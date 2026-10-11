@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/local-tts.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/local-tts.html">
+    <meta property="og:title" content="Social Stream Ninja - 本機AI文字轉語音指南">
+    <meta property="og:description" content="為Social Stream Ninja設定注重隱私的本機文字轉語音，包括內建聲音、自行代管伺服器、聲音複製、OBS音訊和疑難排解。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/local-tts.html">
+    <meta name="twitter:title" content="Social Stream Ninja - 本機AI文字轉語音指南">
+    <meta name="twitter:description" content="為Social Stream Ninja設定注重隱私的本機文字轉語音，包括內建聲音、自行代管伺服器、聲音複製、OBS音訊和疑難排解。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream Ninja - 本機AI文字轉語音指南</title>
+    <meta name="description" content="為Social Stream Ninja設定注重隱私的本機文字轉語音，包括內建聲音、自行代管伺服器、聲音複製、OBS音訊和疑難排解。">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="stylesheet" href="../../docs/css/site-shell.css">
+    <script src="../../docs/js/site-shell.js"></script>
+    <link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/local-tts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"(0.6B / 1.7B)":"（0.6B / 1.7B）","(Kokoro-FastAPI, or your server's port). From the OBS PC, open":"（Kokoro-FastAPI 或你的伺服器連接埠）。在 OBS 電腦開啟","(Piper)":"（Piper）","(Piper): real CPU speech, direct and through the bridge.":"（Piper）：已驗證 CPU 真實語音，含直連和橋接。","(recommended)":"（建議）",") and refresh. While testing, also remove":"）並重新整理。測試時也移除",", SSN sends a JSON POST:":"，SSN 傳送 JSON POST：",", add it under the existing":"，在現有的以下部分加入：",", and the first":"，以及第一個",", and the server uses Piper instead.":"，伺服器會改用 Piper。",", direct and through the bridge.":"，包括直接連線和透過橋接連線。",", enter your server's address, like":"，輸入伺服器位址，例如",", even if the voice server is on another PC.":"，即使語音伺服器在另一台電腦也是如此。",", like":"，例如",", local AI voices make their own audio, so OBS can capture them.":"不同，本機 AI 音色自行產生音訊，因此 OBS 可以擷取。",", nested":"、巢狀的",", or any browser-playable type.":"，或瀏覽器可播放的任何格式。",", or one from its web page. openedai-speech:":"，或其網頁中的音色。openedai-speech：",", then use:":"，然後使用：",", with that PC's local IP":"，改為該電腦的本機 IP",". All options:":"。所有選項：",". Docker needs GPU access. The model downloads on first use.":"。Docker 需要 GPU 存取權，模型首次使用時下載。",". If that fails, OBS can't reach it either. Check the server's firewall.":"。如果失敗，OBS 也無法存取，請檢查伺服器防火牆。",". Inside the":"。在",". Leave it running.":"。保持執行。",". Most people stop here.":"。大多數人做到這裡即可。",". OpenAI names like":"。OpenAI 音色名稱，例如",". Plan on about 4 GB of GPU memory. CPU works but is slow.":"。預計需要約 4 GB 顯示記憶體，CPU 也能執行但較慢。",". Prefer clicking? Use the":"。更喜歡點選操作？使用",". Project is archived.":"。專案已封存。",". Reading options like":"。朗讀選項，例如",". Some servers care about upper/lower case.":"。部分伺服器區分大小寫。",". Still blocked? Run the bridge on the OBS PC.":"。仍被攔截？在 OBS 電腦執行橋接。",". TTS now shows in the OBS mixer.":"。TTS 現在會出現在 OBS 混音器中。",". That's the page that makes the sound.":"。聲音由該頁面產生。",". The bridge translates for them.":"。橋接負責格式轉換。",". The hosted beta dock page is more likely to be blocked; the bridge or a local app window is easier.":"。託管的測試版 Dock 頁面更容易被攔截，橋接或本機應用程式視窗更方便。",". To keep TTS separate from other sounds, send the app to a virtual cable:":"。要將 TTS 與其他聲音分開，請將應用程式輸出到虛擬音訊線：",". Watch the OBS mixer meter during a test. Make sure you set":"。測試時觀察 OBS 混音器音量表，確保已設定",". You should see a page to test voices (67+ available).":"。應出現可試聽音色的頁面（超過 67 種）。","24 GB GPU or remote host":"24 GB GPU 或遠端主機","3-second clip":"3 秒音訊","5 seconds; better with 1 minute":"5 秒，1 分鐘效果更好","6 GB+ NVIDIA GPU, 16 GB RAM":"6 GB以上顯示記憶體的NVIDIA GPU，16 GB記憶體",": need a wrapper first (CLI, Gradio or library only).":"：需要先加包裝層（僅提供 CLI、Gradio 或程式庫）。",": real CPU speech with":"：已驗證 CPU 真實語音，使用",": request format tested, direct and through the bridge.":"：已驗證請求格式，含直連和橋接。",": through bridge modes only.":"：僅透過橋接模式。","; System TTS may need desktop audio or a virtual cable.":"；系統 TTS 可能需要桌面音訊或虛擬音訊線。","\u003c1 GB":"\u003c1 GB","A cloned voice":"複製音色","A server gives you more voices, voice cloning, or one voice you reuse across tools. SSN talks to it like an":"伺服器可提供更多音色、音色複製，或讓多個工具共用一種聲音。SSN 按以下介面與其通訊：","A small helper from SSN. It takes SSN's request, passes it to your voice server, and hands the audio back in a way browsers accept. Needs Node.js.":"SSN 的小型輔助程式：接收 SSN 請求，轉交語音伺服器，再以瀏覽器可接受的方式傳回音訊。需要 Node.js。","A wrapper, or bridge":"包裝層或橋接","API key":"API 金鑰","Add":"新增","Add a":"新增一個","Add its virtual environment's":"加入其虛擬環境中的","Add that link to OBS as a":"將該連結作為以下來源加入 OBS：","All Guides":"所有指南","Also accepted:":"也接受：","Also check the firewall allows the port, and that Docker published it (":"還要確認防火牆允許該連接埠，且 Docker 已公開連接埠（","Any PC":"任何電腦","App test works, OBS is silent":"應用程式測試正常，OBS 無聲","App windows are less strict about browser permissions (CORS) than Chrome. The bridge is still the safest choice for servers that refuse browser requests. For built-in Kokoro, the app can use its own":"應用程式視窗對瀏覽器權限（CORS）的限制比 Chrome 少。伺服器拒絕瀏覽器請求時，橋接仍是最穩妥的選擇。內建 Kokoro 可使用應用程式自身的","Archived project.":"已封存專案。","Audio Input Capture":"音訊輸入擷取（Audio Input Capture）","Audio file":"音訊檔案","Best.":"最佳。","Blocked by the browser?":"被瀏覽器攔截？","Blocked by the browser? Run the":"被瀏覽器攔截？執行","Bridge":"橋接","Browser Source":"瀏覽器來源","Built-in Kitten":"內建Kitten","Built-in Kokoro":"內建Kokoro","Built-in Kokoro and Kokoro-FastAPI don't clone voices.":"內建 Kokoro 和 Kokoro-FastAPI 不支援音色複製。","Built-in Piper":"內建Piper","Built-in eSpeak":"內建eSpeak","Built-in voices":"內建音色","Built-in voices (nothing to install)":"內建音色（不需要安裝）","CPU for testing, slow":"CPU 可測試，較慢","CPU on some builds, slow":"部分版本可用 CPU，較慢","CPU only":"僅CPU","CPU, 4–8 GB RAM":"CPU，4–8 GB 記憶體","CPU, 8 GB RAM":"CPU，8 GB記憶體","Change":"變更","Chatterbox":"Chatterbox","Chatterbox-TTS-Server":"Chatterbox-TTS-Server","Check Docker and the container are running. On the server PC, open":"確認 Docker 和容器正在執行。在伺服器電腦開啟","Checked with both":"已使用以下兩種方式檢查：","Checks":"檢查","Click":"點選","Clip plus its transcript":"音訊及其逐字稿","Clones from":"複製所需材料","Cloning isn't an SSN setting. It's a feature of some voice servers. SSN sends the chat text; the server picks the cloned voice.":"複製不是 SSN 設定，而是部分語音伺服器的功能。SSN 傳送聊天文字，伺服器選擇複製音色。","Comfortable":"較舒適配置","Commands & API":"指令與 API","Compare providers and hear samples":"比較供應商並試聽範例","Computer load":"電腦負載","Connect a server":"連線伺服器","Connect your own TTS server":"連線自己的 TTS 伺服器","Control audio via OBS":"透過 OBS 控制音訊","Copy the link into OBS and send a test chat.":"將連結複製到 OBS 並傳送測試聊天。","Coqui Public Model License":"Coqui Public Model License","Cost":"費用","Custom / Local API Endpoint":"自訂 / 本機 API 端點","Custom / Local TTS Endpoint":"自訂／本機文字轉語音端點","Desktop Audio":"桌面音訊","Diagram showing OBS calling the local bridge, and the bridge calling the TTS server":"示意圖：OBS呼叫本機橋接服務，再由橋接服務呼叫文字轉語音伺服器","Diagram showing that localhost means the same computer, while another computer needs a LAN IP address":"示意圖：localhost指同一台電腦，存取另一台電腦需要區域網路IP位址","Direct or bridge. GPU runs smoother than CPU. Setup varies by fork.":"直連或橋接。GPU 比 CPU 更流暢，設定因分支而異。","Direct,":"直連，","Disk":"磁碟","Do I need this?":"我需要這個嗎？","Do this":"執行操作","Docker":"Docker","Docker Desktop":"Docker Desktop","Docker image not found":"找不到Docker映像檔","Don't mix up the app test and OBS.":"不要把應用程式測試與 OBS 混為一談。","Download":"下載","ElevenLabs":"ElevenLabs","Example":"範例","Example links:":"範例連結：","Excellent":"出色","F5-TTS":"F5-TTS","F5-TTS official":"F5-TTS官方專案","F5-TTS server mode":"F5-TTS 伺服器模式","F5-TTS_server":"F5-TTS_server","Features":"功能","First use is slow.":"首次使用較慢。","Fish Audio in OBS":"OBS 中的 Fish Audio","Fish Audio setup":"Fish Audio 設定","Fits 6 GB GPU?":"6 GB GPU 夠用嗎？","Fix problems":"解決問題","For server builders":"面向伺服器開發者","Formats:":"格式：","Free":"免費","Free voices with nothing to install":"不需要安裝的免費音色","GPT-SoVITS":"GPT-SoVITS","GPT-SoVITS / F5-TTS / Qwen3-TTS":"GPT-SoVITS / F5-TTS / Qwen3-TTS","GPT-SoVITS mode":"GPT-SoVITS 模式","GPT-SoVITS uses its own":"GPT-SoVITS使用自己的","GPU":"GPU","Get the audio into OBS":"將音訊送入 OBS","Get the server and start it:":"取得並啟動伺服器：","GitHub":"GitHub","Good":"良好","Guides":"指南","Hire":"聘用","Home":"首頁","How SSN talks to a custom server. You only need this if you're building or debugging one.":"SSN 與自訂伺服器的通訊方式。僅在建置或偵錯伺服器時需要閱讀。","How to connect":"如何連線","I want":"我想要","I want…":"我想要…","If OBS is on one PC and the voice server on another,":"如果 OBS 與語音伺服器位於兩台電腦，","Image tags change. Check the current tag on":"映像標籤會變化，請在以下位置查看目前標籤：","In":"在","In SSN, open the TTS provider list and pick":"在 SSN 開啟 TTS 供應商清單並選擇","In its properties, turn on":"在內容中開啟","In the SSN folder, run":"在 SSN 資料夾中執行","Inspiration":"靈感","Its":"它的","JSON with an audio URL":"包含音訊 URL 的 JSON","JSON with base64 audio":"包含base64音訊的JSON","Kitten":"Kitten","Kokoro":"Kokoro","Kokoro 82M":"Kokoro 82M","Kokoro and Piper download their models first (about 50–200 MB). Later loads reuse them, but still take a moment to start. OBS keeps its own copy, separate from Chrome.":"Kokoro 和 Piper 首先下載模型（約 50–200 MB），之後會重用，但啟動仍需片刻。OBS 個別儲存，不與 Chrome 共用。","Kokoro-FastAPI":"Kokoro-FastAPI","Kokoro-FastAPI:":"Kokoro-FastAPI：","Laptop CPU, 8 GB RAM":"筆電 CPU，8 GB 記憶體","Leave the API key blank.":"API 金鑰留空。","Likely (0.6B Base)":"很可能夠用（0.6B Base）","Likely with Turbo or small chunks":"使用 Turbo 或較小分段時很可能夠用","Likely with fp16 / light install":"使用 fp16 / 輕量安裝時很可能夠用","Link settings for your own server":"自己的伺服器連結設定","Link value":"連結參數值","Local AI TTS Guide":"本機 AI TTS 指南","Low-end CPU, 4 GB RAM":"低階CPU，4 GB記憶體","Low. CPU only.":"低，僅 CPU。","Main navigation":"主導覽","Make a clean reference clip of a voice you have permission to use. Mono, 22050 Hz, 6–30 seconds:":"準備獲准使用的乾淨參考音訊：單聲道、22050 Hz、6–30 秒：","Maybe":"可能","Medium. Faster with a GPU.":"中等，GPU 更快。","Minimal. CPU only.":"極低，僅 CPU。","Minimum":"最低配置","MisoTTS 8B":"MisoTTS 8B","Model":"模型","Model name. Default":"模型名稱。預設","Modern CPU, 4–8 GB RAM":"現代 CPU，4–8 GB 記憶體","Modern CPU, 8 GB RAM":"現代CPU，8 GB記憶體","More desktop app details":"更多桌面應用程式細節","NVIDIA GPU (faster):":"NVIDIA GPU（更快）：","NVIDIA GPU ~4 GB, 8–16 GB RAM":"NVIDIA GPU 約 4 GB，8–16 GB 記憶體","Needs an OpenAI-compatible wrapper.":"需要相容 OpenAI 的包裝層。","Needs audio routing":"需要設定音訊路由","Needs the full server, not":"需要完整伺服器，而不是","No":"否","No streaming yet.":"暫不支援串流播放。","No; 24 GB recommended":"不夠，建議 24 GB","None":"無","Not at 6 GB":"6 GB 不夠","Notes":"說明","OBS Browser Source (recommended)":"OBS 瀏覽器來源（建議）","OBS and the server on the same PC":"OBS 和伺服器在同一台電腦","OBS audio":"OBS 音訊","OBS must reach the server itself. Server on another PC? Replace":"OBS 必須自行存取伺服器。伺服器在另一台電腦？替換","OBS needs its own working address. The app test doesn't prove OBS can reach the server.":"OBS 需要自己能存取的位址。應用程式測試成功不能證明 OBS 能存取伺服器。","OBS on a different computer?":"OBS 在另一台電腦？","OK":"確定","On macOS or Linux, use":"在macOS或Linux上使用","On this page":"本頁內容","Only clone voices you own or have permission to use.":"只複製自己擁有或獲准使用的聲音。","Only if wrapped":"僅在有封裝時","Only the first letter or words are read":"只讀第一個字母或幾個單字","Open":"開啟","Open a terminal (Command Prompt, PowerShell or Terminal) and run one of these:":"開啟終端機（命令提示字元、PowerShell 或 Terminal），執行以下一種：","Open navigation menu":"開啟導覽選單","OpenAI-compatible":"相容OpenAI","Option":"選項","Option A: Light Piper server (CPU)":"方案 A：輕量 Piper 伺服器（CPU）","Option B: XTTS-v2 voice cloning (GPU)":"方案 B：XTTS-v2 音色複製（GPU）","Optional":"選用","Optional NVIDIA GPU, 8–16 GB RAM":"選用 NVIDIA GPU，8–16 GB 記憶體","Overlay Gallery":"疊加畫面圖庫","Paid cloud voices":"付費雲端音色","Paid tiers":"付費方案","Pick a voice your server knows:":"選擇伺服器認識的音色：","Piper":"Piper","Plays, but OBS doesn't capture it":"能播放但 OBS 擷取不到","Point SSN at the bridge:":"讓 SSN 指向橋接：","Port":"連接埠","Pressing Test in the app tests from the app. With a link in OBS, OBS must reach the server and play the audio.":"在應用程式中按 Test 是從應用程式發起測試。連結放入 OBS 後，必須由 OBS 存取伺服器並播放音訊。","Private":"私人","Problem":"問題","Prompt audio":"提示音訊","Quality":"品質","Qwen3-TTS":"Qwen3-TTS","Raw PCM":"原始PCM","Read the":"閱讀","Record a clean clip of one speaker, usually 3–30 seconds, with little background noise.":"錄製一位說話者的乾淨音訊，通常 3–30 秒，盡量減少背景雜音。","Reference clip":"參考音訊","Remote hosting only. No local REST endpoint in the repo.":"僅遠端託管，儲存庫中沒有本機 REST 端點。","Remove":"移除","Response":"回應","Robotic":"機械感","Rough starting points, not promises. Model size, text length and other apps all change memory use.":"這是粗略起點，不是保證。模型大小、文字長度和其他應用程式都會影響記憶體用量。","Run":"執行","Run chat voices on your own computer. Most streamers only need the built-in voices.":"在自己的電腦執行聊天語音。大多數實況主只需內建音色。","Running it from source on Windows (HTTP 500 errors)":"在 Windows 從原始碼執行（HTTP 500 錯誤）","SSN app test works, OBS is silent":"SSN 應用程式測試正常，OBS 無聲","SSN desktop app":"SSN 桌面應用程式","SSN sends chat text with":"SSN 透過以下方式傳送聊天文字：","SSN waits for the whole response, then plays it. Keep chat messages short.":"SSN 等待完整回應後再播放，請保持聊天訊息簡短。","Screenshot-style checklist for local TTS troubleshooting":"螢幕截圖式本機文字轉語音疑難排解清單","Screenshot-style map of the local TTS fields in Social Stream Ninja":"螢幕截圖式Social Stream Ninja本機文字轉語音欄位說明","See":"參閱","See the":"請參閱","Send a short test chat, like":"傳送簡短測試聊天，例如","Send it as a WAV file or base64 WAV.":"以 WAV 檔案或 base64 WAV 傳送。","Server":"伺服器","Server not responding":"伺服器無回應","Server on another PC at home":"伺服器在家中另一台電腦","Server on another PC? Use its local IP, like":"伺服器在另一台電腦？使用其本機 IP，例如","Set it up in 4 steps":"四步設定","Set up XTTS-v2 in 4 steps":"四步設定 XTTS-v2","Set up private local text-to-speech for Social Stream Ninja, including built-in voices, self-hosted servers, voice cloning, OBS audio, and troubleshooting.":"為Social Stream Ninja設定注重隱私的本機文字轉語音，包括內建聲音、自行代管伺服器、聲音複製、OBS音訊和疑難排解。","Setting":"設定","Setup":"設定","Short WAV clip":"簡短 WAV 音訊","Side-by-side":"並排比較","Simplest rule:":"最簡單的規則：","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja - Local AI TTS Guide":"Social Stream Ninja - 本機AI文字轉語音指南","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja: Local AI TTS Guide ·":"Social Stream Ninja：本機 AI TTS 指南 ·","Some F5-TTS wrappers use":"部分 F5-TTS 包裝層使用","Some servers also need the exact words spoken in the clip.":"部分伺服器也需要音訊中說出的準確文字。","Sound":"音質","Speaking speed (0.5–2.0).":"語速（0.5–2.0）。","Start it with Docker automatically:":"隨 Docker 自動啟動：","Start your server.":"啟動伺服器。","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","System TTS":"系統 TTS","System TTS / eSpeak":"系統文字轉語音／eSpeak","TTS Voice Guide":"文字轉語音聲音指南","TTS link.":"TTS 連結。","TTS reference":"TTS 參考","TTS setup guide":"文字轉語音設定指南","Tell the bridge where your server is. PowerShell:":"告訴橋接伺服器的位置。PowerShell：","The bridge":"橋接","The browser blocked it before the server saw it. Run":"請求尚未到達伺服器就被瀏覽器攔截。執行","The desktop app uses the same link settings. But the sound plays from the app, not OBS. Capture it with":"桌面應用程式使用相同連結設定，但聲音從應用程式而非 OBS 播放。使用以下方式擷取：","The endpoint is the field that matters.":"關鍵欄位是端點。","The first run downloads about 1.5–2 GB, once.":"首次執行下載約 1.5–2 GB，只需一次。","The local TTS bridge":"本機 TTS 橋接","The localhost rule":"localhost 規則","The server returns audio (usually WAV or MP3) and SSN plays it.":"伺服器傳回音訊（通常 WAV 或 MP3），SSN 負責播放。","The server turns the clip into a voice profile.":"伺服器將音訊轉換成音色設定檔。","These need":"這些需要","These run inside SSN in your browser. No server, Docker, or API key.":"它們直接在瀏覽器的 SSN 中執行，不需要伺服器、Docker 或 API 金鑰。","This is the most common mistake.":"這是最常見的錯誤。","This works with any chat SSN captures. The voice belongs to SSN's player, not YouTube or Twitch. Unlike":"適用於 SSN 擷取的所有聊天。音色屬於 SSN 播放器，而非 YouTube 或 Twitch。與","To use a voice server I already run":"使用我已經執行的語音伺服器","Try this":"試試這個","Turn on":"開啟","Turns on TTS, in English.":"開啟英語 TTS。","Under 1 GB. No voice cloning.":"不到 1 GB，不支援音色複製。","Use Kokoro voice names":"使用 Kokoro 音色名稱","Use the":"使用","Use this address":"使用此位址","Use this link (change the address if the server is on another PC):":"使用此連結（伺服器在另一台電腦時修改位址）：","Use your own server. (":"使用自己的伺服器。（","Very good":"很好","Very low. CPU only.":"很低，僅 CPU。","Voice":"音色","Voice cloning":"聲音複製","Voice name. Depends on the server.":"音色名稱，取決於伺服器。","Voices, speed, and other languages:":"音色、速度和其他語言：","Voices:":"音色：","WebGPU GPU or fast CPU, 8–16 GB RAM":"WebGPU GPU 或快速 CPU，8–16 GB 記憶體","What SSN can play back":"SSN 能播放什麼","What SSN sends":"SSN 傳送什麼","What computer do I need?":"需要什麼電腦？","What it does":"功能","What was tested with SSN":"已透過 SSN 測試的內容","With":"帶有","With 6 GB of GPU memory or less, start with small models on OpenAI-compatible servers. Bigger models work too if hosted elsewhere.":"顯示記憶體不超過 6 GB 時，先從相容 OpenAI 伺服器上的小模型開始。大模型也可用，但可託管到別處。","With no API key set, SSN sends no Authorization header.":"未設定 API 金鑰時，SSN 不傳送 Authorization 標頭。","Without it SSN sends":"沒有它時 SSN 傳送","Works in OBS":"可用於 OBS","Works in one place but not another? Check in order: which computer, address, voice, browser permission, OBS audio.":"有的地方可用，有的無法使用？依序檢查：電腦、位址、音色、瀏覽器權限、OBS 音訊。","Works with built-in voices and your own server.":"適用於內建音色和自己的伺服器。","Works?":"是否可用？","Wrong voice, or voice not found":"音色不對或找不到音色","XTTS-v2 / openedai-speech":"XTTS-v2 / openedai-speech","XTTS-v2 is non-commercial by default.":"XTTS-v2預設僅供非商業使用。","Yes":"是","Yes, about 4 GB":"可以，約 4 GB","Your server's address. Change the port to match.":"伺服器位址，連接埠需與伺服器一致。","Your setup":"您的設定","all link settings":"所有連結設定","allows non-commercial use only. A monetized stream may not qualify. Check the license or get permission first.":"僅允許非商業用途。營利直播可能不符合條件，請先檢查授權條款或取得許可。","also works.)":"也可用。）","always mean “this same computer.”":"始終表示「目前這台電腦」。","and":"和","and change only":"，只更改","bridge":"橋接","bridge README":"橋接服務README","built-in voices":"內建音色","chatterbox-tts-api":"chatterbox-tts-api","does the same. Change the port with":"效果相同。用以下參數更改連接埠：","eSpeak-NG":"eSpeak-NG","fields, and data URLs.":"欄位，以及資料URL。","first.":"。","first. Otherwise it can't find":"，否則找不到","folder to":"資料夾加到","folder,":"資料夾中，","for Kokoro,":"用於 Kokoro，","for openedai-speech.":"用於 openedai-speech。","format. The bridge translates for it.":"格式，由橋接轉換。","from the OBS link (for example":"，從 OBS 連結移除（例如","in OBS points at the OBS PC.":"在 OBS 中指向 OBS 電腦。","installed and running. It's free for personal use.":"已安裝並執行，個人使用免費。","is required.":"是必要的。","is small and widely supported.":"體積小且廣泛支援。","is the easiest.":"最簡單。","item.":"項目。","kokoro-web":"kokoro-web","link. (Or":"連結。（或","localhost rule":"localhost 規則","macOS/Linux, in one line:":"macOS/Linux，一行命令：","may not work.":"可能無效。","mp3, wav, opus or flac.":"mp3、wav、opus 或 flac。","must match your voice name in the YAML file.":"必須與 YAML 檔案中的音色名稱一致。","on the OBS PC and use":"在 OBS 電腦上執行，並使用","only if server and browser both support it.":"僅在伺服器和瀏覽器均支援時使用。","openedai-speech":"openedai-speech","openedai-speech (Piper and XTTS-v2)":"openedai-speech（Piper 和 XTTS-v2）","openedai-speech Piper":"openedai-speech Piper","openedai-speech XTTS":"openedai-speech XTTS","openedai-speech was archived in January 2026 and calls itself mostly obsolete. It still works as an example, but gets no updates. Keep it local. Never expose its port to the internet; it has no login.":"openedai-speech 於 2026 年 1 月封存，自稱大致已過時。仍可作為範例使用，但不再更新。請僅在本機使用；它沒有登入驗證，絕不要將連接埠暴露到網際網路。","or":"或","path instead of loading the model in the browser.":"路徑，而不在瀏覽器中載入模型。","provider settings":"供應商設定","routing steps":"音訊路由步驟","run the bridge on the OBS computer. Then OBS always uses":"在 OBS 電腦上執行橋接，這樣 OBS 始終使用","runs Kokoro as a local server. Works on CPU; no GPU needed.":"將 Kokoro 作為本機伺服器執行。支援 CPU，不需要 GPU。","section (keep the voices already there):":"部分（保留已有音色）：","setup guide":"設定指南","speech server. No API key needed.":"語音伺服器，不需要 API 金鑰。","suits cloning servers and bridge testing. Use":"適合複製伺服器和橋接測試。使用","to":"為","to rule out timing issues.":"排除時序問題。","to the name SSN will send.":"改為 SSN 將傳送的名稱。","to your":"到您的","voice cloning":"音色複製","with":"帶有","with its local IP. Check":"替換為本機 IP。檢查","with no provider) depends on the voices OBS has. Often none, or voices that make no capturable sound. Use a provider above instead.":"且未指定供應商）取決於 OBS 中已有的音色。通常沒有，或無法產生可擷取的聲音。請改用上面的供應商。","with your":"，使用你的","work with any provider:":"適用於所有供應商：","~2 GB":"~2 GB","“Blocked by CORS”, “private network”, or “failed fetch”":"「Blocked by CORS」、「private network」或「failed fetch」","“Local” means one of two things: a voice built into SSN that runs in your browser, or a voice server you run yourself.":"「本機」有兩種含義：在瀏覽器中執行的 SSN 內建音色，或你自己執行的語音伺服器。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/local-tts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/local-tts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/local-tts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/local-tts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/local-tts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/local-tts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/local-tts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/local-tts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/local-tts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/local-tts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/local-tts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/local-tts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/local-tts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/local-tts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/local-tts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/local-tts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/local-tts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/local-tts.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/local-tts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/local-tts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/local-tts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/local-tts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/local-tts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/local-tts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/local-tts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/local-tts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="local-tts.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/local-tts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/local-tts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/local-tts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/local-tts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/local-tts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/local-tts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/local-tts.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/local-tts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>本機 AI TTS 指南</h1>
+            <p>在自己的電腦執行聊天語音。大多數實況主只需內建音色。</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="本頁內容">
+                <a href="#overview">我需要這個嗎？</a>
+                <a href="#builtin">內建音色</a>
+                <a href="#server">連線伺服器</a>
+                <a href="#which-computer">localhost 規則</a>
+                <a href="#kokoro-fastapi">Kokoro-FastAPI</a>
+                <a href="#openedai">openedai-speech</a>
+                <a href="#bridge">橋接</a>
+                <a href="#voice-cloning">聲音複製</a>
+                <a href="#obs">OBS 音訊</a>
+                <a href="#troubleshooting">解決問題</a>
+                <a href="#flow">面向伺服器開發者</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="overview">我需要這個嗎？</h2>
+                <p>「本機」有兩種含義：在瀏覽器中執行的 SSN 內建音色，或你自己執行的語音伺服器。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>我想要…</th><th>執行操作</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="我想要">不需要安裝的免費音色</td><td data-label="執行操作">使用 <a href="#builtin">內建音色</a>。大多數人做到這裡即可。</td></tr>
+                        <tr><td data-label="我想要">使用我已經執行的語音伺服器</td><td data-label="執行操作"><a href="#server">連線伺服器</a>.</td></tr>
+                        <tr><td data-label="我想要">複製音色</td><td data-label="執行操作">參閱 <a href="#voice-cloning">音色複製</a>.</td></tr>
+                        <tr><td data-label="我想要">OBS 中的 Fish Audio</td><td data-label="執行操作">請參閱 <a href="tts-setup-guide.html#settings-fish">Fish Audio 設定</a>.</td></tr>
+                        <tr><td data-label="我想要">付費雲端音色</td><td data-label="執行操作">請參閱 <a href="tts.html#providers">TTS 參考</a>.</td></tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">適用於 SSN 擷取的所有聊天。音色屬於 SSN 播放器，而非 YouTube 或 Twitch。與 <em>系統 TTS</em>不同，本機 AI 音色自行產生音訊，因此 OBS 可以擷取。 <a href="tts-setup-guide.html#voice-chooser">比較供應商並試聽範例</a>.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="builtin">內建音色（不需要安裝）</h2>
+                <p>它們直接在瀏覽器的 SSN 中執行，不需要伺服器、Docker 或 API 金鑰。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>音色</th><th>音質</th><th>電腦負載</th><th>連結參數值</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="音色">Kokoro</td><td data-label="音質">出色</td><td data-label="電腦負載">中等，GPU 更快。</td><td data-label="連結參數值"><code>ttsprovider=kokoro</code></td></tr>
+                        <tr><td data-label="音色">Piper</td><td data-label="音質">很好</td><td data-label="電腦負載">低，僅 CPU。</td><td data-label="連結參數值"><code>ttsprovider=piper</code></td></tr>
+                        <tr><td data-label="音色">Kitten</td><td data-label="音質">良好</td><td data-label="電腦負載">很低，僅 CPU。</td><td data-label="連結參數值"><code>ttsprovider=kitten</code></td></tr>
+                        <tr><td data-label="音色">eSpeak-NG</td><td data-label="音質">機械感</td><td data-label="電腦負載">極低，僅 CPU。</td><td data-label="連結參數值"><code>ttsprovider=espeak</code></td></tr>
+                    </tbody>
+                </table>
+                <h3 id="quick-setup">四步設定</h3>
+                <ol class="guide-steps">
+                    <li>新增 <code>&amp;speech=en-US&amp;ttsprovider=kokoro</code> 到您的 <code>dock.html</code> 連結。（或 <code>piper</code>, <code>kitten</code>, <code>espeak</code>.)</li>
+                    <li>將該連結作為以下來源加入 OBS： <strong>瀏覽器來源</strong>。聲音由該頁面產生。</li>
+                    <li>在內容中開啟 <strong>透過 OBS 控制音訊</strong>.</li>
+                    <li>傳送簡短測試聊天，例如 <code>Testing local TTS</code>.</li>
+                </ol>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=kokoro</pre>
+                <div class="warning-note"><strong>首次使用較慢。</strong> Kokoro 和 Piper 首先下載模型（約 50–200 MB），之後會重用，但啟動仍需片刻。OBS 個別儲存，不與 Chrome 共用。</div>
+                <p>音色、速度和其他語言： <a href="tts.html#premium-options">供應商設定</a>。更喜歡點選操作？使用 <a href="tts-setup-guide.html">設定指南</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="server">連線自己的 TTS 伺服器</h2>
+                <p>伺服器可提供更多音色、音色複製，或讓多個工具共用一種聲音。SSN 按以下介面與其通訊： <strong>相容OpenAI</strong> 語音伺服器，不需要 API 金鑰。</p>
+                <div class="guide-step-layout" id="where-to-click">
+                    <ol class="guide-steps">
+                        <li>啟動伺服器。 <a href="#kokoro-fastapi">Kokoro-FastAPI</a> 最簡單。</li>
+                        <li>在 SSN 開啟 TTS 供應商清單並選擇 <strong>自訂／本機文字轉語音端點</strong>.</li>
+                        <li>在 <strong>自訂 / 本機 API 端點</strong>，輸入伺服器位址，例如 <code>http://127.0.0.1:8880/v1/audio/speech</code>.</li>
+                        <li>API 金鑰留空。</li>
+                        <li>選擇伺服器認識的音色： <code>af_bella</code> 用於 Kokoro， <code>nova</code> 用於 openedai-speech。</li>
+                        <li>將連結複製到 OBS 並傳送測試聊天。</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/local-tts/tts-custom-endpoint-fields.png" alt="螢幕截圖式Social Stream Ninja本機文字轉語音欄位說明" class="guide-image" loading="lazy">
+                        <figcaption>關鍵欄位是端點。</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>OBS 在另一台電腦？</strong> 閱讀 <a href="#which-computer">localhost 規則</a> 。 <strong>被瀏覽器攔截？</strong> 使用 <a href="#bridge">橋接</a>.</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>伺服器</th><th>模型</th><th>GPU</th><th>磁碟</th><th>連接埠</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="伺服器"><a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> （建議）</td><td data-label="模型">Kokoro 82M</td><td data-label="GPU">選用</td><td data-label="磁碟">~2 GB</td><td data-label="連接埠">8880</td></tr>
+                        <tr><td data-label="伺服器"><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a> （Piper）</td><td data-label="模型">Piper</td><td data-label="GPU">僅CPU</td><td data-label="磁碟">&lt;1 GB</td><td data-label="連接埠">8000</td></tr>
+                        <tr><td data-label="伺服器"><a href="https://github.com/eduardolat/kokoro-web" target="_blank">kokoro-web</a></td><td data-label="模型">Kokoro 82M</td><td data-label="GPU">選用</td><td data-label="磁碟">~2 GB</td><td data-label="連接埠">3000</td></tr>
+                    </tbody>
+                </table>
+                <p>這些需要 <a href="https://www.docker.com/products/docker-desktop/" target="_blank">Docker Desktop</a> 已安裝並執行，個人使用免費。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="which-computer">localhost 規則</h2>
+                <p>這是最常見的錯誤。</p>
+                <div class="warning-note"><strong><code>localhost</code> 和 <code>127.0.0.1</code> 始終表示「目前這台電腦」。</strong> 如果 OBS 與語音伺服器位於兩台電腦， <code>127.0.0.1</code> 在 OBS 中指向 OBS 電腦。</div>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/local-tts/tts-localhost-map.png" alt="示意圖：localhost指同一台電腦，存取另一台電腦需要區域網路IP位址" class="guide-image guide-image-medium" loading="lazy">
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>您的設定</th><th>使用此位址</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="您的設定">OBS 和伺服器在同一台電腦</td><td data-label="使用此位址"><code>http://127.0.0.1:8880/v1/audio/speech</code></td></tr>
+                        <tr><td data-label="您的設定">伺服器在家中另一台電腦</td><td data-label="使用此位址"><code>http://192.168.x.x:8880/v1/audio/speech</code>，改為該電腦的本機 IP</td></tr>
+                        <tr><td data-label="您的設定">SSN 應用程式測試正常，OBS 無聲</td><td data-label="使用此位址">OBS 需要自己能存取的位址。應用程式測試成功不能證明 OBS 能存取伺服器。</td></tr>
+                    </tbody>
+                </table>
+                <p>還要確認防火牆允許該連接埠，且 Docker 已公開連接埠（<code>-p 8880:8880</code>).</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="kokoro-fastapi">Kokoro-FastAPI</h2>
+                <p><a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> 將 Kokoro 作為本機伺服器執行。支援 CPU，不需要 GPU。</p>
+                <ol class="guide-steps">
+                    <li>開啟終端機（命令提示字元、PowerShell 或 Terminal），執行以下一種：
+                        <pre>docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</pre>
+                        <p>NVIDIA GPU（更快）：</p>
+                        <pre>docker run --gpus all -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-gpu:v0.2.0post4</pre>
+                        首次執行下載約 1.5–2 GB，只需一次。</li>
+                    <li>開啟 <code>http://localhost:8880/web/</code>。應出現可試聽音色的頁面（超過 67 種）。</li>
+                    <li>使用此連結（伺服器在另一台電腦時修改位址）：
+                        <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8880/v1/audio/speech&amp;voiceopenai=af_bella</pre></li>
+                </ol>
+                <div class="guide-note"><strong>使用 Kokoro 音色名稱</strong>，例如 <code>af_bella</code>, <code>af_sarah</code>, <code>am_adam</code> 或 <code>bf_emma</code>。OpenAI 音色名稱，例如 <code>nova</code> 或 <code>alloy</code> 可能無效。</div>
+                <p><strong>隨 Docker 自動啟動：</strong></p>
+                <pre>docker run -d --restart unless-stopped -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</pre>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="openedai">openedai-speech（Piper 和 XTTS-v2）</h2>
+                <div class="warning-note"><strong>已封存專案。</strong> openedai-speech 於 2026 年 1 月封存，自稱大致已過時。仍可作為範例使用，但不再更新。請僅在本機使用；它沒有登入驗證，絕不要將連接埠暴露到網際網路。</div>
+                <h3>方案 A：輕量 Piper 伺服器（CPU）</h3>
+                <p>不到 1 GB，不支援音色複製。</p>
+                <pre>docker run -d --restart unless-stopped -p 8000:8000 ghcr.io/matatonic/openedai-speech-min</pre>
+                <p>音色： <code>alloy</code>, <code>echo</code>, <code>fable</code>, <code>onyx</code>, <code>nova</code>, <code>shimmer</code>.</p>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=openai&amp;openaiendpoint=http://localhost:8000/v1/audio/speech&amp;voiceopenai=nova</pre>
+                <details class="guide-extra"><summary>在 Windows 從原始碼執行（HTTP 500 錯誤）</summary>
+                    <p>加入其虛擬環境中的 <code>Scripts</code> 資料夾加到 <code>PATH</code> ，否則找不到 <code>piper.exe</code> 或 <code>ffmpeg.exe</code>.</p>
+                    <pre>cd openedai-speech
+$env:Path = "$PWD\.venv\Scripts;$env:Path"
+.\.venv\Scripts\python.exe speech.py --xtts_device none -H 127.0.0.1 -P 8000</pre>
+                </details>
+                <h3>方案 B：XTTS-v2 音色複製（GPU）</h3>
+                <p>需要完整伺服器，而不是 <code>openedai-speech-min</code>。預計需要約 4 GB 顯示記憶體，CPU 也能執行但較慢。</p>
+                <details class="guide-extra"><summary>四步設定 XTTS-v2</summary>
+                    <ol class="guide-steps">
+                        <li>取得並啟動伺服器：
+                            <pre>git clone https://github.com/matatonic/openedai-speech.git
+cd openedai-speech
+Copy-Item sample.env speech.env
+docker compose up -d</pre>
+                            在macOS或Linux上使用 <code>cp sample.env speech.env</code>。Docker 需要 GPU 存取權，模型首次使用時下載。</li>
+                        <li>準備獲准使用的乾淨參考音訊：單聲道、22050 Hz、6–30 秒：
+                            <pre>ffmpeg -i input.mp3 -ac 1 -ar 22050 -t 6 -y voices/me.wav</pre></li>
+                        <li>在 <code>config/voice_to_speaker.yaml</code>，在現有的以下部分加入： <code>tts-1-hd</code> 部分（保留已有音色）：
+                            <pre>tts-1-hd:
+  me:
+    model: xtts
+    speaker: voices/me.wav
+    language: en</pre>
+                            變更 <code>me</code> 改為 SSN 將傳送的名稱。</li>
+                        <li>執行 <code>docker compose restart</code>，然後使用：
+                            <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8000/v1/audio/speech&amp;openaimodel=tts-1-hd&amp;voiceopenai=me&amp;openaiformat=wav</pre></li>
+                    </ol>
+                    <div class="guide-note"><strong><code>openaimodel=tts-1-hd</code> 是必要的。</strong> 沒有它時 SSN 傳送 <code>tts-1</code>，伺服器會改用 Piper。 <code>voiceopenai</code> 必須與 YAML 檔案中的音色名稱一致。</div>
+                    <p>被瀏覽器攔截？執行 <a href="#bridge">橋接</a> ，只更改 <code>openaiendpoint</code> 為 <code>http://127.0.0.1:8124/v1/audio/speech</code>.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="bridge">本機 TTS 橋接</h2>
+                <p>SSN 的小型輔助程式：接收 SSN 請求，轉交語音伺服器，再以瀏覽器可接受的方式傳回音訊。需要 Node.js。</p>
+                <div class="guide-note"><strong>最簡單的規則：</strong> 在 OBS 電腦上執行橋接，這樣 OBS 始終使用 <code>http://127.0.0.1:8124/v1/audio/speech</code>，即使語音伺服器在另一台電腦也是如此。</div>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/local-tts/tts-bridge-flow.png" alt="示意圖：OBS呼叫本機橋接服務，再由橋接服務呼叫文字轉語音伺服器" class="guide-image guide-image-medium" loading="lazy">
+                </figure>
+                <ol class="guide-steps">
+                    <li>告訴橋接伺服器的位置。PowerShell：
+                        <pre>$env:SSN_TTS_TARGET="http://127.0.0.1:8880/v1/audio/speech"</pre>
+                        伺服器在另一台電腦？使用其本機 IP，例如 <code>http://192.168.x.x:8880/v1/audio/speech</code>.</li>
+                    <li>在 SSN 資料夾中執行 <code>node scripts/local-tts-bridge.cjs</code>。保持執行。</li>
+                    <li>讓 SSN 指向橋接：
+                        <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;voiceopenai=af_bella</pre></li>
+                </ol>
+                <p>macOS/Linux，一行命令： <code>SSN_TTS_TARGET="http://127.0.0.1:8880/v1/audio/speech" node scripts/local-tts-bridge.cjs</code>。在 <code>local-tts-bridge</code> 資料夾中， <code>node server.cjs</code> 效果相同。用以下參數更改連接埠： <code>SSN_TTS_BRIDGE_PORT=8125</code>。所有選項： <a href="../../local-tts-bridge/README.md" target="_blank">橋接服務README</a>.</p>
+                <details class="guide-extra"><summary>GPT-SoVITS 模式</summary>
+                    <p>GPT-SoVITS使用自己的 <code>/tts</code> 格式，由橋接轉換。</p>
+                    <pre>$env:SSN_TTS_REF_AUDIO_PATH="C:\voices\speaker.wav"
+$env:SSN_TTS_REF_TEXT="Reference audio transcript here."
+$env:SSN_TTS_TARGET="http://127.0.0.1:9880/tts"
+node scripts/local-tts-bridge.cjs --mode gptsovits</pre>
+                    <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;openaiformat=wav</pre>
+                </details>
+                <details class="guide-extra"><summary>F5-TTS 伺服器模式</summary>
+                    <p>部分 F5-TTS 包裝層使用 <code>/synthesize_speech/?text=...&amp;voice=...</code>。橋接負責格式轉換。</p>
+                    <pre>$env:SSN_TTS_TARGET="http://127.0.0.1:7860/synthesize_speech/"
+node scripts/local-tts-bridge.cjs --mode f5</pre>
+                    <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;voiceopenai=default_en&amp;openaiformat=wav</pre>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-cloning">聲音複製</h2>
+                <p>複製不是 SSN 設定，而是部分語音伺服器的功能。SSN 傳送聊天文字，伺服器選擇複製音色。</p>
+                <ol class="guide-steps">
+                    <li>錄製一位說話者的乾淨音訊，通常 3–30 秒，盡量減少背景雜音。</li>
+                    <li>部分伺服器也需要音訊中說出的準確文字。</li>
+                    <li>伺服器將音訊轉換成音色設定檔。</li>
+                    <li>SSN 透過以下方式傳送聊天文字： <code>ttsprovider=customtts</code>.</li>
+                    <li>伺服器傳回音訊（通常 WAV 或 MP3），SSN 負責播放。</li>
+                </ol>
+                <div class="warning-note"><strong>只複製自己擁有或獲准使用的聲音。</strong></div>
+                <div class="warning-note"><strong>XTTS-v2預設僅供非商業使用。</strong> 它的 <a href="https://huggingface.co/coqui/XTTS-v2/blob/main/LICENSE.txt" target="_blank">Coqui Public Model License</a> 僅允許非商業用途。營利直播可能不符合條件，請先檢查授權條款或取得許可。</div>
+                <p>顯示記憶體不超過 6 GB 時，先從相容 OpenAI 伺服器上的小模型開始。大模型也可用，但可託管到別處。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>選項</th><th>複製所需材料</th><th>6 GB GPU 夠用嗎？</th><th>如何連線</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="選項"><a href="https://github.com/matatonic/openedai-speech" target="_blank">XTTS-v2 / openedai-speech</a></td><td data-label="複製所需材料">簡短 WAV 音訊</td><td data-label="6 GB GPU 夠用嗎？">可以，約 4 GB</td><td data-label="如何連線">直連， <code>/v1/audio/speech</code>。專案已封存。</td></tr>
+                        <tr><td data-label="選項"><a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">chatterbox-tts-api</a> / <a href="https://github.com/devnen/Chatterbox-TTS-Server" target="_blank">Chatterbox-TTS-Server</a></td><td data-label="複製所需材料">參考音訊</td><td data-label="6 GB GPU 夠用嗎？">使用 Turbo 或較小分段時很可能夠用</td><td data-label="如何連線">直連或橋接。GPU 比 CPU 更流暢，設定因分支而異。</td></tr>
+                        <tr><td data-label="選項"><a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">Qwen3-TTS</a> （0.6B / 1.7B）</td><td data-label="複製所需材料">3 秒音訊</td><td data-label="6 GB GPU 夠用嗎？">很可能夠用（0.6B Base）</td><td data-label="如何連線">需要相容 OpenAI 的包裝層。</td></tr>
+                        <tr><td data-label="選項"><a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">GPT-SoVITS</a></td><td data-label="複製所需材料">5 秒，1 分鐘效果更好</td><td data-label="6 GB GPU 夠用嗎？">使用 fp16 / 輕量安裝時很可能夠用</td><td data-label="如何連線">橋接 <code>--mode gptsovits</code>.</td></tr>
+                        <tr><td data-label="選項"><a href="https://github.com/SWivid/F5-TTS" target="_blank">F5-TTS</a></td><td data-label="複製所需材料">音訊及其逐字稿</td><td data-label="6 GB GPU 夠用嗎？">可能</td><td data-label="如何連線">包裝層或橋接 <code>--mode f5</code> 帶有 <a href="https://github.com/ValyrianTech/F5-TTS_server" target="_blank">F5-TTS_server</a>.</td></tr>
+                        <tr><td data-label="選項"><a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">MisoTTS 8B</a></td><td data-label="複製所需材料">提示音訊</td><td data-label="6 GB GPU 夠用嗎？">不夠，建議 24 GB</td><td data-label="如何連線">僅遠端託管，儲存庫中沒有本機 REST 端點。</td></tr>
+                    </tbody>
+                </table>
+                <p>內建 Kokoro 和 Kokoro-FastAPI 不支援音色複製。</p>
+                <details class="guide-extra" id="tested-servers"><summary>已透過 SSN 測試的內容</summary>
+                    <p>已使用以下兩種方式檢查： <code>dock.html</code> 和 <code>featured.html</code>:</p>
+                    <ul class="guide-list">
+                        <li><strong>openedai-speech</strong> （Piper）：已驗證 CPU 真實語音，含直連和橋接。</li>
+                        <li><strong>Chatterbox-TTS-Server</strong>：已驗證 CPU 真實語音，使用 <code>Emily.wav</code>，包括直接連線和透過橋接連線。</li>
+                        <li><strong>chatterbox-tts-api</strong>：已驗證請求格式，含直連和橋接。</li>
+                        <li><strong>GPT-SoVITS</strong> 和 <strong>F5-TTS_server</strong>：僅透過橋接模式。</li>
+                        <li><strong>F5-TTS官方專案</strong> 和 <strong>Qwen3-TTS</strong>：需要先加包裝層（僅提供 CLI、Gradio 或程式庫）。</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="hardware">需要什麼電腦？</h2>
+                <p>這是粗略起點，不是保證。模型大小、文字長度和其他應用程式都會影響記憶體用量。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>選項</th><th>最低配置</th><th>較舒適配置</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="選項">系統文字轉語音／eSpeak</td><td data-label="最低配置">任何電腦</td><td data-label="較舒適配置">任何電腦</td></tr>
+                        <tr><td data-label="選項">內建Kitten</td><td data-label="最低配置">低階CPU，4 GB記憶體</td><td data-label="較舒適配置">筆電 CPU，8 GB 記憶體</td></tr>
+                        <tr><td data-label="選項">內建Piper</td><td data-label="最低配置">現代 CPU，4–8 GB 記憶體</td><td data-label="較舒適配置">現代CPU，8 GB記憶體</td></tr>
+                        <tr><td data-label="選項">內建Kokoro</td><td data-label="最低配置">現代CPU，8 GB記憶體</td><td data-label="較舒適配置">WebGPU GPU 或快速 CPU，8–16 GB 記憶體</td></tr>
+                        <tr><td data-label="選項">Kokoro-FastAPI</td><td data-label="最低配置">CPU，8 GB記憶體</td><td data-label="較舒適配置">選用 NVIDIA GPU，8–16 GB 記憶體</td></tr>
+                        <tr><td data-label="選項">openedai-speech Piper</td><td data-label="最低配置">CPU，4–8 GB 記憶體</td><td data-label="較舒適配置">CPU，8 GB記憶體</td></tr>
+                        <tr><td data-label="選項">openedai-speech XTTS</td><td data-label="最低配置">NVIDIA GPU 約 4 GB，8–16 GB 記憶體</td><td data-label="較舒適配置">6 GB以上顯示記憶體的NVIDIA GPU，16 GB記憶體</td></tr>
+                        <tr><td data-label="選項">Chatterbox</td><td data-label="最低配置">部分版本可用 CPU，較慢</td><td data-label="較舒適配置">6 GB以上顯示記憶體的NVIDIA GPU，16 GB記憶體</td></tr>
+                        <tr><td data-label="選項">GPT-SoVITS / F5-TTS / Qwen3-TTS</td><td data-label="最低配置">CPU 可測試，較慢</td><td data-label="較舒適配置">6 GB以上顯示記憶體的NVIDIA GPU，16 GB記憶體</td></tr>
+                        <tr><td data-label="選項">MisoTTS 8B</td><td data-label="最低配置">6 GB 不夠</td><td data-label="較舒適配置">24 GB GPU 或遠端主機</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="obs">將音訊送入 OBS</h2>
+                <h3>OBS 瀏覽器來源（建議）</h3>
+                <p>適用於內建音色和自己的伺服器。</p>
+                <ol class="guide-steps">
+                    <li>新增一個 <strong>瀏覽器來源</strong> ，使用你的 <code>dock.html</code> TTS 連結。</li>
+                    <li>開啟 <strong>透過 OBS 控制音訊</strong>.</li>
+                    <li>點選 <strong>確定</strong>。TTS 現在會出現在 OBS 混音器中。</li>
+                </ol>
+                <h3 id="desktop-app">SSN 桌面應用程式</h3>
+                <p>桌面應用程式使用相同連結設定，但聲音從應用程式而非 OBS 播放。使用以下方式擷取： <strong>桌面音訊</strong> 或 <strong>音訊輸入擷取（Audio Input Capture）</strong>。要將 TTS 與其他聲音分開，請將應用程式輸出到虛擬音訊線： <a href="tts.html#audio-capture">音訊路由步驟</a>.</p>
+                <div class="warning-note"><strong>不要把應用程式測試與 OBS 混為一談。</strong> 在應用程式中按 Test 是從應用程式發起測試。連結放入 OBS 後，必須由 OBS 存取伺服器並播放音訊。</div>
+                <details class="guide-extra"><summary>更多桌面應用程式細節</summary>
+                    <p>應用程式視窗對瀏覽器權限（CORS）的限制比 Chrome 少。伺服器拒絕瀏覽器請求時，橋接仍是最穩妥的選擇。內建 Kokoro 可使用應用程式自身的 <code>ninjafy.tts</code> 路徑，而不在瀏覽器中載入模型。</p>
+                </details>
+                <div class="warning-note"><strong>系統 TTS</strong> (<code>&amp;speech=en-US</code> 且未指定供應商）取決於 OBS 中已有的音色。通常沒有，或無法產生可擷取的聲音。請改用上面的供應商。</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="comparison">並排比較</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>選項</th><th>設定</th><th>品質</th><th>私人</th><th>可用於 OBS</th><th>費用</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="選項">內建Kokoro</td><td data-label="設定">無</td><td data-label="品質">5/5</td><td data-label="私人">是</td><td data-label="可用於 OBS">是</td><td data-label="費用">免費</td></tr>
+                        <tr><td data-label="選項">內建Piper</td><td data-label="設定">無</td><td data-label="品質">4/5</td><td data-label="私人">是</td><td data-label="可用於 OBS">是</td><td data-label="費用">免費</td></tr>
+                        <tr><td data-label="選項">內建Kitten</td><td data-label="設定">無</td><td data-label="品質">3/5</td><td data-label="私人">是</td><td data-label="可用於 OBS">是</td><td data-label="費用">免費</td></tr>
+                        <tr><td data-label="選項">內建eSpeak</td><td data-label="設定">無</td><td data-label="品質">2/5</td><td data-label="私人">是</td><td data-label="可用於 OBS">是</td><td data-label="費用">免費</td></tr>
+                        <tr><td data-label="選項">Kokoro-FastAPI</td><td data-label="設定">Docker</td><td data-label="品質">5/5</td><td data-label="私人">是</td><td data-label="可用於 OBS">是</td><td data-label="費用">免費</td></tr>
+                        <tr><td data-label="選項">openedai-speech</td><td data-label="設定">Docker</td><td data-label="品質">4/5</td><td data-label="私人">是</td><td data-label="可用於 OBS">是</td><td data-label="費用">免費</td></tr>
+                        <tr><td data-label="選項">ElevenLabs</td><td data-label="設定">API 金鑰</td><td data-label="品質">5/5</td><td data-label="私人">否</td><td data-label="可用於 OBS">是</td><td data-label="費用">付費方案</td></tr>
+                        <tr><td data-label="選項">系統 TTS</td><td data-label="設定">無</td><td data-label="品質">2/5</td><td data-label="私人">是</td><td data-label="可用於 OBS">需要設定音訊路由</td><td data-label="費用">免費</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="troubleshooting">解決問題</h2>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/local-tts/tts-troubleshooting-checklist.png" alt="螢幕截圖式本機文字轉語音疑難排解清單" class="guide-image guide-image-medium" loading="lazy">
+                    <figcaption>有的地方可用，有的無法使用？依序檢查：電腦、位址、音色、瀏覽器權限、OBS 音訊。</figcaption>
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>問題</th><th>試試這個</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="問題">應用程式測試正常，OBS 無聲</td><td data-label="試試這個">OBS 必須自行存取伺服器。伺服器在另一台電腦？替換 <code>127.0.0.1</code> 替換為本機 IP。檢查 <strong>透過 OBS 控制音訊</strong>。仍被攔截？在 OBS 電腦執行橋接。</td></tr>
+                        <tr><td data-label="問題">只讀第一個字母或幾個單字</td><td data-label="試試這個">移除 <code>ttsquick</code> ，從 OBS 連結移除（例如 <code>&amp;ttsquick=14</code>）並重新整理。測試時也移除 <code>typewriter=</code> 排除時序問題。</td></tr>
+                        <tr><td data-label="問題">伺服器無回應</td><td data-label="試試這個">確認 Docker 和容器正在執行。在伺服器電腦開啟 <code>http://127.0.0.1:8880/web/</code> （Kokoro-FastAPI 或你的伺服器連接埠）。在 OBS 電腦開啟 <code>http://SERVER_LAN_IP:8880/web/</code>。如果失敗，OBS 也無法存取，請檢查伺服器防火牆。</td></tr>
+                        <tr><td data-label="問題">「Blocked by CORS」、「private network」或「failed fetch」</td><td data-label="試試這個">請求尚未到達伺服器就被瀏覽器攔截。執行 <code>node scripts/local-tts-bridge.cjs</code> 在 OBS 電腦上執行，並使用 <code>http://127.0.0.1:8124/v1/audio/speech</code>。託管的測試版 Dock 頁面更容易被攔截，橋接或本機應用程式視窗更方便。</td></tr>
+                        <tr><td data-label="問題">音色不對或找不到音色</td><td data-label="試試這個">Kokoro-FastAPI： <code>af_bella</code>, <code>af_sarah</code>, <code>am_adam</code>，或其網頁中的音色。openedai-speech： <code>nova</code>, <code>echo</code>, <code>alloy</code>。部分伺服器區分大小寫。</td></tr>
+                        <tr><td data-label="問題">能播放但 OBS 擷取不到</td><td data-label="試試這個">開啟 <strong>透過 OBS 控制音訊</strong>。測試時觀察 OBS 混音器音量表，確保已設定 <code>&amp;ttsprovider=</code>；系統 TTS 可能需要桌面音訊或虛擬音訊線。</td></tr>
+                        <tr><td data-label="問題">找不到Docker映像檔</td><td data-label="試試這個">映像標籤會變化，請在以下位置查看目前標籤： <a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> 或 <a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a>.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="flow">面向伺服器開發者</h2>
+                <p>SSN 與自訂伺服器的通訊方式。僅在建置或偵錯伺服器時需要閱讀。</p>
+                <pre>chat text -&gt; SSN -&gt; your endpoint (or the bridge) -&gt; TTS server -&gt; audio -&gt; SSN plays it</pre>
+                <details class="guide-extra"><summary>SSN 傳送什麼</summary>
+                    <p>帶有 <code>ttsprovider=customtts</code>, <code>localtts</code> 或 <code>openai</code>，SSN 傳送 JSON POST：</p>
+                    <pre>POST /v1/audio/speech
+{
+  "model": "tts-1",
+  "input": "Chat message text",
+  "voice": "af_bella",
+  "response_format": "mp3",
+  "speed": 1.0
+}</pre>
+                    <p>未設定 API 金鑰時，SSN 不傳送 Authorization 標頭。</p>
+                </details>
+                <details class="guide-extra"><summary>SSN 能播放什麼</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>回應</th><th>是否可用？</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="回應">音訊檔案</td><td data-label="是否可用？">是</td><td data-label="說明">最佳。 <code>audio/mpeg</code>, <code>audio/wav</code>, <code>audio/ogg</code>, <code>audio/aac</code>，或瀏覽器可播放的任何格式。</td></tr>
+                            <tr><td data-label="回應">包含音訊 URL 的 JSON</td><td data-label="是否可用？">是</td><td data-label="說明">檢查 <code>url</code>, <code>audio_url</code>, <code>output_url</code>, <code>data.url</code>，以及第一個 <code>data[]</code> 項目。</td></tr>
+                            <tr><td data-label="回應">包含base64音訊的JSON</td><td data-label="是否可用？">是</td><td data-label="說明">檢查 <code>audio</code>, <code>audio_data</code>, <code>audioContent</code>, <code>b64_json</code>、巢狀的 <code>data</code> 欄位，以及資料URL。</td></tr>
+                            <tr><td data-label="回應">原始PCM</td><td data-label="是否可用？">僅在有封裝時</td><td data-label="說明">以 WAV 檔案或 base64 WAV 傳送。</td></tr>
+                        </tbody>
+                    </table>
+                    <p>格式： <code>mp3</code> 體積小且廣泛支援。 <code>wav</code> 適合複製伺服器和橋接測試。使用 <code>opus</code> 僅在伺服器和瀏覽器均支援時使用。</p>
+                    <p><strong>暫不支援串流播放。</strong> SSN 等待完整回應後再播放，請保持聊天訊息簡短。</p>
+                </details>
+                <details class="guide-extra" id="connect" open><summary>自己的伺服器連結設定</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>設定</th><th>範例</th><th>功能</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="設定"><code>ttsprovider</code></td><td data-label="範例"><code>customtts</code></td><td data-label="功能">使用自己的伺服器。（<code>openai</code> 也可用。）</td></tr>
+                            <tr><td data-label="設定"><code>openaiendpoint</code></td><td data-label="範例"><code>http://localhost:8880/v1/audio/speech</code></td><td data-label="功能">伺服器位址，連接埠需與伺服器一致。</td></tr>
+                            <tr><td data-label="設定"><code>speech</code></td><td data-label="範例"><code>en-US</code></td><td data-label="功能">開啟英語 TTS。</td></tr>
+                            <tr><td data-label="設定"><code>voiceopenai</code></td><td data-label="範例"><code>af_bella</code></td><td data-label="功能">音色名稱，取決於伺服器。</td></tr>
+                            <tr><td data-label="設定"><code>openaimodel</code></td><td data-label="範例"><code>tts-1-hd</code></td><td data-label="功能">模型名稱。預設 <code>tts-1</code>.</td></tr>
+                            <tr><td data-label="設定"><code>openaiformat</code></td><td data-label="範例"><code>mp3</code></td><td data-label="功能">mp3、wav、opus 或 flac。</td></tr>
+                            <tr><td data-label="設定"><code>openaispeed</code></td><td data-label="範例"><code>1.0</code></td><td data-label="功能">語速（0.5–2.0）。</td></tr>
+                        </tbody>
+                    </table>
+                    <p>也接受： <code>customttsendpoint</code>, <code>localttsendpoint</code>, <code>customttsvoice</code>, <code>localttsvoice</code>, <code>customttsmodel</code>, <code>localttsmodel</code>, <code>customttsformat</code>, <code>localttsformat</code>。朗讀選項，例如 <code>simpletts</code>, <code>skipmessages</code> 和 <code>ttsquick</code> 適用於所有供應商： <a href="tts.html#parameters">所有連結設定</a>.</p>
+                    <p>範例連結：</p>
+                    <pre>Kokoro-FastAPI:  dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://localhost:8880/v1/audio/speech&amp;voiceopenai=af_bella&amp;openaispeed=1.1
+openedai-speech: dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://localhost:8000/v1/audio/speech&amp;voiceopenai=nova
+kokoro-web:      dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://localhost:3000/api/v1/audio/speech&amp;voiceopenai=af_bella</pre>
+                </details>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>Social Stream Ninja：本機 AI TTS 指南 · <a href="tts-setup-guide.html">文字轉語音設定指南</a> &middot; <a href="tts.html">文字轉語音聲音指南</a> &middot; <a href="guides.html">所有指南</a> &middot; <a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

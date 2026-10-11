@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-cn/docs/thermal-printer-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-cn/docs/thermal-printer-guide.html">
+    <meta property="og:title" content="热敏打印机与直播标签 - Social Stream Ninja">
+    <meta property="og:description" content="在 Social Stream Ninja 中设置 USB 热敏小票或标签打印机，通过 Event Flow 打印名称、打赏、购买、票券及固定尺寸标签。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-cn/docs/thermal-printer-guide.html">
+    <meta name="twitter:title" content="热敏打印机与直播标签 - Social Stream Ninja">
+    <meta name="twitter:description" content="在 Social Stream Ninja 中设置 USB 热敏小票或标签打印机，通过 Event Flow 打印名称、打赏、购买、票券及固定尺寸标签。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>热敏打印机与直播标签 - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="在 Social Stream Ninja 中设置 USB 热敏小票或标签打印机，通过 Event Flow 打印名称、打赏、购买、票券及固定尺寸标签。">
+	<style>
+		.printer-gallery { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; margin:24px 0; align-items:start; }
+		.paper-example { display:flex; flex-direction:column; align-items:center; gap:10px; margin:0; }
+		.paper { position:relative; width:min(100%,220px); min-height:260px; padding:25px 19px; color:#151515; background:#fffdf7; border:1px solid #d9d3c5; box-shadow:0 14px 26px rgba(28,25,18,.15); font-family:"Roboto Mono",monospace; text-align:center; }
+		.paper.receipt::after { content:""; position:absolute; inset:auto 0 -7px; height:13px; background:linear-gradient(135deg,transparent 7px,#fffdf7 0) 0 0/14px 14px repeat-x; }
+		.paper.label { min-height:170px; border-radius:6px; outline:8px solid #e9e5dc; }
+		.paper .eyebrow { font-size:11px; letter-spacing:.13em; text-transform:uppercase; }
+		.paper .big { margin:15px 0 6px; font-size:27px; font-weight:800; overflow-wrap:anywhere; }
+		.paper .amount { margin-top:9px; font-size:22px; font-weight:800; }
+		.paper .rule { border-top:2px dashed #777; margin:17px 0; }
+		.paper-caption { max-width:250px; color:var(--text-secondary); text-align:center; font-size:1.35rem; line-height:1.45; }
+		.flow-demo { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:16px; align-items:center; margin:22px 0; max-width:64rem; }
+		.flow-node { padding:16px 18px; border:1px solid var(--border-color); border-radius:12px; background:var(--background-card); }
+		.flow-node strong { display:block; margin-bottom:7px; }
+		.flow-arrow { color:var(--primary-color); font-size:28px; font-weight:700; text-align:center; }
+		.printer-types { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:20px 0; }
+		.printer-type { padding:16px 18px; border:1px solid var(--border-color); border-radius:12px; background:var(--background-card); }
+		.printer-type h3 { margin-top:0; font-size:1.7rem; }
+		.printer-type p { margin:0; font-size:1.45rem; line-height:1.55; }
+		@media (max-width:800px) {
+			.printer-gallery, .printer-types { grid-template-columns:minmax(0,1fr); }
+			.flow-demo { grid-template-columns:minmax(0,1fr); }
+			.flow-arrow { transform:rotate(90deg); }
+		}
+	</style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/thermal-printer-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{"$25.00 CAD":"$25.00 CAD","(under Integrations) and connect the trigger to it.":"（在 Integrations 下），并连接触发器。",", a new line, then":"，换行，然后",", add an amount, and run it. This prints a real label.":"，填写金额并运行。这会实际打印标签。",", and":"，以及",", and pick the downloaded file.":"，选择下载的文件。",", click":"，点击",", filtered to Whatnot. Bids and auction-ending notices don't print. See the":"，筛选为 Whatnot。出价和拍卖结束通知不会打印。参阅",", or":"，或",", plus an error or code when something fails, for later steps. Success means the job was sent to Windows, not that paper came out. Check the Windows print queue before retrying, or you may get duplicate labels.":"，失败时还会提供错误或代码，供后续步骤使用。成功只表示任务已发给 Windows，不代表已出纸。重试前检查 Windows 打印队列，避免重复标签。",", so it misses most sales.":"，因此会漏掉多数销售。",", use":"，使用",". Check both print actions. They use your Printer Control printer and label length.":"。检查两个打印操作，它们使用 Printer Control 的打印机和标签长度。",". Enter a name, turn on":"。输入名称，开启",". Filter by provider if needed.":"。必要时按服务提供商筛选。",". If an edge is cut off, raise that side's safe margin and test again.":"。边缘被裁切时，增大该侧安全边距后重试。",". It prints the buyer in bold, the item name, and an order ID when there is one. If a payment fails, it prints a separate":"。打印加粗的买家名称、商品名及可用的订单 ID。付款失败时另行打印",". It's usually":"。通常是",". Pick the font size, weight, alignment, and copies.":"。选择字号、字重、对齐和份数。",". Pick your printer by the name Windows shows.":"。按 Windows 显示的名称选择打印机。",". Quantity may be in":"。数量可能位于",". Values made by earlier steps in the flow work too.":"。流程前面步骤产生的值也可使用。",". Your Printer Control settings will be used.":"。会使用 Printer Control 设置。","24 pt · bold · centred":"24 pt · 粗体 · 居中","3 × 1 inch labels (including a Munbyn BT320):":"3 × 1 英寸标签（含 Munbyn BT320）：","58 mm receipt paper. Length grows with the text.":"58 毫米收据纸，长度随文字增长。","A 62 × 29 mm label is usually 62 mm wide with a 29 mm fixed length.":"62 × 29 毫米标签通常设为宽 62 毫米、固定长 29 毫米。","A Counter numbers purchases, not unique buyers. Giving the same number to every purchase by one buyer needs a separate buyer-to-number list, reset at the start of each stream. User Memory's reason field is plain text, not a buyer-number counter.":"Counter 为购买逐笔编号，而非为独立买家编号。若同一买家的每次购买要使用同一编号，需要单独维护买家与编号对应表，并在每次直播开始时重置。User Memory 的 reason 字段是普通文本，不是买家编号计数器。","A fixed die-cut label: name plus donation.":"固定模切标签：姓名与捐款。","A merch or pickup label using event details and a counter.":"使用事件详情和计数器的商品或取货标签。","A running order number":"连续订单编号","A sale label doesn't mean it's paid.":"销售标签不代表已付款。","A shared or networked label station":"共享或联网标签工作站","A short to-do list for a producer sitting next to you.":"给身旁制作人员的简短待办清单。","A sturdier receipt printer":"更结实的收据打印机","A-037":"A-037","Add":"添加","Add a":"添加一个","Add the":"添加","An edge is cut off":"边缘被裁切","BUYER #12":"买家 #12","Before you start:":"开始前：","Blue Ninja Mug":"蓝色 Ninja 马克杯","Bold the buyer, keep the item normal":"买家加粗，商品保持普通字重","Brother QL-800":"Brother QL-800","Brother QL-820NWB":"Brother QL-820NWB","Cheap 58 mm receipts":"低价 58 毫米收据","Click":"点击","Commands & API":"命令与 API","Completed gifts":"已完成礼物","Continuous sticker roll":"连续贴纸卷","Counter":"计数器（Counter）","Die-cut labels":"模切标签","Do this":"执行操作","Don't print private info.":"不要打印私密信息。","Donation / Tip":"打赏 / 小费（Donation / Tip）","Donation trigger connected to a thermal print action":"打赏触发器连接到热敏打印动作","Download":"下载","Download the Whatnot example flow":"下载 Whatnot 示例流程","Each notice prints as it arrives. The flow doesn't wait for payment, fix an earlier label, or give out buyer numbers. Missing fields print blank. A failure notice with no buyer, item, or order details can't tell you which label it belongs to.":"每条通知到达后立即打印。流程不等待付款、不修正旧标签、不分配买家编号。缺失字段留空。若失败通知没有买家、商品或订单详情，就无法判断对应哪张标签。","Enter the":"输入","Enter this as the label text:":"将以下内容作为标签文字输入：","Epson TM-T20III":"Epson TM-T20III","Event Flow Editor":"Event Flow 编辑器","Event Type":"事件类型","Event Type (Advanced) → Custom Event":"事件类型（高级）→ 自定义事件（Event Type (Advanced) → Custom Event）","Example printers":"打印机示例","Examples of thermal receipt and label output":"热敏收据与标签输出示例","Features":"功能","Find printers":"查找打印机（Find printers）","Fix problems":"解决问题","Fixed label length":"固定标签长度","Fixed means fixed":"固定就是固定","For flow builders: print results and buyer numbers":"流程制作者：打印结果与买家编号","For matching badges and product labels. Set the exact fixed length, and pick the same stock in Windows Printing Preferences.":"适用于统一尺寸的胸牌和商品标签。设置准确固定长度，并在 Windows 打印首选项中选择相同纸张。","For purchase slips, queue tickets, and receipts of any length. Leave fixed label length at 0.":"适用于任意长度的购买小票、排队票和收据。固定标签长度保持 0。","For sticky name strips of any length. Works like receipt paper, but the printer or driver must do the cutting.":"适用于任意长度的姓名贴纸。与收据纸类似，但切纸由打印机或驱动负责。","Generic “POS-58”":"通用“POS-58”","Get fixed-size labels right":"正确设置固定尺寸标签","Global settings and tools → Mechanics - Connections & Integrations → Printer Control":"Global settings and tools → Mechanics - Connections & Integrations → Printer Control","Good for":"适合用途","Guides":"指南","Has Donation":"含打赏（Has Donation）","Hire":"雇用","Home":"首页","How the example flow works":"示例流程如何工作","I want to print":"我想打印","I want to print…":"我想打印…","INKY":"INKY","Ideas":"创意","If an earlier step makes":"如果前面步骤生成","Import":"导入","In Social Stream, open":"在 Social Stream 中打开","In the standalone app, set up":"在独立应用中设置","Inky":"Inky","Inspiration":"灵感","It says success, but nothing prints":"显示成功但不打印","It uses":"它使用","Keep Use printable area on. Raise the safe margin on that side.":"保持 Use printable area 开启，并增大对应侧的安全边距。","Keep your Whatnot source open with stream-event capture on.":"保持 Whatnot 来源打开，并开启直播事件捕获。","Label sizes":"标签尺寸","Labels already set to All bold or Normal keep their look.":"已设为 All bold 或 Normal 的标签保持原样。","Leave":"将","Leave the action's printer and fixed-length overrides blank or":"将操作中的打印机及固定长度覆盖值留空或设为","Long names, product options, and extra lines need more room or smaller text.":"长姓名、商品选项及额外行需要更多空间或更小字号。","Main navigation":"主导航","Make sure Windows can print a test page. Restart Social Stream and click Find printers again.":"确认 Windows 能打印测试页，重启 Social Stream，再点击 Find printers。","Match Windows too":"同时匹配 Windows 设置","Measure in the feed direction":"按进纸方向测量","Merch, commission, drink, or pickup tags as orders come in.":"订单到来时打印周边、委托、饮料或取货标签。","Minimum Amount":"最低金额（Minimum Amount）","Minimum Amount:":"最低金额：","Ninja Hoodie":"Ninja 连帽衫","No extra feed is added. Text that's too tall may be cut off or spill over, depending on the driver.":"不会额外进纸。文字过高时，可能因驱动而被裁切或溢出到下一张。","No printer shows up":"没有显示打印机","Notes":"说明","On this page":"本页内容","One label prints as two":"一张标签打印成两张","Only text inside":"只有包在以下符号中的文字","Open navigation menu":"打开导航菜单","Open the":"打开","Open the printer's Windows queue. Look for paused, offline, paper, driver, or port errors.":"打开 Windows 打印队列，检查暂停、离线、纸张、驱动或端口错误。","Other handy placeholders:":"其他实用占位符：","Overlay Gallery":"叠加层图库","PAYMENT FAILED":"付款失败","Paper width (mm)":"纸张宽度（毫米）","Pick a printer override on the Print Thermal Label step. When blank, testing in the editor uses the Windows default printer.":"在 Print Thermal Label 步骤选择打印机覆盖值。留空时，编辑器测试使用 Windows 默认打印机。","Pick your paper":"选择纸张","Pickup":"取货","Plug the printer in by USB, turn it on, and install its Windows driver. Print a Windows test page to be sure it works.":"通过 USB 连接打印机、开机并安装 Windows 驱动，打印 Windows 测试页确认可用。","Print Thermal Label":"打印热敏标签（Print Thermal Label）","Print a label when someone donates":"有人捐款时打印标签","Print on a donation":"捐款时打印","Print sales":"打印销售","Print sales, gifts, and order numbers":"打印销售、礼物和订单号","Print test":"打印测试","Printer":"打印机","Printer Control":"打印机控制（Printer Control）","Problem":"问题","Purchase tag":"购买标签","Raffle tickets. Add rate limits and eligibility checks before the print step.":"抽奖券。在打印前加入频率限制和资格检查。","Receipt roll":"小票纸卷","Rule":"规则","Sales":"销售","See the":"请参阅","Select":"选择","Selected text":"选中的文字","Set":"设置","Set it up":"进行设置","Set it up in 6 steps":"六步完成设置","Set the same stock, direction, gap/mark sensing, and cutter in the driver's Printing Preferences.":"在驱动的打印首选项中设置相同纸张、方向、间隙／标记感应和切刀。","Set up a USB thermal receipt or label printer in Social Stream Ninja and print names, donations, purchases, tickets, and fixed-size labels from Event Flow.":"在 Social Stream Ninja 中设置 USB 热敏小票或标签打印机，通过 Event Flow 打印名称、打赏、购买、票券及固定尺寸标签。","Shopify and eBay don't send the buyer's name. Use an order counter or a product-only tag for those.":"Shopify 和 eBay 不发送买家姓名，请使用订单计数器或仅含商品的标签。","Size L":"L 码","Skip addresses, emails, payment details, and private messages. Thermal paper also fades with heat, light, and time.":"排除地址、邮箱、付款信息和私信。热敏纸也会随热、光和时间褪色。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Social Stream asks for at least 20 mm. The driver may still limit short page sizes.":"Social Stream 请求至少 20 毫米，驱动仍可能限制短页尺寸。","Stickers and name labels":"贴纸和姓名标签","Stream ideas":"直播创意","Support":"支持","Supported Sites":"支持的网站","Supporter name stickers for a wall, prop, map, or progress board.":"用于墙面、道具、地图或进度板的支持者姓名贴纸。","Switch theme":"切换主题","Test Flow":"测试流程（Test Flow）","Test Flow uses the wrong printer":"Test Flow 使用了错误打印机","Test your longest text":"用最长文字测试","Thank you":"谢谢","The action adds":"操作会添加","The default 2 mm left and right safe margins suit many cheap 58 mm receipt printers. The driver decides the real printable area, so keep":"默认左右 2 毫米安全边距适合许多低价 58 毫米收据打印机。实际可打印区域由驱动决定，因此保持","The test print's side borders show the safe width. Its height follows the test text. It doesn't outline the whole label.":"测试打印的侧边框表示安全宽度，高度随测试文字变化，并非整张标签的边框。","The text is taller than the label, or Windows has the wrong stock size. Use less text, smaller font, tighter spacing, or smaller margins.":"文字高度超过标签，或 Windows 纸张尺寸错误。减少文字、缩小字号、收紧行距或减小边距。","Thermal Printers And Stream Labels":"热敏打印机与直播标签","Thermal Printers And Stream Labels - Social Stream Ninja":"热敏打印机与直播标签 - Social Stream Ninja","These are examples, not a tested list. Before buying, check the exact model has a current Windows driver, fits your label size, and shows up as a normal Windows printer.":"这些只是示例，并非已测试清单。购买前确认具体型号有当前 Windows 驱动、支持你的标签尺寸，且显示为普通 Windows 打印机。","Too much blank paper":"空白纸过多","Try this":"试试这个","Turn purchases, donations, and chat events into physical receipts, stickers, tickets, or pickup tags.":"将购买、打赏及聊天事件变成实体收据、贴纸、票券或取货标签。","Turn the flow on and save. It imports turned off.":"开启并保存流程。导入时默认关闭。","Type":"输入","USB, Ethernet, Wi-Fi, and Bluetooth.":"USB、以太网、Wi-Fi 和蓝牙。","USB. 80 mm paper, or 58 mm with the included adapter.":"USB，80 毫米纸张，附带适配器可用 58 毫米。","USB. About 25–112 mm media. Direct-thermal and thermal-transfer versions.":"USB，约 25–112 毫米介质，有直接热敏及热转印版本。","USB. Up to 62 mm, die-cut or continuous, with an auto cutter.":"USB，最大 62 毫米，可用模切或连续纸，带自动切刀。","Use":"使用","Use fixed length 0 for receipts. Lower the bottom margin and extra feed. For labels, set the exact length.":"收据使用固定长度 0，减少下边距和额外进纸；标签则设置准确长度。","Use printable area":"使用可打印区域（Use printable area）","Use single braces. Sales put the product name in":"使用单层花括号。销售事件把商品名放在","Usually USB. Names and drivers vary by seller. A basic POS-58 was used to test Social Stream.":"通常为 USB，名称和驱动因卖家而异。Social Stream 使用基础 POS-58 进行了测试。","VIP badges, team picks, challenge tokens, or milestone labels.":"VIP 胸牌、团队选择票、挑战代币或里程碑标签。","Very short labels may not work":"过短标签可能不适用","Weight":"字重","Whatnot event fields":"Whatnot 事件字段","Whatnot item labels":"Whatnot 商品标签","Whatnot labels":"Whatnot 标签","Whatnot: Item Labels + Payment Warnings":"Whatnot：商品标签 + 付款警告","Why":"原因","Wider product, shipping, or wristband labels":"更宽的商品、快递或腕带标签","Zebra ZD220":"Zebra ZD220","and":"和","and make a new flow.":"并创建新流程。","and run its test print.":"并运行测试打印。","at":"设为","before the print action.":"放在打印操作之前。","commerce event fields":"商务事件字段","for":"用于","for receipt paper. For die-cut labels, enter the label's length in mm (the direction the paper feeds).":"用于收据纸。模切标签请填写进纸方向的标签长度，单位为毫米。","for what each sale includes.":"，查看每种销售包含的内容。","if only bigger donations should print.":"，仅在较大捐款时打印。","instead.":"作为替代。","label with whatever details that notice includes.":"标签，使用该通知包含的详情。","mm and fixed length to":"毫米，固定长度设为","mm when the 1-inch side feeds first. Pick the same stock and direction in Windows Printing Preferences. Start with 12–14 pt text.":"毫米（1 英寸边为进纸方向时）。在 Windows 打印首选项中选择相同纸张和方向，从 12–14 pt 文字开始。","needs":"需要","or":"或","selected unless you've tested something else.":"为选中状态，除非已测试其他设置。","set width to":"将宽度设为","this needs the Windows standalone app. Your printer must show up as a normal Windows printer. Social Stream prints through the Windows driver. It does not send raw ESC/POS, ZPL, or maker SDK commands.":"需要 Windows 独立应用。打印机必须显示为普通 Windows 打印机。Social Stream 通过 Windows 驱动打印，不发送原始 ESC/POS、ZPL 或厂家 SDK 命令。","to":"为","trigger. Set":"触发器。设置","turns bold. No HTML or JavaScript needed.":"会加粗，无需 HTML 或 JavaScript。","with":"带有","💰 Donation / Tip":"💰 打赏 / 小费（Donation / Tip）","🖨️ Print Thermal Label":"🖨️ 打印热敏标签（Print Thermal Label）"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/thermal-printer-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/thermal-printer-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/thermal-printer-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/thermal-printer-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/thermal-printer-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/thermal-printer-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/thermal-printer-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/thermal-printer-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="thermal-printer-guide.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/thermal-printer-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/thermal-printer-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/thermal-printer-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/thermal-printer-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/thermal-printer-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/thermal-printer-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/thermal-printer-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/thermal-printer-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/thermal-printer-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero"><div class="container"><h1>热敏打印机与直播标签</h1><p>将购买、打赏及聊天事件变成实体收据、贴纸、票券或取货标签。</p></div></section>
+
+	<main>
+		<section class="guide-section">
+		<div class="container">
+			<nav class="guide-jump-links" aria-label="本页内容">
+				<a href="#setup">进行设置</a>
+				<a href="#donation-label">捐款时打印</a>
+				<a href="#sales">打印销售</a>
+				<a href="#whatnot-item-labels">Whatnot 标签</a>
+				<a href="#paper">选择纸张</a>
+				<a href="#label-size">标签尺寸</a>
+				<a href="#ideas">创意</a>
+				<a href="#problems">解决问题</a>
+			</nav>
+
+			<div class="guide-card">
+				<h2 id="setup">六步完成设置</h2>
+				<div class="guide-note"><strong>开始前：</strong> 需要 Windows 独立应用。打印机必须显示为普通 Windows 打印机。Social Stream 通过 Windows 驱动打印，不发送原始 ESC/POS、ZPL 或厂家 SDK 命令。</div>
+				<ol class="guide-steps">
+					<li>通过 USB 连接打印机、开机并安装 Windows 驱动，打印 Windows 测试页确认可用。</li>
+					<li>在 Social Stream 中打开 <strong>Global settings and tools &rarr; Mechanics - Connections &amp; Integrations &rarr; Printer Control</strong>.</li>
+					<li>点击 <strong>查找打印机（Find printers）</strong>。按 Windows 显示的名称选择打印机。</li>
+					<li>输入 <strong>纸张宽度（毫米）</strong>。通常是 <code>58</code>, <code>80</code>，或 <code>62</code>.</li>
+					<li>将 <strong>固定标签长度</strong> 设为 <code>0</code> 用于收据纸。模切标签请填写进纸方向的标签长度，单位为毫米。</li>
+					<li>点击 <strong>打印测试</strong>。边缘被裁切时，增大该侧安全边距后重试。</li>
+				</ol>
+				<p>默认左右 2 毫米安全边距适合许多低价 58 毫米收据打印机。实际可打印区域由驱动决定，因此保持 <strong>使用可打印区域（Use printable area）</strong> 为选中状态，除非已测试其他设置。</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="donation-label">有人捐款时打印标签</h2>
+				<div class="flow-demo" aria-label="打赏触发器连接到热敏打印动作"><div class="flow-node"><strong>💰 打赏 / 小费（Donation / Tip）</strong>最低金额： <code>10</code></div><div class="flow-arrow" aria-hidden="true">→</div><div class="flow-node"><strong>🖨️ 打印热敏标签（Print Thermal Label）</strong><code>{username}<br>{donation}</code><br>24 pt · 粗体 · 居中</div></div>
+				<ol class="guide-steps">
+					<li>打开 <a href="../../actions/">Event Flow 编辑器</a> 并创建新流程。</li>
+					<li>添加 <strong>打赏 / 小费（Donation / Tip）</strong> 触发器。设置 <strong>最低金额（Minimum Amount）</strong> ，仅在较大捐款时打印。</li>
+					<li>添加 <strong>打印热敏标签（Print Thermal Label）</strong> （在 Integrations 下），并连接触发器。</li>
+					<li>输入 <code>{username}</code>，换行，然后 <code>{donation}</code>。选择字号、字重、对齐和份数。</li>
+					<li>将操作中的打印机及固定长度覆盖值留空或设为 <code>0</code>。会使用 Printer Control 设置。</li>
+					<li>点击 <strong>测试流程（Test Flow）</strong>。输入名称，开启 <strong>含打赏（Has Donation）</strong>，填写金额并运行。这会实际打印标签。</li>
+				</ol>
+				<p>其他实用占位符： <code>{message}</code>, <code>{source}</code>, <code>{donationAmount}</code>，以及 <code>{counterValue}</code>。流程前面步骤产生的值也可使用。</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="sales">打印销售、礼物和订单号</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>我想打印…</th><th>执行操作</th></tr></thead>
+					<tbody>
+						<tr><td data-label="我想打印">销售</td><td data-label="执行操作">使用 <strong>事件类型</strong> 带有 <code>purchase</code>. <strong>打赏 / 小费（Donation / Tip）</strong> 需要 <code>hasDonation</code>，因此会漏掉多数销售。</td></tr>
+						<tr><td data-label="我想打印">已完成礼物</td><td data-label="执行操作">使用 <code>gift</code> 或 <code>giftfunded</code>。必要时按服务提供商筛选。</td></tr>
+						<tr><td data-label="我想打印">连续订单编号</td><td data-label="执行操作">添加一个 <strong>计数器（Counter）</strong> 放在打印操作之前。</td></tr>
+					</tbody>
+				</table>
+				<p>请参阅 <a href="event-reference.html#commerce-events">商务事件字段</a> ，查看每种销售包含的内容。</p>
+
+				<h3>买家加粗，商品保持普通字重</h3>
+				<ol class="guide-steps">
+					<li>设置 <strong>字重</strong> 为 <strong>选中的文字</strong>.</li>
+					<li>将以下内容作为标签文字输入：</li>
+				</ol>
+				<pre><code>**{username}**
+{subtitle}</code></pre>
+				<ul>
+					<li>只有包在以下符号中的文字 <code>**</code> 会加粗，无需 HTML 或 JavaScript。</li>
+					<li>使用单层花括号。销售事件把商品名放在 <code>{subtitle}</code>。数量可能位于 <code>{meta.commerce.quantity}</code>.</li>
+					<li>如果前面步骤生成 <code>buyer</code>，使用 <code>**{buyer}**</code> 作为替代。</li>
+					<li>Shopify 和 eBay 不发送买家姓名，请使用订单计数器或仅含商品的标签。</li>
+					<li>已设为 All bold 或 Normal 的标签保持原样。</li>
+				</ul>
+
+				<details class="guide-extra">
+					<summary>流程制作者：打印结果与买家编号</summary>
+					<p>操作会添加 <code>meta.thermalPrintResult.success</code>，失败时还会提供错误或代码，供后续步骤使用。成功只表示任务已发给 Windows，不代表已出纸。重试前检查 Windows 打印队列，避免重复标签。</p>
+					<p>Counter 为购买逐笔编号，而非为独立买家编号。若同一买家的每次购买要使用同一编号，需要单独维护买家与编号对应表，并在每次直播开始时重置。User Memory 的 reason 字段是普通文本，不是买家编号计数器。</p>
+				</details>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="whatnot-item-labels">Whatnot 商品标签</h2>
+				<p><a href="../../actions/examples/whatnot-item-labels.json" download>下载 Whatnot 示例流程</a>。打印加粗的买家名称、商品名及可用的订单 ID。付款失败时另行打印 <strong>付款失败</strong> 标签，使用该通知包含的详情。</p>
+				<ol class="guide-steps">
+					<li>在独立应用中设置 <strong>打印机控制（Printer Control）</strong> 并运行测试打印。</li>
+					<li>打开 <strong>Event Flow 编辑器</strong>，点击 <strong>导入</strong>，选择下载的文件。</li>
+					<li>选择 <strong>Whatnot：商品标签 + 付款警告</strong>。检查两个打印操作，它们使用 Printer Control 的打印机和标签长度。</li>
+					<li>开启并保存流程。导入时默认关闭。</li>
+					<li>保持 Whatnot 来源打开，并开启直播事件捕获。</li>
+				</ol>
+				<div class="warning-note"><strong>销售标签不代表已付款。</strong> 每条通知到达后立即打印。流程不等待付款、不修正旧标签、不分配买家编号。缺失字段留空。若失败通知没有买家、商品或订单详情，就无法判断对应哪张标签。</div>
+				<details class="guide-extra">
+					<summary>示例流程如何工作</summary>
+					<p>它使用 <strong>事件类型（高级）→ 自定义事件（Event Type (Advanced) → Custom Event）</strong> 用于 <code>product_sold</code> 和 <code>payment_failed</code>，筛选为 Whatnot。出价和拍卖结束通知不会打印。参阅 <a href="event-reference.html#whatnot">Whatnot 事件字段</a>.</p>
+				</details>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="paper">选择纸张</h2>
+				<div class="printer-types">
+					<div class="printer-type"><h3>小票纸卷</h3><p>适用于任意长度的购买小票、排队票和收据。固定标签长度保持 0。</p></div>
+					<div class="printer-type"><h3>连续贴纸卷</h3><p>适用于任意长度的姓名贴纸。与收据纸类似，但切纸由打印机或驱动负责。</p></div>
+					<div class="printer-type"><h3>模切标签</h3><p>适用于统一尺寸的胸牌和商品标签。设置准确固定长度，并在 Windows 打印首选项中选择相同纸张。</p></div>
+				</div>
+				<div class="printer-gallery" aria-label="热敏收据与标签输出示例">
+					<figure class="paper-example"><div class="paper receipt"><div class="eyebrow">购买标签</div><div class="big">买家 #12</div><div class="rule"></div><strong>Inky</strong><br>蓝色 Ninja 马克杯</div><figcaption class="paper-caption">58 毫米收据纸，长度随文字增长。</figcaption></figure>
+					<figure class="paper-example"><div class="paper label"><div class="eyebrow">谢谢</div><div class="big">INKY</div><div class="amount">$25.00 CAD</div></div><figcaption class="paper-caption">固定模切标签：姓名与捐款。</figcaption></figure>
+					<figure class="paper-example"><div class="paper label"><div class="eyebrow">取货</div><div class="big">A-037</div><div class="rule"></div><strong>Ninja 连帽衫</strong><br>L 码</div><figcaption class="paper-caption">使用事件详情和计数器的商品或取货标签。</figcaption></figure>
+				</div>
+
+				<h3>打印机示例</h3>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>打印机</th><th>适合用途</th><th>说明</th></tr></thead>
+					<tbody>
+						<tr><td data-label="打印机">通用“POS-58”</td><td data-label="适合用途">低价 58 毫米收据</td><td data-label="说明">通常为 USB，名称和驱动因卖家而异。Social Stream 使用基础 POS-58 进行了测试。</td></tr>
+						<tr><td data-label="打印机"><a href="https://files.support.epson.com/pdf/pos/bulk/tm-t20iii_trg_en_reva.pdf" target="_blank" rel="noopener">Epson TM-T20III</a></td><td data-label="适合用途">更结实的收据打印机</td><td data-label="说明">USB，80 毫米纸张，附带适配器可用 58 毫米。</td></tr>
+						<tr><td data-label="打印机"><a href="https://www.brother-usa.com/products/ql800" target="_blank" rel="noopener">Brother QL-800</a></td><td data-label="适合用途">贴纸和姓名标签</td><td data-label="说明">USB，最大 62 毫米，可用模切或连续纸，带自动切刀。</td></tr>
+						<tr><td data-label="打印机"><a href="https://www.brother-usa.com/products/ql820nwb" target="_blank" rel="noopener">Brother QL-820NWB</a></td><td data-label="适合用途">共享或联网标签工作站</td><td data-label="说明">USB、以太网、Wi-Fi 和蓝牙。</td></tr>
+						<tr><td data-label="打印机"><a href="https://www.zebra.com/gb/en/products/spec-sheets/printers/desktop/zd220.html" target="_blank" rel="noopener">Zebra ZD220</a></td><td data-label="适合用途">更宽的商品、快递或腕带标签</td><td data-label="说明">USB，约 25–112 毫米介质，有直接热敏及热转印版本。</td></tr>
+					</tbody>
+				</table>
+				<p>这些只是示例，并非已测试清单。购买前确认具体型号有当前 Windows 驱动、支持你的标签尺寸，且显示为普通 Windows 打印机。</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="label-size">正确设置固定尺寸标签</h2>
+				<div class="guide-note"><strong>3 × 1 英寸标签（含 Munbyn BT320）：</strong> 将宽度设为 <code>76.2</code> 毫米，固定长度设为 <code>25.4</code> 毫米（1 英寸边为进纸方向时）。在 Windows 打印首选项中选择相同纸张和方向，从 12–14 pt 文字开始。</div>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>规则</th><th>原因</th></tr></thead>
+					<tbody>
+						<tr><td data-label="规则">按进纸方向测量</td><td data-label="原因">62 × 29 毫米标签通常设为宽 62 毫米、固定长 29 毫米。</td></tr>
+						<tr><td data-label="规则">同时匹配 Windows 设置</td><td data-label="原因">在驱动的打印首选项中设置相同纸张、方向、间隙／标记感应和切刀。</td></tr>
+						<tr><td data-label="规则">固定就是固定</td><td data-label="原因">不会额外进纸。文字过高时，可能因驱动而被裁切或溢出到下一张。</td></tr>
+						<tr><td data-label="规则">用最长文字测试</td><td data-label="原因">长姓名、商品选项及额外行需要更多空间或更小字号。</td></tr>
+						<tr><td data-label="规则">过短标签可能不适用</td><td data-label="原因">Social Stream 请求至少 20 毫米，驱动仍可能限制短页尺寸。</td></tr>
+					</tbody>
+				</table>
+				<p>测试打印的侧边框表示安全宽度，高度随测试文字变化，并非整张标签的边框。</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="ideas">直播创意</h2>
+				<ul>
+					<li>用于墙面、道具、地图或进度板的支持者姓名贴纸。</li>
+					<li>订单到来时打印周边、委托、饮料或取货标签。</li>
+					<li>抽奖券。在打印前加入频率限制和资格检查。</li>
+					<li>VIP 胸牌、团队选择票、挑战代币或里程碑标签。</li>
+					<li>给身旁制作人员的简短待办清单。</li>
+				</ul>
+				<div class="warning-note"><strong>不要打印私密信息。</strong> 排除地址、邮箱、付款信息和私信。热敏纸也会随热、光和时间褪色。</div>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="problems">解决问题</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>问题</th><th>试试这个</th></tr></thead>
+					<tbody>
+						<tr><td data-label="问题">没有显示打印机</td><td data-label="试试这个">确认 Windows 能打印测试页，重启 Social Stream，再点击 Find printers。</td></tr>
+						<tr><td data-label="问题">显示成功但不打印</td><td data-label="试试这个">打开 Windows 打印队列，检查暂停、离线、纸张、驱动或端口错误。</td></tr>
+						<tr><td data-label="问题">边缘被裁切</td><td data-label="试试这个">保持 Use printable area 开启，并增大对应侧的安全边距。</td></tr>
+						<tr><td data-label="问题">空白纸过多</td><td data-label="试试这个">收据使用固定长度 0，减少下边距和额外进纸；标签则设置准确长度。</td></tr>
+						<tr><td data-label="问题">一张标签打印成两张</td><td data-label="试试这个">文字高度超过标签，或 Windows 纸张尺寸错误。减少文字、缩小字号、收紧行距或减小边距。</td></tr>
+						<tr><td data-label="问题">Test Flow 使用了错误打印机</td><td data-label="试试这个">在 Print Thermal Label 步骤选择打印机覆盖值。留空时，编辑器测试使用 Windows 默认打印机。</td></tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		</section>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja。GPLv3.0 许可证。</p></div></div></footer>
+	<script data-copy-markdown src="../../docs/js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

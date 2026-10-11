@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+	<head>
+    <meta charset="utf-8" />
+    <meta name="description" content="將 Shopify 連接至 Social Stream Ninja，設定商店整合，並在直播疊加畫面中使用商品與銷售資訊。">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/shopify-setup.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/shopify-setup.html">
+    <meta property="og:title" content="Shopify 設定 | Social Stream Ninja">
+    <meta property="og:description" content="將 Shopify 連接至 Social Stream Ninja，設定商店整合，並在直播疊加畫面中使用商品與銷售資訊。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/shopify-setup.html">
+    <meta name="twitter:title" content="Shopify 設定 | Social Stream Ninja">
+    <meta name="twitter:description" content="將 Shopify 連接至 Social Stream Ninja，設定商店整合，並在直播疊加畫面中使用商品與銷售資訊。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Shopify 設定 | Social Stream Ninja</title>
+		<link rel="icon" href="../../icons/favicon.ico" />
+		<link rel="stylesheet" href="../../docs/css/styles.css" />
+		<link rel="stylesheet" href="../../docs/css/guides.css" />
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem('darkMode');
+				var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+				if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) document.documentElement.classList.add('dark-mode');
+			})();
+		</script>
+	<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/shopify-setup.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"(a small shop link), or":"（小型商店連結），或","(deletes the receiver and waiting events). Delete the webhook in Shopify too.":"（刪除接收器及等待事件），並在 Shopify 中刪除 Webhook。","(make one with Shopify's Headless channel, and publish the product there and to the Online Store). Never paste an Admin API or private token.":"（透過 Shopify 的 Headless 管道建立，並將商品發佈到該管道和 Online Store）。切勿貼上 Admin API 或私人權杖。","(pictures, prices, QR codes),":"（圖片、價格、QR 碼）、","(purchases).":"（購買）。",", and donation goals don't go up.":"，捐款目標也不會增加。",", and updated in the last 7 days count. Unpaid, part-paid, and cancelled orders are skipped.":"，且最近 7 天有更新的訂單才會計入。未付款、部分付款和取消訂單會被略過。",", choose":"，選擇",", exact receiver URL,":"、確切的接收器 URL、",", paste the product's public link, and click":"，貼上商品公開連結並點擊",", starting at 800 × 600. Use one source per view.":"，從 800 × 600 開始，每種檢視使用一個來源。",". (This is not a Storefront token.)":"。（這不是 Storefront 權杖。）",". Add it to OBS as a":"。作為以下來源加入 OBS：",". Check":"。檢查",". Find the webhook":"。找到 Webhook 的",". Format:":"。格式：",". No secret needed.":"。不需要密鑰。",". Products & support links must be on.":"。必須開啟 Products & support links。",". URL: the receiver URL.":"。URL 為接收器 URL。","A product card labelled Gift doesn't change how orders are counted. Shipping to someone else doesn't make it a gift to you.":"商品卡片標為 Gift 不會改變訂單統計。寄給其他人不代表它是送給你的禮物。","A purchase alert. The buyer's name stays private.":"購買提醒，買家姓名保密。","A refund didn't remove the alert":"退款未移除提醒","A separate private reader key stays on this computer.":"另一個私人讀取金鑰保留在本機。","Activity alerts only":"僅活動提醒","Add a":"新增一個","Add product or link":"新增商品或連結","Alert source filter":"提醒來源篩選器","An action ran twice":"操作執行了兩次","Browser Source":"瀏覽器來源","Careful with Shopify admin samples.":"謹慎使用 Shopify 管理後台範例。","Check the name, picture, price, and link. Then click":"檢查名稱、圖片、價格和連結，然後點擊","Check the webhook:":"檢查 Webhook：","Click":"點選","Commands & API":"指令與 API","Connect Shopify to Social Stream Ninja, configure your store integration and use product and sale information with your streaming overlays.":"將 Shopify 連接至 Social Stream Ninja，設定商店整合，並在直播疊加畫面中使用商品與銷售資訊。","Copy OBS link":"複製 OBS 連結","Copy public link":"複製公開連結","Copy receiver URL":"複製接收器 URL","Creating a public token using Headless":"使用 Headless 建立公開權杖","Disconnect Shopify":"中斷 Shopify 連線","Do this":"執行操作","Download":"下載","Enter your":"輸入您的","Event Flow and donation goals":"Event Flow 與捐款目標","Event skipped":"事件被略過","Features":"功能","Fix problems":"解決問題","For order-value rules, compare":"訂單金額規則請比較","Get an alert when someone buys":"有人購買時收到提醒","Guides":"指南","Hire":"聘用","Home":"首頁","How waiting and repeat orders work":"等待訂單和重複訂單的處理方式","I want to":"我想要","I want to…":"我想要…","If one isn't clearly marked as a test, don't send it to a setup that gives out rewards.":"未明確標為測試的範例，不要傳送到會發放獎勵的設定。","Import a product":"匯入商品","Imported Shopify product name, image URL, price and canonical public link in the shared product editor":"共用商品編輯器中匯入的 Shopify 商品名稱、圖片 URL、價格與標準公開連結","In Event Flow, choose Event Type":"在 Event Flow 中選擇 Event Type","In Shopify, create a webhook. Event:":"在 Shopify 建立 Webhook。事件：","In Shopify, go to":"在 Shopify 中進入","In Social Stream Ninja, open":"在 Social Stream Ninja 中，開啟","Inspiration":"靈感","Is it working?":"是否正常運作？","It loads one product at a time.":"一次載入一個商品。","It's a snapshot. Prices and stock don't update by themselves, so check it when your store changes.":"這是快照。價格和庫存不會自行更新，商店變更時請核對。","JSON":"JSON","Keep Social Stream Ninja running.":"保持 Social Stream Ninja 執行。","Load product details":"載入商品詳細資料","Main navigation":"主導覽","Monetization → Shopify purchases → Setup":"營利 → Shopify 購買 → 設定","Neither one is ever put in OBS links or viewer QR codes.":"兩者都不會放入 OBS 連結或觀眾 QR 碼。","No buyer name":"沒有買家姓名","Not switched on yet.":"尚未啟用。","Nothing extra. They get Shopify purchases even without the product list.":"無需額外設定，即使沒有商品清單也能接收 Shopify 購買。","OBS overlay for":"OBS 覆蓋層適用於","On purpose. Names, emails, addresses, notes, custom fields, checkout links, and order IDs are never shown.":"這是刻意的。姓名、電子郵件、地址、備註、自訂欄位、結帳連結及訂單 ID 都不會顯示。","On this page":"本頁內容","Only fully paid orders above zero, marked":"只統計金額大於零、全額付款、標記為","Open":"開啟","Open navigation menu":"開啟導覽選單","Order payment":"訂單付款","Order times may be up to five minutes in the future (clock drift).":"允許訂單時間最多超前五分鐘，以容忍時鐘偏差。","Orders wait up to 7 days. Start SSN and they come through.":"訂單最多等待 7 天，啟動 SSN 後會收到。","Overlay Gallery":"疊加畫面圖庫","Overlay link options":"疊加畫面連結選項","Overlay view":"覆蓋層檢視","Pause alerts":"暫停提醒","Payment is never guessed from order creation, shipping, or stock changes. A missing test flag is skipped.":"不會根據訂單建立、出貨或庫存變更推斷付款。缺少測試旗標的訂單會被略過。","Pick a stable API version and save. (SSN was built against 2026-07.)":"選擇穩定 API 版本並儲存，SSN 依 2026-07 版本開發。","Preview sample":"預覽範例","Problem":"問題","Product query":"商品查詢","Product showcase only":"僅商品展示","Product won't load?":"商品無法載入？","Products & support links":"商品與支持連結","Public Storefront token":"公開 Storefront 權杖","Purchase alerts":"購買提醒","Purchase alerts need the Shopify receiver on the SSN server, which stays off until it passes a real-store test. Until then,":"購買提醒需要 SSN 伺服器的 Shopify 接收器，實際商店測試通過前保持關閉。在此之前，","Purchases are not donations. They have no":"購買不是捐款，不帶有","Put it in OBS":"放入 OBS","Refunds, cancellations, and edits don't undo alerts. This isn't bookkeeping.":"退款、取消和編輯不會撤銷提醒。這不是記帳系統。","Repeats are blocked for 7 days, but a crash mid-action can repeat it. Add your own check for important automations.":"七天內會阻止重複，但操作中途當機可能導致重做。重要自動化請加入自己的檢查。","Repeats are matched by store and order, even if Shopify's delivery IDs differ.":"依商店和訂單識別重複，即使 Shopify 的傳送 ID 不同。","SSApp Shopify setup with store domain, cleared signing secret, receiver URL and status":"SSApp Shopify 設定，顯示商店網域、已清除的簽署密鑰、接收器 URL 與狀態","SSN saves which orders it handled before confirming them.":"SSN 先儲存已處理的訂單，再確認接收。","SSN was off during a sale":"銷售時 SSN 已關閉","Save setup":"儲存設定","Save setup shows an error":"Save setup 顯示錯誤","Scan the QR code with your phone at your final stream size.":"在最終直播顯示尺寸下用手機掃描 QR 碼。","See the":"請參閱","Set":"設定","Settings → Notifications → Webhooks":"設定 → 通知 → Webhooks","Share a product link in chat":"在聊天分享商品連結","Shopify CLI sample webhooks can test message handling, but not subscriptions or retries, and they still need app credentials. See":"Shopify CLI 範例 Webhook 可測試訊息處理，但不能測試訂閱或重試，而且仍需應用程式憑證。參閱","Shopify CLI webhook testing limits":"Shopify CLI Webhook 測試限制","Shopify Storefront authentication":"Shopify Storefront 驗證","Shopify event details":"Shopify 事件詳細資訊","Shopify has its own receiver, so you don't need the older remote API control switch.":"Shopify 使用自己的接收器，無需舊版遠端 API 控制開關。","Shopify orders don't include a reliable image, so alerts are text only. They never borrow a product card's picture or QR code.":"Shopify 訂單沒有可靠的圖片，因此購買提醒只顯示文字，絕不借用商品卡片的圖片或 QR 碼。","Shopify purchase alert with Anonymous buyer and public product title":"Shopify 購買提醒，顯示匿名買家與公開商品標題","Shopify purchases":"Shopify 購買","Shopify setup in the app, using an example store. Click to enlarge.":"應用程式內 Shopify 設定，使用範例商店。點擊放大。","Shopify setup | Social Stream Ninja":"Shopify 設定 | Social Stream Ninja","Shopify: manually creating webhooks":"Shopify：手動建立 Webhook","Shopify: verifying deliveries":"Shopify：驗證傳遞","Show a Shopify product in 5 steps":"五步展示 Shopify 商品","Show a product":"顯示商品","Show only Shopify alerts in the Monetization overlay":"在 Monetization 覆蓋層只顯示 Shopify 提醒","Show products with a QR code. Get an alert when someone buys.":"展示帶 QR 碼的商品，並在購買時收到提醒。","Show purchases in multi-alerts or the activity feed":"在 multi-alerts 或活動串流顯示購買","Show your Shopify products and purchases.":"展示您的 Shopify 商品與購買紀錄。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Status and waiting orders survive a receiver restart.":"接收器重新啟動後，狀態和等待訂單仍保留。","Status stays on waiting":"狀態停留在 waiting","Stop for good, or switch stores":"永久停止或切換商店","Storage is limited. If the receiver can't safely store an order, it asks Shopify to send it again later.":"儲存空間有限。無法安全儲存訂單時，接收器會要求 Shopify 稍後重送。","Support":"支援","Support card only":"僅支持卡片","Supported Sites":"支援的網站","Switch theme":"切換主題","Test safely":"安全測試","Tests in the real app cover signed messages (including non-English text), tampered signatures, repeat deliveries, test orders, currency rounding, oversized requests, removal of private customer data, and catching up after being offline. No real orders or merchant account were used.":"實際應用程式測試涵蓋簽章訊息（含非英文）、竄改簽章、重複傳送、測試訂單、幣別四捨五入、過大請求、移除客戶私人資料，以及離線後補收。未使用真實訂單或商家帳戶。","The link is Shopify's public store link, including your custom domain if Shopify gives one.":"連結使用 Shopify 的公開商店網址，若 Shopify 提供自訂網域也可包含在內。","The price is only filled in when every variant costs the same. Otherwise it stays blank. Only add a price if it's accurate.":"只有所有款式價格相同時才填入價格，否則留白。請只填寫正確價格。","The product details load into the editor so you can check them first.":"商品詳細資訊會載入編輯器，供你先檢查。","The receiver checks Shopify's signature and your store name before it accepts an order.":"接收器驗證 Shopify 簽章和商店名稱後才接受訂單。","The receiver isn't on at the server yet. Don't use the old session webhook URL instead.":"伺服器尚未開啟接收器，不要改用舊工作階段 Webhook URL。","The signing secret is stored encrypted on the SSN receiver. The box clears after you save.":"簽章密鑰加密儲存在 SSN 接收器中。儲存後輸入框清空。","The token is used for that one request, then cleared.":"權杖用於單次請求後清除。","Try this":"試試這個","Turn off":"關閉","Turn on":"開啟","Type your store address, like":"輸入商店網址，例如","Unavailable products, and products without a public Online Store link, can't be imported.":"不可用商品，以及沒有公開 Online Store 連結的商品，無法匯入。","Under":"位於","Watch the status line: waiting, test received, event skipped, or purchase received. A receiver URL only means setup was saved.":"查看狀態列：waiting、test received、event skipped 或 purchase received。擁有接收器 URL 只代表設定已儲存。","What has been tested without a real store":"未使用真實商店時完成的測試","What the import fills in":"匯入填入的內容","Where your secret goes":"密鑰儲存在哪裡","Why no picture on purchase alerts?":"購買提醒為什麼沒有圖片？","You can always type a product in by hand instead.":"也可隨時手動輸入商品。","address and the signing secret.":"網址和簽章密鑰。","address, and secret. Custom app webhooks use the app's own secret.":"網址及密鑰。自訂應用程式 Webhook 使用該程式本身的密鑰。","and click":"並點擊","and filter the source/type to":"並將來源／類型篩選為","and pick an":"並選擇","and the":"以及","first.":"。","next to the product.":"，位於商品旁。","or":"或","product and QR code guide":"商品與 QR 碼指南","show in the status only, with no alerts.":"只顯示在狀態中，不產生提醒。","shows an error. Showing products still works.":"會顯示錯誤，但商品展示仍可使用。","signing secret":"簽章密鑰","to":"為","to see the look. It's not connected to your session, so it never runs Event Flow, changes totals, or checks a payment. For a full test, use a Shopify development store. Orders marked":"查看外觀。它不連線你的工作階段，因此不會執行 Event Flow、改變累計值或驗證付款。完整測試請使用 Shopify 開發商店。標記為以下類型的訂單"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/shopify-setup.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/shopify-setup.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/shopify-setup.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/shopify-setup.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/shopify-setup.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/shopify-setup.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/shopify-setup.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/shopify-setup.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/shopify-setup.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/shopify-setup.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/shopify-setup.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/shopify-setup.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/shopify-setup.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/shopify-setup.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/shopify-setup.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/shopify-setup.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/shopify-setup.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/shopify-setup.html">
+<!-- ssn-languages:end --></head>
+	<body class="visual-guide">
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/shopify-setup.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/shopify-setup.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/shopify-setup.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/shopify-setup.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/shopify-setup.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/shopify-setup.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/shopify-setup.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/shopify-setup.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="shopify-setup.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/shopify-setup.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/shopify-setup.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/shopify-setup.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/shopify-setup.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/shopify-setup.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/shopify-setup.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/shopify-setup.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/shopify-setup.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+		<section class="page-hero">
+			<div class="container">
+				<h1>展示您的 Shopify 商品與購買紀錄。</h1>
+				<p>展示帶 QR 碼的商品，並在購買時收到提醒。</p>
+			</div>
+		</section>
+
+	<main>
+		<section class="guide-section">
+			<div class="container">
+				<nav class="guide-jump-links" aria-label="本頁內容">
+					<a href="#products">顯示商品</a>
+					<a href="#alerts">購買提醒</a>
+					<a href="#overlays">放入 OBS</a>
+					<a href="#tests">安全測試</a>
+					<a href="#limits">解決問題</a>
+				</nav>
+
+				<div class="guide-card">
+					<h2 id="products">五步展示 Shopify 商品</h2>
+					<div class="guide-step-layout">
+						<ol class="guide-steps">
+							<li>在 Social Stream Ninja 中，開啟 <strong>營利 → Shopify 購買 → 設定</strong>.</li>
+							<li>輸入商店網址，例如 <code>your-store.myshopify.com</code>。不需要密鑰。</li>
+							<li>開啟 <strong>匯入商品</strong>，貼上商品公開連結並點擊 <strong>載入商品詳細資料</strong>.</li>
+							<li>檢查名稱、圖片、價格和連結，然後點擊 <strong>新增商品或連結</strong>.</li>
+							<li>開啟 <strong>商品與支持連結</strong> 並點擊 <strong>儲存設定</strong>.</li>
+						</ol>
+						<figure class="guide-figure">
+							<a href="../../docs/images/monetization/shopify-import.png" target="_blank" rel="noopener"><img class="guide-image" src="../../docs/images/monetization/shopify-import.png" alt="共用商品編輯器中匯入的 Shopify 商品名稱、圖片 URL、價格與標準公開連結" loading="lazy"></a>
+							<figcaption>商品詳細資訊會載入編輯器，供你先檢查。</figcaption>
+						</figure>
+					</div>
+					<div class="guide-note"><strong>商品無法載入？</strong> 新增一個 <strong>公開 Storefront 權杖</strong> （透過 Shopify 的 Headless 管道建立，並將商品發佈到該管道和 Online Store）。切勿貼上 Admin API 或私人權杖。</div>
+
+					<details class="guide-extra">
+						<summary>匯入填入的內容</summary>
+						<ul>
+							<li>一次載入一個商品。</li>
+							<li>權杖用於單次請求後清除。</li>
+							<li>連結使用 Shopify 的公開商店網址，若 Shopify 提供自訂網域也可包含在內。</li>
+							<li>只有所有款式價格相同時才填入價格，否則留白。請只填寫正確價格。</li>
+							<li>這是快照。價格和庫存不會自行更新，商店變更時請核對。</li>
+							<li>不可用商品，以及沒有公開 Online Store 連結的商品，無法匯入。</li>
+							<li>也可隨時手動輸入商品。</li>
+						</ul>
+						<p><a href="https://shopify.dev/docs/api/storefront/2026-07">Shopify Storefront 驗證</a> &middot; <a href="https://shopify.dev/docs/api/storefront/latest/queries/product">商品查詢</a> &middot; <a href="https://shopify.dev/docs/api/storefront-web-components/getting-started">使用 Headless 建立公開權杖</a></p>
+					</details>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="alerts">有人購買時收到提醒</h2>
+					<div class="warning-note"><strong>尚未啟用。</strong> 購買提醒需要 SSN 伺服器的 Shopify 接收器，實際商店測試通過前保持關閉。在此之前， <strong>儲存設定</strong> 會顯示錯誤，但商品展示仍可使用。</div>
+					<div class="guide-step-layout">
+						<ol class="guide-steps">
+							<li>在 Shopify 中進入 <strong>設定 → 通知 → Webhooks</strong>。找到 Webhook 的 <strong>簽章密鑰</strong>。（這不是 Storefront 權杖。）</li>
+							<li>在 Social Stream Ninja 中，開啟 <strong>營利 → Shopify 購買 → 設定</strong>.</li>
+							<li>輸入您的 <code>myshopify.com</code> 網址和簽章密鑰。</li>
+							<li>開啟 <strong>Shopify 購買</strong> 並點擊 <strong>儲存設定</strong>.</li>
+							<li>點選 <strong>複製接收器 URL</strong>.</li>
+							<li>在 Shopify 建立 Webhook。事件： <strong>訂單付款</strong>。格式： <strong>JSON</strong>。URL 為接收器 URL。</li>
+							<li>選擇穩定 API 版本並儲存，SSN 依 2026-07 版本開發。</li>
+							<li>保持 Social Stream Ninja 執行。</li>
+						</ol>
+						<figure class="guide-figure">
+							<a href="../../docs/images/monetization/shopify-setup.png" target="_blank" rel="noopener"><img class="guide-image" src="../../docs/images/monetization/shopify-setup.png" alt="SSApp Shopify 設定，顯示商店網域、已清除的簽署密鑰、接收器 URL 與狀態" loading="lazy"></a>
+							<figcaption>應用程式內 Shopify 設定，使用範例商店。點擊放大。</figcaption>
+						</figure>
+					</div>
+					<div class="guide-note"><strong>是否正常運作？</strong> 查看狀態列：waiting、test received、event skipped 或 purchase received。擁有接收器 URL 只代表設定已儲存。</div>
+
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>我想要…</th><th>執行操作</th></tr></thead>
+						<tbody>
+							<tr><td data-label="我想要">暫停提醒</td><td data-label="執行操作">關閉 <strong>Shopify 購買</strong>.</td></tr>
+														<tr><td data-label="我想要">永久停止或切換商店</td><td data-label="執行操作">點選 <strong>中斷 Shopify 連線</strong> （刪除接收器及等待事件），並在 Shopify 中刪除 Webhook。</td></tr>
+						</tbody>
+					</table>
+
+					<details class="guide-extra">
+						<summary>密鑰儲存在哪裡</summary>
+						<ul>
+							<li>簽章密鑰加密儲存在 SSN 接收器中。儲存後輸入框清空。</li>
+							<li>另一個私人讀取金鑰保留在本機。</li>
+							<li>兩者都不會放入 OBS 連結或觀眾 QR 碼。</li>
+							<li>接收器驗證 Shopify 簽章和商店名稱後才接受訂單。</li>
+							<li>Shopify 使用自己的接收器，無需舊版遠端 API 控制開關。</li>
+						</ul>
+						<p><a href="https://help.shopify.com/en/manual/fulfillment/setup/notifications/webhooks">Shopify：手動建立 Webhook</a> &middot; <a href="https://shopify.dev/docs/apps/build/webhooks/verify-deliveries">Shopify：驗證傳遞</a></p>
+					</details>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="overlays">放入 OBS</h2>
+					<ol class="guide-steps">
+						<li>位於 <strong>OBS 覆蓋層適用於</strong>，選擇 <strong>商品與支持連結</strong>.</li>
+						<li>開啟 <strong>疊加畫面連結選項</strong> 並選擇 <strong>覆蓋層檢視</strong>: <strong>僅商品展示</strong> （圖片、價格、QR 碼）、 <strong>僅支持卡片</strong> （小型商店連結），或 <strong>僅活動提醒</strong> （購買）。</li>
+						<li>點選 <strong>複製 OBS 連結</strong>。作為以下來源加入 OBS： <strong>瀏覽器來源</strong>，從 800 × 600 開始，每種檢視使用一個來源。</li>
+						<li>在最終直播顯示尺寸下用手機掃描 QR 碼。</li>
+					</ol>
+					<figure class="guide-figure">
+						<a href="../../docs/images/monetization/shopify-purchase.png" target="_blank" rel="noopener"><img class="guide-image" style="max-width:476px;margin:auto" src="../../docs/images/monetization/shopify-purchase.png" alt="Shopify 購買提醒，顯示匿名買家與公開商品標題" loading="lazy"></a>
+						<figcaption>購買提醒，買家姓名保密。</figcaption>
+					</figure>
+
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>我想要…</th><th>執行操作</th></tr></thead>
+						<tbody>
+							<tr><td data-label="我想要">在聊天分享商品連結</td><td data-label="執行操作">點選 <strong>複製公開連結</strong> ，位於商品旁。</td></tr>
+							<tr><td data-label="我想要">在 Monetization 覆蓋層只顯示 Shopify 提醒</td><td data-label="執行操作">設定 <strong>提醒來源篩選器</strong> 為 <code>shopify</code>。必須開啟 Products &amp; support links。</td></tr>
+							<tr><td data-label="我想要">在 multi-alerts 或活動串流顯示購買</td><td data-label="執行操作">無需額外設定，即使沒有商品清單也能接收 Shopify 購買。</td></tr>
+						</tbody>
+					</table>
+					<div class="guide-note"><strong>購買提醒為什麼沒有圖片？</strong> Shopify 訂單沒有可靠的圖片，因此購買提醒只顯示文字，絕不借用商品卡片的圖片或 QR 碼。</div>
+
+					<details class="guide-extra">
+						<summary>Event Flow 與捐款目標</summary>
+						<ul>
+							<li>在 Event Flow 中選擇 Event Type <code>purchase</code> 並將來源／類型篩選為 <code>shopify</code>.</li>
+							<li>訂單金額規則請比較 <code>meta.commerce.orderTotal</code>。檢查 <code>meta.commerce.currency</code> 。</li>
+							<li>購買不是捐款，不帶有 <code>hasDonation</code> 或 <code>donoValue</code>，捐款目標也不會增加。</li>
+							<li>商品卡片標為 Gift 不會改變訂單統計。寄給其他人不代表它是送給你的禮物。</li>
+						</ul>
+					</details>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="tests">安全測試</h2>
+					<p>點選 <strong>預覽範例</strong> 查看外觀。它不連線你的工作階段，因此不會執行 Event Flow、改變累計值或驗證付款。完整測試請使用 Shopify 開發商店。標記為以下類型的訂單 <code>test: true</code> 只顯示在狀態中，不產生提醒。</p>
+					<div class="warning-note"><strong>謹慎使用 Shopify 管理後台範例。</strong> 未明確標為測試的範例，不要傳送到會發放獎勵的設定。</div>
+
+					<details class="guide-extra">
+						<summary>未使用真實商店時完成的測試</summary>
+						<p>實際應用程式測試涵蓋簽章訊息（含非英文）、竄改簽章、重複傳送、測試訂單、幣別四捨五入、過大請求、移除客戶私人資料，以及離線後補收。未使用真實訂單或商家帳戶。</p>
+						<p>Shopify CLI 範例 Webhook 可測試訊息處理，但不能測試訂閱或重試，而且仍需應用程式憑證。參閱 <a href="https://shopify.dev/docs/api/shopify-cli/app/app-webhook-trigger">Shopify CLI Webhook 測試限制</a>.</p>
+					</details>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="limits">解決問題</h2>
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>問題</th><th>試試這個</th></tr></thead>
+						<tbody>
+							<tr><td data-label="問題">Save setup 顯示錯誤</td><td data-label="試試這個">伺服器尚未開啟接收器，不要改用舊工作階段 Webhook URL。</td></tr>
+							<tr><td data-label="問題">狀態停留在 waiting</td><td data-label="試試這個">檢查 Webhook： <strong>訂單付款</strong>, <strong>JSON</strong>、確切的接收器 URL、 <code>myshopify.com</code> 網址及密鑰。自訂應用程式 Webhook 使用該程式本身的密鑰。</td></tr>
+							<tr><td data-label="問題">事件被略過</td><td data-label="試試這個">只統計金額大於零、全額付款、標記為 <code>test: false</code>，且最近 7 天有更新的訂單才會計入。未付款、部分付款和取消訂單會被略過。</td></tr>
+							<tr><td data-label="問題">銷售時 SSN 已關閉</td><td data-label="試試這個">訂單最多等待 7 天，啟動 SSN 後會收到。</td></tr>
+							<tr><td data-label="問題">操作執行了兩次</td><td data-label="試試這個">七天內會阻止重複，但操作中途當機可能導致重做。重要自動化請加入自己的檢查。</td></tr>
+							<tr><td data-label="問題">沒有買家姓名</td><td data-label="試試這個">這是刻意的。姓名、電子郵件、地址、備註、自訂欄位、結帳連結及訂單 ID 都不會顯示。</td></tr>
+							<tr><td data-label="問題">退款未移除提醒</td><td data-label="試試這個">退款、取消和編輯不會撤銷提醒。這不是記帳系統。</td></tr>
+						</tbody>
+					</table>
+
+					<details class="guide-extra">
+						<summary>等待訂單和重複訂單的處理方式</summary>
+						<ul>
+							<li>允許訂單時間最多超前五分鐘，以容忍時鐘偏差。</li>
+							<li>不會根據訂單建立、出貨或庫存變更推斷付款。缺少測試旗標的訂單會被略過。</li>
+							<li>接收器重新啟動後，狀態和等待訂單仍保留。</li>
+							<li>儲存空間有限。無法安全儲存訂單時，接收器會要求 Shopify 稍後重送。</li>
+							<li>依商店和訂單識別重複，即使 Shopify 的傳送 ID 不同。</li>
+							<li>SSN 先儲存已處理的訂單，再確認接收。</li>
+						</ul>
+					</details>
+					<p>請參閱 <a href="event-reference.html#shopify-purchases">Shopify 事件詳細資訊</a> 以及 <a href="creator-store-setup.html#obs">商品與 QR 碼指南</a>.</p>
+				</div>
+			</div>
+		</section>
+	</main><script data-copy-markdown src="../../docs/js/main.js"></script></body></html>

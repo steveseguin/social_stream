@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-cn/docs/tts-setup-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-cn/docs/tts-setup-guide.html">
+    <meta property="og:title" content="TTS 设置指南 - Social Stream Ninja">
+    <meta property="og:description" content="用易懂语言介绍 Social Stream Ninja 文本转语音、OBS 音频、浏览器语音、本地语音及 TTS 服务器模式的设置指南。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-cn/docs/tts-setup-guide.html">
+    <meta name="twitter:title" content="TTS 设置指南 - Social Stream Ninja">
+    <meta name="twitter:description" content="用易懂语言介绍 Social Stream Ninja 文本转语音、OBS 音频、浏览器语音、本地语音及 TTS 服务器模式的设置指南。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS 设置指南 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <style>
+        .tts-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+        .tts-preview { border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.6rem; min-width: 0; }
+        .tts-preview h3 { margin-top: 0; }
+        .tts-preview audio { width: 100%; margin: .8rem 0; }
+        .tts-preview code { overflow-wrap: anywhere; }
+        .guide-card [id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 52rem; }
+        @media (max-width: 700px) { .tts-preview-grid { grid-template-columns: 1fr; } }
+    </style>
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="用易懂语言介绍 Social Stream Ninja 文本转语音、OBS 音频、浏览器语音、本地语音及 TTS 服务器模式的设置指南。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/tts-setup-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{"(Node.js required). Run it on the OBS computer.":"（需要 Node.js）。在运行 OBS 的电脑上启动。","(or":"（或","), optional":"），可选的",", expand":"，展开",", optional":"，可选的",", or":"，或",", set that source to":"中，将该来源设为",", then a voice.":"，然后选择语音。",". Bigger download, more memory.":"。下载更大，内存占用更多。",". Copy the voice's model ID, not its name or page link. Leave it blank for the default voice.":"。复制音色的模型 ID，不是名称或页面链接。留空使用默认音色。",". Fish Audio decides what's free and its fair-use terms. Paid models need account credit. SSN never switches to a paid model if a free request fails. Speed goes from 0.5 to 2. Fish Audio detects the language. Your chat text is sent to Fish Audio.":"。免费范围和合理使用条款由 Fish Audio 决定。付费模型需要账户余额。免费请求失败时，SSN 不会切换到付费模型。速度为 0.5 至 2。Fish Audio 自动识别语言，聊天文本会发送给 Fish Audio。",". Leave it running.":"。保持运行。",". Leave out":"。省略",". Pick":"。选择",". Piper has Spain, Mexico, Brazil and Portugal voices. Kokoro has three Spanish and three Brazilian Portuguese voices.":"。Piper 提供西班牙、墨西哥、巴西和葡萄牙音色。Kokoro 有三种西班牙语和三种巴西葡萄牙语音色。",". Plays each part as it's ready. Slow PCs may pause between parts.":"。每段生成后立即播放。较慢的电脑可能在段落间停顿。",". Streaming or FP32 turns on background generation automatically.":"。流式播放或 FP32 会自动开启后台生成。",". These options make speech in the background so the page stays smooth.":"。这些选项在后台生成语音，让页面保持流畅。",". Waits for the whole message first.":"。先等待整条消息生成完毕。","A ChatGPT subscription doesn't include API credit.":"ChatGPT 订阅不包含 API 额度。","A quick link to try:":"可快速尝试的链接：","API Key":"API密钥","API billing":"API 计费","API charges may apply":"可能产生 API 费用","API terms apply":"适用 API 条款","Account limits and network delay.":"账户限制和网络延迟。","Actual SSN Custom / Local TTS provider settings":"实际 SSN Custom / Local TTS 提供商设置","Actual SSN ElevenLabs provider settings":"实际 SSN ElevenLabs 提供商设置","Actual SSN Gemini provider settings":"实际 SSN Gemini 提供商设置","Actual SSN Google Cloud provider settings":"实际 SSN Google Cloud 提供商设置","Actual SSN Kitten provider settings":"实际 SSN Kitten 提供商设置","Actual SSN Kokoro provider settings":"实际 SSN Kokoro 提供商设置","Actual SSN OpenAI provider settings":"实际 SSN OpenAI 提供商设置","Actual SSN Piper provider settings":"实际 SSN Piper 提供商设置","Actual SSN Speechify provider settings":"实际 SSN Speechify 提供商设置","Actual SSN System TTS provider settings":"实际 SSN System TTS 提供商设置","Actual SSN eSpeak provider settings":"实际 SSN eSpeak 提供商设置","Actual popup: Message: Text to Speech, with Enable TTS in dock switched on":"实际弹出菜单：Message — Text to Speech，已开启 Enable TTS in dock","Actual popup: Piper TTS selected, with English US Female HFC Medium voice":"实际弹出菜单：已选择 Piper TTS，语音为 English US Female HFC Medium","Adam (American Male):":"Adam（美式男声）—","Add a":"添加一个","Advanced Audio Properties":"高级音频属性","Alex (Brazilian Portuguese):":"Alex（巴西葡萄牙语）：","Alex (Spanish):":"Alex（西班牙语）：","Alice (British Female):":"Alice（英式女声）—","All four are free and run on your computer. Press play to compare.":"四种都免费，并在你的电脑上运行。点击播放进行对比。","Alloy (American Female):":"Alloy（美式女声）—","An OBS Custom Browser Dock is a control panel, not a scene source. For Featured Chat, turn on TTS in that overlay's own options and copy its link.":"OBS 自定义浏览器停靠面板是控制面板，不是场景来源。要使用精选聊天，请在该叠加层自身的选项中开启 TTS 并复制链接。","Aoede (American Female):":"Aoede（美式女声）—","Automatic":"自动","Avoid gaps":"减少间断","Background generation":"后台生成","Background processor":"后台处理器","Bella (American Female):":"Bella（美式女声）—","Bella, US English, female. Most natural, but slower on CPU.":"Bella，美式英语，女声。最自然，但在 CPU 上较慢。","Best Kokoro quality":"Kokoro 最佳音质","Billing and quotas apply":"适用计费和配额限制","Blue switch = chat reading is on.":"蓝色开关 = 聊天朗读已开启。","Brazilian Portuguese (Edresson) - Low:":"巴西葡萄牙语（Edresson）- 低质量 —","Brazilian Portuguese (Faber) - Medium:":"巴西葡萄牙语（Faber）- 中等质量 —","Bridge URL":"桥接 URL","Browser Source":"浏览器来源","CPU":"CPU","Check mute and the recording tracks in OBS. Don't capture the monitoring output a second time. See the":"检查 OBS 的静音和录制音轨。不要再次采集监听输出。参见","Check the dock shows chat. Then check the TTS switch, provider and filters. Use a freshly copied link. Let the first voice download finish.":"确认 Dock 显示聊天，再检查 TTS 开关、提供商和过滤条件。使用重新复制的链接，等待首次音色下载完成。","Check your Gemini limits":"检查 Gemini 用量上限","Click":"点击","Commands & API":"命令与 API","Control audio via OBS":"通过 OBS 控制音频","Cost":"费用","Custom / Local":"自定义 / 本地","Custom / Local TTS":"自定义 / 本地 TTS","Daniel (British Male):":"Daniel（英式男声）—","DaveFX":"DaveFX","Do this":"执行操作","Does my chat platform support TTS?":"我的聊天平台支持 TTS 吗？","Dora":"Dora","Dora (Brazilian Portuguese):":"Dora（巴西葡萄牙语）：","Dora (Spanish):":"Dora（西班牙语）：","Download":"下载","Download Kitten sample":"下载 Kitten 示例","Download Kokoro sample":"下载 Kokoro 示例","Download Piper sample":"下载 Piper 示例","Download eSpeak sample":"下载 eSpeak 示例","Download sample":"下载示例","Download sizes and OBS test notes":"下载大小和 OBS 测试说明","Echo (American Male):":"Echo（美式男声）—","Edit my TTS link by hand, or see every option":"手动编辑 TTS 链接或查看所有选项","Eight English voices: male and female versions of voices 2, 3, 4 and 5. The sample uses Voice 4 (Female).":"八种英语音色：2、3、4、5 号音色各有男女版本。示例使用 Voice 4（Female）。","ElevenLabs":"ElevenLabs","ElevenLabs reference":"ElevenLabs 参考","Emma (British Female):":"Emma（英式女声）—","English US Female (HFC) - Medium:":"美式英语女声（HFC）- 中等质量 —","English only. Bundled model is about 24 MB.":"仅英语，随附模型约 24 MB。","English. Robotic, but tiny and fast.":"英语。声音机械，但很小巧、快速。","English:":"英语 —","Enter a Google Cloud TTS API key, the exact voice name, and its matching language.":"输入 Google Cloud TTS API 密钥、准确的音色名称和匹配的语言。","Enter the API key and voice ID from your Speechify API account.":"输入 Speechify API 账号的 API 密钥及语音 ID。","Enter your API key. Then click":"输入 API 密钥，然后点击","Eric (American Male):":"Eric（美式男声）—","Every message is read twice":"每条消息读两次","Faber":"Faber","Fable (British Male):":"Fable（英式男声）—","Faster Kokoro and Kitten":"加速 Kokoro 和 Kitten","Features":"功能","Fenrir (American Male):":"Fenrir（美式男声）—","First time?":"第一次使用？","Fish Audio":"Fish Audio","Fish Audio API key":"Fish Audio API 密钥","Fish Audio API reference":"Fish Audio API 参考","Fish Audio blocks direct requests from web pages, so OBS needs SSN's":"Fish Audio 阻止网页直接请求，所以 OBS 需要 SSN 的","Fix GPU problems (Kokoro)":"解决 GPU 问题（Kokoro）","Fix problems":"解决问题","For OBS: run the local bridge":"OBS：运行本地桥接","Free":"免费","Free model announcement and terms":"免费模型公告及条款","Free model with your own key; voice IDs.":"使用自己的密钥访问免费模型；支持音色 ID。","Free tier set by Fish Audio":"免费额度由 Fish Audio 决定","Free, no key":"免费，无需密钥","Full quality":"完整音质","Gemini":"Gemini","Generation and playback":"生成和播放","George (British Male):":"George（英式男声）—","Go further":"进一步使用","Go here":"前往","Good for":"适合用途","Google Cloud":"Google Cloud","Guides":"指南","Have your chat read aloud on stream. Free, with no account or API key.":"在直播中朗读聊天。免费，无需账户或 API 密钥。","Hear speech sooner":"更早听到语音","Hear the free voices":"试听免费音色","Hear the voices":"试听音色","Hearing every message twice?":"每条消息听到两次？","Heart (American Female):":"Heart（美式女声）—","Heavier on the CPU. First speech can be slow. Faster with a supported GPU.":"CPU 负载较高，首次语音可能较慢。使用支持的 GPU 可加速。","Hire":"雇用","Home":"首页","How these samples were made":"这些示例如何制作","I want an OBS dock or Featured Chat to speak instead":"改用 OBS 停靠面板或精选聊天朗读","I want to":"我想要","I want to…":"我想要…","In OBS":"在 OBS 中","In its properties, turn on":"在属性中开启","In the Fish Audio panel, set":"在 Fish Audio 面板中设置","In the SSN folder, run":"在 SSN 文件夹中运行","Inspiration":"灵感","Isabella (British Female):":"Isabella（英式女声）—","Jessica (American Female):":"Jessica（美式女声）—","Keep in mind":"注意事项","Kitten":"Kitten","Kitten 0.8":"Kitten 0.8","Kitten 0.8 runs on the CPU, English only. Each model downloads on first use. Each browser or OBS keeps its own copy. NeuroSync gets the complete audio file either way. Old links keep working as before unless you change these options.":"Kitten 0.8 在 CPU 上运行，仅支持英语。各模型首次使用时下载，每个浏览器或 OBS 单独保存。无论哪种方式，NeuroSync 都会收到完整音频文件。不改这些选项时，旧链接保持原来的行为。","Kitten voice sample":"Kitten 语音示例","Kitten:":"Kitten：","Kokoro":"Kokoro","Kokoro - Portuguese (Brazil)":"Kokoro - 葡萄牙语（巴西）","Kokoro - Portuguese (Brazil) sample":"Kokoro - 葡萄牙语（巴西）示例","Kokoro - Spanish":"Kokoro - 西班牙语","Kokoro - Spanish sample":"Kokoro - 西班牙语示例","Kokoro voice sample":"Kokoro 语音示例","Kokoro:":"Kokoro：","Kore (American Female):":"Kore（美式女声）—","Lewis (British Male):":"Lewis（英式男声）—","Liam (American Male):":"Liam（美式男声）—","Lily (British Female):":"Lily（英式女声）—","Link settings for Fish Audio":"Fish Audio 链接设置","List My Available Voices":"列出我可用的音色","Local AI TTS guide":"本地 AI TTS 指南","Main chat overlay & control dock":"主聊天叠加层与控制停靠面板","Main navigation":"主导航","Make a short test recording and play it back.":"录制一小段测试并回放。","Message – Text to Speech":"消息 — 文本转语音","Meter moves, but the recording is silent":"音量表在动，但录制没有声音","Michael (American Male):":"Michael（美式男声）—","Monitor and Output":"监听并输出","More detail and link settings":"更多细节和链接设置","More fixes:":"更多解决办法：","More than one page is speaking. Keep TTS on in one place only.":"不止一个页面正在朗读。只在一处开启 TTS。","Most setup. See the":"设置最多。参见","Name reading was off. The clips skip loading time.":"已关闭姓名朗读，示例不包含加载时间。","Named voices, model and format controls.":"具名音色、模型和格式控制。","Named voices; language, rate and pitch.":"具名音色、语言、语速和音高。","Natural voices; English, Spanish, Portuguese.":"自然音色；英语、西班牙语、葡萄牙语。","Nicole (American Female):":"Nicole（美式女声）—","No chat connected yet?":"尚未连接聊天？","No speech at all":"完全没有语音","Not every voice supports every control. Cloud TTS API must be enabled.":"并非每种音色都支持所有设置。必须启用 Cloud TTS API。","Nova (American Female):":"Nova（美式女声）—","OBS audio guide":"OBS 音频指南","OBS has its own browser and voice list. System TTS often fails there. Switch to Piper, Kokoro, Kitten or eSpeak. A virtual audio cable can't fix missing speech.":"OBS 有自己的浏览器和音色列表，系统 TTS 在其中经常不可用。请改用 Piper、Kokoro、Kitten 或 eSpeak。虚拟音频线无法解决根本没有生成语音的问题。","OBS needs SSN's local bridge.":"OBS 需要 SSN 的本地桥接。","Often silent in OBS. Some voices need internet.":"在 OBS 中常常无声，部分音色需要联网。","On that PC, System TTS listed five voices but made no sound in the OBS recording. Your PC may differ, so always test your own link. Cloud voices weren't tested (no paid accounts).":"在那台电脑上，系统 TTS 列出五种音色，但 OBS 录制没有声音。你的电脑可能不同，请始终测试自己的链接。云端音色未测试，因为没有付费账户。","On this page":"本页内容","Only one page should read chat. Turn TTS off everywhere else.":"只让一个页面朗读聊天，其他地方都关闭 TTS。","Onyx (American Male):":"Onyx（美式男声）—","Open navigation menu":"打开导航菜单","Open the":"打开","OpenAI":"OpenAI","Optional: paste a":"可选：粘贴","Overlay Gallery":"叠加层图库","Paste the bridge token shown in the terminal into the":"将终端显示的桥接令牌粘贴到","Paste your":"粘贴你的","Pick":"选择","Pick a":"选择一个","Pick a TTS model and voice. Style instructions change how it's read. This uses the Gemini API, not Google Cloud TTS.":"选择 TTS 模型和音色，风格指令可改变朗读方式。这里使用 Gemini API，不是 Google Cloud TTS。","Pick a language above the voice list in SSN, then press":"在 SSN 音色列表上方选择语言，再按","Pick a language voice. You can change the speaking rate. It sounds robotic by design.":"选择对应语言的音色，可更改语速。机械感是其设计特点。","Pick a provider":"选择提供商","Pick a voice and model, and enter an API key. A ChatGPT subscription doesn't give you API credit. Keep the default endpoint.":"选择音色和模型，输入 API 密钥。ChatGPT 订阅不赠送 API 额度。保留默认端点。","Pick a voice that matches your language. Changing the language alone doesn't change the voice. The sample uses HFC medium.":"选择与你的语言匹配的音色。只改语言不会改变音色。示例使用 HFC medium。","Pick a voice. Use the language filter to find one, and":"选择音色，使用语言过滤器查找，再用","Pick voices by ID; stability and style controls.":"按 ID 选择音色；稳定性和风格控制。","Piper":"Piper","Piper - Portuguese (Brazil)":"Piper - 葡萄牙语（巴西）","Piper - Portuguese (Brazil) sample":"Piper - 葡萄牙语（巴西）示例","Piper - Spanish (Spain)":"Piper - 西班牙语（西班牙）","Piper - Spanish (Spain) sample":"Piper - 西班牙语（西班牙）示例","Piper TTS":"Piper TTS","Piper downloads its voice on first use. Give it a moment.":"Piper 首次使用时下载音色，请稍等。","Piper is free. No account or API key.":"Piper 免费，无需账户或 API 密钥。","Piper is the lighter choice. If Kokoro falls behind the chat, switch to Piper.":"Piper 更轻量。如果 Kokoro 跟不上聊天，请切换到 Piper。","Piper voice sample":"Piper 语音示例","Piper, Kokoro, Kitten and eSpeak passed OBS Browser Source recording tests. Cloud and custom voices also play through the page, but weren't tested with live accounts. Test System TTS on its own, even if it lists voices.":"Piper、Kokoro、Kitten 和 eSpeak 通过了 OBS 浏览器源录制测试。云端及自定义音色也通过页面播放，但未用真实账户测试。系统 TTS 即使列出音色也应单独测试。","Plain-English setup guide for Social Stream Ninja text-to-speech, OBS audio, browser voices, local voices, and TTS server modes.":"用易懂语言介绍 Social Stream Ninja 文本转语音、OBS 音频、浏览器语音、本地语音及 TTS 服务器模式的设置指南。","Play complete message":"播放完整消息","Play it in OBS":"在 OBS 中播放","Portuguese Brazil:":"巴西葡萄牙语 —","Portuguese Portugal (Tugao) - Medium:":"葡萄牙葡萄牙语（Tugao）- 中等质量 —","Portuguese Portugal:":"葡萄牙葡萄牙语 —","Press":"新闻","Preview models and quotas can change.":"预览模型和配额可能变化。","Problem":"问题","Processing":"处理","Provider":"提供商","Provider settings":"提供商设置","Puck (American Male):":"Puck（美式男声）—","Quality varies by voice. HFC medium is about 63 MB.":"音质因音色而异。HFC medium 约 63 MB。","Real screenshots from the desktop app, with a fresh profile (key fields left empty). Open a provider to see its settings. Click a screenshot to enlarge it.":"桌面应用新配置的真实截图（密钥字段为空）。打开提供商查看设置，点击截图可放大。","River (American Female):":"River（美式女声）—","Run my own voice server, or clone a voice":"运行自己的语音服务器或克隆音色","SSN extension popup":"SSN 扩展弹出菜单","Santa (American Male):":"Santa（美式男声）—","Santa (Brazilian Portuguese):":"Santa（巴西葡萄牙语）：","Santa (Spanish):":"Santa（西班牙语）：","Sarah (American Female):":"Sarah（美式女声）—","Scroll to":"滚动至","Send a chat message. The source's audio meter should move.":"发送一条聊天消息，来源的音量表应该跳动。","Set":"设置","Set it up":"进行设置","Set it up in 5 steps":"五步完成设置","Set the":"设置","Set up Speechify":"设置 Speechify","Settings and voices":"设置和音色","Sizes are model files only, not memory use. Free voices run on the computer playing the dock or overlay. First use is slower. OBS keeps its own download cache, separate from Chrome.":"大小仅指模型文件，不是内存用量。免费音色在播放 Dock 或叠加层的电脑上运行，首次使用较慢。OBS 有独立于 Chrome 的下载缓存。","Sky (American Female):":"Sky（美式女声）—","Small English model, eight voices.":"小型英语模型，八种音色。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Sounds robotic on purpose.":"有意保留机械声音。","Sources and Settings":"来源与设置","Spanish Mexico (Ald) - Medium:":"墨西哥西班牙语（Ald）- 中等质量 —","Spanish Spain (DaveFX) - Medium:":"西班牙西班牙语（DaveFX）- 中等质量 —","Spanish and Portuguese samples":"西班牙语与葡萄牙语示例","Spanish:":"西班牙语 —","Speak Text":"朗读文本（Speak Text）","Speech falls behind chat":"语音落后于聊天","Speechify":"Speechify","Speechify guide":"Speechify 指南","Speechify setup":"Speechify 设置","Start as speech arrives":"语音到达即播放","Start here":"从这里开始","Start with Piper.":"先从 Piper 开始。","Step-by-step Speechify guide":"Speechify 分步指南","Support":"支持","Supported Sites":"支持的网站","Switch from Kokoro to Piper, or try eSpeak.":"从 Kokoro 切到 Piper，或尝试 eSpeak。","Switch theme":"切换主题","System TTS":"系统 TTS","TTS Setup Guide":"TTS 设置指南","TTS Setup Guide - Social Stream Ninja":"TTS 设置指南 - Social Stream Ninja","TTS reference":"TTS 参考","TTS reference: provider options":"TTS 参考：提供商选项","Test":"测试","Test TTS":"测试 TTS","Test the voice, then add the overlay link to OBS. Turn on":"测试音色，再将叠加层链接加入 OBS。开启","Tested September 7, 2026 in OBS 32.2.2 on Windows 11. A real chat message reached the dock, spoke, moved the Browser Source meter, and showed up in a recording. Kokoro took noticeably longer to start on CPU.":"于 2026 年 9 月 7 日在 Windows 11 的 OBS 32.2.2 上测试。真实聊天到达 Dock、被朗读、让浏览器源音量表跳动，并进入录制。Kokoro 使用 CPU 时开始播放的等待明显更长。","Text-to-Speech Service Provider":"文本转语音服务提供商","Text-to-speech incoming messages":"将收到的消息转换为语音","The English samples read:":"英语示例朗读内容：","The default model is":"默认模型是","The most natural free voices; English, Spanish, Brazilian Portuguese.":"最自然的免费音色；英语、西班牙语、巴西葡萄牙语。","The token changes each time the bridge restarts.":"每次桥接重启，令牌都会变化。","The voice list depends on your browser or app and the voices installed. There's no fixed SSN list. This fresh profile showed an empty language list.":"音色列表取决于浏览器或应用及安装的音色，并没有固定的 SSN 列表。这个新配置的语言列表为空。","This reuses the OpenAI settings, so the heading still says OpenAI. Enter your server's address and a voice and model it supports. Whether you need a key depends on your server. See the":"这里复用 OpenAI 设置，所以标题仍是 OpenAI。输入服务器地址及其支持的音色和模型。是否需要密钥由服务器决定。参见","To keep it the same, set":"要固定令牌，请设置","Try Kokoro if you like its sound better. Free voices run on your computer. Cloud voices need an account and API key, and your chat text is sent to that company.":"如果更喜欢 Kokoro 的声音，可以试试。免费音色在自己的电脑上运行；云端音色需要账户和 API 密钥，聊天文本会发送给该公司。","Try this":"试试这个","Turn it on for Kitten":"为 Kitten 开启","Turn it on for Kokoro":"为 Kokoro 开启","Turn on":"开启","US English, female. Light and quick.":"美式英语，女声。轻量、快速。","Under":"位于","Under Kokoro or Kitten, open":"在 Kokoro 或 Kitten 下打开","Use Spanish or Portuguese voices in a link":"在链接中使用西班牙语或葡萄牙语音色","Very light, many languages, starts fast.":"非常轻量，多语言，启动快。","Voice 2 (Female):":"Voice 2（女声）—","Voice 2 (Male):":"Voice 2（男声）—","Voice 3 (Female):":"Voice 3（女声）—","Voice 3 (Male):":"Voice 3（男声）—","Voice 4 (Female):":"Voice 4（女声）—","Voice 4 (Male):":"Voice 4（男声）—","Voice 4, female. Small English model.":"Voice 4，女声，小型英语模型。","Voice 5 (Female):":"Voice 5（女声）—","Voice 5 (Male):":"Voice 5（男声）—","Voice ID":"语音 ID","Voice ID with speed, language and model.":"音色 ID，以及速度、语言和模型。","Voice examples and requirements":"语音示例及要求","Voice names and link values":"音色名称与链接参数值","Voice names and supported controls":"语音名称及支持的控件","Voice styles and written delivery instructions.":"语音风格及文字表达指令。","Voices already on your browser or PC.":"浏览器或电脑中已有的音色。","Voices depend on your account.":"音色取决于你的账户。","Want to hear it yourself?":"想自己听到吗？","Welcome to the stream! Thanks for joining us. Which game should we play next?":"欢迎来到直播间！感谢加入。接下来我们玩什么游戏？","With the bridge, add":"使用桥接时，添加","Works in Chrome or Edge, not in OBS":"Chrome 或 Edge 可用，OBS 不可用","Works in the chat dock, featured overlay, TTS page and Flow Actions.":"可用于聊天 Dock、精选叠加层、TTS 页面和 Flow Actions。","Yes, if SSN gets the chat as text. YouTube, Twitch, TikTok and the rest all work the same way. The platform doesn't need its own TTS.":"可以，只要 SSN 能收到文本聊天。YouTube、Twitch、TikTok 等都一样，平台不需要自带 TTS。","Your hardware or hosting":"自己的硬件或托管服务","Your own voice server.":"自己的语音服务器。","and paste the link you copied.":"并粘贴复制的链接。","as the TTS provider.":"作为 TTS 提供商。","beside":"，位于以下选项旁：","copy link":"复制链接","eSpeak":"eSpeak","eSpeak voice sample":"eSpeak 语音示例","environment variable to your Fish API key.":"环境变量设为你的 Fish API 密钥。","field.":"领域。","first.":"。","from":"来自","if the bridge holds your key. Event Flow's":"，如果桥接已保存密钥则省略。Event Flow 的","in the desktop app.":"，位于桌面应用中。","local bridge":"本地桥接","local server guide":"本地服务器指南","local server problems":"本地服务器问题","model: Nano (smallest), Micro or Mini.":"模型：Nano（最小）、Micro 或 Mini。","or":"或","to":"为","to a long random secret. Keep links with a token or key private.":"设为较长的随机秘密值。包含令牌或密钥的链接请保密。","to find a voice ID your account can use.":"查找账户可用的音色 ID。","to hear it. The model loads on the page that speaks. Voices: US and UK English, Spanish, Brazilian Portuguese. Too slow? Try Piper.":"试听。模型在负责朗读的页面加载。音色包括美式和英式英语、西班牙语、巴西葡萄牙语。太慢时尝试 Piper。","uses a supported GPU if there is one, otherwise the CPU. Automatic quality picks FP16 on compatible GPUs, full precision on other supported GPUs, and the compact model on CPU. If you force GPU and none is available, you'll get an error.":"在有支持的 GPU 时使用 GPU，否则使用 CPU。自动音质在兼容 GPU 上选 FP16，在其他支持的 GPU 上选全精度，在 CPU 上选精简模型。强制使用 GPU 却没有可用 GPU 时会报错。","voice override accepts a Fish voice ID when the receiving page uses Fish Audio.":"音色覆盖设置在接收页面使用 Fish Audio 时可接受 Fish 音色 ID。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tts-setup-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tts-setup-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tts-setup-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tts-setup-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tts-setup-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tts-setup-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tts-setup-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tts-setup-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="tts-setup-guide.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tts-setup-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tts-setup-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tts-setup-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tts-setup-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tts-setup-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tts-setup-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tts-setup-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tts-setup-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tts-setup-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>TTS 设置指南</h1>
+            <p>在直播中朗读聊天。免费，无需账户或 API 密钥。</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="本页内容">
+                <a href="#setup">进行设置</a>
+                <a href="#obs-voices">在 OBS 中播放</a>
+                <a href="#voice-samples">试听音色</a>
+                <a href="#voice-chooser">选择提供商</a>
+                <a href="#problems">解决问题</a>
+                <a href="#provider-settings">提供商设置</a>
+                <a href="#more">进一步使用</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="setup">五步完成设置</h2>
+                <p><strong>尚未连接聊天？</strong> <a href="getting-started.html">从这里开始</a> 。</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>打开 <strong>SSN 扩展弹出菜单</strong>，或 <strong>来源与设置</strong> ，位于桌面应用中。</li>
+                        <li>位于 <strong>主聊天叠加层与控制停靠面板</strong>，展开 <strong>消息 — 文本转语音</strong>.</li>
+                        <li>开启 <strong>将收到的消息转换为语音</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <a href="../../docs/images/guides/tts-enable-dock-popup.png"><img src="../../docs/images/guides/tts-enable-dock-popup.png" alt="实际弹出菜单：Message — Text to Speech，已开启 Enable TTS in dock" class="guide-image"></a>
+                        <figcaption>蓝色开关 = 聊天朗读已开启。</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps" start="4">
+                        <li>滚动至 <strong>文本转语音服务提供商</strong>。选择 <strong>Piper TTS</strong>，然后选择语音。</li>
+                        <li>点击 <strong>复制链接</strong> ，位于以下选项旁： <strong>主聊天叠加层与控制停靠面板</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <a href="../../docs/images/guides/tts-select-provider-popup.png"><img src="../../docs/images/guides/tts-select-provider-popup.png" alt="实际弹出菜单：已选择 Piper TTS，语音为 English US Female HFC Medium" class="guide-image" loading="lazy"></a>
+                        <figcaption>Piper 免费，无需账户或 API 密钥。</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>第一次使用？</strong> Piper 首次使用时下载音色，请稍等。</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="obs-voices">在 OBS 中播放</h2>
+                <ol class="guide-steps">
+                    <li>添加一个 <strong>浏览器来源</strong> 并粘贴复制的链接。</li>
+                    <li>在属性中开启 <strong>通过 OBS 控制音频</strong>.</li>
+                    <li>发送一条聊天消息，来源的音量表应该跳动。</li>
+                    <li>录制一小段测试并回放。</li>
+                </ol>
+                <div class="guide-note"><strong>想自己听到吗？</strong> 在 OBS 中 <strong>高级音频属性</strong>中，将该来源设为 <strong>监听并输出</strong>.</div>
+                <div class="warning-note"><strong>每条消息听到两次？</strong> 只让一个页面朗读聊天，其他地方都关闭 TTS。</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-samples">试听免费音色</h2>
+                <p>四种都免费，并在你的电脑上运行。点击播放进行对比。</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper</h3><p>美式英语，女声。轻量、快速。<br><code>en_US-hfc_female-medium</code></p><audio controls preload="none" aria-label="Piper 语音示例"><source src="../../docs/audio/tts/piper-hfc.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-hfc.mp3">下载 Piper 示例</a></audio><p><a href="#settings-piper">设置和音色</a></p></div>
+<div class="tts-preview"><h3>Kokoro</h3><p>Bella，美式英语，女声。最自然，但在 CPU 上较慢。<br><code>af_bella</code></p><audio controls preload="none" aria-label="Kokoro 语音示例"><source src="../../docs/audio/tts/kokoro-bella.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-bella.mp3">下载 Kokoro 示例</a></audio><p><a href="#settings-kokoro">设置和音色</a></p></div>
+<div class="tts-preview"><h3>Kitten</h3><p>Voice 4，女声，小型英语模型。<br><code>expr-voice-4-f</code></p><audio controls preload="none" aria-label="Kitten 语音示例"><source src="../../docs/audio/tts/kitten-4f.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kitten-4f.mp3">下载 Kitten 示例</a></audio><p><a href="#settings-kitten">设置和音色</a></p></div>
+<div class="tts-preview"><h3>eSpeak</h3><p>英语。声音机械，但很小巧、快速。<br><code>en</code></p><audio controls preload="none" aria-label="eSpeak 语音示例"><source src="../../docs/audio/tts/espeak-en.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/espeak-en.mp3">下载 eSpeak 示例</a></audio><p><a href="#settings-espeak">设置和音色</a></p></div>
+                </div>
+                <details class="guide-extra"><summary>西班牙语与葡萄牙语示例</summary>
+                <p>在 SSN 音色列表上方选择语言，再按 <strong>测试</strong>。Piper 提供西班牙、墨西哥、巴西和葡萄牙音色。Kokoro 有三种西班牙语和三种巴西葡萄牙语音色。</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper - 西班牙语（西班牙）</h3><p>DaveFX</p><audio controls preload="none" aria-label="Piper - 西班牙语（西班牙）示例"><source src="../../docs/audio/tts/piper-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-spanish.mp3">下载示例</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - 西班牙语</h3><p>Dora</p><audio controls preload="none" aria-label="Kokoro - 西班牙语示例"><source src="../../docs/audio/tts/kokoro-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-spanish.mp3">下载示例</a></audio></div>
+<div class="tts-preview"><h3>Piper - 葡萄牙语（巴西）</h3><p>Faber</p><audio controls preload="none" aria-label="Piper - 葡萄牙语（巴西）示例"><source src="../../docs/audio/tts/piper-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-portuguese.mp3">下载示例</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - 葡萄牙语（巴西）</h3><p>Dora</p><audio controls preload="none" aria-label="Kokoro - 葡萄牙语（巴西）示例"><source src="../../docs/audio/tts/kokoro-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-portuguese.mp3">下载示例</a></audio></div>
+                </div>
+                <p>Piper 更轻量。如果 Kokoro 跟不上聊天，请切换到 Piper。</p>
+                </details>
+                <details class="guide-extra"><summary>这些示例如何制作</summary>
+                <p>英语示例朗读内容： <em>欢迎来到直播间！感谢加入。接下来我们玩什么游戏？</em> 已关闭姓名朗读，示例不包含加载时间。</p>
+                <p>于 2026 年 9 月 7 日在 Windows 11 的 OBS 32.2.2 上测试。真实聊天到达 Dock、被朗读、让浏览器源音量表跳动，并进入录制。Kokoro 使用 CPU 时开始播放的等待明显更长。</p>
+                <p>在那台电脑上，系统 TTS 列出五种音色，但 OBS 录制没有声音。你的电脑可能不同，请始终测试自己的链接。云端音色未测试，因为没有付费账户。</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-chooser">选择提供商</h2>
+                <p><strong>先从 Piper 开始。</strong> 如果更喜欢 Kokoro 的声音，可以试试。免费音色在自己的电脑上运行；云端音色需要账户和 API 密钥，聊天文本会发送给该公司。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>提供商</th><th>适合用途</th><th>注意事项</th><th>费用</th></tr></thead><tbody>
+<tr><td data-label="提供商"><a href="#settings-piper">Piper</a></td><td data-label="适合用途">自然音色；英语、西班牙语、葡萄牙语。</td><td data-label="注意事项">音质因音色而异。HFC medium 约 63 MB。</td><td data-label="费用">免费，无需密钥</td></tr>
+<tr><td data-label="提供商"><a href="#settings-kokoro">Kokoro</a></td><td data-label="适合用途">最自然的免费音色；英语、西班牙语、巴西葡萄牙语。</td><td data-label="注意事项">CPU 负载较高，首次语音可能较慢。使用支持的 GPU 可加速。</td><td data-label="费用">免费，无需密钥</td></tr>
+<tr><td data-label="提供商"><a href="#settings-kitten">Kitten</a></td><td data-label="适合用途">小型英语模型，八种音色。</td><td data-label="注意事项">仅英语，随附模型约 24 MB。</td><td data-label="费用">免费，无需密钥</td></tr>
+<tr><td data-label="提供商"><a href="#settings-espeak">eSpeak</a></td><td data-label="适合用途">非常轻量，多语言，启动快。</td><td data-label="注意事项">有意保留机械声音。</td><td data-label="费用">免费，无需密钥</td></tr>
+<tr><td data-label="提供商"><a href="#settings-system">系统 TTS</a></td><td data-label="适合用途">浏览器或电脑中已有的音色。</td><td data-label="注意事项">在 OBS 中常常无声，部分音色需要联网。</td><td data-label="费用">免费</td></tr>
+<tr><td data-label="提供商"><a href="#settings-elevenlabs">ElevenLabs</a></td><td data-label="适合用途">按 ID 选择音色；稳定性和风格控制。</td><td data-label="注意事项">账户限制和网络延迟。</td><td data-label="费用">可能产生 API 费用</td></tr>
+<tr><td data-label="提供商"><a href="#settings-google">Google Cloud</a></td><td data-label="适合用途">具名音色、语言、语速和音高。</td><td data-label="注意事项">并非每种音色都支持所有设置。必须启用 Cloud TTS API。</td><td data-label="费用">适用计费和配额限制</td></tr>
+<tr><td data-label="提供商"><a href="#settings-gemini">Gemini</a></td><td data-label="适合用途">语音风格及文字表达指令。</td><td data-label="注意事项">预览模型和配额可能变化。</td><td data-label="费用">检查 Gemini 用量上限</td></tr>
+<tr><td data-label="提供商"><a href="#settings-fish">Fish Audio</a></td><td data-label="适合用途">使用自己的密钥访问免费模型；支持音色 ID。</td><td data-label="注意事项">OBS 需要 SSN 的本地桥接。</td><td data-label="费用">免费额度由 Fish Audio 决定</td></tr>
+<tr><td data-label="提供商"><a href="#settings-speechify">Speechify</a></td><td data-label="适合用途">音色 ID，以及速度、语言和模型。</td><td data-label="注意事项">音色取决于你的账户。</td><td data-label="费用">适用 API 条款</td></tr>
+<tr><td data-label="提供商"><a href="#settings-openai">OpenAI</a></td><td data-label="适合用途">具名音色、模型和格式控制。</td><td data-label="注意事项">ChatGPT 订阅不包含 API 额度。</td><td data-label="费用">API 计费</td></tr>
+<tr><td data-label="提供商"><a href="#settings-customtts">自定义 / 本地</a></td><td data-label="适合用途">自己的语音服务器。</td><td data-label="注意事项">设置最多。参见 <a href="local-tts.html">本地服务器指南</a>.</td><td data-label="费用">自己的硬件或托管服务</td></tr>
+</tbody></table>
+                <details class="guide-extra"><summary>下载大小和 OBS 测试说明</summary>
+                <p>大小仅指模型文件，不是内存用量。免费音色在播放 Dock 或叠加层的电脑上运行，首次使用较慢。OBS 有独立于 Chrome 的下载缓存。</p>
+                <p>Piper、Kokoro、Kitten 和 eSpeak 通过了 OBS 浏览器源录制测试。云端及自定义音色也通过页面播放，但未用真实账户测试。系统 TTS 即使列出音色也应单独测试。</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">解决问题</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>问题</th><th>试试这个</th></tr></thead>
+                    <tbody>
+                        <tr id="chat-platforms"><td data-label="问题">我的聊天平台支持 TTS 吗？</td><td data-label="试试这个">可以，只要 SSN 能收到文本聊天。YouTube、Twitch、TikTok 等都一样，平台不需要自带 TTS。</td></tr>
+                        <tr><td data-label="问题">完全没有语音</td><td data-label="试试这个">确认 Dock 显示聊天，再检查 TTS 开关、提供商和过滤条件。使用重新复制的链接，等待首次音色下载完成。</td></tr>
+                        <tr><td data-label="问题">Chrome 或 Edge 可用，OBS 不可用</td><td data-label="试试这个">OBS 有自己的浏览器和音色列表，系统 TTS 在其中经常不可用。请改用 Piper、Kokoro、Kitten 或 eSpeak。虚拟音频线无法解决根本没有生成语音的问题。</td></tr>
+                        <tr><td data-label="问题">音量表在动，但录制没有声音</td><td data-label="试试这个">检查 OBS 的静音和录制音轨。不要再次采集监听输出。参见 <a href="https://obsproject.com/kb/audio-mixer-guide">OBS 音频指南</a>.</td></tr>
+                        <tr><td data-label="问题">语音落后于聊天</td><td data-label="试试这个">从 Kokoro 切到 Piper，或尝试 eSpeak。</td></tr>
+                        <tr><td data-label="问题">每条消息读两次</td><td data-label="试试这个">不止一个页面正在朗读。只在一处开启 TTS。</td></tr>
+                        <tr><td data-label="问题">改用 OBS 停靠面板或精选聊天朗读</td><td data-label="试试这个">OBS 自定义浏览器停靠面板是控制面板，不是场景来源。要使用精选聊天，请在该叠加层自身的选项中开启 TTS 并复制链接。</td></tr>
+                    </tbody>
+                </table>
+                <p>更多解决办法： <a href="tts.html#troubleshooting">TTS 参考</a> &middot; <a href="local-tts.html#troubleshooting">本地服务器问题</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="provider-settings">提供商设置</h2>
+                <p>桌面应用新配置的真实截图（密钥字段为空）。打开提供商查看设置，点击截图可放大。</p>
+<details class="guide-extra" id="settings-system"><summary>系统 TTS</summary><p>音色列表取决于浏览器或应用及安装的音色，并没有固定的 SSN 列表。这个新配置的语言列表为空。</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-system.png"><img src="../../docs/images/guides/tts-settings-system.png" alt="实际 SSN System TTS 提供商设置" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-kokoro"><summary>Kokoro</summary><p>选择音色，使用语言过滤器查找，再用 <strong>测试</strong> 试听。模型在负责朗读的页面加载。音色包括美式和英式英语、西班牙语、巴西葡萄牙语。太慢时尝试 Piper。</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kokoro.png"><img src="../../docs/images/guides/tts-settings-kokoro.png" alt="实际 SSN Kokoro 提供商设置" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>音色名称与链接参数值</summary><ul class="guide-list">
+<li>Heart（美式女声）— <code>af_heart</code></li>
+<li>Alloy（美式女声）— <code>af_alloy</code></li>
+<li>Aoede（美式女声）— <code>af_aoede</code></li>
+<li>Bella（美式女声）— <code>af_bella</code></li>
+<li>Jessica（美式女声）— <code>af_jessica</code></li>
+<li>Kore（美式女声）— <code>af_kore</code></li>
+<li>Nicole（美式女声）— <code>af_nicole</code></li>
+<li>Nova（美式女声）— <code>af_nova</code></li>
+<li>River（美式女声）— <code>af_river</code></li>
+<li>Sarah（美式女声）— <code>af_sarah</code></li>
+<li>Sky（美式女声）— <code>af_sky</code></li>
+<li>Adam（美式男声）— <code>am_adam</code></li>
+<li>Echo（美式男声）— <code>am_echo</code></li>
+<li>Eric（美式男声）— <code>am_eric</code></li>
+<li>Fenrir（美式男声）— <code>am_fenrir</code></li>
+<li>Liam（美式男声）— <code>am_liam</code></li>
+<li>Michael（美式男声）— <code>am_michael</code></li>
+<li>Onyx（美式男声）— <code>am_onyx</code></li>
+<li>Puck（美式男声）— <code>am_puck</code></li>
+<li>Santa（美式男声）— <code>am_santa</code></li>
+<li>Emma（英式女声）— <code>bf_emma</code></li>
+<li>Isabella（英式女声）— <code>bf_isabella</code></li>
+<li>George（英式男声）— <code>bm_george</code></li>
+<li>Lewis（英式男声）— <code>bm_lewis</code></li>
+<li>Alice（英式女声）— <code>bf_alice</code></li>
+<li>Lily（英式女声）— <code>bf_lily</code></li>
+<li>Daniel（英式男声）— <code>bm_daniel</code></li>
+<li>Fable（英式男声）— <code>bm_fable</code></li>
+<li>Dora（西班牙语）： <code>ef_dora</code></li>
+<li>Alex（西班牙语）： <code>em_alex</code></li>
+<li>Santa（西班牙语）： <code>em_santa</code></li>
+<li>Dora（巴西葡萄牙语）： <code>pf_dora</code></li>
+<li>Alex（巴西葡萄牙语）： <code>pm_alex</code></li>
+<li>Santa（巴西葡萄牙语）： <code>pm_santa</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-kitten"><summary>Kitten</summary><p>八种英语音色：2、3、4、5 号音色各有男女版本。示例使用 Voice 4（Female）。</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kitten.png"><img src="../../docs/images/guides/tts-settings-kitten.png" alt="实际 SSN Kitten 提供商设置" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>音色名称与链接参数值</summary><ul class="guide-list">
+<li>Voice 2（男声）— <code>expr-voice-2-m</code></li>
+<li>Voice 2（女声）— <code>expr-voice-2-f</code></li>
+<li>Voice 3（男声）— <code>expr-voice-3-m</code></li>
+<li>Voice 3（女声）— <code>expr-voice-3-f</code></li>
+<li>Voice 4（男声）— <code>expr-voice-4-m</code></li>
+<li>Voice 4（女声）— <code>expr-voice-4-f</code></li>
+<li>Voice 5（男声）— <code>expr-voice-5-m</code></li>
+<li>Voice 5（女声）— <code>expr-voice-5-f</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-piper"><summary>Piper</summary><p>选择与你的语言匹配的音色。只改语言不会改变音色。示例使用 HFC medium。</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-piper.png"><img src="../../docs/images/guides/tts-settings-piper.png" alt="实际 SSN Piper 提供商设置" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>音色名称与链接参数值</summary><ul class="guide-list">
+<li>美式英语女声（HFC）- 中等质量 — <code>en_US-hfc_female-medium</code></li>
+<li>西班牙西班牙语（DaveFX）- 中等质量 — <code>es_ES-davefx-medium</code></li>
+<li>墨西哥西班牙语（Ald）- 中等质量 — <code>es_MX-ald-medium</code></li>
+<li>巴西葡萄牙语（Faber）- 中等质量 — <code>pt_BR-faber-medium</code></li>
+<li>巴西葡萄牙语（Edresson）- 低质量 — <code>pt_BR-edresson-low</code></li>
+<li>葡萄牙葡萄牙语（Tugao）- 中等质量 — <code>pt_PT-tug&atilde;o-medium</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-espeak"><summary>eSpeak</summary><p>选择对应语言的音色，可更改语速。机械感是其设计特点。</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-espeak.png"><img src="../../docs/images/guides/tts-settings-espeak.png" alt="实际 SSN eSpeak 提供商设置" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>音色名称与链接参数值</summary><ul class="guide-list">
+<li>英语 — <code>en</code></li>
+<li>西班牙语 — <code>es</code></li>
+<li>巴西葡萄牙语 — <code>pt-br</code></li>
+<li>葡萄牙葡萄牙语 — <code>pt-pt</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-elevenlabs"><summary>ElevenLabs</summary><p>输入 API 密钥，然后点击 <strong>列出我可用的音色</strong> 查找账户可用的音色 ID。 <a href="https://elevenlabs.io/docs/api-reference/text-to-speech/convert">ElevenLabs 参考</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-elevenlabs.png"><img src="../../docs/images/guides/tts-settings-elevenlabs.png" alt="实际 SSN ElevenLabs 提供商设置" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-google"><summary>Google Cloud</summary><p>输入 Google Cloud TTS API 密钥、准确的音色名称和匹配的语言。 <a href="https://cloud.google.com/text-to-speech/docs/voices">语音名称及支持的控件</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-google.png"><img src="../../docs/images/guides/tts-settings-google.png" alt="实际 SSN Google Cloud 提供商设置" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-gemini"><summary>Gemini</summary><p>选择 TTS 模型和音色，风格指令可改变朗读方式。这里使用 Gemini API，不是 Google Cloud TTS。 <a href="https://ai.google.dev/gemini-api/docs/speech-generation">语音示例及要求</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-gemini.png"><img src="../../docs/images/guides/tts-settings-gemini.png" alt="实际 SSN Gemini 提供商设置" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-fish"><summary>Fish Audio</summary>
+<p>可用于聊天 Dock、精选叠加层、TTS 页面和 Flow Actions。</p>
+<ol class="guide-steps">
+<li>选择 <strong>Fish Audio</strong> 作为 TTS 提供商。</li>
+<li>粘贴你的 <a href="https://fish.audio/app/api-keys">Fish Audio API 密钥</a>.</li>
+<li>可选：粘贴 <strong>语音 ID</strong> 来自 <a href="https://fish.audio/">Fish Audio</a>。复制音色的模型 ID，不是名称或页面链接。留空使用默认音色。</li>
+<li>新闻 <strong>测试 TTS</strong>.</li>
+</ol>
+<p>默认模型是 <code>s2.1-pro-free</code>。免费范围和合理使用条款由 Fish Audio 决定。付费模型需要账户余额。免费请求失败时，SSN 不会切换到付费模型。速度为 0.5 至 2。Fish Audio 自动识别语言，聊天文本会发送给 Fish Audio。</p>
+<h4>OBS：运行本地桥接</h4>
+<p>Fish Audio 阻止网页直接请求，所以 OBS 需要 SSN 的 <a href="../../local-tts-bridge/README.md#fish-audio-for-obs">本地桥接</a> （需要 Node.js）。在运行 OBS 的电脑上启动。</p>
+<ol class="guide-steps">
+<li>设置 <code>SSN_TTS_TARGET_BEARER</code> 环境变量设为你的 Fish API 密钥。</li>
+<li>在 SSN 文件夹中运行 <code>node scripts/local-tts-bridge.cjs --mode fish</code>。保持运行。</li>
+<li>在 Fish Audio 面板中设置 <strong>桥接 URL</strong> 为 <code>http://127.0.0.1:8124/v1/audio/speech</code>.</li>
+<li>将终端显示的桥接令牌粘贴到 <strong>API密钥</strong> 领域。</li>
+<li>测试音色，再将叠加层链接加入 OBS。开启 <strong>通过 OBS 控制音频</strong>.</li>
+</ol>
+<div class="warning-note"><strong>每次桥接重启，令牌都会变化。</strong> 要固定令牌，请设置 <code>SSN_TTS_BRIDGE_TOKEN</code> 设为较长的随机秘密值。包含令牌或密钥的链接请保密。</div>
+<details class="guide-extra"><summary>Fish Audio 链接设置</summary>
+<pre>&amp;ttsprovider=fish&amp;fishkey=YOUR_KEY&amp;voicefish=VOICE_ID&amp;fishmodel=s2.1-pro-free&amp;fishspeed=1</pre>
+<p>使用桥接时，添加 <code>&amp;fishendpoint=http%3A%2F%2F127.0.0.1%3A8124%2Fv1%2Faudio%2Fspeech</code>。省略 <code>fishkey</code> ，如果桥接已保存密钥则省略。Event Flow 的 <strong>朗读文本（Speak Text）</strong> 音色覆盖设置在接收页面使用 Fish Audio 时可接受 Fish 音色 ID。</p>
+<p><a href="https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech">Fish Audio API 参考</a> &middot; <a href="https://fish.audio/blog/s2-1-pro-free-api/">免费模型公告及条款</a></p>
+</details>
+</details>
+<details class="guide-extra" id="settings-speechify"><summary>Speechify</summary><p>输入 Speechify API 账号的 API 密钥及语音 ID。 <a href="speechify-setup-guide.html"><strong>Speechify 分步指南</strong></a> &middot; <a href="https://docs.speechify.ai/docs/get-started/overview">Speechify 设置</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-speechify.png"><img src="../../docs/images/guides/tts-settings-speechify.png" alt="实际 SSN Speechify 提供商设置" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-openai"><summary>OpenAI</summary><p>选择音色和模型，输入 API 密钥。ChatGPT 订阅不赠送 API 额度。保留默认端点。</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-openai.png"><img src="../../docs/images/guides/tts-settings-openai.png" alt="实际 SSN OpenAI 提供商设置" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-customtts"><summary>自定义 / 本地 TTS</summary><p>这里复用 OpenAI 设置，所以标题仍是 OpenAI。输入服务器地址及其支持的音色和模型。是否需要密钥由服务器决定。参见 <a href="local-tts.html">本地服务器指南</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-customtts.png"><img src="../../docs/images/guides/tts-settings-customtts.png" alt="实际 SSN Custom / Local TTS 提供商设置" class="guide-image" loading="lazy"></a></figure>
+</details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="background-speech">加速 Kokoro 和 Kitten</h2>
+                <p>在 Kokoro 或 Kitten 下打开 <strong>生成和播放</strong>。这些选项在后台生成语音，让页面保持流畅。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>我想要…</th><th>执行操作</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="我想要">为 Kokoro 开启</td><td data-label="执行操作">设置 <strong>处理</strong> 为 <strong>后台生成</strong>.</td></tr>
+                        <tr><td data-label="我想要">为 Kitten 开启</td><td data-label="执行操作">选择一个 <strong>Kitten 0.8</strong> 模型：Nano（最小）、Micro 或 Mini。</td></tr>
+                        <tr><td data-label="我想要">更早听到语音</td><td data-label="执行操作"><strong>语音到达即播放</strong>。每段生成后立即播放。较慢的电脑可能在段落间停顿。</td></tr>
+                        <tr><td data-label="我想要">减少间断</td><td data-label="执行操作"><strong>播放完整消息</strong>。先等待整条消息生成完毕。</td></tr>
+                        <tr><td data-label="我想要">解决 GPU 问题（Kokoro）</td><td data-label="执行操作">设置 <strong>后台处理器</strong> 为 <strong>CPU</strong>.</td></tr>
+                        <tr><td data-label="我想要">Kokoro 最佳音质</td><td data-label="执行操作"><strong>完整音质</strong>。下载更大，内存占用更多。</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra"><summary>更多细节和链接设置</summary>
+                <p><strong>自动</strong> 在有支持的 GPU 时使用 GPU，否则使用 CPU。自动音质在兼容 GPU 上选 FP16，在其他支持的 GPU 上选全精度，在 CPU 上选精简模型。强制使用 GPU 却没有可用 GPU 时会报错。</p>
+                <p>Kitten 0.8 在 CPU 上运行，仅支持英语。各模型首次使用时下载，每个浏览器或 OBS 单独保存。无论哪种方式，NeuroSync 都会收到完整音频文件。不改这些选项时，旧链接保持原来的行为。</p>
+                <p>Kokoro： <code>&amp;kokororuntime=worker</code>，可选的 <code>&amp;kokoroplayback=stream</code>, <code>&amp;kokorodevice=wasm</code> 或 <code>webgpu</code>, <code>&amp;kokorodtype=q8</code>, <code>fp16</code> 或 <code>fp32</code>。流式播放或 FP32 会自动开启后台生成。</p>
+                <p>Kitten： <code>&amp;kittenmodel=nano</code> （或 <code>micro</code>, <code>mini</code>），可选的 <code>&amp;kittenplayback=stream</code>.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="more">进一步使用</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>我想要…</th><th>前往</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="我想要">手动编辑 TTS 链接或查看所有选项</td><td data-label="前往"><a href="tts.html">TTS 参考</a></td></tr>
+                        <tr><td data-label="我想要">在链接中使用西班牙语或葡萄牙语音色</td><td data-label="前往"><a href="tts.html#premium-options">TTS 参考：提供商选项</a></td></tr>
+                        <tr id="local-server"><td data-label="我想要">运行自己的语音服务器或克隆音色</td><td data-label="前往"><a href="local-tts.html">本地 AI TTS 指南</a></td></tr>
+                        <tr><td data-label="我想要">设置 Speechify</td><td data-label="前往"><a href="speechify-setup-guide.html">Speechify 指南</a></td></tr>
+                    </tbody>
+                </table>
+                <p>可快速尝试的链接： <code>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=piper</code></p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 许可证。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function revealGuideSection() {
+            var target;
+            try { target = document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { return; }
+            if (!target) return;
+            for (var node = target; node; node = node.parentElement) {
+                if (node.tagName === "DETAILS") node.open = true;
+            }
+            target.scrollIntoView();
+        }
+        window.addEventListener("hashchange", revealGuideSection);
+        revealGuideSection();
+    </script>
+</body>
+</html>

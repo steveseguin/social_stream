@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="在 Social Stream Ninja 中使用 Event Flow 使用者記憶，儲存觀眾專屬值，並建立可根據先前互動作出回應的自動化。">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/actions/user-memory-guide.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/actions/user-memory-guide.html">
+    <meta property="og:title" content="使用者記憶指南 - Social Stream Ninja">
+    <meta property="og:description" content="在 Social Stream Ninja 中使用 Event Flow 使用者記憶，儲存觀眾專屬值，並建立可根據先前互動作出回應的自動化。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/actions/user-memory-guide.html">
+    <meta name="twitter:title" content="使用者記憶指南 - Social Stream Ninja">
+    <meta name="twitter:description" content="在 Social Stream Ninja 中使用 Event Flow 使用者記憶，儲存觀眾專屬值，並建立可根據先前互動作出回應的自動化。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>使用者記憶指南 - Social Stream Ninja</title>
+    <style>
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #e5e7eb;
+            background: #090c13;
+            line-height: 1.65;
+        }
+        a { color: #5eead4; }
+        code {
+            padding: 2px 6px;
+            border-radius: 5px;
+            color: #f5d0fe;
+            background: rgba(192, 132, 252, 0.14);
+        }
+        .shell { max-width: 1120px; margin: 0 auto; }
+        header {
+            padding: 64px 32px 48px;
+            background:
+                radial-gradient(circle at 78% 15%, rgba(192,132,252,0.28), transparent 32%),
+                linear-gradient(145deg, #111827, #172554 62%, #312e81);
+            border-bottom: 1px solid rgba(192,132,252,0.3);
+        }
+        header .eyebrow {
+            color: #c4b5fd;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        h1 { margin: 8px 0 14px; font-size: clamp(2.2rem, 6vw, 4rem); line-height: 1.08; }
+        header p { max-width: 760px; margin: 0; color: #cbd5e1; font-size: 1.12rem; }
+        nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+        nav a, .button {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 999px;
+            color: #f8fafc;
+            text-decoration: none;
+            background: rgba(15,23,42,0.34);
+        }
+        main { padding: 44px 32px 72px; }
+        section { margin: 0 0 68px; scroll-margin-top: 20px; }
+        h2 { margin: 0 0 16px; color: #ddd6fe; font-size: 2rem; }
+        h3 { margin: 28px 0 10px; color: #c4b5fd; }
+        p { margin: 10px 0; color: #cbd5e1; }
+        ul, ol { color: #cbd5e1; }
+        li { margin: 7px 0; }
+        .lead, .callout, .card {
+            border: 1px solid rgba(148,163,184,0.2);
+            border-radius: 14px;
+            background: #111827;
+        }
+        .lead, .callout { padding: 18px 20px; }
+        .callout { margin: 20px 0; border-color: rgba(94,234,212,0.25); }
+        .warning { border-color: rgba(251,191,36,0.35); background: rgba(120,53,15,0.18); }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+            gap: 16px;
+            margin: 22px 0;
+        }
+        .card { padding: 18px; }
+        .card h3, .card h4 { margin-top: 0; }
+        .wire-key { display: flex; flex-wrap: wrap; gap: 18px; margin: 18px 0; color: #cbd5e1; }
+        .wire { display: inline-flex; align-items: center; gap: 9px; }
+        .wire::before { content: ""; width: 46px; border-top: 3px solid #2dd4bf; }
+        .wire.state::before { border-top: 3px dashed #c084fc; }
+        figure {
+            margin: 24px 0;
+            border: 1px solid rgba(148,163,184,0.22);
+            border-radius: 14px;
+            overflow: hidden;
+            background: #15171d;
+        }
+        figure img { display: block; width: 100%; height: auto; }
+        figcaption { padding: 12px 16px; color: #94a3b8; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #111827; }
+        th, td { padding: 12px 14px; border: 1px solid #293244; text-align: left; vertical-align: top; }
+        th { color: #ddd6fe; background: #172033; }
+        table:focus { outline: 2px solid #c4b5fd; outline-offset: 2px; }
+        .flow {
+            padding: 16px 18px;
+            margin: 14px 0;
+            border-radius: 12px;
+            color: #e2e8f0;
+            background: #070b12;
+            border: 1px solid #253047;
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+            white-space: pre-wrap;
+        }
+        .recipe { padding-left: 18px; border-left: 4px solid #8b5cf6; margin: 28px 0; }
+        .recipe h3 { margin-top: 0; }
+        .two-col { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 22px; align-items: start; }
+        footer { padding: 24px 32px 42px; color: #94a3b8; border-top: 1px solid #1f2937; }
+        @media (max-width: 760px) {
+            header, main, footer { padding-left: 18px; padding-right: 18px; }
+            .two-col { grid-template-columns: 1fr; }
+            table { font-size: 0.9rem; display: block; max-width: 100%; overflow-x: auto; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"actions/user-memory-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{", or":"，或",", selecting the exact memory.":"，選擇確切的記憶。",", so other platforms speak for everyone while TikTok stays restricted.":"，這樣其他平台允許所有人發聲，而 TikTok 仍受限制。",". Confirm the captured row in Test Flow/Event Reference and match the cleanest field your source provides.":"。在 Test Flow/Event Reference 中確認擷取的列，並比對來源提供的最明確欄位。",". It reads the incoming TikTok badge/level data directly; the Main Chat Overlay’s “treat as members” display setting is not required.":"。它直接讀取傳入的 TikTok 徽章/等級資料；不需要 Main Chat Overlay 的「treat as members」顯示設定。","? command + TikTok source + (TikTok Team Member OR User Is Remembered) → AND → Speak Text ? command + NOT TikTok source → AND ────────────────────────────────→ Speak Text":"? command + TikTok source + (TikTok Team Member OR User Is Remembered) → AND → Speak Text ? command + NOT TikTok source → AND ────────────────────────────────→ Speak Text","A":"一個","A like did not add anyone":"按讚沒有新增任何人","A real SSApp flow with two remembered entrants. The event path stays teal; shared-state references are dashed purple.":"一個真實的 SSApp 流程，包含兩名已記憶的參加者。事件路徑保持藍綠色；共用狀態參照為紫色虛線。","A saved memory came back":"儲存的記憶又回來了","A trigger/check that returns true when the current message belongs to someone in the selected memory.":"當目前訊息屬於所選記憶中的某人時，傳回 true 的觸發條件/檢查。","Across restarts":"跨重新啟動","Actual Test Flow output: Alice was selected and the memory count fell to one because “remove selected” was enabled.":"實際 Test Flow 輸出：Alice 被選中，且因為啟用了「remove selected」，記憶計數降為一。","Add User Role: moderator/admin (or an exact host-user check) into an AND gate before the action.":"在動作之前的 AND 閘中加入 User Role: moderator/admin（或精確的主持使用者檢查）。","Add the checks and actions you need, then link each one to the named memory using its side diamond or dropdown.":"新增所需的檢查和動作，然後使用側面的菱形或下拉式選單，將每個節點連結至具名記憶。","Adds the current event’s user once. Repeated participation increases that user’s participation count without adding duplicate draw entries.":"僅新增目前事件的使用者一次。重複參加會增加該使用者的參加次數，不會新增重複抽獎項目。","Also clears a User Memory when that memory is the selected reset target.":"當 User Memory 是所選重設目標時，也會清空該記憶。","Anyone can run the draw/reset command":"任何人都能執行抽獎/重設命令","Automatic":"自動","Available operations":"可用動作","Both branches still require the leading":"兩個分支仍然都要求開頭的","Check whether the events came from different platforms. Platform + user ID intentionally creates separate identities.":"檢查事件是否來自不同平台。平台 + 使用者 ID 會刻意建立不同身分。","Choose":"選擇","Clear All Users":"清除所有使用者（Clear All Users）","Clear All Users Now":"立即清除所有使用者（Clear All Users Now）","Clear after inactivity, on stream start, or on stream stop. A value of 0 disables inactivity reset.":"在不活躍、直播開始或直播停止時清除。值為 0 會停用不活躍重設。","Connect the normal event path with teal wires and use":"使用藍綠色連線連接一般事件路徑，並使用","Dashed purple: this node uses that memory":"紫色虛線：此節點使用該記憶","Download the participation + draw example flow":"下載參加和抽獎範例流程","Drag":"拖曳","Drag the small purple side diamond onto a User Memory node, or choose the memory by name in the node properties. Internally the operation stores the state node’s ID. Selecting the memory highlights every linked operation, and deleting it warns before those links are broken.":"將紫色小側邊菱形拖到 User Memory 節點上，或在節點屬性中依名稱選擇記憶。動作在內部儲存狀態節點的 ID。選擇記憶會醒目顯示所有連結動作，刪除它會在中斷這些連結前發出警告。","Draw outputs":"抽獎輸出","Empties only the selected User Memory object.":"僅清空所選的 User Memory 物件。","Enable":"啟用","Event Flow Guide":"Event Flow 指南","Event Flow canvas showing Remember User and User Is Remembered linked to the Prize Draw Entrants memory with dashed purple lines":"Event Flow 畫布，顯示 Remember User 和 User Is Remembered 透過紫色虛線連結至 Prize Draw Entrants 記憶","Event Flow shared state":"Event Flow 共用狀態","Event Type → Other: gift":"Event Type → Other: gift","Event Type → Other: liked → Remember User ···→ [Liked Stream]":"Event Type → Other: liked → Remember User ···→ [Liked Stream]","Every reset option belongs to this one named memory. Other User Memory nodes are not touched.":"每個重設選項都屬於這一項具名記憶。其他 User Memory 節點不受影響。","Field":"欄位","For TikTok Team/Fan status, choose":"對於 TikTok Team/Fan 狀態，選擇","Forget User":"忘記使用者（Forget User）","From a flow":"從流程中","Gift payloads differ by capture mode. A common setup is":"禮物承載資料因擷取模式而異。一種常見設定為","Heart Me Eligible":"Heart Me 合格使用者（Heart Me Eligible）","How it works":"運作方式","How many times that person has participated.":"該人參加了多少次。","Identity rule:":"身分規則：","Liked Stream":"按讚過直播（Liked Stream）","Manual":"手動","Meaning":"含義","Memory actions add fields to the message so downstream Show Text, Send Message, webhook, or custom actions can use them.":"記憶動作向訊息加入欄位，以便下游 Show Text、Send Message、webhook 或自訂動作使用。","Message Contains: Heart Me":"Message Contains: Heart Me","Message Starts With !enter → Remember User ···→ [Prize Draw Entrants] Moderator + Message Starts With !draw → AND → Pick Random User ···→ [Prize Draw Entrants] Moderator + Message Starts With !resetdraw → AND → Clear All Users ···→ [Prize Draw Entrants]":"Message Starts With !enter → Remember User ···→ [Prize Draw Entrants] Moderator + Message Starts With !draw → AND → Pick Random User ···→ [Prize Draw Entrants] Moderator + Message Starts With !resetdraw → AND → Clear All Users ···→ [Prize Draw Entrants]","Name it for the list it owns, such as":"根據其管理的清單為它命名，例如","Node":"節點","One named memory, many tools":"一個具名記憶，多種工具","Pick Random User":"隨機選擇使用者（Pick Random User）","Practical recipes":"實用方案","Prize Draw Entrants":"抽獎參加者（Prize Draw Entrants）","Recipes":"實用方案","Remember User":"記住使用者（Remember User）","Remember people who liked or participated":"記住按讚或參加過的人","Remember unique participants, check them on later messages, draw a random winner, and reset exactly the list you intended without turning a platform role into permanent global state.":"記住不重複的參加者，在後續訊息中檢查他們，隨機抽出得獎者，並準確重設您想清除的清單，而不會將平台角色變成永久全域狀態。","Remove selected user":"移除選中的使用者（Remove selected user）","Removes only the current event’s user.":"僅移除目前事件的使用者。","Reset State Node":"重設狀態節點（Reset State Node）","Reset and persistence":"重設和持續儲存","Save across restarts":"跨重新啟動儲存（Save across restarts）","Select the operation and choose a User Memory target, or drag its purple side diamond to the memory hub.":"選擇動作並選取一個 User Memory 目標，或將其紫色側邊菱形拖至記憶中心。","Selects one unique remembered user. It can optionally remove the winner so they cannot win again.":"選擇一名不重複的已記憶使用者。可以選擇移除得獎者，使其無法再次得獎。","Session memories start empty with the app. Saved memories reload until that specific memory is cleared.":"工作階段記憶在應用程式啟動時為空。儲存的記憶會重新載入，直到該特定記憶遭清除。","Set it up":"進行設定","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja ·":"Social Stream Ninja ·","Solid teal: this event runs next":"藍綠色實線：接下來執行此事件","State Nodes Guide":"狀態節點指南","State Nodes → User Memory":"狀態節點 → 使用者記憶（State Nodes → User Memory）","TTS":"TTS","Test Flow":"測試流程（Test Flow）","Test Flow result showing a selected prize draw user and one remaining entrant":"Test Flow 結果，顯示選中的抽獎使用者和一名剩餘參加者","The dashed line is missing":"缺少虛線","The drawn user’s display name.":"抽中使用者的顯示名稱。","The drawn user’s stable ID and platform.":"抽中使用者的穩定 ID 和平台。","The event probably had no user identity. Inspect the event payload; aggregate counts cannot become named entrants.":"該事件可能沒有使用者身分。檢查事件承載資料；彙總計數無法成為具名參加者。","The hub reports its current unique-user count and owns persistence/reset settings.":"中心回報目前不重複使用者數量，並管理持續儲存/重設設定。","The latest reason template saved by Remember User.":"Remember User 儲存的最新原因範本。","The same person appears twice":"同一個人出現兩次","The selected memory’s name.":"所選記憶的名稱。","The winner’s recorded participation count.":"得獎者記錄的參加次數。","This app session":"此次應用程式工作階段","This works when the captured like/participation event names a user. Aggregate like-count updates do not identify a person and therefore cannot be remembered. Use a separate memory for each kind of participation if you want independent checks or draws.":"當擷取的按讚/參加事件指明某個使用者時，此功能有效。彙總按讚數量更新不能識別個人，因此無法記憶。若要獨立檢查或抽獎，請為每種參加類型使用單獨的記憶。","TikTok Heart Me or Team Member →":"TikTok Heart Me 或 Team Member →","TikTok gift event + “Heart Me” match → AND → Remember User ···→ [Heart Me Eligible]":"TikTok gift event + “Heart Me” match → AND → Remember User ···→ [Heart Me Eligible]","Troubleshooting":"疑難排解","True only when Remember User added a new unique person.":"僅當 Remember User 新增了新的不重複使用者時為 true。","Unique users currently remembered.":"目前記住的不重複使用者。","Unique-entry prize draw":"每人一份資格的抽獎","Use":"使用","Use Clear All Users on that memory. Changing a flow or clearing a different memory does not erase it.":"對該記憶使用 Clear All Users。變更流程或清除另一個記憶不會抹除它。","Use Event Flow user memory in Social Stream Ninja to store viewer-specific values and build automations that respond to previous interactions.":"在 Social Stream Ninja 中使用 Event Flow 使用者記憶，儲存觀眾專屬值，並建立可根據先前互動作出回應的自動化。","Use draw and participation outputs":"使用抽獎和參加輸出","Use the gift event to remember the sender; do not try to turn the one gift row into a permanent “member” role.":"使用禮物事件記住傳送者；不要試圖將單一禮物列變成永久「會員」角色。","User Is Remembered":"使用者已被記住（User Is Remembered）","User Memory":"使用者記憶（User Memory）","User Memory Guide - Social Stream Ninja":"使用者記憶指南 - Social Stream Ninja","User Memory node properties showing two current users and Save across restarts":"User Memory 節點屬性，顯示目前兩名使用者和 Save across restarts","User Memory reset properties including inactivity, stream start, stream stop, and Clear All Users Now":"User Memory 重設屬性，包含不活躍、直播開始、直播停止和 Clear All Users Now","User Role → TikTok Team Member":"User Role → TikTok Team Member","What it does":"功能","Whether the draw removed the selected winner.":"抽獎是否移除了選中的得獎者。","in the memory properties while building/testing.":"在建立/測試期間，在記憶屬性中使用。","it means all users inside the selected memory, not all Event Flow state, not every draw, and not every memory in Social Stream Ninja.":"它指所選記憶內的所有使用者，而不是全部 Event Flow 狀態、所有抽獎或 Social Stream Ninja 中的每項記憶。","onto the canvas.":"至畫布上。","or":"或","or the generic":"或通用的","plus":"加上","state node owns one isolated set of people. Every Remember, Forget, Check, Draw, or Clear node selects that state node. Create another User Memory node when you need a separate list, for example, one for “liked the stream” and another for “entered the giveaway.”":"狀態節點擁有一組隔離的人員。每個 Remember、Forget、Check、Draw 或 Clear 節點都選擇該狀態節點。需要單獨清單時，再建立一個 User Memory 節點，例如，一個用於「按讚過直播」，另一個用於「參加了贈品抽獎」。","users are keyed by platform plus user ID. The displayed username is used only as a fallback. An anonymous or aggregate event with no user identity is safely ignored.":"使用者以平台加使用者 ID 為鍵。顯示的使用者名稱僅作為備援值。沒有使用者身分的匿名或彙總事件會安全地忽略。","when winners should not be drawn twice. In a public stream, protect draw/reset commands with a moderator, admin, or exact-user check.":"當得獎者不應被重複抽中時。在公開直播中，請使用版主、管理員或精確使用者檢查來保護抽獎/重設命令。","with two different usernames before going live.":"在開播前使用兩個不同的使用者名稱。","“Clear all” is scoped:":"「清除全部」有範圍限制："}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/actions/user-memory-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header>
+        <div class="shell">
+            <div class="eyebrow">Event Flow 共用狀態</div>
+            <h1>使用者記憶（User Memory）</h1>
+            <p>記住不重複的參加者，在後續訊息中檢查他們，隨機抽出得獎者，並準確重設您想清除的清單，而不會將平台角色變成永久全域狀態。</p>
+            <nav>
+                <a href="#model">運作方式</a>
+                <a href="#setup">進行設定</a>
+                <a href="#recipes">實用方案</a>
+                <a href="#reset">重設和持續儲存</a>
+                <a href="#outputs">抽獎輸出</a>
+            </nav>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/user-memory-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/user-memory-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/user-memory-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/user-memory-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/user-memory-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/user-memory-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/user-memory-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/user-memory-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="user-memory-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/actions/user-memory-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/user-memory-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/user-memory-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/user-memory-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/user-memory-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/user-memory-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/user-memory-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/user-memory-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+    </header>
+
+    <main class="shell">
+        <section id="model">
+            <h2>一個具名記憶，多種工具</h2>
+            <div class="lead">
+                一個 <strong>使用者記憶（User Memory）</strong> 狀態節點擁有一組隔離的人員。每個 Remember、Forget、Check、Draw 或 Clear 節點都選擇該狀態節點。需要單獨清單時，再建立一個 User Memory 節點，例如，一個用於「按讚過直播」，另一個用於「參加了贈品抽獎」。
+            </div>
+            <div class="wire-key">
+                <span class="wire">藍綠色實線：接下來執行此事件</span>
+                <span class="wire state">紫色虛線：此節點使用該記憶</span>
+            </div>
+            <p>將紫色小側邊菱形拖到 User Memory 節點上，或在節點屬性中依名稱選擇記憶。動作在內部儲存狀態節點的 ID。選擇記憶會醒目顯示所有連結動作，刪除它會在中斷這些連結前發出警告。</p>
+            <figure>
+                <img src="../../actions/img/user-memory-shared-state.png" alt="Event Flow 畫布，顯示 Remember User 和 User Is Remembered 透過紫色虛線連結至 Prize Draw Entrants 記憶">
+                <figcaption>一個真實的 SSApp 流程，包含兩名已記憶的參加者。事件路徑保持藍綠色；共用狀態參照為紫色虛線。</figcaption>
+            </figure>
+        </section>
+
+        <section id="setup">
+            <h2>進行設定</h2>
+            <ol>
+                <li>拖曳 <strong>狀態節點 → 使用者記憶（State Nodes → User Memory）</strong> 至畫布上。</li>
+                <li>根據其管理的清單為它命名，例如 <em>Heart Me 合格使用者（Heart Me Eligible）</em>, <em>按讚過直播（Liked Stream）</em>，或 <em>抽獎參加者（Prize Draw Entrants）</em>.</li>
+                <li>選擇 <strong>此次應用程式工作階段</strong> 或 <strong>跨重新啟動儲存（Save across restarts）</strong>.</li>
+                <li>新增所需的檢查和動作，然後使用側面的菱形或下拉式選單，將每個節點連結至具名記憶。</li>
+                <li>使用藍綠色連線連接一般事件路徑，並使用 <strong>測試流程（Test Flow）</strong> 在開播前使用兩個不同的使用者名稱。</li>
+            </ol>
+            <div class="two-col">
+                <div>
+                    <h3>可用動作</h3>
+                    <table tabindex="0">
+                        <thead><tr><th>節點</th><th>功能</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>記住使用者（Remember User）</strong></td><td>僅新增目前事件的使用者一次。重複參加會增加該使用者的參加次數，不會新增重複抽獎項目。</td></tr>
+                            <tr><td><strong>使用者已被記住（User Is Remembered）</strong></td><td>當目前訊息屬於所選記憶中的某人時，傳回 true 的觸發條件/檢查。</td></tr>
+                            <tr><td><strong>忘記使用者（Forget User）</strong></td><td>僅移除目前事件的使用者。</td></tr>
+                            <tr><td><strong>隨機選擇使用者（Pick Random User）</strong></td><td>選擇一名不重複的已記憶使用者。可以選擇移除得獎者，使其無法再次得獎。</td></tr>
+                            <tr><td><strong>清除所有使用者（Clear All Users）</strong></td><td>僅清空所選的 User Memory 物件。</td></tr>
+                            <tr><td><strong>重設狀態節點（Reset State Node）</strong></td><td>當 User Memory 是所選重設目標時，也會清空該記憶。</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <figure>
+                    <img src="../../actions/img/user-memory-settings.png" alt="User Memory 節點屬性，顯示目前兩名使用者和 Save across restarts">
+                    <figcaption>中心回報目前不重複使用者數量，並管理持續儲存/重設設定。</figcaption>
+                </figure>
+            </div>
+            <div class="callout">
+                <strong>身分規則：</strong> 使用者以平台加使用者 ID 為鍵。顯示的使用者名稱僅作為備援值。沒有使用者身分的匿名或彙總事件會安全地忽略。
+            </div>
+        </section>
+
+        <section id="recipes">
+            <h2>實用方案</h2>
+
+            <div class="recipe">
+                <h3>TikTok Heart Me 或 Team Member → <code>?</code> TTS</h3>
+                <p>使用禮物事件記住傳送者；不要試圖將單一禮物列變成永久「會員」角色。</p>
+                <div class="flow">TikTok gift event + “Heart Me” match → AND → Remember User ···→ [Heart Me Eligible]</div>
+                <div class="flow">? command + TikTok source + (TikTok Team Member OR User Is Remembered) → AND → Speak Text
+? command + NOT TikTok source → AND ────────────────────────────────→ Speak Text</div>
+                <ul>
+                    <li>對於 TikTok Team/Fan 狀態，選擇 <strong>User Role → TikTok Team Member</strong>。它直接讀取傳入的 TikTok 徽章/等級資料；不需要 Main Chat Overlay 的「treat as members」顯示設定。</li>
+                    <li>禮物承載資料因擷取模式而異。一種常見設定為 <strong>Event Type → Other: gift</strong> 加上 <strong>Message Contains: Heart Me</strong>。在 Test Flow/Event Reference 中確認擷取的列，並比對來源提供的最明確欄位。</li>
+                    <li>兩個分支仍然都要求開頭的 <code>?</code>，這樣其他平台允許所有人發聲，而 TikTok 仍受限制。</li>
+                </ul>
+            </div>
+
+            <div class="recipe">
+                <h3>記住按讚或參加過的人</h3>
+                <div class="flow">Event Type → Other: liked → Remember User ···→ [Liked Stream]</div>
+                <p>當擷取的按讚/參加事件指明某個使用者時，此功能有效。彙總按讚數量更新不能識別個人，因此無法記憶。若要獨立檢查或抽獎，請為每種參加類型使用單獨的記憶。</p>
+            </div>
+
+            <div class="recipe">
+                <h3>每人一份資格的抽獎</h3>
+                <div class="flow">Message Starts With !enter → Remember User ···→ [Prize Draw Entrants]
+Moderator + Message Starts With !draw → AND → Pick Random User ···→ [Prize Draw Entrants]
+Moderator + Message Starts With !resetdraw → AND → Clear All Users ···→ [Prize Draw Entrants]</div>
+                <p>啟用 <strong>移除選中的使用者（Remove selected user）</strong> 當得獎者不應被重複抽中時。在公開直播中，請使用版主、管理員或精確使用者檢查來保護抽獎/重設命令。</p>
+                <p><a class="button" href="../../actions/examples/user-memory-participation-draw.json" download>下載參加和抽獎範例流程</a></p>
+            </div>
+        </section>
+
+        <section id="reset">
+            <h2>重設和持續儲存</h2>
+            <div class="grid">
+                <div class="card"><h3>手動</h3><p>使用 <strong>立即清除所有使用者（Clear All Users Now）</strong> 在建立/測試期間，在記憶屬性中使用。</p></div>
+                <div class="card"><h3>從流程中</h3><p>使用 <strong>清除所有使用者（Clear All Users）</strong> 或通用的 <strong>重設狀態節點（Reset State Node）</strong>，選擇確切的記憶。</p></div>
+                <div class="card"><h3>自動</h3><p>在不活躍、直播開始或直播停止時清除。值為 0 會停用不活躍重設。</p></div>
+                <div class="card"><h3>跨重新啟動</h3><p>工作階段記憶在應用程式啟動時為空。儲存的記憶會重新載入，直到該特定記憶遭清除。</p></div>
+            </div>
+            <figure>
+                <img src="../../actions/img/user-memory-reset-controls.png" alt="User Memory 重設屬性，包含不活躍、直播開始、直播停止和 Clear All Users Now">
+                <figcaption>每個重設選項都屬於這一項具名記憶。其他 User Memory 節點不受影響。</figcaption>
+            </figure>
+            <div class="callout warning">
+                <strong>「清除全部」有範圍限制：</strong> 它指所選記憶內的所有使用者，而不是全部 Event Flow 狀態、所有抽獎或 Social Stream Ninja 中的每項記憶。
+            </div>
+        </section>
+
+        <section id="outputs">
+            <h2>使用抽獎和參加輸出</h2>
+            <p>記憶動作向訊息加入欄位，以便下游 Show Text、Send Message、webhook 或自訂動作使用。</p>
+            <table tabindex="0">
+                <thead><tr><th>欄位</th><th>含義</th></tr></thead>
+                <tbody>
+                    <tr><td><code>userMemoryName</code></td><td>所選記憶的名稱。</td></tr>
+                    <tr><td><code>userMemoryCount</code></td><td>目前記住的不重複使用者。</td></tr>
+                    <tr><td><code>userMemoryAdded</code></td><td>僅當 Remember User 新增了新的不重複使用者時為 true。</td></tr>
+                    <tr><td><code>userMemoryEntryCount</code></td><td>該人參加了多少次。</td></tr>
+                    <tr><td><code>selectedUser</code></td><td>抽中使用者的顯示名稱。</td></tr>
+                    <tr><td><code>selectedUserId</code>, <code>selectedUserSource</code></td><td>抽中使用者的穩定 ID 和平台。</td></tr>
+                    <tr><td><code>selectedUserParticipationCount</code></td><td>得獎者記錄的參加次數。</td></tr>
+                    <tr><td><code>selectedUserReason</code></td><td>Remember User 儲存的最新原因範本。</td></tr>
+                    <tr><td><code>selectedUserRemoved</code></td><td>抽獎是否移除了選中的得獎者。</td></tr>
+                </tbody>
+            </table>
+            <figure>
+                <img src="../../actions/img/user-memory-draw-result.png" alt="Test Flow 結果，顯示選中的抽獎使用者和一名剩餘參加者">
+                <figcaption>實際 Test Flow 輸出：Alice 被選中，且因為啟用了「remove selected」，記憶計數降為一。</figcaption>
+            </figure>
+        </section>
+
+        <section>
+            <h2>疑難排解</h2>
+            <table tabindex="0">
+                <tbody>
+                    <tr><th>缺少虛線</th><td>選擇動作並選取一個 User Memory 目標，或將其紫色側邊菱形拖至記憶中心。</td></tr>
+                    <tr><th>同一個人出現兩次</th><td>檢查事件是否來自不同平台。平台 + 使用者 ID 會刻意建立不同身分。</td></tr>
+                    <tr><th>按讚沒有新增任何人</th><td>該事件可能沒有使用者身分。檢查事件承載資料；彙總計數無法成為具名參加者。</td></tr>
+                    <tr><th>儲存的記憶又回來了</th><td>對該記憶使用 Clear All Users。變更流程或清除另一個記憶不會抹除它。</td></tr>
+                    <tr><th>任何人都能執行抽獎/重設命令</th><td>在動作之前的 AND 閘中加入 User Role: moderator/admin（或精確的主持使用者檢查）。</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer><div class="shell">Social Stream Ninja · <a href="event-flow-guide.html">Event Flow 指南</a> · <a href="state-nodes-guide.html">狀態節點指南</a></div></footer>
+</body>
+</html>

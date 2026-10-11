@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/th/docs/local-tts.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/th/docs/local-tts.html">
+    <meta property="og:title" content="คู่มือ AI TTS ในเครื่อง - Social Stream Ninja">
+    <meta property="og:description" content="ตั้งค่าการแปลงข้อความเป็นเสียงพูดภายในเครื่องแบบเป็นส่วนตัวสำหรับ Social Stream Ninja รวมเสียงแบบในตัว เซิร์ฟเวอร์ที่โฮสต์เอง การโคลนเสียง เสียง OBS และการแก้ปัญหา">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/th/docs/local-tts.html">
+    <meta name="twitter:title" content="คู่มือ AI TTS ในเครื่อง - Social Stream Ninja">
+    <meta name="twitter:description" content="ตั้งค่าการแปลงข้อความเป็นเสียงพูดภายในเครื่องแบบเป็นส่วนตัวสำหรับ Social Stream Ninja รวมเสียงแบบในตัว เซิร์ฟเวอร์ที่โฮสต์เอง การโคลนเสียง เสียง OBS และการแก้ปัญหา">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คู่มือ AI TTS ในเครื่อง - Social Stream Ninja</title>
+    <meta name="description" content="ตั้งค่าการแปลงข้อความเป็นเสียงพูดภายในเครื่องแบบเป็นส่วนตัวสำหรับ Social Stream Ninja รวมเสียงแบบในตัว เซิร์ฟเวอร์ที่โฮสต์เอง การโคลนเสียง เสียง OBS และการแก้ปัญหา">
+    <script src="../../docs/js/standalone-theme.js"></script>
+    <script defer src="../../docs/js/copy-markdown.js"></script>
+    <style>
+        :root {
+            --primary-color: #1565C0;
+            --secondary-color: #1976D2;
+            --accent-color: #996000;
+            --success-color: #267A2B;
+            --text-color: #212121;
+            --text-light: #757575;
+            --bg-color: #FFFFFF;
+            --card-bg: #F5F5F5;
+            --border-color: #E0E0E0;
+            --code-bg: #263238;
+            --code-text: #ECEFF1;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #64B5F6;
+            --secondary-color: #42A5F5;
+            --accent-color: #FFB74D;
+            --success-color: #81C784;
+            --text-color: #E0E0E0;
+            --text-light: #BDBDBD;
+            --bg-color: #121212;
+            --card-bg: #1E1E1E;
+            --border-color: #424242;
+            --code-bg: #000000;
+            --code-text: #ECEFF1;
+        }
+
+        html[data-theme="dark"],
+        body[data-theme="dark"] {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .path-card,
+        [data-theme="dark"] .screen-map,
+        [data-theme="dark"] .fake-field {
+            color: var(--text-color);
+        }
+
+        [data-theme="dark"] th,
+        [data-theme="dark"] .badge,
+        [data-theme="dark"] .plain-step b,
+        [data-theme="dark"] .step-number,
+        [data-theme="dark"] .screen-map-title,
+        [data-theme="dark"] .fake-button {
+            color: #10283B;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1565C0, #0288D1);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .theme-toggle:hover { background: rgba(255,255,255,0.1); }
+
+        h1 { margin: 0; font-size: 2.2em; }
+        h1 + p { margin: 8px 0 0; opacity: 0.9; font-size: 1.1em; }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 8px;
+            margin-top: 40px;
+        }
+
+        h3 { color: var(--secondary-color); margin-top: 24px; }
+        h4 { margin-top: 18px; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .warning {
+            background-color: #FFF3E0;
+            border-left: 4px solid var(--accent-color);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        [data-theme="dark"] .warning {
+            background-color: #4E342E;
+            color: #FFCC80;
+        }
+
+        .info {
+            background-color: #E3F2FD;
+            border-left: 4px solid var(--primary-color);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        [data-theme="dark"] .info {
+            background-color: #0D47A1;
+            color: #BBDEFB;
+        }
+
+        .success {
+            background-color: #E8F5E9;
+            border-left: 4px solid var(--success-color);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        [data-theme="dark"] .success {
+            background-color: #1B5E20;
+            color: #C8E6C9;
+        }
+
+        .code {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 14px 16px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.92em;
+            overflow-x: auto;
+            margin: 12px 0;
+            white-space: pre;
+        }
+
+        code {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        [data-theme="dark"] code {
+            background-color: #2A2A2A;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        tr:nth-child(even) { background-color: var(--card-bg); }
+
+        [data-theme="dark"] tr:nth-child(even) { background-color: #1A1A1A; }
+
+        .check { color: var(--success-color); font-weight: bold; }
+        .cross { color: #EF5350; font-weight: bold; }
+        .partial { color: var(--accent-color); font-weight: bold; }
+
+        ul, ol { padding-left: 22px; }
+        li { margin: 8px 0; }
+
+        a { color: var(--primary-color); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        nav {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 24px 0;
+        }
+
+        nav ul { list-style: none; padding: 0; columns: 2; }
+        nav li { margin: 4px 0; }
+
+        .path-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 700px) {
+            .path-grid { grid-template-columns: 1fr; }
+            nav ul { columns: 1; }
+            table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        .path-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+        }
+
+        .path-card.recommended { border-color: var(--primary-color); }
+        .path-card h3 { margin-top: 0; }
+
+        .badge {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .badge.green { background: var(--success-color); }
+        .badge.orange { background: var(--accent-color); }
+
+        .guide-screenshot {
+            margin: 18px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--bg-color);
+            box-shadow: 0 3px 14px rgba(0,0,0,0.12);
+        }
+
+        .guide-screenshot img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .guide-screenshot figcaption {
+            padding: 10px 14px;
+            color: var(--text-light);
+            font-size: 0.92em;
+            background: var(--card-bg);
+        }
+
+        .plain-steps {
+            display: grid;
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .plain-step {
+            display: grid;
+            grid-template-columns: 34px 1fr;
+            gap: 10px;
+            align-items: start;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-color);
+            padding: 12px;
+        }
+
+        .plain-step b {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        .plain-step strong {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .tiny-note {
+            color: var(--text-light);
+            font-size: 0.92em;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            background-color: var(--card-bg);
+            color: var(--text-light);
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin: 10px 0;
+        }
+
+        .step-content { flex: 1; }
+
+        .url-example {
+            background: var(--code-bg);
+            color: #A5D6A7;
+            padding: 14px 16px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.88em;
+            overflow-x: auto;
+            margin: 12px 0;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+
+        .link-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .link-row a {
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-weight: 600;
+        }
+
+        .screen-map {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-color);
+            margin: 18px 0;
+            overflow: hidden;
+            box-shadow: 0 3px 14px rgba(0,0,0,0.12);
+        }
+
+        .screen-map-title {
+            background: var(--primary-color);
+            color: #fff;
+            padding: 10px 14px;
+            font-weight: 700;
+        }
+
+        .screen-map-body {
+            padding: 16px;
+        }
+
+        .fake-field {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin: 10px 0;
+            background: var(--card-bg);
+        }
+
+        .fake-field strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .fake-button {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #fff;
+            border-radius: 6px;
+            padding: 8px 14px;
+            margin-top: 8px;
+            font-weight: 700;
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/local-tts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{"\"Control audio via OBS\"":"\"ควบคุมเสียงผ่าน OBS (Control audio via OBS)\"","(Piper)":"(Piper)","(built-in and self-hosted server).":"(แบบในตัวและเซิร์ฟเวอร์ที่โฮสต์เอง)","(free)":"(ฟรี)","). System TTS may need desktop audio or virtual cable capture.":") TTS ของระบบอาจต้องใช้การเก็บเสียงเดสก์ท็อปหรือสายเสียงเสมือน","* System TTS requires virtual audio cable routing for OBS capture.":"* TTS ของระบบต้องส่งเสียงผ่านสายเสียงเสมือนเพื่อให้ OBS เก็บเสียงได้",", Chrome may also block calls to local or private HTTP addresses.":" Chrome อาจบล็อกการเรียกไปยังที่อยู่ HTTP ภายในเครื่องหรือเครือข่ายส่วนตัวด้วย",", SSN sends a JSON POST to the configured endpoint:":" SSN ส่งคำขอ JSON POST ไปยังปลายทางที่กำหนดไว้:",", and":", และ",", and openedai-speech selects Piper instead. The":" แล้ว openedai-speech จะเลือก Piper แทน ส่วน",", and the first":" และรายการแรกใน",", built-in Kokoro, Piper, Kitten, and eSpeak. The most useful future browser-side additions would be an audio output device picker where":" รวมถึง Kokoro, Piper, Kitten และ eSpeak แบบในตัว สิ่งที่น่าเพิ่มในฝั่งเบราว์เซอร์ในอนาคตมากที่สุดคือการเลือกอุปกรณ์ส่งออกเสียงเมื่อ",", direct and through the bridge.":" ทั้งโดยตรงและผ่านบริดจ์",", direct and through the bridge. If running from source on Windows, make sure the venv":" ทั้งโดยตรงและผ่านบริดจ์ หากเรียกใช้จากซอร์สบน Windows ให้ตรวจสอบว่าโฟลเดอร์",", etc.) instead.":" เป็นต้น) แทน",", even if the real TTS server is on another computer.":" แม้ว่าเซิร์ฟเวอร์ TTS จริงจะอยู่บนคอมพิวเตอร์อีกเครื่องก็ตาม",", nested":" และฟิลด์ซ้อน เช่น",", not OpenAI-compatible.":" ไม่ใช่แบบที่เข้ากันได้กับ OpenAI",", or":", หรือ",", or another browser-playable audio type.":" หรือชนิดเสียงอื่นที่เบราว์เซอร์เล่นได้",", or another voice from the Kokoro web UI.":" หรือเสียงอื่นจากหน้าเว็บ Kokoro",", temporarily remove it while testing. TTS normally uses the original message, but removing visual effects is a quick way to rule out timing issues.":" ให้ลบออกชั่วคราวขณะทดสอบ โดยปกติ TTS ใช้ข้อความต้นฉบับ แต่การเอาเอฟเฟกต์ภาพออกเป็นวิธีที่รวดเร็วในการตัดปัญหาเรื่องจังหวะเวลา",", using the Kokoro computer's LAN IP":" โดยใช้ IP ภายใน LAN ของคอมพิวเตอร์ที่รัน Kokoro",". Alternatively, run the commands below directly.":" หรือเรียกใช้คำสั่งด้านล่างโดยตรง",". Change":" เปลี่ยน",". Change the port with":" เปลี่ยนพอร์ตด้วย",". Docker must have access to a supported GPU. The model downloads on first use.":" Docker ต้องเข้าถึง GPU ที่รองรับได้ โมเดลจะดาวน์โหลดเมื่อใช้งานครั้งแรก",". For OBS, the easiest setup is to run the bridge on the same computer as OBS.":" สำหรับ OBS วิธีตั้งค่าที่ง่ายที่สุดคือเรียกใช้บริดจ์บนคอมพิวเตอร์เครื่องเดียวกับ OBS",". If that does not load, OBS will not be able to use that server either.":" หากเปิดไม่ได้ OBS ก็จะใช้เซิร์ฟเวอร์นั้นไม่ได้เช่นกัน",". Names like":" ชื่อ เช่น",". No virtual cables are needed. See the":"— ไม่ต้องใช้สายเสียงเสมือน ดู",". Piper mode was tested with real CPU synthesis from":" โหมด Piper ผ่านการทดสอบสังเคราะห์เสียงจริงด้วย CPU จาก",". TTS audio will now appear as an OBS audio source you can adjust or route":"— เสียง TTS จะปรากฏเป็นแหล่งข้อมูลเสียงใน OBS ที่ปรับระดับหรือกำหนดเส้นทางได้",". That option intentionally cuts the spoken text short.":" ตัวเลือกนั้นตั้งใจตัดข้อความที่จะอ่านให้สั้นลง",". That shows the OpenAI-compatible local endpoint fields and the link back to this guide.":" ตัวเลือกนี้แสดงช่องปลายทางภายในเครื่องที่เข้ากันได้กับ OpenAI และลิงก์กลับมายังคู่มือนี้",". They run in your browser using WebAssembly or ONNX, with no server, Docker, or installation required.":" ทั้งหมดทำงานในเบราว์เซอร์ด้วย WebAssembly หรือ ONNX โดยไม่ต้องมีเซิร์ฟเวอร์ Docker หรือการติดตั้ง",". Uses configured reference audio for cloning. API shape was tested direct and through the bridge.":" ใช้เสียงอ้างอิงที่กำหนดไว้สำหรับการโคลน ทดสอบรูปแบบ API แล้วทั้งโดยตรงและผ่านบริดจ์",". Wait for first-time model downloads if using Kokoro or Piper.":" รอการดาวน์โหลดโมเดลครั้งแรกหากใช้ Kokoro หรือ Piper",". You should see a web UI where you can test voices.":"— คุณควรเห็นหน้าเว็บควบคุมที่ใช้ทดสอบเสียงได้","24 GB VRAM or remote host":"VRAM 24 GB หรือโฮสต์ระยะไกล","3-second reference audio":"เสียงอ้างอิง 3 วินาที","5-second zero-shot, 1-minute few-shot":"zero-shot 5 วินาที, few-shot 1 นาที","6 GB VRAM fit":"ใช้กับ VRAM 6 GB ได้","6 GB+ NVIDIA GPU for smaller/optimized models, 16 GB RAM":"GPU NVIDIA 6 GB ขึ้นไปสำหรับโมเดลขนาดเล็ก/ที่ปรับแต่งแล้ว และ RAM 16 GB","6 GB+ NVIDIA GPU, 16 GB RAM":"GPU NVIDIA 6 GB ขึ้นไป และ RAM 16 GB","67+ voices available. A few highlights:":"มีเสียงให้เลือกกว่า 67 เสียง ตัวอย่างเสียงเด่น:",": they generate page audio rather than depending on OBS exposing operating-system voices. See the":": สร้างเสียงจากหน้าเว็บเอง แทนการพึ่งพา OBS ให้เข้าถึงเสียงของระบบปฏิบัติการ ดู","; openedai-speech often uses names like":" โดย openedai-speech มักใช้ชื่อ เช่น","; see the":" ดู","; target server is":" เซิร์ฟเวอร์ปลายทางคือ","; target server uses":" เซิร์ฟเวอร์ปลายทางใช้","\u003c1 GB":"\u003c1 GB","API Key":"คีย์ API","API path for SSN":"เส้นทาง API สำหรับ SSN","About screenshots:":"เกี่ยวกับภาพหน้าจอ:","Add":"เพิ่ม","Add the cloned voice beneath the existing":"เพิ่มเสียงที่โคลนไว้ใต้รายการเดิม","Additional TTS Options":"ตัวเลือก TTS เพิ่มเติม","All Guides":"คู่มือทั้งหมด","All built-in TTS providers play audio directly through the browser. In OBS, add your dock.html as a Browser Source and enable":"ผู้ให้บริการ TTS แบบในตัวทั้งหมดเล่นเสียงผ่านเบราว์เซอร์โดยตรง ใน OBS ให้เพิ่ม dock.html เป็นแหล่งข้อมูลเบราว์เซอร์ แล้วเปิด","All self-hosted servers above use the same connection method: Social Stream's built-in":"เซิร์ฟเวอร์ที่โฮสต์เองทั้งหมดด้านบนใช้วิธีเชื่อมต่อเดียวกัน คือ","Also read subscriptions, donations, etc.":"อ่านการสมัครสมาชิก การบริจาค ฯลฯ ด้วย","Any PC":"พีซีทั่วไป","Any modern PC":"พีซีสมัยใหม่ทั่วไป","Archived project:":"โครงการที่เก็บถาวรแล้ว:","Audio Input Capture":"เก็บเสียงขาเข้า (Audio Input Capture)","Audio Router":"Audio Router","Audio Router (legacy)":"Audio Router (รุ่นเก่า)","Audio Router Software":"ซอฟต์แวร์ Audio Router","Audio capture":"การเก็บเสียง","Audio format: mp3, wav, opus, flac":"รูปแบบเสียง: mp3, wav, opus, flac","Audio plays but OBS does not capture it":"เสียงเล่นได้ แต่ OBS เก็บเสียงไม่ได้","Audio plays from the app, so use desktop/app audio capture.":"เสียงเล่นจากแอป ดังนั้นให้ใช้การเก็บเสียงเดสก์ท็อป/แอป","Available Voices":"เสียงที่มีให้เลือก","Best SSN target shape:":"รูปแบบปลายทางที่เหมาะที่สุดสำหรับ SSN:","Best benefit":"ข้อดีหลัก","Best first choice: no server, strong quality, private, works in browser and desktop app.":"ตัวเลือกแรกที่แนะนำ: ไม่ต้องมีเซิร์ฟเวอร์ คุณภาพดี เป็นส่วนตัว ใช้ได้ทั้งในเบราว์เซอร์และแอปเดสก์ท็อป","Best option. Return":"ตัวเลือกที่ดีที่สุด ส่งกลับ","Best zero-setup quality. First load downloads model assets.":"คุณภาพดีที่สุดโดยไม่ต้องตั้งค่าเพิ่มเติม การโหลดครั้งแรกจะดาวน์โหลดไฟล์โมเดล","Binary audio":"ข้อมูลเสียงแบบไบนารี","Bridge endpoint:":"ปลายทางบริดจ์:","Bridge mode":"โหมดบริดจ์","Browse and test all voices at":"ดูและทดสอบเสียงทั้งหมดได้ที่","Browser Source":"แหล่งเบราว์เซอร์ (Browser Source)","Browser and Desktop App Notes":"หมายเหตุสำหรับเบราว์เซอร์และแอปเดสก์ท็อป","Browser fetch requires CORS from the local server, unless you use the SSN bridge.":"การ fetch จากเบราว์เซอร์ต้องมี CORS จากเซิร์ฟเวอร์ภายในเครื่อง เว้นแต่จะใช้บริดจ์ SSN","Built-in Browser Options Worth Supporting":"ตัวเลือกเบราว์เซอร์แบบในตัวที่ควรรองรับ","Built-in Kitten":"Kitten แบบในตัว","Built-in Kokoro":"Kokoro แบบในตัว","Built-in Kokoro in desktop app":"Kokoro แบบในตัวในแอปเดสก์ท็อป","Built-in Piper":"Piper แบบในตัว","Built-in TTS and self-hosted server TTS both play audio through the browser's audio context (not OS speech synthesis). OBS can capture browser audio directly when \"Control audio via OBS\" is checked.":"TTS แบบในตัวและ TTS จากเซิร์ฟเวอร์ที่โฮสต์เองเล่นเสียงผ่าน audio context ของเบราว์เซอร์ทั้งคู่ (ไม่ใช่ระบบสังเคราะห์เสียงของ OS) OBS เก็บเสียงเบราว์เซอร์โดยตรงได้เมื่อเลือก \"Control audio via OBS\"","Built-in eSpeak":"eSpeak แบบในตัว","CABLE Input":"CABLE Input","CABLE Input (VB-Audio Virtual Cable)":"CABLE Input (VB-Audio Virtual Cable)","CABLE Output":"CABLE Output","CLI, Gradio, and socket server first. Use an OpenAI-compatible wrapper or the F5 bridge mode against a wrapper.":"เน้น CLI, Gradio และซ็อกเก็ตเซิร์ฟเวอร์ก่อน ใช้ตัวครอบที่เข้ากันได้กับ OpenAI หรือโหมดบริดจ์ F5 เชื่อมต่อกับตัวครอบ","CORS is a browser permission check. In plain terms: the TTS server has to tell the browser, \"yes, this page is allowed to ask me for audio.\" If that permission is missing, the request may be blocked before Kokoro or another TTS server ever sees it.":"CORS คือการตรวจสอบสิทธิ์ของเบราว์เซอร์ พูดง่าย ๆ คือเซิร์ฟเวอร์ TTS ต้องบอกเบราว์เซอร์ว่า \"อนุญาตให้หน้านี้ขอเสียงจากฉันได้\" หากไม่มีสิทธิ์นี้ คำขออาจถูกบล็อกก่อนที่ Kokoro หรือเซิร์ฟเวอร์ TTS อื่นจะได้รับเสียอีก","CORS or local network blocked":"CORS หรือเครือข่ายภายในถูกบล็อก","CORS, Hosted Pages, and the Bridge":"CORS, หน้าเว็บที่โฮสต์ไว้ และบริดจ์","CPU (works on any computer):":"CPU (ใช้ได้กับคอมพิวเตอร์ทุกเครื่อง):","CPU Docker host, 8 GB RAM":"โฮสต์ Docker ที่ใช้ CPU, RAM 8 GB","CPU Use":"การใช้ CPU","CPU can work for some builds but is slow":"บางบิลด์ใช้ CPU ได้ แต่ทำงานช้า","CPU only":"เฉพาะ CPU","CPU testing only, slow":"CPU สำหรับทดสอบเท่านั้น ทำงานช้า","CPU, 4-8 GB RAM":"CPU, RAM 4–8 GB","CPU, 8 GB RAM":"CPU, RAM 8 GB","CUDA/GPU support is smoother than CPU for some builds; setup varies by server fork.":"บางบิลด์รองรับ CUDA/GPU ได้ราบรื่นกว่า CPU การตั้งค่าขึ้นอยู่กับ fork ของเซิร์ฟเวอร์","Capture":"จับข้อมูล","Capture desktop/app audio, or route the app to a virtual audio cable.":"เก็บเสียงเดสก์ท็อป/แอป หรือส่งเสียงแอปไปยังสายเสียงเสมือน","Chatterbox Turbo / Server":"Chatterbox Turbo / Server","Chatterbox servers":"เซิร์ฟเวอร์ Chatterbox","Chatterbox-TTS-Server":"Chatterbox-TTS-Server","Check":"ตรวจสอบ","Check the actual OBS URL for":"ตรวจสอบ URL ที่ใช้จริงใน OBS ว่ามี","Check the endpoint and voice before debugging audio.":"ตรวจสอบปลายทางและเสียงที่เลือกก่อนแก้ปัญหาเสียง","Check the firewall on the server computer if the LAN IP does not load.":"ตรวจสอบไฟร์วอลล์บนคอมพิวเตอร์เซิร์ฟเวอร์หากเปิด IP ภายใน LAN ไม่ได้","Chrome extension / OBS browser source":"ส่วนขยาย Chrome / แหล่งข้อมูลเบราว์เซอร์ใน OBS","Click":"คลิก","Click the browser source once in the preview to allow browser audio autoplay":"คลิกแหล่งข้อมูลเบราว์เซอร์หนึ่งครั้งในหน้าตัวอย่างเพื่ออนุญาตให้เบราว์เซอร์เล่นเสียงอัตโนมัติ","Clone the archived server, create its environment file, and start the full GPU-enabled Docker Compose setup:":"โคลนเซิร์ฟเวอร์ที่เก็บถาวรแล้ว สร้างไฟล์ environment แล้วเริ่มชุด Docker Compose เต็มรูปแบบที่เปิดใช้ GPU:","Clone the repository or create a folder with the following":"โคลนรีโพซิทอรีหรือสร้างโฟลเดอร์ที่มี","Compare providers, hear samples and see the settings.":"เปรียบเทียบผู้ให้บริการ ฟังตัวอย่าง และดูการตั้งค่า","Comparison Table":"ตารางเปรียบเทียบ","Computer Requirements":"ข้อกำหนดคอมพิวเตอร์","Confirm Docker is running and the container is still started.":"ยืนยันว่า Docker ทำงานอยู่และคอนเทนเนอร์ยังเริ่มทำงานอยู่","Connecting to Social Stream":"การเชื่อมต่อกับ Social Stream","Connecting to Social Stream Ninja":"การเชื่อมต่อกับ Social Stream Ninja","Control audio via OBS":"ควบคุมเสียงผ่าน OBS (Control audio via OBS)","Control audio via OBS.":"ควบคุมเสียงผ่าน OBS (Control audio via OBS)","Coqui Public Model License":"Coqui Public Model License","Cost":"ค่าใช้จ่าย","Custom / Local TTS Endpoint":"ปลายทาง TTS แบบกำหนดเอง / ภายในเครื่อง","Default Port":"พอร์ตเริ่มต้น","Description":"คำอธิบาย","Desktop Audio Capture":"เก็บเสียงเดสก์ท็อป (Desktop Audio Capture)","Diagram showing OBS calling the local bridge, and the bridge calling the TTS server":"แผนภาพแสดง OBS เรียกบริดจ์ภายในเครื่อง และบริดจ์เรียกเซิร์ฟเวอร์ TTS","Diagram showing that localhost means the same computer, while another computer needs a LAN IP address":"แผนภาพแสดงว่า localhost หมายถึงคอมพิวเตอร์เครื่องเดียวกัน ส่วนคอมพิวเตอร์อีกเครื่องต้องใช้ที่อยู่ IP ภายใน LAN","Direct or bridge":"โดยตรงหรือผ่านบริดจ์","Disk":"ดิสก์","Do not mix up the app test and OBS.":"อย่าสับสนระหว่างการทดสอบในแอปกับ OBS","Do not use":"อย่าใช้","Docker":"Docker","Docker Desktop":"Docker Desktop","Docker Required":"ต้องใช้ Docker","Docker image not found":"ไม่พบอิมเมจ Docker","Docker image tags can change. If a command in this guide stops working, check the project page for the current tag:":"แท็กอิมเมจ Docker อาจเปลี่ยนแปลง หากคำสั่งในคู่มือนี้ใช้ไม่ได้ ให้ดูแท็กปัจจุบันจากหน้าโครงการ:","Docker will download the image (~1.5–2 GB). This only happens once. After that, the server starts in a few seconds.":"Docker จะดาวน์โหลดอิมเมจ (~1.5–2 GB) เพียงครั้งเดียว หลังจากนั้นเซิร์ฟเวอร์จะเริ่มได้ในไม่กี่วินาที","ElevenLabs":"ElevenLabs","Enables TTS for English":"เปิดใช้ TTS สำหรับภาษาอังกฤษ","Endpoint aliases:":"ชื่อแทนปลายทาง:","Endpoint to use":"ปลายทางที่ควรใช้","Example":"ตัวอย่าง","F5-TTS":"F5-TTS","F5-TTS Server Proxy Mode":"โหมดพร็อกซีเซิร์ฟเวอร์ F5-TTS","F5-TTS official":"F5-TTS อย่างเป็นทางการ","F5-TTS_server":"F5-TTS_server","Fast, low quality, no cloning.":"รวดเร็ว คุณภาพต่ำ ไม่มีการโคลนเสียง","Faster with GPU":"เร็วขึ้นเมื่อใช้ GPU","Find the browser or SSN app in the app list.":"หาเบราว์เซอร์หรือแอป SSN ในรายการแอป","Find the browser or SSN app.":"หาเบราว์เซอร์หรือแอป SSN","First run:":"การเรียกใช้ครั้งแรก:","First-time load:":"การโหลดครั้งแรก:","For":"สำหรับ","For 6 GB VRAM or less, target small zero-shot cloning models and OpenAI-compatible servers first. Bigger models can still work through the same SSN endpoint if the user hosts them elsewhere.":"สำหรับ VRAM ไม่เกิน 6 GB ให้เริ่มจากโมเดลโคลนเสียงแบบ zero-shot ขนาดเล็กและเซิร์ฟเวอร์ที่เข้ากันได้กับ OpenAI ก่อน โมเดลขนาดใหญ่ยังใช้ผ่านปลายทาง SSN เดียวกันได้หากผู้ใช้โฮสต์ไว้ที่อื่น","For Kokoro-FastAPI, use voices like":"สำหรับ Kokoro-FastAPI ให้ใช้เสียง เช่น","For cloud-based premium TTS (ElevenLabs, Google Cloud, Speechify) and full URL parameter reference, see the":"สำหรับ TTS ระดับพรีเมียมบนคลาวด์ (ElevenLabs, Google Cloud, Speechify) และเอกสารพารามิเตอร์ URL ฉบับเต็ม ดู","Free":"ฟรี","From the OBS computer, open":"จากคอมพิวเตอร์ที่รัน OBS ให้เปิด","Full Example URLs":"ตัวอย่าง URL แบบเต็ม","GPT-SoVITS":"GPT-SoVITS","GPT-SoVITS / F5-TTS / Qwen3-TTS":"GPT-SoVITS / F5-TTS / Qwen3-TTS","GPT-SoVITS Proxy Mode":"โหมดพร็อกซี GPT-SoVITS","GPT-SoVITS uses its own":"GPT-SoVITS ใช้รูปแบบ JSON เฉพาะของตนสำหรับ","GPU":"GPU","GPU (NVIDIA only, faster synthesis):":"GPU (เฉพาะ NVIDIA — สังเคราะห์เสียงเร็วกว่า):","GPU Needed":"ต้องใช้ GPU","GPU/WebGPU":"GPU/WebGPU","Getting Audio into OBS":"นำเสียงเข้าสู่ OBS","GitHub":"GitHub","Good local server when browser model loading is not ideal.":"เซิร์ฟเวอร์ภายในเครื่องที่เหมาะเมื่อการโหลดโมเดลในเบราว์เซอร์ไม่สะดวก","Good low-resource neural voice option.":"ตัวเลือกเสียงนิวรัลที่ดีและใช้ทรัพยากรน้อย","Good target":"เหมาะสม","High-end prompted speech generation.":"สร้างเสียงพูดคุณภาพสูงตามพรอมป์ต์","How Voice Cloning Works":"การโคลนเสียงทำงานอย่างไร","How to Enable":"วิธีเปิดใช้","How you capture TTS audio in OBS depends on how you're running Social Stream Ninja.":"วิธีเก็บเสียง TTS ใน OBS ขึ้นอยู่กับวิธีที่คุณใช้ Social Stream Ninja","If Kokoro-FastAPI is on another computer, replace":"หาก Kokoro-FastAPI อยู่บนคอมพิวเตอร์อีกเครื่อง ให้แทนที่","If Kokoro-FastAPI is on the same computer as OBS:":"หาก Kokoro-FastAPI อยู่บนคอมพิวเตอร์เครื่องเดียวกับ OBS:","If OBS and the TTS server are on different computers, replace":"หาก OBS และเซิร์ฟเวอร์ TTS อยู่คนละเครื่อง ให้แทนที่","If OBS is on one computer and Kokoro is on another computer,":"หาก OBS อยู่บนคอมพิวเตอร์เครื่องหนึ่งและ Kokoro อยู่อีกเครื่อง","If it is omitted, Social Stream sends its default":"หากไม่ระบุ Social Stream จะส่งค่าเริ่มต้น","If the SSN app test button works but the OBS Browser Source is silent, test OBS separately. OBS is its own browser.":"หากปุ่มทดสอบในแอป SSN ใช้งานได้ แต่แหล่งข้อมูลเบราว์เซอร์ใน OBS ไม่มีเสียง ให้ทดสอบ OBS แยกต่างหาก เพราะ OBS มีเบราว์เซอร์ของตัวเอง","If the browser or OBS blocks the direct request, run the":"หากเบราว์เซอร์หรือ OBS บล็อกคำขอโดยตรง ให้เรียกใช้","If the browser says the request was blocked by CORS, local network access, private network access, or failed fetch, the TTS server may never receive the request.":"หากเบราว์เซอร์แจ้งว่าคำขอถูกบล็อกด้วย CORS, local network access, private network access หรือ failed fetch เซิร์ฟเวอร์ TTS อาจไม่ได้รับคำขอนั้นเลย","If the server does not allow browser requests, run the":"หากเซิร์ฟเวอร์ไม่อนุญาตคำขอจากเบราว์เซอร์ ให้เรียกใช้","If you are using the hosted beta dock page, local HTTP endpoints are more likely to be blocked by the browser. The bridge or a local app window is usually easier.":"หากใช้หน้าแผงด็อกเบต้าที่โฮสต์ไว้ เบราว์เซอร์มีแนวโน้มบล็อกปลายทาง HTTP ภายในเครื่องมากขึ้น โดยทั่วไปใช้บริดจ์หรือหน้าต่างแอปภายในเครื่องจะง่ายกว่า","If you just want TTS working in OBS, try built-in Kokoro or Kitten first. They do not need Docker, a server, or an API key. Use a self-hosted server only when you specifically need a server voice, voice cloning, or another model.":"หากเพียงต้องการให้ TTS ทำงานใน OBS ให้ลอง Kokoro หรือ Kitten แบบในตัวก่อน ทั้งสองไม่ต้องใช้ Docker เซิร์ฟเวอร์ หรือคีย์ API ใช้เซิร์ฟเวอร์ที่โฮสต์เองเฉพาะเมื่อต้องการเสียงจากเซิร์ฟเวอร์ การโคลนเสียง หรือโมเดลอื่นโดยเฉพาะ","If you load":"หากคุณโหลด","If you load the hosted page, such as":"หากคุณโหลดหน้าเว็บที่โฮสต์ไว้ เช่น","If you press Test inside the SSN app, the app is testing from the app. If you copy a":"หากกด Test ภายในแอป SSN แอปจะทดสอบจากภายในแอป หากคุณคัดลอก","If you run openedai-speech from a local checkout instead of Docker, add its virtual environment scripts folder to":"หากเรียกใช้ openedai-speech จากซอร์สในเครื่องแทน Docker ให้เพิ่มโฟลเดอร์สคริปต์ของ virtual environment ไปยัง","If you see":"หากเห็น","If you use":"หากคุณใช้","If you use Kokoro-FastAPI, openedai-speech, or another Docker server, read the localhost rule below before copying a URL into OBS.":"หากใช้ Kokoro-FastAPI, openedai-speech หรือเซิร์ฟเวอร์ Docker อื่น ให้อ่านหลักการ localhost ด้านล่างก่อนคัดลอก URL ไปใส่ OBS","If you want TTS isolated from other desktop audio, use a virtual audio cable:":"หากต้องการแยก TTS ออกจากเสียงเดสก์ท็อปอื่น ให้ใช้สายเสียงเสมือน:","If you want more voice options, voice cloning, or a dedicated server you can reuse across tools, you can run a local TTS server. Social Stream Ninja connects to it using its built-in":"หากต้องการตัวเลือกเสียงเพิ่มเติม การโคลนเสียง หรือเซิร์ฟเวอร์เฉพาะที่ใช้ร่วมกับหลายเครื่องมือได้ คุณสามารถเรียกใช้เซิร์ฟเวอร์ TTS ภายในเครื่อง Social Stream Ninja เชื่อมต่อด้วย","If you're using the Social Stream Ninja standalone desktop app (not an OBS browser source):":"หากใช้แอปเดสก์ท็อป Social Stream Ninja แบบสแตนด์อโลน (ไม่ใช่แหล่งข้อมูลเบราว์เซอร์ใน OBS):","In OBS, add":"ใน OBS ให้เพิ่ม","In OBS, add a new":"ใน OBS ให้เพิ่ม","In OBS, add an":"ใน OBS ให้เพิ่มแหล่งข้อมูลประเภท","In OBS, capture":"ใน OBS ให้เก็บเสียงจาก","In the Browser Source properties, enable":"ในคุณสมบัติของแหล่งข้อมูลเบราว์เซอร์ ให้เปิด","In the extension popup, open the TTS provider selector and choose":"ในป๊อปอัปส่วนขยาย ให้เปิดตัวเลือกผู้ให้บริการ TTS แล้วเลือก","Install Audio Router.":"ติดตั้ง Audio Router","Install Voicemeeter and set it as the Windows default output.":"ติดตั้ง Voicemeeter แล้วตั้งเป็นอุปกรณ์ส่งออกเสียงเริ่มต้นของ Windows","Install with Docker":"ติดตั้งด้วย Docker","Install with Docker Compose":"ติดตั้งด้วย Docker Compose","Intentionally cuts speech short after this many characters. Remove it if messages are being chopped off.":"ตัดเสียงพูดหลังจากจำนวนอักขระนี้โดยตั้งใจ ลบตัวเลือกนี้หากข้อความถูกอ่านไม่จบ","It will now start automatically with Docker Desktop on every reboot.":"จากนี้จะเริ่มโดยอัตโนมัติพร้อม Docker Desktop ทุกครั้งที่รีบูต","JSON shape, so the bridge can translate SSN's OpenAI-compatible request into the GPT-SoVITS request body.":"ดังนั้นบริดจ์จึงแปลงคำขอ SSN ที่เข้ากันได้กับ OpenAI ให้เป็นเนื้อหาคำขอ GPT-SoVITS ได้","JSON with audio URL":"JSON ที่มี URL เสียง","JSON with base64 audio":"JSON ที่มีเสียงแบบ base64","Just add a URL parameter and go.":"เพียงเพิ่มพารามิเตอร์ URL ก็เริ่มใช้ได้","Keep any existing voices already listed under":"เก็บเสียงเดิมทั้งหมดที่แสดงอยู่ใต้","Keep the Server Running":"ให้เซิร์ฟเวอร์ทำงานต่อเนื่อง","Kitten TTS":"Kitten TTS","Kitten TTS Options":"ตัวเลือก Kitten TTS","Kokoro 82M":"Kokoro 82M","Kokoro 82M (best quality)":"Kokoro 82M (คุณภาพดีที่สุด)","Kokoro TTS":"Kokoro TTS","Kokoro TTS Options":"ตัวเลือก Kokoro TTS","Kokoro and Piper need to download their model files on first use (~50–200 MB). This happens automatically in the background. Later loads can reuse cached models, but initialization still takes time. OBS has a separate cache from Chrome/Edge.":"Kokoro และ Piper ต้องดาวน์โหลดไฟล์โมเดลในการใช้งานครั้งแรก (~50–200 MB) โดยทำงานเบื้องหลังอัตโนมัติ การโหลดครั้งถัดไปใช้โมเดลที่แคชไว้ได้ แต่การเริ่มต้นยังต้องใช้เวลา OBS มีแคชแยกจาก Chrome/Edge","Kokoro runs on another computer on your home network":"Kokoro ทำงานบนคอมพิวเตอร์อีกเครื่องในเครือข่ายที่บ้าน","Kokoro voice names are different from OpenAI voice names.":"ชื่อเสียงของ Kokoro ต่างจากชื่อเสียงของ OpenAI","Kokoro-FastAPI":"Kokoro-FastAPI","Kokoro-FastAPI Setup":"การตั้งค่า Kokoro-FastAPI","Kokoro-FastAPI repo":"รีโพซิทอรี Kokoro-FastAPI","Kokoro-FastAPI:":"Kokoro-FastAPI:","Kokoro-FastAPI: try":"Kokoro-FastAPI: ลอง","Language note:":"หมายเหตุเรื่องภาษา:","Library and Gradio demo first. Good candidate for a small OpenAI-compatible wrapper around":"เน้นไลบรารีและเดโม Gradio ก่อน เหมาะสำหรับสร้างตัวครอบขนาดเล็กที่เข้ากันได้กับ OpenAI รอบ","Library/demo first; needs a wrapper for SSN.":"เน้นไลบรารี/เดโม ต้องมีตัวครอบสำหรับ SSN","Light OpenAI-compatible endpoint; Piper is CPU-friendly and XTTS adds cloning around a 4 GB VRAM target.":"ปลายทางที่เข้ากันได้กับ OpenAI ขนาดเล็ก Piper เหมาะกับ CPU และ XTTS เพิ่มการโคลนเสียงโดยใช้ VRAM ประมาณ 4 GB","Light OpenAI-compatible server.":"เซิร์ฟเวอร์ที่เข้ากันได้กับ OpenAI ขนาดเล็ก","Lightweight":"ใช้ทรัพยากรน้อย","Likely":"น่าจะได้","Likely if using Turbo / small chunks":"น่าจะได้หากใช้ Turbo / แบ่งเป็นช่วงสั้น ๆ","Likely with fp16 / lightweight install":"น่าจะได้เมื่อใช้ fp16 / การติดตั้งแบบเบา","Local AI TTS Guide":"คู่มือ AI TTS ในเครื่อง","Local TTS Bridge":"บริดจ์ TTS ภายในเครื่อง","Local TTS behavior":"พฤติกรรม TTS ภายในเครื่อง","Local server not responding":"เซิร์ฟเวอร์ภายในเครื่องไม่ตอบสนอง","Low":"ต่ำ","Low-end CPU, 4 GB RAM":"CPU ระดับเริ่มต้น, RAM 4 GB","Make sure":"ตรวจสอบว่า","Make sure the OBS Browser Source has":"ตรวจสอบว่าแหล่งข้อมูลเบราว์เซอร์ใน OBS เปิด","Make sure you are not using system TTS only (":"ตรวจสอบว่าไม่ได้ใช้เฉพาะ TTS ของระบบ (","Maybe; depends on build and vocoder":"อาจได้ ขึ้นอยู่กับบิลด์และ vocoder","Medium":"ปานกลาง","Method 1: OBS Browser Source":"วิธีที่ 1 — แหล่งข้อมูลเบราว์เซอร์ใน OBS","Method 2: SSN Desktop App + Desktop Audio":"วิธีที่ 2 — แอปเดสก์ท็อป SSN + เสียงเดสก์ท็อป","Minimal":"น้อยมาก","Minimum practical computer":"ข้อกำหนดขั้นต่ำที่ใช้งานได้จริง","MisoTTS":"MisoTTS","MisoTTS 8B":"MisoTTS 8B","Model":"โมเดล","Modern CPU, 4-8 GB RAM":"CPU สมัยใหม่, RAM 4–8 GB","Modern CPU, 8 GB RAM":"CPU สมัยใหม่, RAM 8 GB","Modern cloning and voice-design features, including smaller 0.6B/1.7B models.":"ฟีเจอร์โคลนและออกแบบเสียงสมัยใหม่ รวมถึงโมเดลขนาดเล็ก 0.6B/1.7B","Modern laptop CPU, 8 GB RAM":"CPU แล็ปท็อปสมัยใหม่, RAM 8 GB","More TTS options:":"ตัวเลือก TTS เพิ่มเติม:","NVIDIA GPU around 4 GB VRAM, 8-16 GB RAM":"GPU NVIDIA ที่มี VRAM ประมาณ 4 GB, RAM 8–16 GB","NVIDIA GPU optional, 8-16 GB RAM":"ใช้ GPU NVIDIA หรือไม่ก็ได้, RAM 8–16 GB","Natural zero-shot cloning with prompt WAV + transcript.":"โคลนเสียงแบบ zero-shot อย่างเป็นธรรมชาติด้วย WAV อ้างอิงและข้อความถอดเสียง","Needs wrapper":"ต้องมีตัวครอบ","No":"ไม่มี","No (faster with)":"ไม่ต้องใช้ (แต่เร็วขึ้นถ้ามี)","No (optional)":"ไม่ต้องใช้ (เลือกใช้ได้)","No API key needed.":"ไม่ต้องมีคีย์ API","No Setup":"ไม่ต้องตั้งค่า","No real voice cloning; voice blending and custom voice features depend on the server build.":"ไม่มีการโคลนเสียงจริง ฟีเจอร์ผสมเสียงและเสียงกำหนดเองขึ้นอยู่กับบิลด์เซิร์ฟเวอร์","No voice cloning.":"ไม่มีการโคลนเสียง","No*":"ไม่*","No; project recommends 24 GB VRAM":"ไม่ โครงการแนะนำ VRAM 24 GB","None":"ไม่มี","Not OpenAI-compatible by default; use the SSN bridge mode.":"ค่าเริ่มต้นไม่เข้ากันได้กับ OpenAI ให้ใช้โหมดบริดจ์ SSN","Not a 6 GB VRAM local target; use remote/custom hosting if needed.":"ไม่เหมาะกับเครื่องที่มี VRAM 6 GB ใช้โฮสต์ระยะไกล/กำหนดเองหากจำเป็น","Not recommended locally at 6 GB VRAM":"ไม่แนะนำให้รันภายในเครื่องที่มี VRAM 6 GB","Notes":"หมายเหตุ","OBS (Browser Source)":"OBS (แหล่งข้อมูลเบราว์เซอร์)","OBS and Kokoro run on the same computer":"OBS และ Kokoro ทำงานบนคอมพิวเตอร์เครื่องเดียวกัน","OBS capture:":"การเก็บเสียงใน OBS:","OBS may expose no voices, or may list voices without producing capturable audio. Test speech and the OBS recording separately. Use one of the providers above (":"OBS อาจไม่แสดงเสียงให้เลือก หรือแสดงรายชื่อเสียงแต่ไม่สร้างเสียงที่เก็บได้ ให้ทดสอบการอ่านและไฟล์บันทึกของ OBS แยกกัน ใช้ผู้ให้บริการด้านบนสักราย (","OBS section":"ส่วน OBS","OBS still needs its own working endpoint. The app test does not prove OBS can reach the server.":"OBS ยังต้องมีปลายทางที่ตัวเองใช้งานได้ การทดสอบในแอปไม่ได้ยืนยันว่า OBS เข้าถึงเซิร์ฟเวอร์ได้","OK":"ตกลง (OK)","Official project is not a simple OpenAI endpoint; use a wrapper or bridge mode.":"โครงการอย่างเป็นทางการไม่ได้เป็นปลายทาง OpenAI แบบง่าย ให้ใช้ตัวครอบหรือโหมดบริดจ์","On Linux, macOS, and Windows, also make sure the firewall allows the port and Docker published the port with":"บน Linux, macOS และ Windows ให้ตรวจสอบด้วยว่าไฟร์วอลล์อนุญาตพอร์ตนั้น และ Docker เปิดเผยพอร์ตด้วย","On macOS or Linux, use":"บน macOS หรือ Linux ให้ใช้","On the TTS server computer, open":"บนคอมพิวเตอร์เซิร์ฟเวอร์ TTS ให้เปิด","Only if wrapped":"เฉพาะเมื่อมีตัวครอบ","Only read messages starting with !say":"อ่านเฉพาะข้อความที่ขึ้นต้นด้วย !say","Only the first letter or first few words are read":"อ่านเพียงตัวอักษรแรกหรือคำแรก ๆ","Only then try a self-hosted server.":"หลังจากนั้นจึงค่อยลองเซิร์ฟเวอร์ที่โฮสต์เอง","Open":"เปิด","Open a terminal (Command Prompt, PowerShell, or Terminal) and run one of the following:":"เปิดเทอร์มินัล (Command Prompt, PowerShell หรือ Terminal) แล้วเรียกใช้คำสั่งใดคำสั่งหนึ่งต่อไปนี้:","Open your browser and go to":"เปิดเบราว์เซอร์แล้วไปที่","OpenAI TTS endpoint":"ปลายทาง OpenAI TTS","OpenAI-Compatible Proxy":"พร็อกซีที่เข้ากันได้กับ OpenAI","OpenAI-compatible":"เข้ากันได้กับ OpenAI","OpenAI-compatible TTS endpoint":"ปลายทาง TTS ที่เข้ากันได้กับ OpenAI","OpenAI-compatible endpoint":"ปลายทางที่เข้ากันได้กับ OpenAI","OpenAI-compatible endpoint and Web UI. Tested with real CPU synthesis using":"ปลายทางที่เข้ากันได้กับ OpenAI และหน้าเว็บควบคุม ผ่านการทดสอบสังเคราะห์เสียงจริงด้วย CPU โดยใช้","OpenAI-compatible server builds, or the bridge":"บิลด์เซิร์ฟเวอร์ที่เข้ากันได้กับ OpenAI หรือบริดจ์","OpenAI-compatible server, easy Docker setup, CPU or GPU, many Kokoro voices.":"เซิร์ฟเวอร์ที่เข้ากันได้กับ OpenAI ตั้งค่าง่ายด้วย Docker ใช้ CPU หรือ GPU ได้ มีเสียง Kokoro หลากหลาย","Option":"ตัวเลือก","Option A: Lightweight Piper":"ตัวเลือก A: Piper แบบเบา","Option B: XTTS-v2 Voice Cloning":"ตัวเลือก B: โคลนเสียงด้วย XTTS-v2","Optional":"ไม่บังคับ","Overview":"ภาพรวม","Package":"แพ็กเกจ","Paid tiers":"แพ็กเกจแบบชำระเงิน","Parameter":"พารามิเตอร์","Path 1: Built-in TTS":"แนวทางที่ 1 — TTS แบบในตัว","Path 1: Built-in TTS (Zero Setup)":"แนวทางที่ 1 — TTS แบบในตัว (ไม่ต้องตั้งค่า)","Path 2: Self-Hosted Server":"แนวทางที่ 2 — เซิร์ฟเวอร์ที่โฮสต์เอง","Path 2: Self-Hosted TTS Server":"แนวทางที่ 2 — เซิร์ฟเวอร์ TTS ที่โฮสต์เอง","Piper Neural TTS":"Piper Neural TTS","Piper TTS":"Piper TTS","Piper TTS Options":"ตัวเลือก Piper TTS","Portuguese and Spanish Piper voices are available:":"Piper มีเสียงภาษาโปรตุเกสและสเปน:","Portuguese example:":"ตัวอย่างภาษาโปรตุเกส:","Practical result: keep chat TTS snippets short. Streaming support would need a separate playback path using streamed WAV/MP3 chunks, MediaSource, WebCodecs, or a server-side mixer.":"ข้อสรุปสำหรับการใช้งานจริง: ให้ข้อความแชตที่อ่านด้วย TTS สั้น การรองรับการสตรีมต้องมีเส้นทางเล่นเสียงแยก โดยใช้ช่วงเสียง WAV/MP3 แบบสตรีม, MediaSource, WebCodecs หรือมิกเซอร์ฝั่งเซิร์ฟเวอร์","Prepare a clean, consented reference clip. A mono 22050 Hz WAV between 6 and 30 seconds is a good starting point:":"เตรียมคลิปอ้างอิงเสียงสะอาดที่ได้รับความยินยอมแล้ว เริ่มจาก WAV แบบโมโน 22050 Hz ความยาว 6–30 วินาทีได้:","Private":"ส่วนตัว","Prompt WAV + transcript":"WAV อ้างอิง + ข้อความถอดเสียง","Prompted audio context":"บริบทเสียงจากพรอมป์ต์","Provider":"ผู้ให้บริการ","Put that URL in OBS as a Browser Source.":"ใส่ URL นั้นใน OBS เป็นแหล่งข้อมูลเบราว์เซอร์","Quality":"คุณภาพ","Quick Setup":"ตั้งค่าอย่างรวดเร็ว","Qwen3-TTS":"Qwen3-TTS","Qwen3-TTS 0.6B Base":"Qwen3-TTS 0.6B Base","Raw PCM":"PCM ดิบ","Read every 3rd message only":"อ่านทุกข้อความที่ 3 เท่านั้น","Read your live chat aloud with local AI voices. Start with the no-install option, then use a local server only if you need it.":"อ่านแชตสดออกเสียงด้วยเสียง AI ภายในเครื่อง เริ่มจากตัวเลือกที่ไม่ต้องติดตั้ง แล้วใช้เซิร์ฟเวอร์ภายในเครื่องเมื่อจำเป็นเท่านั้น","Recommended":"แนะนำ","Recommended formats:":"รูปแบบที่แนะนำ:","Record a clean reference clip, usually 3 to 30 seconds of one speaker with little background noise.":"บันทึกคลิปอ้างอิงเสียงสะอาด โดยทั่วไปเป็นเสียงผู้พูดคนเดียว 3–30 วินาที มีเสียงรบกวนน้อย","Reference-audio cloning":"โคลนจากเสียงอ้างอิง","Remote/custom endpoint only":"เฉพาะปลายทางระยะไกล/กำหนดเอง","Remote/custom only":"เฉพาะระยะไกล/กำหนดเอง","Request Shape":"รูปแบบคำขอ","Requirements:":"ข้อกำหนด:","Response":"การตอบกลับ","Restart the server, then point the SSN dock or featured overlay at it:":"เริ่มเซิร์ฟเวอร์ใหม่ แล้วตั้งให้แผงด็อก SSN หรือโอเวอร์เลย์ข้อความเด่นเชื่อมต่อไปยังเซิร์ฟเวอร์:","Return PCM as a WAV file or base64 WAV. A browser audio element cannot reliably play raw PCM bytes directly.":"ส่ง PCM กลับเป็นไฟล์ WAV หรือ WAV แบบ base64 องค์ประกอบเสียงของเบราว์เซอร์ไม่สามารถเล่นไบต์ PCM ดิบโดยตรงได้อย่างแน่นอน","Route the browser or SSN app to":"ส่งเสียงเบราว์เซอร์หรือแอป SSN ไปยัง","Route the virtual output into OBS as an Audio Input Capture source.":"ส่งเสียงเอาต์พุตเสมือนเข้า OBS เป็นแหล่งข้อมูล Audio Input Capture","Run":"เรียก","Run SSN bridge with":"เรียกใช้บริดจ์ SSN ด้วย","Run a local TTS server on your machine and point Social Stream Ninja at it. Gives you more voice options, voice cloning, and server-side control.":"เรียกใช้เซิร์ฟเวอร์ TTS ภายในเครื่องแล้วตั้งให้ Social Stream Ninja เชื่อมต่อไปยังเซิร์ฟเวอร์ คุณจะมีตัวเลือกเสียง การโคลนเสียง และการควบคุมฝั่งเซิร์ฟเวอร์มากขึ้น","Run the minimal Piper-only image:":"เรียกใช้อิมเมจขนาดเล็กที่มีเฉพาะ Piper:","SSN URL":"URL ของ SSN","SSN accepts direct binary audio responses, JSON responses with base64 audio, and JSON responses with an audio URL. Current custom/local playback buffers the returned audio before playing it; progressive streaming playback is not supported yet.":"SSN รองรับการตอบกลับเป็นเสียงไบนารีโดยตรง JSON ที่มีเสียงแบบ base64 และ JSON ที่มี URL เสียง การเล่นเสียงแบบกำหนดเอง/ภายในเครื่องในปัจจุบันจะรับเสียงที่ส่งกลับมาให้ครบก่อนเล่น ยังไม่รองรับการเล่นแบบทยอยสตรีม","SSN already supports OS/browser":"SSN รองรับ speech synthesis ของ OS/เบราว์เซอร์ผ่าน","SSN checks":"SSN ตรวจสอบ","SSN currently lists 28 English, three Spanish, and three Brazilian Portuguese Kokoro voices. Specify one with":"ขณะนี้ SSN มีเสียง Kokoro ภาษาอังกฤษ 28 เสียง ภาษาสเปน 3 เสียง และภาษาโปรตุเกสบราซิล 3 เสียง ระบุเสียงที่ต้องการด้วย","SSN does not currently do progressive playback for custom/local TTS endpoints. It waits for the response blob or JSON audio payload, then plays it. Some upstream servers expose streaming endpoints, but SSN's current OpenAI-compatible path buffers before playback.":"ปัจจุบัน SSN ยังไม่เล่นเสียงแบบทยอยรับข้อมูลสำหรับปลายทาง TTS แบบกำหนดเอง/ภายในเครื่อง โดยจะรอ blob การตอบกลับหรือข้อมูลเสียง JSON ก่อนจึงเล่น เซิร์ฟเวอร์ต้นทางบางตัวมีปลายทางสตรีม แต่เส้นทางที่เข้ากันได้กับ OpenAI ของ SSN ในปัจจุบันจะเก็บข้อมูลให้ครบก่อนเล่น","SSN local TTS bridge":"บริดจ์ TTS ภายในเครื่องของ SSN","SSN path":"เส้นทาง SSN","SSN sends live chat text to the endpoint using":"SSN ส่งข้อความแชตสดไปยังปลายทางโดยใช้","SSN support":"การรองรับของ SSN","SSN treats a local/self-hosted TTS server like an OpenAI-compatible speech endpoint. The core flow is:":"SSN ใช้เซิร์ฟเวอร์ TTS ภายในเครื่อง/ที่โฮสต์เองเหมือนปลายทางเสียงพูดที่เข้ากันได้กับ OpenAI โดยมีขั้นตอนหลักดังนี้:","Screenshot-style checklist for local TTS troubleshooting":"รายการตรวจสอบรูปแบบภาพหน้าจอสำหรับแก้ปัญหา TTS ภายในเครื่อง","Screenshot-style map of the local TTS fields in Social Stream Ninja":"แผนผังรูปแบบภาพหน้าจอแสดงช่องตั้งค่า TTS ภายในเครื่องใน Social Stream Ninja","Select a Kokoro voice that matches the language you want. Changing only the language parameter does not change the selected voice.":"เลือกเสียง Kokoro ที่ตรงกับภาษาที่ต้องการ การเปลี่ยนเฉพาะพารามิเตอร์ภาษาไม่ได้เปลี่ยนเสียงที่เลือกไว้","Self-Hosted Flow":"ขั้นตอนแบบโฮสต์เอง","Send one short test chat message.":"ส่งข้อความแชตทดสอบสั้น ๆ หนึ่งข้อความ","Server":"เซิร์ฟเวอร์","Set":"ตั้งค่า","Set Hardware Out to your speakers/headphones.":"ตั้ง Hardware Out เป็นลำโพง/หูฟังของคุณ","Set Output device to":"ตั้ง Output device เป็น","Set Output to":"ตั้ง Output เป็น","Set the URL to your":"ตั้ง URL เป็น","Set up private local text-to-speech for Social Stream Ninja, including built-in voices, self-hosted servers, voice cloning, OBS audio, and troubleshooting.":"ตั้งค่าการแปลงข้อความเป็นเสียงพูดภายในเครื่องแบบเป็นส่วนตัวสำหรับ Social Stream Ninja รวมเสียงแบบในตัว เซิร์ฟเวอร์ที่โฮสต์เอง การโคลนเสียง เสียง OBS และการแก้ปัญหา","Settings > System > Sound > Volume Mixer":"Settings > System > Sound > Volume Mixer","Setup":"การตั้งค่า","Several high-quality AI voices are":"มีเสียง AI คุณภาพสูงหลายเสียงที่","Short WAV reference voices":"เสียงอ้างอิง WAV สั้น ๆ","Simplest rule:":"หลักการที่ง่ายที่สุด:","Skip \"says\": reads message only":"ข้ามคำว่า \"says\" — อ่านเฉพาะข้อความ","Skip usernames entirely":"ไม่อ่านชื่อผู้ใช้เลย","Small ONNX model, fast startup.":"โมเดล ONNX ขนาดเล็ก เริ่มต้นเร็ว","Social Stream Ninja - Local AI TTS Guide":"คู่มือ AI TTS ในเครื่อง - Social Stream Ninja","Social Stream Ninja can read chat messages out loud using local AI text-to-speech. \"Local\" can mean two things: the voice runs inside the browser, or you run a small TTS server on your own computer.":"Social Stream Ninja อ่านข้อความแชตออกเสียงได้ด้วย AI แปลงข้อความเป็นเสียงพูดภายในเครื่อง คำว่า \"ภายในเครื่อง\" หมายถึงได้สองอย่าง: เสียงทำงานในเบราว์เซอร์ หรือคุณเรียกใช้เซิร์ฟเวอร์ TTS ขนาดเล็กบนคอมพิวเตอร์ของตัวเอง","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja: Local AI TTS Guide |":"Social Stream Ninja — คู่มือ AI TTS ภายในเครื่อง |","Some F5-TTS server wrappers expose":"ตัวครอบเซิร์ฟเวอร์ F5-TTS บางตัวเปิดให้ใช้","Some engines also require the exact transcript of that reference clip.":"เอนจินบางตัวยังต้องการข้อความถอดเสียงที่ตรงกับคลิปอ้างอิงนั้นทุกคำ","Sound Settings > App volume and device preferences":"Sound Settings > App volume and device preferences","Spanish example:":"ตัวอย่างภาษาสเปน:","Speaking speed (0.5–2.0)":"ความเร็วเสียงพูด (0.5–2.0)","Specify a voice model with":"ระบุโมเดลเสียงด้วย","Standalone desktop app":"แอปเดสก์ท็อปแบบสแตนด์อโลน","Start with Path 1.":"เริ่มจากแนวทางที่ 1","Streaming Audio":"เสียงแบบสตรีม","Strong cloning/control with short references and transcript support.":"โคลนและควบคุมเสียงได้ดีด้วยเสียงอ้างอิงสั้น ๆ และรองรับข้อความถอดเสียง","Supported Audio Responses":"รูปแบบการตอบกลับเสียงที่รองรับ","Surface":"ช่องทางใช้งาน","System TTS":"TTS ของระบบ","System TTS (":"TTS ของระบบ (","System TTS / eSpeak":"TTS ของระบบ / eSpeak","TTS Voice Guide":"คู่มือเสียง TTS","TTS audio plays through your system speakers/headphones from the app":"เสียง TTS เล่นจากแอปผ่านลำโพง/หูฟังของระบบ","Table of Contents":"สารบัญ","Tested Server Notes":"หมายเหตุเกี่ยวกับเซิร์ฟเวอร์ที่ทดสอบแล้ว","The Chrome extension, OBS browser source, and standalone Social Stream Ninja desktop app all use the same":"ส่วนขยาย Chrome แหล่งข้อมูลเบราว์เซอร์ใน OBS และแอปเดสก์ท็อป Social Stream Ninja แบบสแตนด์อโลนล้วนใช้","The OBS browser source is the page that will make the sound.":"แหล่งข้อมูลเบราว์เซอร์ใน OBS คือหน้าที่จะสร้างเสียง","The OBS browser source talks to the bridge on the OBS computer. The bridge can then call Kokoro-FastAPI, openedai-speech, or another server.":"แหล่งข้อมูลเบราว์เซอร์ใน OBS ติดต่อบริดจ์บนคอมพิวเตอร์ OBS จากนั้นบริดจ์จึงเรียก Kokoro-FastAPI, openedai-speech หรือเซิร์ฟเวอร์อื่นได้","The SSN app test works, but OBS has no sound":"การทดสอบในแอป SSN ทำงาน แต่ OBS ไม่มีเสียง","The SSN desktop app test button works, but OBS is silent":"ปุ่มทดสอบในแอปเดสก์ท็อป SSN ทำงาน แต่ OBS เงียบ","The app can use its local":"แอปสามารถใช้เส้นทางภายในเครื่อง","The app test only proves the app can reach the server. The OBS Browser Source still has to reach the endpoint and play the audio.":"การทดสอบในแอปยืนยันเพียงว่าแอปเข้าถึงเซิร์ฟเวอร์ได้ แหล่งข้อมูลเบราว์เซอร์ใน OBS ยังต้องเข้าถึงปลายทางและเล่นเสียงได้เอง","The bridge is a small local helper. It accepts the browser request from SSN, talks to your TTS server, then gives the audio back to SSN with browser-friendly headers.":"บริดจ์เป็นโปรแกรมช่วยขนาดเล็กภายในเครื่อง รับคำขอจากเบราว์เซอร์ SSN ติดต่อเซิร์ฟเวอร์ TTS แล้วส่งเสียงกลับให้ SSN พร้อมเฮดเดอร์ที่เหมาะกับเบราว์เซอร์","The endpoint field is the important one. For a local server, the API key can usually stay blank. Pick a voice name that your server actually supports.":"ช่องปลายทางคือส่วนสำคัญ สำหรับเซิร์ฟเวอร์ภายในเครื่อง โดยทั่วไปปล่อยคีย์ API ว่างไว้ได้ เลือกชื่อเสียงที่เซิร์ฟเวอร์รองรับจริง","The local server converts the reference into a speaker prompt, embedding, or voice profile.":"เซิร์ฟเวอร์ภายในเครื่องแปลงเสียงอ้างอิงเป็นพรอมป์ต์ผู้พูด embedding หรือโปรไฟล์เสียง","The localhost / 127.0.0.1 Rule":"หลักการ localhost / 127.0.0.1","The minimal image is Piper-only. XTTS-v2 requires the full installation and":"อิมเมจขนาดเล็กมีเฉพาะ Piper ส่วน XTTS-v2 ต้องติดตั้งแบบเต็มและใช้","The repo recommends high-VRAM GPUs for interactive use.":"รีโพซิทอรีแนะนำ GPU ที่มี VRAM สูงสำหรับการใช้งานแบบโต้ตอบ","The repo says it is mostly obsolete, so treat it as useful but not future-proof.":"รีโพซิทอรีระบุว่าโครงการส่วนใหญ่ล้าสมัยแล้ว จึงยังใช้ประโยชน์ได้แต่ไม่ควรคาดหวังการรองรับในระยะยาว","The server returns a playable audio file, usually WAV or MP3, and SSN plays it in the dock/browser source.":"เซิร์ฟเวอร์ส่งไฟล์เสียงที่เล่นได้กลับมา โดยทั่วไปเป็น WAV หรือ MP3 แล้ว SSN เล่นเสียงในแผงด็อก/แหล่งข้อมูลเบราว์เซอร์","The standalone starter folder is":"โฟลเดอร์เริ่มต้นแบบสแตนด์อโลนคือ","The voice provider belongs to SSN’s player, not YouTube, Twitch, TikTok, or another chat site. These local AI providers differ from":"ผู้ให้บริการเสียงเป็นส่วนของตัวเล่น SSN ไม่ใช่ YouTube, Twitch, TikTok หรือเว็บไซต์แชตอื่น ผู้ให้บริการ AI ภายในเครื่องเหล่านี้ต่างจาก","Then point the OBS":"จากนั้นตั้ง URL ของ OBS","There are two approaches:":"มีสองแนวทาง:","These are practical starting points, not hard guarantees. Model version, quantization, text length, Docker image, and background apps can change memory use.":"ค่าเหล่านี้เป็นจุดเริ่มต้นสำหรับใช้งานจริง ไม่ใช่ข้อรับประกันตายตัว เวอร์ชันโมเดล quantization ความยาวข้อความ อิมเมจ Docker และแอปเบื้องหลังอาจเปลี่ยนการใช้หน่วยความจำได้","These are the self-hosted voice-cloning targets checked for SSN compatibility. The local endpoint path was tested against both":"นี่คือเซิร์ฟเวอร์โคลนเสียงที่โฮสต์เองซึ่งตรวจสอบความเข้ากันได้กับ SSN แล้ว เส้นทางปลายทางภายในเครื่องผ่านการทดสอบกับทั้ง","These engines are bundled inside Social Stream Ninja and require no installation. They run in the browser using WebAssembly (WASM) or ONNX Runtime.":"เอนจินเหล่านี้มาพร้อม Social Stream Ninja และไม่ต้องติดตั้งเพิ่ม โดยทำงานในเบราว์เซอร์ด้วย WebAssembly (WASM) หรือ ONNX Runtime","These work with any TTS provider, including local servers:":"ใช้ได้กับผู้ให้บริการ TTS ทุกราย รวมถึงเซิร์ฟเวอร์ภายในเครื่อง:","This is the most common local TTS mistake.":"นี่คือข้อผิดพลาดเกี่ยวกับ TTS ภายในเครื่องที่พบบ่อยที่สุด","This is the shortest path for most streamers:":"นี่คือวิธีที่สั้นที่สุดสำหรับสตรีมเมอร์ส่วนใหญ่:","This is the simplest method and works for":"นี่คือวิธีที่ง่ายที่สุดและใช้ได้กับ","Three recommended options:":"ตัวเลือกที่แนะนำสามแบบ:","To keep Kokoro-FastAPI running automatically in the background, use Docker's restart flag:":"หากต้องการให้ Kokoro-FastAPI ทำงานเบื้องหลังโดยอัตโนมัติต่อเนื่อง ให้ใช้แฟล็ก restart ของ Docker:","Toggle Dark Mode":"สลับโหมดมืด","Toggle Light Mode":"สลับโหมดสว่าง","Tradeoff":"ข้อแลกเปลี่ยน","Troubleshooting":"การแก้ปัญหา","Try the SSN local TTS bridge on the OBS computer if the browser blocks the request.":"ลองใช้บริดจ์ TTS ภายในเครื่องของ SSN บนคอมพิวเตอร์ OBS หากเบราว์เซอร์บล็อกคำขอ","Turn on OBS audio capture.":"เปิดการเก็บเสียงใน OBS","Typical Flow":"ขั้นตอนทั่วไป","URL Parameter":"พารามิเตอร์ URL","URL Parameters":"พารามิเตอร์ URL","URL at the bridge:":"ไปยังบริดจ์:","URL into OBS, OBS is the one that must reach the TTS server and play the audio.":"ลงใน OBS ตัว OBS เองต้องเข้าถึงเซิร์ฟเวอร์ TTS และเล่นเสียงได้","URL parameters for TTS. The important difference is where the sound is being made.":"พารามิเตอร์ URL สำหรับ TTS เหมือนกัน ความแตกต่างสำคัญคือเสียงเกิดขึ้นที่ใด","URL with TTS parameters":"URL ที่มีพารามิเตอร์ TTS","URL.":".","URL:":":","Use":"ใช้","Use GPU when cloning or processing long text.":"ใช้ GPU เมื่อโคลนเสียงหรือประมวลผลข้อความยาว","Use OBS Browser Source with \"Control audio via OBS\".":"ใช้แหล่งข้อมูลเบราว์เซอร์ใน OBS พร้อมเปิด \"Control audio via OBS\"","Use an OpenAI-compatible wrapper, or":"ใช้ตัวครอบที่เข้ากันได้กับ OpenAI หรือ","Use an OpenAI-compatible wrapper, then":"ใช้ตัวครอบที่เข้ากันได้กับ OpenAI จากนั้น","Use consented voices only.":"ใช้เฉพาะเสียงที่ได้รับความยินยอมแล้ว","Use something simple like":"ใช้ข้อความง่าย ๆ เช่น","Use the OpenAI-compatible TTS path. Use":"ใช้เส้นทาง TTS ที่เข้ากันได้กับ OpenAI ใช้","Use the built-in provider first.":"ใช้ผู้ให้บริการแบบในตัวก่อน","Use this option for a CPU-only TTS server under 1 GB. It does not include XTTS-v2 or voice cloning.":"ใช้ตัวเลือกนี้สำหรับเซิร์ฟเวอร์ TTS ที่ใช้เฉพาะ CPU และมีขนาดต่ำกว่า 1 GB โดยไม่มี XTTS-v2 หรือการโคลนเสียง","Uses Social Stream's built-in":"ใช้","Uses the same provider settings. The app's local file windows are less CORS constrained, but the bridge is still the safest path for servers that reject browser-style requests.":"ใช้การตั้งค่าผู้ให้บริการเดียวกัน หน้าต่างไฟล์ภายในเครื่องของแอปมีข้อจำกัด CORS น้อยกว่า แต่บริดจ์ยังเป็นวิธีที่ปลอดภัยที่สุดสำหรับเซิร์ฟเวอร์ที่ปฏิเสธคำขอแบบเบราว์เซอร์","VB-Audio Virtual Cable":"VB-Audio Virtual Cable","Value":"ค่า","Verify It's Running":"ตรวจสอบว่าเซิร์ฟเวอร์ทำงานอยู่","Very Low":"ต่ำมาก","Voice cloning":"การโคลนเสียง","Voice cloning can sound like a real person, so only use voices you own, have permission to use, or have clearly licensed for this purpose.":"การโคลนเสียงอาจฟังเหมือนบุคคลจริง จึงควรใช้เฉพาะเสียงของคุณเอง เสียงที่ได้รับอนุญาต หรือเสียงที่มีสิทธิ์ใช้งานเพื่อวัตถุประสงค์นี้อย่างชัดเจน","Voice cloning is not a separate SSN mode. It is a feature inside some local TTS servers. SSN sends the chat text to a local endpoint; the server chooses the cloned voice from a saved reference audio file, a voice profile, or bridge configuration.":"การโคลนเสียงไม่ใช่โหมดแยกของ SSN แต่เป็นฟีเจอร์ในเซิร์ฟเวอร์ TTS ภายในเครื่องบางตัว SSN ส่งข้อความแชตไปยังปลายทางภายในเครื่อง แล้วเซิร์ฟเวอร์เลือกเสียงที่โคลนจากไฟล์เสียงอ้างอิงที่บันทึกไว้ โปรไฟล์เสียง หรือการตั้งค่าบริดจ์","Voice cloning is supported, but the 8B model is not a 6 GB VRAM target and has no local REST endpoint in the repo.":"รองรับการโคลนเสียง แต่โมเดล 8B ไม่เหมาะกับ VRAM 6 GB และรีโพซิทอรีไม่มีปลายทาง REST ภายในเครื่อง","Voice cloning path; CPU is possible but slow.":"แนวทางโคลนเสียง ใช้ CPU ได้แต่ช้า","Voice cloning, web UI options, OpenAI-compatible APIs, long-text tooling.":"การโคลนเสียง ตัวเลือกหน้าเว็บควบคุม API ที่เข้ากันได้กับ OpenAI และเครื่องมือสำหรับข้อความยาว","Voice name (depends on server)":"ชื่อเสียง (ขึ้นอยู่กับเซิร์ฟเวอร์)","Voice names are case-sensitive on some servers.":"เซิร์ฟเวอร์บางตัวแยกตัวพิมพ์ใหญ่และเล็กในชื่อเสียง","Voicemeeter":"Voicemeeter","Voicemeeter Advanced Route":"การกำหนดเส้นทางขั้นสูงด้วย Voicemeeter","Volume level (0.0–1.0)":"ระดับเสียง (0.0–1.0)","Watch the OBS Audio Mixer while a test message plays. The browser source meter should move.":"ดูมิกเซอร์เสียงของ OBS ขณะข้อความทดสอบเล่น มาตรวัดของแหล่งข้อมูลเบราว์เซอร์ควรขยับ","WebGPU-capable GPU or fast CPU, 8-16 GB RAM":"GPU ที่รองรับ WebGPU หรือ CPU ที่เร็ว, RAM 8–16 GB","When TTS works in one place but not another, check the machine, endpoint, voice, browser permission, and OBS audio capture in that order.":"เมื่อ TTS ทำงานในที่หนึ่งแต่อีกที่ไม่ทำงาน ให้ตรวจสอบเครื่อง ปลายทาง เสียงที่เลือก สิทธิ์เบราว์เซอร์ และการเก็บเสียงใน OBS ตามลำดับ","When using a local server (non-openai.com URL), Social Stream Ninja sends the request without an Authorization header. You do not need to configure a key.":"เมื่อใช้เซิร์ฟเวอร์ภายในเครื่อง (URL ที่ไม่ใช่ openai.com) Social Stream Ninja ส่งคำขอโดยไม่มีเฮดเดอร์ Authorization คุณไม่ต้องตั้งค่าคีย์","Where to Click in SSN":"ตำแหน่งที่ต้องคลิกใน SSN","Which Package Fits?":"แพ็กเกจใดเหมาะกับคุณ?","Why this works:":"เหตุผลที่วิธีนี้ได้ผล:","Windows 10 Per-App Route":"การกำหนดเส้นทางเสียงรายแอปใน Windows 10","Windows 11 Per-App Route":"การกำหนดเส้นทางเสียงรายแอปใน Windows 11","Windows Audio Routing Links":"ลิงก์การกำหนดเส้นทางเสียง Windows","Windows PowerShell, when the TTS server is on another computer:":"Windows PowerShell เมื่อเซิร์ฟเวอร์ TTS อยู่บนคอมพิวเตอร์อีกเครื่อง:","Windows PowerShell, when the TTS server is on this same computer:":"Windows PowerShell เมื่อเซิร์ฟเวอร์ TTS อยู่บนคอมพิวเตอร์เครื่องเดียวกันนี้:","Windows Source Install Note":"หมายเหตุการติดตั้งจากซอร์สบน Windows","Windows:":"Windows:","Works with captured chat text, regardless of platform.":"ใช้ได้กับข้อความแชตที่เก็บมา ไม่ว่าจะมาจากแพลตฟอร์มใด","Wrapper choice and model size matter. Expect more setup.":"การเลือกตัวครอบและขนาดโมเดลมีผล คาดว่าจะต้องตั้งค่าเพิ่มเติม","Wrong voice or voice not found":"เสียงผิดหรือไม่พบเสียง","XTTS / openedai-speech":"XTTS / openedai-speech","XTTS-v2 / openedai-speech":"XTTS-v2 / openedai-speech","XTTS-v2 is non-commercial by default.":"ค่าเริ่มต้นของ XTTS-v2 อนุญาตการใช้ที่ไม่ใช่เชิงพาณิชย์","XTTS-v2 itself is a model, not a web API. Use the full openedai-speech server to load the model, select a saved reference voice, accept chat text from SSN, and return playable audio. The server reports a practical target of about 4 GB of GPU VRAM; CPU inference is possible but slow.":"XTTS-v2 เป็นโมเดล ไม่ใช่เว็บ API ให้ใช้เซิร์ฟเวอร์ openedai-speech แบบเต็มเพื่อโหลดโมเดล เลือกเสียงอ้างอิงที่บันทึกไว้ รับข้อความแชตจาก SSN และส่งเสียงที่เล่นได้กลับมา เซิร์ฟเวอร์รายงานว่าใช้ VRAM ของ GPU ประมาณ 4 GB ในทางปฏิบัติ ประมวลผลด้วย CPU ได้แต่ช้า","Yes":"ใช่","Yes, about 4 GB reported by openedai-speech":"ใช่ ประมาณ 4 GB ตามที่ openedai-speech รายงาน","Your local server URL (change port as needed)":"URL เซิร์ฟเวอร์ภายในเครื่องของคุณ (เปลี่ยนพอร์ตตามต้องการ)","Your setup":"การตั้งค่าของคุณ","accept":"รับ","all TTS providers":"ผู้ให้บริการ TTS ทั้งหมด","allows only non-commercial use of the model and its outputs. A monetized stream may not qualify, so verify the license or obtain separate permission before using XTTS-v2 commercially.":"อนุญาตให้ใช้โมเดลและผลลัพธ์เฉพาะที่ไม่ใช่เชิงพาณิชย์ สตรีมที่สร้างรายได้อาจไม่เข้าเงื่อนไข จึงควรตรวจสอบใบอนุญาตหรือขออนุญาตแยกก่อนใช้ XTTS-v2 เชิงพาณิชย์","also work.":"ก็ใช้ได้เช่นกัน","always mean \"this same computer.\"":"หมายถึง \"คอมพิวเตอร์เครื่องเดียวกันนี้\" เสมอ","and":"และ","and choose":"แล้วเลือก","and point SSN at":"แล้วตั้งให้ SSN เชื่อมต่อไปยัง","and return a playable audio file. That covers OpenAI, Coqui/XTTS, Kokoro wrappers, Qwen wrappers, and most proxy services.":"แล้วส่งไฟล์เสียงที่เล่นได้กลับมา ครอบคลุม OpenAI, Coqui/XTTS, ตัวครอบ Kokoro, ตัวครอบ Qwen และบริการพร็อกซีส่วนใหญ่","are OpenAI/openedai-speech style names and may not work with Kokoro.":"เป็นชื่อแบบ OpenAI/openedai-speech และอาจใช้กับ Kokoro ไม่ได้","are accepted aliases for the OpenAI-style fields.":"เป็นชื่อแทนที่ยอมรับได้สำหรับช่องแบบ OpenAI","as the output for the SSN app in Windows Sound settings":"เป็นเอาต์พุตของแอป SSN ในการตั้งค่าเสียง Windows","before starting the server. Without this, requests can return HTTP 500 because the server cannot find":"ก่อนเริ่มเซิร์ฟเวอร์ มิฉะนั้นคำขออาจส่งกลับ HTTP 500 เพราะเซิร์ฟเวอร์ไม่พบ","below.":"ด้านล่าง","bridge README":"README ของบริดจ์","built directly into Social Stream Ninja":"มีอยู่ใน Social Stream Ninja โดยตรง","can be found.":"ถูกค้นพบได้","can route one app to a virtual cable, but it is older software. Prefer the Windows per-app route when it works.":"ส่งเสียงจากแอปหนึ่งไปยังสายเสียงเสมือนได้ แต่เป็นซอฟต์แวร์เก่า หากการกำหนดเส้นทางเสียงรายแอปของ Windows ใช้งานได้ ให้ใช้วิธีนั้นก่อน","chatterbox-tts-api":"chatterbox-tts-api","checked.":"ไว้","dock.html":"dock.html","eSpeak-NG":"eSpeak-NG","eSpeak-NG Options":"ตัวเลือก eSpeak-NG","endpoint that Social Stream needs. Its small image runs Piper on the CPU; its full image can run XTTS-v2 voice cloning on a supported GPU.":"ที่ Social Stream ต้องใช้ อิมเมจขนาดเล็กรัน Piper บน CPU ส่วนอิมเมจเต็มรันการโคลนเสียง XTTS-v2 บน GPU ที่รองรับได้","exposes the OpenAI-compatible":"เปิดให้ใช้ปลายทางที่เข้ากันได้กับ OpenAI","fields, and data URLs.":"และ data URL","folder is on":"ของ venv อยู่ใน","for F5-TTS server wrappers":"สำหรับตัวครอบเซิร์ฟเวอร์ F5-TTS","for Kokoro-FastAPI, or the matching port for your server.":"สำหรับ Kokoro-FastAPI หรือพอร์ตที่ตรงกับเซิร์ฟเวอร์ของคุณ","for XTTS-v2.":"สำหรับ XTTS-v2","for all launch options.":"สำหรับตัวเลือกการเริ่มต้นทั้งหมด","for local cloning servers and bridge testing, and":"สำหรับเซิร์ฟเวอร์โคลนเสียงภายในเครื่องและการทดสอบบริดจ์ และ","for local/self-hosted endpoints.":"สำหรับปลายทางภายในเครื่อง/ที่โฮสต์เอง","for small files and broad browser support,":"สำหรับไฟล์ขนาดเล็กและการรองรับเบราว์เซอร์ที่หลากหลาย","for voice availability versus audio capture.":"เพื่อแยกเรื่องเสียงที่มีให้เลือกออกจากการเก็บเสียง","from":"จาก","github.com/matatonic/openedai-speech":"github.com/matatonic/openedai-speech","github.com/remsky/Kokoro-FastAPI":"github.com/remsky/Kokoro-FastAPI","http://localhost:8880/web/":"http://localhost:8880/web/","if needed.":"หากจำเป็น","in Chrome or OBS, CORS can matter.":"ใน Chrome หรือ OBS เรื่อง CORS อาจมีผล","in OBS with Audio Input Capture":"ใน OBS ด้วย Audio Input Capture","in each speech request.":"ในคำขอเสียงพูดแต่ละครั้ง","in the browser source settings":"ในการตั้งค่าแหล่งข้อมูลเบราว์เซอร์","inside the OBS URL points to the OBS computer, not the Kokoro computer.":"ใน URL ของ OBS จะชี้ไปยังคอมพิวเตอร์ OBS ไม่ใช่คอมพิวเตอร์ Kokoro","instead of":"แทน","instead of an OpenAI-compatible endpoint. The bridge can translate SSN's request into that query format.":"แทนปลายทางที่เข้ากันได้กับ OpenAI บริดจ์แปลงคำขอของ SSN ให้เป็นรูปแบบคิวรีนั้นได้","is available, more Piper voice choices, and a dedicated progressive streaming playback path for servers that can stream audio chunks.":"ใช้งานได้ ตัวเลือกเสียง Piper เพิ่มเติม และเส้นทางเล่นเสียงแบบทยอยสตรีมโดยเฉพาะสำหรับเซิร์ฟเวอร์ที่สตรีมเสียงเป็นช่วง ๆ ได้","is best when you need to hear TTS locally, route it to OBS, and keep it separate from music/game audio.":"เหมาะที่สุดเมื่อคุณต้องการฟัง TTS ภายในเครื่อง ส่งเสียงเข้า OBS และแยกจากเสียงเพลง/เกม","is checked in the Browser Source properties.":"ถูกเลือกไว้ในคุณสมบัติของแหล่งข้อมูลเบราว์เซอร์","is required for XTTS-v2.":"จำเป็นสำหรับ XTTS-v2","item.":"ด้วย","kokoro-web":"kokoro-web","kokoro-web repo":"รีโพซิทอรี kokoro-web","kokoro-web:":"kokoro-web:","macOS/Linux terminal:":"เทอร์มินัล macOS/Linux:","may be valid.":"อาจใช้ได้","must be a voice your server supports. Kokoro-FastAPI uses names like":"ต้องเป็นเสียงที่เซิร์ฟเวอร์รองรับ Kokoro-FastAPI ใช้ชื่อ เช่น","must be installed and running. Docker is free for personal use.":"ต้องติดตั้งและทำงานอยู่ Docker ใช้ฟรีสำหรับการใช้งานส่วนบุคคล","must be reachable from the page that is playing TTS, and":"ต้องเข้าถึงได้จากหน้าที่กำลังเล่น TTS และ","on the OBS computer and keep the same model and voice parameters while changing":"บนคอมพิวเตอร์ OBS และคงพารามิเตอร์โมเดลกับเสียงไว้เหมือนเดิมขณะเปลี่ยน","on the OBS computer and point SSN to":"บนคอมพิวเตอร์ OBS แล้วตั้งให้ SSN เชื่อมต่อไปยัง","once the server is running.":"เมื่อเซิร์ฟเวอร์ทำงานแล้ว","only when the TTS server is on the same computer as the page playing audio. If the server is on another computer, use that computer's LAN IP address.":"เฉพาะเมื่อเซิร์ฟเวอร์ TTS อยู่บนคอมพิวเตอร์เครื่องเดียวกับหน้าที่เล่นเสียง หากเซิร์ฟเวอร์อยู่อีกเครื่อง ให้ใช้ที่อยู่ IP ภายใน LAN ของเครื่องนั้น","only when the server and browser both support it.":"เฉพาะเมื่อทั้งเซิร์ฟเวอร์และเบราว์เซอร์รองรับ","openedai-speech":"openedai-speech","openedai-speech (Piper)":"openedai-speech (Piper)","openedai-speech / XTTS-v2 Setup":"การตั้งค่า openedai-speech / XTTS-v2","openedai-speech Piper":"openedai-speech Piper","openedai-speech Setup (Piper and XTTS-v2)":"การตั้งค่า openedai-speech (Piper และ XTTS-v2)","openedai-speech XTTS":"openedai-speech XTTS","openedai-speech repo":"รีโพซิทอรี openedai-speech","openedai-speech uses OpenAI-style voice names mapped to Piper voices:":"openedai-speech ใช้ชื่อเสียงแบบ OpenAI ที่จับคู่กับเสียง Piper:","openedai-speech was archived in January 2026 and describes itself as mostly obsolete. It remains a useful compatibility example, but it is no longer maintained. Keep it local, and do not expose its unauthenticated port to the public Internet.":"openedai-speech ถูกเก็บถาวรในเดือนมกราคม 2026 และระบุว่าตัวเองล้าสมัยเป็นส่วนใหญ่ ยังเป็นตัวอย่างความเข้ากันได้ที่มีประโยชน์ แต่ไม่มีการบำรุงรักษาแล้ว ให้ใช้ภายในเครื่องและอย่าเปิดพอร์ตที่ไม่มีการยืนยันตัวตนสู่อินเทอร์เน็ตสาธารณะ","openedai-speech:":"openedai-speech:","openedai-speech: voices such as":"openedai-speech: เสียง เช่น","or":"หรือ","or another small number, remove it and refresh the OBS Browser Source.":"หรือค่าจำนวนน้อยอื่น ให้ลบออกแล้วรีเฟรชแหล่งข้อมูลเบราว์เซอร์ใน OBS","path for Kokoro instead of relying only on browser model loading.":"สำหรับ Kokoro แทนการพึ่งการโหลดโมเดลในเบราว์เซอร์เพียงอย่างเดียว","run the bridge on the same computer as OBS. Then OBS can use":"ให้เรียกใช้บริดจ์บนคอมพิวเตอร์เครื่องเดียวกับ OBS จากนั้น OBS จะใช้","runs the Kokoro 82M model as a local server with an OpenAI-compatible API. It works on CPU (no GPU required) and has excellent voice quality.":"เรียกใช้โมเดล Kokoro 82M เป็นเซิร์ฟเวอร์ภายในเครื่องพร้อม API ที่เข้ากันได้กับ OpenAI ทำงานบน CPU ได้ (ไม่ต้องใช้ GPU) และมีคุณภาพเสียงยอดเยี่ยม","section in":"ในไฟล์","short OBS setup guide":"คู่มือตั้งค่า OBS แบบสั้น","so":"เพื่อให้","source":".","support with a custom local URL.":"โดยใช้ URL ภายในเครื่องแบบกำหนดเอง","support.":"ที่มีในตัว","support. Local servers do not need an API key.":"โดยไม่ต้องใช้คีย์ API สำหรับเซิร์ฟเวอร์ภายในเครื่อง","the SSN field map above shows the local endpoint fields. Third-party server UIs change by project version, so their current screenshots and UI details are linked from each project repo near the relevant setup step.":"แผนผังช่องตั้งค่า SSN ด้านบนแสดงช่องปลายทางภายในเครื่อง หน้าตาของเซิร์ฟเวอร์ภายนอกเปลี่ยนไปตามเวอร์ชันโครงการ จึงมีลิงก์ภาพหน้าจอและรายละเอียด UI ปัจจุบันจากรีโพซิทอรีแต่ละโครงการอยู่ใกล้ขั้นตอนตั้งค่าที่เกี่ยวข้อง","to":"เป็น","to the voice name you want SSN to send, and use the correct XTTS language code when needed.":"เป็นชื่อเสียงที่ต้องการให้ SSN ส่ง และใช้รหัสภาษา XTTS ที่ถูกต้องเมื่อจำเป็น","to your":"ไปยัง URL ของ","to your Social Stream":"ใน URL ของ Social Stream ที่เป็นหน้า","use":"ใช้","value must match the cloned voice name in":"ต้องตรงกับชื่อเสียงที่โคลนใน","with":"พร้อม","with that computer's LAN IP address:":"ด้วยที่อยู่ IP ภายใน LAN ของเครื่องนั้น:","with the TTS server computer's LAN IP.":"ด้วย IP ภายใน LAN ของคอมพิวเตอร์เซิร์ฟเวอร์ TTS","without":"โดยไม่มี","without a provider) depends on voices exposed by the browser.":"โดยไม่ระบุผู้ให้บริการ) ขึ้นอยู่กับเสียงที่เบราว์เซอร์เปิดให้ใช้","~2 GB":"~2 GB","⭐⭐ Robotic":"⭐⭐ เสียงหุ่นยนต์","⭐⭐⭐ Good":"⭐⭐⭐ ดี","⭐⭐⭐⭐ Very Good":"⭐⭐⭐⭐ ดีมาก","⭐⭐⭐⭐⭐ Excellent":"⭐⭐⭐⭐⭐ ยอดเยี่ยม"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/local-tts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/local-tts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/local-tts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/local-tts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/local-tts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/local-tts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/local-tts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/local-tts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/local-tts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/local-tts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/local-tts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/local-tts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/local-tts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/local-tts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/local-tts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/local-tts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/local-tts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/local-tts.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header>
+        <div class="container">
+            <button class="theme-toggle" data-theme-toggle type="button">
+                <span>🌓</span>
+                <span class="theme-text">สลับโหมดมืด</span>
+            </button>
+            <h1>คู่มือ AI TTS ในเครื่อง</h1>
+            <p>อ่านแชตสดออกเสียงด้วยเสียง AI ภายในเครื่อง เริ่มจากตัวเลือกที่ไม่ต้องติดตั้ง แล้วใช้เซิร์ฟเวอร์ภายในเครื่องเมื่อจำเป็นเท่านั้น</p>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/local-tts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/local-tts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/local-tts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/local-tts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/local-tts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/local-tts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/local-tts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/local-tts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/local-tts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/local-tts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/local-tts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/local-tts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/local-tts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/local-tts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/local-tts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/local-tts.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="local-tts.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --></div>
+    </header>
+
+    <div class="container">
+
+        <nav>
+            <h3 style="margin-top:0">สารบัญ</h3>
+            <ul>
+                <li><a href="#overview">ภาพรวม</a></li>
+                <li><a href="#quick-setup">ตั้งค่าอย่างรวดเร็ว</a></li>
+                <li><a href="#which-computer">หลักการ localhost / 127.0.0.1</a></li>
+                <li><a href="#where-to-click">ตำแหน่งที่ต้องคลิกใน SSN</a></li>
+                <li><a href="#flow">ขั้นตอนแบบโฮสต์เอง</a></li>
+                <li><a href="#builtin">แนวทางที่ 1 — TTS แบบในตัว (ไม่ต้องตั้งค่า)</a></li>
+                <li><a href="#desktop-app">หมายเหตุสำหรับเบราว์เซอร์และแอปเดสก์ท็อป</a></li>
+                <li><a href="#server">แนวทางที่ 2 — เซิร์ฟเวอร์ TTS ที่โฮสต์เอง</a></li>
+                <li><a href="#voice-cloning">การโคลนเสียงทำงานอย่างไร</a></li>
+                <li><a href="#hardware">ข้อกำหนดคอมพิวเตอร์</a></li>
+                <li><a href="#kokoro-fastapi">การตั้งค่า Kokoro-FastAPI</a></li>
+                <li><a href="#openedai">การตั้งค่า openedai-speech / XTTS-v2</a></li>
+                <li><a href="#bridge">บริดจ์ TTS ภายในเครื่อง</a></li>
+                <li><a href="#tested-servers">หมายเหตุเกี่ยวกับเซิร์ฟเวอร์ที่ทดสอบแล้ว</a></li>
+                <li><a href="#connect">การเชื่อมต่อกับ Social Stream</a></li>
+                <li><a href="#obs">นำเสียงเข้าสู่ OBS</a></li>
+                <li><a href="#comparison">ตารางเปรียบเทียบ</a></li>
+                <li><a href="#troubleshooting">การแก้ปัญหา</a></li>
+            </ul>
+        </nav>
+
+        <!-- OVERVIEW -->
+        <h2 id="overview">ภาพรวม</h2>
+        <div class="info"><strong>ใช้ได้กับข้อความแชตที่เก็บมา ไม่ว่าจะมาจากแพลตฟอร์มใด</strong> ผู้ให้บริการเสียงเป็นส่วนของตัวเล่น SSN ไม่ใช่ YouTube, Twitch, TikTok หรือเว็บไซต์แชตอื่น ผู้ให้บริการ AI ภายในเครื่องเหล่านี้ต่างจาก <em>TTS ของระบบ</em>: สร้างเสียงจากหน้าเว็บเอง แทนการพึ่งพา OBS ให้เข้าถึงเสียงของระบบปฏิบัติการ ดู <a href="tts-setup-guide.html#obs-voices">คู่มือตั้งค่า OBS แบบสั้น</a> เพื่อแยกเรื่องเสียงที่มีให้เลือกออกจากการเก็บเสียง <a href="tts-setup-guide.html#voice-chooser">เปรียบเทียบผู้ให้บริการ ฟังตัวอย่าง และดูการตั้งค่า</a></div>
+        <div class="card">
+            <p>Social Stream Ninja อ่านข้อความแชตออกเสียงได้ด้วย AI แปลงข้อความเป็นเสียงพูดภายในเครื่อง คำว่า "ภายในเครื่อง" หมายถึงได้สองอย่าง: เสียงทำงานในเบราว์เซอร์ หรือคุณเรียกใช้เซิร์ฟเวอร์ TTS ขนาดเล็กบนคอมพิวเตอร์ของตัวเอง</p>
+
+            <p>มีสองแนวทาง:</p>
+            <div class="path-grid">
+                <div class="path-card recommended">
+                    <h3>แนวทางที่ 1 — TTS แบบในตัว <span class="badge green">ไม่ต้องตั้งค่า</span></h3>
+                    <p>มีเสียง AI คุณภาพสูงหลายเสียงที่ <strong>มีอยู่ใน Social Stream Ninja โดยตรง</strong> ทั้งหมดทำงานในเบราว์เซอร์ด้วย WebAssembly หรือ ONNX โดยไม่ต้องมีเซิร์ฟเวอร์ Docker หรือการติดตั้ง</p>
+                    <ul>
+                        <li>Kokoro 82M (คุณภาพดีที่สุด)</li>
+                        <li>Piper Neural TTS</li>
+                        <li>Kitten TTS</li>
+                        <li>eSpeak-NG</li>
+                    </ul>
+                    <p><strong>เพียงเพิ่มพารามิเตอร์ URL ก็เริ่มใช้ได้</strong></p>
+                </div>
+                <div class="path-card">
+                    <h3>แนวทางที่ 2 — เซิร์ฟเวอร์ที่โฮสต์เอง <span class="badge orange">ต้องใช้ Docker</span></h3>
+                    <p>เรียกใช้เซิร์ฟเวอร์ TTS ภายในเครื่องแล้วตั้งให้ Social Stream Ninja เชื่อมต่อไปยังเซิร์ฟเวอร์ คุณจะมีตัวเลือกเสียง การโคลนเสียง และการควบคุมฝั่งเซิร์ฟเวอร์มากขึ้น</p>
+                    <ul>
+                        <li>Kokoro-FastAPI</li>
+                        <li>openedai-speech (Piper)</li>
+                        <li>kokoro-web</li>
+                    </ul>
+                    <p>ใช้ <strong>ปลายทางที่เข้ากันได้กับ OpenAI</strong> ที่มีในตัว</p>
+                </div>
+            </div>
+
+            <div class="success">
+                <strong>เริ่มจากแนวทางที่ 1</strong> หากเพียงต้องการให้ TTS ทำงานใน OBS ให้ลอง Kokoro หรือ Kitten แบบในตัวก่อน ทั้งสองไม่ต้องใช้ Docker เซิร์ฟเวอร์ หรือคีย์ API ใช้เซิร์ฟเวอร์ที่โฮสต์เองเฉพาะเมื่อต้องการเสียงจากเซิร์ฟเวอร์ การโคลนเสียง หรือโมเดลอื่นโดยเฉพาะ
+            </div>
+        </div>
+
+        <!-- QUICK SETUP -->
+        <h2 id="quick-setup">ตั้งค่าอย่างรวดเร็ว</h2>
+        <div class="card">
+            <p>นี่คือวิธีที่สั้นที่สุดสำหรับสตรีมเมอร์ส่วนใหญ่:</p>
+            <div class="plain-steps">
+                <div class="plain-step"><b>1</b><div><strong>ใช้ผู้ให้บริการแบบในตัวก่อน</strong> เพิ่ม <code>&amp;speech=en-US&amp;ttsprovider=kokoro</code> หรือ <code>&amp;speech=en-US&amp;ttsprovider=kitten</code> ไปยัง URL ของ <code>dock.html</code> .</div></div>
+                <div class="plain-step"><b>2</b><div><strong>ใส่ URL นั้นใน OBS เป็นแหล่งข้อมูลเบราว์เซอร์</strong> แหล่งข้อมูลเบราว์เซอร์ใน OBS คือหน้าที่จะสร้างเสียง</div></div>
+                <div class="plain-step"><b>3</b><div><strong>เปิดการเก็บเสียงใน OBS</strong> ในคุณสมบัติของแหล่งข้อมูลเบราว์เซอร์ ให้เปิด <strong>ควบคุมเสียงผ่าน OBS (Control audio via OBS)</strong></div></div>
+                <div class="plain-step"><b>4</b><div><strong>ส่งข้อความแชตทดสอบสั้น ๆ หนึ่งข้อความ</strong> ใช้ข้อความง่าย ๆ เช่น <code>Testing local TTS</code> รอการดาวน์โหลดโมเดลครั้งแรกหากใช้ Kokoro หรือ Piper</div></div>
+                <div class="plain-step"><b>5</b><div><strong>หลังจากนั้นจึงค่อยลองเซิร์ฟเวอร์ที่โฮสต์เอง</strong> หากใช้ Kokoro-FastAPI, openedai-speech หรือเซิร์ฟเวอร์ Docker อื่น ให้อ่านหลักการ localhost ด้านล่างก่อนคัดลอก URL ไปใส่ OBS</div></div>
+            </div>
+        </div>
+
+        <!-- WHICH COMPUTER -->
+        <h2 id="which-computer">หลักการ localhost / 127.0.0.1</h2>
+        <div class="card">
+            <p>นี่คือข้อผิดพลาดเกี่ยวกับ TTS ภายในเครื่องที่พบบ่อยที่สุด</p>
+            <div class="warning">
+                <strong><code>localhost</code> และ <code>127.0.0.1</code> หมายถึง "คอมพิวเตอร์เครื่องเดียวกันนี้" เสมอ</strong> หาก OBS อยู่บนคอมพิวเตอร์เครื่องหนึ่งและ Kokoro อยู่อีกเครื่อง <code>127.0.0.1</code> ใน URL ของ OBS จะชี้ไปยังคอมพิวเตอร์ OBS ไม่ใช่คอมพิวเตอร์ Kokoro
+            </div>
+            <figure class="guide-screenshot">
+                <img src="../../docs/images/local-tts/tts-localhost-map.png" alt="แผนภาพแสดงว่า localhost หมายถึงคอมพิวเตอร์เครื่องเดียวกัน ส่วนคอมพิวเตอร์อีกเครื่องต้องใช้ที่อยู่ IP ภายใน LAN">
+                <figcaption>ใช้ <code>127.0.0.1</code> เฉพาะเมื่อเซิร์ฟเวอร์ TTS อยู่บนคอมพิวเตอร์เครื่องเดียวกับหน้าที่เล่นเสียง หากเซิร์ฟเวอร์อยู่อีกเครื่อง ให้ใช้ที่อยู่ IP ภายใน LAN ของเครื่องนั้น</figcaption>
+            </figure>
+            <table>
+                <tr><th>การตั้งค่าของคุณ</th><th>ปลายทางที่ควรใช้</th></tr>
+                <tr><td>OBS และ Kokoro ทำงานบนคอมพิวเตอร์เครื่องเดียวกัน</td><td><code>http://127.0.0.1:8880/v1/audio/speech</code></td></tr>
+                <tr><td>Kokoro ทำงานบนคอมพิวเตอร์อีกเครื่องในเครือข่ายที่บ้าน</td><td><code>http://192.168.x.x:8880/v1/audio/speech</code> โดยใช้ IP ภายใน LAN ของคอมพิวเตอร์ที่รัน Kokoro</td></tr>
+                <tr><td>ปุ่มทดสอบในแอปเดสก์ท็อป SSN ทำงาน แต่ OBS เงียบ</td><td>OBS ยังต้องมีปลายทางที่ตัวเองใช้งานได้ การทดสอบในแอปไม่ได้ยืนยันว่า OBS เข้าถึงเซิร์ฟเวอร์ได้</td></tr>
+            </table>
+            <p class="tiny-note">บน Linux, macOS และ Windows ให้ตรวจสอบด้วยว่าไฟร์วอลล์อนุญาตพอร์ตนั้น และ Docker เปิดเผยพอร์ตด้วย <code>-p 8880:8880</code>.</p>
+        </div>
+
+        <!-- WHERE TO CLICK -->
+        <h2 id="where-to-click">ตำแหน่งที่ต้องคลิกใน SSN</h2>
+        <div class="card">
+            <p>ในป๊อปอัปส่วนขยาย ให้เปิดตัวเลือกผู้ให้บริการ TTS แล้วเลือก <strong>ปลายทาง TTS แบบกำหนดเอง / ภายในเครื่อง</strong> ตัวเลือกนี้แสดงช่องปลายทางภายในเครื่องที่เข้ากันได้กับ OpenAI และลิงก์กลับมายังคู่มือนี้</p>
+
+            <figure class="guide-screenshot">
+                <img src="../../docs/images/local-tts/tts-custom-endpoint-fields.png" alt="แผนผังรูปแบบภาพหน้าจอแสดงช่องตั้งค่า TTS ภายในเครื่องใน Social Stream Ninja">
+                <figcaption>ช่องปลายทางคือส่วนสำคัญ สำหรับเซิร์ฟเวอร์ภายในเครื่อง โดยทั่วไปปล่อยคีย์ API ว่างไว้ได้ เลือกชื่อเสียงที่เซิร์ฟเวอร์รองรับจริง</figcaption>
+            </figure>
+
+            <div class="info">
+                <strong>เกี่ยวกับภาพหน้าจอ:</strong> แผนผังช่องตั้งค่า SSN ด้านบนแสดงช่องปลายทางภายในเครื่อง หน้าตาของเซิร์ฟเวอร์ภายนอกเปลี่ยนไปตามเวอร์ชันโครงการ จึงมีลิงก์ภาพหน้าจอและรายละเอียด UI ปัจจุบันจากรีโพซิทอรีแต่ละโครงการอยู่ใกล้ขั้นตอนตั้งค่าที่เกี่ยวข้อง
+            </div>
+        </div>
+
+        <!-- FLOW -->
+        <h2 id="flow">ขั้นตอนแบบโฮสต์เอง</h2>
+        <div class="card">
+            <p>SSN ใช้เซิร์ฟเวอร์ TTS ภายในเครื่อง/ที่โฮสต์เองเหมือนปลายทางเสียงพูดที่เข้ากันได้กับ OpenAI โดยมีขั้นตอนหลักดังนี้:</p>
+            <div class="code">chat text -> SSN TTS request -> local endpoint or SSN bridge -> TTS server -> audio response -> SSN playback</div>
+
+            <h3>รูปแบบคำขอ</h3>
+            <p>สำหรับ <code>ttsprovider=customtts</code>, <code>localtts</code>, หรือ <code>openai</code> SSN ส่งคำขอ JSON POST ไปยังปลายทางที่กำหนดไว้:</p>
+            <div class="code">POST /v1/audio/speech
+{
+  "model": "tts-1",
+  "input": "Chat message text",
+  "voice": "af_bella",
+  "response_format": "mp3",
+  "speed": 1.0
+}</div>
+
+            <h3>CORS, หน้าเว็บที่โฮสต์ไว้ และบริดจ์</h3>
+            <p>CORS คือการตรวจสอบสิทธิ์ของเบราว์เซอร์ พูดง่าย ๆ คือเซิร์ฟเวอร์ TTS ต้องบอกเบราว์เซอร์ว่า "อนุญาตให้หน้านี้ขอเสียงจากฉันได้" หากไม่มีสิทธิ์นี้ คำขออาจถูกบล็อกก่อนที่ Kokoro หรือเซิร์ฟเวอร์ TTS อื่นจะได้รับเสียอีก</p>
+            <ul>
+                <li>หากคุณโหลด <code>dock.html</code> ใน Chrome หรือ OBS เรื่อง CORS อาจมีผล</li>
+                <li>หากคุณโหลดหน้าเว็บที่โฮสต์ไว้ เช่น <code>https://beta.socialstream.ninja/dock.html</code> Chrome อาจบล็อกการเรียกไปยังที่อยู่ HTTP ภายในเครื่องหรือเครือข่ายส่วนตัวด้วย</li>
+                <li>หากปุ่มทดสอบในแอป SSN ใช้งานได้ แต่แหล่งข้อมูลเบราว์เซอร์ใน OBS ไม่มีเสียง ให้ทดสอบ OBS แยกต่างหาก เพราะ OBS มีเบราว์เซอร์ของตัวเอง</li>
+            </ul>
+            <p>หากเซิร์ฟเวอร์ไม่อนุญาตคำขอจากเบราว์เซอร์ ให้เรียกใช้ <a href="../../local-tts-bridge/README.md" target="_blank">บริดจ์ TTS ภายในเครื่องของ SSN</a> แล้วตั้งให้ SSN เชื่อมต่อไปยัง <code>http://127.0.0.1:8124/v1/audio/speech</code> สำหรับ OBS วิธีตั้งค่าที่ง่ายที่สุดคือเรียกใช้บริดจ์บนคอมพิวเตอร์เครื่องเดียวกับ OBS</p>
+
+            <h3>รูปแบบการตอบกลับเสียงที่รองรับ</h3>
+            <table>
+                <tr>
+                    <th>การตอบกลับ</th>
+                    <th>การรองรับของ SSN</th>
+                    <th>หมายเหตุ</th>
+                </tr>
+                <tr>
+                    <td>ข้อมูลเสียงแบบไบนารี</td>
+                    <td class="check">ใช่</td>
+                    <td>ตัวเลือกที่ดีที่สุด ส่งกลับ <code>audio/mpeg</code>, <code>audio/wav</code>, <code>audio/ogg</code>, <code>audio/aac</code> หรือชนิดเสียงอื่นที่เบราว์เซอร์เล่นได้</td>
+                </tr>
+                <tr>
+                    <td>JSON ที่มี URL เสียง</td>
+                    <td class="check">ใช่</td>
+                    <td>SSN ตรวจสอบ <code>url</code>, <code>audio_url</code>, <code>output_url</code> และฟิลด์ซ้อน เช่น <code>data.url</code> และรายการแรกใน <code>data[]</code> ด้วย</td>
+                </tr>
+                <tr>
+                    <td>JSON ที่มีเสียงแบบ base64</td>
+                    <td class="check">ใช่</td>
+                    <td>SSN ตรวจสอบ <code>audio</code>, <code>audio_data</code>, <code>audioContent</code>, <code>b64_json</code> และฟิลด์ซ้อน เช่น <code>data</code> และ data URL</td>
+                </tr>
+                <tr>
+                    <td>PCM ดิบ</td>
+                    <td class="partial">เฉพาะเมื่อมีตัวครอบ</td>
+                    <td>ส่ง PCM กลับเป็นไฟล์ WAV หรือ WAV แบบ base64 องค์ประกอบเสียงของเบราว์เซอร์ไม่สามารถเล่นไบต์ PCM ดิบโดยตรงได้อย่างแน่นอน</td>
+                </tr>
+            </table>
+
+            <div class="info">
+                <strong>รูปแบบที่แนะนำ:</strong> ใช้ <code>mp3</code> สำหรับไฟล์ขนาดเล็กและการรองรับเบราว์เซอร์ที่หลากหลาย <code>wav</code> สำหรับเซิร์ฟเวอร์โคลนเสียงภายในเครื่องและการทดสอบบริดจ์ และ <code>opus</code> เฉพาะเมื่อทั้งเซิร์ฟเวอร์และเบราว์เซอร์รองรับ
+            </div>
+
+            <h3>เสียงแบบสตรีม</h3>
+            <p>ปัจจุบัน SSN ยังไม่เล่นเสียงแบบทยอยรับข้อมูลสำหรับปลายทาง TTS แบบกำหนดเอง/ภายในเครื่อง โดยจะรอ blob การตอบกลับหรือข้อมูลเสียง JSON ก่อนจึงเล่น เซิร์ฟเวอร์ต้นทางบางตัวมีปลายทางสตรีม แต่เส้นทางที่เข้ากันได้กับ OpenAI ของ SSN ในปัจจุบันจะเก็บข้อมูลให้ครบก่อนเล่น</p>
+            <p>ข้อสรุปสำหรับการใช้งานจริง: ให้ข้อความแชตที่อ่านด้วย TTS สั้น การรองรับการสตรีมต้องมีเส้นทางเล่นเสียงแยก โดยใช้ช่วงเสียง WAV/MP3 แบบสตรีม, MediaSource, WebCodecs หรือมิกเซอร์ฝั่งเซิร์ฟเวอร์</p>
+        </div>
+
+        <!-- PATH 1: BUILT-IN -->
+        <h2 id="builtin">แนวทางที่ 1 — TTS แบบในตัว (ไม่ต้องตั้งค่า)</h2>
+        <div class="card">
+            <p>เอนจินเหล่านี้มาพร้อม Social Stream Ninja และไม่ต้องติดตั้งเพิ่ม โดยทำงานในเบราว์เซอร์ด้วย WebAssembly (WASM) หรือ ONNX Runtime</p>
+
+            <table>
+                <tr>
+                    <th>ผู้ให้บริการ</th>
+                    <th>คุณภาพ</th>
+                    <th>การใช้ CPU</th>
+                    <th>GPU/WebGPU</th>
+                    <th>พารามิเตอร์ URL</th>
+                </tr>
+                <tr>
+                    <td><strong>Kokoro TTS</strong></td>
+                    <td>⭐⭐⭐⭐⭐ ยอดเยี่ยม</td>
+                    <td class="partial">ปานกลาง</td>
+                    <td class="check">เร็วขึ้นเมื่อใช้ GPU</td>
+                    <td><code>?ttsprovider=kokoro</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Piper TTS</strong></td>
+                    <td>⭐⭐⭐⭐ ดีมาก</td>
+                    <td class="check">ต่ำ</td>
+                    <td class="partial">เฉพาะ CPU</td>
+                    <td><code>?ttsprovider=piper</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Kitten TTS</strong></td>
+                    <td>⭐⭐⭐ ดี</td>
+                    <td class="check">ต่ำมาก</td>
+                    <td class="partial">เฉพาะ CPU</td>
+                    <td><code>?ttsprovider=kitten</code></td>
+                </tr>
+                <tr>
+                    <td><strong>eSpeak-NG</strong></td>
+                    <td>⭐⭐ เสียงหุ่นยนต์</td>
+                    <td class="check">น้อยมาก</td>
+                    <td class="partial">เฉพาะ CPU</td>
+                    <td><code>?ttsprovider=espeak</code></td>
+                </tr>
+            </table>
+
+            <h3>วิธีเปิดใช้</h3>
+            <p>เพิ่ม <code>&amp;ttsprovider=</code> และ <code>&amp;speech=</code> ใน URL ของ Social Stream ที่เป็นหน้า <strong>dock.html</strong> :</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=kokoro</div>
+
+            <h3>ตัวเลือก Kokoro TTS</h3>
+            <p>ขณะนี้ SSN มีเสียง Kokoro ภาษาอังกฤษ 28 เสียง ภาษาสเปน 3 เสียง และภาษาโปรตุเกสบราซิล 3 เสียง ระบุเสียงที่ต้องการด้วย <code>&amp;voicekokoro=</code>:</p>
+            <div class="code">English female: af_bella, af_sarah, af_nicole, af_sky
+English male:   am_adam, am_michael
+British female: bf_emma, bf_isabella
+British male:   bm_george, bm_lewis</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=kokoro&voicekokoro=af_bella&kokorospeed=1.1</div>
+            <div class="warning">
+                <strong>หมายเหตุเรื่องภาษา:</strong> เลือกเสียง Kokoro ที่ตรงกับภาษาที่ต้องการ การเปลี่ยนเฉพาะพารามิเตอร์ภาษาไม่ได้เปลี่ยนเสียงที่เลือกไว้
+            </div>
+            <p>ตัวอย่างภาษาสเปน:</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=es-ES&ttsprovider=kokoro&voicekokoro=ef_dora</div>
+            <p>ตัวอย่างภาษาโปรตุเกส:</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=pt-BR&ttsprovider=kokoro&voicekokoro=pf_dora</div>
+
+            <h3>ตัวเลือก Piper TTS</h3>
+            <p>ระบุโมเดลเสียงด้วย <code>&amp;pipervoice=</code>:</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=piper&pipervoice=en_US-hfc_female-medium</div>
+            <p>Piper มีเสียงภาษาโปรตุเกสและสเปน:</p>
+            <div class="code">Brazilian Portuguese: pt_BR-faber-medium, pt_BR-edresson-low</div>
+            <div class="code">Spanish: es_ES-davefx-medium, es_MX-ald-medium</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=pt-BR&ttsprovider=piper&pipervoice=pt_BR-faber-medium</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=es-ES&ttsprovider=piper&pipervoice=es_ES-davefx-medium</div>
+
+            <h3>ตัวเลือก Kitten TTS</h3>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=kitten&kittenvoice=expr-voice-4-f</div>
+
+            <h3>ตัวเลือก eSpeak-NG</h3>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=espeak&espeakvoice=en&espeakspeed=175</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br&espeakspeed=145</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=es-ES&ttsprovider=espeak&espeakvoice=es&espeakspeed=145</div>
+
+            <div class="warning">
+                <strong>การโหลดครั้งแรก:</strong> Kokoro และ Piper ต้องดาวน์โหลดไฟล์โมเดลในการใช้งานครั้งแรก (~50–200 MB) โดยทำงานเบื้องหลังอัตโนมัติ การโหลดครั้งถัดไปใช้โมเดลที่แคชไว้ได้ แต่การเริ่มต้นยังต้องใช้เวลา OBS มีแคชแยกจาก Chrome/Edge
+            </div>
+
+            <div class="info">
+                <strong>การเก็บเสียงใน OBS:</strong> ผู้ให้บริการ TTS แบบในตัวทั้งหมดเล่นเสียงผ่านเบราว์เซอร์โดยตรง ใน OBS ให้เพิ่ม dock.html เป็นแหล่งข้อมูลเบราว์เซอร์ แล้วเปิด <strong>"ควบคุมเสียงผ่าน OBS (Control audio via OBS)"</strong>— ไม่ต้องใช้สายเสียงเสมือน ดู <a href="#obs">ส่วน OBS</a> ด้านล่าง
+            </div>
+        </div>
+
+        <!-- DESKTOP APP NOTES -->
+        <h2 id="desktop-app">หมายเหตุสำหรับเบราว์เซอร์และแอปเดสก์ท็อป</h2>
+        <div class="card">
+            <p>ส่วนขยาย Chrome แหล่งข้อมูลเบราว์เซอร์ใน OBS และแอปเดสก์ท็อป Social Stream Ninja แบบสแตนด์อโลนล้วนใช้ <code>dock.html</code> พารามิเตอร์ URL สำหรับ TTS เหมือนกัน ความแตกต่างสำคัญคือเสียงเกิดขึ้นที่ใด</p>
+
+            <table>
+                <tr>
+                    <th>ช่องทางใช้งาน</th>
+                    <th>พฤติกรรม TTS ภายในเครื่อง</th>
+                    <th>การเก็บเสียง</th>
+                </tr>
+                <tr>
+                    <td>ส่วนขยาย Chrome / แหล่งข้อมูลเบราว์เซอร์ใน OBS</td>
+                    <td>การ fetch จากเบราว์เซอร์ต้องมี CORS จากเซิร์ฟเวอร์ภายในเครื่อง เว้นแต่จะใช้บริดจ์ SSN</td>
+                    <td>ใช้แหล่งข้อมูลเบราว์เซอร์ใน OBS พร้อมเปิด "Control audio via OBS"</td>
+                </tr>
+                <tr>
+                    <td>แอปเดสก์ท็อปแบบสแตนด์อโลน</td>
+                    <td>ใช้การตั้งค่าผู้ให้บริการเดียวกัน หน้าต่างไฟล์ภายในเครื่องของแอปมีข้อจำกัด CORS น้อยกว่า แต่บริดจ์ยังเป็นวิธีที่ปลอดภัยที่สุดสำหรับเซิร์ฟเวอร์ที่ปฏิเสธคำขอแบบเบราว์เซอร์</td>
+                    <td>เก็บเสียงเดสก์ท็อป/แอป หรือส่งเสียงแอปไปยังสายเสียงเสมือน</td>
+                </tr>
+                <tr>
+                    <td>Kokoro แบบในตัวในแอปเดสก์ท็อป</td>
+                    <td>แอปสามารถใช้เส้นทางภายในเครื่อง <code>ninjafy.tts</code> สำหรับ Kokoro แทนการพึ่งการโหลดโมเดลในเบราว์เซอร์เพียงอย่างเดียว</td>
+                    <td>เสียงเล่นจากแอป ดังนั้นให้ใช้การเก็บเสียงเดสก์ท็อป/แอป</td>
+                </tr>
+            </table>
+
+            <div class="warning">
+                <strong>อย่าสับสนระหว่างการทดสอบในแอปกับ OBS</strong> หากกด Test ภายในแอป SSN แอปจะทดสอบจากภายในแอป หากคุณคัดลอก <code>dock.html</code> ลงใน OBS ตัว OBS เองต้องเข้าถึงเซิร์ฟเวอร์ TTS และเล่นเสียงได้
+            </div>
+        </div>
+
+        <!-- PATH 2: SELF-HOSTED SERVER -->
+        <h2 id="server">แนวทางที่ 2 — เซิร์ฟเวอร์ TTS ที่โฮสต์เอง</h2>
+        <div class="card">
+            <p>หากต้องการตัวเลือกเสียงเพิ่มเติม การโคลนเสียง หรือเซิร์ฟเวอร์เฉพาะที่ใช้ร่วมกับหลายเครื่องมือได้ คุณสามารถเรียกใช้เซิร์ฟเวอร์ TTS ภายในเครื่อง Social Stream Ninja เชื่อมต่อด้วย <strong>ปลายทาง TTS ที่เข้ากันได้กับ OpenAI</strong> โดยไม่ต้องใช้คีย์ API สำหรับเซิร์ฟเวอร์ภายในเครื่อง</p>
+
+            <div class="warning">
+                <strong>ข้อกำหนด:</strong> <a href="https://www.docker.com/products/docker-desktop/" target="_blank">Docker Desktop</a> ต้องติดตั้งและทำงานอยู่ Docker ใช้ฟรีสำหรับการใช้งานส่วนบุคคล
+            </div>
+
+            <p>ตัวเลือกที่แนะนำสามแบบ:</p>
+            <div class="link-row">
+                <a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">รีโพซิทอรี Kokoro-FastAPI</a>
+                <a href="https://github.com/matatonic/openedai-speech" target="_blank">รีโพซิทอรี openedai-speech</a>
+                <a href="https://github.com/eduardolat/kokoro-web" target="_blank">รีโพซิทอรี kokoro-web</a>
+            </div>
+            <table>
+                <tr>
+                    <th>เซิร์ฟเวอร์</th>
+                    <th>โมเดล</th>
+                    <th>GPU</th>
+                    <th>ดิสก์</th>
+                    <th>พอร์ตเริ่มต้น</th>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a></strong> <span class="badge green">แนะนำ</span></td>
+                    <td>Kokoro 82M</td>
+                    <td class="partial">ไม่บังคับ</td>
+                    <td>~2 GB</td>
+                    <td>8880</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a></strong> (Piper) <span class="badge">ใช้ทรัพยากรน้อย</span></td>
+                    <td>Piper TTS</td>
+                    <td class="cross">เฉพาะ CPU</td>
+                    <td>&lt;1 GB</td>
+                    <td>8000</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/eduardolat/kokoro-web" target="_blank">kokoro-web</a></strong></td>
+                    <td>Kokoro 82M</td>
+                    <td class="partial">ไม่บังคับ</td>
+                    <td>~2 GB</td>
+                    <td>3000</td>
+                </tr>
+            </table>
+
+            <h3>แพ็กเกจใดเหมาะกับคุณ?</h3>
+            <table>
+                <tr>
+                    <th>แพ็กเกจ</th>
+                    <th>ข้อดีหลัก</th>
+                    <th>ข้อแลกเปลี่ยน</th>
+                </tr>
+                <tr>
+                    <td><strong>Kokoro แบบในตัว</strong></td>
+                    <td>ตัวเลือกแรกที่แนะนำ: ไม่ต้องมีเซิร์ฟเวอร์ คุณภาพดี เป็นส่วนตัว ใช้ได้ทั้งในเบราว์เซอร์และแอปเดสก์ท็อป</td>
+                    <td>ไม่มีการโคลนเสียง</td>
+                </tr>
+                <tr>
+                    <td><strong>Kokoro-FastAPI</strong></td>
+                    <td>เซิร์ฟเวอร์ที่เข้ากันได้กับ OpenAI ตั้งค่าง่ายด้วย Docker ใช้ CPU หรือ GPU ได้ มีเสียง Kokoro หลากหลาย</td>
+                    <td>ไม่มีการโคลนเสียงจริง ฟีเจอร์ผสมเสียงและเสียงกำหนดเองขึ้นอยู่กับบิลด์เซิร์ฟเวอร์</td>
+                </tr>
+                <tr>
+                    <td><strong>openedai-speech</strong></td>
+                    <td>ปลายทางที่เข้ากันได้กับ OpenAI ขนาดเล็ก Piper เหมาะกับ CPU และ XTTS เพิ่มการโคลนเสียงโดยใช้ VRAM ประมาณ 4 GB</td>
+                    <td>รีโพซิทอรีระบุว่าโครงการส่วนใหญ่ล้าสมัยแล้ว จึงยังใช้ประโยชน์ได้แต่ไม่ควรคาดหวังการรองรับในระยะยาว</td>
+                </tr>
+                <tr>
+                    <td><strong>เซิร์ฟเวอร์ Chatterbox</strong></td>
+                    <td>การโคลนเสียง ตัวเลือกหน้าเว็บควบคุม API ที่เข้ากันได้กับ OpenAI และเครื่องมือสำหรับข้อความยาว</td>
+                    <td>บางบิลด์รองรับ CUDA/GPU ได้ราบรื่นกว่า CPU การตั้งค่าขึ้นอยู่กับ fork ของเซิร์ฟเวอร์</td>
+                </tr>
+                <tr>
+                    <td><strong>GPT-SoVITS</strong></td>
+                    <td>โคลนและควบคุมเสียงได้ดีด้วยเสียงอ้างอิงสั้น ๆ และรองรับข้อความถอดเสียง</td>
+                    <td>ค่าเริ่มต้นไม่เข้ากันได้กับ OpenAI ให้ใช้โหมดบริดจ์ SSN</td>
+                </tr>
+                <tr>
+                    <td><strong>F5-TTS</strong></td>
+                    <td>โคลนเสียงแบบ zero-shot อย่างเป็นธรรมชาติด้วย WAV อ้างอิงและข้อความถอดเสียง</td>
+                    <td>โครงการอย่างเป็นทางการไม่ได้เป็นปลายทาง OpenAI แบบง่าย ให้ใช้ตัวครอบหรือโหมดบริดจ์</td>
+                </tr>
+                <tr>
+                    <td><strong>Qwen3-TTS</strong></td>
+                    <td>ฟีเจอร์โคลนและออกแบบเสียงสมัยใหม่ รวมถึงโมเดลขนาดเล็ก 0.6B/1.7B</td>
+                    <td>เน้นไลบรารี/เดโม ต้องมีตัวครอบสำหรับ SSN</td>
+                </tr>
+                <tr>
+                    <td><strong>MisoTTS</strong></td>
+                    <td>สร้างเสียงพูดคุณภาพสูงตามพรอมป์ต์</td>
+                    <td>ไม่เหมาะกับเครื่องที่มี VRAM 6 GB ใช้โฮสต์ระยะไกล/กำหนดเองหากจำเป็น</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- VOICE CLONING OPTIONS -->
+        <h2 id="voice-cloning">การโคลนเสียงทำงานอย่างไร</h2>
+        <div class="card">
+            <p>การโคลนเสียงไม่ใช่โหมดแยกของ SSN แต่เป็นฟีเจอร์ในเซิร์ฟเวอร์ TTS ภายในเครื่องบางตัว SSN ส่งข้อความแชตไปยังปลายทางภายในเครื่อง แล้วเซิร์ฟเวอร์เลือกเสียงที่โคลนจากไฟล์เสียงอ้างอิงที่บันทึกไว้ โปรไฟล์เสียง หรือการตั้งค่าบริดจ์</p>
+
+            <h3>ขั้นตอนทั่วไป</h3>
+            <ol>
+                <li>บันทึกคลิปอ้างอิงเสียงสะอาด โดยทั่วไปเป็นเสียงผู้พูดคนเดียว 3–30 วินาที มีเสียงรบกวนน้อย</li>
+                <li>เอนจินบางตัวยังต้องการข้อความถอดเสียงที่ตรงกับคลิปอ้างอิงนั้นทุกคำ</li>
+                <li>เซิร์ฟเวอร์ภายในเครื่องแปลงเสียงอ้างอิงเป็นพรอมป์ต์ผู้พูด embedding หรือโปรไฟล์เสียง</li>
+                <li>SSN ส่งข้อความแชตสดไปยังปลายทางโดยใช้ <code>ttsprovider=customtts</code>.</li>
+                <li>เซิร์ฟเวอร์ส่งไฟล์เสียงที่เล่นได้กลับมา โดยทั่วไปเป็น WAV หรือ MP3 แล้ว SSN เล่นเสียงในแผงด็อก/แหล่งข้อมูลเบราว์เซอร์</li>
+            </ol>
+
+            <div class="warning">
+                <strong>ใช้เฉพาะเสียงที่ได้รับความยินยอมแล้ว</strong> การโคลนเสียงอาจฟังเหมือนบุคคลจริง จึงควรใช้เฉพาะเสียงของคุณเอง เสียงที่ได้รับอนุญาต หรือเสียงที่มีสิทธิ์ใช้งานเพื่อวัตถุประสงค์นี้อย่างชัดเจน
+            </div>
+
+            <div class="warning">
+                <strong>ค่าเริ่มต้นของ XTTS-v2 อนุญาตการใช้ที่ไม่ใช่เชิงพาณิชย์</strong> <a href="https://huggingface.co/coqui/XTTS-v2/blob/main/LICENSE.txt" target="_blank">Coqui Public Model License</a> อนุญาตให้ใช้โมเดลและผลลัพธ์เฉพาะที่ไม่ใช่เชิงพาณิชย์ สตรีมที่สร้างรายได้อาจไม่เข้าเงื่อนไข จึงควรตรวจสอบใบอนุญาตหรือขออนุญาตแยกก่อนใช้ XTTS-v2 เชิงพาณิชย์
+            </div>
+
+            <p>สำหรับ VRAM ไม่เกิน 6 GB ให้เริ่มจากโมเดลโคลนเสียงแบบ zero-shot ขนาดเล็กและเซิร์ฟเวอร์ที่เข้ากันได้กับ OpenAI ก่อน โมเดลขนาดใหญ่ยังใช้ผ่านปลายทาง SSN เดียวกันได้หากผู้ใช้โฮสต์ไว้ที่อื่น</p>
+
+            <div class="link-row">
+                <a href="https://github.com/matatonic/openedai-speech" target="_blank">XTTS / openedai-speech</a>
+                <a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">chatterbox-tts-api</a>
+                <a href="https://github.com/devnen/Chatterbox-TTS-Server" target="_blank">Chatterbox-TTS-Server</a>
+                <a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">GPT-SoVITS</a>
+                <a href="https://github.com/SWivid/F5-TTS" target="_blank">F5-TTS</a>
+                <a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">Qwen3-TTS</a>
+                <a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">MisoTTS</a>
+            </div>
+
+            <table>
+                <tr>
+                    <th>ตัวเลือก</th>
+                    <th>การโคลนเสียง</th>
+                    <th>ใช้กับ VRAM 6 GB ได้</th>
+                    <th>เส้นทาง API สำหรับ SSN</th>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">Qwen3-TTS 0.6B Base</a></strong></td>
+                    <td>เสียงอ้างอิง 3 วินาที</td>
+                    <td class="check">น่าจะได้</td>
+                    <td>ใช้ตัวครอบที่เข้ากันได้กับ OpenAI จากนั้น <code>ttsprovider=customtts</code></td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/matatonic/openedai-speech" target="_blank">XTTS-v2 / openedai-speech</a></strong></td>
+                    <td>เสียงอ้างอิง WAV สั้น ๆ</td>
+                    <td class="check">ใช่ ประมาณ 4 GB ตามที่ openedai-speech รายงาน</td>
+                    <td><code>/v1/audio/speech</code></td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">Chatterbox Turbo / Server</a></strong></td>
+                    <td>โคลนจากเสียงอ้างอิง</td>
+                    <td class="partial">น่าจะได้หากใช้ Turbo / แบ่งเป็นช่วงสั้น ๆ</td>
+                    <td>บิลด์เซิร์ฟเวอร์ที่เข้ากันได้กับ OpenAI หรือบริดจ์</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">GPT-SoVITS</a></strong></td>
+                    <td>zero-shot 5 วินาที, few-shot 1 นาที</td>
+                    <td class="check">น่าจะได้เมื่อใช้ fp16 / การติดตั้งแบบเบา</td>
+                    <td>ใช้ <code>scripts/local-tts-bridge.cjs --mode gptsovits</code></td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/SWivid/F5-TTS" target="_blank">F5-TTS</a></strong></td>
+                    <td>WAV อ้างอิง + ข้อความถอดเสียง</td>
+                    <td class="partial">อาจได้ ขึ้นอยู่กับบิลด์และ vocoder</td>
+                    <td>ใช้ตัวครอบที่เข้ากันได้กับ OpenAI หรือ <code>--mode f5</code> สำหรับตัวครอบเซิร์ฟเวอร์ F5-TTS</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">MisoTTS 8B</a></strong></td>
+                    <td>บริบทเสียงจากพรอมป์ต์</td>
+                    <td class="cross">ไม่ โครงการแนะนำ VRAM 24 GB</td>
+                    <td>เฉพาะปลายทางระยะไกล/กำหนดเอง</td>
+                </tr>
+            </table>
+
+            <div class="info">
+                <strong>รูปแบบปลายทางที่เหมาะที่สุดสำหรับ SSN:</strong> รับ <code>POST /v1/audio/speech</code> พร้อม <code>{ model, input, voice, response_format, speed }</code> แล้วส่งไฟล์เสียงที่เล่นได้กลับมา ครอบคลุม OpenAI, Coqui/XTTS, ตัวครอบ Kokoro, ตัวครอบ Qwen และบริการพร็อกซีส่วนใหญ่
+            </div>
+        </div>
+
+        <!-- HARDWARE -->
+        <h2 id="hardware">ข้อกำหนดคอมพิวเตอร์</h2>
+        <div class="card">
+            <p>ค่าเหล่านี้เป็นจุดเริ่มต้นสำหรับใช้งานจริง ไม่ใช่ข้อรับประกันตายตัว เวอร์ชันโมเดล quantization ความยาวข้อความ อิมเมจ Docker และแอปเบื้องหลังอาจเปลี่ยนการใช้หน่วยความจำได้</p>
+
+            <table>
+                <tr>
+                    <th>ตัวเลือก</th>
+                    <th>ข้อกำหนดขั้นต่ำที่ใช้งานได้จริง</th>
+                    <th>เหมาะสม</th>
+                    <th>หมายเหตุ</th>
+                </tr>
+                <tr>
+                    <td>TTS ของระบบ / eSpeak</td>
+                    <td>พีซีสมัยใหม่ทั่วไป</td>
+                    <td>พีซีทั่วไป</td>
+                    <td>รวดเร็ว คุณภาพต่ำ ไม่มีการโคลนเสียง</td>
+                </tr>
+                <tr>
+                    <td>Kitten แบบในตัว</td>
+                    <td>CPU ระดับเริ่มต้น, RAM 4 GB</td>
+                    <td>CPU แล็ปท็อปสมัยใหม่, RAM 8 GB</td>
+                    <td>โมเดล ONNX ขนาดเล็ก เริ่มต้นเร็ว</td>
+                </tr>
+                <tr>
+                    <td>Piper แบบในตัว</td>
+                    <td>CPU สมัยใหม่, RAM 4–8 GB</td>
+                    <td>CPU สมัยใหม่, RAM 8 GB</td>
+                    <td>ตัวเลือกเสียงนิวรัลที่ดีและใช้ทรัพยากรน้อย</td>
+                </tr>
+                <tr>
+                    <td>Kokoro แบบในตัว</td>
+                    <td>CPU สมัยใหม่, RAM 8 GB</td>
+                    <td>GPU ที่รองรับ WebGPU หรือ CPU ที่เร็ว, RAM 8–16 GB</td>
+                    <td>คุณภาพดีที่สุดโดยไม่ต้องตั้งค่าเพิ่มเติม การโหลดครั้งแรกจะดาวน์โหลดไฟล์โมเดล</td>
+                </tr>
+                <tr>
+                    <td>Kokoro-FastAPI</td>
+                    <td>โฮสต์ Docker ที่ใช้ CPU, RAM 8 GB</td>
+                    <td>ใช้ GPU NVIDIA หรือไม่ก็ได้, RAM 8–16 GB</td>
+                    <td>เซิร์ฟเวอร์ภายในเครื่องที่เหมาะเมื่อการโหลดโมเดลในเบราว์เซอร์ไม่สะดวก</td>
+                </tr>
+                <tr>
+                    <td>openedai-speech Piper</td>
+                    <td>CPU, RAM 4–8 GB</td>
+                    <td>CPU, RAM 8 GB</td>
+                    <td>เซิร์ฟเวอร์ที่เข้ากันได้กับ OpenAI ขนาดเล็ก</td>
+                </tr>
+                <tr>
+                    <td>openedai-speech XTTS</td>
+                    <td>GPU NVIDIA ที่มี VRAM ประมาณ 4 GB, RAM 8–16 GB</td>
+                    <td>GPU NVIDIA 6 GB ขึ้นไป และ RAM 16 GB</td>
+                    <td>แนวทางโคลนเสียง ใช้ CPU ได้แต่ช้า</td>
+                </tr>
+                <tr>
+                    <td>เซิร์ฟเวอร์ Chatterbox</td>
+                    <td>บางบิลด์ใช้ CPU ได้ แต่ทำงานช้า</td>
+                    <td>GPU NVIDIA 6 GB ขึ้นไป และ RAM 16 GB</td>
+                    <td>ใช้ GPU เมื่อโคลนเสียงหรือประมวลผลข้อความยาว</td>
+                </tr>
+                <tr>
+                    <td>GPT-SoVITS / F5-TTS / Qwen3-TTS</td>
+                    <td>CPU สำหรับทดสอบเท่านั้น ทำงานช้า</td>
+                    <td>GPU NVIDIA 6 GB ขึ้นไปสำหรับโมเดลขนาดเล็ก/ที่ปรับแต่งแล้ว และ RAM 16 GB</td>
+                    <td>การเลือกตัวครอบและขนาดโมเดลมีผล คาดว่าจะต้องตั้งค่าเพิ่มเติม</td>
+                </tr>
+                <tr>
+                    <td>MisoTTS 8B</td>
+                    <td>ไม่แนะนำให้รันภายในเครื่องที่มี VRAM 6 GB</td>
+                    <td>VRAM 24 GB หรือโฮสต์ระยะไกล</td>
+                    <td>รีโพซิทอรีแนะนำ GPU ที่มี VRAM สูงสำหรับการใช้งานแบบโต้ตอบ</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- TESTED SERVER NOTES -->
+        <h2 id="tested-servers">หมายเหตุเกี่ยวกับเซิร์ฟเวอร์ที่ทดสอบแล้ว</h2>
+        <div class="card">
+            <p>นี่คือเซิร์ฟเวอร์โคลนเสียงที่โฮสต์เองซึ่งตรวจสอบความเข้ากันได้กับ SSN แล้ว เส้นทางปลายทางภายในเครื่องผ่านการทดสอบกับทั้ง <code>dock.html</code> และ <code>featured.html</code>.</p>
+            <p>SSN รองรับการตอบกลับเป็นเสียงไบนารีโดยตรง JSON ที่มีเสียงแบบ base64 และ JSON ที่มี URL เสียง การเล่นเสียงแบบกำหนดเอง/ภายในเครื่องในปัจจุบันจะรับเสียงที่ส่งกลับมาให้ครบก่อนเล่น ยังไม่รองรับการเล่นแบบทยอยสตรีม</p>
+
+            <table>
+                <tr>
+                    <th>เซิร์ฟเวอร์</th>
+                    <th>เส้นทาง SSN</th>
+                    <th>หมายเหตุ</th>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a></strong></td>
+                    <td class="check">โดยตรงหรือผ่านบริดจ์</td>
+                    <td>เข้ากันได้กับ OpenAI <code>/v1/audio/speech</code> โหมด Piper ผ่านการทดสอบสังเคราะห์เสียงจริงด้วย CPU จาก <code>dock.html</code> และ <code>featured.html</code> ทั้งโดยตรงและผ่านบริดจ์ หากเรียกใช้จากซอร์สบน Windows ให้ตรวจสอบว่าโฟลเดอร์ <code>Scripts</code> ของ venv อยู่ใน <code>PATH</code> เพื่อให้ <code>piper.exe</code> และ <code>ffmpeg.exe</code> ถูกค้นพบได้</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">chatterbox-tts-api</a></strong></td>
+                    <td class="check">โดยตรงหรือผ่านบริดจ์</td>
+                    <td>เข้ากันได้กับ OpenAI <code>/v1/audio/speech</code> ใช้เสียงอ้างอิงที่กำหนดไว้สำหรับการโคลน ทดสอบรูปแบบ API แล้วทั้งโดยตรงและผ่านบริดจ์</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/devnen/Chatterbox-TTS-Server" target="_blank">Chatterbox-TTS-Server</a></strong></td>
+                    <td class="check">โดยตรงหรือผ่านบริดจ์</td>
+                    <td>ปลายทางที่เข้ากันได้กับ OpenAI และหน้าเว็บควบคุม ผ่านการทดสอบสังเคราะห์เสียงจริงด้วย CPU โดยใช้ <code>Emily.wav</code> จาก <code>dock.html</code> และ <code>featured.html</code> ทั้งโดยตรงและผ่านบริดจ์</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">GPT-SoVITS</a></strong></td>
+                    <td class="partial">โหมดบริดจ์</td>
+                    <td>เรียกใช้บริดจ์ SSN ด้วย <code>--mode gptsovits</code> เซิร์ฟเวอร์ปลายทางคือ <code>/tts</code> ไม่ใช่แบบที่เข้ากันได้กับ OpenAI</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/ValyrianTech/F5-TTS_server" target="_blank">F5-TTS_server</a></strong></td>
+                    <td class="partial">โหมดบริดจ์</td>
+                    <td>เรียกใช้บริดจ์ SSN ด้วย <code>--mode f5</code> เซิร์ฟเวอร์ปลายทางใช้ <code>GET /synthesize_speech/</code>.</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/SWivid/F5-TTS" target="_blank">F5-TTS อย่างเป็นทางการ</a></strong></td>
+                    <td class="partial">ต้องมีตัวครอบ</td>
+                    <td>เน้น CLI, Gradio และซ็อกเก็ตเซิร์ฟเวอร์ก่อน ใช้ตัวครอบที่เข้ากันได้กับ OpenAI หรือโหมดบริดจ์ F5 เชื่อมต่อกับตัวครอบ</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">Qwen3-TTS</a></strong></td>
+                    <td class="partial">ต้องมีตัวครอบ</td>
+                    <td>เน้นไลบรารีและเดโม Gradio ก่อน เหมาะสำหรับสร้างตัวครอบขนาดเล็กที่เข้ากันได้กับ OpenAI รอบ <code>generate_voice_clone</code>.</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">MisoTTS</a></strong></td>
+                    <td class="cross">เฉพาะระยะไกล/กำหนดเอง</td>
+                    <td>รองรับการโคลนเสียง แต่โมเดล 8B ไม่เหมาะกับ VRAM 6 GB และรีโพซิทอรีไม่มีปลายทาง REST ภายในเครื่อง</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- KOKORO-FASTAPI -->
+        <h2 id="kokoro-fastapi">การตั้งค่า Kokoro-FastAPI</h2>
+        <div class="card">
+            <p><a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> เรียกใช้โมเดล Kokoro 82M เป็นเซิร์ฟเวอร์ภายในเครื่องพร้อม API ที่เข้ากันได้กับ OpenAI ทำงานบน CPU ได้ (ไม่ต้องใช้ GPU) และมีคุณภาพเสียงยอดเยี่ยม</p>
+
+            <h3>ติดตั้งด้วย Docker</h3>
+            <p>เปิดเทอร์มินัล (Command Prompt, PowerShell หรือ Terminal) แล้วเรียกใช้คำสั่งใดคำสั่งหนึ่งต่อไปนี้:</p>
+
+            <h4>CPU (ใช้ได้กับคอมพิวเตอร์ทุกเครื่อง):</h4>
+            <div class="code">docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</div>
+
+            <h4>GPU (เฉพาะ NVIDIA — สังเคราะห์เสียงเร็วกว่า):</h4>
+            <div class="code">docker run --gpus all -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-gpu:v0.2.0post4</div>
+
+            <div class="info">
+                <strong>การเรียกใช้ครั้งแรก:</strong> Docker จะดาวน์โหลดอิมเมจ (~1.5–2 GB) เพียงครั้งเดียว หลังจากนั้นเซิร์ฟเวอร์จะเริ่มได้ในไม่กี่วินาที
+            </div>
+
+            <h3>ตรวจสอบว่าเซิร์ฟเวอร์ทำงานอยู่</h3>
+            <p>เปิดเบราว์เซอร์แล้วไปที่ <strong>http://localhost:8880/web/</strong>— คุณควรเห็นหน้าเว็บควบคุมที่ใช้ทดสอบเสียงได้</p>
+
+            <h3>เสียงที่มีให้เลือก</h3>
+            <p>มีเสียงให้เลือกกว่า 67 เสียง ตัวอย่างเสียงเด่น:</p>
+            <div class="code">af_bella, af_sarah, af_nicole, af_sky, af_heart  (American female)
+am_adam, am_michael                              (American male)
+bf_emma, bf_isabella                             (British female)
+bm_george, bm_lewis                              (British male)</div>
+            <p>ดูและทดสอบเสียงทั้งหมดได้ที่ <code>http://localhost:8880/web/</code> เมื่อเซิร์ฟเวอร์ทำงานแล้ว</p>
+
+            <h3>URL ของ SSN</h3>
+            <p>หาก Kokoro-FastAPI อยู่บนคอมพิวเตอร์เครื่องเดียวกับ OBS:</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8880/v1/audio/speech&voiceopenai=af_bella</div>
+            <p>หาก Kokoro-FastAPI อยู่บนคอมพิวเตอร์อีกเครื่อง ให้แทนที่ <code>192.168.x.x</code> ด้วยที่อยู่ IP ภายใน LAN ของเครื่องนั้น:</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://192.168.x.x:8880/v1/audio/speech&voiceopenai=af_bella</div>
+            <div class="info">
+                <strong>ชื่อเสียงของ Kokoro ต่างจากชื่อเสียงของ OpenAI</strong> สำหรับ Kokoro-FastAPI ให้ใช้เสียง เช่น <code>af_bella</code>, <code>af_sarah</code>, <code>am_adam</code>, หรือ <code>bf_emma</code> ชื่อ เช่น <code>echo</code>, <code>nova</code>, และ <code>alloy</code> เป็นชื่อแบบ OpenAI/openedai-speech และอาจใช้กับ Kokoro ไม่ได้
+            </div>
+
+            <h3>ให้เซิร์ฟเวอร์ทำงานต่อเนื่อง</h3>
+            <p>หากต้องการให้ Kokoro-FastAPI ทำงานเบื้องหลังโดยอัตโนมัติต่อเนื่อง ให้ใช้แฟล็ก restart ของ Docker:</p>
+            <div class="code">docker run -d --restart unless-stopped -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</div>
+            <p>จากนี้จะเริ่มโดยอัตโนมัติพร้อม Docker Desktop ทุกครั้งที่รีบูต</p>
+        </div>
+
+        <!-- OPENEDAI-SPEECH -->
+        <h2 id="openedai">การตั้งค่า openedai-speech (Piper และ XTTS-v2)</h2>
+        <div class="card">
+            <p><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a> เปิดให้ใช้ปลายทางที่เข้ากันได้กับ OpenAI <code>/v1/audio/speech</code> ที่ Social Stream ต้องใช้ อิมเมจขนาดเล็กรัน Piper บน CPU ส่วนอิมเมจเต็มรันการโคลนเสียง XTTS-v2 บน GPU ที่รองรับได้</p>
+
+            <div class="warning">
+                <strong>โครงการที่เก็บถาวรแล้ว:</strong> openedai-speech ถูกเก็บถาวรในเดือนมกราคม 2026 และระบุว่าตัวเองล้าสมัยเป็นส่วนใหญ่ ยังเป็นตัวอย่างความเข้ากันได้ที่มีประโยชน์ แต่ไม่มีการบำรุงรักษาแล้ว ให้ใช้ภายในเครื่องและอย่าเปิดพอร์ตที่ไม่มีการยืนยันตัวตนสู่อินเทอร์เน็ตสาธารณะ
+            </div>
+
+            <h3>ตัวเลือก A: Piper แบบเบา</h3>
+            <p>ใช้ตัวเลือกนี้สำหรับเซิร์ฟเวอร์ TTS ที่ใช้เฉพาะ CPU และมีขนาดต่ำกว่า 1 GB โดยไม่มี XTTS-v2 หรือการโคลนเสียง</p>
+
+            <h3>ติดตั้งด้วย Docker Compose</h3>
+
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                    โคลนรีโพซิทอรีหรือสร้างโฟลเดอร์ที่มี <code>docker-compose.min.yml</code> หรือเรียกใช้คำสั่งด้านล่างโดยตรง
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">เรียกใช้อิมเมจขนาดเล็กที่มีเฉพาะ Piper:</div>
+            </div>
+            <div class="code">docker run -d --restart unless-stopped \
+  -p 8000:8000 \
+  ghcr.io/matatonic/openedai-speech-min</div>
+
+            <h3>หมายเหตุการติดตั้งจากซอร์สบน Windows</h3>
+            <p>หากเรียกใช้ openedai-speech จากซอร์สในเครื่องแทน Docker ให้เพิ่มโฟลเดอร์สคริปต์ของ virtual environment ไปยัง <code>PATH</code> ก่อนเริ่มเซิร์ฟเวอร์ มิฉะนั้นคำขออาจส่งกลับ HTTP 500 เพราะเซิร์ฟเวอร์ไม่พบ <code>piper.exe</code> หรือ <code>ffmpeg.exe</code>.</p>
+            <div class="code">cd openedai-speech
+$env:Path = "$PWD\.venv\Scripts;$env:Path"
+.\.venv\Scripts\python.exe speech.py --xtts_device none -H 127.0.0.1 -P 8000</div>
+
+            <h3>เสียงที่มีให้เลือก</h3>
+            <p>openedai-speech ใช้ชื่อเสียงแบบ OpenAI ที่จับคู่กับเสียง Piper:</p>
+            <div class="code">alloy, echo, fable, onyx, nova, shimmer</div>
+
+            <h3>URL ของ SSN</h3>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=openai&openaiendpoint=http://localhost:8000/v1/audio/speech&voiceopenai=nova</div>
+
+            <h3>ตัวเลือก B: โคลนเสียงด้วย XTTS-v2</h3>
+            <p>XTTS-v2 เป็นโมเดล ไม่ใช่เว็บ API ให้ใช้เซิร์ฟเวอร์ openedai-speech แบบเต็มเพื่อโหลดโมเดล เลือกเสียงอ้างอิงที่บันทึกไว้ รับข้อความแชตจาก SSN และส่งเสียงที่เล่นได้กลับมา เซิร์ฟเวอร์รายงานว่าใช้ VRAM ของ GPU ประมาณ 4 GB ในทางปฏิบัติ ประมวลผลด้วย CPU ได้แต่ช้า</p>
+
+            <div class="warning">
+                <strong>อย่าใช้ <code>openedai-speech-min</code> สำหรับ XTTS-v2</strong> อิมเมจขนาดเล็กมีเฉพาะ Piper ส่วน XTTS-v2 ต้องติดตั้งแบบเต็มและใช้ <code>model=tts-1-hd</code> ในคำขอเสียงพูดแต่ละครั้ง
+            </div>
+
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">โคลนเซิร์ฟเวอร์ที่เก็บถาวรแล้ว สร้างไฟล์ environment แล้วเริ่มชุด Docker Compose เต็มรูปแบบที่เปิดใช้ GPU:</div>
+            </div>
+            <div class="code">git clone https://github.com/matatonic/openedai-speech.git
+cd openedai-speech
+Copy-Item sample.env speech.env
+docker compose up -d</div>
+            <p class="tiny-note">บน macOS หรือ Linux ให้ใช้ <code>cp sample.env speech.env</code> แทน <code>Copy-Item</code> Docker ต้องเข้าถึง GPU ที่รองรับได้ โมเดลจะดาวน์โหลดเมื่อใช้งานครั้งแรก</p>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">เตรียมคลิปอ้างอิงเสียงสะอาดที่ได้รับความยินยอมแล้ว เริ่มจาก WAV แบบโมโน 22050 Hz ความยาว 6–30 วินาทีได้:</div>
+            </div>
+            <div class="code">ffmpeg -i input.mp3 -ac 1 -ar 22050 -t 6 -y voices/me.wav</div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                <div class="step-content">เพิ่มเสียงที่โคลนไว้ใต้รายการเดิม <code>tts-1-hd</code> ในไฟล์ <code>config/voice_to_speaker.yaml</code>:</div>
+            </div>
+            <div class="code">tts-1-hd:
+  me:
+    model: xtts
+    speaker: voices/me.wav
+    language: en</div>
+            <p class="tiny-note">เก็บเสียงเดิมทั้งหมดที่แสดงอยู่ใต้ <code>tts-1-hd</code> เปลี่ยน <code>me</code> เป็นชื่อเสียงที่ต้องการให้ SSN ส่ง และใช้รหัสภาษา XTTS ที่ถูกต้องเมื่อจำเป็น</p>
+
+            <div class="step">
+                <span class="step-number">4</span>
+                <div class="step-content">เริ่มเซิร์ฟเวอร์ใหม่ แล้วตั้งให้แผงด็อก SSN หรือโอเวอร์เลย์ข้อความเด่นเชื่อมต่อไปยังเซิร์ฟเวอร์:</div>
+            </div>
+            <div class="code">docker compose restart</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8000/v1/audio/speech&openaimodel=tts-1-hd&voiceopenai=me&openaiformat=wav</div>
+
+            <div class="info">
+                <strong><code>openaimodel=tts-1-hd</code> จำเป็นสำหรับ XTTS-v2</strong> หากไม่ระบุ Social Stream จะส่งค่าเริ่มต้น <code>tts-1</code> แล้ว openedai-speech จะเลือก Piper แทน ส่วน <code>voiceopenai</code> ต้องตรงกับชื่อเสียงที่โคลนใน <code>voice_to_speaker.yaml</code>.
+            </div>
+
+            <p>หากเบราว์เซอร์หรือ OBS บล็อกคำขอโดยตรง ให้เรียกใช้ <a href="#bridge">บริดจ์ TTS ภายในเครื่อง</a> บนคอมพิวเตอร์ OBS และคงพารามิเตอร์โมเดลกับเสียงไว้เหมือนเดิมขณะเปลี่ยน <code>openaiendpoint</code> เป็น <code>http://127.0.0.1:8124/v1/audio/speech</code>.</p>
+        </div>
+
+        <!-- LOCAL TTS BRIDGE -->
+        <h2 id="bridge">บริดจ์ TTS ภายในเครื่อง</h2>
+        <div class="card">
+            <p>บริดจ์เป็นโปรแกรมช่วยขนาดเล็กภายในเครื่อง รับคำขอจากเบราว์เซอร์ SSN ติดต่อเซิร์ฟเวอร์ TTS แล้วส่งเสียงกลับให้ SSN พร้อมเฮดเดอร์ที่เหมาะกับเบราว์เซอร์</p>
+            <div class="success">
+                <strong>หลักการที่ง่ายที่สุด:</strong> ให้เรียกใช้บริดจ์บนคอมพิวเตอร์เครื่องเดียวกับ OBS จากนั้น OBS จะใช้ <code>http://127.0.0.1:8124/v1/audio/speech</code> แม้ว่าเซิร์ฟเวอร์ TTS จริงจะอยู่บนคอมพิวเตอร์อีกเครื่องก็ตาม
+            </div>
+            <figure class="guide-screenshot">
+                <img src="../../docs/images/local-tts/tts-bridge-flow.png" alt="แผนภาพแสดง OBS เรียกบริดจ์ภายในเครื่อง และบริดจ์เรียกเซิร์ฟเวอร์ TTS">
+                <figcaption>แหล่งข้อมูลเบราว์เซอร์ใน OBS ติดต่อบริดจ์บนคอมพิวเตอร์ OBS จากนั้นบริดจ์จึงเรียก Kokoro-FastAPI, openedai-speech หรือเซิร์ฟเวอร์อื่นได้</figcaption>
+            </figure>
+            <p>โฟลเดอร์เริ่มต้นแบบสแตนด์อโลนคือ <code>local-tts-bridge/</code> ดู <a href="../../local-tts-bridge/README.md" target="_blank">README ของบริดจ์</a> สำหรับตัวเลือกการเริ่มต้นทั้งหมด</p>
+
+            <h3>พร็อกซีที่เข้ากันได้กับ OpenAI</h3>
+            <p>Windows PowerShell เมื่อเซิร์ฟเวอร์ TTS อยู่บนคอมพิวเตอร์เครื่องเดียวกันนี้:</p>
+            <div class="code">$env:SSN_TTS_TARGET="http://127.0.0.1:8880/v1/audio/speech"
+npm run local-tts-bridge</div>
+            <p>Windows PowerShell เมื่อเซิร์ฟเวอร์ TTS อยู่บนคอมพิวเตอร์อีกเครื่อง:</p>
+            <div class="code">$env:SSN_TTS_TARGET="http://192.168.x.x:8880/v1/audio/speech"
+npm run local-tts-bridge</div>
+            <p>เทอร์มินัล macOS/Linux:</p>
+            <div class="code">SSN_TTS_TARGET="http://127.0.0.1:8880/v1/audio/speech" npm run local-tts-bridge</div>
+            <p>จากนั้นตั้ง URL ของ OBS <code>dock.html</code> ไปยังบริดจ์:</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&voiceopenai=af_bella</div>
+
+            <h3>โหมดพร็อกซี GPT-SoVITS</h3>
+            <p>GPT-SoVITS ใช้รูปแบบ JSON เฉพาะของตนสำหรับ <code>/tts</code> ดังนั้นบริดจ์จึงแปลงคำขอ SSN ที่เข้ากันได้กับ OpenAI ให้เป็นเนื้อหาคำขอ GPT-SoVITS ได้</p>
+            <div class="code">$env:SSN_TTS_REF_AUDIO_PATH="C:\voices\speaker.wav"
+$env:SSN_TTS_REF_TEXT="Reference audio transcript here."
+$env:SSN_TTS_TARGET="http://127.0.0.1:9880/tts"
+npm run local-tts-bridge -- --mode gptsovits</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&openaiformat=wav</div>
+
+            <h3>โหมดพร็อกซีเซิร์ฟเวอร์ F5-TTS</h3>
+            <p>ตัวครอบเซิร์ฟเวอร์ F5-TTS บางตัวเปิดให้ใช้ <code>/synthesize_speech/?text=...&amp;voice=...</code> แทนปลายทางที่เข้ากันได้กับ OpenAI บริดจ์แปลงคำขอของ SSN ให้เป็นรูปแบบคิวรีนั้นได้</p>
+            <div class="code">$env:SSN_TTS_TARGET="http://127.0.0.1:7860/synthesize_speech/"
+npm run local-tts-bridge -- --mode f5</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&voiceopenai=default_en&openaiformat=wav</div>
+
+            <div class="info">
+                <strong>ปลายทางบริดจ์:</strong> <code>http://127.0.0.1:8124/v1/audio/speech</code> เปลี่ยนพอร์ตด้วย <code>SSN_TTS_BRIDGE_PORT=8125</code> หากจำเป็น
+            </div>
+        </div>
+
+        <!-- CONNECTING TO SSN -->
+        <h2 id="connect">การเชื่อมต่อกับ Social Stream Ninja</h2>
+        <div class="card">
+            <p>เซิร์ฟเวอร์ที่โฮสต์เองทั้งหมดด้านบนใช้วิธีเชื่อมต่อเดียวกัน คือ <strong>ปลายทาง OpenAI TTS</strong> โดยใช้ URL ภายในเครื่องแบบกำหนดเอง</p>
+
+            <h3>พารามิเตอร์ URL</h3>
+            <table>
+                <tr>
+                    <th>พารามิเตอร์</th>
+                    <th>ค่า</th>
+                    <th>คำอธิบาย</th>
+                </tr>
+                <tr>
+                    <td><code>ttsprovider</code></td>
+                    <td><code>customtts</code> หรือ <code>openai</code></td>
+                    <td>ใช้เส้นทาง TTS ที่เข้ากันได้กับ OpenAI ใช้ <code>customtts</code> สำหรับปลายทางภายในเครื่อง/ที่โฮสต์เอง</td>
+                </tr>
+                <tr>
+                    <td><code>openaiendpoint</code></td>
+                    <td><code>http://localhost:8880/v1/audio/speech</code></td>
+                    <td>URL เซิร์ฟเวอร์ภายในเครื่องของคุณ (เปลี่ยนพอร์ตตามต้องการ)</td>
+                </tr>
+                <tr>
+                    <td><code>speech</code></td>
+                    <td><code>en-US</code></td>
+                    <td>เปิดใช้ TTS สำหรับภาษาอังกฤษ</td>
+                </tr>
+                <tr>
+                    <td><code>voiceopenai</code></td>
+                    <td><code>af_bella</code></td>
+                    <td>ชื่อเสียง (ขึ้นอยู่กับเซิร์ฟเวอร์)</td>
+                </tr>
+                <tr>
+                    <td><code>openaiformat</code></td>
+                    <td><code>mp3</code></td>
+                    <td>รูปแบบเสียง: mp3, wav, opus, flac</td>
+                </tr>
+                <tr>
+                    <td><code>openaispeed</code></td>
+                    <td><code>1.0</code></td>
+                    <td>ความเร็วเสียงพูด (0.5–2.0)</td>
+                </tr>
+            </table>
+
+            <div class="info">
+                <strong>ชื่อแทนปลายทาง:</strong> <code>customttsendpoint</code> และ <code>localttsendpoint</code> ก็ใช้ได้เช่นกัน <code>customttsvoice</code>, <code>localttsvoice</code>, <code>customttsmodel</code>, <code>localttsmodel</code>, <code>customttsformat</code>, และ <code>localttsformat</code> เป็นชื่อแทนที่ยอมรับได้สำหรับช่องแบบ OpenAI
+            </div>
+            <div class="warning">
+                <strong>ตรวจสอบปลายทางและเสียงที่เลือกก่อนแก้ปัญหาเสียง</strong> <code>openaiendpoint</code> ต้องเข้าถึงได้จากหน้าที่กำลังเล่น TTS และ <code>voiceopenai</code> ต้องเป็นเสียงที่เซิร์ฟเวอร์รองรับ Kokoro-FastAPI ใช้ชื่อ เช่น <code>af_bella</code> โดย openedai-speech มักใช้ชื่อ เช่น <code>nova</code> หรือ <code>echo</code>.
+            </div>
+
+            <h3>ตัวอย่าง URL แบบเต็ม</h3>
+            <h4>Kokoro-FastAPI:</h4>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://localhost:8880/v1/audio/speech&voiceopenai=af_bella&openaispeed=1.1</div>
+
+            <h4>openedai-speech:</h4>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://localhost:8000/v1/audio/speech&voiceopenai=nova</div>
+
+            <h4>kokoro-web:</h4>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://localhost:3000/api/v1/audio/speech&voiceopenai=af_bella</div>
+
+            <h3>ตัวเลือก TTS เพิ่มเติม</h3>
+            <p>ใช้ได้กับผู้ให้บริการ TTS ทุกราย รวมถึงเซิร์ฟเวอร์ภายในเครื่อง:</p>
+            <table>
+                <tr>
+                    <th>พารามิเตอร์</th>
+                    <th>ตัวอย่าง</th>
+                    <th>คำอธิบาย</th>
+                </tr>
+                <tr>
+                    <td><code>simpletts</code></td>
+                    <td><code>&simpletts</code></td>
+                    <td>ข้ามคำว่า "says" — อ่านเฉพาะข้อความ</td>
+                </tr>
+                <tr>
+                    <td><code>simpletts2</code></td>
+                    <td><code>&simpletts2</code></td>
+                    <td>ไม่อ่านชื่อผู้ใช้เลย</td>
+                </tr>
+                <tr>
+                    <td><code>volume</code></td>
+                    <td><code>&volume=0.8</code></td>
+                    <td>ระดับเสียง (0.0–1.0)</td>
+                </tr>
+                <tr>
+                    <td><code>skipmessages</code></td>
+                    <td><code>&skipmessages=3</code></td>
+                    <td>อ่านทุกข้อความที่ 3 เท่านั้น</td>
+                </tr>
+                <tr>
+                    <td><code>ttscommand</code></td>
+                    <td><code>&ttscommand=!say</code></td>
+                    <td>อ่านเฉพาะข้อความที่ขึ้นต้นด้วย !say</td>
+                </tr>
+                <tr>
+                    <td><code>readevents</code></td>
+                    <td><code>&readevents</code></td>
+                    <td>อ่านการสมัครสมาชิก การบริจาค ฯลฯ ด้วย</td>
+                </tr>
+                <tr>
+                    <td><code>ttsquick</code></td>
+                    <td><code>&ttsquick=100</code></td>
+                    <td>ตัดเสียงพูดหลังจากจำนวนอักขระนี้โดยตั้งใจ ลบตัวเลือกนี้หากข้อความถูกอ่านไม่จบ</td>
+                </tr>
+            </table>
+
+            <div class="info">
+                <strong>ไม่ต้องมีคีย์ API</strong> เมื่อใช้เซิร์ฟเวอร์ภายในเครื่อง (URL ที่ไม่ใช่ openai.com) Social Stream Ninja ส่งคำขอโดยไม่มีเฮดเดอร์ Authorization คุณไม่ต้องตั้งค่าคีย์
+            </div>
+
+            <h3>ตัวเลือกเบราว์เซอร์แบบในตัวที่ควรรองรับ</h3>
+            <p>SSN รองรับ speech synthesis ของ OS/เบราว์เซอร์ผ่าน <code>speechSynthesis</code> รวมถึง Kokoro, Piper, Kitten และ eSpeak แบบในตัว สิ่งที่น่าเพิ่มในฝั่งเบราว์เซอร์ในอนาคตมากที่สุดคือการเลือกอุปกรณ์ส่งออกเสียงเมื่อ <code>setSinkId</code> ใช้งานได้ ตัวเลือกเสียง Piper เพิ่มเติม และเส้นทางเล่นเสียงแบบทยอยสตรีมโดยเฉพาะสำหรับเซิร์ฟเวอร์ที่สตรีมเสียงเป็นช่วง ๆ ได้</p>
+        </div>
+
+        <!-- OBS AUDIO CAPTURE -->
+        <h2 id="obs">นำเสียงเข้าสู่ OBS</h2>
+        <div class="card">
+            <p>วิธีเก็บเสียง TTS ใน OBS ขึ้นอยู่กับวิธีที่คุณใช้ Social Stream Ninja</p>
+
+            <h3>วิธีที่ 1 — แหล่งข้อมูลเบราว์เซอร์ใน OBS <span class="badge green">แนะนำ</span></h3>
+            <p>นี่คือวิธีที่ง่ายที่สุดและใช้ได้กับ <strong>ผู้ให้บริการ TTS ทั้งหมด</strong> (แบบในตัวและเซิร์ฟเวอร์ที่โฮสต์เอง)</p>
+
+            <div class="step"><span class="step-number">1</span><div class="step-content">ใน OBS ให้เพิ่ม <strong>แหล่งเบราว์เซอร์ (Browser Source)</strong></div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">ตั้ง URL เป็น <code>dock.html</code> URL ที่มีพารามิเตอร์ TTS</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">ตรวจสอบ <strong>"ควบคุมเสียงผ่าน OBS (Control audio via OBS)"</strong> ในการตั้งค่าแหล่งข้อมูลเบราว์เซอร์</div></div>
+            <div class="step"><span class="step-number">4</span><div class="step-content">คลิก <strong>ตกลง (OK)</strong>— เสียง TTS จะปรากฏเป็นแหล่งข้อมูลเสียงใน OBS ที่ปรับระดับหรือกำหนดเส้นทางได้</div></div>
+            <div class="step"><span class="step-number">5</span><div class="step-content">คลิกแหล่งข้อมูลเบราว์เซอร์หนึ่งครั้งในหน้าตัวอย่างเพื่ออนุญาตให้เบราว์เซอร์เล่นเสียงอัตโนมัติ</div></div>
+
+            <div class="info">
+                <strong>เหตุผลที่วิธีนี้ได้ผล:</strong> TTS แบบในตัวและ TTS จากเซิร์ฟเวอร์ที่โฮสต์เองเล่นเสียงผ่าน audio context ของเบราว์เซอร์ทั้งคู่ (ไม่ใช่ระบบสังเคราะห์เสียงของ OS) OBS เก็บเสียงเบราว์เซอร์โดยตรงได้เมื่อเลือก "Control audio via OBS"
+            </div>
+
+            <h3>วิธีที่ 2 — แอปเดสก์ท็อป SSN + เสียงเดสก์ท็อป</h3>
+            <p>หากใช้แอปเดสก์ท็อป Social Stream Ninja แบบสแตนด์อโลน (ไม่ใช่แหล่งข้อมูลเบราว์เซอร์ใน OBS):</p>
+
+            <div class="step"><span class="step-number">1</span><div class="step-content">เสียง TTS เล่นจากแอปผ่านลำโพง/หูฟังของระบบ</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">ใน OBS ให้เพิ่มแหล่งข้อมูลประเภท <strong>เก็บเสียงขาเข้า (Audio Input Capture)</strong> หรือ <strong>เก็บเสียงเดสก์ท็อป (Desktop Audio Capture)</strong> .</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">หากต้องการแยก TTS ออกจากเสียงเดสก์ท็อปอื่น ให้ใช้สายเสียงเสมือน:<br>
+                <ul>
+                    <li><strong>Windows:</strong> <a href="https://vb-audio.com/Cable/" target="_blank">VB-Audio Virtual Cable</a> (ฟรี)</li>
+                    <li>ตั้งค่า <strong>CABLE Input</strong> เป็นเอาต์พุตของแอป SSN ในการตั้งค่าเสียง Windows</li>
+                    <li>จับข้อมูล <strong>CABLE Output</strong> ใน OBS ด้วย Audio Input Capture</li>
+                </ul>
+            </div></div>
+
+            <h3>ลิงก์การกำหนดเส้นทางเสียง Windows</h3>
+            <div class="link-row">
+                <a href="https://vb-audio.com/Cable/" target="_blank">VB-Audio Virtual Cable</a>
+                <a href="https://vb-audio.com/Voicemeeter/" target="_blank">Voicemeeter</a>
+                <a href="https://github.com/audiorouterdev/audio-router" target="_blank">Audio Router (รุ่นเก่า)</a>
+            </div>
+
+            <h3>การกำหนดเส้นทางเสียงรายแอปใน Windows 10</h3>
+            <div class="step"><span class="step-number">1</span><div class="step-content">เปิด <strong>Sound Settings &gt; App volume and device preferences</strong>.</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">หาเบราว์เซอร์หรือแอป SSN ในรายการแอป</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">ตั้ง Output เป็น <strong>CABLE Input (VB-Audio Virtual Cable)</strong>.</div></div>
+            <div class="step"><span class="step-number">4</span><div class="step-content">ใน OBS ให้เพิ่ม <strong>เก็บเสียงขาเข้า (Audio Input Capture)</strong> แล้วเลือก <strong>CABLE Output</strong>.</div></div>
+
+            <h3>การกำหนดเส้นทางเสียงรายแอปใน Windows 11</h3>
+            <div class="step"><span class="step-number">1</span><div class="step-content">เปิด <strong>Settings &gt; System &gt; Sound &gt; Volume Mixer</strong>.</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">หาเบราว์เซอร์หรือแอป SSN</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">ตั้ง Output device เป็น <strong>CABLE Input (VB-Audio Virtual Cable)</strong>.</div></div>
+            <div class="step"><span class="step-number">4</span><div class="step-content">ใน OBS ให้เพิ่ม <strong>เก็บเสียงขาเข้า (Audio Input Capture)</strong> แล้วเลือก <strong>CABLE Output</strong>.</div></div>
+
+            <h3>ซอฟต์แวร์ Audio Router</h3>
+            <p><a href="https://github.com/audiorouterdev/audio-router" target="_blank">Audio Router</a> ส่งเสียงจากแอปหนึ่งไปยังสายเสียงเสมือนได้ แต่เป็นซอฟต์แวร์เก่า หากการกำหนดเส้นทางเสียงรายแอปของ Windows ใช้งานได้ ให้ใช้วิธีนั้นก่อน</p>
+            <div class="step"><span class="step-number">1</span><div class="step-content">ติดตั้ง Audio Router</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">ส่งเสียงเบราว์เซอร์หรือแอป SSN ไปยัง <strong>CABLE Input</strong>.</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">ใน OBS ให้เก็บเสียงจาก <strong>CABLE Output</strong>.</div></div>
+
+            <h3>การกำหนดเส้นทางขั้นสูงด้วย Voicemeeter</h3>
+            <p><a href="https://vb-audio.com/Voicemeeter/" target="_blank">Voicemeeter</a> เหมาะที่สุดเมื่อคุณต้องการฟัง TTS ภายในเครื่อง ส่งเสียงเข้า OBS และแยกจากเสียงเพลง/เกม</p>
+            <div class="step"><span class="step-number">1</span><div class="step-content">ติดตั้ง Voicemeeter แล้วตั้งเป็นอุปกรณ์ส่งออกเสียงเริ่มต้นของ Windows</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">ตั้ง Hardware Out เป็นลำโพง/หูฟังของคุณ</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">ส่งเสียงเอาต์พุตเสมือนเข้า OBS เป็นแหล่งข้อมูล Audio Input Capture</div></div>
+
+            <div class="warning">
+                <strong>TTS ของระบบ (<code>?speech=en-US</code> โดยไม่ระบุผู้ให้บริการ) ขึ้นอยู่กับเสียงที่เบราว์เซอร์เปิดให้ใช้</strong> OBS อาจไม่แสดงเสียงให้เลือก หรือแสดงรายชื่อเสียงแต่ไม่สร้างเสียงที่เก็บได้ ให้ทดสอบการอ่านและไฟล์บันทึกของ OBS แยกกัน ใช้ผู้ให้บริการด้านบนสักราย (<code>kokoro</code>, <code>piper</code> เป็นต้น) แทน
+            </div>
+        </div>
+
+        <!-- COMPARISON TABLE -->
+        <h2 id="comparison">ตารางเปรียบเทียบ</h2>
+        <div class="card">
+            <table>
+                <tr>
+                    <th>ตัวเลือก</th>
+                    <th>การตั้งค่า</th>
+                    <th>คุณภาพ</th>
+                    <th>ส่วนตัว</th>
+                    <th>OBS (แหล่งข้อมูลเบราว์เซอร์)</th>
+                    <th>ต้องใช้ GPU</th>
+                    <th>ค่าใช้จ่าย</th>
+                </tr>
+                <tr>
+                    <td><strong>Kokoro แบบในตัว</strong></td>
+                    <td class="check">ไม่มี</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                    <td class="check">ใช่</td>
+                    <td class="check">ใช่</td>
+                    <td class="partial">ไม่ต้องใช้ (แต่เร็วขึ้นถ้ามี)</td>
+                    <td class="check">ฟรี</td>
+                </tr>
+                <tr>
+                    <td><strong>Piper แบบในตัว</strong></td>
+                    <td class="check">ไม่มี</td>
+                    <td>⭐⭐⭐⭐</td>
+                    <td class="check">ใช่</td>
+                    <td class="check">ใช่</td>
+                    <td class="check">ไม่มี</td>
+                    <td class="check">ฟรี</td>
+                </tr>
+                <tr>
+                    <td><strong>Kitten แบบในตัว</strong></td>
+                    <td class="check">ไม่มี</td>
+                    <td>⭐⭐⭐</td>
+                    <td class="check">ใช่</td>
+                    <td class="check">ใช่</td>
+                    <td class="check">ไม่มี</td>
+                    <td class="check">ฟรี</td>
+                </tr>
+                <tr>
+                    <td><strong>eSpeak แบบในตัว</strong></td>
+                    <td class="check">ไม่มี</td>
+                    <td>⭐⭐</td>
+                    <td class="check">ใช่</td>
+                    <td class="check">ใช่</td>
+                    <td class="check">ไม่มี</td>
+                    <td class="check">ฟรี</td>
+                </tr>
+                <tr>
+                    <td><strong>Kokoro-FastAPI</strong></td>
+                    <td class="partial">Docker</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                    <td class="check">ใช่</td>
+                    <td class="check">ใช่</td>
+                    <td class="partial">ไม่ต้องใช้ (เลือกใช้ได้)</td>
+                    <td class="check">ฟรี</td>
+                </tr>
+                <tr>
+                    <td><strong>openedai-speech</strong></td>
+                    <td class="partial">Docker</td>
+                    <td>⭐⭐⭐⭐</td>
+                    <td class="check">ใช่</td>
+                    <td class="check">ใช่</td>
+                    <td class="check">ไม่มี</td>
+                    <td class="check">ฟรี</td>
+                </tr>
+                <tr>
+                    <td>ElevenLabs</td>
+                    <td class="check">คีย์ API</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                    <td class="cross">ไม่มี</td>
+                    <td class="check">ใช่</td>
+                    <td class="check">ไม่มี</td>
+                    <td class="partial">แพ็กเกจแบบชำระเงิน</td>
+                </tr>
+                <tr>
+                    <td>TTS ของระบบ</td>
+                    <td class="check">ไม่มี</td>
+                    <td>⭐⭐</td>
+                    <td class="check">ใช่</td>
+                    <td class="cross">ไม่*</td>
+                    <td class="check">ไม่มี</td>
+                    <td class="check">ฟรี</td>
+                </tr>
+            </table>
+            <p style="font-size:0.9em; color: var(--text-light);">* TTS ของระบบต้องส่งเสียงผ่านสายเสียงเสมือนเพื่อให้ OBS เก็บเสียงได้</p>
+        </div>
+
+        <!-- TROUBLESHOOTING -->
+        <h2 id="troubleshooting">การแก้ปัญหา</h2>
+        <div class="card">
+            <figure class="guide-screenshot">
+                <img src="../../docs/images/local-tts/tts-troubleshooting-checklist.png" alt="รายการตรวจสอบรูปแบบภาพหน้าจอสำหรับแก้ปัญหา TTS ภายในเครื่อง">
+                <figcaption>เมื่อ TTS ทำงานในที่หนึ่งแต่อีกที่ไม่ทำงาน ให้ตรวจสอบเครื่อง ปลายทาง เสียงที่เลือก สิทธิ์เบราว์เซอร์ และการเก็บเสียงใน OBS ตามลำดับ</figcaption>
+            </figure>
+
+            <h3>การทดสอบในแอป SSN ทำงาน แต่ OBS ไม่มีเสียง</h3>
+            <p>การทดสอบในแอปยืนยันเพียงว่าแอปเข้าถึงเซิร์ฟเวอร์ได้ แหล่งข้อมูลเบราว์เซอร์ใน OBS ยังต้องเข้าถึงปลายทางและเล่นเสียงได้เอง</p>
+            <ul>
+                <li>หาก OBS และเซิร์ฟเวอร์ TTS อยู่คนละเครื่อง ให้แทนที่ <code>127.0.0.1</code> ด้วย IP ภายใน LAN ของคอมพิวเตอร์เซิร์ฟเวอร์ TTS</li>
+                <li>ตรวจสอบว่าแหล่งข้อมูลเบราว์เซอร์ใน OBS เปิด <strong>ควบคุมเสียงผ่าน OBS (Control audio via OBS)</strong> ไว้</li>
+                <li>ลองใช้บริดจ์ TTS ภายในเครื่องของ SSN บนคอมพิวเตอร์ OBS หากเบราว์เซอร์บล็อกคำขอ</li>
+            </ul>
+
+            <h3>อ่านเพียงตัวอักษรแรกหรือคำแรก ๆ</h3>
+            <ul>
+                <li>ตรวจสอบ URL ที่ใช้จริงใน OBS ว่ามี <code>ttsquick</code> ตัวเลือกนั้นตั้งใจตัดข้อความที่จะอ่านให้สั้นลง</li>
+                <li>หากเห็น <code>&amp;ttsquick=14</code> หรือค่าจำนวนน้อยอื่น ให้ลบออกแล้วรีเฟรชแหล่งข้อมูลเบราว์เซอร์ใน OBS</li>
+                <li>หากคุณใช้ <code>typewriter=</code> ให้ลบออกชั่วคราวขณะทดสอบ โดยปกติ TTS ใช้ข้อความต้นฉบับ แต่การเอาเอฟเฟกต์ภาพออกเป็นวิธีที่รวดเร็วในการตัดปัญหาเรื่องจังหวะเวลา</li>
+            </ul>
+
+            <h3>เซิร์ฟเวอร์ภายในเครื่องไม่ตอบสนอง</h3>
+            <ul>
+                <li>ยืนยันว่า Docker ทำงานอยู่และคอนเทนเนอร์ยังเริ่มทำงานอยู่</li>
+                <li>บนคอมพิวเตอร์เซิร์ฟเวอร์ TTS ให้เปิด <code>http://127.0.0.1:8880/web/</code> สำหรับ Kokoro-FastAPI หรือพอร์ตที่ตรงกับเซิร์ฟเวอร์ของคุณ</li>
+                <li>จากคอมพิวเตอร์ที่รัน OBS ให้เปิด <code>http://SERVER_LAN_IP:8880/web/</code> หากเปิดไม่ได้ OBS ก็จะใช้เซิร์ฟเวอร์นั้นไม่ได้เช่นกัน</li>
+                <li>ตรวจสอบไฟร์วอลล์บนคอมพิวเตอร์เซิร์ฟเวอร์หากเปิด IP ภายใน LAN ไม่ได้</li>
+            </ul>
+
+            <h3>CORS หรือเครือข่ายภายในถูกบล็อก</h3>
+            <p>หากเบราว์เซอร์แจ้งว่าคำขอถูกบล็อกด้วย CORS, local network access, private network access หรือ failed fetch เซิร์ฟเวอร์ TTS อาจไม่ได้รับคำขอนั้นเลย</p>
+            <ul>
+                <li>เรียก <code>npm run local-tts-bridge</code> บนคอมพิวเตอร์ OBS แล้วตั้งให้ SSN เชื่อมต่อไปยัง <code>http://127.0.0.1:8124/v1/audio/speech</code>.</li>
+                <li>หากใช้หน้าแผงด็อกเบต้าที่โฮสต์ไว้ เบราว์เซอร์มีแนวโน้มบล็อกปลายทาง HTTP ภายในเครื่องมากขึ้น โดยทั่วไปใช้บริดจ์หรือหน้าต่างแอปภายในเครื่องจะง่ายกว่า</li>
+            </ul>
+
+            <h3>เสียงผิดหรือไม่พบเสียง</h3>
+            <ul>
+                <li>Kokoro-FastAPI: ลอง <code>af_bella</code>, <code>af_sarah</code>, <code>am_adam</code> หรือเสียงอื่นจากหน้าเว็บ Kokoro</li>
+                <li>openedai-speech: เสียง เช่น <code>nova</code>, <code>echo</code>, และ <code>alloy</code> อาจใช้ได้</li>
+                <li>เซิร์ฟเวอร์บางตัวแยกตัวพิมพ์ใหญ่และเล็กในชื่อเสียง</li>
+            </ul>
+
+            <h3>เสียงเล่นได้ แต่ OBS เก็บเสียงไม่ได้</h3>
+            <ul>
+                <li>ตรวจสอบว่า <strong>ควบคุมเสียงผ่าน OBS (Control audio via OBS)</strong> ถูกเลือกไว้ในคุณสมบัติของแหล่งข้อมูลเบราว์เซอร์</li>
+                <li>ดูมิกเซอร์เสียงของ OBS ขณะข้อความทดสอบเล่น มาตรวัดของแหล่งข้อมูลเบราว์เซอร์ควรขยับ</li>
+                <li>ตรวจสอบว่าไม่ได้ใช้เฉพาะ TTS ของระบบ (<code>?speech=en-US</code> โดยไม่มี <code>&amp;ttsprovider=</code>) TTS ของระบบอาจต้องใช้การเก็บเสียงเดสก์ท็อปหรือสายเสียงเสมือน</li>
+            </ul>
+
+            <h3>ไม่พบอิมเมจ Docker</h3>
+            <p>แท็กอิมเมจ Docker อาจเปลี่ยนแปลง หากคำสั่งในคู่มือนี้ใช้ไม่ได้ ให้ดูแท็กปัจจุบันจากหน้าโครงการ:</p>
+            <ul>
+                <li>Kokoro-FastAPI: <a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">github.com/remsky/Kokoro-FastAPI</a></li>
+                <li>openedai-speech: <a href="https://github.com/matatonic/openedai-speech" target="_blank">github.com/matatonic/openedai-speech</a></li>
+            </ul>
+        </div>
+
+        <div class="info" style="margin-top: 30px;">
+            <strong>ตัวเลือก TTS เพิ่มเติม:</strong> สำหรับ TTS ระดับพรีเมียมบนคลาวด์ (ElevenLabs, Google Cloud, Speechify) และเอกสารพารามิเตอร์ URL ฉบับเต็ม ดู <a href="tts.html">คู่มือเสียง TTS</a>.
+        </div>
+
+        <footer>
+            <p>Social Stream Ninja — คู่มือ AI TTS ภายในเครื่อง | <a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub</a> &nbsp;|&nbsp; <a href="tts.html">คู่มือเสียง TTS</a> &nbsp;|&nbsp; <a href="guides.html">คู่มือทั้งหมด</a></p>
+        </footer>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ja/docs/tip-jar-goal-meter.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ja/docs/tip-jar-goal-meter.html">
+    <meta property="og:title" content="Tip JarとGoal Meterガイド - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream NinjaのTip JarとGoal Meterを設定し、寄付、メンバー登録、ギフトメンバーシップが反映されない問題を調べます。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ja/docs/tip-jar-goal-meter.html">
+    <meta name="twitter:title" content="Tip JarとGoal Meterガイド - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream NinjaのTip JarとGoal Meterを設定し、寄付、メンバー登録、ギフトメンバーシップが反映されない問題を調べます。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tip JarとGoal Meterガイド - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream NinjaのTip JarとGoal Meterを設定し、寄付、メンバー登録、ギフトメンバーシップが反映されない問題を調べます。">
+    <style>
+        .style-group { margin: 2.4rem 0 1rem; font-size: 1.6rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; }
+        .visual-guide .guide-card > .style-grid { max-width: none; list-style: none; padding: 0; margin: 0; }
+        .style-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: 1.4rem; margin: 0; padding: 0; list-style: none; }
+        .visual-guide main .style-grid li { margin: 0; padding: 0; }
+        .style-grid li::before { content: none !important; display: none !important; }
+        .style-tile { height: 100%; overflow: hidden; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .style-tile img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; }
+        .style-tile div { padding: .9rem 1.2rem 1.1rem; }
+        .style-tile strong { display: block; font-size: 1.55rem; color: var(--text-primary); }
+        .style-tile span { display: block; margin-top: .2rem; font-size: 1.35rem; line-height: 1.45; color: var(--text-secondary); }
+        .style-tile code { font-size: 1.2rem; }
+        .setup-screenshots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem; align-items: start; }
+        .setup-screenshots > .guide-figure { min-width: 0; margin: 1rem 0; }
+        .count-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4rem; margin: 1.4rem 0; }
+        .count-picker > div { padding: 1.4rem 1.6rem; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .count-picker strong { display: block; margin-bottom: .4rem; font-size: 1.65rem; }
+        .count-picker p { margin: 0; font-size: 1.45rem; line-height: 1.5; }
+        .count-picker .example { margin-top: .8rem; color: var(--text-secondary); }
+        @media (max-width: 760px) {
+            .setup-screenshots { grid-template-columns: minmax(0, 1fr); }
+            .count-picker { grid-template-columns: minmax(0, 1fr); }
+            .style-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
+            .style-tile span { display: none; }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/tip-jar-goal-meter.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{"(0 to 1).":"（0〜1）。","(12 to 96 pixels).":"（12〜96ピクセル）。","(hex colours, with":"（16進数の色指定では、",". An animated GIF keeps playing, but this setting does not switch images as progress changes or add artwork beside a bar.":"。アニメーションGIFは再生され続けますが、この設定では進捗に応じた画像の切り替えや、バーの横への画像追加はできません。",". Its previews use sample data and do not change your live totals.":"。プレビューはサンプルデータを使うため、配信中の合計は変わりません。",". Leave a box blank to keep the style's default. Bar text size and “bar only” apply to Fluid Goal Bar only.":"。空欄にすると、そのスタイルの初期設定を使います。バーの文字サイズと「バーのみ」はFluid Goal Barだけに適用されます。",". The styles below include built-in animations.":"。以下のスタイルには組み込みのアニメーションがあります。",". These do not apply to every style; check the preview. The four panels below also support":"。すべてのスタイルに適用されるわけではないので、プレビューで確認してください。以下の4種類のパネルは次の設定にも対応しています：",". Use the fill colours above for Fluid Goal Bar.":"。Fluid Goal Barには上記の塗りつぶし色を使ってください。","340 / 1000 points":"340 / 1000ポイント","3D Rotating Jar":"3D回転ジャー","7 / 20 Super Chats":"Super Chat 7 / 20件","A $1 and a $100 Super Chat each add one. To count Super Stickers too, change the paid event filter.":"1ドルのSuper Chatも100ドルのSuper Chatも1件として数えます。Super Stickerも数える場合は、有料イベントのフィルターを変更します。","A money goal in the Goal Meter style.":"Goal Meterスタイルの金額目標。","A slowly turning glass.":"ゆっくり回転するグラス。","A sweeping needle.":"弧を描いて動く針。","Add to the link":"リンクに追加","All donations":"すべての寄付（All donations）","An old total comes back":"以前の合計が戻ってくる","Animated artwork":"アニメーション画像","Bar plus recent supporters.":"バーと最近の支援者。","Bars":"バー","Battery":"バッテリー","Beer Mug":"ジョッキ","Big total, slim bar.":"大きな合計表示と細いバー。","Bigger total:":"合計を大きく表示：","Carry extra points":"余剰ポイントを繰り越す（Carry extra points）","Change artwork as the goal fills":"目標の進捗に応じて画像を切り替える","Change the Fluid Goal Bar fill colours":"Fluid Goal Barの塗りつぶし色を変更する","Change the Glass Tip Jar label":"Glass Tip Jarのラベルを変更する","Change the celebration effect":"お祝いのエフェクトを変更する","Change what falls into the jar":"瓶に落ちるアイテムを変更する","Charges red to green.":"赤から緑へ充電。","Check the source is on, the session IDs match, and your filters allow that event.":"ソースが有効で、セッションIDが一致し、フィルターでそのイベントが許可されているか確認してください。","Choose a Display Style, such as Fluid Goal Bar.":"「Display Style」で「Fluid Goal Bar」などの表示スタイルを選びます。","Chunky RPG bar.":"太めのRPG風バー。","Circle with a percentage.":"割合を表示する円。","Classic Jar":"Classic Jar","Classic fundraiser look.":"定番の募金メーター風。","Click [copy link] beside Tip Jar and Goal Meter and add the link to OBS as a Browser Source.":"「Tip Jar and Goal Meter」の横にある「[copy link]」をクリックしてリンクをコピーし、OBSにブラウザソースとして追加します。","Click either screenshot to enlarge.":"スクリーンショットをクリックすると拡大できます。","Coffee Mug":"コーヒーマグ","Commands & API":"コマンドとAPI","Compact Bar":"コンパクトバー（Compact Bar）","Count Super Chats instead of money":"金額ではなくSuper Chatの件数を数える","Count individual gift recipients too":"個々のギフト受取人も数える（Count individual gift recipients too）","Count subs and memberships too":"サブスクやメンバーシップも数える","Count unit label":"件数の単位ラベル（Count unit label）","Custom jar image":"カスタム瓶画像","Default for Hype goals. The completion delay sets how long it stays full.":"Hype目標の初期設定です。完了時の待機時間で、満タンの表示を維持する長さを設定します。","Default for money and count goals.":"金額目標と件数目標の初期設定です。","Default, Neon, or Gold.":"Default、Neon、Gold。","Dial":"ダイヤル","Donation points per USD":"1米ドルあたりの寄付ポイント","Donation type filter":"寄付タイプフィルター（Donation type filter）","Donations":"寄付","Download":"ダウンロード","Event Reference":"イベントリファレンス","Every donation adds one, whatever the amount.":"金額にかかわらず、寄付1件につき1増えます。","Every style tracks the same goal. Only the appearance changes. Compare sample layouts in the":"どのスタイルも同じ目標を追跡し、変わるのは見た目だけです。サンプルのレイアウトを比較するには、こちらを開いてください：","Extra options for Goal Card, Progress Ring, Lower Third, and Segmented Bar":"Goal Card、Progress Ring、Lower Third、Segmented Barの追加オプション","Features":"機能","Fill colours you set yourself win over":"自分で設定した塗りつぶし色は、次の設定より優先されます：","Five checkpoints light up.":"5つのチェックポイントが点灯。","Fix problems":"問題を解決する","Fluid Goal Bar":"流動型目標バー（Fluid Goal Bar）","Foam and bubbles.":"泡と気泡。","Follow the step-by-step GIF tutorial":"GIFの手順付きチュートリアルを見る","For a bar that fills with donations, choose":"寄付に応じて伸びるバーを使うには、次を選びます：","Game-style level bar.":"ゲーム風のレベルバー。","Gifted memberships":"ギフトメンバーシップ","Gifted memberships add too little":"ギフトメンバーシップの加算が少なすぎる","Gifted memberships count twice":"ギフトメンバーシップが二重に数えられる","Gifted memberships shouldn't count":"ギフトメンバーシップを数えたくない","Gifted sub/member points":"ギフトサブスク／メンバーのポイント","Glass Tip Jar":"ガラスチップジャー","Glowing and bubbling.":"光と気泡。","Glowing, flickering tube.":"光ってちらつくチューブ。","Go up in levels (100, 200, 300…)":"段階的にレベルを上げる（100、200、300…）","Goal Card":"目標カード（Goal Card）","Goal Meter":"目標メーター（Goal Meter）","Goal Settings with Goal target set to 500 and Custom Title set to Community Fundraiser.":"目標値（Goal target）を500、カスタムタイトル（Custom Title）をCommunity Fundraiserに設定した目標設定画面。","Goal and title fields, further down in the same section.":"同じセクションの下部にある目標値とタイトルの入力欄。","Goal measures":"目標の集計方法（Goal measures）","Goal meter bar showing $63.50 of a $100 goal with recent supporters":"100ドルの目標に対して63.50ドルを示し、最近の支援者を表示する目標メーターバー","Guides":"ガイド","Health Bar":"ヘルスバー","Hide the dollar signs (":"ドル記号を隠す（","Hide the title or percentage on newer jars and meters":"新しい瓶やメーターのタイトルまたは割合を隠す","Hire":"仕事を依頼する","Home":"ホーム","How YouTube gifts are counted":"YouTubeギフトの数え方","How it counts":"集計方法","Hype Cup Scoring":"Hypeカップのスコア（Hype Cup Scoring）","Hype goals restart by default. Use Keep total and advance target.":"Hype目標は初期設定では最初からやり直します。「Keep total and advance target」を使ってください。","Hype only: number of gifts × gift points. YouTube doesn't send the price, so the cash value is unknown.":"Hypeのみ：ギフト数 × ギフトポイント。YouTubeは価格を送信しないため、実際の金額は不明です。","Hype points":"Hypeポイント","I want the goal to":"目標の動作","I want the goal to…":"目標の動作を選ぶ…","I want to":"したいこと","I want to…":"したいこと…","Ignored by default, so gifts aren't counted twice.":"ギフトを二重に数えないよう、初期設定では無視します。","In the menu, find Tip Jar and Goal Meter and open Style, Goal, and Filters.":"メニューで「Tip Jar and Goal Meter」を見つけ、「Style, Goal, and Filters」を開きます。","Inspiration":"活用アイデア","Its value for a money goal, one for a donation-count goal, or your configured donation points in Hype mode. The event must pass your filters.":"金額目標ではその金額、寄付件数の目標では1件、Hypeモードでは設定した寄付ポイントを加算します。イベントはフィルターの条件を満たす必要があります。","Jars and objects":"瓶とオブジェクト","Jewels / virtual gifts":"Jewels / バーチャルギフト","Just big numbers.":"大きな数字だけ。","Keep amount between sessions":"セッション間で金額を保持（Keep amount between sessions）","Keep amount between sessions is on. Reset the amount.":"「Keep amount between sessions」がオンになっています。金額をリセットしてください。","Keep counting and raise the target":"加算を続けて目標値を上げる","Keep leftover points when it starts over":"やり直すときに余ったポイントを引き継ぐ","Keep total and advance target":"合計を保持して目標を進める（Keep total and advance target）","Leave":"次はそのままにします：","Lid opens as it fills.":"満たされるほど蓋が開く。","Low and wide.":"低く横長。","Lower Third":"ローワーサード（Lower Third）","Main navigation":"メインナビゲーション","Memberships or subs don't count":"メンバーシップやサブスクが数えられない","Milestone Track":"マイルストーントラック","Minimal":"最小","Money":"金額","Most of these are settings in the Tip Jar options. You can also add the code to the end of your overlay link.":"これらのほとんどはTip Jarのオプションで設定できます。オーバーレイのリンク末尾にコードを追加することもできます。","Neon Tube":"ネオン管","Nothing showing up?":"何も表示されませんか？","Nothing updates":"何も更新されない","Number of donations":"寄付件数","Number of qualifying donations":"条件に合う寄付の件数","Old-school loading bar.":"昔ながらの読み込みバー。","On this page":"このページの内容","One GIF inside the Classic Jar?":"Classic Jarの中にGIFを1つ表示したい場合","One line of text.":"1行のテキスト。","Only turn on":"次の設定をオンにするのは、","Open navigation menu":"ナビゲーションメニューを開く","Overlay Gallery":"オーバーレイギャラリー","Paid event filter":"有料イベントフィルター（Paid event filter）","Panels and text":"パネルとテキスト","Pick a look":"見た目を選ぶ","Pick one. Changing the look (jar, bar, etc.) never changes what counts.":"どれか1つ選んでください。見た目を瓶やバーなどに変えても、何を数えるかは変わりません。","Piggy Bank":"貯金箱","Pixel Bar":"ピクセルバー","Point unit label":"ポイント単位のラベル","Points for each dollar donated.":"寄付1ドルあたりのポイント。","Points for each new sub or renewal.":"新規サブスクまたは更新1件あたりのポイント。","Points per gift. 5 gifts = 5 × this number.":"ギフト1個あたりのポイント。ギフト5個なら、この数値 × 5です。","Potion Flask":"ポーションフラスコ","Problem":"問題","Progress Ring":"進捗リング（Progress Ring）","Put a donation goal on stream that fills up every time someone supports you.":"支援を受けるたびに進む寄付目標を配信画面に表示します。","Quick tweaks":"手軽な調整","Recurring goal increment":"繰り返し目標の増分（Recurring goal increment）","Remember the total after a restart":"再起動後も合計を保持する","Resources":"資料","Retro block meter.":"レトロなブロック式メーター。","Reusing OBS for a new goal?":"OBSを新しい目標に使い回しますか？","Saved totals are stored in that browser or OBS profile, not per session. Reset the amount first.":"保存された合計はセッションごとではなく、そのブラウザーやOBSのプロファイルに保存されます。まず金額をリセットしてください。","See-through panel:":"パネルの透過度：","Segmented Bar":"区切り付きバー（Segmented Bar）","Set":"設定する項目：","Set Paid event filter to Super Chats only.":"Paid event filterをSuper Chats onlyに設定します。","Set an accent on newer panels, jars, or meters":"新しいパネル、瓶、メーターのアクセント色を設定する","Set how many points each thing is worth (below).":"それぞれ何ポイントとして扱うか、以下で設定します。","Set it up":"設定する","Set it up in 5 steps":"5つの手順で設定する","Set the goal, for example":"目標を設定します。例：","Set up the Social Stream Ninja Tip Jar and Goal Meter and troubleshoot missing donations, memberships, and gifted memberships.":"Social Stream NinjaのTip JarとGoal Meterを設定し、寄付、メンバー登録、ギフトメンバーシップが反映されない問題を調べます。","Setting":"設定","Small, for a corner.":"画面の隅に置ける小型。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Someone receiving a gift":"ギフトを受け取った人","Source filter":"ソースフィルター（Source filter）","Start over after it fills":"満タンになったら最初からやり直す","Stay full until I reset it":"リセットするまで満タンのままにする","Stop the 3D jar spinning":"3Dの瓶の回転を止める","Style selector and copy-link button.":"スタイルの選択欄とリンクのコピーボタン。","Sub/member points":"サブスク／メンバーのポイント","Super Chat / Super Sticker":"Super Chat / Super Sticker","Super Chat count includes Super Stickers":"Super Chat件数にSuper Stickerが含まれる","Super Chats only":"Super Chatのみ（Super Chats only）","Super Chats, Bits, tips, and other donations add their value.":"Super Chat、Bits、チップなどの寄付は、それぞれの金額を加算します。","Support":"サポート","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","Tall, for a side column.":"横の空間に置ける縦長。","Terminal":"ターミナル","Text Only":"テキストのみ（Text Only）","The original, with falling items.":"アイテムが落ちる元祖スタイル。","The overlay link and Social Stream must use the same session ID. Keep that link private.":"オーバーレイのリンクとSocial Streamは同じセッションIDを使う必要があります。このリンクは公開しないでください。","The test buttons only send donations. To test memberships or gifts, watch the Dock or Events Dashboard on the same session and check the event arrives.":"テストボタンが送信するのは寄付だけです。メンバーシップやギフトを試すには、同じセッションのDockまたはEvents Dashboardでイベントが届くか確認してください。","The word or symbol shown, like":"表示する単語や記号。例：","Theme:":"テーマ：","Thermometer":"温度計","They use your gift points setting, not a price. Raise the points.":"価格ではなく、設定したギフトポイントを使います。ポイントを増やしてください。","Tip Jar and Goal Meter":"チップジャーと目標メーター","Tip Jar and Goal Meter Guide - Social Stream Ninja":"Tip JarとGoal Meterガイド - Social Stream Ninja","Tip Jar and Goal Meter menu with Style, Goal, and Filters expanded and Fluid Goal Bar selected.":"Style, Goal, and Filtersを展開し、Fluid Goal Barを選択したTip Jar and Goal Meterメニュー。","Tips drop through the lid.":"蓋の穴からチップが落ちる。","To show your own GIF at 0%, 25%, 50%, 75%, and 100%, customize a copy of the overlay. There is no milestone-GIF picker in the built-in options. Keep the artwork and bar in the same custom overlay so they use the same total.":"0%、25%、50%、75%、100%で自分のGIFを表示するには、オーバーレイのコピーをカスタマイズします。組み込みオプションには節目のGIFを選ぶ機能はありません。画像とバーを同じカスタムオーバーレイに入れ、同じ合計を参照させてください。","Total drops to zero at the goal":"目標に達すると合計がゼロになる","Treasure Chest":"宝箱","Try this":"試すこと","Turn off Count individual gift recipients.":"「Count individual gift recipients」をオフにしてください。","Turn on":"オンにする項目：","Turn on Exclude YouTube gifted memberships.":"「Exclude YouTube gifted memberships」をオンにしてください。","Turn on Hype Cup Scoring and set Donation type filter to All donations.":"「Hype Cup Scoring」をオンにして、「Donation type filter」を「All donations」に設定してください。","Turn on your YouTube, Twitch, or other chat source in Social Stream Ninja.":"Social Stream NinjaでYouTube、Twitchなどのチャットソースを有効にします。","Twenty easy-to-read blocks.":"見やすい20個のブロック。","Under Goal Settings, set Goal target to 500 and enter a Custom Title.":"「Goal Settings」で「Goal target」を500に設定し、「Custom Title」にタイトルを入力します。","Use":"使う項目：","Use a solid or gradient fill":"単色またはグラデーションで塗りつぶす","Use my own jar picture (Classic Jar only)":"自分の瓶の画像を使う（Classic Jarのみ）","Use the matching donation type filter.":"対応する寄付タイプのフィルターを使ってください。","Use the newer look on older styles":"従来のスタイルで新しい見た目を使う","Use this":"使うもの","Vertical Bar":"縦バー（Vertical Bar）","What counts":"数える対象","What counts toward the goal":"目標に加算する対象","What it does":"動作","When the goal fills":"目標が満たされたとき","When the goal fills up":"目標が満たされたときの動作","Wide animated bar.":"横長のアニメーションバー。","With drifting steam.":"湯気が漂う。","Wobbles on each tip.":"チップのたびに揺れる。","XP Bar":"XPバー","YouTube":"YouTube","YouTube event":"YouTubeイベント","changes the word shown.":"で表示する単語を変更します。","for a $500 example, artwork filenames, an AI customization prompt, and preview checks.":"。500ドルの例、画像ファイル名、AI向けカスタマイズプロンプト、プレビューでの確認手順があります。","if you want to add points on top of the gift itself.":"ギフト自体に加えてポイントを上乗せしたい場合だけです。","instead of":"を使用し、次の値は使いません：","off.":"をオフにします。","on":"で","or":"または","plus":"に加え、","style preview gallery":"スタイルのプレビューギャラリー","subs, memberships, and gifted subs.":"サブスク、メンバーシップ、ギフトサブスク。","to":"→","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja. All rights reserved.","· also":"・ほかに"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tip-jar-goal-meter.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション"><a href="../index.html">ホーム</a><a href="features.html">機能</a><a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a><a href="download.html">ダウンロード</a><a href="guides.html">ガイド</a><a href="commands.html">コマンドとAPI</a><a href="supported-sites.html">対応サイト</a><a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a><a href="services.html" class="site-priority-hire">仕事を依頼する</a><a href="support.html">サポート</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tip-jar-goal-meter.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tip-jar-goal-meter.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tip-jar-goal-meter.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tip-jar-goal-meter.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tip-jar-goal-meter.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tip-jar-goal-meter.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="tip-jar-goal-meter.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tip-jar-goal-meter.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tip-jar-goal-meter.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tip-jar-goal-meter.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tip-jar-goal-meter.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tip-jar-goal-meter.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tip-jar-goal-meter.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tip-jar-goal-meter.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tip-jar-goal-meter.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tip-jar-goal-meter.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tip-jar-goal-meter.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="テーマを切り替え"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>チップジャーと目標メーター</h1>
+            <p>支援を受けるたびに進む寄付目標を配信画面に表示します。</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <nav class="guide-jump-links" aria-label="このページの内容">
+                    <a href="#setup">設定する</a>
+                    <a href="#artwork">アニメーション画像</a>
+                    <a href="#styles">見た目を選ぶ</a>
+                    <a href="#tweaks">手軽な調整</a>
+                    <a href="#what-counts">数える対象</a>
+                    <a href="#goal-reached">目標が満たされたとき</a>
+                    <a href="#problems">問題を解決する</a>
+                </nav>
+
+                <div class="guide-card">
+                    <h2 id="setup">5つの手順で設定する</h2>
+                    <ol class="guide-steps">
+                        <li>Social Stream NinjaでYouTube、Twitchなどのチャットソースを有効にします。</li>
+                        <li>メニューで「Tip Jar and Goal Meter」を見つけ、「Style, Goal, and Filters」を開きます。</li>
+                        <li>「Display Style」で「Fluid Goal Bar」などの表示スタイルを選びます。</li>
+                        <li>「Goal Settings」で「Goal target」を500に設定し、「Custom Title」にタイトルを入力します。</li>
+                        <li>「Tip Jar and Goal Meter」の横にある「[copy link]」をクリックしてリンクをコピーし、OBSにブラウザソースとして追加します。</li>
+                    </ol>
+                    <p>スクリーンショットをクリックすると拡大できます。</p>
+                    <div class="setup-screenshots">
+                        <figure class="guide-figure">
+                            <a href="../../docs/images/guides/tip-jar-popup-style.png"><img src="../../docs/images/guides/tip-jar-popup-style.png" alt="Style, Goal, and Filtersを展開し、Fluid Goal Barを選択したTip Jar and Goal Meterメニュー。" class="guide-image" width="1040" height="730" loading="lazy"></a>
+                            <figcaption>スタイルの選択欄とリンクのコピーボタン。</figcaption>
+                        </figure>
+                        <figure class="guide-figure">
+                            <a href="../../docs/images/guides/tip-jar-popup-goal.png"><img src="../../docs/images/guides/tip-jar-popup-goal.png" alt="目標値（Goal target）を500、カスタムタイトル（Custom Title）をCommunity Fundraiserに設定した目標設定画面。" class="guide-image" width="988" height="660" loading="lazy"></a>
+                            <figcaption>同じセクションの下部にある目標値とタイトルの入力欄。</figcaption>
+                        </figure>
+                    </div>
+                    <div class="guide-note"><strong>何も表示されませんか？</strong> オーバーレイのリンクとSocial Streamは同じセッションIDを使う必要があります。このリンクは公開しないでください。</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="artwork">目標の進捗に応じて画像を切り替える</h2>
+                    <p>寄付に応じて伸びるバーを使うには、次を選びます： <strong>流動型目標バー（Fluid Goal Bar）</strong> または <strong>目標メーター（Goal Meter）</strong>。以下のスタイルには組み込みのアニメーションがあります。</p>
+                    <p>0%、25%、50%、75%、100%で自分のGIFを表示するには、オーバーレイのコピーをカスタマイズします。組み込みオプションには節目のGIFを選ぶ機能はありません。画像とバーを同じカスタムオーバーレイに入れ、同じ合計を参照させてください。</p>
+                    <p><a href="goals-customization-guide.html#milestone-artwork">GIFの手順付きチュートリアルを見る</a> 。500ドルの例、画像ファイル名、AI向けカスタマイズプロンプト、プレビューでの確認手順があります。</p>
+                    <div class="guide-note"><strong>Classic Jarの中にGIFを1つ表示したい場合</strong> 使う項目： <strong>カスタム瓶画像</strong> または <code>&amp;jarimage=https://&hellip;</code>。アニメーションGIFは再生され続けますが、この設定では進捗に応じた画像の切り替えや、バーの横への画像追加はできません。</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="styles">見た目を選ぶ</h2>
+                    <p>どのスタイルも同じ目標を追跡し、変わるのは見た目だけです。サンプルのレイアウトを比較するには、こちらを開いてください： <a href="../../tipjar-preview.html">スタイルのプレビューギャラリー</a>。プレビューはサンプルデータを使うため、配信中の合計は変わりません。</p>
+
+                    <h3 class="style-group">バー</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/bar.jpg" alt="流動型目標バー（Fluid Goal Bar）" loading="lazy" width="480" height="320"><div><strong>流動型目標バー（Fluid Goal Bar）</strong><span>横長のアニメーションバー。</span><code>style=bar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/meter.jpg" alt="目標メーター（Goal Meter）" loading="lazy" width="480" height="320"><div><strong>目標メーター（Goal Meter）</strong><span>バーと最近の支援者。</span><code>style=meter</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/compact.jpg" alt="コンパクトバー（Compact Bar）" loading="lazy" width="480" height="320"><div><strong>コンパクトバー（Compact Bar）</strong><span>画面の隅に置ける小型。</span><code>style=compact</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/vertical.jpg" alt="縦バー（Vertical Bar）" loading="lazy" width="480" height="320"><div><strong>縦バー（Vertical Bar）</strong><span>横の空間に置ける縦長。</span><code>style=vertical</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/segmented.jpg" alt="区切り付きバー（Segmented Bar）" loading="lazy" width="480" height="320"><div><strong>区切り付きバー（Segmented Bar）</strong><span>見やすい20個のブロック。</span><code>style=segmented</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/milestones.jpg" alt="マイルストーントラック" loading="lazy" width="480" height="320"><div><strong>マイルストーントラック</strong><span>5つのチェックポイントが点灯。</span><code>style=milestones</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/xpbar.jpg" alt="XPバー" loading="lazy" width="480" height="320"><div><strong>XPバー</strong><span>ゲーム風のレベルバー。</span><code>style=xpbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/healthbar.jpg" alt="ヘルスバー" loading="lazy" width="480" height="320"><div><strong>ヘルスバー</strong><span>太めのRPG風バー。</span><code>style=healthbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/battery.jpg" alt="バッテリー" loading="lazy" width="480" height="320"><div><strong>バッテリー</strong><span>赤から緑へ充電。</span><code>style=battery</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/pixelbar.jpg" alt="ピクセルバー" loading="lazy" width="480" height="320"><div><strong>ピクセルバー</strong><span>レトロなブロック式メーター。</span><code>style=pixelbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/neonbar.jpg" alt="ネオン管" loading="lazy" width="480" height="320"><div><strong>ネオン管</strong><span>光ってちらつくチューブ。</span><code>style=neonbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/terminal.jpg" alt="ターミナル" loading="lazy" width="480" height="320"><div><strong>ターミナル</strong><span>昔ながらの読み込みバー。</span><code>style=terminal</code></div></div></li>
+                    </ul>
+
+                    <h3 class="style-group">瓶とオブジェクト</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/jar.jpg" alt="Classic Jar" loading="lazy" width="480" height="320"><div><strong>Classic Jar</strong><span>アイテムが落ちる元祖スタイル。</span><code>style=jar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/glassjar.jpg" alt="ガラスチップジャー" loading="lazy" width="480" height="320"><div><strong>ガラスチップジャー</strong><span>蓋の穴からチップが落ちる。</span><code>style=glassjar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/jar3d.jpg" alt="3D回転ジャー" loading="lazy" width="480" height="320"><div><strong>3D回転ジャー</strong><span>ゆっくり回転するグラス。</span><code>style=jar3d</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/beermug.jpg" alt="ジョッキ" loading="lazy" width="480" height="320"><div><strong>ジョッキ</strong><span>泡と気泡。</span><code>style=beermug</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/coffeemug.jpg" alt="コーヒーマグ" loading="lazy" width="480" height="320"><div><strong>コーヒーマグ</strong><span>湯気が漂う。</span><code>style=coffeemug</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/potion.jpg" alt="ポーションフラスコ" loading="lazy" width="480" height="320"><div><strong>ポーションフラスコ</strong><span>光と気泡。</span><code>style=potion</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/piggybank.jpg" alt="貯金箱" loading="lazy" width="480" height="320"><div><strong>貯金箱</strong><span>チップのたびに揺れる。</span><code>style=piggybank</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/chest.jpg" alt="宝箱" loading="lazy" width="480" height="320"><div><strong>宝箱</strong><span>満たされるほど蓋が開く。</span><code>style=chest</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/thermometer.jpg" alt="温度計" loading="lazy" width="480" height="320"><div><strong>温度計</strong><span>定番の募金メーター風。</span><code>style=thermometer</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/gauge.jpg" alt="ダイヤル" loading="lazy" width="480" height="320"><div><strong>ダイヤル</strong><span>弧を描いて動く針。</span><code>style=gauge</code></div></div></li>
+                    </ul>
+
+                    <h3 class="style-group">パネルとテキスト</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/card.jpg" alt="目標カード（Goal Card）" loading="lazy" width="480" height="320"><div><strong>目標カード（Goal Card）</strong><span>大きな合計表示と細いバー。</span><code>style=card</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/ring.jpg" alt="進捗リング（Progress Ring）" loading="lazy" width="480" height="320"><div><strong>進捗リング（Progress Ring）</strong><span>割合を表示する円。</span><code>style=ring</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/lowerthird.jpg" alt="ローワーサード（Lower Third）" loading="lazy" width="480" height="320"><div><strong>ローワーサード（Lower Third）</strong><span>低く横長。</span><code>style=lowerthird</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/minimal.jpg" alt="最小" loading="lazy" width="480" height="320"><div><strong>最小</strong><span>大きな数字だけ。</span><code>style=minimal</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/text.jpg" alt="テキストのみ（Text Only）" loading="lazy" width="480" height="320"><div><strong>テキストのみ（Text Only）</strong><span>1行のテキスト。</span><code>style=text</code></div></div></li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="tweaks">手軽な調整</h2>
+                    <p>これらのほとんどはTip Jarのオプションで設定できます。オーバーレイのリンク末尾にコードを追加することもできます。</p>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>したいこと…</th><th>リンクに追加</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="したいこと">ドル記号を隠す（<code>0 / 500</code>)</td><td data-label="リンクに追加"><code>&amp;hidecurrency</code></td></tr>
+                            <tr><td data-label="したいこと">瓶に落ちるアイテムを変更する</td><td data-label="リンクに追加"><code>&amp;dropitem=coins</code> ・ほかに <code>gems</code>, <code>stars</code>, <code>bills</code>, <code>hearts</code></td></tr>
+                            <tr><td data-label="したいこと">お祝いのエフェクトを変更する</td><td data-label="リンクに追加"><code>&amp;celebration=confetti</code> ・ほかに <code>hearts</code>, <code>fireworks</code>, <code>none</code></td></tr>
+                            <tr><td data-label="したいこと">Fluid Goal Barの塗りつぶし色を変更する</td><td data-label="リンクに追加"><code>&amp;fillstart=%2366d9b2&amp;fillend=%23ffcc88</code> （16進数の色指定では、 <code>%23</code> を使用し、次の値は使いません： <code>#</code>)</td></tr>
+                            <tr><td data-label="したいこと">新しいパネル、瓶、メーターのアクセント色を設定する</td><td data-label="リンクに追加"><code>&amp;accent=%23ffcc88</code>。Fluid Goal Barには上記の塗りつぶし色を使ってください。</td></tr>
+                            <tr><td data-label="したいこと">新しい瓶やメーターのタイトルまたは割合を隠す</td><td data-label="リンクに追加"><code>&amp;hidetitle</code> &middot; <code>&amp;hidepercent</code>。すべてのスタイルに適用されるわけではないので、プレビューで確認してください。以下の4種類のパネルは次の設定にも対応しています： <code>hidepercent</code>.</td></tr>
+                            <tr><td data-label="したいこと">Glass Tip Jarのラベルを変更する</td><td data-label="リンクに追加"><code>&amp;jarlabel=TIPS</code></td></tr>
+                            <tr><td data-label="したいこと">3Dの瓶の回転を止める</td><td data-label="リンクに追加"><code>&amp;nospin</code></td></tr>
+                            <tr><td data-label="したいこと">自分の瓶の画像を使う（Classic Jarのみ）</td><td data-label="リンクに追加"><code>&amp;jarimage=https://&hellip;</code></td></tr>
+                            <tr><td data-label="したいこと">単色またはグラデーションで塗りつぶす</td><td data-label="リンクに追加"><code>&amp;fillmode=solid</code> &middot; <code>&amp;fillmode=gradient</code></td></tr>
+                            <tr><td data-label="したいこと">従来のスタイルで新しい見た目を使う</td><td data-label="リンクに追加"><code>&amp;refresh</code></td></tr>
+                        </tbody>
+                    </table>
+
+                    <details class="guide-extra">
+                        <summary>Goal Card、Progress Ring、Lower Third、Segmented Barの追加オプション</summary>
+                        <ul>
+                            <li><strong>テーマ：</strong> Default、Neon、Gold。</li>
+                            <li><strong>パネルの透過度：</strong> <code>&amp;panelopacity=0.5</code> （0〜1）。</li>
+                            <li><strong>合計を大きく表示：</strong> <code>&amp;amountsize=32</code> （12〜96ピクセル）。</li>
+                        </ul>
+                        <p>自分で設定した塗りつぶし色は、次の設定より優先されます： <code>accent</code>。空欄にすると、そのスタイルの初期設定を使います。バーの文字サイズと「バーのみ」はFluid Goal Barだけに適用されます。</p>
+                    </details>
+
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="what-counts">目標に加算する対象</h2>
+                    <p>どれか1つ選んでください。見た目を瓶やバーなどに変えても、何を数えるかは変わりません。</p>
+                    <div class="count-picker">
+                        <div><strong>金額</strong><p>Super Chat、Bits、チップなどの寄付は、それぞれの金額を加算します。</p><p class="example">$63.50 / $100</p></div>
+                        <div><strong>寄付件数</strong><p>金額にかかわらず、寄付1件につき1増えます。</p><p class="example">Super Chat 7 / 20件</p></div>
+                        <div><strong>Hypeポイント</strong><p>寄付 <em>に加え、</em> サブスク、メンバーシップ、ギフトサブスク。</p><p class="example">340 / 1000ポイント</p></div>
+                    </div>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/goal-meter-bar-demo.png" alt="100ドルの目標に対して63.50ドルを示し、最近の支援者を表示する目標メーターバー" class="guide-image guide-image-medium" loading="lazy">
+                        <figcaption>Goal Meterスタイルの金額目標。</figcaption>
+                    </figure>
+
+                    <h3>金額ではなくSuper Chatの件数を数える</h3>
+                    <ol class="guide-steps">
+                        <li>次はそのままにします： <strong>Hypeカップのスコア（Hype Cup Scoring）</strong> をオフにします。</li>
+                        <li>設定する項目： <strong>目標の集計方法（Goal measures）</strong> → <strong>条件に合う寄付の件数</strong>.</li>
+                        <li>設定する項目： <strong>ソースフィルター（Source filter）</strong> → <strong>YouTube</strong>.</li>
+                        <li>設定する項目： <strong>有料イベントフィルター（Paid event filter）</strong> → <strong>Super Chatのみ（Super Chats only）</strong>.</li>
+                        <li>目標を設定します。例： <code>20</code>.</li>
+                    </ol>
+                    <p>1ドルのSuper Chatも100ドルのSuper Chatも1件として数えます。Super Stickerも数える場合は、有料イベントのフィルターを変更します。 <strong>件数の単位ラベル（Count unit label）</strong> で表示する単語を変更します。</p>
+
+                    <h3>サブスクやメンバーシップも数える</h3>
+                    <ol class="guide-steps">
+                        <li>オンにする項目： <strong>Hypeカップのスコア（Hype Cup Scoring）</strong>.</li>
+                        <li>次はそのままにします： <strong>寄付タイプフィルター（Donation type filter）</strong> で <strong>すべての寄付（All donations）</strong>.</li>
+                        <li>それぞれ何ポイントとして扱うか、以下で設定します。</li>
+                    </ol>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>設定</th><th>動作</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="設定">サブスク／メンバーのポイント</td><td data-label="動作">新規サブスクまたは更新1件あたりのポイント。</td></tr>
+                            <tr><td data-label="設定">ギフトサブスク／メンバーのポイント</td><td data-label="動作">ギフト1個あたりのポイント。ギフト5個なら、この数値 × 5です。</td></tr>
+                            <tr><td data-label="設定">1米ドルあたりの寄付ポイント</td><td data-label="動作">寄付1ドルあたりのポイント。</td></tr>
+                            <tr><td data-label="設定">ポイント単位のラベル</td><td data-label="動作">表示する単語や記号。例： <code>pts</code>.</td></tr>
+                        </tbody>
+                    </table>
+
+                    <details class="guide-extra">
+                        <summary>YouTubeギフトの数え方</summary>
+                        <table class="guide-table guide-table-stack">
+                            <thead><tr><th>YouTubeイベント</th><th>集計方法</th></tr></thead>
+                            <tbody>
+                                <tr><td data-label="YouTubeイベント">Super Chat / Super Sticker</td><td data-label="集計方法">金額目標ではその金額、寄付件数の目標では1件、Hypeモードでは設定した寄付ポイントを加算します。イベントはフィルターの条件を満たす必要があります。</td></tr>
+                                <tr><td data-label="YouTubeイベント">ギフトメンバーシップ</td><td data-label="集計方法">Hypeのみ：ギフト数 × ギフトポイント。YouTubeは価格を送信しないため、実際の金額は不明です。</td></tr>
+                                <tr><td data-label="YouTubeイベント">ギフトを受け取った人</td><td data-label="集計方法">ギフトを二重に数えないよう、初期設定では無視します。</td></tr>
+                                <tr><td data-label="YouTubeイベント">Jewels / バーチャルギフト</td><td data-label="集計方法">対応する寄付タイプのフィルターを使ってください。</td></tr>
+                            </tbody>
+                        </table>
+                        <p>次の設定をオンにするのは、 <strong>個々のギフト受取人も数える（Count individual gift recipients too）</strong> ギフト自体に加えてポイントを上乗せしたい場合だけです。</p>
+                    </details>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="goal-reached">目標が満たされたときの動作</h2>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>目標の動作を選ぶ…</th><th>使うもの</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="目標の動作">リセットするまで満タンのままにする</td><td data-label="使うもの">金額目標と件数目標の初期設定です。</td></tr>
+                            <tr><td data-label="目標の動作">満タンになったら最初からやり直す</td><td data-label="使うもの">Hype目標の初期設定です。完了時の待機時間で、満タンの表示を維持する長さを設定します。</td></tr>
+                            <tr><td data-label="目標の動作">やり直すときに余ったポイントを引き継ぐ</td><td data-label="使うもの"><strong>余剰ポイントを繰り越す（Carry extra points）</strong></td></tr>
+                            <tr><td data-label="目標の動作">加算を続けて目標値を上げる</td><td data-label="使うもの"><strong>合計を保持して目標を進める（Keep total and advance target）</strong></td></tr>
+                            <tr><td data-label="目標の動作">段階的にレベルを上げる（100、200、300…）</td><td data-label="使うもの"><strong>繰り返し目標の増分（Recurring goal increment）</strong></td></tr>
+                            <tr><td data-label="目標の動作">再起動後も合計を保持する</td><td data-label="使うもの"><strong>セッション間で金額を保持（Keep amount between sessions）</strong></td></tr>
+                        </tbody>
+                    </table>
+                    <div class="warning-note"><strong>OBSを新しい目標に使い回しますか？</strong> 保存された合計はセッションごとではなく、そのブラウザーやOBSのプロファイルに保存されます。まず金額をリセットしてください。</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="problems">問題を解決する</h2>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>問題</th><th>試すこと</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="問題">何も更新されない</td><td data-label="試すこと">ソースが有効で、セッションIDが一致し、フィルターでそのイベントが許可されているか確認してください。</td></tr>
+                            <tr><td data-label="問題">メンバーシップやサブスクが数えられない</td><td data-label="試すこと">「Hype Cup Scoring」をオンにして、「Donation type filter」を「All donations」に設定してください。</td></tr>
+                            <tr><td data-label="問題">ギフトメンバーシップの加算が少なすぎる</td><td data-label="試すこと">価格ではなく、設定したギフトポイントを使います。ポイントを増やしてください。</td></tr>
+                            <tr><td data-label="問題">ギフトメンバーシップが二重に数えられる</td><td data-label="試すこと">「Count individual gift recipients」をオフにしてください。</td></tr>
+                            <tr><td data-label="問題">ギフトメンバーシップを数えたくない</td><td data-label="試すこと">「Exclude YouTube gifted memberships」をオンにしてください。</td></tr>
+                            <tr><td data-label="問題">目標に達すると合計がゼロになる</td><td data-label="試すこと">Hype目標は初期設定では最初からやり直します。「Keep total and advance target」を使ってください。</td></tr>
+                            <tr><td data-label="問題">以前の合計が戻ってくる</td><td data-label="試すこと">「Keep amount between sessions」がオンになっています。金額をリセットしてください。</td></tr>
+                            <tr><td data-label="問題">Super Chat件数にSuper Stickerが含まれる</td><td data-label="試すこと">Paid event filterをSuper Chats onlyに設定します。</td></tr>
+                        </tbody>
+                    </table>
+                    <p>テストボタンが送信するのは寄付だけです。メンバーシップやギフトを試すには、同じセッションのDockまたはEvents Dashboardでイベントが届くか確認してください。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo"><img src="../../media/logo.png" alt="Social Stream Ninjaのロゴ"><span>Social Stream Ninja</span></div>
+                <div class="footer-links"><div class="footer-section"><h4>資料</h4><ul><li><a href="guides.html">ガイド</a></li><li><a href="event-reference.html">イベントリファレンス</a></li><li><a href="support.html">サポート</a></li></ul></div></div>
+            </div>
+            <div class="footer-bottom"><p>&copy; 2026 Social Stream Ninja. All rights reserved.</p></div>
+        </div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

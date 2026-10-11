@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/cs/docs/custom-fonts.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/cs/docs/custom-fonts.html">
+    <meta property="og:title" content="Vlastní hosting písem a stylování – Social Stream Ninja">
+    <meta property="og:description" content="Zjistěte, jak hostovat vlastní písma a přizpůsobovat překryvy Social Stream Ninja, například dock.html a featured.html, pomocí vlastního CSS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/cs/docs/custom-fonts.html">
+    <meta name="twitter:title" content="Vlastní hosting písem a stylování – Social Stream Ninja">
+    <meta name="twitter:description" content="Zjistěte, jak hostovat vlastní písma a přizpůsobovat překryvy Social Stream Ninja, například dock.html a featured.html, pomocí vlastního CSS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vlastní hosting písem a stylování – Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Zjistěte, jak hostovat vlastní písma a přizpůsobovat překryvy Social Stream Ninja, například dock.html a featured.html, pomocí vlastního CSS.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/custom-fonts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"(both pages support these).":"(podporují je obě stránky).",", and":", a",", and row colors (":"a barvami řádků (",", or":", nebo",", plus the":"a také",". The browser will fall back automatically if a glyph is missing.":". Pokud znak chybí, prohlížeč automaticky použije náhradní písmo.","1) Host your font files":"1) Umístěte soubory písem na hosting","2) Build the CSS":"2) Vytvořte CSS","3) Apply it to dock.html or featured.html":"3) Použijte jej v dock.html nebo featured.html","4) Tune the overlay text":"4) Dolaďte text překryvu","5) Troubleshooting":"5) Řešení problémů","; mismatches are the most common issue.":"; neshody jsou nejčastějším problémem.","API Reference":"Referenční příručka API","About":"O projektu","Commands & API":"Příkazy a API","Community":"Komunita","Contribute":"Přispět k projektu","Core typography variables used by both pages:":"Základní proměnné typografie používané na obou stránkách:","Custom Overlays":"Vlastní překryvy","Customization Guide":"Průvodce přizpůsobením","Define the font with":"Definujte písmo pomocí","Discord":"Discord","Dock-only extras:":"Další možnosti pouze pro dok:","Donate":"Přispět finančně","Download":"Stáhnout","Durable options:":"Trvalé možnosti:","Featured layout tweaks:":"Úpravy rozvržení vybrané zprávy:","Features":"Funkce","For quick tests you can pass CSS directly with":"Pro rychlé testy můžete předat CSS přímo pomocí","GitHub":"GitHub","GitHub Pages, Cloudflare Pages, Netlify, your own web server.":"GitHub Pages, Cloudflare Pages, Netlify, vlastní webový server.","GitHub Repository":"Repozitář GitHub","Guides":"Návody","Hire":"Najmout odborníka","Home":"Domů","How to host .ttf, .otf, or .woff2 files yourself (no Google or system font required).":"Jak sami hostovat soubory .ttf, .otf nebo .woff2 (bez nutnosti písma Google nebo systémového písma).","How to load those fonts in":"Jak tato písma načíst v","If the font does not appear, open the font URL directly in a browser to confirm it downloads and is served with HTTPS.":"Pokud se písmo nezobrazí, otevřete jeho URL přímo v prohlížeči a ověřte, že se stáhne a je poskytováno přes HTTPS.","Inline URL param:":"Vložený parametr URL:","Inspiration":"Inspirace","Join our Discord":"Připojte se k našemu Discordu","Keep font-family names consistent between the":"Udržujte názvy font-family shodné v blocích","Learn how to self-host fonts and customize Social Stream Ninja overlays like dock.html and featured.html with custom CSS.":"Zjistěte, jak hostovat vlastní písma a přizpůsobovat překryvy Social Stream Ninja, například dock.html a featured.html, pomocí vlastního CSS.","Main navigation":"Hlavní navigace","Need multiple fonts (for Armenian + Russian + Latin)? Declare each font-face and list them in":"Potřebujete více písem (pro arménštinu + ruštinu + latinku)? Deklarujte každé font-face a uveďte je v","OBS Browser Source:":"Zdroj Prohlížeč v OBS:","Only host fonts you are licensed to redistribute. WOFF2 files are smaller and load faster than TTF/OTF when available.":"Hostujte pouze písma, která smíte podle licence dále distribuovat. Pokud jsou k dispozici soubory WOFF2, jsou menší a načítají se rychleji než TTF/OTF.","Open navigation menu":"Otevřít navigační nabídku","Open your dock/featured URL in OBS > Browser Source > Custom CSS and paste the CSS block above.":"Otevřete URL doku/vybrané zprávy v OBS > Zdroj Prohlížeč > Vlastní CSS a vložte výše uvedený blok CSS.","Overlay Gallery":"Galerie překryvů","Pair CSS changes with existing URL options like":"Kombinujte změny CSS se stávajícími možnostmi URL, například","Privacy Policy":"Zásady ochrany soukromí","Product":"Produkt","Quick fallbacks if you want to keep using Google Fonts or installed system fonts.":"Rychlé náhradní možnosti, pokud chcete nadále používat Google Fonts nebo nainstalovaná systémová písma.","Quick font switches:":"Rychlé přepnutí písma:","Quick options:":"Rychlé možnosti:","Reload the OBS Browser Source or refresh the dock/featured tab after changing CSS so cached fonts are re-requested.":"Po změně CSS znovu načtěte zdroj Prohlížeč v OBS nebo obnovte kartu doku/vybrané zprávy, aby se písma z mezipaměti znovu vyžádala.","Report an Issue":"Nahlásit problém","Resources":"Zdroje informací","Self-Hosted Fonts & Overlay Styling":"Vlastní hosting písem a stylování překryvů","Self-Hosted Fonts & Styling - Social Stream Ninja":"Vlastní hosting písem a stylování – Social Stream Ninja","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja lets you capture, mix, and display chat from over 100 platforms in real time. Built by Steve Seguin.":"Social Stream Ninja umožňuje zachytávat, kombinovat a zobrazovat chat z více než 100 platforem v reálném čase. Autorem je Steve Seguin.","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. Licence GPLv3.0. Autor:","Some hosts block hotlinking; switch to a host that allows direct file access or set the proper CORS headers.":"Některé hostingy blokují přímé odkazování; přejděte na hosting, který umožňuje přímý přístup k souborům, nebo nastavte správné hlavičky CORS.","Steve Seguin":"Steve Seguin","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","Templates":"Šablony","Terms of Service":"Podmínky používání","The same":"Stejný","These options work the same in the Chrome extension, Electron app, and the hosted site because they all load the same":"Tyto možnosti fungují stejně v rozšíření Chrome, aplikaci Electron i na hostovaném webu, protože všechny načítají stejné soubory","URL parameter (hosted CSS):":"Parametr URL (hostované CSS):","Upload the CSS to the same host as your fonts, then append":"Nahrajte CSS na stejný hosting jako písma a potom přidejte","Use":"Použijte","Use your own fonts with dock.html and featured.html, whether you load them in OBS Browser Source, the Chrome extension, or the desktop app.":"Používejte vlastní písma v dock.html a featured.html, ať je načítáte ve zdroji Prohlížeč v OBS, rozšíření Chrome nebo desktopové aplikaci.","What this guide covers":"Co tento průvodce obsahuje","Which CSS variables adjust text sizing and layout on both pages.":"Které proměnné CSS upravují velikost textu a rozvržení na obou stránkách.","X":"X","You need a direct HTTPS link to the font file. Pick a host that allows hotlinking/CORS so the browser inside OBS or the app can fetch it.":"Potřebujete přímý odkaz HTTPS na soubor písma. Vyberte hosting, který umožňuje přímé odkazování/CORS, aby jej prohlížeč uvnitř OBS nebo aplikace mohl načíst.","adjust":"upravte","and point it at your hosted file, then set the overlay to use it via":"a odkažte na hostovaný soubor, potom nastavte překryv tak, aby jej používal pomocí","applied. Self-hosted fonts work the same way via":"— vlastní hostovaná písma fungují stejným způsobem pomocí","blocks and":"a","catbox.moe, 0x0.st, file.io (short-lived).":"catbox.moe, 0x0.st, file.io (krátkodobé).","featured.html overlay message rendered in the Pacifico font with an avatar and name tag":"Zpráva překryvu featured.html vykreslená písmem Pacifico s avatarem a jmenovkou","files.":".","like":"například","loads Google Fonts if you prefer not to self-host.":"načítá Google Fonts, pokud nechcete hostovat vlastní písma.","or":"nebo","or base64 encode it with":"nebo jej zakódujte do base64 pomocí","overlay with":"překryv s","to confirm a system font is visible when testing":"pro ověření, že je systémové písmo při testování viditelné","to reposition the lower-third block without editing the HTML.":"pro změnu umístění spodního bloku bez úprav HTML.","to the page URL:":"k URL stránky:","uses a system font name, while":"používá název systémového písma, zatímco","using URL parameters or OBS custom CSS.":"pomocí parametrů URL nebo vlastního CSS v OBS.","variants).":"varianty).","when you need layout adjustments in the dock.":"pokud potřebujete upravit rozvržení doku.","with contributions from the community.":"s příspěvky komunity."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/custom-fonts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/custom-fonts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/custom-fonts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/custom-fonts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/custom-fonts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/custom-fonts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/custom-fonts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/custom-fonts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/custom-fonts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/custom-fonts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/custom-fonts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/custom-fonts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/custom-fonts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/custom-fonts.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/custom-fonts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/custom-fonts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/custom-fonts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/custom-fonts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/custom-fonts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/custom-fonts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/custom-fonts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/custom-fonts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/custom-fonts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/custom-fonts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/custom-fonts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/custom-fonts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/custom-fonts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/custom-fonts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/custom-fonts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="custom-fonts.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/custom-fonts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Vlastní hosting písem a stylování překryvů</h1>
+            <p>Používejte vlastní písma v dock.html a featured.html, ať je načítáte ve zdroji Prohlížeč v OBS, rozšíření Chrome nebo desktopové aplikaci.</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>Co tento průvodce obsahuje</h3>
+                <ul class="guide-list">
+                    <li>Jak sami hostovat soubory .ttf, .otf nebo .woff2 (bez nutnosti písma Google nebo systémového písma).</li>
+                    <li>Jak tato písma načíst v <code>dock.html</code> nebo <code>featured.html</code> pomocí parametrů URL nebo vlastního CSS v OBS.</li>
+                    <li>Které proměnné CSS upravují velikost textu a rozvržení na obou stránkách.</li>
+                    <li>Rychlé náhradní možnosti, pokud chcete nadále používat Google Fonts nebo nainstalovaná systémová písma.</li>
+                </ul>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/custom-font-featured-demo.png" alt="Zpráva překryvu featured.html vykreslená písmem Pacifico s avatarem a jmenovkou" class="guide-image">
+                    <figcaption>Stejný <code>featured.html</code> překryv s <code>&amp;googlefont=Pacifico</code> — vlastní hostovaná písma fungují stejným způsobem pomocí <code>@font-face</code>.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>1) Umístěte soubory písem na hosting</h3>
+                <p>Potřebujete přímý odkaz HTTPS na soubor písma. Vyberte hosting, který umožňuje přímé odkazování/CORS, aby jej prohlížeč uvnitř OBS nebo aplikace mohl načíst.</p>
+                <ul class="guide-list">
+                    <li><strong>Rychlé možnosti:</strong> catbox.moe, 0x0.st, file.io (krátkodobé).</li>
+                    <li><strong>Trvalé možnosti:</strong> GitHub Pages, Cloudflare Pages, Netlify, vlastní webový server.</li>
+                    <li>Hostujte pouze písma, která smíte podle licence dále distribuovat. Pokud jsou k dispozici soubory WOFF2, jsou menší a načítají se rychleji než TTF/OTF.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h3>2) Vytvořte CSS</h3>
+                <p>Definujte písmo pomocí <code>@font-face</code> a odkažte na hostovaný soubor, potom nastavte překryv tak, aby jej používal pomocí <code>--font-family</code>.</p>
+                <div class="code-block">
+<pre>@font-face {
+  font-family: 'MyDockFont';
+  src: url('https://your-site.example/fonts/MyDockFont.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* Optional second weight */
+@font-face {
+  font-family: 'MyDockFont';
+  src: url('https://your-site.example/fonts/MyDockFont-Bold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+}
+
+:root {
+  --font-family: 'MyDockFont', 'Segoe UI', 'Arial Unicode MS', sans-serif;
+  --comment-font-size: 28px;
+  --author-font-size: 24px;
+  --message-line-height: 32px;
+}</pre>
+                </div>
+                <div class="guide-note">
+                    <p>Potřebujete více písem (pro arménštinu + ruštinu + latinku)? Deklarujte každé font-face a uveďte je v <code>--font-family</code> například <code>'FontA', 'FontB', 'FontC', sans-serif</code>. Pokud znak chybí, prohlížeč automaticky použije náhradní písmo.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h3>3) Použijte jej v dock.html nebo featured.html</h3>
+                <ul class="guide-list">
+                    <li><strong>Zdroj Prohlížeč v OBS:</strong> Otevřete URL doku/vybrané zprávy v OBS &gt; Zdroj Prohlížeč &gt; Vlastní CSS a vložte výše uvedený blok CSS.</li>
+                    <li><strong>Parametr URL (hostované CSS):</strong> Nahrajte CSS na stejný hosting jako písma a potom přidejte <code>&css=https://your-site.example/my-font.css</code> k URL stránky:
+                        <div class="code-block"><pre>https://socialstream.ninja/dock.html?session=YOURSESSION&css=https://your-site.example/my-font.css
+https://socialstream.ninja/featured.html?session=YOURSESSION&css=https://your-site.example/my-font.css</pre></div>
+                    </li>
+                    <li><strong>Vložený parametr URL:</strong> Pro rychlé testy můžete předat CSS přímo pomocí <code>&css=</code> nebo jej zakódujte do base64 pomocí <code>&b64css=</code> (podporují je obě stránky).</li>
+                    <li><strong>Rychlé přepnutí písma:</strong> <code>&font=YourInstalledFont</code> používá název systémového písma, zatímco <code>&googlefont=Noto+Sans+Armenian,Noto+Sans</code> načítá Google Fonts, pokud nechcete hostovat vlastní písma.</li>
+                </ul>
+                <div class="guide-note">
+                    <p>Tyto možnosti fungují stejně v rozšíření Chrome, aplikaci Electron i na hostovaném webu, protože všechny načítají stejné soubory <code>dock.html</code>/<code>featured.html</code> .</p>
+                </div>
+			</div>
+
+			<div class="guide-card">
+				<h3>4) Dolaďte text překryvu</h3>
+				<p>Základní proměnné typografie používané na obou stránkách:</p>
+				<div class="code-block">
+<pre>:root {
+  --font-family: 'MyDockFont', 'FontB', sans-serif;
+  --comment-font-size: 28px;  /* message text size */
+  --author-font-size: 24px;   /* name text size */
+  --comment-font-weight: 600; /* featured.html */
+  --author-font-weight: 700;  /* featured.html */
+  --message-font-weight: 500; /* dock.html */
+  --name-font-weight: 700;    /* dock.html */
+  --comment-color: #ffffff;
+  --author-color: #ffe08a;
+  --comment-bg-color: #161616;
+  --author-bg-color: #202020;
+}</pre>
+				</div>
+				<p><strong>Další možnosti pouze pro dok:</strong> <code>--stylized-emoji</code>, <code>--stylized-img</code>, <code>--text-stroke-width</code>, <code>--text-shadow</code>a barvami řádků (<code>--highlight-base</code>, <code>--highlight-base2</code>a také <code>compact</code> varianty).</p>
+				<p><strong>Úpravy rozvržení vybrané zprávy:</strong> upravte <code>--comment-width</code>, <code>--comment-padding</code>, <code>--comment-area-bottom</code>, a <code>--comment-area-height</code> pro změnu umístění spodního bloku bez úprav HTML.</p>
+				<p>Kombinujte změny CSS se stávajícími možnostmi URL, například <code>&scale</code>, <code>&compact</code>, nebo <code>&hidesource</code> pokud potřebujete upravit rozvržení doku.</p>
+			</div>
+
+            <div class="guide-card">
+                <h3>5) Řešení problémů</h3>
+                <ul class="guide-list">
+                    <li>Pokud se písmo nezobrazí, otevřete jeho URL přímo v prohlížeči a ověřte, že se stáhne a je poskytováno přes HTTPS.</li>
+                    <li>Některé hostingy blokují přímé odkazování; přejděte na hosting, který umožňuje přímý přístup k souborům, nebo nastavte správné hlavičky CORS.</li>
+                    <li>Po změně CSS znovu načtěte zdroj Prohlížeč v OBS nebo obnovte kartu doku/vybrané zprávy, aby se písma z mezipaměti znovu vyžádala.</li>
+                    <li>Použijte <code>https://socialstream.ninja/fonts.html</code> pro ověření, že je systémové písmo při testování viditelné <code>&font=</code>.</li>
+                    <li>Udržujte názvy font-family shodné v blocích <code>@font-face</code> a <code>--font-family</code>; neshody jsou nejčastějším problémem.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>O projektu</h3>
+                    <p>Social Stream Ninja umožňuje zachytávat, kombinovat a zobrazovat chat z více než 100 platforem v reálném čase. Autorem je Steve Seguin.</p>
+                    <div class="social-links">
+                        <a href="https://discord.socialstream.ninja" target="_blank" aria-label="Discord">
+                            <img src="../../icons/discord.svg" alt="Discord">
+                        </a>
+                        <a href="https://x.com/ninjafytools" target="_blank" aria-label="X">
+                            <img src="../../icons/x.svg" alt="X">
+                        </a>
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank" aria-label="GitHub">
+                            <img src="../../icons/github.svg" alt="GitHub">
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Produkt</h3>
+                    <ul>
+                        <li><a href="../index.html">Domů</a></li>
+                        <li><a href="features.html">Funkce</a></li>
+                        <li><a href="download.html">Stáhnout</a></li>
+                        <li><a href="guides.html">Návody</a></li>
+                        <li><a href="commands.html">Příkazy a API</a></li>
+                        <li><a href="supported-sites.html">Podporované weby</a></li>
+                        <li><a href="templates.html">Šablony</a></li>
+                        <li><a href="support.html">Podpora</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Zdroje informací</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-customization">Průvodce přizpůsobením</a></li>
+                        <li><a href="../../docs/customoverlays.md">Vlastní překryvy</a></li>
+                        <li><a href="../../api.md">Referenční příručka API</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Nahlásit problém</a></li>
+                        <li><a href="../privacy.html">Zásady ochrany soukromí</a></li>
+                        <li><a href="../TOS.html">Podmínky používání</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Komunita</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Připojte se k našemu Discordu</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">Repozitář GitHub</a></li>
+                        <li><a href="support.html#contribute">Přispět k projektu</a></li>
+                        <li><a href="https://github.com/sponsors/steveseguin" target="_blank">Přispět finančně</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0. Autor: <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> s příspěvky komunity.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

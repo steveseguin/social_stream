@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/obs-troubleshooting.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/obs-troubleshooting.html">
+    <meta property="og:title" content="OBS 문제 해결 - Social Stream Ninja">
+    <meta property="og:description" content="빈 Social Stream Ninja OBS 오버레이, 잘못된 세션, 들리지 않는 음성 읽기, 브라우저 소스 캐시 및 소스 캡처 문제를 해결하세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/obs-troubleshooting.html">
+    <meta name="twitter:title" content="OBS 문제 해결 - Social Stream Ninja">
+    <meta name="twitter:description" content="빈 Social Stream Ninja OBS 오버레이, 잘못된 세션, 들리지 않는 음성 읽기, 브라우저 소스 캐시 및 소스 캡처 문제를 해결하세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS 문제 해결 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="빈 Social Stream Ninja OBS 오버레이, 잘못된 세션, 들리지 않는 음성 읽기, 브라우저 소스 캐시 및 소스 캡처 문제를 해결하세요.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/obs-troubleshooting.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", replace its URL, apply the change, and reopen that dock.":"에서 URL을 교체하고 변경을 적용한 뒤 해당 도크를 다시 여세요.",", right-click it, and choose":"에서 해당 소스를 마우스 오른쪽 버튼으로 클릭하고 다음을 선택하세요:",", then paste the new link over the old one.":"을 선택한 뒤 기존 링크 위에 새 링크를 붙여 넣으세요.",", then send one fake test message from Social Stream Ninja.":"을 클릭한 뒤 Social Stream Ninja에서 가짜 테스트 메시지를 하나 보내세요.",". Administrator mode is not a normal fix for a blank Dock.":". 관리자 모드는 빈 도크 문제의 일반적인 해결책이 아닙니다.","Audio routing issue.":"오디오 라우팅 문제입니다.","Bottom of OBS Browser Source Properties with Refresh cache of current page highlighted":"현재 페이지의 캐시 새로고침이 강조된 OBS 브라우저 소스 속성 하단","Check The Overlay URL":"오버레이 URL 확인","Check login, live page, popout/source page, app mode, or platform guide.":"로그인, 라이브 페이지, 팝아웃/소스 페이지, 앱 모드 또는 플랫폼 가이드를 확인하세요.","Check provider vs system TTS and OBS audio capture.":"제공업체 음성 읽기와 시스템 음성 읽기의 차이 및 OBS 오디오 캡처를 확인하세요.","Click":"클릭:","Close the old Dock page or window, then click the newly generated":"이전 도크 페이지나 창을 닫고 Social Stream Ninja에서 새로 생성된","Commands & API":"명령 및 API","Common Fixes":"일반적인 해결 방법","Decision Tree":"진단 흐름도","Detailed help:":"자세한 도움말:","Do these in this order. Refreshing the cache alone does not add a changed session, password, or server-routing option to an old URL.":"이 순서대로 진행하세요. 캐시만 새로고침해도 이전 URL에 변경된 세션, 비밀번호 또는 서버 라우팅 옵션이 추가되지는 않습니다.","Dock":"도크","Dock is empty":"도크가 비어 있음","Dock works, browser overlay blank":"도크는 작동하지만 브라우저 오버레이가 비어 있음","Dock works, browser overlay works":"도크와 브라우저 오버레이 모두 작동함","Docks → Custom Browser Docks":"도크 → 사용자 지정 브라우저 도크","Download":"다운로드","Export your Social Stream Ninja settings and OBS scene collection for support":"지원 요청을 위해 Social Stream Ninja 설정과 OBS 장면 모음 내보내기","Featured overlay preview showing a selected message":"선택한 메시지가 표시된 강조 오버레이 미리 보기","Features":"기능","Find out whether the source, session, overlay, or OBS browser source is the problem.":"소스, 세션, 오버레이, OBS 브라우저 소스 중 어디에 문제가 있는지 확인하세요.","Guides":"가이드","Hire":"작업 의뢰","Home":"홈","If TTS Is Silent In OBS":"OBS에서 음성 읽기가 들리지 않는 경우","If it is still stale:":"여전히 이전 상태라면:","If messages appear in the dock, Social Stream Ninja is receiving chat.":"도크에 메시지가 나타나면 Social Stream Ninja가 채팅을 받고 있는 것입니다.","If support has confirmed a Windows privilege mismatch, follow":"지원팀에서 Windows 권한 불일치를 확인했다면 다음 안내를 참고하세요:","Image works, TTS silent":"이미지는 표시되지만 음성 읽기는 들리지 않음","In OBS, find the Social Stream source in":"OBS에서 Social Stream 소스를 다음에서 찾으세요:","In Social Stream Ninja, copy a freshly generated link for the exact Dock or overlay you use. Copy the whole link instead of editing its parameters by hand.":"Social Stream Ninja에서 사용하는 정확한 도크나 오버레이의 새 링크를 복사하세요. 매개변수를 수동으로 편집하지 말고 전체 링크를 복사하세요.","Inspiration":"아이디어","Local file":"로컬 파일","Main navigation":"기본 탐색 메뉴","Make sure":"다음을 확인하세요:","Make the source visible and check that width/height are not tiny.":"소스가 보이게 하고 너비/높이가 너무 작지 않은지 확인하세요.","Meaning":"의미","Next Step":"다음 단계","OBS Browser Source Properties showing the Local file checkbox and URL field":"로컬 파일 체크박스와 URL 입력란이 표시된 OBS 브라우저 소스 속성","OBS Troubleshooting":"OBS 문제 해결","OBS Troubleshooting - Social Stream Ninja":"OBS 문제 해결 - Social Stream Ninja","OBS audio capture note explaining system TTS limitations":"시스템 음성 읽기의 제한을 설명하는 OBS 오디오 캡처 참고 사항","OBS browser source is the likely issue.":"OBS 브라우저 소스에 문제가 있을 가능성이 높습니다.","OK":"확인","On this page":"이 페이지에서","Open navigation menu":"탐색 메뉴 열기","Open the same OBS URL in a normal browser to separate OBS issues from Social Stream Ninja issues.":"OBS와 Social Stream Ninja의 문제를 구분하려면 같은 OBS URL을 일반 브라우저에서 여세요.","Overlay Gallery":"오버레이 갤러리","Plain system TTS is the common trap. It may speak through your speakers while OBS Browser Source hears nothing.":"일반 시스템 음성 읽기에서 자주 문제가 생깁니다. 스피커에서는 들려도 OBS 브라우저 소스에서는 아무 소리도 받지 못할 수 있습니다.","Properties":"속성","Refresh OBS source, check URL, dimensions, visibility, cache, and custom CSS.":"OBS 소스를 새로고침하고 URL, 크기, 표시 여부, 캐시, 사용자 지정 CSS를 확인하세요.","Refresh cache of current page":"현재 페이지의 캐시 새로고침 (Refresh cache of current page)","Reopen A Dock Link":"도크 링크 다시 열기","Replace The Saved OBS URL And Refresh Its Cache":"저장된 OBS URL 교체 및 캐시 새로고침","Replace the entire URL with the freshly generated Social Stream link. Screenshot from the":"전체 URL을 새로 생성한 Social Stream 링크로 교체하세요. 스크린샷 출처:","Replace the saved URL, then refresh the Browser Source cache":"저장된 URL을 교체한 뒤 브라우저 소스 캐시 새로고침","Run OBS and Social Stream as Administrator":"OBS와 Social Stream을 관리자 권한으로 실행","Scroll to the bottom of the Properties window and click":"속성 창의 맨 아래로 스크롤하고 다음을 클릭하세요:","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja dock showing received chat messages":"받은 채팅 메시지를 보여 주는 Social Stream Ninja 도크","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Some overlays only show content after a message is featured or a matching event happens.":"일부 오버레이는 메시지를 강조 표시하거나 일치하는 이벤트가 발생한 뒤에만 콘텐츠를 표시합니다.","Source/platform capture is not working yet.":"소스/플랫폼 캡처가 아직 작동하지 않습니다.","Sources":"소스","Spin and Wheel's OBS setup page":"Spin and Wheel의 OBS 설정 페이지","Start With The Dock":"도크부터 확인","Still stuck?":"아직 해결되지 않았나요?","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","TTS Setup Guide":"음성 읽기 설정 가이드","Temporarily remove custom OBS CSS to rule out hidden text or opacity.":"텍스트 숨김이나 불투명도 문제가 아닌지 확인하려면 OBS 사용자 지정 CSS를 잠시 제거하세요.","Test":"테스트","The cache button is near the bottom of Browser Source Properties. UI example cropped from":"캐시 버튼은 브라우저 소스 속성 하단 근처에 있습니다. UI 예제 이미지 출처:","The dock is the fastest test. If the dock is empty, do not debug OBS yet. Fix the platform source first.":"도크가 가장 빠른 테스트 방법입니다. 도크가 비어 있다면 아직 OBS를 진단하지 마세요. 먼저 플랫폼 소스를 해결하세요.","Troubleshoot blank Social Stream Ninja OBS overlays, wrong sessions, silent TTS, browser source cache, and source capture problems.":"빈 Social Stream Ninja OBS 오버레이, 잘못된 세션, 들리지 않는 음성 읽기, 브라우저 소스 캐시 및 소스 캡처 문제를 해결하세요.","URL":"URL","Use provider/browser TTS for easier OBS capture, or route system audio separately.":"더 쉽게 OBS에서 캡처하려면 제공업체/브라우저 음성 읽기를 사용하거나 시스템 오디오를 별도로 라우팅하세요.","Use the exact same session ID everywhere. A one-character difference creates a separate room.":"모든 곳에서 정확히 같은 세션 ID를 사용하세요. 한 글자만 달라도 별도 방이 만들어집니다.","Use the same session and pick a page that matches the expected output.":"같은 세션을 사용하고 원하는 출력에 맞는 페이지를 선택하세요.","Wrong overlay page, wrong session, or no matching payload.":"잘못된 오버레이 페이지, 잘못된 세션 또는 일치하는 페이로드 없음.","close Properties, open it again, and repeat the test. Removing and recreating the Browser Source with the fresh link is the last resort.":"속성을 닫았다가 다시 열고 테스트를 반복하세요. 브라우저 소스를 제거하고 새 링크로 다시 만드는 것은 마지막 수단입니다.","is not selected. Select everything in":"이 선택되지 않았는지 확인하세요. 다음 입력란의 전체 내용을 선택하세요:","link in Social Stream Ninja. If it is saved as an OBS Custom Browser Dock, open":"링크를 클릭하세요. OBS 사용자 지정 브라우저 도크로 저장되어 있다면 다음을 여세요:","official OBS Browser Source guide":"공식 OBS 브라우저 소스 가이드"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/obs-troubleshooting.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-troubleshooting.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-troubleshooting.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-troubleshooting.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-troubleshooting.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-troubleshooting.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-troubleshooting.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-troubleshooting.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-troubleshooting.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-troubleshooting.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-troubleshooting.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-troubleshooting.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="obs-troubleshooting.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/obs-troubleshooting.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/obs-troubleshooting.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/obs-troubleshooting.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/obs-troubleshooting.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/obs-troubleshooting.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>OBS 문제 해결</h1><p>소스, 세션, 오버레이, OBS 브라우저 소스 중 어디에 문제가 있는지 확인하세요.</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="이 페이지에서"><a href="#read-section-1">도크부터 확인</a><a href="#read-section-2">저장된 OBS URL 교체 및 캐시 새로고침</a><a href="#read-section-3">진단 흐름도</a><a href="#read-section-4">오버레이 URL 확인</a><a href="#read-section-5">OBS에서 음성 읽기가 들리지 않는 경우</a><a href="#read-section-6">일반적인 해결 방법</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">도크부터 확인</h2>
+                <p>도크가 가장 빠른 테스트 방법입니다. 도크가 비어 있다면 아직 OBS를 진단하지 마세요. 먼저 플랫폼 소스를 해결하세요.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-dock-message-check.png" alt="받은 채팅 메시지를 보여 주는 Social Stream Ninja 도크" class="guide-image">
+                    <figcaption>도크에 메시지가 나타나면 Social Stream Ninja가 채팅을 받고 있는 것입니다.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card" id="replace-url-and-cache">
+                <h2 id="read-section-2">저장된 OBS URL 교체 및 캐시 새로고침</h2>
+                <p>이 순서대로 진행하세요. 캐시만 새로고침해도 이전 URL에 변경된 세션, 비밀번호 또는 서버 라우팅 옵션이 추가되지는 않습니다.</p>
+                <ol class="guide-steps">
+                    <li>Social Stream Ninja에서 사용하는 정확한 도크나 오버레이의 새 링크를 복사하세요. 매개변수를 수동으로 편집하지 말고 전체 링크를 복사하세요.</li>
+                    <li>OBS에서 Social Stream 소스를 다음에서 찾으세요: <strong>소스</strong>에서 해당 소스를 마우스 오른쪽 버튼으로 클릭하고 다음을 선택하세요: <strong>속성</strong>.</li>
+                    <li>다음을 확인하세요: <strong>로컬 파일</strong> 이 선택되지 않았는지 확인하세요. 다음 입력란의 전체 내용을 선택하세요: <strong>URL</strong>을 선택한 뒤 기존 링크 위에 새 링크를 붙여 넣으세요.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-browser-source-url.png" alt="로컬 파일 체크박스와 URL 입력란이 표시된 OBS 브라우저 소스 속성" class="guide-image">
+                    <figcaption>전체 URL을 새로 생성한 Social Stream 링크로 교체하세요. 스크린샷 출처: <a href="https://obsproject.com/kb/browser-source">공식 OBS 브라우저 소스 가이드</a>.</figcaption>
+                </figure>
+                <ol class="guide-steps" start="4">
+                    <li>속성 창의 맨 아래로 스크롤하고 다음을 클릭하세요: <strong>현재 페이지의 캐시 새로고침 (Refresh cache of current page)</strong>.</li>
+                    <li>클릭: <strong>확인</strong>을 클릭한 뒤 Social Stream Ninja에서 가짜 테스트 메시지를 하나 보내세요.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-browser-source-refresh-cache.png" alt="현재 페이지의 캐시 새로고침이 강조된 OBS 브라우저 소스 속성 하단" class="guide-image guide-image-medium">
+                    <figcaption>캐시 버튼은 브라우저 소스 속성 하단 근처에 있습니다. UI 예제 이미지 출처: <a href="https://spinandwheel.com/obs-setup/">Spin and Wheel의 OBS 설정 페이지</a>.</figcaption>
+                </figure>
+                <div class="guide-note">
+                    <p><strong>여전히 이전 상태라면:</strong> 속성을 닫았다가 다시 열고 테스트를 반복하세요. 브라우저 소스를 제거하고 새 링크로 다시 만드는 것은 마지막 수단입니다.</p>
+                </div>
+                <h3>도크 링크 다시 열기</h3>
+                <p>이전 도크 페이지나 창을 닫고 Social Stream Ninja에서 새로 생성된 <strong>도크</strong> 링크를 클릭하세요. OBS 사용자 지정 브라우저 도크로 저장되어 있다면 다음을 여세요: <strong>도크 → 사용자 지정 브라우저 도크</strong>에서 URL을 교체하고 변경을 적용한 뒤 해당 도크를 다시 여세요.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">진단 흐름도</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>테스트</th><th>의미</th><th>다음 단계</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="테스트">도크가 비어 있음</td><td data-label="의미">소스/플랫폼 캡처가 아직 작동하지 않습니다.</td><td data-label="다음 단계">로그인, 라이브 페이지, 팝아웃/소스 페이지, 앱 모드 또는 플랫폼 가이드를 확인하세요.</td></tr>
+                        <tr><td data-label="테스트">도크와 브라우저 오버레이 모두 작동함</td><td data-label="의미">OBS 브라우저 소스에 문제가 있을 가능성이 높습니다.</td><td data-label="다음 단계">OBS 소스를 새로고침하고 URL, 크기, 표시 여부, 캐시, 사용자 지정 CSS를 확인하세요.</td></tr>
+                        <tr><td data-label="테스트">도크는 작동하지만 브라우저 오버레이가 비어 있음</td><td data-label="의미">잘못된 오버레이 페이지, 잘못된 세션 또는 일치하는 페이로드 없음.</td><td data-label="다음 단계">같은 세션을 사용하고 원하는 출력에 맞는 페이지를 선택하세요.</td></tr>
+                        <tr><td data-label="테스트">이미지는 표시되지만 음성 읽기는 들리지 않음</td><td data-label="의미">오디오 라우팅 문제입니다.</td><td data-label="다음 단계">제공업체 음성 읽기와 시스템 음성 읽기의 차이 및 OBS 오디오 캡처를 확인하세요.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">오버레이 URL 확인</h2>
+                <p>모든 곳에서 정확히 같은 세션 ID를 사용하세요. 한 글자만 달라도 별도 방이 만들어집니다.</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION</pre>
+                <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION</pre>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-featured-overlay-preview.png" alt="선택한 메시지가 표시된 강조 오버레이 미리 보기" class="guide-image">
+                    <figcaption>일부 오버레이는 메시지를 강조 표시하거나 일치하는 이벤트가 발생한 뒤에만 콘텐츠를 표시합니다.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">OBS에서 음성 읽기가 들리지 않는 경우</h2>
+                <p>일반 시스템 음성 읽기에서 자주 문제가 생깁니다. 스피커에서는 들려도 OBS 브라우저 소스에서는 아무 소리도 받지 못할 수 있습니다.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-tts-obs-audio.png" alt="시스템 음성 읽기의 제한을 설명하는 OBS 오디오 캡처 참고 사항" class="guide-image">
+                    <figcaption>더 쉽게 OBS에서 캡처하려면 제공업체/브라우저 음성 읽기를 사용하거나 시스템 오디오를 별도로 라우팅하세요.</figcaption>
+                </figure>
+                <p>자세한 도움말: <a href="tts-setup-guide.html">음성 읽기 설정 가이드</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">일반적인 해결 방법</h2>
+                <ul class="guide-list">
+                    <li><a href="#replace-url-and-cache">저장된 URL을 교체한 뒤 브라우저 소스 캐시 새로고침</a>.</li>
+                    <li>소스가 보이게 하고 너비/높이가 너무 작지 않은지 확인하세요.</li>
+                    <li>텍스트 숨김이나 불투명도 문제가 아닌지 확인하려면 OBS 사용자 지정 CSS를 잠시 제거하세요.</li>
+                    <li>OBS와 Social Stream Ninja의 문제를 구분하려면 같은 OBS URL을 일반 브라우저에서 여세요.</li>
+                </ul>
+                <p>지원팀에서 Windows 권한 불일치를 확인했다면 다음 안내를 참고하세요: <a href="windows-administrator-mode.html">OBS와 Social Stream을 관리자 권한으로 실행</a>. 관리자 모드는 빈 도크 문제의 일반적인 해결책이 아닙니다.</p>
+                <p>아직 해결되지 않았나요? <a href="export-settings-for-support.html">지원 요청을 위해 Social Stream Ninja 설정과 OBS 장면 모음 내보내기</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 라이선스.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

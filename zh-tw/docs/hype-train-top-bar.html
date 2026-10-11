@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-tw/docs/hype-train-top-bar.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/zh-tw/docs/hype-train-top-bar.html">
+    <meta property="og:title" content="Hype Train 頂列指南 - Social Stream Ninja">
+    <meta property="og:description" content="如何將 Social Stream Ninja 的 Twitch Hype Train 頂列疊加畫面新增到 OBS，並在開播前測試。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-tw/docs/hype-train-top-bar.html">
+    <meta name="twitter:title" content="Hype Train 頂列指南 - Social Stream Ninja">
+    <meta name="twitter:description" content="如何將 Social Stream Ninja 的 Twitch Hype Train 頂列疊加畫面新增到 OBS，並在開播前測試。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hype Train 頂列指南 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="如何將 Social Stream Ninja 的 Twitch Hype Train 頂列疊加畫面新增到 OBS，並在開播前測試。">
+    <style>
+        .guide-image {
+            display: block;
+            width: 100%;
+            max-width: 1100px;
+            margin: 1.5rem auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .quick-note {
+            background: rgba(26, 115, 232, 0.08);
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 1.4rem 1.6rem;
+            margin: 1.5rem 0;
+        }
+
+        .dark-mode .quick-note {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .warning-note {
+            background: rgba(251, 188, 5, 0.14);
+            border-left-color: #f9ab00;
+        }
+
+        .dark-mode .warning-note {
+            background: rgba(251, 188, 5, 0.2);
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/hype-train-top-bar.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{", which makes the overlay focus on Hype Train and Treasure Train events.":"，讓疊加畫面專注於 Hype Train 和 Treasure Train 事件。","A Hype Train will not appear in the normal chat overlay. Use the Hype Train Top Bar, the Meta Data Bar, or":"Hype Train 不會出現在普通聊天疊加畫面中。請使用 Hype Train 頂列、中繼資料列或","Add a Twitch-style Hype Train progress bar to OBS, test it before going live, and know what to check if it does not appear.":"在 OBS 中新增 Twitch 風格的 Hype Train 進度條，開播前進行測試，並瞭解不顯示時的檢查方式。","Add that link to OBS as a Browser Source.":"將該連結作為瀏覽器來源新增到 OBS。","Add the Hype Train Top Bar as a browser source, not as a normal chat overlay.":"將 Hype Train 頂列新增為瀏覽器來源，而不是普通聊天疊加畫面。","Align overlay to the center:":"疊加畫面置中對齊：","Align overlay to the right-side:":"疊加畫面靠右對齊：","Before you start":"開始之前","Commands & API":"指令與 API","Confirm the URL includes":"確認 URL 包含","Confirm the copied overlay URL has the same session ID as the Social Stream Ninja popup.":"確認複製的疊加畫面 URL 與 Social Stream Ninja 彈出選單使用相同的工作階段 ID。","Confirm your Twitch account was re-authorized after Hype Train support was added.":"確認已在新增 Hype Train 支援後重新授權 Twitch 帳號。","Copy the":"複製","Custom page background color:":"自訂頁面背景顏色：","Customize the bar":"自訂進度條","Disable text outlining:":"停用文字描邊：","Download":"下載","Event Reference":"事件參考","Fake Hype Train":"模擬 Hype Train","Features":"功能","Find":"找到","Guides":"指南","Hire":"聘用","Home":"首頁","How to add the Social Stream Ninja Twitch Hype Train top bar overlay to OBS and test it before going live.":"如何將 Social Stream Ninja 的 Twitch Hype Train 頂列疊加畫面新增到 OBS，並在開播前測試。","Hype Meter and Viewer Count":"熱度計與觀眾人數","Hype Train Top Bar":"Hype Train頂端列","Hype Train Top Bar Guide":"Hype Train 頂列指南","Hype Train Top Bar Guide - Social Stream Ninja":"Hype Train 頂列指南 - Social Stream Ninja","Hype Train Top Bar preview showing progress, level, timer, and contributors":"Hype Train 頂列預覽，顯示進度、等級、計時器和貢獻者","If it does not show":"如果沒有顯示","If prompted, re-authorize Twitch so Social Stream Ninja can request the":"如出現提示，請重新授權 Twitch，以便 Social Stream Ninja 請求","Important:":"重要：","Inspiration":"靈感","It does not show normal chat messages. Hype Train data is metadata-only, so the bar updates when Twitch sends a Hype Train event.":"它不顯示普通聊天訊息。Hype Train 資料只有中繼資料，因此 Twitch 傳送 Hype Train 事件時，進度條才會更新。","Main navigation":"主導覽","Open":"開啟","Open navigation menu":"開啟導覽選單","Open the Social Stream Ninja popup.":"開啟 Social Stream Ninja 彈出選單。","Overlay Gallery":"疊加畫面圖庫","Panel opacity:":"面板不透明度：","Resources":"資源","Scale multiplier:":"縮放倍數：","Set it up from the popup":"從彈出選單設定","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja popup showing Hype Train Top Bar link and layout options":"Social Stream Ninja 彈出選單，顯示 Hype Train 頂列連結和版面配置選項","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","Test with the":"使用下列按鈕測試：","Testing options":"測試選項","The Hype Train Top Bar is a dedicated overlay for Twitch Hype Train and Treasure Train events. It shows the current level, progress, total, timer, and top contributors in a top-bar style layout.":"Hype Train 頂列是用於 Twitch Hype Train 和 Treasure Train 事件的專用疊加畫面。它採用頂列版面配置，顯示目前等級、進度、總值、計時器和主要貢獻者。","The Hype Train Top Bar options work like the other overlay options in the popup. Toggle an option, then copy the updated link again.":"Hype Train 頂列選項與彈出選單中的其他疊加畫面選項相同。切換選項後，再次複製更新的連結。","The copied URL includes":"複製的 URL 包含","Tip:":"提示：","Transparent bar background:":"透明進度條背景：","Use":"使用","Use Twitch WebSocket mode for Twitch event capture.":"使用 Twitch WebSocket 模式擷取 Twitch 事件。","Use the":"使用","What this overlay does":"此疊加畫面的作用","adjusts the whole bar opacity.":"調整整個進度條的不透明度。","and select a Hype Train preset if you want to test through the API route.":"並選擇 Hype Train 預設，以透過 API 路徑測試。","button to confirm the bar appears.":"按鈕，確認進度條會出現。","button.":"按鈕。","centers the bar horizontally.":"使進度條水平置中。","if you want to confirm the raw Twitch Hype Train event is being received.":"，確認正在接收原始 Twitch Hype Train 事件。","in the popup for the quickest test.":"，位於彈出選單中，可進行最快速的測試。","link.":"連結。","makes the bar smaller or larger.":"縮小或放大進度條。","places the bar against the right edge.":"將進度條放在右邊緣。","removes the black text shadow.":"移除黑色文字陰影。","removes the filled background behind the bar.":"移除進度條背後的填色背景。","scope.":"權限範圍。","to see it.":"以查看它。","useful when testing outside OBS or when you want a non-transparent page background.":"適合在 OBS 之外測試，或需要不透明頁面背景時使用。","with the same session to verify Hype Train metadata is arriving.":"，使用相同工作階段，驗證 Hype Train 中繼資料正在到達。","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja。保留所有權利。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/hype-train-top-bar.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/hype-train-top-bar.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/hype-train-top-bar.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/hype-train-top-bar.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/hype-train-top-bar.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/hype-train-top-bar.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/hype-train-top-bar.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/hype-train-top-bar.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/hype-train-top-bar.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="hype-train-top-bar.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/hype-train-top-bar.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/hype-train-top-bar.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/hype-train-top-bar.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/hype-train-top-bar.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/hype-train-top-bar.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/hype-train-top-bar.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/hype-train-top-bar.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/hype-train-top-bar.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Hype Train 頂列指南</h1>
+            <p>在 OBS 中新增 Twitch 風格的 Hype Train 進度條，開播前進行測試，並瞭解不顯示時的檢查方式。</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <h3>此疊加畫面的作用</h3>
+                    <p>Hype Train 頂列是用於 Twitch Hype Train 和 Treasure Train 事件的專用疊加畫面。它採用頂列版面配置，顯示目前等級、進度、總值、計時器和主要貢獻者。</p>
+                    <p>它不顯示普通聊天訊息。Hype Train 資料只有中繼資料，因此 Twitch 傳送 Hype Train 事件時，進度條才會更新。</p>
+                    <img src="../../docs/images/hype-train-top-bar-preview.png" alt="Hype Train 頂列預覽，顯示進度、等級、計時器和貢獻者" class="guide-image">
+                </div>
+
+                <div class="guide-card">
+                    <h3>開始之前</h3>
+                    <ul class="guide-list">
+                        <li>使用 Twitch WebSocket 模式擷取 Twitch 事件。</li>
+                        <li>如出現提示，請重新授權 Twitch，以便 Social Stream Ninja 請求 <code>channel:read:hype_train</code> 權限範圍。</li>
+                        <li>將 Hype Train 頂列新增為瀏覽器來源，而不是普通聊天疊加畫面。</li>
+                    </ul>
+                    <div class="quick-note warning-note">
+                        <strong>重要：</strong> Hype Train 不會出現在普通聊天疊加畫面中。請使用 Hype Train 頂列、中繼資料列或 <code>events.html</code> 以查看它。
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>從彈出選單設定</h3>
+                    <ol class="guide-steps">
+                        <li>開啟 Social Stream Ninja 彈出選單。</li>
+                        <li>找到 <strong>熱度計與觀眾人數</strong>.</li>
+                        <li>複製 <strong>Hype Train頂端列</strong> 連結。</li>
+                        <li>將該連結作為瀏覽器來源新增到 OBS。</li>
+                        <li>使用 <strong>模擬 Hype Train</strong> 按鈕，確認進度條會出現。</li>
+                    </ol>
+                    <img src="../../docs/images/hype-train-popup-options.png" alt="Social Stream Ninja 彈出選單，顯示 Hype Train 頂列連結和版面配置選項" class="guide-image">
+                    <div class="quick-note">
+                        <strong>提示：</strong> 複製的 URL 包含 <code>&amp;hype</code>，讓疊加畫面專注於 Hype Train 和 Treasure Train 事件。
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>自訂進度條</h3>
+                    <p>Hype Train 頂列選項與彈出選單中的其他疊加畫面選項相同。切換選項後，再次複製更新的連結。</p>
+                    <ul class="guide-list">
+                        <li><strong>疊加畫面靠右對齊：</strong> 將進度條放在右邊緣。</li>
+                        <li><strong>疊加畫面置中對齊：</strong> 使進度條水平置中。</li>
+                        <li><strong>縮放倍數：</strong> 縮小或放大進度條。</li>
+                        <li><strong>面板不透明度：</strong> 調整整個進度條的不透明度。</li>
+                        <li><strong>透明進度條背景：</strong> 移除進度條背後的填色背景。</li>
+                        <li><strong>停用文字描邊：</strong> 移除黑色文字陰影。</li>
+                        <li><strong>自訂頁面背景顏色：</strong> 適合在 OBS 之外測試，或需要不透明頁面背景時使用。</li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h3>測試選項</h3>
+                    <ul class="guide-list">
+                        <li>使用 <strong>模擬 Hype Train</strong> ，位於彈出選單中，可進行最快速的測試。</li>
+                        <li>使用 <code>sampleapi.html</code> 並選擇 Hype Train 預設，以透過 API 路徑測試。</li>
+                        <li>使用 <code>events.html</code> ，確認正在接收原始 Twitch Hype Train 事件。</li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h3>如果沒有顯示</h3>
+                    <ol class="guide-steps">
+                        <li>確認已在新增 Hype Train 支援後重新授權 Twitch 帳號。</li>
+                        <li>確認複製的疊加畫面 URL 與 Social Stream Ninja 彈出選單使用相同的工作階段 ID。</li>
+                        <li>確認 URL 包含 <code>&amp;hype</code>.</li>
+                        <li>使用下列按鈕測試： <strong>模擬 Hype Train</strong> 按鈕。</li>
+                        <li>開啟 <code>events.html</code> ，使用相同工作階段，驗證 Hype Train 中繼資料正在到達。</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../../media/logo.png" alt="Social Stream Ninja 標誌">
+                    <span>Social Stream Ninja</span>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>資源</h4>
+                        <ul>
+                            <li><a href="guides.html">指南</a></li>
+                            <li><a href="event-reference.html">事件參考</a></li>
+                            <li><a href="support.html">支援</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Social Stream Ninja。保留所有權利。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

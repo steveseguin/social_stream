@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-cn/docs/media-hosting-event-flow.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/zh-cn/docs/media-hosting-event-flow.html">
+    <meta property="og:title" content="Event Flow 媒体文件 - Social Stream Ninja">
+    <meta property="og:description" content="如何在 Social Stream Ninja Event Flow 和 OBS 中使用已上传、本地或云端托管的音频、图片、GIF 和视频。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-cn/docs/media-hosting-event-flow.html">
+    <meta name="twitter:title" content="Event Flow 媒体文件 - Social Stream Ninja">
+    <meta name="twitter:description" content="如何在 Social Stream Ninja Event Flow 和 OBS 中使用已上传、本地或云端托管的音频、图片、GIF 和视频。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Flow 媒体文件 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="如何在 Social Stream Ninja Event Flow 和 OBS 中使用已上传、本地或云端托管的音频、图片、GIF 和视频。">
+    <style>
+        .answer-card {
+            border: 2px solid var(--primary-color);
+            background: linear-gradient(135deg, rgba(157, 70, 255, 0.12), rgba(66, 211, 146, 0.08));
+        }
+        .route-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+            margin: 1.4rem 0 0;
+        }
+        .route-card {
+            position: relative;
+            padding: 1.4rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--background-light);
+        }
+        .route-card::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: -1.1rem;
+            width: 1.1rem;
+            height: 2px;
+            background: var(--primary-color);
+        }
+        .route-card:last-child::after {
+            display: none;
+        }
+        .route-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.8rem;
+            height: 2.8rem;
+            margin-bottom: 0.8rem;
+            border-radius: 50%;
+            color: var(--on-primary);
+            background: var(--primary-color);
+            font-weight: 700;
+        }
+        .route-card strong,
+        .choice-card strong {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        .route-card p,
+        .choice-card p {
+            margin: 0;
+        }
+        .choice-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+            margin: 1.2rem 0;
+        }
+        .choice-card {
+            padding: 1.4rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--background-light);
+        }
+        .choice-card.recommended {
+            border-color: var(--primary-color);
+        }
+        .choice-label {
+            display: inline-block;
+            margin-bottom: 0.8rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            color: var(--primary-color);
+            background: rgba(157, 70, 255, 0.12);
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .screenshot-crop {
+            width: min(100%, 42rem);
+            height: 16rem;
+            margin: 1.4rem auto 0;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: #202024;
+            box-shadow: var(--shadow-sm);
+        }
+        .screenshot-crop img {
+            display: block;
+            width: 42rem;
+            max-width: none;
+            height: auto;
+            transform: translateY(-34rem);
+        }
+        .path-map {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            gap: 1rem;
+            align-items: center;
+            margin: 1.4rem 0;
+        }
+        .path-box {
+            padding: 1.2rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--background-light);
+            text-align: center;
+        }
+        .path-arrow {
+            color: var(--primary-color);
+            font-size: 2.4rem;
+            font-weight: 700;
+        }
+        .code-label {
+            margin: 1.2rem 0 0.4rem;
+            color: var(--text-secondary);
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+        .compact-note {
+            margin: 1.2rem 0;
+        }
+        @media (max-width: 760px) {
+            .route-grid,
+            .choice-grid,
+            .path-map {
+                grid-template-columns: 1fr;
+            }
+            .route-card::after {
+                display: none;
+            }
+            .path-arrow {
+                transform: rotate(90deg);
+                text-align: center;
+            }
+            .screenshot-crop {
+                height: 15rem;
+            }
+            .screenshot-crop img {
+                width: 35rem;
+                transform: translateY(-28rem);
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/media-hosting-event-flow.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{", and":"，以及",", choose the file, and finish the upload in the page that opens.":"，选择文件，并在打开的页面中完成上传。",", then create a":"，然后创建一个",": works, but is more fragile":"：可用，但更容易出问题","A few small public files or occasional release downloads.":"少量小型公开文件，或偶尔下载发布资源。","A reward or message triggers the action.":"奖励或消息触发操作。","Add the exact origin of any other page that fetches the files. Origins do not contain paths or a trailing slash. If a custom domain was already cached before adding CORS, purge that hostname's cache.":"添加其他会获取文件的页面的准确来源地址。来源地址不包含路径或末尾斜杠。如果自定义域名在添加 CORS 前已有缓存，请清除此主机名的缓存。","Advanced fallback: run your own local server":"高级备用方案：运行自己的本地服务器","Amazon S3 or another S3-compatible host":"Amazon S3 或其他兼容 S3 的托管服务","Anyone with the object URL can access the media. Do not upload private, licensed, or personal files that should not be shared.":"任何持有对象 URL 的人都能访问媒体。不要上传不应共享的私密、受许可限制或个人文件。","Backblaze B2":"Backblaze B2","Backblaze B2 CORS Example":"Backblaze B2 CORS 示例","Before Going Live":"正式开播前","Best for a modest library and the least setup.":"最适合规模适中的媒体库，设置最少。","Best for lots of media, backups, and use from multiple computers.":"最适合大量媒体、备份和多台电脑使用。","Best general choice for a public alert library.":"公开提醒媒体库的首选通用方案。","Both the Flow Actions page and media must be local. A hosted":"Flow Actions 页面和媒体都必须在本地。托管的","Bucket → Settings → CORS Policy":"存储桶 → 设置 → CORS 策略","Built-in Upload":"内置上传","Choose Local File":"选择本地文件","Click":"点击","Cloud Object Storage":"云对象存储","Cloud file is blocked:":"云端文件被阻止：","Cloudflare R2":"Cloudflare R2","Cloudflare R2 Setup":"Cloudflare R2 设置","Commands & API":"命令与 API","Confirm that the action says the file is available and the local server is running.":"确认操作显示文件可用，且本地服务器正在运行。","Confirm that the returned":"确认返回的","Copy Local Flow Actions URL for OBS":"复制用于 OBS 的本地 Flow Actions URL","Create an R2 bucket using the":"创建 R2 存储桶，使用","Desktop Local Media":"桌面本地媒体","Display Media Overlay":"显示媒体叠加层","Do not share the generated URL. It contains a private random capability used to protect the local server.":"不要分享生成的 URL。其中包含用于保护本地服务器的私密随机访问凭据。","Download":"下载","Download and extract the":"下载并解压","Enable public read for the media, set correct content types, and add a read-only CORS rule if browser requests require it.":"为媒体启用公开读取，设置正确的内容类型，并在浏览器请求需要时添加只读 CORS 规则。","Event Flow":"Event Flow","Event Flow Display Media Overlay properties showing the Media URL field and Upload button":"Event Flow 的“显示媒体叠加层”属性，显示媒体 URL 字段和上传按钮","Existing cloud accounts and advanced access controls.":"已有云端账号和高级访问控制。","Fastest":"最快","Features":"功能","Flow Actions":"Flow Actions","Flow Actions URL for the OBS Browser Source":"用于 OBS 浏览器源的 Flow Actions URL","GitHub":"GitHub","Good For":"适合","Guides":"指南","Hire":"雇用","Home":"首页","Hosted Flow Actions cannot play the local item:":"托管的 Flow Actions 无法播放本地项目：","How an Event Flow media action reaches OBS":"Event Flow 媒体操作如何到达 OBS","How to use uploaded, local, or cloud-hosted audio, images, GIFs, and videos with Social Stream Ninja Event Flow and OBS.":"如何在 Social Stream Ninja Event Flow 和 OBS 中使用已上传、本地或云端托管的音频、图片、GIF 和视频。","If OBS refuses a local file, use the local HTTP server method above.":"如果 OBS 拒绝本地文件，请使用上方的本地 HTTP 服务器方法。","If the file is moved or renamed, Event Flow shows it as missing. Click":"如果文件被移动或重命名，Event Flow 会显示它缺失。点击","If the upload site shows a 1 GB account allowance and your library will exceed it, use the local-folder or cloud-storage option below.":"如果上传网站显示账号额度为 1 GB，且你的媒体库将超过此额度，请使用下方的本地文件夹或云存储选项。","If you do not want to run a local server, point OBS at a local Flow Actions page and use local media URLs too:":"如果不想运行本地服务器，可让 OBS 使用本地 Flow Actions 页面，同时使用本地媒体 URL：","Image":"图片","Important Notes":"重要说明","In Event Flow, select":"在 Event Flow 中选择","In the bucket's Settings, enable public access. Use the public development URL only for testing, or connect a custom domain for regular live use.":"在存储桶设置中启用公开访问。公开开发 URL 仅用于测试；常规直播请连接自定义域名。","Inspiration":"灵感","Install Python if it is not already installed.":"如果尚未安装 Python，请先安装。","Keep SSApp running while OBS uses the Local Flow Actions URL.":"OBS 使用本地 Flow Actions URL 时，保持 SSApp 运行。","Large or shared libraries":"大型或共享媒体库","Local Flow Actions URL":"本地 Flow Actions URL","Local file is missing:":"本地文件缺失：","Local media":"本地媒体","Local media URL map":"本地媒体 URL 映射","Local server is offline:":"本地服务器离线：","Low-cost S3-compatible storage with public file URLs.":"低成本的 S3 兼容存储，提供公开文件 URL。","Main navigation":"主导航","Make the bucket public, use the direct file URL, and apply a download-only rule if a browser reports a CORS error:":"将存储桶设为公开，使用直接文件 URL；如果浏览器报告 CORS 错误，请应用仅允许下载的规则：","Media Files for Event Flow":"Event Flow 媒体文件","Media Files for Event Flow - Social Stream Ninja":"Event Flow 媒体文件 - Social Stream Ninja","Media URL":"媒体 URL","Media URLs to paste into Event Flow":"要粘贴到 Event Flow 的媒体 URL","No storage bill":"无存储费用","Normal repositories block files over 100 MiB, and GitHub Pages sites have a 1 GB published-site limit. Releases allow larger assets, but they are awkward as a managed alert-media library.":"普通仓库不接受超过 100 MiB 的文件，GitHub Pages 网站的已发布站点大小上限为 1 GB。Releases 允许更大的资源，但不便用作受管理的提醒媒体库。","Nothing reaches OBS:":"OBS 没有收到内容：","OBS Browser Source":"OBS 浏览器源","OBS loads the sound, image, GIF, or video.":"OBS 加载声音、图片、GIF 或视频。","Official references:":"官方参考：","On this page":"本页内容","Open PowerShell or Command Prompt and run this command. Leave the window open while streaming.":"打开 PowerShell 或命令提示符，运行此命令。直播期间保持窗口打开。","Open an object URL in a private/incognito browser window. It should load the file directly without a login or share page.":"在隐私/无痕浏览窗口中打开对象 URL。它应直接加载文件，无需登录或经过分享页面。","Open navigation menu":"打开导航菜单","Open the Flow Actions page in OBS with the same session ID used by Event Flow.":"在 OBS 中打开 Flow Actions 页面，使用与 Event Flow 相同的会话 ID。","Open the exact media URL in a private/incognito window. It must load the file directly.":"在隐私/无痕窗口中打开准确的媒体 URL。它必须直接加载文件。","Option 1: Use the Built-in Upload":"方案 1：使用内置上传","Option 2: Keep the Library on the OBS Computer":"方案 2：将媒体库保留在 OBS 电脑上","Option 3: Host a Larger Library Online":"方案 3：在线托管更大的媒体库","Overlay Gallery":"叠加层图库","Paste that URL into an OBS Browser Source, save the flow, and test the action.":"将该 URL 粘贴到 OBS 浏览器源，保存流程并测试操作。","Paste that direct HTTPS URL into the Event Flow action.":"将该直接 HTTPS URL 粘贴到 Event Flow 操作中。","Pick the Best Route":"选择最合适的方式","Plain images and audio normally load without custom CORS settings. If a custom overlay, font, video player, or browser fetch reports a CORS error, open":"普通图片和音频通常无需自定义 CORS 设置即可加载。如果自定义叠加层、字体、视频播放器或浏览器 fetch 报告 CORS 错误，请打开","Play Audio Clip":"播放音频片段","Prefer MP3 for audio, PNG/WebP/GIF for images, and H.264/AAC MP4 for video compatibility.":"为保证兼容性，音频优先使用 MP3，图片使用 PNG/WebP/GIF，视频使用 H.264/AAC MP4。","Preview":"预览","Provider":"提供商","Public means public.":"公开就意味着任何人可访问。","R2 CORS":"R2 CORS","R2 pricing":"R2 价格","Recommended when SSApp, OBS, and the files are on the same computer.":"当 SSApp、OBS 和文件在同一台电脑上时推荐使用。","Relink":"重新关联","Reveal in Folder":"在文件夹中显示","Save the flow and keep":"保存流程，并保持","See Backblaze's":"参阅 Backblaze 的","Select":"选择","Short Answer":"简短解答","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja source folder":"Social Stream Ninja 源代码文件夹","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Standard":"标准","Standard storage currently includes 10 GB-month per month and free Internet egress. Use a custom domain for production;":"标准存储目前每月包含 10 GB-month 的存储用量和免费互联网出站流量。生产环境请使用自定义域名；","Start the Social Stream standalone app and open Event Flow.":"启动 Social Stream 独立应用并打开 Event Flow。","Start the manual local HTTP server":"手动启动本地 HTTP 服务器","Support":"支持","Supported Sites":"支持的网站","Switch theme":"切换主题","The Chrome extension cannot serve files from your disk by itself. Extension users should continue using Upload or a hosted media URL unless they also run a supported desktop companion.":"Chrome 扩展本身无法提供磁盘上的文件。除非同时运行受支持的桌面配套程序，否则扩展用户应继续使用“上传”或托管媒体 URL。","The Social Stream desktop app can play approved local files without uploading them.":"Social Stream 桌面应用可以播放获准的本地文件，无需上传。","The Upload button creates a hosted URL. It is not a local file picker for Event Flow playback.":"“上传”按钮会创建托管 URL。它不是用于 Event Flow 播放的本地文件选择器。","The extension cannot expose arbitrary files from your disk to OBS by itself. Without a supported companion bridge, use":"扩展本身无法将磁盘上的任意文件提供给 OBS。没有受支持的配套桥接程序时，请使用","The extension uses the same Event Flow format, so desktop-created flows remain compatible. Local actions store an opaque media ID rather than a Windows, macOS, or Linux path.":"扩展使用相同的 Event Flow 格式，因此桌面端创建的流程仍然兼容。本地操作保存的是不透明媒体 ID，而不是 Windows、macOS 或 Linux 路径。","The first 10 GB is currently free; storage and excess egress are paid after the included amounts.":"目前前 10 GB 免费；超过包含额度后，存储和额外出站流量需要付费。","The following manual setup remains available if you are not using SSApp's managed Local Media Library.":"如果不使用 SSApp 管理的本地媒体库，仍可采用以下手动设置。","The hosted":"托管的","The setting":"此设置","The standalone desktop app includes a Local Media Library and a loopback server that only listens on this computer. Event Flow stores a stable media ID instead of putting your disk path into the flow.":"独立桌面应用包含本地媒体库，以及仅监听本机的回环服务器。Event Flow 保存稳定的媒体 ID，而不会将磁盘路径写入流程。","URL appears in the action.":"URL 出现在操作中。","URL downloads instead of playing:":"URL 触发下载而不是播放：","Upload":"上传","Upload your media with clear folder names such as":"上传媒体时使用清晰的文件夹名称，例如","Use":"使用","Use Event Flow's test panel, then refresh the OBS Browser Source once before the real stream.":"使用 Event Flow 测试面板，然后在正式直播前刷新 OBS 浏览器源一次。","Use forward slashes and avoid spaces or special characters in folder and file names.":"使用正斜杠，并避免在文件夹和文件名中使用空格或特殊字符。","Use the generated Local Flow Actions URL.":"使用生成的本地 Flow Actions URL。","Use your own sounds, images, GIFs, and videos in OBS.":"在 OBS 中使用自己的声音、图片、GIF 和视频。","Video/Embed":"视频/嵌入","What About the Chrome Extension?":"Chrome 扩展怎么办？","Windows command":"Windows 命令","and add a read-only policy:":"并添加只读策略：","and choose its new location; existing flows keep working.":"并选择新位置；现有流程会继续工作。","and select an audio, image, GIF, or video file.":"并选择音频、图片、GIF 或视频文件。","confirm the Flow Actions URL and Event Flow use the same session ID.":"确认 Flow Actions URL 和 Event Flow 使用相同的会话 ID。","folder inside it.":"文件夹，放在其中。","for PNG, JPG, WebP, or GIF media. Use":"用于 PNG、JPG、WebP 或 GIF 媒体。使用","for video or embed URLs.":"用于视频或嵌入 URL。","in Event Flow, then copy the generated":"，在 Event Flow 中操作，然后复制生成的","into OBS.":"到 OBS 中。","is rate-limited and intended for development.":"有速率限制，且仅用于开发。","keeps the server on this computer. This simple server is for local streaming use, not public Internet hosting.":"将服务器限制在本机访问。此简易服务器用于本地直播，不用于在公共互联网上托管内容。","macOS or Linux command":"macOS 或 Linux 命令","make it public and check the CORS origin, method, and headers.":"将其设为公开，并检查 CORS 来源地址、方法和响应头。","official CORS rule reference":"官方 CORS 规则参考","open in OBS.":"在 OBS 中保持打开。","open the action in SSApp and use":"在 SSApp 中打开操作并使用","or":"或","or a normal hosted URL. If an imported flow references local media, the extension explains that the desktop app or bridge is required instead of silently failing.":"或普通托管 URL。如果导入的流程引用本地媒体，扩展会说明需要桌面应用或桥接程序，不会静默失败。","page cannot read that path.":"页面无法读取该路径。","page cannot resolve a desktop-library media ID.":"页面无法解析桌面媒体库 ID。","public R2 buckets":"公开 R2 存储桶","receives the action.":"接收操作。","replace the OBS URL with the one generated by SSApp.":"将 OBS URL 替换为 SSApp 生成的 URL。","start SSApp and copy the Local Flow Actions URL again if the port or security token changed.":"启动 SSApp；如果端口或安全令牌已变化，请重新复制本地 Flow Actions URL。","storage class.":"存储类别。","the host is sending the wrong content type or a download-only response.":"托管服务发送了错误的内容类型或仅供下载的响应。","to check the selected file.":"检查所选文件。","when you need to locate the original file.":"，用于查找原始文件。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/media-hosting-event-flow.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/media-hosting-event-flow.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/media-hosting-event-flow.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/media-hosting-event-flow.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/media-hosting-event-flow.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/media-hosting-event-flow.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/media-hosting-event-flow.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/media-hosting-event-flow.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="media-hosting-event-flow.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/media-hosting-event-flow.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/media-hosting-event-flow.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/media-hosting-event-flow.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/media-hosting-event-flow.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/media-hosting-event-flow.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/media-hosting-event-flow.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/media-hosting-event-flow.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/media-hosting-event-flow.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/media-hosting-event-flow.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero"><div class="container"><h1>Event Flow 媒体文件</h1><p>在 OBS 中使用自己的声音、图片、GIF 和视频。</p></div></section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="本页内容"><a href="#read-section-1">简短解答</a><a href="#read-section-2">选择最合适的方式</a><a href="#read-section-3">方案 1：使用内置上传</a><a href="#read-section-4">方案 2：将媒体库保留在 OBS 电脑上</a><a href="#read-section-5">Chrome 扩展怎么办？</a><a href="#read-section-6">方案 3：在线托管更大的媒体库</a><a href="#read-section-9">正式开播前</a></nav>
+<div class="guide-card answer-card">
+                <h2 id="read-section-1">简短解答</h2>
+                <p><strong>Social Stream 桌面应用可以播放获准的本地文件，无需上传。</strong> 使用 <strong>选择本地文件</strong> ，在 Event Flow 中操作，然后复制生成的 <strong>本地 Flow Actions URL</strong> 到 OBS 中。</p>
+                <p>Chrome 扩展本身无法提供磁盘上的文件。除非同时运行受支持的桌面配套程序，否则扩展用户应继续使用“上传”或托管媒体 URL。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">选择最合适的方式</h2>
+                <div class="choice-grid">
+                    <div class="choice-card">
+                        <span class="choice-label">最快</span>
+                        <strong>内置上传</strong>
+                        <p>最适合规模适中的媒体库，设置最少。</p>
+                    </div>
+                    <div class="choice-card recommended">
+                        <span class="choice-label">无存储费用</span>
+                        <strong>桌面本地媒体</strong>
+                        <p>当 SSApp、OBS 和文件在同一台电脑上时推荐使用。</p>
+                    </div>
+                    <div class="choice-card">
+                        <span class="choice-label">大型或共享媒体库</span>
+                        <strong>云对象存储</strong>
+                        <p>最适合大量媒体、备份和多台电脑使用。</p>
+                    </div>
+                </div>
+                <div class="route-grid" aria-label="Event Flow 媒体操作如何到达 OBS">
+                    <div class="route-card"><span class="route-number">1</span><strong>Event Flow</strong><p>奖励或消息触发操作。</p></div>
+                    <div class="route-card"><span class="route-number">2</span><strong>Flow Actions</strong><p><code>actions.html</code> 接收操作。</p></div>
+                    <div class="route-card"><span class="route-number">3</span><strong>媒体 URL</strong><p>OBS 加载声音、图片、GIF 或视频。</p></div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">方案 1：使用内置上传</h2>
+                <ol class="guide-steps">
+                    <li>在 Event Flow 中选择 <strong>播放音频片段</strong> 或 <strong>显示媒体叠加层</strong>.</li>
+                    <li>点击 <strong>上传</strong>，选择文件，并在打开的页面中完成上传。</li>
+                    <li>确认返回的 <code>https://fileuploads.socialstream.ninja/media/...</code> URL 出现在操作中。</li>
+                    <li>保存流程，并保持 <code>actions.html?session=YOUR_SESSION</code> 在 OBS 中保持打开。</li>
+                </ol>
+                <p>如果上传网站显示账号额度为 1 GB，且你的媒体库将超过此额度，请使用下方的本地文件夹或云存储选项。</p>
+                <figure class="guide-figure">
+                    <div class="screenshot-crop">
+                        <img src="../../docs/images/kick-channel-points-event-flow/event-flow-media-action-values.png" alt="Event Flow 的“显示媒体叠加层”属性，显示媒体 URL 字段和上传按钮">
+                    </div>
+                    <figcaption>“上传”按钮会创建托管 URL。它不是用于 Event Flow 播放的本地文件选择器。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">方案 2：将媒体库保留在 OBS 电脑上</h2>
+                <p>独立桌面应用包含本地媒体库，以及仅监听本机的回环服务器。Event Flow 保存稳定的媒体 ID，而不会将磁盘路径写入流程。</p>
+                <ol class="guide-steps">
+                    <li>启动 Social Stream 独立应用并打开 Event Flow。</li>
+                    <li>选择 <strong>播放音频片段</strong> 或 <strong>显示媒体叠加层</strong>.</li>
+                    <li>点击 <strong>选择本地文件</strong> 并选择音频、图片、GIF 或视频文件。</li>
+                    <li>确认操作显示文件可用，且本地服务器正在运行。</li>
+                    <li>点击 <strong>复制用于 OBS 的本地 Flow Actions URL</strong>.</li>
+                    <li>将该 URL 粘贴到 OBS 浏览器源，保存流程并测试操作。</li>
+                </ol>
+                <ul class="guide-list">
+                    <li>使用 <strong>预览</strong> 检查所选文件。</li>
+                    <li>如果文件被移动或重命名，Event Flow 会显示它缺失。点击 <strong>重新关联</strong> 并选择新位置；现有流程会继续工作。</li>
+                    <li>使用 <strong>在文件夹中显示</strong> ，用于查找原始文件。</li>
+                    <li>OBS 使用本地 Flow Actions URL 时，保持 SSApp 运行。</li>
+                    <li>不要分享生成的 URL。其中包含用于保护本地服务器的私密随机访问凭据。</li>
+                </ul>
+                <div class="warning-note compact-note">
+                    <p><strong>使用生成的本地 Flow Actions URL。</strong> 托管的 <code>https://socialstream.ninja/actions.html</code> 页面无法解析桌面媒体库 ID。</p>
+                </div>
+
+                <h3>高级备用方案：运行自己的本地服务器</h3>
+                <p>如果不使用 SSApp 管理的本地媒体库，仍可采用以下手动设置。</p>
+                <p>下载并解压 <a href="https://github.com/steveseguin/social_stream" target="_blank" rel="noopener">Social Stream Ninja 源代码文件夹</a>，然后创建一个 <code>user-media</code> 文件夹，放在其中。</p>
+                <pre>C:\SSN\social_stream\
+  actions.html
+  user-media\
+    audio\booty.mp3
+    images\reward.png
+    video\celebration.mp4</pre>
+
+                <h3>手动启动本地 HTTP 服务器</h3>
+                <ol class="guide-steps">
+                    <li>如果尚未安装 Python，请先安装。</li>
+                    <li>打开 PowerShell 或命令提示符，运行此命令。直播期间保持窗口打开。</li>
+                </ol>
+                <p class="code-label">Windows 命令</p>
+                <pre>py -m http.server 8765 --bind 127.0.0.1 --directory "C:\SSN\social_stream"</pre>
+                <p class="code-label">macOS 或 Linux 命令</p>
+                <pre>python3 -m http.server 8765 --bind 127.0.0.1 --directory "/path/to/social_stream"</pre>
+                <p class="code-label">用于 OBS 浏览器源的 Flow Actions URL</p>
+                <pre>http://127.0.0.1:8765/actions.html?session=YOUR_SESSION_ID</pre>
+                <p class="code-label">要粘贴到 Event Flow 的媒体 URL</p>
+                <pre>http://127.0.0.1:8765/user-media/audio/booty.mp3
+http://127.0.0.1:8765/user-media/images/reward.png
+http://127.0.0.1:8765/user-media/video/celebration.mp4</pre>
+                <div class="path-map" aria-label="本地媒体 URL 映射">
+                    <div class="path-box"><strong>OBS 浏览器源</strong><br><code>127.0.0.1:8765/actions.html</code></div>
+                    <div class="path-arrow" aria-hidden="true">&#8596;</div>
+                    <div class="path-box"><strong>本地媒体</strong><br><code>127.0.0.1:8765/user-media/...</code></div>
+                </div>
+                <p>此设置 <code>--bind 127.0.0.1</code> 将服务器限制在本机访问。此简易服务器用于本地直播，不用于在公共互联网上托管内容。</p>
+
+                <h3><code>file://</code>：可用，但更容易出问题</h3>
+                <p>如果不想运行本地服务器，可让 OBS 使用本地 Flow Actions 页面，同时使用本地媒体 URL：</p>
+                <pre>file:///C:/SSN/social_stream/actions.html?session=YOUR_SESSION_ID
+file:///C:/SSN/social_stream/user-media/audio/booty.mp3</pre>
+                <ul class="guide-list">
+                    <li>使用正斜杠，并避免在文件夹和文件名中使用空格或特殊字符。</li>
+                    <li>Flow Actions 页面和媒体都必须在本地。托管的 <code>actions.html</code> 页面无法读取该路径。</li>
+                    <li>如果 OBS 拒绝本地文件，请使用上方的本地 HTTP 服务器方法。</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">Chrome 扩展怎么办？</h2>
+                <p>扩展使用相同的 Event Flow 格式，因此桌面端创建的流程仍然兼容。本地操作保存的是不透明媒体 ID，而不是 Windows、macOS 或 Linux 路径。</p>
+                <p>扩展本身无法将磁盘上的任意文件提供给 OBS。没有受支持的配套桥接程序时，请使用 <strong>上传</strong> 或普通托管 URL。如果导入的流程引用本地媒体，扩展会说明需要桌面应用或桥接程序，不会静默失败。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">方案 3：在线托管更大的媒体库</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>提供商</th><th>适合</th><th>重要说明</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="提供商"><a href="https://developers.cloudflare.com/r2/" target="_blank" rel="noopener">Cloudflare R2</a></td>
+                            <td data-label="适合">公开提醒媒体库的首选通用方案。</td>
+                            <td data-label="重要说明">标准存储目前每月包含 10 GB-month 的存储用量和免费互联网出站流量。生产环境请使用自定义域名； <code>r2.dev</code> 有速率限制，且仅用于开发。</td>
+                        </tr>
+                        <tr>
+                            <td data-label="提供商"><a href="https://www.backblaze.com/cloud-storage/pricing" target="_blank" rel="noopener">Backblaze B2</a></td>
+                            <td data-label="适合">低成本的 S3 兼容存储，提供公开文件 URL。</td>
+                            <td data-label="重要说明">目前前 10 GB 免费；超过包含额度后，存储和额外出站流量需要付费。</td>
+                        </tr>
+                        <tr>
+                            <td data-label="提供商">Amazon S3 或其他兼容 S3 的托管服务</td>
+                            <td data-label="适合">已有云端账号和高级访问控制。</td>
+                            <td data-label="重要说明">为媒体启用公开读取，设置正确的内容类型，并在浏览器请求需要时添加只读 CORS 规则。</td>
+                        </tr>
+                        <tr>
+                            <td data-label="提供商"><a href="https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github" target="_blank" rel="noopener">GitHub</a></td>
+                            <td data-label="适合">少量小型公开文件，或偶尔下载发布资源。</td>
+                            <td data-label="重要说明">普通仓库不接受超过 100 MiB 的文件，GitHub Pages 网站的已发布站点大小上限为 1 GB。Releases 允许更大的资源，但不便用作受管理的提醒媒体库。</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="warning-note compact-note">
+                    <p><strong>公开就意味着任何人可访问。</strong> 任何持有对象 URL 的人都能访问媒体。不要上传不应共享的私密、受许可限制或个人文件。</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-7">Cloudflare R2 设置</h2>
+                <ol class="guide-steps">
+                    <li>创建 R2 存储桶，使用 <strong>标准</strong> 存储类别。</li>
+                    <li>上传媒体时使用清晰的文件夹名称，例如 <code>audio/</code>, <code>images/</code>，以及 <code>video/</code>.</li>
+                    <li>在存储桶设置中启用公开访问。公开开发 URL 仅用于测试；常规直播请连接自定义域名。</li>
+                    <li>在隐私/无痕浏览窗口中打开对象 URL。它应直接加载文件，无需登录或经过分享页面。</li>
+                    <li>将该直接 HTTPS URL 粘贴到 Event Flow 操作中。</li>
+                </ol>
+                <p>普通图片和音频通常无需自定义 CORS 设置即可加载。如果自定义叠加层、字体、视频播放器或浏览器 fetch 报告 CORS 错误，请打开 <strong>存储桶 → 设置 → CORS 策略</strong> 并添加只读策略：</p>
+                <pre>[
+  {
+    "AllowedOrigins": [
+      "https://socialstream.ninja",
+      "http://127.0.0.1:8765"
+    ],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedHeaders": ["Range"],
+    "ExposeHeaders": [
+      "Content-Length",
+      "Content-Range",
+      "Accept-Ranges"
+    ],
+    "MaxAgeSeconds": 3600
+  }
+]</pre>
+                <p>添加其他会获取文件的页面的准确来源地址。来源地址不包含路径或末尾斜杠。如果自定义域名在添加 CORS 前已有缓存，请清除此主机名的缓存。</p>
+                <p>官方参考： <a href="https://developers.cloudflare.com/r2/buckets/public-buckets/" target="_blank" rel="noopener">公开 R2 存储桶</a>, <a href="https://developers.cloudflare.com/r2/buckets/cors/" target="_blank" rel="noopener">R2 CORS</a>，以及 <a href="https://developers.cloudflare.com/r2/pricing/" target="_blank" rel="noopener">R2 价格</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-8">Backblaze B2 CORS 示例</h2>
+                <p>将存储桶设为公开，使用直接文件 URL；如果浏览器报告 CORS 错误，请应用仅允许下载的规则：</p>
+                <pre>[
+  {
+    "corsRuleName": "allowSSNMedia",
+    "allowedOrigins": ["https://socialstream.ninja"],
+    "allowedHeaders": ["range"],
+    "allowedOperations": ["b2_download_file_by_name"],
+    "exposeHeaders": [
+      "content-length",
+      "content-range",
+      "accept-ranges"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]</pre>
+                <p>参阅 Backblaze 的 <a href="https://www.backblaze.com/docs/cloud-storage-cross-origin-resource-sharing-rules" target="_blank" rel="noopener">官方 CORS 规则参考</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-9">正式开播前</h2>
+                <ol class="guide-steps">
+                    <li>在隐私/无痕窗口中打开准确的媒体 URL。它必须直接加载文件。</li>
+                    <li>使用 <strong>图片</strong> 用于 PNG、JPG、WebP 或 GIF 媒体。使用 <strong>视频/嵌入</strong> 用于视频或嵌入 URL。</li>
+                    <li>为保证兼容性，音频优先使用 MP3，图片使用 PNG/WebP/GIF，视频使用 H.264/AAC MP4。</li>
+                    <li>在 OBS 中打开 Flow Actions 页面，使用与 Event Flow 相同的会话 ID。</li>
+                    <li>使用 Event Flow 测试面板，然后在正式直播前刷新 OBS 浏览器源一次。</li>
+                </ol>
+                <ul class="guide-list">
+                    <li><strong>URL 触发下载而不是播放：</strong> 托管服务发送了错误的内容类型或仅供下载的响应。</li>
+                    <li><strong>云端文件被阻止：</strong> 将其设为公开，并检查 CORS 来源地址、方法和响应头。</li>
+                    <li><strong>本地文件缺失：</strong> 在 SSApp 中打开操作并使用 <strong>重新关联</strong>.</li>
+                    <li><strong>本地服务器离线：</strong> 启动 SSApp；如果端口或安全令牌已变化，请重新复制本地 Flow Actions URL。</li>
+                    <li><strong>托管的 Flow Actions 无法播放本地项目：</strong> 将 OBS URL 替换为 SSApp 生成的 URL。</li>
+                    <li><strong>OBS 没有收到内容：</strong> 确认 Flow Actions URL 和 Event Flow 使用相同的会话 ID。</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja。GPLv3.0 许可证。</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

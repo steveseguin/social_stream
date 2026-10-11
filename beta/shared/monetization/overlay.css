@@ -1,0 +1,192 @@
+:root {
+	font:
+		14px/1.4 system-ui,
+		-apple-system,
+		'Segoe UI',
+		sans-serif;
+	color: #f6f8f7;
+}
+* {
+	box-sizing: border-box;
+}
+html,
+body {
+	margin: 0;
+	background: transparent;
+	overflow: hidden;
+	width: 100%;
+	height: 100%;
+}
+[hidden] {
+	display: none !important;
+}
+body.demo {
+	background: repeating-conic-gradient(#18222c 0% 25%, #1e2933 0% 50%) 0 0/32px 32px;
+}
+#support-card {
+	position: absolute;
+	right: 22px;
+	bottom: 22px;
+	width: 380px;
+	max-width: calc(100vw - 32px);
+	padding: 20px;
+	border: 1px solid #637c7277;
+	border-radius: 20px;
+	background: linear-gradient(135deg, #152b28f5, #111c26fa);
+	box-shadow: 0 8px 32px #0004;
+}
+body.tl #support-card {
+	top: 22px;
+	left: 22px;
+	bottom: auto;
+	right: auto;
+}
+body.ninja #support-card {
+	background: linear-gradient(135deg, #28213bf5, #151d29fa);
+	border-color: #b1a2d466;
+}
+.eyebrow {
+	font-size: 11px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	font-weight: 750;
+	color: #d5f7a6;
+	margin-bottom: 13px;
+}
+.ninja .eyebrow {
+	color: #d9c6ff;
+}
+.content {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}
+.story {
+	min-width: 0;
+	flex: 1;
+}
+h1 {
+	font-size: 22px;
+	line-height: 1.18;
+	letter-spacing: -0.03em;
+	margin: 0 0 9px;
+	overflow-wrap: anywhere;
+}
+p {
+	margin: 0 0 10px;
+	color: #ccdcd8;
+	font-size: 13px;
+	overflow-wrap: anywhere;
+}
+a {
+	color: #e6f9bc;
+	font-size: 11px;
+	overflow-wrap: anywhere;
+	text-decoration: none;
+}
+.ninja a {
+	color: #e3d5ff;
+}
+#qr {
+	background: white;
+	padding: 16px;
+	border-radius: 10px;
+	flex: none;
+}
+#qr img,
+#qr canvas {
+	display: block;
+	width: 128px;
+	height: 128px;
+	image-rendering: pixelated;
+}
+#item-image {
+	width: 64px;
+	height: 64px;
+	object-fit: contain;
+	background: #fff;
+	border-radius: 10px;
+	margin-bottom: 10px;
+}
+#footer {
+	border-top: 1px solid #ffffff18;
+	margin: 15px 0 0;
+	padding-top: 11px;
+	font-size: 11px;
+	color: #afc1bb;
+}
+#overlay-status {
+	position: absolute;
+	bottom: 8px;
+	left: 8px;
+	font-size: 12px;
+	color: #d3dfeb;
+	background: #152433e6;
+	border-radius: 6px;
+	padding: 6px 10px;
+	max-width: 90%;
+}
+body.demo #overlay-status {
+	top: 12px;
+	bottom: auto;
+}
+@media (max-width: 420px) {
+	#support-card {
+		padding: 16px;
+		right: 16px;
+		bottom: 16px;
+	}
+	h1 {
+		font-size: 19px;
+	}
+	.content {
+		gap: 10px;
+	}
+	#qr {
+		padding: 16px;
+	}
+	#qr img,
+	#qr canvas {
+		width: 128px;
+		height: 128px;
+	}
+}
+
+body.throne #support-card {
+	background: linear-gradient(135deg, #342318f5, #211b2cfa);
+	border-color: #efba7966;
+}
+.throne .eyebrow {
+	color: #ffd69e;
+}
+.throne a {
+	color: #ffe3b8;
+}
+
+body.ebay #support-card {
+	background: linear-gradient(135deg, #182d45f5, #151c2afa);
+	border-color: #8fb5f066;
+}
+.ebay .eyebrow,
+.ebay a {
+	color: #b8d8ff;
+}
+
+#support-card { transform: scale(var(--monetization-fit-scale, var(--monetization-scale, 1))); transform-origin: bottom right; }
+body.tl #support-card { transform-origin: top left; }
+body.compact #support-card { padding: 12px; border-radius: 10px; }
+body.compact h1 { font-size: 18px; }
+body.compact #item-image { width: 48px; height: 48px; }
+body.card-view #item-image { display: none; }
+#support-link:focus { outline: 2px solid currentColor; outline-offset: 3px; }
+
+/* Bound long content while keeping the complete text available to assistive technology. */
+#title, #detail, #support-link, #footer {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+#title { -webkit-line-clamp: 3; }
+#detail { -webkit-line-clamp: 4; }
+#support-link { -webkit-line-clamp: 2; }
+#footer { -webkit-line-clamp: 3; }

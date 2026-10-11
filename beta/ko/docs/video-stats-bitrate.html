@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/video-stats-bitrate.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/video-stats-bitrate.html">
+    <meta property="og:title" content="비디오 통계 및 비트레이트 가이드 - Social Stream Ninja">
+    <meta property="og:description" content="비디오 서버 폴링을 설정하고 Social Stream Ninja 도크에 실시간 비트레이트 메타데이터를 표시하세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/video-stats-bitrate.html">
+    <meta name="twitter:title" content="비디오 통계 및 비트레이트 가이드 - Social Stream Ninja">
+    <meta name="twitter:description" content="비디오 서버 폴링을 설정하고 Social Stream Ninja 도크에 실시간 비트레이트 메타데이터를 표시하세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>비디오 통계 및 비트레이트 가이드 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="비디오 서버 폴링을 설정하고 Social Stream Ninja 도크에 실시간 비트레이트 메타데이터를 표시하세요.">
+    <style>
+        .quick-note { background: rgba(26,115,232,.08); border: 1px solid var(--border-color); padding: 1.2rem 1.4rem; margin: 1.5rem 0; }
+        .warning-note { background: rgba(251,188,5,.14);}
+        .dark-mode .quick-note { background: rgba(26,115,232,.18); }
+        .field-table { width: 100%; border-collapse: collapse; }
+        .field-table th, .field-table td { border: 1px solid var(--border-color); padding: .65rem; text-align: left; vertical-align: top; }
+        pre { overflow-x: auto; }
+
+        @media (max-width: 700px) {
+            .field-table, .steps-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/video-stats-bitrate.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", enable":", 활성화하세요:",", then open or refresh the Dock link.":"을 켠 뒤 도크 링크를 열거나 새로고침하세요.",", with":", 포함:",". Fields may be top-level or inside":"입니다. 필드는 최상위 또는 다음 안에 있을 수 있습니다:",". It also reads stream time and optional video/audio codec metadata.":"로 계산합니다. 스트림 시간과 선택적인 비디오/오디오 코덱 메타데이터도 읽습니다.",". SSN automatically uses it when the response contains only one publisher.":"입니다. 응답에 송출자가 하나뿐이면 SSN이 자동으로 선택합니다.","Add authorization if required. The SRT API key field is sent as the complete":"필요하면 인증을 추가하세요. SRT API 키 입력란은 전체","Advanced: protocol, formats, and units":"고급: 프로토콜, 형식, 단위","Belabox Cloud:":"Belabox Cloud:","Bitrate is Kbps, viewers is a count, and duration is seconds.":"비트레이트는 Kbps, 시청자는 인원수, 지속 시간은 초입니다.","Boolean;":"불리언;","Choose a polling interval from 1 to 60 seconds; the default is five seconds.":"폴링 간격을 1–60초로 선택하세요. 기본값은 5초입니다.","Commands & API":"명령 및 API","Compatibility":"호환성","Configure video server polling and show live bitrate metadata in the Social Stream Ninja Dock.":"비디오 서버 폴링을 설정하고 Social Stream Ninja 도크에 실시간 비트레이트 메타데이터를 표시하세요.","Confirm both video stats options are enabled in SSN.":"SSN에서 두 비디오 통계 옵션이 모두 켜져 있는지 확인하세요.","Confirm the endpoint responds within five seconds and the source type and stream identifiers match.":"엔드포인트가 5초 안에 응답하고 소스 유형과 스트림 식별자가 일치하는지 확인하세요.","Download":"다운로드","Enable the compatible server's HTTP stats endpoint and confirm the computer running SSN can open its URL.":"호환 서버의 HTTP 통계 엔드포인트를 켜고 SSN을 실행하는 컴퓨터에서 해당 URL을 열 수 있는지 확인하세요.","Event Reference":"이벤트 참고 문서","Features":"기능","Field":"필드","For NGINX RTMP or Node Media Server, enter the application and stream key/name, such as":"NGINX RTMP 또는 Node Media Server에서는 애플리케이션과 스트림 키/이름을 입력하세요. 예:","For SRT or Belabox, enter the exact publisher ID, such as":"SRT 또는 Belabox에서는 정확한 송출자 ID를 입력하세요. 예:","Global settings":"전역 설정","Guides":"가이드","Hire":"작업 의뢰","Home":"홈","How to use it":"사용 방법","If nothing appears":"아무것도 나타나지 않을 때","Important:":"중요:","In Dock options, enable":"도크 옵션에서 활성화할 항목:","In SSN":"SSN에서","Inspiration":"아이디어","JSON":"JSON","Kbps, whole number":"Kbps, 정수","Loss/drop fields":"손실/드롭 필드","Main navigation":"기본 탐색 메뉴","Mbps":"Mbps","Milliseconds":"밀리초","NGINX RTMP":"NGINX RTMP","NGINX RTMP:":"NGINX RTMP:","Node Media Server":"Node Media Server","Node Media Server:":"Node Media Server:","Normalized SSN event":"정규화된 SSN 이벤트","OBS can send video to a compatible server, but OBS WebSocket and SSN browser sources do not provide this data.":"OBS는 호환 서버로 영상을 보낼 수 있지만 OBS WebSocket과 SSN 브라우저 소스는 이 데이터를 제공하지 않습니다.","OBS is not a stats source:":"OBS는 통계 소스가 아닙니다:","On this page":"이 페이지에서","Open navigation menu":"탐색 메뉴 열기","Overlay Gallery":"오버레이 갤러리","Packet counts or bytes":"패킷 수 또는 바이트","Resources":"자료","SRT Live Server / SLS and Belabox Cloud":"SRT Live Server / SLS 및 Belabox Cloud","SRT Live Server / SLS:":"SRT Live Server / SLS:","SSN also normalizes available latency, buffer, packet-loss, uptime, codec, and viewer data into a":"SSN은 사용 가능한 지연 시간, 버퍼, 패킷 손실, 가동 시간, 코덱, 시청자 데이터도 다음으로 정규화합니다:","SSN does not read bitrate from OBS or a streaming platform automatically. It polls the stats API of the video server receiving your stream.":"SSN은 OBS나 스트리밍 플랫폼에서 비트레이트를 자동으로 읽지 않습니다. 스트림을 받는 비디오 서버의 통계 API를 폴링합니다.","SSN performs an HTTP or HTTPS":"SSN은 HTTP 또는 HTTPS로 다음 요청을 보냅니다:","SSN requests":"SSN이 요청하는 대상:","Seconds":"초","Select the source type and enter the stats URL.":"소스 유형을 선택하고 통계 URL을 입력하세요.","Show bitrate metadata if available; top-right":"비트레이트 메타데이터가 있으면 오른쪽 위에 표시","Show the incoming stream bitrate in the top-right of the Social Stream Ninja Dock.":"Social Stream Ninja 도크 오른쪽 위에 수신 스트림 비트레이트를 표시하세요.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Start publishing video. The bitrate appears after a valid online response.":"비디오 송출을 시작하세요. 유효한 온라인 응답을 받으면 비트레이트가 표시됩니다.","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","The Dock accepts":"도크가 받는 값:","The URL must return NGINX RTMP status XML. SSN matches the configured application and stream. It reads":"URL은 NGINX RTMP 상태 XML을 반환해야 합니다. SSN은 설정한 애플리케이션과 스트림을 일치시킵니다. 읽는 값:","The readout disappears when the stream is offline, bitrate is missing or zero, or no fresh stats arrive for about 130 seconds.":"스트림이 오프라인이거나 비트레이트가 없거나 0인 경우, 또는 약 130초 동안 새 통계가 도착하지 않으면 표시가 사라집니다.","This gives a host or producer a small, live bitrate readout in the Dock. It is useful when OBS, a mobile encoder, or another sender publishes to your own relay or ingest server.":"진행자나 제작진이 도크에서 작은 실시간 비트레이트 표시를 볼 수 있습니다. OBS, 모바일 인코더 등의 송출기가 자체 릴레이 또는 수신 서버로 송출할 때 유용합니다.","Unit/type":"단위/유형","Video Stats and Bitrate":"비디오 통계와 비트레이트","Video Stats and Bitrate Guide - Social Stream Ninja":"비디오 통계 및 비트레이트 가이드 - Social Stream Ninja","Video stats polling":"비디오 통계 폴링","What it is for":"용도","XML from the NGINX RTMP status module.":"NGINX RTMP 상태 모듈의 XML.","and":"그리고","as bytes per second and divides by 1024 for":"를 초당 바이트로 읽고 1024로 나누어 다음 값으로 사용합니다:","as fallbacks. Values below 1000 display as rounded Kbps; larger values display as Mbps rounded to one decimal. The stats URL, stream key, and credentials are never sent to overlays.":"를 대체 값으로 사용합니다. 1000 미만은 반올림한 Kbps로, 그 이상은 소수점 한 자리로 반올림한 Mbps로 표시됩니다. 통계 URL, 스트림 키, 인증 정보는 오버레이에 전송되지 않습니다.","at the configured interval with caching disabled and a five-second timeout.":"을 설정한 간격으로 보내며 캐시를 사용하지 않고 시간 제한은 5초입니다.","endpoint containing a":"엔드포인트에 포함된","header. Node Media Server uses the username/password as HTTP Basic authentication.":"헤더로 전송됩니다. Node Media Server는 사용자 이름/비밀번호를 HTTP 기본 인증에 사용합니다.","hides the Dock value":"이면 도크 값이 숨겨집니다","is Kbps; RTT and receive buffer are milliseconds; receive rate and bandwidth are Mbps; uptime is seconds; loss/drop values are packet counts or bytes.":"는 Kbps입니다. RTT와 수신 버퍼는 밀리초, 수신 속도와 대역폭은 Mbps, 가동 시간은 초, 손실/드롭 값은 패킷 수 또는 바이트입니다.","its JSON stream API, with optional HTTP Basic authentication.":"JSON 스트림 API이며 선택적으로 HTTP 기본 인증을 사용합니다.","its SRT-style JSON receiver/relay stats response.":"SRT 형식 JSON 수신기/릴레이 통계 응답.","means the computer running SSN. Use the server's LAN address when it is another device.":"는 SSN을 실행하는 컴퓨터를 뜻합니다. 서버가 다른 기기라면 해당 서버의 LAN 주소를 사용하세요.","metadata event. The standard Dock readout shows only bitrate.":"메타데이터 이벤트입니다. 기본 도크 표시는 비트레이트만 보여 줍니다.","object.":"객체입니다.","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja. 모든 권리 보유."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/video-stats-bitrate.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/video-stats-bitrate.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/video-stats-bitrate.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/video-stats-bitrate.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/video-stats-bitrate.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/video-stats-bitrate.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/video-stats-bitrate.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/video-stats-bitrate.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/video-stats-bitrate.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/video-stats-bitrate.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/video-stats-bitrate.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/video-stats-bitrate.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="video-stats-bitrate.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/video-stats-bitrate.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/video-stats-bitrate.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/video-stats-bitrate.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/video-stats-bitrate.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/video-stats-bitrate.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <main>
+        <section class="page-hero"><div class="container"><h1>비디오 통계와 비트레이트</h1><p>Social Stream Ninja 도크 오른쪽 위에 수신 스트림 비트레이트를 표시하세요.</p></div></section>
+        <section class="guide-content"><div class="container">
+            <div class="quick-note"><strong>중요:</strong> SSN은 OBS나 스트리밍 플랫폼에서 비트레이트를 자동으로 읽지 않습니다. 스트림을 받는 비디오 서버의 통계 API를 폴링합니다.</div>
+
+            <nav class="guide-jump-links" aria-label="이 페이지에서"><a href="#read-section-1">용도</a><a href="#read-section-2">호환성</a><a href="#read-section-3">사용 방법</a><a href="#read-section-4">아무것도 나타나지 않을 때</a><a href="#read-section-5">고급: 프로토콜, 형식, 단위</a></nav>
+<div class="guide-card"><h2 id="read-section-1">용도</h2>
+                <p>진행자나 제작진이 도크에서 작은 실시간 비트레이트 표시를 볼 수 있습니다. OBS, 모바일 인코더 등의 송출기가 자체 릴레이 또는 수신 서버로 송출할 때 유용합니다.</p>
+                <p>SSN은 사용 가능한 지연 시간, 버퍼, 패킷 손실, 가동 시간, 코덱, 시청자 데이터도 다음으로 정규화합니다: <code>video_stats</code> 메타데이터 이벤트입니다. 기본 도크 표시는 비트레이트만 보여 줍니다.</p>
+            </div>
+
+            <div class="guide-card"><h2 id="read-section-2">호환성</h2><ul class="guide-list">
+                <li><strong>SRT Live Server / SLS:</strong> JSON <code>/stats</code> 엔드포인트에 포함된 <code>publishers</code> 객체입니다.</li>
+                <li><strong>Belabox Cloud:</strong> SRT 형식 JSON 수신기/릴레이 통계 응답.</li>
+                <li><strong>NGINX RTMP:</strong> NGINX RTMP 상태 모듈의 XML.</li>
+                <li><strong>Node Media Server:</strong> JSON 스트림 API이며 선택적으로 HTTP 기본 인증을 사용합니다.</li>
+            </ul><div class="quick-note warning-note"><strong>OBS는 통계 소스가 아닙니다:</strong> OBS는 호환 서버로 영상을 보낼 수 있지만 OBS WebSocket과 SSN 브라우저 소스는 이 데이터를 제공하지 않습니다.</div></div>
+
+            <div class="guide-card"><h2 id="read-section-3">사용 방법</h2><ol class="guide-steps">
+                <li>호환 서버의 HTTP 통계 엔드포인트를 켜고 SSN을 실행하는 컴퓨터에서 해당 URL을 열 수 있는지 확인하세요.</li>
+                <li>SSN에서 <strong>전역 설정</strong>, 활성화하세요: <strong>비디오 통계 폴링</strong>.</li>
+                <li>소스 유형을 선택하고 통계 URL을 입력하세요.</li>
+                <li>SRT 또는 Belabox에서는 정확한 송출자 ID를 입력하세요. 예: <code>publish/live/feed1</code>입니다. 응답에 송출자가 하나뿐이면 SSN이 자동으로 선택합니다.</li>
+                <li>NGINX RTMP 또는 Node Media Server에서는 애플리케이션과 스트림 키/이름을 입력하세요. 예: <code>live</code> 그리고 <code>feed1</code>.</li>
+                <li>필요하면 인증을 추가하세요. SRT API 키 입력란은 전체 <code>Authorization</code> 헤더로 전송됩니다. Node Media Server는 사용자 이름/비밀번호를 HTTP 기본 인증에 사용합니다.</li>
+                <li>폴링 간격을 1–60초로 선택하세요. 기본값은 5초입니다.</li>
+                <li>도크 옵션에서 활성화할 항목: <strong>비트레이트 메타데이터가 있으면 오른쪽 위에 표시</strong>을 켠 뒤 도크 링크를 열거나 새로고침하세요.</li>
+                <li>비디오 송출을 시작하세요. 유효한 온라인 응답을 받으면 비트레이트가 표시됩니다.</li>
+            </ol></div>
+
+            <div class="guide-card"><h2 id="read-section-4">아무것도 나타나지 않을 때</h2><ul class="guide-list">
+                <li>SSN에서 두 비디오 통계 옵션이 모두 켜져 있는지 확인하세요.</li>
+                <li>엔드포인트가 5초 안에 응답하고 소스 유형과 스트림 식별자가 일치하는지 확인하세요.</li>
+                <li><code>127.0.0.1</code> 는 SSN을 실행하는 컴퓨터를 뜻합니다. 서버가 다른 기기라면 해당 서버의 LAN 주소를 사용하세요.</li>
+                <li>스트림이 오프라인이거나 비트레이트가 없거나 0인 경우, 또는 약 130초 동안 새 통계가 도착하지 않으면 표시가 사라집니다.</li>
+            </ul></div>
+
+            <div class="guide-card"><h2 id="read-section-5">고급: 프로토콜, 형식, 단위</h2>
+                <p>SSN은 HTTP 또는 HTTPS로 다음 요청을 보냅니다: <code>GET</code> 을 설정한 간격으로 보내며 캐시를 사용하지 않고 시간 제한은 5초입니다.</p>
+                <h3>SRT Live Server / SLS 및 Belabox Cloud</h3>
+                <pre><code>{
+  "publishers": {
+    "publish/live/feed1": {
+      "bitrate": 4500, "rtt": 32.5, "msRcvBuf": 120,
+      "mbpsRecvRate": 4.5, "mbpsBandwidth": 12.8,
+      "pktRcvDrop": 2, "pktRcvLoss": 1,
+      "bytesRcvDrop": 2632, "bytesRcvLoss": 1316, "uptime": 3600
+    }
+  }
+}</code></pre>
+                <p><code>bitrate</code> 는 Kbps입니다. RTT와 수신 버퍼는 밀리초, 수신 속도와 대역폭은 Mbps, 가동 시간은 초, 손실/드롭 값은 패킷 수 또는 바이트입니다.</p>
+                <h3>NGINX RTMP</h3>
+                <p>URL은 NGINX RTMP 상태 XML을 반환해야 합니다. SSN은 설정한 애플리케이션과 스트림을 일치시킵니다. 읽는 값: <code>bw_video</code> 를 초당 바이트로 읽고 1024로 나누어 다음 값으로 사용합니다: <code>bitrateKbps</code>로 계산합니다. 스트림 시간과 선택적인 비디오/오디오 코덱 메타데이터도 읽습니다.</p>
+                <h3>Node Media Server</h3>
+                <p>SSN이 요청하는 대상: <code>STATS_URL/APPLICATION/STREAM_NAME</code>입니다. 필드는 최상위 또는 다음 안에 있을 수 있습니다: <code>data</code>.</p>
+                <pre><code>{ "data": { "isLive": true, "bitrate": 4500, "viewers": 3, "duration": 3600 } }</code></pre>
+                <p>비트레이트는 Kbps, 시청자는 인원수, 지속 시간은 초입니다.</p>
+                <h3>정규화된 SSN 이벤트</h3>
+                <pre><code>{
+  "type": "generic",
+  "event": "video_stats",
+  "meta": {
+    "provider": "srt-live-server", "source": "srt-live-server",
+    "label": "SRT", "online": true,
+    "updatedAt": "2026-07-13T14:45:00.000Z",
+    "bitrateKbps": 4500, "rttMs": 32.5, "bufferMs": 120,
+    "summary": "4500 Kbps, 33 ms, 120 ms"
+  }
+}</code></pre>
+                <table class="field-table"><thead><tr><th>필드</th><th>단위/유형</th></tr></thead><tbody>
+                    <tr><td><code>bitrateKbps</code></td><td>Kbps, 정수</td></tr>
+                    <tr><td><code>rttMs</code> / <code>bufferMs</code></td><td>밀리초</td></tr>
+                    <tr><td><code>recvRateMbps</code> / <code>bandwidthMbps</code></td><td>Mbps</td></tr>
+                    <tr><td>손실/드롭 필드</td><td>패킷 수 또는 바이트</td></tr>
+                    <tr><td><code>uptimeSeconds</code> / <code>durationSeconds</code></td><td>초</td></tr>
+                    <tr><td><code>online</code></td><td>불리언; <code>false</code> 이면 도크 값이 숨겨집니다</td></tr>
+                </tbody></table>
+                <p>도크가 받는 값: <code>meta.bitrateKbps</code>, 포함: <code>meta.bitrate</code> 그리고 <code>meta.kbps</code> 를 대체 값으로 사용합니다. 1000 미만은 반올림한 Kbps로, 그 이상은 소수점 한 자리로 반올림한 Mbps로 표시됩니다. 통계 URL, 스트림 키, 인증 정보는 오버레이에 전송되지 않습니다.</p>
+            </div>
+        </div></section>
+    </main>
+    <footer><div class="container"><div class="footer-content"><div class="footer-logo"><img src="../../media/logo.png" alt="Social Stream Ninja 로고"><span>Social Stream Ninja</span></div><div class="footer-links"><div class="footer-section"><h4>자료</h4><ul><li><a href="guides.html">가이드</a></li><li><a href="event-reference.html">이벤트 참고 문서</a></li><li><a href="support.html">지원</a></li></ul></div></div></div><div class="footer-bottom"><p>© 2026 Social Stream Ninja. 모든 권리 보유.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

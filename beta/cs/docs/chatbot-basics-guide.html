@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/docs/chatbot-basics-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/docs/chatbot-basics-guide.html">
+    <meta property="og:title" content="Nastavení a používání AI chatbota — Social Stream Ninja">
+    <meta property="og:description" content="Nastavte a používejte AI chatbota Social Stream Ninja, připojte poskytovatele AI, bezpečně testujte, řiďte živé odpovědi a řešte chybějící reakce.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/docs/chatbot-basics-guide.html">
+    <meta name="twitter:title" content="Nastavení a používání AI chatbota — Social Stream Ninja">
+    <meta name="twitter:description" content="Nastavte a používejte AI chatbota Social Stream Ninja, připojte poskytovatele AI, bezpečně testujte, řiďte živé odpovědi a řešte chybějící reakce.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nastavení a používání AI chatbota — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Nastavte a používejte AI chatbota Social Stream Ninja, připojte poskytovatele AI, bezpečně testujte, řiďte živé odpovědi a řešte chybějící reakce.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/chatbot-basics-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"(default 120000)":"(výchozí: 120000)","(default 500)":"(výchozí: 500)","(defaults 4000 and 30000)":"(výchozí: 4000 a 30000)","(milliseconds, so 10 seconds)":"(milisekundy, tedy 10 sekund)","(or":"(nebo",") and fill in the boxes it shows.":") a vyplňte zobrazená pole.","), not the featured chat overlay. The overlay options in settings cover the common ones.":"), nikoli překryv zvýrazněného chatu. Nastavení překryvu pokrývá běžné možnosti.",", paste the whole key, enter a model your project can use, and click":", vložte celý klíč, zadejte model povolený pro projekt a klikněte na",", then":", potom",", type a message in the real YouTube or Twitch chat. Check it shows up in the Dock.":", napište zprávu do skutečného chatu YouTube nebo Twitch. Ověřte zobrazení v Docku.",". A real text reply should appear under the button.":". Pod tlačítkem se má objevit skutečná textová odpověď.",". Don't use this for Ollama.":". Pro Ollama tuto možnost nepoužívejte.",". Follow its model download steps.":". Postupujte podle kroků ke stažení modelu.",". Full provider list:":". Úplný seznam poskytovatelů:",". If the voice never starts,":". Pokud hlas nezačne,",". Not an Admin key.":". Nikoli administrátorský klíč.",". The usual address is":". Obvyklá adresa je","A chat source that supports sending, logged in and allowed to post, still open, with host chat not disabled.":"Zdroj chatu podporující odesílání, otevřený, přihlášený a oprávněný psát, s povoleným chatem hostitele.","A paid service, like OpenAI or Gemini":"Placenou službu, například OpenAI nebo Gemini","A short, plain name viewers can type.":"Krátké a jednoduché jméno, které diváci snadno napíšou.","AI Chat Bot Setup and Use - Social Stream Ninja":"Nastavení a používání AI chatbota — Social Stream Ninja","AI Integration in Commands & API":"Integrace AI v příkazech a API","AI Modes Guide":"Průvodce režimy AI","Add a word if the bot shouldn't consider every message.":"Přidejte slovo, pokud bot nemá posuzovat každou zprávu.","Add to the link":"Přidejte do odkazu","Adding credit won't fix a 401.":"Doplnění kreditu chybu 401 nevyřeší.","Additional Bot Instructions":"Další pokyny pro bota (Additional Bot Instructions)","Blank":"Prázdné","Bot replies ONLY go to the bot overlay page":"Odpovědi bota jdou POUZE na stránku překryvu bota","Chat Bot - Primary":"Chat Bot - Primary","Chat Bots and AI services → Configure LLM Service Provider":"Chatboti a AI služby → Nastavit poskytovatele LLM","Chat isn't being captured. Check Social Stream is on, the chat window is open and logged in, the right live chat is open, and your source filters.":"Chat se nezachytává. Ověřte zapnutí Social Stream, otevřené a přihlášené okno chatu, správný živý chat a filtry zdrojů.","ChatGPT API":"ChatGPT API","Check API billing and budget (separate from a ChatGPT subscription). Slow down or wait.":"Zkontrolujte účtování a rozpočet API (oddělené od předplatného ChatGPT). Zpomalte nebo počkejte.","Check it's a normal key in the right project with model requests allowed. If unsure, make a new key and replace the saved one.":"Ověřte běžný klíč správného projektu s povolenými požadavky na modely. Při nejistotě vytvořte nový a nahraďte uložený.","Clear bot overlay now":"Vymazat překryv bota nyní (Clear bot overlay now)","Clear it from the API, and custom styling":"Vymazání přes API a vlastní vzhled","Clear it right now":"Vymazat nyní","Click":"Klikněte na","Commands & API":"Příkazy a API","Configure LLM section with Ollama selected, local endpoint and model fields filled in, and the provider test showing Connected":"Sekce Configure LLM s vybranou Ollama, vyplněným místním koncovým bodem a modelem a testem poskytovatele ve stavu Connected","Connected":"Připojeno (Connected)","Connected means the AI answered. It doesn't turn the bot on.":"Připojeno znamená, že AI odpověděla. Bota to nezapíná.","Connected, but the viewer's message isn't in the Dock":"Připojeno, ale zpráva diváka není v Docku","Copy the status, code, missing scope, and Request ID shown in Social Stream. Then send the in-app diagnostic report soon after. It leaves out API keys and prompts.":"Zkopírujte stav, kód, chybějící oprávnění a Request ID ze Social Stream. Potom brzy odešlete diagnostickou zprávu z aplikace. Klíče API a zadání vynechává.","Credit and permissions are separate. See OpenAI's":"Kredit a oprávnění jsou oddělené. Viz","Custom API":"Custom API","Custom CSS on the normal":"Vlastní CSS u běžného odkazu","Customize bot name":"Vlastní jméno bota (Customize bot name)","Disable the host chat and block functions":"Vypnout chat hostitele a blokovací funkce","Do not screen out any of the bot's replies":"Nefiltrovat žádné odpovědi bota (Do not screen out any of the bot's replies)","Don't test from the Dock.":"Netestujte z Docku.","Download":"Stáhnout","Enable the LLM AI chat bot":"Zapnout AI chatbota LLM (Enable the LLM AI chat bot)","Error":"Chyba","Features":"Funkce","Find the last thing that worked, then check the next row.":"Najděte poslední funkční krok a pak zkontrolujte další řádek.","First test":"První test","Fix problems":"Řešení problémů","From a":"Z","From that account, send:":"Z tohoto účtu pošlete:","Give up waiting for a stuck voice":"Přestat čekat na zaseknutý hlas","Guides":"Návody","Hide after TTS, autohide, or a fixed time":"Skrýt po TTS, automaticky nebo po pevné době","Hide each reply after a set time":"Skrýt každou odpověď po určené době","Hide it when the voice finishes":"Skrýt po skončení řeči","Hide longer replies later, shorter ones sooner":"Dlouhé odpovědi skrýt později, krátké dříve","Hide old replies":"Skrýt staré odpovědi","Hire":"Najmout odborníka","Home":"Domů","I use":"Používám","I use…":"Používám…","I want to":"Chci","I want to…":"Chci…","If you set a trigger word, the message must contain it.":"Pokud nastavíte spouštěcí slovo, zpráva jej musí obsahovat.","If your browser auto-translates the OpenAI site and the key settings act strangely, switch to the original English page. This helped one user, but isn't a known cause of 401 errors.":"Pokud prohlížeč automaticky překládá web OpenAI a nastavení klíčů se chová zvláštně, přepněte na původní anglickou stránku. Jednomu uživateli to pomohlo, ale nejde o známou příčinu chyb 401.","If your key and project look right, give OpenAI support the Request ID and time.":"Pokud klíč a projekt vypadají správně, předejte podpoře OpenAI Request ID a čas.","In Social Stream settings, open":"V nastavení Social Stream otevřete","In Social Stream, pick":"V Social Stream vyberte","Inspiration":"Inspirace","It answers one message at a time by default. When posting into chat, it also waits 5 seconds per source.":"Standardně odpovídá na jednu zprávu najednou. Při psaní do chatu také čeká 5 sekund pro každý zdroj.","It skips its own messages, empty messages, and messages too close to its last reply.":"Vynechává vlastní zprávy, prázdné zprávy a zprávy příliš blízko poslední odpovědi.","It's just added to the start of the reply. Replies post from the account you're logged in with, unless you set up account roles in the standalone app. For a separate Twitch bot account, see the":"Pouze se přidá na začátek odpovědi. Odpovědi se posílají z přihlášeného účtu, pokud v samostatné aplikaci nenastavíte role účtů. Pro samostatný účet bota Twitch viz","Keep":"Ponechte","Keep low unless your AI can handle more.":"Ponechte nízkou hodnotu, pokud AI nezvládne více.","Keep on while the bot should watch chat.":"Nechte zapnuté, dokud má bot sledovat chat.","LM Studio, llama.cpp, vLLM, or similar":"LM Studio, llama.cpp, vLLM a podobné","Later":"Později","Let an AI answer your viewers in chat, on screen, or out loud.":"Nechte AI odpovídat divákům v chatu, na obrazovce nebo nahlas.","List of words to trigger bot":"Seznam slov spouštějících bota (List of words to trigger bot)","Local Gemma":"Místní Gemma","Local Qwen":"Místní Qwen","Look for a missing character or extra space. Check it wasn't deleted, it's in the right project, and Social Stream isn't using an old saved key.":"Hledejte chybějící znak nebo nadbytečnou mezeru. Ověřte, že klíč nebyl smazán, patří správnému projektu a Social Stream nepoužívá starý uložený klíč.","Main navigation":"Hlavní navigace","Make a normal project API key on the":"Vytvořte běžný projektový klíč API na","Make sure it's in the project you want billed, and it's allowed to make model requests.":"Ověřte, že je v projektu, kterému chcete účtovat náklady, a smí posílat požadavky modelům.","Max parallel bot replies":"Maximální souběžné odpovědi bota (Max parallel bot replies)","Message is in the Dock, but no reply on the overlay":"Zpráva je v Docku, ale překryv nemá odpověď","Messages typed in the Dock or host chat can be skipped on purpose, so the bot doesn't reply to itself.":"Zprávy psané v Docku nebo chatu hostitele mohou být záměrně vynechány, aby bot neodpovídal sám sobě.","Moderators-only mode skips everyone else.":"Režim pouze pro moderátory ostatní vynechává.","Need Ollama? Get it from the":"Potřebujete Ollama? Stáhněte ji ze","Never paste your key":"Nikdy nevkládejte klíč","Nothing yet, and want it to run in the browser":"Zatím nic, chci běh v prohlížeči","Off":"Vypnuto","Ollama (Native Local API)":"Ollama (nativní místní API)","Ollama download page":"stránky pro stažení Ollama","Ollama keep-alive set to 0?":"Keep-alive Ollama nastaveno na 0?","Ollama on my computer":"Ollama na mém počítači","On":"Zapnuto (On)","On this page":"Na této stránce","Once it works, turn":"Až to funguje, znovu vypněte","Only if you want that.":"Pouze pokud to chcete.","Only the first test gets a reply":"Odpověď dostane jen první test","Open":"Otevřít","Open navigation menu":"Otevřít navigační nabídku","Open the":"Otevřete","OpenAI API keys page":"stránce klíčů API OpenAI","OpenAI error like":"Chyba OpenAI jako","OpenAI key errors":"Chyby klíče OpenAI","Or send":"Nebo pošlete","Other AI bot pages":"Další stránky AI botů","Other AI pages":"Další stránky AI","Out of quota, or too many requests.":"Vyčerpaná kvóta nebo příliš mnoho požadavků.","Overlay Gallery":"Galerie překryvů","Overlay Page and TTS for Chat Bot":"Stránka překryvu a TTS chatbota","Overlay-only setting":"Nastavení pouze překryvu","Pick an AI":"Vyberte AI","Pick this":"Vyberte tuto možnost","Pick your AI (":"Vyberte AI (","Private":"Soukromý","Problem":"Problém","Raise it if the bot posts too often. Only matters when posting into chat.":"Zvyšte hodnotu, pokud bot píše příliš často. Platí jen pro psaní do chatu.","Rate limit for responses per tab / source":"Limit frekvence odpovědí pro kartu nebo zdroj","Read the error under the button. Check the address, API key, model name, that your local AI is running, firewall, and your provider's limits.":"Přečtěte chybu pod tlačítkem. Ověřte adresu, klíč API, název modelu, běh místní AI, firewall a limity poskytovatele.","Reference table comparing the Primary bot overlay, private chatbot, censor bot, and AI cohost":"Srovnávací tabulka překryvu hlavního bota, soukromého chatbota, cenzurního bota a AI spolumoderátora","Replies show on the bot overlay only. Nothing is posted to chat.":"Odpovědi se zobrazují jen v překryvu bota. Do chatu se nic neposílá.","Replies still go to the overlay, and Social Stream also tries to post them in the chat they came from.":"Odpovědi dál míří do překryvu a Social Stream se je snaží poslat i do původního chatu.","Reply shows on the overlay, but not in chat":"Odpověď je v překryvu, ale ne v chatu","Reply stays on screen after the voice":"Odpověď zůstává na obrazovce po skončení hlasu","Run the test":"Spusťte test","See":"Viz","See all AI features in the":"Všechny funkce AI najdete v","Send it from the real platform chat, not the Dock. Then check the bot is on, the trigger word, moderators-only, the bot name, the rate limit, and your instructions. Turn on":"Pošlete ji ze skutečného chatu platformy, ne z Docku. Ověřte zapnutí bota, spouštěcí slovo, režim moderátorů, jméno, limit a pokyny. Zapněte","Send it once, then wait. A local AI may still be loading.":"Pošlete ji jednou a počkejte. Místní AI se může ještě načítat.","Set Up the AI Chat Bot":"Nastavení AI chatbota","Set it up":"Nastavení","Set it up in 6 steps":"Nastavení v 6 krocích","Set the shortest and longest time for autohide":"Nastavit nejkratší a nejdelší dobu automatického skrytí","Set up and use the Social Stream Ninja AI chat bot, connect an AI provider, test safely, control live replies, and troubleshoot missing responses.":"Nastavte a používejte AI chatbota Social Stream Ninja, připojte poskytovatele AI, bezpečně testujte, řiďte živé odpovědi a řešte chybějící reakce.","Setting":"Nastavení","Short messages like":"Krátké zprávy jako","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Still stuck?":"Stále nevíte jak dál?","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","Test button fails":"Testovací tlačítko selhává","Test it":"Vyzkoušejte","Test selected chat bot":"Otestovat vybraného chatbota (Test selected chat bot)","That service. Enter its API key and model. They set the prices, limits, and model names.":"Danou službu. Zadejte její klíč API a model. Poskytovatel určuje ceny, limity a názvy modelů.","That unloads the model after each request. The bot still works, but every reply may be slow while the model loads again.":"Tím se model po každém požadavku uvolní z paměti. Bot funguje dál, ale odpovědi mohou čekat na nové načtení modelu.","The Primary bot, private chat, censor bot, and AI co-host are separate tools. Each has its own settings and history.":"Hlavní bot, soukromý chat, cenzurní bot a AI spolumoderátor jsou samostatné nástroje. Každý má vlastní nastavení a historii.","The bot is picky by design. An empty trigger list means it":"Bot je záměrně vybíravý. Prázdný seznam spouštěčů znamená, že","The bot name is not a new account.":"Jméno bota není nový účet.","The key is wrong or gone.":"Klíč je chybný nebo už neexistuje.","The key isn't allowed to make model requests.":"Klíč nemá oprávnění posílat požadavky modelům.","The private bot can't stand in for testing the Primary bot.":"Soukromý bot nenahrazuje testování hlavního bota.","The reply should appear on the":"Odpověď se má objevit na","These only affect the bot overlay (":"Tyto možnosti ovlivňují jen překryv bota (","Three parts, all needed:":"Tři části, všechny nutné:","Trigger starts with":"Spouštěč začíná na","Try this":"Vyzkoušejte","Turn Social Stream on and open your live chat source.":"Zapněte Social Stream a otevřete zdroj živého chatu.","Turn off overlay-only. Check that source can send, the account can post, the chat box is available, account roles, and":"Vypněte režim pouze překryvu. Ověřte odesílání zdroje, oprávnění účtu psát, dostupnost pole chatu, role účtů a","Turn off when you're ready to post into real chat.":"Vypněte, až budete chtít psát do skutečného chatu.","Turn on":"Zapněte","Turn on the private chat bot option and use its link with the same session. It's a separate bot, so it doesn't test the Primary bot.":"Zapněte soukromý chatbot a použijte jeho odkaz se stejnou relací. Je to samostatný bot, takže netestuje hlavního bota.","Twitch Bot Account guide":"průvodce účtem bota Twitch","Use":"Použijte","Use a plain-word trigger, or let that command through your command filter.":"Použijte jako spouštěč běžné slovo nebo povolte příkaz ve filtru.","Use these settings in":"Použijte tato nastavení v","Using more than one?":"Používáte více možností?","Usually off, so the bot can skip pointless replies.":"Obvykle vypnuté, aby bot mohl vynechat zbytečné odpovědi.","Wait a bit after the voice finishes":"Chvíli počkat po skončení hlasu","Wait for the first reply and the rate limit. Keep-alive":"Počkejte na první odpověď a uplynutí limitu. Keep-alive","What happens":"Co se stane","What it means":"Co to znamená","Where replies go":"Kam míří odpovědi","Why it's quiet":"Proč mlčí","Why the bot is quiet":"Proč bot mlčí","Will respond to Moderators only":"Odpovídat pouze moderátorům (Will respond to Moderators only)","With Remote API Control on, open":"Se zapnutým vzdáleným ovládáním API otevřete","You need":"Potřebujete","Your command filter setting may drop that message before the bot sees it. Use a plain word instead.":"Filtr příkazů může zprávu zahodit dříve, než ji bot uvidí. Použijte běžné slovo.","and":"a","and turn on":"a zapněte","authentication reference":"přehled ověřování OpenAI","back off. Then pick a trigger word and rate limit, and decide if replies should go into real chat.":". Pak vyberte spouštěcí slovo a limit frekvence a rozhodněte, zda odpovědi mají jít do skutečného chatu.","does nothing":"nic nedělá","error guide":"průvodce chybami OpenAI","every message, not that it answers every one.":"každou zprávu, nikoli že na každou odpoví.","falls back to a length-based time.":"použije dobu podle délky.","for now. This keeps replies off your real chat while you test.":"zatím. Při testování tak odpovědi nepůjdou do skutečného chatu.","for your first test.":"pro první test.","in settings. This removes the reply on screen and any waiting ones, but won't stop a voice that's already talking.":"v nastavení. Odstraní odpověď z obrazovky i čekající odpovědi, ale nezastaví už mluvící hlas.","into a support message or diagnostic report.":"do zprávy podpoře ani diagnostického hlášení.","is an OpenAI permission, not something to type into Social Stream.":"je oprávnění OpenAI, nikoli text k zadání do Social Stream.","is blank":"je prázdné","is optional.":"je volitelný.","link keeps all of these features. A copied or edited local":"zachovává všechny tyto funkce. Místní kopie nebo upravený soubor","link under":"z","looks at":"posuzuje","makes every reply slow to start.":"zpomalí začátek každé odpovědi.","may be skipped. Say the bot's name to be clear.":"mohou být vynechány. Pro jistotu uveďte jméno bota.","ms":"ms","only proves the first part.":"potvrzuje pouze první část.","open with the same session. Also needed for TTS.":"otevřené se stejnou relací. Je potřeba i pro TTS.","or":"nebo","over the API WebSocket.":"přes WebSocket API.","page.":"stránku.","second account":"druhého účtu","see below":"viz níže","short at first, like:":"zpočátku krátké, například:","the AI (writes the reply), the Primary bot (picks which chat messages to answer), and where replies go (overlay, chat, or both). A green":"AI (píše odpověď), hlavní bot (vybírá zprávy k zodpovězení) a cíl odpovědí (překryv, chat nebo obojí). Zelený stav","to test.":"pro test.","wins, then":"má přednost, potom","won't get later fixes unless you update it.":"nedostane pozdější opravy, pokud jej neaktualizujete."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/chatbot-basics-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/chatbot-basics-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/chatbot-basics-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/chatbot-basics-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/chatbot-basics-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/chatbot-basics-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/chatbot-basics-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/chatbot-basics-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/chatbot-basics-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/chatbot-basics-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/chatbot-basics-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/chatbot-basics-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/chatbot-basics-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/chatbot-basics-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/chatbot-basics-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/chatbot-basics-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="chatbot-basics-guide.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/chatbot-basics-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Nastavení AI chatbota</h1>
+            <p>Nechte AI odpovídat divákům v chatu, na obrazovce nebo nahlas.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Na této stránce">
+                <a href="#setup">Nastavení</a>
+                <a href="#provider">Vyberte AI</a>
+                <a href="#first-test">Vyzkoušejte</a>
+                <a href="#replies">Kam míří odpovědi</a>
+                <a href="#quiet">Proč mlčí</a>
+                <a href="#hide">Skrýt staré odpovědi</a>
+                <a href="#problems">Řešení problémů</a>
+                <a href="#openai">Chyby klíče OpenAI</a>
+                <a href="#other-pages">Další stránky AI</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="setup">Nastavení v 6 krocích</h2>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>V nastavení Social Stream otevřete <strong>Chatboti a AI služby → Nastavit poskytovatele LLM</strong>.</li>
+                        <li>Vyberte AI (<a href="#provider">viz níže</a>) a vyplňte zobrazená pole.</li>
+                        <li>Klikněte na <strong>Otestovat vybraného chatbota (Test selected chat bot)</strong>. Pod tlačítkem se má objevit skutečná textová odpověď.</li>
+                        <li>Otevřít <strong>Chat Bot - Primary</strong> a zapněte <strong>Zapnout AI chatbota LLM (Enable the LLM AI chat bot)</strong>.</li>
+                        <li>Zapněte <strong>Odpovědi bota jdou POUZE na stránku překryvu bota</strong> zatím. Při testování tak odpovědi nepůjdou do skutečného chatu.</li>
+                        <li>Otevřete <code>bot.html</code> z <strong>Stránka překryvu a TTS chatbota</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/guide-llm-provider-connected.png" alt="Sekce Configure LLM s vybranou Ollama, vyplněným místním koncovým bodem a modelem a testem poskytovatele ve stavu Connected" class="guide-image">
+                        <figcaption>Připojeno znamená, že AI odpověděla. Bota to nezapíná.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>Tři části, všechny nutné:</strong> AI (píše odpověď), hlavní bot (vybírá zprávy k zodpovězení) a cíl odpovědí (překryv, chat nebo obojí). Zelený stav <strong>Připojeno (Connected)</strong> potvrzuje pouze první část.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="provider">Vyberte AI</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Používám…</th><th>Vyberte tuto možnost</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Používám">Ollama na mém počítači</td><td data-label="Vyberte tuto možnost"><strong>Ollama (nativní místní API)</strong>. Obvyklá adresa je <code>http://localhost:11434</code>.</td></tr>
+                        <tr><td data-label="Používám">LM Studio, llama.cpp, vLLM a podobné</td><td data-label="Vyberte tuto možnost"><strong>Custom API</strong>. Pro Ollama tuto možnost nepoužívejte.</td></tr>
+                        <tr><td data-label="Používám">Placenou službu, například OpenAI nebo Gemini</td><td data-label="Vyberte tuto možnost">Danou službu. Zadejte její klíč API a model. Poskytovatel určuje ceny, limity a názvy modelů.</td></tr>
+                        <tr><td data-label="Používám">Zatím nic, chci běh v prohlížeči</td><td data-label="Vyberte tuto možnost"><strong>Místní Gemma</strong> nebo <strong>Místní Qwen</strong>. Postupujte podle kroků ke stažení modelu.</td></tr>
+                    </tbody>
+                </table>
+                <p>Potřebujete Ollama? Stáhněte ji ze <a href="https://ollama.com/download" target="_blank" rel="noopener">stránky pro stažení Ollama</a>. Úplný seznam poskytovatelů: <a href="commands.html#ai-integration">Integrace AI v příkazech a API</a>.</p>
+                <details class="guide-extra">
+                    <summary>Keep-alive Ollama nastaveno na 0?</summary>
+                    <p>Tím se model po každém požadavku uvolní z paměti. Bot funguje dál, ale odpovědi mohou čekat na nové načtení modelu.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="first-test">Vyzkoušejte</h2>
+                <p>Použijte tato nastavení v <strong>Chat Bot - Primary</strong> pro první test.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Nastavení</th><th>První test</th><th>Později</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Nastavení">Zapnout AI chatbota LLM (Enable the LLM AI chat bot)</td><td data-label="První test">Zapnuto (On)</td><td data-label="Později">Nechte zapnuté, dokud má bot sledovat chat.</td></tr>
+                        <tr><td data-label="Nastavení">Vlastní jméno bota (Customize bot name)</td><td data-label="První test"><code>NinjaBot</code></td><td data-label="Později">Krátké a jednoduché jméno, které diváci snadno napíšou.</td></tr>
+                        <tr><td data-label="Nastavení">Odpovědi bota jdou POUZE na stránku překryvu bota</td><td data-label="První test">Zapnuto (On)</td><td data-label="Později">Vypněte, až budete chtít psát do skutečného chatu.</td></tr>
+                        <tr><td data-label="Nastavení">Nefiltrovat žádné odpovědi bota (Do not screen out any of the bot's replies)</td><td data-label="První test">Zapnuto (On)</td><td data-label="Později">Obvykle vypnuté, aby bot mohl vynechat zbytečné odpovědi.</td></tr>
+                        <tr><td data-label="Nastavení">Seznam slov spouštějících bota (List of words to trigger bot)</td><td data-label="První test">Prázdné</td><td data-label="Později">Přidejte slovo, pokud bot nemá posuzovat každou zprávu.</td></tr>
+                        <tr><td data-label="Nastavení">Limit frekvence odpovědí pro kartu nebo zdroj</td><td data-label="První test"><code>5000</code> ms</td><td data-label="Později">Zvyšte hodnotu, pokud bot píše příliš často. Platí jen pro psaní do chatu.</td></tr>
+                        <tr><td data-label="Nastavení">Maximální souběžné odpovědi bota (Max parallel bot replies)</td><td data-label="První test"><code>1</code></td><td data-label="Později">Ponechte nízkou hodnotu, pokud AI nezvládne více.</td></tr>
+                        <tr><td data-label="Nastavení">Odpovídat pouze moderátorům (Will respond to Moderators only)</td><td data-label="První test">Vypnuto</td><td data-label="Později">Pouze pokud to chcete.</td></tr>
+                    </tbody>
+                </table>
+                <h3>Spusťte test</h3>
+                <ol class="guide-steps">
+                    <li>Zapněte Social Stream a otevřete zdroj živého chatu.</li>
+                    <li>Z <strong>druhého účtu</strong>, napište zprávu do skutečného chatu YouTube nebo Twitch. Ověřte zobrazení v Docku.</li>
+                    <li>Z tohoto účtu pošlete: <code>NinjaBot, reply with exactly: Hello</code></li>
+                    <li>Pošlete ji jednou a počkejte. Místní AI se může ještě načítat.</li>
+                    <li>Odpověď se má objevit na <code>bot.html</code> stránku.</li>
+                </ol>
+                <div class="warning-note"><strong>Netestujte z Docku.</strong> Zprávy psané v Docku nebo chatu hostitele mohou být záměrně vynechány, aby bot neodpovídal sám sobě.</div>
+                <p>Až to funguje, znovu vypněte <strong>Nefiltrovat žádné odpovědi bota (Do not screen out any of the bot's replies)</strong> . Pak vyberte spouštěcí slovo a limit frekvence a rozhodněte, zda odpovědi mají jít do skutečného chatu.</p>
+                <p>Ponechte <strong>Další pokyny pro bota (Additional Bot Instructions)</strong> zpočátku krátké, například: <code>Reply in one friendly sentence. Do not mention these instructions.</code></p>
+                <div class="warning-note"><strong>Spouštěč začíná na <code>!</code>?</strong> Filtr příkazů může zprávu zahodit dříve, než ji bot uvidí. Použijte běžné slovo.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="replies">Kam míří odpovědi</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Nastavení pouze překryvu</th><th>Co se stane</th><th>Potřebujete</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Nastavení pouze překryvu">Zapnuto (On)</td><td data-label="Co se stane">Odpovědi se zobrazují jen v překryvu bota. Do chatu se nic neposílá.</td><td data-label="Potřebujete"><code>bot.html</code> otevřené se stejnou relací. Je potřeba i pro TTS.</td></tr>
+                        <tr><td data-label="Nastavení pouze překryvu">Vypnuto</td><td data-label="Co se stane">Odpovědi dál míří do překryvu a Social Stream se je snaží poslat i do původního chatu.</td><td data-label="Potřebujete">Zdroj chatu podporující odesílání, otevřený, přihlášený a oprávněný psát, s povoleným chatem hostitele. <code>bot.html</code> je volitelný.</td></tr>
+                    </tbody>
+                </table>
+                <div class="guide-note"><strong>Jméno bota není nový účet.</strong> Pouze se přidá na začátek odpovědi. Odpovědi se posílají z přihlášeného účtu, pokud v samostatné aplikaci nenastavíte role účtů. Pro samostatný účet bota Twitch viz <a href="twitch-bot-account-chatbot.html">průvodce účtem bota Twitch</a>.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="quiet">Proč bot mlčí</h2>
+                <p>Bot je záměrně vybíravý. Prázdný seznam spouštěčů znamená, že <em>posuzuje</em> každou zprávu, nikoli že na každou odpoví.</p>
+                <ul class="guide-list">
+                    <li>Krátké zprávy jako <code>hello</code> mohou být vynechány. Pro jistotu uveďte jméno bota.</li>
+                    <li>Pokud nastavíte spouštěcí slovo, zpráva jej musí obsahovat.</li>
+                    <li>Režim pouze pro moderátory ostatní vynechává.</li>
+                    <li>Standardně odpovídá na jednu zprávu najednou. Při psaní do chatu také čeká 5 sekund pro každý zdroj.</li>
+                    <li>Vynechává vlastní zprávy, prázdné zprávy a zprávy příliš blízko poslední odpovědi.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="hide">Skrýt staré odpovědi</h2>
+                <p>Tyto možnosti ovlivňují jen překryv bota (<code>bot.html</code>), nikoli překryv zvýrazněného chatu. Nastavení překryvu pokrývá běžné možnosti.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Chci…</th><th>Přidejte do odkazu</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Chci">Skrýt každou odpověď po určené době</td><td data-label="Přidejte do odkazu"><code>&amp;showtime=10000</code> (milisekundy, tedy 10 sekund)</td></tr>
+                        <tr><td data-label="Chci">Dlouhé odpovědi skrýt později, krátké dříve</td><td data-label="Přidejte do odkazu"><code>&amp;autohide</code> (nebo <code>&amp;autotime</code>)</td></tr>
+                        <tr><td data-label="Chci">Nastavit nejkratší a nejdelší dobu automatického skrytí</td><td data-label="Přidejte do odkazu"><code>&amp;mintime=5000&amp;maxtime=20000</code> (výchozí: 4000 a 30000)</td></tr>
+                        <tr><td data-label="Chci">Skrýt po skončení řeči</td><td data-label="Přidejte do odkazu"><code>&amp;hideaftertts</code></td></tr>
+                        <tr><td data-label="Chci">Chvíli počkat po skončení hlasu</td><td data-label="Přidejte do odkazu"><code>&amp;hidedelay=1000</code> (výchozí: 500)</td></tr>
+                        <tr><td data-label="Chci">Přestat čekat na zaseknutý hlas</td><td data-label="Přidejte do odkazu"><code>&amp;ttstimeout=60000</code> (výchozí: 120000)</td></tr>
+                    </tbody>
+                </table>
+                <p>Používáte více možností? <code>hideaftertts</code> má přednost, potom <code>autohide</code>, potom <code>showtime</code>. Pokud hlas nezačne, <code>hideaftertts</code> použije dobu podle délky.</p>
+                <h3>Vymazat nyní</h3>
+                <p>Klikněte na <strong>Vymazat překryv bota nyní (Clear bot overlay now)</strong> v nastavení. Odstraní odpověď z obrazovky i čekající odpovědi, ale nezastaví už mluvící hlas.</p>
+                <details class="guide-extra">
+                    <summary>Vymazání přes API a vlastní vzhled</summary>
+                    <ul>
+                        <li>Se zapnutým vzdáleným ovládáním API otevřete <code>https://io.socialstream.ninja/SESSION_ID/clearBotOverlay</code>.</li>
+                        <li>Nebo pošlete <code>{"action":"clearBotOverlay"}</code> přes WebSocket API.</li>
+                    </ul>
+                    <p>Vlastní CSS u běžného odkazu <code>bot.html</code> zachovává všechny tyto funkce. Místní kopie nebo upravený soubor <code>bot.html</code> nedostane pozdější opravy, pokud jej neaktualizujete.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">Řešení problémů</h2>
+                <p>Najděte poslední funkční krok a pak zkontrolujte další řádek.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Problém</th><th>Vyzkoušejte</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Problém">Testovací tlačítko selhává</td><td data-label="Vyzkoušejte">Přečtěte chybu pod tlačítkem. Ověřte adresu, klíč API, název modelu, běh místní AI, firewall a limity poskytovatele.</td></tr>
+                        <tr><td data-label="Problém">Připojeno, ale zpráva diváka není v Docku</td><td data-label="Vyzkoušejte">Chat se nezachytává. Ověřte zapnutí Social Stream, otevřené a přihlášené okno chatu, správný živý chat a filtry zdrojů.</td></tr>
+                        <tr><td data-label="Problém">Zpráva je v Docku, ale překryv nemá odpověď</td><td data-label="Vyzkoušejte">Pošlete ji ze skutečného chatu platformy, ne z Docku. Ověřte zapnutí bota, spouštěcí slovo, režim moderátorů, jméno, limit a pokyny. Zapněte <strong>Nefiltrovat žádné odpovědi bota (Do not screen out any of the bot's replies)</strong> pro test.</td></tr>
+                        <tr><td data-label="Problém">Odpověď je v překryvu, ale ne v chatu</td><td data-label="Vyzkoušejte">Vypněte režim pouze překryvu. Ověřte odesílání zdroje, oprávnění účtu psát, dostupnost pole chatu, role účtů a <strong>Vypnout chat hostitele a blokovací funkce</strong>.</td></tr>
+                        <tr><td data-label="Problém"><code>!bot</code> nic nedělá</td><td data-label="Vyzkoušejte">Použijte jako spouštěč běžné slovo nebo povolte příkaz ve filtru.</td></tr>
+                        <tr><td data-label="Problém">Odpověď dostane jen první test</td><td data-label="Vyzkoušejte">Počkejte na první odpověď a uplynutí limitu. Keep-alive <code>0</code> zpomalí začátek každé odpovědi.</td></tr>
+                        <tr><td data-label="Problém">Odpověď zůstává na obrazovce po skončení hlasu</td><td data-label="Vyzkoušejte">Použijte <a href="#hide">Skrýt po TTS, automaticky nebo po pevné době</a>.</td></tr>
+                        <tr><td data-label="Problém">Chyba OpenAI jako <code>401</code> nebo <code>429</code></td><td data-label="Vyzkoušejte">Viz <a href="#openai">Chyby klíče OpenAI</a>.</td></tr>
+                        <tr><td data-label="Problém">Soukromý <code>chatbot.html</code> je prázdné</td><td data-label="Vyzkoušejte">Zapněte soukromý chatbot a použijte jeho odkaz se stejnou relací. Je to samostatný bot, takže netestuje hlavního bota.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="openai">Chyby klíče OpenAI</h2>
+                <ol class="guide-steps">
+                    <li>Vytvořte běžný projektový klíč API na <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">stránce klíčů API OpenAI</a>. Nikoli administrátorský klíč.</li>
+                    <li>Ověřte, že je v projektu, kterému chcete účtovat náklady, a smí posílat požadavky modelům.</li>
+                    <li>V Social Stream vyberte <strong>ChatGPT API</strong>, vložte celý klíč, zadejte model povolený pro projekt a klikněte na <strong>Otestovat vybraného chatbota (Test selected chat bot)</strong>.</li>
+                </ol>
+                <div class="warning-note"><strong>Nikdy nevkládejte klíč</strong> do zprávy podpoře ani diagnostického hlášení.</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Chyba</th><th>Co to znamená</th><th>Vyzkoušejte</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Chyba"><code>401 missing_scope</code> / <code>model.request</code></td><td data-label="Co to znamená">Klíč nemá oprávnění posílat požadavky modelům. <code>model.request</code> je oprávnění OpenAI, nikoli text k zadání do Social Stream.</td><td data-label="Vyzkoušejte">Ověřte běžný klíč správného projektu s povolenými požadavky na modely. Při nejistotě vytvořte nový a nahraďte uložený.</td></tr>
+                        <tr><td data-label="Chyba"><code>401 invalid_api_key</code></td><td data-label="Co to znamená">Klíč je chybný nebo už neexistuje.</td><td data-label="Vyzkoušejte">Hledejte chybějící znak nebo nadbytečnou mezeru. Ověřte, že klíč nebyl smazán, patří správnému projektu a Social Stream nepoužívá starý uložený klíč.</td></tr>
+                        <tr><td data-label="Chyba"><code>429</code></td><td data-label="Co to znamená">Vyčerpaná kvóta nebo příliš mnoho požadavků.</td><td data-label="Vyzkoušejte">Zkontrolujte účtování a rozpočet API (oddělené od předplatného ChatGPT). Zpomalte nebo počkejte.</td></tr>
+                    </tbody>
+                </table>
+                <p><strong>Doplnění kreditu chybu 401 nevyřeší.</strong> Kredit a oprávnění jsou oddělené. Viz <a href="https://developers.openai.com/api/docs/guides/error-codes" target="_blank" rel="noopener">průvodce chybami OpenAI</a> a <a href="https://developers.openai.com/api/reference/overview#start-here" target="_blank" rel="noopener">přehled ověřování OpenAI</a>.</p>
+                <details class="guide-extra">
+                    <summary>Stále nevíte jak dál?</summary>
+                    <ul>
+                        <li>Pokud prohlížeč automaticky překládá web OpenAI a nastavení klíčů se chová zvláštně, přepněte na původní anglickou stránku. Jednomu uživateli to pomohlo, ale nejde o známou příčinu chyb 401.</li>
+                        <li>Zkopírujte stav, kód, chybějící oprávnění a Request ID ze Social Stream. Potom brzy odešlete diagnostickou zprávu z aplikace. Klíče API a zadání vynechává.</li>
+                        <li>Pokud klíč a projekt vypadají správně, předejte podpoře OpenAI Request ID a čas.</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="other-pages">Další stránky AI botů</h2>
+                <p>Hlavní bot, soukromý chat, cenzurní bot a AI spolumoderátor jsou samostatné nástroje. Každý má vlastní nastavení a historii.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-chatbot-pages-reference.png" alt="Srovnávací tabulka překryvu hlavního bota, soukromého chatbota, cenzurního bota a AI spolumoderátora" class="guide-image">
+                    <figcaption>Soukromý bot nenahrazuje testování hlavního bota.</figcaption>
+                </figure>
+                <p>Všechny funkce AI najdete v <a href="ai-modes-guide.html">Průvodce režimy AI</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

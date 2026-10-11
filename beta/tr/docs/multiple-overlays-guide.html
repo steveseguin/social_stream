@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/tr/docs/multiple-overlays-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/tr/docs/multiple-overlays-guide.html">
+    <meta property="og:title" content="Birden fazla kanal ve ayrı katmanlar - Social Stream Ninja">
+    <meta property="og:description" content="Her izleyici katmanında hangi platformların görüneceğini seçerken tüm sohbetlerinizi tek Panelde okuyun.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/tr/docs/multiple-overlays-guide.html">
+    <meta name="twitter:title" content="Birden fazla kanal ve ayrı katmanlar - Social Stream Ninja">
+    <meta name="twitter:description" content="Her izleyici katmanında hangi platformların görüneceğini seçerken tüm sohbetlerinizi tek Panelde okuyun.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Birden fazla kanal ve ayrı katmanlar - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Her izleyici katmanında hangi platformların görüneceğini seçerken tüm sohbetlerinizi tek Panelde okuyun.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/multiple-overlays-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{"(advanced, see below).":"(gelişmiş, aşağıya bakın).","(replace values that are already there). Make the Hype layer taller if your style needs room.":"(mevcut değerleri değiştirin). Stiliniz daha fazla alan gerektiriyorsa Hype katmanını daha yüksek yapın.","(see the":"(bkz.","(works when the source sends a channel name).":"(kaynak kanal adı gönderdiğinde çalışır).",") only works on the Dock.":") yalnızca Dock'ta çalışır.",") or percent (":") veya yüzde (",", and":", ve",", and remove":" ve şunu kaldırın:",", height":", yükseklik",", left":", sol",", may not work on this page. YouTube Shorts is its own type: add":", bu sayfada çalışmayabilir. YouTube Shorts ayrı bir türdür; şunu ekleyin:",", then":", ardından",", top":", üst",". Add layers bottom first, and type just the numbers (no commas, no “px”) under each layer's":". Katmanları alttan başlayarak ekleyin; her katmanın şu bölümüne yalnızca sayıları yazın (virgül veya “px” olmadan):",". Blank width and height fill the browser; blank left and top start at the top-left corner.":". Boş genişlik ve yükseklik tarayıcıyı doldurur; boş sol ve üst değerleri sol üst köşeden başlar.",". For a compact look, try":". Daha kompakt görünüm için şunu deneyin:",". Keep that Dock unfiltered. It's your own view.":". O Dock'u filtresiz tutun. Sizin kişisel görünümünüzdür.",". Name them clearly, like":". Net adlar verin, örneğin",". Other layers stay fullscreen.":". Diğer katmanlar tam ekran kalır.",". Other pages need their own transparent setting. Some outside sites block embedding.":". Diğer sayfalar kendi şeffaflık ayarını gerektirir. Bazı dış siteler gömülmeyi engeller.",". Other scene sizes need other numbers.":". Farklı sahne boyutları farklı sayılar gerektirir.",". Replace any":". Şu mevcut değerleri değiştirin:",". Set width, height, left, and top in pixels (":". Genişlik, yükseklik, sol ve üst konumlarını piksel (","1. Live Chat / Dock":"1. Canlı Sohbet / Panel","2. Hype counter":"2. Hype sayacı","3. Emoji / Emote Wall":"3. Emoji / İfade Duvarı","4. Featured Chat":"4. Öne Çıkan Sohbet","5. NinjaBacker (optional)":"5. NinjaBacker (isteğe bağlı)","A full example:":"Tam bir örnek:","A layer has a solid background":"Katmanda opak arka plan var","A layer is empty":"Katman boş","A see-through layer can still block taps. Turn off":"Şeffaf bir katman da dokunmaları engelleyebilir. Şunu kapatın:","A view is blank":"Görünüm boş","Add":"Ekleyin:","Add a filter to the end of each copy, like":"Her kopyanın sonuna bir filtre ekleyin, örneğin","Add all your chats to Social Stream Ninja. Check one new message from each shows up in your":"Tüm sohbetlerinizi Social Stream Ninja'ya ekleyin. Her birinden yeni bir mesajın şurada göründüğünü kontrol edin:","Add each link to OBS as its own":"Her bağlantıyı OBS'ye ayrı bir kaynak olarak ekleyin:","Add more overlays":"Daha fazla katman ekleyin","Add to the Dock link":"Dock bağlantısına ekleyin","All guides":"Tüm kılavuzlar","Allow taps and scrolling":"Dokunmaya ve kaydırmaya izin ver","Allow taps and scrolling on this layer":"Bu katmanda dokunmaya ve kaydırmaya izin ver","An overlay with a different session but no matching capture will just sit empty. An overlay's":"Farklı oturumdaki bir katman, eşleşen yakalama yoksa boş kalır. Katmanın","Automatic transparency works for":"Otomatik şeffaflık şunlarda çalışır:","Browse all guides":"Tüm kılavuzlara göz atın","Browser Source":"Tarayıcı Kaynağı","Can't tap or scroll chat":"Sohbete dokunulamıyor veya kaydırılamıyor","Capture":"Yakalama","Center Hype in the column.":"Hype'ı sütunda ortalayın.","Chat and alerts in one browser tab":"Tek tarayıcı sekmesinde sohbet ve uyarılar","Chat and alerts in one tab":"Tek sekmede sohbet ve uyarılar","Chat layer: width":"Sohbet katmanı: genişlik","Check both show in your Dock, and each chat overlay shows only its own platform.":"İkisinin de Dock'ta göründüğünü ve her sohbet katmanının yalnızca kendi platformunu gösterdiğini kontrol edin.","Clear saved setup":"Kayıtlı kurulumu temizle","Combine overlays":"Katmanları birleştir","Commands & API":"Komutlar ve API","Copy combined link":"Birleştirilmiş bağlantıyı kopyala","Copy the new combined link into OBS.":"Yeni birleştirilmiş bağlantıyı OBS'ye kopyalayın.","Copy them from your existing Browser Sources so session, password, styles, and connection settings come along. Leave":"Oturum, parola, stiller ve bağlantı ayarları korunsun diye mevcut Tarayıcı Kaynaklarından kopyalayın. Şu ayarı koruyun:","Copy your generated":"Oluşturulan bağlantınızı kopyalayın:","Create test messages":"Test mesajları oluşturun","Do this":"Yapılacak işlem","Download":"İndir","Each layer is its own area. Set the OBS Browser Source to":"Her katmanın kendi alanı vardır. OBS Tarayıcı Kaynağını şu boyuta ayarlayın:","Each overlay gets its own Browser Source.":"Her katmanın kendi Tarayıcı Kaynağı olur.","Edit a combined link later":"Birleştirilmiş bağlantıyı daha sonra düzenleyin","Edits on desktop don't update an older link. Copy or scan the new link after editing. Nothing syncs through your session ID.":"Masaüstündeki düzenlemeler eski bağlantıyı güncellemez. Düzenledikten sonra yeni bağlantıyı kopyalayın veya tarayın. Oturum kimliğiniz üzerinden hiçbir şey eşitlenmez.","Event reference":"Olay referansı","Everything except Discord":"Discord dışındaki her şey","Example: one overlay shows only Twitch chat, another shows only YouTube chat. You still read everything in one Dock.":"Örnek: Bir katman yalnızca Twitch sohbetini, diğeri yalnızca YouTube sohbetini gösterir. Siz her şeyi tek Dock'ta okumaya devam edersiniz.","Feature each message, then press clear. Check every featured page after switching platforms.":"Her mesajı öne çıkarın, ardından temizleye basın. Platform değiştirdikten sonra tüm öne çıkarılan mesaj sayfalarını kontrol edin.","Featured Chat":"Öne çıkan sohbet","Featured Chat takes one platform per link.":"Featured Chat, bağlantı başına bir platform alır.","Features":"Özellikler","Filter options":"Filtre seçenekleri","Filter options for chat overlays":"Sohbet katmanlarının filtre seçenekleri","Filter the Dock by browser tab":"Dock'u tarayıcı sekmesine göre filtreleyin","Find the":"Şunu bulun:","Guides":"Kılavuzlar","Height":"Yükseklik","Hire":"Hizmet alın","Home":"Ana sayfa","How":"Nasıl","I want to":"Şunu yapmak istiyorum","I want to show":"Göstermek istiyorum","I want to show…":"Göstermek istiyorum…","I want to…":"Şunu yapmak istiyorum…","If a layer is blank or covers chat":"Bir katman boşsa veya sohbeti örtüyorsa","Inspiration":"İlham","It is not a platform channel ID.":"Platform kanal ID'si değildir.","It takes the numeric ID of the browser tab the message came from. Separate several with commas.":"Mesajın geldiği tarayıcı sekmesinin sayısal ID'sini alır. Birden fazla ID'yi virgülle ayırın.","It works on the Dock only, not as a Featured Chat channel filter.":"Yalnızca Dock'ta çalışır; Featured Chat kanal filtresi değildir.","Keep Featured Chat beside the chat column.":"Featured Chat'i sohbet sütununun yanında tutun.","Keep combined links and QR codes as private as your overlay links.":"Birleşik bağlantıları ve QR kodlarını katman bağlantılarınız kadar gizli tutun.","Keep each overlay in its own OBS Browser Source.":"Her katmanı kendi OBS Tarayıcı Kaynağında tutun.","Keep your Dock open to pick messages.":"Mesaj seçmek için Dock'u açık tutun.","Layer":"Katman","Layer options":"Katman seçenekleri","Leave":"Bırakın:","Left":"Sol","Left = 450":"Sol = 450","Main navigation":"Ana gezinme","Make a layer fullscreen again":"Katmanı yeniden tam ekran yapın","Make a left chat column (1920×1080)":"Solda sohbet sütunu oluşturun (1920×1080)","Multi-Stream Alert Box":"Çoklu Yayın Uyarı Kutusu","Multiple channels and separate overlays":"Birden fazla kanal ve ayrı katmanlar","Multiple channels and separate overlays - Social Stream Ninja":"Birden fazla kanal ve ayrı katmanlar - Social Stream Ninja","No CSS needed.":"CSS gerekmez.","No sound on the phone":"Telefonda ses yok","OBS layout recipe":"OBS yerleşim tarifi","OBS recipe: left chat column with fullscreen effects":"OBS tarifi: tam ekran efektlerle solda sohbet sütunu","OBS views":"OBS görünümleri","On the":"Şunun üzerinde:","On this page":"Bu sayfada","One SSN session":"Tek SSN oturumu","One feed can power several filtered views.":"Tek veri akışı birden fazla filtreli görünümü besleyebilir.","Open":"Açın:","Open its original link on its own first. Alerts stay empty until an event arrives. Combining doesn't capture anything new.":"Önce özgün bağlantısını tek başına açın. Uyarılar olay gelene kadar boş kalır. Birleştirme yeni veri yakalamaz.","Open navigation menu":"Gezinme menüsünü aç","Options from other overlays, like":"Başka katmanlardaki seçenekler; örneğin","Overlay Gallery":"Katman galerisi","Paste its viewer overlay link as the top layer, with its right-entry animation setting. The combiner sets its area and order; NinjaBacker sets its own animation. Its background must be transparent and its site must allow embedding. This layer wasn't part of the tested example.":"İzleyici katmanı bağlantısını sağdan giriş animasyonuyla en üst katmana yapıştırın. Birleştirici alanı ve sırayı, NinjaBacker kendi animasyonunu belirler. Arka plan şeffaf olmalı ve site gömmeye izin vermelidir. Bu katman test edilen örneğe dâhil değildi.","Paste your":"Şunu yapıştırın:","Paste your full overlay links.":"Tam katman bağlantılarınızı yapıştırın.","Performance:":"Performans:","Phones may need a tap before playing sound. Turn on taps for that layer and tap it. Test on the real phone before relying on it.":"Telefonlar sesi çalmadan önce dokunma isteyebilir. O katmanda dokunmayı açıp dokunun. Güvenmeden önce gerçek telefonda test edin.","Pixel sizes stay fixed when the browser resizes. Percentages follow it. Each overlay keeps its own content and settings.":"Piksel boyutları tarayıcı boyutu değişince sabit kalır. Yüzdeler uyum sağlar. Her katman kendi içeriğini ve ayarlarını korur.","Press":"Basın","Preview":"Önizleme","Preview at 1920×1080.":"1920×1080 boyutunda önizleyin.","Problem":"Sorun","Put NinjaBacker last (optional).":"NinjaBacker'ı sona koyun (isteğe bağlı).","Put a layer in front or behind":"Katmanı öne veya arkaya alın","Read all your chats in one Dock while choosing which platforms appear in each audience overlay.":"Her izleyici katmanında hangi platformların görüneceğini seçerken tüm sohbetlerinizi tek Panelde okuyun.","Real Chromium test with four SSN overlays and a test feed. The image is transparent; the dark background is added here so you can read it. Click for full size. Your fonts and colors come from your own overlay settings.":"Dört SSN katmanı ve test akışıyla gerçek Chromium testi. Görsel şeffaftır; okunabilmesi için burada koyu arka plan eklenmiştir. Tam boy için tıklayın. Yazı tipleri ve renkler kendi katman ayarlarınızdan gelir.","Remove its filter for a moment. If chat comes back, check the exact source type or tab ID.":"Filtreyi geçici kaldırın. Sohbet geri gelirse tam kaynak türünü veya sekme ID'sini kontrol edin.","Renamed the OBS source but nothing changed":"OBS kaynağını yeniden adlandırdım, değişmedi","Renaming doesn't change the saved link. Edit the URL itself.":"Ad değiştirmek kayıtlı bağlantıyı değiştirmez. URL'nin kendisini düzenleyin.","Repeat with a real message from each of your sources. Fake messages don't have real tab IDs.":"Her kaynaktan gerçek mesajla tekrarlayın. Sahte mesajların gerçek sekme ID'si yoktur.","Reset to fullscreen":"Tam ekrana sıfırla","Run two fully separate shows":"Tamamen ayrı iki yayın çalıştırın","SSN capture must still be running, and the phone must reach the same servers as the original links.":"SSN yakalaması çalışmalı ve telefon özgün bağlantıların kullandığı sunuculara erişebilmelidir.","Saving, phones, and privacy":"Kayıt, telefonlar ve gizlilik","See":"Bkz.","Send a chat message with emojis, feature a message from your Dock, and turn on Hype data in SSN. Normal chat doesn't pick a featured message on its own.":"Emojili mesaj gönderin, Dock'tan bir mesajı öne çıkarın ve SSN'de Hype verilerini açın. Normal sohbet kendiliğinden öne çıkarılacak mesaj seçmez.","Send a fake Twitch message and a fake YouTube message into a test session. Use":"Test oturumuna sahte Twitch ve YouTube mesajı gönderin. Şunu kullanın:","Set":"Şunu ayarlayın:","Set that Browser Source to Width 1920, Height 1080. The preview size doesn't set this. Fit it to your scene without cropping. After every layout change, copy the link again; the old link keeps the old layout.":"Tarayıcı Kaynağını 1920 genişlik, 1080 yükseklik yapın. Önizleme boyutu bunu ayarlamaz. Kırpmadan sahneye sığdırın. Her yerleşim değişikliğinden sonra bağlantıyı tekrar kopyalayın; eski bağlantı eski düzeni korur.","Show QR code":"QR kodunu göster","Show which channel each message came from":"Her mesajın hangi kanaldan geldiğini gösterin","Size and position":"Boyut ve konum","Size or move a layer":"Katmanı boyutlandırın veya taşıyın","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja ·":"Social Stream Ninja ·","Source types":"Kaynak türleri","Split Featured Chat (selected messages)":"Featured Chat'i ayırın (seçilen mesajlar)","Split chat by platform":"Sohbeti platforma göre ayırın","Split chat by platform in 4 steps":"4 adımda sohbeti platforma göre ayırın","Start over":"Baştan başlayın","Still blank without the filter":"Filtresiz de boş","Streaming Chat Dock":"Yayın sohbeti paneli","Support":"Destek","Supported Sites":"Desteklenen siteler","Switch theme":"Temayı değiştir","Tab IDs can change when a source reopens. Sources without a matching tab ID may be hidden.":"Kaynak yeniden açılınca sekme ID'leri değişebilir. Eşleşen sekme ID'si olmayan kaynaklar gizlenebilir.","Test each view":"Her görünümü test edin","Test it":"Test edin","Tested combined output: Hype centered over a narrow left chat column, emojis across the scene, and a featured message along the bottom to the right of chat.":"Test edilmiş birleşik çıktı: dar sol sohbet sütununun üzerinde ortalanmış Hype, sahne boyunca emojiler ve sohbetin sağında alt kısım boyunca öne çıkan mesaj.","The combined link and QR code hold the whole layout. Set it up on desktop, scan once, then bookmark it on your phone. Opening it also saves the setup in the phone's browser.":"Birleşik bağlantı ve QR kodu tüm yerleşimi içerir. Bilgisayarda kurun, bir kez taratın ve telefonda yer imlerine ekleyin. Açılması ayarları telefonun tarayıcısına da kaydeder.","The combined view has no setup controls. It just shows your overlays.":"Birleşik görünümde ayar kontrolleri yoktur. Yalnızca katmanları gösterir.","The comma list (":"Virgüllü liste (","The filter only decides which picks a page accepts. It doesn't give you separate queues. A rejected pick doesn't clear the screen either. When you switch segments, clear the featured message yourself so an old one isn't left showing.":"Filtre yalnızca sayfanın hangi seçilmiş mesajları kabul edeceğini belirler; ayrı kuyruklar oluşturmaz. Reddedilen mesaj ekranı da temizlemez. Bölüm değiştirirken eski mesaj kalmaması için öne çıkan mesajı kendiniz temizleyin.","The top 80 pixels hold Hype, with the chat column below. Want chat full height behind Hype? Set Live Chat's height to":"Üst 80 piksel Hype'a ayrılır, sohbet sütunu altındadır. Sohbetin Hype arkasında tam yüksekliği kaplamasını mı istiyorsunuz? Live Chat yüksekliğini şuna ayarlayın:","Top":"Üst","Transparent SSN background":"Şeffaf SSN arka planı","Try this":"Şunu deneyin","Turn on":"Açın:","Twitch + YouTube":"Twitch + YouTube","Twitch and YouTube together":"Twitch ve YouTube birlikte","Twitch chat":"Twitch sohbeti","Twitch only":"Yalnızca Twitch","Twitch-only and YouTube-only":"Yalnızca Twitch ve yalnızca YouTube","Two channels on the same platform":"Aynı platformda iki kanal","Two channels, same platform":"İki kanal, aynı platform","Up to eight links.":"En fazla sekiz bağlantı.","Use":"Kullanın:","Use separate capture instances or profiles, each with its own session, each opening only its own sources.":"Her biri kendi oturumuna sahip ve yalnızca kendi kaynaklarını açan ayrı yakalama örnekleri veya profiller kullanın.","Use the arrow buttons.":"Ok düğmelerini kullanın.","Use the editable link, or add":"Düzenlenebilir bağlantıyı kullanın veya şunu ekleyin:","Very long links may not fit in a QR code. You can still copy the link.":"Çok uzun bağlantılar QR koda sığmayabilir. Bağlantıyı yine kopyalayabilirsiniz.","Width":"Genişlik","Width = 1470":"Genişlik = 1470","YouTube chat":"YouTube sohbeti","YouTube only":"Yalnızca YouTube","Your Dock sees both":"Dock'unuz ikisini de görür","Your links and layer options save automatically in this browser, even unfinished ones. Private browsing may not keep them.":"Bağlantılar ve katman seçenekleri, tamamlanmamış olanlar dâhil bu tarayıcıda otomatik kaydedilir. Gizli gezinme bunları saklamayabilir.","and":"ve","and scan it with your phone. Or press":"ve telefonla tarayın. Ya da şuna basın:","and top to":"ve üst uzaklığı şu değere:","before the":"şundan önce:","checked.":"işaretli olmalıdır.","checked. OBS crops, transforms, filters, and Custom CSS are not in the link and won't carry over.":"işaretli kalsın. OBS kırpma, dönüşüm, filtre ve Özel CSS ayarları bağlantıda değildir; taşınmaz.","for chat. Turn it off for alerts, so they don't block chat.":"sohbet için. Uyarılarda kapatın ki sohbeti engellemesinler.","here.":"burada.","if your capture reports it. See":"yakalamanız bildiriyorsa. Bkz.","in a real captured payload. See the":"gerçek yakalanmış veride. Bkz.","link into the bottom layer.":"bağlantısını alt katmana.","link into the top layer. Keep the full links, with session, password, and connection options.":"bağlantısını üst katmana. Oturum, parola ve bağlantı seçenekleriyle tam bağlantıları koruyun.","link twice.":"bağlantısını iki kez.","link twice. Copying keeps your session, password, version, and server settings.":"bağlantısını iki kez. Kopyalama oturumu, parolayı, sürümü ve sunucu ayarlarını korur.","link, use":"bağlantısında şunu kullanın:","means all of Twitch, not one Twitch channel. Channel names and stream titles can't be used as filter names.":"tek bir Twitch kanalı değil, tüm Twitch anlamına gelir. Kanal ve yayın başlıkları filtre adı olarak kullanılamaz.","means the phone itself.":"telefonun kendisi anlamına gelir.","names the page for routing; it is not a channel filter.":"yönlendirme için sayfayı adlandırır; kanal filtresi değildir.","on layers above chat that don't need it.":"sohbet üzerindeki, buna ihtiyaç duymayan katmanlarda.","one Browser Source still runs every overlay inside it. Fewer OBS sources doesn't guarantee lower CPU or memory. Close the browser preview when done, and compare OBS with the old sources turned off. M1 Mac performance and your own NinjaBacker link are untested. You can keep Live Chat separate and combine only the rest.":"tek Tarayıcı Kaynağı içindeki tüm katmanları yine çalıştırır. Daha az OBS kaynağı daha az CPU veya bellek kullanımını garanti etmez. İşiniz bitince tarayıcı önizlemesini kapatın ve eski kaynaklar kapalıyken OBS'yi karşılaştırın. M1 Mac performansı ve kendi NinjaBacker bağlantınız test edilmedi. Live Chat'i ayrı tutup yalnızca diğerlerini birleştirebilirsiniz.","or":"veya","session and routing troubleshooting":"oturum ve yönlendirme sorun giderme","stacks your overlay links into one tab or one OBS Browser Source. Handy for reading chat on your phone during an IRL stream.":"katman bağlantılarınızı tek sekmede veya tek OBS Tarayıcı Kaynağında birleştirir. IRL yayın sırasında telefondan sohbet okumak için kullanışlıdır.","table below":"aşağıdaki tablo","to":"şu değere:","to center short messages in that area. To center across the whole scene, use Left 0, Width 1920, and":"ile kısa mesajları o alanda ortalayın. Tüm sahne boyunca ortalamak için Left 0, Width 1920 ve","to one and":"birine ve","to paste into a Browser Source.":"Tarayıcı Kaynağına yapıştırmak için.","to the other.":"diğerine.","together (450 + 1470 = 1920). Moving a 1920-wide layer right would cut off its edge. Add":"birlikte (450 + 1470 = 1920). 1920 genişliğindeki katmanı sağa taşımak kenarını keser. Şunu ekleyin:","works":"çalışır"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/multiple-overlays-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide visual-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme">
+<a href="../index.html">Ana sayfa</a>
+<a href="features.html">Özellikler</a>
+<a href="inspiration.html" class="site-priority-inspiration">İlham</a>
+<a href="download.html">İndir</a>
+<a href="guides.html">Kılavuzlar</a>
+<a href="commands.html">Komutlar ve API</a>
+<a href="supported-sites.html">Desteklenen siteler</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a>
+<a href="services.html" class="site-priority-hire">Hizmet alın</a>
+<a href="support.html">Destek</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/multiple-overlays-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/multiple-overlays-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/multiple-overlays-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/multiple-overlays-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/multiple-overlays-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/multiple-overlays-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/multiple-overlays-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/multiple-overlays-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/multiple-overlays-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/multiple-overlays-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/multiple-overlays-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/multiple-overlays-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/multiple-overlays-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/multiple-overlays-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="multiple-overlays-guide.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/multiple-overlays-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/multiple-overlays-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="Temayı değiştir">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>Birden fazla kanal ve ayrı katmanlar</h1>
+<p>Her izleyici katmanında hangi platformların görüneceğini seçerken tüm sohbetlerinizi tek Panelde okuyun.</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="guide-jump-links" aria-label="Bu sayfada">
+<a href="#setup">Sohbeti platforma göre ayırın</a>
+<a href="#rolling">Filtre seçenekleri</a>
+<a href="#featured">Öne çıkan sohbet</a>
+<a href="#channels">İki kanal, aynı platform</a>
+<a href="#check">Test edin</a>
+<a href="#combine">Tek sekmede sohbet ve uyarılar</a>
+<a href="#combine-obs">OBS yerleşim tarifi</a>
+<a href="guides.html">Tüm kılavuzlar</a>
+</nav>
+
+<section class="guide-card">
+<h2 id="setup">4 adımda sohbeti platforma göre ayırın</h2>
+<p>Örnek: Bir katman yalnızca Twitch sohbetini, diğeri yalnızca YouTube sohbetini gösterir. Siz her şeyi tek Dock'ta okumaya devam edersiniz.</p>
+<div class="guide-step-layout">
+<ol class="guide-steps">
+<li>Tüm sohbetlerinizi Social Stream Ninja'ya ekleyin. Her birinden yeni bir mesajın şurada göründüğünü kontrol edin: <strong>Yayın sohbeti paneli</strong>. O Dock'u filtresiz tutun. Sizin kişisel görünümünüzdür.</li>
+<li>Oluşturulan bağlantınızı kopyalayın: <code>dock.html</code> bağlantısını iki kez. Kopyalama oturumu, parolayı, sürümü ve sunucu ayarlarını korur.</li>
+<li>Her kopyanın sonuna bir filtre ekleyin, örneğin <code>&amp;onlyfrom=twitch&amp;hidemenu</code> (bkz. <a href="#rolling">aşağıdaki tablo</a>).</li>
+<li>Her bağlantıyı OBS'ye ayrı bir kaynak olarak ekleyin: <strong>Tarayıcı Kaynağı</strong>. Net adlar verin, örneğin <strong>Twitch sohbeti</strong> ve <strong>YouTube sohbeti</strong>.</li>
+</ol>
+<figure class="guide-figure"><a href="../../docs/images/guides/obs-studio-sources.png"><img src="../../docs/images/guides/obs-studio-sources.png" width="265" height="580" alt="Her katmanı kendi OBS Tarayıcı Kaynağında tutun." loading="lazy" decoding="async"></a><figcaption>Her katmanın kendi Tarayıcı Kaynağı olur.</figcaption></figure>
+</div>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>Yakalama</strong>
+<span>Twitch + YouTube</span>
+</li>
+<li>
+<strong>Tek SSN oturumu</strong>
+<span>Dock'unuz ikisini de görür</span>
+</li>
+<li>
+<strong>OBS görünümleri</strong>
+<span>Yalnızca Twitch ve yalnızca YouTube</span>
+</li>
+</ol>
+<figcaption>Tek veri akışı birden fazla filtreli görünümü besleyebilir.</figcaption>
+</figure>
+</section>
+
+<section class="guide-card">
+<h2 id="rolling">Sohbet katmanlarının filtre seçenekleri</h2>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">Göstermek istiyorum…</th>
+<th scope="col">Dock bağlantısına ekleyin</th>
+</tr>
+</thead>
+<tbody>
+<tr><td data-label="Göstermek istiyorum">Yalnızca Twitch</td><td data-label="Dock bağlantısına ekleyin"><code>&amp;onlyfrom=twitch&amp;hidemenu</code></td></tr>
+<tr><td data-label="Göstermek istiyorum">Yalnızca YouTube</td><td data-label="Dock bağlantısına ekleyin"><code>&amp;onlyfrom=youtube&amp;hidemenu</code></td></tr>
+<tr><td data-label="Göstermek istiyorum">Twitch ve YouTube birlikte</td><td data-label="Dock bağlantısına ekleyin"><code>&amp;onlyfrom=twitch,youtube&amp;hidemenu</code></td></tr>
+<tr><td data-label="Göstermek istiyorum">Discord dışındaki her şey</td><td data-label="Dock bağlantısına ekleyin"><code>&amp;hidefrom=discord&amp;hidemenu</code></td></tr>
+</tbody>
+</table>
+<p>Tam bir örnek:</p>
+<pre><code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;onlyfrom=twitch&amp;hidemenu</code></pre>
+<div class="guide-note"><strong>Kullanın: <code>onlyfrom</code> ve <code>hidefrom</code> burada.</strong> Başka katmanlardaki seçenekler; örneğin <code>onlytype</code>, bu sayfada çalışmayabilir. YouTube Shorts ayrı bir türdür; şunu ekleyin: <code>youtubeshorts</code> yakalamanız bildiriyorsa. Bkz. <a href="source-types-guide.html">Kaynak türleri</a>.</div>
+</section>
+
+<section class="guide-card">
+<h2 id="featured">Featured Chat'i ayırın (seçilen mesajlar)</h2>
+<ol class="guide-steps">
+<li>Oluşturulan bağlantınızı kopyalayın: <code>featured.html</code> bağlantısını iki kez.</li>
+<li>Ekleyin: <code>&amp;onlyfrom=twitch</code> birine ve <code>&amp;onlyfrom=youtube</code> diğerine.</li>
+<li>Mesaj seçmek için Dock'u açık tutun.</li>
+</ol>
+<div class="warning-note"><strong>Featured Chat, bağlantı başına bir platform alır.</strong> Virgüllü liste (<code>twitch,youtube</code>) yalnızca Dock'ta çalışır.</div>
+<p>Filtre yalnızca sayfanın hangi seçilmiş mesajları kabul edeceğini belirler; ayrı kuyruklar oluşturmaz. Reddedilen mesaj ekranı da temizlemez. Bölüm değiştirirken eski mesaj kalmaması için öne çıkan mesajı kendiniz temizleyin.</p>
+</section>
+
+<section class="guide-card">
+<h2 id="channels">Aynı platformda iki kanal</h2>
+<p><code>onlyfrom=twitch</code> tek bir Twitch kanalı değil, tüm Twitch anlamına gelir. Kanal ve yayın başlıkları filtre adı olarak kullanılamaz.</p>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>Şunu yapmak istiyorum…</th><th>Yapılacak işlem</th></tr></thead>
+<tbody>
+<tr><td data-label="Şunu yapmak istiyorum">Her mesajın hangi kanaldan geldiğini gösterin</td><td data-label="Yapılacak işlem">Ekleyin: <code>&amp;showchannelname</code> (kaynak kanal adı gönderdiğinde çalışır).</td></tr>
+<tr><td data-label="Şunu yapmak istiyorum">Tamamen ayrı iki yayın çalıştırın</td><td data-label="Yapılacak işlem">Her biri kendi oturumuna sahip ve yalnızca kendi kaynaklarını açan ayrı yakalama örnekleri veya profiller kullanın.</td></tr>
+<tr><td data-label="Şunu yapmak istiyorum">Dock'u tarayıcı sekmesine göre filtreleyin</td><td data-label="Yapılacak işlem"><code>&amp;filtertid=123</code> (gelişmiş, aşağıya bakın).</td></tr>
+</tbody>
+</table>
+<div class="guide-note">Farklı oturumdaki bir katman, eşleşen yakalama yoksa boş kalır. Katmanın <code>label</code> yönlendirme için sayfayı adlandırır; kanal filtresi değildir.</div>
+<details class="guide-extra">
+<summary>Nasıl <code>filtertid</code> çalışır</summary>
+<ul>
+<li>Mesajın geldiği tarayıcı sekmesinin sayısal ID'sini alır. Birden fazla ID'yi virgülle ayırın.</li>
+<li>Şunu bulun: <code>tid</code> gerçek yakalanmış veride. Bkz. <a href="event-reference.html">Olay referansı</a> ve <a href="commands.html">Komutlar ve API</a>.</li>
+<li>Platform kanal ID'si değildir.</li>
+<li>Kaynak yeniden açılınca sekme ID'leri değişebilir. Eşleşen sekme ID'si olmayan kaynaklar gizlenebilir.</li>
+<li>Yalnızca Dock'ta çalışır; Featured Chat kanal filtresi değildir.</li>
+</ul>
+</details>
+</section>
+
+<section class="guide-card">
+<h2 id="check">Her görünümü test edin</h2>
+<ol class="guide-steps">
+<li>Test oturumuna sahte Twitch ve YouTube mesajı gönderin. Şunu kullanın: <a href="test-message-guide.html">Test mesajları oluşturun</a>.</li>
+<li>İkisinin de Dock'ta göründüğünü ve her sohbet katmanının yalnızca kendi platformunu gösterdiğini kontrol edin.</li>
+<li>Her mesajı öne çıkarın, ardından temizleye basın. Platform değiştirdikten sonra tüm öne çıkarılan mesaj sayfalarını kontrol edin.</li>
+<li>Her kaynaktan gerçek mesajla tekrarlayın. Sahte mesajların gerçek sekme ID'si yoktur.</li>
+</ol>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>Sorun</th><th>Şunu deneyin</th></tr></thead>
+<tbody>
+<tr><td data-label="Sorun">Görünüm boş</td><td data-label="Şunu deneyin">Filtreyi geçici kaldırın. Sohbet geri gelirse tam kaynak türünü veya sekme ID'sini kontrol edin.</td></tr>
+<tr><td data-label="Sorun">Filtresiz de boş</td><td data-label="Şunu deneyin">Bkz. <a href="sessions-passwords-relay-modes.html">oturum ve yönlendirme sorun giderme</a>.</td></tr>
+<tr><td data-label="Sorun">OBS kaynağını yeniden adlandırdım, değişmedi</td><td data-label="Şunu deneyin">Ad değiştirmek kayıtlı bağlantıyı değiştirmez. URL'nin kendisini düzenleyin.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="guide-card">
+<h2 id="combine">Tek tarayıcı sekmesinde sohbet ve uyarılar</h2>
+<p><a href="../../combine.html">Katmanları birleştir</a> katman bağlantılarınızı tek sekmede veya tek OBS Tarayıcı Kaynağında birleştirir. IRL yayın sırasında telefondan sohbet okumak için kullanışlıdır.</p>
+<ol class="guide-steps">
+<li>Şunu yapıştırın: <strong>Yayın sohbeti paneli</strong> bağlantısını alt katmana.</li>
+<li>Şunu yapıştırın: <strong>Çoklu Yayın Uyarı Kutusu</strong> bağlantısını üst katmana. Oturum, parola ve bağlantı seçenekleriyle tam bağlantıları koruyun.</li>
+<li>Bırakın: <strong>Şeffaf SSN arka planı</strong> işaretli olmalıdır.</li>
+<li>Açın: <strong>Bu katmanda dokunmaya ve kaydırmaya izin ver</strong> sohbet için. Uyarılarda kapatın ki sohbeti engellemesinler.</li>
+<li>Basın <strong>Önizleme</strong>, ardından <strong>QR kodunu göster</strong> ve telefonla tarayın. Ya da şuna basın: <strong>Birleştirilmiş bağlantıyı kopyala</strong> Tarayıcı Kaynağına yapıştırmak için.</li>
+</ol>
+<p>Birleşik görünümde ayar kontrolleri yoktur. Yalnızca katmanları gösterir.</p>
+
+<h3>Katman seçenekleri</h3>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>Şunu yapmak istiyorum…</th><th>Yapılacak işlem</th></tr></thead>
+<tbody>
+<tr><td data-label="Şunu yapmak istiyorum">Daha fazla katman ekleyin</td><td data-label="Yapılacak işlem">En fazla sekiz bağlantı.</td></tr>
+<tr><td data-label="Şunu yapmak istiyorum">Katmanı öne veya arkaya alın</td><td data-label="Yapılacak işlem">Ok düğmelerini kullanın.</td></tr>
+<tr><td data-label="Şunu yapmak istiyorum">Katmanı boyutlandırın veya taşıyın</td><td data-label="Yapılacak işlem">Açın: <strong>Boyut ve konum</strong>. Genişlik, yükseklik, sol ve üst konumlarını piksel (<code>450</code>) veya yüzde (<code>100%</code>).</td></tr>
+<tr><td data-label="Şunu yapmak istiyorum">Katmanı yeniden tam ekran yapın</td><td data-label="Yapılacak işlem"><strong>Tam ekrana sıfırla</strong>. Boş genişlik ve yükseklik tarayıcıyı doldurur; boş sol ve üst değerleri sol üst köşeden başlar.</td></tr>
+<tr><td data-label="Şunu yapmak istiyorum">Solda sohbet sütunu oluşturun (1920×1080)</td><td data-label="Yapılacak işlem">Sohbet katmanı: genişlik <code>450</code>, yükseklik <code>1080</code>, sol <code>0</code>, üst <code>0</code>. Diğer katmanlar tam ekran kalır.</td></tr>
+<tr><td data-label="Şunu yapmak istiyorum">Birleştirilmiş bağlantıyı daha sonra düzenleyin</td><td data-label="Yapılacak işlem">Düzenlenebilir bağlantıyı kullanın veya şunu ekleyin: <code>?edit=1</code> şundan önce: <code>#</code>.</td></tr>
+<tr><td data-label="Şunu yapmak istiyorum">Baştan başlayın</td><td data-label="Yapılacak işlem"><strong>Kayıtlı kurulumu temizle</strong>.</td></tr>
+</tbody>
+</table>
+<p>Piksel boyutları tarayıcı boyutu değişince sabit kalır. Yüzdeler uyum sağlar. Her katman kendi içeriğini ve ayarlarını korur.</p>
+
+<details class="guide-extra">
+<summary>Kayıt, telefonlar ve gizlilik</summary>
+<ul>
+<li>Bağlantılar ve katman seçenekleri, tamamlanmamış olanlar dâhil bu tarayıcıda otomatik kaydedilir. Gizli gezinme bunları saklamayabilir.</li>
+<li>Birleşik bağlantı ve QR kodu tüm yerleşimi içerir. Bilgisayarda kurun, bir kez taratın ve telefonda yer imlerine ekleyin. Açılması ayarları telefonun tarayıcısına da kaydeder.</li>
+<li>Masaüstündeki düzenlemeler eski bağlantıyı güncellemez. Düzenledikten sonra yeni bağlantıyı kopyalayın veya tarayın. Oturum kimliğiniz üzerinden hiçbir şey eşitlenmez.</li>
+<li>Birleşik bağlantıları ve QR kodlarını katman bağlantılarınız kadar gizli tutun.</li>
+<li>SSN yakalaması çalışmalı ve telefon özgün bağlantıların kullandığı sunuculara erişebilmelidir. <code>localhost</code> veya <code>127.0.0.1</code> telefonun kendisi anlamına gelir.</li>
+<li>Çok uzun bağlantılar QR koda sığmayabilir. Bağlantıyı yine kopyalayabilirsiniz.</li>
+</ul>
+</details>
+</section>
+
+<section class="guide-card">
+<h2 id="combine-obs">OBS tarifi: tam ekran efektlerle solda sohbet sütunu</h2>
+<p><strong>CSS gerekmez.</strong> Her katmanın kendi alanı vardır. OBS Tarayıcı Kaynağını şu boyuta ayarlayın: <strong>1920&times;1080</strong>. Katmanları alttan başlayarak ekleyin; her katmanın şu bölümüne yalnızca sayıları yazın (virgül veya “px” olmadan): <strong>Boyut ve konum</strong>.</p>
+<div class="guide-table-scroll">
+<table class="guide-table">
+<thead><tr><th scope="col">Katman</th><th scope="col">Genişlik</th><th scope="col">Yükseklik</th><th scope="col">Sol</th><th scope="col">Üst</th></tr></thead>
+<tbody>
+<tr><td data-label="Katman">1. Canlı Sohbet / Panel</td><td data-label="Genişlik">450</td><td data-label="Yükseklik">1000</td><td data-label="Sol">0</td><td data-label="Üst">80</td></tr>
+<tr><td data-label="Katman">2. Hype sayacı</td><td data-label="Genişlik">450</td><td data-label="Yükseklik">80</td><td data-label="Sol">0</td><td data-label="Üst">0</td></tr>
+<tr><td data-label="Katman">3. Emoji / İfade Duvarı</td><td data-label="Genişlik">1920</td><td data-label="Yükseklik">1080</td><td data-label="Sol">0</td><td data-label="Üst">0</td></tr>
+<tr><td data-label="Katman">4. Öne Çıkan Sohbet</td><td data-label="Genişlik">1470</td><td data-label="Yükseklik">1080</td><td data-label="Sol">450</td><td data-label="Üst">0</td></tr>
+<tr><td data-label="Katman">5. NinjaBacker (isteğe bağlı)</td><td data-label="Genişlik">1920</td><td data-label="Yükseklik">1080</td><td data-label="Sol">0</td><td data-label="Üst">0</td></tr>
+</tbody>
+</table>
+</div>
+<p>Üst 80 piksel Hype'a ayrılır, sohbet sütunu altındadır. Sohbetin Hype arkasında tam yüksekliği kaplamasını mı istiyorsunuz? Live Chat yüksekliğini şuna ayarlayın: <code>1080</code> ve üst uzaklığı şu değere: <code>0</code>. Farklı sahne boyutları farklı sayılar gerektirir.</p>
+<ol class="guide-steps">
+<li><strong>Tam katman bağlantılarınızı yapıştırın.</strong> Oturum, parola, stiller ve bağlantı ayarları korunsun diye mevcut Tarayıcı Kaynaklarından kopyalayın. Şu ayarı koruyun: <strong>Şeffaf SSN arka planı</strong> işaretli kalsın. OBS kırpma, dönüşüm, filtre ve Özel CSS ayarları bağlantıda değildir; taşınmaz.</li>
+<li><strong>Hype'ı sütunda ortalayın.</strong> Şunun üzerinde: <code>hype.html</code> bağlantısında şunu kullanın: <code>&amp;align=center</code>. Şu mevcut değerleri değiştirin: <code>align=left</code> veya <code>align=right</code> ve şunu kaldırın: <code>alignright</code>. Daha kompakt görünüm için şunu deneyin: <code>&amp;combineall&amp;hidetitle&amp;style=compact&amp;scale=0.75</code> (mevcut değerleri değiştirin). Stiliniz daha fazla alan gerektiriyorsa Hype katmanını daha yüksek yapın.</li>
+<li><strong>Featured Chat'i sohbet sütununun yanında tutun.</strong> Şunu ayarlayın: <strong>Sol = 450</strong> ve <strong>Genişlik = 1470</strong> birlikte (450 + 1470 = 1920). 1920 genişliğindeki katmanı sağa taşımak kenarını keser. Şunu ekleyin: <code>&amp;center</code> şu değere: <code>featured.html</code> ile kısa mesajları o alanda ortalayın. Tüm sahne boyunca ortalamak için Left 0, Width 1920 ve <code>&amp;center</code>.</li>
+<li><strong>NinjaBacker'ı sona koyun (isteğe bağlı).</strong> İzleyici katmanı bağlantısını sağdan giriş animasyonuyla en üst katmana yapıştırın. Birleştirici alanı ve sırayı, NinjaBacker kendi animasyonunu belirler. Arka plan şeffaf olmalı ve site gömmeye izin vermelidir. Bu katman test edilen örneğe dâhil değildi.</li>
+<li><strong>1920×1080 boyutunda önizleyin.</strong> Emojili mesaj gönderin, Dock'tan bir mesajı öne çıkarın ve SSN'de Hype verilerini açın. Normal sohbet kendiliğinden öne çıkarılacak mesaj seçmez.</li>
+<li><strong>Yeni birleştirilmiş bağlantıyı OBS'ye kopyalayın.</strong> Tarayıcı Kaynağını 1920 genişlik, 1080 yükseklik yapın. Önizleme boyutu bunu ayarlamaz. Kırpmadan sahneye sığdırın. Her yerleşim değişikliğinden sonra bağlantıyı tekrar kopyalayın; eski bağlantı eski düzeni korur.</li>
+</ol>
+<figure class="guide-figure">
+<a href="../../docs/images/combined-podcast-scene.png" target="_blank" rel="noopener noreferrer"><img class="guide-image" src="../../docs/images/combined-podcast-scene.png" width="1920" height="1080" loading="lazy" style="background:#181b23" alt="Test edilmiş birleşik çıktı: dar sol sohbet sütununun üzerinde ortalanmış Hype, sahne boyunca emojiler ve sohbetin sağında alt kısım boyunca öne çıkan mesaj."></a>
+<figcaption>Dört SSN katmanı ve test akışıyla gerçek Chromium testi. Görsel şeffaftır; okunabilmesi için burada koyu arka plan eklenmiştir. Tam boy için tıklayın. Yazı tipleri ve renkler kendi katman ayarlarınızdan gelir.</figcaption>
+</figure>
+<div class="guide-note"><strong>Performans:</strong> tek Tarayıcı Kaynağı içindeki tüm katmanları yine çalıştırır. Daha az OBS kaynağı daha az CPU veya bellek kullanımını garanti etmez. İşiniz bitince tarayıcı önizlemesini kapatın ve eski kaynaklar kapalıyken OBS'yi karşılaştırın. M1 Mac performansı ve kendi NinjaBacker bağlantınız test edilmedi. Live Chat'i ayrı tutup yalnızca diğerlerini birleştirebilirsiniz.</div>
+
+<h3>Bir katman boşsa veya sohbeti örtüyorsa</h3>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>Sorun</th><th>Şunu deneyin</th></tr></thead>
+<tbody>
+<tr><td data-label="Sorun">Katman boş</td><td data-label="Şunu deneyin">Önce özgün bağlantısını tek başına açın. Uyarılar olay gelene kadar boş kalır. Birleştirme yeni veri yakalamaz.</td></tr>
+<tr><td data-label="Sorun">Katmanda opak arka plan var</td><td data-label="Şunu deneyin">Otomatik şeffaflık şunlarda çalışır: <code>dock.html</code>, <code>featured.html</code>, <code>multi-alerts.html</code>, ve <code>minecraft.html</code>. Diğer sayfalar kendi şeffaflık ayarını gerektirir. Bazı dış siteler gömülmeyi engeller.</td></tr>
+<tr><td data-label="Sorun">Sohbete dokunulamıyor veya kaydırılamıyor</td><td data-label="Şunu deneyin">Şeffaf bir katman da dokunmaları engelleyebilir. Şunu kapatın: <strong>Dokunmaya ve kaydırmaya izin ver</strong> sohbet üzerindeki, buna ihtiyaç duymayan katmanlarda.</td></tr>
+<tr><td data-label="Sorun">Telefonda ses yok</td><td data-label="Şunu deneyin">Telefonlar sesi çalmadan önce dokunma isteyebilir. O katmanda dokunmayı açıp dokunun. Güvenmeden önce gerçek telefonda test edin.</td></tr>
+</tbody>
+</table>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">Tüm kılavuzlara göz atın</a>
+</p>
+</div>
+</div>
+</footer>
+<script data-copy-markdown src="../../docs/js/main.js">
+</script>
+</body>
+</html>

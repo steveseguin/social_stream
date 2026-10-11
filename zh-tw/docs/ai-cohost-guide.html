@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-tw/docs/ai-cohost-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/zh-tw/docs/ai-cohost-guide.html">
+    <meta property="og:title" content="AI 共同主持指南 — Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja AI 共同主持、停駐面板控制與 AI 舞台疊加畫面的設定和工作流程指南。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-tw/docs/ai-cohost-guide.html">
+    <meta name="twitter:title" content="AI 共同主持指南 — Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja AI 共同主持、停駐面板控制與 AI 舞台疊加畫面的設定和工作流程指南。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 共同主持指南 — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja AI 共同主持、停駐面板控制與 AI 舞台疊加畫面的設定和工作流程指南。">
+    <style>
+        .cohost-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin: 22px 0;
+        }
+        .cohost-guide-card {
+            background: var(--card-bg, #fff);
+            border: 1px solid rgba(127, 127, 127, 0.22);
+            border-radius: 8px;
+            padding: 18px;
+        }
+        .cohost-guide-card h3 {
+            margin-top: 0;
+        }
+        .cohost-flow {
+            margin: 18px 0;
+            padding: 18px;
+            border-left: 4px solid #00a6ff;
+            background: rgba(0, 166, 255, 0.08);
+        }
+        .cohost-code {
+            display: block;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            background: #111827;
+            color: #e5e7eb;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.92rem;
+            line-height: 1.45;
+        }
+        .dark-mode .cohost-guide-card {
+            background: #161b22;
+        }
+
+        @media (max-width: 700px) {
+            .field-table, .steps-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/ai-cohost-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"(the default), or explicitly choose":"（預設），或明確選擇",", add your OpenAI project API key, and use":"，新增 OpenAI 專案 API 金鑰，並使用",", allow microphone permission, check the operating system's default microphone, confirm internet access, and verify that Chrome Speech Recognition is available.":"，允許使用麥克風，檢查作業系統的預設麥克風，確認能存取網際網路，並驗證 Chrome 語音辨識是否可用。",", and manual dock actions that send approved lines to":"，以及將已核准文字傳送到以下目標的手動停駐面板操作：",", browser audio permissions, and OBS browser/app audio capture. Use":"、瀏覽器音訊權限，以及 OBS 對瀏覽器或應用程式音訊的擷取。使用",", confirm the selected microphone is not muted and allow the first model download to finish.":"，確認選取的麥克風沒有靜音，並等待首次模型下載完成。",", keeping payloads predictable for overlays and automations.":"，使疊加畫面和自動化收到的資料保持一致。",", open":"，開啟",", the volume slider, output-device selector, and":"、音量滑桿、輸出裝置選擇器，以及",", which uses":"，它使用","- allows overlay TTS even when the co-host controller is already playing audio; this intentionally creates a second voice.":"— 即使共同主持控制器已在播放音訊，也允許疊加畫面使用 TTS；這會刻意產生第二路聲音。","- controls stage placement.":"— 控制舞台位置。","- lets the overlay speak with browser TTS.":"— 讓疊加畫面使用瀏覽器 TTS 朗讀。","- required for the dock and overlay to share a room.":"— 停駐面板與疊加畫面加入同一個房間所必需。","- scales the overlay.":"— 縮放疊加畫面。","- sets the display name on the overlay.":"— 設定疊加畫面上的顯示名稱。","- sets the overlay target label.":"— 設定疊加畫面的目標標籤。","- shows connection/status text on the overlay.":"— 在疊加畫面上顯示連線和狀態文字。","- uses a custom avatar image.":"— 使用自訂頭像圖片。",". Add":"。新增",". Ask “What is chat saying?” to have the same spoken AI discuss recent viewer messages.":"。問它「聊天裡在說什麼？」，就能讓同一個語音 AI 討論近期觀眾訊息。",". Its default context-only mode lets the AI remember recent viewer messages and discuss them when the streamer asks.":"。預設的僅上下文模式讓 AI 記住近期觀眾訊息，在直播主提問時進行討論。",". OBS also needs at least one exact scene name in its allowlist.":"。OBS 還需要在允許清單中至少包含一個精確的場景名稱。",". Replies are capped at 512 output tokens; Diagnostics shows cumulative token usage and measured first-output latency. OpenAI automatically truncates unplayed audio when the streamer interrupts. SSN retains at most 20 recent chat messages for up to 90 seconds, including paid-support, membership, moderator, event, and source-channel context, then removes that temporary context. SSN checks quiet sessions, reconnects failed transports, and rolls sessions over before the 60-minute limit. A recovered session reapplies the system instructions and performance settings, but starts without the previous spoken conversation.":"。回覆最多輸出 512 個 token；診斷面板顯示累計 token 用量和測得的首次輸出延遲。直播主打斷時，OpenAI 會自動截斷尚未播放的音訊。SSN 最多保留 20 則近期聊天訊息，最長 90 秒，包括付費支持、會員、管理員、事件和來源頻道的上下文，隨後刪除這些暫存內容。SSN 會檢查靜默工作階段、重新連接失敗的傳輸，並在 60 分鐘上限前切換到新工作階段。恢復後的工作階段會重新套用系統指令和效能設定，但不包含先前的語音對話。",". The dock can read the message, ask the AI for an answer, or create a light roast draft.":"。停駐面板可以朗讀訊息、向 AI 提問，或產生輕度調侃草稿。",". The first use downloads about 42 MB; later transcription runs offline.":"。首次使用會下載約 42 MB，之後轉錄可離線執行。",". The menu is hidden until the stage overlay is detected. Dock message rows do not yet expose this context menu to the keyboard; keyboard users can use the typed message field or voice controls on":"。偵測到舞台疊加畫面後才會顯示選單。停駐面板的訊息列暫不支援用鍵盤開啟此快顯選單；鍵盤使用者可使用以下頁面上的文字輸入框或語音控制項：",". The standard key stays in the SSN extension/Desktop background; the co-host page receives only a short-lived Realtime client secret.":"。標準金鑰保留在 SSN 擴充功能或桌面應用程式的背景服務；共同主持頁面僅取得有效期很短的 Realtime 用戶端密鑰。",". With Desktop Whisper, it should show":"。使用桌面 Whisper 時，應顯示",": ask it what chat is saying. Questions or All speak automatic replies from the co-host page; they do not post those replies into YouTube, Twitch, or Kick chat.":"：問它聊天在說什麼。Questions 或 All 模式會從共同主持頁面自動朗讀回覆，但不會把回覆發布到 YouTube、Twitch 或 Kick 聊天。","AI Co-host Guide":"AI 共同主持指南","AI Co-host Guide - Social Stream Ninja":"AI 共同主持指南 — Social Stream Ninja","AI Stage Overlay":"AI 舞台疊加畫面","Action":"操作","Add the AI stage overlay to OBS:":"將 AI 舞台疊加畫面新增至 OBS：","Answer":"回答","Answer / Light Roast:":"回答／輕度調侃：","Answer and Light Roast use the configured LLM provider through the Private Chat Bot bridge. Read does not require AI.":"回答和輕度調侃透過私人聊天機器人橋接呼叫已設定的 LLM 服務。朗讀不需要 AI。","Approval panel draft":"核准面板草稿","Ask directly, for example “switch to BRB,” “feature that last message,” or “clear the featured chat.” Viewer messages cannot authorize tools, and only one stream-changing tool runs per direct streamer request.":"直接提出要求，例如「切換到 BRB」「顯示最後一則訊息」或「清空精選聊天」。觀眾訊息不能授權工具操作，每次直播主直接提出的要求最多執行一個改變直播狀態的工具。","Audio Response":"音訊回覆","Available Actions":"可用操作","Capture the audio from the co-host browser/app in OBS. The native OpenAI voice plays only from":"在 OBS 中擷取共同主持瀏覽器或應用程式的音訊。OpenAI 原生語音僅從以下頁面播放：","Chat Bots and AI services > Chat Bot - Private Interface > Enable private chat bot option":"聊天機器人和 AI 服務 > 聊天機器人－私人介面 > 啟用私人聊天機器人選項","Chat Bots and AI services > Configure LLM Service Provider":"聊天機器人和 AI 服務 > 設定 LLM 服務提供者","ChatGPT API":"ChatGPT API","Chrome / Chrome extension link:":"Chrome／Chrome 擴充功能連結：","Co-host":"共同主持","Co-host Stream Controls":"共同主持直播控制","Co-host output":"共同主持輸出","Commands & API":"指令與 API","Connected":"已連線","Context only":"僅上下文","Context only - answer when asked":"僅上下文 — 提問時才回答","Copies the draft without sending it to the overlay.":"複製草稿，不傳送到疊加畫面。","Copy":"複製","Creates a short answer draft for streamer approval.":"建立簡短回答草稿，供直播主核准。","Creates a short, playful, PG draft for streamer approval.":"建立簡短、輕鬆幽默、內容溫和的草稿，供直播主核准。","Design Notes":"設計說明","Diagnostics:":"診斷：","Dock Controls":"停駐面板控制","Dock Right-click Co-host Setup":"設定停駐面板右鍵共同主持功能","Download":"下載","Enable":"啟用","Explicitly choose the microphone you talk into, keep":"明確選擇你說話時使用的麥克風，保持","Fast waits up to about 2 seconds for the end of a thought; Balanced about 4 seconds; Patient about 8 seconds. Fast feels more responsive but can interrupt a natural pause.":"Fast 最多等待約 2 秒來判斷一句話是否結束；Balanced 約 4 秒；Patient 約 8 秒。Fast 回應較快，但可能打斷自然停頓。","Features":"功能","For AI answers, configure an LLM provider in the popup. For quick testing, choose":"若要使用 AI 回答，請在彈出選單中設定 LLM 服務。快速測試時可選擇","For OBS, enter the exact allowed scene names as a comma-separated list and keep":"對於 OBS，請輸入精確的允許場景名稱，以逗號分隔，並保持","For dock/manual text workflows, the overlay is the visual and optional TTS playout source. For native OpenAI voice, capture":"在停駐面板或手動文字流程中，疊加畫面負責畫面顯示和選用的 TTS 播放。對於 OpenAI 原生語音，請獨立擷取","For longer-term use, use your own token or local provider if the trial service is disabled or rate-limited.":"長期使用時，如果試用服務被關閉或限流，請使用自己的權杖或本機服務。","Generated responses are not auto-spoken; the streamer must approve them first.":"產生的回覆不會自動朗讀，必須先由直播主核准。","Guides":"指南","Heard":"辨識內容","Hire":"聘用","Home":"首頁","How The Pages Talk":"頁面如何通訊","How the dock controls, private chat bot, and AI stage overlay work together.":"停駐面板控制項、私人聊天機器人和 AI 舞台疊加畫面如何協同運作。","If":"如果","If Answer or Light Roast is disabled, the SSN bridge or Private Chat Bot is not available.":"如果回答或輕度調侃無法使用，表示 SSN 橋接或私人聊天機器人無法使用。","If Chrome never fills":"如果 Chrome 始終沒有填入","If Desktop shows":"如果桌面版顯示","If Local Gemma cannot download its model files from the default asset host, set the asset host to your own mirrored Gemma folder.":"如果 Local Gemma 無法從預設資源主機下載模型檔案，請將資源主機設為你自己鏡像的 Gemma 資料夾。","If OpenAI Realtime disconnects, leave the co-host running while it retries. Diagnostics identifies the data, peer, provider, or health-check failure. A recovered session keeps the selected system instructions and performance settings but cannot recover the previous spoken conversation.":"如果 OpenAI Realtime 中斷連線，請讓共同主持保持執行並等待重試。診斷面板會區分資料、對等連線、服務提供者或健康檢查故障。恢復後的工作階段保留選取的系統指令和效能設定，但無法恢復先前的語音對話。","If OpenAI Realtime replies are slow, try Mini, Low reasoning, and Fast turn-taking, then compare the Latency line in Diagnostics. Higher reasoning and Patient turn-taking deliberately trade speed for depth or longer pauses.":"如果 OpenAI Realtime 回覆較慢，嘗試 Mini、Low 推理強度和 Fast 輪流發言速度，再比較診斷面板中的延遲。較高推理強度和 Patient 輪流發言速度會刻意犧牲速度，以換取更深入的回答或更長的停頓。","If OpenAI Realtime text appears but no audio plays, verify":"如果 OpenAI Realtime 顯示文字但沒有播放音訊，請檢查","If a stream-control tool is unavailable, enable it in both the SSN popup and":"如果直播控制工具無法使用，請同時在 SSN 彈出選單和以下位置啟用：","If an Answer, Light Roast, or SSN Configured LLM request times out, check that Social Stream is on, the session matches, Private Chat Bot is enabled, and the selected LLM provider is reachable. OpenAI Realtime does not require Private Chat Bot.":"如果回答、輕度調侃或 SSN Configured LLM 要求逾時，請檢查 Social Stream 已開啟、工作階段一致、私人聊天機器人已啟用，且所選 LLM 服務可存取。OpenAI Realtime 不需要私人聊天機器人。","If multiple overlays are open, make sure the overlay label matches the dock target. The default label is":"如果開啟了多個疊加畫面，請確認疊加畫面標籤與停駐面板目標一致。預設標籤為","If the Co-host menu is missing, the co-host overlay is not detected in the same session.":"如果缺少共同主持選單，表示在同一工作階段中沒有偵測到共同主持疊加畫面。","If the co-host knows chat but stays quiet, that is expected in":"如果共同主持知道聊天內容卻不說話，這是以下模式的正常行為：","If the hosted trial AI stops responding, it may be disabled or rate-limited; switch to your own token, Ollama, or Custom API.":"如果託管試用 AI 停止回應，可能已被停用或限流；請改用自己的權杖、Ollama 或自訂 API。","In the SSN popup, choose":"在 SSN 彈出選單中選擇","In the SSN popup, enable only the co-host tools you want: Spotify, OBS scenes, or featured chat.":"在 SSN 彈出選單中，僅啟用你需要的共同主持工具：Spotify、OBS 場景或精選聊天。","Inspiration":"靈感","Keep the stage overlay's speech bubble visible, or provide captions, so the AI response is not available through audio alone.":"保持舞台疊加畫面的對話泡泡可見，或提供字幕，讓 AI 回覆不只透過音訊傳達。","Latency reports the time from the end of the turn to first text or audio, and separates model delay when possible. Network conditions and provider load can still vary between otherwise similar requests.":"延遲顯示從一輪發言結束到首次出現文字或音訊的時間，並在可行時獨立標出模型延遲。即使要求相似，網路狀況和服務負載仍可能不同。","Leave Live Chat on":"將 Live Chat 保持為","Leave the endpoint, token, and model blank for the default trial setup.":"預設試用設定中，將端點、權杖和模型留空。","Light Roast":"輕度調侃","Listening (Desktop Whisper)":"正在聆聽（桌面 Whisper）","Listening (OpenAI WebRTC)":"正在聆聽（OpenAI WebRTC）","Main navigation":"主導覽","Mini is normally faster and costs less. Full quality is more capable and costs more.":"Mini 通常更快且費用更低。Full quality 能力更強，費用也更高。","Minimal or Low normally lowers response delay and billed output usage. High or Extra high can improve complex answers but may respond more slowly and cost more. Changes apply while connected.":"Minimal 或 Low 通常可降低回覆延遲和計費輸出用量。High 或 Extra high 可改善複雜問題的回答，但可能更慢且更貴。連線期間變更會即時生效。","Model:":"模型：","Multimodal Co-host":"多模態共同主持","Mute co-host voice":"將共同主持語音靜音","Mute microphone":"將麥克風靜音","Mute shared system audio":"將共享的系統音訊靜音","No Video":"無視訊","Non-standard command details live inside":"非標準指令細節放在","On":"開啟","On this page":"本頁內容","Open":"開啟","Open navigation menu":"開啟導覽選單","Open the Streaming Chat dock with your session:":"使用你的工作階段開啟 Streaming Chat 停駐面板：","Open the generated":"開啟產生的","OpenAI Realtime":"OpenAI Realtime","OpenAI Realtime Setup":"OpenAI Realtime 設定","OpenAI Realtime supports the Spotify, OBS scene, and featured-chat tools below. SSN Configured LLM currently supports Spotify only; other co-host providers do not yet expose these tools.":"OpenAI Realtime 支援下列 Spotify、OBS 場景和精選聊天工具。SSN Configured LLM 目前僅支援 Spotify；其他共同主持服務暫未開放這些工具。","OpenAI Realtime:":"OpenAI Realtime:","OpenAI Speed, Quality, And Cost":"OpenAI 的速度、品質與費用","Optional Stream Controls":"選用的直播控制","Optional: leave Video source on":"選用：將視訊來源保持為","Other browsers:":"其他瀏覽器：","Overlay Gallery":"疊加畫面圖庫","Privacy:":"隱私權：","Private Chat Bot":"私人聊天機器人","Private Chat Bot + configured LLM or Hosted Trial LLM":"私人聊天機器人 + 已設定的 LLM 或託管試用 LLM","Read on Co-host":"由共同主持朗讀","Read on Co-host:":"由共同主持朗讀：","Reads the selected chat message on the overlay.":"在疊加畫面中朗讀選取的聊天訊息。","Reasoning effort:":"推理強度：","Requires":"需要","Result":"結果","Right-click a dock message and select":"以滑鼠右鍵點擊停駐面板中的訊息，選擇","SSN Desktop:":"SSN 桌面版：","SSN Hosted Trial LLM":"SSN 託管試用 LLM","SSN Hosted Trial LLM (experimental)":"SSN 託管試用 LLM（實驗性）","Screen Share":"螢幕分享","Select":"選擇","Sends the approved text to the AI stage overlay.":"將已核准的文字傳送到 AI 舞台疊加畫面。","Setup and workflow guide for the Social Stream Ninja AI co-host, dock controls, and AI stage overlay.":"Social Stream Ninja AI 共同主持、停駐面板控制與 AI 舞台疊加畫面的設定和工作流程指南。","Simple AI Option":"簡單 AI 選項","Skip to main content":"跳至主要內容","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Speak":"朗讀","Start Co-host":"啟動共同主持","Status And Troubleshooting":"狀態與疑難排解","Stop speaking":"停止朗讀","Streams the microphone selected on":"將以下頁面中選取的麥克風音訊傳輸","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","Test overlay":"測試疊加畫面","Test selected chat bot":"測試所選聊天機器人","The":"此","The dock and overlay use the existing Social Stream session bridge. Messages are sent as":"停駐面板與疊加畫面使用現有的 Social Stream 工作階段橋接。訊息以下列形式傳送：","The dock is the control surface, so streamer approval stays off-stream.":"停駐面板是操作控制介面，因此直播主的核准過程不會出現在直播畫面中。","The extension opens the hosted co-host page in a Chrome tab. OpenAI Realtime uses WebRTC with a short-lived client secret; text-response providers use Chrome Speech Recognition and may require internet.":"擴充功能在 Chrome 分頁中開啟託管的共同主持頁面。OpenAI Realtime 透過短期用戶端密鑰使用 WebRTC；文字回覆服務使用 Chrome 語音辨識，可能需要連網。","The overlay shows the avatar, speech bubble, and optional browser text-to-speech audio. This is the browser source you put in OBS.":"疊加畫面顯示頭像、對話泡泡，並可選擇使用瀏覽器文字轉語音。把這個瀏覽器來源放進 OBS 即可。","The primary chat bot overlay toggle is optional and does not enable dock right-click co-host actions.":"主聊天機器人疊加畫面開關是選用項目，不會啟用停駐面板右鍵共同主持操作。","There are two co-host workflows: a continuous voice companion in":"共同主持有兩種工作流程：持續對話的語音夥伴，位於","This uses OpenAI API billing and creates one SSN Realtime conversation over WebRTC, separate from":"此功能使用 OpenAI API 計費，並透過 WebRTC 建立一個 SSN Realtime 對話，獨立於","Tip:":"提示：","Tool access is allowlisted, not general API access. OBS can select only scenes named in SSN settings. Feature requests use a recent captured chat message and require the Streaming Chat dock; tool replies report delivery, not proof that OBS or the overlay completed the action.":"工具存取受允許清單限制，並非通用 API 存取。OBS 只能選擇 SSN 設定中列出的場景。精選顯示要求使用近期擷取的聊天訊息，並要求 Streaming Chat 停駐面板已開啟；工具回覆回報的是指令送達，不代表 OBS 或疊加畫面已完成操作。","Turn-taking speed:":"輪流發言速度：","Use":"使用","Use the same":"使用相同的","Useful URL Parameters":"常用 URL 參數","Uses local Whisper with the microphone selected on":"使用本機 Whisper，麥克風選擇位於","Voice Conversation Support":"語音對話支援","Voice recognition is not guaranteed. Typed co-host chat, live-chat input, camera/screen input, and configured LLM responses can still work without speech recognition.":"不保證語音辨識一定可用。即使沒有語音辨識，共同主持文字聊天、即時聊天輸入、攝影機或螢幕輸入，以及已設定的 LLM 回覆仍可運作。","What It Does":"功能說明","When the stage overlay is connected, right-click a chat message in the dock and choose":"舞台疊加畫面連線後，以滑鼠右鍵點擊停駐面板中的聊天訊息，選擇","With OpenAI Realtime, Diagnostics should show":"使用 OpenAI Realtime 時，診斷面板應顯示","and arm the same tools for that controller.":"，並為該控制器啟用相同的工具。","and then the recognized text under":"，然後在以下位置顯示辨識文字：","applies to text-overlay workflows. When native controller audio is active, SSN suppresses duplicate overlay TTS;":"適用於文字疊加畫面流程。控制器原生音訊啟用時，SSN 會抑制重複的疊加畫面 TTS；","as a free simple option for testing while the trial is available.":"，在試用服務可用期間可作為簡單免費的測試選項。","as the popup and that Live Chat is set to Context, Questions, or All.":"，與彈出選單保持一致，並確認 Live Chat 設為 Context、Questions 或 All。","audio separately; the stage overlay does not replay that same WebRTC audio.":"的音訊；舞台疊加畫面不會重播同一條 WebRTC 音訊串流。","but never fills":"，但始終沒有填入","cohost.html control page showing media devices, AI provider settings, system instructions, and live chat status":"cohost.html 控制頁面，顯示媒體裝置、AI 服務設定、系統指令和即時聊天狀態","connected to OBS, or use an OBS browser source with Full Permissions.":"連接到 OBS，或使用具備完整權限的 OBS 瀏覽器來源。","connects to the SSN live chat feed when opened with the same":"透過相同的下列參數開啟時，會連接到 SSN 即時聊天串流：","control page: pick your camera and microphone, choose an AI provider, set system instructions, and watch the Live Chat status panel.":"控制頁面：選擇攝影機和麥克風，選擇 AI 服務，設定系統指令，並查看 Live Chat 狀態面板。","control playout.":"控制播放。","currently shares chat with the AI only for OpenAI Realtime. Other providers monitor the feed without injecting it into the model.":"目前僅在使用 OpenAI Realtime 時將聊天內容分享給 AI。其他服務會監聽聊天串流，但不會把它輸入模型。","deliberately overrides that protection.":"會刻意覆寫這項保護。","directly to OpenAI for one native speech-to-speech conversation. The spoken conversation and live-chat context stay in the same co-host session.":"直接傳送給 OpenAI，構成一次原生語音到語音對話。語音對話與即時聊天上下文保留在同一個共同主持工作階段中。","dock sends a private chatbot request to the SSN background service, shows the AI draft in the dock, then sends it to the overlay only after the streamer clicks Speak.":"停駐面板向 SSN 背景服務傳送私人聊天機器人要求，在面板中顯示 AI 草稿，只有直播主點擊朗讀後才傳送給疊加畫面。","dock sends the selected chat message directly to":"停駐面板將選取的聊天訊息直接傳送到","for isolated OBS routing.":"，以便在 OBS 中獨立路由音訊。","is available through":"可透過下列選項使用：","is not seeing chat, confirm the URL has the same":"看不到聊天時，請確認 URL 中的下列參數一致：","is separate and appears for screen-capable providers.":"是獨立選項，僅對支援螢幕輸入的服務顯示。","link from the popup. Its private, expiring co-host capability authorizes Realtime without enabling the separate Private Chat Bot option.":"連結，來自彈出選單。其私有且會到期的共同主持授權憑證可授權 Realtime，無需啟用獨立的私人聊天機器人選項。","only for a text-response workflow.":"，僅用於文字回覆流程。","only for the separate text-overlay workflow.":"，僅用於獨立的文字疊加畫面流程。","or":"或","or a camera. OpenAI receives one current image with each direct spoken or typed request rather than continuous video; this can add API cost and latency.":"或攝影機。OpenAI 在每次直接語音或文字要求時接收一張目前圖像，而非連續視訊；這可能增加 API 費用和延遲。","payloads and targeted by label.":"訊息資料，並依標籤指定目標。","receives the avatar and text, not that same audio stream. When supported, choose a virtual cable under":"接收頭像和文字，不接收同一條音訊串流。如果支援，請在以下位置選擇虛擬音訊線：","selected, and press":"保持選取，然後按","stops audio sent to the co-host.":"停止向共同主持傳送音訊。","the selected microphone, any explicitly selected camera/screen frames, and viewer messages shared by the chosen Live Chat mode are sent to that AI provider. Viewer messages are treated as untrusted context and cannot authorize co-host tools. Open the generated co-host controller link from the popup and keep it private; its private capability expires after 12 hours, is scoped to the current SSN session, and is removed from the address bar after the page loads.":"所選麥克風、明確選擇的攝影機或螢幕影格，以及所選 Live Chat 模式分享的觀眾訊息，都會傳送給該 AI 服務。觀眾訊息被視為不可信上下文，不能授權共同主持工具操作。請從彈出選單開啟產生的共同主持控制器連結，並妥善保密；其中的私有授權憑證在 12 小時後到期，僅限目前 SSN 工作階段使用，頁面載入後會從網址列中移除。","to send a harmless visible test line, then confirm it appears in the AI Stage Overlay in OBS.":"傳送一則無害的可見測試文字，然後確認它出現在 OBS 的 AI 舞台疊加畫面中。","value for the dock and co-host overlay.":"值，用於停駐面板和共同主持疊加畫面。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/ai-cohost-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<a class="skip-link" href="#main-content">跳至主要內容</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/ai-cohost-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/ai-cohost-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/ai-cohost-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/ai-cohost-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/ai-cohost-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/ai-cohost-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/ai-cohost-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/ai-cohost-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="ai-cohost-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/ai-cohost-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/ai-cohost-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/ai-cohost-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/ai-cohost-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/ai-cohost-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/ai-cohost-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/ai-cohost-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/ai-cohost-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>AI 共同主持指南</h1>
+            <p>停駐面板控制項、私人聊天機器人和 AI 舞台疊加畫面如何協同運作。</p>
+        </div>
+    </section>
+
+    <main class="guide-section" id="main-content">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="本頁內容"><a href="#read-section-1">功能說明</a><a href="#read-section-2">設定停駐面板右鍵共同主持功能</a><a href="#read-section-3">簡單 AI 選項</a><a href="#read-section-4">語音對話支援</a><a href="#read-section-5">OpenAI Realtime 設定</a><a href="#read-section-6">OpenAI 的速度、品質與費用</a><a href="#read-section-12">設計說明</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">功能說明</h2>
+				<p>共同主持有兩種工作流程：持續對話的語音夥伴，位於 <code>cohost.html</code>，以及將已核准文字傳送到以下目標的手動停駐面板操作： <code>cohost-overlay.html</code>.</p>
+                <div class="cohost-guide-grid">
+                    <div class="cohost-guide-card">
+                        <h3>停駐面板控制</h3>
+                        <p>舞台疊加畫面連線後，以滑鼠右鍵點擊停駐面板中的聊天訊息，選擇 <strong>共同主持</strong>。停駐面板可以朗讀訊息、向 AI 提問，或產生輕度調侃草稿。</p>
+                    </div>
+                    <div class="cohost-guide-card">
+                        <h3>AI 舞台疊加畫面</h3>
+                        <p>疊加畫面顯示頭像、對話泡泡，並可選擇使用瀏覽器文字轉語音。把這個瀏覽器來源放進 OBS 即可。</p>
+                    </div>
+                    <div class="cohost-guide-card">
+                        <h3>私人聊天機器人</h3>
+                        <p>回答和輕度調侃透過私人聊天機器人橋接呼叫已設定的 LLM 服務。朗讀不需要 AI。</p>
+                    </div>
+                    <div class="cohost-guide-card">
+                        <h3>多模態共同主持</h3>
+                        <p><code>cohost.html</code> 透過相同的下列參數開啟時，會連接到 SSN 即時聊天串流： <code>session</code>。預設的僅上下文模式讓 AI 記住近期觀眾訊息，在直播主提問時進行討論。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+				<h2 id="read-section-2">設定停駐面板右鍵共同主持功能</h2>
+				<ol class="guide-steps">
+					<li>使用你的工作階段開啟 Streaming Chat 停駐面板： <code>dock.html?session=YOUR_SESSION_ID</code>.</li>
+					<li>將 AI 舞台疊加畫面新增至 OBS： <code>cohost-overlay.html?session=YOUR_SESSION_ID</code>。新增 <code>&amp;tts</code> ，僅用於文字回覆流程。</li>
+                    <li>若要使用 AI 回答，請在彈出選單中設定 LLM 服務。快速測試時可選擇 <strong>SSN 託管試用 LLM</strong>，它使用 <code>llm.socialstream.ninja</code>.</li>
+                    <li>啟用 <strong>聊天機器人和 AI 服務 &gt; 聊天機器人－私人介面 &gt; 啟用私人聊天機器人選項</strong>.</li>
+					<li>以滑鼠右鍵點擊停駐面板中的訊息，選擇 <strong>共同主持</strong>。偵測到舞台疊加畫面後才會顯示選單。停駐面板的訊息列暫不支援用鍵盤開啟此快顯選單；鍵盤使用者可使用以下頁面上的文字輸入框或語音控制項： <code>cohost.html</code>.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-ai-cohost-controls.png" alt="cohost.html 控制頁面，顯示媒體裝置、AI 服務設定、系統指令和即時聊天狀態" class="guide-image guide-image-medium">
+                    <figcaption>此 <code>cohost.html</code> 控制頁面：選擇攝影機和麥克風，選擇 AI 服務，設定系統指令，並查看 Live Chat 狀態面板。</figcaption>
+                </figure>
+                <div class="guide-note">
+					<p><strong>提示：</strong> 使用相同的 <code>session</code> 值，用於停駐面板和共同主持疊加畫面。 <code>&amp;tts</code> 適用於文字疊加畫面流程。控制器原生音訊啟用時，SSN 會抑制重複的疊加畫面 TTS； <code>&amp;forcetts</code> 會刻意覆寫這項保護。</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">簡單 AI 選項</h2>
+                <p><code>llm.socialstream.ninja</code> 可透過下列選項使用： <strong>SSN 託管試用 LLM</strong> ，在試用服務可用期間可作為簡單免費的測試選項。</p>
+                <ul class="guide-list">
+                    <li>開啟 <strong>聊天機器人和 AI 服務 &gt; 設定 LLM 服務提供者</strong>.</li>
+                    <li>選擇 <strong>SSN 託管試用 LLM（實驗性）</strong>.</li>
+                    <li>預設試用設定中，將端點、權杖和模型留空。</li>
+                    <li>長期使用時，如果試用服務被關閉或限流，請使用自己的權杖或本機服務。</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">語音對話支援</h2>
+                <ul class="guide-list">
+                    <li><strong>OpenAI Realtime:</strong> 將以下頁面中選取的麥克風音訊傳輸 <code>cohost.html</code> 直接傳送給 OpenAI，構成一次原生語音到語音對話。語音對話與即時聊天上下文保留在同一個共同主持工作階段中。</li>
+                    <li><strong>SSN 桌面版：</strong> 使用本機 Whisper，麥克風選擇位於 <code>cohost.html</code>。首次使用會下載約 42 MB，之後轉錄可離線執行。</li>
+					<li><strong>Chrome／Chrome 擴充功能連結：</strong> 擴充功能在 Chrome 分頁中開啟託管的共同主持頁面。OpenAI Realtime 透過短期用戶端密鑰使用 WebRTC；文字回覆服務使用 Chrome 語音辨識，可能需要連網。</li>
+                    <li><strong>其他瀏覽器：</strong> 不保證語音辨識一定可用。即使沒有語音辨識，共同主持文字聊天、即時聊天輸入、攝影機或螢幕輸入，以及已設定的 LLM 回覆仍可運作。</li>
+                </ul>
+				<div class="guide-note">
+					<p>使用 OpenAI Realtime 時，診斷面板應顯示 <strong>正在聆聽（OpenAI WebRTC）</strong>。使用桌面 Whisper 時，應顯示 <strong>正在聆聽（桌面 Whisper）</strong> ，然後在以下位置顯示辨識文字： <strong>辨識內容</strong>.</p>
+				</div>
+				<div class="warning-note">
+					<p><strong>隱私權：</strong> 所選麥克風、明確選擇的攝影機或螢幕影格，以及所選 Live Chat 模式分享的觀眾訊息，都會傳送給該 AI 服務。觀眾訊息被視為不可信上下文，不能授權共同主持工具操作。請從彈出選單開啟產生的共同主持控制器連結，並妥善保密；其中的私有授權憑證在 12 小時後到期，僅限目前 SSN 工作階段使用，頁面載入後會從網址列中移除。</p>
+				</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">OpenAI Realtime 設定</h2>
+				<ol class="guide-steps">
+					<li>在 SSN 彈出選單中選擇 <strong>ChatGPT API</strong>，新增 OpenAI 專案 API 金鑰，並使用 <strong>測試所選聊天機器人</strong>.</li>
+					<li>開啟產生的 <code>cohost.html?session=YOUR_SESSION_ID</code> 連結，來自彈出選單。其私有且會到期的共同主持授權憑證可授權 Realtime，無需啟用獨立的私人聊天機器人選項。</li>
+					<li>選擇 <strong>OpenAI Realtime</strong>。標準金鑰保留在 SSN 擴充功能或桌面應用程式的背景服務；共同主持頁面僅取得有效期很短的 Realtime 用戶端密鑰。</li>
+					<li>明確選擇你說話時使用的麥克風，保持 <strong>音訊回覆</strong> 保持選取，然後按 <strong>啟動共同主持</strong>.</li>
+					<li>選用：將視訊來源保持為 <strong>無視訊</strong> （預設），或明確選擇 <strong>螢幕分享</strong> 或攝影機。OpenAI 在每次直接語音或文字要求時接收一張目前圖像，而非連續視訊；這可能增加 API 費用和延遲。</li>
+                    <li>將 Live Chat 保持為 <strong>僅上下文 — 提問時才回答</strong>。問它「聊天裡在說什麼？」，就能讓同一個語音 AI 討論近期觀眾訊息。</li>
+					<li>在 OBS 中擷取共同主持瀏覽器或應用程式的音訊。OpenAI 原生語音僅從以下頁面播放： <code>cohost.html</code>; <code>cohost-overlay.html</code> 接收頭像和文字，不接收同一條音訊串流。如果支援，請在以下位置選擇虛擬音訊線： <strong>共同主持輸出</strong> ，以便在 OBS 中獨立路由音訊。</li>
+					<li>保持舞台疊加畫面的對話泡泡可見，或提供字幕，讓 AI 回覆不只透過音訊傳達。</li>
+                </ol>
+				<div class="guide-note">
+					<p>此功能使用 OpenAI API 計費，並透過 WebRTC 建立一個 SSN Realtime 對話，獨立於 <code>chatgpt.com</code>。回覆最多輸出 512 個 token；診斷面板顯示累計 token 用量和測得的首次輸出延遲。直播主打斷時，OpenAI 會自動截斷尚未播放的音訊。SSN 最多保留 20 則近期聊天訊息，最長 90 秒，包括付費支持、會員、管理員、事件和來源頻道的上下文，隨後刪除這些暫存內容。SSN 會檢查靜默工作階段、重新連接失敗的傳輸，並在 60 分鐘上限前切換到新工作階段。恢復後的工作階段會重新套用系統指令和效能設定，但不包含先前的語音對話。</p>
+				</div>
+            </div>
+
+			<div class="guide-card">
+				<h2 id="read-section-6">OpenAI 的速度、品質與費用</h2>
+				<ul class="guide-list">
+					<li><strong>模型：</strong> Mini 通常更快且費用更低。Full quality 能力更強，費用也更高。</li>
+					<li><strong>推理強度：</strong> Minimal 或 Low 通常可降低回覆延遲和計費輸出用量。High 或 Extra high 可改善複雜問題的回答，但可能更慢且更貴。連線期間變更會即時生效。</li>
+					<li><strong>輪流發言速度：</strong> Fast 最多等待約 2 秒來判斷一句話是否結束；Balanced 約 4 秒；Patient 約 8 秒。Fast 回應較快，但可能打斷自然停頓。</li>
+					<li><strong>診斷：</strong> 延遲顯示從一輪發言結束到首次出現文字或音訊的時間，並在可行時獨立標出模型延遲。即使要求相似，網路狀況和服務負載仍可能不同。</li>
+				</ul>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="read-section-7">選用的直播控制</h2>
+				<p>OpenAI Realtime 支援下列 Spotify、OBS 場景和精選聊天工具。SSN Configured LLM 目前僅支援 Spotify；其他共同主持服務暫未開放這些工具。</p>
+				<ol class="guide-steps">
+					<li>在 SSN 彈出選單中，僅啟用你需要的共同主持工具：Spotify、OBS 場景或精選聊天。</li>
+					<li>對於 OBS，請輸入精確的允許場景名稱，以逗號分隔，並保持 <code>actions.html</code> 連接到 OBS，或使用具備完整權限的 OBS 瀏覽器來源。</li>
+					<li>開啟 <code>cohost.html</code>，開啟 <strong>共同主持直播控制</strong> ，並為該控制器啟用相同的工具。</li>
+					<li>直接提出要求，例如「切換到 BRB」「顯示最後一則訊息」或「清空精選聊天」。觀眾訊息不能授權工具操作，每次直播主直接提出的要求最多執行一個改變直播狀態的工具。</li>
+				</ol>
+				<div class="warning-note">
+					<p>工具存取受允許清單限制，並非通用 API 存取。OBS 只能選擇 SSN 設定中列出的場景。精選顯示要求使用近期擷取的聊天訊息，並要求 Streaming Chat 停駐面板已開啟；工具回覆回報的是指令送達，不代表 OBS 或疊加畫面已完成操作。</p>
+				</div>
+			</div>
+
+            <div class="guide-card">
+                <h2 id="read-section-8">頁面如何通訊</h2>
+                <p>停駐面板與疊加畫面使用現有的 Social Stream 工作階段橋接。訊息以下列形式傳送： <code>overlayNinja</code> 訊息資料，並依標籤指定目標。</p>
+                <div class="cohost-flow">
+                    <p><strong>由共同主持朗讀：</strong> 停駐面板將選取的聊天訊息直接傳送到 <code>cohost-overlay.html</code>.</p>
+                    <p><strong>回答／輕度調侃：</strong> 停駐面板向 SSN 背景服務傳送私人聊天機器人要求，在面板中顯示 AI 草稿，只有直播主點擊朗讀後才傳送給疊加畫面。</p>
+                </div>
+                <pre class="cohost-code">{
+  "action": "cohostOverlay",
+  "target": "cohost-overlay",
+  "meta": {
+    "command": "say",
+    "text": "The line the avatar should say",
+    "speak": true,
+    "emotion": "happy"
+  }
+}</pre>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-9">可用操作</h2>
+                <table class="field-table">
+                    <thead>
+                        <tr>
+                            <th>操作</th>
+                            <th>需要</th>
+                            <th>結果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>由共同主持朗讀</td>
+                            <td>已連線 <code>cohost-overlay.html</code></td>
+                            <td>在疊加畫面中朗讀選取的聊天訊息。</td>
+                        </tr>
+                        <tr>
+                            <td>回答</td>
+                            <td>私人聊天機器人 + 已設定的 LLM 或託管試用 LLM</td>
+                            <td>建立簡短回答草稿，供直播主核准。</td>
+                        </tr>
+                        <tr>
+                            <td>輕度調侃</td>
+                            <td>私人聊天機器人 + 已設定的 LLM 或託管試用 LLM</td>
+                            <td>建立簡短、輕鬆幽默、內容溫和的草稿，供直播主核准。</td>
+                        </tr>
+                        <tr>
+                            <td>朗讀</td>
+                            <td>核准面板草稿</td>
+                            <td>將已核准的文字傳送到 AI 舞台疊加畫面。</td>
+                        </tr>
+                        <tr>
+                            <td>複製</td>
+                            <td>核准面板草稿</td>
+                            <td>複製草稿，不傳送到疊加畫面。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-10">狀態與疑難排解</h2>
+                <ul class="guide-list">
+                    <li>如果缺少共同主持選單，表示在同一工作階段中沒有偵測到共同主持疊加畫面。</li>
+                    <li>如果回答或輕度調侃無法使用，表示 SSN 橋接或私人聊天機器人無法使用。</li>
+                    <li>主聊天機器人疊加畫面開關是選用項目，不會啟用停駐面板右鍵共同主持操作。</li>
+					<li>如果 <code>cohost.html</code> 看不到聊天時，請確認 URL 中的下列參數一致： <code>session</code> ，與彈出選單保持一致，並確認 Live Chat 設為 Context、Questions 或 All。</li>
+					<li><strong>僅上下文</strong> 目前僅在使用 OpenAI Realtime 時將聊天內容分享給 AI。其他服務會監聽聊天串流，但不會把它輸入模型。</li>
+					<li><strong>將麥克風靜音</strong> 停止向共同主持傳送音訊。 <strong>將共同主持語音靜音</strong>、音量滑桿、輸出裝置選擇器，以及 <strong>停止朗讀</strong> 控制播放。 <strong>將共享的系統音訊靜音</strong> 是獨立選項，僅對支援螢幕輸入的服務顯示。</li>
+					<li>如果直播控制工具無法使用，請同時在 SSN 彈出選單和以下位置啟用： <strong>共同主持直播控制</strong>。OBS 還需要在允許清單中至少包含一個精確的場景名稱。</li>
+					<li>使用 <strong>測試疊加畫面</strong> 傳送一則無害的可見測試文字，然後確認它出現在 OBS 的 AI 舞台疊加畫面中。</li>
+					<li>如果共同主持知道聊天內容卻不說話，這是以下模式的正常行為： <strong>僅上下文</strong>：問它聊天在說什麼。Questions 或 All 模式會從共同主持頁面自動朗讀回覆，但不會把回覆發布到 YouTube、Twitch 或 Kick 聊天。</li>
+					<li>如果桌面版顯示 <strong>正在聆聽（桌面 Whisper）</strong> ，但始終沒有填入 <strong>辨識內容</strong>，確認選取的麥克風沒有靜音，並等待首次模型下載完成。</li>
+					<li>如果 Chrome 始終沒有填入 <strong>辨識內容</strong>，允許使用麥克風，檢查作業系統的預設麥克風，確認能存取網際網路，並驗證 Chrome 語音辨識是否可用。</li>
+					<li>如果 OpenAI Realtime 顯示文字但沒有播放音訊，請檢查 <strong>音訊回覆</strong>、瀏覽器音訊權限，以及 OBS 對瀏覽器或應用程式音訊的擷取。使用 <code>&amp;tts</code> ，僅用於獨立的文字疊加畫面流程。</li>
+					<li>如果 OpenAI Realtime 回覆較慢，嘗試 Mini、Low 推理強度和 Fast 輪流發言速度，再比較診斷面板中的延遲。較高推理強度和 Patient 輪流發言速度會刻意犧牲速度，以換取更深入的回答或更長的停頓。</li>
+					<li>如果 OpenAI Realtime 中斷連線，請讓共同主持保持執行並等待重試。診斷面板會區分資料、對等連線、服務提供者或健康檢查故障。恢復後的工作階段保留選取的系統指令和效能設定，但無法恢復先前的語音對話。</li>
+					<li>如果回答、輕度調侃或 SSN Configured LLM 要求逾時，請檢查 Social Stream 已開啟、工作階段一致、私人聊天機器人已啟用，且所選 LLM 服務可存取。OpenAI Realtime 不需要私人聊天機器人。</li>
+                    <li>如果 Local Gemma 無法從預設資源主機下載模型檔案，請將資源主機設為你自己鏡像的 Gemma 資料夾。</li>
+                    <li>如果託管試用 AI 停止回應，可能已被停用或限流；請改用自己的權杖、Ollama 或自訂 API。</li>
+                    <li>如果開啟了多個疊加畫面，請確認疊加畫面標籤與停駐面板目標一致。預設標籤為 <code>cohost-overlay</code>.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-11">常用 URL 參數</h2>
+                <ul class="guide-list">
+                    <li><code>session=YOUR_SESSION_ID</code> — 停駐面板與疊加畫面加入同一個房間所必需。</li>
+					<li><code>tts</code> 或 <code>speak=1</code> — 讓疊加畫面使用瀏覽器 TTS 朗讀。</li>
+					<li><code>forcetts</code> — 即使共同主持控制器已在播放音訊，也允許疊加畫面使用 TTS；這會刻意產生第二路聲音。</li>
+                    <li><code>label=cohost-overlay</code> — 設定疊加畫面的目標標籤。</li>
+                    <li><code>name=NinjaBot</code> — 設定疊加畫面上的顯示名稱。</li>
+                    <li><code>avatar=https://...</code> — 使用自訂頭像圖片。</li>
+                    <li><code>position=bottom-right</code> — 控制舞台位置。</li>
+                    <li><code>scale=1.2</code> — 縮放疊加畫面。</li>
+                    <li><code>status</code> — 在疊加畫面上顯示連線和狀態文字。</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-12">設計說明</h2>
+                <ul class="guide-list">
+					<li>在停駐面板或手動文字流程中，疊加畫面負責畫面顯示和選用的 TTS 播放。對於 OpenAI 原生語音，請獨立擷取 <code>cohost.html</code> 的音訊；舞台疊加畫面不會重播同一條 WebRTC 音訊串流。</li>
+                    <li>停駐面板是操作控制介面，因此直播主的核准過程不會出現在直播畫面中。</li>
+                    <li>產生的回覆不會自動朗讀，必須先由直播主核准。</li>
+                    <li>非標準指令細節放在 <code>meta</code>，使疊加畫面和自動化收到的資料保持一致。</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 授權條款。</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

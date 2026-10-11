@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+	<head>
+    <meta charset="utf-8" />
+    <meta name="description" content="ShopifyをSocial Stream Ninjaに接続し、ストア連携を設定して、配信オーバーレイで商品情報や売上情報を利用します。">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ja/docs/shopify-setup.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ja/docs/shopify-setup.html">
+    <meta property="og:title" content="Shopifyの設定 | Social Stream Ninja">
+    <meta property="og:description" content="ShopifyをSocial Stream Ninjaに接続し、ストア連携を設定して、配信オーバーレイで商品情報や売上情報を利用します。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ja/docs/shopify-setup.html">
+    <meta name="twitter:title" content="Shopifyの設定 | Social Stream Ninja">
+    <meta name="twitter:description" content="ShopifyをSocial Stream Ninjaに接続し、ストア連携を設定して、配信オーバーレイで商品情報や売上情報を利用します。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Shopifyの設定 | Social Stream Ninja</title>
+		<link rel="icon" href="../../icons/favicon.ico" />
+		<link rel="stylesheet" href="../../docs/css/styles.css" />
+		<link rel="stylesheet" href="../../docs/css/guides.css" />
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem('darkMode');
+				var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+				if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) document.documentElement.classList.add('dark-mode');
+			})();
+		</script>
+	<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/shopify-setup.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{"(a small shop link), or":"（小型のショップリンク）、または","(deletes the receiver and waiting events). Delete the webhook in Shopify too.":"（受信先と待機中イベントを削除）。Shopify側のWebhookも削除してください。","(make one with Shopify's Headless channel, and publish the product there and to the Online Store). Never paste an Admin API or private token.":"（ShopifyのHeadlessチャネルで作成し、商品をそのチャネルとOnline Storeで公開します）。Admin APIや非公開トークンは貼り付けないでください。","(pictures, prices, QR codes),":"（画像、価格、QRコード）、","(purchases).":"（購入）。",", and donation goals don't go up.":"はなく、寄付目標も増えません。",", and updated in the last 7 days count. Unpaid, part-paid, and cancelled orders are skipped.":"とされ、過去7日以内に更新された注文だけを数えます。未払い、一部払い、キャンセル済みの注文は無視します。",", choose":"で、次を選択します：",", exact receiver URL,":"、正確な受信先URL、",", paste the product's public link, and click":"で商品の公開リンクを貼り、次をクリックします：",", starting at 800 × 600. Use one source per view.":"として、まず800 × 600で追加します。表示ごとにソースを1つ使います。",". (This is not a Storefront token.)":"。（Storefrontトークンではありません。）",". Add it to OBS as a":"。OBSへ次のソースとして追加します：",". Check":"。チェックする",". Find the webhook":"。Webhookの次の情報を探します：",". Format:":"。形式：",". No secret needed.":"。シークレットは不要です。",". Products & support links must be on.":"。Products & support linksを有効にしてください。",". URL: the receiver URL.":"。URLには受信先URLを使います。","A product card labelled Gift doesn't change how orders are counted. Shipping to someone else doesn't make it a gift to you.":"商品カードにGiftと付けても注文の数え方は変わりません。別の人に発送するだけでは、あなた宛てのギフトにはなりません。","A purchase alert. The buyer's name stays private.":"購入アラート。購入者の名前は非公開です。","A refund didn't remove the alert":"返金してもアラートが消えなかった","A separate private reader key stays on this computer.":"別の非公開読み取りキーは、このパソコンに保管されます。","Activity alerts only":"アクティビティ通知のみ","Add a":"追加する項目：","Add product or link":"商品またはリンクを追加（Add product or link）","Alert source filter":"アラートのソースフィルター","An action ran twice":"アクションが2回実行された","Browser Source":"ブラウザソース","Careful with Shopify admin samples.":"Shopify管理画面のサンプルには注意してください。","Check the name, picture, price, and link. Then click":"名前、画像、価格、リンクを確認し、次をクリックします：","Check the webhook:":"Webhookを確認：","Click":"クリックする項目：","Commands & API":"コマンドとAPI","Connect Shopify to Social Stream Ninja, configure your store integration and use product and sale information with your streaming overlays.":"ShopifyをSocial Stream Ninjaに接続し、ストア連携を設定して、配信オーバーレイで商品情報や売上情報を利用します。","Copy OBS link":"OBSリンクをコピー","Copy public link":"公開リンクをコピー","Copy receiver URL":"受信URLをコピー（Copy receiver URL）","Creating a public token using Headless":"Headlessで公開トークンを作成する","Disconnect Shopify":"Shopifyを切断する","Do this":"操作","Download":"ダウンロード","Enter your":"次の情報を入力します：","Event Flow and donation goals":"Event Flowと寄付目標","Event skipped":"イベントが無視された","Features":"機能","Fix problems":"問題を解決する","For order-value rules, compare":"注文額の条件では、次を比較します：","Get an alert when someone buys":"購入時にアラートを受け取る","Guides":"ガイド","Hire":"仕事を依頼する","Home":"ホーム","How waiting and repeat orders work":"待機中の注文と重複注文の扱い","I want to":"したいこと","I want to…":"したいこと…","If one isn't clearly marked as a test, don't send it to a setup that gives out rewards.":"テストと明示されていないものを、特典を配る設定へ送らないでください。","Import a product":"商品をインポート","Imported Shopify product name, image URL, price and canonical public link in the shared product editor":"共通商品エディタに取り込まれたShopifyの商品名、画像URL、価格、正規の公開リンク","In Event Flow, choose Event Type":"Event FlowでEvent Typeを選びます：","In Shopify, create a webhook. Event:":"ShopifyでWebhookを作成します。イベント：","In Shopify, go to":"Shopifyで次を開きます：","In Social Stream Ninja, open":"Social Stream Ninjaで開く項目：","Inspiration":"活用アイデア","Is it working?":"動いていますか？","It loads one product at a time.":"商品を1つずつ読み込みます。","It's a snapshot. Prices and stock don't update by themselves, so check it when your store changes.":"取り込み時点の情報です。価格や在庫は自動更新されないため、ストアに変更があれば確認してください。","JSON":"JSON","Keep Social Stream Ninja running.":"Social Stream Ninjaを動かしたままにします。","Load product details":"商品情報を読み込む（Load product details）","Main navigation":"メインナビゲーション","Monetization → Shopify purchases → Setup":"収益化（Monetization）→ Shopify purchases → Setup","Neither one is ever put in OBS links or viewer QR codes.":"どちらもOBSリンクや視聴者向けQRコードには入りません。","No buyer name":"購入者名がない","Not switched on yet.":"まだ有効になっていません。","Nothing extra. They get Shopify purchases even without the product list.":"追加設定は不要です。商品一覧がなくてもShopifyの購入を受信します。","OBS overlay for":"対象のOBSオーバーレイ：","On purpose. Names, emails, addresses, notes, custom fields, checkout links, and order IDs are never shown.":"意図的です。氏名、メール、住所、メモ、独自フィールド、決済リンク、注文IDは表示しません。","On this page":"このページの内容","Only fully paid orders above zero, marked":"0より大きい全額支払い済み注文で、","Open":"開く項目：","Open navigation menu":"ナビゲーションメニューを開く","Order payment":"注文の支払い（Order payment）","Order times may be up to five minutes in the future (clock drift).":"時計のずれを許容し、注文時刻は5分先まで受け付けます。","Orders wait up to 7 days. Start SSN and they come through.":"注文は最大7日待機します。SSNを起動すると届きます。","Overlay Gallery":"オーバーレイギャラリー","Overlay link options":"オーバーレイリンクの設定","Overlay view":"オーバーレイの表示形式","Pause alerts":"アラートを一時停止","Payment is never guessed from order creation, shipping, or stock changes. A missing test flag is skipped.":"注文作成、発送、在庫変更から支払い済みと推測しません。テストフラグがない注文も無視します。","Pick a stable API version and save. (SSN was built against 2026-07.)":"安定版のAPIバージョンを選んで保存します（SSNは2026-07に合わせて作られています）。","Preview sample":"サンプルをプレビュー（Preview sample）","Problem":"問題","Product query":"商品クエリ（Product query）","Product showcase only":"商品紹介のみ","Product won't load?":"商品が読み込まれませんか？","Products & support links":"商品とサポートのリンク（Products & support links）","Public Storefront token":"公開Storefrontトークン","Purchase alerts":"購入アラート","Purchase alerts need the Shopify receiver on the SSN server, which stays off until it passes a real-store test. Until then,":"購入アラートにはSSNサーバーのShopify受信機能が必要です。実店舗のテストを通過するまで無効のままです。それまでは、","Purchases are not donations. They have no":"購入は寄付ではありません。次の値は含みません：","Put it in OBS":"OBSに追加する","Refunds, cancellations, and edits don't undo alerts. This isn't bookkeeping.":"返金、キャンセル、編集でアラートは取り消されません。会計管理の機能ではありません。","Repeats are blocked for 7 days, but a crash mid-action can repeat it. Add your own check for important automations.":"7日間は重複を防ぎますが、処理途中の異常終了で再実行する可能性があります。重要な自動化には独自の重複確認を追加してください。","Repeats are matched by store and order, even if Shopify's delivery IDs differ.":"Shopifyの配信IDが異なっていても、ストアと注文で重複を判定します。","SSApp Shopify setup with store domain, cleared signing secret, receiver URL and status":"ストアドメイン、消去済み署名シークレット、受信URL、ステータスを示すSSAppのShopify設定","SSN saves which orders it handled before confirming them.":"SSNは受領確認の前に、処理した注文を保存します。","SSN was off during a sale":"販売時にSSNが停止していた","Save setup":"設定を保存（Save setup）","Save setup shows an error":"Save setupでエラーが出る","Scan the QR code with your phone at your final stream size.":"実際の配信サイズでスマートフォンからQRコードを読み取ってください。","See the":"参照先：","Set":"設定する項目：","Settings → Notifications → Webhooks":"設定 → 通知 → Webhook（Settings → Notifications → Webhooks）","Share a product link in chat":"商品のリンクをチャットで共有する","Shopify CLI sample webhooks can test message handling, but not subscriptions or retries, and they still need app credentials. See":"Shopify CLIのサンプルWebhookはメッセージ処理を試せますが、購読や再試行は検証できず、アプリの認証情報も必要です。参照：","Shopify CLI webhook testing limits":"Shopify CLIのWebhookテストの制限","Shopify Storefront authentication":"Shopify Storefront認証","Shopify event details":"Shopifyイベントの詳細","Shopify has its own receiver, so you don't need the older remote API control switch.":"Shopifyは専用の受信機能を使うため、旧Remote API Controlスイッチは不要です。","Shopify orders don't include a reliable image, so alerts are text only. They never borrow a product card's picture or QR code.":"Shopifyの注文には信頼できる画像が含まれないため、アラートは文字だけです。商品カードの画像やQRコードを借りて表示しません。","Shopify purchase alert with Anonymous buyer and public product title":"匿名の購入者と公開商品名を表示するShopify購入アラート","Shopify purchases":"Shopifyの購入","Shopify setup in the app, using an example store. Click to enlarge.":"例のストアを使ったアプリ内Shopify設定。クリックで拡大。","Shopify setup | Social Stream Ninja":"Shopifyの設定 | Social Stream Ninja","Shopify: manually creating webhooks":"Shopify：Webhookの手動作成","Shopify: verifying deliveries":"Shopify：配信の検証","Show a Shopify product in 5 steps":"5つの手順でShopify商品を表示する","Show a product":"商品を表示する","Show only Shopify alerts in the Monetization overlay":"MonetizationオーバーレイでShopifyアラートだけを表示する","Show products with a QR code. Get an alert when someone buys.":"QRコード付きで商品を表示し、購入時にはアラートを受け取ります。","Show purchases in multi-alerts or the activity feed":"multi-alertsやアクティビティフィードに購入を表示する","Show your Shopify products and purchases.":"Shopifyの商品と購入を表示しましょう。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Status and waiting orders survive a receiver restart.":"受信機能の再起動後も、状態と待機中の注文は残ります。","Status stays on waiting":"状態がwaitingのまま","Stop for good, or switch stores":"完全に停止する・別のストアへ切り替える","Storage is limited. If the receiver can't safely store an order, it asks Shopify to send it again later.":"保存容量には限りがあります。注文を安全に保存できない場合、受信機能はShopifyへ後で再送するよう求めます。","Support":"サポート","Support card only":"支援カードのみ","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","Test safely":"安全にテストする","Tests in the real app cover signed messages (including non-English text), tampered signatures, repeat deliveries, test orders, currency rounding, oversized requests, removal of private customer data, and catching up after being offline. No real orders or merchant account were used.":"実アプリで、英語以外の文字を含む署名付きメッセージ、改ざんされた署名、重複配信、テスト注文、通貨の丸め、大きすぎる要求、顧客の非公開情報の除去、オフライン後の取得をテストしています。実際の注文や販売者アカウントは使っていません。","The link is Shopify's public store link, including your custom domain if Shopify gives one.":"リンクはShopifyが提供する公開ストアリンクです。独自ドメインが提供されている場合はそれも使えます。","The price is only filled in when every variant costs the same. Otherwise it stays blank. Only add a price if it's accurate.":"すべてのバリエーションが同額の場合だけ価格を入力します。それ以外は空欄です。正しい価格だけを追加してください。","The product details load into the editor so you can check them first.":"商品の詳細は編集欄へ読み込むので、先に確認できます。","The receiver checks Shopify's signature and your store name before it accepts an order.":"受信機能はShopifyの署名とストア名を確認してから注文を受け付けます。","The receiver isn't on at the server yet. Don't use the old session webhook URL instead.":"サーバー側の受信機能がまだ有効ではありません。古いセッションWebhook URLで代用しないでください。","The signing secret is stored encrypted on the SSN receiver. The box clears after you save.":"署名用シークレットはSSNの受信機能で暗号化して保存します。保存後、入力欄は空になります。","The token is used for that one request, then cleared.":"トークンはその1回の要求に使った後、消去されます。","Try this":"試すこと","Turn off":"無効にする項目：","Turn on":"オンにする項目：","Type your store address, like":"ストアのアドレスを入力します。例：","Unavailable products, and products without a public Online Store link, can't be imported.":"販売できない商品や、公開Online Storeリンクのない商品は取り込めません。","Under":"次のセクションで：","Watch the status line: waiting, test received, event skipped, or purchase received. A receiver URL only means setup was saved.":"状態欄のwaiting、test received、event skipped、purchase receivedを確認します。受信先URLがあるだけでは、設定が保存されたという意味にすぎません。","What has been tested without a real store":"実店舗なしでテスト済みの項目","What the import fills in":"取り込みで入力される内容","Where your secret goes":"シークレットの保管場所","Why no picture on purchase alerts?":"購入アラートに画像がない理由","You can always type a product in by hand instead.":"商品を手動入力することもできます。","address and the signing secret.":"のアドレスと署名用シークレットを入力します。","address, and secret. Custom app webhooks use the app's own secret.":"のアドレスとシークレットを確認します。カスタムアプリのWebhookはそのアプリ自身のシークレットを使います。","and click":"を選び、次をクリックします：","and filter the source/type to":"。ソース/タイプのフィルターを次に設定します：","and pick an":"で、次を選びます：","and the":"および","first.":"を先に設定します。","next to the product.":"を商品の横でクリックします。","or":"または","product and QR code guide":"商品とQRコードのガイド","show in the status only, with no alerts.":"は状態だけに表示され、アラートは出ません。","shows an error. Showing products still works.":"はエラーになります。商品の表示は引き続き使えます。","signing secret":"署名用シークレット","to":"→","to see the look. It's not connected to your session, so it never runs Event Flow, changes totals, or checks a payment. For a full test, use a Shopify development store. Orders marked":"で見た目を確認します。自分のセッションに接続しないため、Event Flowの実行、合計の変更、決済確認は行いません。全体を試すにはShopify開発ストアを使います。次の印がある注文は、"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/shopify-setup.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/shopify-setup.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/shopify-setup.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/shopify-setup.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/shopify-setup.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/shopify-setup.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/shopify-setup.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/shopify-setup.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/shopify-setup.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/shopify-setup.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/shopify-setup.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/shopify-setup.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/shopify-setup.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/shopify-setup.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/shopify-setup.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/shopify-setup.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/shopify-setup.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/shopify-setup.html">
+<!-- ssn-languages:end --></head>
+	<body class="visual-guide">
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション"><a href="../index.html">ホーム</a><a href="features.html">機能</a><a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a><a href="download.html">ダウンロード</a><a href="guides.html">ガイド</a><a href="commands.html">コマンドとAPI</a><a href="supported-sites.html">対応サイト</a><a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a><a href="services.html" class="site-priority-hire">仕事を依頼する</a><a href="support.html">サポート</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/shopify-setup.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/shopify-setup.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/shopify-setup.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/shopify-setup.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/shopify-setup.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/shopify-setup.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="shopify-setup.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/shopify-setup.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/shopify-setup.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/shopify-setup.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/shopify-setup.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/shopify-setup.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/shopify-setup.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/shopify-setup.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/shopify-setup.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/shopify-setup.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/shopify-setup.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="テーマを切り替え"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+		<section class="page-hero">
+			<div class="container">
+				<h1>Shopifyの商品と購入を表示しましょう。</h1>
+				<p>QRコード付きで商品を表示し、購入時にはアラートを受け取ります。</p>
+			</div>
+		</section>
+
+	<main>
+		<section class="guide-section">
+			<div class="container">
+				<nav class="guide-jump-links" aria-label="このページの内容">
+					<a href="#products">商品を表示する</a>
+					<a href="#alerts">購入アラート</a>
+					<a href="#overlays">OBSに追加する</a>
+					<a href="#tests">安全にテストする</a>
+					<a href="#limits">問題を解決する</a>
+				</nav>
+
+				<div class="guide-card">
+					<h2 id="products">5つの手順でShopify商品を表示する</h2>
+					<div class="guide-step-layout">
+						<ol class="guide-steps">
+							<li>Social Stream Ninjaで開く項目： <strong>収益化（Monetization）→ Shopify purchases → Setup</strong>.</li>
+							<li>ストアのアドレスを入力します。例： <code>your-store.myshopify.com</code>。シークレットは不要です。</li>
+							<li>開く項目： <strong>商品をインポート</strong>で商品の公開リンクを貼り、次をクリックします： <strong>商品情報を読み込む（Load product details）</strong>.</li>
+							<li>名前、画像、価格、リンクを確認し、次をクリックします： <strong>商品またはリンクを追加（Add product or link）</strong>.</li>
+							<li>オンにする項目： <strong>商品とサポートのリンク（Products &amp; support links）</strong> を選び、次をクリックします： <strong>設定を保存（Save setup）</strong>.</li>
+						</ol>
+						<figure class="guide-figure">
+							<a href="../../docs/images/monetization/shopify-import.png" target="_blank" rel="noopener"><img class="guide-image" src="../../docs/images/monetization/shopify-import.png" alt="共通商品エディタに取り込まれたShopifyの商品名、画像URL、価格、正規の公開リンク" loading="lazy"></a>
+							<figcaption>商品の詳細は編集欄へ読み込むので、先に確認できます。</figcaption>
+						</figure>
+					</div>
+					<div class="guide-note"><strong>商品が読み込まれませんか？</strong> 追加する項目： <strong>公開Storefrontトークン</strong> （ShopifyのHeadlessチャネルで作成し、商品をそのチャネルとOnline Storeで公開します）。Admin APIや非公開トークンは貼り付けないでください。</div>
+
+					<details class="guide-extra">
+						<summary>取り込みで入力される内容</summary>
+						<ul>
+							<li>商品を1つずつ読み込みます。</li>
+							<li>トークンはその1回の要求に使った後、消去されます。</li>
+							<li>リンクはShopifyが提供する公開ストアリンクです。独自ドメインが提供されている場合はそれも使えます。</li>
+							<li>すべてのバリエーションが同額の場合だけ価格を入力します。それ以外は空欄です。正しい価格だけを追加してください。</li>
+							<li>取り込み時点の情報です。価格や在庫は自動更新されないため、ストアに変更があれば確認してください。</li>
+							<li>販売できない商品や、公開Online Storeリンクのない商品は取り込めません。</li>
+							<li>商品を手動入力することもできます。</li>
+						</ul>
+						<p><a href="https://shopify.dev/docs/api/storefront/2026-07">Shopify Storefront認証</a> &middot; <a href="https://shopify.dev/docs/api/storefront/latest/queries/product">商品クエリ（Product query）</a> &middot; <a href="https://shopify.dev/docs/api/storefront-web-components/getting-started">Headlessで公開トークンを作成する</a></p>
+					</details>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="alerts">購入時にアラートを受け取る</h2>
+					<div class="warning-note"><strong>まだ有効になっていません。</strong> 購入アラートにはSSNサーバーのShopify受信機能が必要です。実店舗のテストを通過するまで無効のままです。それまでは、 <strong>設定を保存（Save setup）</strong> はエラーになります。商品の表示は引き続き使えます。</div>
+					<div class="guide-step-layout">
+						<ol class="guide-steps">
+							<li>Shopifyで次を開きます： <strong>設定 → 通知 → Webhook（Settings → Notifications → Webhooks）</strong>。Webhookの次の情報を探します： <strong>署名用シークレット</strong>。（Storefrontトークンではありません。）</li>
+							<li>Social Stream Ninjaで開く項目： <strong>収益化（Monetization）→ Shopify purchases → Setup</strong>.</li>
+							<li>次の情報を入力します： <code>myshopify.com</code> のアドレスと署名用シークレットを入力します。</li>
+							<li>オンにする項目： <strong>Shopifyの購入</strong> を選び、次をクリックします： <strong>設定を保存（Save setup）</strong>.</li>
+							<li>クリックする項目： <strong>受信URLをコピー（Copy receiver URL）</strong>.</li>
+							<li>ShopifyでWebhookを作成します。イベント： <strong>注文の支払い（Order payment）</strong>。形式： <strong>JSON</strong>。URLには受信先URLを使います。</li>
+							<li>安定版のAPIバージョンを選んで保存します（SSNは2026-07に合わせて作られています）。</li>
+							<li>Social Stream Ninjaを動かしたままにします。</li>
+						</ol>
+						<figure class="guide-figure">
+							<a href="../../docs/images/monetization/shopify-setup.png" target="_blank" rel="noopener"><img class="guide-image" src="../../docs/images/monetization/shopify-setup.png" alt="ストアドメイン、消去済み署名シークレット、受信URL、ステータスを示すSSAppのShopify設定" loading="lazy"></a>
+							<figcaption>例のストアを使ったアプリ内Shopify設定。クリックで拡大。</figcaption>
+						</figure>
+					</div>
+					<div class="guide-note"><strong>動いていますか？</strong> 状態欄のwaiting、test received、event skipped、purchase receivedを確認します。受信先URLがあるだけでは、設定が保存されたという意味にすぎません。</div>
+
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>したいこと…</th><th>操作</th></tr></thead>
+						<tbody>
+							<tr><td data-label="したいこと">アラートを一時停止</td><td data-label="操作">無効にする項目： <strong>Shopifyの購入</strong>.</td></tr>
+														<tr><td data-label="したいこと">完全に停止する・別のストアへ切り替える</td><td data-label="操作">クリックする項目： <strong>Shopifyを切断する</strong> （受信先と待機中イベントを削除）。Shopify側のWebhookも削除してください。</td></tr>
+						</tbody>
+					</table>
+
+					<details class="guide-extra">
+						<summary>シークレットの保管場所</summary>
+						<ul>
+							<li>署名用シークレットはSSNの受信機能で暗号化して保存します。保存後、入力欄は空になります。</li>
+							<li>別の非公開読み取りキーは、このパソコンに保管されます。</li>
+							<li>どちらもOBSリンクや視聴者向けQRコードには入りません。</li>
+							<li>受信機能はShopifyの署名とストア名を確認してから注文を受け付けます。</li>
+							<li>Shopifyは専用の受信機能を使うため、旧Remote API Controlスイッチは不要です。</li>
+						</ul>
+						<p><a href="https://help.shopify.com/en/manual/fulfillment/setup/notifications/webhooks">Shopify：Webhookの手動作成</a> &middot; <a href="https://shopify.dev/docs/apps/build/webhooks/verify-deliveries">Shopify：配信の検証</a></p>
+					</details>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="overlays">OBSに追加する</h2>
+					<ol class="guide-steps">
+						<li>次のセクションで： <strong>対象のOBSオーバーレイ：</strong>で、次を選択します： <strong>商品とサポートのリンク（Products &amp; support links）</strong>.</li>
+						<li>開く項目： <strong>オーバーレイリンクの設定</strong> で、次を選びます： <strong>オーバーレイの表示形式</strong>: <strong>商品紹介のみ</strong> （画像、価格、QRコード）、 <strong>支援カードのみ</strong> （小型のショップリンク）、または <strong>アクティビティ通知のみ</strong> （購入）。</li>
+						<li>クリックする項目： <strong>OBSリンクをコピー</strong>。OBSへ次のソースとして追加します： <strong>ブラウザソース</strong>として、まず800 × 600で追加します。表示ごとにソースを1つ使います。</li>
+						<li>実際の配信サイズでスマートフォンからQRコードを読み取ってください。</li>
+					</ol>
+					<figure class="guide-figure">
+						<a href="../../docs/images/monetization/shopify-purchase.png" target="_blank" rel="noopener"><img class="guide-image" style="max-width:476px;margin:auto" src="../../docs/images/monetization/shopify-purchase.png" alt="匿名の購入者と公開商品名を表示するShopify購入アラート" loading="lazy"></a>
+						<figcaption>購入アラート。購入者の名前は非公開です。</figcaption>
+					</figure>
+
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>したいこと…</th><th>操作</th></tr></thead>
+						<tbody>
+							<tr><td data-label="したいこと">商品のリンクをチャットで共有する</td><td data-label="操作">クリックする項目： <strong>公開リンクをコピー</strong> を商品の横でクリックします。</td></tr>
+							<tr><td data-label="したいこと">MonetizationオーバーレイでShopifyアラートだけを表示する</td><td data-label="操作">設定する項目： <strong>アラートのソースフィルター</strong> → <code>shopify</code>。Products &amp; support linksを有効にしてください。</td></tr>
+							<tr><td data-label="したいこと">multi-alertsやアクティビティフィードに購入を表示する</td><td data-label="操作">追加設定は不要です。商品一覧がなくてもShopifyの購入を受信します。</td></tr>
+						</tbody>
+					</table>
+					<div class="guide-note"><strong>購入アラートに画像がない理由</strong> Shopifyの注文には信頼できる画像が含まれないため、アラートは文字だけです。商品カードの画像やQRコードを借りて表示しません。</div>
+
+					<details class="guide-extra">
+						<summary>Event Flowと寄付目標</summary>
+						<ul>
+							<li>Event FlowでEvent Typeを選びます： <code>purchase</code> 。ソース/タイプのフィルターを次に設定します： <code>shopify</code>.</li>
+							<li>注文額の条件では、次を比較します： <code>meta.commerce.orderTotal</code>。チェックする <code>meta.commerce.currency</code> を先に設定します。</li>
+							<li>購入は寄付ではありません。次の値は含みません： <code>hasDonation</code> または <code>donoValue</code>はなく、寄付目標も増えません。</li>
+							<li>商品カードにGiftと付けても注文の数え方は変わりません。別の人に発送するだけでは、あなた宛てのギフトにはなりません。</li>
+						</ul>
+					</details>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="tests">安全にテストする</h2>
+					<p>クリックする項目： <strong>サンプルをプレビュー（Preview sample）</strong> で見た目を確認します。自分のセッションに接続しないため、Event Flowの実行、合計の変更、決済確認は行いません。全体を試すにはShopify開発ストアを使います。次の印がある注文は、 <code>test: true</code> は状態だけに表示され、アラートは出ません。</p>
+					<div class="warning-note"><strong>Shopify管理画面のサンプルには注意してください。</strong> テストと明示されていないものを、特典を配る設定へ送らないでください。</div>
+
+					<details class="guide-extra">
+						<summary>実店舗なしでテスト済みの項目</summary>
+						<p>実アプリで、英語以外の文字を含む署名付きメッセージ、改ざんされた署名、重複配信、テスト注文、通貨の丸め、大きすぎる要求、顧客の非公開情報の除去、オフライン後の取得をテストしています。実際の注文や販売者アカウントは使っていません。</p>
+						<p>Shopify CLIのサンプルWebhookはメッセージ処理を試せますが、購読や再試行は検証できず、アプリの認証情報も必要です。参照： <a href="https://shopify.dev/docs/api/shopify-cli/app/app-webhook-trigger">Shopify CLIのWebhookテストの制限</a>.</p>
+					</details>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="limits">問題を解決する</h2>
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>問題</th><th>試すこと</th></tr></thead>
+						<tbody>
+							<tr><td data-label="問題">Save setupでエラーが出る</td><td data-label="試すこと">サーバー側の受信機能がまだ有効ではありません。古いセッションWebhook URLで代用しないでください。</td></tr>
+							<tr><td data-label="問題">状態がwaitingのまま</td><td data-label="試すこと">Webhookを確認： <strong>注文の支払い（Order payment）</strong>, <strong>JSON</strong>、正確な受信先URL、 <code>myshopify.com</code> のアドレスとシークレットを確認します。カスタムアプリのWebhookはそのアプリ自身のシークレットを使います。</td></tr>
+							<tr><td data-label="問題">イベントが無視された</td><td data-label="試すこと">0より大きい全額支払い済み注文で、 <code>test: false</code>とされ、過去7日以内に更新された注文だけを数えます。未払い、一部払い、キャンセル済みの注文は無視します。</td></tr>
+							<tr><td data-label="問題">販売時にSSNが停止していた</td><td data-label="試すこと">注文は最大7日待機します。SSNを起動すると届きます。</td></tr>
+							<tr><td data-label="問題">アクションが2回実行された</td><td data-label="試すこと">7日間は重複を防ぎますが、処理途中の異常終了で再実行する可能性があります。重要な自動化には独自の重複確認を追加してください。</td></tr>
+							<tr><td data-label="問題">購入者名がない</td><td data-label="試すこと">意図的です。氏名、メール、住所、メモ、独自フィールド、決済リンク、注文IDは表示しません。</td></tr>
+							<tr><td data-label="問題">返金してもアラートが消えなかった</td><td data-label="試すこと">返金、キャンセル、編集でアラートは取り消されません。会計管理の機能ではありません。</td></tr>
+						</tbody>
+					</table>
+
+					<details class="guide-extra">
+						<summary>待機中の注文と重複注文の扱い</summary>
+						<ul>
+							<li>時計のずれを許容し、注文時刻は5分先まで受け付けます。</li>
+							<li>注文作成、発送、在庫変更から支払い済みと推測しません。テストフラグがない注文も無視します。</li>
+							<li>受信機能の再起動後も、状態と待機中の注文は残ります。</li>
+							<li>保存容量には限りがあります。注文を安全に保存できない場合、受信機能はShopifyへ後で再送するよう求めます。</li>
+							<li>Shopifyの配信IDが異なっていても、ストアと注文で重複を判定します。</li>
+							<li>SSNは受領確認の前に、処理した注文を保存します。</li>
+						</ul>
+					</details>
+					<p>参照先： <a href="event-reference.html#shopify-purchases">Shopifyイベントの詳細</a> および <a href="creator-store-setup.html#obs">商品とQRコードのガイド</a>.</p>
+				</div>
+			</div>
+		</section>
+	</main><script data-copy-markdown src="../../docs/js/main.js"></script></body></html>

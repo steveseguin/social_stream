@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-cn/docs/platform-setup-picker.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/zh-cn/docs/platform-setup-picker.html">
+    <meta property="og:title" content="平台设置选择器 - Social Stream Ninja">
+    <meta property="og:description" content="为每个聊天平台选择正确的 Social Stream Ninja 设置方式。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-cn/docs/platform-setup-picker.html">
+    <meta name="twitter:title" content="平台设置选择器 - Social Stream Ninja">
+    <meta name="twitter:description" content="为每个聊天平台选择正确的 Social Stream Ninja 设置方式。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>平台设置选择器 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="为每个聊天平台选择正确的 Social Stream Ninja 设置方式。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/platform-setup-picker.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{"Browser extension":"浏览器扩展","Browser tabs are being hidden, throttled, or discarded.":"浏览器标签页被隐藏、限速或丢弃。","Choose the right Social Stream Ninja setup path for each chat platform.":"为每个聊天平台选择正确的 Social Stream Ninja 设置方式。","Choose the simplest capture path before opening OBS.":"打开 OBS 前，先选择最简单的捕获方式。","Commands & API":"命令与 API","Commands/API or custom source":"命令／API 或自定义来源","Custom automation or incoming data":"自定义自动化或传入数据","Desktop app":"桌面应用","Desktop setup:":"桌面设置：","Download":"下载","Each platform note tells you the simplest thing to open, such as a normal live page, popout chat, or source page.":"各平台说明会告诉您最简单的打开方式，例如普通直播页面、弹出聊天或来源页面。","Features":"功能","For exact platform notes, see":"有关平台的具体说明，请参阅","Guides":"指南","Hidden browser tab stops updating":"隐藏的浏览器标签页停止更新","Hire":"雇用","Home":"首页","Inspiration":"灵感","Main navigation":"主导航","Open navigation menu":"打开导航菜单","Overlay Gallery":"叠加层图库","Platform Setup Picker":"平台设置选择器","Platform Setup Picker - Social Stream Ninja":"平台设置选择器 - Social Stream Ninja","Popout/chat-only window":"弹出／仅聊天窗口","Quick Decision":"快速选择","Search for your platform first. Click it and read the short setup note before trying a harder method.":"先搜索您的平台。点击并阅读简短设置说明，再考虑更复杂的方法。","Setup asks for room/channel/token":"设置要求房间／频道／令牌","Site says pop out chat":"网站要求弹出聊天","Situation":"情况","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Source page":"来源页面","Source pages are normal. They just mean Social Stream needs a special page for that platform.":"来源页面是正常的。它只是表示 Social Stream 对该平台需要使用专用页面。","Standalone App Guide":"独立应用指南","Standard supported chat site":"标准受支持聊天网站","Start With The Supported Sites Page":"从支持的网站页面开始","Start here for YouTube, Twitch, Facebook, Discord, Slack, WhatsApp, and most browser-based sources.":"YouTube、Twitch、Facebook、Discord、Slack、WhatsApp 和大多数浏览器来源从这里开始。","Support":"支持","Supported Sites":"支持的网站","Supported Sites setup popup for TikTok Live showing the URL format and visible chat note":"支持的网站中 TikTok Live 的设置弹窗，显示 URL 格式和聊天需可见的说明","Switch theme":"切换主题","The normal stream page is heavy or unreliable.":"普通直播页面负担较重或不可靠。","The platform has a separate popout chat URL.":"平台具有独立的弹出聊天 URL。","The platform is not captured from a normal browser tab.":"无法从普通浏览器标签页捕获该平台。","The platform needs a dedicated Social Stream source URL.":"平台需要专用的 Social Stream 来源 URL。","The platform works in your normal browser.":"平台在普通浏览器中可用。","The setup asks for a channel, room, token, or sign-in step.":"设置要求频道、房间、令牌或登录步骤。","The supported-sites page says to open the site or pop out chat.":"支持的网站页面要求打开网站或弹出聊天。","Use":"使用","Use A Popout Or Chat-Only Window When":"适合使用弹出或仅聊天窗口的情况","Use A Source Page When":"适合使用来源页面的情况","Use The Desktop App When":"适合使用桌面应用的情况","Use The Normal Browser Extension When":"适合使用普通浏览器扩展的情况","When in doubt, start with the easiest matching row. You can switch methods later.":"不确定时，先从符合情况的最简单选项开始。以后可以切换方法。","You already have the right account signed in.":"您已登录正确的账号。","You are using an app-specific integration, such as some TikTok modes.":"您正在使用应用专用集成，例如某些 TikTok 模式。","You want a smaller window that only shows chat.":"您希望使用只显示聊天的小窗口。","You want source windows managed inside the app.":"您希望在应用内部管理来源窗口。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/platform-setup-picker.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/platform-setup-picker.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/platform-setup-picker.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/platform-setup-picker.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/platform-setup-picker.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/platform-setup-picker.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/platform-setup-picker.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/platform-setup-picker.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/platform-setup-picker.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="platform-setup-picker.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/platform-setup-picker.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/platform-setup-picker.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/platform-setup-picker.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/platform-setup-picker.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/platform-setup-picker.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/platform-setup-picker.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/platform-setup-picker.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/platform-setup-picker.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/platform-setup-picker.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>平台设置选择器</h1>
+            <p>打开 OBS 前，先选择最简单的捕获方式。</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>从支持的网站页面开始</h3>
+                <p>先搜索您的平台。点击并阅读简短设置说明，再考虑更复杂的方法。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/platform-tiktok-setup-modal.png" alt="支持的网站中 TikTok Live 的设置弹窗，显示 URL 格式和聊天需可见的说明" class="guide-image">
+                    <figcaption>各平台说明会告诉您最简单的打开方式，例如普通直播页面、弹出聊天或来源页面。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>适合使用普通浏览器扩展的情况</h3>
+                <ul class="guide-list">
+                    <li>平台在普通浏览器中可用。</li>
+                    <li>您已登录正确的账号。</li>
+                    <li>支持的网站页面要求打开网站或弹出聊天。</li>
+                </ul>
+                <p>YouTube、Twitch、Facebook、Discord、Slack、WhatsApp 和大多数浏览器来源从这里开始。</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>适合使用弹出或仅聊天窗口的情况</h3>
+                <ul class="guide-list">
+                    <li>平台具有独立的弹出聊天 URL。</li>
+                    <li>普通直播页面负担较重或不可靠。</li>
+                    <li>您希望使用只显示聊天的小窗口。</li>
+                </ul>
+                <p>有关平台的具体说明，请参阅 <a href="supported-sites.html">支持的网站</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>适合使用桌面应用的情况</h3>
+                <ul class="guide-list">
+                    <li>浏览器标签页被隐藏、限速或丢弃。</li>
+                    <li>您希望在应用内部管理来源窗口。</li>
+                    <li>您正在使用应用专用集成，例如某些 TikTok 模式。</li>
+                </ul>
+                <p>桌面设置： <a href="guides.html#standalone-getting-started">独立应用指南</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>适合使用来源页面的情况</h3>
+                <ul class="guide-list">
+                    <li>平台需要专用的 Social Stream 来源 URL。</li>
+                    <li>设置要求频道、房间、令牌或登录步骤。</li>
+                    <li>无法从普通浏览器标签页捕获该平台。</li>
+                </ul>
+                <p>来源页面是正常的。它只是表示 Social Stream 对该平台需要使用专用页面。</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>快速选择</h3>
+                <table class="guide-table">
+                    <tr><th>情况</th><th>使用</th></tr>
+                    <tr><td>标准受支持聊天网站</td><td>浏览器扩展</td></tr>
+                    <tr><td>网站要求弹出聊天</td><td>弹出／仅聊天窗口</td></tr>
+                    <tr><td>隐藏的浏览器标签页停止更新</td><td>桌面应用</td></tr>
+                    <tr><td>设置要求房间／频道／令牌</td><td>来源页面</td></tr>
+                    <tr><td>自定义自动化或传入数据</td><td>命令／API 或自定义来源</td></tr>
+                </table>
+                <p>不确定时，先从符合情况的最简单选项开始。以后可以切换方法。</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 许可证。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

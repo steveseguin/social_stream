@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-cn/docs/ai-modes-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-cn/docs/ai-modes-guide.html">
+    <meta property="og:title" content="完整 AI 指南 — Social Stream Ninja">
+    <meta property="og:description" content="选择并配置 Social Stream Ninja 的 AI 功能：语音联合主持、公共与私人聊天机器人、ChatGPT 浏览器伙伴模式、审核、翻译、RAG、总结、TTS 和 AI 生成的叠加层。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-cn/docs/ai-modes-guide.html">
+    <meta name="twitter:title" content="完整 AI 指南 — Social Stream Ninja">
+    <meta name="twitter:description" content="选择并配置 Social Stream Ninja 的 AI 功能：语音联合主持、公共与私人聊天机器人、ChatGPT 浏览器伙伴模式、审核、翻译、RAG、总结、TTS 和 AI 生成的叠加层。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>完整 AI 指南 — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="选择并配置 Social Stream Ninja 的 AI 功能：语音联合主持、公共与私人聊天机器人、ChatGPT 浏览器伙伴模式、审核、翻译、RAG、总结、TTS 和 AI 生成的叠加层。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/ai-modes-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{"(experimental)":"（实验性）",", and":"，以及",", and send a new message.":"，然后发送新消息。",", so viewer messages only go to ChatGPT.":"，使观众消息只发送到 ChatGPT。",", then press":"，然后按",", then preview and save it. Add":"，然后预览并保存。添加",", then reload it.":"，然后重新加载。",", turn on":"，开启",". The key stays in Social Stream. The co-host page only gets a short-lived pass, and audio travels over WebRTC.":"。密钥保留在 Social Stream 中。共同主持人页面只获得短期凭证，音频通过 WebRTC 传输。",". Turn on TTS if replies should be spoken.":"。若要朗读回复，请开启 TTS。",". When on, it sends one picture per request, not live video. This adds cost and delay.":"。启用后，每次请求发送一张图片，并非实时视频。这会增加费用和延迟。","A one-on-one helper, good for testing prompts.":"一对一助手，适合测试提示词。","AI Integration in Commands & API":"“命令与 API”中的 AI 集成","AI Overlay Builder showing prompt, preview, save controls, and event simulation buttons":"AI 叠加层构建器，显示提示词、预览、保存控件和事件模拟按钮","AI cohost controls showing media devices, AI provider settings, system instructions, and live chat mode":"AI 联合主持控制界面，显示媒体设备、AI 服务设置、系统指令和实时聊天模式","AI in Social Stream Ninja":"Social Stream Ninja 中的 AI","API key?":"需要 API 密钥？","Add":"添加","Adding an OpenAI API key doesn't connect Social Stream to a ChatGPT website or voice conversation you already have.":"添加 OpenAI API 密钥不会让 Social Stream 接入你已有的 ChatGPT 网站会话或语音对话。","Already use ChatGPT in Chrome and don't want an API key? Social Stream can pick up new messages from your ChatGPT tab, like any other chat source (type":"已经在 Chrome 使用 ChatGPT，又不想用 API 密钥？Social Stream 可以像捕获其他聊天来源一样，读取 ChatGPT 标签页中的新消息（类型为","Answers everything out loud.":"语音回答所有消息。","Answers those out loud by itself.":"自动语音回答这些消息。","Answers viewer messages on an overlay, out loud with TTS, or back in chat where supported.":"通过覆盖层、TTS 语音，或受支持的平台聊天回复观众消息。","Audio Response":"音频回复","Auto-answer YouTube, Twitch, Kick, or other chat":"自动回答 YouTube、Twitch、Kick 或其他聊天","Bot can't post in chat":"机器人无法在聊天中发言","Bot replies ONLY go to the bot overlay page":"机器人回复仅发送到机器人叠加层页面","Bot skips most messages":"机器人跳过大多数消息","Camera and Screen Share are optional. Default is":"摄像头和屏幕共享为可选功能，默认是","Capture your ChatGPT tab":"捕获 ChatGPT 标签页","Censor bot":"内容过滤机器人","Chat Bot - Primary":"聊天机器人 - 主机器人","Chat Bot - Private Interface":"聊天机器人 — 私人界面","Chat Bots and AI services":"聊天机器人和 AI 服务","Chat bot":"聊天机器人","Chat privately with an AI helper":"与 AI 助手私下聊天","Chat summaries":"聊天总结","Chat tools":"聊天工具","ChatGPT":"ChatGPT","ChatGPT API":"ChatGPT API","ChatGPT API provider":"ChatGPT API 服务","ChatGPT browser source":"ChatGPT 浏览器来源","ChatGPT tab":"ChatGPT 标签页","ChatGPT tab (experimental)":"ChatGPT 标签页（实验性）","ChatGPT tab shows nothing":"ChatGPT 标签页没有显示内容","Check that platform supports it, you're logged in, the account can post, and rate limits.":"检查平台是否支持、是否已登录、账户是否有发言权限，以及频率限制。","Check trigger words, moderators-only, rate limits, and your instructions. It's picky by design.":"检查触发词、仅管理员、频率限制及指令。它本来就被设计为有选择地回应。","Checks, cleans up, or blocks incoming messages.":"检查、清理或阻止传入的消息。","Choices":"选项","Choose and configure Social Stream Ninja AI features: voice cohosts, public and private chat bots, ChatGPT browser companion mode, moderation, translation, RAG, summaries, TTS, and AI-built overlays.":"选择并配置 Social Stream Ninja 的 AI 功能：语音联合主持、公共与私人聊天机器人、ChatGPT 浏览器伙伴模式、审核、翻译、RAG、总结、TTS 和 AI 生成的叠加层。","Claude":"Claude","Click":"点击","Cloud":"云端","Co-host Stream Controls":"联合主持直播控制","Co-host sees chat but stays quiet":"共同主持人看到聊天但不说话","Commands & API":"命令与 API","Complete AI Guide - Social Stream Ninja":"完整 AI 指南 — Social Stream Ninja","Configure LLM Service Provider":"配置 LLM 服务提供商","Connect an AI":"连接 AI","Connect an AI in 5 steps":"五步连接 AI","Connected isn't the finish line.":"连接成功不代表设置完成。","Connected, but no replies to chat":"已连接，但没有回复聊天","Context only - answer when asked":"仅上下文 — 提问时才回答","Custom API (OpenAI-compatible)":"自定义 API（兼容 OpenAI）","Depends on the AI":"取决于 AI","Describe an overlay and have AI build it":"描述叠加层，让 AI 构建它","Describe an overlay in":"在以下功能中描述覆盖层：","Download":"下载","Each service sets its own keys, billing, limits, and model names.":"每个服务都有自己的密钥、计费、限制和模型名称。","Enable the LLM AI chat bot":"启用 LLM AI 聊天机器人","Every option except the ChatGPT tab needs this first.":"除了 ChatGPT 标签页，其他选项都需要先完成此设置。","Experimental.":"实验性功能。","Experimental. Captures new text messages, not history. Relay can type into its message box.":"实验性功能。捕获新文本消息，不捕获历史记录。转发可向消息输入框输入内容。","Experimental. May be turned off or rate-limited.":"实验性功能，可能关闭或限制用量。","Features":"功能","Fill in its address, model, API key, or download settings.":"填写地址、模型、API 密钥或下载设置。","Filter, translate, or summarize chat, or answer from my documents":"过滤、翻译、总结聊天，或根据我的文档回答","Fix problems":"解决问题","For a safe first test, turn on":"首次测试时，为稳妥起见请开启","For llama.cpp, LM Studio, vLLM, and similar. Ollama should use its own option.":"适用于 llama.cpp、LM Studio、vLLM 等。Ollama 应使用专门的选项。","For speed: Mini model, Low reasoning, Fast turn-taking. Full quality and higher reasoning are smarter but slower and cost more. Fast can cut in on pauses.":"追求速度可选 Mini 模型、Low 推理和 Fast 轮流发言。Full quality 和更高推理强度更聪明，但更慢、费用更高。Fast 可能在停顿时插话。","Free trial":"免费试用","Full AI Chat Bot Guide":"完整 AI 聊天机器人指南","Full AI Co-host Guide":"完整 AI 共同主持人指南","Full AI Overlay Builder Guide":"完整 AI 覆盖层构建器指南","Gemini, Copilot, Perplexity, others":"Gemini、Copilot、Perplexity 等","Good to know":"实用说明","Guides":"指南","Hire":"雇用","Home":"首页","I want to":"我想要","I want to…":"我想要…","In the Social Stream popup, open":"在 Social Stream 弹出菜单中打开","In the popup, turn on the":"在弹出菜单中开启","Inspiration":"灵感","Install and turn on the Social Stream Ninja Chrome extension.":"安装并启用 Social Stream Ninja Chrome 扩展程序。","It doesn't take over a conversation in the ChatGPT website or app.":"它不会接管 ChatGPT 网站或应用中的对话。","It only means the AI answered the test. Nothing reads your chat until you turn on a feature.":"这只表示 AI 回答了测试。启用具体功能之前，不会读取聊天。","It reconnects by itself. A fresh session keeps your instructions and settings, but forgets what was said aloud.":"它会自动重连。新会话保留指令和设置，但会忘记之前的语音对话。","It's separate from the Primary bot. It doesn't share its document knowledge (RAG) or chat history.":"它独立于 Primary 机器人，不共享其文档知识（RAG）或聊天历史。","Its own, separate from chatgpt.com.":"独立对话，与 chatgpt.com 分开。","Keep the tab open. ChatGPT's replies come back as":"保持标签页打开。ChatGPT 回复会以以下形式返回：","Kind":"类型","Knowledge base (RAG)":"知识库（RAG）","Lets the Primary bot look things up in files you upload.":"让 Primary 机器人查阅你上传的文件。","Live Chat setting":"Live Chat 设置","Local AI TTS":"本地 AI TTS","Local or cloud AI":"本地或云端 AI","Main navigation":"主导航","Make sure the page making the sound is open and OBS captures its audio.":"确保发声页面保持打开，且 OBS 正在捕获其音频。","Management":"管理","More:":"更多：","No":"否","No Video":"无视频","No cloud key. Speed depends on your computer.":"不需要云端密钥。速度取决于电脑性能。","No conversation capture. The included Claude script only changes the page style.":"不捕获对话。附带的 Claude 脚本只改变页面样式。","No website capture. Their APIs may still work if listed as a provider.":"不捕获网站内容。如果在服务提供商列表中，其 API 仍可能可用。","None of these post into platform chat. Keep the speech bubble visible so viewers can read along.":"这些方式都不向平台聊天发言。保留对话气泡，方便观众阅读。","Normal in Context only. Ask it about chat, or pick a mode that speaks replies.":"Context only 模式下这是正常的。向它询问聊天内容，或选择会语音回复的模式。","Ollama, Local Gemma, Local Qwen":"Ollama、Local Gemma、Local Qwen","On this page":"本页内容","On your computer":"在你的电脑上","Open":"打开","Open navigation menu":"打开导航菜单","Open the Dock with the same session.":"打开同一会话的 Dock。","OpenAI Realtime details":"OpenAI Realtime 详情","OpenAI, Gemini, DeepSeek, xAI, AWS Bedrock, OpenRouter, Groq, OpenCode Zen":"OpenAI, Gemini, DeepSeek, xAI, AWS Bedrock, OpenRouter, Groq, OpenCode Zen","Option":"选项","Other AI websites":"其他 AI 网站","Overlay Gallery":"叠加层图库","Overlay builder":"覆盖层构建器","Pick a voice AI, or the AI you set up in the popup.":"选择语音 AI，或在弹出菜单中配置的 AI。","Pick one":"选择一个","Pick the AI, mic, reply type, instructions, and chat mode.":"选择 AI、麦克风、回复类型、指令和聊天模式。","Pick what you want the AI to do, then follow that setup.":"选择希望 AI 完成的任务，然后按对应步骤设置。","Pick your microphone and":"选择麦克风和","Primary chat bot":"主聊天机器人","Private bot":"私有机器人","Problem":"问题","Relay all messages":"转发所有消息","Remembers chat, stays quiet until you ask about it. Works with OpenAI Realtime.":"记住聊天内容，询问时才回答。适用于 OpenAI Realtime。","Replies are capped at 512 output tokens. Diagnostics shows usage and delay.":"回复最多输出 512 个令牌。Diagnostics 显示用量和延迟。","Replies post from your logged-in account. For a separate name, use a YouTube, Twitch, or Kick bot account where supported.":"回复从当前登录的账户发出。若要使用单独名称，请在支持的平台使用 YouTube、Twitch 或 Kick 机器人账户。","SSN Hosted Trial LLM":"SSN 托管试用 LLM","Send a new ChatGPT message. Both sides should show in the Dock. Older messages are skipped on purpose.":"发送新的 ChatGPT 消息。对话双方的消息都应显示在 Dock 中。旧消息会被有意跳过。","Send your live chat into ChatGPT":"把实时聊天发送到 ChatGPT","Set":"设置","Set trigger words, moderators-only, rate limits, history, and instructions.":"设置触发词、仅管理员、频率限制、历史记录和指令。","Show or speak AI answers without posting in chat":"显示或朗读 AI 回答，而不发到聊天中","Skip to main content":"跳至主要内容","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Social Stream sends prompts to OpenAI with your API key.":"Social Stream 使用你的 API 密钥向 OpenAI 发送提示词。","Speak a reply to every message":"语音回复每条消息","Speak replies to questions and mentions":"语音回答问题和提及","Spotify, OBS scene, and featured-chat tools are off by default. Turn them on in the popup, then in":"Spotify、OBS 场景和精选聊天工具默认关闭。先在弹出菜单中启用，再在以下位置启用：","Start Co-host":"启动联合主持","Start in non-blocking mode and review what it flags.":"从不阻止消息的模式开始，并检查它标记的内容。","Start safely":"稳妥开始","Support":"支持","Supported Sites":"支持的网站","Switch theme":"切换主题","TTS Setup":"TTS 设置","Talk to an AI on stream that also hears chat":"在直播中与也能读取聊天的 AI 对话","Talk to an AI on stream. It hears your microphone, sees chat you share, and can answer out loud.":"在直播中与 AI 交谈。它能听到麦克风、看到共享的聊天，并语音回答。","Test it with fake chat and alerts before adding it to OBS.":"添加到 OBS 之前，用模拟聊天和提醒测试。","Test on a private or unlisted stream, in a normal text chat.":"在私人或不公开列出的直播中，用普通文本聊天测试。","Test one language. Avoid block mode until it's reliable.":"先测试一种语言。稳定可靠之前，不要使用阻止模式。","Test selected chat bot":"测试所选聊天机器人","Text shows but no sound":"有文字但无声音","The ChatGPT site can change. Relaying all chat can flood the conversation. Voice mode may not accept typed-in text. Use filters or a test stream first.":"ChatGPT 网站可能变更。转发所有聊天可能让对话被大量消息淹没。语音模式不一定接受输入的文本。请先用筛选器或测试直播。","The extension reads new messages from an open":"扩展程序从打开的以下标签页读取新消息：","The one in your tab. No API key.":"标签页中的对话。不需要 API 密钥。","The overlay doesn't get the OpenAI voice. Use the co-host output picker for a virtual cable if supported.":"覆盖层收不到 OpenAI 语音。若环境支持，在共同主持人的输出选择器中使用虚拟音频线。","Tool":"工具","Translates incoming chat, and optionally your own messages.":"翻译传入聊天，也可选择翻译自己的消息。","Translation":"翻译","Try this":"试试这个","Turn on":"开启","Turn on the ChatGPT source, reload":"开启 ChatGPT 来源，重新加载","Turn on the Primary bot or the feature you want. Connecting an AI alone does nothing to chat.":"启用 Primary 机器人或需要的功能。仅连接 AI 不会对聊天产生任何作用。","Turn on the feature that should use it, like the Primary bot or translation.":"开启使用 AI 的功能，例如 Primary 机器人或翻译。","Turn overlay-only off only after you've checked that platform supports posting.":"确认平台支持发言后，才关闭 overlay-only。","Under":"位于","Use ChatGPT's audio, or Social Stream TTS or an overlay, to put replies on stream.":"使用 ChatGPT 音频、Social Stream TTS 或覆盖层把回复呈现在直播中。","Use my open ChatGPT tab as a companion":"把打开的 ChatGPT 标签页用作搭档","Use this":"使用此项","Use up-to-date, focused text or Markdown files.":"使用内容集中且保持更新的文本或 Markdown 文件。","Uses the OpenAI key saved under":"使用保存在以下位置的 OpenAI 密钥：","Viewers type":"观众输入","Voice co-host":"语音共同主持人","Watch history size, cost, and private content.":"留意历史记录大小、费用及私密内容。","Website":"网站","What do you want the AI to do?":"希望 AI 做什么？","What it does":"功能","What it is":"功能说明","Which conversation":"使用哪个会话","With OpenAI Realtime, capture the co-host page audio in OBS.":"使用 OpenAI Realtime 时，在 OBS 中捕获共同主持人页面音频。","Your own server":"自己的服务器","adds a second, separate overlay voice.":"会增加另一道独立的覆盖层语音。","and pick the AI you use.":"并选择所用的 AI。","and test it.":"并测试。","and turn on":"并开启","messages.":"消息。","relay destinations":"转发目标","source.":"来源。","tab.":"标签页。","to":"为","to OBS for the avatar and speech bubble.":"到 OBS，以显示头像和对话气泡。","to OBS to show it.":"到 OBS 中显示。","to get an AI summary.":"以获取 AI 总结。","with overlay-only and TTS":"，配合 overlay-only 和 TTS","with your session.":"，使用你的会话。","“ChatGPT API” vs. your ChatGPT tab":"“ChatGPT API”与 ChatGPT 标签页的区别"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/ai-modes-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<a class="skip-link" href="#main-content">跳至主要内容</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/ai-modes-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/ai-modes-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/ai-modes-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/ai-modes-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/ai-modes-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/ai-modes-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/ai-modes-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="ai-modes-guide.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/ai-modes-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/ai-modes-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/ai-modes-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/ai-modes-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/ai-modes-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/ai-modes-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/ai-modes-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/ai-modes-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/ai-modes-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Social Stream Ninja 中的 AI</h1>
+            <p>选择希望 AI 完成的任务，然后按对应步骤设置。</p>
+        </div>
+    </section>
+
+    <main class="guide-section" id="main-content">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="本页内容">
+                <a href="#pick">选择一个</a>
+                <a href="#providers">连接 AI</a>
+                <a href="#voice-cohost">语音共同主持人</a>
+                <a href="#primary-bot">聊天机器人</a>
+                <a href="#private-bot">私有机器人</a>
+                <a href="#processing-tools">聊天工具</a>
+                <a href="#overlay-builder">覆盖层构建器</a>
+                <a href="#browser-companion">ChatGPT 标签页</a>
+                <a href="#problems">解决问题</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="pick">希望 AI 做什么？</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>我想要…</th><th>使用此项</th><th>需要 API 密钥？</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="我想要">在直播中与也能读取聊天的 AI 对话</td><td data-label="使用此项"><a href="#voice-cohost"><strong>语音共同主持人</strong></a></td><td data-label="需要 API 密钥？">取决于 AI</td></tr>
+                        <tr><td data-label="我想要">自动回答 YouTube、Twitch、Kick 或其他聊天</td><td data-label="使用此项"><a href="#primary-bot"><strong>主聊天机器人</strong></a></td><td data-label="需要 API 密钥？">本地或云端 AI</td></tr>
+                        <tr><td data-label="我想要">显示或朗读 AI 回答，而不发到聊天中</td><td data-label="使用此项"><a href="#primary-bot"><strong>主聊天机器人</strong></a> ，配合 overlay-only 和 TTS</td><td data-label="需要 API 密钥？">本地或云端 AI</td></tr>
+                        <tr><td data-label="我想要">与 AI 助手私下聊天</td><td data-label="使用此项"><a href="#private-bot"><strong>私有机器人</strong></a></td><td data-label="需要 API 密钥？">本地或云端 AI</td></tr>
+                        <tr><td data-label="我想要">过滤、翻译、总结聊天，或根据我的文档回答</td><td data-label="使用此项"><a href="#processing-tools"><strong>聊天工具</strong></a></td><td data-label="需要 API 密钥？">本地或云端 AI</td></tr>
+                        <tr><td data-label="我想要">描述叠加层，让 AI 构建它</td><td data-label="使用此项"><a href="#overlay-builder"><strong>覆盖层构建器</strong></a></td><td data-label="需要 API 密钥？">本地或云端 AI</td></tr>
+                        <tr><td data-label="我想要">把打开的 ChatGPT 标签页用作搭档</td><td data-label="使用此项"><a href="#browser-companion"><strong>ChatGPT 标签页</strong></a> （实验性）</td><td data-label="需要 API 密钥？">否</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="providers">五步连接 AI</h2>
+                <p>除了 ChatGPT 标签页，其他选项都需要先完成此设置。</p>
+                <ol class="guide-steps">
+                    <li>在 Social Stream 弹出菜单中打开 <strong>聊天机器人和 AI 服务</strong>.</li>
+                    <li>打开 <strong>配置 LLM 服务提供商</strong> 并选择所用的 AI。</li>
+                    <li>填写地址、模型、API 密钥或下载设置。</li>
+                    <li>点击 <strong>测试所选聊天机器人</strong>.</li>
+                    <li>开启使用 AI 的功能，例如 Primary 机器人或翻译。</li>
+                </ol>
+                <div class="guide-note"><strong>连接成功不代表设置完成。</strong> 这只表示 AI 回答了测试。启用具体功能之前，不会读取聊天。</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>类型</th><th>选项</th><th>实用说明</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="类型">在你的电脑上</td><td data-label="选项">Ollama、Local Gemma、Local Qwen</td><td data-label="实用说明">不需要云端密钥。速度取决于电脑性能。</td></tr>
+                        <tr><td data-label="类型">自己的服务器</td><td data-label="选项">自定义 API（兼容 OpenAI）</td><td data-label="实用说明">适用于 llama.cpp、LM Studio、vLLM 等。Ollama 应使用专门的选项。</td></tr>
+                        <tr><td data-label="类型">云端</td><td data-label="选项">OpenAI, Gemini, DeepSeek, xAI, AWS Bedrock, OpenRouter, Groq, OpenCode Zen</td><td data-label="实用说明">每个服务都有自己的密钥、计费、限制和模型名称。</td></tr>
+                        <tr><td data-label="类型">免费试用</td><td data-label="选项">SSN 托管试用 LLM</td><td data-label="实用说明">实验性功能，可能关闭或限制用量。</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra">
+                    <summary>“ChatGPT API”与 ChatGPT 标签页的区别</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>选项</th><th>功能说明</th><th>使用哪个会话</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="选项">ChatGPT API 服务</td><td data-label="功能说明">Social Stream 使用你的 API 密钥向 OpenAI 发送提示词。</td><td data-label="使用哪个会话">独立对话，与 chatgpt.com 分开。</td></tr>
+                            <tr><td data-label="选项">ChatGPT 浏览器来源</td><td data-label="功能说明">扩展程序从打开的以下标签页读取新消息： <code>chatgpt.com</code> 标签页。</td><td data-label="使用哪个会话">标签页中的对话。不需要 API 密钥。</td></tr>
+                        </tbody>
+                    </table>
+                    <p>添加 OpenAI API 密钥不会让 Social Stream 接入你已有的 ChatGPT 网站会话或语音对话。</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-cohost">语音共同主持人</h2>
+                <p>在直播中与 AI 交谈。它能听到麦克风、看到共享的聊天，并语音回答。</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>打开 <code>cohost.html?session=YOUR_SESSION</code>.</li>
+                        <li>选择语音 AI，或在弹出菜单中配置的 AI。</li>
+                        <li>选择麦克风和 <strong>音频回复</strong>，然后按 <strong>启动联合主持</strong>.</li>
+                        <li>使用 OpenAI Realtime 时，在 OBS 中捕获共同主持人页面音频。</li>
+                        <li>添加 <code>cohost-overlay.html?session=YOUR_SESSION</code> 到 OBS，以显示头像和对话气泡。</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/guide-ai-cohost-controls.png" alt="AI 联合主持控制界面，显示媒体设备、AI 服务设置、系统指令和实时聊天模式" class="guide-image">
+                        <figcaption>选择 AI、麦克风、回复类型、指令和聊天模式。</figcaption>
+                    </figure>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Live Chat 设置</th><th>功能</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Live Chat 设置">仅上下文 — 提问时才回答</td><td data-label="功能">记住聊天内容，询问时才回答。适用于 OpenAI Realtime。</td></tr>
+                        <tr><td data-label="Live Chat 设置">语音回答问题和提及</td><td data-label="功能">自动语音回答这些消息。</td></tr>
+                        <tr><td data-label="Live Chat 设置">语音回复每条消息</td><td data-label="功能">语音回答所有消息。</td></tr>
+                    </tbody>
+                </table>
+                <p>这些方式都不向平台聊天发言。保留对话气泡，方便观众阅读。</p>
+                <details class="guide-extra">
+                    <summary>OpenAI Realtime 详情</summary>
+                    <ul>
+                        <li>使用保存在以下位置的 OpenAI 密钥： <strong>ChatGPT API</strong>。密钥保留在 Social Stream 中。共同主持人页面只获得短期凭证，音频通过 WebRTC 传输。</li>
+                        <li>覆盖层收不到 OpenAI 语音。若环境支持，在共同主持人的输出选择器中使用虚拟音频线。 <code>&amp;forcetts</code> 会增加另一道独立的覆盖层语音。</li>
+                        <li>追求速度可选 Mini 模型、Low 推理和 Fast 轮流发言。Full quality 和更高推理强度更聪明，但更慢、费用更高。Fast 可能在停顿时插话。</li>
+                        <li>摄像头和屏幕共享为可选功能，默认是 <strong>无视频</strong>。启用后，每次请求发送一张图片，并非实时视频。这会增加费用和延迟。</li>
+                        <li>Spotify、OBS 场景和精选聊天工具默认关闭。先在弹出菜单中启用，再在以下位置启用： <strong>联合主持直播控制</strong>.</li>
+                        <li>回复最多输出 512 个令牌。Diagnostics 显示用量和延迟。</li>
+                        <li>它会自动重连。新会话保留指令和设置，但会忘记之前的语音对话。</li>
+                        <li>它不会接管 ChatGPT 网站或应用中的对话。</li>
+                    </ul>
+                </details>
+                <p><a href="ai-cohost-guide.html" class="btn btn-primary">完整 AI 共同主持人指南</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="primary-bot">主聊天机器人</h2>
+                <p>通过覆盖层、TTS 语音，或受支持的平台聊天回复观众消息。</p>
+                <ol class="guide-steps">
+                    <li><a href="#providers">连接 AI</a> 并测试。</li>
+                    <li>打开 <strong>聊天机器人 - 主机器人</strong> 并开启 <strong>启用 LLM AI 聊天机器人</strong>.</li>
+                    <li>设置触发词、仅管理员、频率限制、历史记录和指令。</li>
+                    <li>首次测试时，为稳妥起见请开启 <strong>机器人回复仅发送到机器人叠加层页面</strong>.</li>
+                    <li>打开 <code>bot.html?session=YOUR_SESSION</code>。若要朗读回复，请开启 TTS。</li>
+                    <li>确认平台支持发言后，才关闭 overlay-only。</li>
+                </ol>
+                <p>回复从当前登录的账户发出。若要使用单独名称，请在支持的平台使用 YouTube、Twitch 或 Kick 机器人账户。</p>
+                <p><a href="chatbot-basics-guide.html" class="btn btn-primary">完整 AI 聊天机器人指南</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="private-bot">私有机器人</h2>
+                <p>一对一助手，适合测试提示词。</p>
+                <ol class="guide-steps">
+                    <li>开启 <strong>聊天机器人 — 私人界面</strong>.</li>
+                    <li>打开 <code>chatbot.html</code> ，使用你的会话。</li>
+                </ol>
+                <div class="guide-note">它独立于 Primary 机器人，不共享其文档知识（RAG）或聊天历史。</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="processing-tools">聊天工具</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>工具</th><th>功能</th><th>稳妥开始</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="工具">内容过滤机器人</td><td data-label="功能">检查、清理或阻止传入的消息。</td><td data-label="稳妥开始">从不阻止消息的模式开始，并检查它标记的内容。</td></tr>
+                        <tr><td data-label="工具">翻译</td><td data-label="功能">翻译传入聊天，也可选择翻译自己的消息。</td><td data-label="稳妥开始">先测试一种语言。稳定可靠之前，不要使用阻止模式。</td></tr>
+                        <tr><td data-label="工具">知识库（RAG）</td><td data-label="功能">让 Primary 机器人查阅你上传的文件。</td><td data-label="稳妥开始">使用内容集中且保持更新的文本或 Markdown 文件。</td></tr>
+                        <tr><td data-label="工具">聊天总结</td><td data-label="功能">观众输入 <code>!summary</code> 以获取 AI 总结。</td><td data-label="稳妥开始">留意历史记录大小、费用及私密内容。</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="overlay-builder">覆盖层构建器</h2>
+                <p>在以下功能中描述覆盖层： <code>aiprompt.html</code>，然后预览并保存。添加 <code>aioverlay.html</code> 到 OBS 中显示。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-ai-overlay-builder.png" alt="AI 叠加层构建器，显示提示词、预览、保存控件和事件模拟按钮" class="guide-image">
+                    <figcaption>添加到 OBS 之前，用模拟聊天和提醒测试。</figcaption>
+                </figure>
+                <p><a href="ai-overlay-builder-guide.html" class="btn btn-primary">完整 AI 覆盖层构建器指南</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="browser-companion">ChatGPT 标签页（实验性）</h2>
+                <p>已经在 Chrome 使用 ChatGPT，又不想用 API 密钥？Social Stream 可以像捕获其他聊天来源一样，读取 ChatGPT 标签页中的新消息（类型为 <code>openai</code>).</p>
+                <h3>捕获 ChatGPT 标签页</h3>
+                <ol class="guide-steps">
+                    <li>安装并启用 Social Stream Ninja Chrome 扩展程序。</li>
+                    <li>在弹出菜单中开启 <strong>ChatGPT</strong> 来源。</li>
+                    <li>打开 <code>https://chatgpt.com/</code>，然后重新加载。</li>
+                    <li>打开同一会话的 Dock。</li>
+                    <li>发送新的 ChatGPT 消息。对话双方的消息都应显示在 Dock 中。旧消息会被有意跳过。</li>
+                </ol>
+                <h3>把实时聊天发送到 ChatGPT</h3>
+                <ol class="guide-steps">
+                    <li>在私人或不公开列出的直播中，用普通文本聊天测试。</li>
+                    <li>位于 <strong>管理</strong>，开启 <strong>转发所有消息</strong>.</li>
+                    <li>设置 <strong>转发目标</strong> 为 <code>openai</code>，使观众消息只发送到 ChatGPT。</li>
+                    <li>保持标签页打开。ChatGPT 回复会以以下形式返回： <code>openai</code> 消息。</li>
+                    <li>使用 ChatGPT 音频、Social Stream TTS 或覆盖层把回复呈现在直播中。</li>
+                </ol>
+                <div class="warning-note"><strong>实验性功能。</strong> ChatGPT 网站可能变更。转发所有聊天可能让对话被大量消息淹没。语音模式不一定接受输入的文本。请先用筛选器或测试直播。</div>
+                <details class="guide-extra">
+                    <summary>其他 AI 网站</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>网站</th><th>支持</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="网站">ChatGPT</td><td data-label="支持">实验性功能。捕获新文本消息，不捕获历史记录。转发可向消息输入框输入内容。</td></tr>
+                            <tr><td data-label="网站">Claude</td><td data-label="支持">不捕获对话。附带的 Claude 脚本只改变页面样式。</td></tr>
+                            <tr><td data-label="网站">Gemini、Copilot、Perplexity 等</td><td data-label="支持">不捕获网站内容。如果在服务提供商列表中，其 API 仍可能可用。</td></tr>
+                        </tbody>
+                    </table>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">解决问题</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>问题</th><th>试试这个</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="问题">已连接，但没有回复聊天</td><td data-label="试试这个">启用 Primary 机器人或需要的功能。仅连接 AI 不会对聊天产生任何作用。</td></tr>
+                        <tr><td data-label="问题">共同主持人看到聊天但不说话</td><td data-label="试试这个">Context only 模式下这是正常的。向它询问聊天内容，或选择会语音回复的模式。</td></tr>
+                        <tr><td data-label="问题">ChatGPT 标签页没有显示内容</td><td data-label="试试这个">开启 ChatGPT 来源，重新加载 <code>chatgpt.com</code>，然后发送新消息。</td></tr>
+                        <tr><td data-label="问题">机器人跳过大多数消息</td><td data-label="试试这个">检查触发词、仅管理员、频率限制及指令。它本来就被设计为有选择地回应。</td></tr>
+                        <tr><td data-label="问题">有文字但无声音</td><td data-label="试试这个">确保发声页面保持打开，且 OBS 正在捕获其音频。</td></tr>
+                        <tr><td data-label="问题">机器人无法在聊天中发言</td><td data-label="试试这个">检查平台是否支持、是否已登录、账户是否有发言权限，以及频率限制。</td></tr>
+                    </tbody>
+                </table>
+                <p>更多： <a href="tts-setup-guide.html">TTS 设置</a>, <a href="local-tts.html">本地 AI TTS</a>，以及 <a href="commands.html#ai-integration">“命令与 API”中的 AI 集成</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 许可证。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

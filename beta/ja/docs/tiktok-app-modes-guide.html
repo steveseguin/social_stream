@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ja/docs/tiktok-app-modes-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ja/docs/tiktok-app-modes-guide.html">
+    <meta property="og:title" content="TikTokのアプリモード - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream NinjaデスクトップアプリのTikTok接続モードの実用ガイド：Auto、Standard、Local Signer、互換モード（WebSocket）、プロキシ署名。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ja/docs/tiktok-app-modes-guide.html">
+    <meta name="twitter:title" content="TikTokのアプリモード - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream NinjaデスクトップアプリのTikTok接続モードの実用ガイド：Auto、Standard、Local Signer、互換モード（WebSocket）、プロキシ署名。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTokのアプリモード - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream NinjaデスクトップアプリのTikTok接続モードの実用ガイド：Auto、Standard、Local Signer、互換モード（WebSocket）、プロキシ署名。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/tiktok-app-modes-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{"Add TikTok in the desktop app and leave the preset on Auto unless you are troubleshooting a specific failure.":"デスクトップアプリにTikTokを追加し、特定の問題を調べる場合以外はプリセットをAutoのままにしてください。","Advanced setup with provider/API key requirements.":"プロバイダー/APIキーの要件がある高度な設定です。","Auto":"自動（Auto）","Auto fails:":"Autoが失敗する：","Commands & API":"コマンドとAPI","Common Fixes":"よくある問題の対処","Compatibility (WebSocket)":"互換モード（WebSocket）","Desktop app mode troubleshooting starts after the basic TikTok source path is understood.":"デスクトップアプリのモードの問題を調べる前に、TikTokの基本的なソース接続方法を確認してください。","Desktop app version and whether beta mode is enabled.":"デスクトップアプリのバージョンと、betaモードが有効かどうか。","Download":"ダウンロード","Duplicate or missing messages:":"メッセージが重複する、または欠ける：","Exact app status text or error message.":"アプリの正確なステータス表示またはエラーメッセージ。","Features":"機能","For basic browser-extension TikTok setup, use the public TikTok setup note first.":"ブラウザ拡張機能での基本的なTikTok設定には、まず公開されているTikTok設定の説明を使ってください。","Guides":"ガイド","Hire":"仕事を依頼する","Home":"ホーム","Inspiration":"活用アイデア","Local Signer":"ローカル署名（Local Signer）","Main navigation":"メインナビゲーション","Mode":"モード","Mode Picker":"モード選択","Normal first setup.":"通常の初回設定。","On this page":"このページの内容","Open navigation menu":"ナビゲーションメニューを開く","Overlay Gallery":"オーバーレイギャラリー","Practical guide to TikTok connection modes in the Social Stream Ninja desktop app: Auto, Standard, Local Signer, Compatibility (WebSocket), and proxy signing.":"Social Stream NinjaデスクトップアプリのTikTok接続モードの実用ガイド：Auto、Standard、Local Signer、互換モード（WebSocket）、プロキシ署名。","Previously called Polling. Still requires signing in the current app; no replies. See the":"旧称はPollingです。現在のアプリでも署名が必要で、返信はできません。詳しくは次をご覧ください：","Provider limits, room ID, signing errors, and rate limits.":"プロバイダーの制限、ルームID、署名エラー、レート制限。","Proxy/custom signing":"プロキシ/カスタム署名","Redirects, CAPTCHA, hidden chat, or wrong live URL.":"リダイレクト、CAPTCHA、非表示のチャット、誤ったライブURL。","Related:":"関連：","Replies fail:":"返信が失敗する：","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0ライセンス。","Standalone app modes":"単体アプリのモード","Standalone app source entries showing Standard, WebSocket, and TikTok connection preset controls":"Standard、WebSocket、TikTok接続プリセットの操作項目を表示した単体アプリのソース一覧","Standard":"標準（Standard）","Standard redirects:":"Standardでリダイレクトされる：","Start Simple":"簡単な設定から始める","Support":"サポート","Supported Sites":"対応サイト","Supported Sites Check":"対応サイトを確認","Switch theme":"テーマを切り替え","The TikTok preset selector exists because TikTok has several app-specific paths.":"TikTokにはアプリ固有の接続方式が複数あるため、TikTok専用のプリセット選択があります。","The app may move through fallback states.":"アプリが代替方式へ順次切り替える場合があります。","TikTok App Modes":"TikTokのアプリモード","TikTok App Modes - Social Stream Ninja":"TikTokのアプリモード - Social Stream Ninja","TikTok Live setup modal showing live page setup guidance":"ライブページの設定案内を表示したTikTok Live設定ダイアログ","TikTok app session/cookies must be valid.":"アプリ内のTikTokセッション/Cookieが有効である必要があります。","TikTok guide":"TikTokガイド","TikTok preset/mode currently selected.":"現在選択しているTikTokプリセット/モード。","Trying the compatibility connector settings.":"互換コネクターの設定を試す場合。","Use Auto first, then switch modes only when the status text points you there.":"まずAutoを使い、ステータス表示が示す場合にのみモードを切り替えてください。","Use When":"適した場面","Watch For":"確認する点","What To Collect When It Fails":"失敗時に集める情報","Whether chat is visible on the live page in Standard mode.":"Standardモードのライブページでチャットが見えるかどうか。","Whether the account is signed into TikTok inside the app.":"アプリ内でTikTokアカウントにログインしているかどうか。","Whether the dock receives anything before OBS is tested.":"OBSをテストする前に、ドックに何か届いているかどうか。","You need app-native reading or reply-support paths.":"アプリ内での読み取りや返信に対応する方式が必要な場合。","You need visible page capture or manual login/verification.":"表示中のページの取得、手動ログイン、確認操作が必要な場合。","and":"および","check TikTok session/cookies and whether the current mode supports send-back.":"TikTokセッション/Cookieと、現在のモードが返信に対応しているかを確認してください。","close duplicate TikTok source windows/tabs and test one mode at a time.":"重複したTikTokソースウィンドウ/タブを閉じ、1つのモードずつテストしてください。","reveal the capture page, check the username/live URL, and complete TikTok verification if prompted.":"取得ページを表示し、ユーザー名/ライブURLを確認して、求められたらTikTokの確認操作を完了してください。","signing guide":"署名ガイド","try Standard to confirm the visible page and login work.":"Standardを試し、表示ページとログインが動作することを確認してください。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tiktok-app-modes-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション"><a href="../index.html">ホーム</a><a href="features.html">機能</a><a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a><a href="download.html">ダウンロード</a><a href="guides.html">ガイド</a><a href="commands.html">コマンドとAPI</a><a href="supported-sites.html">対応サイト</a><a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a><a href="services.html" class="site-priority-hire">仕事を依頼する</a><a href="support.html">サポート</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tiktok-app-modes-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tiktok-app-modes-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tiktok-app-modes-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tiktok-app-modes-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tiktok-app-modes-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tiktok-app-modes-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="tiktok-app-modes-guide.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tiktok-app-modes-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tiktok-app-modes-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tiktok-app-modes-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tiktok-app-modes-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tiktok-app-modes-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tiktok-app-modes-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tiktok-app-modes-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tiktok-app-modes-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tiktok-app-modes-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tiktok-app-modes-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="テーマを切り替え"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>TikTokのアプリモード</h1><p>まずAutoを使い、ステータス表示が示す場合にのみモードを切り替えてください。</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="このページの内容"><a href="#read-section-1">簡単な設定から始める</a><a href="#read-section-2">モード選択</a><a href="#read-section-3">失敗時に集める情報</a><a href="#read-section-4">対応サイトを確認</a><a href="#read-section-5">よくある問題の対処</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">簡単な設定から始める</h2>
+                <p>デスクトップアプリにTikTokを追加し、特定の問題を調べる場合以外はプリセットをAutoのままにしてください。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-standalone-source-modes.png" alt="Standard、WebSocket、TikTok接続プリセットの操作項目を表示した単体アプリのソース一覧" class="guide-image">
+                    <figcaption>TikTokにはアプリ固有の接続方式が複数あるため、TikTok専用のプリセット選択があります。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">モード選択</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>モード</th><th>適した場面</th><th>確認する点</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="モード">自動（Auto）</td><td data-label="適した場面">通常の初回設定。</td><td data-label="確認する点">アプリが代替方式へ順次切り替える場合があります。</td></tr>
+                        <tr><td data-label="モード">標準（Standard）</td><td data-label="適した場面">表示中のページの取得、手動ログイン、確認操作が必要な場合。</td><td data-label="確認する点">リダイレクト、CAPTCHA、非表示のチャット、誤ったライブURL。</td></tr>
+                        <tr><td data-label="モード">ローカル署名（Local Signer）</td><td data-label="適した場面">アプリ内での読み取りや返信に対応する方式が必要な場合。</td><td data-label="確認する点">アプリ内のTikTokセッション/Cookieが有効である必要があります。</td></tr>
+                        <tr><td data-label="モード">互換モード（WebSocket）</td><td data-label="適した場面">互換コネクターの設定を試す場合。</td><td data-label="確認する点">旧称はPollingです。現在のアプリでも署名が必要で、返信はできません。詳しくは次をご覧ください： <a href="tiktok-signing.html">署名ガイド</a>.</td></tr>
+                        <tr><td data-label="モード">プロキシ/カスタム署名</td><td data-label="適した場面">プロバイダー/APIキーの要件がある高度な設定です。</td><td data-label="確認する点">プロバイダーの制限、ルームID、署名エラー、レート制限。</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">失敗時に集める情報</h2>
+                <ul class="guide-list">
+                    <li>デスクトップアプリのバージョンと、betaモードが有効かどうか。</li>
+                    <li>現在選択しているTikTokプリセット/モード。</li>
+                    <li>アプリの正確なステータス表示またはエラーメッセージ。</li>
+                    <li>アプリ内でTikTokアカウントにログインしているかどうか。</li>
+                    <li>Standardモードのライブページでチャットが見えるかどうか。</li>
+                    <li>OBSをテストする前に、ドックに何か届いているかどうか。</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">対応サイトを確認</h2>
+                <p>ブラウザ拡張機能での基本的なTikTok設定には、まず公開されているTikTok設定の説明を使ってください。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/tiktok-live-setup-modal.png" alt="ライブページの設定案内を表示したTikTok Live設定ダイアログ" class="guide-image">
+                    <figcaption>デスクトップアプリのモードの問題を調べる前に、TikTokの基本的なソース接続方法を確認してください。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">よくある問題の対処</h2>
+                <ul class="guide-list">
+                    <li><strong>Autoが失敗する：</strong> Standardを試し、表示ページとログインが動作することを確認してください。</li>
+                    <li><strong>Standardでリダイレクトされる：</strong> 取得ページを表示し、ユーザー名/ライブURLを確認して、求められたらTikTokの確認操作を完了してください。</li>
+                    <li><strong>返信が失敗する：</strong> TikTokセッション/Cookieと、現在のモードが返信に対応しているかを確認してください。</li>
+                    <li><strong>メッセージが重複する、または欠ける：</strong> 重複したTikTokソースウィンドウ/タブを閉じ、1つのモードずつテストしてください。</li>
+                </ul>
+                <p>関連： <a href="tiktok-guide.html">TikTokガイド</a> および <a href="standalone-app-modes.html">単体アプリのモード</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0ライセンス。</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

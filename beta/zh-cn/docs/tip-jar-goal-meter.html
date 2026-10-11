@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-cn/docs/tip-jar-goal-meter.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-cn/docs/tip-jar-goal-meter.html">
+    <meta property="og:title" content="打赏罐与目标计量器指南 - Social Stream Ninja">
+    <meta property="og:description" content="设置 Social Stream Ninja 打赏罐与目标计量器，并排查遗漏的打赏、会员及赠送会员。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-cn/docs/tip-jar-goal-meter.html">
+    <meta name="twitter:title" content="打赏罐与目标计量器指南 - Social Stream Ninja">
+    <meta name="twitter:description" content="设置 Social Stream Ninja 打赏罐与目标计量器，并排查遗漏的打赏、会员及赠送会员。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打赏罐与目标计量器指南 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="设置 Social Stream Ninja 打赏罐与目标计量器，并排查遗漏的打赏、会员及赠送会员。">
+    <style>
+        .style-group { margin: 2.4rem 0 1rem; font-size: 1.6rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; }
+        .visual-guide .guide-card > .style-grid { max-width: none; list-style: none; padding: 0; margin: 0; }
+        .style-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: 1.4rem; margin: 0; padding: 0; list-style: none; }
+        .visual-guide main .style-grid li { margin: 0; padding: 0; }
+        .style-grid li::before { content: none !important; display: none !important; }
+        .style-tile { height: 100%; overflow: hidden; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .style-tile img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; }
+        .style-tile div { padding: .9rem 1.2rem 1.1rem; }
+        .style-tile strong { display: block; font-size: 1.55rem; color: var(--text-primary); }
+        .style-tile span { display: block; margin-top: .2rem; font-size: 1.35rem; line-height: 1.45; color: var(--text-secondary); }
+        .style-tile code { font-size: 1.2rem; }
+        .setup-screenshots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem; align-items: start; }
+        .setup-screenshots > .guide-figure { min-width: 0; margin: 1rem 0; }
+        .count-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4rem; margin: 1.4rem 0; }
+        .count-picker > div { padding: 1.4rem 1.6rem; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .count-picker strong { display: block; margin-bottom: .4rem; font-size: 1.65rem; }
+        .count-picker p { margin: 0; font-size: 1.45rem; line-height: 1.5; }
+        .count-picker .example { margin-top: .8rem; color: var(--text-secondary); }
+        @media (max-width: 760px) {
+            .setup-screenshots { grid-template-columns: minmax(0, 1fr); }
+            .count-picker { grid-template-columns: minmax(0, 1fr); }
+            .style-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
+            .style-tile span { display: none; }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/tip-jar-goal-meter.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{"(0 to 1).":"（0 到 1）。","(12 to 96 pixels).":"（12 到 96 像素）。","(hex colours, with":"（十六进制颜色，用",". An animated GIF keeps playing, but this setting does not switch images as progress changes or add artwork beside a bar.":"。动画 GIF 会持续播放，但此设置不会随进度切换图片，也不会在进度条旁添加图片。",". Its previews use sample data and do not change your live totals.":"。预览使用示例数据，不会改变直播中的累计值。",". Leave a box blank to keep the style's default. Bar text size and “bar only” apply to Fluid Goal Bar only.":"。留空可使用该样式的默认设置。进度条字号和“仅进度条”只适用于 Fluid Goal Bar。",". The styles below include built-in animations.":"。以下样式包含内置动画。",". These do not apply to every style; check the preview. The four panels below also support":"。这些设置并非适用于所有样式，请在预览中确认。下面四种面板还支持",". Use the fill colours above for Fluid Goal Bar.":"。Fluid Goal Bar 请使用上面的填充颜色设置。","340 / 1000 points":"340 / 1000 积分","3D Rotating Jar":"3D旋转罐","7 / 20 Super Chats":"7 / 20 条 Super Chat","A $1 and a $100 Super Chat each add one. To count Super Stickers too, change the paid event filter.":"1 美元和 100 美元的 Super Chat 都各计一次。若要同时统计 Super Sticker，请更改付费事件筛选器。","A money goal in the Goal Meter style.":"Goal Meter 样式下的金额目标。","A slowly turning glass.":"缓慢旋转的玻璃杯。","A sweeping needle.":"沿刻度转动的指针。","Add to the link":"添加到链接","All donations":"所有打赏（All donations）","An old total comes back":"以前的累计值又出现了","Animated artwork":"动画素材","Bar plus recent supporters.":"进度条加最近的支持者。","Bars":"进度条","Battery":"电池","Beer Mug":"啤酒杯","Big total, slim bar.":"醒目的累计值，纤细的进度条。","Bigger total:":"放大累计值：","Carry extra points":"保留超额积分（Carry extra points）","Change artwork as the goal fills":"随目标进度切换图片","Change the Fluid Goal Bar fill colours":"更改 Fluid Goal Bar 的填充颜色","Change the Glass Tip Jar label":"更改 Glass Tip Jar 的标签","Change the celebration effect":"更改庆祝效果","Change what falls into the jar":"更改落入罐中的物品","Charges red to green.":"从红色充电到绿色。","Check the source is on, the session IDs match, and your filters allow that event.":"确认来源已启用、会话 ID 一致，并且筛选器允许该事件。","Choose a Display Style, such as Fluid Goal Bar.":"在Display Style（显示样式）中选择Fluid Goal Bar等样式。","Chunky RPG bar.":"厚实的 RPG 风格进度条。","Circle with a percentage.":"显示百分比的圆环。","Classic Jar":"Classic Jar（经典罐）","Classic fundraiser look.":"经典募款计量器外观。","Click [copy link] beside Tip Jar and Goal Meter and add the link to OBS as a Browser Source.":"点击Tip Jar and Goal Meter旁的[copy link]复制链接，然后在OBS中添加浏览器来源并填入该链接。","Click either screenshot to enlarge.":"点击任一截图即可放大。","Coffee Mug":"咖啡杯","Commands & API":"命令与 API","Compact Bar":"紧凑条（Compact Bar）","Count Super Chats instead of money":"统计 Super Chat 次数，而非金额","Count individual gift recipients too":"也统计每位礼物接收者","Count subs and memberships too":"同时统计订阅和会员","Count unit label":"计数单位标签","Custom jar image":"自定义罐子图片","Default for Hype goals. The completion delay sets how long it stays full.":"Hype 目标的默认行为。完成延迟决定满格状态保留多久。","Default for money and count goals.":"金额目标和次数目标的默认行为。","Default, Neon, or Gold.":"Default、Neon 或 Gold。","Dial":"拨号","Donation points per USD":"每美元捐款积分","Donation type filter":"打赏类型过滤器","Donations":"打赏","Download":"下载","Event Reference":"事件参考","Every donation adds one, whatever the amount.":"每笔捐款加一，与金额无关。","Every style tracks the same goal. Only the appearance changes. Compare sample layouts in the":"所有样式都追踪同一个目标，只改变外观。可在以下位置比较示例布局：","Extra options for Goal Card, Progress Ring, Lower Third, and Segmented Bar":"Goal Card、Progress Ring、Lower Third 和 Segmented Bar 的更多选项","Features":"功能","Fill colours you set yourself win over":"自行设置的填充颜色优先于","Five checkpoints light up.":"五个里程碑依次点亮。","Fix problems":"解决问题","Fluid Goal Bar":"流动目标条（Fluid Goal Bar）","Foam and bubbles.":"泡沫和气泡。","Follow the step-by-step GIF tutorial":"查看逐步 GIF 教程","For a bar that fills with donations, choose":"若要使用随捐款增长的进度条，请选择","Game-style level bar.":"游戏风格的等级条。","Gifted memberships":"赠送会员","Gifted memberships add too little":"赠送会员增加得太少","Gifted memberships count twice":"赠送会员被重复统计","Gifted memberships shouldn't count":"不想统计赠送会员","Gifted sub/member points":"赠送订阅／会员积分","Glass Tip Jar":"玻璃尖罐","Glowing and bubbling.":"发光并冒泡。","Glowing, flickering tube.":"发光、闪烁的灯管。","Go up in levels (100, 200, 300…)":"逐级提升目标（100、200、300…）","Goal Card":"目标卡片（Goal Card）","Goal Meter":"目标计量器（Goal Meter）","Goal Settings with Goal target set to 500 and Custom Title set to Community Fundraiser.":"目标设置界面，目标值（Goal target）设为500，自定义标题（Custom Title）设为Community Fundraiser。","Goal and title fields, further down in the same section.":"同一部分下方的目标值和标题输入框。","Goal measures":"目标衡量方式","Goal meter bar showing $63.50 of a $100 goal with recent supporters":"目标计量条显示已达 63.50 美元、目标为 100 美元，并列出最近的支持者","Guides":"指南","Health Bar":"生命条","Hide the dollar signs (":"隐藏美元符号（","Hide the title or percentage on newer jars and meters":"隐藏较新罐子和计量器的标题或百分比","Hire":"雇用","Home":"首页","How YouTube gifts are counted":"如何统计 YouTube 礼物","How it counts":"计数方式","Hype Cup Scoring":"热度杯计分（Hype Cup Scoring）","Hype goals restart by default. Use Keep total and advance target.":"Hype 目标默认会重新开始。请使用 Keep total and advance target。","Hype only: number of gifts × gift points. YouTube doesn't send the price, so the cash value is unknown.":"仅限 Hype：礼物数量 × 礼物积分。YouTube 不提供价格，因此现金价值未知。","Hype points":"Hype 积分","I want the goal to":"希望目标如何变化","I want the goal to…":"我希望目标…","I want to":"我想要","I want to…":"我想要…","Ignored by default, so gifts aren't counted twice.":"默认忽略，避免重复统计礼物。","In the menu, find Tip Jar and Goal Meter and open Style, Goal, and Filters.":"在菜单中找到Tip Jar and Goal Meter，打开Style, Goal, and Filters（样式、目标和筛选器）。","Inspiration":"灵感","Its value for a money goal, one for a donation-count goal, or your configured donation points in Hype mode. The event must pass your filters.":"金额目标加上其金额；捐款次数目标加一；Hype 模式加上所设置的捐款积分。事件必须通过筛选器。","Jars and objects":"罐子和物件","Jewels / virtual gifts":"Jewels / 虚拟礼物","Just big numbers.":"只显示大号数字。","Keep amount between sessions":"在会话之间保留金额","Keep amount between sessions is on. Reset the amount.":"Keep amount between sessions 已开启。请重置金额。","Keep counting and raise the target":"继续累计并提高目标值","Keep leftover points when it starts over":"重新开始时保留超出的积分","Keep total and advance target":"保留总额并推进目标","Leave":"将","Lid opens as it fills.":"进度越高，盖子开得越大。","Low and wide.":"低矮而宽。","Lower Third":"下三分之一字幕条（Lower Third）","Main navigation":"主导航","Memberships or subs don't count":"会员或订阅没有计入","Milestone Track":"里程碑轨迹","Minimal":"极低","Money":"金额","Most of these are settings in the Tip Jar options. You can also add the code to the end of your overlay link.":"大多数设置都可在 Tip Jar 选项中找到。也可以把代码加到覆盖层链接末尾。","Neon Tube":"霓虹灯管","Nothing showing up?":"没有任何显示？","Nothing updates":"没有任何更新","Number of donations":"捐款次数","Number of qualifying donations":"符合条件的打赏次数","Old-school loading bar.":"复古加载条。","On this page":"本页内容","One GIF inside the Classic Jar?":"只想在 Classic Jar 内放一个 GIF？","One line of text.":"一行文字。","Only turn on":"只有需要额外加分时才开启","Open navigation menu":"打开导航菜单","Overlay Gallery":"叠加层图库","Paid event filter":"付费事件过滤器","Panels and text":"面板和文字","Pick a look":"选择外观","Pick one. Changing the look (jar, bar, etc.) never changes what counts.":"选择一种统计方式。改变外观（罐子、进度条等）不会改变统计内容。","Piggy Bank":"存钱罐","Pixel Bar":"像素栏","Point unit label":"积分单位标签","Points for each dollar donated.":"每捐款一美元获得的积分。","Points for each new sub or renewal.":"每次新订阅或续订获得的积分。","Points per gift. 5 gifts = 5 × this number.":"每份礼物的积分。5 份礼物 = 5 × 此数值。","Potion Flask":"药水瓶","Problem":"问题","Progress Ring":"进度环（Progress Ring）","Put a donation goal on stream that fills up every time someone supports you.":"在直播中显示捐款目标，每次有人支持你时，进度都会增加。","Quick tweaks":"快速调整","Recurring goal increment":"循环目标增量","Remember the total after a restart":"重启后保留累计值","Resources":"资源","Retro block meter.":"复古方块计量器。","Reusing OBS for a new goal?":"要在 OBS 中开始新目标？","Saved totals are stored in that browser or OBS profile, not per session. Reset the amount first.":"累计值保存在该浏览器或 OBS 配置文件中，不按会话分别保存。请先重置金额。","See-through panel:":"面板透明度：","Segmented Bar":"分段条（Segmented Bar）","Set":"设置","Set Paid event filter to Super Chats only.":"将 Paid event filter 设为 Super Chats only。","Set an accent on newer panels, jars, or meters":"为较新的面板、罐子或计量器设置强调色","Set how many points each thing is worth (below).":"在下方设置每种事件对应的积分。","Set it up":"进行设置","Set it up in 5 steps":"五步完成设置","Set the goal, for example":"设置目标，例如","Set up the Social Stream Ninja Tip Jar and Goal Meter and troubleshoot missing donations, memberships, and gifted memberships.":"设置 Social Stream Ninja 打赏罐与目标计量器，并排查遗漏的打赏、会员及赠送会员。","Setting":"设置","Small, for a corner.":"小巧，适合放在角落。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Someone receiving a gift":"收到礼物的人","Source filter":"来源过滤器","Start over after it fills":"满格后重新开始","Stay full until I reset it":"保持满格，直到手动重置","Stop the 3D jar spinning":"停止 3D 罐子旋转","Style selector and copy-link button.":"样式选择器和复制链接按钮。","Sub/member points":"订阅／会员积分","Super Chat / Super Sticker":"Super Chat / Super Sticker","Super Chat count includes Super Stickers":"Super Chat 计数包含 Super Sticker","Super Chats only":"仅 Super Chat（Super Chats only）","Super Chats, Bits, tips, and other donations add their value.":"Super Chat、Bits、打赏和其他捐款按其价值累计。","Support":"支持","Supported Sites":"支持的网站","Switch theme":"切换主题","Tall, for a side column.":"竖直细长，适合侧栏。","Terminal":"终端","Text Only":"仅文字（Text Only）","The original, with falling items.":"经典样式，带掉落物品。","The overlay link and Social Stream must use the same session ID. Keep that link private.":"覆盖层链接与 Social Stream 必须使用相同的会话 ID。请勿公开该链接。","The test buttons only send donations. To test memberships or gifts, watch the Dock or Events Dashboard on the same session and check the event arrives.":"测试按钮只会发送捐款。若要测试会员或礼物，请在同一会话的 Dock 或 Events Dashboard 中确认事件已到达。","The word or symbol shown, like":"显示的文字或符号，例如","Theme:":"主题：","Thermometer":"温度计","They use your gift points setting, not a price. Raise the points.":"它们使用你设置的礼物积分，不使用实际价格。请提高积分值。","Tip Jar and Goal Meter":"打赏罐和目标进度条","Tip Jar and Goal Meter Guide - Social Stream Ninja":"打赏罐与目标计量器指南 - Social Stream Ninja","Tip Jar and Goal Meter menu with Style, Goal, and Filters expanded and Fluid Goal Bar selected.":"Tip Jar and Goal Meter菜单，已展开Style, Goal, and Filters，并选中Fluid Goal Bar。","Tips drop through the lid.":"打赏从盖子投口落下。","To show your own GIF at 0%, 25%, 50%, 75%, and 100%, customize a copy of the overlay. There is no milestone-GIF picker in the built-in options. Keep the artwork and bar in the same custom overlay so they use the same total.":"若要在 0%、25%、50%、75% 和 100% 显示自己的 GIF，请自定义一份覆盖层副本。内置选项没有里程碑 GIF 选择器。请把图片和进度条放在同一个自定义覆盖层中，让它们使用相同的累计值。","Total drops to zero at the goal":"达成目标时累计值归零","Treasure Chest":"宝箱","Try this":"试试这个","Turn off Count individual gift recipients.":"关闭 Count individual gift recipients。","Turn on":"开启","Turn on Exclude YouTube gifted memberships.":"开启 Exclude YouTube gifted memberships。","Turn on Hype Cup Scoring and set Donation type filter to All donations.":"开启 Hype Cup Scoring，并将 Donation type filter 设为 All donations。","Turn on your YouTube, Twitch, or other chat source in Social Stream Ninja.":"在 Social Stream Ninja 中开启 YouTube、Twitch 或其他聊天来源。","Twenty easy-to-read blocks.":"二十个清晰易读的方块。","Under Goal Settings, set Goal target to 500 and enter a Custom Title.":"在Goal Settings（目标设置）中，将Goal target（目标值）设为500，并在Custom Title中输入自定义标题。","Use":"使用","Use a solid or gradient fill":"使用纯色或渐变填充","Use my own jar picture (Classic Jar only)":"使用自己的罐子图片（仅限 Classic Jar）","Use the matching donation type filter.":"使用对应的捐款类型筛选器。","Use the newer look on older styles":"为旧样式启用新版外观","Use this":"使用此项","Vertical Bar":"垂直条（Vertical Bar）","What counts":"统计哪些内容","What counts toward the goal":"哪些内容计入目标","What it does":"功能","When the goal fills":"目标满格时","When the goal fills up":"目标满格后的行为","Wide animated bar.":"宽幅动画进度条。","With drifting steam.":"带飘动的蒸汽。","Wobbles on each tip.":"每次打赏时晃动。","XP Bar":"经验栏","YouTube":"YouTube","YouTube event":"YouTube 事件","changes the word shown.":"可更改显示的文字。","for a $500 example, artwork filenames, an AI customization prompt, and preview checks.":"，其中包含 500 美元的示例、图片文件名、AI 自定义提示词及预览检查步骤。","if you want to add points on top of the gift itself.":"，用于在礼物本身的积分之外再加积分。","instead of":"而不是","off.":"关闭。","on":"在","or":"或","plus":"加上","style preview gallery":"样式预览图库","subs, memberships, and gifted subs.":"订阅、会员以及赠送订阅。","to":"为","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja。保留所有权利。","· also":"· 还支持"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tip-jar-goal-meter.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tip-jar-goal-meter.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tip-jar-goal-meter.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tip-jar-goal-meter.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tip-jar-goal-meter.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tip-jar-goal-meter.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tip-jar-goal-meter.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tip-jar-goal-meter.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="tip-jar-goal-meter.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tip-jar-goal-meter.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tip-jar-goal-meter.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tip-jar-goal-meter.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tip-jar-goal-meter.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tip-jar-goal-meter.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tip-jar-goal-meter.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tip-jar-goal-meter.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tip-jar-goal-meter.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tip-jar-goal-meter.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>打赏罐和目标进度条</h1>
+            <p>在直播中显示捐款目标，每次有人支持你时，进度都会增加。</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <nav class="guide-jump-links" aria-label="本页内容">
+                    <a href="#setup">进行设置</a>
+                    <a href="#artwork">动画素材</a>
+                    <a href="#styles">选择外观</a>
+                    <a href="#tweaks">快速调整</a>
+                    <a href="#what-counts">统计哪些内容</a>
+                    <a href="#goal-reached">目标满格时</a>
+                    <a href="#problems">解决问题</a>
+                </nav>
+
+                <div class="guide-card">
+                    <h2 id="setup">五步完成设置</h2>
+                    <ol class="guide-steps">
+                        <li>在 Social Stream Ninja 中开启 YouTube、Twitch 或其他聊天来源。</li>
+                        <li>在菜单中找到Tip Jar and Goal Meter，打开Style, Goal, and Filters（样式、目标和筛选器）。</li>
+                        <li>在Display Style（显示样式）中选择Fluid Goal Bar等样式。</li>
+                        <li>在Goal Settings（目标设置）中，将Goal target（目标值）设为500，并在Custom Title中输入自定义标题。</li>
+                        <li>点击Tip Jar and Goal Meter旁的[copy link]复制链接，然后在OBS中添加浏览器来源并填入该链接。</li>
+                    </ol>
+                    <p>点击任一截图即可放大。</p>
+                    <div class="setup-screenshots">
+                        <figure class="guide-figure">
+                            <a href="../../docs/images/guides/tip-jar-popup-style.png"><img src="../../docs/images/guides/tip-jar-popup-style.png" alt="Tip Jar and Goal Meter菜单，已展开Style, Goal, and Filters，并选中Fluid Goal Bar。" class="guide-image" width="1040" height="730" loading="lazy"></a>
+                            <figcaption>样式选择器和复制链接按钮。</figcaption>
+                        </figure>
+                        <figure class="guide-figure">
+                            <a href="../../docs/images/guides/tip-jar-popup-goal.png"><img src="../../docs/images/guides/tip-jar-popup-goal.png" alt="目标设置界面，目标值（Goal target）设为500，自定义标题（Custom Title）设为Community Fundraiser。" class="guide-image" width="988" height="660" loading="lazy"></a>
+                            <figcaption>同一部分下方的目标值和标题输入框。</figcaption>
+                        </figure>
+                    </div>
+                    <div class="guide-note"><strong>没有任何显示？</strong> 覆盖层链接与 Social Stream 必须使用相同的会话 ID。请勿公开该链接。</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="artwork">随目标进度切换图片</h2>
+                    <p>若要使用随捐款增长的进度条，请选择 <strong>流动目标条（Fluid Goal Bar）</strong> 或 <strong>目标计量器（Goal Meter）</strong>。以下样式包含内置动画。</p>
+                    <p>若要在 0%、25%、50%、75% 和 100% 显示自己的 GIF，请自定义一份覆盖层副本。内置选项没有里程碑 GIF 选择器。请把图片和进度条放在同一个自定义覆盖层中，让它们使用相同的累计值。</p>
+                    <p><a href="goals-customization-guide.html#milestone-artwork">查看逐步 GIF 教程</a> ，其中包含 500 美元的示例、图片文件名、AI 自定义提示词及预览检查步骤。</p>
+                    <div class="guide-note"><strong>只想在 Classic Jar 内放一个 GIF？</strong> 使用 <strong>自定义罐子图片</strong> 或 <code>&amp;jarimage=https://&hellip;</code>。动画 GIF 会持续播放，但此设置不会随进度切换图片，也不会在进度条旁添加图片。</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="styles">选择外观</h2>
+                    <p>所有样式都追踪同一个目标，只改变外观。可在以下位置比较示例布局： <a href="../../tipjar-preview.html">样式预览图库</a>。预览使用示例数据，不会改变直播中的累计值。</p>
+
+                    <h3 class="style-group">进度条</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/bar.jpg" alt="流动目标条（Fluid Goal Bar）" loading="lazy" width="480" height="320"><div><strong>流动目标条（Fluid Goal Bar）</strong><span>宽幅动画进度条。</span><code>style=bar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/meter.jpg" alt="目标计量器（Goal Meter）" loading="lazy" width="480" height="320"><div><strong>目标计量器（Goal Meter）</strong><span>进度条加最近的支持者。</span><code>style=meter</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/compact.jpg" alt="紧凑条（Compact Bar）" loading="lazy" width="480" height="320"><div><strong>紧凑条（Compact Bar）</strong><span>小巧，适合放在角落。</span><code>style=compact</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/vertical.jpg" alt="垂直条（Vertical Bar）" loading="lazy" width="480" height="320"><div><strong>垂直条（Vertical Bar）</strong><span>竖直细长，适合侧栏。</span><code>style=vertical</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/segmented.jpg" alt="分段条（Segmented Bar）" loading="lazy" width="480" height="320"><div><strong>分段条（Segmented Bar）</strong><span>二十个清晰易读的方块。</span><code>style=segmented</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/milestones.jpg" alt="里程碑轨迹" loading="lazy" width="480" height="320"><div><strong>里程碑轨迹</strong><span>五个里程碑依次点亮。</span><code>style=milestones</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/xpbar.jpg" alt="经验栏" loading="lazy" width="480" height="320"><div><strong>经验栏</strong><span>游戏风格的等级条。</span><code>style=xpbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/healthbar.jpg" alt="生命条" loading="lazy" width="480" height="320"><div><strong>生命条</strong><span>厚实的 RPG 风格进度条。</span><code>style=healthbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/battery.jpg" alt="电池" loading="lazy" width="480" height="320"><div><strong>电池</strong><span>从红色充电到绿色。</span><code>style=battery</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/pixelbar.jpg" alt="像素栏" loading="lazy" width="480" height="320"><div><strong>像素栏</strong><span>复古方块计量器。</span><code>style=pixelbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/neonbar.jpg" alt="霓虹灯管" loading="lazy" width="480" height="320"><div><strong>霓虹灯管</strong><span>发光、闪烁的灯管。</span><code>style=neonbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/terminal.jpg" alt="终端" loading="lazy" width="480" height="320"><div><strong>终端</strong><span>复古加载条。</span><code>style=terminal</code></div></div></li>
+                    </ul>
+
+                    <h3 class="style-group">罐子和物件</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/jar.jpg" alt="Classic Jar（经典罐）" loading="lazy" width="480" height="320"><div><strong>Classic Jar（经典罐）</strong><span>经典样式，带掉落物品。</span><code>style=jar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/glassjar.jpg" alt="玻璃尖罐" loading="lazy" width="480" height="320"><div><strong>玻璃尖罐</strong><span>打赏从盖子投口落下。</span><code>style=glassjar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/jar3d.jpg" alt="3D旋转罐" loading="lazy" width="480" height="320"><div><strong>3D旋转罐</strong><span>缓慢旋转的玻璃杯。</span><code>style=jar3d</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/beermug.jpg" alt="啤酒杯" loading="lazy" width="480" height="320"><div><strong>啤酒杯</strong><span>泡沫和气泡。</span><code>style=beermug</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/coffeemug.jpg" alt="咖啡杯" loading="lazy" width="480" height="320"><div><strong>咖啡杯</strong><span>带飘动的蒸汽。</span><code>style=coffeemug</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/potion.jpg" alt="药水瓶" loading="lazy" width="480" height="320"><div><strong>药水瓶</strong><span>发光并冒泡。</span><code>style=potion</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/piggybank.jpg" alt="存钱罐" loading="lazy" width="480" height="320"><div><strong>存钱罐</strong><span>每次打赏时晃动。</span><code>style=piggybank</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/chest.jpg" alt="宝箱" loading="lazy" width="480" height="320"><div><strong>宝箱</strong><span>进度越高，盖子开得越大。</span><code>style=chest</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/thermometer.jpg" alt="温度计" loading="lazy" width="480" height="320"><div><strong>温度计</strong><span>经典募款计量器外观。</span><code>style=thermometer</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/gauge.jpg" alt="拨号" loading="lazy" width="480" height="320"><div><strong>拨号</strong><span>沿刻度转动的指针。</span><code>style=gauge</code></div></div></li>
+                    </ul>
+
+                    <h3 class="style-group">面板和文字</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/card.jpg" alt="目标卡片（Goal Card）" loading="lazy" width="480" height="320"><div><strong>目标卡片（Goal Card）</strong><span>醒目的累计值，纤细的进度条。</span><code>style=card</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/ring.jpg" alt="进度环（Progress Ring）" loading="lazy" width="480" height="320"><div><strong>进度环（Progress Ring）</strong><span>显示百分比的圆环。</span><code>style=ring</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/lowerthird.jpg" alt="下三分之一字幕条（Lower Third）" loading="lazy" width="480" height="320"><div><strong>下三分之一字幕条（Lower Third）</strong><span>低矮而宽。</span><code>style=lowerthird</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/minimal.jpg" alt="极低" loading="lazy" width="480" height="320"><div><strong>极低</strong><span>只显示大号数字。</span><code>style=minimal</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/text.jpg" alt="仅文字（Text Only）" loading="lazy" width="480" height="320"><div><strong>仅文字（Text Only）</strong><span>一行文字。</span><code>style=text</code></div></div></li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="tweaks">快速调整</h2>
+                    <p>大多数设置都可在 Tip Jar 选项中找到。也可以把代码加到覆盖层链接末尾。</p>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>我想要…</th><th>添加到链接</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="我想要">隐藏美元符号（<code>0 / 500</code>)</td><td data-label="添加到链接"><code>&amp;hidecurrency</code></td></tr>
+                            <tr><td data-label="我想要">更改落入罐中的物品</td><td data-label="添加到链接"><code>&amp;dropitem=coins</code> · 还支持 <code>gems</code>, <code>stars</code>, <code>bills</code>, <code>hearts</code></td></tr>
+                            <tr><td data-label="我想要">更改庆祝效果</td><td data-label="添加到链接"><code>&amp;celebration=confetti</code> · 还支持 <code>hearts</code>, <code>fireworks</code>, <code>none</code></td></tr>
+                            <tr><td data-label="我想要">更改 Fluid Goal Bar 的填充颜色</td><td data-label="添加到链接"><code>&amp;fillstart=%2366d9b2&amp;fillend=%23ffcc88</code> （十六进制颜色，用 <code>%23</code> 而不是 <code>#</code>)</td></tr>
+                            <tr><td data-label="我想要">为较新的面板、罐子或计量器设置强调色</td><td data-label="添加到链接"><code>&amp;accent=%23ffcc88</code>。Fluid Goal Bar 请使用上面的填充颜色设置。</td></tr>
+                            <tr><td data-label="我想要">隐藏较新罐子和计量器的标题或百分比</td><td data-label="添加到链接"><code>&amp;hidetitle</code> &middot; <code>&amp;hidepercent</code>。这些设置并非适用于所有样式，请在预览中确认。下面四种面板还支持 <code>hidepercent</code>.</td></tr>
+                            <tr><td data-label="我想要">更改 Glass Tip Jar 的标签</td><td data-label="添加到链接"><code>&amp;jarlabel=TIPS</code></td></tr>
+                            <tr><td data-label="我想要">停止 3D 罐子旋转</td><td data-label="添加到链接"><code>&amp;nospin</code></td></tr>
+                            <tr><td data-label="我想要">使用自己的罐子图片（仅限 Classic Jar）</td><td data-label="添加到链接"><code>&amp;jarimage=https://&hellip;</code></td></tr>
+                            <tr><td data-label="我想要">使用纯色或渐变填充</td><td data-label="添加到链接"><code>&amp;fillmode=solid</code> &middot; <code>&amp;fillmode=gradient</code></td></tr>
+                            <tr><td data-label="我想要">为旧样式启用新版外观</td><td data-label="添加到链接"><code>&amp;refresh</code></td></tr>
+                        </tbody>
+                    </table>
+
+                    <details class="guide-extra">
+                        <summary>Goal Card、Progress Ring、Lower Third 和 Segmented Bar 的更多选项</summary>
+                        <ul>
+                            <li><strong>主题：</strong> Default、Neon 或 Gold。</li>
+                            <li><strong>面板透明度：</strong> <code>&amp;panelopacity=0.5</code> （0 到 1）。</li>
+                            <li><strong>放大累计值：</strong> <code>&amp;amountsize=32</code> （12 到 96 像素）。</li>
+                        </ul>
+                        <p>自行设置的填充颜色优先于 <code>accent</code>。留空可使用该样式的默认设置。进度条字号和“仅进度条”只适用于 Fluid Goal Bar。</p>
+                    </details>
+
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="what-counts">哪些内容计入目标</h2>
+                    <p>选择一种统计方式。改变外观（罐子、进度条等）不会改变统计内容。</p>
+                    <div class="count-picker">
+                        <div><strong>金额</strong><p>Super Chat、Bits、打赏和其他捐款按其价值累计。</p><p class="example">$63.50 / $100</p></div>
+                        <div><strong>捐款次数</strong><p>每笔捐款加一，与金额无关。</p><p class="example">7 / 20 条 Super Chat</p></div>
+                        <div><strong>Hype 积分</strong><p>打赏 <em>加上</em> 订阅、会员以及赠送订阅。</p><p class="example">340 / 1000 积分</p></div>
+                    </div>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/goal-meter-bar-demo.png" alt="目标计量条显示已达 63.50 美元、目标为 100 美元，并列出最近的支持者" class="guide-image guide-image-medium" loading="lazy">
+                        <figcaption>Goal Meter 样式下的金额目标。</figcaption>
+                    </figure>
+
+                    <h3>统计 Super Chat 次数，而非金额</h3>
+                    <ol class="guide-steps">
+                        <li>将 <strong>热度杯计分（Hype Cup Scoring）</strong> 关闭。</li>
+                        <li>设置 <strong>目标衡量方式</strong> 为 <strong>符合条件的打赏次数</strong>.</li>
+                        <li>设置 <strong>来源过滤器</strong> 为 <strong>YouTube</strong>.</li>
+                        <li>设置 <strong>付费事件过滤器</strong> 为 <strong>仅 Super Chat（Super Chats only）</strong>.</li>
+                        <li>设置目标，例如 <code>20</code>.</li>
+                    </ol>
+                    <p>1 美元和 100 美元的 Super Chat 都各计一次。若要同时统计 Super Sticker，请更改付费事件筛选器。 <strong>计数单位标签</strong> 可更改显示的文字。</p>
+
+                    <h3>同时统计订阅和会员</h3>
+                    <ol class="guide-steps">
+                        <li>开启 <strong>热度杯计分（Hype Cup Scoring）</strong>.</li>
+                        <li>将 <strong>打赏类型过滤器</strong> 在 <strong>所有打赏（All donations）</strong>.</li>
+                        <li>在下方设置每种事件对应的积分。</li>
+                    </ol>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>设置</th><th>功能</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="设置">订阅／会员积分</td><td data-label="功能">每次新订阅或续订获得的积分。</td></tr>
+                            <tr><td data-label="设置">赠送订阅／会员积分</td><td data-label="功能">每份礼物的积分。5 份礼物 = 5 × 此数值。</td></tr>
+                            <tr><td data-label="设置">每美元捐款积分</td><td data-label="功能">每捐款一美元获得的积分。</td></tr>
+                            <tr><td data-label="设置">积分单位标签</td><td data-label="功能">显示的文字或符号，例如 <code>pts</code>.</td></tr>
+                        </tbody>
+                    </table>
+
+                    <details class="guide-extra">
+                        <summary>如何统计 YouTube 礼物</summary>
+                        <table class="guide-table guide-table-stack">
+                            <thead><tr><th>YouTube 事件</th><th>计数方式</th></tr></thead>
+                            <tbody>
+                                <tr><td data-label="YouTube 事件">Super Chat / Super Sticker</td><td data-label="计数方式">金额目标加上其金额；捐款次数目标加一；Hype 模式加上所设置的捐款积分。事件必须通过筛选器。</td></tr>
+                                <tr><td data-label="YouTube 事件">赠送会员</td><td data-label="计数方式">仅限 Hype：礼物数量 × 礼物积分。YouTube 不提供价格，因此现金价值未知。</td></tr>
+                                <tr><td data-label="YouTube 事件">收到礼物的人</td><td data-label="计数方式">默认忽略，避免重复统计礼物。</td></tr>
+                                <tr><td data-label="YouTube 事件">Jewels / 虚拟礼物</td><td data-label="计数方式">使用对应的捐款类型筛选器。</td></tr>
+                            </tbody>
+                        </table>
+                        <p>只有需要额外加分时才开启 <strong>也统计每位礼物接收者</strong> ，用于在礼物本身的积分之外再加积分。</p>
+                    </details>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="goal-reached">目标满格后的行为</h2>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>我希望目标…</th><th>使用此项</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="希望目标如何变化">保持满格，直到手动重置</td><td data-label="使用此项">金额目标和次数目标的默认行为。</td></tr>
+                            <tr><td data-label="希望目标如何变化">满格后重新开始</td><td data-label="使用此项">Hype 目标的默认行为。完成延迟决定满格状态保留多久。</td></tr>
+                            <tr><td data-label="希望目标如何变化">重新开始时保留超出的积分</td><td data-label="使用此项"><strong>保留超额积分（Carry extra points）</strong></td></tr>
+                            <tr><td data-label="希望目标如何变化">继续累计并提高目标值</td><td data-label="使用此项"><strong>保留总额并推进目标</strong></td></tr>
+                            <tr><td data-label="希望目标如何变化">逐级提升目标（100、200、300…）</td><td data-label="使用此项"><strong>循环目标增量</strong></td></tr>
+                            <tr><td data-label="希望目标如何变化">重启后保留累计值</td><td data-label="使用此项"><strong>在会话之间保留金额</strong></td></tr>
+                        </tbody>
+                    </table>
+                    <div class="warning-note"><strong>要在 OBS 中开始新目标？</strong> 累计值保存在该浏览器或 OBS 配置文件中，不按会话分别保存。请先重置金额。</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="problems">解决问题</h2>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>问题</th><th>试试这个</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="问题">没有任何更新</td><td data-label="试试这个">确认来源已启用、会话 ID 一致，并且筛选器允许该事件。</td></tr>
+                            <tr><td data-label="问题">会员或订阅没有计入</td><td data-label="试试这个">开启 Hype Cup Scoring，并将 Donation type filter 设为 All donations。</td></tr>
+                            <tr><td data-label="问题">赠送会员增加得太少</td><td data-label="试试这个">它们使用你设置的礼物积分，不使用实际价格。请提高积分值。</td></tr>
+                            <tr><td data-label="问题">赠送会员被重复统计</td><td data-label="试试这个">关闭 Count individual gift recipients。</td></tr>
+                            <tr><td data-label="问题">不想统计赠送会员</td><td data-label="试试这个">开启 Exclude YouTube gifted memberships。</td></tr>
+                            <tr><td data-label="问题">达成目标时累计值归零</td><td data-label="试试这个">Hype 目标默认会重新开始。请使用 Keep total and advance target。</td></tr>
+                            <tr><td data-label="问题">以前的累计值又出现了</td><td data-label="试试这个">Keep amount between sessions 已开启。请重置金额。</td></tr>
+                            <tr><td data-label="问题">Super Chat 计数包含 Super Sticker</td><td data-label="试试这个">将 Paid event filter 设为 Super Chats only。</td></tr>
+                        </tbody>
+                    </table>
+                    <p>测试按钮只会发送捐款。若要测试会员或礼物，请在同一会话的 Dock 或 Events Dashboard 中确认事件已到达。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo"><img src="../../media/logo.png" alt="Social Stream Ninja 标志"><span>Social Stream Ninja</span></div>
+                <div class="footer-links"><div class="footer-section"><h4>资源</h4><ul><li><a href="guides.html">指南</a></li><li><a href="event-reference.html">事件参考</a></li><li><a href="support.html">支持</a></li></ul></div></div>
+            </div>
+            <div class="footer-bottom"><p>© 2026 Social Stream Ninja。保留所有权利。</p></div>
+        </div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

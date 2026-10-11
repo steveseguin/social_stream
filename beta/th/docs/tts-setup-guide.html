@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/th/docs/tts-setup-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/beta/th/docs/tts-setup-guide.html">
+    <meta property="og:title" content="คู่มือตั้งค่า TTS - Social Stream Ninja">
+    <meta property="og:description" content="คู่มือตั้งค่าแบบเข้าใจง่ายสำหรับการแปลงข้อความเป็นเสียงพูดของ Social Stream Ninja เสียง OBS เสียงเบราว์เซอร์ เสียงภายในเครื่อง และโหมดเซิร์ฟเวอร์ TTS">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/th/docs/tts-setup-guide.html">
+    <meta name="twitter:title" content="คู่มือตั้งค่า TTS - Social Stream Ninja">
+    <meta name="twitter:description" content="คู่มือตั้งค่าแบบเข้าใจง่ายสำหรับการแปลงข้อความเป็นเสียงพูดของ Social Stream Ninja เสียง OBS เสียงเบราว์เซอร์ เสียงภายในเครื่อง และโหมดเซิร์ฟเวอร์ TTS">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คู่มือตั้งค่า TTS - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <style>
+        .tts-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+        .tts-preview { border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.6rem; min-width: 0; }
+        .tts-preview h3 { margin-top: 0; }
+        .tts-preview audio { width: 100%; margin: .8rem 0; }
+        .tts-preview code { overflow-wrap: anywhere; }
+        .guide-card [id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 52rem; }
+        @media (max-width: 700px) { .tts-preview-grid { grid-template-columns: 1fr; } }
+    </style>
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="คู่มือตั้งค่าแบบเข้าใจง่ายสำหรับการแปลงข้อความเป็นเสียงพูดของ Social Stream Ninja เสียง OBS เสียงเบราว์เซอร์ เสียงภายในเครื่อง และโหมดเซิร์ฟเวอร์ TTS">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/tts-setup-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{"(Node.js required). Run it on the OBS computer.":"(ต้องมี Node.js) รันบนคอมพิวเตอร์ OBS","(or":"(หรือ","), optional":") และตัวเลือกเสริม",", expand":" ขยาย",", optional":", ตัวเลือกเพิ่มเติม",", or":", หรือ",", set that source to":" ตั้งแหล่งนั้นเป็น",", then a voice.":" แล้วเลือกเสียง",". Bigger download, more memory.":" ดาวน์โหลดใหญ่กว่าและใช้หน่วยความจำมากกว่า",". Copy the voice's model ID, not its name or page link. Leave it blank for the default voice.":" คัดลอก model ID ของเสียง ไม่ใช่ชื่อหรือลิงก์หน้า เว้นว่างเพื่อใช้เสียงเริ่มต้น",". Fish Audio decides what's free and its fair-use terms. Paid models need account credit. SSN never switches to a paid model if a free request fails. Speed goes from 0.5 to 2. Fish Audio detects the language. Your chat text is sent to Fish Audio.":" Fish Audio กำหนดสิ่งที่ใช้ฟรีและเงื่อนไขการใช้ที่เป็นธรรม โมเดลเสียเงินต้องมีเครดิต SSN ไม่สลับไปโมเดลเสียเงินหากคำขอฟรีล้มเหลว ความเร็วอยู่ระหว่าง 0.5 ถึง 2 Fish Audio ตรวจภาษาเอง ข้อความแชตส่งไปยัง Fish Audio",". Leave it running.":" เปิดทิ้งไว้",". Leave out":" ไม่ต้องใส่",". Pick":" เลือก",". Piper has Spain, Mexico, Brazil and Portugal voices. Kokoro has three Spanish and three Brazilian Portuguese voices.":" Piper มีเสียงสเปน เม็กซิโก บราซิล และโปรตุเกส Kokoro มีเสียงสเปนสามเสียงและโปรตุเกสบราซิลสามเสียง",". Plays each part as it's ready. Slow PCs may pause between parts.":" เล่นแต่ละส่วนเมื่อพร้อม เครื่องช้าอาจหยุดระหว่างส่วน",". Streaming or FP32 turns on background generation automatically.":" การสตรีมหรือ FP32 เปิดการสร้างเสียงเบื้องหลังอัตโนมัติ",". These options make speech in the background so the page stays smooth.":" ตัวเลือกเหล่านี้สร้างเสียงเบื้องหลังเพื่อให้หน้าลื่น",". Waits for the whole message first.":" รอให้ข้อความทั้งหมดพร้อมก่อน","A ChatGPT subscription doesn't include API credit.":"สมาชิก ChatGPT ไม่รวมเครดิต API","A quick link to try:":"ลิงก์ลองใช้อย่างรวดเร็ว:","API Key":"คีย์ API","API billing":"การเรียกเก็บเงิน API","API charges may apply":"อาจมีค่า API","API terms apply":"เป็นไปตามเงื่อนไข API","Account limits and network delay.":"ขีดจำกัดบัญชีและความหน่วงเครือข่าย","Actual SSN Custom / Local TTS provider settings":"การตั้งค่าผู้ให้บริการ Custom / Local TTS ของ SSN จริง","Actual SSN ElevenLabs provider settings":"การตั้งค่าผู้ให้บริการ ElevenLabs ของ SSN จริง","Actual SSN Gemini provider settings":"การตั้งค่าผู้ให้บริการ Gemini ของ SSN จริง","Actual SSN Google Cloud provider settings":"การตั้งค่าผู้ให้บริการ Google Cloud ของ SSN จริง","Actual SSN Kitten provider settings":"การตั้งค่าผู้ให้บริการ Kitten ของ SSN จริง","Actual SSN Kokoro provider settings":"การตั้งค่าผู้ให้บริการ Kokoro ของ SSN จริง","Actual SSN OpenAI provider settings":"การตั้งค่าผู้ให้บริการ OpenAI ของ SSN จริง","Actual SSN Piper provider settings":"การตั้งค่าผู้ให้บริการ Piper ของ SSN จริง","Actual SSN Speechify provider settings":"การตั้งค่าผู้ให้บริการ Speechify ของ SSN จริง","Actual SSN System TTS provider settings":"การตั้งค่าผู้ให้บริการ System TTS ของ SSN จริง","Actual SSN eSpeak provider settings":"การตั้งค่าผู้ให้บริการ eSpeak ของ SSN จริง","Actual popup: Message: Text to Speech, with Enable TTS in dock switched on":"ป๊อปอัปจริง: Message — Text to Speech โดยเปิด Enable TTS in dock","Actual popup: Piper TTS selected, with English US Female HFC Medium voice":"ป๊อปอัปจริง: เลือก Piper TTS พร้อมเสียง English US Female HFC Medium","Adam (American Male):":"Adam (ชายอเมริกัน) —","Add a":"เพิ่ม","Advanced Audio Properties":"คุณสมบัติเสียงขั้นสูง (Advanced Audio Properties)","Alex (Brazilian Portuguese):":"Alex (โปรตุเกสบราซิล):","Alex (Spanish):":"Alex (สเปน):","Alice (British Female):":"Alice (หญิงบริติช) —","All four are free and run on your computer. Press play to compare.":"ทั้งสี่ใช้ฟรีและทำงานบนคอมพิวเตอร์คุณ กดเล่นเพื่อเปรียบเทียบ","Alloy (American Female):":"Alloy (หญิงอเมริกัน) —","An OBS Custom Browser Dock is a control panel, not a scene source. For Featured Chat, turn on TTS in that overlay's own options and copy its link.":"Custom Browser Dock ของ OBS เป็นแผงควบคุม ไม่ใช่แหล่งในฉาก หากใช้ Featured Chat ให้เปิด TTS ในตัวเลือกของโอเวอร์เลย์นั้นแล้วคัดลอกลิงก์","Aoede (American Female):":"Aoede (หญิงอเมริกัน) —","Automatic":"อัตโนมัติ","Avoid gaps":"หลีกเลี่ยงช่วงเงียบ","Background generation":"สร้างเสียงเบื้องหลัง","Background processor":"ตัวประมวลผลเบื้องหลัง","Bella (American Female):":"Bella (หญิงอเมริกัน) —","Bella, US English, female. Most natural, but slower on CPU.":"Bella หญิงอังกฤษอเมริกัน เป็นธรรมชาติที่สุด แต่ช้ากว่าบน CPU","Best Kokoro quality":"คุณภาพ Kokoro สูงสุด","Billing and quotas apply":"มีการคิดเงินและโควตา","Blue switch = chat reading is on.":"สวิตช์สีน้ำเงิน = เปิดการอ่านแชตแล้ว","Brazilian Portuguese (Edresson) - Low:":"โปรตุเกสแบบบราซิล (Edresson) - คุณภาพต่ำ —","Brazilian Portuguese (Faber) - Medium:":"โปรตุเกสแบบบราซิล (Faber) - คุณภาพปานกลาง —","Bridge URL":"URL ของบริดจ์","Browser Source":"แหล่งเบราว์เซอร์ (Browser Source)","CPU":"CPU","Check mute and the recording tracks in OBS. Don't capture the monitoring output a second time. See the":"ตรวจการปิดเสียงและแทร็กบันทึกใน OBS อย่าจับเสียงมอนิเตอร์ซ้ำ ดู","Check the dock shows chat. Then check the TTS switch, provider and filters. Use a freshly copied link. Let the first voice download finish.":"ตรวจว่า Dock แสดงแชต แล้วตรวจสวิตช์ TTS ผู้ให้บริการ และตัวกรอง ใช้ลิงก์ที่เพิ่งคัดลอก รอให้ดาวน์โหลดเสียงครั้งแรกเสร็จ","Check your Gemini limits":"ตรวจขีดจำกัด Gemini","Click":"คลิก","Commands & API":"คำสั่งและ API","Control audio via OBS":"ควบคุมเสียงผ่าน OBS (Control audio via OBS)","Cost":"ค่าใช้จ่าย","Custom / Local":"กำหนดเอง / ภายในเครื่อง","Custom / Local TTS":"TTS แบบกำหนดเอง / ภายในเครื่อง","Daniel (British Male):":"Daniel (ชายบริติช) —","DaveFX":"DaveFX","Do this":"ทำตามนี้","Does my chat platform support TTS?":"แพลตฟอร์มแชตของฉันรองรับ TTS ไหม?","Dora":"Dora","Dora (Brazilian Portuguese):":"Dora (โปรตุเกสบราซิล):","Dora (Spanish):":"Dora (สเปน):","Download":"ดาวน์โหลด","Download Kitten sample":"ดาวน์โหลดตัวอย่าง Kitten","Download Kokoro sample":"ดาวน์โหลดตัวอย่าง Kokoro","Download Piper sample":"ดาวน์โหลดตัวอย่าง Piper","Download eSpeak sample":"ดาวน์โหลดตัวอย่าง eSpeak","Download sample":"ดาวน์โหลดตัวอย่าง","Download sizes and OBS test notes":"ขนาดดาวน์โหลดและหมายเหตุทดสอบ OBS","Echo (American Male):":"Echo (ชายอเมริกัน) —","Edit my TTS link by hand, or see every option":"แก้ลิงก์ TTS เอง หรือดูตัวเลือกทั้งหมด","Eight English voices: male and female versions of voices 2, 3, 4 and 5. The sample uses Voice 4 (Female).":"แปดเสียงอังกฤษ: รุ่นชายและหญิงของเสียง 2, 3, 4 และ 5 ตัวอย่างใช้ Voice 4 (Female)","ElevenLabs":"ElevenLabs","ElevenLabs reference":"เอกสารอ้างอิง ElevenLabs","Emma (British Female):":"Emma (หญิงบริติช) —","English US Female (HFC) - Medium:":"หญิงภาษาอังกฤษสหรัฐฯ (HFC) - คุณภาพปานกลาง —","English only. Bundled model is about 24 MB.":"เฉพาะอังกฤษ โมเดลที่ให้มาประมาณ 24 MB","English. Robotic, but tiny and fast.":"อังกฤษ เสียงหุ่นยนต์ แต่เล็กและเร็ว","English:":"อังกฤษ —","Enter a Google Cloud TTS API key, the exact voice name, and its matching language.":"ใส่คีย์ Google Cloud TTS API ชื่อเสียงตรงทุกตัว และภาษาที่ตรงกัน","Enter the API key and voice ID from your Speechify API account.":"ป้อนคีย์ API และรหัสเสียงจากบัญชี Speechify API ของคุณ","Enter your API key. Then click":"ใส่คีย์ API แล้วคลิก","Eric (American Male):":"Eric (ชายอเมริกัน) —","Every message is read twice":"ทุกข้อความถูกอ่านสองครั้ง","Faber":"Faber","Fable (British Male):":"Fable (ชายบริติช) —","Faster Kokoro and Kitten":"เร่ง Kokoro และ Kitten","Features":"ฟีเจอร์","Fenrir (American Male):":"Fenrir (ชายอเมริกัน) —","First time?":"ใช้งานครั้งแรก?","Fish Audio":"Fish Audio","Fish Audio API key":"คีย์ Fish Audio API","Fish Audio API reference":"เอกสารอ้างอิง Fish Audio API","Fish Audio blocks direct requests from web pages, so OBS needs SSN's":"Fish Audio บล็อกคำขอตรงจากหน้าเว็บ OBS จึงต้องใช้","Fix GPU problems (Kokoro)":"แก้ปัญหา GPU (Kokoro)","Fix problems":"แก้ปัญหา","For OBS: run the local bridge":"สำหรับ OBS: รันบริดจ์ในเครื่อง","Free":"ฟรี","Free model announcement and terms":"ประกาศและเงื่อนไขโมเดลฟรี","Free model with your own key; voice IDs.":"โมเดลฟรีที่ใช้คีย์ของคุณเอง พร้อม voice ID","Free tier set by Fish Audio":"Fish Audio กำหนดระดับใช้ฟรี","Free, no key":"ฟรี ไม่ต้องใช้คีย์","Full quality":"คุณภาพเต็ม","Gemini":"Gemini","Generation and playback":"การสร้างและเล่นเสียง","George (British Male):":"George (ชายบริติช) —","Go further":"ใช้งานเพิ่มเติม","Go here":"ไปที่นี่","Good for":"เหมาะสำหรับ","Google Cloud":"Google Cloud","Guides":"คู่มือ","Have your chat read aloud on stream. Free, with no account or API key.":"ให้ระบบอ่านแชตออกเสียงบนสตรีม ฟรี ไม่ต้องมีบัญชีหรือคีย์ API","Hear speech sooner":"ได้ยินเสียงเร็วขึ้น","Hear the free voices":"ฟังเสียงฟรี","Hear the voices":"ฟังเสียง","Hearing every message twice?":"ได้ยินทุกข้อความสองครั้ง?","Heart (American Female):":"Heart (หญิงอเมริกัน) —","Heavier on the CPU. First speech can be slow. Faster with a supported GPU.":"ใช้ CPU มากกว่า เสียงแรกอาจเริ่มช้า เร็วขึ้นเมื่อมี GPU ที่รองรับ","Hire":"จ้างงาน","Home":"หน้าแรก","How these samples were made":"ตัวอย่างเสียงเหล่านี้สร้างอย่างไร","I want an OBS dock or Featured Chat to speak instead":"ฉันอยากให้ Dock ใน OBS หรือ Featured Chat พูดแทน","I want to":"ฉันต้องการ","I want to…":"ฉันต้องการ…","In OBS":"ใน OBS","In its properties, turn on":"ในคุณสมบัติ เปิด","In the Fish Audio panel, set":"ในแผง Fish Audio ตั้ง","In the SSN folder, run":"ในโฟลเดอร์ SSN รัน","Inspiration":"ไอเดียสร้างสรรค์","Isabella (British Female):":"Isabella (หญิงบริติช) —","Jessica (American Female):":"Jessica (หญิงอเมริกัน) —","Keep in mind":"ข้อควรรู้","Kitten":"Kitten","Kitten 0.8":"Kitten 0.8","Kitten 0.8 runs on the CPU, English only. Each model downloads on first use. Each browser or OBS keeps its own copy. NeuroSync gets the complete audio file either way. Old links keep working as before unless you change these options.":"Kitten 0.8 ทำงานบน CPU รองรับเฉพาะอังกฤษ แต่ละโมเดลดาวน์โหลดครั้งแรกที่ใช้ แต่ละเบราว์เซอร์หรือ OBS เก็บสำเนาของตัวเอง NeuroSync ได้ไฟล์เสียงเต็มไม่ว่าโหมดใด ลิงก์เก่ายังทำงานเหมือนเดิมเว้นแต่เปลี่ยนตัวเลือกเหล่านี้","Kitten voice sample":"ตัวอย่างเสียง Kitten","Kitten:":"Kitten:","Kokoro":"Kokoro","Kokoro - Portuguese (Brazil)":"Kokoro - โปรตุเกส (บราซิล)","Kokoro - Portuguese (Brazil) sample":"ตัวอย่าง Kokoro - โปรตุเกส (บราซิล)","Kokoro - Spanish":"Kokoro - สเปน","Kokoro - Spanish sample":"ตัวอย่าง Kokoro - สเปน","Kokoro voice sample":"ตัวอย่างเสียง Kokoro","Kokoro:":"Kokoro:","Kore (American Female):":"Kore (หญิงอเมริกัน) —","Lewis (British Male):":"Lewis (ชายบริติช) —","Liam (American Male):":"Liam (ชายอเมริกัน) —","Lily (British Female):":"Lily (หญิงบริติช) —","Link settings for Fish Audio":"ตัวเลือกลิงก์ Fish Audio","List My Available Voices":"แสดงเสียงที่บัญชีฉันใช้ได้","Local AI TTS guide":"คู่มือ AI TTS ในเครื่อง","Main chat overlay & control dock":"โอเวอร์เลย์แชตหลักและแผงด็อกควบคุม (Main chat overlay & control dock)","Main navigation":"เมนูหลัก","Make a short test recording and play it back.":"ลองบันทึกสั้น ๆ แล้วเปิดฟัง","Message – Text to Speech":"Message – Text to Speech","Meter moves, but the recording is silent":"มิเตอร์ขยับ แต่ไฟล์บันทึกไม่มีเสียง","Michael (American Male):":"Michael (ชายอเมริกัน) —","Monitor and Output":"มอนิเตอร์และส่งออก (Monitor and Output)","More detail and link settings":"รายละเอียดและตัวเลือกลิงก์เพิ่มเติม","More fixes:":"วิธีแก้เพิ่มเติม:","More than one page is speaking. Keep TTS on in one place only.":"มีมากกว่าหนึ่งหน้ากำลังพูด เปิด TTS ไว้ที่เดียว","Most setup. See the":"ตั้งค่ามากที่สุด ดู","Name reading was off. The clips skip loading time.":"ปิดการอ่านชื่อไว้ คลิปไม่รวมเวลาโหลด","Named voices, model and format controls.":"เสียงมีชื่อ พร้อมควบคุมโมเดลและรูปแบบ","Named voices; language, rate and pitch.":"เสียงมีชื่อ พร้อมภาษา ความเร็ว และระดับเสียงสูงต่ำ","Natural voices; English, Spanish, Portuguese.":"เสียงธรรมชาติ อังกฤษ สเปน โปรตุเกส","Nicole (American Female):":"Nicole (หญิงอเมริกัน) —","No chat connected yet?":"ยังไม่ได้เชื่อมแชตใช่ไหม?","No speech at all":"ไม่มีเสียงเลย","Not every voice supports every control. Cloud TTS API must be enabled.":"ไม่ใช่ทุกเสียงรองรับทุกตัวควบคุม ต้องเปิด Cloud TTS API","Nova (American Female):":"Nova (หญิงอเมริกัน) —","OBS audio guide":"คู่มือเสียง OBS","OBS has its own browser and voice list. System TTS often fails there. Switch to Piper, Kokoro, Kitten or eSpeak. A virtual audio cable can't fix missing speech.":"OBS มีเบราว์เซอร์และรายการเสียงของตัวเอง System TTS มักใช้ไม่ได้ที่นั่น เปลี่ยนเป็น Piper, Kokoro, Kitten หรือ eSpeak สายเสียงเสมือนแก้ปัญหาไม่มีเสียงพูดไม่ได้","OBS needs SSN's local bridge.":"OBS ต้องใช้บริดจ์ในเครื่องของ SSN","Often silent in OBS. Some voices need internet.":"มักเงียบใน OBS บางเสียงต้องใช้อินเทอร์เน็ต","On that PC, System TTS listed five voices but made no sound in the OBS recording. Your PC may differ, so always test your own link. Cloud voices weren't tested (no paid accounts).":"บนเครื่องนั้น System TTS แสดงห้าเสียงแต่ไม่มีเสียงในไฟล์บันทึก OBS เครื่องคุณอาจต่างกัน จึงควรทดสอบลิงก์เองเสมอ ไม่ได้ทดสอบเสียงคลาวด์เพราะไม่มีบัญชีเสียเงิน","On this page":"ในหน้านี้","Only one page should read chat. Turn TTS off everywhere else.":"ควรมีเพียงหน้าเดียวอ่านแชต ปิด TTS ที่อื่นทั้งหมด","Onyx (American Male):":"Onyx (ชายอเมริกัน) —","Open navigation menu":"เปิดเมนูนำทาง","Open the":"เปิด","OpenAI":"OpenAI","Optional: paste a":"ตัวเลือกเสริม: วาง","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Paste the bridge token shown in the terminal into the":"วางโทเคนบริดจ์ที่แสดงในเทอร์มินัลลงใน","Paste your":"วาง","Pick":"เลือก","Pick a":"เลือก","Pick a TTS model and voice. Style instructions change how it's read. This uses the Gemini API, not Google Cloud TTS.":"เลือกโมเดล TTS และเสียง คำสั่งสไตล์เปลี่ยนวิธีอ่าน ใช้ Gemini API ไม่ใช่ Google Cloud TTS","Pick a language above the voice list in SSN, then press":"เลือกภาษาเหนือรายการเสียงใน SSN แล้วกด","Pick a language voice. You can change the speaking rate. It sounds robotic by design.":"เลือกเสียงตามภาษา เปลี่ยนความเร็วพูดได้ ตั้งใจให้เป็นเสียงหุ่นยนต์","Pick a provider":"เลือกผู้ให้บริการ","Pick a voice and model, and enter an API key. A ChatGPT subscription doesn't give you API credit. Keep the default endpoint.":"เลือกเสียงและโมเดล แล้วใส่คีย์ API สมาชิก ChatGPT ไม่ให้เครดิต API คง endpoint เริ่มต้นไว้","Pick a voice that matches your language. Changing the language alone doesn't change the voice. The sample uses HFC medium.":"เลือกเสียงที่ตรงภาษา การเปลี่ยนภาษาอย่างเดียวไม่เปลี่ยนเสียง ตัวอย่างใช้ HFC medium","Pick a voice. Use the language filter to find one, and":"เลือกเสียง ใช้ตัวกรองภาษาเพื่อค้นหา และ","Pick voices by ID; stability and style controls.":"เลือกด้วย voice ID พร้อมตัวควบคุมความคงที่และสไตล์","Piper":"Piper","Piper - Portuguese (Brazil)":"Piper - โปรตุเกส (บราซิล)","Piper - Portuguese (Brazil) sample":"ตัวอย่าง Piper - โปรตุเกส (บราซิล)","Piper - Spanish (Spain)":"Piper - สเปน (ประเทศสเปน)","Piper - Spanish (Spain) sample":"ตัวอย่าง Piper - สเปน (ประเทศสเปน)","Piper TTS":"Piper TTS","Piper downloads its voice on first use. Give it a moment.":"Piper ดาวน์โหลดเสียงเมื่อใช้ครั้งแรก รอสักครู่","Piper is free. No account or API key.":"Piper ฟรี ไม่ต้องมีบัญชีหรือคีย์ API","Piper is the lighter choice. If Kokoro falls behind the chat, switch to Piper.":"Piper เบากว่า หาก Kokoro ตามแชตไม่ทัน ให้เปลี่ยนเป็น Piper","Piper voice sample":"ตัวอย่างเสียง Piper","Piper, Kokoro, Kitten and eSpeak passed OBS Browser Source recording tests. Cloud and custom voices also play through the page, but weren't tested with live accounts. Test System TTS on its own, even if it lists voices.":"Piper, Kokoro, Kitten และ eSpeak ผ่านการทดสอบบันทึก Browser Source ใน OBS เสียงคลาวด์และกำหนดเองเล่นผ่านหน้าได้เช่นกัน แต่ไม่ได้ทดสอบด้วยบัญชีจริง ทดสอบ System TTS แยกแม้มีรายการเสียง","Plain-English setup guide for Social Stream Ninja text-to-speech, OBS audio, browser voices, local voices, and TTS server modes.":"คู่มือตั้งค่าแบบเข้าใจง่ายสำหรับการแปลงข้อความเป็นเสียงพูดของ Social Stream Ninja เสียง OBS เสียงเบราว์เซอร์ เสียงภายในเครื่อง และโหมดเซิร์ฟเวอร์ TTS","Play complete message":"เล่นข้อความทั้งก้อน","Play it in OBS":"เล่นใน OBS","Portuguese Brazil:":"โปรตุเกสแบบบราซิล —","Portuguese Portugal (Tugao) - Medium:":"โปรตุเกสแบบโปรตุเกส (Tugao) - คุณภาพปานกลาง —","Portuguese Portugal:":"โปรตุเกสแบบโปรตุเกส —","Press":"กด","Preview models and quotas can change.":"โมเดล preview และโควตาอาจเปลี่ยน","Problem":"ปัญหา","Processing":"การประมวลผล","Provider":"ผู้ให้บริการ","Provider settings":"การตั้งค่าผู้ให้บริการ","Puck (American Male):":"Puck (ชายอเมริกัน) —","Quality varies by voice. HFC medium is about 63 MB.":"คุณภาพต่างกันตามเสียง HFC medium ประมาณ 63 MB","Real screenshots from the desktop app, with a fresh profile (key fields left empty). Open a provider to see its settings. Click a screenshot to enlarge it.":"ภาพหน้าจอจริงจากแอปเดสก์ท็อปในโปรไฟล์ใหม่ โดยเว้นช่องคีย์ว่าง เปิดผู้ให้บริการเพื่อดูการตั้งค่า คลิกภาพเพื่อขยาย","River (American Female):":"River (หญิงอเมริกัน) —","Run my own voice server, or clone a voice":"รันเซิร์ฟเวอร์เสียงเอง หรือโคลนเสียง","SSN extension popup":"ป๊อปอัปส่วนขยาย SSN","Santa (American Male):":"Santa (ชายอเมริกัน) —","Santa (Brazilian Portuguese):":"Santa (โปรตุเกสบราซิล):","Santa (Spanish):":"Santa (สเปน):","Sarah (American Female):":"Sarah (หญิงอเมริกัน) —","Scroll to":"เลื่อนไปยัง","Send a chat message. The source's audio meter should move.":"ส่งข้อความแชต มิเตอร์เสียงของแหล่งควรขยับ","Set":"ตั้งค่า","Set it up":"ตั้งค่า","Set it up in 5 steps":"ตั้งค่าใน 5 ขั้นตอน","Set the":"ตั้งค่า","Set up Speechify":"ตั้งค่า Speechify","Settings and voices":"การตั้งค่าและเสียง","Sizes are model files only, not memory use. Free voices run on the computer playing the dock or overlay. First use is slower. OBS keeps its own download cache, separate from Chrome.":"ขนาดนี้คือไฟล์โมเดล ไม่ใช่หน่วยความจำที่ใช้ เสียงฟรีทำงานบนเครื่องที่เล่น Dock หรือโอเวอร์เลย์ ครั้งแรกจะช้ากว่า OBS มีแคชดาวน์โหลดแยกจาก Chrome","Sky (American Female):":"Sky (หญิงอเมริกัน) —","Small English model, eight voices.":"โมเดลอังกฤษขนาดเล็ก แปดเสียง","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja สัญญาอนุญาต GPLv3.0","Sounds robotic on purpose.":"ตั้งใจให้ฟังเหมือนหุ่นยนต์","Sources and Settings":"แหล่งข้อมูลและการตั้งค่า (Sources and Settings)","Spanish Mexico (Ald) - Medium:":"สเปนแบบเม็กซิโก (Ald) - คุณภาพปานกลาง —","Spanish Spain (DaveFX) - Medium:":"สเปนแบบสเปน (DaveFX) - คุณภาพปานกลาง —","Spanish and Portuguese samples":"ตัวอย่างภาษาสเปนและโปรตุเกส","Spanish:":"สเปน —","Speak Text":"อ่านข้อความ (Speak Text)","Speech falls behind chat":"เสียงตามแชตไม่ทัน","Speechify":"Speechify","Speechify guide":"คู่มือ Speechify","Speechify setup":"การตั้งค่า Speechify","Start as speech arrives":"เริ่มทันทีที่เสียงมา","Start here":"เริ่มที่นี่","Start with Piper.":"เริ่มด้วย Piper","Step-by-step Speechify guide":"คู่มือ Speechify ทีละขั้น","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Switch from Kokoro to Piper, or try eSpeak.":"เปลี่ยนจาก Kokoro เป็น Piper หรือลอง eSpeak","Switch theme":"เปลี่ยนธีม","System TTS":"TTS ของระบบ","TTS Setup Guide":"คู่มือตั้งค่า TTS","TTS Setup Guide - Social Stream Ninja":"คู่มือตั้งค่า TTS - Social Stream Ninja","TTS reference":"เอกสารอ้างอิง TTS","TTS reference: provider options":"เอกสารอ้างอิง TTS: ตัวเลือกผู้ให้บริการ","Test":"ทดสอบ","Test TTS":"ทดสอบ TTS","Test the voice, then add the overlay link to OBS. Turn on":"ทดสอบเสียง แล้วเพิ่มลิงก์โอเวอร์เลย์ใน OBS เปิด","Tested September 7, 2026 in OBS 32.2.2 on Windows 11. A real chat message reached the dock, spoke, moved the Browser Source meter, and showed up in a recording. Kokoro took noticeably longer to start on CPU.":"ทดสอบเมื่อ 7 กันยายน 2026 ใน OBS 32.2.2 บน Windows 11 ข้อความแชตจริงเข้า Dock พูดออกเสียง ทำให้มิเตอร์ Browser Source ขยับ และอยู่ในไฟล์บันทึก Kokoro เริ่มช้ากว่าอย่างเห็นได้ชัดบน CPU","Text-to-Speech Service Provider":"ผู้ให้บริการแปลงข้อความเป็นเสียงพูด","Text-to-speech incoming messages":"อ่านข้อความขาเข้าด้วยเสียง","The English samples read:":"ตัวอย่างอังกฤษอ่านว่า:","The default model is":"โมเดลเริ่มต้นคือ","The most natural free voices; English, Spanish, Brazilian Portuguese.":"เสียงฟรีที่เป็นธรรมชาติที่สุด อังกฤษ สเปน โปรตุเกสบราซิล","The token changes each time the bridge restarts.":"โทเคนเปลี่ยนทุกครั้งที่บริดจ์รีสตาร์ต","The voice list depends on your browser or app and the voices installed. There's no fixed SSN list. This fresh profile showed an empty language list.":"รายการเสียงขึ้นกับเบราว์เซอร์หรือแอปและเสียงที่ติดตั้ง ไม่มีรายการ SSN ตายตัว โปรไฟล์ใหม่นี้มีรายการภาษาว่าง","This reuses the OpenAI settings, so the heading still says OpenAI. Enter your server's address and a voice and model it supports. Whether you need a key depends on your server. See the":"ใช้การตั้งค่า OpenAI เดิม หัวข้อจึงยังเขียน OpenAI ใส่ที่อยู่เซิร์ฟเวอร์ เสียง และโมเดลที่รองรับ ต้องมีคีย์หรือไม่ขึ้นกับเซิร์ฟเวอร์ ดู","To keep it the same, set":"หากต้องการให้เหมือนเดิม ตั้ง","Try Kokoro if you like its sound better. Free voices run on your computer. Cloud voices need an account and API key, and your chat text is sent to that company.":"ลอง Kokoro หากชอบเสียงมากกว่า เสียงฟรีทำงานในเครื่อง ส่วนเสียงคลาวด์ต้องมีบัญชีและคีย์ API และส่งข้อความแชตให้บริษัทนั้น","Try this":"ลองวิธีนี้","Turn it on for Kitten":"เปิดสำหรับ Kitten","Turn it on for Kokoro":"เปิดสำหรับ Kokoro","Turn on":"เปิด","US English, female. Light and quick.":"หญิงอังกฤษอเมริกัน เบาและเร็ว","Under":"ใน","Under Kokoro or Kitten, open":"ใต้ Kokoro หรือ Kitten เปิด","Use Spanish or Portuguese voices in a link":"ใช้เสียงสเปนหรือโปรตุเกสในลิงก์","Very light, many languages, starts fast.":"เบามาก หลายภาษา เริ่มเร็ว","Voice 2 (Female):":"เสียง 2 (หญิง) —","Voice 2 (Male):":"เสียง 2 (ชาย) —","Voice 3 (Female):":"เสียง 3 (หญิง) —","Voice 3 (Male):":"เสียง 3 (ชาย) —","Voice 4 (Female):":"เสียง 4 (หญิง) —","Voice 4 (Male):":"เสียง 4 (ชาย) —","Voice 4, female. Small English model.":"Voice 4 หญิง โมเดลอังกฤษขนาดเล็ก","Voice 5 (Female):":"เสียง 5 (หญิง) —","Voice 5 (Male):":"เสียง 5 (ชาย) —","Voice ID":"รหัสเสียง","Voice ID with speed, language and model.":"Voice ID พร้อมความเร็ว ภาษา และโมเดล","Voice examples and requirements":"ตัวอย่างเสียงและข้อกำหนด","Voice names and link values":"ชื่อเสียงและค่าในลิงก์","Voice names and supported controls":"ชื่อเสียงและตัวควบคุมที่รองรับ","Voice styles and written delivery instructions.":"สไตล์เสียงและคำสั่งลักษณะการพูดแบบข้อความ","Voices already on your browser or PC.":"เสียงที่มีในเบราว์เซอร์หรือพีซีอยู่แล้ว","Voices depend on your account.":"เสียงขึ้นกับบัญชีคุณ","Want to hear it yourself?":"อยากฟังด้วยตัวเอง?","Welcome to the stream! Thanks for joining us. Which game should we play next?":"ยินดีต้อนรับสู่สตรีม! ขอบคุณที่มาร่วมกัน เราควรเล่นเกมอะไรต่อดี?","With the bridge, add":"เมื่อใช้บริดจ์ ให้เพิ่ม","Works in Chrome or Edge, not in OBS":"ใช้ได้ใน Chrome หรือ Edge แต่ไม่ได้ใน OBS","Works in the chat dock, featured overlay, TTS page and Flow Actions.":"ใช้ใน Dock แชต โอเวอร์เลย์ข้อความเด่น หน้า TTS และ Flow Actions","Yes, if SSN gets the chat as text. YouTube, Twitch, TikTok and the rest all work the same way. The platform doesn't need its own TTS.":"ได้ หาก SSN รับแชตเป็นข้อความ YouTube, Twitch, TikTok และอื่น ๆ ทำงานเหมือนกัน แพลตฟอร์มไม่ต้องมี TTS ของตัวเอง","Your hardware or hosting":"ฮาร์ดแวร์หรือโฮสติ้งของคุณ","Your own voice server.":"เซิร์ฟเวอร์เสียงของคุณเอง","and paste the link you copied.":"แล้ววางลิงก์ที่คัดลอก","as the TTS provider.":"เป็นผู้ให้บริการ TTS","beside":"ข้าง","copy link":"คัดลอกลิงก์","eSpeak":"eSpeak","eSpeak voice sample":"ตัวอย่างเสียง eSpeak","environment variable to your Fish API key.":"เป็นคีย์ Fish API ของคุณ","field.":"สนาม","first.":"ก่อน","from":"จาก","if the bridge holds your key. Event Flow's":"หากบริดจ์เก็บคีย์ไว้ ตัวเลือกของ Event Flow","in the desktop app.":"ในแอปเดสก์ท็อป","local bridge":"บริดจ์ในเครื่อง","local server guide":"คู่มือเซิร์ฟเวอร์ภายในเครื่อง","local server problems":"ปัญหาเซิร์ฟเวอร์ในเครื่อง","model: Nano (smallest), Micro or Mini.":": Nano (เล็กสุด), Micro หรือ Mini","or":"หรือ","to":"เป็น","to a long random secret. Keep links with a token or key private.":"เป็นรหัสลับสุ่มยาว เก็บลิงก์ที่มีโทเคนหรือคีย์เป็นความลับ","to find a voice ID your account can use.":"เพื่อหา voice ID ที่บัญชีใช้ได้","to hear it. The model loads on the page that speaks. Voices: US and UK English, Spanish, Brazilian Portuguese. Too slow? Try Piper.":"เพื่อฟัง โมเดลโหลดบนหน้าที่พูด รองรับอังกฤษสหรัฐและสหราชอาณาจักร สเปน โปรตุเกสบราซิล ช้าเกินไป? ลอง Piper","uses a supported GPU if there is one, otherwise the CPU. Automatic quality picks FP16 on compatible GPUs, full precision on other supported GPUs, and the compact model on CPU. If you force GPU and none is available, you'll get an error.":"ใช้ GPU ที่รองรับหากมี มิฉะนั้นใช้ CPU คุณภาพอัตโนมัติเลือก FP16 บน GPU ที่เข้ากัน ดีกรีเต็มบน GPU อื่นที่รองรับ และโมเดลกระชับบน CPU หากบังคับ GPU แต่ไม่มี จะเกิดข้อผิดพลาด","voice override accepts a Fish voice ID when the receiving page uses Fish Audio.":"สำหรับทับค่าเสียงรับ Fish voice ID ได้เมื่อหน้าปลายทางใช้ Fish Audio"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tts-setup-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก"><a href="../index.html">หน้าแรก</a><a href="features.html">ฟีเจอร์</a><a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a><a href="download.html">ดาวน์โหลด</a><a href="guides.html">คู่มือ</a><a href="commands.html">คำสั่งและ API</a><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a><a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a><a href="services.html" class="site-priority-hire">จ้างงาน</a><a href="support.html">การสนับสนุน</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tts-setup-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tts-setup-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tts-setup-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tts-setup-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tts-setup-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tts-setup-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tts-setup-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tts-setup-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tts-setup-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tts-setup-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tts-setup-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tts-setup-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tts-setup-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tts-setup-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tts-setup-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tts-setup-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="tts-setup-guide.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="เปลี่ยนธีม"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>คู่มือตั้งค่า TTS</h1>
+            <p>ให้ระบบอ่านแชตออกเสียงบนสตรีม ฟรี ไม่ต้องมีบัญชีหรือคีย์ API</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="ในหน้านี้">
+                <a href="#setup">ตั้งค่า</a>
+                <a href="#obs-voices">เล่นใน OBS</a>
+                <a href="#voice-samples">ฟังเสียง</a>
+                <a href="#voice-chooser">เลือกผู้ให้บริการ</a>
+                <a href="#problems">แก้ปัญหา</a>
+                <a href="#provider-settings">การตั้งค่าผู้ให้บริการ</a>
+                <a href="#more">ใช้งานเพิ่มเติม</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="setup">ตั้งค่าใน 5 ขั้นตอน</h2>
+                <p><strong>ยังไม่ได้เชื่อมแชตใช่ไหม?</strong> <a href="getting-started.html">เริ่มที่นี่</a> ก่อน</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>เปิด <strong>ป๊อปอัปส่วนขยาย SSN</strong>, หรือ <strong>แหล่งข้อมูลและการตั้งค่า (Sources and Settings)</strong> ในแอปเดสก์ท็อป</li>
+                        <li>ใน <strong>โอเวอร์เลย์แชตหลักและแผงด็อกควบคุม (Main chat overlay &amp; control dock)</strong> ขยาย <strong>Message &ndash; Text to Speech</strong>.</li>
+                        <li>เปิด <strong>อ่านข้อความขาเข้าด้วยเสียง</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <a href="../../docs/images/guides/tts-enable-dock-popup.png"><img src="../../docs/images/guides/tts-enable-dock-popup.png" alt="ป๊อปอัปจริง: Message — Text to Speech โดยเปิด Enable TTS in dock" class="guide-image"></a>
+                        <figcaption>สวิตช์สีน้ำเงิน = เปิดการอ่านแชตแล้ว</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps" start="4">
+                        <li>เลื่อนไปยัง <strong>ผู้ให้บริการแปลงข้อความเป็นเสียงพูด</strong> เลือก <strong>Piper TTS</strong> แล้วเลือกเสียง</li>
+                        <li>คลิก <strong>คัดลอกลิงก์</strong> ข้าง <strong>โอเวอร์เลย์แชตหลักและแผงด็อกควบคุม (Main chat overlay &amp; control dock)</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <a href="../../docs/images/guides/tts-select-provider-popup.png"><img src="../../docs/images/guides/tts-select-provider-popup.png" alt="ป๊อปอัปจริง: เลือก Piper TTS พร้อมเสียง English US Female HFC Medium" class="guide-image" loading="lazy"></a>
+                        <figcaption>Piper ฟรี ไม่ต้องมีบัญชีหรือคีย์ API</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>ใช้งานครั้งแรก?</strong> Piper ดาวน์โหลดเสียงเมื่อใช้ครั้งแรก รอสักครู่</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="obs-voices">เล่นใน OBS</h2>
+                <ol class="guide-steps">
+                    <li>เพิ่ม <strong>แหล่งเบราว์เซอร์ (Browser Source)</strong> แล้ววางลิงก์ที่คัดลอก</li>
+                    <li>ในคุณสมบัติ เปิด <strong>ควบคุมเสียงผ่าน OBS (Control audio via OBS)</strong>.</li>
+                    <li>ส่งข้อความแชต มิเตอร์เสียงของแหล่งควรขยับ</li>
+                    <li>ลองบันทึกสั้น ๆ แล้วเปิดฟัง</li>
+                </ol>
+                <div class="guide-note"><strong>อยากฟังด้วยตัวเอง?</strong> ใน OBS <strong>คุณสมบัติเสียงขั้นสูง (Advanced Audio Properties)</strong> ตั้งแหล่งนั้นเป็น <strong>มอนิเตอร์และส่งออก (Monitor and Output)</strong>.</div>
+                <div class="warning-note"><strong>ได้ยินทุกข้อความสองครั้ง?</strong> ควรมีเพียงหน้าเดียวอ่านแชต ปิด TTS ที่อื่นทั้งหมด</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-samples">ฟังเสียงฟรี</h2>
+                <p>ทั้งสี่ใช้ฟรีและทำงานบนคอมพิวเตอร์คุณ กดเล่นเพื่อเปรียบเทียบ</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper</h3><p>หญิงอังกฤษอเมริกัน เบาและเร็ว<br><code>en_US-hfc_female-medium</code></p><audio controls preload="none" aria-label="ตัวอย่างเสียง Piper"><source src="../../docs/audio/tts/piper-hfc.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-hfc.mp3">ดาวน์โหลดตัวอย่าง Piper</a></audio><p><a href="#settings-piper">การตั้งค่าและเสียง</a></p></div>
+<div class="tts-preview"><h3>Kokoro</h3><p>Bella หญิงอังกฤษอเมริกัน เป็นธรรมชาติที่สุด แต่ช้ากว่าบน CPU<br><code>af_bella</code></p><audio controls preload="none" aria-label="ตัวอย่างเสียง Kokoro"><source src="../../docs/audio/tts/kokoro-bella.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-bella.mp3">ดาวน์โหลดตัวอย่าง Kokoro</a></audio><p><a href="#settings-kokoro">การตั้งค่าและเสียง</a></p></div>
+<div class="tts-preview"><h3>Kitten</h3><p>Voice 4 หญิง โมเดลอังกฤษขนาดเล็ก<br><code>expr-voice-4-f</code></p><audio controls preload="none" aria-label="ตัวอย่างเสียง Kitten"><source src="../../docs/audio/tts/kitten-4f.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kitten-4f.mp3">ดาวน์โหลดตัวอย่าง Kitten</a></audio><p><a href="#settings-kitten">การตั้งค่าและเสียง</a></p></div>
+<div class="tts-preview"><h3>eSpeak</h3><p>อังกฤษ เสียงหุ่นยนต์ แต่เล็กและเร็ว<br><code>en</code></p><audio controls preload="none" aria-label="ตัวอย่างเสียง eSpeak"><source src="../../docs/audio/tts/espeak-en.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/espeak-en.mp3">ดาวน์โหลดตัวอย่าง eSpeak</a></audio><p><a href="#settings-espeak">การตั้งค่าและเสียง</a></p></div>
+                </div>
+                <details class="guide-extra"><summary>ตัวอย่างภาษาสเปนและโปรตุเกส</summary>
+                <p>เลือกภาษาเหนือรายการเสียงใน SSN แล้วกด <strong>ทดสอบ</strong> Piper มีเสียงสเปน เม็กซิโก บราซิล และโปรตุเกส Kokoro มีเสียงสเปนสามเสียงและโปรตุเกสบราซิลสามเสียง</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper - สเปน (ประเทศสเปน)</h3><p>DaveFX</p><audio controls preload="none" aria-label="ตัวอย่าง Piper - สเปน (ประเทศสเปน)"><source src="../../docs/audio/tts/piper-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-spanish.mp3">ดาวน์โหลดตัวอย่าง</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - สเปน</h3><p>Dora</p><audio controls preload="none" aria-label="ตัวอย่าง Kokoro - สเปน"><source src="../../docs/audio/tts/kokoro-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-spanish.mp3">ดาวน์โหลดตัวอย่าง</a></audio></div>
+<div class="tts-preview"><h3>Piper - โปรตุเกส (บราซิล)</h3><p>Faber</p><audio controls preload="none" aria-label="ตัวอย่าง Piper - โปรตุเกส (บราซิล)"><source src="../../docs/audio/tts/piper-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-portuguese.mp3">ดาวน์โหลดตัวอย่าง</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - โปรตุเกส (บราซิล)</h3><p>Dora</p><audio controls preload="none" aria-label="ตัวอย่าง Kokoro - โปรตุเกส (บราซิล)"><source src="../../docs/audio/tts/kokoro-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-portuguese.mp3">ดาวน์โหลดตัวอย่าง</a></audio></div>
+                </div>
+                <p>Piper เบากว่า หาก Kokoro ตามแชตไม่ทัน ให้เปลี่ยนเป็น Piper</p>
+                </details>
+                <details class="guide-extra"><summary>ตัวอย่างเสียงเหล่านี้สร้างอย่างไร</summary>
+                <p>ตัวอย่างอังกฤษอ่านว่า: <em>ยินดีต้อนรับสู่สตรีม! ขอบคุณที่มาร่วมกัน เราควรเล่นเกมอะไรต่อดี?</em> ปิดการอ่านชื่อไว้ คลิปไม่รวมเวลาโหลด</p>
+                <p>ทดสอบเมื่อ 7 กันยายน 2026 ใน OBS 32.2.2 บน Windows 11 ข้อความแชตจริงเข้า Dock พูดออกเสียง ทำให้มิเตอร์ Browser Source ขยับ และอยู่ในไฟล์บันทึก Kokoro เริ่มช้ากว่าอย่างเห็นได้ชัดบน CPU</p>
+                <p>บนเครื่องนั้น System TTS แสดงห้าเสียงแต่ไม่มีเสียงในไฟล์บันทึก OBS เครื่องคุณอาจต่างกัน จึงควรทดสอบลิงก์เองเสมอ ไม่ได้ทดสอบเสียงคลาวด์เพราะไม่มีบัญชีเสียเงิน</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-chooser">เลือกผู้ให้บริการ</h2>
+                <p><strong>เริ่มด้วย Piper</strong> ลอง Kokoro หากชอบเสียงมากกว่า เสียงฟรีทำงานในเครื่อง ส่วนเสียงคลาวด์ต้องมีบัญชีและคีย์ API และส่งข้อความแชตให้บริษัทนั้น</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>ผู้ให้บริการ</th><th>เหมาะสำหรับ</th><th>ข้อควรรู้</th><th>ค่าใช้จ่าย</th></tr></thead><tbody>
+<tr><td data-label="ผู้ให้บริการ"><a href="#settings-piper">Piper</a></td><td data-label="เหมาะสำหรับ">เสียงธรรมชาติ อังกฤษ สเปน โปรตุเกส</td><td data-label="ข้อควรรู้">คุณภาพต่างกันตามเสียง HFC medium ประมาณ 63 MB</td><td data-label="ค่าใช้จ่าย">ฟรี ไม่ต้องใช้คีย์</td></tr>
+<tr><td data-label="ผู้ให้บริการ"><a href="#settings-kokoro">Kokoro</a></td><td data-label="เหมาะสำหรับ">เสียงฟรีที่เป็นธรรมชาติที่สุด อังกฤษ สเปน โปรตุเกสบราซิล</td><td data-label="ข้อควรรู้">ใช้ CPU มากกว่า เสียงแรกอาจเริ่มช้า เร็วขึ้นเมื่อมี GPU ที่รองรับ</td><td data-label="ค่าใช้จ่าย">ฟรี ไม่ต้องใช้คีย์</td></tr>
+<tr><td data-label="ผู้ให้บริการ"><a href="#settings-kitten">Kitten</a></td><td data-label="เหมาะสำหรับ">โมเดลอังกฤษขนาดเล็ก แปดเสียง</td><td data-label="ข้อควรรู้">เฉพาะอังกฤษ โมเดลที่ให้มาประมาณ 24 MB</td><td data-label="ค่าใช้จ่าย">ฟรี ไม่ต้องใช้คีย์</td></tr>
+<tr><td data-label="ผู้ให้บริการ"><a href="#settings-espeak">eSpeak</a></td><td data-label="เหมาะสำหรับ">เบามาก หลายภาษา เริ่มเร็ว</td><td data-label="ข้อควรรู้">ตั้งใจให้ฟังเหมือนหุ่นยนต์</td><td data-label="ค่าใช้จ่าย">ฟรี ไม่ต้องใช้คีย์</td></tr>
+<tr><td data-label="ผู้ให้บริการ"><a href="#settings-system">TTS ของระบบ</a></td><td data-label="เหมาะสำหรับ">เสียงที่มีในเบราว์เซอร์หรือพีซีอยู่แล้ว</td><td data-label="ข้อควรรู้">มักเงียบใน OBS บางเสียงต้องใช้อินเทอร์เน็ต</td><td data-label="ค่าใช้จ่าย">ฟรี</td></tr>
+<tr><td data-label="ผู้ให้บริการ"><a href="#settings-elevenlabs">ElevenLabs</a></td><td data-label="เหมาะสำหรับ">เลือกด้วย voice ID พร้อมตัวควบคุมความคงที่และสไตล์</td><td data-label="ข้อควรรู้">ขีดจำกัดบัญชีและความหน่วงเครือข่าย</td><td data-label="ค่าใช้จ่าย">อาจมีค่า API</td></tr>
+<tr><td data-label="ผู้ให้บริการ"><a href="#settings-google">Google Cloud</a></td><td data-label="เหมาะสำหรับ">เสียงมีชื่อ พร้อมภาษา ความเร็ว และระดับเสียงสูงต่ำ</td><td data-label="ข้อควรรู้">ไม่ใช่ทุกเสียงรองรับทุกตัวควบคุม ต้องเปิด Cloud TTS API</td><td data-label="ค่าใช้จ่าย">มีการคิดเงินและโควตา</td></tr>
+<tr><td data-label="ผู้ให้บริการ"><a href="#settings-gemini">Gemini</a></td><td data-label="เหมาะสำหรับ">สไตล์เสียงและคำสั่งลักษณะการพูดแบบข้อความ</td><td data-label="ข้อควรรู้">โมเดล preview และโควตาอาจเปลี่ยน</td><td data-label="ค่าใช้จ่าย">ตรวจขีดจำกัด Gemini</td></tr>
+<tr><td data-label="ผู้ให้บริการ"><a href="#settings-fish">Fish Audio</a></td><td data-label="เหมาะสำหรับ">โมเดลฟรีที่ใช้คีย์ของคุณเอง พร้อม voice ID</td><td data-label="ข้อควรรู้">OBS ต้องใช้บริดจ์ในเครื่องของ SSN</td><td data-label="ค่าใช้จ่าย">Fish Audio กำหนดระดับใช้ฟรี</td></tr>
+<tr><td data-label="ผู้ให้บริการ"><a href="#settings-speechify">Speechify</a></td><td data-label="เหมาะสำหรับ">Voice ID พร้อมความเร็ว ภาษา และโมเดล</td><td data-label="ข้อควรรู้">เสียงขึ้นกับบัญชีคุณ</td><td data-label="ค่าใช้จ่าย">เป็นไปตามเงื่อนไข API</td></tr>
+<tr><td data-label="ผู้ให้บริการ"><a href="#settings-openai">OpenAI</a></td><td data-label="เหมาะสำหรับ">เสียงมีชื่อ พร้อมควบคุมโมเดลและรูปแบบ</td><td data-label="ข้อควรรู้">สมาชิก ChatGPT ไม่รวมเครดิต API</td><td data-label="ค่าใช้จ่าย">การเรียกเก็บเงิน API</td></tr>
+<tr><td data-label="ผู้ให้บริการ"><a href="#settings-customtts">กำหนดเอง / ภายในเครื่อง</a></td><td data-label="เหมาะสำหรับ">เซิร์ฟเวอร์เสียงของคุณเอง</td><td data-label="ข้อควรรู้">ตั้งค่ามากที่สุด ดู <a href="local-tts.html">คู่มือเซิร์ฟเวอร์ภายในเครื่อง</a>.</td><td data-label="ค่าใช้จ่าย">ฮาร์ดแวร์หรือโฮสติ้งของคุณ</td></tr>
+</tbody></table>
+                <details class="guide-extra"><summary>ขนาดดาวน์โหลดและหมายเหตุทดสอบ OBS</summary>
+                <p>ขนาดนี้คือไฟล์โมเดล ไม่ใช่หน่วยความจำที่ใช้ เสียงฟรีทำงานบนเครื่องที่เล่น Dock หรือโอเวอร์เลย์ ครั้งแรกจะช้ากว่า OBS มีแคชดาวน์โหลดแยกจาก Chrome</p>
+                <p>Piper, Kokoro, Kitten และ eSpeak ผ่านการทดสอบบันทึก Browser Source ใน OBS เสียงคลาวด์และกำหนดเองเล่นผ่านหน้าได้เช่นกัน แต่ไม่ได้ทดสอบด้วยบัญชีจริง ทดสอบ System TTS แยกแม้มีรายการเสียง</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">แก้ปัญหา</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>ปัญหา</th><th>ลองวิธีนี้</th></tr></thead>
+                    <tbody>
+                        <tr id="chat-platforms"><td data-label="ปัญหา">แพลตฟอร์มแชตของฉันรองรับ TTS ไหม?</td><td data-label="ลองวิธีนี้">ได้ หาก SSN รับแชตเป็นข้อความ YouTube, Twitch, TikTok และอื่น ๆ ทำงานเหมือนกัน แพลตฟอร์มไม่ต้องมี TTS ของตัวเอง</td></tr>
+                        <tr><td data-label="ปัญหา">ไม่มีเสียงเลย</td><td data-label="ลองวิธีนี้">ตรวจว่า Dock แสดงแชต แล้วตรวจสวิตช์ TTS ผู้ให้บริการ และตัวกรอง ใช้ลิงก์ที่เพิ่งคัดลอก รอให้ดาวน์โหลดเสียงครั้งแรกเสร็จ</td></tr>
+                        <tr><td data-label="ปัญหา">ใช้ได้ใน Chrome หรือ Edge แต่ไม่ได้ใน OBS</td><td data-label="ลองวิธีนี้">OBS มีเบราว์เซอร์และรายการเสียงของตัวเอง System TTS มักใช้ไม่ได้ที่นั่น เปลี่ยนเป็น Piper, Kokoro, Kitten หรือ eSpeak สายเสียงเสมือนแก้ปัญหาไม่มีเสียงพูดไม่ได้</td></tr>
+                        <tr><td data-label="ปัญหา">มิเตอร์ขยับ แต่ไฟล์บันทึกไม่มีเสียง</td><td data-label="ลองวิธีนี้">ตรวจการปิดเสียงและแทร็กบันทึกใน OBS อย่าจับเสียงมอนิเตอร์ซ้ำ ดู <a href="https://obsproject.com/kb/audio-mixer-guide">คู่มือเสียง OBS</a>.</td></tr>
+                        <tr><td data-label="ปัญหา">เสียงตามแชตไม่ทัน</td><td data-label="ลองวิธีนี้">เปลี่ยนจาก Kokoro เป็น Piper หรือลอง eSpeak</td></tr>
+                        <tr><td data-label="ปัญหา">ทุกข้อความถูกอ่านสองครั้ง</td><td data-label="ลองวิธีนี้">มีมากกว่าหนึ่งหน้ากำลังพูด เปิด TTS ไว้ที่เดียว</td></tr>
+                        <tr><td data-label="ปัญหา">ฉันอยากให้ Dock ใน OBS หรือ Featured Chat พูดแทน</td><td data-label="ลองวิธีนี้">Custom Browser Dock ของ OBS เป็นแผงควบคุม ไม่ใช่แหล่งในฉาก หากใช้ Featured Chat ให้เปิด TTS ในตัวเลือกของโอเวอร์เลย์นั้นแล้วคัดลอกลิงก์</td></tr>
+                    </tbody>
+                </table>
+                <p>วิธีแก้เพิ่มเติม: <a href="tts.html#troubleshooting">เอกสารอ้างอิง TTS</a> &middot; <a href="local-tts.html#troubleshooting">ปัญหาเซิร์ฟเวอร์ในเครื่อง</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="provider-settings">การตั้งค่าผู้ให้บริการ</h2>
+                <p>ภาพหน้าจอจริงจากแอปเดสก์ท็อปในโปรไฟล์ใหม่ โดยเว้นช่องคีย์ว่าง เปิดผู้ให้บริการเพื่อดูการตั้งค่า คลิกภาพเพื่อขยาย</p>
+<details class="guide-extra" id="settings-system"><summary>TTS ของระบบ</summary><p>รายการเสียงขึ้นกับเบราว์เซอร์หรือแอปและเสียงที่ติดตั้ง ไม่มีรายการ SSN ตายตัว โปรไฟล์ใหม่นี้มีรายการภาษาว่าง</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-system.png"><img src="../../docs/images/guides/tts-settings-system.png" alt="การตั้งค่าผู้ให้บริการ System TTS ของ SSN จริง" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-kokoro"><summary>Kokoro</summary><p>เลือกเสียง ใช้ตัวกรองภาษาเพื่อค้นหา และ <strong>ทดสอบ</strong> เพื่อฟัง โมเดลโหลดบนหน้าที่พูด รองรับอังกฤษสหรัฐและสหราชอาณาจักร สเปน โปรตุเกสบราซิล ช้าเกินไป? ลอง Piper</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kokoro.png"><img src="../../docs/images/guides/tts-settings-kokoro.png" alt="การตั้งค่าผู้ให้บริการ Kokoro ของ SSN จริง" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>ชื่อเสียงและค่าในลิงก์</summary><ul class="guide-list">
+<li>Heart (หญิงอเมริกัน) — <code>af_heart</code></li>
+<li>Alloy (หญิงอเมริกัน) — <code>af_alloy</code></li>
+<li>Aoede (หญิงอเมริกัน) — <code>af_aoede</code></li>
+<li>Bella (หญิงอเมริกัน) — <code>af_bella</code></li>
+<li>Jessica (หญิงอเมริกัน) — <code>af_jessica</code></li>
+<li>Kore (หญิงอเมริกัน) — <code>af_kore</code></li>
+<li>Nicole (หญิงอเมริกัน) — <code>af_nicole</code></li>
+<li>Nova (หญิงอเมริกัน) — <code>af_nova</code></li>
+<li>River (หญิงอเมริกัน) — <code>af_river</code></li>
+<li>Sarah (หญิงอเมริกัน) — <code>af_sarah</code></li>
+<li>Sky (หญิงอเมริกัน) — <code>af_sky</code></li>
+<li>Adam (ชายอเมริกัน) — <code>am_adam</code></li>
+<li>Echo (ชายอเมริกัน) — <code>am_echo</code></li>
+<li>Eric (ชายอเมริกัน) — <code>am_eric</code></li>
+<li>Fenrir (ชายอเมริกัน) — <code>am_fenrir</code></li>
+<li>Liam (ชายอเมริกัน) — <code>am_liam</code></li>
+<li>Michael (ชายอเมริกัน) — <code>am_michael</code></li>
+<li>Onyx (ชายอเมริกัน) — <code>am_onyx</code></li>
+<li>Puck (ชายอเมริกัน) — <code>am_puck</code></li>
+<li>Santa (ชายอเมริกัน) — <code>am_santa</code></li>
+<li>Emma (หญิงบริติช) — <code>bf_emma</code></li>
+<li>Isabella (หญิงบริติช) — <code>bf_isabella</code></li>
+<li>George (ชายบริติช) — <code>bm_george</code></li>
+<li>Lewis (ชายบริติช) — <code>bm_lewis</code></li>
+<li>Alice (หญิงบริติช) — <code>bf_alice</code></li>
+<li>Lily (หญิงบริติช) — <code>bf_lily</code></li>
+<li>Daniel (ชายบริติช) — <code>bm_daniel</code></li>
+<li>Fable (ชายบริติช) — <code>bm_fable</code></li>
+<li>Dora (สเปน): <code>ef_dora</code></li>
+<li>Alex (สเปน): <code>em_alex</code></li>
+<li>Santa (สเปน): <code>em_santa</code></li>
+<li>Dora (โปรตุเกสบราซิล): <code>pf_dora</code></li>
+<li>Alex (โปรตุเกสบราซิล): <code>pm_alex</code></li>
+<li>Santa (โปรตุเกสบราซิล): <code>pm_santa</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-kitten"><summary>Kitten</summary><p>แปดเสียงอังกฤษ: รุ่นชายและหญิงของเสียง 2, 3, 4 และ 5 ตัวอย่างใช้ Voice 4 (Female)</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kitten.png"><img src="../../docs/images/guides/tts-settings-kitten.png" alt="การตั้งค่าผู้ให้บริการ Kitten ของ SSN จริง" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>ชื่อเสียงและค่าในลิงก์</summary><ul class="guide-list">
+<li>เสียง 2 (ชาย) — <code>expr-voice-2-m</code></li>
+<li>เสียง 2 (หญิง) — <code>expr-voice-2-f</code></li>
+<li>เสียง 3 (ชาย) — <code>expr-voice-3-m</code></li>
+<li>เสียง 3 (หญิง) — <code>expr-voice-3-f</code></li>
+<li>เสียง 4 (ชาย) — <code>expr-voice-4-m</code></li>
+<li>เสียง 4 (หญิง) — <code>expr-voice-4-f</code></li>
+<li>เสียง 5 (ชาย) — <code>expr-voice-5-m</code></li>
+<li>เสียง 5 (หญิง) — <code>expr-voice-5-f</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-piper"><summary>Piper</summary><p>เลือกเสียงที่ตรงภาษา การเปลี่ยนภาษาอย่างเดียวไม่เปลี่ยนเสียง ตัวอย่างใช้ HFC medium</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-piper.png"><img src="../../docs/images/guides/tts-settings-piper.png" alt="การตั้งค่าผู้ให้บริการ Piper ของ SSN จริง" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>ชื่อเสียงและค่าในลิงก์</summary><ul class="guide-list">
+<li>หญิงภาษาอังกฤษสหรัฐฯ (HFC) - คุณภาพปานกลาง — <code>en_US-hfc_female-medium</code></li>
+<li>สเปนแบบสเปน (DaveFX) - คุณภาพปานกลาง — <code>es_ES-davefx-medium</code></li>
+<li>สเปนแบบเม็กซิโก (Ald) - คุณภาพปานกลาง — <code>es_MX-ald-medium</code></li>
+<li>โปรตุเกสแบบบราซิล (Faber) - คุณภาพปานกลาง — <code>pt_BR-faber-medium</code></li>
+<li>โปรตุเกสแบบบราซิล (Edresson) - คุณภาพต่ำ — <code>pt_BR-edresson-low</code></li>
+<li>โปรตุเกสแบบโปรตุเกส (Tugao) - คุณภาพปานกลาง — <code>pt_PT-tug&atilde;o-medium</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-espeak"><summary>eSpeak</summary><p>เลือกเสียงตามภาษา เปลี่ยนความเร็วพูดได้ ตั้งใจให้เป็นเสียงหุ่นยนต์</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-espeak.png"><img src="../../docs/images/guides/tts-settings-espeak.png" alt="การตั้งค่าผู้ให้บริการ eSpeak ของ SSN จริง" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>ชื่อเสียงและค่าในลิงก์</summary><ul class="guide-list">
+<li>อังกฤษ — <code>en</code></li>
+<li>สเปน — <code>es</code></li>
+<li>โปรตุเกสแบบบราซิล — <code>pt-br</code></li>
+<li>โปรตุเกสแบบโปรตุเกส — <code>pt-pt</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-elevenlabs"><summary>ElevenLabs</summary><p>ใส่คีย์ API แล้วคลิก <strong>แสดงเสียงที่บัญชีฉันใช้ได้</strong> เพื่อหา voice ID ที่บัญชีใช้ได้ <a href="https://elevenlabs.io/docs/api-reference/text-to-speech/convert">เอกสารอ้างอิง ElevenLabs</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-elevenlabs.png"><img src="../../docs/images/guides/tts-settings-elevenlabs.png" alt="การตั้งค่าผู้ให้บริการ ElevenLabs ของ SSN จริง" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-google"><summary>Google Cloud</summary><p>ใส่คีย์ Google Cloud TTS API ชื่อเสียงตรงทุกตัว และภาษาที่ตรงกัน <a href="https://cloud.google.com/text-to-speech/docs/voices">ชื่อเสียงและตัวควบคุมที่รองรับ</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-google.png"><img src="../../docs/images/guides/tts-settings-google.png" alt="การตั้งค่าผู้ให้บริการ Google Cloud ของ SSN จริง" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-gemini"><summary>Gemini</summary><p>เลือกโมเดล TTS และเสียง คำสั่งสไตล์เปลี่ยนวิธีอ่าน ใช้ Gemini API ไม่ใช่ Google Cloud TTS <a href="https://ai.google.dev/gemini-api/docs/speech-generation">ตัวอย่างเสียงและข้อกำหนด</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-gemini.png"><img src="../../docs/images/guides/tts-settings-gemini.png" alt="การตั้งค่าผู้ให้บริการ Gemini ของ SSN จริง" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-fish"><summary>Fish Audio</summary>
+<p>ใช้ใน Dock แชต โอเวอร์เลย์ข้อความเด่น หน้า TTS และ Flow Actions</p>
+<ol class="guide-steps">
+<li>เลือก <strong>Fish Audio</strong> เป็นผู้ให้บริการ TTS</li>
+<li>วาง <a href="https://fish.audio/app/api-keys">คีย์ Fish Audio API</a>.</li>
+<li>ตัวเลือกเสริม: วาง <strong>รหัสเสียง</strong> จาก <a href="https://fish.audio/">Fish Audio</a> คัดลอก model ID ของเสียง ไม่ใช่ชื่อหรือลิงก์หน้า เว้นว่างเพื่อใช้เสียงเริ่มต้น</li>
+<li>กด <strong>ทดสอบ TTS</strong>.</li>
+</ol>
+<p>โมเดลเริ่มต้นคือ <code>s2.1-pro-free</code> Fish Audio กำหนดสิ่งที่ใช้ฟรีและเงื่อนไขการใช้ที่เป็นธรรม โมเดลเสียเงินต้องมีเครดิต SSN ไม่สลับไปโมเดลเสียเงินหากคำขอฟรีล้มเหลว ความเร็วอยู่ระหว่าง 0.5 ถึง 2 Fish Audio ตรวจภาษาเอง ข้อความแชตส่งไปยัง Fish Audio</p>
+<h4>สำหรับ OBS: รันบริดจ์ในเครื่อง</h4>
+<p>Fish Audio บล็อกคำขอตรงจากหน้าเว็บ OBS จึงต้องใช้ <a href="../../local-tts-bridge/README.md#fish-audio-for-obs">บริดจ์ในเครื่อง</a> (ต้องมี Node.js) รันบนคอมพิวเตอร์ OBS</p>
+<ol class="guide-steps">
+<li>ตั้งค่า <code>SSN_TTS_TARGET_BEARER</code> เป็นคีย์ Fish API ของคุณ</li>
+<li>ในโฟลเดอร์ SSN รัน <code>node scripts/local-tts-bridge.cjs --mode fish</code> เปิดทิ้งไว้</li>
+<li>ในแผง Fish Audio ตั้ง <strong>URL ของบริดจ์</strong> เป็น <code>http://127.0.0.1:8124/v1/audio/speech</code>.</li>
+<li>วางโทเคนบริดจ์ที่แสดงในเทอร์มินัลลงใน <strong>คีย์ API</strong> สนาม</li>
+<li>ทดสอบเสียง แล้วเพิ่มลิงก์โอเวอร์เลย์ใน OBS เปิด <strong>ควบคุมเสียงผ่าน OBS (Control audio via OBS)</strong>.</li>
+</ol>
+<div class="warning-note"><strong>โทเคนเปลี่ยนทุกครั้งที่บริดจ์รีสตาร์ต</strong> หากต้องการให้เหมือนเดิม ตั้ง <code>SSN_TTS_BRIDGE_TOKEN</code> เป็นรหัสลับสุ่มยาว เก็บลิงก์ที่มีโทเคนหรือคีย์เป็นความลับ</div>
+<details class="guide-extra"><summary>ตัวเลือกลิงก์ Fish Audio</summary>
+<pre>&amp;ttsprovider=fish&amp;fishkey=YOUR_KEY&amp;voicefish=VOICE_ID&amp;fishmodel=s2.1-pro-free&amp;fishspeed=1</pre>
+<p>เมื่อใช้บริดจ์ ให้เพิ่ม <code>&amp;fishendpoint=http%3A%2F%2F127.0.0.1%3A8124%2Fv1%2Faudio%2Fspeech</code> ไม่ต้องใส่ <code>fishkey</code> หากบริดจ์เก็บคีย์ไว้ ตัวเลือกของ Event Flow <strong>อ่านข้อความ (Speak Text)</strong> สำหรับทับค่าเสียงรับ Fish voice ID ได้เมื่อหน้าปลายทางใช้ Fish Audio</p>
+<p><a href="https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech">เอกสารอ้างอิง Fish Audio API</a> &middot; <a href="https://fish.audio/blog/s2-1-pro-free-api/">ประกาศและเงื่อนไขโมเดลฟรี</a></p>
+</details>
+</details>
+<details class="guide-extra" id="settings-speechify"><summary>Speechify</summary><p>ป้อนคีย์ API และรหัสเสียงจากบัญชี Speechify API ของคุณ <a href="speechify-setup-guide.html"><strong>คู่มือ Speechify ทีละขั้น</strong></a> &middot; <a href="https://docs.speechify.ai/docs/get-started/overview">การตั้งค่า Speechify</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-speechify.png"><img src="../../docs/images/guides/tts-settings-speechify.png" alt="การตั้งค่าผู้ให้บริการ Speechify ของ SSN จริง" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-openai"><summary>OpenAI</summary><p>เลือกเสียงและโมเดล แล้วใส่คีย์ API สมาชิก ChatGPT ไม่ให้เครดิต API คง endpoint เริ่มต้นไว้</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-openai.png"><img src="../../docs/images/guides/tts-settings-openai.png" alt="การตั้งค่าผู้ให้บริการ OpenAI ของ SSN จริง" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-customtts"><summary>TTS แบบกำหนดเอง / ภายในเครื่อง</summary><p>ใช้การตั้งค่า OpenAI เดิม หัวข้อจึงยังเขียน OpenAI ใส่ที่อยู่เซิร์ฟเวอร์ เสียง และโมเดลที่รองรับ ต้องมีคีย์หรือไม่ขึ้นกับเซิร์ฟเวอร์ ดู <a href="local-tts.html">คู่มือเซิร์ฟเวอร์ภายในเครื่อง</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-customtts.png"><img src="../../docs/images/guides/tts-settings-customtts.png" alt="การตั้งค่าผู้ให้บริการ Custom / Local TTS ของ SSN จริง" class="guide-image" loading="lazy"></a></figure>
+</details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="background-speech">เร่ง Kokoro และ Kitten</h2>
+                <p>ใต้ Kokoro หรือ Kitten เปิด <strong>การสร้างและเล่นเสียง</strong> ตัวเลือกเหล่านี้สร้างเสียงเบื้องหลังเพื่อให้หน้าลื่น</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>ฉันต้องการ…</th><th>ทำตามนี้</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="ฉันต้องการ">เปิดสำหรับ Kokoro</td><td data-label="ทำตามนี้">ตั้งค่า <strong>การประมวลผล</strong> เป็น <strong>สร้างเสียงเบื้องหลัง</strong>.</td></tr>
+                        <tr><td data-label="ฉันต้องการ">เปิดสำหรับ Kitten</td><td data-label="ทำตามนี้">เลือก <strong>Kitten 0.8</strong> : Nano (เล็กสุด), Micro หรือ Mini</td></tr>
+                        <tr><td data-label="ฉันต้องการ">ได้ยินเสียงเร็วขึ้น</td><td data-label="ทำตามนี้"><strong>เริ่มทันทีที่เสียงมา</strong> เล่นแต่ละส่วนเมื่อพร้อม เครื่องช้าอาจหยุดระหว่างส่วน</td></tr>
+                        <tr><td data-label="ฉันต้องการ">หลีกเลี่ยงช่วงเงียบ</td><td data-label="ทำตามนี้"><strong>เล่นข้อความทั้งก้อน</strong> รอให้ข้อความทั้งหมดพร้อมก่อน</td></tr>
+                        <tr><td data-label="ฉันต้องการ">แก้ปัญหา GPU (Kokoro)</td><td data-label="ทำตามนี้">ตั้งค่า <strong>ตัวประมวลผลเบื้องหลัง</strong> เป็น <strong>CPU</strong>.</td></tr>
+                        <tr><td data-label="ฉันต้องการ">คุณภาพ Kokoro สูงสุด</td><td data-label="ทำตามนี้"><strong>คุณภาพเต็ม</strong> ดาวน์โหลดใหญ่กว่าและใช้หน่วยความจำมากกว่า</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra"><summary>รายละเอียดและตัวเลือกลิงก์เพิ่มเติม</summary>
+                <p><strong>อัตโนมัติ</strong> ใช้ GPU ที่รองรับหากมี มิฉะนั้นใช้ CPU คุณภาพอัตโนมัติเลือก FP16 บน GPU ที่เข้ากัน ดีกรีเต็มบน GPU อื่นที่รองรับ และโมเดลกระชับบน CPU หากบังคับ GPU แต่ไม่มี จะเกิดข้อผิดพลาด</p>
+                <p>Kitten 0.8 ทำงานบน CPU รองรับเฉพาะอังกฤษ แต่ละโมเดลดาวน์โหลดครั้งแรกที่ใช้ แต่ละเบราว์เซอร์หรือ OBS เก็บสำเนาของตัวเอง NeuroSync ได้ไฟล์เสียงเต็มไม่ว่าโหมดใด ลิงก์เก่ายังทำงานเหมือนเดิมเว้นแต่เปลี่ยนตัวเลือกเหล่านี้</p>
+                <p>Kokoro: <code>&amp;kokororuntime=worker</code>, ตัวเลือกเพิ่มเติม <code>&amp;kokoroplayback=stream</code>, <code>&amp;kokorodevice=wasm</code> หรือ <code>webgpu</code>, <code>&amp;kokorodtype=q8</code>, <code>fp16</code> หรือ <code>fp32</code> การสตรีมหรือ FP32 เปิดการสร้างเสียงเบื้องหลังอัตโนมัติ</p>
+                <p>Kitten: <code>&amp;kittenmodel=nano</code> (หรือ <code>micro</code>, <code>mini</code>) และตัวเลือกเสริม <code>&amp;kittenplayback=stream</code>.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="more">ใช้งานเพิ่มเติม</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>ฉันต้องการ…</th><th>ไปที่นี่</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="ฉันต้องการ">แก้ลิงก์ TTS เอง หรือดูตัวเลือกทั้งหมด</td><td data-label="ไปที่นี่"><a href="tts.html">เอกสารอ้างอิง TTS</a></td></tr>
+                        <tr><td data-label="ฉันต้องการ">ใช้เสียงสเปนหรือโปรตุเกสในลิงก์</td><td data-label="ไปที่นี่"><a href="tts.html#premium-options">เอกสารอ้างอิง TTS: ตัวเลือกผู้ให้บริการ</a></td></tr>
+                        <tr id="local-server"><td data-label="ฉันต้องการ">รันเซิร์ฟเวอร์เสียงเอง หรือโคลนเสียง</td><td data-label="ไปที่นี่"><a href="local-tts.html">คู่มือ AI TTS ในเครื่อง</a></td></tr>
+                        <tr><td data-label="ฉันต้องการ">ตั้งค่า Speechify</td><td data-label="ไปที่นี่"><a href="speechify-setup-guide.html">คู่มือ Speechify</a></td></tr>
+                    </tbody>
+                </table>
+                <p>ลิงก์ลองใช้อย่างรวดเร็ว: <code>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=piper</code></p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja สัญญาอนุญาต GPLv3.0</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function revealGuideSection() {
+            var target;
+            try { target = document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { return; }
+            if (!target) return;
+            for (var node = target; node; node = node.parentElement) {
+                if (node.tagName === "DETAILS") node.open = true;
+            }
+            target.scrollIntoView();
+        }
+        window.addEventListener("hashchange", revealGuideSection);
+        revealGuideSection();
+    </script>
+</body>
+</html>

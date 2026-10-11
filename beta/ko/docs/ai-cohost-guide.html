@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/ai-cohost-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/ai-cohost-guide.html">
+    <meta property="og:title" content="AI 공동 진행자 가이드 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja AI 공동 진행자, 도크 제어, AI 무대 오버레이의 설정 및 작업 흐름 가이드입니다.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/ai-cohost-guide.html">
+    <meta name="twitter:title" content="AI 공동 진행자 가이드 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja AI 공동 진행자, 도크 제어, AI 무대 오버레이의 설정 및 작업 흐름 가이드입니다.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 공동 진행자 가이드 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja AI 공동 진행자, 도크 제어, AI 무대 오버레이의 설정 및 작업 흐름 가이드입니다.">
+    <style>
+        .cohost-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.4rem; margin: 1.4rem 0; }
+        .cohost-picker > div { padding: 1.4rem 1.6rem; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .cohost-picker strong { display: block; margin-bottom: .4rem; font-size: 1.65rem; }
+        .cohost-picker p { margin: 0; font-size: 1.45rem; line-height: 1.5; }
+        .cohost-picker .example { margin-top: .8rem; }
+        .cohost-flow {
+            margin: 18px 0;
+            padding: 18px;
+            border: 1px solid var(--border-color);
+            background: rgba(0, 166, 255, 0.08);
+        }
+        .cohost-code {
+            display: block;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            background: #111827;
+            color: #e5e7eb;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 1.3rem;
+            line-height: 1.45;
+        }
+        @media (max-width: 760px) {
+            .cohost-picker { grid-template-columns: minmax(0, 1fr); }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/ai-cohost-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", and your words should appear under":". 말한 내용이 다음 항목에 표시되어야 합니다:",", browser audio permission, and that OBS captures the co-host page audio. Don't use":", 브라우저 오디오 권한, OBS의 공동 진행자 페이지 오디오 캡처를 확인하세요. 이 경우에는",", if your setup supports it. Keep the speech bubble visible too, so viewers who can't hear can still follow along.":". 지원되는 환경에서 사용할 수 있습니다. 소리를 듣지 못하는 시청자도 따라올 수 있도록 말풍선도 표시하세요.",", open":"를 선택하고 다음을 엽니다:",", paste your OpenAI project API key, and click":", OpenAI 프로젝트 API 키를 붙여 넣고 다음을 클릭하세요:",", so payloads stay predictable for overlays and automations.":". 그러면 오버레이와 자동화에서 일정한 데이터 형식을 사용할 수 있습니다.",", so you'll need an OpenAI API key. Other options are":"이므로 OpenAI API 키가 필요합니다. 다른 선택지는 다음과 같습니다:",", the volume slider, the output picker, and":", 볼륨 슬라이더, 출력 선택기, 다음 항목을 확인하세요:",". Add":". 다음을 추가합니다:",". Approval happens in the Dock, off-stream.":". 승인은 방송 화면에 나오지 않는 Dock에서 이루어집니다.",". Ask “What is chat saying?” any time.":". 언제든 ‘채팅에서 무슨 이야기를 해?’라고 물어보세요.",". If you pick":". 다음을 선택하면",". It should say":". 다음과 같이 표시되어야 합니다:",". It talks back and can discuss your chat when you ask.":". 음성으로 대답하며 요청하면 채팅 내용에 관해서도 이야기합니다.","A draft.":"초안입니다.","A stream control tool is missing":"방송 제어 도구가 보이지 않음","AI Co-host":"AI 공동 진행자","AI Co-host Guide - Social Stream Ninja":"AI 공동 진행자 가이드 - Social Stream Ninja","AI drafts are never spoken until you click":"AI 초안은 다음을 클릭하기 전까지 읽어 주지 않습니다:","AI stage overlay":"AI 무대 오버레이","Add":"추가:","Add the stage overlay to OBS:":"무대 오버레이를 OBS에 추가:","Add these to the end of your":"다음 설정을 링크 끝에 추가하세요:","Add to the link":"링크에 추가","Allow the microphone, check your computer's default mic, check internet, and that Chrome speech recognition is available.":"마이크를 허용하고 컴퓨터의 기본 마이크, 인터넷 연결, Chrome 음성 인식 사용 가능 여부를 확인하세요.","An AI sidekick you can talk to on stream. It can read your chat too.":"방송 중 대화할 수 있는 AI 조수입니다. 채팅도 읽을 수 있습니다.","Answer":"답변(Answer)","Answer / Light Roast:":"답변 / 가벼운 놀림(Answer / Light Roast):","Answer or Light Roast is greyed out":"Answer 또는 Light Roast가 비활성화됨","Answer, Light Roast, or SSN Configured LLM times out":"Answer, Light Roast 또는 SSN Configured LLM 시간이 초과됨","Answers every message out loud.":"모든 메시지에 음성으로 답합니다.","Answers questions and mentions out loud by itself.":"질문과 멘션에 자동으로 음성 응답합니다.","Ask it out loud, like “switch to BRB”, “feature that last message”, or “clear the featured chat”.":"‘BRB로 전환해’, ‘마지막 메시지를 강조해’, ‘강조 채팅을 지워’처럼 말로 요청하세요.","Audio Response":"음성 응답(Audio Response)","Balanced: about 4 seconds. Patient: about 8.":"Balanced는 약 4초, Patient는 약 8초입니다.","Both show an avatar and speech bubble in OBS using the":"둘 다 OBS에 아바타와 말풍선을 표시합니다. 사용하는 기능은","Button":"버튼","Change the name shown":"표시 이름 바꾸기","Chat Bots and AI services → Chat Bot - Private Interface → Enable private chat bot option":"Chat Bots and AI services → Chat Bot - Private Interface → Enable private chat bot option","Chat Bots and AI services → Configure LLM Service Provider":"Chat Bots and AI services → Configure LLM Service Provider","ChatGPT API":"ChatGPT API","Check":"확인:","Check Social Stream is on, the session matches, Private Chat Bot is on, and your AI provider is reachable.":"Social Stream이 켜져 있고 세션이 일치하며 Private Chat Bot이 켜져 있고 AI 제공업체에 연결할 수 있는지 확인하세요.","Check the mic isn't muted, and let the first download finish.":"마이크가 음소거되어 있지 않은지 확인하고 첫 다운로드가 끝날 때까지 기다리세요.","Chrome (extension link)":"Chrome(확장 프로그램 링크)","Chrome's speech recognition. May need internet.":"Chrome 음성 인식입니다. 인터넷이 필요할 수 있습니다.","Click":"클릭:","Co-host":"공동 진행자(Co-host)","Co-host Stream Controls":"공동 진행자의 방송 제어","Co-host output":"공동 진행자 출력","Co-host page doesn't see chat":"공동 진행자 페이지에 채팅이 보이지 않음","Commands & API":"명령 및 API","Connect to my Social Stream (required)":"내 Social Stream에 연결(필수)","Context only":"문맥만(Context only)","Context only - answer when asked (default)":"맥락으로만 사용하고 요청 시 답변(기본값)","Copies the draft without sending it.":"전송하지 않고 초안을 복사합니다.","Copy":"복사","Diagnostics":"진단","Dock buttons":"Dock 버튼","Dock buttons in 5 steps":"5단계로 Dock 버튼 사용하기","Download":"다운로드","Drafts a short answer for you to approve.":"승인할 수 있도록 짧은 답변 초안을 작성합니다.","Drafts a short, playful, PG roast for you to approve.":"승인할 수 있도록 짧고 장난스러우며 가족 시청에 적합한 가벼운 놀림 초안을 작성합니다.","Extra command details go inside":"추가 명령 정보는 다음에 넣습니다:","Fast: waits about 2 seconds after you stop. May cut in on a pause.":"Fast는 말이 끝난 뒤 약 2초 기다립니다. 잠깐 멈추면 끼어들 수 있습니다.","Faster and cheaper":"더 빠르고 저렴하게","Features":"기능","Fix problems":"문제 해결","For Dock text workflows, the overlay is the picture and optional TTS voice. For the OpenAI voice, capture":"Dock 텍스트 방식에서 오버레이는 이미지와 선택적인 TTS 음성을 담당합니다. OpenAI 음성은 다음을 캡처하세요:","For OBS, type the exact scene names it may switch to, separated by commas. Keep":"OBS에서 전환을 허용할 정확한 장면 이름을 쉼표로 구분해 입력하세요. 다음 설정은","Force overlay speech even when the co-host page is talking (adds a second voice)":"공동 진행자 페이지가 말하는 중에도 오버레이 음성 강제 재생(음성이 하나 더 나옴)","Free AI for testing":"테스트용 무료 AI","Free trial AI stopped answering":"무료 체험 AI가 답하지 않음","Full quality (costs more)":"최고 품질(비용 증가)","Guides":"가이드","Have the overlay speak (Dock workflow)":"오버레이가 말하게 하기(Dock 방식)","Heard":"인식한 내용(Heard)","High or Extra high (costs more)":"High 또는 Extra high(비용 증가)","Hire":"작업 의뢰","Home":"홈","How it hears you":"내 말을 듣는 방식","How it uses chat":"채팅을 사용하는 방식","How it uses your chat":"내 채팅을 사용하는 방식","How the pages talk (for developers)":"페이지 간 통신 방식(개발자용)","I want to":"원하는 작업","I want to…":"원하는 작업…","If you talk over it, it stops and drops the unplayed audio.":"말하는 도중 끼어들면 재생을 멈추고 아직 재생하지 않은 오디오를 버립니다.","In OBS, capture the audio from the co-host page or app. The AI's voice only plays there.":"OBS에서 공동 진행자 페이지나 앱의 오디오를 캡처하세요. AI 음성은 그곳에서만 재생됩니다.","In the Social Stream popup, pick":"Social Stream 팝업에서 다음을 선택하세요:","In the Social Stream popup, turn on only the tools you want.":"Social Stream 팝업에서 필요한 도구만 켜세요.","Inspiration":"아이디어","It keeps up to 20 recent chat messages for up to 90 seconds, including donations, memberships, moderator, event, and channel info. Then it forgets them.":"기부, 멤버십, 관리자, 이벤트, 채널 정보를 포함해 최근 채팅 메시지 최대 20개를 최대 90초 유지한 뒤 잊습니다.","It knows chat but stays quiet":"채팅을 알고 있지만 말하지 않음","It may be off or rate-limited. Use your own token, Ollama, or Custom API.":"꺼져 있거나 사용량 제한에 걸렸을 수 있습니다. 자신의 토큰, Ollama 또는 Custom API를 사용하세요.","It only appears once the Dock sees the stage overlay on the same session.":"Dock에서 같은 세션의 무대 오버레이를 감지해야 나타납니다.","It reconnects by itself if the connection drops, and starts a fresh session before OpenAI's 60-minute limit. Your instructions and speed settings carry over, but it forgets what was said aloud.":"연결이 끊기면 자동으로 다시 연결하고 OpenAI의 60분 제한 전에 새 세션을 시작합니다. 지침과 속도 설정은 유지되지만 음성 대화 내용은 잊습니다.","It's billed to your OpenAI API account. It's separate from chatgpt.com and doesn't join a ChatGPT website or app conversation.":"OpenAI API 계정에 요금이 청구됩니다. chatgpt.com과 별개이며 ChatGPT 웹사이트나 앱 대화에 참여하지 않습니다.","It's free while the trial lasts, and may be turned off or rate-limited. For long-term use, add your own token or use a local AI.":"체험 기간에는 무료이며 중단되거나 사용량이 제한될 수 있습니다. 장기적으로 사용하려면 자신의 토큰을 추가하거나 로컬 AI를 사용하세요.","Leave":"유지:","Leave it running while it retries. Diagnostics shows what failed.":"다시 시도하는 동안 계속 실행해 두세요. 실패 원인은 Diagnostics에 표시됩니다.","Leave the endpoint, token, and model blank.":"엔드포인트, 토큰, 모델을 비워 두세요.","Let it control your stream":"방송 제어 맡기기","Let it see your screen or camera?":"화면이나 카메라를 보여 줄까요?","Light Roast":"가벼운 놀림(Light Roast)","Link options":"링크 옵션","Listening (Desktop Whisper)":"듣는 중(Desktop Whisper)","Listening (OpenAI WebRTC)":"듣는 중(OpenAI WebRTC)","Live Chat":"실시간 채팅","Live Chat setting":"Live Chat 설정","Local Gemma won't download":"로컬 Gemma가 다운로드되지 않음","Main navigation":"기본 탐색 메뉴","Make it bigger or smaller":"크기 바꾸기","Make sure the overlay label matches the Dock's target. The default is":"오버레이 라벨이 Dock의 대상과 일치하는지 확인하세요. 기본값은","Message format and design notes":"메시지 형식과 설계 참고 사항","Mini":"Mini","Minimal or Low":"Minimal 또는 Low","Model":"모델","More about OpenAI Realtime":"OpenAI Realtime 자세히 보기","Move it":"위치 이동","Mute and volume buttons":"음소거 및 볼륨 버튼","Mute co-host voice":"공동 진행자 음성 음소거","Mute microphone":"마이크 음소거","Mute shared system audio":"공유 시스템 오디오 음소거","Needs":"필요한 항목","No Co-host menu in the Dock":"Dock에 Co-host 메뉴가 없음","No Co-host menu?":"Co-host 메뉴가 없나요?","No Video":"영상 없음","None of these post replies into YouTube, Twitch, or Kick chat.":"어떤 방식도 YouTube, Twitch 또는 Kick 채팅에 답글을 게시하지 않습니다.","Nothing shows in OBS":"OBS에 아무것도 표시되지 않음","On":"켜짐","On this page":"이 페이지에서","Only you can trigger tools.":"도구는 본인만 실행할 수 있습니다.","Open":"열기","Open navigation menu":"탐색 메뉴 열기","Open the":"다음을 여세요:","Open the Dock:":"Dock 열기:","Open the co-host page with the same":"같은 설정으로 공동 진행자 페이지를 여세요:","OpenAI Realtime":"OpenAI Realtime","OpenAI keeps disconnecting":"OpenAI 연결이 계속 끊김","Optional. Video starts on":"선택 사항입니다. 영상의 시작 설정은","Other browsers":"다른 브라우저","Overlay Gallery":"오버레이 갤러리","Overlay link options":"오버레이 링크 옵션","Pick a virtual cable under":"다음 항목에서 가상 오디오 케이블을 선택하세요:","Pick the microphone you talk into. Keep":"말할 때 사용할 마이크를 선택하세요. 다음 설정은","Point its asset host at your own copy of the Gemma files.":"자신이 보관한 Gemma 파일을 사용하도록 파일 호스트를 지정하세요.","Press":"프레스","Privacy:":"개인정보 보호:","Private Chat Bot on, plus an AI provider.":"Private Chat Bot을 켜고 AI 제공업체도 설정해야 합니다.","Problem":"문제","Read on Co-host":"공동 진행자로 읽기","Read on Co-host:":"공동 진행자로 읽기:","Reasoning changes apply even while connected.":"추론 설정 변경은 연결된 상태에서도 적용됩니다.","Reasoning effort":"추론 강도","Remembers recent messages and stays quiet until you ask about chat.":"최근 메시지를 기억하며 채팅에 관해 물어볼 때까지 조용히 있습니다.","Remove":"제거","Replies are capped at 512 output tokens.":"답변 출력은 최대 512토큰으로 제한됩니다.","Replies are slow":"답변이 느림","Right-click a Dock message and pick":"Dock 메시지를 마우스 오른쪽 버튼으로 클릭하고 다음을 선택하세요:","Right-click a chat message in the Dock. The AI avatar reads it, or drafts an answer or light roast that you approve first.":"Dock에서 채팅 메시지를 오른쪽 클릭하세요. AI 아바타가 읽어 주거나 답변 또는 가벼운 놀림 초안을 작성하며, 초안은 먼저 승인해야 합니다.","SSN Desktop app":"SSN 데스크톱 앱","SSN Hosted Trial LLM":"SSN Hosted Trial LLM","SSN Hosted Trial LLM (experimental)":"SSN Hosted Trial LLM(실험적)","Screen Share":"화면 공유","Select":"선택:","Sends your approved draft to the overlay.":"승인한 초안을 오버레이로 보냅니다.","Set it up":"설정하기","Set the overlay's label":"오버레이 라벨 설정","Set up an AI provider in the popup. For a quick test, use":"팝업에서 AI 제공업체를 설정하세요. 빠르게 테스트하려면","Setting":"설정","Setup and workflow guide for the Social Stream Ninja AI co-host, dock controls, and AI stage overlay.":"Social Stream Ninja AI 공동 진행자, 도크 제어, AI 무대 오버레이의 설정 및 작업 흐름 가이드입니다.","Several overlays open":"여러 오버레이가 열려 있음","Show connection status":"연결 상태 표시","Skip to main content":"본문으로 건너뛰기","Smarter, slower":"더 똑똑하지만 더 느리게","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Speak":"말하기","Speak a reply to every message":"모든 메시지에 음성으로 답하기","Speak replies to questions and mentions":"질문과 멘션에 음성으로 답하기","Speed and cost":"속도와 비용","Speed, quality, and cost (OpenAI)":"속도, 품질, 비용(OpenAI)","Stage overlay connected. No AI needed.":"무대 오버레이 연결이 필요합니다. AI는 필요하지 않습니다.","Start Co-host":"공동 진행자 시작","Stop speaking":"말하기 중지","Stream controls":"방송 제어","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Talk to the AI out loud on":"다음 페이지에서 AI에게 말로 대화하세요:","Test overlay":"오버레이 테스트","Test selected chat bot":"선택한 챗봇 테스트","Text shows but no voice (OpenAI)":"텍스트는 표시되지만 음성이 없음(OpenAI)","That's normal in Context only. Ask it what chat is saying, or":"Context only에서는 정상입니다. 채팅 내용을 물어보거나","The Dock and overlay use the normal Social Stream session bridge. Messages are sent as":"Dock과 오버레이는 일반 Social Stream 세션 브리지를 사용합니다. 메시지는 다음 형식으로 전송됩니다:","The avatar reads the message.":"아바타가 메시지를 읽습니다.","The co-host can play Spotify, switch OBS scenes, or feature a chat message. All are off by default. OpenAI Realtime supports all three. SSN Configured LLM supports Spotify only. Other providers don't support these yet.":"공동 진행자는 Spotify 재생, OBS 장면 전환, 채팅 메시지 강조를 할 수 있습니다. 기본값은 모두 꺼짐입니다. OpenAI Realtime은 세 기능을 모두 지원하며 SSN Configured LLM은 Spotify만 지원합니다. 다른 제공업체는 아직 지원하지 않습니다.","The co-host page: microphone, AI provider, instructions, and live chat status.":"공동 진행자 페이지: 마이크, AI 제공업체, 지침, 실시간 채팅 상태.","The right-click menu doesn't work from the keyboard yet. Keyboard users can type or talk on":"오른쪽 클릭 메뉴는 아직 키보드를 지원하지 않습니다. 키보드 사용자는 다음 페이지에서 입력하거나 말할 수 있습니다:","The stage overlay isn't open on the same session. The Primary chat bot overlay toggle doesn't affect this.":"같은 세션에 무대 오버레이가 열려 있지 않습니다. Primary chat bot overlay 스위치는 이 기능과 관계없습니다.","This uses":"사용하는 기능은","To check it can hear you, open":"내 말을 들을 수 있는지 확인하려면 다음을 여세요:","Try Mini, Low reasoning, and Fast turn-taking. Compare the Latency line in Diagnostics.":"Mini, Low 추론, Fast 대화 전환을 사용해 보세요. Diagnostics의 Latency 항목을 비교하세요.","Try this":"시도할 방법","Turn it on in both the popup and Co-host Stream Controls. OBS needs at least one scene name.":"팝업과 Co-host Stream Controls 양쪽에서 켜세요. OBS에는 장면 이름이 최소 하나 필요합니다.","Turn on":"켜기:","Turn on the Private Chat Bot option, and check Social Stream is running.":"Private Chat Bot 옵션을 켜고 Social Stream이 실행 중인지 확인하세요.","Turn-taking speed":"대화 전환 속도","Two voices at once":"두 음성이 동시에 나옴","Two ways to use it":"두 가지 사용 방법","Use my own avatar":"내 아바타 사용","Use the same":"동일한 값을 사용하세요:","Viewers can't. It runs one tool per request, and can only pick scenes on your list. Featuring a message needs the Dock open. A “done” reply means the request was sent, not that OBS or the overlay finished it.":"시청자는 사용할 수 없습니다. 요청마다 도구 하나를 실행하며 목록에 있는 장면만 선택합니다. 메시지를 강조하려면 Dock이 열려 있어야 합니다. ‘완료’라는 답변은 요청이 전송되었다는 뜻이며 OBS나 오버레이에서 처리가 끝났다는 뜻은 아닙니다.","Voice co-host":"음성 공동 진행자","Voice co-host in 8 steps":"8단계로 음성 공동 진행자 사용하기","Voice co-host setup":"음성 공동 진행자 설정","Voice may not work. Typing, live chat, camera or screen, and AI replies can still work.":"음성은 작동하지 않을 수 있습니다. 텍스트 입력, 실시간 채팅, 카메라 또는 화면, AI 답변은 계속 사용할 수 있습니다.","Voice without OpenAI":"OpenAI 없이 음성 사용","Want its own audio track in OBS?":"OBS에서 별도 오디오 트랙을 쓰고 싶나요?","What it does":"역할","When the co-host page is already playing the voice, the overlay skips its own speech so you don't hear it twice.":"공동 진행자 페이지가 이미 음성을 재생 중이면 두 번 들리지 않도록 오버레이의 자체 음성을 생략합니다.","Where you run it":"실행 환경","Whisper, on your own computer. First use downloads about 42 MB. After that it works offline.":"내 컴퓨터에서 실행되는 Whisper입니다. 처음에 약 42MB를 다운로드하고 이후에는 오프라인으로 작동합니다.","Without OpenAI":"OpenAI를 사용하지 않을 때","You don't need to turn on the Private Chat Bot option for this.":"이 기능을 위해 Private Chat Bot 옵션을 켤 필요는 없습니다.","Your standard key stays in Social Stream. The co-host page only gets a short-lived pass.":"일반 키는 Social Stream 안에 보관됩니다. 공동 진행자 페이지에는 유효 기간이 짧은 인증 정보만 전달됩니다.","and turn on the same tools.":"에서 같은 도구를 켜세요.","as Social Stream and it can see your live chat. Choose how under":"를 Social Stream과 같게 하면 실시간 채팅을 볼 수 있습니다. 다음에서 방식을 선택하세요:","as the popup. Set Live Chat to anything but Off.":"를 팝업과 같게 하세요. Live Chat은 Off 이외의 값으로 설정하세요.","audio separately. The overlay doesn't replay that WebRTC audio.":"의 오디오를 별도로 캡처하세요. 오버레이는 해당 WebRTC 오디오를 다시 재생하지 않습니다.","below":"아래 항목","cohost.html control page showing media devices, AI provider settings, system instructions, and live chat status":"미디어 장치, AI 제공자 설정, 시스템 지침, 실시간 채팅 상태를 보여주는 cohost.html 제어 페이지","connected to OBS, or use an OBS Browser Source with Full Permissions.":"를 OBS에 연결하거나 Full Permissions가 있는 OBS Browser Source를 사용하세요.","control what you hear.":"설정으로 듣는 소리를 조절합니다.","for this.":"는 사용하지 마세요.","from the overlay link.":"를 오버레이 링크에서 제거하세요.","if it should speak.":"를 음성 재생이 필요할 때 사용하세요.","instead.":"를 대신 사용하세요.","is separate, and only shows for providers that can use your screen.":"는 별도 설정이며 화면을 사용할 수 있는 제공업체에서만 표시됩니다.","link from the popup. Keep that link private.":"링크를 팝업에서 가져오세요. 이 링크를 공개하지 마세요.","link.":"링크.","on":"위치:","on the co-host page and check the line appears.":"를 공동 진행자 페이지에서 열고 해당 항목이 표시되는지 확인하세요.","only feeds chat to the AI with OpenAI Realtime. Other providers watch the chat but don't pass it to the AI.":"는 OpenAI Realtime에서만 채팅을 AI에 전달합니다. 다른 제공업체는 채팅을 확인하지만 AI에 전달하지는 않습니다.","or":"또는","or a camera, OpenAI gets one picture each time you speak or type to it, not a live video. This can add cost and delay.":"또는 카메라를 선택하면 말하거나 입력할 때마다 OpenAI에 사진 한 장을 보냅니다. 실시간 영상은 아닙니다. 비용과 지연이 늘어날 수 있습니다.","payloads and targeted by label.":"페이로드로 전송되며 라벨로 대상이 지정됩니다.","pick another mode":"다른 모드를 선택하세요","selected.":"를 선택한 상태로 두세요.","shows how long replies take to start. Network and OpenAI load can still vary.":"는 답변 시작까지 걸리는 시간을 보여 줍니다. 네트워크와 OpenAI 부하에 따라 달라질 수 있습니다.","shows total token use and how fast replies start.":"는 총 토큰 사용량과 답변 시작 속도를 보여 줍니다.","stays empty (Chrome)":"항목이 비어 있음(Chrome)","stays empty (Desktop)":"항목이 비어 있음(데스크톱)","stops sending your voice to the co-host.":"는 공동 진행자에게 음성을 보내는 것을 중지합니다.","the Dock asks the private chat bot in the background, shows the draft in the Dock, and only sends it to the overlay after you click Speak.":"에서는 Dock이 백그라운드의 비공개 챗봇에 요청하고 초안을 표시한 뒤 Speak를 클릭해야 오버레이로 보냅니다.","the Dock sends the chosen message straight to":"에서는 Dock이 선택한 메시지를 다음으로 바로 보냅니다:","to OBS as a Browser Source for the avatar and speech bubble.":"를 OBS Browser Source로 추가하여 아바타와 말풍선을 표시하세요.","turns that off.":"는 해당 기능을 끕니다.","your microphone, any screen or camera you pick, and the chat messages you share go to OpenAI. Viewers can't use chat to make the co-host run tools. The co-host link expires after 12 hours, only works for your session, and is removed from the address bar once the page loads.":"마이크, 선택한 화면이나 카메라, 공유한 채팅 메시지가 OpenAI로 전송됩니다. 시청자는 채팅으로 공동 진행자의 도구를 실행할 수 없습니다. 공동 진행자 링크는 12시간 뒤 만료되고 자신의 세션에서만 작동하며, 페이지가 로드되면 주소 표시줄에서 제거됩니다."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/ai-cohost-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/ai-cohost-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/ai-cohost-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/ai-cohost-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/ai-cohost-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/ai-cohost-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/ai-cohost-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/ai-cohost-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/ai-cohost-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/ai-cohost-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/ai-cohost-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/ai-cohost-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="ai-cohost-guide.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/ai-cohost-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/ai-cohost-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/ai-cohost-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/ai-cohost-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/ai-cohost-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>AI 공동 진행자</h1>
+            <p>방송 중 대화할 수 있는 AI 조수입니다. 채팅도 읽을 수 있습니다.</p>
+        </div>
+    </section>
+
+    <main class="guide-section" id="main-content">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="이 페이지에서">
+                <a href="#two-ways">두 가지 사용 방법</a>
+                <a href="#voice-setup">음성 공동 진행자 설정</a>
+                <a href="#chat-modes">채팅을 사용하는 방식</a>
+                <a href="#other-voice">OpenAI를 사용하지 않을 때</a>
+                <a href="#dock-setup">Dock 버튼</a>
+                <a href="#speed">속도와 비용</a>
+                <a href="#stream-controls">방송 제어</a>
+                <a href="#problems">문제 해결</a>
+                <a href="#link-options">링크 옵션</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="two-ways">두 가지 사용 방법</h2>
+                <div class="cohost-picker">
+                    <div><strong>음성 공동 진행자</strong><p>다음 페이지에서 AI에게 말로 대화하세요: <code>cohost.html</code>. 음성으로 대답하며 요청하면 채팅 내용에 관해서도 이야기합니다.</p><p class="example"><a href="#voice-setup">설정하기</a></p></div>
+                    <div><strong>Dock 버튼</strong><p>Dock에서 채팅 메시지를 오른쪽 클릭하세요. AI 아바타가 읽어 주거나 답변 또는 가벼운 놀림 초안을 작성하며, 초안은 먼저 승인해야 합니다.</p><p class="example"><a href="#dock-setup">설정하기</a></p></div>
+                </div>
+                <p>둘 다 OBS에 아바타와 말풍선을 표시합니다. 사용하는 기능은 <strong>AI 무대 오버레이</strong>, <code>cohost-overlay.html</code>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-setup">8단계로 음성 공동 진행자 사용하기</h2>
+                <p>사용하는 기능은 <strong>OpenAI Realtime</strong>이므로 OpenAI API 키가 필요합니다. 다른 선택지는 다음과 같습니다: <a href="#other-voice">아래 항목</a>.</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>Social Stream 팝업에서 다음을 선택하세요: <strong>ChatGPT API</strong>, OpenAI 프로젝트 API 키를 붙여 넣고 다음을 클릭하세요: <strong>선택한 챗봇 테스트</strong>.</li>
+                        <li>다음을 여세요: <code>cohost.html</code> 링크를 팝업에서 가져오세요. 이 링크를 공개하지 마세요.</li>
+                        <li>선택: <strong>OpenAI Realtime</strong>.</li>
+                        <li>말할 때 사용할 마이크를 선택하세요. 다음 설정은 <strong>음성 응답(Audio Response)</strong> 를 선택한 상태로 두세요.</li>
+                        <li>프레스 <strong>공동 진행자 시작</strong>.</li>
+                        <li>유지: <strong>실시간 채팅</strong> 위치: <strong>문맥만(Context only)</strong>. 언제든 ‘채팅에서 무슨 이야기를 해?’라고 물어보세요.</li>
+                        <li>OBS에서 공동 진행자 페이지나 앱의 오디오를 캡처하세요. AI 음성은 그곳에서만 재생됩니다.</li>
+                        <li>추가: <code>cohost-overlay.html?session=YOUR_SESSION_ID</code> 를 OBS Browser Source로 추가하여 아바타와 말풍선을 표시하세요.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/guide-ai-cohost-controls.png" alt="미디어 장치, AI 제공자 설정, 시스템 지침, 실시간 채팅 상태를 보여주는 cohost.html 제어 페이지" class="guide-image">
+                        <figcaption>공동 진행자 페이지: 마이크, AI 제공업체, 지침, 실시간 채팅 상태.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>OBS에서 별도 오디오 트랙을 쓰고 싶나요?</strong> 다음 항목에서 가상 오디오 케이블을 선택하세요: <strong>공동 진행자 출력</strong>. 지원되는 환경에서 사용할 수 있습니다. 소리를 듣지 못하는 시청자도 따라올 수 있도록 말풍선도 표시하세요.</div>
+                <div class="guide-note"><strong>화면이나 카메라를 보여 줄까요?</strong> 선택 사항입니다. 영상의 시작 설정은 <strong>영상 없음</strong>. 다음을 선택하면 <strong>화면 공유</strong> 또는 카메라를 선택하면 말하거나 입력할 때마다 OpenAI에 사진 한 장을 보냅니다. 실시간 영상은 아닙니다. 비용과 지연이 늘어날 수 있습니다.</div>
+                <div class="warning-note"><strong>개인정보 보호:</strong> 마이크, 선택한 화면이나 카메라, 공유한 채팅 메시지가 OpenAI로 전송됩니다. 시청자는 채팅으로 공동 진행자의 도구를 실행할 수 없습니다. 공동 진행자 링크는 12시간 뒤 만료되고 자신의 세션에서만 작동하며, 페이지가 로드되면 주소 표시줄에서 제거됩니다.</div>
+                <details class="guide-extra">
+                    <summary>OpenAI Realtime 자세히 보기</summary>
+                    <ul>
+                        <li>OpenAI API 계정에 요금이 청구됩니다. chatgpt.com과 별개이며 ChatGPT 웹사이트나 앱 대화에 참여하지 않습니다.</li>
+                        <li>일반 키는 Social Stream 안에 보관됩니다. 공동 진행자 페이지에는 유효 기간이 짧은 인증 정보만 전달됩니다.</li>
+                        <li>이 기능을 위해 Private Chat Bot 옵션을 켤 필요는 없습니다.</li>
+                        <li>답변 출력은 최대 512토큰으로 제한됩니다. <strong>진단</strong> 는 총 토큰 사용량과 답변 시작 속도를 보여 줍니다.</li>
+                        <li>말하는 도중 끼어들면 재생을 멈추고 아직 재생하지 않은 오디오를 버립니다.</li>
+                        <li>기부, 멤버십, 관리자, 이벤트, 채널 정보를 포함해 최근 채팅 메시지 최대 20개를 최대 90초 유지한 뒤 잊습니다.</li>
+                        <li>연결이 끊기면 자동으로 다시 연결하고 OpenAI의 60분 제한 전에 새 세션을 시작합니다. 지침과 속도 설정은 유지되지만 음성 대화 내용은 잊습니다.</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="chat-modes">내 채팅을 사용하는 방식</h2>
+                <p>같은 설정으로 공동 진행자 페이지를 여세요: <code>session</code> 를 Social Stream과 같게 하면 실시간 채팅을 볼 수 있습니다. 다음에서 방식을 선택하세요: <strong>실시간 채팅</strong>.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Live Chat 설정</th><th>역할</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Live Chat 설정">맥락으로만 사용하고 요청 시 답변(기본값)</td><td data-label="역할">최근 메시지를 기억하며 채팅에 관해 물어볼 때까지 조용히 있습니다.</td></tr>
+                        <tr><td data-label="Live Chat 설정">질문과 멘션에 음성으로 답하기</td><td data-label="역할">질문과 멘션에 자동으로 음성 응답합니다.</td></tr>
+                        <tr><td data-label="Live Chat 설정">모든 메시지에 음성으로 답하기</td><td data-label="역할">모든 메시지에 음성으로 답합니다.</td></tr>
+                    </tbody>
+                </table>
+                <p>어떤 방식도 YouTube, Twitch 또는 Kick 채팅에 답글을 게시하지 않습니다. <strong>문맥만(Context only)</strong> 는 OpenAI Realtime에서만 채팅을 AI에 전달합니다. 다른 제공업체는 채팅을 확인하지만 AI에 전달하지는 않습니다.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="other-voice">OpenAI 없이 음성 사용</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>실행 환경</th><th>내 말을 듣는 방식</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="실행 환경">SSN 데스크톱 앱</td><td data-label="내 말을 듣는 방식">내 컴퓨터에서 실행되는 Whisper입니다. 처음에 약 42MB를 다운로드하고 이후에는 오프라인으로 작동합니다.</td></tr>
+                        <tr><td data-label="실행 환경">Chrome(확장 프로그램 링크)</td><td data-label="내 말을 듣는 방식">Chrome 음성 인식입니다. 인터넷이 필요할 수 있습니다.</td></tr>
+                        <tr><td data-label="실행 환경">다른 브라우저</td><td data-label="내 말을 듣는 방식">음성은 작동하지 않을 수 있습니다. 텍스트 입력, 실시간 채팅, 카메라 또는 화면, AI 답변은 계속 사용할 수 있습니다.</td></tr>
+                    </tbody>
+                </table>
+                <p>내 말을 들을 수 있는지 확인하려면 다음을 여세요: <strong>진단</strong>. 다음과 같이 표시되어야 합니다: <strong>듣는 중(Desktop Whisper)</strong> 또는 <strong>듣는 중(OpenAI WebRTC)</strong>. 말한 내용이 다음 항목에 표시되어야 합니다: <strong>인식한 내용(Heard)</strong>.</p>
+                <h3>테스트용 무료 AI</h3>
+                <ol class="guide-steps">
+                    <li>열기 <strong>Chat Bots and AI services &rarr; Configure LLM Service Provider</strong>.</li>
+                    <li>선택: <strong>SSN Hosted Trial LLM(실험적)</strong>.</li>
+                    <li>엔드포인트, 토큰, 모델을 비워 두세요.</li>
+                </ol>
+                <p>체험 기간에는 무료이며 중단되거나 사용량이 제한될 수 있습니다. 장기적으로 사용하려면 자신의 토큰을 추가하거나 로컬 AI를 사용하세요.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="dock-setup">5단계로 Dock 버튼 사용하기</h2>
+                <ol class="guide-steps">
+                    <li>Dock 열기: <code>dock.html?session=YOUR_SESSION_ID</code>.</li>
+                    <li>무대 오버레이를 OBS에 추가: <code>cohost-overlay.html?session=YOUR_SESSION_ID</code>. 다음을 추가합니다: <code>&amp;tts</code> 를 음성 재생이 필요할 때 사용하세요.</li>
+                    <li>팝업에서 AI 제공업체를 설정하세요. 빠르게 테스트하려면 <a href="#other-voice">SSN Hosted Trial LLM</a>.</li>
+                    <li>켜기: <strong>Chat Bots and AI services &rarr; Chat Bot - Private Interface &rarr; Enable private chat bot option</strong>.</li>
+                    <li>Dock 메시지를 마우스 오른쪽 버튼으로 클릭하고 다음을 선택하세요: <strong>공동 진행자(Co-host)</strong>.</li>
+                </ol>
+                <div class="guide-note"><strong>Co-host 메뉴가 없나요?</strong> Dock에서 같은 세션의 무대 오버레이를 감지해야 나타납니다.</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>버튼</th><th>역할</th><th>필요한 항목</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="버튼">공동 진행자로 읽기</td><td data-label="역할">아바타가 메시지를 읽습니다.</td><td data-label="필요한 항목">무대 오버레이 연결이 필요합니다. AI는 필요하지 않습니다.</td></tr>
+                        <tr><td data-label="버튼">답변(Answer)</td><td data-label="역할">승인할 수 있도록 짧은 답변 초안을 작성합니다.</td><td data-label="필요한 항목">Private Chat Bot을 켜고 AI 제공업체도 설정해야 합니다.</td></tr>
+                        <tr><td data-label="버튼">가벼운 놀림(Light Roast)</td><td data-label="역할">승인할 수 있도록 짧고 장난스러우며 가족 시청에 적합한 가벼운 놀림 초안을 작성합니다.</td><td data-label="필요한 항목">Private Chat Bot을 켜고 AI 제공업체도 설정해야 합니다.</td></tr>
+                        <tr><td data-label="버튼">말하기</td><td data-label="역할">승인한 초안을 오버레이로 보냅니다.</td><td data-label="필요한 항목">초안입니다.</td></tr>
+                        <tr><td data-label="버튼">복사</td><td data-label="역할">전송하지 않고 초안을 복사합니다.</td><td data-label="필요한 항목">초안입니다.</td></tr>
+                    </tbody>
+                </table>
+                <p>AI 초안은 다음을 클릭하기 전까지 읽어 주지 않습니다: <strong>말하기</strong>. 승인은 방송 화면에 나오지 않는 Dock에서 이루어집니다.</p>
+                <p>오른쪽 클릭 메뉴는 아직 키보드를 지원하지 않습니다. 키보드 사용자는 다음 페이지에서 입력하거나 말할 수 있습니다: <code>cohost.html</code> 를 대신 사용하세요.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="speed">속도, 품질, 비용(OpenAI)</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>설정</th><th>더 빠르고 저렴하게</th><th>더 똑똑하지만 더 느리게</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="설정">모델</td><td data-label="더 빠르고 저렴하게">Mini</td><td data-label="더 똑똑하지만 더 느리게">최고 품질(비용 증가)</td></tr>
+                        <tr><td data-label="설정">추론 강도</td><td data-label="더 빠르고 저렴하게">Minimal 또는 Low</td><td data-label="더 똑똑하지만 더 느리게">High 또는 Extra high(비용 증가)</td></tr>
+                        <tr><td data-label="설정">대화 전환 속도</td><td data-label="더 빠르고 저렴하게">Fast는 말이 끝난 뒤 약 2초 기다립니다. 잠깐 멈추면 끼어들 수 있습니다.</td><td data-label="더 똑똑하지만 더 느리게">Balanced는 약 4초, Patient는 약 8초입니다.</td></tr>
+                    </tbody>
+                </table>
+                <p>추론 설정 변경은 연결된 상태에서도 적용됩니다. <strong>진단</strong> 는 답변 시작까지 걸리는 시간을 보여 줍니다. 네트워크와 OpenAI 부하에 따라 달라질 수 있습니다.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="stream-controls">방송 제어 맡기기</h2>
+                <p>공동 진행자는 Spotify 재생, OBS 장면 전환, 채팅 메시지 강조를 할 수 있습니다. 기본값은 모두 꺼짐입니다. OpenAI Realtime은 세 기능을 모두 지원하며 SSN Configured LLM은 Spotify만 지원합니다. 다른 제공업체는 아직 지원하지 않습니다.</p>
+                <ol class="guide-steps">
+                    <li>Social Stream 팝업에서 필요한 도구만 켜세요.</li>
+                    <li>OBS에서 전환을 허용할 정확한 장면 이름을 쉼표로 구분해 입력하세요. 다음 설정은 <code>actions.html</code> 를 OBS에 연결하거나 Full Permissions가 있는 OBS Browser Source를 사용하세요.</li>
+                    <li>켜짐 <code>cohost.html</code>를 선택하고 다음을 엽니다: <strong>공동 진행자의 방송 제어</strong> 에서 같은 도구를 켜세요.</li>
+                    <li>‘BRB로 전환해’, ‘마지막 메시지를 강조해’, ‘강조 채팅을 지워’처럼 말로 요청하세요.</li>
+                </ol>
+                <div class="warning-note"><strong>도구는 본인만 실행할 수 있습니다.</strong> 시청자는 사용할 수 없습니다. 요청마다 도구 하나를 실행하며 목록에 있는 장면만 선택합니다. 메시지를 강조하려면 Dock이 열려 있어야 합니다. ‘완료’라는 답변은 요청이 전송되었다는 뜻이며 OBS나 오버레이에서 처리가 끝났다는 뜻은 아닙니다.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">문제 해결</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>문제</th><th>시도할 방법</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="문제">Dock에 Co-host 메뉴가 없음</td><td data-label="시도할 방법">같은 세션에 무대 오버레이가 열려 있지 않습니다. Primary chat bot overlay 스위치는 이 기능과 관계없습니다.</td></tr>
+                        <tr><td data-label="문제">Answer 또는 Light Roast가 비활성화됨</td><td data-label="시도할 방법">Private Chat Bot 옵션을 켜고 Social Stream이 실행 중인지 확인하세요.</td></tr>
+                        <tr><td data-label="문제">Answer, Light Roast 또는 SSN Configured LLM 시간이 초과됨</td><td data-label="시도할 방법">Social Stream이 켜져 있고 세션이 일치하며 Private Chat Bot이 켜져 있고 AI 제공업체에 연결할 수 있는지 확인하세요.</td></tr>
+                        <tr><td data-label="문제">공동 진행자 페이지에 채팅이 보이지 않음</td><td data-label="시도할 방법">동일한 값을 사용하세요: <code>session</code> 를 팝업과 같게 하세요. Live Chat은 Off 이외의 값으로 설정하세요.</td></tr>
+                        <tr><td data-label="문제">채팅을 알고 있지만 말하지 않음</td><td data-label="시도할 방법">Context only에서는 정상입니다. 채팅 내용을 물어보거나 <a href="#chat-modes">다른 모드를 선택하세요</a>.</td></tr>
+                        <tr><td data-label="문제">OBS에 아무것도 표시되지 않음</td><td data-label="시도할 방법">클릭: <strong>오버레이 테스트</strong> 를 공동 진행자 페이지에서 열고 해당 항목이 표시되는지 확인하세요.</td></tr>
+                        <tr><td data-label="문제">텍스트는 표시되지만 음성이 없음(OpenAI)</td><td data-label="시도할 방법">확인: <strong>음성 응답(Audio Response)</strong>, 브라우저 오디오 권한, OBS의 공동 진행자 페이지 오디오 캡처를 확인하세요. 이 경우에는 <code>&amp;tts</code> 는 사용하지 마세요.</td></tr>
+                        <tr><td data-label="문제">두 음성이 동시에 나옴</td><td data-label="시도할 방법">제거 <code>&amp;forcetts</code> 를 오버레이 링크에서 제거하세요.</td></tr>
+                        <tr><td data-label="문제"><strong>인식한 내용(Heard)</strong> 항목이 비어 있음(데스크톱)</td><td data-label="시도할 방법">마이크가 음소거되어 있지 않은지 확인하고 첫 다운로드가 끝날 때까지 기다리세요.</td></tr>
+                        <tr><td data-label="문제"><strong>인식한 내용(Heard)</strong> 항목이 비어 있음(Chrome)</td><td data-label="시도할 방법">마이크를 허용하고 컴퓨터의 기본 마이크, 인터넷 연결, Chrome 음성 인식 사용 가능 여부를 확인하세요.</td></tr>
+                        <tr><td data-label="문제">답변이 느림</td><td data-label="시도할 방법">Mini, Low 추론, Fast 대화 전환을 사용해 보세요. Diagnostics의 Latency 항목을 비교하세요.</td></tr>
+                        <tr><td data-label="문제">OpenAI 연결이 계속 끊김</td><td data-label="시도할 방법">다시 시도하는 동안 계속 실행해 두세요. 실패 원인은 Diagnostics에 표시됩니다.</td></tr>
+                        <tr><td data-label="문제">방송 제어 도구가 보이지 않음</td><td data-label="시도할 방법">팝업과 Co-host Stream Controls 양쪽에서 켜세요. OBS에는 장면 이름이 최소 하나 필요합니다.</td></tr>
+                        <tr><td data-label="문제">무료 체험 AI가 답하지 않음</td><td data-label="시도할 방법">꺼져 있거나 사용량 제한에 걸렸을 수 있습니다. 자신의 토큰, Ollama 또는 Custom API를 사용하세요.</td></tr>
+                        <tr><td data-label="문제">로컬 Gemma가 다운로드되지 않음</td><td data-label="시도할 방법">자신이 보관한 Gemma 파일을 사용하도록 파일 호스트를 지정하세요.</td></tr>
+                        <tr><td data-label="문제">여러 오버레이가 열려 있음</td><td data-label="시도할 방법">오버레이 라벨이 Dock의 대상과 일치하는지 확인하세요. 기본값은 <code>cohost-overlay</code>.</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra">
+                    <summary>음소거 및 볼륨 버튼</summary>
+                    <ul>
+                        <li><strong>마이크 음소거</strong> 는 공동 진행자에게 음성을 보내는 것을 중지합니다.</li>
+                        <li><strong>공동 진행자 음성 음소거</strong>, 볼륨 슬라이더, 출력 선택기, 다음 항목을 확인하세요: <strong>말하기 중지</strong> 설정으로 듣는 소리를 조절합니다.</li>
+                        <li><strong>공유 시스템 오디오 음소거</strong> 는 별도 설정이며 화면을 사용할 수 있는 제공업체에서만 표시됩니다.</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="link-options">오버레이 링크 옵션</h2>
+                <p>다음 설정을 링크 끝에 추가하세요: <code>cohost-overlay.html</code> 링크.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>원하는 작업…</th><th>링크에 추가</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="원하는 작업">내 Social Stream에 연결(필수)</td><td data-label="링크에 추가"><code>?session=YOUR_SESSION_ID</code></td></tr>
+                        <tr><td data-label="원하는 작업">오버레이가 말하게 하기(Dock 방식)</td><td data-label="링크에 추가"><code>&amp;tts</code> 또는 <code>&amp;speak=1</code></td></tr>
+                        <tr><td data-label="원하는 작업">공동 진행자 페이지가 말하는 중에도 오버레이 음성 강제 재생(음성이 하나 더 나옴)</td><td data-label="링크에 추가"><code>&amp;forcetts</code></td></tr>
+                        <tr><td data-label="원하는 작업">오버레이 라벨 설정</td><td data-label="링크에 추가"><code>&amp;label=cohost-overlay</code></td></tr>
+                        <tr><td data-label="원하는 작업">표시 이름 바꾸기</td><td data-label="링크에 추가"><code>&amp;name=NinjaBot</code></td></tr>
+                        <tr><td data-label="원하는 작업">내 아바타 사용</td><td data-label="링크에 추가"><code>&amp;avatar=https://&hellip;</code></td></tr>
+                        <tr><td data-label="원하는 작업">위치 이동</td><td data-label="링크에 추가"><code>&amp;position=bottom-right</code></td></tr>
+                        <tr><td data-label="원하는 작업">크기 바꾸기</td><td data-label="링크에 추가"><code>&amp;scale=1.2</code></td></tr>
+                        <tr><td data-label="원하는 작업">연결 상태 표시</td><td data-label="링크에 추가"><code>&amp;status</code></td></tr>
+                    </tbody>
+                </table>
+                <p>공동 진행자 페이지가 이미 음성을 재생 중이면 두 번 들리지 않도록 오버레이의 자체 음성을 생략합니다. <code>&amp;forcetts</code> 는 해당 기능을 끕니다.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="how-it-works">페이지 간 통신 방식(개발자용)</h2>
+                <details class="guide-extra">
+                    <summary>메시지 형식과 설계 참고 사항</summary>
+                    <p>Dock과 오버레이는 일반 Social Stream 세션 브리지를 사용합니다. 메시지는 다음 형식으로 전송됩니다: <code>overlayNinja</code> 페이로드로 전송되며 라벨로 대상이 지정됩니다.</p>
+                    <div class="cohost-flow">
+                        <p><strong>공동 진행자로 읽기:</strong> 에서는 Dock이 선택한 메시지를 다음으로 바로 보냅니다: <code>cohost-overlay.html</code>.</p>
+                        <p><strong>답변 / 가벼운 놀림(Answer / Light Roast):</strong> 에서는 Dock이 백그라운드의 비공개 챗봇에 요청하고 초안을 표시한 뒤 Speak를 클릭해야 오버레이로 보냅니다.</p>
+                    </div>
+                    <pre class="cohost-code">{
+  "action": "cohostOverlay",
+  "target": "cohost-overlay",
+  "meta": {
+    "command": "say",
+    "text": "The line the avatar should say",
+    "speak": true,
+    "emotion": "happy"
+  }
+}</pre>
+                    <ul>
+                        <li>Dock 텍스트 방식에서 오버레이는 이미지와 선택적인 TTS 음성을 담당합니다. OpenAI 음성은 다음을 캡처하세요: <code>cohost.html</code> 의 오디오를 별도로 캡처하세요. 오버레이는 해당 WebRTC 오디오를 다시 재생하지 않습니다.</li>
+                        <li>추가 명령 정보는 다음에 넣습니다: <code>meta</code>. 그러면 오버레이와 자동화에서 일정한 데이터 형식을 사용할 수 있습니다.</li>
+                    </ul>
+                </details>
+            </div>
+        </div>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

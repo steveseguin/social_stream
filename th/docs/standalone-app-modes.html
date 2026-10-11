@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/th/docs/standalone-app-modes.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/th/docs/standalone-app-modes.html">
+    <meta property="og:title" content="โหมดแอปแบบแยก - Social Stream Ninja">
+    <meta property="og:description" content="คู่มือเข้าใจง่ายเกี่ยวกับโหมดแหล่งข้อมูลแอป Social Stream Ninja เดสก์ท็อป โหมด Standard, WebSocket, พรีเซ็ต TikTok หน้าต่างแหล่งข้อมูล และการแก้ปัญหาแอปที่พบบ่อย">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/th/docs/standalone-app-modes.html">
+    <meta name="twitter:title" content="โหมดแอปแบบแยก - Social Stream Ninja">
+    <meta name="twitter:description" content="คู่มือเข้าใจง่ายเกี่ยวกับโหมดแหล่งข้อมูลแอป Social Stream Ninja เดสก์ท็อป โหมด Standard, WebSocket, พรีเซ็ต TikTok หน้าต่างแหล่งข้อมูล และการแก้ปัญหาแอปที่พบบ่อย">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โหมดแอปแบบแยก - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="คู่มือเข้าใจง่ายเกี่ยวกับโหมดแหล่งข้อมูลแอป Social Stream Ninja เดสก์ท็อป โหมด Standard, WebSocket, พรีเซ็ต TikTok หน้าต่างแหล่งข้อมูล และการแก้ปัญหาแอปที่พบบ่อย">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/standalone-app-modes.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{"A compatibility path that checks for updates instead of using the preferred live socket path.":"เส้นทางเพื่อความเข้ากันได้ที่ตรวจการอัปเดตเป็นระยะ แทนเส้นทางซ็อกเก็ตสดที่แนะนำ","Advanced setups.":"การตั้งค่าขั้นสูง","App is using the wrong source files:":"แอปใช้ไฟล์แหล่งข้อมูลผิด:","App-native reading and reply-support paths.":"เส้นทางอ่านและรองรับการตอบกลับแบบเนทีฟของแอป","Auto":"อัตโนมัติ","Chrome is logged in but the app is not:":"Chrome ลงชื่อเข้าใช้แล้วแต่แอปยังไม่ได้ลง:","Commands & API":"คำสั่งและ API","Common Failure Point":"จุดที่มักเกิดปัญหา","Common Fixes":"วิธีแก้ปัญหาที่พบบ่อย","Confirm the app source is activated.":"ยืนยันว่าเปิดใช้แหล่งข้อมูลในแอปแล้ว","Confirm the dock receives chat with the same session ID.":"ยืนยันว่าแผงด็อกรับแชตด้วยรหัสเซสชันเดียวกัน","Confirm the source window is signed in if the platform needs login.":"ยืนยันว่าลงชื่อเข้าใช้ในหน้าต่างแหล่งข้อมูลแล้ว หากแพลตฟอร์มต้องใช้","Download":"ดาวน์โหลด","Fallback when socket/signing paths fail.":"ตัวสำรองเมื่อเส้นทางซ็อกเก็ต/ลงลายเซ็นล้มเหลว","Features":"ฟีเจอร์","First try for most users.":"ตัวเลือกแรกสำหรับผู้ใช้ส่วนใหญ่","For a normal first attempt, add TikTok, leave the preset on Auto, activate the source, and watch the app status text.":"สำหรับการลองครั้งแรกตามปกติ ให้เพิ่ม TikTok คงพรีเซ็ต Auto เปิดใช้แหล่งข้อมูล แล้วดูข้อความสถานะในแอป","Guides":"คู่มือ","Hire":"จ้างงาน","Home":"หน้าแรก","If Chrome works but the app does not, remember that app sessions and Chrome sessions are separate.":"หาก Chrome ใช้ได้แต่แอปไม่ได้ จำไว้ว่าเซสชันแอปแยกจาก Chrome","Inspiration":"ไอเดียสร้างสรรค์","Less rich than the preferred connector.":"ข้อมูลไม่ครบเท่าตัวเชื่อมต่อที่แนะนำ","Local Signer":"ตัวลงลายเซ็นในเครื่อง (Local Signer)","Login, CAPTCHA, redirected page, or hidden chat.":"การลงชื่อเข้าใช้ CAPTCHA หน้าที่เปลี่ยนเส้นทาง หรือแชตที่ซ่อน","Main navigation":"เมนูหลัก","Mode":"โหมด","Mode Names":"ชื่อโหมด","OBS is blank:":"OBS ว่าง:","On this page":"ในหน้านี้","Only after the dock works, add or refresh the OBS overlay URL.":"หลังแผงด็อกทำงานแล้วเท่านั้น จึงเพิ่มหรือรีเฟรช URL โอเวอร์เลย์ OBS","Open navigation menu":"เปิดเมนูนำทาง","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Plain Meaning":"ความหมายแบบง่าย","Plain-English guide to Social Stream Ninja desktop app source modes, Standard mode, WebSocket mode, TikTok presets, source windows, and common app troubleshooting.":"คู่มือเข้าใจง่ายเกี่ยวกับโหมดแหล่งข้อมูลแอป Social Stream Ninja เดสก์ท็อป โหมด Standard, WebSocket, พรีเซ็ต TikTok หน้าต่างแหล่งข้อมูล และการแก้ปัญหาแอปที่พบบ่อย","Platform Setup Picker":"ตัวช่วยเลือกการตั้งค่าแพลตฟอร์ม","Polling/Compatibility":"ดึงเป็นระยะ/ความเข้ากันได้ (Polling/Compatibility)","Polling/Legacy":"ดึงเป็นระยะ/แบบเก่า (Polling/Legacy)","Provider availability, API key, room ID, or rate limits.":"ความพร้อมของผู้ให้บริการ คีย์ API รหัสห้อง หรือข้อจำกัดอัตรา","Proxy or custom signing":"พร็อกซีหรือการลงลายเซ็นกำหนดเอง","Related guide:":"คู่มือที่เกี่ยวข้อง:","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja สัญญาอนุญาต GPLv3.0","Some sources have more than one connection mode. The right mode depends on the platform, login state, and whether you need richer events or simple page capture.":"บางแหล่งข้อมูลมีโหมดเชื่อมต่อมากกว่าหนึ่งแบบ โหมดที่เหมาะขึ้นอยู่กับแพลตฟอร์ม สถานะลงชื่อเข้าใช้ และว่าต้องการเหตุการณ์ละเอียดขึ้นหรือแค่เก็บจากหน้าเว็บ","Source says active but no chat arrives:":"แหล่งข้อมูลบอกว่าทำงานแต่แชตไม่มา:","Standalone App Modes":"โหมดแอปแยก","Standalone App Modes - Social Stream Ninja":"โหมดแอปแบบแยก - Social Stream Ninja","Standalone app Add source sidebar with YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook, and TikTok source buttons":"แถบด้านข้าง Add source ของแอปแบบแยก พร้อมปุ่มแหล่งข้อมูล YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook และ TikTok","Standalone app sample source entries showing Standard and WebSocket connection mode controls, plus TikTok connection preset controls":"ตัวอย่างรายการแหล่งข้อมูลในแอปแบบแยก แสดงตัวควบคุมโหมดเชื่อมต่อ Standard และ WebSocket พร้อมพรีเซ็ตเชื่อมต่อ TikTok","Standard":"Standard","Standard and WebSocket are common source modes. TikTok has its own preset selector because it has extra app-specific connection paths.":"Standard และ WebSocket เป็นโหมดแหล่งข้อมูลทั่วไป TikTok มีตัวเลือกพรีเซ็ตของตัวเอง เพราะมีเส้นทางเชื่อมต่อเฉพาะแอปเพิ่มเติม","Standard mode can still fail if the platform changes its page layout, blocks embedded/app browsers, asks for CAPTCHA, or hides chat behind a login.":"โหมด Standard ยังล้มเหลวได้หากแพลตฟอร์มเปลี่ยนเลย์เอาต์ บล็อกเบราว์เซอร์ฝัง/ในแอป ขอ CAPTCHA หรือซ่อนแชตไว้หลังการลงชื่อเข้าใช้","Start by adding the platform source you need. The app then creates and manages that source entry.":"เริ่มจากเพิ่มแหล่งข้อมูลแพลตฟอร์มที่ต้องการ แล้วแอปจะสร้างและจัดการรายการนั้น","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Switch theme":"เปลี่ยนธีม","The app TikTok session/cookies must be valid.":"เซสชัน/คุกกี้ TikTok ในแอปต้องใช้ได้","The app chooses the best TikTok path and may fall back if one fails.":"แอปเลือกเส้นทาง TikTok ที่ดีที่สุด และอาจใช้ตัวสำรองหากเส้นทางหนึ่งล้มเหลว","The app may fall back, so check the status text.":"แอปอาจใช้ตัวสำรอง จึงควรตรวจข้อความสถานะ","The app opens a normal platform/source page and reads the rendered page.":"แอปเปิดหน้าแพลตฟอร์ม/แหล่งข้อมูลปกติและอ่านหน้าที่แสดงผล","The desktop app manages Social Stream source windows outside your normal browser. It can help with source organization and some browser-tab throttling problems. It is not the same as Chrome, and it does not automatically share your Chrome login or cookies.":"แอปเดสก์ท็อปจัดการหน้าต่างแหล่ง Social Stream นอกเบราว์เซอร์ปกติ ช่วยจัดระเบียบแหล่งข้อมูลและแก้ปัญหาแท็บถูกลดการทำงานบางอย่างได้ แอปไม่เหมือน Chrome และไม่แชร์การลงชื่อเข้าใช้หรือคุกกี้ Chrome อัตโนมัติ","The newer connector fails or a platform-specific fallback is needed.":"ตัวเชื่อมต่อใหม่ล้มเหลว หรือต้องใช้ตัวสำรองเฉพาะแพลตฟอร์ม","The platform supports it and you want better background reliability or richer event data.":"แพลตฟอร์มรองรับ และคุณต้องการให้เบื้องหลังเสถียรขึ้นหรือข้อมูลเหตุการณ์ละเอียดขึ้น","The platform works when you can see the live page or popout chat.":"แพลตฟอร์มทำงานเมื่อคุณมองเห็นหน้าไลฟ์หรือแชตแยก","The site needs you to sign in, solve a prompt, or keep a visible chat panel open.":"เว็บไซต์ต้องให้ลงชื่อเข้าใช้ ตอบคำถามยืนยัน หรือเปิดแผงแชตที่มองเห็นค้างไว้","The source connects through a platform API, socket, or Social Stream source page.":"แหล่งข้อมูลเชื่อมผ่าน API แพลตฟอร์ม ซ็อกเก็ต หรือหน้าแหล่งข้อมูล Social Stream","The source specifically supports WebSocket/API mode.":"แหล่งข้อมูลรองรับโหมด WebSocket/API โดยเฉพาะ","TikTok Auto":"TikTok อัตโนมัติ","TikTok In The App":"TikTok ในแอป","TikTok Path":"เส้นทาง TikTok","TikTok fails:":"TikTok ใช้ไม่ได้:","TikTok in the desktop app is not one single mode. Always note which preset is active before troubleshooting.":"TikTok ในแอปเดสก์ท็อปไม่ได้มีโหมดเดียว จดพรีเซ็ตที่ใช้งานอยู่ก่อนแก้ปัญหาเสมอ","Understand source windows, Standard mode, WebSocket mode, and TikTok presets.":"เข้าใจหน้าต่างแหล่งข้อมูล โหมด Standard, WebSocket และพรีเซ็ต TikTok","Use Case":"กรณีใช้งาน","Use Standard Mode When":"ใช้โหมด Standard เมื่อ","Use WebSocket Or API Mode When":"ใช้โหมด WebSocket หรือ API เมื่อ","Use When":"ใช้เมื่อ","Visible TikTok page capture.":"เก็บข้อมูลจากหน้า TikTok ที่มองเห็น","WebSocket/API":"WebSocket/API","WebSocket/API mode is not always better. If auth, tokens, provider access, or a platform API is failing, Standard mode may be the faster test.":"โหมด WebSocket/API ไม่ได้ดีกว่าเสมอ หากการยืนยันตัวตน โทเคน สิทธิ์ผู้ให้บริการ หรือ API แพลตฟอร์มมีปัญหา โหมด Standard อาจทดสอบได้เร็วกว่า","What The App Is For":"แอปมีไว้เพื่ออะไร","What To Check Before OBS":"สิ่งที่ต้องตรวจก่อน OBS","You are comparing app behavior against the Chrome extension.":"คุณกำลังเปรียบเทียบพฤติกรรมแอปกับส่วนขยาย Chrome","You are not sure which TikTok mode to use.":"คุณยังไม่แน่ใจว่าจะใช้โหมด TikTok ใด","You can handle provider tokens, account permissions, API scopes, or source-page setup.":"คุณจัดการโทเคนผู้ให้บริการ สิทธิ์บัญชี ขอบเขต API หรือการตั้งค่าหน้าแหล่งข้อมูลได้","You need event families that normal page scraping may not expose.":"คุณต้องการกลุ่มเหตุการณ์ที่การเก็บจากหน้าปกติอาจไม่แสดง","You need the most familiar troubleshooting path: open page, see chat, test dock, then OBS.":"คุณต้องการขั้นตอนแก้ปัญหาที่คุ้นเคยที่สุด: เปิดหน้า เห็นแชต ทดสอบแผงด็อก แล้วค่อย OBS","You need the simplest visible page capture, login, or manual verification.":"คุณต้องการวิธีง่ายที่สุดสำหรับเก็บจากหน้าที่มองเห็น ลงชื่อเข้าใช้ หรือยืนยันด้วยตนเอง","You want a source that can keep working better in the background.":"คุณต้องการแหล่งข้อมูลที่ทำงานเบื้องหลังได้ดีขึ้น","check the mode, source window, live URL/user name, and dock session.":"ตรวจโหมด หน้าต่างแหล่งข้อมูล URL ไลฟ์/ชื่อผู้ใช้ และเซสชันแผงด็อก","check whether the app is using packaged, cached, remote, beta, stable, or local Social Stream assets.":"ตรวจว่าแอปใช้ไฟล์ Social Stream ที่แพ็กมา แคช ระยะไกล เบต้า เสถียร หรือในเครื่อง","record the current preset, status text, app version, and whether the source switched to a fallback mode.":"จดพรีเซ็ตปัจจุบัน ข้อความสถานะ รุ่นแอป และว่าแหล่งข้อมูลสลับเป็นโหมดสำรองหรือไม่","sign in to the platform inside the app source window or use the extension as the capture path.":"ลงชื่อเข้าใช้แพลตฟอร์มในหน้าต่างแหล่งข้อมูลแอป หรือใช้ส่วนขยายเป็นเส้นทางเก็บข้อมูล","test the dock first. If the dock is empty, OBS is not the problem yet.":"ทดสอบแผงด็อกก่อน หากแผงด็อกว่าง ปัญหายังไม่ได้อยู่ที่ OBS"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/standalone-app-modes.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก"><a href="../index.html">หน้าแรก</a><a href="features.html">ฟีเจอร์</a><a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a><a href="download.html">ดาวน์โหลด</a><a href="guides.html">คู่มือ</a><a href="commands.html">คำสั่งและ API</a><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a><a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a><a href="services.html" class="site-priority-hire">จ้างงาน</a><a href="support.html">การสนับสนุน</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/standalone-app-modes.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/standalone-app-modes.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/standalone-app-modes.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/standalone-app-modes.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/standalone-app-modes.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/standalone-app-modes.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/standalone-app-modes.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/standalone-app-modes.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/standalone-app-modes.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/standalone-app-modes.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/standalone-app-modes.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/standalone-app-modes.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/standalone-app-modes.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/standalone-app-modes.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/standalone-app-modes.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/standalone-app-modes.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="standalone-app-modes.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="เปลี่ยนธีม"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>โหมดแอปแยก</h1>
+            <p>เข้าใจหน้าต่างแหล่งข้อมูล โหมด Standard, WebSocket และพรีเซ็ต TikTok</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="ในหน้านี้"><a href="#read-section-1">แอปมีไว้เพื่ออะไร</a><a href="#read-section-2">ชื่อโหมด</a><a href="#read-section-3">ใช้โหมด Standard เมื่อ</a><a href="#read-section-4">ใช้โหมด WebSocket หรือ API เมื่อ</a><a href="#tiktok-in-the-app">TikTok ในแอป</a><a href="#read-section-6">สิ่งที่ต้องตรวจก่อน OBS</a><a href="#read-section-7">วิธีแก้ปัญหาที่พบบ่อย</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">แอปมีไว้เพื่ออะไร</h2>
+                <p>แอปเดสก์ท็อปจัดการหน้าต่างแหล่ง Social Stream นอกเบราว์เซอร์ปกติ ช่วยจัดระเบียบแหล่งข้อมูลและแก้ปัญหาแท็บถูกลดการทำงานบางอย่างได้ แอปไม่เหมือน Chrome และไม่แชร์การลงชื่อเข้าใช้หรือคุกกี้ Chrome อัตโนมัติ</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-standalone-add-source.png" alt="แถบด้านข้าง Add source ของแอปแบบแยก พร้อมปุ่มแหล่งข้อมูล YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook และ TikTok" class="guide-image guide-image-narrow">
+                    <figcaption>เริ่มจากเพิ่มแหล่งข้อมูลแพลตฟอร์มที่ต้องการ แล้วแอปจะสร้างและจัดการรายการนั้น</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">ชื่อโหมด</h2>
+                <p>บางแหล่งข้อมูลมีโหมดเชื่อมต่อมากกว่าหนึ่งแบบ โหมดที่เหมาะขึ้นอยู่กับแพลตฟอร์ม สถานะลงชื่อเข้าใช้ และว่าต้องการเหตุการณ์ละเอียดขึ้นหรือแค่เก็บจากหน้าเว็บ</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-standalone-source-modes.png" alt="ตัวอย่างรายการแหล่งข้อมูลในแอปแบบแยก แสดงตัวควบคุมโหมดเชื่อมต่อ Standard และ WebSocket พร้อมพรีเซ็ตเชื่อมต่อ TikTok" class="guide-image">
+                    <figcaption>Standard และ WebSocket เป็นโหมดแหล่งข้อมูลทั่วไป TikTok มีตัวเลือกพรีเซ็ตของตัวเอง เพราะมีเส้นทางเชื่อมต่อเฉพาะแอปเพิ่มเติม</figcaption>
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>โหมด</th><th>ความหมายแบบง่าย</th><th>ใช้เมื่อ</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="โหมด">Standard</td><td data-label="ความหมายแบบง่าย">แอปเปิดหน้าแพลตฟอร์ม/แหล่งข้อมูลปกติและอ่านหน้าที่แสดงผล</td><td data-label="ใช้เมื่อ">คุณต้องการวิธีง่ายที่สุดสำหรับเก็บจากหน้าที่มองเห็น ลงชื่อเข้าใช้ หรือยืนยันด้วยตนเอง</td></tr>
+                        <tr><td data-label="โหมด">WebSocket/API</td><td data-label="ความหมายแบบง่าย">แหล่งข้อมูลเชื่อมผ่าน API แพลตฟอร์ม ซ็อกเก็ต หรือหน้าแหล่งข้อมูล Social Stream</td><td data-label="ใช้เมื่อ">แพลตฟอร์มรองรับ และคุณต้องการให้เบื้องหลังเสถียรขึ้นหรือข้อมูลเหตุการณ์ละเอียดขึ้น</td></tr>
+                        <tr><td data-label="โหมด">ดึงเป็นระยะ/แบบเก่า (Polling/Legacy)</td><td data-label="ความหมายแบบง่าย">เส้นทางเพื่อความเข้ากันได้ที่ตรวจการอัปเดตเป็นระยะ แทนเส้นทางซ็อกเก็ตสดที่แนะนำ</td><td data-label="ใช้เมื่อ">ตัวเชื่อมต่อใหม่ล้มเหลว หรือต้องใช้ตัวสำรองเฉพาะแพลตฟอร์ม</td></tr>
+                        <tr><td data-label="โหมด">TikTok อัตโนมัติ</td><td data-label="ความหมายแบบง่าย">แอปเลือกเส้นทาง TikTok ที่ดีที่สุด และอาจใช้ตัวสำรองหากเส้นทางหนึ่งล้มเหลว</td><td data-label="ใช้เมื่อ">คุณยังไม่แน่ใจว่าจะใช้โหมด TikTok ใด</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">ใช้โหมด Standard เมื่อ</h2>
+                <ul class="guide-list">
+                    <li>แพลตฟอร์มทำงานเมื่อคุณมองเห็นหน้าไลฟ์หรือแชตแยก</li>
+                    <li>เว็บไซต์ต้องให้ลงชื่อเข้าใช้ ตอบคำถามยืนยัน หรือเปิดแผงแชตที่มองเห็นค้างไว้</li>
+                    <li>คุณกำลังเปรียบเทียบพฤติกรรมแอปกับส่วนขยาย Chrome</li>
+                    <li>คุณต้องการขั้นตอนแก้ปัญหาที่คุ้นเคยที่สุด: เปิดหน้า เห็นแชต ทดสอบแผงด็อก แล้วค่อย OBS</li>
+                </ul>
+                <p>โหมด Standard ยังล้มเหลวได้หากแพลตฟอร์มเปลี่ยนเลย์เอาต์ บล็อกเบราว์เซอร์ฝัง/ในแอป ขอ CAPTCHA หรือซ่อนแชตไว้หลังการลงชื่อเข้าใช้</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">ใช้โหมด WebSocket หรือ API เมื่อ</h2>
+                <ul class="guide-list">
+                    <li>แหล่งข้อมูลรองรับโหมด WebSocket/API โดยเฉพาะ</li>
+                    <li>คุณต้องการแหล่งข้อมูลที่ทำงานเบื้องหลังได้ดีขึ้น</li>
+                    <li>คุณต้องการกลุ่มเหตุการณ์ที่การเก็บจากหน้าปกติอาจไม่แสดง</li>
+                    <li>คุณจัดการโทเคนผู้ให้บริการ สิทธิ์บัญชี ขอบเขต API หรือการตั้งค่าหน้าแหล่งข้อมูลได้</li>
+                </ul>
+                <p>โหมด WebSocket/API ไม่ได้ดีกว่าเสมอ หากการยืนยันตัวตน โทเคน สิทธิ์ผู้ให้บริการ หรือ API แพลตฟอร์มมีปัญหา โหมด Standard อาจทดสอบได้เร็วกว่า</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="tiktok-in-the-app">TikTok ในแอป</h2>
+                <p>TikTok ในแอปเดสก์ท็อปไม่ได้มีโหมดเดียว จดพรีเซ็ตที่ใช้งานอยู่ก่อนแก้ปัญหาเสมอ</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>เส้นทาง TikTok</th><th>กรณีใช้งาน</th><th>จุดที่มักเกิดปัญหา</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="เส้นทาง TikTok">อัตโนมัติ</td><td data-label="กรณีใช้งาน">ตัวเลือกแรกสำหรับผู้ใช้ส่วนใหญ่</td><td data-label="จุดที่มักเกิดปัญหา">แอปอาจใช้ตัวสำรอง จึงควรตรวจข้อความสถานะ</td></tr>
+                        <tr><td data-label="เส้นทาง TikTok">Standard</td><td data-label="กรณีใช้งาน">เก็บข้อมูลจากหน้า TikTok ที่มองเห็น</td><td data-label="จุดที่มักเกิดปัญหา">การลงชื่อเข้าใช้ CAPTCHA หน้าที่เปลี่ยนเส้นทาง หรือแชตที่ซ่อน</td></tr>
+                        <tr><td data-label="เส้นทาง TikTok">ตัวลงลายเซ็นในเครื่อง (Local Signer)</td><td data-label="กรณีใช้งาน">เส้นทางอ่านและรองรับการตอบกลับแบบเนทีฟของแอป</td><td data-label="จุดที่มักเกิดปัญหา">เซสชัน/คุกกี้ TikTok ในแอปต้องใช้ได้</td></tr>
+                        <tr><td data-label="เส้นทาง TikTok">ดึงเป็นระยะ/ความเข้ากันได้ (Polling/Compatibility)</td><td data-label="กรณีใช้งาน">ตัวสำรองเมื่อเส้นทางซ็อกเก็ต/ลงลายเซ็นล้มเหลว</td><td data-label="จุดที่มักเกิดปัญหา">ข้อมูลไม่ครบเท่าตัวเชื่อมต่อที่แนะนำ</td></tr>
+                        <tr><td data-label="เส้นทาง TikTok">พร็อกซีหรือการลงลายเซ็นกำหนดเอง</td><td data-label="กรณีใช้งาน">การตั้งค่าขั้นสูง</td><td data-label="จุดที่มักเกิดปัญหา">ความพร้อมของผู้ให้บริการ คีย์ API รหัสห้อง หรือข้อจำกัดอัตรา</td></tr>
+                    </tbody>
+                </table>
+                <p>สำหรับการลองครั้งแรกตามปกติ ให้เพิ่ม TikTok คงพรีเซ็ต Auto เปิดใช้แหล่งข้อมูล แล้วดูข้อความสถานะในแอป</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">สิ่งที่ต้องตรวจก่อน OBS</h2>
+                <ol class="guide-steps">
+                    <li>ยืนยันว่าเปิดใช้แหล่งข้อมูลในแอปแล้ว</li>
+                    <li>ยืนยันว่าลงชื่อเข้าใช้ในหน้าต่างแหล่งข้อมูลแล้ว หากแพลตฟอร์มต้องใช้</li>
+                    <li>ยืนยันว่าแผงด็อกรับแชตด้วยรหัสเซสชันเดียวกัน</li>
+                    <li>หลังแผงด็อกทำงานแล้วเท่านั้น จึงเพิ่มหรือรีเฟรช URL โอเวอร์เลย์ OBS</li>
+                    <li>หาก Chrome ใช้ได้แต่แอปไม่ได้ จำไว้ว่าเซสชันแอปแยกจาก Chrome</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-7">วิธีแก้ปัญหาที่พบบ่อย</h2>
+                <ul class="guide-list">
+                    <li><strong>Chrome ลงชื่อเข้าใช้แล้วแต่แอปยังไม่ได้ลง:</strong> ลงชื่อเข้าใช้แพลตฟอร์มในหน้าต่างแหล่งข้อมูลแอป หรือใช้ส่วนขยายเป็นเส้นทางเก็บข้อมูล</li>
+                    <li><strong>แหล่งข้อมูลบอกว่าทำงานแต่แชตไม่มา:</strong> ตรวจโหมด หน้าต่างแหล่งข้อมูล URL ไลฟ์/ชื่อผู้ใช้ และเซสชันแผงด็อก</li>
+                    <li><strong>แอปใช้ไฟล์แหล่งข้อมูลผิด:</strong> ตรวจว่าแอปใช้ไฟล์ Social Stream ที่แพ็กมา แคช ระยะไกล เบต้า เสถียร หรือในเครื่อง</li>
+                    <li><strong>TikTok ใช้ไม่ได้:</strong> จดพรีเซ็ตปัจจุบัน ข้อความสถานะ รุ่นแอป และว่าแหล่งข้อมูลสลับเป็นโหมดสำรองหรือไม่</li>
+                    <li><strong>OBS ว่าง:</strong> ทดสอบแผงด็อกก่อน หากแผงด็อกว่าง ปัญหายังไม่ได้อยู่ที่ OBS</li>
+                </ul>
+                <p>คู่มือที่เกี่ยวข้อง: <a href="platform-setup-picker.html">ตัวช่วยเลือกการตั้งค่าแพลตฟอร์ม</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja สัญญาอนุญาต GPLv3.0</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

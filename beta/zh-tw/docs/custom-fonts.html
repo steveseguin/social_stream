@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/custom-fonts.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/custom-fonts.html">
+    <meta property="og:title" content="自行託管字型與樣式 - Social Stream Ninja">
+    <meta property="og:description" content="瞭解如何自行託管字型，並使用自訂 CSS 調整 dock.html 和 featured.html 等 Social Stream Ninja 疊加畫面。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/custom-fonts.html">
+    <meta name="twitter:title" content="自行託管字型與樣式 - Social Stream Ninja">
+    <meta name="twitter:description" content="瞭解如何自行託管字型，並使用自訂 CSS 調整 dock.html 和 featured.html 等 Social Stream Ninja 疊加畫面。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自行託管字型與樣式 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="瞭解如何自行託管字型，並使用自訂 CSS 調整 dock.html 和 featured.html 等 Social Stream Ninja 疊加畫面。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/custom-fonts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"(both pages support these).":"（兩個頁面均支援）。",", and":"，以及",", and row colors (":"，以及列顏色（",", or":"，或",", plus the":"，再加上",". The browser will fall back automatically if a glyph is missing.":"。缺少某個字形時，瀏覽器會自動使用備用字型。","1) Host your font files":"1）託管字型檔案","2) Build the CSS":"2）撰寫 CSS","3) Apply it to dock.html or featured.html":"3）套用至 dock.html 或 featured.html","4) Tune the overlay text":"4）調整疊加畫面文字","5) Troubleshooting":"5）疑難排解","; mismatches are the most common issue.":"；名稱不符是最常見的問題。","API Reference":"API 參考","About":"關於","Commands & API":"指令與 API","Community":"社群","Contribute":"參與貢獻","Core typography variables used by both pages:":"兩個頁面使用的核心排版變數：","Custom Overlays":"自訂疊加畫面","Customization Guide":"自訂指南","Define the font with":"使用下列規則定義字型：","Discord":"Discord","Dock-only extras:":"僅適用於停駐面板的額外選項：","Donate":"贊助","Download":"下載","Durable options:":"適合長期使用的選項：","Featured layout tweaks:":"精選訊息版面配置調整：","Features":"功能","For quick tests you can pass CSS directly with":"快速測試時，可以直接透過下列參數傳入 CSS：","GitHub":"GitHub","GitHub Pages, Cloudflare Pages, Netlify, your own web server.":"GitHub Pages、Cloudflare Pages、Netlify 或你自己的網頁伺服器。","GitHub Repository":"GitHub 儲存庫","Guides":"指南","Hire":"聘用","Home":"首頁","How to host .ttf, .otf, or .woff2 files yourself (no Google or system font required).":"如何自行託管 .ttf、.otf 或 .woff2 檔案（無需使用 Google 字型或系統字型）。","How to load those fonts in":"如何在下列頁面中載入這些字型：","If the font does not appear, open the font URL directly in a browser to confirm it downloads and is served with HTTPS.":"如果字型沒有顯示，請直接在瀏覽器中開啟字型 URL，確認可以下載且使用 HTTPS 提供。","Inline URL param:":"行內 URL 參數：","Inspiration":"靈感","Join our Discord":"加入我們的 Discord","Keep font-family names consistent between the":"確保 font-family 名稱在下列位置保持一致：","Learn how to self-host fonts and customize Social Stream Ninja overlays like dock.html and featured.html with custom CSS.":"瞭解如何自行託管字型，並使用自訂 CSS 調整 dock.html 和 featured.html 等 Social Stream Ninja 疊加畫面。","Main navigation":"主導覽","Need multiple fonts (for Armenian + Russian + Latin)? Declare each font-face and list them in":"需要多種字型（例如亞美尼亞文、俄文和拉丁文）？分別宣告每個 font-face，並在下列屬性中列出：","OBS Browser Source:":"OBS 瀏覽器來源：","Only host fonts you are licensed to redistribute. WOFF2 files are smaller and load faster than TTF/OTF when available.":"僅託管你有權再散布的字型。如可選擇，WOFF2 檔案比 TTF／OTF 更小、載入更快。","Open navigation menu":"開啟導覽選單","Open your dock/featured URL in OBS > Browser Source > Custom CSS and paste the CSS block above.":"在 OBS 中開啟你的 dock/featured URL，前往「瀏覽器來源 > 自訂 CSS」，並貼上上方 CSS 程式碼區塊。","Overlay Gallery":"疊加畫面圖庫","Pair CSS changes with existing URL options like":"將 CSS 變更與現有 URL 選項搭配使用，例如","Privacy Policy":"隱私權政策","Product":"產品","Quick fallbacks if you want to keep using Google Fonts or installed system fonts.":"如果仍想使用 Google Fonts 或已安裝的系統字型，可採用這些快速備用方案。","Quick font switches:":"快速切換字型：","Quick options:":"快捷選項：","Reload the OBS Browser Source or refresh the dock/featured tab after changing CSS so cached fonts are re-requested.":"變更 CSS 後，重新載入 OBS 瀏覽器來源或重新整理 dock/featured 分頁，以重新請求快取的字型。","Report an Issue":"回報問題","Resources":"資源","Self-Hosted Fonts & Overlay Styling":"自行託管字型與疊加畫面樣式","Self-Hosted Fonts & Styling - Social Stream Ninja":"自行託管字型與樣式 - Social Stream Ninja","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja lets you capture, mix, and display chat from over 100 platforms in real time. Built by Steve Seguin.":"Social Stream Ninja 可即時擷取、混合並展示來自 100 多個平台的聊天內容。由 Steve Seguin 開發。","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja。GPLv3.0 授權條款。建立者：","Some hosts block hotlinking; switch to a host that allows direct file access or set the proper CORS headers.":"某些託管服務會阻止外連存取；請改用允許直接存取檔案的服務，或設定正確的 CORS 回應標頭。","Steve Seguin":"Steve Seguin","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","Templates":"範本","Terms of Service":"服務條款","The same":"相同的","These options work the same in the Chrome extension, Electron app, and the hosted site because they all load the same":"這些選項在 Chrome 擴充功能、Electron 應用程式和託管網站中的運作方式相同，因為它們都載入相同的","URL parameter (hosted CSS):":"URL 參數（託管 CSS）：","Upload the CSS to the same host as your fonts, then append":"將 CSS 上傳到與字型相同的託管服務，然後加入","Use":"使用","Use your own fonts with dock.html and featured.html, whether you load them in OBS Browser Source, the Chrome extension, or the desktop app.":"無論在 OBS 瀏覽器來源、Chrome 擴充功能還是桌面應用程式中載入 dock.html 和 featured.html，都可使用自己的字型。","What this guide covers":"本指南涵蓋的內容","Which CSS variables adjust text sizing and layout on both pages.":"哪些 CSS 變數可調整兩個頁面的文字大小和版面配置。","X":"X","You need a direct HTTPS link to the font file. Pick a host that allows hotlinking/CORS so the browser inside OBS or the app can fetch it.":"你需要字型檔案的直接 HTTPS 連結。請選擇允許外連存取／CORS 的託管服務，讓 OBS 或應用程式中的瀏覽器能夠取得該檔案。","adjust":"調整","and point it at your hosted file, then set the overlay to use it via":"並指向託管的檔案，然後透過下列屬性讓疊加畫面使用它：","applied. Self-hosted fonts work the same way via":"已套用 — 自行託管的字型也可透過下列方式使用：","blocks and":"程式碼區塊和","catbox.moe, 0x0.st, file.io (short-lived).":"catbox.moe、0x0.st、file.io（短期儲存）。","featured.html overlay message rendered in the Pacifico font with an avatar and name tag":"featured.html 疊加畫面訊息，以 Pacifico 字型呈現，帶有頭像和姓名標籤","files.":"檔案。","like":"，例如","loads Google Fonts if you prefer not to self-host.":"可載入 Google Fonts，適合不想自行託管的情況。","or":"或","or base64 encode it with":"，或使用下列參數傳入 base64 編碼的 CSS：","overlay with":"疊加畫面，套用了","to confirm a system font is visible when testing":"，在測試時確認系統字型可見","to reposition the lower-third block without editing the HTML.":"，無需編輯 HTML 即可重新定位下三分之一字幕區塊。","to the page URL:":"到頁面 URL：","uses a system font name, while":"使用系統字型名稱，而","using URL parameters or OBS custom CSS.":"，可透過 URL 參數或 OBS 自訂 CSS 實作。","variants).":"等變體）。","when you need layout adjustments in the dock.":"，用於調整停駐面板版面配置。","with contributions from the community.":"，社群共同參與貢獻。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/custom-fonts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/custom-fonts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/custom-fonts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/custom-fonts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/custom-fonts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/custom-fonts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/custom-fonts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/custom-fonts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/custom-fonts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/custom-fonts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/custom-fonts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/custom-fonts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/custom-fonts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/custom-fonts.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/custom-fonts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/custom-fonts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/custom-fonts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/custom-fonts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/custom-fonts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/custom-fonts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/custom-fonts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/custom-fonts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="custom-fonts.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/custom-fonts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/custom-fonts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/custom-fonts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/custom-fonts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/custom-fonts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/custom-fonts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/custom-fonts.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/custom-fonts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>自行託管字型與疊加畫面樣式</h1>
+            <p>無論在 OBS 瀏覽器來源、Chrome 擴充功能還是桌面應用程式中載入 dock.html 和 featured.html，都可使用自己的字型。</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>本指南涵蓋的內容</h3>
+                <ul class="guide-list">
+                    <li>如何自行託管 .ttf、.otf 或 .woff2 檔案（無需使用 Google 字型或系統字型）。</li>
+                    <li>如何在下列頁面中載入這些字型： <code>dock.html</code> 或 <code>featured.html</code> ，可透過 URL 參數或 OBS 自訂 CSS 實作。</li>
+                    <li>哪些 CSS 變數可調整兩個頁面的文字大小和版面配置。</li>
+                    <li>如果仍想使用 Google Fonts 或已安裝的系統字型，可採用這些快速備用方案。</li>
+                </ul>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/custom-font-featured-demo.png" alt="featured.html 疊加畫面訊息，以 Pacifico 字型呈現，帶有頭像和姓名標籤" class="guide-image">
+                    <figcaption>相同的 <code>featured.html</code> 疊加畫面，套用了 <code>&amp;googlefont=Pacifico</code> 已套用 — 自行託管的字型也可透過下列方式使用： <code>@font-face</code>.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>1）託管字型檔案</h3>
+                <p>你需要字型檔案的直接 HTTPS 連結。請選擇允許外連存取／CORS 的託管服務，讓 OBS 或應用程式中的瀏覽器能夠取得該檔案。</p>
+                <ul class="guide-list">
+                    <li><strong>快捷選項：</strong> catbox.moe、0x0.st、file.io（短期儲存）。</li>
+                    <li><strong>適合長期使用的選項：</strong> GitHub Pages、Cloudflare Pages、Netlify 或你自己的網頁伺服器。</li>
+                    <li>僅託管你有權再散布的字型。如可選擇，WOFF2 檔案比 TTF／OTF 更小、載入更快。</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h3>2）撰寫 CSS</h3>
+                <p>使用下列規則定義字型： <code>@font-face</code> 並指向託管的檔案，然後透過下列屬性讓疊加畫面使用它： <code>--font-family</code>.</p>
+                <div class="code-block">
+<pre>@font-face {
+  font-family: 'MyDockFont';
+  src: url('https://your-site.example/fonts/MyDockFont.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* Optional second weight */
+@font-face {
+  font-family: 'MyDockFont';
+  src: url('https://your-site.example/fonts/MyDockFont-Bold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+}
+
+:root {
+  --font-family: 'MyDockFont', 'Segoe UI', 'Arial Unicode MS', sans-serif;
+  --comment-font-size: 28px;
+  --author-font-size: 24px;
+  --message-line-height: 32px;
+}</pre>
+                </div>
+                <div class="guide-note">
+                    <p>需要多種字型（例如亞美尼亞文、俄文和拉丁文）？分別宣告每個 font-face，並在下列屬性中列出： <code>--font-family</code> ，例如 <code>'FontA', 'FontB', 'FontC', sans-serif</code>。缺少某個字形時，瀏覽器會自動使用備用字型。</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h3>3）套用至 dock.html 或 featured.html</h3>
+                <ul class="guide-list">
+                    <li><strong>OBS 瀏覽器來源：</strong> 在 OBS 中開啟你的 dock/featured URL，前往「瀏覽器來源 &gt; 自訂 CSS」，並貼上上方 CSS 程式碼區塊。</li>
+                    <li><strong>URL 參數（託管 CSS）：</strong> 將 CSS 上傳到與字型相同的託管服務，然後加入 <code>&css=https://your-site.example/my-font.css</code> 到頁面 URL：
+                        <div class="code-block"><pre>https://socialstream.ninja/dock.html?session=YOURSESSION&css=https://your-site.example/my-font.css
+https://socialstream.ninja/featured.html?session=YOURSESSION&css=https://your-site.example/my-font.css</pre></div>
+                    </li>
+                    <li><strong>行內 URL 參數：</strong> 快速測試時，可以直接透過下列參數傳入 CSS： <code>&css=</code> ，或使用下列參數傳入 base64 編碼的 CSS： <code>&b64css=</code> （兩個頁面均支援）。</li>
+                    <li><strong>快速切換字型：</strong> <code>&font=YourInstalledFont</code> 使用系統字型名稱，而 <code>&googlefont=Noto+Sans+Armenian,Noto+Sans</code> 可載入 Google Fonts，適合不想自行託管的情況。</li>
+                </ul>
+                <div class="guide-note">
+                    <p>這些選項在 Chrome 擴充功能、Electron 應用程式和託管網站中的運作方式相同，因為它們都載入相同的 <code>dock.html</code>/<code>featured.html</code> 檔案。</p>
+                </div>
+			</div>
+
+			<div class="guide-card">
+				<h3>4）調整疊加畫面文字</h3>
+				<p>兩個頁面使用的核心排版變數：</p>
+				<div class="code-block">
+<pre>:root {
+  --font-family: 'MyDockFont', 'FontB', sans-serif;
+  --comment-font-size: 28px;  /* message text size */
+  --author-font-size: 24px;   /* name text size */
+  --comment-font-weight: 600; /* featured.html */
+  --author-font-weight: 700;  /* featured.html */
+  --message-font-weight: 500; /* dock.html */
+  --name-font-weight: 700;    /* dock.html */
+  --comment-color: #ffffff;
+  --author-color: #ffe08a;
+  --comment-bg-color: #161616;
+  --author-bg-color: #202020;
+}</pre>
+				</div>
+				<p><strong>僅適用於停駐面板的額外選項：</strong> <code>--stylized-emoji</code>, <code>--stylized-img</code>, <code>--text-stroke-width</code>, <code>--text-shadow</code>，以及列顏色（<code>--highlight-base</code>, <code>--highlight-base2</code>，再加上 <code>compact</code> 等變體）。</p>
+				<p><strong>精選訊息版面配置調整：</strong> 調整 <code>--comment-width</code>, <code>--comment-padding</code>, <code>--comment-area-bottom</code>，以及 <code>--comment-area-height</code> ，無需編輯 HTML 即可重新定位下三分之一字幕區塊。</p>
+				<p>將 CSS 變更與現有 URL 選項搭配使用，例如 <code>&scale</code>, <code>&compact</code>，或 <code>&hidesource</code> ，用於調整停駐面板版面配置。</p>
+			</div>
+
+            <div class="guide-card">
+                <h3>5）疑難排解</h3>
+                <ul class="guide-list">
+                    <li>如果字型沒有顯示，請直接在瀏覽器中開啟字型 URL，確認可以下載且使用 HTTPS 提供。</li>
+                    <li>某些託管服務會阻止外連存取；請改用允許直接存取檔案的服務，或設定正確的 CORS 回應標頭。</li>
+                    <li>變更 CSS 後，重新載入 OBS 瀏覽器來源或重新整理 dock/featured 分頁，以重新請求快取的字型。</li>
+                    <li>使用 <code>https://socialstream.ninja/fonts.html</code> ，在測試時確認系統字型可見 <code>&font=</code>.</li>
+                    <li>確保 font-family 名稱在下列位置保持一致： <code>@font-face</code> 程式碼區塊和 <code>--font-family</code>；名稱不符是最常見的問題。</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>關於</h3>
+                    <p>Social Stream Ninja 可即時擷取、混合並展示來自 100 多個平台的聊天內容。由 Steve Seguin 開發。</p>
+                    <div class="social-links">
+                        <a href="https://discord.socialstream.ninja" target="_blank" aria-label="Discord">
+                            <img src="../../icons/discord.svg" alt="Discord">
+                        </a>
+                        <a href="https://x.com/ninjafytools" target="_blank" aria-label="X">
+                            <img src="../../icons/x.svg" alt="X">
+                        </a>
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank" aria-label="GitHub">
+                            <img src="../../icons/github.svg" alt="GitHub">
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>產品</h3>
+                    <ul>
+                        <li><a href="../index.html">首頁</a></li>
+                        <li><a href="features.html">功能</a></li>
+                        <li><a href="download.html">下載</a></li>
+                        <li><a href="guides.html">指南</a></li>
+                        <li><a href="commands.html">指令與 API</a></li>
+                        <li><a href="supported-sites.html">支援的網站</a></li>
+                        <li><a href="templates.html">範本</a></li>
+                        <li><a href="support.html">支援</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>資源</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-customization">自訂指南</a></li>
+                        <li><a href="../../docs/customoverlays.md">自訂疊加畫面</a></li>
+                        <li><a href="../../api.md">API 參考</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">回報問題</a></li>
+                        <li><a href="../privacy.html">隱私權政策</a></li>
+                        <li><a href="../TOS.html">服務條款</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>社群</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">加入我們的 Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub 儲存庫</a></li>
+                        <li><a href="support.html#contribute">參與貢獻</a></li>
+                        <li><a href="https://github.com/sponsors/steveseguin" target="_blank">贊助</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 授權條款。建立者： <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> ，社群共同參與貢獻。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

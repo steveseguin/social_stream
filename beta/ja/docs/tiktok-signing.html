@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ja/docs/tiktok-signing.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ja/docs/tiktok-signing.html">
+    <meta property="og:title" content="TikTokの署名 - Social Stream Ninja">
+    <meta property="og:description" content="TikTok署名サーバーの役割、デスクトップアプリにSign server unavailableと表示される理由、解決方法を説明します。レート制限の解除を待つ、Euler APIキーを追加する、モードを切り替える方法があります。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ja/docs/tiktok-signing.html">
+    <meta name="twitter:title" content="TikTokの署名 - Social Stream Ninja">
+    <meta name="twitter:description" content="TikTok署名サーバーの役割、デスクトップアプリにSign server unavailableと表示される理由、解決方法を説明します。レート制限の解除を待つ、Euler APIキーを追加する、モードを切り替える方法があります。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTokの署名 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="TikTok署名サーバーの役割、デスクトップアプリにSign server unavailableと表示される理由、解決方法を説明します。レート制限の解除を待つ、Euler APIキーを追加する、モードを切り替える方法があります。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/tiktok-signing.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{"\"Sign Server Unavailable\"":"「Sign Server Unavailable」（署名サーバーを利用できません）","). Repeatedly deleting and re-adding the source, or rapidly switching modes, burns through the quota and keeps the error going.":"）。ソースの削除と再追加を繰り返したり、短時間にモードを切り替えたりすると、割り当てを使い切り、エラーが続きます。",", and":"、および",", called":"（旧称：",". No account or API key is needed for normal use. The app uses Euler's free tier automatically.":"。通常の使用にアカウントやAPIキーは不要です。アプリがEulerの無料枠を自動的に使用します。","Add Your Own Euler API Key":"自分のEuler APIキーを追加する","After an Euler connection fails, the desktop app checks TikTok directly without using Euler quota. If it cannot reconnect, Euler mode pauses; Auto tries the available non-Euler methods instead.":"After an Euler connection fails, the desktop app checks TikTok directly without using Euler quota. If it cannot reconnect, Euler mode pauses; Auto tries the available non-Euler methods instead.","Because this service sits between the app and TikTok, TikTok sources can stop working even when nothing is wrong on your end: the sign server may be down, rate-limited, or temporarily broken by a TikTok-side change.":"このサービスはアプリとTikTokの間にあるため、自分の環境に問題がなくてもTikTokソースが止まることがあります。署名サーバーの停止、レート制限、TikTok側の変更による一時的な不具合などが原因になります。","Choose":"選ぶ項目：","Commands & API":"コマンドとAPI","Compatibility (WebSocket)":"互換モード（WebSocket）","Create a free account and key at the":"次で無料のアカウントとキーを作成します：","Download":"ダウンロード","Euler Proxy (API Key)":"Euler Proxy（API Key）","Euler Signing (Advanced)":"Euler Signing（Advanced）","Euler Stream":"Euler Stream","Euler Stream dashboard":"Euler Streamダッシュボード","Euler is occasionally down or overloaded. This usually resolves within hours and needs no changes on your side.":"Eulerは時々停止したり過負荷になったりします。通常は数時間以内に解消し、自分の設定を変更する必要はありません。","Euler's rate limits":"Eulerのレート制限","Features":"機能","Guides":"ガイド","Hire":"仕事を依頼する","Home":"ホーム","How It Works":"仕組み","If you hit rate limits often, add your own free Euler API key (below).":"頻繁にレート制限にかかる場合は、自分の無料Euler APIキーを追加してください（下記参照）。","In the desktop app, edit your TikTok source and open the connection preset picker.":"デスクトップアプリでTikTokソースを編集し、接続プリセットの選択欄を開きます。","Inspiration":"活用アイデア","Loads the TikTok live page and captures chat from it. No signing service involved.":"TikTokライブページを読み込み、そこからチャットを取得します。署名サービスは使用しません。","Local Signer":"ローカル署名（Local Signer）","Main navigation":"メインナビゲーション","Make sure you are on the latest app version. TikTok fixes ship frequently.":"アプリが最新版か確認してください。TikTok向けの修正は頻繁に提供されています。","Mode":"モード","Modes That Avoid the Sign Server":"署名サーバーを使わないモード","Needs the live page to stay open; may prompt for TikTok login or verification.":"ライブページを開いたままにする必要があり、TikTokのログインや確認操作を求められる場合があります。","Note that Euler Proxy mode never supports replies, regardless of sign-in state.":"Euler Proxyモードは、ログイン状態に関係なく返信に対応していません。","On this page":"このページの内容","Open navigation menu":"ナビゲーションメニューを開く","Overlay Gallery":"オーバーレイギャラリー","Polling":"ポーリング（Polling）","Rate limits.":"レート制限。","Reconnect the source once after saving.":"保存後にソースを1回だけ再接続します。","Related":"関連情報","Sending Replies To TikTok":"TikTokへ返信する","Sending chat messages from the dock back to TikTok requires being signed into your TikTok account inside the desktop app. The app needs your TikTok session to post as you. If you are not signed in, or the TikTok connection is down, outgoing messages will only reach your other platforms.":"ドックからTikTokへチャットメッセージを送るには、デスクトップアプリ内でTikTokアカウントにログインする必要があります。アプリがあなたとして投稿するためにTikTokセッションを使います。ログインしていない場合やTikTok接続が切れている場合、送信メッセージは他のプラットフォームにしか届きません。","Sign server outage.":"署名サーバーの障害。","Signs requests locally in a lightweight TikTok window instead of using Euler.":"Eulerの代わりに、軽量なTikTokウィンドウでリクエストにローカル署名します。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0ライセンス。","Standard":"標準（Standard）","Support":"サポート","Supported Sites":"対応サイト","Switch the TikTok source to":"TikTokソースを次へ切り替えます：","Switch theme":"テーマを切り替え","The free tier is limited per IP address (a few connections per minute, with hourly and daily caps; see":"無料枠はIPアドレスごとに制限されます（毎分数接続で、時間単位と日単位の上限もあります。参照：","This status means the app could not get a valid signature from the signing service. Common causes:":"このステータスは、アプリが署名サービスから有効な署名を取得できなかったことを意味します。よくある原因：","TikTok Signing":"TikTokの署名","TikTok Signing - Social Stream Ninja":"TikTokの署名 - Social Stream Ninja","TikTok app modes":"TikTokのアプリモード","TikTok changes.":"TikTokの変更。","TikTok guide":"TikTokガイド","TikTok quick start":"TikTokクイックスタート","TikTok requires connection requests to its live chat feed to be cryptographically signed. The desktop app signs these requests through a third-party signing service run by":"TikTokでは、ライブチャットフィードへの接続リクエストに暗号学的な署名が必要です。デスクトップアプリは、次が運営する第三者の署名サービスを通じて署名します：","Trade-offs":"考慮する点","What Is TikTok Signing?":"TikTokの署名とは？","What the TikTok sign server is, why the desktop app says Sign server unavailable, and how to fix it: wait out rate limits, add an Euler API key, or switch modes.":"TikTok署名サーバーの役割、デスクトップアプリにSign server unavailableと表示される理由、解決方法を説明します。レート制限の解除を待つ、Euler APIキーを追加する、モードを切り替える方法があります。","What the sign server is, why it sometimes fails, and how to get reconnected.":"署名サーバーの役割、失敗することがある理由、再接続する方法を説明します。","What to do, in order:":"順番に試すこと：","When Euler retries are paused, activate the source to try again. If you reached an Euler rate limit, wait for that limit to reset first.":"When Euler retries are paused, activate the source to try again. If you reached an Euler rate limit, wait for that limit to reset first.","When TikTok updates its live infrastructure, signing can break for everyone until Euler ships a fix.":"TikTokがライブ配信の基盤を更新すると、Eulerが修正するまで全ユーザーの署名が動作しなくなる場合があります。","Works best signed into TikTok inside the app; anonymous mode can miss some chat.":"アプリ内でTikTokにログインすると最も安定します。匿名モードでは一部のチャットを取得できない場合があります。","Your own key gives you a dedicated quota instead of sharing the anonymous per-IP allowance.":"自分のキーを使うと、匿名ユーザー向けのIP単位の枠を共有する代わりに、専用の割り当てを利用できます。","also works but does not support sending replies.":"も動作しますが、返信の送信には対応していません。","and paste your API key.":"を選び、APIキーを貼り付けます。","in older app versions, uses a signed WebSocket in the current desktop app. It does not provide unsigned HTTP polling and cannot send replies. It uses Euler signing, so it is also affected by that service's outages and limits.":"）は、現在のデスクトップアプリでは署名付きWebSocketを使用します。署名なしのHTTPポーリングは提供せず、返信もできません。Eulerの署名を使うため、そのサービスの障害や制限の影響も受けます。","mode (page capture) as a reliable stopgap. It loads the live page directly and does not use the sign server at all.":"モード（ページ取得）を安定した一時的な代替手段として使えます。ライブページを直接読み込み、署名サーバーを一切使いません。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tiktok-signing.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション"><a href="../index.html">ホーム</a><a href="features.html">機能</a><a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a><a href="download.html">ダウンロード</a><a href="guides.html">ガイド</a><a href="commands.html">コマンドとAPI</a><a href="supported-sites.html">対応サイト</a><a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a><a href="services.html" class="site-priority-hire">仕事を依頼する</a><a href="support.html">サポート</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tiktok-signing.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tiktok-signing.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tiktok-signing.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tiktok-signing.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tiktok-signing.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tiktok-signing.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="tiktok-signing.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tiktok-signing.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tiktok-signing.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tiktok-signing.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tiktok-signing.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tiktok-signing.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tiktok-signing.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tiktok-signing.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tiktok-signing.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tiktok-signing.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tiktok-signing.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="テーマを切り替え"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>TikTokの署名</h1><p>署名サーバーの役割、失敗することがある理由、再接続する方法を説明します。</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="このページの内容"><a href="#read-section-1">TikTokの署名とは？</a><a href="#read-section-2">「Sign Server Unavailable」（署名サーバーを利用できません）</a><a href="#read-section-3">自分のEuler APIキーを追加する</a><a href="#read-section-4">署名サーバーを使わないモード</a><a href="#read-section-5">TikTokへ返信する</a><a href="#read-section-6">関連情報</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">TikTokの署名とは？</h2>
+                <p>TikTokでは、ライブチャットフィードへの接続リクエストに暗号学的な署名が必要です。デスクトップアプリは、次が運営する第三者の署名サービスを通じて署名します： <a href="https://www.eulerstream.com/" target="_blank" rel="noopener">Euler Stream</a>。通常の使用にアカウントやAPIキーは不要です。アプリがEulerの無料枠を自動的に使用します。</p>
+                <p>このサービスはアプリとTikTokの間にあるため、自分の環境に問題がなくてもTikTokソースが止まることがあります。署名サーバーの停止、レート制限、TikTok側の変更による一時的な不具合などが原因になります。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">「Sign Server Unavailable」（署名サーバーを利用できません）</h2>
+                <p>このステータスは、アプリが署名サービスから有効な署名を取得できなかったことを意味します。よくある原因：</p>
+                <ul class="guide-list">
+                    <li><strong>レート制限。</strong> 無料枠はIPアドレスごとに制限されます（毎分数接続で、時間単位と日単位の上限もあります。参照： <a href="https://www.eulerstream.com/docs/api/rate-limits" target="_blank" rel="noopener">Eulerのレート制限</a>）。ソースの削除と再追加を繰り返したり、短時間にモードを切り替えたりすると、割り当てを使い切り、エラーが続きます。</li>
+                    <li><strong>署名サーバーの障害。</strong> Eulerは時々停止したり過負荷になったりします。通常は数時間以内に解消し、自分の設定を変更する必要はありません。</li>
+                    <li><strong>TikTokの変更。</strong> TikTokがライブ配信の基盤を更新すると、Eulerが修正するまで全ユーザーの署名が動作しなくなる場合があります。</li>
+                </ul>
+                <p>順番に試すこと：</p>
+                <ul class="guide-list">
+                    <li>After an Euler connection fails, the desktop app checks TikTok directly without using Euler quota. If it cannot reconnect, Euler mode pauses; Auto tries the available non-Euler methods instead.</li>
+                    <li>When Euler retries are paused, activate the source to try again. If you reached an Euler rate limit, wait for that limit to reset first.</li>
+                    <li>アプリが最新版か確認してください。TikTok向けの修正は頻繁に提供されています。</li>
+                    <li>TikTokソースを次へ切り替えます： <strong>標準（Standard）</strong> モード（ページ取得）を安定した一時的な代替手段として使えます。ライブページを直接読み込み、署名サーバーを一切使いません。</li>
+                    <li>頻繁にレート制限にかかる場合は、自分の無料Euler APIキーを追加してください（下記参照）。</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">自分のEuler APIキーを追加する</h2>
+                <p>自分のキーを使うと、匿名ユーザー向けのIP単位の枠を共有する代わりに、専用の割り当てを利用できます。</p>
+                <ul class="guide-list">
+                    <li>次で無料のアカウントとキーを作成します： <a href="https://www.eulerstream.com/dashboard" target="_blank" rel="noopener">Euler Streamダッシュボード</a>.</li>
+                    <li>デスクトップアプリでTikTokソースを編集し、接続プリセットの選択欄を開きます。</li>
+                    <li>選ぶ項目： <strong>Euler Signing（Advanced）</strong> を選び、APIキーを貼り付けます。 <strong>Euler Proxy（API Key）</strong> も動作しますが、返信の送信には対応していません。</li>
+                    <li>保存後にソースを1回だけ再接続します。</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">署名サーバーを使わないモード</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>モード</th><th>仕組み</th><th>考慮する点</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="モード">標準（Standard）</td><td data-label="仕組み">TikTokライブページを読み込み、そこからチャットを取得します。署名サービスは使用しません。</td><td data-label="考慮する点">ライブページを開いたままにする必要があり、TikTokのログインや確認操作を求められる場合があります。</td></tr>
+                        <tr><td data-label="モード">ローカル署名（Local Signer）</td><td data-label="仕組み">Eulerの代わりに、軽量なTikTokウィンドウでリクエストにローカル署名します。</td><td data-label="考慮する点">アプリ内でTikTokにログインすると最も安定します。匿名モードでは一部のチャットを取得できない場合があります。</td></tr>
+                    </tbody>
+                </table>
+                <p><strong>互換モード（WebSocket）</strong>（旧称： <strong>ポーリング（Polling）</strong> ）は、現在のデスクトップアプリでは署名付きWebSocketを使用します。署名なしのHTTPポーリングは提供せず、返信もできません。Eulerの署名を使うため、そのサービスの障害や制限の影響も受けます。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">TikTokへ返信する</h2>
+                <p>ドックからTikTokへチャットメッセージを送るには、デスクトップアプリ内でTikTokアカウントにログインする必要があります。アプリがあなたとして投稿するためにTikTokセッションを使います。ログインしていない場合やTikTok接続が切れている場合、送信メッセージは他のプラットフォームにしか届きません。</p>
+                <p>Euler Proxyモードは、ログイン状態に関係なく返信に対応していません。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">関連情報</h2>
+                <p><a href="tiktok-app-modes-guide.html">TikTokのアプリモード</a>, <a href="tiktok-guide.html">TikTokガイド</a>、および <a href="tiktok-quick-start.html">TikTokクイックスタート</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0ライセンス。</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

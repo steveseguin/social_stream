@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ko/docs/hype-train-top-bar.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/ko/docs/hype-train-top-bar.html">
+    <meta property="og:title" content="하이프 열차 상단 바 가이드 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja Twitch 하이프 열차 상단 바 오버레이를 OBS에 추가하고 생방송 전에 테스트하는 방법입니다.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ko/docs/hype-train-top-bar.html">
+    <meta name="twitter:title" content="하이프 열차 상단 바 가이드 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja Twitch 하이프 열차 상단 바 오버레이를 OBS에 추가하고 생방송 전에 테스트하는 방법입니다.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>하이프 열차 상단 바 가이드 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja Twitch 하이프 열차 상단 바 오버레이를 OBS에 추가하고 생방송 전에 테스트하는 방법입니다.">
+    <style>
+        .guide-image {
+            display: block;
+            width: 100%;
+            max-width: 1100px;
+            margin: 1.5rem auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .quick-note {
+            background: rgba(26, 115, 232, 0.08);
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 1.4rem 1.6rem;
+            margin: 1.5rem 0;
+        }
+
+        .dark-mode .quick-note {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .warning-note {
+            background: rgba(251, 188, 5, 0.14);
+            border-left-color: #f9ab00;
+        }
+
+        .dark-mode .warning-note {
+            background: rgba(251, 188, 5, 0.2);
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/hype-train-top-bar.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", which makes the overlay focus on Hype Train and Treasure Train events.":", 오버레이가 하이프 열차와 보물 열차 이벤트에 집중하게 합니다.","A Hype Train will not appear in the normal chat overlay. Use the Hype Train Top Bar, the Meta Data Bar, or":"하이프 열차는 일반 채팅 오버레이에 나타나지 않습니다. Hype Train Top Bar, Meta Data Bar 또는 다음을 사용하세요:","Add a Twitch-style Hype Train progress bar to OBS, test it before going live, and know what to check if it does not appear.":"Twitch 스타일의 하이프 열차 진행 표시줄을 OBS에 추가하고 생방송 전에 테스트하며 표시되지 않을 때 확인할 사항을 알아보세요.","Add that link to OBS as a Browser Source.":"해당 링크를 OBS 브라우저 소스로 추가하세요.","Add the Hype Train Top Bar as a browser source, not as a normal chat overlay.":"Hype Train Top Bar를 일반 채팅 오버레이가 아닌 브라우저 소스로 추가하세요.","Align overlay to the center:":"오버레이 가운데 정렬:","Align overlay to the right-side:":"오버레이 오른쪽 정렬:","Before you start":"시작하기 전","Commands & API":"명령 및 API","Confirm the URL includes":"URL에 다음이 포함되어 있는지 확인하세요:","Confirm the copied overlay URL has the same session ID as the Social Stream Ninja popup.":"복사한 오버레이 URL의 세션 ID가 Social Stream Ninja 팝업과 같은지 확인하세요.","Confirm your Twitch account was re-authorized after Hype Train support was added.":"하이프 열차 지원이 추가된 뒤 Twitch 계정을 다시 승인했는지 확인하세요.","Copy the":"복사:","Custom page background color:":"사용자 지정 페이지 배경색:","Customize the bar":"표시줄 맞춤 설정","Disable text outlining:":"텍스트 외곽선 비활성화:","Download":"다운로드","Event Reference":"이벤트 참고 문서","Fake Hype Train":"가상 하이프 열차","Features":"기능","Find":"찾기:","Guides":"가이드","Hire":"작업 의뢰","Home":"홈","How to add the Social Stream Ninja Twitch Hype Train top bar overlay to OBS and test it before going live.":"Social Stream Ninja Twitch 하이프 열차 상단 바 오버레이를 OBS에 추가하고 생방송 전에 테스트하는 방법입니다.","Hype Meter and Viewer Count":"하이프 미터 및 시청자 수","Hype Train Top Bar":"하이프 열차 상단 바","Hype Train Top Bar Guide":"하이프 열차 상단 바 가이드","Hype Train Top Bar Guide - Social Stream Ninja":"하이프 열차 상단 바 가이드 - Social Stream Ninja","Hype Train Top Bar preview showing progress, level, timer, and contributors":"진행률, 레벨, 타이머, 기여자가 표시된 하이프 열차 상단 바 미리보기","If it does not show":"표시되지 않을 때","If prompted, re-authorize Twitch so Social Stream Ninja can request the":"요청하면 Twitch를 다시 승인해 Social Stream Ninja가 다음 범위를 요청할 수 있게 하세요:","Important:":"중요:","Inspiration":"아이디어","It does not show normal chat messages. Hype Train data is metadata-only, so the bar updates when Twitch sends a Hype Train event.":"일반 채팅 메시지는 표시하지 않습니다. 하이프 열차 데이터는 메타데이터 전용이므로 Twitch가 하이프 열차 이벤트를 보내면 표시줄이 업데이트됩니다.","Main navigation":"기본 탐색 메뉴","Open":"열기","Open navigation menu":"탐색 메뉴 열기","Open the Social Stream Ninja popup.":"Social Stream Ninja 팝업을 여세요.","Overlay Gallery":"오버레이 갤러리","Panel opacity:":"패널 불투명도:","Resources":"자료","Scale multiplier:":"배율:","Set it up from the popup":"팝업에서 설정","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja popup showing Hype Train Top Bar link and layout options":"Hype Train Top Bar 링크와 레이아웃 옵션이 보이는 Social Stream Ninja 팝업","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Test with the":"다음으로 테스트하세요:","Testing options":"테스트 옵션","The Hype Train Top Bar is a dedicated overlay for Twitch Hype Train and Treasure Train events. It shows the current level, progress, total, timer, and top contributors in a top-bar style layout.":"Hype Train Top Bar는 Twitch 하이프 열차 및 보물 열차 이벤트용 전용 오버레이입니다. 현재 레벨, 진행량, 총량, 타이머, 상위 기여자를 상단 바 형태로 표시합니다.","The Hype Train Top Bar options work like the other overlay options in the popup. Toggle an option, then copy the updated link again.":"Hype Train Top Bar 옵션은 팝업의 다른 오버레이 옵션처럼 작동합니다. 옵션을 전환한 뒤 업데이트된 링크를 다시 복사하세요.","The copied URL includes":"복사한 URL에는 다음이 포함됩니다:","Tip:":"팁:","Transparent bar background:":"투명한 표시줄 배경:","Use":"사용:","Use Twitch WebSocket mode for Twitch event capture.":"Twitch 이벤트 캡처에는 Twitch WebSocket 모드를 사용하세요.","Use the":"사용:","What this overlay does":"이 오버레이의 기능","adjusts the whole bar opacity.":"는 표시줄 전체의 불투명도를 조정합니다.","and select a Hype Train preset if you want to test through the API route.":"그리고 API 경로로 테스트하려면 Hype Train 사전 설정을 선택하세요.","button to confirm the bar appears.":"버튼으로 표시줄이 나타나는지 확인하세요.","button.":"버튼.","centers the bar horizontally.":"는 표시줄을 가로 방향 중앙에 배치합니다.","if you want to confirm the raw Twitch Hype Train event is being received.":"로 원본 Twitch 하이프 열차 이벤트가 수신되는지 확인하세요.","in the popup for the quickest test.":"를 팝업에서 사용하면 가장 빠르게 테스트할 수 있습니다.","link.":"링크.","makes the bar smaller or larger.":"는 표시줄을 더 작게 또는 크게 만듭니다.","places the bar against the right edge.":"는 표시줄을 오른쪽 가장자리에 배치합니다.","removes the black text shadow.":"는 검은 텍스트 그림자를 제거합니다.","removes the filled background behind the bar.":"는 표시줄 뒤의 채워진 배경을 제거합니다.","scope.":"범위.","to see it.":"로 확인하세요.","useful when testing outside OBS or when you want a non-transparent page background.":"OBS 외부에서 테스트하거나 투명하지 않은 페이지 배경을 원할 때 유용합니다.","with the same session to verify Hype Train metadata is arriving.":"를 같은 세션으로 열어 하이프 열차 메타데이터가 도착하는지 확인하세요.","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja. 모든 권리 보유."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/hype-train-top-bar.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/hype-train-top-bar.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/hype-train-top-bar.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/hype-train-top-bar.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/hype-train-top-bar.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/hype-train-top-bar.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/hype-train-top-bar.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/hype-train-top-bar.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/hype-train-top-bar.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/hype-train-top-bar.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/hype-train-top-bar.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/hype-train-top-bar.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="hype-train-top-bar.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/hype-train-top-bar.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/hype-train-top-bar.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/hype-train-top-bar.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/hype-train-top-bar.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/hype-train-top-bar.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>하이프 열차 상단 바 가이드</h1>
+            <p>Twitch 스타일의 하이프 열차 진행 표시줄을 OBS에 추가하고 생방송 전에 테스트하며 표시되지 않을 때 확인할 사항을 알아보세요.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <h3>이 오버레이의 기능</h3>
+                    <p>Hype Train Top Bar는 Twitch 하이프 열차 및 보물 열차 이벤트용 전용 오버레이입니다. 현재 레벨, 진행량, 총량, 타이머, 상위 기여자를 상단 바 형태로 표시합니다.</p>
+                    <p>일반 채팅 메시지는 표시하지 않습니다. 하이프 열차 데이터는 메타데이터 전용이므로 Twitch가 하이프 열차 이벤트를 보내면 표시줄이 업데이트됩니다.</p>
+                    <img src="../../docs/images/hype-train-top-bar-preview.png" alt="진행률, 레벨, 타이머, 기여자가 표시된 하이프 열차 상단 바 미리보기" class="guide-image">
+                </div>
+
+                <div class="guide-card">
+                    <h3>시작하기 전</h3>
+                    <ul class="guide-list">
+                        <li>Twitch 이벤트 캡처에는 Twitch WebSocket 모드를 사용하세요.</li>
+                        <li>요청하면 Twitch를 다시 승인해 Social Stream Ninja가 다음 범위를 요청할 수 있게 하세요: <code>channel:read:hype_train</code> 범위.</li>
+                        <li>Hype Train Top Bar를 일반 채팅 오버레이가 아닌 브라우저 소스로 추가하세요.</li>
+                    </ul>
+                    <div class="quick-note warning-note">
+                        <strong>중요:</strong> 하이프 열차는 일반 채팅 오버레이에 나타나지 않습니다. Hype Train Top Bar, Meta Data Bar 또는 다음을 사용하세요: <code>events.html</code> 로 확인하세요.
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>팝업에서 설정</h3>
+                    <ol class="guide-steps">
+                        <li>Social Stream Ninja 팝업을 여세요.</li>
+                        <li>찾기: <strong>하이프 미터 및 시청자 수</strong>.</li>
+                        <li>복사: <strong>하이프 열차 상단 바</strong> 링크.</li>
+                        <li>해당 링크를 OBS 브라우저 소스로 추가하세요.</li>
+                        <li>사용: <strong>가상 하이프 열차</strong> 버튼으로 표시줄이 나타나는지 확인하세요.</li>
+                    </ol>
+                    <img src="../../docs/images/hype-train-popup-options.png" alt="Hype Train Top Bar 링크와 레이아웃 옵션이 보이는 Social Stream Ninja 팝업" class="guide-image">
+                    <div class="quick-note">
+                        <strong>팁:</strong> 복사한 URL에는 다음이 포함됩니다: <code>&amp;hype</code>, 오버레이가 하이프 열차와 보물 열차 이벤트에 집중하게 합니다.
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>표시줄 맞춤 설정</h3>
+                    <p>Hype Train Top Bar 옵션은 팝업의 다른 오버레이 옵션처럼 작동합니다. 옵션을 전환한 뒤 업데이트된 링크를 다시 복사하세요.</p>
+                    <ul class="guide-list">
+                        <li><strong>오버레이 오른쪽 정렬:</strong> 는 표시줄을 오른쪽 가장자리에 배치합니다.</li>
+                        <li><strong>오버레이 가운데 정렬:</strong> 는 표시줄을 가로 방향 중앙에 배치합니다.</li>
+                        <li><strong>배율:</strong> 는 표시줄을 더 작게 또는 크게 만듭니다.</li>
+                        <li><strong>패널 불투명도:</strong> 는 표시줄 전체의 불투명도를 조정합니다.</li>
+                        <li><strong>투명한 표시줄 배경:</strong> 는 표시줄 뒤의 채워진 배경을 제거합니다.</li>
+                        <li><strong>텍스트 외곽선 비활성화:</strong> 는 검은 텍스트 그림자를 제거합니다.</li>
+                        <li><strong>사용자 지정 페이지 배경색:</strong> OBS 외부에서 테스트하거나 투명하지 않은 페이지 배경을 원할 때 유용합니다.</li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h3>테스트 옵션</h3>
+                    <ul class="guide-list">
+                        <li>사용: <strong>가상 하이프 열차</strong> 를 팝업에서 사용하면 가장 빠르게 테스트할 수 있습니다.</li>
+                        <li>사용: <code>sampleapi.html</code> 그리고 API 경로로 테스트하려면 Hype Train 사전 설정을 선택하세요.</li>
+                        <li>사용: <code>events.html</code> 로 원본 Twitch 하이프 열차 이벤트가 수신되는지 확인하세요.</li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h3>표시되지 않을 때</h3>
+                    <ol class="guide-steps">
+                        <li>하이프 열차 지원이 추가된 뒤 Twitch 계정을 다시 승인했는지 확인하세요.</li>
+                        <li>복사한 오버레이 URL의 세션 ID가 Social Stream Ninja 팝업과 같은지 확인하세요.</li>
+                        <li>URL에 다음이 포함되어 있는지 확인하세요: <code>&amp;hype</code>.</li>
+                        <li>다음으로 테스트하세요: <strong>가상 하이프 열차</strong> 버튼.</li>
+                        <li>열기 <code>events.html</code> 를 같은 세션으로 열어 하이프 열차 메타데이터가 도착하는지 확인하세요.</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../../media/logo.png" alt="Social Stream Ninja 로고">
+                    <span>Social Stream Ninja</span>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>자료</h4>
+                        <ul>
+                            <li><a href="guides.html">가이드</a></li>
+                            <li><a href="event-reference.html">이벤트 참고 문서</a></li>
+                            <li><a href="support.html">지원</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Social Stream Ninja. 모든 권리 보유.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

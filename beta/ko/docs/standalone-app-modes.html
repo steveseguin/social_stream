@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/standalone-app-modes.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/standalone-app-modes.html">
+    <meta property="og:title" content="독립 실행형 앱 모드 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja 데스크톱 앱 소스 모드, 표준 모드, WebSocket 모드, TikTok 프리셋, 소스 창, 일반적인 앱 문제 해결을 쉽게 설명하는 가이드입니다.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/standalone-app-modes.html">
+    <meta name="twitter:title" content="독립 실행형 앱 모드 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja 데스크톱 앱 소스 모드, 표준 모드, WebSocket 모드, TikTok 프리셋, 소스 창, 일반적인 앱 문제 해결을 쉽게 설명하는 가이드입니다.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>독립 실행형 앱 모드 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja 데스크톱 앱 소스 모드, 표준 모드, WebSocket 모드, TikTok 프리셋, 소스 창, 일반적인 앱 문제 해결을 쉽게 설명하는 가이드입니다.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/standalone-app-modes.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"A compatibility path that checks for updates instead of using the preferred live socket path.":"권장 실시간 소켓 경로 대신 업데이트를 확인하는 호환 방식입니다.","Advanced setups.":"고급 설정.","App is using the wrong source files:":"앱이 잘못된 소스 파일을 사용함:","App-native reading and reply-support paths.":"앱 네이티브 읽기 및 답장 지원 경로입니다.","Auto":"자동","Chrome is logged in but the app is not:":"Chrome에는 로그인했지만 앱에는 로그인되지 않음:","Commands & API":"명령 및 API","Common Failure Point":"흔한 실패 지점","Common Fixes":"일반적인 해결 방법","Confirm the app source is activated.":"앱 소스가 활성화되어 있는지 확인하세요.","Confirm the dock receives chat with the same session ID.":"같은 세션 ID로 도크가 채팅을 받는지 확인하세요.","Confirm the source window is signed in if the platform needs login.":"플랫폼에 로그인이 필요하면 소스 창에서 로그인했는지 확인하세요.","Download":"다운로드","Fallback when socket/signing paths fail.":"소켓/서명 경로가 실패할 때의 대체 방식.","Features":"기능","First try for most users.":"대부분의 사용자가 먼저 시도할 방식.","For a normal first attempt, add TikTok, leave the preset on Auto, activate the source, and watch the app status text.":"일반적인 첫 시도에서는 TikTok을 추가하고 프리셋을 Auto로 둔 채 소스를 활성화하여 앱 상태 문구를 확인하세요.","Guides":"가이드","Hire":"작업 의뢰","Home":"홈","If Chrome works but the app does not, remember that app sessions and Chrome sessions are separate.":"Chrome에서는 되지만 앱에서는 안 된다면 앱 세션과 Chrome 세션이 별개임을 기억하세요.","Inspiration":"아이디어","Less rich than the preferred connector.":"권장 연결 도구보다 정보가 적습니다.","Local Signer":"로컬 서명기 (Local Signer)","Login, CAPTCHA, redirected page, or hidden chat.":"로그인, CAPTCHA, 리디렉션된 페이지 또는 숨겨진 채팅.","Main navigation":"기본 탐색 메뉴","Mode":"모드","Mode Names":"모드 이름","OBS is blank:":"OBS가 비어 있음:","On this page":"이 페이지에서","Only after the dock works, add or refresh the OBS overlay URL.":"도크가 작동한 뒤에만 OBS 오버레이 URL을 추가하거나 새로고침하세요.","Open navigation menu":"탐색 메뉴 열기","Overlay Gallery":"오버레이 갤러리","Plain Meaning":"쉬운 설명","Plain-English guide to Social Stream Ninja desktop app source modes, Standard mode, WebSocket mode, TikTok presets, source windows, and common app troubleshooting.":"Social Stream Ninja 데스크톱 앱 소스 모드, 표준 모드, WebSocket 모드, TikTok 프리셋, 소스 창, 일반적인 앱 문제 해결을 쉽게 설명하는 가이드입니다.","Platform Setup Picker":"플랫폼 설정 선택기","Polling/Compatibility":"폴링/호환성","Polling/Legacy":"폴링/레거시","Provider availability, API key, room ID, or rate limits.":"제공업체 사용 가능 여부, API 키, 방 ID 또는 요청 제한.","Proxy or custom signing":"프록시 또는 사용자 지정 서명","Related guide:":"관련 가이드:","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Some sources have more than one connection mode. The right mode depends on the platform, login state, and whether you need richer events or simple page capture.":"일부 소스에는 연결 모드가 여러 개 있습니다. 적합한 모드는 플랫폼, 로그인 상태, 풍부한 이벤트가 필요한지 간단한 페이지 캡처가 필요한지에 따라 다릅니다.","Source says active but no chat arrives:":"소스는 활성 상태지만 채팅이 오지 않음:","Standalone App Modes":"독립 실행형 앱 모드","Standalone App Modes - Social Stream Ninja":"독립 실행형 앱 모드 - Social Stream Ninja","Standalone app Add source sidebar with YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook, and TikTok source buttons":"YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook, TikTok 소스 버튼이 표시된 독립 실행형 앱 소스 추가 사이드바","Standalone app sample source entries showing Standard and WebSocket connection mode controls, plus TikTok connection preset controls":"Standard 및 WebSocket 연결 모드 제어와 TikTok 연결 프리셋 제어가 있는 독립 실행형 앱 예시 소스 항목","Standard":"표준 (Standard)","Standard and WebSocket are common source modes. TikTok has its own preset selector because it has extra app-specific connection paths.":"Standard와 WebSocket은 일반적인 소스 모드입니다. TikTok에는 앱 전용 연결 방식이 추가로 있어 자체 프리셋 선택기가 있습니다.","Standard mode can still fail if the platform changes its page layout, blocks embedded/app browsers, asks for CAPTCHA, or hides chat behind a login.":"플랫폼이 페이지 구조를 변경하거나 내장/앱 브라우저를 차단하거나 CAPTCHA를 요구하거나 로그인을 해야 채팅을 보여 주면 표준 모드도 실패할 수 있습니다.","Start by adding the platform source you need. The app then creates and manages that source entry.":"필요한 플랫폼 소스를 추가하는 것부터 시작하세요. 그러면 앱이 해당 소스 항목을 만들고 관리합니다.","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","The app TikTok session/cookies must be valid.":"앱의 TikTok 세션/쿠키가 유효해야 합니다.","The app chooses the best TikTok path and may fall back if one fails.":"앱이 가장 적합한 TikTok 방식을 선택하며 하나가 실패하면 대체 방식으로 전환할 수 있습니다.","The app may fall back, so check the status text.":"앱이 대체 방식으로 전환할 수 있으므로 상태 문구를 확인하세요.","The app opens a normal platform/source page and reads the rendered page.":"앱이 일반 플랫폼/소스 페이지를 열고 렌더링된 페이지를 읽습니다.","The desktop app manages Social Stream source windows outside your normal browser. It can help with source organization and some browser-tab throttling problems. It is not the same as Chrome, and it does not automatically share your Chrome login or cookies.":"데스크톱 앱은 일반 브라우저 밖에서 Social Stream 소스 창을 관리합니다. 소스 정리와 일부 브라우저 탭 성능 제한 문제에 도움이 될 수 있습니다. Chrome과 같지 않으며 Chrome 로그인이나 쿠키를 자동으로 공유하지 않습니다.","The newer connector fails or a platform-specific fallback is needed.":"새 연결 도구가 실패하거나 플랫폼별 대체 방식이 필요한 경우.","The platform supports it and you want better background reliability or richer event data.":"플랫폼이 지원하며 더 안정적인 백그라운드 작동이나 풍부한 이벤트 데이터를 원하는 경우.","The platform works when you can see the live page or popout chat.":"라이브 페이지나 팝아웃 채팅이 보일 때 플랫폼이 작동하는 경우.","The site needs you to sign in, solve a prompt, or keep a visible chat panel open.":"사이트에서 로그인, 확인 절차 해결 또는 채팅 패널을 보이게 열어 두기를 요구하는 경우.","The source connects through a platform API, socket, or Social Stream source page.":"소스가 플랫폼 API, 소켓 또는 Social Stream 소스 페이지를 통해 연결합니다.","The source specifically supports WebSocket/API mode.":"소스가 WebSocket/API 모드를 명시적으로 지원하는 경우.","TikTok Auto":"TikTok 자동 (Auto)","TikTok In The App":"앱의 TikTok","TikTok Path":"TikTok 연결 방식","TikTok fails:":"TikTok이 작동하지 않음:","TikTok in the desktop app is not one single mode. Always note which preset is active before troubleshooting.":"데스크톱 앱의 TikTok은 단일 모드가 아닙니다. 문제 해결 전에 항상 어떤 프리셋이 활성화되어 있는지 기록하세요.","Understand source windows, Standard mode, WebSocket mode, and TikTok presets.":"소스 창, 표준 모드, WebSocket 모드, TikTok 프리셋을 알아보세요.","Use Case":"사용 사례","Use Standard Mode When":"표준 모드를 사용할 때","Use WebSocket Or API Mode When":"WebSocket 또는 API 모드를 사용할 때","Use When":"사용할 때","Visible TikTok page capture.":"보이는 TikTok 페이지 캡처.","WebSocket/API":"WebSocket/API","WebSocket/API mode is not always better. If auth, tokens, provider access, or a platform API is failing, Standard mode may be the faster test.":"WebSocket/API 모드가 항상 더 좋은 것은 아닙니다. 인증, 토큰, 제공업체 접근 또는 플랫폼 API에 문제가 있다면 표준 모드로 더 빠르게 시험할 수 있습니다.","What The App Is For":"앱의 용도","What To Check Before OBS":"OBS 전에 확인할 사항","You are comparing app behavior against the Chrome extension.":"앱 동작을 Chrome 확장 프로그램과 비교하는 경우.","You are not sure which TikTok mode to use.":"어떤 TikTok 모드를 사용할지 모르는 경우.","You can handle provider tokens, account permissions, API scopes, or source-page setup.":"제공업체 토큰, 계정 권한, API 범위 또는 소스 페이지 설정을 처리할 수 있는 경우.","You need event families that normal page scraping may not expose.":"일반 페이지 스크래핑으로 제공되지 않을 수 있는 이벤트 종류가 필요한 경우.","You need the most familiar troubleshooting path: open page, see chat, test dock, then OBS.":"페이지 열기, 채팅 확인, 도크 테스트, OBS 순서의 가장 익숙한 문제 해결 방식을 원하는 경우.","You need the simplest visible page capture, login, or manual verification.":"가장 간단한 보이는 페이지 캡처, 로그인 또는 수동 확인이 필요한 경우.","You want a source that can keep working better in the background.":"백그라운드에서도 더 잘 작동하는 소스를 원하는 경우.","check the mode, source window, live URL/user name, and dock session.":"모드, 소스 창, 라이브 URL/사용자 이름, 도크 세션을 확인하세요.","check whether the app is using packaged, cached, remote, beta, stable, or local Social Stream assets.":"앱이 내장, 캐시, 원격, 베타, 안정 버전 또는 로컬 Social Stream 리소스 중 무엇을 사용하는지 확인하세요.","record the current preset, status text, app version, and whether the source switched to a fallback mode.":"현재 프리셋, 상태 문구, 앱 버전, 소스의 대체 모드 전환 여부를 기록하세요.","sign in to the platform inside the app source window or use the extension as the capture path.":"앱 소스 창 안에서 플랫폼에 로그인하거나 확장 프로그램으로 캡처하세요.","test the dock first. If the dock is empty, OBS is not the problem yet.":"먼저 도크를 시험하세요. 도크가 비어 있다면 아직 OBS의 문제가 아닙니다."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/standalone-app-modes.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/standalone-app-modes.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/standalone-app-modes.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/standalone-app-modes.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/standalone-app-modes.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/standalone-app-modes.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/standalone-app-modes.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/standalone-app-modes.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/standalone-app-modes.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/standalone-app-modes.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/standalone-app-modes.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/standalone-app-modes.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="standalone-app-modes.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/standalone-app-modes.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/standalone-app-modes.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/standalone-app-modes.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/standalone-app-modes.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/standalone-app-modes.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>독립 실행형 앱 모드</h1>
+            <p>소스 창, 표준 모드, WebSocket 모드, TikTok 프리셋을 알아보세요.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="이 페이지에서"><a href="#read-section-1">앱의 용도</a><a href="#read-section-2">모드 이름</a><a href="#read-section-3">표준 모드를 사용할 때</a><a href="#read-section-4">WebSocket 또는 API 모드를 사용할 때</a><a href="#tiktok-in-the-app">앱의 TikTok</a><a href="#read-section-6">OBS 전에 확인할 사항</a><a href="#read-section-7">일반적인 해결 방법</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">앱의 용도</h2>
+                <p>데스크톱 앱은 일반 브라우저 밖에서 Social Stream 소스 창을 관리합니다. 소스 정리와 일부 브라우저 탭 성능 제한 문제에 도움이 될 수 있습니다. Chrome과 같지 않으며 Chrome 로그인이나 쿠키를 자동으로 공유하지 않습니다.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-standalone-add-source.png" alt="YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook, TikTok 소스 버튼이 표시된 독립 실행형 앱 소스 추가 사이드바" class="guide-image guide-image-narrow">
+                    <figcaption>필요한 플랫폼 소스를 추가하는 것부터 시작하세요. 그러면 앱이 해당 소스 항목을 만들고 관리합니다.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">모드 이름</h2>
+                <p>일부 소스에는 연결 모드가 여러 개 있습니다. 적합한 모드는 플랫폼, 로그인 상태, 풍부한 이벤트가 필요한지 간단한 페이지 캡처가 필요한지에 따라 다릅니다.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-standalone-source-modes.png" alt="Standard 및 WebSocket 연결 모드 제어와 TikTok 연결 프리셋 제어가 있는 독립 실행형 앱 예시 소스 항목" class="guide-image">
+                    <figcaption>Standard와 WebSocket은 일반적인 소스 모드입니다. TikTok에는 앱 전용 연결 방식이 추가로 있어 자체 프리셋 선택기가 있습니다.</figcaption>
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>모드</th><th>쉬운 설명</th><th>사용할 때</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="모드">표준 (Standard)</td><td data-label="쉬운 설명">앱이 일반 플랫폼/소스 페이지를 열고 렌더링된 페이지를 읽습니다.</td><td data-label="사용할 때">가장 간단한 보이는 페이지 캡처, 로그인 또는 수동 확인이 필요한 경우.</td></tr>
+                        <tr><td data-label="모드">WebSocket/API</td><td data-label="쉬운 설명">소스가 플랫폼 API, 소켓 또는 Social Stream 소스 페이지를 통해 연결합니다.</td><td data-label="사용할 때">플랫폼이 지원하며 더 안정적인 백그라운드 작동이나 풍부한 이벤트 데이터를 원하는 경우.</td></tr>
+                        <tr><td data-label="모드">폴링/레거시</td><td data-label="쉬운 설명">권장 실시간 소켓 경로 대신 업데이트를 확인하는 호환 방식입니다.</td><td data-label="사용할 때">새 연결 도구가 실패하거나 플랫폼별 대체 방식이 필요한 경우.</td></tr>
+                        <tr><td data-label="모드">TikTok 자동 (Auto)</td><td data-label="쉬운 설명">앱이 가장 적합한 TikTok 방식을 선택하며 하나가 실패하면 대체 방식으로 전환할 수 있습니다.</td><td data-label="사용할 때">어떤 TikTok 모드를 사용할지 모르는 경우.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">표준 모드를 사용할 때</h2>
+                <ul class="guide-list">
+                    <li>라이브 페이지나 팝아웃 채팅이 보일 때 플랫폼이 작동하는 경우.</li>
+                    <li>사이트에서 로그인, 확인 절차 해결 또는 채팅 패널을 보이게 열어 두기를 요구하는 경우.</li>
+                    <li>앱 동작을 Chrome 확장 프로그램과 비교하는 경우.</li>
+                    <li>페이지 열기, 채팅 확인, 도크 테스트, OBS 순서의 가장 익숙한 문제 해결 방식을 원하는 경우.</li>
+                </ul>
+                <p>플랫폼이 페이지 구조를 변경하거나 내장/앱 브라우저를 차단하거나 CAPTCHA를 요구하거나 로그인을 해야 채팅을 보여 주면 표준 모드도 실패할 수 있습니다.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">WebSocket 또는 API 모드를 사용할 때</h2>
+                <ul class="guide-list">
+                    <li>소스가 WebSocket/API 모드를 명시적으로 지원하는 경우.</li>
+                    <li>백그라운드에서도 더 잘 작동하는 소스를 원하는 경우.</li>
+                    <li>일반 페이지 스크래핑으로 제공되지 않을 수 있는 이벤트 종류가 필요한 경우.</li>
+                    <li>제공업체 토큰, 계정 권한, API 범위 또는 소스 페이지 설정을 처리할 수 있는 경우.</li>
+                </ul>
+                <p>WebSocket/API 모드가 항상 더 좋은 것은 아닙니다. 인증, 토큰, 제공업체 접근 또는 플랫폼 API에 문제가 있다면 표준 모드로 더 빠르게 시험할 수 있습니다.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="tiktok-in-the-app">앱의 TikTok</h2>
+                <p>데스크톱 앱의 TikTok은 단일 모드가 아닙니다. 문제 해결 전에 항상 어떤 프리셋이 활성화되어 있는지 기록하세요.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>TikTok 연결 방식</th><th>사용 사례</th><th>흔한 실패 지점</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="TikTok 연결 방식">자동</td><td data-label="사용 사례">대부분의 사용자가 먼저 시도할 방식.</td><td data-label="흔한 실패 지점">앱이 대체 방식으로 전환할 수 있으므로 상태 문구를 확인하세요.</td></tr>
+                        <tr><td data-label="TikTok 연결 방식">표준 (Standard)</td><td data-label="사용 사례">보이는 TikTok 페이지 캡처.</td><td data-label="흔한 실패 지점">로그인, CAPTCHA, 리디렉션된 페이지 또는 숨겨진 채팅.</td></tr>
+                        <tr><td data-label="TikTok 연결 방식">로컬 서명기 (Local Signer)</td><td data-label="사용 사례">앱 네이티브 읽기 및 답장 지원 경로입니다.</td><td data-label="흔한 실패 지점">앱의 TikTok 세션/쿠키가 유효해야 합니다.</td></tr>
+                        <tr><td data-label="TikTok 연결 방식">폴링/호환성</td><td data-label="사용 사례">소켓/서명 경로가 실패할 때의 대체 방식.</td><td data-label="흔한 실패 지점">권장 연결 도구보다 정보가 적습니다.</td></tr>
+                        <tr><td data-label="TikTok 연결 방식">프록시 또는 사용자 지정 서명</td><td data-label="사용 사례">고급 설정.</td><td data-label="흔한 실패 지점">제공업체 사용 가능 여부, API 키, 방 ID 또는 요청 제한.</td></tr>
+                    </tbody>
+                </table>
+                <p>일반적인 첫 시도에서는 TikTok을 추가하고 프리셋을 Auto로 둔 채 소스를 활성화하여 앱 상태 문구를 확인하세요.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">OBS 전에 확인할 사항</h2>
+                <ol class="guide-steps">
+                    <li>앱 소스가 활성화되어 있는지 확인하세요.</li>
+                    <li>플랫폼에 로그인이 필요하면 소스 창에서 로그인했는지 확인하세요.</li>
+                    <li>같은 세션 ID로 도크가 채팅을 받는지 확인하세요.</li>
+                    <li>도크가 작동한 뒤에만 OBS 오버레이 URL을 추가하거나 새로고침하세요.</li>
+                    <li>Chrome에서는 되지만 앱에서는 안 된다면 앱 세션과 Chrome 세션이 별개임을 기억하세요.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-7">일반적인 해결 방법</h2>
+                <ul class="guide-list">
+                    <li><strong>Chrome에는 로그인했지만 앱에는 로그인되지 않음:</strong> 앱 소스 창 안에서 플랫폼에 로그인하거나 확장 프로그램으로 캡처하세요.</li>
+                    <li><strong>소스는 활성 상태지만 채팅이 오지 않음:</strong> 모드, 소스 창, 라이브 URL/사용자 이름, 도크 세션을 확인하세요.</li>
+                    <li><strong>앱이 잘못된 소스 파일을 사용함:</strong> 앱이 내장, 캐시, 원격, 베타, 안정 버전 또는 로컬 Social Stream 리소스 중 무엇을 사용하는지 확인하세요.</li>
+                    <li><strong>TikTok이 작동하지 않음:</strong> 현재 프리셋, 상태 문구, 앱 버전, 소스의 대체 모드 전환 여부를 기록하세요.</li>
+                    <li><strong>OBS가 비어 있음:</strong> 먼저 도크를 시험하세요. 도크가 비어 있다면 아직 OBS의 문제가 아닙니다.</li>
+                </ul>
+                <p>관련 가이드: <a href="platform-setup-picker.html">플랫폼 설정 선택기</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="uk" data-site-root="../../" data-site-language="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Використовуйте вузли стану в Event Flow Social Stream Ninja для відстеження значень, застосування пауз та узгодження дій між вхідними подіями чату.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/uk/actions/state-nodes-guide.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="uk_UA">
+    <meta property="og:url" content="https://socialstream.ninja/beta/uk/actions/state-nodes-guide.html">
+    <meta property="og:title" content="Практичний посібник із вузлів стану — Social Stream Ninja">
+    <meta property="og:description" content="Використовуйте вузли стану в Event Flow Social Stream Ninja для відстеження значень, застосування пауз та узгодження дій між вхідними подіями чату.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Логотип Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/uk/actions/state-nodes-guide.html">
+    <meta name="twitter:title" content="Практичний посібник із вузлів стану — Social Stream Ninja">
+    <meta name="twitter:description" content="Використовуйте вузли стану в Event Flow Social Stream Ninja для відстеження значень, застосування пауз та узгодження дій між вхідними подіями чату.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Логотип Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Практичний посібник із вузлів стану — Social Stream Ninja</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: radial-gradient(circle at top, #4338ca 0%, #0f172a 55%, #020617 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 35px 80px rgba(3, 7, 18, 0.55);
+        }
+        header {
+            background: linear-gradient(135deg, #4c1d95, #312e81, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.7rem;
+            margin-bottom: 12px;
+        }
+        header p {
+            font-size: 1.15rem;
+            max-width: 680px;
+            opacity: 0.92;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 11px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.06em;
+            margin-bottom: 18px;
+        }
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        nav a {
+            color: #f8fafc;
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 999px;
+            padding: 6px 16px;
+            transition: background 0.2s;
+        }
+        nav a:hover {
+            background: rgba(15,23,42,0.25);
+        }
+        .content {
+            padding: 50px 55px 70px;
+        }
+        section {
+            margin-bottom: 70px;
+        }
+        h2 {
+            font-size: 2rem;
+            color: #312e81;
+            margin-bottom: 18px;
+        }
+        h3 {
+            font-size: 1.35rem;
+            color: #4338ca;
+            margin: 20px 0 10px;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 24px;
+            margin: 12px 0;
+        }
+        li {
+            margin: 6px 0;
+        }
+        .panel {
+            border-radius: 16px;
+            padding: 22px;
+            margin: 18px 0;
+        }
+        .panel.info {
+            background: #eef2ff;
+            border: 1px solid rgba(67,56,202,0.2);
+        }
+        .panel.warn {
+            background: #fff7ed;
+            border: 1px solid rgba(234,88,12,0.25);
+        }
+        .panel.success {
+            background: #ecfdf5;
+            border: 1px solid rgba(5,150,105,0.2);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 18px;
+            margin: 20px 0;
+        }
+        .card {
+            border-radius: 18px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+            padding: 20px 22px;
+            background: #fff;
+        }
+        .card h4 {
+            margin-bottom: 10px;
+            color: #4c1d95;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono','Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            border-radius: 14px;
+            padding: 18px;
+            margin: 16px 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .recipe {
+            border-left: 4px solid #312e81;
+            padding-left: 18px;
+            margin: 18px 0;
+        }
+        .recipe h4 {
+            margin-bottom: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        table th, table td {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            text-align: left;
+        }
+        table th {
+            background: #f1f5f9;
+            color: #312e81;
+        }
+        code {
+            background: rgba(15,23,42,0.06);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono','Courier New', monospace;
+        }
+        @media (max-width: 720px) {
+            table { display: block; max-width: 100%; overflow-x: auto; }
+            header, .content {
+                padding: 35px 20px;
+            }
+            nav {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="uk">
+<script id="ssn-site-language" type="application/json">{"language":"uk","page":"actions/state-nodes-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Перемкнути на світлу тему","Switch to dark theme":"Перемкнути на темну тему","Light mode":"Світла тема","Dark mode":"Темна тема","Open navigation menu":"Відкрити меню навігації","Close navigation menu":"Закрити меню навігації","Copy this document as Markdown to the clipboard":"Скопіювати цей документ у форматі Markdown до буфера обміну","Copy Markdown":"Скопіювати Markdown","Copying…":"Копіювання…","Markdown copied":"Markdown скопійовано","Copy failed":"Не вдалося скопіювати","Copy comprehensive Markdown for an AI assistant":"Скопіювати повний Markdown для ШІ-асистента","Copy this documentation page as Markdown for an AI assistant":"Скопіювати цю сторінку документації як Markdown для ШІ-асистента"},"strings":{"!hello ──▶ Switch (ON?) ─▶ Send Reply ─▶ Set Gate: OFF ─▶ Delay 15s ─▶ Set Gate: ON":"!hello ──▶ Перемикач (ON?) ─▶ Надіслати відповідь ─▶ Стан перемикача: OFF ─▶ Затримка 15 с ─▶ Стан перемикача: ON","(OFF) referencing “helloCooldown”.":"(OFF) із посиланням на «helloCooldown».","(ON) for “helloCooldown”.":"(ON) для «helloCooldown».","01 · Quick Orientation":"01 · Короткий огляд","02 · On/Off Switch (Gate)":"02 · Перемикач увімк./вимк. (Gate)","03 · Counter":"03 · Лічильник","04 · Rate Limiter (Throttle)":"04 · Обмежувач частоти (Throttle)","05 · User Memory":"05 · Пам’ять користувачів","06 · Problem Kits":"06 · Готові рішення","07 · Troubleshooting & FAQ":"07 · Усунення неполадок і поширені запитання","08 · Next Steps":"08 · Наступні кроки",": add or subtract custom amounts.":"— додати або відняти довільну величину.",": flip ON or OFF.":"— перемкнути на ON або OFF.",": jump to a specific number.":"— перейти до певного числа.",": revert to default (usually ON).":"— повернути початковий стан (зазвичай ON).",": revert to the default start value.":"— повернути початкове значення за замовчуванням.","A User Memory operation has no dashed link.":"Операція пам’яті користувачів не має пунктирного зв’язку.","Actions":"Дії","Add a":"Додайте","Add a chat message “Cooldown active” on the false output if desired.":"За бажанням додайте до виходу false повідомлення чату «Пауза між командами активна».","Add another":"Додайте ще один","Add the State node first, give it a unique name, then select it from each matching operation. Without the base node, state actions have nothing to update.":"Спочатку додайте вузол стану, надайте йому унікальну назву, а потім виберіть його в кожній відповідній операції. Без базового вузла діям стану нічого оновлювати.","Add the switch node first and confirm the dropdown references it.":"Спочатку додайте вузол перемикача й перевірте, що він вибраний у спадному списку.","After your action, add":"Після своєї дії додайте","All overlay triggers pass through the switch.":"Усі тригери оверлею проходять через перемикач.","Any Message ─▶ Counter (name: hype5) ─▶ Condition (value % 5 === 0?) ─▶ Play Celebration":"Будь-яке повідомлення ─▶ Лічильник (назва: hype5) ─▶ Умова (value % 5 === 0?) ─▶ Відтворити святковий ефект","Auto increment:":"Автоматичне збільшення:","Best for":"Найкраще для","Build Steps":"Кроки створення","Can live anywhere in the flow. Just pick the matching node name.":"Може розташовуватися будь-де у сценарії — просто виберіть відповідну назву вузла.","Choose the named memory in the operation's properties or drag its purple side connector onto the memory.":"Виберіть іменовану пам’ять у властивостях операції або перетягніть її фіолетовий бічний з’єднувач на пам’ять.","Choose the time window (seconds).":"Виберіть часове вікно (секунди).","Combine state nodes with the rest of the Event Flow toolkit:":"Поєднуйте вузли стану з іншими засобами Event Flow:","Command Cooldown":"Пауза між командами","Configuration":"Конфігурація","Connect your trigger → switch → actions.":"З’єднайте тригер → перемикач → дії.","Cooldowns for chat commands.":"Паузи між командами чату.","Counter":"Лічильник (Counter)","Counter default 0, target 3.":"Початкове значення лічильника — 0, ціль — 3.","Counter never increments.":"Лічильник ніколи не збільшується.","Counters track numbers across messages. They increment automatically when a message flows through, and you can adjust values manually with actions.":"Лічильники відстежують числа між повідомленнями. Вони автоматично збільшуються, коли проходить повідомлення, а значення можна вручну змінювати діями.","Decide whether to queue or discard overflow.":"Вирішіть, чи ставити надлишок у чергу, чи відкидати.","Delay":"Затримка (Delay)","Drop the switch node, name it “helloCooldown”, default ON.":"Додайте вузол перемикача, назвіть його «helloCooldown», початковий стан — ON.","Ensure":"Переконайтеся, що","Event Flow Guide":"Посібник із потоків подій","Event Flow System":"Система Event Flow","Every Nth chatter triggers a prize.":"Кожен N-й учасник чату запускає приз.","Every time a payload passes through the Counter node it adds 1 (unless you pause it with the “Only count when gate is true” option).":"Щоразу, коли дані проходять через вузол Counter, він додає 1 (якщо його не призупинено опцією Only count when gate is true).","Example Flow Charts":"Приклади схем сценаріїв","Example: 15s Cooldown":"Приклад: пауза 15 секунд","Example: Celebrate Every 5 Messages":"Приклад: святкування кожних 5 повідомлень","Export working patterns as templates so your team can re-import them later.":"Експортуйте робочі схеми як шаблони, щоб команда могла повторно імпортувати їх.","Fix":"Виправлення","Gate, Counter, and Rate Limiter can run in the normal event path.":"Gate, Counter і Rate Limiter можуть працювати у звичайному шляху подій.","Gift-based or badge-based eligibility.":"Допуск на основі подарунків або значків.","Great When You Need":"Корисно, коли потрібно","Guide buttons don’t open.":"Кнопки посібників не відкриваються.","Heads up:":"Зверніть увагу:","Holds the value (ON/OFF, count, timestamps, or users).":"Зберігає значення (ON/OFF, число, часові мітки або користувачів).","Increment after each redemption.":"Збільшуйте після кожного отримання нагороди.","Inside the Condition node, compare":"У вузлі Condition порівняйте","Keep experimenting! The new":"Продовжуйте експериментувати! Новий","Key Actions":"Основні дії","Label branches (e.g., “false → cooldown active”) so you can follow the path visually.":"Підписуйте гілки (наприклад, «false → пауза активна»), щоб візуально відстежувати шлях.","Likely Cause":"Імовірна причина","Limited Freebies":"Обмежені безкоштовні нагороди","Lives on the canvas.":"Розташовується на полотні.","Maintenance windows (pause features during BRB scenes).":"Періоди обслуговування (призупинення функцій під час сцен перерви BRB).","Make sure the trigger wire passes through the counter and the gate output is true.":"Переконайтеся, що провід тригера проходить через лічильник, а вихід перемикача має значення true.","Manual toggles (enable/disable overlays).":"Ручні перемикачі (увімкнення/вимкнення оверлеїв).","No matching switch node exists (or the names differ).":"Відповідного вузла перемикача немає (або назви відрізняються).","No target memory is selected.":"Цільову пам’ять не вибрано.","On/Off Switch":"Перемикач увімк./вимк. (On/Off Switch)","Operations":"Операції","Overview":"Огляд","Participation Trigger ──▶ Remember User ······▶ User Memory: Entrants Draw Command ───────────▶ Pick Random User ···▶ User Memory: Entrants Reset Command ──────────▶ Clear All Users ·····▶ User Memory: Entrants":"Тригер участі ──▶ Запам’ятати користувача ······▶ Пам’ять користувачів: Entrants\nКоманда розіграшу ───────────▶ Вибрати випадкового користувача ···▶ Пам’ять користувачів: Entrants\nКоманда скидання ──────────▶ Очистити всіх користувачів ·····▶ Пам’ять користувачів: Entrants","Pick a scenario and follow the steps.":"Виберіть сценарій і виконайте кроки.","Placed downstream.":"Розміщується далі за потоком.","Problem Kits":"Готові рішення","Rate Limiter":"Обмежувач частоти (Rate Limiter)","Reads or changes the stored value (set ON, add +1, remember, draw, reset, etc.).":"Читає або змінює збережене значення (установити ON, додати +1, запам’ятати, розіграти, скинути тощо).","Redeem Reward ─▶ Counter ticketsSold ├─value \u003c 50 ─▶ Approve Redemption └─value ≥ 50 ─▶ Deny + Refund points":"Отримати нагороду ─▶ Лічильник ticketsSold\n├─value \u003c 50 ─▶ Підтвердити отримання\n└─value ≥ 50 ─▶ Відхилити + повернути бали","Relax the limit and drop a Reset State Node action before retesting.":"Послабте обмеження й перед повторною перевіркою додайте дію Reset State Node.","Remember:":"Пам’ятайте:","Remembering viewers who liked, entered, or participated.":"Запам’ятовування глядачів, які вподобали, зареєструвалися або взяли участь.","Reset state nodes between tests so you are not reading stale data.":"Скидайте вузли стану між перевірками, щоб не читати застарілі дані.","Running inside the extension without web_accessible resources updated.":"Запуск усередині розширення без оновлених ресурсів web_accessible.","See the dedicated":"Дивіться окремий","Separate lists for separate campaigns.":"Окремі списки для окремих кампаній.","Set Gate OFF → Delay → Set Gate ON.":"Установити Gate OFF → Затримка → Установити Gate ON.","Set Gate State":"Установити стан перемикача (Set Gate State)","Set Gate State action won’t save.":"Дія Set Gate State не зберігається.","Set the maximum events allowed.":"Установіть максимальну дозволену кількість подій.","Social Stream Ninja logo":"Логотип Social Stream Ninja","Solid teal wires carry events. Dashed purple links show which shared memory an operation uses. Each User Memory has its own count, persistence mode, and reset policy, so clearing one list does not affect another.":"Суцільні бірюзові лінії передають події. Пунктирні фіолетові зв’язки показують, яку спільну пам’ять використовує операція. Кожна User Memory має власний лічильник, режим зберігання та правила скидання, тому очищення одного списку не впливає на інший.","State Action":"Дія стану","State Node":"Вузол стану","State Nodes Playbook":"Практичний посібник із вузлів стану","State Nodes Playbook - Social Stream Ninja":"Практичний посібник із вузлів стану — Social Stream Ninja","State nodes give Social Stream Ninja memory. Use them to build cooldowns, toggles, counters, throttles, participant lists, and prize draws that keep automations predictable.":"Вузли стану надають Social Stream Ninja пам’ять. Створюйте з ними паузи, перемикачі, лічильники, обмежувачі частоти, списки учасників і розіграші призів, щоб автоматизації працювали передбачувано.","State tools have an object that owns the value and operations that read or change it:":"Засоби стану мають об’єкт, що зберігає значення, та операції, які читають або змінюють його:","Store points redeemed via commands.":"Зберігайте витрачені через команди бали.","Store state-driven metadata under":"Зберігайте метадані, що залежать від стану, у","Switch named “overlayToggle”.":"Перемикач із назвою «overlayToggle».","Switch node named “commandCooldown”.":"Вузол перемикача з назвою «commandCooldown».","Symptom":"Симптом","Temporarily shorten cooldowns (2 seconds) or lower counter targets while verifying.":"Під час перевірки тимчасово скорочуйте паузи (до 2 секунд) або зменшуйте цільові значення лічильників.","Testing Checklist":"Список перевірок","The flow bypasses the counter node or the gate is false.":"Сценарій обходить вузол лічильника або перемикач має значення false.","The switch is a boolean guard. When ON, messages pass through; when OFF, the flow halts at this node.":"Перемикач — це логічний пропускний механізм. У стані ON повідомлення проходять; у стані OFF потік зупиняється на цьому вузлі.","The throttle remembers timestamps and refuses new events until the rate you specify is respected.":"Обмежувач частоти запам’ятовує часові мітки й відхиляє нові події, доки не буде дотримано заданої частоти.","Throttle blocks everything forever.":"Обмежувач частоти назавжди блокує все.","Throttles do not auto-reset when you edit the flow. Use":"Обмежувачі частоти не скидаються автоматично після редагування сценарію. Використовуйте","Track progress to a community goal.":"Відстежуйте поступ до спільної цілі.","Trigger → switch → reply.":"Тригер → перемикач → відповідь.","Trigger ─▶ Switch (overlayToggle) ─▶ If ON → Show Overlay └─false─▶ Notify moderator “Overlay disabled”":"Тригер ─▶ Перемикач (overlayToggle) ─▶ Якщо ON → Показати оверлей\n└─false─▶ Повідомити модератора «Оверлей вимкнено»","Troubleshooting":"Усунення несправностей","Unique-entry prize draws.":"Розіграші призів з унікальними учасниками.","Use Cases":"Варіанти використання","Use Reset action at the end of stream.":"Наприкінці трансляції використовуйте дію скидання.","Use logic gates (AND/OR/NOT) before a switch to decide who can toggle it.":"Перед перемикачем використовуйте логічні вузли (AND/OR/NOT), щоб визначити, хто може його перемикати.","Use state nodes in Social Stream Ninja Event Flow to track values, apply cooldowns and coordinate actions across incoming chat events.":"Використовуйте вузли стану в Event Flow Social Stream Ninja для відстеження значень, застосування пауз та узгодження дій між вхідними подіями чату.","Use the Event Flow “Send Test Event” tool to simulate commands.":"Використовуйте засіб Send Test Event в Event Flow для імітації команд.","User Memory":"Пам’ять користувачів (User Memory)","User Memory guide":"Посібник із пам’яті користувачів","User Memory is a shared hub referenced by other nodes.":"User Memory — спільний центр, на який посилаються інші вузли.","User Memory owns one named list of unique people. Remember users when they participate, check that list on later messages, remove a person, choose a random winner, or clear only that list.":"User Memory зберігає один іменований список унікальних людей. Запам’ятовуйте користувачів під час участі, перевіряйте цей список у наступних повідомленнях, видаляйте людину, вибирайте випадкового переможця або очищайте лише цей список.","Viewer Toggle":"Перемикач для глядача","When value ≥ 3, branch to “Sorry, all gone”.":"Коли value ≥ 3, перейдіть до гілки «Вибачте, усе закінчилося».","Window too strict or leftover state from testing.":"Надто суворе часове вікно або залишковий стан від тестування.","and":"і","command → Set Gate OFF.":"команда → Установити Gate OFF.","command → Set Gate ON.":"команда → Установити Gate ON.","for reviewed screenshots, a downloadable draw flow, TikTok eligibility, participation examples, and reset details.":"із перевіреними знімками екрана, завантажуваним сценарієм розіграшу, допуском TikTok, прикладами участі та подробицями скидання.","if you need a clean slate during testing.":"якщо під час тестування потрібно почати з чистого стану.","node (15 seconds).":"вузол (15 секунд).","or":"або","or simply use the built-in “Trigger when value matches Target” option from the Counter node’s properties.":"або просто використовуйте вбудовану опцію Trigger when value matches Target у властивостях вузла Counter.","pairs with this playbook so you can master both logic and state layers.":"доповнює цей практичний посібник, щоб ви могли опанувати і логіку, і стан.","ships via manifest and reload the extension.":"входить до пакета через manifest, і перезавантажте розширення.","so overlays know why a branch fired.":"щоб оверлеї знали, чому спрацювала гілка.","“Drop alerts if the overlay is already busy.”":"«Відкидати сповіщення, якщо оверлей уже зайнятий».","“One API call per 10 seconds.”":"«Один виклик API кожні 10 секунд».","“Only five raffle entries per minute.”":"«Лише п’ять реєстрацій у розіграші за хвилину»."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/actions/state-nodes-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="shell">
+        <header>
+            <div class="badge">Система Event Flow<!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Українська"><span aria-hidden="true">🌐 </span><span lang="uk">Українська</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/state-nodes-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/state-nodes-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/state-nodes-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/state-nodes-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/state-nodes-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/state-nodes-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/state-nodes-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/state-nodes-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/state-nodes-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/state-nodes-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/state-nodes-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/state-nodes-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="state-nodes-guide.html" lang="uk" hreflang="uk" aria-current="true">Українська</a><a class="site-language-link" href="../../ar/actions/state-nodes-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/state-nodes-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/state-nodes-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/state-nodes-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+            <h1>Практичний посібник із вузлів стану</h1>
+            <p>Вузли стану надають Social Stream Ninja пам’ять. Створюйте з ними паузи, перемикачі, лічильники, обмежувачі частоти, списки учасників і розіграші призів, щоб автоматизації працювали передбачувано.</p>
+            <nav>
+                <a href="#overview">Огляд</a>
+                <a href="#switch">Перемикач увімк./вимк. (On/Off Switch)</a>
+                <a href="#counter">Лічильник (Counter)</a>
+                <a href="#throttle">Обмежувач частоти (Rate Limiter)</a>
+                <a href="#user-memory">Пам’ять користувачів (User Memory)</a>
+                <a href="#recipes">Готові рішення</a>
+                <a href="#troubleshooting">Усунення несправностей</a>
+            </nav>
+        </header>
+        <div class="content">
+            <section id="overview">
+                <h2>01 · Короткий огляд</h2>
+                <p>Засоби стану мають об’єкт, що зберігає значення, та операції, які читають або змінюють його:</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Вузол стану</h4>
+                        <ul>
+                            <li>Розташовується на полотні.</li>
+                            <li>Зберігає значення (ON/OFF, число, часові мітки або користувачів).</li>
+                            <li>Gate, Counter і Rate Limiter можуть працювати у звичайному шляху подій.</li>
+                            <li>User Memory — спільний центр, на який посилаються інші вузли.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Дія стану</h4>
+                        <ul>
+                            <li>Розміщується далі за потоком.</li>
+                            <li>Читає або змінює збережене значення (установити ON, додати +1, запам’ятати, розіграти, скинути тощо).</li>
+                            <li>Може розташовуватися будь-де у сценарії — просто виберіть відповідну назву вузла.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel info">
+                    <strong>Пам’ятайте:</strong> Спочатку додайте вузол стану, надайте йому унікальну назву, а потім виберіть його в кожній відповідній операції. Без базового вузла діям стану нічого оновлювати.
+                </div>
+            </section>
+
+            <section id="switch">
+                <h2>02 · Перемикач увімк./вимк. (Gate)</h2>
+                <p>Перемикач — це логічний пропускний механізм. У стані ON повідомлення проходять; у стані OFF потік зупиняється на цьому вузлі.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Найкраще для</h4>
+                        <ul>
+                            <li>Паузи між командами чату.</li>
+                            <li>Ручні перемикачі (увімкнення/вимкнення оверлеїв).</li>
+                            <li>Періоди обслуговування (призупинення функцій під час сцен перерви BRB).</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Основні дії</h4>
+                        <ul>
+                            <li><code>Set Gate State</code>— перемкнути на ON або OFF.</li>
+                            <li><code>Reset State Node</code>— повернути початковий стан (зазвичай ON).</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>Приклад: пауза 15 секунд</h3>
+                <div class="diagram">
+!hello ──▶ Перемикач (ON?) ─▶ Надіслати відповідь ─▶ Стан перемикача: OFF ─▶ Затримка 15 с ─▶ Стан перемикача: ON
+                </div>
+                <div class="recipe">
+                    <h4>Кроки створення</h4>
+                    <ol>
+                        <li>Додайте вузол перемикача, назвіть його «helloCooldown», початковий стан — ON.</li>
+                        <li>З’єднайте тригер → перемикач → дії.</li>
+                        <li>Після своєї дії додайте <em>Установити стан перемикача (Set Gate State)</em> (OFF) із посиланням на «helloCooldown».</li>
+                        <li>Додайте <em>Затримка (Delay)</em> вузол (15 секунд).</li>
+                        <li>Додайте ще один <em>Установити стан перемикача (Set Gate State)</em> (ON) для «helloCooldown».</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section id="counter">
+                <h2>03 · Лічильник</h2>
+                <p>Лічильники відстежують числа між повідомленнями. Вони автоматично збільшуються, коли проходить повідомлення, а значення можна вручну змінювати діями.</p>
+                <div class="panel success">
+                    <strong>Автоматичне збільшення:</strong> Щоразу, коли дані проходять через вузол Counter, він додає 1 (якщо його не призупинено опцією Only count when gate is true).
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Варіанти використання</h4>
+                        <ul>
+                            <li>Кожен N-й учасник чату запускає приз.</li>
+                            <li>Відстежуйте поступ до спільної цілі.</li>
+                            <li>Зберігайте витрачені через команди бали.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Дії</h4>
+                        <ul>
+                            <li><code>Increment Counter</code>— додати або відняти довільну величину.</li>
+                            <li><code>Set Counter Value</code>— перейти до певного числа.</li>
+                            <li><code>Reset State Node</code>— повернути початкове значення за замовчуванням.</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>Приклад: святкування кожних 5 повідомлень</h3>
+                <div class="diagram">
+Будь-яке повідомлення ─▶ Лічильник (назва: hype5) ─▶ Умова (value % 5 === 0?) ─▶ Відтворити святковий ефект
+                </div>
+                <p>У вузлі Condition порівняйте <code>state.hype5.value</code> або просто використовуйте вбудовану опцію Trigger when value matches Target у властивостях вузла Counter.</p>
+            </section>
+
+            <section id="throttle">
+                <h2>04 · Обмежувач частоти (Throttle)</h2>
+                <p>Обмежувач частоти запам’ятовує часові мітки й відхиляє нові події, доки не буде дотримано заданої частоти.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Корисно, коли потрібно</h4>
+                        <ul>
+                            <li>«Лише п’ять реєстрацій у розіграші за хвилину».</li>
+                            <li>«Один виклик API кожні 10 секунд».</li>
+                            <li>«Відкидати сповіщення, якщо оверлей уже зайнятий».</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Конфігурація</h4>
+                        <ul>
+                            <li>Установіть максимальну дозволену кількість подій.</li>
+                            <li>Виберіть часове вікно (секунди).</li>
+                            <li>Вирішіть, чи ставити надлишок у чергу, чи відкидати.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel warn">
+                    <strong>Зверніть увагу:</strong> Обмежувачі частоти не скидаються автоматично після редагування сценарію. Використовуйте <code>Reset State Node</code> якщо під час тестування потрібно почати з чистого стану.
+                </div>
+            </section>
+
+            <section id="user-memory">
+                <h2>05 · Пам’ять користувачів</h2>
+                <p>User Memory зберігає один іменований список унікальних людей. Запам’ятовуйте користувачів під час участі, перевіряйте цей список у наступних повідомленнях, видаляйте людину, вибирайте випадкового переможця або очищайте лише цей список.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Найкраще для</h4>
+                        <ul>
+                            <li>Допуск на основі подарунків або значків.</li>
+                            <li>Запам’ятовування глядачів, які вподобали, зареєструвалися або взяли участь.</li>
+                            <li>Розіграші призів з унікальними учасниками.</li>
+                            <li>Окремі списки для окремих кампаній.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Операції</h4>
+                        <ul>
+                            <li><code>Remember User</code> і <code>Forget User</code>.</li>
+                            <li><code>User Is Remembered</code>.</li>
+                            <li><code>Pick Random User</code>.</li>
+                            <li><code>Clear All Users</code> або <code>Reset State Node</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="diagram">
+Тригер участі ──▶ Запам’ятати користувача ······▶ Пам’ять користувачів: Entrants
+Команда розіграшу ───────────▶ Вибрати випадкового користувача ···▶ Пам’ять користувачів: Entrants
+Команда скидання ──────────▶ Очистити всіх користувачів ·····▶ Пам’ять користувачів: Entrants
+                </div>
+                <p>Суцільні бірюзові лінії передають події. Пунктирні фіолетові зв’язки показують, яку спільну пам’ять використовує операція. Кожна User Memory має власний лічильник, режим зберігання та правила скидання, тому очищення одного списку не впливає на інший.</p>
+                <div class="panel success">
+                    Дивіться окремий <a href="user-memory-guide.html">Посібник із пам’яті користувачів</a> із перевіреними знімками екрана, завантажуваним сценарієм розіграшу, допуском TikTok, прикладами участі та подробицями скидання.
+                </div>
+            </section>
+
+            <section id="recipes">
+                <h2>06 · Готові рішення</h2>
+                <p>Виберіть сценарій і виконайте кроки.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Пауза між командами</h4>
+                        <ol>
+                            <li>Вузол перемикача з назвою «commandCooldown».</li>
+                            <li>Тригер → перемикач → відповідь.</li>
+                            <li>Установити Gate OFF → Затримка → Установити Gate ON.</li>
+                            <li>За бажанням додайте до виходу false повідомлення чату «Пауза між командами активна».</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>Обмежені безкоштовні нагороди</h4>
+                        <ol>
+                            <li>Початкове значення лічильника — 0, ціль — 3.</li>
+                            <li>Збільшуйте після кожного отримання нагороди.</li>
+                            <li>Коли value ≥ 3, перейдіть до гілки «Вибачте, усе закінчилося».</li>
+                            <li>Наприкінці трансляції використовуйте дію скидання.</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>Перемикач для глядача</h4>
+                        <ol>
+                            <li>Перемикач із назвою «overlayToggle».</li>
+                            <li><code>!overlay on</code> команда → Установити Gate ON.</li>
+                            <li><code>!overlay off</code> команда → Установити Gate OFF.</li>
+                            <li>Усі тригери оверлею проходять через перемикач.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <h3>Приклади схем сценаріїв</h3>
+                <div class="diagram">
+Тригер ─▶ Перемикач (overlayToggle) ─▶ Якщо ON → Показати оверлей
+└─false─▶ Повідомити модератора «Оверлей вимкнено»
+                </div>
+                <div class="diagram">
+Отримати нагороду ─▶ Лічильник ticketsSold
+├─value &lt; 50 ─▶ Підтвердити отримання
+└─value ≥ 50 ─▶ Відхилити + повернути бали
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>07 · Усунення неполадок і поширені запитання</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Симптом</th>
+                            <th>Імовірна причина</th>
+                            <th>Виправлення</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Дія Set Gate State не зберігається.</td>
+                            <td>Відповідного вузла перемикача немає (або назви відрізняються).</td>
+                            <td>Спочатку додайте вузол перемикача й перевірте, що він вибраний у спадному списку.</td>
+                        </tr>
+                        <tr>
+                            <td>Лічильник ніколи не збільшується.</td>
+                            <td>Сценарій обходить вузол лічильника або перемикач має значення false.</td>
+                            <td>Переконайтеся, що провід тригера проходить через лічильник, а вихід перемикача має значення true.</td>
+                        </tr>
+                        <tr>
+                            <td>Обмежувач частоти назавжди блокує все.</td>
+                            <td>Надто суворе часове вікно або залишковий стан від тестування.</td>
+                            <td>Послабте обмеження й перед повторною перевіркою додайте дію Reset State Node.</td>
+                        </tr>
+                        <tr>
+                            <td>Операція пам’яті користувачів не має пунктирного зв’язку.</td>
+                            <td>Цільову пам’ять не вибрано.</td>
+                            <td>Виберіть іменовану пам’ять у властивостях операції або перетягніть її фіолетовий бічний з’єднувач на пам’ять.</td>
+                        </tr>
+                        <tr>
+                            <td>Кнопки посібників не відкриваються.</td>
+                            <td>Запуск усередині розширення без оновлених ресурсів web_accessible.</td>
+                            <td>Переконайтеся, що <code>actions/state-nodes-guide.html</code> входить до пакета через manifest, і перезавантажте розширення.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3>Список перевірок</h3>
+                <ul>
+                    <li>Використовуйте засіб Send Test Event в Event Flow для імітації команд.</li>
+                    <li>Під час перевірки тимчасово скорочуйте паузи (до 2 секунд) або зменшуйте цільові значення лічильників.</li>
+                    <li>Скидайте вузли стану між перевірками, щоб не читати застарілі дані.</li>
+                    <li>Підписуйте гілки (наприклад, «false → пауза активна»), щоб візуально відстежувати шлях.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>08 · Наступні кроки</h2>
+                <p>Поєднуйте вузли стану з іншими засобами Event Flow:</p>
+                <ul>
+                    <li>Перед перемикачем використовуйте логічні вузли (AND/OR/NOT), щоб визначити, хто може його перемикати.</li>
+                    <li>Зберігайте метадані, що залежать від стану, у <code>meta</code> щоб оверлеї знали, чому спрацювала гілка.</li>
+                    <li>Експортуйте робочі схеми як шаблони, щоб команда могла повторно імпортувати їх.</li>
+                </ul>
+                <div class="panel info">
+                    Продовжуйте експериментувати! Новий <a href="event-flow-guide.html">Посібник із потоків подій</a> доповнює цей практичний посібник, щоб ви могли опанувати і логіку, і стан.
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

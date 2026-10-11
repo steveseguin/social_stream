@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="使用 Event Flow 觸發條件、條件和動作建立 Social Stream Ninja 自動化。將直播聊天事件連接至聲音、媒體、獎勵和 OBS 控制項。">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/zh-tw/actions/event-flow-guide.html">
+    <meta property="og:title" content="Event Flow 指南 - Social Stream Ninja">
+    <meta property="og:description" content="使用 Event Flow 觸發條件、條件和動作建立 Social Stream Ninja 自動化。將直播聊天事件連接至聲音、媒體、獎勵和 OBS 控制項。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-tw/actions/event-flow-guide.html">
+    <meta name="twitter:title" content="Event Flow 指南 - Social Stream Ninja">
+    <meta name="twitter:description" content="使用 Event Flow 觸發條件、條件和動作建立 Social Stream Ninja 自動化。將直播聊天事件連接至聲音、媒體、獎勵和 OBS 控制項。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Flow 指南 - Social Stream Ninja</title>
+    <link rel="canonical" href="https://socialstream.ninja/zh-tw/actions/event-flow-guide.html">
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1f2937 40%, #312e81 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .guide-shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(4, 12, 38, 0.5);
+        }
+        header {
+            background: radial-gradient(circle at top left, rgba(109,40,217,0.15), transparent),
+                        linear-gradient(135deg, #4c1d95, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+        }
+        header p {
+            font-size: 1.2rem;
+            max-width: 640px;
+            opacity: 0.92;
+        }
+        .content {
+            padding: 45px 55px 65px;
+        }
+        section {
+            margin-bottom: 60px;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 18px;
+            color: #312e81;
+        }
+        h3 {
+            font-size: 1.4rem;
+            margin: 25px 0 10px;
+            color: #4338ca;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 25px;
+            margin: 15px 0;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .panel {
+            background: #f7f7fb;
+            border: 1px solid rgba(67,56,202,0.12);
+            border-radius: 12px;
+            padding: 22px 25px;
+            margin: 22px 0;
+        }
+        .panel strong {
+            color: #312e81;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            padding: 22px;
+            border-radius: 14px;
+            margin: 25px 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 22px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+        }
+        .card h4 {
+            margin-bottom: 12px;
+            color: #4c1d95;
+        }
+        code {
+            background: rgba(226,232,240,0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .callout {
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            border-left: 4px solid;
+        }
+        .callout.tip { background: #eef2ff; border-color: #4338ca; }
+        .callout.warn { background: #fef3c7; border-color: #d97706; }
+        .callout.danger { background: #fee2e2; border-color: #b91c1c; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+        .var-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            font-size: 0.95rem;
+        }
+        .var-table th, .var-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .var-table th {
+            background: #f7f7fb;
+            color: #312e81;
+            font-weight: 600;
+        }
+        .var-table tr:hover {
+            background: rgba(99,102,241,0.04);
+        }
+        .var-table code {
+            background: rgba(99,102,241,0.1);
+            color: #4338ca;
+        }
+        /* ── Custom JS section additions ── */
+        .code-js {
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 18px 22px;
+            border-radius: 10px;
+            margin: 16px 0;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.88rem;
+            line-height: 1.65;
+            overflow-x: auto;
+            white-space: pre;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .snippet-block {
+            margin: 28px 0;
+            border: 1px solid rgba(67,56,202,0.15);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .snippet-label {
+            background: rgba(67,56,202,0.07);
+            padding: 10px 18px;
+            font-weight: 600;
+            color: #312e81;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .snippet-desc {
+            padding: 10px 18px 0;
+            font-size: 0.93rem;
+            color: #475569;
+        }
+        .snippet-block .code-js {
+            border-radius: 0;
+            margin: 0;
+            border: none;
+            border-top: 1px solid rgba(0,0,0,0.15);
+        }
+        figure.screenshot {
+            margin: 24px 0;
+            text-align: center;
+        }
+        figure.screenshot img {
+            max-width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(15,23,42,0.12);
+            box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+        }
+        figure.screenshot figcaption {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #64748b;
+            font-style: italic;
+        }
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 24px 0;
+            align-items: start;
+        }
+        .desktop-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #312e81;
+            color: #e0e7ff;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            padding: 3px 10px;
+            border-radius: 999px;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        .snippet-heading {
+            margin: 28px 0 4px;
+            color: #4c1d95;
+        }
+        @media (max-width: 700px) {
+            header, .content { padding: 35px 20px; }
+            h1 { font-size: 2rem; }
+            .diagram { font-size: 0.85rem; }
+            .var-table { font-size: 0.85rem; display: block; max-width: 100%; overflow-x: auto; }
+            .var-table th, .var-table td { padding: 8px 10px; }
+            .panel code { overflow-wrap: anywhere; }
+            .two-col { grid-template-columns: 1fr; }
+            .code-js { font-size: 0.8rem; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"actions/event-flow-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"\"Desktop only\"":"「僅限桌面應用程式」","\"chat message contains !raffle\").":"「聊天訊息包含 !raffle」）。","$5.00, 500 bits":"$5.00, 500 bits","(Send Test Event) before pushing a flow live.":"（Send Test Event），然後再將流程投入直播。","(Twitch Message, Timers, Manual Trigger, etc.) ignore upstream input. They generate their own payload and always emit":"（Twitch Message、Timers、Manual Trigger 等）忽略上游輸入，它們產生自己的承載資料，並始終發出","(action). They are the escape hatch for anything the built-in nodes cannot express.":"（動作）。當內建節點無法表達某種需求時，它們提供自訂途徑。","(counters, toggles, timers) to track context between events.":"（計數器、開關、計時器）來追蹤事件之間的脈絡。","(current flow result state),":"（目前流程結果狀態），","(left ports) expect the message context.":"（左側連接埠）接收訊息脈絡。","(paste into the action's JavaScript Code field):":"（貼到動作的 JavaScript Code 欄位）：","(paste into the trigger's JavaScript Code field):":"（貼到觸發條件的 JavaScript Code 欄位）：","(platform, type, chatname, chatmessage, etc.). Attach custom data under":"（platform、type、chatname、chatmessage 等）。將自訂資料附加至","(right ports) emit the same context plus any edits.":"（右側連接埠）發出相同脈絡以及所有編輯。","(see":"（參見","(the event payload),":"（事件承載資料），","(top-right of the editor) to send a synthetic message through the pipeline without needing a live stream. Set the chatname to a subscriber, add a message like":"（位於編輯器右上角），無需直播即可向處理流程傳送模擬訊息。將 chatname 設為訂閱者的名稱，新增類似下列內容的訊息：","(trigger) and":"（觸發條件）和","(trigger) or a no-op (action) and logs to the DevTools console. The flow doesn't crash.":"（觸發條件）或不執行動作（動作），並記錄至 DevTools 主控台，流程不會當機。","). Treat imported flow files like executable code. Only import flows from sources you trust.":"）。請將匯入的流程檔案視為可執行程式碼，只匯入可信來源的流程。",", a new line, then":"，換行，然後",", and":"，以及",", and confirm the Relay Chat destination receives the reformatted string.":"，並確認 Relay Chat 目標收到重新格式化的字串。",", and the OBS controls need a rendering surface. That surface is the Flow Actions overlay page served from":"，以及 OBS 控制項都需要一個繪製介面。該介面就是由以下位址提供的 Flow Actions 疊加畫面頁面：",", not when it happens:":"，而不是它何時發生：",", or":"，或",", or leave it blank to use the Flow Actions TTS default.":"，或留空以使用 Flow Actions TTS 預設值。",", plus":"，加上",", so the output is":"，因此輸出為",", source / filter / mute / text actions will not work until OBS / obs-websocket is upgraded.":"，在升級 OBS / obs-websocket 之前，來源 / 濾鏡 / 靜音 / 文字動作將無法運作。",", then return":"，然後傳回",". A flow built only from actions chained together looks valid but is permanently idle, because nothing ever starts the chain. Node names describe what the node":"。僅將動作串聯起來的流程看似有效，但會一直閒置，因為沒有任何東西啟動該鏈。節點名稱描述的是節點",". Connect that wire into NOT to invert the result.":"。將該連線接入 NOT 以反轉結果。",". Drag a wire from the colored output you need (green = true, gray/red = false) to the next node.":"。從所需的彩色輸出（綠色 = true，灰色/紅色 = false）拖曳連線至下一個節點。",". Each flow can subscribe to multiple platforms at once.":"。每個流程都可以同時訂閱多個平台。",". Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set.":". Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set.",". If you're accepting shared flows from others, audit the JS before activating them.":"。如果接受他人分享的流程，請在啟用前審核 JS。",". Keep it running in your broadcasting software (OBS/Streamer.bot browser docks/etc.) so Event Flow actions have somewhere to appear.":"。讓它在直播軟體（OBS/Streamer.bot 瀏覽器停駐面板等）中保持執行，讓 Event Flow 動作有地方顯示。",". Keep it wired to something meaningful or disable the node so it does not accidentally unblock a flow.":"。保持它連接至有意義的節點，或停用該節點，以免意外放行流程。",". Open the editor through the":"。透過以下入口開啟編輯器：",". Paste it into an OBS Browser Source (1920×1080 suggested) or open it in any overlay browser.":"。將其貼到 OBS 瀏覽器來源（建議 1920×1080），或在任意疊加畫面瀏覽器中開啟。",". Returning the Promise lets Event Flow wait for submission and report errors.":"。傳回 Promise 使 Event Flow 能夠等待提交並回報錯誤。",". SSApp queues the job silently through the native Windows printer API and uses those saved settings. A flow can override them with options such as":"。SSApp 透過原生 Windows 印表機 API 靜默將工作排入佇列，並使用這些已儲存設定。流程可以透過以下選項覆寫它們：",". Scene switching works here, and recording / streaming / replay buffer actions can fall back to it.":"。此處支援場景切換，錄製 / 直播 / 重播緩衝區動作也可以將它用作備援方式。",". See the":"。請參閱",". The":"。",". The fields below are always available; platform-specific events may include additional ones.":"。以下欄位始終可用；平台專屬事件可能包含其他欄位。",". They can still output an updated payload if you want to keep chaining actions.":"。如果您希望繼續串聯動作，它們仍可輸出更新後的承載資料。",". This controls display on re-ingest, not sending. Follow the":"。這控制重新接收時的顯示，而不是傳送。請遵循",". Use two relay actions when a message should reach both variants. See":"。當訊息應抵達兩個變體時，使用兩個轉送動作。請參閱","0. Quick Orientation":"0. 快速入門","1. What Moves Through a Node?":"1. 什麼內容流經節點？","2. Logic Node Cheatsheet":"2. 邏輯節點速查","3. Example Micro-Flows":"3. 微型流程範例","4. Preventing Echoes, Loops, and Relay Feedback":"4. 防止回傳、循環和轉送回授","5. Inputs, Outputs, and Practical Questions":"5. 輸入、輸出和實用問題","6. Template Variables Reference":"6. 範本變數參考","7. Best Practices Checklist":"7. 最佳做法檢查表","8. Further Exploration":"8. 進一步探索","9. Custom JavaScript":"9. 自訂 JavaScript",": add a standard Relay Chat node after the action and configure it to point at your Discord (or other) destination. No custom code is needed here. The reformatted":"：在動作後新增標準 Relay Chat 節點，並設定為指向 Discord（或其他）目標。此處無需自訂程式碼，重新格式化的",": named triggers, a starter template, workflow discovery, extra data, HTTP/WebSocket/P2P examples, and dial gestures.":"：具名觸發條件、入門範本、工作流程探索、額外資料、HTTP/WebSocket/P2P 範例和旋鈕手勢。","; see":"— 請參閱","; with no trigger on top, nothing starts the chain.":"；如果上方沒有觸發條件，就沒有任何東西啟動該鏈。","= continue,":"= 繼續，","= stop). Use":"= 停止）。使用","A 50/50 coin flip between two audio clips. The RANDOM gate rolls once per matching message: when it passes, sound A plays; when it fails, the NOT gate flips the result and the AND gate lets sound B play instead.":"以各 50% 機率在兩個音訊片段中選擇。RANDOM 閘對每則相符訊息隨機判斷一次：通過時播放聲音 A；失敗時，NOT 閘反轉結果，AND 閘讓聲音 B 播放。","A Custom Code trigger (blue) and Execute Custom Code action (green) placed on the canvas. Wire the trigger's output port to the action's input port to connect them.":"畫布上放置了 Custom Code 觸發條件（藍色）和 Execute Custom Code 動作（綠色）。將觸發條件的輸出連接埠連接至動作的輸入連接埠即可連接它們。","A bare NOT would output":"獨立的 NOT 會輸出","A floating NOT node will still output":"懸空的 NOT 節點仍會輸出","A recalculated gate bit (logic nodes) or passthrough bit (actions).":"重新計算的閘控位元（邏輯節點）或直通位元（動作）。","A reflection is an outgoing message captured again from a destination chat. Current Relay Chat actions skip these recognized reflections; there is no separate No Reflections checkbox. To hide or limit their display in the Dock and overlays, use a":"回流是指傳送至目標聊天後又被擷取的訊息。目前 Relay Chat 動作會略過這些已識別的回流；沒有單獨的 No Reflections 核取方塊。如需隱藏或限制它們在停駐面板和疊加畫面中的顯示，請使用","A runtime error in your code returns":"程式碼中的執行階段錯誤會傳回","A. Auto-reply Unless the Message Is a Command":"A. 除命令訊息外自動回覆","AND":"且（AND）","Action Nodes":"動作節點","Action code can call":"動作程式碼可以呼叫","Action nodes (green) never run on their own. They only fire when a trigger node (blue) above them evaluates":"動作節點（綠色）從不自行執行，只有上方的觸發條件節點（藍色）求值為以下結果時才觸發：","Action panel showing Execute Custom Code under the Integrations group":"動作面板，顯示 Integrations 群組下的 Execute Custom Code","Action properties. Return an object to merge changes back into the flow result.":"動作屬性。傳回一個物件，將變更合併回流程結果。","Action snippets: return":"動作程式碼片段 — 傳回","Actions":"操作","Add a visual indicator at the end of every message that passes through this action.":"在通過此動作的每則訊息結尾加入視覺標記。","Additional context":"補充脈絡","Advanced":"進階","Advanced Access Level":"進階存取層級（Advanced Access Level）","Alias":"別名","Allow All":"全部允許","Allow First":"允許第一則","An error of type":"類型為","Any Message":"任意訊息（Any Message）","Any Message trigger connected to Feature Message and Speak Text actions":"Any Message 觸發條件連接至 Feature Message 和 Speak Text 動作","Any Message trigger connected to a Play Audio Clip action":"Any Message 觸發條件連接至 Play Audio Clip 動作","Any node with a green output emits":"任何具有綠色輸出的節點都會發出","Append a badge or tag to the message":"在訊息後附加徽章或標籤","Arbitrary structured data attached to the event":"附加至事件的任意結構化資料","Attach routing metadata for downstream nodes":"附加路由中繼資料，供下游節點使用","Attached image URL":"附加的影像 URL","Available:":"可用：","Avoid duplicate relay systems.":"避免重複轉送系統。","B. Require Multiple Checks with AND":"B. 使用 AND 要求多項檢查","Block All":"全部封鎖","Block message conditionally":"有條件地封鎖訊息","Both nodes receive the full event payload as":"兩個節點都以下列形式接收完整事件承載資料：","Break cycles intentionally.":"有意識地中斷循環。","Browser Source API:":"瀏覽器來源 API：","Build Social Stream Ninja automations with Event Flow triggers, conditions and actions. Connect live chat events to sounds, media, rewards and OBS controls.":"使用 Event Flow 觸發條件、條件和動作建立 Social Stream Ninja 自動化。將直播聊天事件連接至聲音、媒體、獎勵和 OBS 控制項。","Build loyalty-based commands, keyword games, or raffle gating with AND/OR/NOT logic.":"透過 AND/OR/NOT 邏輯建立以忠誠度為依據的命令、關鍵字遊戲或抽獎資格限制。","Build reliable automations for Social Stream Ninja. This guide walks through the basics, logic nodes, signal flow, and the practical tricks that creators ask about most (like avoiding chat echoes and knowing when to stack AND/NOT blocks).":"為 Social Stream Ninja 建立可靠的自動化。本指南介紹基礎知識、邏輯節點、訊號流，以及創作者最常詢問的實用技巧，例如避免聊天回傳以及何時組合 AND/NOT 區塊。","C. NOT Node to Block Repeat Alerts":"C. 使用 NOT 節點封鎖重複提醒","Call Webhook JSON:":"呼叫 Webhook JSON：","Can a node emit a payload even if it returns false?":"節點傳回 false 時，仍能發出承載資料嗎？","Can each Speak Text node use a different voice?":"每個 Speak Text 節點可以使用不同的語音嗎？","Canvas showing a Custom Code trigger and Execute Custom Code action side by side":"畫布並排顯示 Custom Code 觸發條件和 Execute Custom Code 動作","Chat message text":"聊天訊息文字","Check the":"檢查","Choose":"選擇","Choose Local File":"選擇本機檔案","Click":"點選","Click this button:":"點擊此按鈕：","Closing the Flow Actions page pauses every overlay/audio/OBS action in Event Flow. Hide it or put it on a separate monitor instead of closing it outright.":"關閉 Flow Actions 頁面會暫停 Event Flow 中的所有疊加畫面/音訊/OBS 動作。請將其隱藏或放在另一台螢幕上，而不要完全關閉。","Combine":"組合","Combine role check and message content in a single expression that no built-in trigger covers.":"將角色檢查和訊息內容組合為單一運算式，以實現內建觸發條件無法涵蓋的條件。","Common Q & A":"常見問答","Complete example: VIP feature request bot":"完整範例 — VIP 功能請求機器人","Condition, Compare, Regex, and Logic nodes emit two ports.":"Condition、Compare、Regex 和 Logic 節點提供兩個輸出連接埠。","Confirm":"確認","Continue the flow only when the message contains a specific word or phrase.":"僅當訊息包含特定單字或片語時繼續流程。","Convert the standard YouTube donation label to EUR, exclude Jewels/Gifts, and select one sound or visual range.":"將標準 YouTube 贊助標籤轉換為 EUR，排除 Jewels/Gifts，並選擇一個聲音或視覺效果區間。","CoolViewer123":"CoolViewer123","Copy Local Flow Actions URL for OBS":"複製用於 OBS 的本機 Flow Actions URL","Copy any of these into the JavaScript Code textarea of the matching node type.":"將任一項複製到相應節點類型的 JavaScript Code 文字區域。","Core Variables (backward compatible)":"核心變數（回溯相容）","Counter target minus current value, clamped at 0":"計數器目標減去目前值，最小為 0","Counter target value":"計數器目標值","Currency conversion:":"貨幣換算：","Current counter value after a Counter or Check Counter step":"經過 Counter 或 Check Counter 步驟後的目前計數器值","Custom Code":"自訂程式碼（Custom Code）","Custom Code lives under the":"Custom Code 位於","Custom Code trigger properties panel showing the JavaScript code editor":"Custom Code 觸發條件屬性面板，顯示 JavaScript 程式碼編輯器","Custom Code: Trigger node":"Custom Code — 觸發條件節點","Custom JavaScript nodes":"自訂 JavaScript 節點","Custom JavaScript nodes are disabled in the browser extension because Chrome's Manifest V3 Content Security Policy blocks":"瀏覽器擴充功能中停用了自訂 JavaScript 節點，因為 Chrome Manifest V3 內容安全性原則封鎖","Custom code runs with renderer-process privileges.":"自訂程式碼以繪製程序權限執行。","D. Randomly Play One of Two Sounds":"D. 隨機播放兩種聲音之一","Data type":"資料型別","Default behavior:":"預設行為：","Description":"說明","Desktop app required.":"需要桌面應用程式。","Disable global Relay all when using equivalent Event Flow routes, and check for other services bridging the same chats. Custom metadata is not guaranteed to survive a trip through a platform chat.":"使用等效的 Event Flow 路由時，請停用全域 Relay all，並檢查是否有其他服務橋接相同聊天。自訂中繼資料不能保證在經過平台聊天後仍保留。","Discord Call Webhook:":"Discord 呼叫 Webhook：","Display Media Overlay":"顯示媒體疊加畫面","Display name (alternate field)":"顯示名稱（備用欄位）","Display name of the sender":"傳送者的顯示名稱","Display name of the user":"使用者的顯示名稱","Do I always need an AND node?":"始終需要 AND 節點嗎？","Do I have to use AND for every pair of filters?":"每一對篩選器都必須使用 AND 嗎？","Document meta fields.":"記載 meta 欄位。","Donation Alert:":"贊助提醒：","Donation above a threshold":"超過門檻的贊助","Donation/tip display label":"贊助顯示標籤","Donation: animation + sound + OBS filter":"贊助：動畫 + 聲音 + OBS 濾鏡","Donation: celebration + voice":"贊助：慶祝 + 語音","Drag":"拖曳","Editing code:":"編輯程式碼：","Effect":"效果","Emits":"發出","Enable audio":"啟用音訊","Errors are caught.":"錯誤會遭攔截。","Even if you didn't change anything, returning":"即使沒有變更任何內容，傳回","Event Flow":"Event Flow","Event Flow Editor Guide":"Event Flow 編輯器指南","Event Flow Editor: empty state":"Event Flow 編輯器 — 空白狀態","Event Flow Guide - Social Stream Ninja":"Event Flow 指南 - Social Stream Ninja","Event Flow System":"Event Flow 系統","Event Flow plays through the":"Event Flow 透過以下頁面播放：","Event Payload ─▶ State Check (isAlertMuted) └─false─▶ NOT ─▶ Play Celebration":"Event Payload ─▶ State Check (isAlertMuted) └─false─▶ NOT ─▶ Play Celebration","Event Reference":"事件參考","Event Sources":"事件來源","Event type identifier":"事件類型識別碼","Every flow starts with a trigger":"每個流程都從觸發條件開始","Every message carries a JSON object. Mandatory keys follow":"每則訊息都帶有 JSON 物件。必要鍵遵循","Every project is saved locally until exported. Use":"每個專案在匯出前都儲存在本機。使用","Example":"範例","Example Templates":"範例範本","Example:":"範例：","Execute Custom Code":"執行自訂程式碼（Execute Custom Code）","Execute Custom Code action properties panel showing the code editor":"Execute Custom Code 動作屬性面板，顯示程式碼編輯器","Execute Custom Code under the":"Execute Custom Code 位於","Execute Custom Code: Action node":"Execute Custom Code — 動作節點","Export your flow whenever you reach a milestone. Imports are the easiest rollback if an experiment goes sideways.":"每當達到一個里程碑時就匯出流程。如果實驗出錯，匯入是最簡單的還原方式。","Extended Variables":"延伸變數","Feature Message":"精選訊息（Feature Message）","Feeding the trigger into the AND as a second input restricts sound B to matching messages only. The same pattern works for any either/or pair of actions, not just audio.":"將觸發器連接至 AND 的第二個輸入，可將聲音 B 限制為僅在訊息符合條件時播放。同一模式適用於任何二選一的動作組合，不限於音訊。","Field":"欄位","Filter as early as possible to avoid extra processing down the line.":"儘早篩選，避免後續額外處理。","Fire only when a donation meets or exceeds a minimum amount.":"僅當贊助達到或超過最低金額時觸發。","Flow Actions":"Flow Actions","Flow Actions Overlay (Action Output)":"Flow Actions 疊加畫面（動作輸出）","Flow using a RANDOM gate, NOT gate, and AND gate to play one of two audio clips at random":"流程使用 RANDOM 閘、NOT 閘和 AND 閘，隨機播放兩個音訊片段之一","Flow-added fields also work.":"流程加入的欄位也適用。","Format a donation announcement":"格式化贊助公告","Formatted donation string if present":"存在時的格式化贊助字串","Gate signal":"閘控訊號","Great for multi-platform triggers: feed Twitch + YouTube message nodes into a single OR, then unify the downstream action.":"適合多平台觸發條件：將 Twitch 和 YouTube 訊息節點接入單一 OR，然後統一下游動作。","Group logic near the source.":"在來源附近集中邏輯。","Hello everyone!":"大家好！","Here the Regex node emits":"此處 Regex 節點發出","Highlight My Message":"醒目顯示我的訊息（Highlight My Message）","Hook into the":"接入","How do I match TikTok Team members?":"如何比對 TikTok Team 成員？","How do true/false values reach the NOT node?":"true/false 值如何抵達 NOT 節點？","How to open it (from the popup/dash):":"如何開啟（從彈出視窗/儀表板）：","If a node outputs false:":"如果節點輸出 false：","If an earlier action adds a top-level value to the message, later templates can read it directly. This is how":"如果較早的動作向訊息加入了頂層值，後續範本可以直接讀取它。這就是","If an event does not have a particular field (e.g.,":"如果事件沒有某個欄位（例如","If nothing is connected to the NOT input it evaluates to":"如果 NOT 輸入沒有連接任何內容，它會求值為","If two branches feed each other, add a logic node that checks a state variable (\"currentlyRelaying\") so the flow exits early when the flag is set.":"如果兩個分支相互輸入，請新增邏輯節點檢查狀態變數（「currentlyRelaying」），以便在旗標已設定時提前退出流程。","If you do nothing with a":"如果不處理","In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose":"In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose","In a Play Audio Clip or Display Media Overlay action, click":"在 Play Audio Clip 或 Display Media Overlay 動作中，點擊","Incoming triggers and outgoing Relay Chat destinations both distinguish between":"傳入觸發條件和傳出 Relay Chat 的目標都會區分","Input Expectations":"輸入需求","Inputs":"輸入","Inputs: 1 boolean (true/false) derived from the previous node.":"輸入：來自前一節點的 1 個布林值（true/false）。","Inputs: two or more boolean signals (A, B, ...). You can leave extra ports empty.":"輸入：兩個或更多布林訊號（A、B 等）。可讓額外連接埠留空。","Inside the SSApp, code in Custom JS nodes has full access to the":"在 SSApp 內，Custom JS 節點中的程式碼可以完整存取","Inspect the content and silently drop the message if a rule matches. This is useful for spam patterns the keyword filter can't express.":"檢查內容，並在規則相符時靜默捨棄訊息，適用於關鍵字篩選器無法表達的垃圾訊息模式。","Integrations":"整合","Keep SSApp running. If a selected file moves, return to the action and click":"保持 SSApp 執行。如果所選檔案移動了，請回到動作並點擊","Keep the overlay open.":"保持疊加畫面開啟。","Keyword match (case-insensitive)":"關鍵字比對（不區分大小寫）","Launch + Basics":"啟動和基礎知識","Let the flow continue only for privileged users.":"僅允許具權限的使用者讓流程繼續。","Logic nodes may emit both the":"邏輯節點可能同時發出","MEMBERSHIP, new_sponsor":"MEMBERSHIP, new_sponsor","Match messages that start with a command from a defined list (e.g.":"比對以預先定義清單中某個命令開頭的訊息（例如","Media Files for Event Flow guide":"Event Flow 媒體檔案指南","Member for 3 months":"已加入會員 3 個月","Membership state":"會員狀態","Membership state when applicable":"適用時的會員狀態","Message length gate":"訊息長度閘控","Minimal safe return:":"最小安全傳回值：","Missing variables become empty strings.":"缺失的變數變成空字串。","Mix multiple platforms inside a single automation (Kick + Twitch + YouTube routed through one flow).":"在單一自動化中混合多個平台（Kick + Twitch + YouTube 透過一個流程路由）。","Most nodes expose one output. Whatever enters (payload + gate) exits unchanged unless the node edits it.":"大多數節點提供一個輸出。進入的內容（承載資料 + 閘控）會原樣輸出，除非節點對其進行編輯。","Most side effects (like sending chat) do not alter the payload, but points actions can attach status fields such as":"大多數副作用（如傳送聊天）不會改變承載資料，但點數動作可以附加狀態欄位，例如","Multi-condition: VIP + keyword":"多條件 — VIP + 關鍵字","Must return:":"必須傳回：","NOT":"非（NOT）","NOT & empty inputs:":"NOT 和空輸入：","Name & color":"命名並設定色彩：","Need to remember participants, check later eligibility, run a unique-user draw, or clear one named list? Open the":"需要記住參加者、檢查後續資格、進行不重複使用者抽獎，或清除一個具名清單？開啟","No network sandbox.":"沒有網路沙盒。","No. Many nodes already provide all-in-one filters (for example \"Filter User Level\" + \"Contains Text\"). Use AND only when the built-in options do not cover your combination, or when you want a reusable logic junction that other branches can share.":"不需要。許多節點已經提供整合式篩選器（例如「Filter User Level」 + 「Contains Text」）。僅當內建選項無法涵蓋您的組合，或需要供其他分支共用的可重用邏輯連接點時，才使用 AND。","No. Many nodes include multiple checks (for example, the basic Message Filter supports keyword + role). Use AND only for advanced combinations or when merging signals from different nodes.":"不需要。許多節點包含多項檢查（例如，基本 Message Filter 支援關鍵字 + 角色）。僅對進階組合，或合併來自不同節點的訊號時使用 AND。","Nodes at a Glance":"節點速覽","Nodes such as":"例如以下節點：","OBS Control Guide":"OBS 控制指南","OBS WebSocket:":"OBS WebSocket:","OBS control modes:":"OBS 控制模式：","OR":"OR","Old 4.x installs:":"舊版 4.x 安裝：","Once loaded, that overlay can:":"載入後，該疊加畫面可以：","Only process events from specific platforms.":"僅處理來自特定平台的事件。","Only process messages that have enough content (useful for TTS or relay to avoid single-emoji spam).":"僅處理包含足夠內容的訊息（適用於 TTS 或轉送，以避免單一表情洗版）。","Open":"開啟","Open Code Editor":"開啟程式碼編輯器（Open Code Editor）","Open the Event Flow editor from the main dashboard's menu (desktop or extension).":"從主儀表板選單（桌面應用程式或擴充功能）開啟 Event Flow 編輯器。","Open the main Social Stream Ninja popup (the window loaded from":"開啟 Social Stream Ninja 主彈出視窗（從以下位置載入的視窗：","Optional context (state variables, timers) that the node asks for explicitly.":"節點明確請求的可選脈絡（狀態變數、計時器）。","Output Patterns":"輸出模式","Outputs":"輸出","Outputs:":"輸出：","Outputs: the inverted boolean plus the untouched payload.":"輸出：反轉後的布林值，以及未改動的承載資料。","Overlay diagnostics:":"疊加畫面診斷：","Pass the (possibly mutated) message back so downstream nodes receive your changes.":"將訊息（可能已修改）傳回，讓下游節點收到您的變更。","Pass-Through vs. Override":"直通與覆寫","Password:":"密碼：","Payload":"承載資料","Payload Structure":"承載資料結構","Place NOT after \"Contains Keyword\" to trigger an alert when a viewer":"將 NOT 放在「Contains Keyword」後，即可在下列情況觸發提醒：觀眾","Platform filter":"平台篩選器","Platform name (capitalized)":"平台名稱（首字母大寫）","Platform name (raw)":"平台名稱（原始值）","Platform user ID":"平台使用者 ID","Platform-aware message prefix":"依平台區分的訊息前綴","Play Audio Clip":"播放音訊片段","Play Audio Clip → Browse sounds":"Play Audio Clip → Browse sounds","Play sounds (TTS, audio clips) locally so viewers hear them.":"在本機播放聲音（TTS、音訊片段），讓觀眾聽到。","Playback options":"Playback options","Points & Rewards":"點數和獎勵","Prepend a platform label when relaying cross-platform so viewers know the source.":"跨平台轉送時加入平台標籤前綴，讓觀眾知道來源。","Printer Control":"印表機控制（Printer Control）","Properties panel after placing the trigger. Write any expression that returns":"放置觸發條件後的屬性面板。撰寫任意傳回以下值的運算式：","Ready for more depth?":"準備深入了解？","Recommended diagnostic path:":"建議診斷路徑：","Reflection Filter":"回流篩選器（Reflection Filter）","Regex command detection":"規則運算式命令偵測","Relay Chat":"轉送聊天（Relay Chat）","Relay Chat skips recognized reflections automatically.":"Relay Chat 自動略過已識別的回流。","Relay Chat:":"轉送聊天（Relay Chat）：","Relay chat between services with filters (e.g., mirror Twitch to Discord but block commands).":"在服務之間篩選並轉送聊天（例如將 Twitch 鏡像至 Discord，但封鎖命令）。","Relaying chat between surfaces is powerful but can echo infinitely if you listen to your own output. Follow these safeguards:":"跨介面轉送聊天很有用，但如果監聽自己的輸出，就可能產生無限回傳。請遵循以下防護措施：","Relink":"重新連結","Remember:":"請記住：","Remove all @username mentions from a message before relaying it to another platform.":"轉送至另一個平台之前，移除訊息中的所有 @username 提及。","Return a plain object from your action code. Any fields you include are merged into the flow's":"從動作程式碼傳回一般物件。您包含的任何欄位都會合併至流程的","Return field":"傳回欄位","Reward name when the source exposes a top-level reward title field":"來源提供頂層獎勵標題欄位時的獎勵名稱","Rewrite the chatmessage into a consistent announcement string when a donation is present.":"存在贊助時，將 chatmessage 重寫為一致的公告字串。","Run Test":"執行測試（Run Test）","Run custom workflows from Stream Deck or the API":"從 Stream Deck 或 API 執行自訂工作流程","Run the matching action check there before testing the full Event Flow automation.":"在測試完整 Event Flow 自動化之前，先在那裡執行相應的動作檢查。","Running the":"執行","SSApp / Desktop only":"僅限 SSApp / 桌面應用程式","SSApp desktop app":"SSApp 桌面應用程式","SSApp desktop app?":"SSApp 桌面應用程式？","Save & Close":"儲存並關閉（Save & Close）","Save versions.":"儲存版本。","Scroll to the “Flow Actions” card. Use the":"捲動至「Flow Actions」卡片。使用","Secondary context line":"次要脈絡列","Security considerations":"安全注意事項","See the dedicated":"請參閱專門的","Send Message":"傳送訊息（Send Message）","Sender has VIP status":"傳送者具有 VIP 身分","Sender is a moderator":"傳送者是管理員","Sender is a subscriber":"傳送者是訂閱者","Set":"設定","Set OBS Text Source:":"設定 OBS 文字來源（Set OBS Text Source）：","Set Text Source:":"設定文字來源（Set Text Source）：","Several action nodes (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) support":"多個動作節點（Show Text、Set Text Source、Send Message、Relay Chat、TTS Speak、Call Webhook、Print Thermal Label）支援","Should return:":"應傳回：","Show GIPHY or direct media URLs, text, and confetti triggered by your flows.":"顯示由流程觸發的 GIPHY 或直接媒體 URL、文字和彩紙。","Show Text:":"顯示文字（Show Text）：","Signature:":"簽章：","Single Output":"單一輸出","Snippet examples":"程式碼片段範例","Social Stream Ninja logo":"Social Stream Ninja 標誌","Some nodes (Set Variable, Math, Text Replace) mutate the payload but still forward the":"部分節點（Set Variable、Math、Text Replace）會修改承載資料，但仍轉送","Sound Library":"Sound Library","Source platform (lowercase)":"來源平台（小寫）","Speak Text":"朗讀文字（Speak Text）","Start with an alert template:":"從提醒範本開始：","State Nodes":"狀態節點","Step 1: Custom Code trigger":"步驟 1 — Custom Code 觸發條件","Step 2: Execute Custom Code action":"步驟 2 — Execute Custom Code 動作","Step 3: Relay Chat action":"步驟 3 — Relay Chat 動作","Stop Audio Clips":"Stop Audio Clips","Store repeats in State nodes.":"將重複記錄存入狀態節點。","Strip @mentions":"移除 @提及","Structured event data (JSON)":"結構化事件資料（JSON）","Subscriber / VIP / mod gate":"訂閱者 / VIP / 管理員閘控","Syntax errors too.":"語法錯誤也一樣。","TTS:":"TTS:","Tag the message with a custom field that a later":"為訊息加入自訂欄位標記，後續的","Talk to OBS via the WebSocket settings that live under the Flow Actions section in the popup (scene switching, source toggles, GDI+/FreeType text updates, replay buffer, etc.).":"透過彈出視窗 Flow Actions 區段中的 WebSocket 設定與 OBS 通訊（場景切換、來源開關、GDI+/FreeType 文字更新、重播緩衝區等）。","Template variables work in JSON string values at any nested object or array depth. Object keys are not templated, and a custom body without placeholders is sent unchanged.":"範本變數適用於任意巢狀物件或陣列深度的 JSON 字串值。物件鍵不進行範本替換，不含預留位置的自訂本文會原樣傳送。","Test Flow":"測試流程（Test Flow）","Test with the built-in simulator":"使用內建模擬器測試","Testing the flow.":"測試流程。","The AND gate is not optional.":"AND 閘不可省略。","The AND node ensures only members using the right keyword relay to Discord. Both branches send their boolean result to the AND node; the payload from the":"AND 節點確保只有使用正確關鍵字的會員才會轉送至 Discord。兩個分支都將布林結果傳送至 AND 節點；承載資料來自","The Chrome extension cannot serve disk files by itself. Use Upload or a hosted URL when no desktop companion is available. See the":"Chrome 擴充功能本身無法提供磁碟檔案。沒有桌面輔助應用程式時，請使用 Upload 或代管 URL。請參閱","The Event Flow Editor. The left panel lists all available nodes; the dotted canvas is where you build flows; the right panel shows properties for the selected node.":"Event Flow 編輯器。左側面板列出所有可用節點；點陣畫布用於建立流程；右側面板顯示所選節點的屬性。","The Event Flow editor is the “advanced automation” layer for Social Stream Ninja. It sits above the simple popup switches and lets you script your own routing logic. Use it when you need to:":"Event Flow 編輯器是 Social Stream Ninja 的「進階自動化」層。它位於簡單彈出視窗開關之上，讓您撰寫自己的路由邏輯。在需要以下功能時使用它：","The Event Flow runtime passes two things through every wire:":"Event Flow 執行階段透過每條連線傳遞兩種內容：","The Test Flow panel for sending synthetic test events":"用於傳送模擬測試事件的 Test Flow 面板","The Test Flow panel. Fill in fields matching your trigger conditions and click":"Test Flow 面板。填寫與觸發條件相符的欄位，然後點擊","The chat message text (may contain HTML)":"聊天訊息文字（可能包含 HTML）","The editor's Preview button plays locally; live playback needs the overlay open. If the browser blocks autoplay, click":"編輯器的 Preview 按鈕會在本機播放；即時播放需要開啟疊加畫面。如果瀏覽器封鎖自動播放，請點擊","The full message payload.":"完整訊息承載資料。","The gate bit (":"閘控位元（","The link looks like":"連結類似於","The object":"物件","The same payload unless the node edits it.":"相同承載資料，除非節點對其進行編輯。","Thermal Label:":"熱感標籤：","Thermal Printer Guide":"熱感印表機指南","Thermal printing in SSApp:":"SSApp 中的熱感列印：","These blocks answer the most common \"What does true/false mean?\" questions.":"這些區塊解答最常見的「true/false 是什麼意思？」問題。","Think of the popup as “quick presets” and Event Flow as the toolkit for bespoke workflows.":"可以將彈出視窗視為「快速預設」，將 Event Flow 視為自訂工作流程的工具集。","This flow is complete and fires on every message, but the sound plays on the Flow Actions overlay page,":"該流程完整，並在每則訊息時觸發，但聲音會在 Flow Actions 疊加畫面頁面上播放，","This flow listens for":"該流程監聽","This guide is intentionally standalone. Copy it locally, adapt it for your team, and keep experimenting inside the editor.":"本指南刻意設計為獨立文件，您可以複製到本機、為團隊調整，並繼續在編輯器中嘗試。","TikTok Team Member":"TikTok Team 成員（TikTok Team Member）","Transform & Logic Nodes":"轉換和邏輯節點","Trigger custom overlays, audio, OBS scenes, or webhooks based on data you enrich in the flow.":"根據在流程中補充的資料，觸發自訂疊加畫面、音訊、OBS 場景或 webhook。","Trigger panel showing Custom Code node under the Advanced group":"觸發條件面板，顯示 Advanced 群組下的 Custom Code 節點","Trigger snippets: return":"觸發條件程式碼片段 — 傳回","Trigger ──▶ RANDOM (50%) ──▶ Play Sound A │ └──▶ NOT ──▶ AND ──▶ Play Sound B Trigger ──────────────────▲":"Trigger ──▶ RANDOM (50%) ──▶ Play Sound A │ └──▶ NOT ──▶ AND ──▶ Play Sound B Trigger ──────────────────▲","Triggers":"觸發器","True":"真（True）","True/False Outputs":"True/False 輸出","Twitch Message ──▶ Regex Match \"^!\" ─┐ │ ├─false──▶ Auto Reply (\"Thanks for chatting!\") │ └─true──▶ Do nothing":"Twitch Message ──▶ Regex Match \"^!\" ─┐ │ ├─false──▶ Auto Reply (\"Thanks for chatting!\") │ └─true──▶ Do nothing","Twitch and YouTube relay walkthrough":"Twitch 和 YouTube 轉送教學","Twitch, YouTube":"Twitch, YouTube","Two action nodes chained together with no trigger node":"兩個串聯的動作節點，沒有觸發條件節點","Two nodes in the Event Flow editor let you write arbitrary JavaScript that runs inside the flow pipeline:":"Event Flow 編輯器中的兩個節點讓您撰寫在流程處理管線內執行的任意 JavaScript：","USD donation equivalent when the source provides one; valid zero values are honored. Event Flow falls back to":"來源提供時的等值美元贊助金額；有效的零值會予以採用。Event Flow 改用以下內容作為備援：","USD donation equivalent, supplied or estimated; Event Flow derives threshold values from normalized":"提供或估算的等值美元贊助金額；Event Flow 從標準化的以下欄位推導門檻：","Unlock":"解鎖","Use":"使用","Use AND when multiple conditions must be satisfied simultaneously (\"is subscriber\"":"當多個條件必須同時滿足時使用 AND（「是訂閱者」","Use Debounce or Cooldown nodes":"使用 Debounce 或 Cooldown 節點","Use counters, toggles, and timestamps to avoid double alerts.":"使用計數器、開關和時間戳記避免重複提醒。","Use random set":"Use random set","Use sound":"Use sound","User Memory guide":"使用者記憶指南","User avatar URL":"使用者頭像 URL","User's platform ID":"使用者的平台 ID","Using local media in the standalone app:":"在獨立應用程式中使用本機媒體：","Variable":"變數","Variable matching is case-insensitive.":"變數比對不區分大小寫。","Variables + Logic":"變數和邏輯","Voice Override":"語音覆寫（Voice Override）","What comes into a node?":"節點接收什麼？","What is this editor?":"這個編輯器是什麼？","What leaves a node?":"什麼內容離開節點？","What the action returns":"動作傳回的內容","When to branch?":"何時分支？","When you add custom":"當您新增自訂的","Whenever you want to react differently to":"每當希望針對以下內容作出不同反應時：","Work inside canvases called":"在稱為以下名稱的畫布中工作：","Yes. Enter a provider-supported voice name or ID in":"可以。在以下欄位中輸入提供者支援的語音名稱或 ID：","Yes. The payload still travels through the false output; it is up to you to decide where that branch should go.":"可以。承載資料仍會透過 false 輸出傳遞；由您決定該分支應通向何處。","YouTube Message ──▶ Contains \"!queue\" ─▶ AND ─▶ Relay to Discord Gifted Membership ─▶ User Role = Member ──▲":"YouTube Message ──▶ Contains \"!queue\" ─▶ AND ─▶ Relay to Discord Gifted Membership ─▶ User Role = Member ──▲","YouTube Shorts and Event Flow":"YouTube Shorts 與 Event Flow","YouTube Shorts destination note:":"YouTube Shorts 目標說明：","YouTube Super Chat or Super Sticker in a EUR range":"EUR 區間內的 YouTube Super Chat 或 Super Sticker","[copy link]":"[複製連結]","a boolean:":"布林值 —","action can read from a template variable (":"動作可從範本變數讀取（","action with":"動作，帶有","actions":"動作","actions.html":"actions.html","all work the same way.":"都以相同方式運作。","also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.":"also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.","an object or Promise merged into":"物件或 Promise，合併至","and":"和","and use that generated localhost URL instead of the hosted Flow Actions URL.":"並使用產生的 localhost URL 代替代管的 Flow Actions URL。","any":"任意","append":"附加","at compile time is caught the same way. Check DevTools (F12) if a node appears to do nothing.":"的編譯錯誤也會以相同方式攔截。如果節點似乎沒有反應，請檢查 DevTools（F12）。","available only when":"僅在以下情況下可用：","becomes available on the gray/red port.":"會在灰色/紅色連接埠提供。","below), plus":"如下），加上","bit telling the next node whether to run.":"位元，告知下一個節點是否執行。","boolean":"布林值","browser source; Multi-Alerts plays through its own browser source. Keep sound enabled in only one for the same event to avoid duplicate playback. Tab to a flow node and press Enter or Space to edit its properties.":"瀏覽器來源；Multi-Alerts 透過自己的瀏覽器來源播放。對於同一事件，只在其中一個來源啟用聲音，以免重複播放。使用 Tab 移動至流程節點，按 Enter 或空白鍵編輯其屬性。","button or click the URL inside the card.":"按鈕，或點擊卡片內的 URL。","by default. When a condition fails, it emits":"作為預設值。條件失敗時，它發出","channel and an optional":"頻道和可選的","channel.":"頻道。","checks the JavaScript syntax and saves the whole flow;":"檢查 JavaScript 語法並儲存整個流程；","cheer, raid, new_follower":"cheer, raid, new_follower","choose the printer and calibrate its paper width and safe margins under":"在以下位置選擇印表機並校準紙張寬度和安全邊界：","connected input is true.":"連接的輸入為 true。","continues downstream.":"，並繼續向下游傳遞。","continues through the green port;":"透過綠色連接埠繼續；","controls overlap, queueing, and the action's cooldown;":"controls overlap, queueing, and the action's cooldown;","conversion of normalized":"轉換標準化的","docs/event-reference.html":"docs/event-reference.html","does":"做什麼","does not use the keyword.":"未使用該關鍵字。","does the same. Cancel leaves the node unchanged.":"執行相同動作。Cancel 不會變更節點。","doesn't match your trigger.":"不符合觸發條件的訊息。","downstream nodes stop executing unless they receive input on a separate branch (for example, the":"下游節點停止執行，除非它們從其他分支收到輸入（例如","exposes":"提供","false":"false","features a message when the flow reaches it. It does not fire when you feature a message elsewhere.":"在流程抵達它時精選訊息，而不會在您於其他位置精選訊息時觸發。","fields. Tells downstream nodes the payload has been edited.":"欄位。告知下游節點承載資料已編輯。","fire only when the gate remains":"僅在閘控保持以下值時觸發：","first branch":"第一個分支","flows":"流程","flows through automatically.":"會自動流經。","for a complete setup.":"了解完整設定。","for a large editing window.":"開啟大型編輯視窗。","for a ready-made animation and synthetic thank-you clip, or the advanced":"以使用現成的動畫和合成感謝語音片段，或使用進階的","for alerts that should only fire once every X seconds.":"用於每 X 秒只應觸發一次的提醒。","for arbitrary logic that no built-in node covers.":"用於內建節點未涵蓋的任意邏輯。","for detailed payload documentation across all platforms.":"了解所有平台的詳細承載資料文件。","for downstream logic.":"用於下游邏輯。","for every trigger, action, setup step, and tested recipe.":"了解每個觸發條件、動作、設定步驟和經過測試的方案。","for printer setup, fixed-size labels, and a complete flow.":"了解印表機設定、固定尺寸標籤和完整流程。","for the full setup.":"了解完整設定。","for the shared-state model, screenshots, and an importable example.":"了解共用狀態模型、螢幕擷取畫面和可匯入範例。","from subscribers, VIPs, or mods, reformats it as a feature request, and relays it to a second destination (e.g. Discord).":"來自訂閱者、VIP 或管理員的內容，將其重新格式化為功能請求，並轉送至第二個目標（例如 Discord）。","from the":"來自","group in the":"群組，位於","group in the Actions panel.":"群組，位於 Actions 面板。","group in the Triggers panel.":"群組，位於 Triggers 面板。","https://...":"https://...","if":"如果","if you are still using obs-websocket 4.x / port":"如果仍使用 obs-websocket 4.x / 連接埠","if you changed":"如果您變更了","if you want a small live OBS connection badge on the overlay while troubleshooting.":"如果希望在排查問題時，在疊加畫面上顯示一個小型即時 OBS 連接徽章。","in the User Role node. It recognizes TikTok Fan Club/team levels and badges on the incoming message and does not depend on Main Chat Overlay settings.":"在 User Role 節點中。它識別傳入訊息中的 TikTok Fan Club/team 等級和徽章，不依賴 Main Chat Overlay 設定。","is a legacy alias":"是舊版別名","is a node-based editor. Each line carries a message payload plus a boolean state (":"是以節點為基礎的編輯器。每條連線帶有訊息承載資料和布林狀態（","is running inside OBS Browser Source with":"在 OBS 瀏覽器來源內執行，帶有","keeps it flowing to the next node.":"使它繼續流向下一個節點。","keys, note them so overlays and remote clients stay consistent.":"鍵時，請記載它們，讓疊加畫面和遠端用戶端保持一致。","labels for threshold comparisons, including 100 unknown named units = $0.01 USD. It does not parse":"標籤用於門檻比較，包括 100 個未知具名單位 = 0.01 美元。它不會解析","labels such as value,":"標籤，例如數值，","logic nodes":"邏輯節點","message API":"訊息 API","not in the editor.":"而不是在編輯器中。","number / string":"數值 / 字串","object":"物件","object and any APIs the preload script exposes (e.g.":"物件，以及 preload 指令碼提供的任何 API（例如","object; fields you omit keep their current values.":"物件；省略的欄位保持目前值。","obs-websocket-test.html":"obs-websocket-test.html","on a regular chat message), the placeholder is replaced with an empty string rather than showing the literal":"在一般聊天訊息中），預留位置會替換為空字串，而不是顯示字面的","on the Flow Actions page to retry the latest blocked clip. Clicking elsewhere on that page also enables playback. An OBS Browser Source normally allows autoplay.":"在 Flow Actions 頁面上，以重試最近遭封鎖的片段。點擊該頁面其他位置也會啟用播放。OBS 瀏覽器來源通常允許自動播放。","only if all connected inputs equal":"僅當所有連接輸入都等於","optional. Only append":"選用。僅在 OBS 伺服器要求驗證時，才將","or":"或","or the extension icon).":"或擴充功能圖示）。","output, the flow simply ends there. That is perfect for filters (\"block everything that fails the check\") but do not forget to connect the":"輸出，流程就會在此結束。這非常適合篩選器（「封鎖所有未通過檢查的內容」），但別忘了連接","outputs a value of":"在提醒遭靜音時輸出","panel onto the canvas. It acts as a gate: the flow continues only when your code returns":"面板拖到畫布上。它充當閘控：僅當程式碼傳回以下值時流程才繼續：","panel. It can mutate the message, block it, or attach metadata that downstream nodes can read.":"面板。它可以修改訊息、封鎖訊息或附加供下游節點讀取的中繼資料。","path if you need fallbacks.":"路徑，如果需要備援處理。","popup.html":"popup.html","prose for donation values.":"文字來擷取贊助值。","read the payload and may rewrite fields, set state, or flip the gate signal to":"讀取承載資料，並可重寫欄位、設定狀態，或將閘控訊號翻轉為","recommended for consistent control. Social Stream Ninja Flow Actions use the OBS WebSocket v5 API from OBS 28+ and expect the modern request set on port":"建議使用，以實現一致的控制。Social Stream Ninja Flow Actions 使用 OBS 28+ 的 OBS WebSocket v5 API，並要求連接埠上提供現代請求集：","result API":"結果 API","select a Custom Code node and click":"選擇 Custom Code 節點並點擊","socket on a Condition node). That makes it easy to build fallback logic without duplicating whole flows.":"連接埠，位於 Condition 節點上）。這樣就能輕鬆建立備援邏輯，無需複製整個流程。","socket to our reply, so regular chatters get an acknowledgement while commands simply pass through.":"連接埠接到回覆，因此一般聊天者會收到確認，而命令直接通過。","sources":"來源","state from their input. Others (NOT, AND, OR) recalculate the boolean themselves.":"來自輸入的狀態。其他節點（NOT、AND、OR）自行重新計算布林值。","stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use":"stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use","string":"字串","succeed.":"成功。","system so viewers can intentionally trigger flows.":"系統，讓觀眾可以主動觸發流程。","template variables":"範本變數","template. New alert templates start disabled so you can configure and test them first. For the OBS template, choose a source and the same normally-off filter in both filter actions.":"範本。新提醒範本初始為停用狀態，讓您可以先設定並測試。對於 OBS 範本，在兩個濾鏡動作中選擇同一個來源和同一個通常關閉的濾鏡。","text.":"文字。","that get replaced with event data at runtime. Wrap variable names in curly braces like":"在執行階段會被事件資料替換。用大括號包住變數名稱，例如","the object":"物件","to back up or share.":"以備份或分享。","to build queue systems, raffles, or scoring engines.":"以建立佇列系統、抽獎或評分引擎。","to continue the flow":"以繼續流程","to convert the formatted donation label into EUR. It returns a number, or":"將格式化的贊助標籤轉換為 EUR。它傳回數字，或","to enable them. In extension mode the nodes appear greyed-out with the label":"以啟用它們。在擴充功能模式中，節點顯示為灰色，並帶有標籤","to filter decisions, and":"以篩選決策，以及","to inject events,":"以插入事件，","to let the flow continue,":"讓流程繼續，","to make things happen (send chat, control overlays, relay messages, etc.).":"以執行實際動作（傳送聊天、控制疊加畫面、轉送訊息等）。","to prevent the message from being displayed or relayed.":"以防止訊息顯示或轉送。","to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing":"to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing","to stop it.":"以停止它。","to the Flow Actions URL if your OBS server is configured to require authentication.":"加入 Flow Actions URL。","to the URL for":"至以下頁面的 URL：","to validate the full pipeline.":"以驗證完整處理管線。","trigger (or Message Contains, a regex, a donation event, etc.) starts the chain; both actions then run for each matching message.":"觸發條件（或 Message Contains、規則運算式、贊助事件等）啟動該鏈；之後，每則相符訊息都會執行這兩個動作。","true":"true","twitch, youtube":"twitch, youtube","unless the node itself errors.":"除非節點本身出錯。","updates OBS Text (GDI+) and Text (FreeType 2) inputs directly and supports Event Flow template variables such as":"直接更新 OBS Text (GDI+) 和 Text (FreeType 2) 輸入，並支援 Event Flow 範本變數，例如","use":"使用","value, value + unit, or compact unit/value. Unknown named virtual units use 100 units = $0.01 USD; unpriced TikTok gifts use one coin per gift ($0.01 each).":"數值、數值 + 單位，或精簡的單位/數值格式。未知具名虛擬單位依 100 單位 = 0.01 美元換算；未定價的 TikTok 禮物依每份禮物一個金幣（每個 0.01 美元）計算。","vs":"與","when the alert is muted. By inverting that result, the NOT node makes sure we only play the celebration when the flag is":"。透過反轉該結果，NOT 節點確保僅在旗標為以下值時播放慶祝效果：","when the message is a command. We route the":"，條件是訊息為指令。我們將","when the requested target currency is unsupported. The converter uses Social Stream Ninja's approximate internal rates; it does not contact an external exchange service.":"當不支援請求的目標貨幣時。轉換器使用 Social Stream Ninja 的內部近似匯率，不會聯繫外部匯率服務。","whenever the RANDOM gate sits idle, so sound B would play on every chat message that":"每當 RANDOM 閘閒置時，因此聲音 B 會在每則以下聊天訊息時播放：","your code runs as":"您的程式碼以下列形式執行：","your nodes so future-you knows which branch is which.":"為節點設定名稱和色彩，以便日後辨認各個分支。","{\"viewers\":100}":"{\"viewers\":100}","– a":"— 一個","– the event or message data object.":"— 事件或訊息資料物件。","┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│ Relay Chat │ │ │ │ │ │ (to Discord) │ │ Gate: VIP/sub/mod │ │ Reformat message text │ │ │ │ + starts with │ │ → \"📋 Feature Request │ │ │ │ !feature │ │ from {name}: {text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘":"┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│ Relay Chat │ │ │ │ │ │ (to Discord) │ │ Gate: VIP/sub/mod │ │ Reformat message text │ │ │ │ + starts with │ │ → \"📋 Feature Request │ │ │ │ !feature │ │ from {name}: {text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘","✅ Works. An":"✅ 可執行。一個","❌ Never runs. Feature Message and Speak Text are both":"❌ 從不執行。Feature Message 和 Speak Text 都是"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/actions/event-flow-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="guide-shell">
+        <header>
+            <p class="badge">Event Flow 系統</p>
+            <h1>Event Flow 編輯器指南</h1>
+            <p>為 Social Stream Ninja 建立可靠的自動化。本指南介紹基礎知識、邏輯節點、訊號流，以及創作者最常詢問的實用技巧，例如避免聊天回傳以及何時組合 AND/NOT 區塊。</p>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/event-flow-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/event-flow-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/event-flow-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/event-flow-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/event-flow-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/event-flow-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/event-flow-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/event-flow-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="event-flow-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/actions/event-flow-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/event-flow-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/event-flow-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/event-flow-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/event-flow-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/event-flow-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/event-flow-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/event-flow-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></header>
+        <div class="content">
+            <section>
+                <h2>0. 快速入門</h2>
+                <div class="panel">
+                    <strong>Event Flow</strong> 是以節點為基礎的編輯器。每條連線帶有訊息承載資料和布林狀態（<em>true</em> = 繼續， <em>false</em> = 停止）。使用 <strong>來源</strong> 以插入事件， <strong>邏輯節點</strong> 以篩選決策，以及 <strong>動作</strong> 以執行實際動作（傳送聊天、控制疊加畫面、轉送訊息等）。
+                </div>
+                <div class="callout">
+                    需要記住參加者、檢查後續資格、進行不重複使用者抽獎，或清除一個具名清單？開啟 <a href="user-memory-guide.html">使用者記憶指南</a> 了解共用狀態模型、螢幕擷取畫面和可匯入範例。
+                </div>
+                <h3 id="what-is-event-flow">這個編輯器是什麼？</h3>
+                <p>Event Flow 編輯器是 Social Stream Ninja 的「進階自動化」層。它位於簡單彈出視窗開關之上，讓您撰寫自己的路由邏輯。在需要以下功能時使用它：</p>
+                <ul>
+                    <li>在服務之間篩選並轉送聊天（例如將 Twitch 鏡像至 Discord，但封鎖命令）。</li>
+                    <li>透過 AND/OR/NOT 邏輯建立以忠誠度為依據的命令、關鍵字遊戲或抽獎資格限制。</li>
+                    <li>根據在流程中補充的資料，觸發自訂疊加畫面、音訊、OBS 場景或 webhook。</li>
+                    <li>在單一自動化中混合多個平台（Kick + Twitch + YouTube 透過一個流程路由）。</li>
+                </ul>
+                <p>可以將彈出視窗視為「快速預設」，將 Event Flow 視為自訂工作流程的工具集。</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>啟動和基礎知識</h4>
+                        <ul>
+                            <li>從主儀表板選單（桌面應用程式或擴充功能）開啟 Event Flow 編輯器。</li>
+                            <li>每個專案在匯出前都儲存在本機。使用 <code>Export</code> 以備份或分享。</li>
+                            <li>在稱為以下名稱的畫布中工作： <em>流程</em>。每個流程都可以同時訂閱多個平台。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>節點速覽</h4>
+                        <ul>
+                            <li><strong>輸入</strong> （左側連接埠）接收訊息脈絡。</li>
+                            <li><strong>輸出</strong> （右側連接埠）發出相同脈絡以及所有編輯。</li>
+                            <li>邏輯節點可能同時發出 <code>true</code> 頻道和可選的 <code>false</code> 頻道。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>承載資料結構</h4>
+                        <p>每則訊息都帶有 JSON 物件。必要鍵遵循 <a href="../docs/event-reference.html" target="_blank" rel="noopener">docs/event-reference.html</a> （platform、type、chatname、chatmessage 等）。將自訂資料附加至 <code>meta</code>.</p>
+                    </div>
+                </div>
+                <h3 id="every-flow-needs-a-trigger">每個流程都從觸發條件開始</h3>
+                <p>動作節點（綠色）從不自行執行，只有上方的觸發條件節點（藍色）求值為以下結果時才觸發： <code>true</code>。僅將動作串聯起來的流程看似有效，但會一直閒置，因為沒有任何東西啟動該鏈。節點名稱描述的是節點 <em>做什麼</em>，而不是它何時發生： <em>精選訊息（Feature Message）</em> 在流程抵達它時精選訊息，而不會在您於其他位置精選訊息時觸發。</p>
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-missing-trigger.png" alt="兩個串聯的動作節點，沒有觸發條件節點">
+                        <figcaption>❌ 從不執行。Feature Message 和 Speak Text 都是 <em>動作</em>；如果上方沒有觸發條件，就沒有任何東西啟動該鏈。</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-trigger-first.png" alt="Any Message 觸發條件連接至 Feature Message 和 Speak Text 動作">
+                        <figcaption>✅ 可執行。一個 <em>任意訊息（Any Message）</em> 觸發條件（或 Message Contains、規則運算式、贊助事件等）啟動該鏈；之後，每則相符訊息都會執行這兩個動作。</figcaption>
+                    </figure>
+                </div>
+            </section>
+            <section id="flow-actions-overlay">
+                <h2>Flow Actions 疊加畫面（動作輸出）</h2>
+                <div class="panel">
+                    <strong>從提醒範本開始：</strong>
+                    <p>選擇 <em>贊助：慶祝 + 語音</em> 以使用現成的動畫和合成感謝語音片段，或使用進階的 <em>贊助：動畫 + 聲音 + OBS 濾鏡</em> 範本。新提醒範本初始為停用狀態，讓您可以先設定並測試。對於 OBS 範本，在兩個濾鏡動作中選擇同一個來源和同一個通常關閉的濾鏡。</p>
+                    <p>選擇 <em>Play Audio Clip → Browse sounds</em> to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing <em>Use sound</em>。 <a href="../../audio-library.html" target="_blank" rel="noopener">Sound Library</a> also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.</p>
+                    <p>In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose <em>Use random set</em>. Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set. <em>Playback options</em> controls overlap, queueing, and the action's cooldown; <em>Stop Audio Clips</em> stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use <em>朗讀文字（Speak Text）</em>.</p>
+                    <p>Event Flow 透過以下頁面播放： <strong>Flow Actions</strong> 瀏覽器來源；Multi-Alerts 透過自己的瀏覽器來源播放。對於同一事件，只在其中一個來源啟用聲音，以免重複播放。使用 Tab 移動至流程節點，按 Enter 或空白鍵編輯其屬性。</p>
+                </div>
+                <p>例如以下節點： <em>播放音訊片段</em>, <em>顯示媒體疊加畫面</em>，以及 OBS 控制項都需要一個繪製介面。該介面就是由以下位址提供的 Flow Actions 疊加畫面頁面： <a href="../../actions.html" target="_blank" rel="noopener">actions.html</a>。讓它在直播軟體（OBS/Streamer.bot 瀏覽器停駐面板等）中保持執行，讓 Event Flow 動作有地方顯示。</p>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-audio-overlay.png" alt="Any Message 觸發條件連接至 Play Audio Clip 動作">
+                    <figcaption>該流程完整，並在每則訊息時觸發，但聲音會在 Flow Actions 疊加畫面頁面上播放， <em>而不是在編輯器中。</em> 編輯器的 Preview 按鈕會在本機播放；即時播放需要開啟疊加畫面。如果瀏覽器封鎖自動播放，請點擊 <strong>啟用音訊</strong> 在 Flow Actions 頁面上，以重試最近遭封鎖的片段。點擊該頁面其他位置也會啟用播放。OBS 瀏覽器來源通常允許自動播放。</figcaption>
+                </figure>
+                <div class="panel">
+                    <strong>如何開啟（從彈出視窗/儀表板）：</strong>
+                    <ol>
+                        <li>開啟 Social Stream Ninja 主彈出視窗（從以下位置載入的視窗： <a href="../../popup.html" target="_blank" rel="noopener">popup.html</a> 或擴充功能圖示）。</li>
+                        <li>捲動至「Flow Actions」卡片。使用 <em>[複製連結]</em> 按鈕，或點擊卡片內的 URL。</li>
+                        <li>連結類似於 <code>https://socialstream.ninja/actions.html?session=YOURSESSION</code>。將其貼到 OBS 瀏覽器來源（建議 1920×1080），或在任意疊加畫面瀏覽器中開啟。</li>
+                    </ol>
+                </div>
+                <div class="panel">
+                    <strong>在獨立應用程式中使用本機媒體：</strong>
+                    <ol>
+                        <li>在 Play Audio Clip 或 Display Media Overlay 動作中，點擊 <em>選擇本機檔案</em>.</li>
+                        <li>點選 <em>複製用於 OBS 的本機 Flow Actions URL</em> 並使用產生的 localhost URL 代替代管的 Flow Actions URL。</li>
+                        <li>保持 SSApp 執行。如果所選檔案移動了，請回到動作並點擊 <em>重新連結</em>.</li>
+                    </ol>
+                    <p>Chrome 擴充功能本身無法提供磁碟檔案。沒有桌面輔助應用程式時，請使用 Upload 或代管 URL。請參閱 <a href="../docs/media-hosting-event-flow.html" target="_blank" rel="noopener">Event Flow 媒體檔案指南</a> 了解完整設定。</p>
+                </div>
+                <p>載入後，該疊加畫面可以：</p>
+                <ul>
+                    <li>顯示由流程觸發的 GIPHY 或直接媒體 URL、文字和彩紙。</li>
+                    <li>在本機播放聲音（TTS、音訊片段），讓觀眾聽到。</li>
+                    <li>透過彈出視窗 Flow Actions 區段中的 WebSocket 設定與 OBS 通訊（場景切換、來源開關、GDI+/FreeType 文字更新、重播緩衝區等）。</li>
+                </ul>
+                <div class="panel">
+                    <strong>OBS 控制模式：</strong>
+                    <ul>
+                        <li><strong>瀏覽器來源 API：</strong> 僅在以下情況下可用： <code>actions.html</code> 在 OBS 瀏覽器來源內執行，帶有 <em>進階存取層級（Advanced Access Level）</em>。此處支援場景切換，錄製 / 直播 / 重播緩衝區動作也可以將它用作備援方式。</li>
+                        <li><strong>OBS WebSocket:</strong> 建議使用，以實現一致的控制。Social Stream Ninja Flow Actions 使用 OBS 28+ 的 OBS WebSocket v5 API，並要求連接埠上提供現代請求集： <code>4455</code>.</li>
+                        <li><strong>密碼：</strong> 選用。僅在 OBS 伺服器要求驗證時，才將 <code>&amp;obspw=...</code> 加入 Flow Actions URL。</li>
+                        <li><strong>疊加畫面診斷：</strong> 附加 <code>&amp;obsdebug=1</code> 至以下頁面的 URL： <code>actions.html</code> 如果希望在排查問題時，在疊加畫面上顯示一個小型即時 OBS 連接徽章。</li>
+                        <li><strong>設定文字來源（Set Text Source）：</strong> 直接更新 OBS Text (GDI+) 和 Text (FreeType 2) 輸入，並支援 Event Flow 範本變數，例如 <code>{counterValue}</code> 和 <code>{counterTarget}</code>.</li>
+                        <li><strong>舊版 4.x 安裝：</strong> 如果仍使用 obs-websocket 4.x / 連接埠 <code>4444</code>，在升級 OBS / obs-websocket 之前，來源 / 濾鏡 / 靜音 / 文字動作將無法運作。</li>
+                    </ul>
+                    <p>請參閱專門的 <a href="obs-control-guide.html">OBS 控制指南</a> 了解每個觸發條件、動作、設定步驟和經過測試的方案。</p>
+                </div>
+                <div class="panel">
+                    <strong>建議診斷路徑：</strong>
+                    <ol>
+                        <li>開啟 <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">obs-websocket-test.html</a>.</li>
+                        <li>確認 <code>GetVersion</code>, <code>GetCurrentProgramScene</code>，以及 <code>GetSceneList</code> 成功。</li>
+                        <li>在測試完整 Event Flow 自動化之前，先在那裡執行相應的動作檢查。</li>
+                    </ol>
+                </div>
+                <div class="panel warn">
+                    <strong>保持疊加畫面開啟。</strong> 關閉 Flow Actions 頁面會暫停 Event Flow 中的所有疊加畫面/音訊/OBS 動作。請將其隱藏或放在另一台螢幕上，而不要完全關閉。
+                </div>
+            </section>
+
+            <section>
+                <h2>1. 什麼內容流經節點？</h2>
+                <p>Event Flow 執行階段透過每條連線傳遞兩種內容：</p>
+                <ol>
+                    <li><strong>承載資料</strong> — 事件或訊息資料物件。</li>
+                    <li><strong>閘控訊號</strong> — 一個 <em>true</em>/<em>false</em> 位元，告知下一個節點是否執行。</li>
+                </ol>
+                <div class="panel">
+                    <strong>如果節點輸出 false：</strong> 下游節點停止執行，除非它們從其他分支收到輸入（例如 <code>false</code> 連接埠，位於 Condition 節點上）。這樣就能輕鬆建立備援邏輯，無需複製整個流程。
+                </div>
+                <h3>輸入需求</h3>
+                <ul>
+                    <li><strong>事件來源</strong> （Twitch Message、Timers、Manual Trigger 等）忽略上游輸入，它們產生自己的承載資料，並始終發出 <code>true</code> 除非節點本身出錯。</li>
+                    <li><strong>轉換和邏輯節點</strong> 讀取承載資料，並可重寫欄位、設定狀態，或將閘控訊號翻轉為 <code>false</code>.</li>
+                    <li><strong>動作節點</strong> 僅在閘控保持以下值時觸發： <code>true</code>。如果您希望繼續串聯動作，它們仍可輸出更新後的承載資料。</li>
+                </ul>
+                <h3>輸出模式</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>單一輸出</h4>
+                        <p>大多數節點提供一個輸出。進入的內容（承載資料 + 閘控）會原樣輸出，除非節點對其進行編輯。</p>
+                    </div>
+                    <div class="card">
+                        <h4>True/False 輸出</h4>
+                        <p>Condition、Compare、Regex 和 Logic 節點提供兩個輸出連接埠。 <em>真（True）</em> 透過綠色連接埠繼續； <em>false</em> 會在灰色/紅色連接埠提供。</p>
+                    </div>
+                    <div class="card">
+                        <h4>直通與覆寫</h4>
+                        <p>部分節點（Set Variable、Math、Text Replace）會修改承載資料，但仍轉送 <em>true</em>/<em>false</em> 來自輸入的狀態。其他節點（NOT、AND、OR）自行重新計算布林值。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>2. 邏輯節點速查</h2>
+                <p>這些區塊解答最常見的「true/false 是什麼意思？」問題。</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>非（NOT）</h4>
+                        <ul>
+                            <li>輸入：來自前一節點的 1 個布林值（true/false）。</li>
+                            <li>輸出：反轉後的布林值，以及未改動的承載資料。</li>
+                            <li><strong>預設行為：</strong> 如果 NOT 輸入沒有連接任何內容，它會求值為 <code>false</code>，因此輸出為 <code>true</code>.</li>
+                        </ul>
+                        <div class="panel">
+                            <strong>範例：</strong> 將 NOT 放在「Contains Keyword」後，即可在下列情況觸發提醒：觀眾 <em>未使用該關鍵字。</em>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>且（AND）</h4>
+                        <ul>
+                            <li>輸入：兩個或更多布林訊號（A、B 等）。可讓額外連接埠留空。</li>
+                            <li>輸出： <code>true</code> 僅當所有連接輸入都等於 <code>true</code>.</li>
+                            <li>當多個條件必須同時滿足時使用 AND（「是訂閱者」 <em>和</em> 「聊天訊息包含 !raffle」）。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>OR</h4>
+                        <ul>
+                            <li>發出 <code>true</code> 如果 <strong>任意</strong> 連接的輸入為 true。</li>
+                            <li>適合多平台觸發條件：將 Twitch 和 YouTube 訊息節點接入單一 OR，然後統一下游動作。</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="callout tip">
+                    <strong>始終需要 AND 節點嗎？</strong><br>
+                    不需要。許多節點已經提供整合式篩選器（例如「Filter User Level」 + 「Contains Text」）。僅當內建選項無法涵蓋您的組合，或需要供其他分支共用的可重用邏輯連接點時，才使用 AND。
+                </div>
+                <div class="callout.warn">
+                    <strong>NOT 和空輸入：</strong> 懸空的 NOT 節點仍會輸出 <code>true</code>。保持它連接至有意義的節點，或停用該節點，以免意外放行流程。
+                </div>
+            </section>
+
+            <section>
+                <h2>3. 微型流程範例</h2>
+                <h3>A. 除命令訊息外自動回覆</h3>
+                <div class="diagram">
+Twitch Message ──▶ Regex Match "^!" ─┐
+                                   │
+                                   ├─false──▶ Auto Reply ("Thanks for chatting!")
+                                   │
+                                   └─true──▶ Do nothing
+                </div>
+                <p>此處 Regex 節點發出 <code>true</code> ，條件是訊息為指令。我們將 <code>false</code> 連接埠接到回覆，因此一般聊天者會收到確認，而命令直接通過。</p>
+                <h3>B. 使用 AND 要求多項檢查</h3>
+                <div class="diagram">
+YouTube Message ──▶ Contains "!queue" ─▶ AND ─▶ Relay to Discord
+Gifted Membership ─▶ User Role = Member ──▲
+                </div>
+                <p>AND 節點確保只有使用正確關鍵字的會員才會轉送至 Discord。兩個分支都將布林結果傳送至 AND 節點；承載資料來自 <em>第一個分支</em> ，並繼續向下游傳遞。</p>
+                <h3>C. 使用 NOT 節點封鎖重複提醒</h3>
+                <div class="diagram">
+Event Payload ─▶ State Check (isAlertMuted)
+                 └─false─▶ NOT ─▶ Play Celebration
+                </div>
+                <p><code>State Check</code> 在提醒遭靜音時輸出 <code>true</code> 。透過反轉該結果，NOT 節點確保僅在旗標為以下值時播放慶祝效果： <code>false</code>.</p>
+                <h3>D. 隨機播放兩種聲音之一</h3>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-random-two-sounds.png" alt="流程使用 RANDOM 閘、NOT 閘和 AND 閘，隨機播放兩個音訊片段之一">
+                    <figcaption>以各 50% 機率在兩個音訊片段中選擇。RANDOM 閘對每則相符訊息隨機判斷一次：通過時播放聲音 A；失敗時，NOT 閘反轉結果，AND 閘讓聲音 B 播放。</figcaption>
+                </figure>
+                <div class="diagram">
+Trigger ──▶ RANDOM (50%) ──▶ Play Sound A
+              │
+              └──▶ NOT ──▶ AND ──▶ Play Sound B
+Trigger ──────────────────▲
+                </div>
+                <p><strong>AND 閘不可省略。</strong> 獨立的 NOT 會輸出 <code>true</code> 每當 RANDOM 閘閒置時，因此聲音 B 會在每則以下聊天訊息時播放： <em>不符合觸發條件的訊息。</em> 將觸發器連接至 AND 的第二個輸入，可將聲音 B 限制為僅在訊息符合條件時播放。同一模式適用於任何二選一的動作組合，不限於音訊。</p>
+            </section>
+
+            <section>
+                <h2>4. 防止回傳、循環和轉送回授</h2>
+                <p>跨介面轉送聊天很有用，但如果監聽自己的輸出，就可能產生無限回傳。請遵循以下防護措施：</p>
+                <div class="callout tip">
+                    <strong>YouTube Shorts 目標說明：</strong><br>
+                    傳入觸發條件和傳出 Relay Chat 的目標都會區分 <code>youtube</code> 和 <code>youtubeshorts</code>。當訊息應抵達兩個變體時，使用兩個轉送動作。請參閱 <a href="../docs/source-types-guide.html#youtube-shorts-event-flow">YouTube Shorts 與 Event Flow</a>.
+                </div>
+                <div class="callout.danger">
+                    <strong>Relay Chat 自動略過已識別的回流。</strong><br>
+                    回流是指傳送至目標聊天後又被擷取的訊息。目前 Relay Chat 動作會略過這些已識別的回流；沒有單獨的 No Reflections 核取方塊。如需隱藏或限制它們在停駐面板和疊加畫面中的顯示，請使用 <strong>回流篩選器（Reflection Filter）</strong> 動作，帶有 <strong>全部封鎖</strong>, <strong>允許第一則</strong>，或 <strong>全部允許</strong>。這控制重新接收時的顯示，而不是傳送。請遵循 <a href="../docs/chat-relay-guide.html">Twitch 和 YouTube 轉送教學</a> 了解完整設定。
+                </div>
+                <ul>
+                    <li><strong>避免重複轉送系統。</strong> 使用等效的 Event Flow 路由時，請停用全域 Relay all，並檢查是否有其他服務橋接相同聊天。自訂中繼資料不能保證在經過平台聊天後仍保留。</li>
+                    <li><strong>使用 Debounce 或 Cooldown 節點</strong> 用於每 X 秒只應觸發一次的提醒。</li>
+                    <li><strong>有意識地中斷循環。</strong> 如果兩個分支相互輸入，請新增邏輯節點檢查狀態變數（「currentlyRelaying」），以便在旗標已設定時提前退出流程。</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>5. 輸入、輸出和實用問題</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h4>節點接收什麼？</h4>
+                        <ul>
+                            <li>完整訊息承載資料。</li>
+                            <li>閘控位元（<code>true</code>/<code>false</code>).</li>
+                            <li>節點明確請求的可選脈絡（狀態變數、計時器）。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>什麼內容離開節點？</h4>
+                        <ul>
+                            <li>相同承載資料，除非節點對其進行編輯。</li>
+                            <li>重新計算的閘控位元（邏輯節點）或直通位元（動作）。</li>
+                            <li>大多數副作用（如傳送聊天）不會改變承載資料，但點數動作可以附加狀態欄位，例如 <code>pointsTotal</code> 或 <code>pointsSpendError</code> 用於下游邏輯。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>何時分支？</h4>
+                        <p>每當希望針對以下內容作出不同反應時： <code>true</code> 與 <code>false</code>。從所需的彩色輸出（綠色 = true，灰色/紅色 = false）拖曳連線至下一個節點。</p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <strong>請記住：</strong> 如果不處理 <code>false</code> 輸出，流程就會在此結束。這非常適合篩選器（「封鎖所有未通過檢查的內容」），但別忘了連接 <code>false</code> 路徑，如果需要備援處理。
+                </div>
+                <h3>常見問答</h3>
+                <ul>
+                    <li><strong>每一對篩選器都必須使用 AND 嗎？</strong> 不需要。許多節點包含多項檢查（例如，基本 Message Filter 支援關鍵字 + 角色）。僅對進階組合，或合併來自不同節點的訊號時使用 AND。</li>
+                    <li><strong>true/false 值如何抵達 NOT 節點？</strong> 任何具有綠色輸出的節點都會發出 <code>true</code> 作為預設值。條件失敗時，它發出 <code>false</code>。將該連線接入 NOT 以反轉結果。</li>
+                    <li><strong>節點傳回 false 時，仍能發出承載資料嗎？</strong> 可以。承載資料仍會透過 false 輸出傳遞；由您決定該分支應通向何處。</li>
+					<li><strong>如何比對 TikTok Team 成員？</strong> 選擇 <em>TikTok Team 成員（TikTok Team Member）</em> 在 User Role 節點中。它識別傳入訊息中的 TikTok Fan Club/team 等級和徽章，不依賴 Main Chat Overlay 設定。</li>
+					<li><strong>每個 Speak Text 節點可以使用不同的語音嗎？</strong> 可以。在以下欄位中輸入提供者支援的語音名稱或 ID： <em>語音覆寫（Voice Override）</em>，或留空以使用 Flow Actions TTS 預設值。</li>
+                </ul>
+            </section>
+
+            <section id="template-variables">
+                <h2>6. 範本變數參考</h2>
+                <p>多個動作節點（Show Text、Set Text Source、Send Message、Relay Chat、TTS Speak、Call Webhook、Print Thermal Label）支援 <strong>範本變數</strong> 在執行階段會被事件資料替換。用大括號包住變數名稱，例如 <code>{username}</code>.</p>
+
+                <h3>核心變數（回溯相容）</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>變數</th><th>別名</th><th>說明</th><th>範例</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{username}</code></td><td><code>{chatname}</code></td><td>使用者的顯示名稱</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{message}</code></td><td><code>{chatmessage}</code></td><td>聊天訊息文字</td><td>大家好！</td></tr>
+                        <tr><td><code>{source}</code></td><td>-</td><td>平台名稱（首字母大寫）</td><td>Twitch, YouTube</td></tr>
+                        <tr><td><code>{type}</code></td><td>-</td><td>平台名稱（原始值）</td><td>twitch, youtube</td></tr>
+                        <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>贊助顯示標籤</td><td>$5.00, 500 bits</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>延伸變數</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>變數</th><th>說明</th><th>範例</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{displayname}</code></td><td>顯示名稱（備用欄位）</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{donoValue}</code></td><td>提供或估算的等值美元贊助金額；Event Flow 從標準化的以下欄位推導門檻： <code>hasDonation</code> 標籤，例如數值， <code>$</code>數值、數值 + 單位，或精簡的單位/數值格式。未知具名虛擬單位依 100 單位 = 0.01 美元換算；未定價的 TikTok 禮物依每份禮物一個金幣（每個 0.01 美元）計算。 <code>{donationAmount}</code> 是舊版別名</td><td>5.00</td></tr>
+                        <tr><td><code>{event}</code></td><td>事件類型識別碼</td><td>cheer, raid, new_follower</td></tr>
+                        <tr><td><code>{membership}</code></td><td>會員狀態</td><td>MEMBERSHIP, new_sponsor</td></tr>
+                        <tr><td><code>{subtitle}</code></td><td>補充脈絡</td><td>已加入會員 3 個月</td></tr>
+                        <tr><td><code>{userid}</code></td><td>使用者的平台 ID</td><td>12345678</td></tr>
+                        <tr><td><code>{chatimg}</code></td><td>使用者頭像 URL</td><td>https://...</td></tr>
+                        <tr><td><code>{contentimg}</code></td><td>附加的影像 URL</td><td>https://...</td></tr>
+                        <tr><td><code>{rewardTitle}</code></td><td>來源提供頂層獎勵標題欄位時的獎勵名稱</td><td>醒目顯示我的訊息（Highlight My Message）</td></tr>
+                        <tr><td><code>{meta}</code></td><td>結構化事件資料（JSON）</td><td>{"viewers":100}</td></tr>
+                        <tr><td><code>{counterValue}</code></td><td>經過 Counter 或 Check Counter 步驟後的目前計數器值</td><td>12</td></tr>
+                        <tr><td><code>{counterTarget}</code></td><td>計數器目標值</td><td>30</td></tr>
+                        <tr><td><code>{counterRemaining}</code></td><td>計數器目標減去目前值，最小為 0</td><td>18</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>變數比對不區分大小寫。</strong> <code>{USERNAME}</code>, <code>{Username}</code>，以及 <code>{username}</code> 都以相同方式運作。
+                </div>
+                <div class="panel">
+                    <strong>流程加入的欄位也適用。</strong> 如果較早的動作向訊息加入了頂層值，後續範本可以直接讀取它。這就是 <code>Check Counter</code> 提供 <code>{counterValue}</code>, <code>{counterTarget}</code>，以及 <code>{counterRemaining}</code>.
+                </div>
+                <div class="panel">
+                    <strong>呼叫 Webhook JSON：</strong> 範本變數適用於任意巢狀物件或陣列深度的 JSON 字串值。物件鍵不進行範本替換，不含預留位置的自訂本文會原樣傳送。
+                </div>
+
+                <h3>範例範本</h3>
+                <ul>
+                    <li><strong>顯示文字（Show Text）：</strong> <code>{username} just cheered {hasDonation}!</code></li>
+                    <li><strong>設定 OBS 文字來源（Set OBS Text Source）：</strong> <code>{username}: now {counterValue}, need {counterTarget}</code></li>
+                    <li><strong>轉送聊天（Relay Chat）：</strong> <code>[{source}] {username}: {message}</code></li>
+                    <li><strong>TTS:</strong> <code>{username} says {message}</code></li>
+                    <li><strong>贊助提醒：</strong> <code>{username} donated {donation} - {subtitle}</code></li>
+					<li><strong>熱感標籤：</strong> <code>{username}</code>，換行，然後 <code>{donation}</code>。請參閱 <a href="../docs/thermal-printer-guide.html">熱感印表機指南</a> 了解印表機設定、固定尺寸標籤和完整流程。</li>
+                    <li><strong>Discord 呼叫 Webhook：</strong> <code>{&quot;content&quot;:&quot;{message}&quot;,&quot;username&quot;:&quot;{username}&quot;,&quot;avatar_url&quot;:&quot;{chatimg}&quot;}</code></li>
+                </ul>
+
+                <div class="callout tip">
+                    <strong>缺失的變數變成空字串。</strong> 如果事件沒有某個欄位（例如 <code>{donation}</code> 在一般聊天訊息中），預留位置會替換為空字串，而不是顯示字面的 <code>{donation}</code> 文字。
+                </div>
+            </section>
+
+            <section>
+                <h2>7. 最佳做法檢查表</h2>
+                <ul>
+                    <li><strong>命名並設定色彩：</strong> 為節點設定名稱和色彩，以便日後辨認各個分支。</li>
+                    <li><strong>使用內建模擬器測試</strong> （Send Test Event），然後再將流程投入直播。</li>
+                    <li><strong>在來源附近集中邏輯。</strong> 儘早篩選，避免後續額外處理。</li>
+                    <li><strong>將重複記錄存入狀態節點。</strong> 使用計數器、開關和時間戳記避免重複提醒。</li>
+                    <li><strong>記載 meta 欄位。</strong> 當您新增自訂的 <code>meta</code> 鍵時，請記載它們，讓疊加畫面和遠端用戶端保持一致。</li>
+                </ul>
+                <div class="callout tip">
+                    <strong>儲存版本。</strong> 每當達到一個里程碑時就匯出流程。如果實驗出錯，匯入是最簡單的還原方式。
+                </div>
+            </section>
+
+            <section>
+                <h2>8. 進一步探索</h2>
+                <p><a href="../docs/streamdeck-event-flow.html">從 Stream Deck 或 API 執行自訂工作流程</a>：具名觸發條件、入門範本、工作流程探索、額外資料、HTTP/WebSocket/P2P 範例和旋鈕手勢。</p>
+                <p>準備深入了解？</p>
+                <ul>
+                    <li>使用 <strong>狀態節點</strong> （計數器、開關、計時器）來追蹤事件之間的脈絡。</li>
+                    <li>組合 <strong>變數和邏輯</strong> 以建立佇列系統、抽獎或評分引擎。</li>
+                    <li>接入 <strong>點數和獎勵</strong> 系統，讓觀眾可以主動觸發流程。</li>
+                    <li>執行 <strong>SSApp 桌面應用程式？</strong> 解鎖 <a href="#custom-js"><strong>自訂 JavaScript 節點</strong></a> 用於內建節點未涵蓋的任意邏輯。</li>
+                    <li>檢查 <a href="../docs/event-reference.html"><strong>事件參考</strong></a> 了解所有平台的詳細承載資料文件。</li>
+                </ul>
+                <p>本指南刻意設計為獨立文件，您可以複製到本機、為團隊調整，並繼續在編輯器中嘗試。</p>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 SECTION 9: CUSTOM JAVASCRIPT
+                 Direct link anchors:
+                   #custom-js              → section root
+                   #custom-js-trigger      → Custom Code trigger node
+                   #custom-js-action       → Execute Custom Code action node
+                   #custom-js-message-api  → message object reference table
+                   #custom-js-result-api   → result return object reference
+                   #custom-js-examples     → snippet library
+                   #custom-js-example-flow → complete worked example
+            ══════════════════════════════════════════════════════════════ -->
+            <section id="custom-js">
+                <h2>9. 自訂 JavaScript <span class="desktop-badge">僅限 SSApp / 桌面應用程式</span></h2>
+                <p>Event Flow 編輯器中的兩個節點讓您撰寫在流程處理管線內執行的任意 JavaScript： <strong>自訂程式碼（Custom Code）</strong> （觸發條件）和 <strong>執行自訂程式碼（Execute Custom Code）</strong> （動作）。當內建節點無法表達某種需求時，它們提供自訂途徑。</p>
+
+                <div class="callout warn">
+                    <strong>需要桌面應用程式。</strong> 瀏覽器擴充功能中停用了自訂 JavaScript 節點，因為 Chrome Manifest V3 內容安全性原則封鎖 <code>new Function()</code> / <code>eval()</code>。透過以下入口開啟編輯器： <strong>SSApp 桌面應用程式</strong> 以啟用它們。在擴充功能模式中，節點顯示為灰色，並帶有標籤 <em>「僅限桌面應用程式」</em>.
+                </div>
+
+                <div class="panel">
+                    <strong>編輯程式碼：</strong> 選擇 Custom Code 節點並點擊 <strong>開啟程式碼編輯器（Open Code Editor）</strong> 開啟大型編輯視窗。 <strong>儲存並關閉（Save &amp; Close）</strong> 檢查 JavaScript 語法並儲存整個流程； <code>Ctrl+S</code> 或 <code>Cmd+S</code> 執行相同動作。Cancel 不會變更節點。
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/editor-overview.png" alt="Event Flow 編輯器 — 空白狀態">
+                    <figcaption>Event Flow 編輯器。左側面板列出所有可用節點；點陣畫布用於建立流程；右側面板顯示所選節點的屬性。</figcaption>
+                </figure>
+
+                <!-- ─── Trigger ─── -->
+                <h3 id="custom-js-trigger">Custom Code — 觸發條件節點</h3>
+                <p>拖曳 <strong>自訂程式碼（Custom Code）</strong> 來自 <em>進階</em> 群組，位於 <strong>觸發器</strong> 面板拖到畫布上。它充當閘控：僅當程式碼傳回以下值時流程才繼續： <code>true</code>.</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/trigger-panel.png" alt="觸發條件面板，顯示 Advanced 群組下的 Custom Code 節點">
+                        <figcaption>Custom Code 位於 <em>進階</em> 群組，位於 Triggers 面板。</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-trigger-props.png" alt="Custom Code 觸發條件屬性面板，顯示 JavaScript 程式碼編輯器">
+                        <figcaption>放置觸發條件後的屬性面板。撰寫任意傳回以下值的運算式： <code>true</code> 或 <code>false</code>.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>簽章：</strong> 您的程式碼以下列形式執行： <code>function(message) { ... }</code><br>
+                    <strong>必須傳回：</strong> 布林值 — <code>true</code> 讓流程繼續， <code>false</code> 以停止它。<br>
+                    <strong>可用：</strong> 物件 <code>message</code> （參見 <a href="#custom-js-message-api">訊息 API</a> 如下），加上 <code>convertCurrency(value, targetCurrency, source)</code> 和 <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <!-- ─── Action ─── -->
+                <h3 id="custom-js-action">Execute Custom Code — 動作節點</h3>
+                <p>拖曳 <strong>執行自訂程式碼（Execute Custom Code）</strong> 來自 <em>整合</em> 群組，位於 <strong>操作</strong> 面板。它可以修改訊息、封鎖訊息或附加供下游節點讀取的中繼資料。</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/action-panel.png" alt="動作面板，顯示 Integrations 群組下的 Execute Custom Code">
+                        <figcaption>Execute Custom Code 位於 <em>整合</em> 群組，位於 Actions 面板。</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-action-props.png" alt="Execute Custom Code 動作屬性面板，顯示程式碼編輯器">
+                        <figcaption>動作屬性。傳回一個物件，將變更合併回流程結果。</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>簽章：</strong> 您的程式碼以下列形式執行： <code>function(message, result) { ... }</code><br>
+                    <strong>應傳回：</strong> 物件或 Promise，合併至 <code>result</code>— 請參閱 <a href="#custom-js-result-api">結果 API</a>.<br>
+                    <strong>可用：</strong> <code>message</code> （事件承載資料）， <code>result</code> （目前流程結果狀態）， <code>printThermal(html, options)</code>，加上 <code>convertCurrency(value, targetCurrency, source)</code> 和 <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <div class="panel">
+                    <strong>SSApp 中的熱感列印：</strong> 在以下位置選擇印表機並校準紙張寬度和安全邊界： <em>印表機控制（Printer Control）</em>，然後傳回 <code>printThermal('&lt;strong&gt;' + message.chatname + '&lt;/strong&gt;')</code>。SSApp 透過原生 Windows 印表機 API 靜默將工作排入佇列，並使用這些已儲存設定。流程可以透過以下選項覆寫它們： <code>{ width: '58mm', marginLeft: '3mm', marginRight: '3mm', marginTop: '2mm', marginBottom: '2mm', feed: '3mm', marginType: 'printableArea' }</code>。傳回 Promise 使 Event Flow 能夠等待提交並回報錯誤。
+                </div>
+
+                <!-- ─── Both nodes on canvas ─── -->
+                <figure class="screenshot">
+                    <img src="../../actions/img/both-nodes-canvas.png" alt="畫布並排顯示 Custom Code 觸發條件和 Execute Custom Code 動作">
+                    <figcaption>畫布上放置了 Custom Code 觸發條件（藍色）和 Execute Custom Code 動作（綠色）。將觸發條件的輸出連接埠連接至動作的輸入連接埠即可連接它們。</figcaption>
+                </figure>
+
+                <!-- ─── message API ─── -->
+                <h3 id="custom-js-message-api">物件 <code>message</code></h3>
+                <p>兩個節點都以下列形式接收完整事件承載資料： <code>message</code>。以下欄位始終可用；平台專屬事件可能包含其他欄位。</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>欄位</th><th>資料型別</th><th>說明</th><th>範例</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>message.chatmessage</code></td><td>字串</td><td>聊天訊息文字（可能包含 HTML）</td><td><code>"Hello stream!"</code></td></tr>
+                        <tr><td><code>message.chatname</code></td><td>字串</td><td>傳送者的顯示名稱</td><td><code>"CoolViewer"</code></td></tr>
+                        <tr><td><code>message.userid</code></td><td>字串</td><td>平台使用者 ID</td><td><code>"12345678"</code></td></tr>
+                        <tr><td><code>message.type</code></td><td>字串</td><td>來源平台（小寫）</td><td><code>"twitch"</code>, <code>"youtube"</code>, <code>"kick"</code></td></tr>
+                        <tr><td><code>message.hasDonation</code></td><td>字串</td><td>存在時的格式化贊助字串</td><td><code>"$5.00"</code>, <code>"500 bits"</code></td></tr>
+                        <tr><td><code>message.donoValue</code></td><td>數值 / 字串</td><td>來源提供時的等值美元贊助金額；有效的零值會予以採用。Event Flow 改用以下內容作為備援： <code>currency.js</code> 轉換標準化的 <code>hasDonation</code> 標籤用於門檻比較，包括 100 個未知具名單位 = 0.01 美元。它不會解析 <code>chatmessage</code> 文字來擷取贊助值。</td><td><code>5</code></td></tr>
+                        <tr><td><code>message.event</code></td><td>字串</td><td>事件類型識別碼</td><td><code>"new_follower"</code>, <code>"cheer"</code>, <code>"raid"</code></td></tr>
+                        <tr><td><code>message.membership</code></td><td>字串</td><td>適用時的會員狀態</td><td><code>"MEMBERSHIP"</code></td></tr>
+                        <tr><td><code>message.subtitle</code></td><td>字串</td><td>次要脈絡列</td><td><code>"Member for 3 months"</code></td></tr>
+                        <tr><td><code>message.mod</code></td><td>布林值</td><td>傳送者是管理員</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.subscriber</code></td><td>布林值</td><td>傳送者是訂閱者</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.vip</code></td><td>布林值</td><td>傳送者具有 VIP 身分</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.chatimg</code></td><td>字串</td><td>使用者頭像 URL</td><td><code>"https://..."</code></td></tr>
+                        <tr><td><code>message.meta</code></td><td>物件</td><td>附加至事件的任意結構化資料</td><td><code>{ viewers: 120 }</code></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>貨幣換算：</strong> 使用 <code>convertCurrency(message.hasDonation, 'EUR', message.type)</code> 將格式化的贊助標籤轉換為 EUR。它傳回數字，或 <code>null</code> 當不支援請求的目標貨幣時。轉換器使用 Social Stream Ninja 的內部近似匯率，不會聯繫外部匯率服務。
+                </div>
+
+                <!-- ─── result API ─── -->
+                <h3 id="custom-js-result-api">動作傳回的內容</h3>
+                <p>從動作程式碼傳回一般物件。您包含的任何欄位都會合併至流程的 <code>result</code> 物件；省略的欄位保持目前值。</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>傳回欄位</th><th>資料型別</th><th>效果</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>modified</code></td><td>布林值</td><td>設定 <code>true</code> 如果您變更了 <code>message</code> 欄位。告知下游節點承載資料已編輯。</td></tr>
+                        <tr><td><code>message</code></td><td>物件</td><td>將訊息（可能已修改）傳回，讓下游節點收到您的變更。</td></tr>
+                        <tr><td><code>blocked</code></td><td>布林值</td><td>設定 <code>true</code> 以防止訊息顯示或轉送。</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>最小安全傳回值：</strong> <code>return { modified: false, message };</code><br>
+                    即使沒有變更任何內容，傳回 <code>message</code> 使它繼續流向下一個節點。
+                </div>
+
+                <!-- ─── Snippet Examples ─── -->
+                <h3 id="custom-js-examples">程式碼片段範例</h3>
+                <p>將任一項複製到相應節點類型的 JavaScript Code 文字區域。</p>
+
+                <h4 class="snippet-heading">觸發條件程式碼片段 — 傳回 <code>true</code> 以繼續流程</h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">關鍵字比對（不區分大小寫）</div>
+                    <div class="snippet-desc">僅當訊息包含特定單字或片語時繼續流程。</div>
+                    <div class="code-js">// Matches "!hello" anywhere in the message
+return (message.chatmessage || '').toLowerCase().includes('!hello');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">規則運算式命令偵測</div>
+                    <div class="snippet-desc">比對以預先定義清單中某個命令開頭的訊息（例如 <code>!queue</code>, <code>!raffle</code>, <code>!enter</code>).</div>
+                    <div class="code-js">return /^!(queue|raffle|enter)\b/i.test(message.chatmessage || '');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">超過門檻的贊助</div>
+                    <div class="snippet-desc">僅當贊助達到或超過最低金額時觸發。</div>
+                    <div class="code-js">const amount = message.donoValue !== undefined && message.donoValue !== null && message.donoValue !== ''
+  ? Number(message.donoValue)
+  : (typeof convertToUSD === 'function' ? convertToUSD(message.hasDonation || '', message.type || '') : Number(String(message.hasDonation || '').replace(/[^0-9.]/g, '') || 0));
+return amount >= 5;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">EUR 區間內的 YouTube Super Chat 或 Super Sticker</div>
+                    <div class="snippet-desc">將標準 YouTube 贊助標籤轉換為 EUR，排除 Jewels/Gifts，並選擇一個聲音或視覺效果區間。</div>
+                    <div class="code-js">var eventName = String(message.event || '').toLowerCase();
+if (eventName !== 'superchat' &amp;&amp; eventName !== 'supersticker') return false;
+
+var eurValue = convertCurrency(message.hasDonation || '', 'EUR', message.type || '');
+if (typeof eurValue !== 'number' || !isFinite(eurValue)) return false;
+
+message.eurValue = eurValue;
+return eurValue &gt;= 10 &amp;&amp; eurValue &lt; 25;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">平台篩選器</div>
+                    <div class="snippet-desc">僅處理來自特定平台的事件。</div>
+                    <div class="code-js">return ['twitch', 'youtube'].includes(message.type);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">訂閱者 / VIP / 管理員閘控</div>
+                    <div class="snippet-desc">僅允許具權限的使用者讓流程繼續。</div>
+                    <div class="code-js">return !!(message.subscriber || message.vip || message.mod);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">多條件 — VIP + 關鍵字</div>
+                    <div class="snippet-desc">將角色檢查和訊息內容組合為單一運算式，以實現內建觸發條件無法涵蓋的條件。</div>
+                    <div class="code-js">const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test(message.chatmessage || '');
+return isPrivileged && isCommand;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">訊息長度閘控</div>
+                    <div class="snippet-desc">僅處理包含足夠內容的訊息（適用於 TTS 或轉送，以避免單一表情洗版）。</div>
+                    <div class="code-js">return (message.chatmessage || '').replace(/<[^>]+>/g, '').trim().length >= 20;</div>
+                </div>
+
+                <h4 class="snippet-heading" style="margin-top:36px;">動作程式碼片段 — 傳回 <code>{ modified, message }</code></h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">在訊息後附加徽章或標籤</div>
+                    <div class="snippet-desc">在通過此動作的每則訊息結尾加入視覺標記。</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').trimEnd() + ' ✅';
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">有條件地封鎖訊息</div>
+                    <div class="snippet-desc">檢查內容，並在規則相符時靜默捨棄訊息，適用於關鍵字篩選器無法表達的垃圾訊息模式。</div>
+                    <div class="code-js">const text = (message.chatmessage || '').toLowerCase();
+const spamPatterns = ['buy followers', 'free nitro', 'click here'];
+
+if (spamPatterns.some(p => text.includes(p))) {
+    return { blocked: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">移除 @提及</div>
+                    <div class="snippet-desc">轉送至另一個平台之前，移除訊息中的所有 @username 提及。</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').replace(/@\w+/g, '').trim();
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">格式化贊助公告</div>
+                    <div class="snippet-desc">存在贊助時，將 chatmessage 重寫為一致的公告字串。</div>
+                    <div class="code-js">const amount = parseFloat(message.donoValue || 0);
+if (amount > 0) {
+    const note = (message.chatmessage || '').trim();
+    message.chatmessage = `💰 ${message.chatname} donated $${amount.toFixed(2)}!`
+        + (note ? ` "${note}"` : '');
+    return { modified: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">附加路由中繼資料，供下游節點使用</div>
+                    <div class="snippet-desc">為訊息加入自訂欄位標記，後續的 <em>轉送聊天（Relay Chat）</em> 或 <em>傳送訊息（Send Message）</em> 動作可從範本變數讀取（<code>{meta}</code>).</div>
+                    <div class="code-js">message.meta = message.meta || {};
+
+// Assign a donation tier so the next node can use {meta} to decide overlay colour
+const amount = parseFloat(message.donoValue || 0);
+message.meta.donationTier = amount >= 20 ? 'gold' : amount >= 5 ? 'silver' : 'bronze';
+
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">依平台區分的訊息前綴</div>
+                    <div class="snippet-desc">跨平台轉送時加入平台標籤前綴，讓觀眾知道來源。</div>
+                    <div class="code-js">const labels = {
+    twitch:  '[Twitch]',
+    youtube: '[YouTube]',
+    kick:    '[Kick]',
+    tiktok:  '[TikTok]',
+};
+const label = labels[message.type] || `[${message.type || 'Chat'}]`;
+message.chatmessage = `${label} ${message.chatname}: ${message.chatmessage || ''}`;
+return { modified: true, message };</div>
+                </div>
+
+                <!-- ─── Complete worked example ─── -->
+                <h3 id="custom-js-example-flow">完整範例 — VIP 功能請求機器人</h3>
+                <p>該流程監聽 <code>!feature &lt;text&gt;</code> 來自訂閱者、VIP 或管理員的內容，將其重新格式化為功能請求，並轉送至第二個目標（例如 Discord）。</p>
+
+                <div class="diagram">
+┌──────────────────────┐     ┌──────────────────────────┐     ┌──────────────────┐
+│  Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│  Relay Chat      │
+│                      │     │                          │     │  (to Discord)    │
+│  Gate: VIP/sub/mod   │     │  Reformat message text   │     │                  │
+│  + starts with       │     │  → "📋 Feature Request   │     │                  │
+│    !feature          │     │     from {name}: {text}" │     │                  │
+└──────────────────────┘     └──────────────────────────┘     └──────────────────┘</div>
+
+                <p><strong>步驟 1 — Custom Code 觸發條件</strong> （貼到觸發條件的 JavaScript Code 欄位）：</p>
+                <div class="code-js">// Only let VIPs, subscribers, and mods through, and only for !feature commands
+const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test((message.chatmessage || '').trim());
+return isPrivileged && isCommand;</div>
+
+                <p><strong>步驟 2 — Execute Custom Code 動作</strong> （貼到動作的 JavaScript Code 欄位）：</p>
+                <div class="code-js">// Strip the "!feature" command word and format a clean announcement
+const featureText = (message.chatmessage || '')
+    .replace(/^!feature\s*/i, '')
+    .trim();
+
+if (!featureText) {
+    // No text after the command: block rather than relay an empty request
+    return { blocked: true, message };
+}
+
+message.chatmessage = `📋 Feature request from ${message.chatname}: ${featureText}`;
+return { modified: true, message };</div>
+
+                <p><strong>步驟 3 — Relay Chat 動作</strong>：在動作後新增標準 Relay Chat 節點，並設定為指向 Discord（或其他）目標。此處無需自訂程式碼，重新格式化的 <code>message.chatmessage</code> 會自動流經。</p>
+
+                <div class="callout tip">
+                    <strong>測試流程。</strong> 點擊此按鈕： <strong>測試流程（Test Flow）</strong> （位於編輯器右上角），無需直播即可向處理流程傳送模擬訊息。將 chatname 設為訂閱者的名稱，新增類似下列內容的訊息： <code>!feature dark mode support</code>，並確認 Relay Chat 目標收到重新格式化的字串。
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/test-panel.png" alt="用於傳送模擬測試事件的 Test Flow 面板">
+                    <figcaption>Test Flow 面板。填寫與觸發條件相符的欄位，然後點擊 <em>執行測試（Run Test）</em> 以驗證完整處理管線。</figcaption>
+                </figure>
+
+                <!-- ─── Security note ─── -->
+                <h3 id="custom-js-security">安全注意事項</h3>
+                <div class="callout warn">
+                    <strong>自訂程式碼以繪製程序權限執行。</strong> 在 SSApp 內，Custom JS 節點中的程式碼可以完整存取 <code>window</code> 物件，以及 preload 指令碼提供的任何 API（例如 <code>window.ninjafy</code>）。請將匯入的流程檔案視為可執行程式碼，只匯入可信來源的流程。
+                </div>
+                <ul>
+                    <li><strong>沒有網路沙盒。</strong> 動作程式碼可以呼叫 <code>fetch()</code>。如果接受他人分享的流程，請在啟用前審核 JS。</li>
+                    <li><strong>錯誤會遭攔截。</strong> 程式碼中的執行階段錯誤會傳回 <code>false</code> （觸發條件）或不執行動作（動作），並記錄至 DevTools 主控台，流程不會當機。</li>
+                    <li><strong>語法錯誤也一樣。</strong> 類型為 <code>SyntaxError</code> 的編譯錯誤也會以相同方式攔截。如果節點似乎沒有反應，請檢查 DevTools（F12）。</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/docs/twitch-bot-account-chatbot.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/docs/twitch-bot-account-chatbot.html">
+    <meta property="og:title" content="Účty botů pro automatické odpovědi - Social Stream Ninja">
+    <meta property="og:description" content="Použijte účet bota Twitch WebSocket nebo samostatný zdroj pouze pro odpovědi a odesílejte automatické odpovědi Social Stream Ninja z jiného účtu.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/docs/twitch-bot-account-chatbot.html">
+    <meta name="twitter:title" content="Účty botů pro automatické odpovědi - Social Stream Ninja">
+    <meta name="twitter:description" content="Použijte účet bota Twitch WebSocket nebo samostatný zdroj pouze pro odpovědi a odesílejte automatické odpovědi Social Stream Ninja z jiného účtu.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Účty botů pro automatické odpovědi - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Použijte účet bota Twitch WebSocket nebo samostatný zdroj pouze pro odpovědi a odesílejte automatické odpovědi Social Stream Ninja z jiného účtu.">
+    <style>
+        .bot-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin: 22px 0;
+        }
+        .bot-guide-card {
+            background: var(--card-bg, #fff);
+            border: 1px solid rgba(127, 127, 127, 0.22);
+            border-radius: 8px;
+            padding: 18px;
+        }
+        .bot-guide-card h3 {
+            margin-top: 0;
+        }
+        .bot-guide-shot {
+            display: block;
+            width: auto;
+            max-width: 100%;
+            border: 1px solid rgba(127, 127, 127, 0.28);
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            margin: 16px auto 8px;
+        }
+        .bot-guide-caption {
+            color: var(--text-secondary);
+            font-size: 1.4rem;
+            margin-bottom: 22px;
+        }
+        .dark-mode .bot-guide-card {
+            background: #161b22;
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/twitch-bot-account-chatbot.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{", and its separate session at the top.":", a nahoře jeho samostatnou relaci.",", click":", klikněte na",", the separate bot source takes priority. SSN will not also send the same reply through the attached Twitch WebSocket bot account.":", samostatný zdroj bota má přednost. SSN neodešle stejnou odpověď také přes připojený účet bota Twitch WebSocket.","A separate SSApp Twitch source configured as Reply only with Role Bot and a bot-account browser session":"Samostatný zdroj Twitch v SSApp nastavený na Reply only, s rolí Bot a relací prohlížeče účtu bota","Account role":"Role účtu","Account roles can support more advanced routing setups.":"Role účtů mohou podporovat pokročilejší nastavení směrování.","Activate the bot source and leave it running whenever it needs to send replies.":"Aktivujte zdroj bota a nechte jej běžet vždy, když má odesílat odpovědi.","Add the same channel or source again. If SSApp asks whether to make it a reply-only bot source, choose":"Přidejte stejný kanál nebo zdroj znovu. Pokud se SSApp zeptá, zda má vytvořit zdroj bota pouze pro odpovědi, zvolte","Add your normal source for capturing chat.":"Přidejte běžný zdroj pro zachytávání chatu.","Automatic reply account: @BotName":"Účet pro automatické odpovědi: @BotName","Automatic reply account: Main account":"Účet pro automatické odpovědi: hlavní účet","Best for":"Nejlepší pro","Bot":"Bot","Bot Accounts for Automatic Replies":"Účty botů pro automatické odpovědi","Bot Accounts for Automatic Replies - Social Stream Ninja":"Účty botů pro automatické odpovědi - Social Stream Ninja","Bot reply-only (no capture)":"Bot pouze pro odpovědi (bez zachytávání)","Both methods make automatic replies appear under a bot account instead of your main account. They do it in different ways.":"Obě metody odesílají automatické odpovědi pod účtem bota místo hlavního účtu. Každá toho dosahuje jinak.","Browser Session Settings":"Nastavení relace prohlížeče (Browser Session Settings)","Can work with other platforms that support outgoing replies.":"Může fungovat i s dalšími platformami podporujícími odesílání odpovědí.","Chatbot and scheduled automatic replies use the bot account.":"Chatbot a plánované automatické odpovědi používají účet bota.","Choose the simple Twitch WebSocket option or the existing separate reply-only source method.":"Vyberte jednoduchou možnost Twitch WebSocket nebo stávající metodu se samostatným zdrojem pouze pro odpovědi.","Click":"Klikněte na","Click the source's":"Klikněte u zdroje na","Commands & API":"Příkazy a API","Connect bot account":"Připojit účet bota (Connect bot account)","Cons":"Nevýhody","Download":"Stáhnout","Enter this value:":"Zadejte hodnotu:","Extra source?":"Další zdroj?","Features":"Funkce","Guides":"Návody","Hire":"Najmout odborníka","Home":"Domů","If Both Methods Are Configured":"Pokud jsou nastavené obě metody","If reply-only is disabled, the second source can capture duplicate messages.":"Pokud je Reply only vypnuté, druhý zdroj může zachytávat duplicitní zprávy.","In SSApp, find your Twitch source and make sure":"V SSApp najděte zdroj Twitch a ujistěte se, že","In Twitch Shared Chat, bot replies stay in this source's channel.":"Ve sdíleném chatu Twitch zůstávají odpovědi bota v kanálu tohoto zdroje.","In the settings panel on the right, switch to full mode and search for":"V panelu nastavení vpravo přepněte do úplného režimu a vyhledejte","Inspiration":"Inspirace","It does not create another source or permanent browser session.":"Nevytvoří se tím další zdroj ani trvalá relace prohlížeče.","It is not available for Twitch Standard mode, other platforms, or the browser extension.":"Není dostupná pro režim Twitch Standard, jiné platformy ani rozšíření prohlížeče.","Main navigation":"Hlavní navigace","Manual sends still use the main Twitch account.":"Ruční odesílání stále používá hlavní účet Twitch.","Method":"Metoda","Method 1: Twitch WebSocket Bot Account":"Metoda 1: účet bota Twitch WebSocket","Method 2: Separate Reply-Only Bot Source":"Metoda 2: samostatný zdroj bota pouze pro odpovědi","More settings must be kept in sync.":"Je potřeba udržovat více nastavení v souladu.","No":"Ne","No second source to create or keep running.":"Není nutné vytvářet ani udržovat druhý zdroj.","On the second source, open":"U druhého zdroje otevřete","On this page":"Na této stránce","Open its gear menu. Enable":"Otevřete jeho nabídku ozubeného kola. Zapněte","Open navigation menu":"Otevřít navigační nabídku","Overlay Gallery":"Galerie překryvů","Pros":"Výhody","Replies still use the main account:":"Odpovědi stále používají hlavní účet:","Reply only":"Pouze odpovědi (Reply only)","Requires a second source and a separate session.":"Vyžaduje druhý zdroj a samostatnou relaci.","Review the explanation, then click":"Přečtěte si vysvětlení a klikněte na","Role: Bot":"Role: Bot","SSApp Automatic reply account dialog with the Connect bot account button":"Dialog Automatic reply account v SSApp s tlačítkem Connect bot account","SSApp Twitch WebSocket source with its gear menu open and Automatic reply account set to Main account":"Zdroj Twitch WebSocket v SSApp s otevřenou nabídkou ozubeného kola a Automatic reply account nastaveným na Main account","SSApp opens a separate Twitch sign-in window. Sign in with the account that should send bot replies.":"SSApp otevře samostatné přihlašovací okno Twitch. Přihlaste se účtem, který má odesílat odpovědi bota.","SSN setting Send bot replies through these SSApp account roles filled with bot":"Nastavení SSN Send bot replies through these SSApp account roles s vyplněnou hodnotou bot","Send bot replies through these SSApp account roles":"Odesílat odpovědi bota přes tyto role účtů SSApp (Send bot replies through these SSApp account roles)","Separate reply-only bot source":"Samostatný zdroj bota pouze pro odpovědi","Set":"Nastavte","Sign in":"Přihlásit se (Sign in)","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","The attached Twitch bot cannot send:":"Připojený bot Twitch nemůže odesílat:","The bot must be a moderator, or the channel owner may need to reconnect once to approve Twitch bot access.":"Bot musí být moderátorem, nebo může být nutné, aby se vlastník kanálu jednou znovu připojil a schválil přístup bota Twitch.","The bot source has its own browser session and source controls.":"Zdroj bota má vlastní relaci prohlížeče a ovládací prvky zdroje.","The bot source must be active to send.":"Aby mohl zdroj bota odesílat, musí být aktivní.","The easiest Twitch-only setup":"Nejjednodušší nastavení pouze pro Twitch","The finished second source shows":"Dokončený druhý zdroj zobrazuje","The new attached-account method is only for Twitch WebSocket sources in the SSApp desktop app.":"Nová metoda s připojeným účtem je dostupná pouze pro zdroje Twitch WebSocket v desktopové aplikaci SSApp.","The new option is missing:":"Nová možnost chybí:","The screenshots below use Twitch, but this method is not Twitch-only. It can also be used with other SSApp sources that support signing in and sending replies.":"Níže uvedené snímky používají Twitch, ale tato metoda není omezena jen na něj. Lze ji použít i s dalšími zdroji SSApp podporujícími přihlášení a odesílání odpovědí.","The separate sign-in window prevents your normal browser's Twitch login from silently choosing the wrong account.":"Samostatné přihlašovací okno zabraňuje tomu, aby přihlášení k Twitch v běžném prohlížeči bez upozornění vybralo nesprávný účet.","The separate source captures duplicate chat:":"Samostatný zdroj zachytává duplicitní chat:","The separate source sends nothing:":"Samostatný zdroj nic neodesílá:","The wrong Twitch account was selected:":"Byl vybrán nesprávný účet Twitch:","This attaches a second Twitch login to your existing WebSocket source.":"Tím se připojí druhý účet Twitch k vašemu stávajícímu zdroji WebSocket.","This is the original SSApp method and it is still supported. It creates a second source, gives that source its own browser session, and routes automatic replies through sources with the":"Jde o původní metodu SSApp, která je stále podporovaná. Vytvoří druhý zdroj, přiřadí mu vlastní relaci prohlížeče a směruje automatické odpovědi přes zdroje s rolí","This section appears only when that Twitch source is using WebSocket mode.":"Tato část se zobrazuje pouze tehdy, když daný zdroj Twitch používá režim WebSocket.","Tip: Click or tap any screenshot to open it at full size.":"Tip: Kliknutím nebo klepnutím na snímek ho otevřete v plné velikosti.","Troubleshooting":"Řešení potíží","Twitch Standard mode or another platform that can send replies":"Režim Twitch Standard nebo jiná platforma schopná odesílat odpovědi","Twitch WebSocket bot account":"Účet bota Twitch WebSocket","Twitch WebSocket sending":"Odesílání Twitch WebSocket (Twitch WebSocket sending)","Twitch only.":"Pouze Twitch.","Under":"V části","Use a Twitch WebSocket bot account or a separate reply-only source to send Social Stream Ninja automatic replies from another account.":"Použijte účet bota Twitch WebSocket nebo samostatný zdroj pouze pro odpovědi a odesílejte automatické odpovědi Social Stream Ninja z jiného účtu.","Use one method for a given reply path. If":"Pro danou cestu odpovědí použijte jednu metodu. Pokud","Very little setup after the WebSocket source is connected.":"Po připojení zdroje WebSocket vyžaduje minimum nastavení.","WebSocket":"WebSocket","WebSocket mode only.":"Pouze režim WebSocket.","When the sign-in finishes, the source menu changes to":"Po dokončení přihlášení se nabídka zdroje změní na","Which Method Should I Use?":"Kterou metodu mám použít?","Works with Twitch Standard mode.":"Funguje s režimem Twitch Standard.","Yes":"Ano","activate it, confirm it is signed in as the bot, and verify the routing field contains exactly":"aktivujte ho, ověřte přihlášení pod účtem bota a zkontrolujte, že pole směrování obsahuje přesně","and cycle":"a přepínejte","and use a separate session such as":"a použijte samostatnou relaci, například","bot replies":"bot replies","choose the account again and sign into the separate SSApp Twitch window with the bot account.":"znovu vyberte účet a přihlaste se v samostatném okně Twitch v SSApp účtem bota.","confirm this is the SSApp desktop app and the Twitch source is set to WebSocket mode.":"ověřte, že používáte desktopovou aplikaci SSApp a zdroj Twitch má nastavený režim WebSocket.","enable":"zapněte","gear button":"tlačítko ozubeného kola","in this field. The two relay-role fields above it are separate settings and can stay blank.":"do tohoto pole. Dvě pole rolí přenosu nad ním jsou samostatná nastavení a mohou zůstat prázdná.","is configured as":"se nastavuje na","is selected.":"je vybrané.","make the bot a moderator. If it is not a moderator, reconnect the main Twitch account once using the channel owner and approve the requested permission.":"nastavte bota jako moderátora. Pokud moderátorem není, jednou znovu připojte hlavní účet Twitch jako vlastník kanálu a schvalte požadované oprávnění.","on that second source and sign in with the bot account.":"u tohoto druhého zdroje a přihlaste se účtem bota.","role.":".","to":"na","until it says":"dokud se nezobrazí","verify the attached account is shown by username, or verify the separate source says":"ověřte, že připojený účet zobrazuje uživatelské jméno, nebo že samostatný zdroj uvádí"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/twitch-bot-account-chatbot.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/twitch-bot-account-chatbot.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/twitch-bot-account-chatbot.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/twitch-bot-account-chatbot.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/twitch-bot-account-chatbot.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/twitch-bot-account-chatbot.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/twitch-bot-account-chatbot.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/twitch-bot-account-chatbot.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/twitch-bot-account-chatbot.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/twitch-bot-account-chatbot.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/twitch-bot-account-chatbot.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/twitch-bot-account-chatbot.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/twitch-bot-account-chatbot.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/twitch-bot-account-chatbot.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/twitch-bot-account-chatbot.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/twitch-bot-account-chatbot.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="twitch-bot-account-chatbot.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/twitch-bot-account-chatbot.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Účty botů pro automatické odpovědi</h1>
+            <p>Vyberte jednoduchou možnost Twitch WebSocket nebo stávající metodu se samostatným zdrojem pouze pro odpovědi.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Na této stránce"><a href="#read-section-1">Kterou metodu mám použít?</a><a href="#read-section-2">Metoda 1: účet bota Twitch WebSocket</a><a href="#read-section-3">Metoda 2: samostatný zdroj bota pouze pro odpovědi</a><a href="#read-section-4">Pokud jsou nastavené obě metody</a><a href="#read-section-5">Řešení potíží</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Kterou metodu mám použít?</h2>
+                <p>Obě metody odesílají automatické odpovědi pod účtem bota místo hlavního účtu. Každá toho dosahuje jinak.</p>
+                <div class="guide-note">
+                    <p><strong>Nová metoda s připojeným účtem je dostupná pouze pro zdroje Twitch WebSocket v desktopové aplikaci SSApp.</strong> Není dostupná pro režim Twitch Standard, jiné platformy ani rozšíření prohlížeče.</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr>
+                            <th>Metoda</th>
+                            <th>Nejlepší pro</th>
+                            <th>Další zdroj?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Metoda"><strong>Účet bota Twitch WebSocket</strong></td>
+                            <td data-label="Nejlepší pro">Nejjednodušší nastavení pouze pro Twitch</td>
+                            <td data-label="Další zdroj?">Ne</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Metoda"><strong>Samostatný zdroj bota pouze pro odpovědi</strong></td>
+                            <td data-label="Nejlepší pro">Režim Twitch Standard nebo jiná platforma schopná odesílat odpovědi</td>
+                            <td data-label="Další zdroj?">Ano</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">Metoda 1: účet bota Twitch WebSocket</h2>
+                <p>Tím se připojí druhý účet Twitch k vašemu stávajícímu zdroji WebSocket. <strong>Nevytvoří se tím další zdroj ani trvalá relace prohlížeče.</strong></p>
+                <p><small>Tip: Kliknutím nebo klepnutím na snímek ho otevřete v plné velikosti.</small></p>
+                <ol class="guide-steps">
+                    <li>V SSApp najděte zdroj Twitch a ujistěte se, že <strong>WebSocket</strong> je vybrané.</li>
+                    <li>Klikněte u zdroje na <strong>tlačítko ozubeného kola</strong>.</li>
+                    <li>V části <strong>Odesílání Twitch WebSocket (Twitch WebSocket sending)</strong>, klikněte na <strong>Účet pro automatické odpovědi: hlavní účet</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-websocket-bot-menu.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-websocket-bot-menu.png" alt="Zdroj Twitch WebSocket v SSApp s otevřenou nabídkou ozubeného kola a Automatic reply account nastaveným na Main account">
+                </a>
+                <p class="bot-guide-caption">Tato část se zobrazuje pouze tehdy, když daný zdroj Twitch používá režim WebSocket.</p>
+
+                <ol class="guide-steps" start="4">
+                    <li>Přečtěte si vysvětlení a klikněte na <strong>Připojit účet bota (Connect bot account)</strong>.</li>
+                    <li>SSApp otevře samostatné přihlašovací okno Twitch. Přihlaste se účtem, který má odesílat odpovědi bota.</li>
+                    <li>Po dokončení přihlášení se nabídka zdroje změní na <strong>Účet pro automatické odpovědi: @BotName</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-bot-account-dialog.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-bot-account-dialog.png" alt="Dialog Automatic reply account v SSApp s tlačítkem Connect bot account">
+                </a>
+                <p class="bot-guide-caption">Samostatné přihlašovací okno zabraňuje tomu, aby přihlášení k Twitch v běžném prohlížeči bez upozornění vybralo nesprávný účet.</p>
+
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>Výhody</h3>
+                        <ul class="guide-list">
+                            <li>Není nutné vytvářet ani udržovat druhý zdroj.</li>
+                            <li>Po připojení zdroje WebSocket vyžaduje minimum nastavení.</li>
+                            <li>Chatbot a plánované automatické odpovědi používají účet bota.</li>
+                            <li>Ve sdíleném chatu Twitch zůstávají odpovědi bota v kanálu tohoto zdroje.</li>
+                        </ul>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>Nevýhody</h3>
+                        <ul class="guide-list">
+                            <li>Pouze Twitch.</li>
+                            <li>Pouze režim WebSocket.</li>
+                            <li>Ruční odesílání stále používá hlavní účet Twitch.</li>
+                            <li>Bot musí být moderátorem, nebo může být nutné, aby se vlastník kanálu jednou znovu připojil a schválil přístup bota Twitch.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">Metoda 2: samostatný zdroj bota pouze pro odpovědi</h2>
+                <p>Jde o původní metodu SSApp, která je stále podporovaná. Vytvoří druhý zdroj, přiřadí mu vlastní relaci prohlížeče a směruje automatické odpovědi přes zdroje s rolí <code>bot</code> .</p>
+                <p>Níže uvedené snímky používají Twitch, ale tato metoda není omezena jen na něj. Lze ji použít i s dalšími zdroji SSApp podporujícími přihlášení a odesílání odpovědí.</p>
+                <ol class="guide-steps">
+                    <li>Přidejte běžný zdroj pro zachytávání chatu.</li>
+                    <li>Přidejte stejný kanál nebo zdroj znovu. Pokud se SSApp zeptá, zda má vytvořit zdroj bota pouze pro odpovědi, zvolte <strong>Ano</strong>.</li>
+                    <li>U druhého zdroje otevřete <strong>Nastavení relace prohlížeče (Browser Session Settings)</strong> a použijte samostatnou relaci, například <code>bot-account</code>.</li>
+                    <li>Klikněte na <strong>Přihlásit se (Sign in)</strong> u tohoto druhého zdroje a přihlaste se účtem bota.</li>
+                    <li>Otevřete jeho nabídku ozubeného kola. Zapněte <strong>Bot pouze pro odpovědi (bez zachytávání)</strong> a přepínejte <strong>Role účtu</strong> dokud se nezobrazí <strong>Bot</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-separate-reply-only-bot-source.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-separate-reply-only-bot-source.png" alt="Samostatný zdroj Twitch v SSApp nastavený na Reply only, s rolí Bot a relací prohlížeče účtu bota">
+                </a>
+                <p class="bot-guide-caption">Dokončený druhý zdroj zobrazuje <strong>Pouze odpovědi (Reply only)</strong>, <strong>Role: Bot</strong>, a nahoře jeho samostatnou relaci.</p>
+
+                <ol class="guide-steps" start="6">
+                    <li>V panelu nastavení vpravo přepněte do úplného režimu a vyhledejte <strong>bot replies</strong>.</li>
+                    <li>Nastavte <strong>Odesílat odpovědi bota přes tyto role účtů SSApp (Send bot replies through these SSApp account roles)</strong> na <code>bot</code>.</li>
+                    <li>Aktivujte zdroj bota a nechte jej běžet vždy, když má odesílat odpovědi.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssn-bot-reply-role-routing.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssn-bot-reply-role-routing.png" alt="Nastavení SSN Send bot replies through these SSApp account roles s vyplněnou hodnotou bot">
+                </a>
+                <p class="bot-guide-caption">Zadejte hodnotu: <code>bot</code> do tohoto pole. Dvě pole rolí přenosu nad ním jsou samostatná nastavení a mohou zůstat prázdná.</p>
+
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>Výhody</h3>
+                        <ul class="guide-list">
+                            <li>Funguje s režimem Twitch Standard.</li>
+                            <li>Může fungovat i s dalšími platformami podporujícími odesílání odpovědí.</li>
+                            <li>Zdroj bota má vlastní relaci prohlížeče a ovládací prvky zdroje.</li>
+                            <li>Role účtů mohou podporovat pokročilejší nastavení směrování.</li>
+                        </ul>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>Nevýhody</h3>
+                        <ul class="guide-list">
+                            <li>Vyžaduje druhý zdroj a samostatnou relaci.</li>
+                            <li>Aby mohl zdroj bota odesílat, musí být aktivní.</li>
+                            <li>Je potřeba udržovat více nastavení v souladu.</li>
+                            <li>Pokud je Reply only vypnuté, druhý zdroj může zachytávat duplicitní zprávy.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">Pokud jsou nastavené obě metody</h2>
+                <p>Pro danou cestu odpovědí použijte jednu metodu. Pokud <strong>Odesílat odpovědi bota přes tyto role účtů SSApp (Send bot replies through these SSApp account roles)</strong> se nastavuje na <code>bot</code>, samostatný zdroj bota má přednost. SSN neodešle stejnou odpověď také přes připojený účet bota Twitch WebSocket.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">Řešení potíží</h2>
+                <ul class="guide-list">
+                    <li><strong>Nová možnost chybí:</strong> ověřte, že používáte desktopovou aplikaci SSApp a zdroj Twitch má nastavený režim WebSocket.</li>
+                    <li><strong>Připojený bot Twitch nemůže odesílat:</strong> nastavte bota jako moderátora. Pokud moderátorem není, jednou znovu připojte hlavní účet Twitch jako vlastník kanálu a schvalte požadované oprávnění.</li>
+                    <li><strong>Byl vybrán nesprávný účet Twitch:</strong> znovu vyberte účet a přihlaste se v samostatném okně Twitch v SSApp účtem bota.</li>
+                    <li><strong>Samostatný zdroj nic neodesílá:</strong> aktivujte ho, ověřte přihlášení pod účtem bota a zkontrolujte, že pole směrování obsahuje přesně <code>bot</code>.</li>
+                    <li><strong>Samostatný zdroj zachytává duplicitní chat:</strong> zapněte <strong>Bot pouze pro odpovědi (bez zachytávání)</strong>.</li>
+                    <li><strong>Odpovědi stále používají hlavní účet:</strong> ověřte, že připojený účet zobrazuje uživatelské jméno, nebo že samostatný zdroj uvádí <strong>Role: Bot</strong>.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

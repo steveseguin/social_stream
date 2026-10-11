@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-site-root="../../" data-site-language="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/pt-br/docs/obs-quick-start.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:url" content="https://socialstream.ninja/pt-br/docs/obs-quick-start.html">
+    <meta property="og:title" content="Início rápido no OBS - Social Stream Ninja">
+    <meta property="og:description" content="Guia rápido para usar overlays de chat do Social Stream Ninja no OBS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logotipo do Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/pt-br/docs/obs-quick-start.html">
+    <meta name="twitter:title" content="Início rápido no OBS - Social Stream Ninja">
+    <meta name="twitter:description" content="Guia rápido para usar overlays de chat do Social Stream Ninja no OBS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logotipo do Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Início rápido no OBS - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Guia rápido para usar overlays de chat do Social Stream Ninja no OBS.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="pt-br">
+<script id="ssn-site-language" type="application/json">{"language":"pt-br","page":"docs/obs-quick-start.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Mudar para o tema claro","Switch to dark theme":"Mudar para o tema escuro","Light mode":"Modo claro","Dark mode":"Modo escuro","Open navigation menu":"Abrir menu de navegação","Close navigation menu":"Fechar menu de navegação","Copy this document as Markdown to the clipboard":"Copiar este documento em Markdown para a área de transferência","Copy Markdown":"Copiar Markdown","Copying…":"Copiando…","Markdown copied":"Markdown copiado","Copy failed":"Falha ao copiar","Copy comprehensive Markdown for an AI assistant":"Copiar Markdown completo para um assistente de IA","Copy this documentation page as Markdown for an AI assistant":"Copiar esta página de documentação como Markdown para um assistente de IA"},"strings":{"1. Pick One Session ID":"1. Escolha um ID de sessão","2. Start A Chat Source":"2. Inicie uma fonte de chat","3. Open The Dock":"3. Abra o dock","4. Add An OBS Browser Source":"4. Adicione uma fonte de navegador no OBS","5. If OBS Is Blank":"5. Se o OBS estiver em branco","A browser source can show a featured message like this after chat is reaching the dock.":"Uma fonte de navegador pode mostrar um destaque assim depois que o chat chegar ao dock.","Check one thing at a time, in this order.":"Confira uma coisa por vez, nesta ordem.","Check that the source chat page or app source window is still running.":"Confira se a página de chat ou a janela da fonte no aplicativo continua funcionando.","Commands & API":"Comandos e API","Confirm the OBS URL has the same":"Confirme que a URL do OBS tenha o mesmo","Confirm the dock receives messages first. If the dock is empty, OBS is not the problem yet.":"Confirme primeiro que o dock recebe mensagens. Se estiver vazio, o OBS ainda não é o problema.","Download":"Baixar","Featured message overlay preview with a sample chat message and donation badge":"Prévia do overlay de mensagem em destaque com mensagem de exemplo e selo de doação","Features":"Recursos","For regular chat overlay layouts, use a template from the":"Para layouts de chat contínuo, use um modelo da","Get chat into OBS with the fewest moving parts.":"Coloque o chat no OBS com o mínimo de etapas.","Guides":"Guias","Hire":"Contratar","Home":"Início","If messages appear here, Social Stream Ninja is receiving chat. Use the same session ID in OBS.":"Se as mensagens aparecem aqui, o Social Stream Ninja está recebendo chat. Use o mesmo ID de sessão no OBS.","In OBS, add a Browser Source and paste the overlay URL.":"No OBS, adicione uma fonte de navegador e cole a URL do overlay.","Inspiration":"Inspiração","Install or open Social Stream Ninja.":"Instale ou abra o Social Stream Ninja.","Main navigation":"Navegação principal","Make up one short session ID and use it everywhere. It is how your chat source, dock, and OBS overlay find each other.":"Crie um ID de sessão curto e use-o em todos os lugares. É assim que a fonte de chat, o dock e o overlay do OBS se encontram.","More details:":"Mais detalhes:","Not sure which source mode to use? See the":"Não sabe qual modo de fonte usar? Veja o","OBS Quick Start":"Início rápido no OBS","OBS Quick Start - Social Stream Ninja":"Início rápido no OBS - Social Stream Ninja","Open navigation menu":"Abrir menu de navegação","Open the chat source for your platform and leave it open.":"Abra a fonte de chat da sua plataforma e mantenha-a aberta.","Overlay Gallery":"Galeria de overlays","Platform Setup Picker":"Seletor de configuração de plataformas","Quick setup guide for using Social Stream Ninja chat overlays in OBS.":"Guia rápido para usar overlays de chat do Social Stream Ninja no OBS.","Refresh the OBS browser source after changing URL options.":"Atualize a fonte de navegador do OBS depois de mudar opções da URL.","Send or wait for one chat message so you know the source is working.":"Envie ou espere uma mensagem no chat para confirmar que a fonte funciona.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja dock showing three received chat messages":"Dock do Social Stream Ninja com três mensagens recebidas","Social Stream Ninja logo":"Logotipo do Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licença GPLv3.0.","Support":"Suporte","Supported Sites":"Sites compatíveis","Switch theme":"Alternar tema","Templates Gallery":"Galeria de modelos","The dock is your test screen. Open it before changing OBS settings.":"O dock é sua tela de teste. Abra-o antes de alterar configurações do OBS.","Troubleshooting":"Solução de problemas"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/obs-quick-start.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navegação principal"><a href="../index.html">Início</a><a href="features.html">Recursos</a><a href="inspiration.html" class="site-priority-inspiration">Inspiração</a><a href="download.html">Baixar</a><a href="guides.html">Guias</a><a href="commands.html">Comandos e API</a><a href="supported-sites.html">Sites compatíveis</a><a href="overlay-gallery.html" class="site-priority-gallery">Galeria de overlays</a><a href="services.html" class="site-priority-hire">Contratar</a><a href="support.html">Suporte</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Português (Brasil)"><span aria-hidden="true">🌐 </span><span lang="pt-br">Português (Brasil)</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-quick-start.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-quick-start.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="obs-quick-start.html" lang="pt-br" hreflang="pt-br" aria-current="true">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-quick-start.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-quick-start.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-quick-start.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-quick-start.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-quick-start.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-quick-start.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-quick-start.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-quick-start.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/obs-quick-start.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/obs-quick-start.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/obs-quick-start.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/obs-quick-start.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/obs-quick-start.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/obs-quick-start.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Alternar tema"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Início rápido no OBS</h1>
+            <p>Coloque o chat no OBS com o mínimo de etapas.</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>1. Escolha um ID de sessão</h3>
+                <p>Crie um ID de sessão curto e use-o em todos os lugares. É assim que a fonte de chat, o dock e o overlay do OBS se encontram.</p>
+                <pre>YOUR_SESSION_ID</pre>
+            </div>
+
+            <div class="guide-card">
+                <h3>2. Inicie uma fonte de chat</h3>
+                <ol class="guide-steps">
+                    <li>Instale ou abra o Social Stream Ninja.</li>
+                    <li>Abra a fonte de chat da sua plataforma e mantenha-a aberta.</li>
+                    <li>Envie ou espere uma mensagem no chat para confirmar que a fonte funciona.</li>
+                </ol>
+                <p>Não sabe qual modo de fonte usar? Veja o <a href="platform-setup-picker.html">Seletor de configuração de plataformas</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>3. Abra o dock</h3>
+                <p>O dock é sua tela de teste. Abra-o antes de alterar configurações do OBS.</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID</pre>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-dock-message-check.png" alt="Dock do Social Stream Ninja com três mensagens recebidas" class="guide-image">
+                    <figcaption>Se as mensagens aparecem aqui, o Social Stream Ninja está recebendo chat. Use o mesmo ID de sessão no OBS.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>4. Adicione uma fonte de navegador no OBS</h3>
+                <p>No OBS, adicione uma fonte de navegador e cole a URL do overlay.</p>
+                <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID</pre>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-featured-overlay-preview.png" alt="Prévia do overlay de mensagem em destaque com mensagem de exemplo e selo de doação" class="guide-image">
+                    <figcaption>Uma fonte de navegador pode mostrar um destaque assim depois que o chat chegar ao dock.</figcaption>
+                </figure>
+                <p>Para layouts de chat contínuo, use um modelo da <a href="templates.html">Galeria de modelos</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>5. Se o OBS estiver em branco</h3>
+                <p>Confira uma coisa por vez, nesta ordem.</p>
+                <ul class="guide-list">
+                    <li>Confirme primeiro que o dock recebe mensagens. Se estiver vazio, o OBS ainda não é o problema.</li>
+                    <li>Confirme que a URL do OBS tenha o mesmo <code>session</code>.</li>
+                    <li>Atualize a fonte de navegador do OBS depois de mudar opções da URL.</li>
+                    <li>Confira se a página de chat ou a janela da fonte no aplicativo continua funcionando.</li>
+                </ul>
+                <p>Mais detalhes: <a href="guides.html#extension-troubleshooting">Solução de problemas</a>.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licença GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

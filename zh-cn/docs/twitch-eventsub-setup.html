@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-cn/docs/twitch-eventsub-setup.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/zh-cn/docs/twitch-eventsub-setup.html">
+    <meta property="og:title" content="Twitch 设置与 EventSub - Social Stream Ninja">
+    <meta property="og:description" content="通过普通页面捕获或更丰富的 EventSub WebSocket 来源将 Twitch 聊天连接到 Social Stream Ninja，附带 OAuth、范围、事件及故障排查说明。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-cn/docs/twitch-eventsub-setup.html">
+    <meta name="twitter:title" content="Twitch 设置与 EventSub - Social Stream Ninja">
+    <meta name="twitter:description" content="通过普通页面捕获或更丰富的 EventSub WebSocket 来源将 Twitch 聊天连接到 Social Stream Ninja，附带 OAuth、范围、事件及故障排查说明。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch 设置与 EventSub - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="通过普通页面捕获或更丰富的 EventSub WebSocket 来源将 Twitch 聊天连接到 Social Stream Ninja，附带 OAuth、范围、事件及故障排查说明。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/twitch-eventsub-setup.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{"## Verified maintainer context Current Twitch OAuth scopes requested by `sources/websocket/twitch.js`: `chat:read`, `chat:edit`, `user:write:chat`, `bits:read`, `moderator:read:followers`, `moderator:read:chatters`, `channel:read:subscriptions`, `channel:read:hype_train`, `channel:moderate`, `moderator:manage:banned_users`, `moderator:manage:chat_messages`, `channel:manage:broadcast`, `channel:read:ads`, `channel:manage:ads`, `channel:read:redemptions`. Current EventSub subscription attempts, gated by role/scope/channel eligibility: `channel.follow` v2; `channel.subscribe`; `channel.subscription.gift`; `channel.subscription.message`; `channel.cheer`; `channel.ban`; `channel.channel_points_custom_reward_redemption.add`; `channel.raid`; `stream.online`; `stream.offline`; `channel.ad_break.begin`; and `channel.hype_train.begin`, `.progress`, `.end` v2. The current transport endpoint is Twitch EventSub WebSocket. Twitch requires a user access token when creating WebSocket subscriptions. The Twitch chat-client subscription-gift normalization regression test passed during this documentation review.":"## 经维护者验证的背景信息\n\n`sources/websocket/twitch.js` 当前请求的 Twitch OAuth 范围：\n\n`chat:read`, `chat:edit`, `user:write:chat`, `bits:read`, `moderator:read:followers`, `moderator:read:chatters`, `channel:read:subscriptions`, `channel:read:hype_train`, `channel:moderate`, `moderator:manage:banned_users`, `moderator:manage:chat_messages`, `channel:manage:broadcast`, `channel:read:ads`, `channel:manage:ads`, `channel:read:redemptions`.\n\n当前尝试的 EventSub 订阅，受角色/范围/频道资格限制：\n\n`channel.follow` v2; `channel.subscribe`; `channel.subscription.gift`; `channel.subscription.message`; `channel.cheer`; `channel.ban`; `channel.channel_points_custom_reward_redemption.add`; `channel.raid`; `stream.online`; `stream.offline`; `channel.ad_break.begin`; 以及 `channel.hype_train.begin`、`.progress`、`.end` v2。\n\n当前传输端点为 Twitch EventSub WebSocket。创建 WebSocket 订阅时，Twitch 要求用户访问令牌。在本次文档审查中，Twitch 聊天客户端的赠送订阅标准化回归测试已通过。",", and":"，以及",", enter":"，输入",", then":"，然后","Activate source":"激活来源","Add source → Twitch":"添加来源 → Twitch（Add source → Twitch）","Authorize the requested permissions and keep the Twitch source window open.":"授权请求的权限，并保持 Twitch 来源窗口打开。","Basic public chat capture from a Twitch chat or popout page.":"从 Twitch 聊天页面或弹出页面捕获基本公开聊天。","Best For":"最适合","Bits, rewards, and Hype Trains":"Bits、奖励与 Hype Train","Bits:":"Bits：","Browser Extension EventSub Setup":"浏览器扩展 EventSub 设置","Channel":"频道","Channel Points:":"频道积分：","Channel management":"频道管理","Chat":"聊天","Check that the dock and alert overlay use the same Social Stream session ID.":"检查停靠面板和警报叠加层是否使用相同的 Social Stream 会话 ID。","Cheers, custom Channel Points redemptions, and Hype Train status.":"Cheers、自定义频道积分兑换及 Hype Train 状态。","Choose A Twitch Source Mode":"选择 Twitch 来源模式","Commands & API":"命令与 API","Confirm the source page says the correct":"确认来源页面显示正确的","Connect Twitch chat to Social Stream Ninja using normal page capture or the richer EventSub WebSocket source, with OAuth, scope, event, and troubleshooting notes.":"通过普通页面捕获或更丰富的 EventSub WebSocket 来源将 Twitch 聊天连接到 Social Stream Ninja，附带 OAuth、范围、事件及故障排查说明。","Desktop App Setup":"桌面应用设置","Download":"下载","Enter the Twitch channel login used in its URL. For":"输入 Twitch 频道 URL 中使用的登录名。对于","Event Reference":"事件参考","EventSub can deliver a notification more than once.":"EventSub 可能多次投递同一通知。","EventSub overview":"EventSub 概述","EventSub subscription types":"EventSub 订阅类型","Events The Current Source Handles":"当前来源处理的事件","Events and Alerts Compatibility guide":"事件与提醒兼容性指南","Features":"功能","First Checks When An Event Is Missing":"事件缺失时首先检查的事项","Follow events, subscriber events, gifted subscriptions, and resub messages.":"关注事件、订阅者事件、赠送订阅及续订消息。","Followers and subscribers":"关注者与订阅者","Follows, subscriptions, bits, rewards, raids, stream status, Hype Trains, moderation sync, sending chat, and channel details.":"关注、订阅、Bits、奖励、Raid（观众转移）、直播状态、Hype Train、管理同步、发送聊天及频道详情。","Follows:":"关注：","For basic Standard capture instead, open the normal Twitch chat or popout chat page and keep chat visible.":"若使用基本的 Standard 捕获，请打开普通 Twitch 聊天或弹出聊天页面，并保持聊天可见。","For downstream alert names and payload fields, use the":"下游警报名称和数据字段请参见","Guides":"指南","Hire":"雇用","Home":"首页","Hype Train:":"Hype Train：","If chat works but follows/subs/rewards do not, sign out and authorize again so the current scopes are granted.":"若聊天正常但关注/订阅/奖励无效，请退出并重新授权，以授予当前所需的范围。","Important Difference":"重要区别","Inspiration":"灵感","Install and enable the current Social Stream Ninja extension.":"安装并启用当前版本的 Social Stream Ninja 扩展。","Keep that page open. Confirm that its User and Channel fields are correct before testing alerts.":"保持该页面打开。测试警报前，确认 User 和 Channel 字段正确。","Keep the source page/window open and confirm its chat connection is active.":"保持来源页面/窗口打开，并确认聊天连接处于活动状态。","Leave":"将","Main navigation":"主导航","Message deletion, bans/timeouts, and block synchronization when the account may moderate the channel.":"账号有权管理该频道时，支持消息删除、封禁/禁言及屏蔽同步。","Mode":"模式","Moderation":"管理","Moderation:":"管理：","On this page":"本页内容","Open navigation menu":"打开导航菜单","Open the":"打开","Overlay Gallery":"叠加层图库","Permission Group":"权限组","Raids:":"Raid（观众转移）：","Read chat, send chat, and list chatters.":"读取聊天、发送聊天及列出聊天用户。","Read/update title and category, read/manage ads, and display channel metrics.":"读取/更新标题与分类、读取/管理广告及显示频道指标。","Reads what the page exposes. It is simple, but does not provide the full EventSub event set.":"读取页面公开的内容。操作简单，但不提供完整 EventSub 事件集。","Replace":"替换","Requires Twitch OAuth. Events are enabled only when the signed-in account, channel role, channel eligibility, and granted scope allow them.":"需要 Twitch OAuth。仅当登录账号、频道角色、频道资格及授予的范围允许时，才会启用事件。","See Twitch's official":"参见 Twitch 官方","Select":"选择","Sign in to Twitch":"登录 Twitch","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Social Stream asks for a user token with permissions needed by the controls and subscriptions it supports. Granting a scope does not make an account a broadcaster or moderator; Twitch still checks the account's role for the selected channel.":"Social Stream 请求带有其支持的控件及订阅所需权限的用户令牌。授予范围不会让账号成为主播或管理员；Twitch 仍会检查该账号在所选频道中的角色。","Standard":"标准","Stream and ad status:":"直播与广告状态：","Subscriptions:":"订阅：","Support":"支持","Supported Sites":"支持的网站","Switch theme":"切换主题","The desktop source offers an external-browser OAuth flow and a local-app flow. External browser is usually the easiest when Twitch already works in your normal browser.":"桌面来源提供外部浏览器 OAuth 流程及本地应用流程。如果 Twitch 已在普通浏览器中正常使用，外部浏览器通常最方便。","Twitch EventSub source page":"Twitch EventSub 来源页面","Twitch Setup and EventSub":"Twitch 设置与 EventSub","Twitch Setup and EventSub - Social Stream Ninja":"Twitch 设置与 EventSub - Social Stream Ninja","Twitch documents at-least-once delivery. Social Stream includes duplicate protection, but custom API consumers should still deduplicate by event/message identity where possible. See the official":"Twitch 文档规定至少投递一次。Social Stream 内置重复保护，但自定义 API 接收方仍应尽可能按事件/消息标识去重。参见官方","Twitch source sign-in screen with External browser and Local app sign-in methods":"Twitch 来源登录界面，提供 External browser 和 Local app 登录方式","Twitch subscriber events require an eligible Affiliate/Partner channel and broadcaster access. Follow and moderation subscriptions require the signed-in user to be the broadcaster or an authorized moderator, depending on the event.":"Twitch 订阅者事件需要符合资格的 Affiliate/Partner 频道及主播访问权限。关注和管理订阅要求登录用户是主播或获授权管理员，具体取决于事件。","Use normal page capture for simple chat, or EventSub/WebSocket mode for follows, subs, bits, rewards, raids, Hype Trains, and channel controls.":"简单聊天使用普通页面捕获；关注、订阅、Bits、奖励、Raid（观众转移）、Hype Train 及频道控制则使用 EventSub/WebSocket 模式。","Use the popup's fake test message or Multi Alerts preview to separate capture problems from overlay problems.":"使用弹出菜单中的模拟测试消息或 Multi Alerts 预览，区分捕获问题与叠加层问题。","Used For":"用途","User":"用户","Verify that the signed-in account is the broadcaster or a permitted moderator for that channel.":"确认登录账号是该频道的主播或获准管理员。","WebSocket":"WebSocket","WebSocket / EventSub":"WebSocket / EventSub","What Twitch Requests":"Twitch 请求的权限","and":"和","and approve the requested access.":"并批准所请求的访问权限。","ban and message-deletion updates when permitted.":"在权限允许时更新封禁及消息删除。","begin, progress, and end updates.":"开始、进度及结束更新。","in the URL with the channel login you want to monitor.":"为要监控的频道登录名，修改 URL 中的该值。","scope reference":"范围参考","selected for the richer EventSub source. Twitch currently defaults to this mode in the app.":"保持选中状态，以使用更丰富的 EventSub 来源。目前应用中的 Twitch 默认采用此模式。","with a donation value.":"并附带打赏值。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/twitch-eventsub-setup.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/twitch-eventsub-setup.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/twitch-eventsub-setup.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/twitch-eventsub-setup.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/twitch-eventsub-setup.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/twitch-eventsub-setup.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/twitch-eventsub-setup.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/twitch-eventsub-setup.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="twitch-eventsub-setup.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/twitch-eventsub-setup.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/twitch-eventsub-setup.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/twitch-eventsub-setup.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/twitch-eventsub-setup.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/twitch-eventsub-setup.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/twitch-eventsub-setup.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/twitch-eventsub-setup.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/twitch-eventsub-setup.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/twitch-eventsub-setup.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Twitch 设置与 EventSub</h1>
+            <p>简单聊天使用普通页面捕获；关注、订阅、Bits、奖励、Raid（观众转移）、Hype Train 及频道控制则使用 EventSub/WebSocket 模式。</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="本页内容"><a href="#read-section-1">选择 Twitch 来源模式</a><a href="#read-section-2">桌面应用设置</a><a href="#read-section-3">浏览器扩展 EventSub 设置</a><a href="#read-section-4">Twitch 请求的权限</a><a href="#read-section-5">当前来源处理的事件</a><a href="#read-section-6">事件缺失时首先检查的事项</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">选择 Twitch 来源模式</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>模式</th><th>最适合</th><th>重要区别</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="模式">标准</td>
+                            <td data-label="最适合">从 Twitch 聊天页面或弹出页面捕获基本公开聊天。</td>
+                            <td data-label="重要区别">读取页面公开的内容。操作简单，但不提供完整 EventSub 事件集。</td>
+                        </tr>
+                        <tr>
+                            <td data-label="模式">WebSocket / EventSub</td>
+                            <td data-label="最适合">关注、订阅、Bits、奖励、Raid（观众转移）、直播状态、Hype Train、管理同步、发送聊天及频道详情。</td>
+                            <td data-label="重要区别">需要 Twitch OAuth。仅当登录账号、频道角色、频道资格及授予的范围允许时，才会启用事件。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">桌面应用设置</h2>
+                <ol class="guide-steps">
+                    <li>选择 <strong>添加来源 → Twitch（Add source → Twitch）</strong>.</li>
+                    <li>输入 Twitch 频道 URL 中使用的登录名。对于 <code>twitch.tv/examplechannel</code>，输入 <code>examplechannel</code>.</li>
+                    <li>将 <strong>WebSocket</strong> 保持选中状态，以使用更丰富的 EventSub 来源。目前应用中的 Twitch 默认采用此模式。</li>
+                    <li>选择 <strong>激活来源</strong>，然后 <strong>登录 Twitch</strong>.</li>
+                    <li>授权请求的权限，并保持 Twitch 来源窗口打开。</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/twitch-eventsub-sign-in.png" alt="Twitch 来源登录界面，提供 External browser 和 Local app 登录方式" class="guide-image guide-image-narrow">
+                    <figcaption>桌面来源提供外部浏览器 OAuth 流程及本地应用流程。如果 Twitch 已在普通浏览器中正常使用，外部浏览器通常最方便。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">浏览器扩展 EventSub 设置</h2>
+                <ol class="guide-steps">
+                    <li>安装并启用当前版本的 Social Stream Ninja 扩展。</li>
+                    <li>打开 <a href="https://socialstream.ninja/sources/websocket/twitch.html?channel=examplechannel" target="_blank" rel="noopener">Twitch EventSub 来源页面</a>.</li>
+                    <li>替换 <code>examplechannel</code> 为要监控的频道登录名，修改 URL 中的该值。</li>
+                    <li>选择 <strong>登录 Twitch</strong> 并批准所请求的访问权限。</li>
+                    <li>保持该页面打开。测试警报前，确认 User 和 Channel 字段正确。</li>
+                </ol>
+                <pre><code>https://socialstream.ninja/sources/websocket/twitch.html?channel=CHANNEL_LOGIN</code></pre>
+                <p>若使用基本的 Standard 捕获，请打开普通 Twitch 聊天或弹出聊天页面，并保持聊天可见。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">Twitch 请求的权限</h2>
+                <p>Social Stream 请求带有其支持的控件及订阅所需权限的用户令牌。授予范围不会让账号成为主播或管理员；Twitch 仍会检查该账号在所选频道中的角色。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>权限组</th><th>用途</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="权限组">聊天</td><td data-label="用途">读取聊天、发送聊天及列出聊天用户。</td></tr>
+                        <tr><td data-label="权限组">关注者与订阅者</td><td data-label="用途">关注事件、订阅者事件、赠送订阅及续订消息。</td></tr>
+                        <tr><td data-label="权限组">Bits、奖励与 Hype Train</td><td data-label="用途">Cheers、自定义频道积分兑换及 Hype Train 状态。</td></tr>
+                        <tr><td data-label="权限组">管理</td><td data-label="用途">账号有权管理该频道时，支持消息删除、封禁/禁言及屏蔽同步。</td></tr>
+                        <tr><td data-label="权限组">频道管理</td><td data-label="用途">读取/更新标题与分类、读取/管理广告及显示频道指标。</td></tr>
+                    </tbody>
+                </table>
+                <p>参见 Twitch 官方 <a href="https://dev.twitch.tv/docs/authentication/scopes/" target="_blank" rel="noopener">范围参考</a> 和 <a href="https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/" target="_blank" rel="noopener">EventSub 订阅类型</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">当前来源处理的事件</h2>
+                <ul class="guide-list">
+                    <li><strong>关注：</strong> <code>new_follower</code>.</li>
+                    <li><strong>订阅：</strong> <code>new_subscriber</code>, <code>resub</code>，以及 <code>subscription_gift</code>.</li>
+                    <li><strong>Bits：</strong> <code>cheer</code> 并附带打赏值。</li>
+                    <li><strong>频道积分：</strong> <code>reward</code>.</li>
+                    <li><strong>Raid（观众转移）：</strong> <code>raid</code>.</li>
+                    <li><strong>直播与广告状态：</strong> <code>stream_online</code>, <code>stream_offline</code>，以及 <code>ad_break</code>.</li>
+                    <li><strong>Hype Train：</strong> <code>hype_train</code> 开始、进度及结束更新。</li>
+                    <li><strong>管理：</strong> 在权限允许时更新封禁及消息删除。</li>
+                </ul>
+                <p>Twitch 订阅者事件需要符合资格的 Affiliate/Partner 频道及主播访问权限。关注和管理订阅要求登录用户是主播或获授权管理员，具体取决于事件。</p>
+                <p>下游警报名称和数据字段请参见 <a href="events-alerts-compatibility.html">事件与提醒兼容性指南</a> 和 <a href="event-reference.html">事件参考</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">事件缺失时首先检查的事项</h2>
+                <ol class="guide-steps">
+                    <li>确认来源页面显示正确的 <strong>用户</strong> 和 <strong>频道</strong>.</li>
+                    <li>保持来源页面/窗口打开，并确认聊天连接处于活动状态。</li>
+                    <li>若聊天正常但关注/订阅/奖励无效，请退出并重新授权，以授予当前所需的范围。</li>
+                    <li>确认登录账号是该频道的主播或获准管理员。</li>
+                    <li>检查停靠面板和警报叠加层是否使用相同的 Social Stream 会话 ID。</li>
+                    <li>使用弹出菜单中的模拟测试消息或 Multi Alerts 预览，区分捕获问题与叠加层问题。</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>EventSub 可能多次投递同一通知。</strong> Twitch 文档规定至少投递一次。Social Stream 内置重复保护，但自定义 API 接收方仍应尽可能按事件/消息标识去重。参见官方 <a href="https://dev.twitch.tv/docs/eventsub/" target="_blank" rel="noopener">EventSub 概述</a>.</p>
+                </div>
+            </div>
+
+            <template data-copy-markdown-extra>
+## 经维护者验证的背景信息
+
+`sources/websocket/twitch.js` 当前请求的 Twitch OAuth 范围：
+
+`chat:read`, `chat:edit`, `user:write:chat`, `bits:read`, `moderator:read:followers`, `moderator:read:chatters`, `channel:read:subscriptions`, `channel:read:hype_train`, `channel:moderate`, `moderator:manage:banned_users`, `moderator:manage:chat_messages`, `channel:manage:broadcast`, `channel:read:ads`, `channel:manage:ads`, `channel:read:redemptions`.
+
+当前尝试的 EventSub 订阅，受角色/范围/频道资格限制：
+
+`channel.follow` v2; `channel.subscribe`; `channel.subscription.gift`; `channel.subscription.message`; `channel.cheer`; `channel.ban`; `channel.channel_points_custom_reward_redemption.add`; `channel.raid`; `stream.online`; `stream.offline`; `channel.ad_break.begin`; 以及 `channel.hype_train.begin`、`.progress`、`.end` v2。
+
+当前传输端点为 Twitch EventSub WebSocket。创建 WebSocket 订阅时，Twitch 要求用户访问令牌。在本次文档审查中，Twitch 聊天客户端的赠送订阅标准化回归测试已通过。
+            </template>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja。GPLv3.0 许可证。</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="pl" data-site-root="../../" data-site-language="pl">
+	<head>
+    <meta charset="utf-8" />
+    <meta name="description" content="Połącz Shopify z Social Stream Ninja, skonfiguruj integrację sklepu i wykorzystuj informacje o produktach oraz sprzedaży w nakładkach transmisji.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/pl/docs/shopify-setup.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="pl_PL">
+    <meta property="og:url" content="https://socialstream.ninja/beta/pl/docs/shopify-setup.html">
+    <meta property="og:title" content="Konfiguracja Shopify | Social Stream Ninja">
+    <meta property="og:description" content="Połącz Shopify z Social Stream Ninja, skonfiguruj integrację sklepu i wykorzystuj informacje o produktach oraz sprzedaży w nakładkach transmisji.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/pl/docs/shopify-setup.html">
+    <meta name="twitter:title" content="Konfiguracja Shopify | Social Stream Ninja">
+    <meta name="twitter:description" content="Połącz Shopify z Social Stream Ninja, skonfiguruj integrację sklepu i wykorzystuj informacje o produktach oraz sprzedaży w nakładkach transmisji.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Konfiguracja Shopify | Social Stream Ninja</title>
+		<link rel="icon" href="../../icons/favicon.ico" />
+		<link rel="stylesheet" href="../../docs/css/styles.css" />
+		<link rel="stylesheet" href="../../docs/css/guides.css" />
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem('darkMode');
+				var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+				if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) document.documentElement.classList.add('dark-mode');
+			})();
+		</script>
+	<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="pl">
+<script id="ssn-site-language" type="application/json">{"language":"pl","page":"docs/shopify-setup.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Przełącz na jasny motyw","Switch to dark theme":"Przełącz na ciemny motyw","Light mode":"Tryb jasny","Dark mode":"Tryb ciemny","Open navigation menu":"Otwórz menu nawigacji","Close navigation menu":"Zamknij menu nawigacji","Copy this document as Markdown to the clipboard":"Skopiuj ten dokument w formacie Markdown do schowka","Copy Markdown":"Kopiuj Markdown","Copying…":"Kopiowanie…","Markdown copied":"Skopiowano Markdown","Copy failed":"Nie udało się skopiować","Copy comprehensive Markdown for an AI assistant":"Skopiuj pełny Markdown dla asystenta AI","Copy this documentation page as Markdown for an AI assistant":"Skopiuj tę stronę dokumentacji jako Markdown dla asystenta AI"},"strings":{"(a small shop link), or":"(mały link do sklepu) lub","(deletes the receiver and waiting events). Delete the webhook in Shopify too.":"(usuwa odbiornik i oczekujące zdarzenia). Usuń też webhook w Shopify.","(make one with Shopify's Headless channel, and publish the product there and to the Online Store). Never paste an Admin API or private token.":"(utwórz go w kanale Headless Shopify i opublikuj produkt tam oraz w Online Store). Nigdy nie wklejaj tokenu Admin API ani prywatnego tokenu.","(pictures, prices, QR codes),":"(obrazy, ceny, kody QR),","(purchases).":"(zakupy).",", and donation goals don't go up.":", a cele darowizn nie rosną.",", and updated in the last 7 days count. Unpaid, part-paid, and cancelled orders are skipped.":"i zaktualizowane w ostatnich 7 dniach są liczone. Nieopłacone, częściowo opłacone i anulowane zamówienia są pomijane.",", choose":", wybierz",", exact receiver URL,":", dokładny URL odbiornika,",", paste the product's public link, and click":", wklej publiczny link produktu i kliknij",", starting at 800 × 600. Use one source per view.":", zaczynając od 800 × 600. Użyj jednego źródła na widok.",". (This is not a Storefront token.)":". (To nie jest token Storefront).",". Add it to OBS as a":". Dodaj go do OBS jako",". Check":". Sprawdź",". Find the webhook":". Znajdź dla webhooka",". Format:":". Format:",". No secret needed.":". Sekret nie jest potrzebny.",". Products & support links must be on.":". Produkty i linki wsparcia muszą być włączone.",". URL: the receiver URL.":". URL: adres odbiornika.","A product card labelled Gift doesn't change how orders are counted. Shipping to someone else doesn't make it a gift to you.":"Karta produktu oznaczona jako Prezent nie zmienia liczenia zamówień. Wysyłka do innej osoby nie oznacza prezentu dla Ciebie.","A purchase alert. The buyer's name stays private.":"Powiadomienie o zakupie. Nazwa kupującego pozostaje prywatna.","A refund didn't remove the alert":"Zwrot nie usunął powiadomienia","A separate private reader key stays on this computer.":"Osobny prywatny klucz odczytu pozostaje na tym komputerze.","Activity alerts only":"Tylko alerty aktywności","Add a":"Dodaj","Add product or link":"Dodaj produkt lub link","Alert source filter":"Filtr źródła powiadomień","An action ran twice":"Akcja wykonała się dwa razy","Browser Source":"Źródło przeglądarki","Careful with Shopify admin samples.":"Uważaj na próbki z panelu administracyjnego Shopify.","Check the name, picture, price, and link. Then click":"Sprawdź nazwę, obraz, cenę i link. Następnie kliknij","Check the webhook:":"Sprawdź webhook:","Click":"Kliknij","Commands & API":"Polecenia i API","Connect Shopify to Social Stream Ninja, configure your store integration and use product and sale information with your streaming overlays.":"Połącz Shopify z Social Stream Ninja, skonfiguruj integrację sklepu i wykorzystuj informacje o produktach oraz sprzedaży w nakładkach transmisji.","Copy OBS link":"Kopiuj link OBS","Copy public link":"Kopiuj publiczny link","Copy receiver URL":"Kopiuj adres odbiornika","Creating a public token using Headless":"Tworzenie publicznego tokenu za pomocą Headless","Disconnect Shopify":"Odłącz Shopify","Do this":"Zrób to","Download":"Pobierz","Enter your":"Wpisz swoją","Event Flow and donation goals":"Event Flow i cele darowizn","Event skipped":"Zdarzenie pominięte","Features":"Funkcje","Fix problems":"Rozwiązywanie problemów","For order-value rules, compare":"Dla reguł wartości zamówienia porównaj","Get an alert when someone buys":"Otrzymaj powiadomienie o zakupie","Guides":"Poradniki","Hire":"Zleć pracę","Home":"Strona główna","How waiting and repeat orders work":"Jak działają oczekujące i powtarzające się zamówienia","I want to":"Chcę","I want to…":"Chcę…","If one isn't clearly marked as a test, don't send it to a setup that gives out rewards.":"Jeśli próbka nie jest wyraźnie oznaczona jako test, nie wysyłaj jej do konfiguracji przyznającej nagrody.","Import a product":"Importuj produkt","Imported Shopify product name, image URL, price and canonical public link in the shared product editor":"Zaimportowana nazwa produktu Shopify, adres obrazu, cena i kanoniczny publiczny link we wspólnym edytorze produktów","In Event Flow, choose Event Type":"W Event Flow wybierz typ zdarzenia","In Shopify, create a webhook. Event:":"W Shopify utwórz webhook. Zdarzenie:","In Shopify, go to":"W Shopify przejdź do","In Social Stream Ninja, open":"W Social Stream Ninja otwórz","Inspiration":"Inspiracje","Is it working?":"Czy to działa?","It loads one product at a time.":"Wczytuje jeden produkt naraz.","It's a snapshot. Prices and stock don't update by themselves, so check it when your store changes.":"To migawka. Ceny i stany magazynowe nie aktualizują się same, więc sprawdzaj je po zmianach w sklepie.","JSON":"JSON","Keep Social Stream Ninja running.":"Pozostaw Social Stream Ninja uruchomione.","Load product details":"Wczytaj szczegóły produktu","Main navigation":"Nawigacja główna","Monetization → Shopify purchases → Setup":"Monetization → Shopify purchases → Setup","Neither one is ever put in OBS links or viewer QR codes.":"Żaden z nich nigdy nie trafia do linków OBS ani kodów QR dla widzów.","No buyer name":"Brak nazwy kupującego","Not switched on yet.":"Jeszcze niewłączone.","Nothing extra. They get Shopify purchases even without the product list.":"Nic więcej. Odbierają zakupy Shopify nawet bez listy produktów.","OBS overlay for":"Nakładka OBS dla","On purpose. Names, emails, addresses, notes, custom fields, checkout links, and order IDs are never shown.":"Celowo. Nazwy, e-maile, adresy, notatki, własne pola, linki do płatności i identyfikatory zamówień nigdy nie są wyświetlane.","On this page":"Na tej stronie","Only fully paid orders above zero, marked":"Tylko w pełni opłacone zamówienia o wartości powyżej zera, oznaczone","Open":"Otwórz","Open navigation menu":"Otwórz menu nawigacji","Order payment":"Order payment","Order times may be up to five minutes in the future (clock drift).":"Czas zamówienia może być do pięciu minut w przyszłości (różnica zegarów).","Orders wait up to 7 days. Start SSN and they come through.":"Zamówienia czekają do 7 dni. Uruchom SSN, a zostaną dostarczone.","Overlay Gallery":"Galeria nakładek","Overlay link options":"Opcje linku nakładki","Overlay view":"Widok nakładki","Pause alerts":"Wstrzymaj powiadomienia","Payment is never guessed from order creation, shipping, or stock changes. A missing test flag is skipped.":"Płatność nigdy nie jest wnioskowana z utworzenia zamówienia, wysyłki ani zmian stanu magazynowego. Brak flagi testowej powoduje pominięcie.","Pick a stable API version and save. (SSN was built against 2026-07.)":"Wybierz stabilną wersję API i zapisz. (SSN zbudowano dla wersji 2026-07).","Preview sample":"Podgląd przykładu","Problem":"Problem","Product query":"Zapytanie o produkt","Product showcase only":"Tylko prezentacja produktów","Product won't load?":"Produkt się nie wczytuje?","Products & support links":"Produkty i linki wsparcia","Public Storefront token":"Publiczny token Storefront","Purchase alerts":"Powiadomienia o zakupach","Purchase alerts need the Shopify receiver on the SSN server, which stays off until it passes a real-store test. Until then,":"Powiadomienia o zakupach wymagają odbiornika Shopify na serwerze SSN, który pozostaje wyłączony do przejścia testu z prawdziwym sklepem. Do tego czasu","Purchases are not donations. They have no":"Zakupy nie są darowiznami. Nie mają","Put it in OBS":"Dodaj do OBS","Refunds, cancellations, and edits don't undo alerts. This isn't bookkeeping.":"Zwroty, anulowania i zmiany nie cofają powiadomień. To nie jest księgowość.","Repeats are blocked for 7 days, but a crash mid-action can repeat it. Add your own check for important automations.":"Powtórzenia są blokowane przez 7 dni, ale awaria w trakcie akcji może spowodować jej powtórzenie. Dodaj własną kontrolę do ważnych automatyzacji.","Repeats are matched by store and order, even if Shopify's delivery IDs differ.":"Powtórzenia są dopasowywane według sklepu i zamówienia, nawet gdy identyfikatory dostarczenia Shopify się różnią.","SSApp Shopify setup with store domain, cleared signing secret, receiver URL and status":"Konfiguracja Shopify w SSApp z domeną sklepu, wyczyszczonym sekretem podpisującym, adresem odbiornika i statusem","SSN saves which orders it handled before confirming them.":"SSN zapisuje obsłużone zamówienia przed ich potwierdzeniem.","SSN was off during a sale":"SSN było wyłączone podczas sprzedaży","Save setup":"Zapisz konfigurację","Save setup shows an error":"Zapisz konfigurację pokazuje błąd","Scan the QR code with your phone at your final stream size.":"Zeskanuj kod QR telefonem w końcowym rozmiarze transmisji.","See the":"Zobacz","Set":"Ustaw","Settings → Notifications → Webhooks":"Settings → Notifications → Webhooks","Share a product link in chat":"Udostępnij link produktu na czacie","Shopify CLI sample webhooks can test message handling, but not subscriptions or retries, and they still need app credentials. See":"Przykładowe webhooki Shopify CLI mogą testować obsługę wiadomości, ale nie subskrypcje ani ponowienia, i nadal wymagają danych aplikacji. Zobacz","Shopify CLI webhook testing limits":"Ograniczenia testowania webhooków w Shopify CLI","Shopify Storefront authentication":"Uwierzytelnianie Shopify Storefront","Shopify event details":"Szczegóły zdarzeń Shopify","Shopify has its own receiver, so you don't need the older remote API control switch.":"Shopify ma własny odbiornik, więc starszy przełącznik zdalnego sterowania API nie jest potrzebny.","Shopify orders don't include a reliable image, so alerts are text only. They never borrow a product card's picture or QR code.":"Zamówienia Shopify nie zawierają wiarygodnego obrazu, więc powiadomienia są tekstowe. Nigdy nie pobierają obrazu ani kodu QR z karty produktu.","Shopify purchase alert with Anonymous buyer and public product title":"Alert zakupu Shopify z anonimowym kupującym i publicznym tytułem produktu","Shopify purchases":"Zakupy Shopify","Shopify setup in the app, using an example store. Click to enlarge.":"Konfiguracja Shopify w aplikacji z przykładowym sklepem. Kliknij, aby powiększyć.","Shopify setup | Social Stream Ninja":"Konfiguracja Shopify | Social Stream Ninja","Shopify: manually creating webhooks":"Shopify: ręczne tworzenie webhooków","Shopify: verifying deliveries":"Shopify: weryfikowanie dostarczeń","Show a Shopify product in 5 steps":"Pokaż produkt Shopify w 5 krokach","Show a product":"Pokaż produkt","Show only Shopify alerts in the Monetization overlay":"Pokazuj tylko powiadomienia Shopify w nakładce monetyzacji","Show products with a QR code. Get an alert when someone buys.":"Pokazuj produkty z kodem QR. Otrzymuj powiadomienia o zakupach.","Show purchases in multi-alerts or the activity feed":"Pokazuj zakupy w multi-alerts lub kanale aktywności","Show your Shopify products and purchases.":"Pokazuj swoje produkty i zakupy Shopify.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Status and waiting orders survive a receiver restart.":"Stan i oczekujące zamówienia przetrwają ponowne uruchomienie odbiornika.","Status stays on waiting":"Stan pozostaje na „oczekiwanie”","Stop for good, or switch stores":"Zatrzymaj na stałe lub zmień sklep","Storage is limited. If the receiver can't safely store an order, it asks Shopify to send it again later.":"Pamięć jest ograniczona. Jeśli odbiornik nie może bezpiecznie zapisać zamówienia, prosi Shopify o ponowne wysłanie później.","Support":"Pomoc","Support card only":"Tylko karta wsparcia","Supported Sites":"Obsługiwane witryny","Switch theme":"Zmień motyw","Test safely":"Testuj bezpiecznie","Tests in the real app cover signed messages (including non-English text), tampered signatures, repeat deliveries, test orders, currency rounding, oversized requests, removal of private customer data, and catching up after being offline. No real orders or merchant account were used.":"Testy w prawdziwej aplikacji obejmują podpisane wiadomości (także tekst nieangielski), zmienione podpisy, powtórzone dostawy, zamówienia testowe, zaokrąglanie walut, zbyt duże żądania, usuwanie prywatnych danych klientów i nadrabianie po pracy offline. Nie używano prawdziwych zamówień ani konta sprzedawcy.","The link is Shopify's public store link, including your custom domain if Shopify gives one.":"To publiczny link sklepu Shopify, także z własną domeną, jeśli Shopify ją udostępnia.","The price is only filled in when every variant costs the same. Otherwise it stays blank. Only add a price if it's accurate.":"Cena jest wypełniana tylko wtedy, gdy wszystkie warianty kosztują tyle samo. Inaczej pozostaje pusta. Dodaj cenę tylko wtedy, gdy jest prawidłowa.","The product details load into the editor so you can check them first.":"Szczegóły produktu są wczytywane do edytora, aby można było je najpierw sprawdzić.","The receiver checks Shopify's signature and your store name before it accepts an order.":"Odbiornik sprawdza podpis Shopify i nazwę sklepu przed przyjęciem zamówienia.","The receiver isn't on at the server yet. Don't use the old session webhook URL instead.":"Odbiornik nie jest jeszcze włączony na serwerze. Nie używaj zamiast niego starego URL webhooka sesji.","The signing secret is stored encrypted on the SSN receiver. The box clears after you save.":"Sekret podpisu jest przechowywany zaszyfrowany w odbiorniku SSN. Pole czyści się po zapisaniu.","The token is used for that one request, then cleared.":"Token jest używany do tego jednego żądania, a potem usuwany.","Try this":"Spróbuj tego","Turn off":"Wyłącz","Turn on":"Włącz","Type your store address, like":"Wpisz adres sklepu, np.","Unavailable products, and products without a public Online Store link, can't be imported.":"Nie można importować niedostępnych produktów ani produktów bez publicznego linku Online Store.","Under":"W sekcji","Watch the status line: waiting, test received, event skipped, or purchase received. A receiver URL only means setup was saved.":"Obserwuj wiersz stanu: oczekiwanie, test odebrany, zdarzenie pominięte lub zakup odebrany. URL odbiornika oznacza tylko zapisanie konfiguracji.","What has been tested without a real store":"Co przetestowano bez prawdziwego sklepu","What the import fills in":"Co wypełnia import","Where your secret goes":"Gdzie trafia Twój sekret","Why no picture on purchase alerts?":"Dlaczego powiadomienia o zakupie nie mają obrazu?","You can always type a product in by hand instead.":"Zawsze możesz zamiast tego wpisać produkt ręcznie.","address and the signing secret.":"adres i sekret podpisu.","address, and secret. Custom app webhooks use the app's own secret.":"adres i sekret. Webhooki własnych aplikacji używają sekretu aplikacji.","and click":"i kliknij","and filter the source/type to":"i filtruj źródło/typ według","and pick an":"i wybierz","and the":"oraz","first.":"w pierwszej kolejności.","next to the product.":"obok produktu.","or":"lub","product and QR code guide":"poradnik produktów i kodów QR","show in the status only, with no alerts.":"pojawiają się tylko w stanie, bez powiadomień.","shows an error. Showing products still works.":"pokazuje błąd. Wyświetlanie produktów nadal działa.","signing secret":"sekret podpisu","to":"na","to see the look. It's not connected to your session, so it never runs Event Flow, changes totals, or checks a payment. For a full test, use a Shopify development store. Orders marked":"aby zobaczyć wygląd. Nie łączy się z sesją, więc nigdy nie uruchamia Event Flow, nie zmienia sum ani nie sprawdza płatności. Do pełnego testu użyj sklepu deweloperskiego Shopify. Zamówienia oznaczone"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/shopify-setup.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/shopify-setup.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/shopify-setup.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/shopify-setup.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/shopify-setup.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/shopify-setup.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/shopify-setup.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/shopify-setup.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/shopify-setup.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/shopify-setup.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/shopify-setup.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/shopify-setup.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/shopify-setup.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/shopify-setup.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/shopify-setup.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/shopify-setup.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/shopify-setup.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/shopify-setup.html">
+<!-- ssn-languages:end --></head>
+	<body class="visual-guide">
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Nawigacja główna"><a href="../index.html">Strona główna</a><a href="features.html">Funkcje</a><a href="inspiration.html" class="site-priority-inspiration">Inspiracje</a><a href="download.html">Pobierz</a><a href="guides.html">Poradniki</a><a href="commands.html">Polecenia i API</a><a href="supported-sites.html">Obsługiwane witryny</a><a href="overlay-gallery.html" class="site-priority-gallery">Galeria nakładek</a><a href="services.html" class="site-priority-hire">Zleć pracę</a><a href="support.html">Pomoc</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Polski"><span aria-hidden="true">🌐 </span><span lang="pl">Polski</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/shopify-setup.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/shopify-setup.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/shopify-setup.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/shopify-setup.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/shopify-setup.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/shopify-setup.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/shopify-setup.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/shopify-setup.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/shopify-setup.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/shopify-setup.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="shopify-setup.html" lang="pl" hreflang="pl" aria-current="true">Polski</a><a class="site-language-link" href="../../ko/docs/shopify-setup.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/shopify-setup.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/shopify-setup.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/shopify-setup.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/shopify-setup.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/shopify-setup.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Zmień motyw"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otwórz menu nawigacji" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+		<section class="page-hero">
+			<div class="container">
+				<h1>Pokazuj swoje produkty i zakupy Shopify.</h1>
+				<p>Pokazuj produkty z kodem QR. Otrzymuj powiadomienia o zakupach.</p>
+			</div>
+		</section>
+
+	<main>
+		<section class="guide-section">
+			<div class="container">
+				<nav class="guide-jump-links" aria-label="Na tej stronie">
+					<a href="#products">Pokaż produkt</a>
+					<a href="#alerts">Powiadomienia o zakupach</a>
+					<a href="#overlays">Dodaj do OBS</a>
+					<a href="#tests">Testuj bezpiecznie</a>
+					<a href="#limits">Rozwiązywanie problemów</a>
+				</nav>
+
+				<div class="guide-card">
+					<h2 id="products">Pokaż produkt Shopify w 5 krokach</h2>
+					<div class="guide-step-layout">
+						<ol class="guide-steps">
+							<li>W Social Stream Ninja otwórz <strong>Monetization &rarr; Shopify purchases &rarr; Setup</strong>.</li>
+							<li>Wpisz adres sklepu, np. <code>your-store.myshopify.com</code>. Sekret nie jest potrzebny.</li>
+							<li>Otwórz <strong>Importuj produkt</strong>, wklej publiczny link produktu i kliknij <strong>Wczytaj szczegóły produktu</strong>.</li>
+							<li>Sprawdź nazwę, obraz, cenę i link. Następnie kliknij <strong>Dodaj produkt lub link</strong>.</li>
+							<li>Włącz <strong>Produkty i linki wsparcia</strong> i kliknij <strong>Zapisz konfigurację</strong>.</li>
+						</ol>
+						<figure class="guide-figure">
+							<a href="../../docs/images/monetization/shopify-import.png" target="_blank" rel="noopener"><img class="guide-image" src="../../docs/images/monetization/shopify-import.png" alt="Zaimportowana nazwa produktu Shopify, adres obrazu, cena i kanoniczny publiczny link we wspólnym edytorze produktów" loading="lazy"></a>
+							<figcaption>Szczegóły produktu są wczytywane do edytora, aby można było je najpierw sprawdzić.</figcaption>
+						</figure>
+					</div>
+					<div class="guide-note"><strong>Produkt się nie wczytuje?</strong> Dodaj <strong>Publiczny token Storefront</strong> (utwórz go w kanale Headless Shopify i opublikuj produkt tam oraz w Online Store). Nigdy nie wklejaj tokenu Admin API ani prywatnego tokenu.</div>
+
+					<details class="guide-extra">
+						<summary>Co wypełnia import</summary>
+						<ul>
+							<li>Wczytuje jeden produkt naraz.</li>
+							<li>Token jest używany do tego jednego żądania, a potem usuwany.</li>
+							<li>To publiczny link sklepu Shopify, także z własną domeną, jeśli Shopify ją udostępnia.</li>
+							<li>Cena jest wypełniana tylko wtedy, gdy wszystkie warianty kosztują tyle samo. Inaczej pozostaje pusta. Dodaj cenę tylko wtedy, gdy jest prawidłowa.</li>
+							<li>To migawka. Ceny i stany magazynowe nie aktualizują się same, więc sprawdzaj je po zmianach w sklepie.</li>
+							<li>Nie można importować niedostępnych produktów ani produktów bez publicznego linku Online Store.</li>
+							<li>Zawsze możesz zamiast tego wpisać produkt ręcznie.</li>
+						</ul>
+						<p><a href="https://shopify.dev/docs/api/storefront/2026-07">Uwierzytelnianie Shopify Storefront</a> &middot; <a href="https://shopify.dev/docs/api/storefront/latest/queries/product">Zapytanie o produkt</a> &middot; <a href="https://shopify.dev/docs/api/storefront-web-components/getting-started">Tworzenie publicznego tokenu za pomocą Headless</a></p>
+					</details>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="alerts">Otrzymaj powiadomienie o zakupie</h2>
+					<div class="warning-note"><strong>Jeszcze niewłączone.</strong> Powiadomienia o zakupach wymagają odbiornika Shopify na serwerze SSN, który pozostaje wyłączony do przejścia testu z prawdziwym sklepem. Do tego czasu <strong>Zapisz konfigurację</strong> pokazuje błąd. Wyświetlanie produktów nadal działa.</div>
+					<div class="guide-step-layout">
+						<ol class="guide-steps">
+							<li>W Shopify przejdź do <strong>Settings &rarr; Notifications &rarr; Webhooks</strong>. Znajdź dla webhooka <strong>sekret podpisu</strong>. (To nie jest token Storefront).</li>
+							<li>W Social Stream Ninja otwórz <strong>Monetization &rarr; Shopify purchases &rarr; Setup</strong>.</li>
+							<li>Wpisz swoją <code>myshopify.com</code> adres i sekret podpisu.</li>
+							<li>Włącz <strong>Zakupy Shopify</strong> i kliknij <strong>Zapisz konfigurację</strong>.</li>
+							<li>Kliknij <strong>Kopiuj adres odbiornika</strong>.</li>
+							<li>W Shopify utwórz webhook. Zdarzenie: <strong>Order payment</strong>. Format: <strong>JSON</strong>. URL: adres odbiornika.</li>
+							<li>Wybierz stabilną wersję API i zapisz. (SSN zbudowano dla wersji 2026-07).</li>
+							<li>Pozostaw Social Stream Ninja uruchomione.</li>
+						</ol>
+						<figure class="guide-figure">
+							<a href="../../docs/images/monetization/shopify-setup.png" target="_blank" rel="noopener"><img class="guide-image" src="../../docs/images/monetization/shopify-setup.png" alt="Konfiguracja Shopify w SSApp z domeną sklepu, wyczyszczonym sekretem podpisującym, adresem odbiornika i statusem" loading="lazy"></a>
+							<figcaption>Konfiguracja Shopify w aplikacji z przykładowym sklepem. Kliknij, aby powiększyć.</figcaption>
+						</figure>
+					</div>
+					<div class="guide-note"><strong>Czy to działa?</strong> Obserwuj wiersz stanu: oczekiwanie, test odebrany, zdarzenie pominięte lub zakup odebrany. URL odbiornika oznacza tylko zapisanie konfiguracji.</div>
+
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>Chcę…</th><th>Zrób to</th></tr></thead>
+						<tbody>
+							<tr><td data-label="Chcę">Wstrzymaj powiadomienia</td><td data-label="Zrób to">Wyłącz <strong>Zakupy Shopify</strong>.</td></tr>
+														<tr><td data-label="Chcę">Zatrzymaj na stałe lub zmień sklep</td><td data-label="Zrób to">Kliknij <strong>Odłącz Shopify</strong> (usuwa odbiornik i oczekujące zdarzenia). Usuń też webhook w Shopify.</td></tr>
+						</tbody>
+					</table>
+
+					<details class="guide-extra">
+						<summary>Gdzie trafia Twój sekret</summary>
+						<ul>
+							<li>Sekret podpisu jest przechowywany zaszyfrowany w odbiorniku SSN. Pole czyści się po zapisaniu.</li>
+							<li>Osobny prywatny klucz odczytu pozostaje na tym komputerze.</li>
+							<li>Żaden z nich nigdy nie trafia do linków OBS ani kodów QR dla widzów.</li>
+							<li>Odbiornik sprawdza podpis Shopify i nazwę sklepu przed przyjęciem zamówienia.</li>
+							<li>Shopify ma własny odbiornik, więc starszy przełącznik zdalnego sterowania API nie jest potrzebny.</li>
+						</ul>
+						<p><a href="https://help.shopify.com/en/manual/fulfillment/setup/notifications/webhooks">Shopify: ręczne tworzenie webhooków</a> &middot; <a href="https://shopify.dev/docs/apps/build/webhooks/verify-deliveries">Shopify: weryfikowanie dostarczeń</a></p>
+					</details>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="overlays">Dodaj do OBS</h2>
+					<ol class="guide-steps">
+						<li>W sekcji <strong>Nakładka OBS dla</strong>, wybierz <strong>Produkty i linki wsparcia</strong>.</li>
+						<li>Otwórz <strong>Opcje linku nakładki</strong> i wybierz <strong>Widok nakładki</strong>: <strong>Tylko prezentacja produktów</strong> (obrazy, ceny, kody QR), <strong>Tylko karta wsparcia</strong> (mały link do sklepu) lub <strong>Tylko alerty aktywności</strong> (zakupy).</li>
+						<li>Kliknij <strong>Kopiuj link OBS</strong>. Dodaj go do OBS jako <strong>Źródło przeglądarki</strong>, zaczynając od 800 × 600. Użyj jednego źródła na widok.</li>
+						<li>Zeskanuj kod QR telefonem w końcowym rozmiarze transmisji.</li>
+					</ol>
+					<figure class="guide-figure">
+						<a href="../../docs/images/monetization/shopify-purchase.png" target="_blank" rel="noopener"><img class="guide-image" style="max-width:476px;margin:auto" src="../../docs/images/monetization/shopify-purchase.png" alt="Alert zakupu Shopify z anonimowym kupującym i publicznym tytułem produktu" loading="lazy"></a>
+						<figcaption>Powiadomienie o zakupie. Nazwa kupującego pozostaje prywatna.</figcaption>
+					</figure>
+
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>Chcę…</th><th>Zrób to</th></tr></thead>
+						<tbody>
+							<tr><td data-label="Chcę">Udostępnij link produktu na czacie</td><td data-label="Zrób to">Kliknij <strong>Kopiuj publiczny link</strong> obok produktu.</td></tr>
+							<tr><td data-label="Chcę">Pokazuj tylko powiadomienia Shopify w nakładce monetyzacji</td><td data-label="Zrób to">Ustaw <strong>Filtr źródła powiadomień</strong> na <code>shopify</code>. Produkty i linki wsparcia muszą być włączone.</td></tr>
+							<tr><td data-label="Chcę">Pokazuj zakupy w multi-alerts lub kanale aktywności</td><td data-label="Zrób to">Nic więcej. Odbierają zakupy Shopify nawet bez listy produktów.</td></tr>
+						</tbody>
+					</table>
+					<div class="guide-note"><strong>Dlaczego powiadomienia o zakupie nie mają obrazu?</strong> Zamówienia Shopify nie zawierają wiarygodnego obrazu, więc powiadomienia są tekstowe. Nigdy nie pobierają obrazu ani kodu QR z karty produktu.</div>
+
+					<details class="guide-extra">
+						<summary>Event Flow i cele darowizn</summary>
+						<ul>
+							<li>W Event Flow wybierz typ zdarzenia <code>purchase</code> i filtruj źródło/typ według <code>shopify</code>.</li>
+							<li>Dla reguł wartości zamówienia porównaj <code>meta.commerce.orderTotal</code>. Sprawdź <code>meta.commerce.currency</code> w pierwszej kolejności.</li>
+							<li>Zakupy nie są darowiznami. Nie mają <code>hasDonation</code> lub <code>donoValue</code>, a cele darowizn nie rosną.</li>
+							<li>Karta produktu oznaczona jako Prezent nie zmienia liczenia zamówień. Wysyłka do innej osoby nie oznacza prezentu dla Ciebie.</li>
+						</ul>
+					</details>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="tests">Testuj bezpiecznie</h2>
+					<p>Kliknij <strong>Podgląd przykładu</strong> aby zobaczyć wygląd. Nie łączy się z sesją, więc nigdy nie uruchamia Event Flow, nie zmienia sum ani nie sprawdza płatności. Do pełnego testu użyj sklepu deweloperskiego Shopify. Zamówienia oznaczone <code>test: true</code> pojawiają się tylko w stanie, bez powiadomień.</p>
+					<div class="warning-note"><strong>Uważaj na próbki z panelu administracyjnego Shopify.</strong> Jeśli próbka nie jest wyraźnie oznaczona jako test, nie wysyłaj jej do konfiguracji przyznającej nagrody.</div>
+
+					<details class="guide-extra">
+						<summary>Co przetestowano bez prawdziwego sklepu</summary>
+						<p>Testy w prawdziwej aplikacji obejmują podpisane wiadomości (także tekst nieangielski), zmienione podpisy, powtórzone dostawy, zamówienia testowe, zaokrąglanie walut, zbyt duże żądania, usuwanie prywatnych danych klientów i nadrabianie po pracy offline. Nie używano prawdziwych zamówień ani konta sprzedawcy.</p>
+						<p>Przykładowe webhooki Shopify CLI mogą testować obsługę wiadomości, ale nie subskrypcje ani ponowienia, i nadal wymagają danych aplikacji. Zobacz <a href="https://shopify.dev/docs/api/shopify-cli/app/app-webhook-trigger">Ograniczenia testowania webhooków w Shopify CLI</a>.</p>
+					</details>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="limits">Rozwiązywanie problemów</h2>
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>Problem</th><th>Spróbuj tego</th></tr></thead>
+						<tbody>
+							<tr><td data-label="Problem">Zapisz konfigurację pokazuje błąd</td><td data-label="Spróbuj tego">Odbiornik nie jest jeszcze włączony na serwerze. Nie używaj zamiast niego starego URL webhooka sesji.</td></tr>
+							<tr><td data-label="Problem">Stan pozostaje na „oczekiwanie”</td><td data-label="Spróbuj tego">Sprawdź webhook: <strong>Order payment</strong>, <strong>JSON</strong>, dokładny URL odbiornika, <code>myshopify.com</code> adres i sekret. Webhooki własnych aplikacji używają sekretu aplikacji.</td></tr>
+							<tr><td data-label="Problem">Zdarzenie pominięte</td><td data-label="Spróbuj tego">Tylko w pełni opłacone zamówienia o wartości powyżej zera, oznaczone <code>test: false</code>i zaktualizowane w ostatnich 7 dniach są liczone. Nieopłacone, częściowo opłacone i anulowane zamówienia są pomijane.</td></tr>
+							<tr><td data-label="Problem">SSN było wyłączone podczas sprzedaży</td><td data-label="Spróbuj tego">Zamówienia czekają do 7 dni. Uruchom SSN, a zostaną dostarczone.</td></tr>
+							<tr><td data-label="Problem">Akcja wykonała się dwa razy</td><td data-label="Spróbuj tego">Powtórzenia są blokowane przez 7 dni, ale awaria w trakcie akcji może spowodować jej powtórzenie. Dodaj własną kontrolę do ważnych automatyzacji.</td></tr>
+							<tr><td data-label="Problem">Brak nazwy kupującego</td><td data-label="Spróbuj tego">Celowo. Nazwy, e-maile, adresy, notatki, własne pola, linki do płatności i identyfikatory zamówień nigdy nie są wyświetlane.</td></tr>
+							<tr><td data-label="Problem">Zwrot nie usunął powiadomienia</td><td data-label="Spróbuj tego">Zwroty, anulowania i zmiany nie cofają powiadomień. To nie jest księgowość.</td></tr>
+						</tbody>
+					</table>
+
+					<details class="guide-extra">
+						<summary>Jak działają oczekujące i powtarzające się zamówienia</summary>
+						<ul>
+							<li>Czas zamówienia może być do pięciu minut w przyszłości (różnica zegarów).</li>
+							<li>Płatność nigdy nie jest wnioskowana z utworzenia zamówienia, wysyłki ani zmian stanu magazynowego. Brak flagi testowej powoduje pominięcie.</li>
+							<li>Stan i oczekujące zamówienia przetrwają ponowne uruchomienie odbiornika.</li>
+							<li>Pamięć jest ograniczona. Jeśli odbiornik nie może bezpiecznie zapisać zamówienia, prosi Shopify o ponowne wysłanie później.</li>
+							<li>Powtórzenia są dopasowywane według sklepu i zamówienia, nawet gdy identyfikatory dostarczenia Shopify się różnią.</li>
+							<li>SSN zapisuje obsłużone zamówienia przed ich potwierdzeniem.</li>
+						</ul>
+					</details>
+					<p>Zobacz <a href="event-reference.html#shopify-purchases">Szczegóły zdarzeń Shopify</a> oraz <a href="creator-store-setup.html#obs">poradnik produktów i kodów QR</a>.</p>
+				</div>
+			</div>
+		</section>
+	</main><script data-copy-markdown src="../../docs/js/main.js"></script></body></html>

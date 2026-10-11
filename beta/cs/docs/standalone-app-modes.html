@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/docs/standalone-app-modes.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/docs/standalone-app-modes.html">
+    <meta property="og:title" content="Režimy samostatné aplikace – Social Stream Ninja">
+    <meta property="og:description" content="Srozumitelný návod k režimům zdrojů desktopové aplikace Social Stream Ninja, standardnímu režimu, WebSocketu, předvolbám TikToku, oknům zdrojů a řešení běžných problémů aplikace.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/docs/standalone-app-modes.html">
+    <meta name="twitter:title" content="Režimy samostatné aplikace – Social Stream Ninja">
+    <meta name="twitter:description" content="Srozumitelný návod k režimům zdrojů desktopové aplikace Social Stream Ninja, standardnímu režimu, WebSocketu, předvolbám TikToku, oknům zdrojů a řešení běžných problémů aplikace.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Režimy samostatné aplikace – Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Srozumitelný návod k režimům zdrojů desktopové aplikace Social Stream Ninja, standardnímu režimu, WebSocketu, předvolbám TikToku, oknům zdrojů a řešení běžných problémů aplikace.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/standalone-app-modes.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"A compatibility path that checks for updates instead of using the preferred live socket path.":"Kompatibilní způsob připojení, který kontroluje aktualizace namísto preferovaného živého socketu.","Advanced setups.":"Pokročilá nastavení.","App is using the wrong source files:":"Aplikace používá nesprávné soubory zdrojů:","App-native reading and reply-support paths.":"Způsoby čtení a podpory odpovědí přímo v aplikaci.","Auto":"Automaticky","Chrome is logged in but the app is not:":"Chrome je přihlášený, ale aplikace ne:","Commands & API":"Příkazy a API","Common Failure Point":"Běžná příčina selhání","Common Fixes":"Běžná řešení","Confirm the app source is activated.":"Ověřte, že je zdroj v aplikaci aktivovaný.","Confirm the dock receives chat with the same session ID.":"Ověřte, že dok přijímá chat se stejným ID relace.","Confirm the source window is signed in if the platform needs login.":"Pokud platforma vyžaduje přihlášení, ověřte jej v okně zdroje.","Download":"Stáhnout","Fallback when socket/signing paths fail.":"Náhradní režim při selhání socketu nebo podepisování.","Features":"Funkce","First try for most users.":"První volba pro většinu uživatelů.","For a normal first attempt, add TikTok, leave the preset on Auto, activate the source, and watch the app status text.":"Při běžném prvním pokusu přidejte TikTok, ponechte předvolbu Auto, aktivujte zdroj a sledujte stavový text aplikace.","Guides":"Návody","Hire":"Najmout odborníka","Home":"Domů","If Chrome works but the app does not, remember that app sessions and Chrome sessions are separate.":"Pokud Chrome funguje, ale aplikace ne, pamatujte, že relace aplikace a Chromu jsou oddělené.","Inspiration":"Inspirace","Less rich than the preferred connector.":"Méně podrobné údaje než u preferovaného konektoru.","Local Signer":"Místní podepisování","Login, CAPTCHA, redirected page, or hidden chat.":"Přihlášení, CAPTCHA, přesměrovaná stránka nebo skrytý chat.","Main navigation":"Hlavní navigace","Mode":"Režim","Mode Names":"Názvy režimů","OBS is blank:":"OBS je prázdné:","On this page":"Na této stránce","Only after the dock works, add or refresh the OBS overlay URL.":"Teprve až bude dok fungovat, přidejte nebo obnovte URL překryvu OBS.","Open navigation menu":"Otevřít navigační nabídku","Overlay Gallery":"Galerie překryvů","Plain Meaning":"Jednoduché vysvětlení","Plain-English guide to Social Stream Ninja desktop app source modes, Standard mode, WebSocket mode, TikTok presets, source windows, and common app troubleshooting.":"Srozumitelný návod k režimům zdrojů desktopové aplikace Social Stream Ninja, standardnímu režimu, WebSocketu, předvolbám TikToku, oknům zdrojů a řešení běžných problémů aplikace.","Platform Setup Picker":"Výběr nastavení platformy","Polling/Compatibility":"Dotazování / kompatibilita","Polling/Legacy":"Dotazování / starší režim","Provider availability, API key, room ID, or rate limits.":"Dostupnost poskytovatele, API klíč, ID místnosti nebo limity požadavků.","Proxy or custom signing":"Proxy nebo vlastní podepisování","Related guide:":"Související návod:","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Some sources have more than one connection mode. The right mode depends on the platform, login state, and whether you need richer events or simple page capture.":"Některé zdroje mají více režimů připojení. Vhodný režim závisí na platformě, stavu přihlášení a na tom, zda potřebujete podrobnější události, nebo jednoduché zachytávání stránky.","Source says active but no chat arrives:":"Zdroj hlásí aktivní stav, ale chat nepřichází:","Standalone App Modes":"Režimy samostatné aplikace","Standalone App Modes - Social Stream Ninja":"Režimy samostatné aplikace – Social Stream Ninja","Standalone app Add source sidebar with YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook, and TikTok source buttons":"Postranní panel Přidat zdroj samostatné aplikace s tlačítky YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook a TikTok","Standalone app sample source entries showing Standard and WebSocket connection mode controls, plus TikTok connection preset controls":"Ukázkové položky zdrojů samostatné aplikace s ovládáním standardního režimu a režimu WebSocket i předvoleb připojení TikToku","Standard":"Standard","Standard and WebSocket are common source modes. TikTok has its own preset selector because it has extra app-specific connection paths.":"Standardní režim a WebSocket jsou běžné režimy zdrojů. TikTok má vlastní výběr předvoleb, protože nabízí další způsoby připojení specifické pro aplikaci.","Standard mode can still fail if the platform changes its page layout, blocks embedded/app browsers, asks for CAPTCHA, or hides chat behind a login.":"Standardní režim může selhat, pokud platforma změní rozložení stránky, zablokuje vložené prohlížeče či prohlížeče aplikací, vyžádá CAPTCHA nebo skryje chat za přihlášením.","Start by adding the platform source you need. The app then creates and manages that source entry.":"Začněte přidáním požadovaného zdroje platformy. Aplikace poté vytvoří a spravuje jeho položku.","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","The app TikTok session/cookies must be valid.":"Relace a cookies TikToku v aplikaci musí být platné.","The app chooses the best TikTok path and may fall back if one fails.":"Aplikace vybere nejlepší způsob připojení TikToku a při selhání může přejít na náhradní.","The app may fall back, so check the status text.":"Aplikace může přejít na náhradní režim, proto sledujte stavový text.","The app opens a normal platform/source page and reads the rendered page.":"Aplikace otevře běžnou stránku platformy nebo zdroje a čte vykreslenou stránku.","The desktop app manages Social Stream source windows outside your normal browser. It can help with source organization and some browser-tab throttling problems. It is not the same as Chrome, and it does not automatically share your Chrome login or cookies.":"Desktopová aplikace spravuje okna zdrojů Social Stream mimo váš běžný prohlížeč. Pomáhá s organizací zdrojů a některými problémy omezování karet na pozadí. Není totožná s Chromem a automaticky nesdílí vaše přihlášení ani cookies z Chromu.","The newer connector fails or a platform-specific fallback is needed.":"Novější konektor selhává nebo je potřeba náhradní řešení pro danou platformu.","The platform supports it and you want better background reliability or richer event data.":"Platforma jej podporuje a chcete spolehlivější práci na pozadí nebo podrobnější data událostí.","The platform works when you can see the live page or popout chat.":"Platforma funguje, když vidíte živou stránku nebo samostatný chat.","The site needs you to sign in, solve a prompt, or keep a visible chat panel open.":"Web vyžaduje přihlášení, vyřešení výzvy nebo otevřený viditelný panel chatu.","The source connects through a platform API, socket, or Social Stream source page.":"Zdroj se připojuje přes API platformy, socket nebo stránku zdroje Social Stream.","The source specifically supports WebSocket/API mode.":"Zdroj výslovně podporuje režim WebSocket/API.","TikTok Auto":"TikTok Auto","TikTok In The App":"TikTok v aplikaci","TikTok Path":"Způsob připojení TikToku","TikTok fails:":"TikTok nefunguje:","TikTok in the desktop app is not one single mode. Always note which preset is active before troubleshooting.":"TikTok v desktopové aplikaci nemá jediný režim. Před řešením problémů si vždy poznamenejte aktivní předvolbu.","Understand source windows, Standard mode, WebSocket mode, and TikTok presets.":"Seznamte se s okny zdrojů, standardním režimem, WebSocketem a předvolbami TikToku.","Use Case":"Použití","Use Standard Mode When":"Kdy použít standardní režim","Use WebSocket Or API Mode When":"Kdy použít režim WebSocket nebo API","Use When":"Kdy použít","Visible TikTok page capture.":"Zachytávání viditelné stránky TikToku.","WebSocket/API":"WebSocket/API","WebSocket/API mode is not always better. If auth, tokens, provider access, or a platform API is failing, Standard mode may be the faster test.":"Režim WebSocket/API není vždy lepší. Pokud selhává ověřování, tokeny, přístup k poskytovateli nebo API platformy, může být standardní režim rychlejším testem.","What The App Is For":"K čemu aplikace slouží","What To Check Before OBS":"Co ověřit před OBS","You are comparing app behavior against the Chrome extension.":"Porovnáváte chování aplikace s rozšířením Chrome.","You are not sure which TikTok mode to use.":"Nejste si jistí, jaký režim TikToku použít.","You can handle provider tokens, account permissions, API scopes, or source-page setup.":"Dokážete nastavit tokeny poskytovatele, oprávnění účtu, rozsahy API nebo stránku zdroje.","You need event families that normal page scraping may not expose.":"Potřebujete skupiny událostí, které běžné čtení stránky nemusí zpřístupnit.","You need the most familiar troubleshooting path: open page, see chat, test dock, then OBS.":"Potřebujete nejznámější postup řešení problémů: otevřít stránku, vidět chat, otestovat dok a pak OBS.","You need the simplest visible page capture, login, or manual verification.":"Potřebujete nejjednodušší zachytávání viditelné stránky, přihlášení nebo ruční ověření.","You want a source that can keep working better in the background.":"Chcete zdroj, který dokáže lépe fungovat na pozadí.","check the mode, source window, live URL/user name, and dock session.":"zkontrolujte režim, okno zdroje, URL živého vysílání či uživatelské jméno a relaci doku.","check whether the app is using packaged, cached, remote, beta, stable, or local Social Stream assets.":"zkontrolujte, zda aplikace používá soubory Social Stream z balíčku, mezipaměti, vzdáleného serveru, bety, stabilní verze nebo místního umístění.","record the current preset, status text, app version, and whether the source switched to a fallback mode.":"zaznamenejte aktuální předvolbu, stavový text, verzi aplikace a zda zdroj přešel do náhradního režimu.","sign in to the platform inside the app source window or use the extension as the capture path.":"přihlaste se k platformě uvnitř okna zdroje aplikace nebo zachytávejte pomocí rozšíření.","test the dock first. If the dock is empty, OBS is not the problem yet.":"nejprve otestujte dok. Pokud je prázdný, problém zatím není v OBS."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/standalone-app-modes.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/standalone-app-modes.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/standalone-app-modes.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/standalone-app-modes.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/standalone-app-modes.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/standalone-app-modes.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/standalone-app-modes.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/standalone-app-modes.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/standalone-app-modes.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/standalone-app-modes.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/standalone-app-modes.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/standalone-app-modes.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/standalone-app-modes.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/standalone-app-modes.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/standalone-app-modes.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/standalone-app-modes.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="standalone-app-modes.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/standalone-app-modes.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Režimy samostatné aplikace</h1>
+            <p>Seznamte se s okny zdrojů, standardním režimem, WebSocketem a předvolbami TikToku.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Na této stránce"><a href="#read-section-1">K čemu aplikace slouží</a><a href="#read-section-2">Názvy režimů</a><a href="#read-section-3">Kdy použít standardní režim</a><a href="#read-section-4">Kdy použít režim WebSocket nebo API</a><a href="#tiktok-in-the-app">TikTok v aplikaci</a><a href="#read-section-6">Co ověřit před OBS</a><a href="#read-section-7">Běžná řešení</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">K čemu aplikace slouží</h2>
+                <p>Desktopová aplikace spravuje okna zdrojů Social Stream mimo váš běžný prohlížeč. Pomáhá s organizací zdrojů a některými problémy omezování karet na pozadí. Není totožná s Chromem a automaticky nesdílí vaše přihlášení ani cookies z Chromu.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-standalone-add-source.png" alt="Postranní panel Přidat zdroj samostatné aplikace s tlačítky YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook a TikTok" class="guide-image guide-image-narrow">
+                    <figcaption>Začněte přidáním požadovaného zdroje platformy. Aplikace poté vytvoří a spravuje jeho položku.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">Názvy režimů</h2>
+                <p>Některé zdroje mají více režimů připojení. Vhodný režim závisí na platformě, stavu přihlášení a na tom, zda potřebujete podrobnější události, nebo jednoduché zachytávání stránky.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-standalone-source-modes.png" alt="Ukázkové položky zdrojů samostatné aplikace s ovládáním standardního režimu a režimu WebSocket i předvoleb připojení TikToku" class="guide-image">
+                    <figcaption>Standardní režim a WebSocket jsou běžné režimy zdrojů. TikTok má vlastní výběr předvoleb, protože nabízí další způsoby připojení specifické pro aplikaci.</figcaption>
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Režim</th><th>Jednoduché vysvětlení</th><th>Kdy použít</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Režim">Standard</td><td data-label="Jednoduché vysvětlení">Aplikace otevře běžnou stránku platformy nebo zdroje a čte vykreslenou stránku.</td><td data-label="Kdy použít">Potřebujete nejjednodušší zachytávání viditelné stránky, přihlášení nebo ruční ověření.</td></tr>
+                        <tr><td data-label="Režim">WebSocket/API</td><td data-label="Jednoduché vysvětlení">Zdroj se připojuje přes API platformy, socket nebo stránku zdroje Social Stream.</td><td data-label="Kdy použít">Platforma jej podporuje a chcete spolehlivější práci na pozadí nebo podrobnější data událostí.</td></tr>
+                        <tr><td data-label="Režim">Dotazování / starší režim</td><td data-label="Jednoduché vysvětlení">Kompatibilní způsob připojení, který kontroluje aktualizace namísto preferovaného živého socketu.</td><td data-label="Kdy použít">Novější konektor selhává nebo je potřeba náhradní řešení pro danou platformu.</td></tr>
+                        <tr><td data-label="Režim">TikTok Auto</td><td data-label="Jednoduché vysvětlení">Aplikace vybere nejlepší způsob připojení TikToku a při selhání může přejít na náhradní.</td><td data-label="Kdy použít">Nejste si jistí, jaký režim TikToku použít.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">Kdy použít standardní režim</h2>
+                <ul class="guide-list">
+                    <li>Platforma funguje, když vidíte živou stránku nebo samostatný chat.</li>
+                    <li>Web vyžaduje přihlášení, vyřešení výzvy nebo otevřený viditelný panel chatu.</li>
+                    <li>Porovnáváte chování aplikace s rozšířením Chrome.</li>
+                    <li>Potřebujete nejznámější postup řešení problémů: otevřít stránku, vidět chat, otestovat dok a pak OBS.</li>
+                </ul>
+                <p>Standardní režim může selhat, pokud platforma změní rozložení stránky, zablokuje vložené prohlížeče či prohlížeče aplikací, vyžádá CAPTCHA nebo skryje chat za přihlášením.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">Kdy použít režim WebSocket nebo API</h2>
+                <ul class="guide-list">
+                    <li>Zdroj výslovně podporuje režim WebSocket/API.</li>
+                    <li>Chcete zdroj, který dokáže lépe fungovat na pozadí.</li>
+                    <li>Potřebujete skupiny událostí, které běžné čtení stránky nemusí zpřístupnit.</li>
+                    <li>Dokážete nastavit tokeny poskytovatele, oprávnění účtu, rozsahy API nebo stránku zdroje.</li>
+                </ul>
+                <p>Režim WebSocket/API není vždy lepší. Pokud selhává ověřování, tokeny, přístup k poskytovateli nebo API platformy, může být standardní režim rychlejším testem.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="tiktok-in-the-app">TikTok v aplikaci</h2>
+                <p>TikTok v desktopové aplikaci nemá jediný režim. Před řešením problémů si vždy poznamenejte aktivní předvolbu.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Způsob připojení TikToku</th><th>Použití</th><th>Běžná příčina selhání</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Způsob připojení TikToku">Automaticky</td><td data-label="Použití">První volba pro většinu uživatelů.</td><td data-label="Běžná příčina selhání">Aplikace může přejít na náhradní režim, proto sledujte stavový text.</td></tr>
+                        <tr><td data-label="Způsob připojení TikToku">Standard</td><td data-label="Použití">Zachytávání viditelné stránky TikToku.</td><td data-label="Běžná příčina selhání">Přihlášení, CAPTCHA, přesměrovaná stránka nebo skrytý chat.</td></tr>
+                        <tr><td data-label="Způsob připojení TikToku">Místní podepisování</td><td data-label="Použití">Způsoby čtení a podpory odpovědí přímo v aplikaci.</td><td data-label="Běžná příčina selhání">Relace a cookies TikToku v aplikaci musí být platné.</td></tr>
+                        <tr><td data-label="Způsob připojení TikToku">Dotazování / kompatibilita</td><td data-label="Použití">Náhradní režim při selhání socketu nebo podepisování.</td><td data-label="Běžná příčina selhání">Méně podrobné údaje než u preferovaného konektoru.</td></tr>
+                        <tr><td data-label="Způsob připojení TikToku">Proxy nebo vlastní podepisování</td><td data-label="Použití">Pokročilá nastavení.</td><td data-label="Běžná příčina selhání">Dostupnost poskytovatele, API klíč, ID místnosti nebo limity požadavků.</td></tr>
+                    </tbody>
+                </table>
+                <p>Při běžném prvním pokusu přidejte TikTok, ponechte předvolbu Auto, aktivujte zdroj a sledujte stavový text aplikace.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">Co ověřit před OBS</h2>
+                <ol class="guide-steps">
+                    <li>Ověřte, že je zdroj v aplikaci aktivovaný.</li>
+                    <li>Pokud platforma vyžaduje přihlášení, ověřte jej v okně zdroje.</li>
+                    <li>Ověřte, že dok přijímá chat se stejným ID relace.</li>
+                    <li>Teprve až bude dok fungovat, přidejte nebo obnovte URL překryvu OBS.</li>
+                    <li>Pokud Chrome funguje, ale aplikace ne, pamatujte, že relace aplikace a Chromu jsou oddělené.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-7">Běžná řešení</h2>
+                <ul class="guide-list">
+                    <li><strong>Chrome je přihlášený, ale aplikace ne:</strong> přihlaste se k platformě uvnitř okna zdroje aplikace nebo zachytávejte pomocí rozšíření.</li>
+                    <li><strong>Zdroj hlásí aktivní stav, ale chat nepřichází:</strong> zkontrolujte režim, okno zdroje, URL živého vysílání či uživatelské jméno a relaci doku.</li>
+                    <li><strong>Aplikace používá nesprávné soubory zdrojů:</strong> zkontrolujte, zda aplikace používá soubory Social Stream z balíčku, mezipaměti, vzdáleného serveru, bety, stabilní verze nebo místního umístění.</li>
+                    <li><strong>TikTok nefunguje:</strong> zaznamenejte aktuální předvolbu, stavový text, verzi aplikace a zda zdroj přešel do náhradního režimu.</li>
+                    <li><strong>OBS je prázdné:</strong> nejprve otestujte dok. Pokud je prázdný, problém zatím není v OBS.</li>
+                </ul>
+                <p>Související návod: <a href="platform-setup-picker.html">Výběr nastavení platformy</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

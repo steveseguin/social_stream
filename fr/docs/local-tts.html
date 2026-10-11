@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="fr" data-site-root="../../" data-site-language="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/fr/docs/local-tts.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:url" content="https://socialstream.ninja/fr/docs/local-tts.html">
+    <meta property="og:title" content="Synthèse vocale IA locale - Social Stream Ninja">
+    <meta property="og:description" content="Configurez une synthèse vocale locale privée pour Social Stream Ninja : voix intégrées, serveurs auto-hébergés, clonage vocal, audio OBS et dépannage.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/fr/docs/local-tts.html">
+    <meta name="twitter:title" content="Synthèse vocale IA locale - Social Stream Ninja">
+    <meta name="twitter:description" content="Configurez une synthèse vocale locale privée pour Social Stream Ninja : voix intégrées, serveurs auto-hébergés, clonage vocal, audio OBS et dépannage.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthèse vocale IA locale - Social Stream Ninja</title>
+    <meta name="description" content="Configurez une synthèse vocale locale privée pour Social Stream Ninja : voix intégrées, serveurs auto-hébergés, clonage vocal, audio OBS et dépannage.">
+    <script src="../../docs/js/standalone-theme.js"></script>
+    <script defer src="../../docs/js/copy-markdown.js"></script>
+    <style>
+        :root {
+            --primary-color: #1565C0;
+            --secondary-color: #1976D2;
+            --accent-color: #996000;
+            --success-color: #267A2B;
+            --text-color: #212121;
+            --text-light: #757575;
+            --bg-color: #FFFFFF;
+            --card-bg: #F5F5F5;
+            --border-color: #E0E0E0;
+            --code-bg: #263238;
+            --code-text: #ECEFF1;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #64B5F6;
+            --secondary-color: #42A5F5;
+            --accent-color: #FFB74D;
+            --success-color: #81C784;
+            --text-color: #E0E0E0;
+            --text-light: #BDBDBD;
+            --bg-color: #121212;
+            --card-bg: #1E1E1E;
+            --border-color: #424242;
+            --code-bg: #000000;
+            --code-text: #ECEFF1;
+        }
+
+        html[data-theme="dark"],
+        body[data-theme="dark"] {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .path-card,
+        [data-theme="dark"] .screen-map,
+        [data-theme="dark"] .fake-field {
+            color: var(--text-color);
+        }
+
+        [data-theme="dark"] th,
+        [data-theme="dark"] .badge,
+        [data-theme="dark"] .plain-step b,
+        [data-theme="dark"] .step-number,
+        [data-theme="dark"] .screen-map-title,
+        [data-theme="dark"] .fake-button {
+            color: #10283B;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1565C0, #0288D1);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .theme-toggle:hover { background: rgba(255,255,255,0.1); }
+
+        h1 { margin: 0; font-size: 2.2em; }
+        h1 + p { margin: 8px 0 0; opacity: 0.9; font-size: 1.1em; }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 8px;
+            margin-top: 40px;
+        }
+
+        h3 { color: var(--secondary-color); margin-top: 24px; }
+        h4 { margin-top: 18px; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .warning {
+            background-color: #FFF3E0;
+            border-left: 4px solid var(--accent-color);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        [data-theme="dark"] .warning {
+            background-color: #4E342E;
+            color: #FFCC80;
+        }
+
+        .info {
+            background-color: #E3F2FD;
+            border-left: 4px solid var(--primary-color);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        [data-theme="dark"] .info {
+            background-color: #0D47A1;
+            color: #BBDEFB;
+        }
+
+        .success {
+            background-color: #E8F5E9;
+            border-left: 4px solid var(--success-color);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        [data-theme="dark"] .success {
+            background-color: #1B5E20;
+            color: #C8E6C9;
+        }
+
+        .code {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 14px 16px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.92em;
+            overflow-x: auto;
+            margin: 12px 0;
+            white-space: pre;
+        }
+
+        code {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        [data-theme="dark"] code {
+            background-color: #2A2A2A;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        tr:nth-child(even) { background-color: var(--card-bg); }
+
+        [data-theme="dark"] tr:nth-child(even) { background-color: #1A1A1A; }
+
+        .check { color: var(--success-color); font-weight: bold; }
+        .cross { color: #EF5350; font-weight: bold; }
+        .partial { color: var(--accent-color); font-weight: bold; }
+
+        ul, ol { padding-left: 22px; }
+        li { margin: 8px 0; }
+
+        a { color: var(--primary-color); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        nav {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 24px 0;
+        }
+
+        nav ul { list-style: none; padding: 0; columns: 2; }
+        nav li { margin: 4px 0; }
+
+        .path-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 700px) {
+            .path-grid { grid-template-columns: 1fr; }
+            nav ul { columns: 1; }
+            table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        .path-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+        }
+
+        .path-card.recommended { border-color: var(--primary-color); }
+        .path-card h3 { margin-top: 0; }
+
+        .badge {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .badge.green { background: var(--success-color); }
+        .badge.orange { background: var(--accent-color); }
+
+        .guide-screenshot {
+            margin: 18px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--bg-color);
+            box-shadow: 0 3px 14px rgba(0,0,0,0.12);
+        }
+
+        .guide-screenshot img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .guide-screenshot figcaption {
+            padding: 10px 14px;
+            color: var(--text-light);
+            font-size: 0.92em;
+            background: var(--card-bg);
+        }
+
+        .plain-steps {
+            display: grid;
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .plain-step {
+            display: grid;
+            grid-template-columns: 34px 1fr;
+            gap: 10px;
+            align-items: start;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-color);
+            padding: 12px;
+        }
+
+        .plain-step b {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        .plain-step strong {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .tiny-note {
+            color: var(--text-light);
+            font-size: 0.92em;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            background-color: var(--card-bg);
+            color: var(--text-light);
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin: 10px 0;
+        }
+
+        .step-content { flex: 1; }
+
+        .url-example {
+            background: var(--code-bg);
+            color: #A5D6A7;
+            padding: 14px 16px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.88em;
+            overflow-x: auto;
+            margin: 12px 0;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+
+        .link-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .link-row a {
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-weight: 600;
+        }
+
+        .screen-map {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-color);
+            margin: 18px 0;
+            overflow: hidden;
+            box-shadow: 0 3px 14px rgba(0,0,0,0.12);
+        }
+
+        .screen-map-title {
+            background: var(--primary-color);
+            color: #fff;
+            padding: 10px 14px;
+            font-weight: 700;
+        }
+
+        .screen-map-body {
+            padding: 16px;
+        }
+
+        .fake-field {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin: 10px 0;
+            background: var(--card-bg);
+        }
+
+        .fake-field strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .fake-button {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #fff;
+            border-radius: 6px;
+            padding: 8px 14px;
+            margin-top: 8px;
+            font-weight: 700;
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="fr">
+<script id="ssn-site-language" type="application/json">{"language":"fr","page":"docs/local-tts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Passer au thème clair","Switch to dark theme":"Passer au thème sombre","Light mode":"Mode clair","Dark mode":"Mode sombre","Open navigation menu":"Ouvrir le menu de navigation","Close navigation menu":"Fermer le menu de navigation","Copy this document as Markdown to the clipboard":"Copier ce document au format Markdown dans le presse-papiers","Copy Markdown":"Copier le Markdown","Copying…":"Copie en cours…","Markdown copied":"Markdown copié","Copy failed":"Échec de la copie","Copy comprehensive Markdown for an AI assistant":"Copier le Markdown complet pour un assistant IA","Copy this documentation page as Markdown for an AI assistant":"Copier cette page de documentation en Markdown pour un assistant IA"},"strings":{"\"Control audio via OBS\"":"« Contrôler l'audio via OBS (Control audio via OBS) »","(Piper)":"(Piper)","(built-in and self-hosted server).":"(intégré et serveur auto-hébergé).","(free)":"(gratuit)","). System TTS may need desktop audio or virtual cable capture.":"). La synthèse vocale du système peut nécessiter la capture audio du bureau ou d'un câble virtuel.","* System TTS requires virtual audio cable routing for OBS capture.":"* La synthèse vocale du système nécessite un routage par câble audio virtuel pour la capture OBS.",", Chrome may also block calls to local or private HTTP addresses.":", Chrome peut également bloquer les appels vers des adresses HTTP locales ou privées.",", SSN sends a JSON POST to the configured endpoint:":", SSN envoie un POST JSON au point de terminaison configuré :",", and":", et",", and openedai-speech selects Piper instead. The":", et openedai-speech sélectionne Piper à la place. La valeur de",", and the first":", et le premier élément de",", built-in Kokoro, Piper, Kitten, and eSpeak. The most useful future browser-side additions would be an audio output device picker where":", Kokoro, Piper, Kitten et eSpeak intégrés. Les ajouts futurs les plus utiles côté navigateur seraient un sélecteur de périphérique de sortie audio lorsque",", direct and through the bridge.":", directement et via la passerelle.",", direct and through the bridge. If running from source on Windows, make sure the venv":", directement et via la passerelle. En cas d'exécution depuis les sources sous Windows, vérifiez que le dossier",", etc.) instead.":", etc.) à la place.",", even if the real TTS server is on another computer.":", même si le véritable serveur de synthèse vocale se trouve sur un autre ordinateur.",", nested":", des champs imbriqués tels que",", not OpenAI-compatible.":", pas compatible OpenAI.",", or":", ou",", or another browser-playable audio type.":", ou un autre type audio lisible par le navigateur.",", or another voice from the Kokoro web UI.":", ou une autre voix de l'interface web Kokoro.",", temporarily remove it while testing. TTS normally uses the original message, but removing visual effects is a quick way to rule out timing issues.":", retirez-le temporairement pendant les tests. La synthèse vocale utilise normalement le message d'origine, mais retirer les effets visuels permet d'écarter rapidement les problèmes de synchronisation.",", using the Kokoro computer's LAN IP":", en utilisant l'adresse IP locale de l'ordinateur Kokoro",". Alternatively, run the commands below directly.":". Vous pouvez aussi exécuter directement les commandes ci-dessous.",". Change":". Modifiez",". Change the port with":". Changez le port avec",". Docker must have access to a supported GPU. The model downloads on first use.":". Docker doit avoir accès à un GPU pris en charge. Le modèle se télécharge à la première utilisation.",". For OBS, the easiest setup is to run the bridge on the same computer as OBS.":". Pour OBS, le plus simple est d'exécuter la passerelle sur le même ordinateur qu'OBS.",". If that does not load, OBS will not be able to use that server either.":". Si cela ne charge pas, OBS ne pourra pas non plus utiliser ce serveur.",". Names like":". Des noms tels que",". No virtual cables are needed. See the":"— aucun câble virtuel nécessaire. Consultez la",". Piper mode was tested with real CPU synthesis from":". Le mode Piper a été testé avec une véritable synthèse sur processeur depuis",". TTS audio will now appear as an OBS audio source you can adjust or route":"— l'audio de synthèse vocale apparaît désormais comme une source audio OBS que vous pouvez régler ou router",". That option intentionally cuts the spoken text short.":". Cette option raccourcit volontairement le texte prononcé.",". That shows the OpenAI-compatible local endpoint fields and the link back to this guide.":". Cela affiche les champs du point de terminaison local compatible OpenAI et le lien vers ce guide.",". They run in your browser using WebAssembly or ONNX, with no server, Docker, or installation required.":". Elles s'exécutent dans votre navigateur avec WebAssembly ou ONNX : aucun serveur, aucun Docker, aucune installation.",". Uses configured reference audio for cloning. API shape was tested direct and through the bridge.":". Utilise l'audio de référence configuré pour le clonage. La structure API a été testée directement et via la passerelle.",". Wait for first-time model downloads if using Kokoro or Piper.":". Attendez les premiers téléchargements de modèles si vous utilisez Kokoro ou Piper.",". You should see a web UI where you can test voices.":"— vous devriez voir une interface web où tester les voix.","24 GB VRAM or remote host":"24 Go de VRAM ou hôte distant","3-second reference audio":"Audio de référence de 3 secondes","5-second zero-shot, 1-minute few-shot":"5 secondes sans entraînement, 1 minute avec quelques exemples","6 GB VRAM fit":"Tient dans 6 Go de VRAM","6 GB+ NVIDIA GPU for smaller/optimized models, 16 GB RAM":"GPU NVIDIA de 6 Go ou plus pour les modèles petits/optimisés, 16 Go de RAM","6 GB+ NVIDIA GPU, 16 GB RAM":"GPU NVIDIA de 6 Go ou plus, 16 Go de RAM","67+ voices available. A few highlights:":"Plus de 67 voix disponibles. Quelques exemples :",": they generate page audio rather than depending on OBS exposing operating-system voices. See the":": ils génèrent l'audio de la page sans dépendre de l'exposition des voix du système par OBS. Consultez le","; openedai-speech often uses names like":"; openedai-speech utilise souvent des noms tels que","; see the":"; consultez le","; target server is":"; le serveur cible est","; target server uses":"; le serveur cible utilise","\u003c1 GB":"\u003c 1 Go","API Key":"Clé API","API path for SSN":"Chemin API pour SSN","About screenshots:":"À propos des captures d'écran :","Add":"Ajouter","Add the cloned voice beneath the existing":"Ajoutez la voix clonée sous la section existante","Additional TTS Options":"Options de synthèse vocale supplémentaires","All Guides":"Tous les guides","All built-in TTS providers play audio directly through the browser. In OBS, add your dock.html as a Browser Source and enable":"Tous les fournisseurs intégrés de synthèse vocale lisent l'audio directement dans le navigateur. Dans OBS, ajoutez votre dock.html comme source navigateur et activez","All self-hosted servers above use the same connection method: Social Stream's built-in":"Tous les serveurs auto-hébergés ci-dessus utilisent la même méthode de connexion : le mode intégré de Social Stream","Also read subscriptions, donations, etc.":"Lire aussi les abonnements, dons, etc.","Any PC":"N'importe quel PC","Any modern PC":"Tout PC moderne","Archived project:":"Projet archivé :","Audio Input Capture":"Capture d'entrée audio","Audio Router":"Audio Router","Audio Router (legacy)":"Audio Router (ancien)","Audio Router Software":"Logiciel Audio Router","Audio capture":"Capture audio","Audio format: mp3, wav, opus, flac":"Format audio : mp3, wav, opus, flac","Audio plays but OBS does not capture it":"Le son est audible mais OBS ne le capture pas","Audio plays from the app, so use desktop/app audio capture.":"Le son est lu par l'application ; utilisez donc la capture audio du bureau/de l'application.","Available Voices":"Voix disponibles","Best SSN target shape:":"Meilleure structure cible pour SSN :","Best benefit":"Principal avantage","Best first choice: no server, strong quality, private, works in browser and desktop app.":"Meilleur premier choix : aucun serveur, bonne qualité, privé, fonctionne dans le navigateur et l'application de bureau.","Best option. Return":"Meilleure option. Renvoyez","Best zero-setup quality. First load downloads model assets.":"Meilleure qualité sans configuration. Le premier chargement télécharge les ressources du modèle.","Binary audio":"Audio binaire","Bridge endpoint:":"Point de terminaison de la passerelle :","Bridge mode":"Mode passerelle","Browse and test all voices at":"Parcourez et testez toutes les voix à l'adresse","Browser Source":"Source navigateur","Browser and Desktop App Notes":"Notes pour le navigateur et l'application de bureau","Browser fetch requires CORS from the local server, unless you use the SSN bridge.":"La récupération depuis le navigateur nécessite CORS sur le serveur local, sauf si vous utilisez la passerelle SSN.","Built-in Browser Options Worth Supporting":"Options intégrées au navigateur à prendre en charge","Built-in Kitten":"Kitten intégré","Built-in Kokoro":"Kokoro intégré","Built-in Kokoro in desktop app":"Kokoro intégré dans l'application de bureau","Built-in Piper":"Piper intégré","Built-in TTS and self-hosted server TTS both play audio through the browser's audio context (not OS speech synthesis). OBS can capture browser audio directly when \"Control audio via OBS\" is checked.":"La synthèse vocale intégrée et celle des serveurs auto-hébergés lisent toutes deux l'audio via le contexte audio du navigateur (et non la synthèse vocale du système). OBS peut capturer directement l'audio du navigateur lorsque « Control audio via OBS » est coché.","Built-in eSpeak":"eSpeak intégré","CABLE Input":"CABLE Input","CABLE Input (VB-Audio Virtual Cable)":"CABLE Input (VB-Audio Virtual Cable)","CABLE Output":"CABLE Output","CLI, Gradio, and socket server first. Use an OpenAI-compatible wrapper or the F5 bridge mode against a wrapper.":"D'abord CLI, Gradio et serveur socket. Utilisez une interface compatible OpenAI ou le mode passerelle F5 vers une interface adaptée.","CORS is a browser permission check. In plain terms: the TTS server has to tell the browser, \"yes, this page is allowed to ask me for audio.\" If that permission is missing, the request may be blocked before Kokoro or another TTS server ever sees it.":"CORS est une vérification d'autorisation du navigateur. En termes simples, le serveur de synthèse vocale doit dire au navigateur : « oui, cette page est autorisée à me demander de l'audio ». Si cette autorisation manque, la requête peut être bloquée avant même que Kokoro ou un autre serveur de synthèse vocale ne la reçoive.","CORS or local network blocked":"CORS ou réseau local bloqué","CORS, Hosted Pages, and the Bridge":"CORS, pages hébergées et passerelle","CPU (works on any computer):":"Processeur (fonctionne sur tout ordinateur) :","CPU Docker host, 8 GB RAM":"Hôte Docker sur processeur, 8 Go de RAM","CPU Use":"Utilisation du processeur","CPU can work for some builds but is slow":"Le processeur peut fonctionner avec certaines versions, mais lentement","CPU only":"Processeur uniquement","CPU testing only, slow":"Tests sur processeur uniquement, lent","CPU, 4-8 GB RAM":"Processeur, 4 à 8 Go de RAM","CPU, 8 GB RAM":"Processeur, 8 Go de RAM","CUDA/GPU support is smoother than CPU for some builds; setup varies by server fork.":"La prise en charge CUDA/GPU est plus fluide que le processeur pour certaines versions ; la configuration varie selon la variante du serveur.","Capture":"Capture","Capture desktop/app audio, or route the app to a virtual audio cable.":"Capturez l'audio du bureau/de l'application ou dirigez l'application vers un câble audio virtuel.","Chatterbox Turbo / Server":"Chatterbox Turbo / Server","Chatterbox servers":"Serveurs Chatterbox","Chatterbox-TTS-Server":"Chatterbox-TTS-Server","Check":"Vérifiez","Check the actual OBS URL for":"Vérifiez dans l'URL OBS réellement utilisée la présence de","Check the endpoint and voice before debugging audio.":"Vérifiez le point de terminaison et la voix avant de dépanner l'audio.","Check the firewall on the server computer if the LAN IP does not load.":"Vérifiez le pare-feu de l'ordinateur serveur si l'adresse IP locale ne charge pas.","Chrome extension / OBS browser source":"Extension Chrome / source navigateur OBS","Click":"Cliquez sur","Click the browser source once in the preview to allow browser audio autoplay":"Cliquez une fois sur la source navigateur dans l'aperçu pour autoriser la lecture automatique audio","Clone the archived server, create its environment file, and start the full GPU-enabled Docker Compose setup:":"Clonez le serveur archivé, créez son fichier d'environnement et démarrez la configuration Docker Compose complète avec GPU :","Clone the repository or create a folder with the following":"Clonez le dépôt ou créez un dossier avec le fichier suivant","Compare providers, hear samples and see the settings.":"Comparez les fournisseurs, écoutez des exemples et consultez les paramètres.","Comparison Table":"Tableau comparatif","Computer Requirements":"Configuration matérielle requise","Confirm Docker is running and the container is still started.":"Vérifiez que Docker fonctionne et que le conteneur est toujours démarré.","Connecting to Social Stream":"Connexion à Social Stream","Connecting to Social Stream Ninja":"Connexion à Social Stream Ninja","Control audio via OBS":"Contrôler l’audio via OBS","Control audio via OBS.":"Contrôler l'audio via OBS.","Coqui Public Model License":"La Coqui Public Model License","Cost":"Coût","Custom / Local TTS Endpoint":"Point de terminaison de synthèse vocale personnalisé / local","Default Port":"Port par défaut","Description":"Description","Desktop Audio Capture":"Capture audio du bureau","Diagram showing OBS calling the local bridge, and the bridge calling the TTS server":"Schéma montrant OBS appelant la passerelle locale, puis la passerelle appelant le serveur de synthèse vocale","Diagram showing that localhost means the same computer, while another computer needs a LAN IP address":"Schéma montrant que localhost désigne le même ordinateur, tandis qu'un autre ordinateur nécessite une adresse IP du réseau local","Direct or bridge":"Direct ou passerelle","Disk":"Disque","Do not mix up the app test and OBS.":"Ne confondez pas le test dans l'application et OBS.","Do not use":"N'utilisez pas","Docker":"Docker","Docker Desktop":"Docker Desktop","Docker Required":"Docker requis","Docker image not found":"Image Docker introuvable","Docker image tags can change. If a command in this guide stops working, check the project page for the current tag:":"Les étiquettes d'images Docker peuvent changer. Si une commande de ce guide cesse de fonctionner, consultez la page du projet pour connaître l'étiquette actuelle :","Docker will download the image (~1.5–2 GB). This only happens once. After that, the server starts in a few seconds.":"Docker télécharge l'image (environ 1,5 à 2 Go). Cela ne se produit qu'une fois. Ensuite, le serveur démarre en quelques secondes.","ElevenLabs":"ElevenLabs","Enables TTS for English":"Active la synthèse vocale en anglais","Endpoint aliases:":"Alias du point de terminaison :","Endpoint to use":"Point de terminaison à utiliser","Example":"Exemple","F5-TTS":"F5-TTS","F5-TTS Server Proxy Mode":"Mode proxy serveur F5-TTS","F5-TTS official":"F5-TTS officiel","F5-TTS_server":"F5-TTS_server","Fast, low quality, no cloning.":"Rapide, qualité faible, sans clonage.","Faster with GPU":"Plus rapide avec un GPU","Find the browser or SSN app in the app list.":"Trouvez le navigateur ou l'application SSN dans la liste des applications.","Find the browser or SSN app.":"Trouvez le navigateur ou l'application SSN.","First run:":"Première exécution :","First-time load:":"Premier chargement :","For":"Pour","For 6 GB VRAM or less, target small zero-shot cloning models and OpenAI-compatible servers first. Bigger models can still work through the same SSN endpoint if the user hosts them elsewhere.":"Avec 6 Go de VRAM ou moins, privilégiez les petits modèles de clonage sans entraînement et les serveurs compatibles OpenAI. Les modèles plus volumineux peuvent toujours fonctionner via le même point de terminaison SSN si l'utilisateur les héberge ailleurs.","For Kokoro-FastAPI, use voices like":"Pour Kokoro-FastAPI, utilisez des voix telles que","For cloud-based premium TTS (ElevenLabs, Google Cloud, Speechify) and full URL parameter reference, see the":"Pour la synthèse vocale premium cloud (ElevenLabs, Google Cloud, Speechify) et la référence complète des paramètres URL, consultez le","Free":"Gratuit","From the OBS computer, open":"Depuis l'ordinateur OBS, ouvrez","Full Example URLs":"Exemples d'URL complètes","GPT-SoVITS":"GPT-SoVITS","GPT-SoVITS / F5-TTS / Qwen3-TTS":"GPT-SoVITS / F5-TTS / Qwen3-TTS","GPT-SoVITS Proxy Mode":"Mode proxy GPT-SoVITS","GPT-SoVITS uses its own":"GPT-SoVITS utilise sa propre structure JSON pour","GPU":"GPU","GPU (NVIDIA only, faster synthesis):":"GPU (NVIDIA uniquement — synthèse plus rapide) :","GPU Needed":"GPU nécessaire","GPU/WebGPU":"GPU/WebGPU","Getting Audio into OBS":"Acheminer l'audio vers OBS","GitHub":"GitHub","Good local server when browser model loading is not ideal.":"Bon serveur local lorsque le chargement du modèle dans le navigateur n'est pas idéal.","Good low-resource neural voice option.":"Bonne option de voix neuronale peu gourmande en ressources.","Good target":"Bonne cible","High-end prompted speech generation.":"Génération vocale haut de gamme pilotée par instructions.","How Voice Cloning Works":"Fonctionnement du clonage vocal","How to Enable":"Comment activer","How you capture TTS audio in OBS depends on how you're running Social Stream Ninja.":"La méthode de capture de l'audio de synthèse vocale dans OBS dépend de votre façon d'exécuter Social Stream Ninja.","If Kokoro-FastAPI is on another computer, replace":"Si Kokoro-FastAPI est sur un autre ordinateur, remplacez","If Kokoro-FastAPI is on the same computer as OBS:":"Si Kokoro-FastAPI est sur le même ordinateur qu'OBS :","If OBS and the TTS server are on different computers, replace":"Si OBS et le serveur de synthèse vocale sont sur des ordinateurs différents, remplacez","If OBS is on one computer and Kokoro is on another computer,":"Si OBS est sur un ordinateur et Kokoro sur un autre,","If it is omitted, Social Stream sends its default":"S'il est omis, Social Stream envoie sa valeur par défaut","If the SSN app test button works but the OBS Browser Source is silent, test OBS separately. OBS is its own browser.":"Si le bouton Test de l'application SSN fonctionne mais que la source navigateur OBS reste silencieuse, testez OBS séparément. OBS possède son propre navigateur.","If the browser or OBS blocks the direct request, run the":"Si le navigateur ou OBS bloque la requête directe, exécutez la","If the browser says the request was blocked by CORS, local network access, private network access, or failed fetch, the TTS server may never receive the request.":"Si le navigateur indique que la requête est bloquée par CORS, l'accès au réseau local/privé ou un échec de récupération, le serveur de synthèse vocale peut ne jamais recevoir la requête.","If the server does not allow browser requests, run the":"Si le serveur n'autorise pas les requêtes du navigateur, exécutez la","If you are using the hosted beta dock page, local HTTP endpoints are more likely to be blocked by the browser. The bridge or a local app window is usually easier.":"Si vous chargez la page du Dock bêta hébergée, les points de terminaison HTTP locaux risquent davantage d'être bloqués par le navigateur. La passerelle ou une fenêtre locale de l'application est généralement plus simple.","If you just want TTS working in OBS, try built-in Kokoro or Kitten first. They do not need Docker, a server, or an API key. Use a self-hosted server only when you specifically need a server voice, voice cloning, or another model.":"Si vous souhaitez simplement faire fonctionner la synthèse vocale dans OBS, essayez d'abord Kokoro ou Kitten intégrés. Ils ne nécessitent ni Docker, ni serveur, ni clé API. Utilisez un serveur auto-hébergé uniquement si vous avez précisément besoin d'une voix serveur, du clonage vocal ou d'un autre modèle.","If you load":"Si vous chargez","If you load the hosted page, such as":"Si vous chargez une page hébergée, telle que","If you press Test inside the SSN app, the app is testing from the app. If you copy a":"Si vous appuyez sur Test dans l'application SSN, le test est effectué depuis l'application. Si vous copiez une","If you run openedai-speech from a local checkout instead of Docker, add its virtual environment scripts folder to":"Si vous exécutez openedai-speech depuis une copie locale des sources plutôt que Docker, ajoutez le dossier de scripts de son environnement virtuel à","If you see":"Si vous voyez","If you use":"Si vous utilisez","If you use Kokoro-FastAPI, openedai-speech, or another Docker server, read the localhost rule below before copying a URL into OBS.":"Si vous utilisez Kokoro-FastAPI, openedai-speech ou un autre serveur Docker, lisez la règle localhost ci-dessous avant de copier une URL dans OBS.","If you want TTS isolated from other desktop audio, use a virtual audio cable:":"Si vous souhaitez isoler la synthèse vocale des autres sons du bureau, utilisez un câble audio virtuel :","If you want more voice options, voice cloning, or a dedicated server you can reuse across tools, you can run a local TTS server. Social Stream Ninja connects to it using its built-in":"Si vous souhaitez davantage de voix, le clonage vocal ou un serveur dédié réutilisable avec plusieurs outils, vous pouvez exécuter un serveur local de synthèse vocale. Social Stream Ninja s'y connecte avec son mode intégré","If you're using the Social Stream Ninja standalone desktop app (not an OBS browser source):":"Si vous utilisez l'application de bureau autonome Social Stream Ninja (et non une source navigateur OBS) :","In OBS, add":"Dans OBS, ajoutez","In OBS, add a new":"Dans OBS, ajoutez une nouvelle","In OBS, add an":"Dans OBS, ajoutez une source de type","In OBS, capture":"Dans OBS, capturez","In the Browser Source properties, enable":"Dans les propriétés de la source navigateur, activez","In the extension popup, open the TTS provider selector and choose":"Dans la fenêtre de l'extension, ouvrez le sélecteur de fournisseur de synthèse vocale et choisissez","Install Audio Router.":"Installez Audio Router.","Install Voicemeeter and set it as the Windows default output.":"Installez Voicemeeter et définissez-le comme sortie par défaut de Windows.","Install with Docker":"Installer avec Docker","Install with Docker Compose":"Installer avec Docker Compose","Intentionally cuts speech short after this many characters. Remove it if messages are being chopped off.":"Coupe volontairement la parole après ce nombre de caractères. Retirez-le si les messages sont tronqués.","It will now start automatically with Docker Desktop on every reboot.":"Il démarrera désormais automatiquement avec Docker Desktop à chaque redémarrage.","JSON shape, so the bridge can translate SSN's OpenAI-compatible request into the GPT-SoVITS request body.":", ce qui permet à la passerelle de convertir la requête compatible OpenAI de SSN en corps de requête GPT-SoVITS.","JSON with audio URL":"JSON avec URL audio","JSON with base64 audio":"JSON avec audio en base64","Just add a URL parameter and go.":"Ajoutez simplement un paramètre URL et commencez.","Keep any existing voices already listed under":"Conservez toutes les voix existantes déjà répertoriées sous","Keep the Server Running":"Maintenir le serveur en marche","Kitten TTS":"Kitten TTS","Kitten TTS Options":"Options Kitten TTS","Kokoro 82M":"Kokoro 82M","Kokoro 82M (best quality)":"Kokoro 82M (meilleure qualité)","Kokoro TTS":"Kokoro TTS","Kokoro TTS Options":"Options Kokoro TTS","Kokoro and Piper need to download their model files on first use (~50–200 MB). This happens automatically in the background. Later loads can reuse cached models, but initialization still takes time. OBS has a separate cache from Chrome/Edge.":"Kokoro et Piper doivent télécharger leurs fichiers de modèle à la première utilisation (environ 50 à 200 Mo). Cela se fait automatiquement en arrière-plan. Les chargements suivants peuvent réutiliser les modèles en cache, mais l'initialisation prend toujours du temps. OBS possède un cache distinct de Chrome/Edge.","Kokoro runs on another computer on your home network":"Kokoro fonctionne sur un autre ordinateur de votre réseau domestique","Kokoro voice names are different from OpenAI voice names.":"Les noms de voix Kokoro diffèrent de ceux d'OpenAI.","Kokoro-FastAPI":"Kokoro-FastAPI","Kokoro-FastAPI Setup":"Configuration Kokoro-FastAPI","Kokoro-FastAPI repo":"dépôt Kokoro-FastAPI","Kokoro-FastAPI:":"Kokoro-FastAPI :","Kokoro-FastAPI: try":"Kokoro-FastAPI : essayez","Language note:":"Remarque sur les langues :","Library and Gradio demo first. Good candidate for a small OpenAI-compatible wrapper around":"D'abord bibliothèque et démonstration Gradio. Bon candidat pour une petite interface compatible OpenAI autour de","Library/demo first; needs a wrapper for SSN.":"D'abord bibliothèque/démonstration ; nécessite une interface adaptée pour SSN.","Light OpenAI-compatible endpoint; Piper is CPU-friendly and XTTS adds cloning around a 4 GB VRAM target.":"Point de terminaison compatible OpenAI léger ; Piper convient au processeur et XTTS ajoute le clonage avec environ 4 Go de VRAM visés.","Light OpenAI-compatible server.":"Serveur compatible OpenAI léger.","Lightweight":"Léger","Likely":"Probablement","Likely if using Turbo / small chunks":"Probablement avec Turbo / de petits segments","Likely with fp16 / lightweight install":"Probablement avec fp16 / une installation légère","Local AI TTS Guide":"Guide de synthèse vocale IA locale","Local TTS Bridge":"Passerelle locale de synthèse vocale","Local TTS behavior":"Fonctionnement de la synthèse vocale locale","Local server not responding":"Le serveur local ne répond pas","Low":"Faible","Low-end CPU, 4 GB RAM":"Processeur d'entrée de gamme, 4 Go de RAM","Make sure":"Vérifiez que","Make sure the OBS Browser Source has":"Vérifiez que la source navigateur OBS a","Make sure you are not using system TTS only (":"Vérifiez que vous n'utilisez pas uniquement la synthèse vocale du système (","Maybe; depends on build and vocoder":"Peut-être ; dépend de la version et du vocodeur","Medium":"Moyen","Method 1: OBS Browser Source":"Méthode 1 — Source navigateur OBS","Method 2: SSN Desktop App + Desktop Audio":"Méthode 2 — Application de bureau SSN + audio du bureau","Minimal":"Minimal","Minimum practical computer":"Configuration minimale pratique","MisoTTS":"MisoTTS","MisoTTS 8B":"MisoTTS 8B","Model":"Modèle","Modern CPU, 4-8 GB RAM":"Processeur moderne, 4 à 8 Go de RAM","Modern CPU, 8 GB RAM":"Processeur moderne, 8 Go de RAM","Modern cloning and voice-design features, including smaller 0.6B/1.7B models.":"Fonctions modernes de clonage et de création de voix, avec des modèles plus petits de 0.6B/1.7B.","Modern laptop CPU, 8 GB RAM":"Processeur moderne de portable, 8 Go de RAM","More TTS options:":"Autres options de synthèse vocale :","NVIDIA GPU around 4 GB VRAM, 8-16 GB RAM":"GPU NVIDIA d'environ 4 Go de VRAM, 8 à 16 Go de RAM","NVIDIA GPU optional, 8-16 GB RAM":"GPU NVIDIA facultatif, 8 à 16 Go de RAM","Natural zero-shot cloning with prompt WAV + transcript.":"Clonage naturel sans entraînement avec WAV de référence et transcription.","Needs wrapper":"Nécessite une interface adaptée","No":"Non","No (faster with)":"Non (plus rapide avec)","No (optional)":"Non (facultatif)","No API key needed.":"Aucune clé API nécessaire.","No Setup":"Aucune configuration","No real voice cloning; voice blending and custom voice features depend on the server build.":"Pas de véritable clonage vocal ; le mélange de voix et les fonctions de voix personnalisées dépendent de la version du serveur.","No voice cloning.":"Pas de clonage vocal.","No*":"Non*","No; project recommends 24 GB VRAM":"Non ; le projet recommande 24 Go de VRAM","None":"Aucun","Not OpenAI-compatible by default; use the SSN bridge mode.":"Pas compatible OpenAI par défaut ; utilisez le mode passerelle SSN.","Not a 6 GB VRAM local target; use remote/custom hosting if needed.":"Ne convient pas à une cible locale de 6 Go de VRAM ; utilisez un hébergement distant/personnalisé si nécessaire.","Not recommended locally at 6 GB VRAM":"Non recommandé localement avec 6 Go de VRAM","Notes":"Remarques","OBS (Browser Source)":"OBS (source navigateur)","OBS and Kokoro run on the same computer":"OBS et Kokoro fonctionnent sur le même ordinateur","OBS capture:":"Capture OBS :","OBS may expose no voices, or may list voices without producing capturable audio. Test speech and the OBS recording separately. Use one of the providers above (":"OBS peut n'exposer aucune voix ou répertorier des voix sans produire d'audio capturable. Testez séparément la parole et l'enregistrement OBS. Utilisez l'un des fournisseurs ci-dessus (","OBS section":"section OBS","OBS still needs its own working endpoint. The app test does not prove OBS can reach the server.":"OBS a toujours besoin de son propre point de terminaison fonctionnel. Le test de l'application ne prouve pas qu'OBS peut atteindre le serveur.","OK":"OK","Official project is not a simple OpenAI endpoint; use a wrapper or bridge mode.":"Le projet officiel n'est pas un simple point de terminaison OpenAI ; utilisez une interface adaptée ou le mode passerelle.","On Linux, macOS, and Windows, also make sure the firewall allows the port and Docker published the port with":"Sous Linux, macOS et Windows, vérifiez également que le pare-feu autorise le port et que Docker a publié le port avec","On macOS or Linux, use":"Sous macOS ou Linux, utilisez","On the TTS server computer, open":"Sur l'ordinateur du serveur de synthèse vocale, ouvrez","Only if wrapped":"Uniquement s'il est encapsulé","Only read messages starting with !say":"Lire uniquement les messages commençant par !say","Only the first letter or first few words are read":"Seule la première lettre ou les premiers mots sont lus","Only then try a self-hosted server.":"Essayez un serveur auto-hébergé seulement ensuite.","Open":"Ouvrir","Open a terminal (Command Prompt, PowerShell, or Terminal) and run one of the following:":"Ouvrez un terminal (Invite de commandes, PowerShell ou Terminal) et exécutez l'une des commandes suivantes :","Open your browser and go to":"Ouvrez votre navigateur et accédez à","OpenAI TTS endpoint":"Point de terminaison OpenAI TTS","OpenAI-Compatible Proxy":"Proxy compatible OpenAI","OpenAI-compatible":"Compatible OpenAI","OpenAI-compatible TTS endpoint":"Point de terminaison de synthèse vocale compatible OpenAI","OpenAI-compatible endpoint":"Point de terminaison compatible OpenAI","OpenAI-compatible endpoint and Web UI. Tested with real CPU synthesis using":"Point de terminaison compatible OpenAI et interface web. Testé avec une véritable synthèse sur processeur à l'aide de","OpenAI-compatible server builds, or the bridge":"Versions de serveurs compatibles OpenAI, ou la passerelle","OpenAI-compatible server, easy Docker setup, CPU or GPU, many Kokoro voices.":"Serveur compatible OpenAI, configuration Docker simple, processeur ou GPU, nombreuses voix Kokoro.","Option":"Option","Option A: Lightweight Piper":"Option A : Piper léger","Option B: XTTS-v2 Voice Cloning":"Option B : clonage vocal XTTS-v2","Optional":"Facultatif","Overview":"Vue d’ensemble","Package":"Paquet","Paid tiers":"Offres payantes","Parameter":"Paramètre","Path 1: Built-in TTS":"Option 1 — Synthèse vocale intégrée","Path 1: Built-in TTS (Zero Setup)":"Option 1 — Synthèse vocale intégrée (sans configuration)","Path 2: Self-Hosted Server":"Option 2 — Serveur auto-hébergé","Path 2: Self-Hosted TTS Server":"Option 2 — Serveur de synthèse vocale auto-hébergé","Piper Neural TTS":"Synthèse vocale neuronale Piper","Piper TTS":"Piper TTS","Piper TTS Options":"Options Piper TTS","Portuguese and Spanish Piper voices are available:":"Des voix Piper portugaises et espagnoles sont disponibles :","Portuguese example:":"Exemple portugais :","Practical result: keep chat TTS snippets short. Streaming support would need a separate playback path using streamed WAV/MP3 chunks, MediaSource, WebCodecs, or a server-side mixer.":"En pratique : gardez courts les extraits de chat lus. La prise en charge du streaming nécessiterait un circuit de lecture distinct utilisant des segments WAV/MP3 diffusés, MediaSource, WebCodecs ou un mixeur côté serveur.","Prepare a clean, consented reference clip. A mono 22050 Hz WAV between 6 and 30 seconds is a good starting point:":"Préparez un extrait de référence propre, avec consentement. Un WAV mono à 22050 Hz de 6 à 30 secondes est un bon point de départ :","Private":"Privé","Prompt WAV + transcript":"WAV de référence + transcription","Prompted audio context":"Contexte audio de référence","Provider":"Fournisseur","Put that URL in OBS as a Browser Source.":"Placez cette URL dans OBS comme source navigateur.","Quality":"Qualité","Quick Setup":"Configuration rapide","Qwen3-TTS":"Qwen3-TTS","Qwen3-TTS 0.6B Base":"Qwen3-TTS 0.6B Base","Raw PCM":"PCM brut","Read every 3rd message only":"Lire seulement un message sur trois","Read your live chat aloud with local AI voices. Start with the no-install option, then use a local server only if you need it.":"Lisez votre chat en direct à voix haute avec des voix IA locales. Commencez par l'option sans installation, puis utilisez un serveur local uniquement si nécessaire.","Recommended":"Recommandé","Recommended formats:":"Formats recommandés :","Record a clean reference clip, usually 3 to 30 seconds of one speaker with little background noise.":"Enregistrez un extrait de référence propre, généralement de 3 à 30 secondes, avec une seule personne et peu de bruit de fond.","Reference-audio cloning":"Clonage à partir d'un audio de référence","Remote/custom endpoint only":"Point de terminaison distant/personnalisé uniquement","Remote/custom only":"Distant/personnalisé uniquement","Request Shape":"Structure de la requête","Requirements:":"Conditions requises :","Response":"Réponse","Restart the server, then point the SSN dock or featured overlay at it:":"Redémarrez le serveur, puis dirigez le Dock SSN ou l'incrustation de mise en avant vers lui :","Return PCM as a WAV file or base64 WAV. A browser audio element cannot reliably play raw PCM bytes directly.":"Renvoyez le PCM comme fichier WAV ou WAV en base64. Un élément audio du navigateur ne peut pas lire directement des octets PCM bruts de manière fiable.","Route the browser or SSN app to":"Dirigez le navigateur ou l'application SSN vers","Route the virtual output into OBS as an Audio Input Capture source.":"Dirigez la sortie virtuelle vers OBS comme source de capture d'entrée audio.","Run":"Exécutez","Run SSN bridge with":"Exécutez la passerelle SSN avec","Run a local TTS server on your machine and point Social Stream Ninja at it. Gives you more voice options, voice cloning, and server-side control.":"Exécutez un serveur local de synthèse vocale sur votre machine et dirigez Social Stream Ninja vers lui. Cela offre davantage de voix, le clonage vocal et le contrôle côté serveur.","Run the minimal Piper-only image:":"Exécutez l'image minimale réservée à Piper :","SSN URL":"URL SSN","SSN accepts direct binary audio responses, JSON responses with base64 audio, and JSON responses with an audio URL. Current custom/local playback buffers the returned audio before playing it; progressive streaming playback is not supported yet.":"SSN accepte les réponses audio binaires directes, les réponses JSON avec audio en base64 et les réponses JSON avec URL audio. La lecture personnalisée/locale actuelle met l'audio reçu en mémoire avant de le lire ; la lecture progressive en streaming n'est pas encore prise en charge.","SSN already supports OS/browser":"SSN prend déjà en charge le mode système/navigateur","SSN checks":"SSN vérifie","SSN currently lists 28 English, three Spanish, and three Brazilian Portuguese Kokoro voices. Specify one with":"SSN propose actuellement 28 voix Kokoro en anglais, trois en espagnol et trois en portugais du Brésil. Indiquez une voix avec","SSN does not currently do progressive playback for custom/local TTS endpoints. It waits for the response blob or JSON audio payload, then plays it. Some upstream servers expose streaming endpoints, but SSN's current OpenAI-compatible path buffers before playback.":"SSN ne lit actuellement pas progressivement les points de terminaison de synthèse vocale personnalisés/locaux. Il attend le blob de réponse ou les données audio JSON, puis les lit. Certains serveurs en amont exposent des points de terminaison de streaming, mais le circuit compatible OpenAI actuel de SSN met les données en mémoire avant lecture.","SSN local TTS bridge":"passerelle locale de synthèse vocale SSN","SSN path":"Circuit SSN","SSN sends live chat text to the endpoint using":"SSN envoie le texte du chat en direct au point de terminaison avec","SSN support":"Prise en charge SSN","SSN treats a local/self-hosted TTS server like an OpenAI-compatible speech endpoint. The core flow is:":"SSN traite un serveur local/auto-hébergé de synthèse vocale comme un point de terminaison vocal compatible OpenAI. Le fonctionnement principal est le suivant :","Screenshot-style checklist for local TTS troubleshooting":"Liste de vérifications illustrée pour dépanner la synthèse vocale locale","Screenshot-style map of the local TTS fields in Social Stream Ninja":"Schéma illustré des champs de synthèse vocale locale dans Social Stream Ninja","Select a Kokoro voice that matches the language you want. Changing only the language parameter does not change the selected voice.":"Sélectionnez une voix Kokoro correspondant à la langue souhaitée. Modifier uniquement le paramètre de langue ne change pas la voix sélectionnée.","Self-Hosted Flow":"Fonctionnement auto-hébergé","Send one short test chat message.":"Envoyez un court message de test dans le chat.","Server":"Serveur","Set":"Définissez","Set Hardware Out to your speakers/headphones.":"Réglez Hardware Out sur vos haut-parleurs/écouteurs.","Set Output device to":"Réglez Output device sur","Set Output to":"Réglez Output sur","Set the URL to your":"Définissez l'URL sur votre","Set up private local text-to-speech for Social Stream Ninja, including built-in voices, self-hosted servers, voice cloning, OBS audio, and troubleshooting.":"Configurez une synthèse vocale locale privée pour Social Stream Ninja : voix intégrées, serveurs auto-hébergés, clonage vocal, audio OBS et dépannage.","Settings > System > Sound > Volume Mixer":"Paramètres > Système > Son > Mélangeur de volume","Setup":"Configuration","Several high-quality AI voices are":"Plusieurs voix IA de haute qualité sont","Short WAV reference voices":"Voix de référence WAV courtes","Simplest rule:":"Règle la plus simple :","Skip \"says\": reads message only":"Omettre « dit » — lit uniquement le message","Skip usernames entirely":"Omettre entièrement les noms d'utilisateurs","Small ONNX model, fast startup.":"Petit modèle ONNX, démarrage rapide.","Social Stream Ninja - Local AI TTS Guide":"Synthèse vocale IA locale - Social Stream Ninja","Social Stream Ninja can read chat messages out loud using local AI text-to-speech. \"Local\" can mean two things: the voice runs inside the browser, or you run a small TTS server on your own computer.":"Social Stream Ninja peut lire les messages du chat à voix haute avec une synthèse vocale IA locale. « Locale » peut signifier deux choses : la voix s'exécute dans le navigateur, ou vous utilisez un petit serveur de synthèse vocale sur votre propre ordinateur.","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja: Local AI TTS Guide |":"Social Stream Ninja — Guide de la synthèse vocale IA locale |","Some F5-TTS server wrappers expose":"Certaines interfaces de serveur F5-TTS exposent","Some engines also require the exact transcript of that reference clip.":"Certains moteurs exigent aussi la transcription exacte de cet extrait de référence.","Sound Settings > App volume and device preferences":"Paramètres de son > Préférences de volume des applications et des appareils","Spanish example:":"Exemple espagnol :","Speaking speed (0.5–2.0)":"Vitesse de parole (0.5–2.0)","Specify a voice model with":"Précisez un modèle de voix avec","Standalone desktop app":"Application de bureau autonome","Start with Path 1.":"Commencez par l'option 1.","Streaming Audio":"Audio en streaming","Strong cloning/control with short references and transcript support.":"Clonage et contrôle performants avec de courtes références et prise en charge de transcriptions.","Supported Audio Responses":"Réponses audio prises en charge","Surface":"Interface","System TTS":"Synthèse vocale système","System TTS (":"Synthèse vocale du système (","System TTS / eSpeak":"Synthèse vocale du système / eSpeak","TTS Voice Guide":"Guide des voix de synthèse vocale","TTS audio plays through your system speakers/headphones from the app":"L'audio de synthèse vocale est lu par l'application sur les haut-parleurs/écouteurs du système","Table of Contents":"Table des matières","Tested Server Notes":"Notes sur les serveurs testés","The Chrome extension, OBS browser source, and standalone Social Stream Ninja desktop app all use the same":"L'extension Chrome, la source navigateur OBS et l'application de bureau autonome Social Stream Ninja utilisent toutes les mêmes","The OBS browser source is the page that will make the sound.":"La source navigateur OBS est la page qui produit le son.","The OBS browser source talks to the bridge on the OBS computer. The bridge can then call Kokoro-FastAPI, openedai-speech, or another server.":"La source navigateur OBS communique avec la passerelle sur l'ordinateur OBS. La passerelle peut ensuite appeler Kokoro-FastAPI, openedai-speech ou un autre serveur.","The SSN app test works, but OBS has no sound":"Le test dans l'application SSN fonctionne, mais OBS n'a pas de son","The SSN desktop app test button works, but OBS is silent":"Le bouton de test de l'application de bureau SSN fonctionne, mais OBS est silencieux","The app can use its local":"L'application peut utiliser son circuit local","The app test only proves the app can reach the server. The OBS Browser Source still has to reach the endpoint and play the audio.":"Le test de l'application prouve uniquement qu'elle peut atteindre le serveur. La source navigateur OBS doit encore atteindre le point de terminaison et lire l'audio.","The bridge is a small local helper. It accepts the browser request from SSN, talks to your TTS server, then gives the audio back to SSN with browser-friendly headers.":"La passerelle est un petit utilitaire local. Elle accepte la requête du navigateur depuis SSN, communique avec votre serveur de synthèse vocale, puis renvoie l'audio à SSN avec des en-têtes adaptés au navigateur.","The endpoint field is the important one. For a local server, the API key can usually stay blank. Pick a voice name that your server actually supports.":"Le champ du point de terminaison est le plus important. Pour un serveur local, la clé API peut généralement rester vide. Choisissez un nom de voix réellement pris en charge par votre serveur.","The local server converts the reference into a speaker prompt, embedding, or voice profile.":"Le serveur local convertit la référence en consigne de locuteur, représentation vectorielle ou profil vocal.","The localhost / 127.0.0.1 Rule":"La règle localhost / 127.0.0.1","The minimal image is Piper-only. XTTS-v2 requires the full installation and":"L'image minimale contient uniquement Piper. XTTS-v2 nécessite l'installation complète et","The repo recommends high-VRAM GPUs for interactive use.":"Le dépôt recommande des GPU avec beaucoup de VRAM pour un usage interactif.","The repo says it is mostly obsolete, so treat it as useful but not future-proof.":"Le dépôt indique qu'il est largement obsolète ; considérez-le donc comme utile, mais sans garantie de pérennité.","The server returns a playable audio file, usually WAV or MP3, and SSN plays it in the dock/browser source.":"Le serveur renvoie un fichier audio lisible, généralement WAV ou MP3, et SSN le lit dans le Dock/la source navigateur.","The standalone starter folder is":"Le dossier de démarrage autonome est","The voice provider belongs to SSN’s player, not YouTube, Twitch, TikTok, or another chat site. These local AI providers differ from":"Le fournisseur de voix appartient au lecteur SSN, pas à YouTube, Twitch, TikTok ni à un autre site de chat. Ces fournisseurs IA locaux diffèrent de","Then point the OBS":"Dirigez ensuite l'URL OBS","There are two approaches:":"Il existe deux approches :","These are practical starting points, not hard guarantees. Model version, quantization, text length, Docker image, and background apps can change memory use.":"Ce sont des points de départ pratiques, pas des garanties strictes. La version du modèle, la quantification, la longueur du texte, l'image Docker et les applications en arrière-plan peuvent modifier l'utilisation mémoire.","These are the self-hosted voice-cloning targets checked for SSN compatibility. The local endpoint path was tested against both":"Voici les cibles auto-hébergées de clonage vocal dont la compatibilité SSN a été vérifiée. Le circuit du point de terminaison local a été testé avec les deux","These engines are bundled inside Social Stream Ninja and require no installation. They run in the browser using WebAssembly (WASM) or ONNX Runtime.":"Ces moteurs sont inclus dans Social Stream Ninja et ne nécessitent aucune installation. Ils s'exécutent dans le navigateur avec WebAssembly (WASM) ou ONNX Runtime.","These work with any TTS provider, including local servers:":"Ces paramètres fonctionnent avec tout fournisseur de synthèse vocale, y compris les serveurs locaux :","This is the most common local TTS mistake.":"C'est l'erreur la plus courante avec la synthèse vocale locale.","This is the shortest path for most streamers:":"C'est le chemin le plus court pour la plupart des streamers :","This is the simplest method and works for":"C'est la méthode la plus simple et elle fonctionne pour","Three recommended options:":"Trois options recommandées :","To keep Kokoro-FastAPI running automatically in the background, use Docker's restart flag:":"Pour maintenir Kokoro-FastAPI automatiquement en arrière-plan, utilisez l'option de redémarrage de Docker :","Toggle Dark Mode":"Basculer le mode sombre","Toggle Light Mode":"Activer/désactiver le mode clair","Tradeoff":"Compromis","Troubleshooting":"Dépannage","Try the SSN local TTS bridge on the OBS computer if the browser blocks the request.":"Essayez la passerelle locale de synthèse vocale SSN sur l'ordinateur OBS si le navigateur bloque la requête.","Turn on OBS audio capture.":"Activez la capture audio OBS.","Typical Flow":"Fonctionnement typique","URL Parameter":"Paramètre d’URL","URL Parameters":"Paramètres URL","URL at the bridge:":"vers la passerelle :","URL into OBS, OBS is the one that must reach the TTS server and play the audio.":"URL dans OBS, c'est OBS qui doit atteindre le serveur de synthèse vocale et lire l'audio.","URL parameters for TTS. The important difference is where the sound is being made.":"paramètres URL de synthèse vocale. La différence importante est l'endroit où le son est produit.","URL with TTS parameters":"URL avec paramètres de synthèse vocale","URL.":"URL.","URL:":"URL :","Use":"Utilisez","Use GPU when cloning or processing long text.":"Utilisez un GPU pour le clonage ou le traitement de textes longs.","Use OBS Browser Source with \"Control audio via OBS\".":"Utilisez une source navigateur OBS avec « Control audio via OBS ».","Use an OpenAI-compatible wrapper, or":"Utilisez une interface compatible OpenAI, ou","Use an OpenAI-compatible wrapper, then":"Utilisez une interface compatible OpenAI, puis","Use consented voices only.":"Utilisez uniquement des voix avec consentement.","Use something simple like":"Utilisez quelque chose de simple comme","Use the OpenAI-compatible TTS path. Use":"Utilisez le circuit de synthèse vocale compatible OpenAI. Utilisez","Use the built-in provider first.":"Utilisez d'abord le fournisseur intégré.","Use this option for a CPU-only TTS server under 1 GB. It does not include XTTS-v2 or voice cloning.":"Utilisez cette option pour un serveur de synthèse vocale sur processeur de moins de 1 Go. Elle n'inclut ni XTTS-v2 ni clonage vocal.","Uses Social Stream's built-in":"Utilise la prise en charge intégrée à Social Stream du mode","Uses the same provider settings. The app's local file windows are less CORS constrained, but the bridge is still the safest path for servers that reject browser-style requests.":"Utilise les mêmes paramètres de fournisseur. Les fenêtres de fichiers locaux de l'application sont moins limitées par CORS, mais la passerelle reste la voie la plus sûre pour les serveurs refusant les requêtes de type navigateur.","VB-Audio Virtual Cable":"VB-Audio Virtual Cable","Value":"Valeur","Verify It's Running":"Vérifier le fonctionnement","Very Low":"Très faible","Voice cloning":"Clonage vocal","Voice cloning can sound like a real person, so only use voices you own, have permission to use, or have clearly licensed for this purpose.":"Le clonage vocal peut imiter une vraie personne ; utilisez donc uniquement vos propres voix, celles pour lesquelles vous avez une autorisation ou celles disposant d'une licence explicite pour cet usage.","Voice cloning is not a separate SSN mode. It is a feature inside some local TTS servers. SSN sends the chat text to a local endpoint; the server chooses the cloned voice from a saved reference audio file, a voice profile, or bridge configuration.":"Le clonage vocal n'est pas un mode SSN distinct. C'est une fonction de certains serveurs locaux de synthèse vocale. SSN envoie le texte du chat à un point de terminaison local ; le serveur choisit la voix clonée à partir d'un fichier audio de référence enregistré, d'un profil vocal ou de la configuration de la passerelle.","Voice cloning is supported, but the 8B model is not a 6 GB VRAM target and has no local REST endpoint in the repo.":"Le clonage vocal est pris en charge, mais le modèle 8B ne convient pas à 6 Go de VRAM et le dépôt ne propose aucun point de terminaison REST local.","Voice cloning path; CPU is possible but slow.":"Circuit de clonage vocal ; le processeur est possible, mais lent.","Voice cloning, web UI options, OpenAI-compatible APIs, long-text tooling.":"Clonage vocal, options d'interface web, API compatibles OpenAI, outils pour les textes longs.","Voice name (depends on server)":"Nom de la voix (dépend du serveur)","Voice names are case-sensitive on some servers.":"Les noms de voix respectent la casse sur certains serveurs.","Voicemeeter":"Voicemeeter","Voicemeeter Advanced Route":"Routage avancé Voicemeeter","Volume level (0.0–1.0)":"Niveau de volume (0.0–1.0)","Watch the OBS Audio Mixer while a test message plays. The browser source meter should move.":"Observez le mélangeur audio OBS pendant la lecture d'un message de test. Le vumètre de la source navigateur doit bouger.","WebGPU-capable GPU or fast CPU, 8-16 GB RAM":"GPU compatible WebGPU ou processeur rapide, 8 à 16 Go de RAM","When TTS works in one place but not another, check the machine, endpoint, voice, browser permission, and OBS audio capture in that order.":"Lorsque la synthèse vocale fonctionne à un endroit mais pas à un autre, vérifiez dans cet ordre la machine, le point de terminaison, la voix, l'autorisation du navigateur et la capture audio OBS.","When using a local server (non-openai.com URL), Social Stream Ninja sends the request without an Authorization header. You do not need to configure a key.":"Avec un serveur local (URL autre qu'openai.com), Social Stream Ninja envoie la requête sans en-tête Authorization. Vous n'avez pas besoin de configurer de clé.","Where to Click in SSN":"Où cliquer dans SSN","Which Package Fits?":"Quel paquet choisir ?","Why this works:":"Pourquoi cela fonctionne :","Windows 10 Per-App Route":"Routage par application sous Windows 10","Windows 11 Per-App Route":"Routage par application sous Windows 11","Windows Audio Routing Links":"Liens de routage audio Windows","Windows PowerShell, when the TTS server is on another computer:":"Windows PowerShell, lorsque le serveur de synthèse vocale est sur un autre ordinateur :","Windows PowerShell, when the TTS server is on this same computer:":"Windows PowerShell, lorsque le serveur de synthèse vocale est sur ce même ordinateur :","Windows Source Install Note":"Note sur l'installation depuis les sources sous Windows","Windows:":"Windows :","Works with captured chat text, regardless of platform.":"Fonctionne avec le texte capturé du chat, quelle que soit la plateforme.","Wrapper choice and model size matter. Expect more setup.":"Le choix de l'interface et la taille du modèle comptent. Prévoyez davantage de configuration.","Wrong voice or voice not found":"Mauvaise voix ou voix introuvable","XTTS / openedai-speech":"XTTS / openedai-speech","XTTS-v2 / openedai-speech":"XTTS-v2 / openedai-speech","XTTS-v2 is non-commercial by default.":"XTTS-v2 est non commercial par défaut.","XTTS-v2 itself is a model, not a web API. Use the full openedai-speech server to load the model, select a saved reference voice, accept chat text from SSN, and return playable audio. The server reports a practical target of about 4 GB of GPU VRAM; CPU inference is possible but slow.":"XTTS-v2 est un modèle, pas une API web. Utilisez le serveur openedai-speech complet pour charger le modèle, sélectionner une voix de référence enregistrée, accepter le texte du chat SSN et renvoyer un audio lisible. Le serveur indique une cible pratique d'environ 4 Go de VRAM GPU ; l'inférence sur processeur est possible, mais lente.","Yes":"Oui","Yes, about 4 GB reported by openedai-speech":"Oui, environ 4 Go selon openedai-speech","Your local server URL (change port as needed)":"URL de votre serveur local (changez le port si nécessaire)","Your setup":"Votre configuration","accept":"accepter","all TTS providers":"tous les fournisseurs de synthèse vocale","allows only non-commercial use of the model and its outputs. A monetized stream may not qualify, so verify the license or obtain separate permission before using XTTS-v2 commercially.":"autorise uniquement un usage non commercial du modèle et de ses sorties. Un direct monétisé peut ne pas remplir cette condition ; vérifiez donc la licence ou obtenez une autorisation séparée avant d'utiliser XTTS-v2 commercialement.","also work.":"fonctionnent également.","always mean \"this same computer.\"":"signifient toujours « ce même ordinateur ».","and":"et","and choose":"et choisissez","and point SSN at":"et dirigez SSN vers","and return a playable audio file. That covers OpenAI, Coqui/XTTS, Kokoro wrappers, Qwen wrappers, and most proxy services.":"et renvoyer un fichier audio lisible. Cela couvre OpenAI, Coqui/XTTS, les interfaces Kokoro, les interfaces Qwen et la plupart des services proxy.","are OpenAI/openedai-speech style names and may not work with Kokoro.":"sont des noms de style OpenAI/openedai-speech et peuvent ne pas fonctionner avec Kokoro.","are accepted aliases for the OpenAI-style fields.":"sont des alias acceptés pour les champs de style OpenAI.","as the output for the SSN app in Windows Sound settings":"comme sortie de l'application SSN dans les paramètres de son Windows","before starting the server. Without this, requests can return HTTP 500 because the server cannot find":"avant de démarrer le serveur. Sinon, les requêtes peuvent renvoyer HTTP 500 parce que le serveur ne trouve pas","below.":"ci-dessous.","bridge README":"README de la passerelle","built directly into Social Stream Ninja":"directement intégrées à Social Stream Ninja","can be found.":"puissent être trouvés.","can route one app to a virtual cable, but it is older software. Prefer the Windows per-app route when it works.":"peut diriger une application vers un câble virtuel, mais c'est un ancien logiciel. Préférez le routage par application de Windows lorsqu'il fonctionne.","chatterbox-tts-api":"chatterbox-tts-api","checked.":"coché.","dock.html":"dock.html","eSpeak-NG":"eSpeak-NG","eSpeak-NG Options":"Options eSpeak-NG","endpoint that Social Stream needs. Its small image runs Piper on the CPU; its full image can run XTTS-v2 voice cloning on a supported GPU.":"nécessaire à Social Stream. Sa petite image exécute Piper sur le processeur ; son image complète peut exécuter le clonage vocal XTTS-v2 sur un GPU pris en charge.","exposes the OpenAI-compatible":"expose le point de terminaison compatible OpenAI","fields, and data URLs.":"et des URL de données.","folder is on":"de l'environnement virtuel figure dans","for F5-TTS server wrappers":"pour les interfaces de serveur F5-TTS","for Kokoro-FastAPI, or the matching port for your server.":"pour Kokoro-FastAPI, ou le port correspondant de votre serveur.","for XTTS-v2.":"pour XTTS-v2.","for all launch options.":"pour toutes les options de lancement.","for local cloning servers and bridge testing, and":"pour les serveurs locaux de clonage et les tests de passerelle, et","for local/self-hosted endpoints.":"pour les points de terminaison locaux/auto-hébergés.","for small files and broad browser support,":"pour de petits fichiers et une large compatibilité navigateur,","for voice availability versus audio capture.":"pour distinguer la disponibilité des voix et la capture audio.","from":"depuis","github.com/matatonic/openedai-speech":"github.com/matatonic/openedai-speech","github.com/remsky/Kokoro-FastAPI":"github.com/remsky/Kokoro-FastAPI","http://localhost:8880/web/":"http://localhost:8880/web/","if needed.":"si nécessaire.","in Chrome or OBS, CORS can matter.":"dans Chrome ou OBS, CORS peut intervenir.","in OBS with Audio Input Capture":"dans OBS avec Capture d'entrée audio","in each speech request.":"dans chaque requête vocale.","in the browser source settings":"dans les paramètres de la source navigateur","inside the OBS URL points to the OBS computer, not the Kokoro computer.":"dans l'URL OBS désigne l'ordinateur OBS, pas l'ordinateur Kokoro.","instead of":"au lieu de","instead of an OpenAI-compatible endpoint. The bridge can translate SSN's request into that query format.":"au lieu d'un point de terminaison compatible OpenAI. La passerelle peut convertir la requête SSN dans ce format de requête.","is available, more Piper voice choices, and a dedicated progressive streaming playback path for servers that can stream audio chunks.":"est disponible, davantage de voix Piper et un circuit dédié de lecture progressive en streaming pour les serveurs capables de diffuser des segments audio.","is best when you need to hear TTS locally, route it to OBS, and keep it separate from music/game audio.":"est préférable pour entendre la synthèse vocale localement, la diriger vers OBS et la séparer de la musique/du son du jeu.","is checked in the Browser Source properties.":"est coché dans les propriétés de la source navigateur.","is required for XTTS-v2.":"est requis pour XTTS-v2.","item.":".","kokoro-web":"kokoro-web","kokoro-web repo":"dépôt kokoro-web","kokoro-web:":"kokoro-web :","macOS/Linux terminal:":"Terminal macOS/Linux :","may be valid.":"peuvent être valides.","must be a voice your server supports. Kokoro-FastAPI uses names like":"doit être une voix prise en charge par votre serveur. Kokoro-FastAPI utilise des noms tels que","must be installed and running. Docker is free for personal use.":"doit être installé et en cours d'exécution. Docker est gratuit pour un usage personnel.","must be reachable from the page that is playing TTS, and":"doit être accessible depuis la page qui lit la synthèse vocale, et","on the OBS computer and keep the same model and voice parameters while changing":"sur l'ordinateur OBS et conservez les mêmes paramètres de modèle et de voix en modifiant","on the OBS computer and point SSN to":"sur l'ordinateur OBS et dirigez SSN vers","once the server is running.":"une fois le serveur démarré.","only when the TTS server is on the same computer as the page playing audio. If the server is on another computer, use that computer's LAN IP address.":"uniquement lorsque le serveur de synthèse vocale est sur le même ordinateur que la page qui lit l'audio. Si le serveur est sur un autre ordinateur, utilisez l'adresse IP locale de cet ordinateur.","only when the server and browser both support it.":"uniquement lorsque le serveur et le navigateur le prennent tous deux en charge.","openedai-speech":"openedai-speech","openedai-speech (Piper)":"openedai-speech (Piper)","openedai-speech / XTTS-v2 Setup":"Configuration openedai-speech / XTTS-v2","openedai-speech Piper":"openedai-speech Piper","openedai-speech Setup (Piper and XTTS-v2)":"Configuration openedai-speech (Piper et XTTS-v2)","openedai-speech XTTS":"openedai-speech XTTS","openedai-speech repo":"dépôt openedai-speech","openedai-speech uses OpenAI-style voice names mapped to Piper voices:":"openedai-speech utilise des noms de voix de style OpenAI associés à des voix Piper :","openedai-speech was archived in January 2026 and describes itself as mostly obsolete. It remains a useful compatibility example, but it is no longer maintained. Keep it local, and do not expose its unauthenticated port to the public Internet.":"openedai-speech a été archivé en janvier 2026 et se décrit comme largement obsolète. Il reste un exemple utile de compatibilité, mais n'est plus maintenu. Gardez-le local et n'exposez pas son port sans authentification à Internet.","openedai-speech:":"openedai-speech :","openedai-speech: voices such as":"openedai-speech : des voix telles que","or":"ou","or another small number, remove it and refresh the OBS Browser Source.":"ou un autre petit nombre, retirez-le et actualisez la source navigateur OBS.","path for Kokoro instead of relying only on browser model loading.":"pour Kokoro au lieu de dépendre uniquement du chargement du modèle dans le navigateur.","run the bridge on the same computer as OBS. Then OBS can use":"exécutez la passerelle sur le même ordinateur qu'OBS. OBS peut alors utiliser","runs the Kokoro 82M model as a local server with an OpenAI-compatible API. It works on CPU (no GPU required) and has excellent voice quality.":"exécute le modèle Kokoro 82M comme serveur local avec une API compatible OpenAI. Il fonctionne sur processeur (aucun GPU requis) et offre une excellente qualité vocale.","section in":"dans","short OBS setup guide":"guide court de configuration OBS","so":"afin que","source":".","support with a custom local URL.":"avec une URL locale personnalisée.","support.":".","support. Local servers do not need an API key.":"— aucune clé API nécessaire pour les serveurs locaux.","the SSN field map above shows the local endpoint fields. Third-party server UIs change by project version, so their current screenshots and UI details are linked from each project repo near the relevant setup step.":"le schéma des champs SSN ci-dessus montre les champs du point de terminaison local. Les interfaces des serveurs tiers changent selon la version du projet ; leurs captures d'écran et détails actuels sont donc accessibles depuis le dépôt de chaque projet, près de l'étape de configuration concernée.","to":"à","to the voice name you want SSN to send, and use the correct XTTS language code when needed.":"par le nom de voix que vous souhaitez que SSN envoie, et utilisez le bon code de langue XTTS si nécessaire.","to your":"à votre","to your Social Stream":"à votre Social Stream","use":"utilisez","value must match the cloned voice name in":"doit correspondre au nom de voix clonée dans","with":"avec","with that computer's LAN IP address:":"par l'adresse IP locale de cet ordinateur :","with the TTS server computer's LAN IP.":"par l'adresse IP locale de l'ordinateur du serveur de synthèse vocale.","without":"sans","without a provider) depends on voices exposed by the browser.":"sans fournisseur) dépend des voix exposées par le navigateur.","~2 GB":"Environ 2 Go","⭐⭐ Robotic":"⭐⭐ Robotique","⭐⭐⭐ Good":"⭐⭐⭐ Bon","⭐⭐⭐⭐ Very Good":"⭐⭐⭐⭐ Très bon","⭐⭐⭐⭐⭐ Excellent":"⭐⭐⭐⭐⭐ Excellent"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/local-tts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/local-tts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/local-tts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/local-tts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/local-tts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/local-tts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/local-tts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/local-tts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/local-tts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/local-tts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/local-tts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/local-tts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/local-tts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/local-tts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/local-tts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/local-tts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/local-tts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/local-tts.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header>
+        <div class="container">
+            <button class="theme-toggle" data-theme-toggle type="button">
+                <span>🌓</span>
+                <span class="theme-text">Basculer le mode sombre</span>
+            </button>
+            <h1>Guide de synthèse vocale IA locale</h1>
+            <p>Lisez votre chat en direct à voix haute avec des voix IA locales. Commencez par l'option sans installation, puis utilisez un serveur local uniquement si nécessaire.</p>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Français"><span aria-hidden="true">🌐 </span><span lang="fr">Français</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/local-tts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/local-tts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/local-tts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/local-tts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="local-tts.html" lang="fr" hreflang="fr" aria-current="true">Français</a><a class="site-language-link" href="../../de/docs/local-tts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/local-tts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/local-tts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/local-tts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/local-tts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/local-tts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/local-tts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/local-tts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/local-tts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/local-tts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/local-tts.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/local-tts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+    </header>
+
+    <div class="container">
+
+        <nav>
+            <h3 style="margin-top:0">Table des matières</h3>
+            <ul>
+                <li><a href="#overview">Vue d’ensemble</a></li>
+                <li><a href="#quick-setup">Configuration rapide</a></li>
+                <li><a href="#which-computer">La règle localhost / 127.0.0.1</a></li>
+                <li><a href="#where-to-click">Où cliquer dans SSN</a></li>
+                <li><a href="#flow">Fonctionnement auto-hébergé</a></li>
+                <li><a href="#builtin">Option 1 — Synthèse vocale intégrée (sans configuration)</a></li>
+                <li><a href="#desktop-app">Notes pour le navigateur et l'application de bureau</a></li>
+                <li><a href="#server">Option 2 — Serveur de synthèse vocale auto-hébergé</a></li>
+                <li><a href="#voice-cloning">Fonctionnement du clonage vocal</a></li>
+                <li><a href="#hardware">Configuration matérielle requise</a></li>
+                <li><a href="#kokoro-fastapi">Configuration Kokoro-FastAPI</a></li>
+                <li><a href="#openedai">Configuration openedai-speech / XTTS-v2</a></li>
+                <li><a href="#bridge">Passerelle locale de synthèse vocale</a></li>
+                <li><a href="#tested-servers">Notes sur les serveurs testés</a></li>
+                <li><a href="#connect">Connexion à Social Stream</a></li>
+                <li><a href="#obs">Acheminer l'audio vers OBS</a></li>
+                <li><a href="#comparison">Tableau comparatif</a></li>
+                <li><a href="#troubleshooting">Dépannage</a></li>
+            </ul>
+        </nav>
+
+        <!-- OVERVIEW -->
+        <h2 id="overview">Vue d’ensemble</h2>
+        <div class="info"><strong>Fonctionne avec le texte capturé du chat, quelle que soit la plateforme.</strong> Le fournisseur de voix appartient au lecteur SSN, pas à YouTube, Twitch, TikTok ni à un autre site de chat. Ces fournisseurs IA locaux diffèrent de <em>Synthèse vocale système</em>: ils génèrent l'audio de la page sans dépendre de l'exposition des voix du système par OBS. Consultez le <a href="tts-setup-guide.html#obs-voices">guide court de configuration OBS</a> pour distinguer la disponibilité des voix et la capture audio. <a href="tts-setup-guide.html#voice-chooser">Comparez les fournisseurs, écoutez des exemples et consultez les paramètres.</a></div>
+        <div class="card">
+            <p>Social Stream Ninja peut lire les messages du chat à voix haute avec une synthèse vocale IA locale. « Locale » peut signifier deux choses : la voix s'exécute dans le navigateur, ou vous utilisez un petit serveur de synthèse vocale sur votre propre ordinateur.</p>
+
+            <p>Il existe deux approches :</p>
+            <div class="path-grid">
+                <div class="path-card recommended">
+                    <h3>Option 1 — Synthèse vocale intégrée <span class="badge green">Aucune configuration</span></h3>
+                    <p>Plusieurs voix IA de haute qualité sont <strong>directement intégrées à Social Stream Ninja</strong>. Elles s'exécutent dans votre navigateur avec WebAssembly ou ONNX : aucun serveur, aucun Docker, aucune installation.</p>
+                    <ul>
+                        <li>Kokoro 82M (meilleure qualité)</li>
+                        <li>Synthèse vocale neuronale Piper</li>
+                        <li>Kitten TTS</li>
+                        <li>eSpeak-NG</li>
+                    </ul>
+                    <p><strong>Ajoutez simplement un paramètre URL et commencez.</strong></p>
+                </div>
+                <div class="path-card">
+                    <h3>Option 2 — Serveur auto-hébergé <span class="badge orange">Docker requis</span></h3>
+                    <p>Exécutez un serveur local de synthèse vocale sur votre machine et dirigez Social Stream Ninja vers lui. Cela offre davantage de voix, le clonage vocal et le contrôle côté serveur.</p>
+                    <ul>
+                        <li>Kokoro-FastAPI</li>
+                        <li>openedai-speech (Piper)</li>
+                        <li>kokoro-web</li>
+                    </ul>
+                    <p>Utilise la prise en charge intégrée à Social Stream du mode <strong>Point de terminaison compatible OpenAI</strong> .</p>
+                </div>
+            </div>
+
+            <div class="success">
+                <strong>Commencez par l'option 1.</strong> Si vous souhaitez simplement faire fonctionner la synthèse vocale dans OBS, essayez d'abord Kokoro ou Kitten intégrés. Ils ne nécessitent ni Docker, ni serveur, ni clé API. Utilisez un serveur auto-hébergé uniquement si vous avez précisément besoin d'une voix serveur, du clonage vocal ou d'un autre modèle.
+            </div>
+        </div>
+
+        <!-- QUICK SETUP -->
+        <h2 id="quick-setup">Configuration rapide</h2>
+        <div class="card">
+            <p>C'est le chemin le plus court pour la plupart des streamers :</p>
+            <div class="plain-steps">
+                <div class="plain-step"><b>1</b><div><strong>Utilisez d'abord le fournisseur intégré.</strong> Ajouter <code>&amp;speech=en-US&amp;ttsprovider=kokoro</code> ou <code>&amp;speech=en-US&amp;ttsprovider=kitten</code> à votre <code>dock.html</code> URL.</div></div>
+                <div class="plain-step"><b>2</b><div><strong>Placez cette URL dans OBS comme source navigateur.</strong> La source navigateur OBS est la page qui produit le son.</div></div>
+                <div class="plain-step"><b>3</b><div><strong>Activez la capture audio OBS.</strong> Dans les propriétés de la source navigateur, activez <strong>Contrôler l'audio via OBS.</strong></div></div>
+                <div class="plain-step"><b>4</b><div><strong>Envoyez un court message de test dans le chat.</strong> Utilisez quelque chose de simple comme <code>Testing local TTS</code>. Attendez les premiers téléchargements de modèles si vous utilisez Kokoro ou Piper.</div></div>
+                <div class="plain-step"><b>5</b><div><strong>Essayez un serveur auto-hébergé seulement ensuite.</strong> Si vous utilisez Kokoro-FastAPI, openedai-speech ou un autre serveur Docker, lisez la règle localhost ci-dessous avant de copier une URL dans OBS.</div></div>
+            </div>
+        </div>
+
+        <!-- WHICH COMPUTER -->
+        <h2 id="which-computer">La règle localhost / 127.0.0.1</h2>
+        <div class="card">
+            <p>C'est l'erreur la plus courante avec la synthèse vocale locale.</p>
+            <div class="warning">
+                <strong><code>localhost</code> et <code>127.0.0.1</code> signifient toujours « ce même ordinateur ».</strong> Si OBS est sur un ordinateur et Kokoro sur un autre, <code>127.0.0.1</code> dans l'URL OBS désigne l'ordinateur OBS, pas l'ordinateur Kokoro.
+            </div>
+            <figure class="guide-screenshot">
+                <img src="../../docs/images/local-tts/tts-localhost-map.png" alt="Schéma montrant que localhost désigne le même ordinateur, tandis qu&#x27;un autre ordinateur nécessite une adresse IP du réseau local">
+                <figcaption>Utilisez <code>127.0.0.1</code> uniquement lorsque le serveur de synthèse vocale est sur le même ordinateur que la page qui lit l'audio. Si le serveur est sur un autre ordinateur, utilisez l'adresse IP locale de cet ordinateur.</figcaption>
+            </figure>
+            <table>
+                <tr><th>Votre configuration</th><th>Point de terminaison à utiliser</th></tr>
+                <tr><td>OBS et Kokoro fonctionnent sur le même ordinateur</td><td><code>http://127.0.0.1:8880/v1/audio/speech</code></td></tr>
+                <tr><td>Kokoro fonctionne sur un autre ordinateur de votre réseau domestique</td><td><code>http://192.168.x.x:8880/v1/audio/speech</code>, en utilisant l'adresse IP locale de l'ordinateur Kokoro</td></tr>
+                <tr><td>Le bouton de test de l'application de bureau SSN fonctionne, mais OBS est silencieux</td><td>OBS a toujours besoin de son propre point de terminaison fonctionnel. Le test de l'application ne prouve pas qu'OBS peut atteindre le serveur.</td></tr>
+            </table>
+            <p class="tiny-note">Sous Linux, macOS et Windows, vérifiez également que le pare-feu autorise le port et que Docker a publié le port avec <code>-p 8880:8880</code>.</p>
+        </div>
+
+        <!-- WHERE TO CLICK -->
+        <h2 id="where-to-click">Où cliquer dans SSN</h2>
+        <div class="card">
+            <p>Dans la fenêtre de l'extension, ouvrez le sélecteur de fournisseur de synthèse vocale et choisissez <strong>Point de terminaison de synthèse vocale personnalisé / local</strong>. Cela affiche les champs du point de terminaison local compatible OpenAI et le lien vers ce guide.</p>
+
+            <figure class="guide-screenshot">
+                <img src="../../docs/images/local-tts/tts-custom-endpoint-fields.png" alt="Schéma illustré des champs de synthèse vocale locale dans Social Stream Ninja">
+                <figcaption>Le champ du point de terminaison est le plus important. Pour un serveur local, la clé API peut généralement rester vide. Choisissez un nom de voix réellement pris en charge par votre serveur.</figcaption>
+            </figure>
+
+            <div class="info">
+                <strong>À propos des captures d'écran :</strong> le schéma des champs SSN ci-dessus montre les champs du point de terminaison local. Les interfaces des serveurs tiers changent selon la version du projet ; leurs captures d'écran et détails actuels sont donc accessibles depuis le dépôt de chaque projet, près de l'étape de configuration concernée.
+            </div>
+        </div>
+
+        <!-- FLOW -->
+        <h2 id="flow">Fonctionnement auto-hébergé</h2>
+        <div class="card">
+            <p>SSN traite un serveur local/auto-hébergé de synthèse vocale comme un point de terminaison vocal compatible OpenAI. Le fonctionnement principal est le suivant :</p>
+            <div class="code">chat text -> SSN TTS request -> local endpoint or SSN bridge -> TTS server -> audio response -> SSN playback</div>
+
+            <h3>Structure de la requête</h3>
+            <p>Pour <code>ttsprovider=customtts</code>, <code>localtts</code>, ou <code>openai</code>, SSN envoie un POST JSON au point de terminaison configuré :</p>
+            <div class="code">POST /v1/audio/speech
+{
+  "model": "tts-1",
+  "input": "Chat message text",
+  "voice": "af_bella",
+  "response_format": "mp3",
+  "speed": 1.0
+}</div>
+
+            <h3>CORS, pages hébergées et passerelle</h3>
+            <p>CORS est une vérification d'autorisation du navigateur. En termes simples, le serveur de synthèse vocale doit dire au navigateur : « oui, cette page est autorisée à me demander de l'audio ». Si cette autorisation manque, la requête peut être bloquée avant même que Kokoro ou un autre serveur de synthèse vocale ne la reçoive.</p>
+            <ul>
+                <li>Si vous chargez <code>dock.html</code> dans Chrome ou OBS, CORS peut intervenir.</li>
+                <li>Si vous chargez une page hébergée, telle que <code>https://beta.socialstream.ninja/dock.html</code>, Chrome peut également bloquer les appels vers des adresses HTTP locales ou privées.</li>
+                <li>Si le bouton Test de l'application SSN fonctionne mais que la source navigateur OBS reste silencieuse, testez OBS séparément. OBS possède son propre navigateur.</li>
+            </ul>
+            <p>Si le serveur n'autorise pas les requêtes du navigateur, exécutez la <a href="../../local-tts-bridge/README.md" target="_blank">passerelle locale de synthèse vocale SSN</a> et dirigez SSN vers <code>http://127.0.0.1:8124/v1/audio/speech</code>. Pour OBS, le plus simple est d'exécuter la passerelle sur le même ordinateur qu'OBS.</p>
+
+            <h3>Réponses audio prises en charge</h3>
+            <table>
+                <tr>
+                    <th>Réponse</th>
+                    <th>Prise en charge SSN</th>
+                    <th>Remarques</th>
+                </tr>
+                <tr>
+                    <td>Audio binaire</td>
+                    <td class="check">Oui</td>
+                    <td>Meilleure option. Renvoyez <code>audio/mpeg</code>, <code>audio/wav</code>, <code>audio/ogg</code>, <code>audio/aac</code>, ou un autre type audio lisible par le navigateur.</td>
+                </tr>
+                <tr>
+                    <td>JSON avec URL audio</td>
+                    <td class="check">Oui</td>
+                    <td>SSN vérifie <code>url</code>, <code>audio_url</code>, <code>output_url</code>, des champs imbriqués tels que <code>data.url</code>, et le premier élément de <code>data[]</code> .</td>
+                </tr>
+                <tr>
+                    <td>JSON avec audio en base64</td>
+                    <td class="check">Oui</td>
+                    <td>SSN vérifie <code>audio</code>, <code>audio_data</code>, <code>audioContent</code>, <code>b64_json</code>, des champs imbriqués tels que <code>data</code> et des URL de données.</td>
+                </tr>
+                <tr>
+                    <td>PCM brut</td>
+                    <td class="partial">Uniquement s'il est encapsulé</td>
+                    <td>Renvoyez le PCM comme fichier WAV ou WAV en base64. Un élément audio du navigateur ne peut pas lire directement des octets PCM bruts de manière fiable.</td>
+                </tr>
+            </table>
+
+            <div class="info">
+                <strong>Formats recommandés :</strong> utilisez <code>mp3</code> pour de petits fichiers et une large compatibilité navigateur, <code>wav</code> pour les serveurs locaux de clonage et les tests de passerelle, et <code>opus</code> uniquement lorsque le serveur et le navigateur le prennent tous deux en charge.
+            </div>
+
+            <h3>Audio en streaming</h3>
+            <p>SSN ne lit actuellement pas progressivement les points de terminaison de synthèse vocale personnalisés/locaux. Il attend le blob de réponse ou les données audio JSON, puis les lit. Certains serveurs en amont exposent des points de terminaison de streaming, mais le circuit compatible OpenAI actuel de SSN met les données en mémoire avant lecture.</p>
+            <p>En pratique : gardez courts les extraits de chat lus. La prise en charge du streaming nécessiterait un circuit de lecture distinct utilisant des segments WAV/MP3 diffusés, MediaSource, WebCodecs ou un mixeur côté serveur.</p>
+        </div>
+
+        <!-- PATH 1: BUILT-IN -->
+        <h2 id="builtin">Option 1 — Synthèse vocale intégrée (sans configuration)</h2>
+        <div class="card">
+            <p>Ces moteurs sont inclus dans Social Stream Ninja et ne nécessitent aucune installation. Ils s'exécutent dans le navigateur avec WebAssembly (WASM) ou ONNX Runtime.</p>
+
+            <table>
+                <tr>
+                    <th>Fournisseur</th>
+                    <th>Qualité</th>
+                    <th>Utilisation du processeur</th>
+                    <th>GPU/WebGPU</th>
+                    <th>Paramètre d’URL</th>
+                </tr>
+                <tr>
+                    <td><strong>Kokoro TTS</strong></td>
+                    <td>⭐⭐⭐⭐⭐ Excellent</td>
+                    <td class="partial">Moyen</td>
+                    <td class="check">Plus rapide avec un GPU</td>
+                    <td><code>?ttsprovider=kokoro</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Piper TTS</strong></td>
+                    <td>⭐⭐⭐⭐ Très bon</td>
+                    <td class="check">Faible</td>
+                    <td class="partial">Processeur uniquement</td>
+                    <td><code>?ttsprovider=piper</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Kitten TTS</strong></td>
+                    <td>⭐⭐⭐ Bon</td>
+                    <td class="check">Très faible</td>
+                    <td class="partial">Processeur uniquement</td>
+                    <td><code>?ttsprovider=kitten</code></td>
+                </tr>
+                <tr>
+                    <td><strong>eSpeak-NG</strong></td>
+                    <td>⭐⭐ Robotique</td>
+                    <td class="check">Minimal</td>
+                    <td class="partial">Processeur uniquement</td>
+                    <td><code>?ttsprovider=espeak</code></td>
+                </tr>
+            </table>
+
+            <h3>Comment activer</h3>
+            <p>Ajouter <code>&amp;ttsprovider=</code> et <code>&amp;speech=</code> à votre Social Stream <strong>dock.html</strong> URL :</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=kokoro</div>
+
+            <h3>Options Kokoro TTS</h3>
+            <p>SSN propose actuellement 28 voix Kokoro en anglais, trois en espagnol et trois en portugais du Brésil. Indiquez une voix avec <code>&amp;voicekokoro=</code>:</p>
+            <div class="code">English female: af_bella, af_sarah, af_nicole, af_sky
+English male:   am_adam, am_michael
+British female: bf_emma, bf_isabella
+British male:   bm_george, bm_lewis</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=kokoro&voicekokoro=af_bella&kokorospeed=1.1</div>
+            <div class="warning">
+                <strong>Remarque sur les langues :</strong> Sélectionnez une voix Kokoro correspondant à la langue souhaitée. Modifier uniquement le paramètre de langue ne change pas la voix sélectionnée.
+            </div>
+            <p>Exemple espagnol :</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=es-ES&ttsprovider=kokoro&voicekokoro=ef_dora</div>
+            <p>Exemple portugais :</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=pt-BR&ttsprovider=kokoro&voicekokoro=pf_dora</div>
+
+            <h3>Options Piper TTS</h3>
+            <p>Précisez un modèle de voix avec <code>&amp;pipervoice=</code>:</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=piper&pipervoice=en_US-hfc_female-medium</div>
+            <p>Des voix Piper portugaises et espagnoles sont disponibles :</p>
+            <div class="code">Brazilian Portuguese: pt_BR-faber-medium, pt_BR-edresson-low</div>
+            <div class="code">Spanish: es_ES-davefx-medium, es_MX-ald-medium</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=pt-BR&ttsprovider=piper&pipervoice=pt_BR-faber-medium</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=es-ES&ttsprovider=piper&pipervoice=es_ES-davefx-medium</div>
+
+            <h3>Options Kitten TTS</h3>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=kitten&kittenvoice=expr-voice-4-f</div>
+
+            <h3>Options eSpeak-NG</h3>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=espeak&espeakvoice=en&espeakspeed=175</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br&espeakspeed=145</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=es-ES&ttsprovider=espeak&espeakvoice=es&espeakspeed=145</div>
+
+            <div class="warning">
+                <strong>Premier chargement :</strong> Kokoro et Piper doivent télécharger leurs fichiers de modèle à la première utilisation (environ 50 à 200 Mo). Cela se fait automatiquement en arrière-plan. Les chargements suivants peuvent réutiliser les modèles en cache, mais l'initialisation prend toujours du temps. OBS possède un cache distinct de Chrome/Edge.
+            </div>
+
+            <div class="info">
+                <strong>Capture OBS :</strong> Tous les fournisseurs intégrés de synthèse vocale lisent l'audio directement dans le navigateur. Dans OBS, ajoutez votre dock.html comme source navigateur et activez <strong>« Contrôler l'audio via OBS (Control audio via OBS) »</strong>— aucun câble virtuel nécessaire. Consultez la <a href="#obs">section OBS</a> ci-dessous.
+            </div>
+        </div>
+
+        <!-- DESKTOP APP NOTES -->
+        <h2 id="desktop-app">Notes pour le navigateur et l'application de bureau</h2>
+        <div class="card">
+            <p>L'extension Chrome, la source navigateur OBS et l'application de bureau autonome Social Stream Ninja utilisent toutes les mêmes <code>dock.html</code> paramètres URL de synthèse vocale. La différence importante est l'endroit où le son est produit.</p>
+
+            <table>
+                <tr>
+                    <th>Interface</th>
+                    <th>Fonctionnement de la synthèse vocale locale</th>
+                    <th>Capture audio</th>
+                </tr>
+                <tr>
+                    <td>Extension Chrome / source navigateur OBS</td>
+                    <td>La récupération depuis le navigateur nécessite CORS sur le serveur local, sauf si vous utilisez la passerelle SSN.</td>
+                    <td>Utilisez une source navigateur OBS avec « Control audio via OBS ».</td>
+                </tr>
+                <tr>
+                    <td>Application de bureau autonome</td>
+                    <td>Utilise les mêmes paramètres de fournisseur. Les fenêtres de fichiers locaux de l'application sont moins limitées par CORS, mais la passerelle reste la voie la plus sûre pour les serveurs refusant les requêtes de type navigateur.</td>
+                    <td>Capturez l'audio du bureau/de l'application ou dirigez l'application vers un câble audio virtuel.</td>
+                </tr>
+                <tr>
+                    <td>Kokoro intégré dans l'application de bureau</td>
+                    <td>L'application peut utiliser son circuit local <code>ninjafy.tts</code> pour Kokoro au lieu de dépendre uniquement du chargement du modèle dans le navigateur.</td>
+                    <td>Le son est lu par l'application ; utilisez donc la capture audio du bureau/de l'application.</td>
+                </tr>
+            </table>
+
+            <div class="warning">
+                <strong>Ne confondez pas le test dans l'application et OBS.</strong> Si vous appuyez sur Test dans l'application SSN, le test est effectué depuis l'application. Si vous copiez une <code>dock.html</code> URL dans OBS, c'est OBS qui doit atteindre le serveur de synthèse vocale et lire l'audio.
+            </div>
+        </div>
+
+        <!-- PATH 2: SELF-HOSTED SERVER -->
+        <h2 id="server">Option 2 — Serveur de synthèse vocale auto-hébergé</h2>
+        <div class="card">
+            <p>Si vous souhaitez davantage de voix, le clonage vocal ou un serveur dédié réutilisable avec plusieurs outils, vous pouvez exécuter un serveur local de synthèse vocale. Social Stream Ninja s'y connecte avec son mode intégré <strong>Point de terminaison de synthèse vocale compatible OpenAI</strong> — aucune clé API nécessaire pour les serveurs locaux.</p>
+
+            <div class="warning">
+                <strong>Conditions requises :</strong> <a href="https://www.docker.com/products/docker-desktop/" target="_blank">Docker Desktop</a> doit être installé et en cours d'exécution. Docker est gratuit pour un usage personnel.
+            </div>
+
+            <p>Trois options recommandées :</p>
+            <div class="link-row">
+                <a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">dépôt Kokoro-FastAPI</a>
+                <a href="https://github.com/matatonic/openedai-speech" target="_blank">dépôt openedai-speech</a>
+                <a href="https://github.com/eduardolat/kokoro-web" target="_blank">dépôt kokoro-web</a>
+            </div>
+            <table>
+                <tr>
+                    <th>Serveur</th>
+                    <th>Modèle</th>
+                    <th>GPU</th>
+                    <th>Disque</th>
+                    <th>Port par défaut</th>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a></strong> <span class="badge green">Recommandé</span></td>
+                    <td>Kokoro 82M</td>
+                    <td class="partial">Facultatif</td>
+                    <td>Environ 2 Go</td>
+                    <td>8880</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a></strong> (Piper) <span class="badge">Léger</span></td>
+                    <td>Piper TTS</td>
+                    <td class="cross">Processeur uniquement</td>
+                    <td>&lt; 1 Go</td>
+                    <td>8000</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/eduardolat/kokoro-web" target="_blank">kokoro-web</a></strong></td>
+                    <td>Kokoro 82M</td>
+                    <td class="partial">Facultatif</td>
+                    <td>Environ 2 Go</td>
+                    <td>3000</td>
+                </tr>
+            </table>
+
+            <h3>Quel paquet choisir ?</h3>
+            <table>
+                <tr>
+                    <th>Paquet</th>
+                    <th>Principal avantage</th>
+                    <th>Compromis</th>
+                </tr>
+                <tr>
+                    <td><strong>Kokoro intégré</strong></td>
+                    <td>Meilleur premier choix : aucun serveur, bonne qualité, privé, fonctionne dans le navigateur et l'application de bureau.</td>
+                    <td>Pas de clonage vocal.</td>
+                </tr>
+                <tr>
+                    <td><strong>Kokoro-FastAPI</strong></td>
+                    <td>Serveur compatible OpenAI, configuration Docker simple, processeur ou GPU, nombreuses voix Kokoro.</td>
+                    <td>Pas de véritable clonage vocal ; le mélange de voix et les fonctions de voix personnalisées dépendent de la version du serveur.</td>
+                </tr>
+                <tr>
+                    <td><strong>openedai-speech</strong></td>
+                    <td>Point de terminaison compatible OpenAI léger ; Piper convient au processeur et XTTS ajoute le clonage avec environ 4 Go de VRAM visés.</td>
+                    <td>Le dépôt indique qu'il est largement obsolète ; considérez-le donc comme utile, mais sans garantie de pérennité.</td>
+                </tr>
+                <tr>
+                    <td><strong>Serveurs Chatterbox</strong></td>
+                    <td>Clonage vocal, options d'interface web, API compatibles OpenAI, outils pour les textes longs.</td>
+                    <td>La prise en charge CUDA/GPU est plus fluide que le processeur pour certaines versions ; la configuration varie selon la variante du serveur.</td>
+                </tr>
+                <tr>
+                    <td><strong>GPT-SoVITS</strong></td>
+                    <td>Clonage et contrôle performants avec de courtes références et prise en charge de transcriptions.</td>
+                    <td>Pas compatible OpenAI par défaut ; utilisez le mode passerelle SSN.</td>
+                </tr>
+                <tr>
+                    <td><strong>F5-TTS</strong></td>
+                    <td>Clonage naturel sans entraînement avec WAV de référence et transcription.</td>
+                    <td>Le projet officiel n'est pas un simple point de terminaison OpenAI ; utilisez une interface adaptée ou le mode passerelle.</td>
+                </tr>
+                <tr>
+                    <td><strong>Qwen3-TTS</strong></td>
+                    <td>Fonctions modernes de clonage et de création de voix, avec des modèles plus petits de 0.6B/1.7B.</td>
+                    <td>D'abord bibliothèque/démonstration ; nécessite une interface adaptée pour SSN.</td>
+                </tr>
+                <tr>
+                    <td><strong>MisoTTS</strong></td>
+                    <td>Génération vocale haut de gamme pilotée par instructions.</td>
+                    <td>Ne convient pas à une cible locale de 6 Go de VRAM ; utilisez un hébergement distant/personnalisé si nécessaire.</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- VOICE CLONING OPTIONS -->
+        <h2 id="voice-cloning">Fonctionnement du clonage vocal</h2>
+        <div class="card">
+            <p>Le clonage vocal n'est pas un mode SSN distinct. C'est une fonction de certains serveurs locaux de synthèse vocale. SSN envoie le texte du chat à un point de terminaison local ; le serveur choisit la voix clonée à partir d'un fichier audio de référence enregistré, d'un profil vocal ou de la configuration de la passerelle.</p>
+
+            <h3>Fonctionnement typique</h3>
+            <ol>
+                <li>Enregistrez un extrait de référence propre, généralement de 3 à 30 secondes, avec une seule personne et peu de bruit de fond.</li>
+                <li>Certains moteurs exigent aussi la transcription exacte de cet extrait de référence.</li>
+                <li>Le serveur local convertit la référence en consigne de locuteur, représentation vectorielle ou profil vocal.</li>
+                <li>SSN envoie le texte du chat en direct au point de terminaison avec <code>ttsprovider=customtts</code>.</li>
+                <li>Le serveur renvoie un fichier audio lisible, généralement WAV ou MP3, et SSN le lit dans le Dock/la source navigateur.</li>
+            </ol>
+
+            <div class="warning">
+                <strong>Utilisez uniquement des voix avec consentement.</strong> Le clonage vocal peut imiter une vraie personne ; utilisez donc uniquement vos propres voix, celles pour lesquelles vous avez une autorisation ou celles disposant d'une licence explicite pour cet usage.
+            </div>
+
+            <div class="warning">
+                <strong>XTTS-v2 est non commercial par défaut.</strong> <a href="https://huggingface.co/coqui/XTTS-v2/blob/main/LICENSE.txt" target="_blank">La Coqui Public Model License</a> autorise uniquement un usage non commercial du modèle et de ses sorties. Un direct monétisé peut ne pas remplir cette condition ; vérifiez donc la licence ou obtenez une autorisation séparée avant d'utiliser XTTS-v2 commercialement.
+            </div>
+
+            <p>Avec 6 Go de VRAM ou moins, privilégiez les petits modèles de clonage sans entraînement et les serveurs compatibles OpenAI. Les modèles plus volumineux peuvent toujours fonctionner via le même point de terminaison SSN si l'utilisateur les héberge ailleurs.</p>
+
+            <div class="link-row">
+                <a href="https://github.com/matatonic/openedai-speech" target="_blank">XTTS / openedai-speech</a>
+                <a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">chatterbox-tts-api</a>
+                <a href="https://github.com/devnen/Chatterbox-TTS-Server" target="_blank">Chatterbox-TTS-Server</a>
+                <a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">GPT-SoVITS</a>
+                <a href="https://github.com/SWivid/F5-TTS" target="_blank">F5-TTS</a>
+                <a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">Qwen3-TTS</a>
+                <a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">MisoTTS</a>
+            </div>
+
+            <table>
+                <tr>
+                    <th>Option</th>
+                    <th>Clonage vocal</th>
+                    <th>Tient dans 6 Go de VRAM</th>
+                    <th>Chemin API pour SSN</th>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">Qwen3-TTS 0.6B Base</a></strong></td>
+                    <td>Audio de référence de 3 secondes</td>
+                    <td class="check">Probablement</td>
+                    <td>Utilisez une interface compatible OpenAI, puis <code>ttsprovider=customtts</code></td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/matatonic/openedai-speech" target="_blank">XTTS-v2 / openedai-speech</a></strong></td>
+                    <td>Voix de référence WAV courtes</td>
+                    <td class="check">Oui, environ 4 Go selon openedai-speech</td>
+                    <td><code>/v1/audio/speech</code></td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">Chatterbox Turbo / Server</a></strong></td>
+                    <td>Clonage à partir d'un audio de référence</td>
+                    <td class="partial">Probablement avec Turbo / de petits segments</td>
+                    <td>Versions de serveurs compatibles OpenAI, ou la passerelle</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">GPT-SoVITS</a></strong></td>
+                    <td>5 secondes sans entraînement, 1 minute avec quelques exemples</td>
+                    <td class="check">Probablement avec fp16 / une installation légère</td>
+                    <td>Utilisez <code>scripts/local-tts-bridge.cjs --mode gptsovits</code></td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/SWivid/F5-TTS" target="_blank">F5-TTS</a></strong></td>
+                    <td>WAV de référence + transcription</td>
+                    <td class="partial">Peut-être ; dépend de la version et du vocodeur</td>
+                    <td>Utilisez une interface compatible OpenAI, ou <code>--mode f5</code> pour les interfaces de serveur F5-TTS</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">MisoTTS 8B</a></strong></td>
+                    <td>Contexte audio de référence</td>
+                    <td class="cross">Non ; le projet recommande 24 Go de VRAM</td>
+                    <td>Point de terminaison distant/personnalisé uniquement</td>
+                </tr>
+            </table>
+
+            <div class="info">
+                <strong>Meilleure structure cible pour SSN :</strong> accepter <code>POST /v1/audio/speech</code> avec <code>{ model, input, voice, response_format, speed }</code> et renvoyer un fichier audio lisible. Cela couvre OpenAI, Coqui/XTTS, les interfaces Kokoro, les interfaces Qwen et la plupart des services proxy.
+            </div>
+        </div>
+
+        <!-- HARDWARE -->
+        <h2 id="hardware">Configuration matérielle requise</h2>
+        <div class="card">
+            <p>Ce sont des points de départ pratiques, pas des garanties strictes. La version du modèle, la quantification, la longueur du texte, l'image Docker et les applications en arrière-plan peuvent modifier l'utilisation mémoire.</p>
+
+            <table>
+                <tr>
+                    <th>Option</th>
+                    <th>Configuration minimale pratique</th>
+                    <th>Bonne cible</th>
+                    <th>Remarques</th>
+                </tr>
+                <tr>
+                    <td>Synthèse vocale du système / eSpeak</td>
+                    <td>Tout PC moderne</td>
+                    <td>N'importe quel PC</td>
+                    <td>Rapide, qualité faible, sans clonage.</td>
+                </tr>
+                <tr>
+                    <td>Kitten intégré</td>
+                    <td>Processeur d'entrée de gamme, 4 Go de RAM</td>
+                    <td>Processeur moderne de portable, 8 Go de RAM</td>
+                    <td>Petit modèle ONNX, démarrage rapide.</td>
+                </tr>
+                <tr>
+                    <td>Piper intégré</td>
+                    <td>Processeur moderne, 4 à 8 Go de RAM</td>
+                    <td>Processeur moderne, 8 Go de RAM</td>
+                    <td>Bonne option de voix neuronale peu gourmande en ressources.</td>
+                </tr>
+                <tr>
+                    <td>Kokoro intégré</td>
+                    <td>Processeur moderne, 8 Go de RAM</td>
+                    <td>GPU compatible WebGPU ou processeur rapide, 8 à 16 Go de RAM</td>
+                    <td>Meilleure qualité sans configuration. Le premier chargement télécharge les ressources du modèle.</td>
+                </tr>
+                <tr>
+                    <td>Kokoro-FastAPI</td>
+                    <td>Hôte Docker sur processeur, 8 Go de RAM</td>
+                    <td>GPU NVIDIA facultatif, 8 à 16 Go de RAM</td>
+                    <td>Bon serveur local lorsque le chargement du modèle dans le navigateur n'est pas idéal.</td>
+                </tr>
+                <tr>
+                    <td>openedai-speech Piper</td>
+                    <td>Processeur, 4 à 8 Go de RAM</td>
+                    <td>Processeur, 8 Go de RAM</td>
+                    <td>Serveur compatible OpenAI léger.</td>
+                </tr>
+                <tr>
+                    <td>openedai-speech XTTS</td>
+                    <td>GPU NVIDIA d'environ 4 Go de VRAM, 8 à 16 Go de RAM</td>
+                    <td>GPU NVIDIA de 6 Go ou plus, 16 Go de RAM</td>
+                    <td>Circuit de clonage vocal ; le processeur est possible, mais lent.</td>
+                </tr>
+                <tr>
+                    <td>Serveurs Chatterbox</td>
+                    <td>Le processeur peut fonctionner avec certaines versions, mais lentement</td>
+                    <td>GPU NVIDIA de 6 Go ou plus, 16 Go de RAM</td>
+                    <td>Utilisez un GPU pour le clonage ou le traitement de textes longs.</td>
+                </tr>
+                <tr>
+                    <td>GPT-SoVITS / F5-TTS / Qwen3-TTS</td>
+                    <td>Tests sur processeur uniquement, lent</td>
+                    <td>GPU NVIDIA de 6 Go ou plus pour les modèles petits/optimisés, 16 Go de RAM</td>
+                    <td>Le choix de l'interface et la taille du modèle comptent. Prévoyez davantage de configuration.</td>
+                </tr>
+                <tr>
+                    <td>MisoTTS 8B</td>
+                    <td>Non recommandé localement avec 6 Go de VRAM</td>
+                    <td>24 Go de VRAM ou hôte distant</td>
+                    <td>Le dépôt recommande des GPU avec beaucoup de VRAM pour un usage interactif.</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- TESTED SERVER NOTES -->
+        <h2 id="tested-servers">Notes sur les serveurs testés</h2>
+        <div class="card">
+            <p>Voici les cibles auto-hébergées de clonage vocal dont la compatibilité SSN a été vérifiée. Le circuit du point de terminaison local a été testé avec les deux <code>dock.html</code> et <code>featured.html</code>.</p>
+            <p>SSN accepte les réponses audio binaires directes, les réponses JSON avec audio en base64 et les réponses JSON avec URL audio. La lecture personnalisée/locale actuelle met l'audio reçu en mémoire avant de le lire ; la lecture progressive en streaming n'est pas encore prise en charge.</p>
+
+            <table>
+                <tr>
+                    <th>Serveur</th>
+                    <th>Circuit SSN</th>
+                    <th>Remarques</th>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a></strong></td>
+                    <td class="check">Direct ou passerelle</td>
+                    <td>Compatible OpenAI <code>/v1/audio/speech</code>. Le mode Piper a été testé avec une véritable synthèse sur processeur depuis <code>dock.html</code> et <code>featured.html</code>, directement et via la passerelle. En cas d'exécution depuis les sources sous Windows, vérifiez que le dossier <code>Scripts</code> de l'environnement virtuel figure dans <code>PATH</code> afin que <code>piper.exe</code> et <code>ffmpeg.exe</code> puissent être trouvés.</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">chatterbox-tts-api</a></strong></td>
+                    <td class="check">Direct ou passerelle</td>
+                    <td>Compatible OpenAI <code>/v1/audio/speech</code>. Utilise l'audio de référence configuré pour le clonage. La structure API a été testée directement et via la passerelle.</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/devnen/Chatterbox-TTS-Server" target="_blank">Chatterbox-TTS-Server</a></strong></td>
+                    <td class="check">Direct ou passerelle</td>
+                    <td>Point de terminaison compatible OpenAI et interface web. Testé avec une véritable synthèse sur processeur à l'aide de <code>Emily.wav</code> depuis <code>dock.html</code> et <code>featured.html</code>, directement et via la passerelle.</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">GPT-SoVITS</a></strong></td>
+                    <td class="partial">Mode passerelle</td>
+                    <td>Exécutez la passerelle SSN avec <code>--mode gptsovits</code>; le serveur cible est <code>/tts</code>, pas compatible OpenAI.</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/ValyrianTech/F5-TTS_server" target="_blank">F5-TTS_server</a></strong></td>
+                    <td class="partial">Mode passerelle</td>
+                    <td>Exécutez la passerelle SSN avec <code>--mode f5</code>; le serveur cible utilise <code>GET /synthesize_speech/</code>.</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/SWivid/F5-TTS" target="_blank">F5-TTS officiel</a></strong></td>
+                    <td class="partial">Nécessite une interface adaptée</td>
+                    <td>D'abord CLI, Gradio et serveur socket. Utilisez une interface compatible OpenAI ou le mode passerelle F5 vers une interface adaptée.</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">Qwen3-TTS</a></strong></td>
+                    <td class="partial">Nécessite une interface adaptée</td>
+                    <td>D'abord bibliothèque et démonstration Gradio. Bon candidat pour une petite interface compatible OpenAI autour de <code>generate_voice_clone</code>.</td>
+                </tr>
+                <tr>
+                    <td><strong><a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">MisoTTS</a></strong></td>
+                    <td class="cross">Distant/personnalisé uniquement</td>
+                    <td>Le clonage vocal est pris en charge, mais le modèle 8B ne convient pas à 6 Go de VRAM et le dépôt ne propose aucun point de terminaison REST local.</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- KOKORO-FASTAPI -->
+        <h2 id="kokoro-fastapi">Configuration Kokoro-FastAPI</h2>
+        <div class="card">
+            <p><a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> exécute le modèle Kokoro 82M comme serveur local avec une API compatible OpenAI. Il fonctionne sur processeur (aucun GPU requis) et offre une excellente qualité vocale.</p>
+
+            <h3>Installer avec Docker</h3>
+            <p>Ouvrez un terminal (Invite de commandes, PowerShell ou Terminal) et exécutez l'une des commandes suivantes :</p>
+
+            <h4>Processeur (fonctionne sur tout ordinateur) :</h4>
+            <div class="code">docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</div>
+
+            <h4>GPU (NVIDIA uniquement — synthèse plus rapide) :</h4>
+            <div class="code">docker run --gpus all -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-gpu:v0.2.0post4</div>
+
+            <div class="info">
+                <strong>Première exécution :</strong> Docker télécharge l'image (environ 1,5 à 2 Go). Cela ne se produit qu'une fois. Ensuite, le serveur démarre en quelques secondes.
+            </div>
+
+            <h3>Vérifier le fonctionnement</h3>
+            <p>Ouvrez votre navigateur et accédez à <strong>http://localhost:8880/web/</strong>— vous devriez voir une interface web où tester les voix.</p>
+
+            <h3>Voix disponibles</h3>
+            <p>Plus de 67 voix disponibles. Quelques exemples :</p>
+            <div class="code">af_bella, af_sarah, af_nicole, af_sky, af_heart  (American female)
+am_adam, am_michael                              (American male)
+bf_emma, bf_isabella                             (British female)
+bm_george, bm_lewis                              (British male)</div>
+            <p>Parcourez et testez toutes les voix à l'adresse <code>http://localhost:8880/web/</code> une fois le serveur démarré.</p>
+
+            <h3>URL SSN</h3>
+            <p>Si Kokoro-FastAPI est sur le même ordinateur qu'OBS :</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8880/v1/audio/speech&voiceopenai=af_bella</div>
+            <p>Si Kokoro-FastAPI est sur un autre ordinateur, remplacez <code>192.168.x.x</code> par l'adresse IP locale de cet ordinateur :</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://192.168.x.x:8880/v1/audio/speech&voiceopenai=af_bella</div>
+            <div class="info">
+                <strong>Les noms de voix Kokoro diffèrent de ceux d'OpenAI.</strong> Pour Kokoro-FastAPI, utilisez des voix telles que <code>af_bella</code>, <code>af_sarah</code>, <code>am_adam</code>, ou <code>bf_emma</code>. Des noms tels que <code>echo</code>, <code>nova</code>, et <code>alloy</code> sont des noms de style OpenAI/openedai-speech et peuvent ne pas fonctionner avec Kokoro.
+            </div>
+
+            <h3>Maintenir le serveur en marche</h3>
+            <p>Pour maintenir Kokoro-FastAPI automatiquement en arrière-plan, utilisez l'option de redémarrage de Docker :</p>
+            <div class="code">docker run -d --restart unless-stopped -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</div>
+            <p>Il démarrera désormais automatiquement avec Docker Desktop à chaque redémarrage.</p>
+        </div>
+
+        <!-- OPENEDAI-SPEECH -->
+        <h2 id="openedai">Configuration openedai-speech (Piper et XTTS-v2)</h2>
+        <div class="card">
+            <p><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a> expose le point de terminaison compatible OpenAI <code>/v1/audio/speech</code> nécessaire à Social Stream. Sa petite image exécute Piper sur le processeur ; son image complète peut exécuter le clonage vocal XTTS-v2 sur un GPU pris en charge.</p>
+
+            <div class="warning">
+                <strong>Projet archivé :</strong> openedai-speech a été archivé en janvier 2026 et se décrit comme largement obsolète. Il reste un exemple utile de compatibilité, mais n'est plus maintenu. Gardez-le local et n'exposez pas son port sans authentification à Internet.
+            </div>
+
+            <h3>Option A : Piper léger</h3>
+            <p>Utilisez cette option pour un serveur de synthèse vocale sur processeur de moins de 1 Go. Elle n'inclut ni XTTS-v2 ni clonage vocal.</p>
+
+            <h3>Installer avec Docker Compose</h3>
+
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                    Clonez le dépôt ou créez un dossier avec le fichier suivant <code>docker-compose.min.yml</code>. Vous pouvez aussi exécuter directement les commandes ci-dessous.
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">Exécutez l'image minimale réservée à Piper :</div>
+            </div>
+            <div class="code">docker run -d --restart unless-stopped \
+  -p 8000:8000 \
+  ghcr.io/matatonic/openedai-speech-min</div>
+
+            <h3>Note sur l'installation depuis les sources sous Windows</h3>
+            <p>Si vous exécutez openedai-speech depuis une copie locale des sources plutôt que Docker, ajoutez le dossier de scripts de son environnement virtuel à <code>PATH</code> avant de démarrer le serveur. Sinon, les requêtes peuvent renvoyer HTTP 500 parce que le serveur ne trouve pas <code>piper.exe</code> ou <code>ffmpeg.exe</code>.</p>
+            <div class="code">cd openedai-speech
+$env:Path = "$PWD\.venv\Scripts;$env:Path"
+.\.venv\Scripts\python.exe speech.py --xtts_device none -H 127.0.0.1 -P 8000</div>
+
+            <h3>Voix disponibles</h3>
+            <p>openedai-speech utilise des noms de voix de style OpenAI associés à des voix Piper :</p>
+            <div class="code">alloy, echo, fable, onyx, nova, shimmer</div>
+
+            <h3>URL SSN</h3>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=openai&openaiendpoint=http://localhost:8000/v1/audio/speech&voiceopenai=nova</div>
+
+            <h3>Option B : clonage vocal XTTS-v2</h3>
+            <p>XTTS-v2 est un modèle, pas une API web. Utilisez le serveur openedai-speech complet pour charger le modèle, sélectionner une voix de référence enregistrée, accepter le texte du chat SSN et renvoyer un audio lisible. Le serveur indique une cible pratique d'environ 4 Go de VRAM GPU ; l'inférence sur processeur est possible, mais lente.</p>
+
+            <div class="warning">
+                <strong>N'utilisez pas <code>openedai-speech-min</code> pour XTTS-v2.</strong> L'image minimale contient uniquement Piper. XTTS-v2 nécessite l'installation complète et <code>model=tts-1-hd</code> dans chaque requête vocale.
+            </div>
+
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">Clonez le serveur archivé, créez son fichier d'environnement et démarrez la configuration Docker Compose complète avec GPU :</div>
+            </div>
+            <div class="code">git clone https://github.com/matatonic/openedai-speech.git
+cd openedai-speech
+Copy-Item sample.env speech.env
+docker compose up -d</div>
+            <p class="tiny-note">Sous macOS ou Linux, utilisez <code>cp sample.env speech.env</code> au lieu de <code>Copy-Item</code>. Docker doit avoir accès à un GPU pris en charge. Le modèle se télécharge à la première utilisation.</p>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">Préparez un extrait de référence propre, avec consentement. Un WAV mono à 22050 Hz de 6 à 30 secondes est un bon point de départ :</div>
+            </div>
+            <div class="code">ffmpeg -i input.mp3 -ac 1 -ar 22050 -t 6 -y voices/me.wav</div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                <div class="step-content">Ajoutez la voix clonée sous la section existante <code>tts-1-hd</code> dans <code>config/voice_to_speaker.yaml</code>:</div>
+            </div>
+            <div class="code">tts-1-hd:
+  me:
+    model: xtts
+    speaker: voices/me.wav
+    language: en</div>
+            <p class="tiny-note">Conservez toutes les voix existantes déjà répertoriées sous <code>tts-1-hd</code>. Modifiez <code>me</code> par le nom de voix que vous souhaitez que SSN envoie, et utilisez le bon code de langue XTTS si nécessaire.</p>
+
+            <div class="step">
+                <span class="step-number">4</span>
+                <div class="step-content">Redémarrez le serveur, puis dirigez le Dock SSN ou l'incrustation de mise en avant vers lui :</div>
+            </div>
+            <div class="code">docker compose restart</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8000/v1/audio/speech&openaimodel=tts-1-hd&voiceopenai=me&openaiformat=wav</div>
+
+            <div class="info">
+                <strong><code>openaimodel=tts-1-hd</code> est requis pour XTTS-v2.</strong> S'il est omis, Social Stream envoie sa valeur par défaut <code>tts-1</code>, et openedai-speech sélectionne Piper à la place. La valeur de <code>voiceopenai</code> doit correspondre au nom de voix clonée dans <code>voice_to_speaker.yaml</code>.
+            </div>
+
+            <p>Si le navigateur ou OBS bloque la requête directe, exécutez la <a href="#bridge">Passerelle locale de synthèse vocale</a> sur l'ordinateur OBS et conservez les mêmes paramètres de modèle et de voix en modifiant <code>openaiendpoint</code> à <code>http://127.0.0.1:8124/v1/audio/speech</code>.</p>
+        </div>
+
+        <!-- LOCAL TTS BRIDGE -->
+        <h2 id="bridge">Passerelle locale de synthèse vocale</h2>
+        <div class="card">
+            <p>La passerelle est un petit utilitaire local. Elle accepte la requête du navigateur depuis SSN, communique avec votre serveur de synthèse vocale, puis renvoie l'audio à SSN avec des en-têtes adaptés au navigateur.</p>
+            <div class="success">
+                <strong>Règle la plus simple :</strong> exécutez la passerelle sur le même ordinateur qu'OBS. OBS peut alors utiliser <code>http://127.0.0.1:8124/v1/audio/speech</code>, même si le véritable serveur de synthèse vocale se trouve sur un autre ordinateur.
+            </div>
+            <figure class="guide-screenshot">
+                <img src="../../docs/images/local-tts/tts-bridge-flow.png" alt="Schéma montrant OBS appelant la passerelle locale, puis la passerelle appelant le serveur de synthèse vocale">
+                <figcaption>La source navigateur OBS communique avec la passerelle sur l'ordinateur OBS. La passerelle peut ensuite appeler Kokoro-FastAPI, openedai-speech ou un autre serveur.</figcaption>
+            </figure>
+            <p>Le dossier de démarrage autonome est <code>local-tts-bridge/</code>; consultez le <a href="../../local-tts-bridge/README.md" target="_blank">README de la passerelle</a> pour toutes les options de lancement.</p>
+
+            <h3>Proxy compatible OpenAI</h3>
+            <p>Windows PowerShell, lorsque le serveur de synthèse vocale est sur ce même ordinateur :</p>
+            <div class="code">$env:SSN_TTS_TARGET="http://127.0.0.1:8880/v1/audio/speech"
+npm run local-tts-bridge</div>
+            <p>Windows PowerShell, lorsque le serveur de synthèse vocale est sur un autre ordinateur :</p>
+            <div class="code">$env:SSN_TTS_TARGET="http://192.168.x.x:8880/v1/audio/speech"
+npm run local-tts-bridge</div>
+            <p>Terminal macOS/Linux :</p>
+            <div class="code">SSN_TTS_TARGET="http://127.0.0.1:8880/v1/audio/speech" npm run local-tts-bridge</div>
+            <p>Dirigez ensuite l'URL OBS <code>dock.html</code> vers la passerelle :</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&voiceopenai=af_bella</div>
+
+            <h3>Mode proxy GPT-SoVITS</h3>
+            <p>GPT-SoVITS utilise sa propre structure JSON pour <code>/tts</code> , ce qui permet à la passerelle de convertir la requête compatible OpenAI de SSN en corps de requête GPT-SoVITS.</p>
+            <div class="code">$env:SSN_TTS_REF_AUDIO_PATH="C:\voices\speaker.wav"
+$env:SSN_TTS_REF_TEXT="Reference audio transcript here."
+$env:SSN_TTS_TARGET="http://127.0.0.1:9880/tts"
+npm run local-tts-bridge -- --mode gptsovits</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&openaiformat=wav</div>
+
+            <h3>Mode proxy serveur F5-TTS</h3>
+            <p>Certaines interfaces de serveur F5-TTS exposent <code>/synthesize_speech/?text=...&amp;voice=...</code> au lieu d'un point de terminaison compatible OpenAI. La passerelle peut convertir la requête SSN dans ce format de requête.</p>
+            <div class="code">$env:SSN_TTS_TARGET="http://127.0.0.1:7860/synthesize_speech/"
+npm run local-tts-bridge -- --mode f5</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&voiceopenai=default_en&openaiformat=wav</div>
+
+            <div class="info">
+                <strong>Point de terminaison de la passerelle :</strong> <code>http://127.0.0.1:8124/v1/audio/speech</code>. Changez le port avec <code>SSN_TTS_BRIDGE_PORT=8125</code> si nécessaire.
+            </div>
+        </div>
+
+        <!-- CONNECTING TO SSN -->
+        <h2 id="connect">Connexion à Social Stream Ninja</h2>
+        <div class="card">
+            <p>Tous les serveurs auto-hébergés ci-dessus utilisent la même méthode de connexion : le mode intégré de Social Stream <strong>Point de terminaison OpenAI TTS</strong> avec une URL locale personnalisée.</p>
+
+            <h3>Paramètres URL</h3>
+            <table>
+                <tr>
+                    <th>Paramètre</th>
+                    <th>Valeur</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>ttsprovider</code></td>
+                    <td><code>customtts</code> ou <code>openai</code></td>
+                    <td>Utilisez le circuit de synthèse vocale compatible OpenAI. Utilisez <code>customtts</code> pour les points de terminaison locaux/auto-hébergés.</td>
+                </tr>
+                <tr>
+                    <td><code>openaiendpoint</code></td>
+                    <td><code>http://localhost:8880/v1/audio/speech</code></td>
+                    <td>URL de votre serveur local (changez le port si nécessaire)</td>
+                </tr>
+                <tr>
+                    <td><code>speech</code></td>
+                    <td><code>en-US</code></td>
+                    <td>Active la synthèse vocale en anglais</td>
+                </tr>
+                <tr>
+                    <td><code>voiceopenai</code></td>
+                    <td><code>af_bella</code></td>
+                    <td>Nom de la voix (dépend du serveur)</td>
+                </tr>
+                <tr>
+                    <td><code>openaiformat</code></td>
+                    <td><code>mp3</code></td>
+                    <td>Format audio : mp3, wav, opus, flac</td>
+                </tr>
+                <tr>
+                    <td><code>openaispeed</code></td>
+                    <td><code>1.0</code></td>
+                    <td>Vitesse de parole (0.5–2.0)</td>
+                </tr>
+            </table>
+
+            <div class="info">
+                <strong>Alias du point de terminaison :</strong> <code>customttsendpoint</code> et <code>localttsendpoint</code> fonctionnent également. <code>customttsvoice</code>, <code>localttsvoice</code>, <code>customttsmodel</code>, <code>localttsmodel</code>, <code>customttsformat</code>, et <code>localttsformat</code> sont des alias acceptés pour les champs de style OpenAI.
+            </div>
+            <div class="warning">
+                <strong>Vérifiez le point de terminaison et la voix avant de dépanner l'audio.</strong> <code>openaiendpoint</code> doit être accessible depuis la page qui lit la synthèse vocale, et <code>voiceopenai</code> doit être une voix prise en charge par votre serveur. Kokoro-FastAPI utilise des noms tels que <code>af_bella</code>; openedai-speech utilise souvent des noms tels que <code>nova</code> ou <code>echo</code>.
+            </div>
+
+            <h3>Exemples d'URL complètes</h3>
+            <h4>Kokoro-FastAPI :</h4>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://localhost:8880/v1/audio/speech&voiceopenai=af_bella&openaispeed=1.1</div>
+
+            <h4>openedai-speech :</h4>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://localhost:8000/v1/audio/speech&voiceopenai=nova</div>
+
+            <h4>kokoro-web :</h4>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://localhost:3000/api/v1/audio/speech&voiceopenai=af_bella</div>
+
+            <h3>Options de synthèse vocale supplémentaires</h3>
+            <p>Ces paramètres fonctionnent avec tout fournisseur de synthèse vocale, y compris les serveurs locaux :</p>
+            <table>
+                <tr>
+                    <th>Paramètre</th>
+                    <th>Exemple</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>simpletts</code></td>
+                    <td><code>&simpletts</code></td>
+                    <td>Omettre « dit » — lit uniquement le message</td>
+                </tr>
+                <tr>
+                    <td><code>simpletts2</code></td>
+                    <td><code>&simpletts2</code></td>
+                    <td>Omettre entièrement les noms d'utilisateurs</td>
+                </tr>
+                <tr>
+                    <td><code>volume</code></td>
+                    <td><code>&volume=0.8</code></td>
+                    <td>Niveau de volume (0.0–1.0)</td>
+                </tr>
+                <tr>
+                    <td><code>skipmessages</code></td>
+                    <td><code>&skipmessages=3</code></td>
+                    <td>Lire seulement un message sur trois</td>
+                </tr>
+                <tr>
+                    <td><code>ttscommand</code></td>
+                    <td><code>&ttscommand=!say</code></td>
+                    <td>Lire uniquement les messages commençant par !say</td>
+                </tr>
+                <tr>
+                    <td><code>readevents</code></td>
+                    <td><code>&readevents</code></td>
+                    <td>Lire aussi les abonnements, dons, etc.</td>
+                </tr>
+                <tr>
+                    <td><code>ttsquick</code></td>
+                    <td><code>&ttsquick=100</code></td>
+                    <td>Coupe volontairement la parole après ce nombre de caractères. Retirez-le si les messages sont tronqués.</td>
+                </tr>
+            </table>
+
+            <div class="info">
+                <strong>Aucune clé API nécessaire.</strong> Avec un serveur local (URL autre qu'openai.com), Social Stream Ninja envoie la requête sans en-tête Authorization. Vous n'avez pas besoin de configurer de clé.
+            </div>
+
+            <h3>Options intégrées au navigateur à prendre en charge</h3>
+            <p>SSN prend déjà en charge le mode système/navigateur <code>speechSynthesis</code>, Kokoro, Piper, Kitten et eSpeak intégrés. Les ajouts futurs les plus utiles côté navigateur seraient un sélecteur de périphérique de sortie audio lorsque <code>setSinkId</code> est disponible, davantage de voix Piper et un circuit dédié de lecture progressive en streaming pour les serveurs capables de diffuser des segments audio.</p>
+        </div>
+
+        <!-- OBS AUDIO CAPTURE -->
+        <h2 id="obs">Acheminer l'audio vers OBS</h2>
+        <div class="card">
+            <p>La méthode de capture de l'audio de synthèse vocale dans OBS dépend de votre façon d'exécuter Social Stream Ninja.</p>
+
+            <h3>Méthode 1 — Source navigateur OBS <span class="badge green">Recommandé</span></h3>
+            <p>C'est la méthode la plus simple et elle fonctionne pour <strong>tous les fournisseurs de synthèse vocale</strong> (intégré et serveur auto-hébergé).</p>
+
+            <div class="step"><span class="step-number">1</span><div class="step-content">Dans OBS, ajoutez une nouvelle <strong>Source navigateur</strong></div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">Définissez l'URL sur votre <code>dock.html</code> URL avec paramètres de synthèse vocale</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">Vérifiez <strong>« Contrôler l'audio via OBS (Control audio via OBS) »</strong> dans les paramètres de la source navigateur</div></div>
+            <div class="step"><span class="step-number">4</span><div class="step-content">Cliquez sur <strong>OK</strong>— l'audio de synthèse vocale apparaît désormais comme une source audio OBS que vous pouvez régler ou router</div></div>
+            <div class="step"><span class="step-number">5</span><div class="step-content">Cliquez une fois sur la source navigateur dans l'aperçu pour autoriser la lecture automatique audio</div></div>
+
+            <div class="info">
+                <strong>Pourquoi cela fonctionne :</strong> La synthèse vocale intégrée et celle des serveurs auto-hébergés lisent toutes deux l'audio via le contexte audio du navigateur (et non la synthèse vocale du système). OBS peut capturer directement l'audio du navigateur lorsque « Control audio via OBS » est coché.
+            </div>
+
+            <h3>Méthode 2 — Application de bureau SSN + audio du bureau</h3>
+            <p>Si vous utilisez l'application de bureau autonome Social Stream Ninja (et non une source navigateur OBS) :</p>
+
+            <div class="step"><span class="step-number">1</span><div class="step-content">L'audio de synthèse vocale est lu par l'application sur les haut-parleurs/écouteurs du système</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">Dans OBS, ajoutez une source de type <strong>Capture d'entrée audio</strong> ou <strong>Capture audio du bureau</strong> .</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">Si vous souhaitez isoler la synthèse vocale des autres sons du bureau, utilisez un câble audio virtuel :<br>
+                <ul>
+                    <li><strong>Windows :</strong> <a href="https://vb-audio.com/Cable/" target="_blank">VB-Audio Virtual Cable</a> (gratuit)</li>
+                    <li>Définissez <strong>CABLE Input</strong> comme sortie de l'application SSN dans les paramètres de son Windows</li>
+                    <li>Capture <strong>CABLE Output</strong> dans OBS avec Capture d'entrée audio</li>
+                </ul>
+            </div></div>
+
+            <h3>Liens de routage audio Windows</h3>
+            <div class="link-row">
+                <a href="https://vb-audio.com/Cable/" target="_blank">VB-Audio Virtual Cable</a>
+                <a href="https://vb-audio.com/Voicemeeter/" target="_blank">Voicemeeter</a>
+                <a href="https://github.com/audiorouterdev/audio-router" target="_blank">Audio Router (ancien)</a>
+            </div>
+
+            <h3>Routage par application sous Windows 10</h3>
+            <div class="step"><span class="step-number">1</span><div class="step-content">Ouvrir <strong>Paramètres de son &gt; Préférences de volume des applications et des appareils</strong>.</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">Trouvez le navigateur ou l'application SSN dans la liste des applications.</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">Réglez Output sur <strong>CABLE Input (VB-Audio Virtual Cable)</strong>.</div></div>
+            <div class="step"><span class="step-number">4</span><div class="step-content">Dans OBS, ajoutez <strong>Capture d'entrée audio</strong> et choisissez <strong>CABLE Output</strong>.</div></div>
+
+            <h3>Routage par application sous Windows 11</h3>
+            <div class="step"><span class="step-number">1</span><div class="step-content">Ouvrir <strong>Paramètres &gt; Système &gt; Son &gt; Mélangeur de volume</strong>.</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">Trouvez le navigateur ou l'application SSN.</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">Réglez Output device sur <strong>CABLE Input (VB-Audio Virtual Cable)</strong>.</div></div>
+            <div class="step"><span class="step-number">4</span><div class="step-content">Dans OBS, ajoutez <strong>Capture d'entrée audio</strong> et choisissez <strong>CABLE Output</strong>.</div></div>
+
+            <h3>Logiciel Audio Router</h3>
+            <p><a href="https://github.com/audiorouterdev/audio-router" target="_blank">Audio Router</a> peut diriger une application vers un câble virtuel, mais c'est un ancien logiciel. Préférez le routage par application de Windows lorsqu'il fonctionne.</p>
+            <div class="step"><span class="step-number">1</span><div class="step-content">Installez Audio Router.</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">Dirigez le navigateur ou l'application SSN vers <strong>CABLE Input</strong>.</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">Dans OBS, capturez <strong>CABLE Output</strong>.</div></div>
+
+            <h3>Routage avancé Voicemeeter</h3>
+            <p><a href="https://vb-audio.com/Voicemeeter/" target="_blank">Voicemeeter</a> est préférable pour entendre la synthèse vocale localement, la diriger vers OBS et la séparer de la musique/du son du jeu.</p>
+            <div class="step"><span class="step-number">1</span><div class="step-content">Installez Voicemeeter et définissez-le comme sortie par défaut de Windows.</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">Réglez Hardware Out sur vos haut-parleurs/écouteurs.</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">Dirigez la sortie virtuelle vers OBS comme source de capture d'entrée audio.</div></div>
+
+            <div class="warning">
+                <strong>Synthèse vocale du système (<code>?speech=en-US</code> sans fournisseur) dépend des voix exposées par le navigateur.</strong> OBS peut n'exposer aucune voix ou répertorier des voix sans produire d'audio capturable. Testez séparément la parole et l'enregistrement OBS. Utilisez l'un des fournisseurs ci-dessus (<code>kokoro</code>, <code>piper</code>, etc.) à la place.
+            </div>
+        </div>
+
+        <!-- COMPARISON TABLE -->
+        <h2 id="comparison">Tableau comparatif</h2>
+        <div class="card">
+            <table>
+                <tr>
+                    <th>Option</th>
+                    <th>Configuration</th>
+                    <th>Qualité</th>
+                    <th>Privé</th>
+                    <th>OBS (source navigateur)</th>
+                    <th>GPU nécessaire</th>
+                    <th>Coût</th>
+                </tr>
+                <tr>
+                    <td><strong>Kokoro intégré</strong></td>
+                    <td class="check">Aucun</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                    <td class="check">Oui</td>
+                    <td class="check">Oui</td>
+                    <td class="partial">Non (plus rapide avec)</td>
+                    <td class="check">Gratuit</td>
+                </tr>
+                <tr>
+                    <td><strong>Piper intégré</strong></td>
+                    <td class="check">Aucun</td>
+                    <td>⭐⭐⭐⭐</td>
+                    <td class="check">Oui</td>
+                    <td class="check">Oui</td>
+                    <td class="check">Non</td>
+                    <td class="check">Gratuit</td>
+                </tr>
+                <tr>
+                    <td><strong>Kitten intégré</strong></td>
+                    <td class="check">Aucun</td>
+                    <td>⭐⭐⭐</td>
+                    <td class="check">Oui</td>
+                    <td class="check">Oui</td>
+                    <td class="check">Non</td>
+                    <td class="check">Gratuit</td>
+                </tr>
+                <tr>
+                    <td><strong>eSpeak intégré</strong></td>
+                    <td class="check">Aucun</td>
+                    <td>⭐⭐</td>
+                    <td class="check">Oui</td>
+                    <td class="check">Oui</td>
+                    <td class="check">Non</td>
+                    <td class="check">Gratuit</td>
+                </tr>
+                <tr>
+                    <td><strong>Kokoro-FastAPI</strong></td>
+                    <td class="partial">Docker</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                    <td class="check">Oui</td>
+                    <td class="check">Oui</td>
+                    <td class="partial">Non (facultatif)</td>
+                    <td class="check">Gratuit</td>
+                </tr>
+                <tr>
+                    <td><strong>openedai-speech</strong></td>
+                    <td class="partial">Docker</td>
+                    <td>⭐⭐⭐⭐</td>
+                    <td class="check">Oui</td>
+                    <td class="check">Oui</td>
+                    <td class="check">Non</td>
+                    <td class="check">Gratuit</td>
+                </tr>
+                <tr>
+                    <td>ElevenLabs</td>
+                    <td class="check">Clé API</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                    <td class="cross">Non</td>
+                    <td class="check">Oui</td>
+                    <td class="check">Non</td>
+                    <td class="partial">Offres payantes</td>
+                </tr>
+                <tr>
+                    <td>Synthèse vocale système</td>
+                    <td class="check">Aucun</td>
+                    <td>⭐⭐</td>
+                    <td class="check">Oui</td>
+                    <td class="cross">Non*</td>
+                    <td class="check">Non</td>
+                    <td class="check">Gratuit</td>
+                </tr>
+            </table>
+            <p style="font-size:0.9em; color: var(--text-light);">* La synthèse vocale du système nécessite un routage par câble audio virtuel pour la capture OBS.</p>
+        </div>
+
+        <!-- TROUBLESHOOTING -->
+        <h2 id="troubleshooting">Dépannage</h2>
+        <div class="card">
+            <figure class="guide-screenshot">
+                <img src="../../docs/images/local-tts/tts-troubleshooting-checklist.png" alt="Liste de vérifications illustrée pour dépanner la synthèse vocale locale">
+                <figcaption>Lorsque la synthèse vocale fonctionne à un endroit mais pas à un autre, vérifiez dans cet ordre la machine, le point de terminaison, la voix, l'autorisation du navigateur et la capture audio OBS.</figcaption>
+            </figure>
+
+            <h3>Le test dans l'application SSN fonctionne, mais OBS n'a pas de son</h3>
+            <p>Le test de l'application prouve uniquement qu'elle peut atteindre le serveur. La source navigateur OBS doit encore atteindre le point de terminaison et lire l'audio.</p>
+            <ul>
+                <li>Si OBS et le serveur de synthèse vocale sont sur des ordinateurs différents, remplacez <code>127.0.0.1</code> par l'adresse IP locale de l'ordinateur du serveur de synthèse vocale.</li>
+                <li>Vérifiez que la source navigateur OBS a <strong>Contrôler l’audio via OBS</strong> coché.</li>
+                <li>Essayez la passerelle locale de synthèse vocale SSN sur l'ordinateur OBS si le navigateur bloque la requête.</li>
+            </ul>
+
+            <h3>Seule la première lettre ou les premiers mots sont lus</h3>
+            <ul>
+                <li>Vérifiez dans l'URL OBS réellement utilisée la présence de <code>ttsquick</code>. Cette option raccourcit volontairement le texte prononcé.</li>
+                <li>Si vous voyez <code>&amp;ttsquick=14</code> ou un autre petit nombre, retirez-le et actualisez la source navigateur OBS.</li>
+                <li>Si vous utilisez <code>typewriter=</code>, retirez-le temporairement pendant les tests. La synthèse vocale utilise normalement le message d'origine, mais retirer les effets visuels permet d'écarter rapidement les problèmes de synchronisation.</li>
+            </ul>
+
+            <h3>Le serveur local ne répond pas</h3>
+            <ul>
+                <li>Vérifiez que Docker fonctionne et que le conteneur est toujours démarré.</li>
+                <li>Sur l'ordinateur du serveur de synthèse vocale, ouvrez <code>http://127.0.0.1:8880/web/</code> pour Kokoro-FastAPI, ou le port correspondant de votre serveur.</li>
+                <li>Depuis l'ordinateur OBS, ouvrez <code>http://SERVER_LAN_IP:8880/web/</code>. Si cela ne charge pas, OBS ne pourra pas non plus utiliser ce serveur.</li>
+                <li>Vérifiez le pare-feu de l'ordinateur serveur si l'adresse IP locale ne charge pas.</li>
+            </ul>
+
+            <h3>CORS ou réseau local bloqué</h3>
+            <p>Si le navigateur indique que la requête est bloquée par CORS, l'accès au réseau local/privé ou un échec de récupération, le serveur de synthèse vocale peut ne jamais recevoir la requête.</p>
+            <ul>
+                <li>Exécutez <code>npm run local-tts-bridge</code> sur l'ordinateur OBS et dirigez SSN vers <code>http://127.0.0.1:8124/v1/audio/speech</code>.</li>
+                <li>Si vous chargez la page du Dock bêta hébergée, les points de terminaison HTTP locaux risquent davantage d'être bloqués par le navigateur. La passerelle ou une fenêtre locale de l'application est généralement plus simple.</li>
+            </ul>
+
+            <h3>Mauvaise voix ou voix introuvable</h3>
+            <ul>
+                <li>Kokoro-FastAPI : essayez <code>af_bella</code>, <code>af_sarah</code>, <code>am_adam</code>, ou une autre voix de l'interface web Kokoro.</li>
+                <li>openedai-speech : des voix telles que <code>nova</code>, <code>echo</code>, et <code>alloy</code> peuvent être valides.</li>
+                <li>Les noms de voix respectent la casse sur certains serveurs.</li>
+            </ul>
+
+            <h3>Le son est audible mais OBS ne le capture pas</h3>
+            <ul>
+                <li>Vérifiez que <strong>Contrôler l’audio via OBS</strong> est coché dans les propriétés de la source navigateur.</li>
+                <li>Observez le mélangeur audio OBS pendant la lecture d'un message de test. Le vumètre de la source navigateur doit bouger.</li>
+                <li>Vérifiez que vous n'utilisez pas uniquement la synthèse vocale du système (<code>?speech=en-US</code> sans <code>&amp;ttsprovider=</code>). La synthèse vocale du système peut nécessiter la capture audio du bureau ou d'un câble virtuel.</li>
+            </ul>
+
+            <h3>Image Docker introuvable</h3>
+            <p>Les étiquettes d'images Docker peuvent changer. Si une commande de ce guide cesse de fonctionner, consultez la page du projet pour connaître l'étiquette actuelle :</p>
+            <ul>
+                <li>Kokoro-FastAPI : <a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">github.com/remsky/Kokoro-FastAPI</a></li>
+                <li>openedai-speech : <a href="https://github.com/matatonic/openedai-speech" target="_blank">github.com/matatonic/openedai-speech</a></li>
+            </ul>
+        </div>
+
+        <div class="info" style="margin-top: 30px;">
+            <strong>Autres options de synthèse vocale :</strong> Pour la synthèse vocale premium cloud (ElevenLabs, Google Cloud, Speechify) et la référence complète des paramètres URL, consultez le <a href="tts.html">Guide des voix de synthèse vocale</a>.
+        </div>
+
+        <footer>
+            <p>Social Stream Ninja — Guide de la synthèse vocale IA locale | <a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub</a> &nbsp;|&nbsp; <a href="tts.html">Guide des voix de synthèse vocale</a> &nbsp;|&nbsp; <a href="guides.html">Tous les guides</a></p>
+        </footer>
+    </div>
+
+</body>
+</html>

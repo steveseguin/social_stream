@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ar" data-site-root="../../" data-site-language="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ar/docs/tts-setup-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ar_AR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ar/docs/tts-setup-guide.html">
+    <meta property="og:title" content="دليل إعداد تحويل النص إلى كلام - Social Stream Ninja">
+    <meta property="og:description" content="دليل إعداد بلغة واضحة لتحويل النص إلى كلام في Social Stream Ninja وصوت OBS وأصوات المتصفح والأصوات المحلية وأوضاع خادم تحويل النص إلى كلام.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="شعار Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ar/docs/tts-setup-guide.html">
+    <meta name="twitter:title" content="دليل إعداد تحويل النص إلى كلام - Social Stream Ninja">
+    <meta name="twitter:description" content="دليل إعداد بلغة واضحة لتحويل النص إلى كلام في Social Stream Ninja وصوت OBS وأصوات المتصفح والأصوات المحلية وأوضاع خادم تحويل النص إلى كلام.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="شعار Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل إعداد تحويل النص إلى كلام - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <style>
+        .tts-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+        .tts-preview { border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.6rem; min-width: 0; }
+        .tts-preview h3 { margin-top: 0; }
+        .tts-preview audio { width: 100%; margin: .8rem 0; }
+        .tts-preview code { overflow-wrap: anywhere; }
+        .guide-card [id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 52rem; }
+        @media (max-width: 700px) { .tts-preview-grid { grid-template-columns: 1fr; } }
+    </style>
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="دليل إعداد بلغة واضحة لتحويل النص إلى كلام في Social Stream Ninja وصوت OBS وأصوات المتصفح والأصوات المحلية وأوضاع خادم تحويل النص إلى كلام.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ar">
+<script id="ssn-site-language" type="application/json">{"language":"ar","page":"docs/tts-setup-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"التبديل إلى السمة الفاتحة","Switch to dark theme":"التبديل إلى السمة الداكنة","Light mode":"الوضع الفاتح","Dark mode":"الوضع الداكن","Open navigation menu":"فتح قائمة التنقل","Close navigation menu":"إغلاق قائمة التنقل","Copy this document as Markdown to the clipboard":"نسخ هذا المستند بصيغة Markdown إلى الحافظة","Copy Markdown":"نسخ Markdown","Copying…":"جارٍ النسخ…","Markdown copied":"تم نسخ Markdown","Copy failed":"تعذّر النسخ","Copy comprehensive Markdown for an AI assistant":"نسخ Markdown شامل لمساعد ذكاء اصطناعي","Copy this documentation page as Markdown for an AI assistant":"نسخ صفحة التوثيق هذه بصيغة Markdown لمساعد ذكاء اصطناعي"},"strings":{"(Node.js required). Run it on the OBS computer.":"(يتطلب Node.js). شغّله على حاسوب OBS.","(or":"(أو","), optional":")، واختيارياً",", expand":"، وسّع",", optional":"، والحقل الاختياري",", or":"، أو",", set that source to":"، اضبط ذلك المصدر على",", then a voice.":"، ثم صوتًا.",". Bigger download, more memory.":". تنزيل أكبر واستخدام ذاكرة أعلى.",". Copy the voice's model ID, not its name or page link. Leave it blank for the default voice.":". انسخ معرّف نموذج الصوت، لا اسمه أو رابط صفحته. اتركه فارغاً للصوت الافتراضي.",". Fish Audio decides what's free and its fair-use terms. Paid models need account credit. SSN never switches to a paid model if a free request fails. Speed goes from 0.5 to 2. Fish Audio detects the language. Your chat text is sent to Fish Audio.":". تحدد Fish Audio ما هو مجاني وشروط الاستخدام العادل. تحتاج النماذج المدفوعة إلى رصيد. لا ينتقل SSN إلى نموذج مدفوع إذا فشل طلب مجاني. السرعة من 0.5 إلى 2، وتكتشف Fish Audio اللغة. يُرسل نص الدردشة إليها.",". Leave it running.":". أبقِه قيد التشغيل.",". Leave out":". احذف",". Pick":". اختر",". Piper has Spain, Mexico, Brazil and Portugal voices. Kokoro has three Spanish and three Brazilian Portuguese voices.":". يوفر Piper أصواتاً لإسبانيا والمكسيك والبرازيل والبرتغال. يوفر Kokoro ثلاثة أصوات إسبانية وثلاثة برتغالية برازيلية.",". Plays each part as it's ready. Slow PCs may pause between parts.":". يشغّل كل جزء عند جهوزه. قد تتوقف الحواسيب البطيئة بين الأجزاء.",". Streaming or FP32 turns on background generation automatically.":". يفعّل البث المتتابع أو FP32 التوليد في الخلفية تلقائياً.",". These options make speech in the background so the page stays smooth.":". تولّد هذه الخيارات الكلام في الخلفية لتبقى الصفحة سلسة.",". Waits for the whole message first.":". ينتظر اكتمال الرسالة أولاً.","A ChatGPT subscription doesn't include API credit.":"اشتراك ChatGPT لا يتضمن رصيد API.","A quick link to try:":"رابط سريع للتجربة:","API Key":"مفتاح API","API billing":"فوترة API","API charges may apply":"قد تُطبّق رسوم API","API terms apply":"تُطبّق شروط API","Account limits and network delay.":"حدود الحساب وتأخر الشبكة.","Actual SSN Custom / Local TTS provider settings":"إعدادات مزود Custom / Local TTS الفعلية في SSN","Actual SSN ElevenLabs provider settings":"إعدادات مزود ElevenLabs الفعلية في SSN","Actual SSN Gemini provider settings":"إعدادات مزود Gemini الفعلية في SSN","Actual SSN Google Cloud provider settings":"إعدادات مزود Google Cloud الفعلية في SSN","Actual SSN Kitten provider settings":"إعدادات مزود Kitten الفعلية في SSN","Actual SSN Kokoro provider settings":"إعدادات مزود Kokoro الفعلية في SSN","Actual SSN OpenAI provider settings":"إعدادات مزود OpenAI الفعلية في SSN","Actual SSN Piper provider settings":"إعدادات مزود Piper الفعلية في SSN","Actual SSN Speechify provider settings":"إعدادات مزود Speechify الفعلية في SSN","Actual SSN System TTS provider settings":"إعدادات مزود System TTS الفعلية في SSN","Actual SSN eSpeak provider settings":"إعدادات مزود eSpeak الفعلية في SSN","Actual popup: Message: Text to Speech, with Enable TTS in dock switched on":"النافذة المنبثقة الفعلية: Message — Text to Speech مع تفعيل Enable TTS in dock","Actual popup: Piper TTS selected, with English US Female HFC Medium voice":"النافذة المنبثقة الفعلية: اختيار Piper TTS بصوت English US Female HFC Medium","Adam (American Male):":"Adam (ذكر أمريكي) —","Add a":"أضف","Advanced Audio Properties":"خصائص الصوت المتقدمة (Advanced Audio Properties)","Alex (Brazilian Portuguese):":"Alex (برتغالية برازيلية):","Alex (Spanish):":"Alex (إسبانية):","Alice (British Female):":"Alice (أنثى بريطانية) —","All four are free and run on your computer. Press play to compare.":"الأربعة مجانية وتعمل على حاسوبك. اضغط التشغيل للمقارنة.","Alloy (American Female):":"Alloy (أنثى أمريكية) —","An OBS Custom Browser Dock is a control panel, not a scene source. For Featured Chat, turn on TTS in that overlay's own options and copy its link.":"Custom Browser Dock في OBS لوحة تحكم، وليس مصدراً في المشهد. لـ Featured Chat، فعّل TTS من خيارات التراكب نفسه وانسخ رابطه.","Aoede (American Female):":"Aoede (أنثى أمريكية) —","Automatic":"تلقائي (Automatic)","Avoid gaps":"تجنب الفواصل","Background generation":"التوليد في الخلفية","Background processor":"معالج الخلفية","Bella (American Female):":"Bella (أنثى أمريكية) —","Bella, US English, female. Most natural, but slower on CPU.":"Bella، إنجليزية أمريكية، أنثى. الأكثر طبيعية، لكنها أبطأ على المعالج.","Best Kokoro quality":"أفضل جودة Kokoro","Billing and quotas apply":"تُطبّق الفوترة والحصص","Blue switch = chat reading is on.":"المفتاح الأزرق = قراءة الدردشة مفعلة.","Brazilian Portuguese (Edresson) - Low:":"البرتغالية البرازيلية (Edresson) - جودة منخفضة —","Brazilian Portuguese (Faber) - Medium:":"البرتغالية البرازيلية (Faber) - جودة متوسطة —","Bridge URL":"عنوان الجسر","Browser Source":"مصدر المتصفح","CPU":"المعالج CPU","Check mute and the recording tracks in OBS. Don't capture the monitoring output a second time. See the":"تحقق من الكتم ومسارات التسجيل في OBS. لا تلتقط خرج المراقبة مرة ثانية. راجع","Check the dock shows chat. Then check the TTS switch, provider and filters. Use a freshly copied link. Let the first voice download finish.":"تأكد من أن Dock يعرض الدردشة، ثم افحص مفتاح TTS والمزود والمرشحات. استخدم رابطاً منسوخاً حديثاً ودع تنزيل الصوت الأول يكتمل.","Check your Gemini limits":"تحقق من حدود Gemini","Click":"انقر على","Commands & API":"الأوامر وAPI","Control audio via OBS":"التحكم بالصوت عبر OBS (Control audio via OBS)","Cost":"التكلفة","Custom / Local":"مخصص / محلي","Custom / Local TTS":"تحويل نص إلى كلام مخصص / محلي","Daniel (British Male):":"Daniel (ذكر بريطاني) —","DaveFX":"DaveFX","Do this":"افعل هذا","Does my chat platform support TTS?":"هل تدعم منصة الدردشة لدي تحويل النص إلى كلام؟","Dora":"Dora","Dora (Brazilian Portuguese):":"Dora (برتغالية برازيلية):","Dora (Spanish):":"Dora (إسبانية):","Download":"تنزيل","Download Kitten sample":"تنزيل عينة Kitten","Download Kokoro sample":"تنزيل عينة Kokoro","Download Piper sample":"تنزيل عينة Piper","Download eSpeak sample":"تنزيل عينة eSpeak","Download sample":"تنزيل العينة","Download sizes and OBS test notes":"أحجام التنزيل وملاحظات اختبار OBS","Echo (American Male):":"Echo (ذكر أمريكي) —","Edit my TTS link by hand, or see every option":"تعديل رابط TTS يدوياً أو عرض كل الخيارات","Eight English voices: male and female versions of voices 2, 3, 4 and 5. The sample uses Voice 4 (Female).":"ثمانية أصوات إنجليزية: نسخ ذكورية وأنثوية للأصوات 2 و3 و4 و5. تستخدم العينة Voice 4 (Female).","ElevenLabs":"ElevenLabs","ElevenLabs reference":"مرجع ElevenLabs","Emma (British Female):":"Emma (أنثى بريطانية) —","English US Female (HFC) - Medium:":"أنثى إنجليزية أمريكية (HFC) - جودة متوسطة —","English only. Bundled model is about 24 MB.":"الإنجليزية فقط. النموذج المرفق نحو 24 MB.","English. Robotic, but tiny and fast.":"إنجليزية. صوت آلي لكنه صغير وسريع.","English:":"الإنجليزية —","Enter a Google Cloud TTS API key, the exact voice name, and its matching language.":"أدخل مفتاح Google Cloud TTS API واسم الصوت الدقيق واللغة المطابقة.","Enter the API key and voice ID from your Speechify API account.":"أدخل مفتاح API ومعرّف الصوت من حساب Speechify API.","Enter your API key. Then click":"أدخل مفتاح API ثم انقر","Eric (American Male):":"Eric (ذكر أمريكي) —","Every message is read twice":"تُقرأ كل رسالة مرتين","Faber":"Faber","Fable (British Male):":"Fable (ذكر بريطاني) —","Faster Kokoro and Kitten":"Kokoro وKitten أسرع","Features":"الميزات","Fenrir (American Male):":"Fenrir (ذكر أمريكي) —","First time?":"تستخدمها لأول مرة؟","Fish Audio":"Fish Audio","Fish Audio API key":"مفتاح Fish Audio API","Fish Audio API reference":"مرجع Fish Audio API","Fish Audio blocks direct requests from web pages, so OBS needs SSN's":"تمنع Fish Audio الطلبات المباشرة من صفحات الويب، لذا يحتاج OBS إلى","Fix GPU problems (Kokoro)":"حل مشكلات GPU في Kokoro","Fix problems":"حل المشكلات","For OBS: run the local bridge":"لـ OBS: شغّل الجسر المحلي","Free":"مجاني","Free model announcement and terms":"إعلان النموذج المجاني وشروطه","Free model with your own key; voice IDs.":"نموذج مجاني بمفتاحك الخاص؛ معرّفات أصوات.","Free tier set by Fish Audio":"تحدد Fish Audio الفئة المجانية","Free, no key":"مجاني دون مفتاح","Full quality":"الجودة الكاملة","Gemini":"Gemini","Generation and playback":"التوليد والتشغيل","George (British Male):":"George (ذكر بريطاني) —","Go further":"المزيد","Go here":"اذهب هنا","Good for":"مناسب لـ","Google Cloud":"Google Cloud","Guides":"الأدلة","Have your chat read aloud on stream. Free, with no account or API key.":"دع الدردشة تُقرأ بصوت على البث. مجاناً دون حساب أو مفتاح API.","Hear speech sooner":"سماع الكلام أسرع","Hear the free voices":"استمع إلى الأصوات المجانية","Hear the voices":"استمع إلى الأصوات","Hearing every message twice?":"تسمع كل رسالة مرتين؟","Heart (American Female):":"Heart (أنثى أمريكية) —","Heavier on the CPU. First speech can be slow. Faster with a supported GPU.":"أثقل على المعالج وقد يتأخر أول كلام. أسرع ببطاقة رسومية مدعومة.","Hire":"الاستعانة بخدمات المطوّر","Home":"الرئيسية","How these samples were made":"كيف أُعدت هذه العينات","I want an OBS dock or Featured Chat to speak instead":"أريد أن يتكلم Dock في OBS أو Featured Chat بدلاً منه","I want to":"أريد أن","I want to…":"أريد أن…","In OBS":"في OBS","In its properties, turn on":"في خصائصه، فعّل","In the Fish Audio panel, set":"في لوحة Fish Audio، اضبط","In the SSN folder, run":"في مجلد SSN، شغّل","Inspiration":"أفكار ملهمة","Isabella (British Female):":"Isabella (أنثى بريطانية) —","Jessica (American Female):":"Jessica (أنثى أمريكية) —","Keep in mind":"تذكّر","Kitten":"Kitten","Kitten 0.8":"Kitten 0.8","Kitten 0.8 runs on the CPU, English only. Each model downloads on first use. Each browser or OBS keeps its own copy. NeuroSync gets the complete audio file either way. Old links keep working as before unless you change these options.":"يعمل Kitten 0.8 على المعالج ويدعم الإنجليزية فقط. يُنزّل كل نموذج عند أول استخدام. يحتفظ كل متصفح أو OBS بنسخته الخاصة. يتلقى NeuroSync الملف الصوتي كاملاً في الحالتين. تستمر الروابط القديمة كما كانت ما لم تغير هذه الخيارات.","Kitten voice sample":"عينة صوت Kitten","Kitten:":"Kitten:","Kokoro":"Kokoro","Kokoro - Portuguese (Brazil)":"Kokoro - البرتغالية (البرازيل)","Kokoro - Portuguese (Brazil) sample":"عينة Kokoro - البرتغالية (البرازيل)","Kokoro - Spanish":"Kokoro - الإسبانية","Kokoro - Spanish sample":"عينة Kokoro - الإسبانية","Kokoro voice sample":"عينة صوت Kokoro","Kokoro:":"Kokoro:","Kore (American Female):":"Kore (أنثى أمريكية) —","Lewis (British Male):":"Lewis (ذكر بريطاني) —","Liam (American Male):":"Liam (ذكر أمريكي) —","Lily (British Female):":"Lily (أنثى بريطانية) —","Link settings for Fish Audio":"إعدادات الرابط لـ Fish Audio","List My Available Voices":"عرض أصواتي المتاحة","Local AI TTS guide":"دليل TTS بالذكاء الاصطناعي المحلي","Main chat overlay & control dock":"تراكب الدردشة الرئيسي ولوحة التحكم","Main navigation":"التنقل الرئيسي","Make a short test recording and play it back.":"سجل اختباراً قصيراً وشغّله.","Message – Text to Speech":"Message – Text to Speech","Meter moves, but the recording is silent":"يتحرك العداد لكن التسجيل صامت","Michael (American Male):":"Michael (ذكر أمريكي) —","Monitor and Output":"المراقبة والإخراج (Monitor and Output)","More detail and link settings":"تفاصيل إضافية وإعدادات الرابط","More fixes:":"حلول إضافية:","More than one page is speaking. Keep TTS on in one place only.":"أكثر من صفحة تتكلم. أبقِ TTS مفعلاً في مكان واحد فقط.","Most setup. See the":"يحتاج أكبر قدر من الإعداد. راجع","Name reading was off. The clips skip loading time.":"كانت قراءة الاسم معطلة. المقاطع لا تتضمن وقت التحميل.","Named voices, model and format controls.":"أصوات مسماة وتحكم بالنموذج والصيغة.","Named voices; language, rate and pitch.":"أصوات مسماة؛ لغة وسرعة وطبقة صوت.","Natural voices; English, Spanish, Portuguese.":"أصوات طبيعية؛ إنجليزية وإسبانية وبرتغالية.","Nicole (American Female):":"Nicole (أنثى أمريكية) —","No chat connected yet?":"لم توصل الدردشة بعد؟","No speech at all":"لا صوت مطلقاً","Not every voice supports every control. Cloud TTS API must be enabled.":"لا يدعم كل صوت جميع عناصر التحكم. يجب تفعيل Cloud TTS API.","Nova (American Female):":"Nova (أنثى أمريكية) —","OBS audio guide":"دليل صوت OBS","OBS has its own browser and voice list. System TTS often fails there. Switch to Piper, Kokoro, Kitten or eSpeak. A virtual audio cable can't fix missing speech.":"لدى OBS متصفحه وقائمة أصواته الخاصة، وغالباً لا يعمل System TTS فيه. انتقل إلى Piper أو Kokoro أو Kitten أو eSpeak. لا يصلح كابل صوت افتراضي غياب توليد الكلام.","OBS needs SSN's local bridge.":"يحتاج OBS إلى جسر SSN المحلي.","Often silent in OBS. Some voices need internet.":"غالباً صامت في OBS. تحتاج بعض الأصوات إلى الإنترنت.","On that PC, System TTS listed five voices but made no sound in the OBS recording. Your PC may differ, so always test your own link. Cloud voices weren't tested (no paid accounts).":"على ذلك الحاسوب، عرض System TTS خمسة أصوات لكنه لم يُنتج صوتاً في تسجيل OBS. قد يختلف حاسوبك؛ اختبر رابطك دائماً. لم تُختبر الأصوات السحابية لعدم وجود حسابات مدفوعة.","On this page":"في هذه الصفحة","Only one page should read chat. Turn TTS off everywhere else.":"يجب أن تقرأ صفحة واحدة الدردشة. عطّل TTS في كل مكان آخر.","Onyx (American Male):":"Onyx (ذكر أمريكي) —","Open navigation menu":"فتح قائمة التنقل","Open the":"افتح","OpenAI":"OpenAI","Optional: paste a":"اختياري: الصق","Overlay Gallery":"معرض التراكبات","Paste the bridge token shown in the terminal into the":"الصق رمز الجسر الظاهر في الطرفية في","Paste your":"الصق","Pick":"اختر","Pick a":"اختر","Pick a TTS model and voice. Style instructions change how it's read. This uses the Gemini API, not Google Cloud TTS.":"اختر نموذج TTS وصوتاً. تغير تعليمات الأسلوب طريقة القراءة. يستخدم هذا Gemini API وليس Google Cloud TTS.","Pick a language above the voice list in SSN, then press":"اختر لغة فوق قائمة الأصوات في SSN، ثم اضغط","Pick a language voice. You can change the speaking rate. It sounds robotic by design.":"اختر صوتاً للغة. يمكنك تغيير سرعة الكلام. صوته آلي عمداً.","Pick a provider":"اختر مزوداً","Pick a voice and model, and enter an API key. A ChatGPT subscription doesn't give you API credit. Keep the default endpoint.":"اختر صوتاً ونموذجاً وأدخل مفتاح API. لا يمنح اشتراك ChatGPT رصيد API. احتفظ بعنوان الاتصال الافتراضي.","Pick a voice that matches your language. Changing the language alone doesn't change the voice. The sample uses HFC medium.":"اختر صوتاً يطابق لغتك. تغيير اللغة وحدها لا يغير الصوت. تستخدم العينة HFC medium.","Pick a voice. Use the language filter to find one, and":"اختر صوتاً. استخدم مرشح اللغة للعثور عليه، و","Pick voices by ID; stability and style controls.":"اختر الأصوات بالمعرّف؛ تحكم بالثبات والأسلوب.","Piper":"Piper","Piper - Portuguese (Brazil)":"Piper - البرتغالية (البرازيل)","Piper - Portuguese (Brazil) sample":"عينة Piper - البرتغالية (البرازيل)","Piper - Spanish (Spain)":"Piper - الإسبانية (إسبانيا)","Piper - Spanish (Spain) sample":"عينة Piper - الإسبانية (إسبانيا)","Piper TTS":"Piper TTS","Piper downloads its voice on first use. Give it a moment.":"ينزّل Piper الصوت في أول استخدام؛ امنحه بعض الوقت.","Piper is free. No account or API key.":"Piper مجاني بلا حساب أو مفتاح API.","Piper is the lighter choice. If Kokoro falls behind the chat, switch to Piper.":"Piper الخيار الأخف. إذا تأخر Kokoro عن الدردشة، انتقل إلى Piper.","Piper voice sample":"عينة صوت Piper","Piper, Kokoro, Kitten and eSpeak passed OBS Browser Source recording tests. Cloud and custom voices also play through the page, but weren't tested with live accounts. Test System TTS on its own, even if it lists voices.":"اجتازت Piper وKokoro وKitten وeSpeak اختبارات تسجيل Browser Source في OBS. تعمل الأصوات السحابية والمخصصة عبر الصفحة أيضاً، لكنها لم تُختبر بحسابات حية. اختبر System TTS منفرداً حتى إن عرض أصواتاً.","Plain-English setup guide for Social Stream Ninja text-to-speech, OBS audio, browser voices, local voices, and TTS server modes.":"دليل إعداد بلغة واضحة لتحويل النص إلى كلام في Social Stream Ninja وصوت OBS وأصوات المتصفح والأصوات المحلية وأوضاع خادم تحويل النص إلى كلام.","Play complete message":"تشغيل الرسالة كاملة","Play it in OBS":"تشغيله في OBS","Portuguese Brazil:":"البرتغالية البرازيلية —","Portuguese Portugal (Tugao) - Medium:":"البرتغالية الأوروبية (Tugao) - جودة متوسطة —","Portuguese Portugal:":"البرتغالية الأوروبية —","Press":"اضغط","Preview models and quotas can change.":"قد تتغير نماذج المعاينة والحصص.","Problem":"المشكلة","Processing":"المعالجة","Provider":"المزود","Provider settings":"إعدادات المزود","Puck (American Male):":"Puck (ذكر أمريكي) —","Quality varies by voice. HFC medium is about 63 MB.":"تختلف الجودة بحسب الصوت. HFC medium نحو 63 MB.","Real screenshots from the desktop app, with a fresh profile (key fields left empty). Open a provider to see its settings. Click a screenshot to enlarge it.":"لقطات فعلية من تطبيق سطح المكتب بملف تعريف جديد وحقول المفاتيح فارغة. افتح مزوداً لرؤية إعداداته. انقر اللقطة لتكبيرها.","River (American Female):":"River (أنثى أمريكية) —","Run my own voice server, or clone a voice":"تشغيل خادم أصوات خاص أو استنساخ صوت","SSN extension popup":"النافذة المنبثقة لإضافة SSN","Santa (American Male):":"Santa (ذكر أمريكي) —","Santa (Brazilian Portuguese):":"Santa (برتغالية برازيلية):","Santa (Spanish):":"Santa (إسبانية):","Sarah (American Female):":"Sarah (أنثى أمريكية) —","Scroll to":"مرّر إلى","Send a chat message. The source's audio meter should move.":"أرسل رسالة دردشة. ينبغي أن يتحرك عداد الصوت للمصدر.","Set":"اضبط","Set it up":"إعداده","Set it up in 5 steps":"الإعداد في 5 خطوات","Set the":"اضبط","Set up Speechify":"إعداد Speechify","Settings and voices":"الإعدادات والأصوات","Sizes are model files only, not memory use. Free voices run on the computer playing the dock or overlay. First use is slower. OBS keeps its own download cache, separate from Chrome.":"الأحجام لملفات النماذج فقط وليست استهلاك الذاكرة. تعمل الأصوات المجانية على الحاسوب الذي يشغّل Dock أو التراكب. أول استخدام أبطأ. يحتفظ OBS بذاكرة تنزيل مؤقتة مستقلة عن Chrome.","Sky (American Female):":"Sky (أنثى أمريكية) —","Small English model, eight voices.":"نموذج إنجليزي صغير بثمانية أصوات.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"شعار Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. ترخيص GPLv3.0.","Sounds robotic on purpose.":"صوت آلي عن قصد.","Sources and Settings":"المصادر والإعدادات","Spanish Mexico (Ald) - Medium:":"الإسبانية المكسيكية (Ald) - جودة متوسطة —","Spanish Spain (DaveFX) - Medium:":"الإسبانية الأوروبية (DaveFX) - جودة متوسطة —","Spanish and Portuguese samples":"عينات بالإسبانية والبرتغالية","Spanish:":"الإسبانية —","Speak Text":"نطق النص (Speak Text)","Speech falls behind chat":"الكلام يتأخر عن الدردشة","Speechify":"Speechify","Speechify guide":"دليل Speechify","Speechify setup":"إعداد Speechify","Start as speech arrives":"التشغيل فور وصول الصوت","Start here":"ابدأ هنا","Start with Piper.":"ابدأ بـ Piper.","Step-by-step Speechify guide":"دليل Speechify خطوة بخطوة","Support":"الدعم","Supported Sites":"المواقع المدعومة","Switch from Kokoro to Piper, or try eSpeak.":"انتقل من Kokoro إلى Piper أو جرّب eSpeak.","Switch theme":"تبديل السمة","System TTS":"تحويل النص إلى كلام في النظام","TTS Setup Guide":"دليل إعداد تحويل النص إلى كلام","TTS Setup Guide - Social Stream Ninja":"دليل إعداد تحويل النص إلى كلام - Social Stream Ninja","TTS reference":"مرجع TTS","TTS reference: provider options":"مرجع TTS: خيارات المزود","Test":"اختبار","Test TTS":"اختبار TTS","Test the voice, then add the overlay link to OBS. Turn on":"اختبر الصوت ثم أضف رابط التراكب إلى OBS. فعّل","Tested September 7, 2026 in OBS 32.2.2 on Windows 11. A real chat message reached the dock, spoke, moved the Browser Source meter, and showed up in a recording. Kokoro took noticeably longer to start on CPU.":"اختُبر في 7 سبتمبر 2026 على OBS 32.2.2 وWindows 11. وصلت رسالة دردشة حقيقية إلى Dock ونُطقت وحركت عداد Browser Source وظهرت في تسجيل. استغرق Kokoro وقتاً أطول ملحوظاً للبدء على المعالج.","Text-to-Speech Service Provider":"مزوّد خدمة تحويل النص إلى كلام","Text-to-speech incoming messages":"قراءة الرسائل الواردة بصوت","The English samples read:":"تقرأ العينات الإنجليزية:","The default model is":"النموذج الافتراضي هو","The most natural free voices; English, Spanish, Brazilian Portuguese.":"الأصوات المجانية الأكثر طبيعية؛ إنجليزية وإسبانية وبرتغالية برازيلية.","The token changes each time the bridge restarts.":"يتغير الرمز مع كل إعادة تشغيل للجسر.","The voice list depends on your browser or app and the voices installed. There's no fixed SSN list. This fresh profile showed an empty language list.":"تعتمد قائمة الأصوات على المتصفح أو التطبيق والأصوات المثبتة. لا توجد قائمة ثابتة لدى SSN. عرض ملف التعريف الجديد هذا قائمة لغات فارغة.","This reuses the OpenAI settings, so the heading still says OpenAI. Enter your server's address and a voice and model it supports. Whether you need a key depends on your server. See the":"يعيد هذا استخدام إعدادات OpenAI، لذا يبقى العنوان OpenAI. أدخل عنوان خادمك وصوتاً ونموذجاً يدعمهما. تعتمد الحاجة إلى مفتاح على خادمك. راجع","To keep it the same, set":"للاحتفاظ به ثابتاً، اضبط","Try Kokoro if you like its sound better. Free voices run on your computer. Cloud voices need an account and API key, and your chat text is sent to that company.":"جرّب Kokoro إن فضّلت صوته. تعمل الأصوات المجانية على حاسوبك. تحتاج الأصوات السحابية إلى حساب ومفتاح API وتُرسل الدردشة إلى تلك الشركة.","Try this":"جرّب هذا","Turn it on for Kitten":"تفعيله لـ Kitten","Turn it on for Kokoro":"تفعيله لـ Kokoro","Turn on":"فعّل","US English, female. Light and quick.":"إنجليزية أمريكية، أنثى. خفيف وسريع.","Under":"ضمن","Under Kokoro or Kitten, open":"ضمن Kokoro أو Kitten، افتح","Use Spanish or Portuguese voices in a link":"استخدام أصوات إسبانية أو برتغالية في رابط","Very light, many languages, starts fast.":"خفيف جداً، متعدد اللغات، يبدأ سريعاً.","Voice 2 (Female):":"الصوت 2 (أنثى) —","Voice 2 (Male):":"الصوت 2 (ذكر) —","Voice 3 (Female):":"الصوت 3 (أنثى) —","Voice 3 (Male):":"الصوت 3 (ذكر) —","Voice 4 (Female):":"الصوت 4 (أنثى) —","Voice 4 (Male):":"الصوت 4 (ذكر) —","Voice 4, female. Small English model.":"Voice 4، أنثى. نموذج إنجليزي صغير.","Voice 5 (Female):":"الصوت 5 (أنثى) —","Voice 5 (Male):":"الصوت 5 (ذكر) —","Voice ID":"معرّف الصوت","Voice ID with speed, language and model.":"معرّف صوت مع السرعة واللغة والنموذج.","Voice examples and requirements":"أمثلة الأصوات ومتطلباتها","Voice names and link values":"أسماء الأصوات وقيم الروابط","Voice names and supported controls":"أسماء الأصوات وعناصر التحكم المدعومة","Voice styles and written delivery instructions.":"أنماط أصوات وتعليمات إلقاء مكتوبة.","Voices already on your browser or PC.":"أصوات موجودة بالفعل في متصفحك أو حاسوبك.","Voices depend on your account.":"تعتمد الأصوات على حسابك.","Want to hear it yourself?":"تريد سماعه بنفسك؟","Welcome to the stream! Thanks for joining us. Which game should we play next?":"مرحبًا بكم في البث! شكرًا لانضمامكم إلينا. أي لعبة ينبغي أن نلعب بعد ذلك؟","With the bridge, add":"مع الجسر، أضف","Works in Chrome or Edge, not in OBS":"يعمل في Chrome أو Edge، وليس في OBS","Works in the chat dock, featured overlay, TTS page and Flow Actions.":"يعمل في Dock الدردشة وتراكب الرسائل المميزة وصفحة TTS وإجراءات التدفق.","Yes, if SSN gets the chat as text. YouTube, Twitch, TikTok and the rest all work the same way. The platform doesn't need its own TTS.":"نعم، إذا تلقى SSN الدردشة كنص. تعمل YouTube وTwitch وTikTok وغيرها بالطريقة نفسها. لا تحتاج المنصة إلى TTS خاص بها.","Your hardware or hosting":"أجهزتك أو استضافتك","Your own voice server.":"خادم الأصوات الخاص بك.","and paste the link you copied.":"والصق الرابط الذي نسخته.","as the TTS provider.":"كمزود TTS.","beside":"بجوار","copy link":"نسخ الرابط","eSpeak":"eSpeak","eSpeak voice sample":"عينة صوت eSpeak","environment variable to your Fish API key.":"إلى مفتاح Fish API لديك.","field.":"المجال.","first.":"أولاً.","from":"من","if the bridge holds your key. Event Flow's":"إذا كان الجسر يحتفظ بمفتاحك. خيار Event Flow","in the desktop app.":"في تطبيق سطح المكتب.","local bridge":"الجسر المحلي","local server guide":"دليل الخادم المحلي","local server problems":"مشكلات الخادم المحلي","model: Nano (smallest), Micro or Mini.":": Nano (الأصغر) أو Micro أو Mini.","or":"أو","to":"إلى","to a long random secret. Keep links with a token or key private.":"إلى سر عشوائي طويل. احتفظ بالروابط التي تحتوي رمزاً أو مفتاحاً خاصة.","to find a voice ID your account can use.":"للعثور على معرّف صوت يستطيع حسابك استخدامه.","to hear it. The model loads on the page that speaks. Voices: US and UK English, Spanish, Brazilian Portuguese. Too slow? Try Piper.":"لسماعه. يُحمّل النموذج على الصفحة التي تتكلم. الأصوات: إنجليزية أمريكية وبريطانية وإسبانية وبرتغالية برازيلية. بطيء جداً؟ جرّب Piper.","uses a supported GPU if there is one, otherwise the CPU. Automatic quality picks FP16 on compatible GPUs, full precision on other supported GPUs, and the compact model on CPU. If you force GPU and none is available, you'll get an error.":"يستخدم بطاقة رسومية مدعومة إن توفرت وإلا المعالج. تختار الجودة التلقائية FP16 على البطاقات المتوافقة، والدقة الكاملة على البطاقات المدعومة الأخرى، والنموذج المضغوط على المعالج. إذا فرضت GPU دون توفره، يظهر خطأ.","voice override accepts a Fish voice ID when the receiving page uses Fish Audio.":"لتجاوز الصوت يقبل معرّف صوت Fish عندما تستخدم الصفحة المستقبلة Fish Audio."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tts-setup-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="التنقل الرئيسي"><a href="../index.html">الرئيسية</a><a href="features.html">الميزات</a><a href="inspiration.html" class="site-priority-inspiration">أفكار ملهمة</a><a href="download.html">تنزيل</a><a href="guides.html">الأدلة</a><a href="commands.html">الأوامر وAPI</a><a href="supported-sites.html">المواقع المدعومة</a><a href="overlay-gallery.html" class="site-priority-gallery">معرض التراكبات</a><a href="services.html" class="site-priority-hire">الاستعانة بخدمات المطوّر</a><a href="support.html">الدعم</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="العربية"><span aria-hidden="true">🌐 </span><span lang="ar">العربية</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tts-setup-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tts-setup-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tts-setup-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tts-setup-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tts-setup-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tts-setup-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tts-setup-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tts-setup-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tts-setup-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tts-setup-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tts-setup-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tts-setup-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tts-setup-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="tts-setup-guide.html" lang="ar" hreflang="ar" aria-current="true">العربية</a><a class="site-language-link" href="../../tr/docs/tts-setup-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tts-setup-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tts-setup-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="تبديل السمة"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="فتح قائمة التنقل" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>دليل إعداد تحويل النص إلى كلام</h1>
+            <p>دع الدردشة تُقرأ بصوت على البث. مجاناً دون حساب أو مفتاح API.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="في هذه الصفحة">
+                <a href="#setup">إعداده</a>
+                <a href="#obs-voices">تشغيله في OBS</a>
+                <a href="#voice-samples">استمع إلى الأصوات</a>
+                <a href="#voice-chooser">اختر مزوداً</a>
+                <a href="#problems">حل المشكلات</a>
+                <a href="#provider-settings">إعدادات المزود</a>
+                <a href="#more">المزيد</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="setup">الإعداد في 5 خطوات</h2>
+                <p><strong>لم توصل الدردشة بعد؟</strong> <a href="getting-started.html">ابدأ هنا</a> أولاً.</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>افتح <strong>النافذة المنبثقة لإضافة SSN</strong>، أو <strong>المصادر والإعدادات</strong> في تطبيق سطح المكتب.</li>
+                        <li>ضمن <strong>تراكب الدردشة الرئيسي ولوحة التحكم</strong>، وسّع <strong>Message &ndash; Text to Speech</strong>.</li>
+                        <li>فعّل <strong>قراءة الرسائل الواردة بصوت</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <a href="../../docs/images/guides/tts-enable-dock-popup.png"><img src="../../docs/images/guides/tts-enable-dock-popup.png" alt="النافذة المنبثقة الفعلية: Message — Text to Speech مع تفعيل Enable TTS in dock" class="guide-image"></a>
+                        <figcaption>المفتاح الأزرق = قراءة الدردشة مفعلة.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps" start="4">
+                        <li>مرّر إلى <strong>مزوّد خدمة تحويل النص إلى كلام</strong>. اختر <strong>Piper TTS</strong>، ثم صوتًا.</li>
+                        <li>انقر على <strong>نسخ الرابط</strong> بجوار <strong>تراكب الدردشة الرئيسي ولوحة التحكم</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <a href="../../docs/images/guides/tts-select-provider-popup.png"><img src="../../docs/images/guides/tts-select-provider-popup.png" alt="النافذة المنبثقة الفعلية: اختيار Piper TTS بصوت English US Female HFC Medium" class="guide-image" loading="lazy"></a>
+                        <figcaption>Piper مجاني بلا حساب أو مفتاح API.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>تستخدمها لأول مرة؟</strong> ينزّل Piper الصوت في أول استخدام؛ امنحه بعض الوقت.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="obs-voices">تشغيله في OBS</h2>
+                <ol class="guide-steps">
+                    <li>أضف <strong>مصدر المتصفح</strong> والصق الرابط الذي نسخته.</li>
+                    <li>في خصائصه، فعّل <strong>التحكم بالصوت عبر OBS (Control audio via OBS)</strong>.</li>
+                    <li>أرسل رسالة دردشة. ينبغي أن يتحرك عداد الصوت للمصدر.</li>
+                    <li>سجل اختباراً قصيراً وشغّله.</li>
+                </ol>
+                <div class="guide-note"><strong>تريد سماعه بنفسك؟</strong> في OBS <strong>خصائص الصوت المتقدمة (Advanced Audio Properties)</strong>، اضبط ذلك المصدر على <strong>المراقبة والإخراج (Monitor and Output)</strong>.</div>
+                <div class="warning-note"><strong>تسمع كل رسالة مرتين؟</strong> يجب أن تقرأ صفحة واحدة الدردشة. عطّل TTS في كل مكان آخر.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-samples">استمع إلى الأصوات المجانية</h2>
+                <p>الأربعة مجانية وتعمل على حاسوبك. اضغط التشغيل للمقارنة.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper</h3><p>إنجليزية أمريكية، أنثى. خفيف وسريع.<br><code>en_US-hfc_female-medium</code></p><audio controls preload="none" aria-label="عينة صوت Piper"><source src="../../docs/audio/tts/piper-hfc.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-hfc.mp3">تنزيل عينة Piper</a></audio><p><a href="#settings-piper">الإعدادات والأصوات</a></p></div>
+<div class="tts-preview"><h3>Kokoro</h3><p>Bella، إنجليزية أمريكية، أنثى. الأكثر طبيعية، لكنها أبطأ على المعالج.<br><code>af_bella</code></p><audio controls preload="none" aria-label="عينة صوت Kokoro"><source src="../../docs/audio/tts/kokoro-bella.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-bella.mp3">تنزيل عينة Kokoro</a></audio><p><a href="#settings-kokoro">الإعدادات والأصوات</a></p></div>
+<div class="tts-preview"><h3>Kitten</h3><p>Voice 4، أنثى. نموذج إنجليزي صغير.<br><code>expr-voice-4-f</code></p><audio controls preload="none" aria-label="عينة صوت Kitten"><source src="../../docs/audio/tts/kitten-4f.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kitten-4f.mp3">تنزيل عينة Kitten</a></audio><p><a href="#settings-kitten">الإعدادات والأصوات</a></p></div>
+<div class="tts-preview"><h3>eSpeak</h3><p>إنجليزية. صوت آلي لكنه صغير وسريع.<br><code>en</code></p><audio controls preload="none" aria-label="عينة صوت eSpeak"><source src="../../docs/audio/tts/espeak-en.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/espeak-en.mp3">تنزيل عينة eSpeak</a></audio><p><a href="#settings-espeak">الإعدادات والأصوات</a></p></div>
+                </div>
+                <details class="guide-extra"><summary>عينات بالإسبانية والبرتغالية</summary>
+                <p>اختر لغة فوق قائمة الأصوات في SSN، ثم اضغط <strong>اختبار</strong>. يوفر Piper أصواتاً لإسبانيا والمكسيك والبرازيل والبرتغال. يوفر Kokoro ثلاثة أصوات إسبانية وثلاثة برتغالية برازيلية.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper - الإسبانية (إسبانيا)</h3><p>DaveFX</p><audio controls preload="none" aria-label="عينة Piper - الإسبانية (إسبانيا)"><source src="../../docs/audio/tts/piper-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-spanish.mp3">تنزيل العينة</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - الإسبانية</h3><p>Dora</p><audio controls preload="none" aria-label="عينة Kokoro - الإسبانية"><source src="../../docs/audio/tts/kokoro-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-spanish.mp3">تنزيل العينة</a></audio></div>
+<div class="tts-preview"><h3>Piper - البرتغالية (البرازيل)</h3><p>Faber</p><audio controls preload="none" aria-label="عينة Piper - البرتغالية (البرازيل)"><source src="../../docs/audio/tts/piper-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-portuguese.mp3">تنزيل العينة</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - البرتغالية (البرازيل)</h3><p>Dora</p><audio controls preload="none" aria-label="عينة Kokoro - البرتغالية (البرازيل)"><source src="../../docs/audio/tts/kokoro-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-portuguese.mp3">تنزيل العينة</a></audio></div>
+                </div>
+                <p>Piper الخيار الأخف. إذا تأخر Kokoro عن الدردشة، انتقل إلى Piper.</p>
+                </details>
+                <details class="guide-extra"><summary>كيف أُعدت هذه العينات</summary>
+                <p>تقرأ العينات الإنجليزية: <em>مرحبًا بكم في البث! شكرًا لانضمامكم إلينا. أي لعبة ينبغي أن نلعب بعد ذلك؟</em> كانت قراءة الاسم معطلة. المقاطع لا تتضمن وقت التحميل.</p>
+                <p>اختُبر في 7 سبتمبر 2026 على OBS 32.2.2 وWindows 11. وصلت رسالة دردشة حقيقية إلى Dock ونُطقت وحركت عداد Browser Source وظهرت في تسجيل. استغرق Kokoro وقتاً أطول ملحوظاً للبدء على المعالج.</p>
+                <p>على ذلك الحاسوب، عرض System TTS خمسة أصوات لكنه لم يُنتج صوتاً في تسجيل OBS. قد يختلف حاسوبك؛ اختبر رابطك دائماً. لم تُختبر الأصوات السحابية لعدم وجود حسابات مدفوعة.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-chooser">اختر مزوداً</h2>
+                <p><strong>ابدأ بـ Piper.</strong> جرّب Kokoro إن فضّلت صوته. تعمل الأصوات المجانية على حاسوبك. تحتاج الأصوات السحابية إلى حساب ومفتاح API وتُرسل الدردشة إلى تلك الشركة.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>المزود</th><th>مناسب لـ</th><th>تذكّر</th><th>التكلفة</th></tr></thead><tbody>
+<tr><td data-label="المزود"><a href="#settings-piper">Piper</a></td><td data-label="مناسب لـ">أصوات طبيعية؛ إنجليزية وإسبانية وبرتغالية.</td><td data-label="تذكّر">تختلف الجودة بحسب الصوت. HFC medium نحو 63 MB.</td><td data-label="التكلفة">مجاني دون مفتاح</td></tr>
+<tr><td data-label="المزود"><a href="#settings-kokoro">Kokoro</a></td><td data-label="مناسب لـ">الأصوات المجانية الأكثر طبيعية؛ إنجليزية وإسبانية وبرتغالية برازيلية.</td><td data-label="تذكّر">أثقل على المعالج وقد يتأخر أول كلام. أسرع ببطاقة رسومية مدعومة.</td><td data-label="التكلفة">مجاني دون مفتاح</td></tr>
+<tr><td data-label="المزود"><a href="#settings-kitten">Kitten</a></td><td data-label="مناسب لـ">نموذج إنجليزي صغير بثمانية أصوات.</td><td data-label="تذكّر">الإنجليزية فقط. النموذج المرفق نحو 24 MB.</td><td data-label="التكلفة">مجاني دون مفتاح</td></tr>
+<tr><td data-label="المزود"><a href="#settings-espeak">eSpeak</a></td><td data-label="مناسب لـ">خفيف جداً، متعدد اللغات، يبدأ سريعاً.</td><td data-label="تذكّر">صوت آلي عن قصد.</td><td data-label="التكلفة">مجاني دون مفتاح</td></tr>
+<tr><td data-label="المزود"><a href="#settings-system">تحويل النص إلى كلام في النظام</a></td><td data-label="مناسب لـ">أصوات موجودة بالفعل في متصفحك أو حاسوبك.</td><td data-label="تذكّر">غالباً صامت في OBS. تحتاج بعض الأصوات إلى الإنترنت.</td><td data-label="التكلفة">مجاني</td></tr>
+<tr><td data-label="المزود"><a href="#settings-elevenlabs">ElevenLabs</a></td><td data-label="مناسب لـ">اختر الأصوات بالمعرّف؛ تحكم بالثبات والأسلوب.</td><td data-label="تذكّر">حدود الحساب وتأخر الشبكة.</td><td data-label="التكلفة">قد تُطبّق رسوم API</td></tr>
+<tr><td data-label="المزود"><a href="#settings-google">Google Cloud</a></td><td data-label="مناسب لـ">أصوات مسماة؛ لغة وسرعة وطبقة صوت.</td><td data-label="تذكّر">لا يدعم كل صوت جميع عناصر التحكم. يجب تفعيل Cloud TTS API.</td><td data-label="التكلفة">تُطبّق الفوترة والحصص</td></tr>
+<tr><td data-label="المزود"><a href="#settings-gemini">Gemini</a></td><td data-label="مناسب لـ">أنماط أصوات وتعليمات إلقاء مكتوبة.</td><td data-label="تذكّر">قد تتغير نماذج المعاينة والحصص.</td><td data-label="التكلفة">تحقق من حدود Gemini</td></tr>
+<tr><td data-label="المزود"><a href="#settings-fish">Fish Audio</a></td><td data-label="مناسب لـ">نموذج مجاني بمفتاحك الخاص؛ معرّفات أصوات.</td><td data-label="تذكّر">يحتاج OBS إلى جسر SSN المحلي.</td><td data-label="التكلفة">تحدد Fish Audio الفئة المجانية</td></tr>
+<tr><td data-label="المزود"><a href="#settings-speechify">Speechify</a></td><td data-label="مناسب لـ">معرّف صوت مع السرعة واللغة والنموذج.</td><td data-label="تذكّر">تعتمد الأصوات على حسابك.</td><td data-label="التكلفة">تُطبّق شروط API</td></tr>
+<tr><td data-label="المزود"><a href="#settings-openai">OpenAI</a></td><td data-label="مناسب لـ">أصوات مسماة وتحكم بالنموذج والصيغة.</td><td data-label="تذكّر">اشتراك ChatGPT لا يتضمن رصيد API.</td><td data-label="التكلفة">فوترة API</td></tr>
+<tr><td data-label="المزود"><a href="#settings-customtts">مخصص / محلي</a></td><td data-label="مناسب لـ">خادم الأصوات الخاص بك.</td><td data-label="تذكّر">يحتاج أكبر قدر من الإعداد. راجع <a href="local-tts.html">دليل الخادم المحلي</a>.</td><td data-label="التكلفة">أجهزتك أو استضافتك</td></tr>
+</tbody></table>
+                <details class="guide-extra"><summary>أحجام التنزيل وملاحظات اختبار OBS</summary>
+                <p>الأحجام لملفات النماذج فقط وليست استهلاك الذاكرة. تعمل الأصوات المجانية على الحاسوب الذي يشغّل Dock أو التراكب. أول استخدام أبطأ. يحتفظ OBS بذاكرة تنزيل مؤقتة مستقلة عن Chrome.</p>
+                <p>اجتازت Piper وKokoro وKitten وeSpeak اختبارات تسجيل Browser Source في OBS. تعمل الأصوات السحابية والمخصصة عبر الصفحة أيضاً، لكنها لم تُختبر بحسابات حية. اختبر System TTS منفرداً حتى إن عرض أصواتاً.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">حل المشكلات</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>المشكلة</th><th>جرّب هذا</th></tr></thead>
+                    <tbody>
+                        <tr id="chat-platforms"><td data-label="المشكلة">هل تدعم منصة الدردشة لدي تحويل النص إلى كلام؟</td><td data-label="جرّب هذا">نعم، إذا تلقى SSN الدردشة كنص. تعمل YouTube وTwitch وTikTok وغيرها بالطريقة نفسها. لا تحتاج المنصة إلى TTS خاص بها.</td></tr>
+                        <tr><td data-label="المشكلة">لا صوت مطلقاً</td><td data-label="جرّب هذا">تأكد من أن Dock يعرض الدردشة، ثم افحص مفتاح TTS والمزود والمرشحات. استخدم رابطاً منسوخاً حديثاً ودع تنزيل الصوت الأول يكتمل.</td></tr>
+                        <tr><td data-label="المشكلة">يعمل في Chrome أو Edge، وليس في OBS</td><td data-label="جرّب هذا">لدى OBS متصفحه وقائمة أصواته الخاصة، وغالباً لا يعمل System TTS فيه. انتقل إلى Piper أو Kokoro أو Kitten أو eSpeak. لا يصلح كابل صوت افتراضي غياب توليد الكلام.</td></tr>
+                        <tr><td data-label="المشكلة">يتحرك العداد لكن التسجيل صامت</td><td data-label="جرّب هذا">تحقق من الكتم ومسارات التسجيل في OBS. لا تلتقط خرج المراقبة مرة ثانية. راجع <a href="https://obsproject.com/kb/audio-mixer-guide">دليل صوت OBS</a>.</td></tr>
+                        <tr><td data-label="المشكلة">الكلام يتأخر عن الدردشة</td><td data-label="جرّب هذا">انتقل من Kokoro إلى Piper أو جرّب eSpeak.</td></tr>
+                        <tr><td data-label="المشكلة">تُقرأ كل رسالة مرتين</td><td data-label="جرّب هذا">أكثر من صفحة تتكلم. أبقِ TTS مفعلاً في مكان واحد فقط.</td></tr>
+                        <tr><td data-label="المشكلة">أريد أن يتكلم Dock في OBS أو Featured Chat بدلاً منه</td><td data-label="جرّب هذا">Custom Browser Dock في OBS لوحة تحكم، وليس مصدراً في المشهد. لـ Featured Chat، فعّل TTS من خيارات التراكب نفسه وانسخ رابطه.</td></tr>
+                    </tbody>
+                </table>
+                <p>حلول إضافية: <a href="tts.html#troubleshooting">مرجع TTS</a> &middot; <a href="local-tts.html#troubleshooting">مشكلات الخادم المحلي</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="provider-settings">إعدادات المزود</h2>
+                <p>لقطات فعلية من تطبيق سطح المكتب بملف تعريف جديد وحقول المفاتيح فارغة. افتح مزوداً لرؤية إعداداته. انقر اللقطة لتكبيرها.</p>
+<details class="guide-extra" id="settings-system"><summary>تحويل النص إلى كلام في النظام</summary><p>تعتمد قائمة الأصوات على المتصفح أو التطبيق والأصوات المثبتة. لا توجد قائمة ثابتة لدى SSN. عرض ملف التعريف الجديد هذا قائمة لغات فارغة.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-system.png"><img src="../../docs/images/guides/tts-settings-system.png" alt="إعدادات مزود System TTS الفعلية في SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-kokoro"><summary>Kokoro</summary><p>اختر صوتاً. استخدم مرشح اللغة للعثور عليه، و <strong>اختبار</strong> لسماعه. يُحمّل النموذج على الصفحة التي تتكلم. الأصوات: إنجليزية أمريكية وبريطانية وإسبانية وبرتغالية برازيلية. بطيء جداً؟ جرّب Piper.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kokoro.png"><img src="../../docs/images/guides/tts-settings-kokoro.png" alt="إعدادات مزود Kokoro الفعلية في SSN" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>أسماء الأصوات وقيم الروابط</summary><ul class="guide-list">
+<li>Heart (أنثى أمريكية) — <code>af_heart</code></li>
+<li>Alloy (أنثى أمريكية) — <code>af_alloy</code></li>
+<li>Aoede (أنثى أمريكية) — <code>af_aoede</code></li>
+<li>Bella (أنثى أمريكية) — <code>af_bella</code></li>
+<li>Jessica (أنثى أمريكية) — <code>af_jessica</code></li>
+<li>Kore (أنثى أمريكية) — <code>af_kore</code></li>
+<li>Nicole (أنثى أمريكية) — <code>af_nicole</code></li>
+<li>Nova (أنثى أمريكية) — <code>af_nova</code></li>
+<li>River (أنثى أمريكية) — <code>af_river</code></li>
+<li>Sarah (أنثى أمريكية) — <code>af_sarah</code></li>
+<li>Sky (أنثى أمريكية) — <code>af_sky</code></li>
+<li>Adam (ذكر أمريكي) — <code>am_adam</code></li>
+<li>Echo (ذكر أمريكي) — <code>am_echo</code></li>
+<li>Eric (ذكر أمريكي) — <code>am_eric</code></li>
+<li>Fenrir (ذكر أمريكي) — <code>am_fenrir</code></li>
+<li>Liam (ذكر أمريكي) — <code>am_liam</code></li>
+<li>Michael (ذكر أمريكي) — <code>am_michael</code></li>
+<li>Onyx (ذكر أمريكي) — <code>am_onyx</code></li>
+<li>Puck (ذكر أمريكي) — <code>am_puck</code></li>
+<li>Santa (ذكر أمريكي) — <code>am_santa</code></li>
+<li>Emma (أنثى بريطانية) — <code>bf_emma</code></li>
+<li>Isabella (أنثى بريطانية) — <code>bf_isabella</code></li>
+<li>George (ذكر بريطاني) — <code>bm_george</code></li>
+<li>Lewis (ذكر بريطاني) — <code>bm_lewis</code></li>
+<li>Alice (أنثى بريطانية) — <code>bf_alice</code></li>
+<li>Lily (أنثى بريطانية) — <code>bf_lily</code></li>
+<li>Daniel (ذكر بريطاني) — <code>bm_daniel</code></li>
+<li>Fable (ذكر بريطاني) — <code>bm_fable</code></li>
+<li>Dora (إسبانية): <code>ef_dora</code></li>
+<li>Alex (إسبانية): <code>em_alex</code></li>
+<li>Santa (إسبانية): <code>em_santa</code></li>
+<li>Dora (برتغالية برازيلية): <code>pf_dora</code></li>
+<li>Alex (برتغالية برازيلية): <code>pm_alex</code></li>
+<li>Santa (برتغالية برازيلية): <code>pm_santa</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-kitten"><summary>Kitten</summary><p>ثمانية أصوات إنجليزية: نسخ ذكورية وأنثوية للأصوات 2 و3 و4 و5. تستخدم العينة Voice 4 (Female).</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kitten.png"><img src="../../docs/images/guides/tts-settings-kitten.png" alt="إعدادات مزود Kitten الفعلية في SSN" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>أسماء الأصوات وقيم الروابط</summary><ul class="guide-list">
+<li>الصوت 2 (ذكر) — <code>expr-voice-2-m</code></li>
+<li>الصوت 2 (أنثى) — <code>expr-voice-2-f</code></li>
+<li>الصوت 3 (ذكر) — <code>expr-voice-3-m</code></li>
+<li>الصوت 3 (أنثى) — <code>expr-voice-3-f</code></li>
+<li>الصوت 4 (ذكر) — <code>expr-voice-4-m</code></li>
+<li>الصوت 4 (أنثى) — <code>expr-voice-4-f</code></li>
+<li>الصوت 5 (ذكر) — <code>expr-voice-5-m</code></li>
+<li>الصوت 5 (أنثى) — <code>expr-voice-5-f</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-piper"><summary>Piper</summary><p>اختر صوتاً يطابق لغتك. تغيير اللغة وحدها لا يغير الصوت. تستخدم العينة HFC medium.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-piper.png"><img src="../../docs/images/guides/tts-settings-piper.png" alt="إعدادات مزود Piper الفعلية في SSN" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>أسماء الأصوات وقيم الروابط</summary><ul class="guide-list">
+<li>أنثى إنجليزية أمريكية (HFC) - جودة متوسطة — <code>en_US-hfc_female-medium</code></li>
+<li>الإسبانية الأوروبية (DaveFX) - جودة متوسطة — <code>es_ES-davefx-medium</code></li>
+<li>الإسبانية المكسيكية (Ald) - جودة متوسطة — <code>es_MX-ald-medium</code></li>
+<li>البرتغالية البرازيلية (Faber) - جودة متوسطة — <code>pt_BR-faber-medium</code></li>
+<li>البرتغالية البرازيلية (Edresson) - جودة منخفضة — <code>pt_BR-edresson-low</code></li>
+<li>البرتغالية الأوروبية (Tugao) - جودة متوسطة — <code>pt_PT-tug&atilde;o-medium</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-espeak"><summary>eSpeak</summary><p>اختر صوتاً للغة. يمكنك تغيير سرعة الكلام. صوته آلي عمداً.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-espeak.png"><img src="../../docs/images/guides/tts-settings-espeak.png" alt="إعدادات مزود eSpeak الفعلية في SSN" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>أسماء الأصوات وقيم الروابط</summary><ul class="guide-list">
+<li>الإنجليزية — <code>en</code></li>
+<li>الإسبانية — <code>es</code></li>
+<li>البرتغالية البرازيلية — <code>pt-br</code></li>
+<li>البرتغالية الأوروبية — <code>pt-pt</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-elevenlabs"><summary>ElevenLabs</summary><p>أدخل مفتاح API ثم انقر <strong>عرض أصواتي المتاحة</strong> للعثور على معرّف صوت يستطيع حسابك استخدامه. <a href="https://elevenlabs.io/docs/api-reference/text-to-speech/convert">مرجع ElevenLabs</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-elevenlabs.png"><img src="../../docs/images/guides/tts-settings-elevenlabs.png" alt="إعدادات مزود ElevenLabs الفعلية في SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-google"><summary>Google Cloud</summary><p>أدخل مفتاح Google Cloud TTS API واسم الصوت الدقيق واللغة المطابقة. <a href="https://cloud.google.com/text-to-speech/docs/voices">أسماء الأصوات وعناصر التحكم المدعومة</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-google.png"><img src="../../docs/images/guides/tts-settings-google.png" alt="إعدادات مزود Google Cloud الفعلية في SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-gemini"><summary>Gemini</summary><p>اختر نموذج TTS وصوتاً. تغير تعليمات الأسلوب طريقة القراءة. يستخدم هذا Gemini API وليس Google Cloud TTS. <a href="https://ai.google.dev/gemini-api/docs/speech-generation">أمثلة الأصوات ومتطلباتها</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-gemini.png"><img src="../../docs/images/guides/tts-settings-gemini.png" alt="إعدادات مزود Gemini الفعلية في SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-fish"><summary>Fish Audio</summary>
+<p>يعمل في Dock الدردشة وتراكب الرسائل المميزة وصفحة TTS وإجراءات التدفق.</p>
+<ol class="guide-steps">
+<li>اختر <strong>Fish Audio</strong> كمزود TTS.</li>
+<li>الصق <a href="https://fish.audio/app/api-keys">مفتاح Fish Audio API</a>.</li>
+<li>اختياري: الصق <strong>معرّف الصوت</strong> من <a href="https://fish.audio/">Fish Audio</a>. انسخ معرّف نموذج الصوت، لا اسمه أو رابط صفحته. اتركه فارغاً للصوت الافتراضي.</li>
+<li>اضغط <strong>اختبار TTS</strong>.</li>
+</ol>
+<p>النموذج الافتراضي هو <code>s2.1-pro-free</code>. تحدد Fish Audio ما هو مجاني وشروط الاستخدام العادل. تحتاج النماذج المدفوعة إلى رصيد. لا ينتقل SSN إلى نموذج مدفوع إذا فشل طلب مجاني. السرعة من 0.5 إلى 2، وتكتشف Fish Audio اللغة. يُرسل نص الدردشة إليها.</p>
+<h4>لـ OBS: شغّل الجسر المحلي</h4>
+<p>تمنع Fish Audio الطلبات المباشرة من صفحات الويب، لذا يحتاج OBS إلى <a href="../../local-tts-bridge/README.md#fish-audio-for-obs">الجسر المحلي</a> (يتطلب Node.js). شغّله على حاسوب OBS.</p>
+<ol class="guide-steps">
+<li>اضبط <code>SSN_TTS_TARGET_BEARER</code> إلى مفتاح Fish API لديك.</li>
+<li>في مجلد SSN، شغّل <code>node scripts/local-tts-bridge.cjs --mode fish</code>. أبقِه قيد التشغيل.</li>
+<li>في لوحة Fish Audio، اضبط <strong>عنوان الجسر</strong> إلى <code>http://127.0.0.1:8124/v1/audio/speech</code>.</li>
+<li>الصق رمز الجسر الظاهر في الطرفية في <strong>مفتاح API</strong> المجال.</li>
+<li>اختبر الصوت ثم أضف رابط التراكب إلى OBS. فعّل <strong>التحكم بالصوت عبر OBS (Control audio via OBS)</strong>.</li>
+</ol>
+<div class="warning-note"><strong>يتغير الرمز مع كل إعادة تشغيل للجسر.</strong> للاحتفاظ به ثابتاً، اضبط <code>SSN_TTS_BRIDGE_TOKEN</code> إلى سر عشوائي طويل. احتفظ بالروابط التي تحتوي رمزاً أو مفتاحاً خاصة.</div>
+<details class="guide-extra"><summary>إعدادات الرابط لـ Fish Audio</summary>
+<pre>&amp;ttsprovider=fish&amp;fishkey=YOUR_KEY&amp;voicefish=VOICE_ID&amp;fishmodel=s2.1-pro-free&amp;fishspeed=1</pre>
+<p>مع الجسر، أضف <code>&amp;fishendpoint=http%3A%2F%2F127.0.0.1%3A8124%2Fv1%2Faudio%2Fspeech</code>. احذف <code>fishkey</code> إذا كان الجسر يحتفظ بمفتاحك. خيار Event Flow <strong>نطق النص (Speak Text)</strong> لتجاوز الصوت يقبل معرّف صوت Fish عندما تستخدم الصفحة المستقبلة Fish Audio.</p>
+<p><a href="https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech">مرجع Fish Audio API</a> &middot; <a href="https://fish.audio/blog/s2-1-pro-free-api/">إعلان النموذج المجاني وشروطه</a></p>
+</details>
+</details>
+<details class="guide-extra" id="settings-speechify"><summary>Speechify</summary><p>أدخل مفتاح API ومعرّف الصوت من حساب Speechify API. <a href="speechify-setup-guide.html"><strong>دليل Speechify خطوة بخطوة</strong></a> &middot; <a href="https://docs.speechify.ai/docs/get-started/overview">إعداد Speechify</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-speechify.png"><img src="../../docs/images/guides/tts-settings-speechify.png" alt="إعدادات مزود Speechify الفعلية في SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-openai"><summary>OpenAI</summary><p>اختر صوتاً ونموذجاً وأدخل مفتاح API. لا يمنح اشتراك ChatGPT رصيد API. احتفظ بعنوان الاتصال الافتراضي.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-openai.png"><img src="../../docs/images/guides/tts-settings-openai.png" alt="إعدادات مزود OpenAI الفعلية في SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-customtts"><summary>تحويل نص إلى كلام مخصص / محلي</summary><p>يعيد هذا استخدام إعدادات OpenAI، لذا يبقى العنوان OpenAI. أدخل عنوان خادمك وصوتاً ونموذجاً يدعمهما. تعتمد الحاجة إلى مفتاح على خادمك. راجع <a href="local-tts.html">دليل الخادم المحلي</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-customtts.png"><img src="../../docs/images/guides/tts-settings-customtts.png" alt="إعدادات مزود Custom / Local TTS الفعلية في SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="background-speech">Kokoro وKitten أسرع</h2>
+                <p>ضمن Kokoro أو Kitten، افتح <strong>التوليد والتشغيل</strong>. تولّد هذه الخيارات الكلام في الخلفية لتبقى الصفحة سلسة.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>أريد أن…</th><th>افعل هذا</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="أريد أن">تفعيله لـ Kokoro</td><td data-label="افعل هذا">اضبط <strong>المعالجة</strong> إلى <strong>التوليد في الخلفية</strong>.</td></tr>
+                        <tr><td data-label="أريد أن">تفعيله لـ Kitten</td><td data-label="افعل هذا">اختر <strong>Kitten 0.8</strong> : Nano (الأصغر) أو Micro أو Mini.</td></tr>
+                        <tr><td data-label="أريد أن">سماع الكلام أسرع</td><td data-label="افعل هذا"><strong>التشغيل فور وصول الصوت</strong>. يشغّل كل جزء عند جهوزه. قد تتوقف الحواسيب البطيئة بين الأجزاء.</td></tr>
+                        <tr><td data-label="أريد أن">تجنب الفواصل</td><td data-label="افعل هذا"><strong>تشغيل الرسالة كاملة</strong>. ينتظر اكتمال الرسالة أولاً.</td></tr>
+                        <tr><td data-label="أريد أن">حل مشكلات GPU في Kokoro</td><td data-label="افعل هذا">اضبط <strong>معالج الخلفية</strong> إلى <strong>المعالج CPU</strong>.</td></tr>
+                        <tr><td data-label="أريد أن">أفضل جودة Kokoro</td><td data-label="افعل هذا"><strong>الجودة الكاملة</strong>. تنزيل أكبر واستخدام ذاكرة أعلى.</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra"><summary>تفاصيل إضافية وإعدادات الرابط</summary>
+                <p><strong>تلقائي (Automatic)</strong> يستخدم بطاقة رسومية مدعومة إن توفرت وإلا المعالج. تختار الجودة التلقائية FP16 على البطاقات المتوافقة، والدقة الكاملة على البطاقات المدعومة الأخرى، والنموذج المضغوط على المعالج. إذا فرضت GPU دون توفره، يظهر خطأ.</p>
+                <p>يعمل Kitten 0.8 على المعالج ويدعم الإنجليزية فقط. يُنزّل كل نموذج عند أول استخدام. يحتفظ كل متصفح أو OBS بنسخته الخاصة. يتلقى NeuroSync الملف الصوتي كاملاً في الحالتين. تستمر الروابط القديمة كما كانت ما لم تغير هذه الخيارات.</p>
+                <p>Kokoro: <code>&amp;kokororuntime=worker</code>، والحقل الاختياري <code>&amp;kokoroplayback=stream</code>, <code>&amp;kokorodevice=wasm</code> أو <code>webgpu</code>, <code>&amp;kokorodtype=q8</code>, <code>fp16</code> أو <code>fp32</code>. يفعّل البث المتتابع أو FP32 التوليد في الخلفية تلقائياً.</p>
+                <p>Kitten: <code>&amp;kittenmodel=nano</code> (أو <code>micro</code>, <code>mini</code>)، واختيارياً <code>&amp;kittenplayback=stream</code>.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="more">المزيد</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>أريد أن…</th><th>اذهب هنا</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="أريد أن">تعديل رابط TTS يدوياً أو عرض كل الخيارات</td><td data-label="اذهب هنا"><a href="tts.html">مرجع TTS</a></td></tr>
+                        <tr><td data-label="أريد أن">استخدام أصوات إسبانية أو برتغالية في رابط</td><td data-label="اذهب هنا"><a href="tts.html#premium-options">مرجع TTS: خيارات المزود</a></td></tr>
+                        <tr id="local-server"><td data-label="أريد أن">تشغيل خادم أصوات خاص أو استنساخ صوت</td><td data-label="اذهب هنا"><a href="local-tts.html">دليل TTS بالذكاء الاصطناعي المحلي</a></td></tr>
+                        <tr><td data-label="أريد أن">إعداد Speechify</td><td data-label="اذهب هنا"><a href="speechify-setup-guide.html">دليل Speechify</a></td></tr>
+                    </tbody>
+                </table>
+                <p>رابط سريع للتجربة: <code>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=piper</code></p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. ترخيص GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function revealGuideSection() {
+            var target;
+            try { target = document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { return; }
+            if (!target) return;
+            for (var node = target; node; node = node.parentElement) {
+                if (node.tagName === "DETAILS") node.open = true;
+            }
+            target.scrollIntoView();
+        }
+        window.addEventListener("hashchange", revealGuideSection);
+        revealGuideSection();
+    </script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/overlay-customization-guide.html">
+    <meta name="twitter:title" content="設計您自己的社群流疊加層 - Social Stream Ninja">
+    <meta name="twitter:description" content="在 OBS 中下載、自訂、連接和測試本地覆蓋設計，以及每個覆蓋系列的指南。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>設計您自己的社群流疊加層 - Social Stream Ninja</title>
+<meta name="description" content="在 OBS 中下載、自訂、連接和測試本地覆蓋設計，以及每個覆蓋系列的指南。">
+<meta name="robots" content="noindex, follow">
+<link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/overlay-customization-guide.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Social Stream Ninja">
+<meta property="og:title" content="設計您自己的社群流疊加層 - Social Stream Ninja">
+<meta property="og:description" content="在 OBS 中下載、自訂、連接和測試本地覆蓋設計，以及每個覆蓋系列的指南。">
+<meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/overlay-customization-guide.html">
+<meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+<meta name="twitter:card" content="summary">
+<script>
+(function() {
+    var savedTheme = localStorage.getItem("darkMode");
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+})();
+</script>
+<link rel="stylesheet" href="../../docs/css/styles.css">
+<link rel="stylesheet" href="../../docs/css/guides.css">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/overlay-customization-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{", for example, reads neither. Check the page's code first.":"等頁面兩者都不讀取。請先查看頁面程式碼。",", including zero.":"，包括零。",", keep the copy in the same folder.":"時，將副本保留在同一資料夾。",", links":"、連結",", local endpoints, labels, and version values differ by page. Don't add a server flag just because another overlay uses it.":"、本機端點、標籤和版本值因頁面而異。不要因為其他疊加層使用某個伺服器參數就把它加上。",", not":"，不是",", on Linux usually":"，Linux 上通常是",", then false. One should show the tags as text; the other should show bold text.":"，再改為 false。一種應將標籤顯示為文字，另一種應顯示粗體文字。",", unzip it, and copy that overlay's HTML file.":"，解壓縮後複製對應疊加層的 HTML 檔案。",", which browsers can block when opening from disk. For a simple map restyle, use its hosted link with OBS Custom CSS. For an edited copy, ask your AI to put the map data inside the page so it opens from disk. Hosting is an advanced option for pages that really need it, not a normal step.":"載入，直接從磁碟開啟時可能被瀏覽器攔截。只修改地圖樣式時，請用託管連結和 OBS 自訂 CSS；編輯副本時，可讓 AI 將地圖資料嵌入頁面，以便從磁碟開啟。託管是確實需要它的頁面的進階選項，不是一般步驟。",". Bringing a StreamElements or Streamlabs chat skin? Follow the":"。想匯入 StreamElements 或 Streamlabs 聊天外觀？請參照",". Copying from the browser handles spaces and slashes for you.":"。從瀏覽器複製會幫你處理空格和斜線。",". Don't edit inside the ZIP. You don't need to reinstall SSN.":"。不要在 ZIP 內直接編輯，也不需要重裝 SSN。",". For a theme such as":"。對於如下主題：",". In the browser or OBS URL box, use a plain":"。在瀏覽器或 OBS URL 欄中，使用一般的",". It forwards to your overlay with the settings and":"。它會攜帶設定和以下內容轉到疊加層：",". It must not run, set the marker, or leave event attributes behind. Test a script-scheme link too.":"。它不應執行、設定標記或留下事件屬性。也請測試使用指令碼協定的連結。",". Leave":"。將",". Or open the":"。或者開啟",". Picking the file with Local file doesn't add those settings.":"。透過「本機檔案」選取檔案不會加入這些設定。",". That export comes with its own setup steps.":"。該匯出檔案有自己的設定步驟。",". The brackets should show as text.":"。角括號應作為文字顯示。","A design that only works with hard-coded sample messages isn't done. Keep the original file and compare both with the same test inputs.":"只能顯示寫死的範例訊息還不算完成。保留原檔，並用相同輸入對比原版和副本。","A passing probe only covers the paths you tested. Focus on the renderers and fields your design changed.":"測試通過僅涵蓋已測試的路徑。重點檢查設計變更涉及的轉譯器和欄位。","A path like":"類似這樣的路徑：","AI prompt":"AI提示","Add your styles after the existing ones, or link a local stylesheet after them.":"把樣式加在現有樣式之後，或在其後引入本機樣式表。","Alerts and event feeds":"警報和事件來源","All guides":"所有指南","Blank or “waiting” display":"顯示空白或「等待中」","Browser Source":"瀏覽器來源","Browser Source reference":"瀏覽器原始碼參考","Change the HTML layout":"修改 HTML 版面配置","Change the design":"改變設計","Change the design, or ask AI to":"修改設計，或請 AI","Chat and Dock":"聊天與停靠","Check a real message or event reaches both the original and your copy. A fake event only proves the display works.":"檢查真實訊息或事件是否同時到達原版和副本。模擬事件只能證明顯示功能正常。","Check a supported emote and an image-only message still work.":"確認支援的表情和純圖片訊息仍能正常顯示。","Check refresh/unload settings, duplicate copies of the overlay or controls, and the page's own duplicate and state handling.":"檢查重新整理/卸載設定、是否開啟了重複的疊加層或控制頁，以及頁面本身的去重和狀態處理。","Check the final size, transparency, animations, audio, fonts, and layering. Try show/hide, clear/reset, and a refresh. OBS and your browser don't share logins or saved storage.":"檢查最終尺寸、透明度、動畫、聲音、字型和層次。試試顯示/隱藏、清除/重設和重新整理。OBS 與瀏覽器不共用登入狀態或儲存的資料。","Check the session, password, full":"檢查工作階段、密碼、完整的","Check width/height, old Custom CSS, fonts, cache, and browser storage. Refresh after saving.":"檢查寬高、舊自訂 CSS、字型、快取和瀏覽器儲存空間，儲存後重新整理。","Choose a working overlay before changing its appearance.":"在更改其外观之前选择一个工作叠加层。","Cleaned HTML still isn't safe to run as JavaScript or to use as an AI instruction.":"即使 HTML 已清理，也不能安全地當作 JavaScript 執行或作為 AI 指令。","Click":"點選","Code → Download ZIP":"代碼 → 下載 ZIP","Collected participants and credits controls":"收集參與者和信用控制","Commands & API":"指令與 API","Configured support/count/Hype metric":"配置的支援/計數/炒作指標","Configured ticker content":"配置的股票行情內容","Copy it and point your page at the copy, so only your design changes.":"複製檔案並讓頁面引用副本，確保僅影響自己的設計。","Copy them, don't retype. Inside an HTML attribute write":"直接複製，不要重新輸入。HTML 屬性中應寫為","Counters and rankings":"計數器和排名","Counts, metadata, activity, or point snapshots":"計數、元資料、活動或點快照","Create Test Message":"建立測試訊息","Credits":"致謝","Custom CSS":"自訂 CSS","Custom receivers and connection examples.":"自訂接收端與連線範例。","Data resets or actions happen twice":"資料重設或操作執行兩次","Design guide":"設計指南","Design your own Social Stream overlays":"設計您自己的社交流疊加層","Design your own Social Stream overlays - Social Stream Ninja":"設計您自己的社群流疊加層 - Social Stream Ninja","Details":"詳細資料","Do this":"執行操作","Don't accept a fake.":"不要接受只靠假資料呈現的效果。","Don't paste raw names into attribute strings or raw colors into style markup. Check style values before setting them one property at a time.":"不要把原始姓名拼進屬性字串，也不要把未經檢查的顏色拼進樣式標記。驗證樣式值後逐項設定屬性。","Double-click the launcher to test it. In OBS, check":"按兩下啟動頁進行測試。在 OBS 中勾選","Download":"下載","Download the beta source ZIP":"下載 beta 原始碼 ZIP","Download the files":"下載文件","Download the source ZIP":"下載來源ZIP","Download, customize, connect, and test local overlay designs in OBS, with guides for each overlay family.":"在 OBS 中下載、自訂、連接和測試本地覆蓋設計，以及每個覆蓋系列的指南。","Drag the HTML into your browser again and copy its address. Check the name ends in .html, not .html.txt.":"重新把 HTML 拖進瀏覽器並複製位址。確認檔案名稱以 .html 結尾，而不是 .html.txt。","Drag your HTML copy into Chrome or Edge. Copy its address. It starts with":"將 HTML 副本拖進 Chrome 或 Edge，複製位址。位址以","Each overlay type listens for different things. A chat page, a featured-message page, and a poll don't use the same input. Open the design guide for the one you use:":"不同疊加層接收的內容不同。聊天頁、精選訊息頁和投票頁並不使用相同輸入。請開啟對應類型的設計指南：","Edit a shared stylesheet or script":"編輯共用樣式表或指令碼","Edit the copy":"編輯副本","Event Flow":"Event Flow","Events and Alerts Compatibility":"事件和提醒相容性","Every captured chat message":"每条捕获的聊天消息","Example: this SSN link…":"例如：這個 SSN 連結…","Existing badge and image handling.":"現有的徽章和圖片處理。","Existing connection support, when your page loads them.":"頁面載入相關指令碼時使用的現有連線支援。","Feature a Dock message for a featured card, vote in a poll, pick a giveaway winner, change ticker text, or start a timer. Plain chat doesn't test everything.":"從 Dock 精選訊息來顯示卡片、參與投票、抽出得獎者、更改跑馬燈文字或啟動計時器。一般聊天不能測試所有功能。","Featured messages":"精選訊息","Features":"功能","Field":"欄位","File":"文件","File not found":"找不到文件","Files for AI":"供 AI 使用的檔案","Files to give your AI":"需要交給 AI 的檔案","Find your overlay's file (see the table above). Make a copy next to the original, like":"找到疊加層檔案（見上表），在原檔旁建立副本，例如","Fix problems":"解決問題","Fix the smallest confirmed problem first. A restyle shouldn't need changes to capture scripts or new event fields. If you share a public fork, include its assets and leave private launchers out.":"先修復已確認的最小問題。改變樣式不應需要修改擷取指令碼或加入事件欄位。分享公開分支時應包含素材，排除含私密連結的啟動頁。","For a theme in a subfolder, put the launcher next to that theme copy. Keep the launcher private, since it holds your connection link. A self-contained export that already includes its settings follows its own instructions instead.":"若主題在子資料夾中，將啟動頁放在該主題副本旁。啟動頁含連線連結，應保密。已包含設定的獨立匯出檔案則按自己的說明操作。","For files in subfolders, fix the script paths.":"子資料夾中的檔案需要調整指令碼路徑。","From your working SSN overlay link, copy everything from":"從可用的 SSN 疊加層連結中複製從以下位置開始的全部內容：","Game-specific chat, gifts, and commands":"遊戲特定的聊天、禮物和命令","Games and rewards":"遊戲與獎勵","Generated AI overlays":"產生的 AI 疊加層","Give the AI the overlay's own file and the CSS/JS it loads, plus these. The event reference alone doesn't explain a poll's controls or each overlay's layout code.":"把疊加層本身的檔案、載入的 CSS/JS，以及以下檔案交給 AI。單靠事件參考無法解釋投票控制項或各疊加層的版面程式碼。","Giveaway displays":"贈品展示","Good to know":"實用說明","Graphical polls":"圖形民意調查","Guides":"指南","HTML file":"HTML 文件","Have the AI test a harmless probe like":"請 AI 測試無害的探測內容，例如","Have your logo, font files, brand colors, canvas size, and a visual reference ready. A web page generally can't load fonts or images from another computer's disk.":"準備好標誌、字型檔案、品牌顏色、畫布尺寸和視覺參考。網頁通常無法載入另一台電腦磁碟上的字型或圖片。","Hire":"聘用","Home":"首頁","Host queue and winner state":"主機隊列與獲勝者狀態","How":"方法","How to show it":"如何顯示","How to test the renderer safely":"如何安全測試轉譯器","I want to":"我想要","I want to…":"我想要…","If the page already has a sanitizer, keep it. Don't add a second one.":"頁面已有清理器時請保留，不要再加第二個。","If your copy stays blank, check the original link first. Some pages ask for missing settings; others stay hidden or redirect. Putting the right session in the link avoids guessing.":"副本一直空白時先檢查原始連結。有的頁面會詢問缺少的設定，有的會保持隱藏或重新導向。把正確工作階段寫進連結可避免猜測。","In OBS, add a":"在 OBS 中，新增","Inspiration":"靈感","It can matter. AI Event Overlay, for example, uses a private":"可能有影響。例如 AI Event Overlay 使用私密的","Just want new colors or fonts?":"只想換顏色或字型？","Keep":"保持","Keep IDs and classes that scripts use. If a script rebuilds an element on every update, put permanent artwork outside it, or add it to the renderer.":"保留指令碼使用的 ID 和類別名稱。如果指令碼每次更新都重建元素，請將固定圖案放在元素外，或加入轉譯器。","Keep SSN on and use":"保持 SSN 執行，並使用","Keep chat safe":"安全顯示聊天","Keep everything after":"保留以下位置之後的所有內容：","Keep incoming chat from becoming code":"防止聊天內容變成可執行程式碼","Keep the hosted link and use OBS's":"保留託管連結，使用 OBS 的","Keep the server settings":"保留伺服器設定","Keep the unzipped folder as it is, with your copy next to the original. Check your added artwork and fonts are where the page expects.":"保持解壓縮後的資料夾結構，把副本放在原檔旁。檢查新增圖片和字型是否位於頁面預期的位置。","Keep the whole unzipped folder.":"保留整個解壓縮後的資料夾。","Keep your real session, password, and private tokens out of screenshots, repos, and AI prompts.":"不要在螢幕擷取畫面、程式碼庫或 AI 提示詞中洩露真實工作階段、密碼和私密權杖。","Keep your session link":"保留工作階段連結","Layout":"版面配置","Local file":"本機檔案","Logo disappears on update":"更新後標誌消失","Looks different in OBS than the browser":"OBS 中的外觀與瀏覽器不同","Main navigation":"主導覽","Make your own overlay in 5 steps":"五步製作自己的疊加層","Managed giveaway state or legacy entry feed":"託管贈品狀態或舊條目提要","Matching events / paid chat rows":"匹配事件/付費聊天行","Matching words or location entries":"符合單字或位置條目","May hold emotes and allowed formatting. Use the packaged sanitizer.":"可能包含表情和允許的格式。請使用隨附的清理器。","Missing script, font, or image":"缺少腳本、字體或圖像","More background:":"更多背景：","Music and AI displays":"音樂和AI顯示","Names, amounts, titles, other plain fields":"名稱、金額、標題等純文字欄位","Names, messages, titles, amounts, and links come from viewers and outside services. Treat them as text, never as code. Clean them where your renderer puts them on the page.":"名稱、訊息、標題、金額和連結來自觀眾或外部服務。把它們當作文字，絕不能當作程式碼；在轉譯器寫入頁面的位置進行清理。","Now-playing or bot/cohost updates":"正在播放或機器人/共同主持人更新","OBS":"OBS","OBS URL":"OBS 網址","OBS explains file/URL modes, sizes, Custom CSS, and refresh in its":"OBS 的檔案/URL 模式、尺寸、自訂 CSS 和重新整理說明見其","OBS saves the address. Keep the folder where it is, and keep SSN and your chat source running.":"OBS 會儲存位址。保留資料夾原位置，並讓 SSN 和聊天來源持續執行。","OBS's file picker picks a file but can't add your settings. A small launcher page can open your edited page with the settings attached:":"OBS 檔案選擇器只能選檔案，不能加入設定。小型啟動頁可以攜帶設定開啟編輯後的頁面：","OWASP's guide to safe sinks and HTML sanitization":"OWASP 關於安全輸出位置與 HTML 清理的指南","Official fields, named events, metadata, media, and donation values.":"正式欄位、具名事件、中繼資料、媒體與捐款數值。","On macOS it starts with":"macOS 上以","On this page":"本頁內容","One HTML file can load scripts, styles, fonts, images, audio, or data from nearby folders. Moving the page breaks those links. GitHub's page view or a browser's “Save page” won't get everything.":"一個 HTML 檔案可能從附近資料夾載入指令碼、樣式、字型、圖片、音訊或資料。移動頁面會破壞這些引用。GitHub 的頁面檢視或瀏覽器「儲存頁面」無法取得全部檔案。","Only change CSS":"僅修改 CSS","Only some pages support it.":"只有部分頁面支援。","Open in OBS":"在OBS中打開","Open navigation menu":"開啟導覽選單","Open that combined address in your browser to test it.":"在瀏覽器開啟組合好的位址進行測試。","Open the copy in a text or code editor. Save it as":"在文字或程式碼編輯器中開啟副本，儲存為","Open the edited file straight from your computer. No server needed.":"直接從電腦開啟編輯後的檔案，不需要伺服器。","Open your copy in OBS":"在 OBS 開啟副本","Open your file in OBS":"在 OBS 開啟檔案","Optional: use the Local file checkbox with a launcher":"可選：使用帶有啟動器的本機檔案複選框","Overlay Gallery":"疊加畫面圖庫","Overlay design guides":"疊加設計指南","Pick an overlay":"選擇一個疊加層","Pick the overlay":"選擇疊加層","Pick the overlay to change":"選擇要修改的疊加層","Plain text (":"純文字（","Problem":"問題","Products and boards":"產品與板材","Quick start":"快速開始","Reactions and media effects":"反应和媒体效果","Real capture":"真實擷取","Refresh cache of current page":"重新整理目前頁面快取","Refreshing can lose data.":"重新整理可能遺失資料。","Replace the placeholder link with your full copied SSN link. Change":"用複製的完整 SSN 連結替換預留連結。將","Restyle my edited HTML copy":"重新設計編輯後的 HTML 副本","Reuse existing controls when the design needs a trigger.":"設計需要觸發操作時，重用現有控制項。","Rule":"規則","Run these in a private local preview, not in public chat.":"在私密的本機預覽中執行，不要發到公開聊天。","SSN delivery":"SSN 資料傳遞","Sample payloads and delivery modes.":"資料範例和傳遞模式。","Save the code below as":"將下方程式碼儲存為","Saved a change?":"儲存修改後","Saved designs and their configured event route":"保存的设计及其配置的事件路线","Selected messages and clear commands":"选定的消息和清除命令","Send":"傳送","Session link":"工作階段連結","Shared commerce state":"共享商務狀態","Skip the download. Keep the normal hosted link and paste CSS into the OBS Browser Source's":"不需要下載。保留通常的託管連結，把 CSS 貼到 OBS 瀏覽器來源的","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja ·":"Social Stream Ninja ·","Some pages keep data in memory. Check the type guide before turning on auto-refresh or shutdown-when-hidden. Remove":"有的頁面將資料儲存在記憶體中。開啟自動重新整理或隱藏時關閉前，先查看該類型指南。移除","Special case: pages that read separate data files":"特殊情況：讀取單獨資料檔案的頁面","Start SSN, connect a source, and check the original overlay works. Then copy the":"啟動 SSN、連線來源並確認原疊加層正常運作，然後複製","Start from an overlay that already works.":"從已經可用的疊加層開始。","Starting files":"啟動文件","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","Templates Gallery":"範本庫","Test":"測試","Test it":"測試","Test it, one piece at a time":"逐項測試","Test-message guide":"測試訊息指南","The URL box lets you add":"URL 欄允許加入","The map loads local JSON files with":"地圖透過以下方式載入本機 JSON 檔案：","The packaged display sanitizer.":"隨附的顯示清理器。","The page's specific media/event/action trigger":"頁面的特定媒體/事件/動作觸發","The real trigger":"真實觸發操作","The script may be rebuilding its container. Put permanent decoration outside it, or update the rendering template.":"指令碼可能正在重建容器。請把固定裝飾放在容器外，或修改轉譯範本。","The value after":"以下內容之後的值：","Tickers":"股票行情","Timer state and controls":"定時器狀態與控件","Timers":"定時器","Tip jars and goals":"小費罐與目標","Try this":"試試這個","URL":"URL","URLs, not HTML. Check them with the page's existing media/link rules, then set DOM properties.":"這是 URL，不是 HTML。使用頁面現有的媒體/連結規則檢查後，再設定 DOM 屬性。","Unzip it into a folder you'll keep, like":"解壓縮到準備長期保留的資料夾，例如","Use":"使用","Use a name like":"使用類似這樣的名稱：","Use placeholders when sharing":"分享時使用預留值","Use the page's preview/demo mode if it has one, or made-up local samples. Try long names and messages, missing avatars, empty data, and the expected number of rows.":"頁面有預覽/示範模式時請使用，否則使用虛構的本機樣本。測試長名稱和長訊息、缺少頭像、空資料及預期列數。","Use the type-specific prompt in each design guide, or start with this one. Give the AI your copied file and the styles and scripts it loads.":"使用各設計指南中的專用提示詞，或從此提示詞開始。把副本及它載入的樣式和指令碼交給 AI。","Votes plus host poll settings":"投票加主持人投票設置","Waitlists and queue draws":"候補名單和隊列抽籤","Want something ready-made? Try the":"想要現成的？試試","What drives it":"是什麼驅動它","What it's for":"用途","What the folder looks like, and how paths work":"資料夾結構和路徑的運作方式","Which events and fields each source sends.":"各來源傳送的事件和欄位。","Why":"原因","Why leave Local file unchecked?":"為什麼不選取本機檔案？","Word clouds and maps":"詞雲與地圖","You can change an overlay's colors, fonts, layout, artwork, and motion. The":"你可以修改疊加層的顏色、字型、版面、圖案和動畫。","You only set this up once":"只需設定一次","and":"和","and choose":"並選擇","and pick the":"並選取","and set the width and height.":"，再設定寬度和高度。","beta repository":"測試版儲存庫","box.":"欄。","box. It only affects that OBS source, not a normal browser.":"欄中。僅影響該 OBS 來源，不影響一般瀏覽器。","characters.":"字元。","for display, and use a valid numeric USD":"用於顯示，並使用有效的美元數值作為","from the SSN tool for that overlay.":"，從該疊加層對應的 SSN 工具取得。","from the link before expecting live data.":"，從連結中移除後再檢查即時資料。","full link":"完整連結","import guide":"導入指南","in the source properties.":"在來源屬性中。","is relative to the page that loads it. Move that page to the root and the path breaks. Copy your own artwork and fonts into the folder too, and use relative paths. Your edited copy won't get future SSN fixes automatically.":"是相對於載入它的頁面的路徑。將頁面移到根目錄會破壞路徑。也請將自己的圖案和字型複製到資料夾，並使用相對路徑。編輯後的副本不會自動取得後續 SSN 修復。","is the page. The":"是頁面。","is your SSN session. It's not your YouTube channel, Twitch name, file name, or poll title. SSN and your page must use the same session and password. Keep SSN running: overlays only receive data. They don't capture chat themselves.":"是 SSN 工作階段，不是 YouTube 頻道、Twitch 名稱、檔案名稱或投票標題。SSN 和頁面必須使用相同工作階段和密碼。保持 SSN 執行：疊加層只接收資料，不會自行擷取聊天。","joins the rest":"連接其餘設定","launcher":"發射器","next to":"，放在以下檔案旁：","onward. Paste it on the end of the file address. This keeps your session, password, settings, and any":"起的全部內容，貼到檔案位址末尾。這樣保留工作階段、密碼、設定及任何","or":"或","otherwise":"否則","part.":"部分。","parts, that SSN is running, the feature is on, and the right input is arriving. Compare with the original SSN link.":"部分，確認 SSN 正在執行、功能已開啟、正確輸入正在到達。與原 SSN 連結對照。","points to it and adds your session and display settings.":"指向該檔案，並加入工作階段和顯示設定。","remote API control of extension":"擴充功能的遠端 API 控制","starts the settings,":"表示設定開始，","to your file name. Keep the link in quotes, with plain":"改成自己的檔案名稱。連結保留在引號內，使用一般的","token.":"權杖。","true":"true","turned on. Use a test setup: test messages can set off your automations.":"開啟。請使用測試環境，因為測試訊息可能觸發自動化。","unchecked. Paste the full address into":"取消勾選。將完整位址貼到","with":"帶有","with the overlay's real trigger.":"，使用疊加層的真實觸發操作。","with the same session. The usual Extension API mode needs":"，使用相同工作階段。通常的 Extension API 模式需要","with your SSN session settings added to its address.":"，在位址中加入 SSN 工作階段設定。","you want to change.":"中要修改的內容。","yourself, or ask an AI tool to.":"，可以自己做，也可以請 AI 工具完成。","…becomes this for a downloaded poll copy on Windows:":"…在 Windows 上下載的投票副本中變為："}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/overlay-customization-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide visual-guide">
+<header class="site-header"><div class="site-bar">
+<a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="主導覽">
+<a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a>
+</nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/overlay-customization-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/overlay-customization-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/overlay-customization-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/overlay-customization-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/overlay-customization-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/overlay-customization-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/overlay-customization-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/overlay-customization-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="overlay-customization-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/overlay-customization-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/overlay-customization-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/overlay-customization-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/overlay-customization-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/overlay-customization-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/overlay-customization-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/overlay-customization-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/overlay-customization-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button>
+<button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button>
+</div></div></header>
+<section class="page-hero"><div class="container"><h1>設計您自己的社交流疊加層</h1><p>在 OBS 中下載、自訂、連接和測試本地覆蓋設計，以及每個覆蓋系列的指南。</p></div></section>
+<main class="guide-section"><div class="container">
+<nav class="guide-jump-links" aria-label="本頁內容"><a href="#quick-start">快速開始</a><a href="#choose">選擇一個疊加層</a><a href="#download">下載</a><a href="#session">工作階段連結</a><a href="#local-file">在OBS中打開</a><a href="#design">改變設計</a><a href="#safe-input">安全顯示聊天</a><a href="#test">測試</a><a href="#references">供 AI 使用的檔案</a><a href="#troubleshooting">解決問題</a></nav>
+
+<section class="guide-card" id="quick-start"><h2>五步製作自己的疊加層</h2>
+<div class="guide-flow-visual"><strong>下載文件</strong><span aria-hidden="true">→</span><strong>改變設計</strong><span aria-hidden="true">→</span><strong>在OBS中打開</strong></div>
+<ol class="guide-steps">
+<li><a href="#choose">選擇疊加層</a> 中要修改的內容。</li>
+<li><a href="#download">下載來源ZIP</a>，解壓縮後複製對應疊加層的 HTML 檔案。</li>
+<li><a href="#design">編輯副本</a> ，可以自己做，也可以請 AI 工具完成。</li>
+<li><a href="#local-file">在 OBS 開啟副本</a> ，在位址中加入 SSN 工作階段設定。</li>
+<li><a href="#test">測試</a> ，使用疊加層的真實觸發操作。</li>
+</ol>
+<div class="guide-note"><strong>只想換顏色或字型？</strong> 不需要下載。保留通常的託管連結，把 CSS 貼到 OBS 瀏覽器來源的 <strong>自訂 CSS</strong> 欄。</div>
+</section>
+
+<section class="guide-card" id="choose"><h2>選擇要修改的疊加層</h2>
+<p>你可以修改疊加層的顏色、字型、版面、圖案和動畫。 <strong>HTML 文件</strong> 是頁面。 <strong>OBS 網址</strong> 指向該檔案，並加入工作階段和顯示設定。</p>
+<figure class="guide-shot"><a href="../../docs/images/guides/custom-chat-preview.png"><img src="../../docs/images/guides/custom-chat-preview.png" width="960" height="520" alt="在更改其外观之前选择一个工作叠加层。" loading="lazy" decoding="async"></a><figcaption>從已經可用的疊加層開始。</figcaption></figure>
+<p>不同疊加層接收的內容不同。聊天頁、精選訊息頁和投票頁並不使用相同輸入。請開啟對應類型的設計指南：</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">設計指南</th><th scope="col">啟動文件</th><th scope="col">是什麼驅動它</th></tr></thead><tbody>
+<tr><td data-label="設計指南"><a href="chat-customization-guide.html">聊天與停靠</a></td><td data-label="啟動文件"><code>sampleoverlay.html, dock.html, themes/*</code></td><td data-label="是什麼驅動它">每条捕获的聊天消息</td></tr>
+<tr><td data-label="設計指南"><a href="featured-customization-guide.html">精選訊息</a></td><td data-label="啟動文件"><code>featured.html, samplefeatured.html, themes/featured-styles/*</code></td><td data-label="是什麼驅動它">选定的消息和清除命令</td></tr>
+<tr><td data-label="設計指南"><a href="alerts-customization-guide.html">警報和事件來源</a></td><td data-label="啟動文件"><code>multi-alerts.html, events.html, themes/events/index.html</code></td><td data-label="是什麼驅動它">匹配事件/付費聊天行</td></tr>
+<tr><td data-label="設計指南"><a href="poll-customization-guide.html">圖形民意調查</a></td><td data-label="啟動文件"><code>poll.html</code></td><td data-label="是什麼驅動它">投票加主持人投票設置</td></tr>
+<tr><td data-label="設計指南"><a href="goals-customization-guide.html">小費罐與目標</a></td><td data-label="啟動文件"><code>tipjar.html</code></td><td data-label="是什麼驅動它">配置的支援/計數/炒作指標</td></tr>
+<tr><td data-label="設計指南"><a href="stats-customization-guide.html">計數器和排名</a></td><td data-label="啟動文件"><code>hype.html, meta.html, leaderboard.html, scoreboard.html</code></td><td data-label="是什麼驅動它">計數、元資料、活動或點快照</td></tr>
+<tr><td data-label="設計指南"><a href="waitlist-customization-guide.html">候補名單和隊列抽籤</a></td><td data-label="啟動文件"><code>waitlist.html</code></td><td data-label="是什麼驅動它">主機隊列與獲勝者狀態</td></tr>
+<tr><td data-label="設計指南"><a href="giveaway-customization-guide.html">贈品展示</a></td><td data-label="啟動文件"><code>giveaway.html, giveaway-obs-entries.html</code></td><td data-label="是什麼驅動它">託管贈品狀態或舊條目提要</td></tr>
+<tr><td data-label="設計指南"><a href="timer-customization-guide.html">定時器</a></td><td data-label="啟動文件"><code>timer.html</code></td><td data-label="是什麼驅動它">定時器狀態與控件</td></tr>
+<tr><td data-label="設計指南"><a href="ticker-customization-guide.html">股票行情</a></td><td data-label="啟動文件"><code>ticker.html</code></td><td data-label="是什麼驅動它">配置的股票行情內容</td></tr>
+<tr><td data-label="設計指南"><a href="community-customization-guide.html">詞雲與地圖</a></td><td data-label="啟動文件"><code>wordcloud.html, map.html</code></td><td data-label="是什麼驅動它">符合單字或位置條目</td></tr>
+<tr><td data-label="設計指南"><a href="effects-customization-guide.html">反应和媒体效果</a></td><td data-label="啟動文件"><code>reactions.html, emotes.html, content.html, gif.html, confetti.html, stickers.html, actions.html</code></td><td data-label="是什麼驅動它">頁面的特定媒體/事件/動作觸發</td></tr>
+<tr><td data-label="設計指南"><a href="credits-customization-guide.html">致謝</a></td><td data-label="啟動文件"><code>credits.html</code></td><td data-label="是什麼驅動它">收集參與者和信用控制</td></tr>
+<tr><td data-label="設計指南"><a href="media-customization-guide.html">音樂和AI顯示</a></td><td data-label="啟動文件"><code>spotify-overlay.html, cohost-overlay.html, bot.html, chatbot.html</code></td><td data-label="是什麼驅動它">正在播放或機器人/共同主持人更新</td></tr>
+<tr><td data-label="設計指南"><a href="commerce-customization-guide.html">產品與板材</a></td><td data-label="啟動文件"><code>monetization.html, commerce-board.html, shop_the_stream.html</code></td><td data-label="是什麼驅動它">共享商務狀態</td></tr>
+<tr><td data-label="設計指南"><a href="making-games.html#custom-design">遊戲與獎勵</a></td><td data-label="啟動文件"><code>games/*, games/templates/*, games.html, battle.html</code></td><td data-label="是什麼驅動它">遊戲特定的聊天、禮物和命令</td></tr>
+<tr><td data-label="設計指南"><a href="ai-overlay-builder-guide.html">產生的 AI 疊加層</a></td><td data-label="啟動文件"><code>aioverlay.html, aievent-overlay.html</code></td><td data-label="是什麼驅動它">保存的设计及其配置的事件路线</td></tr>
+</tbody></table>
+<p>想要現成的？試試 <a href="overlay-gallery.html">疊加畫面圖庫</a> 或 <a href="templates.html">範本庫</a>。想匯入 StreamElements 或 Streamlabs 聊天外觀？請參照 <a href="streamelements-chat-guide.html">導入指南</a>。該匯出檔案有自己的設定步驟。</p>
+</section>
+
+<section class="guide-card" id="download"><h2>下載文件</h2>
+<ol class="guide-steps"><li><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">下載 beta 原始碼 ZIP</a>。或者開啟 <a href="https://github.com/steveseguin/social_stream/tree/beta">測試版儲存庫</a> 並選擇 <strong>代碼 → 下載 ZIP</strong>.</li>
+<li>解壓縮到準備長期保留的資料夾，例如 <code>C:\SSN\social_stream-beta\</code>。不要在 ZIP 內直接編輯，也不需要重裝 SSN。</li>
+<li>找到疊加層檔案（見上表），在原檔旁建立副本，例如 <code>poll.html</code> &rarr; <code>my-poll.html</code>。對於如下主題： <code>themes/featured-styles/featured-modern.html</code>時，將副本保留在同一資料夾。</li>
+<li>在文字或程式碼編輯器中開啟副本，儲存為 <code>.html</code>，不是 <code>.html.txt</code>.</li></ol>
+<div class="warning-note"><strong>保留整個解壓縮後的資料夾。</strong> 一個 HTML 檔案可能從附近資料夾載入指令碼、樣式、字型、圖片、音訊或資料。移動頁面會破壞這些引用。GitHub 的頁面檢視或瀏覽器「儲存頁面」無法取得全部檔案。</div>
+<details class="guide-extra"><summary>資料夾結構和路徑的運作方式</summary>
+<pre><code>social_stream-beta/
+    poll.html
+    my-poll.html
+    currency.js
+    js/
+    libs/
+    shared/
+    thirdparty/
+    media/
+    sources/images/
+    themes/
+        featured-styles/
+            featured-modern.html
+            my-featured.html
+    docs/
+        event-reference.html</code></pre>
+<p>類似這樣的路徑： <code>../../shared/utils/chatHtml.js</code> 是相對於載入它的頁面的路徑。將頁面移到根目錄會破壞路徑。也請將自己的圖案和字型複製到資料夾，並使用相對路徑。編輯後的副本不會自動取得後續 SSN 修復。</p>
+</details>
+</section>
+
+<section class="guide-card" id="session"><h2>保留工作階段連結</h2>
+<p>啟動 SSN、連線來源並確認原疊加層正常運作，然後複製 <strong>完整連結</strong> ，從該疊加層對應的 SSN 工具取得。</p>
+<pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>以下內容之後的值： <code>session=</code> 是 SSN 工作階段，不是 YouTube 頻道、Twitch 名稱、檔案名稱或投票標題。SSN 和頁面必須使用相同工作階段和密碼。保持 SSN 執行：疊加層只接收資料，不會自行擷取聊天。</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">規則</th><th scope="col">原因</th></tr></thead><tbody>
+<tr><td data-label="規則"><code>?</code> 表示設定開始， <code>&amp;</code> 連接其餘設定</td><td data-label="原因">直接複製，不要重新輸入。HTML 屬性中應寫為 <code>&amp;amp;</code>。在瀏覽器或 OBS URL 欄中，使用一般的 <code>&amp;</code>.</td></tr>
+<tr><td data-label="規則">保留伺服器設定</td><td data-label="原因"><code>server</code>, <code>server2</code>, <code>server3</code>、本機端點、標籤和版本值因頁面而異。不要因為其他疊加層使用某個伺服器參數就把它加上。</td></tr>
+<tr><td data-label="規則">保留以下位置之後的所有內容： <code>#</code></td><td data-label="原因">可能有影響。例如 AI Event Overlay 使用私密的 <code>#aieventauth=...</code> 權杖。</td></tr>
+<tr><td data-label="規則">分享時使用預留值</td><td data-label="原因">不要在螢幕擷取畫面、程式碼庫或 AI 提示詞中洩露真實工作階段、密碼和私密權杖。</td></tr>
+</tbody></table>
+<p>副本一直空白時先檢查原始連結。有的頁面會詢問缺少的設定，有的會保持隱藏或重新導向。把正確工作階段寫進連結可避免猜測。</p>
+</section>
+
+<section class="guide-card" id="local-file"><h2>在 OBS 開啟檔案</h2>
+<p>直接從電腦開啟編輯後的檔案，不需要伺服器。</p>
+<ol class="guide-steps"><li>將 HTML 副本拖進 Chrome 或 Edge，複製位址。位址以 <code>file:///</code>.</li>
+<li>從可用的 SSN 疊加層連結中複製從以下位置開始的全部內容： <code>?</code> 起的全部內容，貼到檔案位址末尾。這樣保留工作階段、密碼、設定及任何 <code>#</code> 部分。</li>
+<li>在瀏覽器開啟組合好的位址進行測試。</li>
+<li>在 OBS 中，新增 <strong>瀏覽器來源</strong>。將 <strong>本機檔案</strong> 取消勾選。將完整位址貼到 <strong>URL</strong> ，再設定寬度和高度。</li></ol>
+<p>例如：這個 SSN 連結…</p>
+<pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>…在 Windows 上下載的投票副本中變為：</p>
+<pre><code>file:///C:/SSN/social_stream-beta/my-poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>macOS 上以 <code>file:///Users/...</code>，Linux 上通常是 <code>file:///home/...</code>。從瀏覽器複製會幫你處理空格和斜線。</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">實用說明</th><th scope="col">詳細資料</th></tr></thead><tbody>
+<tr><td data-label="實用說明">只需設定一次</td><td data-label="詳細資料">OBS 會儲存位址。保留資料夾原位置，並讓 SSN 和聊天來源持續執行。</td></tr>
+<tr><td data-label="實用說明">儲存修改後</td><td data-label="詳細資料">點選 <strong>重新整理目前頁面快取</strong> 在來源屬性中。</td></tr>
+<tr><td data-label="實用說明">為什麼不選取本機檔案？</td><td data-label="詳細資料">URL 欄允許加入 <code>?session=...</code>。透過「本機檔案」選取檔案不會加入這些設定。</td></tr>
+</tbody></table>
+<details class="guide-extra"><summary>可選：使用帶有啟動器的本機檔案複選框</summary>
+<p>OBS 檔案選擇器只能選檔案，不能加入設定。小型啟動頁可以攜帶設定開啟編輯後的頁面：</p>
+<ol class="guide-steps"><li>將下方程式碼儲存為 <code>launch-my-poll.html</code> ，放在以下檔案旁： <code>my-poll.html</code>.</li>
+<li>用複製的完整 SSN 連結替換預留連結。將 <code>./my-poll.html</code> 改成自己的檔案名稱。連結保留在引號內，使用一般的 <code>&amp;</code> 字元。</li>
+<li>按兩下啟動頁進行測試。在 OBS 中勾選 <strong>本機檔案</strong> 並選取 <strong>發射器</strong>。它會攜帶設定和以下內容轉到疊加層： <code>#</code> 部分。</li></ol>
+<pre><code id="local-launcher-example">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;title&gt;My local overlay launcher&lt;/title&gt;
+&lt;p&gt;Opening the local overlay...&lt;/p&gt;
+&lt;script&gt;
+var copiedLink = new URL(&quot;https://socialstream.ninja/poll.html?session=YOUR_SESSION&quot;);
+var localPage = new URL(&quot;./my-poll.html&quot;, window.location.href);
+localPage.search = copiedLink.search;
+localPage.hash = copiedLink.hash;
+window.location.replace(localPage.href);
+&lt;/script&gt;
+&lt;/html&gt;</code></pre>
+<p>若主題在子資料夾中，將啟動頁放在該主題副本旁。啟動頁含連線連結，應保密。已包含設定的獨立匯出檔案則按自己的說明操作。</p>
+</details>
+<p>OBS 的檔案/URL 模式、尺寸、自訂 CSS 和重新整理說明見其 <a href="https://obsproject.com/kb/browser-source">瀏覽器原始碼參考</a>.</p>
+</section>
+
+<section class="guide-card" id="design"><h2>修改設計，或請 AI</h2>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">我想要…</th><th scope="col">執行操作</th></tr></thead><tbody>
+<tr><td data-label="我想要">僅修改 CSS</td><td data-label="執行操作">保留託管連結，使用 OBS 的 <strong>自訂 CSS</strong> 欄中。僅影響該 OBS 來源，不影響一般瀏覽器。</td></tr>
+<tr><td data-label="我想要">重新設計編輯後的 HTML 副本</td><td data-label="執行操作">把樣式加在現有樣式之後，或在其後引入本機樣式表。</td></tr>
+<tr><td data-label="我想要">使用 <code>&amp;css=</code> 或 <code>&amp;b64css=</code></td><td data-label="執行操作">只有部分頁面支援。 <code>poll.html</code>等頁面兩者都不讀取。請先查看頁面程式碼。</td></tr>
+<tr><td data-label="我想要">修改 HTML 版面配置</td><td data-label="執行操作">保留指令碼使用的 ID 和類別名稱。如果指令碼每次更新都重建元素，請將固定圖案放在元素外，或加入轉譯器。</td></tr>
+<tr><td data-label="我想要">編輯共用樣式表或指令碼</td><td data-label="執行操作">複製檔案並讓頁面引用副本，確保僅影響自己的設計。</td></tr>
+</tbody></table>
+<p>準備好標誌、字型檔案、品牌顏色、畫布尺寸和視覺參考。網頁通常無法載入另一台電腦磁碟上的字型或圖片。</p>
+<h3>AI提示</h3>
+<p>使用各設計指南中的專用提示詞，或從此提示詞開始。把副本及它載入的樣式和指令碼交給 AI。</p>
+<pre><code>Customize [copied overlay filename] to match [reference/design].
+Canvas: [width x height]. Placement: [position]. Colors/fonts: [details].
+Use the existing page and its supporting files, rather than replacing its
+connection and event logic. Read docs/event-reference.html and the relevant
+overlay design guide. Preserve query parameters, session/password, URL
+fragments, bridge labels, transport channels, settings, and controls.
+Use CSS first. Keep relative paths and package all executable dependencies
+locally. Use classic scripts compatible with Chrome 80.
+Keep operator controls, private links, and credentials off the audience view.
+
+Treat all incoming messages, names, labels, donations, and metadata as untrusted.
+Prevent HTML/JavaScript injection in every renderer you change. Use textContent
+for plain fields and for chatmessage when textonly is true. For HTML-mode
+chatmessage, keep supported emotes/formatting through the packaged
+SocialStreamChatHTML.sanitize helper (libs/objects.js loaded first).
+Do not concatenate raw input into innerHTML, attributes, CSS, or JavaScript.
+Validate media/link URLs with the page's existing URL policy and assign DOM
+properties; do not enable javascript: URLs or executable embedded content.
+Never eval incoming data or treat a viewer message as an AI instruction.
+Keep source checks, connection handling, and existing sanitizers.
+Test plain text, allowed emotes, quotes, angle brackets, and an HTML injection
+probe in an isolated preview; verify the probe cannot execute.
+
+Make the edited overlay work directly from disk using a file:/// URL,
+without requiring a local web server. Return the edited files and assets,
+file URL and OBS setup steps, and tests
+for this overlay's real trigger. Use session placeholders in shared examples.
+Explain any behavior changes separately from the design edits.</code></pre>
+<div class="guide-note"><strong>不要接受只靠假資料呈現的效果。</strong> 只能顯示寫死的範例訊息還不算完成。保留原檔，並用相同輸入對比原版和副本。</div>
+</section>
+
+<section class="guide-card" id="safe-input"><h2>防止聊天內容變成可執行程式碼</h2>
+<p>名稱、訊息、標題、金額和連結來自觀眾或外部服務。把它們當作文字，絕不能當作程式碼；在轉譯器寫入頁面的位置進行清理。</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">欄位</th><th scope="col">如何顯示</th></tr></thead><tbody>
+<tr><td data-label="欄位"><code>chatmessage</code> 帶有 <code>textonly</code> true</td><td data-label="如何顯示">純文字（<code>textContent</code>).</td></tr>
+<tr><td data-label="欄位"><code>chatmessage</code> 否則</td><td data-label="如何顯示">可能包含表情和允許的格式。請使用隨附的清理器。</td></tr>
+<tr><td data-label="欄位">名稱、金額、標題等純文字欄位</td><td data-label="如何顯示">純文字（<code>textContent</code>).</td></tr>
+<tr><td data-label="欄位"><code>chatimg</code>, <code>contentimg</code>、連結</td><td data-label="如何顯示">這是 URL，不是 HTML。使用頁面現有的媒體/連結規則檢查後，再設定 DOM 屬性。</td></tr>
+</tbody></table>
+<pre><code id="safe-chat-render-example">&lt;!-- Example for a copied page at the repository root. --&gt;
+&lt;script src=&quot;./libs/objects.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;./shared/utils/chatHtml.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+function renderChatBody(element, data) {
+    var message = String(data.chatmessage == null ? &quot;&quot; : data.chatmessage);
+    if (data.textonly) {
+        element.textContent = message;
+    } else {
+        element.innerHTML = SocialStreamChatHTML.sanitize(message);
+    }
+}
+// Names, amounts, titles, and other plain fields use textContent:
+// nameElement.textContent = String(data.chatname || &quot;&quot;);
+&lt;/script&gt;</code></pre>
+<ul>
+<li>頁面已有清理器時請保留，不要再加第二個。</li>
+<li>子資料夾中的檔案需要調整指令碼路徑。</li>
+<li>不要把原始姓名拼進屬性字串，也不要把未經檢查的顏色拼進樣式標記。驗證樣式值後逐項設定屬性。</li>
+<li>即使 HTML 已清理，也不能安全地當作 JavaScript 執行或作為 AI 指令。</li>
+</ul>
+<p>更多背景： <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html">OWASP 關於安全輸出位置與 HTML 清理的指南</a>.</p>
+<details class="guide-extra"><summary>如何安全測試轉譯器</summary>
+<p>在私密的本機預覽中執行，不要發到公開聊天。</p>
+<ul><li>使用類似這樣的名稱： <code>Guest &lt;b&gt;One&lt;/b&gt;</code>。角括號應作為文字顯示。</li>
+<li>傳送 <code>chatmessage: "&lt;b&gt;Hello&lt;/b&gt;"</code> 帶有 <code>textonly: true</code>，再改為 false。一種應將標籤顯示為文字，另一種應顯示粗體文字。</li>
+<li>確認支援的表情和純圖片訊息仍能正常顯示。</li>
+<li>請 AI 測試無害的探測內容，例如 <code>&lt;img src=x onerror="window.__ssnInjectionProbe=1"&gt;</code>。它不應執行、設定標記或留下事件屬性。也請測試使用指令碼協定的連結。</li></ul>
+<p>測試通過僅涵蓋已測試的路徑。重點檢查設計變更涉及的轉譯器和欄位。</p>
+</details>
+</section>
+
+<section class="guide-card" id="test"><h2>逐項測試</h2>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">測試</th><th scope="col">方法</th></tr></thead><tbody>
+<tr><td data-label="測試">版面配置</td><td data-label="方法">頁面有預覽/示範模式時請使用，否則使用虛構的本機樣本。測試長名稱和長訊息、缺少頭像、空資料及預期列數。</td></tr>
+<tr><td data-label="測試">SSN 資料傳遞</td><td data-label="方法">保持 SSN 執行，並使用 <a href="test-message-guide.html">建立測試訊息</a> ，使用相同工作階段。通常的 Extension API 模式需要 <strong>擴充功能的遠端 API 控制</strong> 開啟。請使用測試環境，因為測試訊息可能觸發自動化。</td></tr>
+<tr><td data-label="測試">真實觸發操作</td><td data-label="方法">從 Dock 精選訊息來顯示卡片、參與投票、抽出得獎者、更改跑馬燈文字或啟動計時器。一般聊天不能測試所有功能。</td></tr>
+<tr><td data-label="測試">真實擷取</td><td data-label="方法">檢查真實訊息或事件是否同時到達原版和副本。模擬事件只能證明顯示功能正常。</td></tr>
+<tr><td data-label="測試">OBS</td><td data-label="方法">檢查最終尺寸、透明度、動畫、聲音、字型和層次。試試顯示/隱藏、清除/重設和重新整理。OBS 與瀏覽器不共用登入狀態或儲存的資料。</td></tr>
+</tbody></table>
+<div class="warning-note"><strong>重新整理可能遺失資料。</strong> 有的頁面將資料儲存在記憶體中。開啟自動重新整理或隱藏時關閉前，先查看該類型指南。移除 <code>demo</code> 或 <code>preview</code> ，從連結中移除後再檢查即時資料。</div>
+</section>
+
+<section class="guide-card" id="references"><h2>需要交給 AI 的檔案</h2>
+<p>把疊加層本身的檔案、載入的 CSS/JS，以及以下檔案交給 AI。單靠事件參考無法解釋投票控制項或各疊加層的版面程式碼。</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">文件</th><th scope="col">用途</th></tr></thead><tbody>
+<tr><td data-label="文件"><a href="event-reference.html"><code>docs/event-reference.html</code></a></td><td data-label="用途">正式欄位、具名事件、中繼資料、媒體與捐款數值。</td></tr>
+<tr><td data-label="文件"><a href="../../docs/index.html?file=customoverlays.md"><code>docs/customoverlays.md</code></a></td><td data-label="用途">自訂接收端與連線範例。</td></tr>
+<tr><td data-label="文件"><a href="events-alerts-compatibility.html">事件和提醒相容性</a></td><td data-label="用途">各來源傳送的事件和欄位。</td></tr>
+<tr><td data-label="文件"><a href="test-message-guide.html">測試訊息指南</a> 和 <a href="../../createtestmessage.html"><code>createtestmessage.html</code></a></td><td data-label="用途">資料範例和傳遞模式。</td></tr>
+<tr><td data-label="文件"><a href="../../libs/objects.js"><code>libs/objects.js</code></a> 和 <a href="../../shared/utils/chatHtml.js"><code>shared/utils/chatHtml.js</code></a></td><td data-label="用途">隨附的顯示清理器。</td></tr>
+<tr><td data-label="文件"><a href="../../shared/utils/chatBadges.js"><code>shared/utils/chatBadges.js</code></a> 和 <a href="../../shared/utils/contentImage.js"><code>shared/utils/contentImage.js</code></a></td><td data-label="用途">現有的徽章和圖片處理。</td></tr>
+<tr><td data-label="文件"><a href="../../js/transport-dedupe.js"><code>js/transport-dedupe.js</code></a>, <a href="../../js/local-server-url.js"><code>js/local-server-url.js</code></a>, <a href="../../shared/overlay-control-transport.js"><code>shared/overlay-control-transport.js</code></a></td><td data-label="用途">頁面載入相關指令碼時使用的現有連線支援。</td></tr>
+<tr><td data-label="文件"><a href="../../currency.js"><code>currency.js</code></a></td><td data-label="用途">保持 <code>hasDonation</code> 用於顯示，並使用有效的美元數值作為 <code>donoValue</code>，包括零。</td></tr>
+<tr><td data-label="文件"><a href="../actions/event-flow-guide.html">Event Flow</a> 和 <a href="commands.html">指令與 API</a></td><td data-label="用途">設計需要觸發操作時，重用現有控制項。</td></tr>
+</tbody></table>
+</section>
+
+<section class="guide-card" id="troubleshooting"><h2>解決問題</h2>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">問題</th><th scope="col">試試這個</th></tr></thead><tbody>
+<tr><td data-label="問題">找不到文件</td><td data-label="試試這個">重新把 HTML 拖進瀏覽器並複製位址。確認檔案名稱以 .html 結尾，而不是 .html.txt。</td></tr>
+<tr><td data-label="問題">缺少腳本、字體或圖像</td><td data-label="試試這個">保持解壓縮後的資料夾結構，把副本放在原檔旁。檢查新增圖片和字型是否位於頁面預期的位置。</td></tr>
+<tr><td data-label="問題">顯示空白或「等待中」</td><td data-label="試試這個">檢查工作階段、密碼、完整的 <code>?</code> 和 <code>#</code> 部分，確認 SSN 正在執行、功能已開啟、正確輸入正在到達。與原 SSN 連結對照。</td></tr>
+<tr><td data-label="問題">OBS 中的外觀與瀏覽器不同</td><td data-label="試試這個">檢查寬高、舊自訂 CSS、字型、快取和瀏覽器儲存空間，儲存後重新整理。</td></tr>
+<tr><td data-label="問題">更新後標誌消失</td><td data-label="試試這個">指令碼可能正在重建容器。請把固定裝飾放在容器外，或修改轉譯範本。</td></tr>
+<tr><td data-label="問題">資料重設或操作執行兩次</td><td data-label="試試這個">檢查重新整理/卸載設定、是否開啟了重複的疊加層或控制頁，以及頁面本身的去重和狀態處理。</td></tr>
+</tbody></table>
+<details class="guide-extra" id="local-http"><summary>特殊情況：讀取單獨資料檔案的頁面</summary>
+<p>地圖透過以下方式載入本機 JSON 檔案： <code>fetch()</code>載入，直接從磁碟開啟時可能被瀏覽器攔截。只修改地圖樣式時，請用託管連結和 OBS 自訂 CSS；編輯副本時，可讓 AI 將地圖資料嵌入頁面，以便從磁碟開啟。託管是確實需要它的頁面的進階選項，不是一般步驟。</p>
+</details>
+<p>先修復已確認的最小問題。改變樣式不應需要修改擷取指令碼或加入事件欄位。分享公開分支時應包含素材，排除含私密連結的啟動頁。</p>
+</section>
+</div></main>
+<footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja &middot; <a href="overlay-customization-guide.html">疊加設計指南</a> &middot; <a href="guides.html">所有指南</a></p></div></div></footer>
+<script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

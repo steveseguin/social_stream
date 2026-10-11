@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/tikfinity-setup.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/tikfinity-setup.html">
+    <meta property="og:title" content="TikTok LIVE 的 TikFinity 設定 - Social Stream Ninja">
+    <meta property="og:description" content="將 TikFinity 設定為 Social Stream Ninja 的備用 TikTok LIVE 聊天來源，附螢幕擷取畫面和疑難排解。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/tikfinity-setup.html">
+    <meta name="twitter:title" content="TikTok LIVE 的 TikFinity 設定 - Social Stream Ninja">
+    <meta name="twitter:description" content="將 TikFinity 設定為 Social Stream Ninja 的備用 TikTok LIVE 聊天來源，附螢幕擷取畫面和疑難排解。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok LIVE 的 TikFinity 設定 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="將 TikFinity 設定為 Social Stream Ninja 的備用 TikTok LIVE 聊天來源，附螢幕擷取畫面和疑難排解。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/tikfinity-setup.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"(called":"（稱為",", add the correct feed link through":", add the correct feed link through",", and activate it.":"，並啟動它。",", copy the Activity Feed's browser-source URL, which looks like":"，複製活動來源的瀏覽器來源 URL，如下圖所示",", enter the TikTok username of the public LIVE you want to capture. Use the account's username, not its display name.":"，輸入想擷取的公開 LIVE 的 TikTok 使用者名稱。使用帳號使用者名稱，而不是顯示名稱。",", or open":"，或開啟",", paste the Activity Feed link, save, and activate it again. If your SSApp version only shows":", paste the Activity Feed link, save, and activate it again. If your SSApp version only shows",". If you already have a TikFinity dashboard open, use its":"。如果已有開啟的 TikFinity 儀表板，請使用其",". Keep this token private. Older URLs such as":".將此令牌保密。較舊的網址，例如",". Open its gear/settings button.":"。開啟其齒輪/設定按鈕。",". SSApp connects to its local endpoint automatically; no API key or dock URL is needed.":". SSApp 會自動連接到其本機端點；不需要 API 金鑰或停靠 URL。","1. Connect TikTok":"1. 連接 TikTok","1. Enter the TikTok username in TikFinity":"1. 在 TikFinity 中輸入 TikTok 使用者名稱","2. Choose activity":"2. 選擇活動","2. Choose what the Activity Feed shows":"2. 選擇 Activity Feed 顯示的內容","3. Add the dock URL to Social Stream Ninja":"3. 將停駐面板 URL 新增至 Social Stream Ninja","3. Add to SSN":"3. 新增至 SSN","4. Check capture":"4. 檢查擷取","4. Check new messages in SSN":"4. 在 SSN 中檢查新訊息","Add other source":"新增其他來源（Add other source）","Already added TikFinity?":"Already added TikFinity?","Another TikFinity page interrupts the connection:":"另一個 TikFinity 頁面中斷連接：","Built-in TikTok emoji codes such as":"內建 TikTok 表情代碼，例如","Capture \"joined\" stream events":"擷取「joined」直播事件","Chat is missing from Dock 2:":"Dock 2 中沒有聊天：","Check":"檢查","Check TikFinity's":"檢查 TikFinity 的","Choose":"選擇","Click":"點選","Commands & API":"指令與 API","Confirm the new message appears once in both TikFinity and SSN, with the correct name and text.":"確認新訊息在 TikFinity 和 SSN 中各出現一次，且名稱和文字正確。","Connect TikTok Account":"連接 TikTok 帳號（Connect TikTok Account）","Connected to TikFinity Desktop":"連接 TikFinity 桌面","Copy that dock's URL. Use the URL from your own TikFinity page.":"複製該停駐面板 URL。使用您自己的 TikFinity 頁面提供的 URL。","Development builds after SSApp 0.4.32 also offer":"SSApp 0.4.32 之後的開發版本也提供","Dock 1":"停駐面板 1（Dock 1）","Dock 2":"停駐面板 2（Dock 2）","Dock display preferences are saved in each browser. If the capture page in SSApp shows different categories from your Chrome preview, open the gear button in that capture page and choose its categories too.":"停駐面板顯示偏好分別儲存在每個瀏覽器中。如果 SSApp 擷取頁面顯示的類別與 Chrome 預覽不同，請開啟該擷取頁面中的齒輪按鈕，也為它選擇類別。","Download":"下載","Event API":"事件API","Everything appears twice:":"所有內容都出現兩次：","Features":"功能","Gifts, joins, or other events are missing:":"禮物、加入或其他事件缺失：","Guides":"指南","Hire":"聘用","Home":"首頁","If SSN's direct TikTok modes keep failing or missing messages, TikFinity offers another way to receive the LIVE chat. It may help when TikTok blocks or limits connections from your network, provided TikFinity can still connect to the stream.":"如果 SSN 的直接 TikTok 模式持續失敗或遺漏訊息，TikFinity 提供另一種接收 LIVE 聊天的方式。當 TikTok 封鎖或限制來自您網路的連接時，它可能有幫助，前提是 TikFinity 仍能連接該直播。","If something is missing":"如果有內容缺失","In SSApp, open":"在 SSApp 中，開啟","In the new":"在新的","In the same TikFinity tab, go to":"在同一個 TikFinity 分頁中，前往","Inspiration":"靈感","Keep TikFinity running:":"保持 TikFinity 執行：","Keep both the TikFinity dashboard and the SSApp capture source running.":"讓 TikFinity 儀表板和 SSApp 擷取來源都保持執行。","Leave it running for a few minutes and check that later messages continue to arrive.":"保持執行幾分鐘，檢查後續訊息是否繼續抵達。","Main navigation":"主導覽","OBS Dock":"OBS 停駐面板（OBS Dock）","OBS Quick Start":"OBS 快速入門","Only the TikFinity logo appears:":"只出現 TikFinity 標誌：","Open":"開啟","Open navigation menu":"開啟導覽選單","Open your SSN chat dock and wait for a":"開啟 SSN 聊天停駐面板，等候一則","Other chat sites":"其他聊天網站","Other overlay sources":"其他疊加畫面來源","Overlay Gallery":"疊加畫面圖庫","Overlays → OBS Docks":"Overlays → OBS Docks","Paste the complete TikFinity Activity Feed URL, add the source, and activate it. SSApp detects TikFinity automatically.":"貼上完整的 TikFinity Activity Feed URL，新增來源並啟用它。SSApp 會自動偵測 TikFinity。","Receiving LIVE events from TikFinity Desktop":"从 TikFinity 桌面接收 LIVE 事件","Replies do not work:":"回覆不起作用：","Run":"執行","SSApp: direct TikFinity Desktop connection (beta)":"SSApp：直接連接 TikFinity 桌面（測試版）","SSN treats these messages as":"SSN 將這些訊息視為","Save":"儲存","Set OBS Dock URL":"Set OBS Dock URL","Set up TikFinity as a fallback TikTok LIVE chat source in Social Stream Ninja, with screenshots and troubleshooting.":"將 TikFinity 設定為 Social Stream Ninja 的備用 TikTok LIVE 聊天來源，附螢幕擷取畫面和疑難排解。","Setup":"設定","Show Chat":"顯示聊天（Show Chat）","Sign-in":"登入","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Social Stream desktop app's Add other source dialog with the Chat page URL field and Add source button":"Social Stream 桌面應用程式的 Add other source 對話方塊，包含 Chat page URL 欄位和 Add source 按鈕","Sources and Settings":"來源與設定","Stop any direct TikTok source capturing the same LIVE so messages do not arrive twice.":"停止任何正在擷取同一 LIVE 的直接 TikTok 來源，以免訊息抵達兩次。","Stop that source, click":"Stop that source, click","Stop your existing SSApp TikTok capture, choose":"停止你現有的SSApp TikTok捕獲，選擇","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","The TikFinity dock URL is an input source. Your SSN chat dock and OBS overlay URLs remain your usual output links.":"TikFinity 停駐面板 URL 是輸入來源。SSN 聊天停駐面板和 OBS 疊加畫面 URL 仍是您平常使用的輸出連結。","The fallback guide is available directly beneath the TikTok connection options.":"備援指南位於 TikTok 連接選項正下方。","The username setting saves automatically; there is no separate Save button to press for this step. Wait for TikFinity to connect and confirm that new activity arrives.":"使用者名稱設定自動儲存，此步驟沒有單獨的 Save 按鈕。等候 TikFinity 連接，並確認有新活動抵達。","These checkboxes control what the TikFinity widget displays. SSN also has its own event filters; enabling a category here does not override an SSN filter.":"這些核取方塊控制 TikFinity 元件顯示的內容。SSN 也有自己的事件篩選器；在這裡啟用某個類別不會覆寫 SSN 篩選器。","This captures the stream selected in TikFinity, regardless of the username entered in SSApp. It is read-only. Use only one capture source for that stream to avoid duplicates. The local API can provide likes and viewer counts as well as chat and gifts; SSN's existing event filters still apply.":"這會捕捉 TikFinity 中選擇的串流，無論 SSApp 中輸入的使用者名稱為何。它是唯讀的。此流僅使用一個捕獲源以避免重複。本地API可以提供點讚和觀看次數以及聊天和禮物；SSN 現有的事件過濾器仍然適用。","This connection receives chat and supported activity. It does not send TikTok replies. You do not need OBS to use a TikFinity":"此連接接收聊天和支援的活動，不會傳送 TikTok 回覆。使用 TikFinity 的以下功能不需要 OBS：","TikFinity":"TikFinity","TikFinity Activity Feed settings with Show Chat, Follows, Shares, Gifts, Subs, Treasure Chests, and Joins enabled, plus the Save button":"TikFinity Activity Feed 設定，已啟用 Show Chat、Follows、Shares、Gifts、Subs、Treasure Chests 和 Joins，並顯示 Save 按鈕","TikFinity Desktop":"TikFinity 桌面版","TikFinity Desktop (Local API, Beta)":"TikFinity 桌面版（本機 API，測試版）","TikFinity OBS Docks":"TikFinity OBS Docks","TikFinity Setup":"TikFinity 設定","TikFinity Setup for TikTok LIVE - Social Stream Ninja":"TikTok LIVE 的 TikFinity 設定 - Social Stream Ninja","TikFinity account:":"TikFinity 帳號：","TikFinity capture is read-only. See":"TikFinity 擷取為唯讀。請參閱","TikFinity dashboard":"TikFinity 儀表板","TikFinity has old messages but SSN is empty:":"TikFinity 有舊訊息，但 SSN 是空的：","TikTok":"TikTok","TikTok Connection":"TikTok 連接","TikTok account:":"TikTok 帳號：","TikTok connection options in SSApp with a Set up TikFinity fallback guide link":"SSApp 中的 TikTok 連接選項，帶有 Set up TikFinity fallback 指南連結","TikTok message. Do not use older messages still visible in TikFinity as a capture test.":"TikTok 訊息。不要將 TikFinity 中仍可見的舊訊息用作擷取測試。","TikTok not connecting? Try TikFinity.":"TikTok 無法連接？試試 TikFinity。","TikTok quick start":"TikTok快速入門","TikTok signing help":"TikTok 簽章說明","Troubleshooting":"疑難排解","Under":"位於","Use a TikFinity Activity Feed as a fallback chat source in Social Stream Ninja.":"在 Social Stream Ninja 中使用 TikFinity Activity Feed 作為備用聊天來源。","Use one dashboard tab:":"使用一個儀表板分頁：","Use the gear button to choose the categories, then Save. Dock 2 does not show chat by default.":"使用齒輪按鈕選擇類別，然後 Save。Dock 2 預設不顯示聊天。","Use your normal SSN overlay URL in OBS, with the same SSN session. See":"在 OBS 中使用一般 SSN 疊加畫面 URL，並使用相同 SSN 工作階段。請參閱","Wait for":"等待","Watch a follow, share, or gift when one occurs. In SSN settings, enable":"追蹤、分享或禮物發生時觀察它。在 SSN 設定中，啟用","When to use this":"何時使用","You can find this guide again beside the":"您可以在以下選項旁再次找到本指南：","and":"和","and check a new message in the SSN dock. Hover over the connection status for recent activity information.":"並在SSN塢中查看新訊息。將滑鼠懸停在連線狀態上以取得最近的活動資訊。","and choose":"並選擇","and every activity category you want to see: follows, shares, gifts, subscriptions, treasure chests, and joins.":"並勾選它及想查看的每個活動類別：追蹤、分享、禮物、訂閱、寶箱和加入。","and remove the old source. Signing in to the dashboard does not supply or replace the feed URL.":"and remove the old source. Signing in to the dashboard does not supply or replace the feed URL.","are also supported. Keep the complete copied URL. Do not paste the Setup or OBS Docks configuration page into SSN.":"也得到支持。保留完整複製的 URL。請勿將設定或 OBS Docks 設定頁貼到 SSN 中。","as an SSN source.":"作為 SSN 來源。","check that the selected TikTok account is live and that TikFinity's main dashboard is connected. An open widget alone does not establish the upstream TikTok connection.":"檢查所選 TikTok 帳號是否正在直播，以及 TikFinity 主儀表板是否已連接。僅開啟元件不會建立上游 TikTok 連接。","check the dock's categories and SSN's own event/donation filters. A category cannot be verified until that event happens.":"檢查停駐面板類別和 SSN 自身的事件/贊助篩選器。事件實際發生前，無法驗證該類別。","confirms the local connection only. If LIVE events stop, check TikFinity's dashboard and selected stream. SSApp reconnects when Desktop closes its local connection; it cannot repair TikFinity's upstream connection.":"僅確認本地連線。如果 LIVE 活動停止，請檢查 TikFinity 的儀表板和選定的流。當Desktop關閉其本機連線時SSApp重新連線；它無法修復 TikFinity 的上游連線。","direct TikTok connection options":"直接 TikTok 連接選項","for reply support.":"了解回覆支援。","for source filters and existing overlays. Supported activity includes chat, gifts and gift streaks, follows, shares, subscriptions, joins, and treasure chests. The Activity Feed does not display likes or viewer counts.":"用於來源篩選器和現有疊加畫面。支援的活動包括聊天、禮物和禮物連送、追蹤、分享、訂閱、加入和寶箱。Activity Feed 不顯示按讚或觀眾數量。","if needed.":"（如有需要）。","if prompted.":"如果出現提示。","if you want joins, and check that donation/event filters allow the activity you want.":"如果需要加入通知，並檢查贊助/事件篩選器是否允許所需活動。","in older versions).":"在舊版本中）。","in the dock settings. This Save button is separate from the automatically saved username setting.":"在停駐面板設定中。此 Save 按鈕與自動儲存的使用者名稱設定是分開的。","in the existing TikTok Connection dropdown. If that choice is missing, use the Activity Feed instructions below.":"在現有的 TikTok 連線下拉清單中。如果缺少該選項，請使用下方的活動來源說明。","keep one main dashboard tab open. Use its navigation to change sections; the Activity Feed capture window is separate.":"保持一個主儀表板分頁開啟。使用其導覽切換區段；Activity Feed 擷取視窗是單獨的。","keep only one capture source for that LIVE. Repeated identical messages with different TikTok message IDs can also be genuine separate messages.":"該 LIVE 只保留一個擷取來源。內容相同但 TikTok 訊息 ID 不同的重複訊息，也可能是真實的獨立訊息。","leave one main TikFinity dashboard tab open and connected throughout the stream.":"整個直播期間，讓一個主 TikFinity 儀表板分頁保持開啟並連接。","navigate between Setup and OBS Docks in the same TikFinity tab. If opening another dashboard interrupts the first, keep the newest connected tab and close the extra dashboard tabs. Keep the separate SSN capture source running.":"在同一 TikFinity 分頁中切換 Setup 和 OBS Docks。如果開啟另一個儀表板會中斷第一個，請保留最新連接的分頁，關閉多餘的儀表板分頁。保持單獨的 SSN 擷取來源執行。","navigation instead of opening another tab. Sign in to":"導覽，而不是另開分頁。登入","new":"新","on the same computer as SSApp. Sign in to TikFinity and connect your LIVE stream there.":"與 SSApp 在同一台電腦上。登入 TikFinity 並在那裡連接您的直播。","open the gear button, enable Show Chat, and Save.":"開啟齒輪按鈕，啟用 Show Chat，然後 Save。","options in an SSApp TikTok source's configuration.":"選項，位於 SSApp TikTok 來源設定中。","or":"或","render as images in an updated SSN source. Text-only mode intentionally keeps text instead; reload the TikFinity source after changing that setting.":"在更新後的 SSN 來源中會繪製為影像。純文字模式會刻意保留文字；變更該設定後，請重新載入 TikFinity 來源。","sign in to TikFinity, or create its free account if prompted. An existing browser session may already be signed in.":"登入 TikFinity，或在提示時建立免費帳號。現有瀏覽器工作階段可能已經登入。","this read-only setup uses a username; it does not require signing in to that TikTok account. We tested it with another public LIVE account. The selected account must be live and accessible to TikFinity.":"此唯讀設定使用使用者名稱，不需要登入該 TikTok 帳號。我們使用另一個公開 LIVE 帳號進行了測試。所選帳號必須正在直播，且 TikFinity 能夠存取。","wait for new activity, confirm the full dock URL, and reload the SSN source. If the widget itself stops receiving new messages, reconnect TikFinity first.":"等候新活動，確認完整的停駐面板 URL，並重新載入 SSN 來源。如果元件本身停止接收新訊息，請先重新連接 TikFinity。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tikfinity-setup.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tikfinity-setup.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tikfinity-setup.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tikfinity-setup.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tikfinity-setup.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tikfinity-setup.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tikfinity-setup.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tikfinity-setup.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tikfinity-setup.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tikfinity-setup.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="tikfinity-setup.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/tikfinity-setup.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tikfinity-setup.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tikfinity-setup.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tikfinity-setup.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tikfinity-setup.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tikfinity-setup.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tikfinity-setup.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tikfinity-setup.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero"><div class="container">
+        <h1>TikTok 無法連接？試試 TikFinity。</h1>
+        <p>在 Social Stream Ninja 中使用 TikFinity Activity Feed 作為備用聊天來源。</p>
+    </div></section>
+    <main class="guide-section"><div class="container">
+        <section class="guide-card" id="before-you-start">
+            <h2 id="read-section-1">何時使用</h2>
+            <p>如果 SSN 的直接 TikTok 模式持續失敗或遺漏訊息，TikFinity 提供另一種接收 LIVE 聊天的方式。當 TikTok 封鎖或限制來自您網路的連接時，它可能有幫助，前提是 TikFinity 仍能連接該直播。</p>
+            <p>此連接接收聊天和支援的活動，不會傳送 TikTok 回覆。使用 TikFinity 的以下功能不需要 OBS： <strong>OBS 停駐面板（OBS Dock）</strong> 作為 SSN 來源。</p>
+            <ul class="guide-list">
+                <li><strong>TikFinity 帳號：</strong> 登入 TikFinity，或在提示時建立免費帳號。現有瀏覽器工作階段可能已經登入。</li>
+                <li><strong>TikTok 帳號：</strong> 此唯讀設定使用使用者名稱，不需要登入該 TikTok 帳號。我們使用另一個公開 LIVE 帳號進行了測試。所選帳號必須正在直播，且 TikFinity 能夠存取。</li>
+                <li><strong>保持 TikFinity 執行：</strong> 整個直播期間，讓一個主 TikFinity 儀表板分頁保持開啟並連接。</li>
+            </ul>
+            <p><a href="#connect">1. 連接 TikTok</a> &middot; <a href="#dock">2. 選擇活動</a> &middot; <a href="#ssn">3. 新增至 SSN</a> &middot; <a href="#verify">4. 檢查擷取</a> &middot; <a href="#troubleshooting">疑難排解</a></p>
+        </section>
+        <section class="guide-card" id="desktop-api">
+            <h2 id="read-section-2">SSApp：直接連接 TikFinity 桌面（測試版）</h2>
+            <p>SSApp 0.4.32 之後的開發版本也提供 <strong>TikFinity 桌面版（本機 API，測試版）</strong> 在現有的 TikTok 連線下拉清單中。如果缺少該選項，請使用下方的活動來源說明。</p>
+            <ol class="guide-steps">
+                <li>執行 <a href="https://tikfinity.zerody.one/app/">TikFinity 桌面版</a> 與 SSApp 在同一台電腦上。登入 TikFinity 並在那裡連接您的直播。</li>
+                <li>檢查 TikFinity 的 <a href="https://tikfinity.zerody.one/tiktok/dapi">事件API</a>. SSApp 會自動連接到其本機端點；不需要 API 金鑰或停靠 URL。</li>
+                <li>停止你現有的SSApp TikTok捕獲，選擇 <strong>TikFinity 桌面版（本機 API，測試版）</strong>，並啟動它。</li>
+                <li>等待 <strong>从 TikFinity 桌面接收 LIVE 事件</strong> 並在SSN塢中查看新訊息。將滑鼠懸停在連線狀態上以取得最近的活動資訊。</li>
+            </ol>
+            <p>這會捕捉 TikFinity 中選擇的串流，無論 SSApp 中輸入的使用者名稱為何。它是唯讀的。此流僅使用一個捕獲源以避免重複。本地API可以提供點讚和觀看次數以及聊天和禮物；SSN 現有的事件過濾器仍然適用。</p>
+            <p><strong>連接 TikFinity 桌面</strong> 僅確認本地連線。如果 LIVE 活動停止，請檢查 TikFinity 的儀表板和選定的流。當Desktop關閉其本機連線時SSApp重新連線；它無法修復 TikFinity 的上游連線。</p>
+        </section>
+        <section class="guide-card" id="connect">
+            <h2 id="read-section-3">1. 在 TikFinity 中輸入 TikTok 使用者名稱</h2>
+            <ol class="guide-steps">
+                <li>開啟 <a href="https://tikfinity.zerody.one/tiktok/setup">TikFinity 設定</a>。如果已有開啟的 TikFinity 儀表板，請使用其 <strong>設定</strong> 導覽，而不是另開分頁。登入 <em>TikFinity</em> 如果出現提示。</li>
+                <li>位於 <strong>連接 TikTok 帳號（Connect TikTok Account）</strong>，輸入想擷取的公開 LIVE 的 TikTok 使用者名稱。使用帳號使用者名稱，而不是顯示名稱。</li>
+                <li>使用者名稱設定自動儲存，此步驟沒有單獨的 Save 按鈕。等候 TikFinity 連接，並確認有新活動抵達。</li>
+            </ol>
+            <div class="callout-box"><strong>使用一個儀表板分頁：</strong> 在同一 TikFinity 分頁中切換 Setup 和 OBS Docks。如果開啟另一個儀表板會中斷第一個，請保留最新連接的分頁，關閉多餘的儀表板分頁。保持單獨的 SSN 擷取來源執行。</div>
+        </section>
+        <section class="guide-card" id="dock">
+            <h2 id="read-section-4">2. 選擇 Activity Feed 顯示的內容</h2>
+            <ol class="guide-steps">
+                <li>在同一個 TikFinity 分頁中，前往 <strong>Overlays &rarr; OBS Docks</strong>，或開啟 <a href="https://tikfinity.zerody.one/tiktok/obsdocks" target="_self">TikFinity OBS Docks</a>.</li>
+                <li>選擇 <strong>停駐面板 1（Dock 1）</strong> 或 <strong>停駐面板 2（Dock 2）</strong>。開啟其齒輪/設定按鈕。</li>
+                <li>檢查 <strong>顯示聊天（Show Chat）</strong> 並勾選它及想查看的每個活動類別：追蹤、分享、禮物、訂閱、寶箱和加入。</li>
+                <li>點選 <strong>儲存</strong> 在停駐面板設定中。此 Save 按鈕與自動儲存的使用者名稱設定是分開的。</li>
+                <li>複製該停駐面板 URL。使用您自己的 TikFinity 頁面提供的 URL。</li>
+            </ol>
+            <figure class="guide-figure"><a href="../../docs/images/tikfinity/dock-settings.png" target="_blank" rel="noopener"><img class="guide-image" src="../../docs/images/tikfinity/dock-settings.png" width="310" height="382" style="max-width:310px;margin-left:auto;margin-right:auto" alt="TikFinity Activity Feed 設定，已啟用 Show Chat、Follows、Shares、Gifts、Subs、Treasure Chests 和 Joins，並顯示 Save 按鈕" loading="lazy"></a><figcaption>使用齒輪按鈕選擇類別，然後 Save。Dock 2 預設不顯示聊天。</figcaption></figure>
+            <p>在新的 <a href="https://app.tikfinity.com/overlays/obs-docks">TikFinity 儀表板</a>，複製活動來源的瀏覽器來源 URL，如下圖所示 <code>https://widgets.tikfinity.com/YOUR_TOKEN</code>.將此令牌保密。較舊的網址，例如 <code>https://tikfinity.zerody.one/widget/activity-feed?cid=YOUR_ID&amp;did=1</code> 也得到支持。保留完整複製的 URL。請勿將設定或 OBS Docks 設定頁貼到 SSN 中。</p>
+            <p>這些核取方塊控制 TikFinity 元件顯示的內容。SSN 也有自己的事件篩選器；在這裡啟用某個類別不會覆寫 SSN 篩選器。</p>
+            <p>停駐面板顯示偏好分別儲存在每個瀏覽器中。如果 SSApp 擷取頁面顯示的類別與 Chrome 預覽不同，請開啟該擷取頁面中的齒輪按鈕，也為它選擇類別。</p>
+        </section>
+        <section class="guide-card" id="ssn">
+            <h2 id="read-section-5">3. 將停駐面板 URL 新增至 Social Stream Ninja</h2>
+            <ol class="guide-steps">
+                <li>在 SSApp 中，開啟 <strong>來源與設定</strong> 並選擇 <strong>新增其他來源（Add other source）</strong> （稱為 <strong>其他聊天網站</strong> 在舊版本中）。</li>
+                <li>貼上完整的 TikFinity Activity Feed URL，新增來源並啟用它。SSApp 會自動偵測 TikFinity。</li>
+                <li>停止任何正在擷取同一 LIVE 的直接 TikTok 來源，以免訊息抵達兩次。</li>
+                <li>讓 TikFinity 儀表板和 SSApp 擷取來源都保持執行。</li>
+            </ol>
+            <figure class="guide-figure"><a href="../../docs/images/tikfinity/ssapp-source.png" target="_blank" rel="noopener"><img class="guide-image" src="../../docs/images/tikfinity/ssapp-source.png" width="750" height="414" alt="Social Stream 桌面應用程式的 Add other source 對話方塊，包含 Chat page URL 欄位和 Add source 按鈕" loading="lazy"></a><figcaption>TikFinity 停駐面板 URL 是輸入來源。SSN 聊天停駐面板和 OBS 疊加畫面 URL 仍是您平常使用的輸出連結。</figcaption></figure>
+            <p><strong>Already added TikFinity?</strong> Stop that source, click <strong>Set OBS Dock URL</strong>, paste the Activity Feed link, save, and activate it again. If your SSApp version only shows <strong>登入</strong>, add the correct feed link through <strong>新增其他來源（Add other source）</strong> and remove the old source. Signing in to the dashboard does not supply or replace the feed URL.</p>
+            <p>您可以在以下選項旁再次找到本指南： <strong>TikTok 連接</strong> 選項，位於 SSApp TikTok 來源設定中。</p>
+            <figure class="guide-figure"><a href="../../docs/images/tikfinity/ssapp-fallback.png" target="_blank" rel="noopener"><img class="guide-image" src="../../docs/images/tikfinity/ssapp-fallback.png" alt="SSApp 中的 TikTok 連接選項，帶有 Set up TikFinity fallback 指南連結" loading="lazy"></a><figcaption>備援指南位於 TikTok 連接選項正下方。</figcaption></figure>
+        </section>
+        <section class="guide-card" id="verify">
+            <h2 id="read-section-6">4. 在 SSN 中檢查新訊息</h2>
+            <ol class="guide-steps">
+                <li>開啟 SSN 聊天停駐面板，等候一則 <strong>新</strong> TikTok 訊息。不要將 TikFinity 中仍可見的舊訊息用作擷取測試。</li>
+                <li>確認新訊息在 TikFinity 和 SSN 中各出現一次，且名稱和文字正確。</li>
+                <li>追蹤、分享或禮物發生時觀察它。在 SSN 設定中，啟用 <strong>擷取「joined」直播事件</strong> 如果需要加入通知，並檢查贊助/事件篩選器是否允許所需活動。</li>
+                <li>保持執行幾分鐘，檢查後續訊息是否繼續抵達。</li>
+                <li>在 OBS 中使用一般 SSN 疊加畫面 URL，並使用相同 SSN 工作階段。請參閱 <a href="obs-quick-start.html">OBS 快速入門</a> （如有需要）。</li>
+            </ol>
+            <p>SSN 將這些訊息視為 <strong>TikTok</strong> 用於來源篩選器和現有疊加畫面。支援的活動包括聊天、禮物和禮物連送、追蹤、分享、訂閱、加入和寶箱。Activity Feed 不顯示按讚或觀眾數量。</p>
+            <p>內建 TikTok 表情代碼，例如 <code>[laughcry]</code> 和 <code>[wow]</code> 在更新後的 SSN 來源中會繪製為影像。純文字模式會刻意保留文字；變更該設定後，請重新載入 TikFinity 來源。</p>
+        </section>
+        <section class="guide-card" id="troubleshooting">
+            <h2 id="read-section-7">如果有內容缺失</h2>
+            <ul class="guide-list">
+                <li><strong>只出現 TikFinity 標誌：</strong> 檢查所選 TikTok 帳號是否正在直播，以及 TikFinity 主儀表板是否已連接。僅開啟元件不會建立上游 TikTok 連接。</li>
+                <li><strong>TikFinity 有舊訊息，但 SSN 是空的：</strong> 等候新活動，確認完整的停駐面板 URL，並重新載入 SSN 來源。如果元件本身停止接收新訊息，請先重新連接 TikFinity。</li>
+                <li><strong>Dock 2 中沒有聊天：</strong> 開啟齒輪按鈕，啟用 Show Chat，然後 Save。</li>
+                <li><strong>禮物、加入或其他事件缺失：</strong> 檢查停駐面板類別和 SSN 自身的事件/贊助篩選器。事件實際發生前，無法驗證該類別。</li>
+                <li><strong>另一個 TikFinity 頁面中斷連接：</strong> 保持一個主儀表板分頁開啟。使用其導覽切換區段；Activity Feed 擷取視窗是單獨的。</li>
+                <li><strong>所有內容都出現兩次：</strong> 該 LIVE 只保留一個擷取來源。內容相同但 TikTok 訊息 ID 不同的重複訊息，也可能是真實的獨立訊息。</li>
+                <li><strong>回覆不起作用：</strong> TikFinity 擷取為唯讀。請參閱 <a href="tiktok-guide.html">直接 TikTok 連接選項</a> 了解回覆支援。</li>
+            </ul>
+            <p><a href="tiktok-quick-start.html">TikTok快速入門</a> &middot; <a href="tiktok-signing.html">TikTok 簽章說明</a> &middot; <a href="external-overlay-sources.html">其他疊加畫面來源</a></p>
+        </section>
+    </div></main>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 授權條款。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

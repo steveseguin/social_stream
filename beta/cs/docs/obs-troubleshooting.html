@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/docs/obs-troubleshooting.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/docs/obs-troubleshooting.html">
+    <meta property="og:title" content="Řešení problémů s OBS - Social Stream Ninja">
+    <meta property="og:description" content="Řešte prázdné překryvy Social Stream Ninja v OBS, chybné relace, tiché TTS, mezipaměť zdroje prohlížeče a problémy se zachytáváním zdrojů.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/docs/obs-troubleshooting.html">
+    <meta name="twitter:title" content="Řešení problémů s OBS - Social Stream Ninja">
+    <meta name="twitter:description" content="Řešte prázdné překryvy Social Stream Ninja v OBS, chybné relace, tiché TTS, mezipaměť zdroje prohlížeče a problémy se zachytáváním zdrojů.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Řešení problémů s OBS - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Řešte prázdné překryvy Social Stream Ninja v OBS, chybné relace, tiché TTS, mezipaměť zdroje prohlížeče a problémy se zachytáváním zdrojů.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/obs-troubleshooting.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{", replace its URL, apply the change, and reopen that dock.":", nahraďte jeho URL, použijte změnu a dok znovu otevřete.",", right-click it, and choose":", klikněte na něj pravým tlačítkem a vyberte",", then paste the new link over the old one.":", pak novým odkazem přepište starý.",", then send one fake test message from Social Stream Ninja.":", pak odešlete jednu umělou testovací zprávu ze Social Stream Ninja.",". Administrator mode is not a normal fix for a blank Dock.":". Režim správce není běžným řešením prázdného doku.","Audio routing issue.":"Problém se směrováním zvuku.","Bottom of OBS Browser Source Properties with Refresh cache of current page highlighted":"Dolní část vlastností zdroje prohlížeče OBS se zvýrazněným tlačítkem Obnovit mezipaměť aktuální stránky","Check The Overlay URL":"Zkontrolujte URL překryvu","Check login, live page, popout/source page, app mode, or platform guide.":"Zkontrolujte přihlášení, živou stránku, samostatnou stránku chatu/zdroje, režim aplikace nebo průvodce platformou.","Check provider vs system TTS and OBS audio capture.":"Zkontrolujte TTS poskytovatele oproti systémovému TTS a zachytávání zvuku v OBS.","Click":"Klikněte na","Close the old Dock page or window, then click the newly generated":"Zavřete starou stránku nebo okno doku a klikněte na nově vygenerovaný odkaz","Commands & API":"Příkazy a API","Common Fixes":"Běžná řešení","Decision Tree":"Rozhodovací strom","Detailed help:":"Podrobná pomoc:","Do these in this order. Refreshing the cache alone does not add a changed session, password, or server-routing option to an old URL.":"Postupujte v tomto pořadí. Samotné obnovení mezipaměti nepřidá do staré URL změněnou relaci, heslo ani možnost serverového směrování.","Dock":"Dok","Dock is empty":"Dok je prázdný","Dock works, browser overlay blank":"Dok funguje, překryv v prohlížeči je prázdný","Dock works, browser overlay works":"Dok funguje, překryv v prohlížeči funguje","Docks → Custom Browser Docks":"Doky → Vlastní doky prohlížeče","Download":"Stáhnout","Export your Social Stream Ninja settings and OBS scene collection for support":"Exportujte nastavení Social Stream Ninja a kolekci scén OBS pro podporu","Featured overlay preview showing a selected message":"Náhled překryvu s vybranou zprávou","Features":"Funkce","Find out whether the source, session, overlay, or OBS browser source is the problem.":"Zjistěte, zda je problém ve zdroji, relaci, překryvu nebo zdroji prohlížeče OBS.","Guides":"Návody","Hire":"Najmout odborníka","Home":"Domů","If TTS Is Silent In OBS":"Pokud TTS v OBS mlčí","If it is still stale:":"Pokud se stále zobrazuje starý stav:","If messages appear in the dock, Social Stream Ninja is receiving chat.":"Pokud se zprávy zobrazují v doku, Social Stream Ninja přijímá chat.","If support has confirmed a Windows privilege mismatch, follow":"Pokud podpora potvrdila nesoulad oprávnění Windows, postupujte podle návodu","Image works, TTS silent":"Obraz funguje, TTS mlčí","In OBS, find the Social Stream source in":"V OBS najděte zdroj Social Stream v části","In Social Stream Ninja, copy a freshly generated link for the exact Dock or overlay you use. Copy the whole link instead of editing its parameters by hand.":"V Social Stream Ninja zkopírujte čerstvě vygenerovaný odkaz přesného doku nebo překryvu, který používáte. Kopírujte celý odkaz místo ručních úprav parametrů.","Inspiration":"Inspirace","Local file":"Místní soubor","Main navigation":"Hlavní navigace","Make sure":"Ověřte, že","Make the source visible and check that width/height are not tiny.":"Zviditelněte zdroj a ověřte, že šířka a výška nejsou příliš malé.","Meaning":"Význam","Next Step":"Další krok","OBS Browser Source Properties showing the Local file checkbox and URL field":"Vlastnosti zdroje prohlížeče OBS s políčkem Místní soubor a polem URL","OBS Troubleshooting":"Řešení problémů s OBS","OBS Troubleshooting - Social Stream Ninja":"Řešení problémů s OBS - Social Stream Ninja","OBS audio capture note explaining system TTS limitations":"Poznámka k zachytávání zvuku OBS vysvětlující omezení systémového TTS","OBS browser source is the likely issue.":"Pravděpodobný problém je ve zdroji prohlížeče OBS.","OK":"OK","On this page":"Na této stránce","Open navigation menu":"Otevřít navigační nabídku","Open the same OBS URL in a normal browser to separate OBS issues from Social Stream Ninja issues.":"Otevřete stejnou URL z OBS v běžném prohlížeči, abyste oddělili problémy OBS od problémů Social Stream Ninja.","Overlay Gallery":"Galerie překryvů","Plain system TTS is the common trap. It may speak through your speakers while OBS Browser Source hears nothing.":"Častým úskalím je běžné systémové TTS. Může mluvit z reproduktorů, zatímco zdroj prohlížeče OBS nic neslyší.","Properties":"Vlastnosti (Properties)","Refresh OBS source, check URL, dimensions, visibility, cache, and custom CSS.":"Obnovte zdroj OBS a zkontrolujte URL, rozměry, viditelnost, mezipaměť a vlastní CSS.","Refresh cache of current page":"Obnovit mezipaměť aktuální stránky","Reopen A Dock Link":"Znovu otevřete odkaz doku","Replace The Saved OBS URL And Refresh Its Cache":"Nahraďte uloženou URL v OBS a obnovte její mezipaměť","Replace the entire URL with the freshly generated Social Stream link. Screenshot from the":"Nahraďte celou URL čerstvě vygenerovaným odkazem Social Stream. Snímek obrazovky z","Replace the saved URL, then refresh the Browser Source cache":"Nahraďte uloženou URL a pak obnovte mezipaměť zdroje prohlížeče","Run OBS and Social Stream as Administrator":"Spustit OBS a Social Stream jako správce","Scroll to the bottom of the Properties window and click":"Přejděte na konec okna Vlastnosti a klikněte na","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja dock showing received chat messages":"Dok Social Stream Ninja s přijatými zprávami chatu","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Some overlays only show content after a message is featured or a matching event happens.":"Některé překryvy zobrazí obsah až po výběru zprávy nebo odpovídající události.","Source/platform capture is not working yet.":"Zachytávání zdroje/platformy zatím nefunguje.","Sources":"Zdroje","Spin and Wheel's OBS setup page":"stránky nastavení OBS pro Spin and Wheel","Start With The Dock":"Začněte dokem","Still stuck?":"Stále nevíte jak dál?","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","TTS Setup Guide":"Průvodce nastavením TTS","Temporarily remove custom OBS CSS to rule out hidden text or opacity.":"Dočasně odstraňte vlastní CSS v OBS, abyste vyloučili skrytý text nebo průhlednost.","Test":"Test","The cache button is near the bottom of Browser Source Properties. UI example cropped from":"Tlačítko mezipaměti je u spodního okraje vlastností zdroje prohlížeče. Ukázka rozhraní je výřez z","The dock is the fastest test. If the dock is empty, do not debug OBS yet. Fix the platform source first.":"Dok je nejrychlejší test. Pokud je prázdný, zatím neřešte OBS. Nejprve opravte zdroj platformy.","Troubleshoot blank Social Stream Ninja OBS overlays, wrong sessions, silent TTS, browser source cache, and source capture problems.":"Řešte prázdné překryvy Social Stream Ninja v OBS, chybné relace, tiché TTS, mezipaměť zdroje prohlížeče a problémy se zachytáváním zdrojů.","URL":"URL","Use provider/browser TTS for easier OBS capture, or route system audio separately.":"Pro jednodušší zachytávání v OBS použijte TTS poskytovatele/prohlížeče nebo samostatně směrujte systémový zvuk.","Use the exact same session ID everywhere. A one-character difference creates a separate room.":"Všude používejte naprosto stejné ID relace. Rozdíl jediného znaku vytvoří jinou místnost.","Use the same session and pick a page that matches the expected output.":"Použijte stejnou relaci a vyberte stránku odpovídající očekávanému výstupu.","Wrong overlay page, wrong session, or no matching payload.":"Nesprávná stránka překryvu, nesprávná relace nebo žádná odpovídající data.","close Properties, open it again, and repeat the test. Removing and recreating the Browser Source with the fresh link is the last resort.":"zavřete Vlastnosti, znovu je otevřete a opakujte test. Odstranění a nové vytvoření zdroje prohlížeče s čerstvým odkazem je poslední možnost.","is not selected. Select everything in":"není vybrán. Označte vše v poli","link in Social Stream Ninja. If it is saved as an OBS Custom Browser Dock, open":"v Social Stream Ninja. Pokud je uložen jako vlastní dok prohlížeče OBS, otevřete","official OBS Browser Source guide":"oficiálního průvodce zdrojem prohlížeče OBS"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/obs-troubleshooting.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-troubleshooting.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-troubleshooting.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-troubleshooting.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-troubleshooting.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-troubleshooting.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-troubleshooting.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-troubleshooting.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-troubleshooting.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-troubleshooting.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-troubleshooting.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-troubleshooting.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/obs-troubleshooting.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/obs-troubleshooting.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/obs-troubleshooting.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/obs-troubleshooting.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="obs-troubleshooting.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/obs-troubleshooting.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>Řešení problémů s OBS</h1><p>Zjistěte, zda je problém ve zdroji, relaci, překryvu nebo zdroji prohlížeče OBS.</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Na této stránce"><a href="#read-section-1">Začněte dokem</a><a href="#read-section-2">Nahraďte uloženou URL v OBS a obnovte její mezipaměť</a><a href="#read-section-3">Rozhodovací strom</a><a href="#read-section-4">Zkontrolujte URL překryvu</a><a href="#read-section-5">Pokud TTS v OBS mlčí</a><a href="#read-section-6">Běžná řešení</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Začněte dokem</h2>
+                <p>Dok je nejrychlejší test. Pokud je prázdný, zatím neřešte OBS. Nejprve opravte zdroj platformy.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-dock-message-check.png" alt="Dok Social Stream Ninja s přijatými zprávami chatu" class="guide-image">
+                    <figcaption>Pokud se zprávy zobrazují v doku, Social Stream Ninja přijímá chat.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card" id="replace-url-and-cache">
+                <h2 id="read-section-2">Nahraďte uloženou URL v OBS a obnovte její mezipaměť</h2>
+                <p>Postupujte v tomto pořadí. Samotné obnovení mezipaměti nepřidá do staré URL změněnou relaci, heslo ani možnost serverového směrování.</p>
+                <ol class="guide-steps">
+                    <li>V Social Stream Ninja zkopírujte čerstvě vygenerovaný odkaz přesného doku nebo překryvu, který používáte. Kopírujte celý odkaz místo ručních úprav parametrů.</li>
+                    <li>V OBS najděte zdroj Social Stream v části <strong>Zdroje</strong>, klikněte na něj pravým tlačítkem a vyberte <strong>Vlastnosti (Properties)</strong>.</li>
+                    <li>Ověřte, že <strong>Místní soubor</strong> není vybrán. Označte vše v poli <strong>URL</strong>, pak novým odkazem přepište starý.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-browser-source-url.png" alt="Vlastnosti zdroje prohlížeče OBS s políčkem Místní soubor a polem URL" class="guide-image">
+                    <figcaption>Nahraďte celou URL čerstvě vygenerovaným odkazem Social Stream. Snímek obrazovky z <a href="https://obsproject.com/kb/browser-source">oficiálního průvodce zdrojem prohlížeče OBS</a>.</figcaption>
+                </figure>
+                <ol class="guide-steps" start="4">
+                    <li>Přejděte na konec okna Vlastnosti a klikněte na <strong>Obnovit mezipaměť aktuální stránky</strong>.</li>
+                    <li>Klikněte na <strong>OK</strong>, pak odešlete jednu umělou testovací zprávu ze Social Stream Ninja.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-browser-source-refresh-cache.png" alt="Dolní část vlastností zdroje prohlížeče OBS se zvýrazněným tlačítkem Obnovit mezipaměť aktuální stránky" class="guide-image guide-image-medium">
+                    <figcaption>Tlačítko mezipaměti je u spodního okraje vlastností zdroje prohlížeče. Ukázka rozhraní je výřez z <a href="https://spinandwheel.com/obs-setup/">stránky nastavení OBS pro Spin and Wheel</a>.</figcaption>
+                </figure>
+                <div class="guide-note">
+                    <p><strong>Pokud se stále zobrazuje starý stav:</strong> zavřete Vlastnosti, znovu je otevřete a opakujte test. Odstranění a nové vytvoření zdroje prohlížeče s čerstvým odkazem je poslední možnost.</p>
+                </div>
+                <h3>Znovu otevřete odkaz doku</h3>
+                <p>Zavřete starou stránku nebo okno doku a klikněte na nově vygenerovaný odkaz <strong>Dok</strong> v Social Stream Ninja. Pokud je uložen jako vlastní dok prohlížeče OBS, otevřete <strong>Doky → Vlastní doky prohlížeče</strong>, nahraďte jeho URL, použijte změnu a dok znovu otevřete.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">Rozhodovací strom</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Test</th><th>Význam</th><th>Další krok</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Test">Dok je prázdný</td><td data-label="Význam">Zachytávání zdroje/platformy zatím nefunguje.</td><td data-label="Další krok">Zkontrolujte přihlášení, živou stránku, samostatnou stránku chatu/zdroje, režim aplikace nebo průvodce platformou.</td></tr>
+                        <tr><td data-label="Test">Dok funguje, překryv v prohlížeči funguje</td><td data-label="Význam">Pravděpodobný problém je ve zdroji prohlížeče OBS.</td><td data-label="Další krok">Obnovte zdroj OBS a zkontrolujte URL, rozměry, viditelnost, mezipaměť a vlastní CSS.</td></tr>
+                        <tr><td data-label="Test">Dok funguje, překryv v prohlížeči je prázdný</td><td data-label="Význam">Nesprávná stránka překryvu, nesprávná relace nebo žádná odpovídající data.</td><td data-label="Další krok">Použijte stejnou relaci a vyberte stránku odpovídající očekávanému výstupu.</td></tr>
+                        <tr><td data-label="Test">Obraz funguje, TTS mlčí</td><td data-label="Význam">Problém se směrováním zvuku.</td><td data-label="Další krok">Zkontrolujte TTS poskytovatele oproti systémovému TTS a zachytávání zvuku v OBS.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">Zkontrolujte URL překryvu</h2>
+                <p>Všude používejte naprosto stejné ID relace. Rozdíl jediného znaku vytvoří jinou místnost.</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION</pre>
+                <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION</pre>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-featured-overlay-preview.png" alt="Náhled překryvu s vybranou zprávou" class="guide-image">
+                    <figcaption>Některé překryvy zobrazí obsah až po výběru zprávy nebo odpovídající události.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">Pokud TTS v OBS mlčí</h2>
+                <p>Častým úskalím je běžné systémové TTS. Může mluvit z reproduktorů, zatímco zdroj prohlížeče OBS nic neslyší.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-tts-obs-audio.png" alt="Poznámka k zachytávání zvuku OBS vysvětlující omezení systémového TTS" class="guide-image">
+                    <figcaption>Pro jednodušší zachytávání v OBS použijte TTS poskytovatele/prohlížeče nebo samostatně směrujte systémový zvuk.</figcaption>
+                </figure>
+                <p>Podrobná pomoc: <a href="tts-setup-guide.html">Průvodce nastavením TTS</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">Běžná řešení</h2>
+                <ul class="guide-list">
+                    <li><a href="#replace-url-and-cache">Nahraďte uloženou URL a pak obnovte mezipaměť zdroje prohlížeče</a>.</li>
+                    <li>Zviditelněte zdroj a ověřte, že šířka a výška nejsou příliš malé.</li>
+                    <li>Dočasně odstraňte vlastní CSS v OBS, abyste vyloučili skrytý text nebo průhlednost.</li>
+                    <li>Otevřete stejnou URL z OBS v běžném prohlížeči, abyste oddělili problémy OBS od problémů Social Stream Ninja.</li>
+                </ul>
+                <p>Pokud podpora potvrdila nesoulad oprávnění Windows, postupujte podle návodu <a href="windows-administrator-mode.html">Spustit OBS a Social Stream jako správce</a>. Režim správce není běžným řešením prázdného doku.</p>
+                <p>Stále nevíte jak dál? <a href="export-settings-for-support.html">Exportujte nastavení Social Stream Ninja a kolekci scén OBS pro podporu</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. Licence GPLv3.0.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

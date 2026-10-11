@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/th/docs/tiktok-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/beta/th/docs/tiktok-guide.html">
+    <meta property="og:title" content="คู่มือ TikTok - Social Stream Ninja">
+    <meta property="og:description" content="วิธีใช้ TikTok กับ Social Stream Ninja รวมโหมด Standard, TikTok WS, การตอบกลับ, Polling, ตัวเลือก Euler และ TikFinity เป็นทางสำรอง">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/th/docs/tiktok-guide.html">
+    <meta name="twitter:title" content="คู่มือ TikTok - Social Stream Ninja">
+    <meta name="twitter:description" content="วิธีใช้ TikTok กับ Social Stream Ninja รวมโหมด Standard, TikTok WS, การตอบกลับ, Polling, ตัวเลือก Euler และ TikFinity เป็นทางสำรอง">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คู่มือ TikTok - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="วิธีใช้ TikTok กับ Social Stream Ninja รวมโหมด Standard, TikTok WS, การตอบกลับ, Polling, ตัวเลือก Euler และ TikFinity เป็นทางสำรอง">
+    <style>
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .setup-grid .guide-card {
+            margin-bottom: 0;
+        }
+
+        .mini-label {
+            display: inline-block;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .callout-box {
+            background: rgba(26, 115, 232, 0.08);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 1.6rem;
+            margin: 2rem 0;
+        }
+
+        .callout-box.warning {
+            background: rgba(251, 188, 5, 0.14);
+        }
+
+        .dark-mode .callout-box {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .dark-mode .callout-box.warning {
+            background: rgba(251, 188, 5, 0.2);
+        }
+
+        .steps-table-wrap {
+            overflow-x: auto;
+            margin-top: 1.5rem;
+        }
+
+        .steps-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .steps-table th,
+        .steps-table td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .steps-table th {
+            color: var(--primary-color);
+        }
+
+        .steps-table code,
+        .guide-card code,
+        .callout-box code {
+            word-break: break-word;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            margin-top: 2rem;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+        }
+
+        @media (max-width: 700px) {
+            .field-table, .steps-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/tiktok-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{"\"I keep getting rate-limited\"":"\"ถูกจำกัดอัตราการใช้งานตลอด\"","\"It says I am offline\"":"\"ระบบบอกว่าฉันออฟไลน์\"","\"Messages are missing\"":"\"ข้อความขาดหาย\"","\"Messages duplicate after reconnects\"":"\"ข้อความซ้ำหลังเชื่อมต่อใหม่\"","\"The auth window closes\"":"\"หน้าต่างยืนยันตัวตนปิดไป\"","\"What should I try first?\"":"\"ควรลองอะไรก่อน?\"",". For event payload details, see the":" สำหรับรายละเอียดข้อมูลอีเวนต์ ดู","Activate source":"เปิดใช้งานแหล่งข้อมูล (Activate source)","Activate the new source and keep TikFinity open while live.":"เปิดใช้งานแหล่งข้อมูลใหม่และเปิด TikFinity ไว้ขณะถ่ายทอดสด","Advanced signing options for users with their own API key or custom setup.":"ตัวเลือกการลงลายเซ็นขั้นสูงสำหรับผู้ที่มีคีย์ API ของตัวเองหรือการตั้งค่าแบบกำหนดเอง","Auto for reading":"Auto สำหรับอ่านแชต","Auto, Polling, TikFinity fallback":"Auto, Polling, TikFinity เป็นทางสำรอง","Back To Guides":"กลับไปที่คู่มือ","Best default for most users. Uses WebSocket first, then falls back to Polling if needed.":"ค่าเริ่มต้นที่เหมาะที่สุดสำหรับผู้ใช้ส่วนใหญ่ ใช้ WebSocket ก่อน แล้วเปลี่ยนไปใช้ Polling หากจำเป็น","Best for":"เหมาะกับ","Best reply mode:":"โหมดตอบกลับที่แนะนำ:","Best when you want to send replies from SSN and use the live TikTok page inside the app.":"เหมาะที่สุดเมื่อต้องการส่งคำตอบจาก SSN และใช้หน้าถ่ายทอดสด TikTok ภายในแอป","Bluesky":"Bluesky","Choose the TikTok mode or preset you want.":"เลือกโหมดหรือพรีเซ็ต TikTok ที่ต้องการ","Click":"คลิก","Click the":"คลิกปุ่ม","Close extra TikTok tabs or apps on the same device if possible.":"ปิดแท็บหรือแอป TikTok อื่นบนอุปกรณ์เดียวกันหากทำได้","Close other TikTok tabs, apps, or duplicate viewers on the same device.":"ปิดแท็บ แอป หรือหน้ารับชม TikTok ที่ซ้ำบนอุปกรณ์เดียวกัน","Commands & API":"คำสั่งและ API","Common TikTok problems":"ปัญหา TikTok ที่พบบ่อย","Community":"ชุมชน","Compatibility mode. Slower, but useful when WebSocket paths fail.":"โหมดเพื่อความเข้ากันได้ ช้ากว่า แต่มีประโยชน์เมื่อเส้นทาง WebSocket ไม่ทำงาน","Connect TikTok in SSN":"เชื่อมต่อ TikTok ใน SSN","Consolidates your live social messaging streams and more. Free and open source.":"รวมข้อความโซเชียลสดและอีกมากมาย ฟรีและเป็นโอเพนซอร์ส","Contribute":"ร่วมพัฒนา","Copy the dock URL.":"คัดลอก URL แผงด็อก","Customization Guide":"คู่มือการปรับแต่ง","Discord":"Discord","Discord StreamKit and TikFinity Sources":"แหล่งข้อมูล Discord StreamKit และ TikFinity","Donate":"บริจาค","Download":"ดาวน์โหลด","Download Desktop App":"ดาวน์โหลดแอปเดสก์ท็อป","Enter the TikTok username, live URL, or requested value.":"ป้อนชื่อผู้ใช้ TikTok, URL ถ่ายทอดสด หรือค่าที่ร้องขอ","Euler Proxy / Euler Signing":"Euler Proxy / Euler Signing","Event Reference":"เอกสารอ้างอิงอีเวนต์","Extension":"ส่วนขยาย","FAQ":"คำถามที่พบบ่อย","Fallback":"ทางสำรอง","Fallback reply mode:":"โหมดตอบกลับสำรอง:","Fallback when Standard is flaky but you still want replies.":"ทางเลือกสำรองเมื่อ Standard ไม่เสถียรแต่ยังต้องการตอบกลับ","Features":"ฟีเจอร์","For a complete walkthrough of this fallback and Discord StreamKit, see":"สำหรับขั้นตอนโดยละเอียดของทางเลือกสำรองนี้และ Discord StreamKit ดู","GitHub":"GitHub","GitHub Repository":"ที่เก็บโค้ด GitHub","Go live first, then try":"เริ่มถ่ายทอดสดก่อน แล้วลอง","Go to":"ไปที่","Guides":"คู่มือ","Hire":"จ้างงาน","Home":"หน้าแรก","How to connect TikTok in Social Stream Ninja, choose the right mode, send replies, and use TikFinity as a fallback when needed.":"วิธีเชื่อมต่อ TikTok ใน Social Stream Ninja เลือกโหมดที่เหมาะสม ส่งคำตอบ และใช้ TikFinity เป็นทางสำรองเมื่อจำเป็น","How to send replies to TikTok chat":"วิธีส่งคำตอบกลับไปยังแชต TikTok","How to use TikFinity OBS Dock":"วิธีใช้ TikFinity OBS Dock","How to use TikTok with Social Stream Ninja, including Standard mode, TikTok WS, replies, Polling, Euler options, and TikFinity fallback.":"วิธีใช้ TikTok กับ Social Stream Ninja รวมโหมด Standard, TikTok WS, การตอบกลับ, Polling, ตัวเลือก Euler และ TikFinity เป็นทางสำรอง","If Standard is flaky, try":"หาก Standard ไม่เสถียร ให้ลอง","If Standard is unstable":"หาก Standard ไม่เสถียร","If TikTok keeps missing chat, use":"หาก TikTok ยังเก็บแชตได้ไม่ครบ ให้ใช้","If TikTok still misses too much chat, switch to the TikFinity fallback below.":"หาก TikTok ยังพลาดแชตมากเกินไป ให้เปลี่ยนไปใช้ TikFinity เป็นทางสำรองตามด้านล่าง","If WebSocket still fails, try":"หาก WebSocket ยังไม่ทำงาน ให้ลอง","If it still duplicates, switch modes or use TikFinity temporarily.":"หากยังมีข้อความซ้ำ ให้เปลี่ยนโหมดหรือใช้ TikFinity ชั่วคราว","If you already use TikFinity activity-feed widgets, SSN can also work with supported TikFinity widget pages in browser-based workflows.":"หากใช้วิดเจ็ตฟีดกิจกรรมของ TikFinity อยู่แล้ว SSN ก็ใช้กับหน้าวิดเจ็ต TikFinity ที่รองรับผ่านเบราว์เซอร์ได้","If you need replies":"หากต้องการตอบกลับ","If you need to reply, switch to":"หากต้องการตอบกลับ ให้เปลี่ยนไปใช้","If you use the browser extension instead":"หากใช้ส่วนขยายเบราว์เซอร์แทน","Important:":"สำคัญ:","In SSN, click":"ใน SSN ให้คลิก","Inspiration":"ไอเดียสร้างสรรค์","Installation Guide":"คู่มือการติดตั้ง","Join our Discord":"เข้าร่วม Discord ของเรา","Keep the signer window open.":"เปิดหน้าต่างลงลายเซ็นไว้","Local Signer":"ตัวลงลายเซ็นในเครื่อง (Local Signer)","Local Signer if Standard is unstable":"Local Signer หาก Standard ไม่เสถียร","Main navigation":"เมนูหลัก","Make sure you are logged into the TikTok account that should send messages.":"ตรวจสอบว่าลงชื่อเข้าใช้บัญชี TikTok ที่ต้องการให้ส่งข้อความแล้ว","Modes":"โหมด","No":"ไม่มี","Not meant for replies:":"ไม่ได้ออกแบบสำหรับการตอบกลับ:","Open":"เปิด","Open TikFinity.":"เปิด TikFinity","Open navigation menu":"เปิดเมนูนำทาง","Open the broadcaster's TikTok live page in your browser and keep the extension enabled.":"เปิดหน้าถ่ายทอดสด TikTok ของผู้ถ่ายทอดสดในเบราว์เซอร์และเปิดส่วนขยายไว้","Open the standalone app.":"เปิดแอปสแตนด์อโลน","Option":"ตัวเลือก","Other chat sites":"เว็บไซต์แชตอื่น","Overlay -> OBS Docks":"Overlay -> OBS Docks","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Overview":"ภาพรวม","Paste the TikFinity dock URL.":"วาง URL แผงด็อก TikFinity","Pick a dock slot and configure it for chat.":"เลือกช่องแผงด็อกแล้วตั้งค่าให้ใช้กับแชต","Polling":"Polling","Practical rule:":"หลักปฏิบัติ:","Privacy Policy":"นโยบายความเป็นส่วนตัว","Quick Links":"ลิงก์ด่วน","Quick recommendation:":"คำแนะนำอย่างรวดเร็ว:","Read-only fallback when TikTok native modes miss too much chat or fail to connect.":"ทางสำรองสำหรับอ่านอย่างเดียวเมื่อโหมด TikTok โดยตรงพลาดแชตมากเกินไปหรือเชื่อมต่อไม่ได้","Reload":"โหลดใหม่ (Reload)","Replies":"การตอบกลับ","Reply support depends on having a valid signed-in TikTok session.":"การรองรับการตอบกลับขึ้นอยู่กับเซสชัน TikTok ที่ลงชื่อเข้าใช้และยังใช้ได้","Report an Issue":"รายงานปัญหา","Resources":"แหล่งข้อมูลอ้างอิง","Show capture page":"แสดงหน้าเก็บข้อมูล (Show capture page)","Sign in":"ลงชื่อเข้าใช้","Sign in if you need authenticated-only or host-only page events on your own live.":"ลงชื่อเข้าใช้หากต้องการอีเวนต์จากหน้าที่จำกัดเฉพาะผู้ยืนยันตัวตนหรือเจ้าของการถ่ายทอดสดของคุณเอง","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja สัญญาอนุญาต GPLv3.0 สร้างโดย","Standard":"Standard","Standard for replies":"Standard สำหรับตอบกลับ","Start here":"เริ่มที่นี่","Start with":"เริ่มจาก","Step 1":"ขั้นตอนที่ 1","Step 2":"ขั้นตอนที่ 2","Step 3":"ขั้นตอนที่ 3","Steve Seguin":"Steve Seguin","Stop the source fully, then reconnect cleanly.":"หยุดแหล่งข้อมูลให้สมบูรณ์ แล้วเชื่อมต่อใหม่จากต้น","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Switch theme":"เปลี่ยนธีม","Templates":"เทมเพลต","Terms of Service":"ข้อกำหนดการให้บริการ","Testing after a stream ends will often fail.":"การทดสอบหลังสตรีมจบมักไม่สำเร็จ","The Supported Sites entry for TikTok Live: use a":"รายการ TikTok Live ในเว็บไซต์ที่รองรับ: ใช้","The standalone app still offers the widest TikTok mode selection and the cleanest fallback options.":"แอปสแตนด์อโลนยังมีโหมด TikTok ให้เลือกมากที่สุดและมีทางเลือกสำรองที่สะดวกที่สุด","This can be a TikTok-side limitation, not always an SSN bug.":"อาจเป็นข้อจำกัดฝั่ง TikTok ไม่ใช่ข้อบกพร่องของ SSN เสมอไป","This is a backup reader, not a reply tool.":"นี่คือตัวอ่านสำรอง ไม่ใช่เครื่องมือตอบกลับ","TikFinity OBS Dock":"แผงด็อก TikFinity OBS","TikFinity activity-feed pages can also work in browser-based SSN setups.":"หน้าฟีดกิจกรรม TikFinity ใช้กับการตั้งค่า SSN ผ่านเบราว์เซอร์ได้เช่นกัน","TikFinity can work as a backup source when TikTok itself is dropping or hiding too much chat.":"TikFinity ใช้เป็นแหล่งข้อมูลสำรองได้เมื่อ TikTok เองทำข้อความตกหล่นหรือซ่อนแชตมากเกินไป","TikFinity if TikTok itself is the problem":"TikFinity หากปัญหาอยู่ที่ TikTok เอง","TikTok":"TikTok","TikTok Guide":"คู่มือ TikTok","TikTok Guide - Social Stream Ninja":"คู่มือ TikTok - Social Stream Ninja","TikTok Live setup instructions modal from the Supported Sites page":"กล่องคำแนะนำการตั้งค่า TikTok Live จากหน้าเว็บไซต์ที่รองรับ","TikTok WS + Auto":"TikTok WS + Auto","TikTok WS + Local Signer":"TikTok WS + Local Signer","TikTok chat only works when the account is actually live.":"แชต TikTok ทำงานเฉพาะเมื่อบัญชีกำลังถ่ายทอดสดจริง","TikTok is one of the hardest platforms to keep stable because TikTok changes behavior often and not every account sees the same thing.":"TikTok เป็นหนึ่งในแพลตฟอร์มที่รักษาความเสถียรได้ยากที่สุด เพราะเปลี่ยนพฤติกรรมบ่อยและไม่ได้แสดงสิ่งเดียวกันให้ทุกบัญชี","TikTok issues are not always caused by SSN. Missing messages, auth failures, and throttling can be caused by TikTok itself, by account state, or by region-specific restrictions.":"ปัญหา TikTok ไม่ได้เกิดจาก SSN เสมอไป ข้อความขาดหาย การยืนยันตัวตนล้มเหลว และการจำกัดการใช้งานอาจมาจาก TikTok เอง สถานะบัญชี หรือข้อจำกัดเฉพาะภูมิภาค","Troubleshooting":"การแก้ปัญหา","Try":"ลอง","Try another mode before deciding one path is permanently best.":"ลองโหมดอื่นก่อนตัดสินว่าวิธีใดดีที่สุดตลอดไป","Try another mode or signing path.":"ลองโหมดหรือวิธีลงลายเซ็นอื่น","URL and keep the chat page open while the extension captures it.":"เป็น URL และเปิดหน้าแชตไว้ขณะส่วนขยายเก็บข้อมูล","Update to the newest app build first.":"อัปเดตแอปเป็นบิลด์ล่าสุดก่อน","Use":"ใช้","Use TikFinity as a fallback if it is behaving better for your account.":"ใช้ TikFinity เป็นทางสำรองหากทำงานกับบัญชีของคุณได้ดีกว่า","Usually No":"โดยทั่วไปไม่ได้","Wait a few minutes before retrying.":"รอสักครู่ก่อนลองใหม่","Which TikTok option should I use?":"ควรใช้ตัวเลือก TikTok ใด?","X.com":"X.com","Yes":"ใช่","after sign-in.":"หลังลงชื่อเข้าใช้","button in the left sidebar.":"ในแถบด้านซ้าย","if needed.":"หากจำเป็น","if reading reliability matters most, start with Auto or Polling. If replying matters most, use Standard or Local Signer.":"หากความครบถ้วนของการอ่านสำคัญที่สุด ให้เริ่มจาก Auto หรือ Polling หากการตอบกลับสำคัญที่สุด ให้ใช้ Standard หรือ Local Signer","mode first.":"ก่อน","so you can see sign-in or CAPTCHA.":"เพื่อให้เห็นหน้าลงชื่อเข้าใช้หรือ CAPTCHA","through":"ผ่าน","with contributions from the community.":"ร่วมพัฒนาโดยชุมชน"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tiktok-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก"><a href="../index.html">หน้าแรก</a><a href="features.html">ฟีเจอร์</a><a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a><a href="download.html">ดาวน์โหลด</a><a href="guides.html">คู่มือ</a><a href="commands.html">คำสั่งและ API</a><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a><a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a><a href="services.html" class="site-priority-hire">จ้างงาน</a><a href="support.html">การสนับสนุน</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tiktok-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tiktok-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tiktok-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tiktok-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tiktok-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tiktok-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tiktok-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tiktok-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tiktok-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tiktok-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tiktok-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tiktok-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tiktok-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tiktok-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tiktok-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tiktok-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="tiktok-guide.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="เปลี่ยนธีม"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>คู่มือ TikTok</h1>
+            <p>วิธีเชื่อมต่อ TikTok ใน Social Stream Ninja เลือกโหมดที่เหมาะสม ส่งคำตอบ และใช้ TikFinity เป็นทางสำรองเมื่อจำเป็น</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <span class="mini-label">ภาพรวม</span>
+                    <h3>เริ่มที่นี่</h3>
+                    <p>TikTok เป็นหนึ่งในแพลตฟอร์มที่รักษาความเสถียรได้ยากที่สุด เพราะเปลี่ยนพฤติกรรมบ่อยและไม่ได้แสดงสิ่งเดียวกันให้ทุกบัญชี</p>
+                    <div class="callout-box">
+                        <strong>คำแนะนำอย่างรวดเร็ว:</strong>
+                        <ul class="guide-list">
+                            <li>เริ่มจาก <strong>TikTok WS + Auto</strong>.</li>
+                            <li>หากต้องการตอบกลับ ให้เปลี่ยนไปใช้ <strong>Standard</strong>.</li>
+                            <li>หาก Standard ไม่เสถียร ให้ลอง <strong>ตัวลงลายเซ็นในเครื่อง (Local Signer)</strong>.</li>
+                            <li>หาก TikTok ยังเก็บแชตได้ไม่ครบ ให้ใช้ <strong>แผงด็อก TikFinity OBS</strong> ผ่าน <strong>เว็บไซต์แชตอื่น</strong>.</li>
+                        </ul>
+                    </div>
+                    <div class="callout-box warning">
+                        <strong>สำคัญ:</strong> ปัญหา TikTok ไม่ได้เกิดจาก SSN เสมอไป ข้อความขาดหาย การยืนยันตัวตนล้มเหลว และการจำกัดการใช้งานอาจมาจาก TikTok เอง สถานะบัญชี หรือข้อจำกัดเฉพาะภูมิภาค
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">โหมด</span>
+                    <h3>ควรใช้ตัวเลือก TikTok ใด?</h3>
+                    <div class="steps-table-wrap">
+                    <table class="steps-table">
+                        <thead>
+                            <tr>
+                                <th>ตัวเลือก</th>
+                                <th>เหมาะกับ</th>
+                                <th>การตอบกลับ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>TikTok WS + Auto</strong></td>
+                                <td>ค่าเริ่มต้นที่เหมาะที่สุดสำหรับผู้ใช้ส่วนใหญ่ ใช้ WebSocket ก่อน แล้วเปลี่ยนไปใช้ Polling หากจำเป็น</td>
+                                <td>ไม่มี</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Standard</strong></td>
+                                <td>เหมาะที่สุดเมื่อต้องการส่งคำตอบจาก SSN และใช้หน้าถ่ายทอดสด TikTok ภายในแอป</td>
+                                <td>ใช่</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TikTok WS + Local Signer</strong></td>
+                                <td>ทางเลือกสำรองเมื่อ Standard ไม่เสถียรแต่ยังต้องการตอบกลับ</td>
+                                <td>ใช่</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Polling</strong></td>
+                                <td>โหมดเพื่อความเข้ากันได้ ช้ากว่า แต่มีประโยชน์เมื่อเส้นทาง WebSocket ไม่ทำงาน</td>
+                                <td>ไม่มี</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Euler Proxy / Euler Signing</strong></td>
+                                <td>ตัวเลือกการลงลายเซ็นขั้นสูงสำหรับผู้ที่มีคีย์ API ของตัวเองหรือการตั้งค่าแบบกำหนดเอง</td>
+                                <td>โดยทั่วไปไม่ได้</td>
+                            </tr>
+                            <tr>
+                                <td><strong>แผงด็อก TikFinity OBS</strong></td>
+                                <td>ทางสำรองสำหรับอ่านอย่างเดียวเมื่อโหมด TikTok โดยตรงพลาดแชตมากเกินไปหรือเชื่อมต่อไม่ได้</td>
+                                <td>ไม่มี</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+
+                <div class="setup-grid">
+                    <div class="guide-card">
+                        <span class="mini-label">ขั้นตอนที่ 1</span>
+                        <h3>เชื่อมต่อ TikTok ใน SSN</h3>
+                        <ol class="guide-steps">
+                            <li>เปิดแอปสแตนด์อโลน</li>
+                            <li>คลิกปุ่ม <strong>TikTok</strong> ในแถบด้านซ้าย</li>
+                            <li>ป้อนชื่อผู้ใช้ TikTok, URL ถ่ายทอดสด หรือค่าที่ร้องขอ</li>
+                            <li>เลือกโหมดหรือพรีเซ็ต TikTok ที่ต้องการ</li>
+                            <li>คลิก <strong>เปิดใช้งานแหล่งข้อมูล (Activate source)</strong>.</li>
+                        </ol>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">ขั้นตอนที่ 2</span>
+                        <h3>หากต้องการตอบกลับ</h3>
+                        <ol class="guide-steps">
+                            <li>ใช้ <strong>Standard</strong> ก่อน</li>
+                            <li>คลิก <strong>ลงชื่อเข้าใช้</strong> หากจำเป็น</li>
+                            <li>เปิด <strong>แสดงหน้าเก็บข้อมูล (Show capture page)</strong>.</li>
+                            <li>ตรวจสอบว่าลงชื่อเข้าใช้บัญชี TikTok ที่ต้องการให้ส่งข้อความแล้ว</li>
+                        </ol>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">ขั้นตอนที่ 3</span>
+                        <h3>หาก Standard ไม่เสถียร</h3>
+                        <ol class="guide-steps">
+                            <li>ลอง <strong>ตัวลงลายเซ็นในเครื่อง (Local Signer)</strong>.</li>
+                            <li>เปิดหน้าต่างลงลายเซ็นไว้</li>
+                            <li>หาก WebSocket ยังไม่ทำงาน ให้ลอง <strong>Polling</strong>.</li>
+                            <li>หาก TikTok ยังพลาดแชตมากเกินไป ให้เปลี่ยนไปใช้ TikFinity เป็นทางสำรองตามด้านล่าง</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">การตอบกลับ</span>
+                    <h3>วิธีส่งคำตอบกลับไปยังแชต TikTok</h3>
+                    <p>การรองรับการตอบกลับขึ้นอยู่กับเซสชัน TikTok ที่ลงชื่อเข้าใช้และยังใช้ได้</p>
+                    <ul class="guide-list">
+                        <li><strong>โหมดตอบกลับที่แนะนำ:</strong> <strong>Standard</strong></li>
+                        <li><strong>โหมดตอบกลับสำรอง:</strong> <strong>ตัวลงลายเซ็นในเครื่อง (Local Signer)</strong></li>
+                        <li><strong>ไม่ได้ออกแบบสำหรับการตอบกลับ:</strong> Auto, Polling, TikFinity เป็นทางสำรอง</li>
+                    </ul>
+                    <div class="callout-box">
+                        <strong>หลักปฏิบัติ:</strong> หากความครบถ้วนของการอ่านสำคัญที่สุด ให้เริ่มจาก Auto หรือ Polling หากการตอบกลับสำคัญที่สุด ให้ใช้ Standard หรือ Local Signer
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">ทางสำรอง</span>
+                    <h3>วิธีใช้ TikFinity OBS Dock</h3>
+                    <p>TikFinity ใช้เป็นแหล่งข้อมูลสำรองได้เมื่อ TikTok เองทำข้อความตกหล่นหรือซ่อนแชตมากเกินไป</p>
+                    <ol class="guide-steps">
+                        <li>เปิด TikFinity</li>
+                        <li>ไปที่ <strong>Overlay -&gt; OBS Docks</strong>.</li>
+                        <li>เลือกช่องแผงด็อกแล้วตั้งค่าให้ใช้กับแชต</li>
+                        <li>คัดลอก URL แผงด็อก</li>
+                        <li>ใน SSN ให้คลิก <strong>เว็บไซต์แชตอื่น</strong>.</li>
+                        <li>วาง URL แผงด็อก TikFinity</li>
+                        <li>เปิดใช้งานแหล่งข้อมูลใหม่และเปิด TikFinity ไว้ขณะถ่ายทอดสด</li>
+                    </ol>
+                    <ul class="guide-list">
+                        <li>นี่คือตัวอ่านสำรอง ไม่ใช่เครื่องมือตอบกลับ</li>
+                        <li>หากใช้วิดเจ็ตฟีดกิจกรรมของ TikFinity อยู่แล้ว SSN ก็ใช้กับหน้าวิดเจ็ต TikFinity ที่รองรับผ่านเบราว์เซอร์ได้</li>
+                    </ul>
+                    <p>สำหรับขั้นตอนโดยละเอียดของทางเลือกสำรองนี้และ Discord StreamKit ดู <a href="external-overlay-sources.html#tikfinity">แหล่งข้อมูล Discord StreamKit และ TikFinity</a> สำหรับรายละเอียดข้อมูลอีเวนต์ ดู <a href="event-reference.html">เอกสารอ้างอิงอีเวนต์</a>.</p>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">การแก้ปัญหา</span>
+                    <h3>ปัญหา TikTok ที่พบบ่อย</h3>
+                    <div class="setup-grid">
+                        <div class="guide-card">
+                            <h4>"ระบบบอกว่าฉันออฟไลน์"</h4>
+                            <ul class="guide-list">
+                                <li>แชต TikTok ทำงานเฉพาะเมื่อบัญชีกำลังถ่ายทอดสดจริง</li>
+                                <li>เริ่มถ่ายทอดสดก่อน แล้วลอง <strong>โหลดใหม่ (Reload)</strong>.</li>
+                                <li>การทดสอบหลังสตรีมจบมักไม่สำเร็จ</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>"หน้าต่างยืนยันตัวตนปิดไป"</h4>
+                            <ul class="guide-list">
+                                <li>ใช้ <strong>แสดงหน้าเก็บข้อมูล (Show capture page)</strong> เพื่อให้เห็นหน้าลงชื่อเข้าใช้หรือ CAPTCHA</li>
+                                <li>ลอง <strong>โหลดใหม่ (Reload)</strong> หลังลงชื่อเข้าใช้</li>
+                                <li>ปิดแท็บหรือแอป TikTok อื่นบนอุปกรณ์เดียวกันหากทำได้</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>"ข้อความขาดหาย"</h4>
+                            <ul class="guide-list">
+                                <li>อาจเป็นข้อจำกัดฝั่ง TikTok ไม่ใช่ข้อบกพร่องของ SSN เสมอไป</li>
+                                <li>ลองโหมดอื่นก่อนตัดสินว่าวิธีใดดีที่สุดตลอดไป</li>
+                                <li>ใช้ TikFinity เป็นทางสำรองหากทำงานกับบัญชีของคุณได้ดีกว่า</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>"ข้อความซ้ำหลังเชื่อมต่อใหม่"</h4>
+                            <ul class="guide-list">
+                                <li>อัปเดตแอปเป็นบิลด์ล่าสุดก่อน</li>
+                                <li>หยุดแหล่งข้อมูลให้สมบูรณ์ แล้วเชื่อมต่อใหม่จากต้น</li>
+                                <li>หากยังมีข้อความซ้ำ ให้เปลี่ยนโหมดหรือใช้ TikFinity ชั่วคราว</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>"ถูกจำกัดอัตราการใช้งานตลอด"</h4>
+                            <ul class="guide-list">
+                                <li>ปิดแท็บ แอป หรือหน้ารับชม TikTok ที่ซ้ำบนอุปกรณ์เดียวกัน</li>
+                                <li>รอสักครู่ก่อนลองใหม่</li>
+                                <li>ลองโหมดหรือวิธีลงลายเซ็นอื่น</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>"ควรลองอะไรก่อน?"</h4>
+                            <ul class="guide-list">
+                                <li>Auto สำหรับอ่านแชต</li>
+                                <li>Standard สำหรับตอบกลับ</li>
+                                <li>Local Signer หาก Standard ไม่เสถียร</li>
+                                <li>TikFinity หากปัญหาอยู่ที่ TikTok เอง</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">ส่วนขยาย</span>
+                    <h3>หากใช้ส่วนขยายเบราว์เซอร์แทน</h3>
+                    <ul class="guide-list">
+                        <li>เปิดหน้าถ่ายทอดสด TikTok ของผู้ถ่ายทอดสดในเบราว์เซอร์และเปิดส่วนขยายไว้</li>
+                        <li>ลงชื่อเข้าใช้หากต้องการอีเวนต์จากหน้าที่จำกัดเฉพาะผู้ยืนยันตัวตนหรือเจ้าของการถ่ายทอดสดของคุณเอง</li>
+                        <li>หน้าฟีดกิจกรรม TikFinity ใช้กับการตั้งค่า SSN ผ่านเบราว์เซอร์ได้เช่นกัน</li>
+                        <li>แอปสแตนด์อโลนยังมีโหมด TikTok ให้เลือกมากที่สุดและมีทางเลือกสำรองที่สะดวกที่สุด</li>
+                    </ul>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/tiktok-live-setup-modal.png" alt="กล่องคำแนะนำการตั้งค่า TikTok Live จากหน้าเว็บไซต์ที่รองรับ" class="guide-image guide-image-medium">
+                        <figcaption>รายการ TikTok Live ในเว็บไซต์ที่รองรับ: ใช้ <code>tiktok.com/*/live</code> เป็น URL และเปิดหน้าแชตไว้ขณะส่วนขยายเก็บข้อมูล</figcaption>
+                    </figure>
+                </div>
+
+                <div class="footer-links">
+                    <a href="guides.html#standalone-tiktok" class="btn btn-secondary">กลับไปที่คู่มือ</a>
+                    <a href="download.html#standalone" class="btn btn-primary">ดาวน์โหลดแอปเดสก์ท็อป</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>รวมข้อความโซเชียลสดและอีกมากมาย ฟรีและเป็นโอเพนซอร์ส</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+                        <a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+                        <a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>ลิงก์ด่วน</h3>
+                    <ul>
+                        <li><a href="../index.html">หน้าแรก</a></li>
+                        <li><a href="features.html">ฟีเจอร์</a></li>
+                        <li><a href="download.html">ดาวน์โหลด</a></li>
+                        <li><a href="guides.html">คู่มือ</a></li>
+                        <li><a href="commands.html">คำสั่งและ API</a></li>
+                        <li><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a></li>
+                        <li><a href="templates.html">เทมเพลต</a></li>
+                        <li><a href="support.html">การสนับสนุน</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>แหล่งข้อมูลอ้างอิง</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">คู่มือการติดตั้ง</a></li>
+                        <li><a href="guides.html#extension-customization">คู่มือการปรับแต่ง</a></li>
+                        <li><a href="guides.html#faq">คำถามที่พบบ่อย</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">รายงานปัญหา</a></li>
+                        <li><a href="../privacy.html">นโยบายความเป็นส่วนตัว</a></li>
+                        <li><a href="../TOS.html">ข้อกำหนดการให้บริการ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>ชุมชน</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">เข้าร่วม Discord ของเรา</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">ที่เก็บโค้ด GitHub</a></li>
+                        <li><a href="support.html#contribute">ร่วมพัฒนา</a></li>
+                        <li><a href="https://github.com/sponsors/steveseguin" target="_blank">บริจาค</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja สัญญาอนุญาต GPLv3.0 สร้างโดย <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> ร่วมพัฒนาโดยชุมชน</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

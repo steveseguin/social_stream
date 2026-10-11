@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/external-overlay-sources.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/external-overlay-sources.html">
+    <meta property="og:title" content="Discord StreamKit 및 TikFinity 소스 - Social Stream Ninja">
+    <meta property="og:description" content="Discord StreamKit 또는 TikFinity OBS Dock URL을 Social Stream Ninja의 읽기 전용 채팅 소스로 사용하세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/external-overlay-sources.html">
+    <meta name="twitter:title" content="Discord StreamKit 및 TikFinity 소스 - Social Stream Ninja">
+    <meta name="twitter:description" content="Discord StreamKit 또는 TikFinity OBS Dock URL을 Social Stream Ninja의 읽기 전용 채팅 소스로 사용하세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord StreamKit 및 TikFinity 소스 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Discord StreamKit 또는 TikFinity OBS Dock URL을 Social Stream Ninja의 읽기 전용 채팅 소스로 사용하세요.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/external-overlay-sources.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", paste the link, and add the source.":", 링크를 붙여넣고 소스를 추가하세요.","Add your preferred Social Stream overlay URL to an OBS Browser Source using the same session ID.":"같은 세션 ID를 사용하는 원하는 Social Stream 오버레이 URL을 OBS 브라우저 소스에 추가하세요.","Avoid duplicates:":"중복 방지:","Browser-extension users can also open a supported TikFinity Activity Feed widget URL containing":"브라우저 확장 프로그램 사용자는 다음이 포함된 지원 TikFinity Activity Feed 위젯 URL을 열 수도 있습니다:","Chat":"채팅","Check the Social Stream dock before troubleshooting OBS. If the dock is empty, OBS is not the problem yet.":"OBS 문제를 해결하기 전에 Social Stream 도크를 확인하세요. 도크가 비어 있다면 아직 OBS의 문제는 아닙니다.","Choose":"선택:","Commands & API":"명령 및 API","Confirm Discord or TikFinity is still open, signed in, and connected.":"Discord 또는 TikFinity가 계속 열려 있고 로그인 및 연결된 상태인지 확인하세요.","Confirm it appears once in the Social Stream dock with the correct name and text.":"올바른 이름과 텍스트로 Social Stream 도크에 한 번 나타나는지 확인하세요.","Confirm the copied link is for the Chat widget or OBS Dock, not its setup page.":"복사한 링크가 설정 페이지가 아니라 Chat 위젯 또는 OBS Dock 링크인지 확인하세요.","Copy the Chat widget's installation link. It should start with":"Chat 위젯의 설치 링크를 복사하세요. 시작 부분은 다음과 같아야 합니다:","Copy the URL for Dock 1 or Dock 2.":"Dock 1 또는 Dock 2의 URL을 복사하세요.","Discord":"Discord","Discord StreamKit":"Discord StreamKit","Discord StreamKit Overlay":"Discord StreamKit Overlay","Discord StreamKit and TikFinity Sources":"Discord StreamKit 및 TikFinity 소스","Discord StreamKit and TikFinity Sources - Social Stream Ninja":"Discord StreamKit 및 TikFinity 소스 - Social Stream Ninja","Does not require you to install a bot in the server.":"서버에 봇을 설치할 필요가 없습니다.","Download":"다운로드","Features":"기능","Follow the":"다음을 따르세요:","Go to":"이동할 위치:","Guides":"가이드","Hire":"작업 의뢰","Home":"홈","If Messages Do Not Appear":"메시지가 나타나지 않을 때","If you only want the original Discord or TikFinity design on screen, paste its link directly into an OBS Browser Source. Use it as a Social Stream source when you want one combined chat, TTS, filtering, message highlighting, or other Social Stream features.":"원래 Discord 또는 TikFinity 디자인만 화면에 표시하려면 링크를 OBS 브라우저 소스에 직접 붙여넣으세요. 통합 채팅, 음성 읽기, 필터링, 메시지 강조 표시 또는 다른 Social Stream 기능을 원하면 Social Stream 소스로 사용하세요.","In the Social Stream desktop app, choose":"Social Stream 데스크톱 앱에서 다음을 선택하세요:","In the Social Stream desktop app, open":"Social Stream 데스크톱 앱에서 다음을 여세요:","Input link:":"입력 링크:","Inspiration":"아이디어","Install for OBS":"OBS용 설치(Install for OBS)","It captures new text, names, basic formatting, emoji, and the displayed name color.":"새 텍스트, 이름, 기본 서식, 이모지, 표시된 이름 색상을 캡처합니다.","It does not capture Discord calls, old message history, or reliably provide every avatar, attachment, reply, and role detail.":"Discord 통화나 이전 메시지 기록은 캡처하지 않으며 모든 아바타, 첨부 파일, 답장, 역할 정보를 항상 제공하지는 않습니다.","Keep TikFinity open and connected while you are live.":"방송 중 TikFinity를 열고 연결된 상태로 유지하세요.","Keep the Discord desktop app running while you capture.":"캡처하는 동안 Discord 데스크톱 앱을 계속 실행하세요.","Leave the source running for several minutes and confirm later messages continue arriving.":"소스를 몇 분 동안 실행해 두고 이후 메시지도 계속 도착하는지 확인하세요.","Main navigation":"기본 탐색 메뉴","OBS Quick Start":"OBS 빠른 시작","Open TikFinity and connect it to the TikTok LIVE account.":"TikFinity를 열고 TikTok LIVE 계정에 연결하세요.","Open navigation menu":"탐색 메뉴 열기","Open the":"다음을 여세요:","Open the Social Stream dock using your session ID.":"세션 ID로 Social Stream 도크를 여세요.","Other chat sites":"다른 채팅 사이트","Output link:":"출력 링크:","Overlay Gallery":"오버레이 갤러리","Overlays -> OBS Docks":"Overlays -> OBS Docks","Paste the TikFinity dock URL and activate the new source.":"TikFinity 도크 URL을 붙여넣고 새 소스를 활성화하세요.","Read-only: Social Stream cannot reply to Discord through StreamKit.":"읽기 전용: Social Stream은 StreamKit을 통해 Discord에 답장할 수 없습니다.","Read-only: use a direct TikTok mode if you need replies.":"읽기 전용: 답장이 필요하면 직접 TikTok 모드를 사용하세요.","Reads new text messages from one Discord server channel through Discord's official Chat widget.":"Discord 공식 Chat 위젯을 통해 Discord 서버 채널 하나의 새 텍스트 메시지를 읽습니다.","Reload or recreate the Social Stream source after changing the selected server, channel, dock, or events.":"선택한 서버, 채널, 도크 또는 이벤트를 변경한 뒤에는 Social Stream 소스를 다시 로드하거나 만드세요.","Requires TikFinity to remain open and connected.":"TikFinity가 계속 열려 있고 연결되어 있어야 합니다.","Requires the Discord desktop app to remain open.":"Discord 데스크톱 앱이 계속 열려 있어야 합니다.","See":"참고:","Select the":"선택:","Send another message and confirm it appears once in both the dock and OBS.":"다른 메시지를 보내 도크와 OBS 양쪽에 한 번씩 표시되는지 확인하세요.","Send one new test message in the selected Discord channel or TikTok LIVE chat.":"선택한 Discord 채널 또는 TikTok LIVE 채팅에 새 테스트 메시지 하나를 보내세요.","Set Up A TikFinity OBS Dock":"TikFinity OBS Dock 설정","Set Up Discord StreamKit":"Discord StreamKit 설정","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Social Stream skips messages already visible when the page first opens. Send a new test message after the source is ready.":"Social Stream은 페이지를 처음 열었을 때 이미 보이던 메시지를 건너뜁니다. 소스가 준비된 뒤 새 테스트 메시지를 보내세요.","Sources and Settings -> Discord":"Sources and Settings -> Discord","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Test with a new message. Existing messages are intentionally not imported.":"새 메시지로 테스트하세요. 기존 메시지는 의도적으로 가져오지 않습니다.","The source is labelled TikFinity in setup, but its messages use the normal":"설정에서는 소스가 TikFinity로 표시되지만 메시지는 일반적인 다음을 사용합니다:","These setups use two different links:":"이 설정에는 서로 다른 두 링크를 사용합니다:","This is a fallback reader, not a way to send TikTok replies.":"이는 대체 수신 방식이며 TikTok 답장을 보내는 방법이 아닙니다.","TikFinity OBS Dock":"TikFinity OBS Dock","TikFinity setup guide with screenshots":"스크린샷이 있는 TikFinity 설정 가이드","TikTok Guide":"TikTok 가이드","TikTok fallback":"TikTok 대체 방식","Treat copied source links as private setup information. Do not publish them or expose them while screen sharing.":"복사한 소스 링크는 비공개 설정 정보로 취급하세요. 게시하거나 화면 공유 중 노출하지 마세요.","Understand The Two Links":"두 링크 이해하기","Use Discord StreamKit or a TikFinity OBS Dock URL as a read-only chat source in Social Stream Ninja.":"Discord StreamKit 또는 TikFinity OBS Dock URL을 Social Stream Ninja의 읽기 전용 채팅 소스로 사용하세요.","Use a Discord StreamKit URL":"Discord StreamKit URL 사용","Use a third-party overlay link as a read-only chat source in Social Stream Ninja.":"외부 오버레이 링크를 Social Stream Ninja의 읽기 전용 채팅 소스로 사용하세요.","Use the gear button to choose the events the dock should show, including chat.":"톱니바퀴 버튼으로 채팅을 포함해 도크가 표시할 이벤트를 선택하세요.","Useful when direct TikTok modes are missing or dropping messages.":"직접 TikTok 모드에서 메시지가 누락되거나 끊길 때 유용합니다.","Uses TikFinity as a fallback reader for TikTok LIVE chat and events.":"TikFinity를 TikTok LIVE 채팅 및 이벤트의 대체 수신기로 사용합니다.","Validate The Full Workflow":"전체 작업 흐름 검증","Which Option Should I Use?":"어떤 옵션을 사용해야 하나요?","With the Social Stream browser extension, enable":"Social Stream 브라우저 확장 프로그램에서 다음을 활성화하세요:","and authorize StreamKit when Discord asks.":"그리고 Discord가 요청하면 StreamKit을 승인하세요.","do not capture the same chat with both a direct source and one of these fallback sources at the same time.":"같은 채팅을 직접 소스와 이 대체 소스로 동시에 캡처하지 마세요.","for the username, OBS Dock settings, and SSApp steps. For direct TikTok modes and reply options, see the":"에서 사용자 이름, OBS Dock 설정, SSApp 단계를 확인하세요. 직접 TikTok 모드와 답장 옵션은 다음을 참조하세요:","if you need the dock and Browser Source steps.":"에서 도크 및 브라우저 소스 단계를 확인하세요.","source type inside Social Stream.":"소스 유형을 Social Stream 안에서 사용합니다.","the Discord StreamKit or TikFinity URL that you paste into Social Stream Ninja. Social Stream reads messages from it.":"Social Stream Ninja에 붙여넣는 Discord StreamKit 또는 TikFinity URL입니다. Social Stream이 이 링크에서 메시지를 읽습니다.","under the optional chat services and open the generated StreamKit Chat link in a browser tab.":"를 선택적 채팅 서비스에서 활성화하고 생성된 StreamKit Chat 링크를 브라우저 탭에서 여세요.","widget, then choose the server and text channel you want to capture.":"위젯을 선택한 다음 캡처할 서버와 텍스트 채널을 선택하세요.","your Social Stream dock or overlay URL. Open the dock to test messages, then add an overlay URL to OBS.":"Social Stream 도크 또는 오버레이 URL입니다. 도크를 열어 메시지를 테스트한 다음 오버레이 URL을 OBS에 추가하세요."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/external-overlay-sources.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/external-overlay-sources.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/external-overlay-sources.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/external-overlay-sources.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/external-overlay-sources.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/external-overlay-sources.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/external-overlay-sources.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/external-overlay-sources.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/external-overlay-sources.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/external-overlay-sources.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/external-overlay-sources.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/external-overlay-sources.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="external-overlay-sources.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/external-overlay-sources.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/external-overlay-sources.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/external-overlay-sources.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/external-overlay-sources.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/external-overlay-sources.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Discord StreamKit 및 TikFinity 소스</h1>
+            <p>외부 오버레이 링크를 Social Stream Ninja의 읽기 전용 채팅 소스로 사용하세요.</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>두 링크 이해하기</h3>
+                <p>이 설정에는 서로 다른 두 링크를 사용합니다:</p>
+                <ul class="guide-list">
+                    <li><strong>입력 링크:</strong> Social Stream Ninja에 붙여넣는 Discord StreamKit 또는 TikFinity URL입니다. Social Stream이 이 링크에서 메시지를 읽습니다.</li>
+                    <li><strong>출력 링크:</strong> Social Stream 도크 또는 오버레이 URL입니다. 도크를 열어 메시지를 테스트한 다음 오버레이 URL을 OBS에 추가하세요.</li>
+                </ul>
+                <p>원래 Discord 또는 TikFinity 디자인만 화면에 표시하려면 링크를 OBS 브라우저 소스에 직접 붙여넣으세요. 통합 채팅, 음성 읽기, 필터링, 메시지 강조 표시 또는 다른 Social Stream 기능을 원하면 Social Stream 소스로 사용하세요.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>어떤 옵션을 사용해야 하나요?</h3>
+                <div class="setup-grid">
+                    <div class="guide-card">
+                        <h4>Discord StreamKit</h4>
+                        <p>Discord 공식 Chat 위젯을 통해 Discord 서버 채널 하나의 새 텍스트 메시지를 읽습니다.</p>
+                        <ul class="guide-list">
+                            <li>Discord 데스크톱 앱이 계속 열려 있어야 합니다.</li>
+                            <li>서버에 봇을 설치할 필요가 없습니다.</li>
+                            <li>읽기 전용: Social Stream은 StreamKit을 통해 Discord에 답장할 수 없습니다.</li>
+                        </ul>
+                    </div>
+                    <div class="guide-card">
+                        <h4>TikFinity OBS Dock</h4>
+                        <p>TikFinity를 TikTok LIVE 채팅 및 이벤트의 대체 수신기로 사용합니다.</p>
+                        <ul class="guide-list">
+                            <li>TikFinity가 계속 열려 있고 연결되어 있어야 합니다.</li>
+                            <li>직접 TikTok 모드에서 메시지가 누락되거나 끊길 때 유용합니다.</li>
+                            <li>읽기 전용: 답장이 필요하면 직접 TikTok 모드를 사용하세요.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="callout-box">
+                    <strong>중복 방지:</strong> 같은 채팅을 직접 소스와 이 대체 소스로 동시에 캡처하지 마세요.
+                </div>
+            </div>
+
+            <div class="guide-card" id="discord-streamkit">
+                <span class="mini-label">Discord</span>
+                <h3>Discord StreamKit 설정</h3>
+                <ol class="guide-steps">
+                    <li>다음을 여세요: <a href="https://streamkit.discord.com/overlay" target="_blank" rel="noopener noreferrer">Discord StreamKit Overlay</a>.</li>
+                    <li>선택: <strong>OBS용 설치(Install for OBS)</strong> 그리고 Discord가 요청하면 StreamKit을 승인하세요.</li>
+                    <li>선택: <strong>채팅</strong> 위젯을 선택한 다음 캡처할 서버와 텍스트 채널을 선택하세요.</li>
+                    <li>Chat 위젯의 설치 링크를 복사하세요. 시작 부분은 다음과 같아야 합니다: <code>https://streamkit.discord.com/overlay/chat/</code>.</li>
+                    <li>Social Stream 데스크톱 앱에서 다음을 여세요: <strong>Sources and Settings -&gt; Discord</strong>.</li>
+                    <li>선택: <strong>Discord StreamKit URL 사용</strong>, 링크를 붙여넣고 소스를 추가하세요.</li>
+                    <li>캡처하는 동안 Discord 데스크톱 앱을 계속 실행하세요.</li>
+                </ol>
+                <p>Social Stream 브라우저 확장 프로그램에서 다음을 활성화하세요: <strong>Discord</strong> 를 선택적 채팅 서비스에서 활성화하고 생성된 StreamKit Chat 링크를 브라우저 탭에서 여세요.</p>
+                <ul class="guide-list">
+                    <li>Social Stream은 페이지를 처음 열었을 때 이미 보이던 메시지를 건너뜁니다. 소스가 준비된 뒤 새 테스트 메시지를 보내세요.</li>
+                    <li>새 텍스트, 이름, 기본 서식, 이모지, 표시된 이름 색상을 캡처합니다.</li>
+                    <li>Discord 통화나 이전 메시지 기록은 캡처하지 않으며 모든 아바타, 첨부 파일, 답장, 역할 정보를 항상 제공하지는 않습니다.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card" id="tikfinity">
+                <span class="mini-label">TikTok 대체 방식</span>
+                <h3>TikFinity OBS Dock 설정</h3>
+                <ol class="guide-steps">
+                    <li>TikFinity를 열고 TikTok LIVE 계정에 연결하세요.</li>
+                    <li>이동할 위치: <strong>Overlays -&gt; OBS Docks</strong>.</li>
+                    <li>톱니바퀴 버튼으로 채팅을 포함해 도크가 표시할 이벤트를 선택하세요.</li>
+                    <li>Dock 1 또는 Dock 2의 URL을 복사하세요.</li>
+                    <li>Social Stream 데스크톱 앱에서 다음을 선택하세요: <strong>다른 채팅 사이트</strong>.</li>
+                    <li>TikFinity 도크 URL을 붙여넣고 새 소스를 활성화하세요.</li>
+                    <li>방송 중 TikFinity를 열고 연결된 상태로 유지하세요.</li>
+                </ol>
+                <ul class="guide-list">
+                    <li>설정에서는 소스가 TikFinity로 표시되지만 메시지는 일반적인 다음을 사용합니다: <code>tiktok</code> 소스 유형을 Social Stream 안에서 사용합니다.</li>
+                    <li>이는 대체 수신 방식이며 TikTok 답장을 보내는 방법이 아닙니다.</li>
+                    <li>브라우저 확장 프로그램 사용자는 다음이 포함된 지원 TikFinity Activity Feed 위젯 URL을 열 수도 있습니다: <code>/widget/vite/src/activity-feed/</code>.</li>
+                </ul>
+                <p>다음을 따르세요: <a href="tikfinity-setup.html">스크린샷이 있는 TikFinity 설정 가이드</a> 에서 사용자 이름, OBS Dock 설정, SSApp 단계를 확인하세요. 직접 TikTok 모드와 답장 옵션은 다음을 참조하세요: <a href="tiktok-guide.html">TikTok 가이드</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>전체 작업 흐름 검증</h3>
+                <ol class="guide-steps">
+                    <li>세션 ID로 Social Stream 도크를 여세요.</li>
+                    <li>선택한 Discord 채널 또는 TikTok LIVE 채팅에 새 테스트 메시지 하나를 보내세요.</li>
+                    <li>올바른 이름과 텍스트로 Social Stream 도크에 한 번 나타나는지 확인하세요.</li>
+                    <li>같은 세션 ID를 사용하는 원하는 Social Stream 오버레이 URL을 OBS 브라우저 소스에 추가하세요.</li>
+                    <li>다른 메시지를 보내 도크와 OBS 양쪽에 한 번씩 표시되는지 확인하세요.</li>
+                    <li>소스를 몇 분 동안 실행해 두고 이후 메시지도 계속 도착하는지 확인하세요.</li>
+                </ol>
+                <p>참고: <a href="obs-quick-start.html">OBS 빠른 시작</a> 에서 도크 및 브라우저 소스 단계를 확인하세요.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>메시지가 나타나지 않을 때</h3>
+                <ul class="guide-list">
+                    <li>새 메시지로 테스트하세요. 기존 메시지는 의도적으로 가져오지 않습니다.</li>
+                    <li>Discord 또는 TikFinity가 계속 열려 있고 로그인 및 연결된 상태인지 확인하세요.</li>
+                    <li>복사한 링크가 설정 페이지가 아니라 Chat 위젯 또는 OBS Dock 링크인지 확인하세요.</li>
+                    <li>선택한 서버, 채널, 도크 또는 이벤트를 변경한 뒤에는 Social Stream 소스를 다시 로드하거나 만드세요.</li>
+                    <li>OBS 문제를 해결하기 전에 Social Stream 도크를 확인하세요. 도크가 비어 있다면 아직 OBS의 문제는 아닙니다.</li>
+                    <li>복사한 소스 링크는 비공개 설정 정보로 취급하세요. 게시하거나 화면 공유 중 노출하지 마세요.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

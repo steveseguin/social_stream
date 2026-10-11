@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Social Stream Ninja Etkinlik Akışı&#x27;nda değerleri izlemek, bekleme süreleri uygulamak ve gelen sohbet etkinlikleri arasında eylemleri koordine etmek için durum düğümlerini kullanın.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/tr/actions/state-nodes-guide.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/tr/actions/state-nodes-guide.html">
+    <meta property="og:title" content="Durum Düğümleri Uygulama Rehberi - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja Etkinlik Akışı&#x27;nda değerleri izlemek, bekleme süreleri uygulamak ve gelen sohbet etkinlikleri arasında eylemleri koordine etmek için durum düğümlerini kullanın.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/tr/actions/state-nodes-guide.html">
+    <meta name="twitter:title" content="Durum Düğümleri Uygulama Rehberi - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja Etkinlik Akışı&#x27;nda değerleri izlemek, bekleme süreleri uygulamak ve gelen sohbet etkinlikleri arasında eylemleri koordine etmek için durum düğümlerini kullanın.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Durum Düğümleri Uygulama Rehberi - Social Stream Ninja</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: radial-gradient(circle at top, #4338ca 0%, #0f172a 55%, #020617 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 35px 80px rgba(3, 7, 18, 0.55);
+        }
+        header {
+            background: linear-gradient(135deg, #4c1d95, #312e81, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.7rem;
+            margin-bottom: 12px;
+        }
+        header p {
+            font-size: 1.15rem;
+            max-width: 680px;
+            opacity: 0.92;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 11px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.06em;
+            margin-bottom: 18px;
+        }
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        nav a {
+            color: #f8fafc;
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 999px;
+            padding: 6px 16px;
+            transition: background 0.2s;
+        }
+        nav a:hover {
+            background: rgba(15,23,42,0.25);
+        }
+        .content {
+            padding: 50px 55px 70px;
+        }
+        section {
+            margin-bottom: 70px;
+        }
+        h2 {
+            font-size: 2rem;
+            color: #312e81;
+            margin-bottom: 18px;
+        }
+        h3 {
+            font-size: 1.35rem;
+            color: #4338ca;
+            margin: 20px 0 10px;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 24px;
+            margin: 12px 0;
+        }
+        li {
+            margin: 6px 0;
+        }
+        .panel {
+            border-radius: 16px;
+            padding: 22px;
+            margin: 18px 0;
+        }
+        .panel.info {
+            background: #eef2ff;
+            border: 1px solid rgba(67,56,202,0.2);
+        }
+        .panel.warn {
+            background: #fff7ed;
+            border: 1px solid rgba(234,88,12,0.25);
+        }
+        .panel.success {
+            background: #ecfdf5;
+            border: 1px solid rgba(5,150,105,0.2);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 18px;
+            margin: 20px 0;
+        }
+        .card {
+            border-radius: 18px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+            padding: 20px 22px;
+            background: #fff;
+        }
+        .card h4 {
+            margin-bottom: 10px;
+            color: #4c1d95;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono','Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            border-radius: 14px;
+            padding: 18px;
+            margin: 16px 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .recipe {
+            border-left: 4px solid #312e81;
+            padding-left: 18px;
+            margin: 18px 0;
+        }
+        .recipe h4 {
+            margin-bottom: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        table th, table td {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            text-align: left;
+        }
+        table th {
+            background: #f1f5f9;
+            color: #312e81;
+        }
+        code {
+            background: rgba(15,23,42,0.06);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono','Courier New', monospace;
+        }
+        @media (max-width: 720px) {
+            table { display: block; max-width: 100%; overflow-x: auto; }
+            header, .content {
+                padding: 35px 20px;
+            }
+            nav {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"actions/state-nodes-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{"!hello ──▶ Switch (ON?) ─▶ Send Reply ─▶ Set Gate: OFF ─▶ Delay 15s ─▶ Set Gate: ON":"!hello ──▶ Switch (ON?) ─▶ Send Reply ─▶ Set Gate: OFF ─▶ Delay 15s ─▶ Set Gate: ON","(OFF) referencing “helloCooldown”.":"(KAPALI), “helloCooldown” seçili olarak.","(ON) for “helloCooldown”.":"(AÇIK), “helloCooldown” için.","01 · Quick Orientation":"01 · Hızlı Tanıtım","02 · On/Off Switch (Gate)":"02 · Aç/Kapat Anahtarı (Geçit)","03 · Counter":"03 · Sayaç","04 · Rate Limiter (Throttle)":"04 · Hız Sınırlayıcı (Kısıtlama)","05 · User Memory":"05 · Kullanıcı Belleği","06 · Problem Kits":"06 · Çözüm Paketleri","07 · Troubleshooting & FAQ":"07 · Sorun Giderme ve SSS","08 · Next Steps":"08 · Sonraki Adımlar",": add or subtract custom amounts.":"— özel miktarlar ekleyin veya çıkarın.",": flip ON or OFF.":"— AÇIK veya KAPALI yapın.",": jump to a specific number.":"— belirli sayıya geçin.",": revert to default (usually ON).":"— varsayılana dönün (genellikle AÇIK).",": revert to the default start value.":"— varsayılan başlangıç değerine dönün.","A User Memory operation has no dashed link.":"Kullanıcı Belleği işleminin kesikli bağlantısı yok.","Actions":"Eylemler","Add a":"Şunu ekleyin:","Add a chat message “Cooldown active” on the false output if desired.":"İsterseniz yanlış çıkışına “Bekleme süresi etkin” sohbet mesajı ekleyin.","Add another":"Bir tane daha ekleyin:","Add the State node first, give it a unique name, then select it from each matching operation. Without the base node, state actions have nothing to update.":"Önce Durum düğümünü ekleyip benzersiz ad verin; sonra ilgili her işlemde seçin. Temel düğüm olmadan durum eylemlerinin güncelleyeceği bir şey yoktur.","Add the switch node first and confirm the dropdown references it.":"Önce anahtar düğümünü ekleyin ve açılır listenin onu seçtiğini doğrulayın.","After your action, add":"Eyleminizden sonra şunu ekleyin:","All overlay triggers pass through the switch.":"Tüm katman tetikleyicileri anahtardan geçer.","Any Message ─▶ Counter (name: hype5) ─▶ Condition (value % 5 === 0?) ─▶ Play Celebration":"Any Message ─▶ Counter (name: hype5) ─▶ Condition (value % 5 === 0?) ─▶ Play Celebration","Auto increment:":"Otomatik artırma:","Best for":"En uygun kullanım","Build Steps":"Oluşturma Adımları","Can live anywhere in the flow. Just pick the matching node name.":"Akışın herhangi bir yerinde olabilir — eşleşen düğüm adını seçmeniz yeterlidir.","Choose the named memory in the operation's properties or drag its purple side connector onto the memory.":"İşlemin özelliklerinde adlandırılmış belleği seçin veya mor yan bağlantısını belleğin üzerine sürükleyin.","Choose the time window (seconds).":"Zaman aralığını seçin (saniye).","Combine state nodes with the rest of the Event Flow toolkit:":"Durum düğümlerini Etkinlik Akışı'nın diğer araçlarıyla birleştirin:","Command Cooldown":"Komut Bekleme Süresi","Configuration":"Yapılandırma","Connect your trigger → switch → actions.":"Tetikleyici → anahtar → eylemler şeklinde bağlayın.","Cooldowns for chat commands.":"Sohbet komutları için bekleme süreleri.","Counter":"Sayaç","Counter default 0, target 3.":"Sayaç varsayılanı 0, hedefi 3.","Counter never increments.":"Sayaç hiç artmıyor.","Counters track numbers across messages. They increment automatically when a message flows through, and you can adjust values manually with actions.":"Sayaçlar mesajlar arasında sayıları takip eder. Mesaj geçtiğinde otomatik artar; eylemlerle değerleri elle de ayarlayabilirsiniz.","Decide whether to queue or discard overflow.":"Sınırı aşanları kuyruğa mı alacağınıza, atacağınıza mı karar verin.","Delay":"Gecikme","Drop the switch node, name it “helloCooldown”, default ON.":"Anahtar düğümünü ekleyin, adını “helloCooldown”, varsayılanını AÇIK yapın.","Ensure":"Şunu doğrulayın:","Event Flow Guide":"Etkinlik Akışı Kılavuzu","Event Flow System":"Etkinlik Akışı Sistemi","Every Nth chatter triggers a prize.":"Her N'inci sohbet katılımcısı ödül tetikler.","Every time a payload passes through the Counter node it adds 1 (unless you pause it with the “Only count when gate is true” option).":"Sayaç düğümünden her veri geçtiğinde 1 ekler (“Yalnızca geçit doğruyken say” seçeneğiyle duraklatmadığınız sürece).","Example Flow Charts":"Örnek Akış Şemaları","Example: 15s Cooldown":"Örnek: 15 sn Bekleme Süresi","Example: Celebrate Every 5 Messages":"Örnek: Her 5 Mesajda Bir Kutlayın","Export working patterns as templates so your team can re-import them later.":"Ekibinizin daha sonra yeniden içe aktarabilmesi için çalışan örüntüleri şablon olarak dışa aktarın.","Fix":"Çözüm","Gate, Counter, and Rate Limiter can run in the normal event path.":"Geçit, Sayaç ve Hız Sınırlayıcı normal etkinlik yolunda çalışabilir.","Gift-based or badge-based eligibility.":"Hediyeye veya rozete dayalı uygunluk.","Great When You Need":"Şunlar Gerektiğinde Kullanışlıdır","Guide buttons don’t open.":"Rehber düğmeleri açılmıyor.","Heads up:":"Dikkat:","Holds the value (ON/OFF, count, timestamps, or users).":"Değeri tutar (AÇIK/KAPALI, sayı, zaman damgaları veya kullanıcılar).","Increment after each redemption.":"Her ödül kullanımından sonra artırın.","Inside the Condition node, compare":"Koşul düğümünde şunu karşılaştırın:","Keep experimenting! The new":"Denemeye devam edin! Yeni","Key Actions":"Temel Eylemler","Label branches (e.g., “false → cooldown active”) so you can follow the path visually.":"Yolu görsel olarak izleyebilmek için dalları etiketleyin (ör. “yanlış → bekleme süresi etkin”).","Likely Cause":"Olası Neden","Limited Freebies":"Sınırlı Ücretsiz Hediyeler","Lives on the canvas.":"Tuvalde bulunur.","Maintenance windows (pause features during BRB scenes).":"Bakım aralıkları (BRB sahnelerinde özellikleri duraklatma).","Make sure the trigger wire passes through the counter and the gate output is true.":"Tetikleyici bağlantısının sayaçtan geçtiğinden ve geçit çıkışının doğru olduğundan emin olun.","Manual toggles (enable/disable overlays).":"Elle anahtarlar (katmanları açma/kapatma).","No matching switch node exists (or the names differ).":"Eşleşen anahtar düğümü yok (veya adlar farklı).","No target memory is selected.":"Hedef bellek seçilmemiş.","On/Off Switch":"Aç/Kapat Anahtarı","Operations":"İşlemler","Overview":"Genel bakış","Participation Trigger ──▶ Remember User ······▶ User Memory: Entrants Draw Command ───────────▶ Pick Random User ···▶ User Memory: Entrants Reset Command ──────────▶ Clear All Users ·····▶ User Memory: Entrants":"Participation Trigger ──▶ Remember User ······▶ User Memory: Entrants Draw Command ───────────▶ Pick Random User ···▶ User Memory: Entrants Reset Command ──────────▶ Clear All Users ·····▶ User Memory: Entrants","Pick a scenario and follow the steps.":"Bir senaryo seçip adımları izleyin.","Placed downstream.":"Sonraki aşamaya yerleştirilir.","Problem Kits":"Çözüm Paketleri","Rate Limiter":"Hız Sınırlayıcı","Reads or changes the stored value (set ON, add +1, remember, draw, reset, etc.).":"Saklanan değeri okur veya değiştirir (AÇIK yap, +1 ekle, hatırla, çekiliş yap, sıfırla vb.).","Redeem Reward ─▶ Counter ticketsSold ├─value \u003c 50 ─▶ Approve Redemption └─value ≥ 50 ─▶ Deny + Refund points":"Redeem Reward ─▶ Counter ticketsSold ├─value \u003c 50 ─▶ Approve Redemption └─value ≥ 50 ─▶ Deny + Refund points","Relax the limit and drop a Reset State Node action before retesting.":"Sınırı gevşetin ve yeniden test etmeden önce Durum Düğümünü Sıfırla eylemi ekleyin.","Remember:":"Unutmayın:","Remembering viewers who liked, entered, or participated.":"Beğenen, katılan veya etkileşen izleyicileri hatırlama.","Reset state nodes between tests so you are not reading stale data.":"Eski verileri okumamak için testler arasında durum düğümlerini sıfırlayın.","Running inside the extension without web_accessible resources updated.":"web_accessible kaynakları güncellenmeden uzantı içinde çalıştırılıyor.","See the dedicated":"Özel rehbere bakın:","Separate lists for separate campaigns.":"Farklı kampanyalar için ayrı listeler.","Set Gate OFF → Delay → Set Gate ON.":"Geçidi KAPALI Yap → Gecikme → Geçidi AÇIK Yap.","Set Gate State":"Geçit Durumunu Ayarla","Set Gate State action won’t save.":"Geçit Durumunu Ayarla eylemi kaydedilmiyor.","Set the maximum events allowed.":"İzin verilen en fazla etkinlik sayısını ayarlayın.","Social Stream Ninja logo":"Social Stream Ninja logosu","Solid teal wires carry events. Dashed purple links show which shared memory an operation uses. Each User Memory has its own count, persistence mode, and reset policy, so clearing one list does not affect another.":"Düz turkuaz bağlantılar etkinlik taşır. Kesikli mor bağlantılar işlemin hangi ortak belleği kullandığını gösterir. Her Kullanıcı Belleği'nin kendi sayısı, kalıcılık modu ve sıfırlama politikası vardır; bir listeyi temizlemek diğerini etkilemez.","State Action":"Durum Eylemi","State Node":"Durum Düğümü","State Nodes Playbook":"Durum Düğümleri Uygulama Rehberi","State Nodes Playbook - Social Stream Ninja":"Durum Düğümleri Uygulama Rehberi - Social Stream Ninja","State nodes give Social Stream Ninja memory. Use them to build cooldowns, toggles, counters, throttles, participant lists, and prize draws that keep automations predictable.":"Durum düğümleri Social Stream Ninja'ya bellek kazandırır. Otomasyonları öngörülebilir tutan bekleme süreleri, anahtarlar, sayaçlar, kısıtlamalar, katılımcı listeleri ve ödül çekilişleri oluşturun.","State tools have an object that owns the value and operations that read or change it:":"Durum araçlarında değeri tutan bir nesne ve onu okuyan veya değiştiren işlemler vardır:","Store points redeemed via commands.":"Komutlarla kullanılan puanları saklayın.","Store state-driven metadata under":"Duruma bağlı üst verileri şu alanda saklayın:","Switch named “overlayToggle”.":"“overlayToggle” adlı anahtar.","Switch node named “commandCooldown”.":"“commandCooldown” adlı anahtar düğümü.","Symptom":"Belirti","Temporarily shorten cooldowns (2 seconds) or lower counter targets while verifying.":"Doğrularken bekleme sürelerini geçici olarak kısaltın (2 saniye) veya sayaç hedeflerini düşürün.","Testing Checklist":"Test Kontrol Listesi","The flow bypasses the counter node or the gate is false.":"Akış sayaç düğümünü atlıyor veya geçit yanlış.","The switch is a boolean guard. When ON, messages pass through; when OFF, the flow halts at this node.":"Anahtar mantıksal bir koruyucudur. AÇIK olduğunda mesajlar geçer; KAPALI olduğunda akış bu düğümde durur.","The throttle remembers timestamps and refuses new events until the rate you specify is respected.":"Kısıtlayıcı zaman damgalarını hatırlar ve belirlediğiniz hıza uyulana kadar yeni etkinlikleri reddeder.","Throttle blocks everything forever.":"Kısıtlayıcı her şeyi sürekli engelliyor.","Throttles do not auto-reset when you edit the flow. Use":"Akışı düzenlediğinizde kısıtlayıcılar otomatik sıfırlanmaz. Şunu kullanın:","Track progress to a community goal.":"Topluluk hedefine ilerlemeyi takip edin.","Trigger → switch → reply.":"Tetikleyici → anahtar → yanıt.","Trigger ─▶ Switch (overlayToggle) ─▶ If ON → Show Overlay └─false─▶ Notify moderator “Overlay disabled”":"Trigger ─▶ Switch (overlayToggle) ─▶ If ON → Show Overlay └─false─▶ Notify moderator “Overlay disabled”","Troubleshooting":"Sorun giderme","Unique-entry prize draws.":"Kişi başına tek katılımlı ödül çekilişleri.","Use Cases":"Kullanım Alanları","Use Reset action at the end of stream.":"Yayın sonunda Sıfırla eylemini kullanın.","Use logic gates (AND/OR/NOT) before a switch to decide who can toggle it.":"Anahtarı kimin değiştirebileceğine karar vermek için öncesinde mantık kapıları (AND/OR/NOT) kullanın.","Use state nodes in Social Stream Ninja Event Flow to track values, apply cooldowns and coordinate actions across incoming chat events.":"Social Stream Ninja Etkinlik Akışı'nda değerleri izlemek, bekleme süreleri uygulamak ve gelen sohbet etkinlikleri arasında eylemleri koordine etmek için durum düğümlerini kullanın.","Use the Event Flow “Send Test Event” tool to simulate commands.":"Komutları canlandırmak için Etkinlik Akışı'nın “Test Etkinliği Gönder” aracını kullanın.","User Memory":"Kullanıcı Belleği","User Memory guide":"Kullanıcı Belleği kılavuzu","User Memory is a shared hub referenced by other nodes.":"Kullanıcı Belleği diğer düğümlerin başvurduğu ortak merkezdir.","User Memory owns one named list of unique people. Remember users when they participate, check that list on later messages, remove a person, choose a random winner, or clear only that list.":"Kullanıcı Belleği, benzersiz kişilerin adlandırılmış tek listesini tutar. Katıldıklarında kullanıcıları hatırlayın, sonraki mesajlarda listeyi kontrol edin, bir kişiyi kaldırın, rastgele kazanan seçin veya yalnızca o listeyi temizleyin.","Viewer Toggle":"İzleyici Anahtarı","When value ≥ 3, branch to “Sorry, all gone”.":"Değer ≥ 3 olduğunda “Üzgünüz, hepsi bitti” dalına geçin.","Window too strict or leftover state from testing.":"Zaman aralığı fazla kısıtlayıcı veya testten kalan durum var.","and":"ve","command → Set Gate OFF.":"komutu → Geçidi KAPALI Yap.","command → Set Gate ON.":"komutu → Geçidi AÇIK Yap.","for reviewed screenshots, a downloadable draw flow, TikTok eligibility, participation examples, and reset details.":"incelenmiş ekran görüntüleri, indirilebilir çekiliş akışı, TikTok uygunluğu, katılım örnekleri ve sıfırlama ayrıntıları için.","if you need a clean slate during testing.":"test sırasında temiz başlangıç gerekiyorsa.","node (15 seconds).":"düğümü (15 saniye).","or":"veya","or simply use the built-in “Trigger when value matches Target” option from the Counter node’s properties.":"veya Sayaç düğümü özelliklerindeki yerleşik “Değer Hedefle eşleştiğinde tetikle” seçeneğini kullanın.","pairs with this playbook so you can master both logic and state layers.":"bu uygulama rehberini tamamlar; böylece hem mantık hem durum katmanında uzmanlaşabilirsiniz.","ships via manifest and reload the extension.":"manifest üzerinden sunulduğunu doğrulayıp uzantıyı yeniden yükleyin.","so overlays know why a branch fired.":"katmanların dalın neden tetiklendiğini bilmesi için.","“Drop alerts if the overlay is already busy.”":"“Katman zaten meşgulse uyarıları at.”","“One API call per 10 seconds.”":"“10 saniyede bir API çağrısı.”","“Only five raffle entries per minute.”":"“Dakikada yalnızca beş çekiliş katılımı.”"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/actions/state-nodes-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="shell">
+        <header>
+            <div class="badge">Etkinlik Akışı Sistemi<!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/state-nodes-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/state-nodes-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/state-nodes-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/state-nodes-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/state-nodes-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/state-nodes-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/state-nodes-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/state-nodes-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/state-nodes-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/state-nodes-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/state-nodes-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/state-nodes-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/state-nodes-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/state-nodes-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="state-nodes-guide.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/actions/state-nodes-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/state-nodes-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+            <h1>Durum Düğümleri Uygulama Rehberi</h1>
+            <p>Durum düğümleri Social Stream Ninja'ya bellek kazandırır. Otomasyonları öngörülebilir tutan bekleme süreleri, anahtarlar, sayaçlar, kısıtlamalar, katılımcı listeleri ve ödül çekilişleri oluşturun.</p>
+            <nav>
+                <a href="#overview">Genel bakış</a>
+                <a href="#switch">Aç/Kapat Anahtarı</a>
+                <a href="#counter">Sayaç</a>
+                <a href="#throttle">Hız Sınırlayıcı</a>
+                <a href="#user-memory">Kullanıcı Belleği</a>
+                <a href="#recipes">Çözüm Paketleri</a>
+                <a href="#troubleshooting">Sorun giderme</a>
+            </nav>
+        </header>
+        <div class="content">
+            <section id="overview">
+                <h2>01 · Hızlı Tanıtım</h2>
+                <p>Durum araçlarında değeri tutan bir nesne ve onu okuyan veya değiştiren işlemler vardır:</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Durum Düğümü</h4>
+                        <ul>
+                            <li>Tuvalde bulunur.</li>
+                            <li>Değeri tutar (AÇIK/KAPALI, sayı, zaman damgaları veya kullanıcılar).</li>
+                            <li>Geçit, Sayaç ve Hız Sınırlayıcı normal etkinlik yolunda çalışabilir.</li>
+                            <li>Kullanıcı Belleği diğer düğümlerin başvurduğu ortak merkezdir.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Durum Eylemi</h4>
+                        <ul>
+                            <li>Sonraki aşamaya yerleştirilir.</li>
+                            <li>Saklanan değeri okur veya değiştirir (AÇIK yap, +1 ekle, hatırla, çekiliş yap, sıfırla vb.).</li>
+                            <li>Akışın herhangi bir yerinde olabilir — eşleşen düğüm adını seçmeniz yeterlidir.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel info">
+                    <strong>Unutmayın:</strong> Önce Durum düğümünü ekleyip benzersiz ad verin; sonra ilgili her işlemde seçin. Temel düğüm olmadan durum eylemlerinin güncelleyeceği bir şey yoktur.
+                </div>
+            </section>
+
+            <section id="switch">
+                <h2>02 · Aç/Kapat Anahtarı (Geçit)</h2>
+                <p>Anahtar mantıksal bir koruyucudur. AÇIK olduğunda mesajlar geçer; KAPALI olduğunda akış bu düğümde durur.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>En uygun kullanım</h4>
+                        <ul>
+                            <li>Sohbet komutları için bekleme süreleri.</li>
+                            <li>Elle anahtarlar (katmanları açma/kapatma).</li>
+                            <li>Bakım aralıkları (BRB sahnelerinde özellikleri duraklatma).</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Temel Eylemler</h4>
+                        <ul>
+                            <li><code>Set Gate State</code>— AÇIK veya KAPALI yapın.</li>
+                            <li><code>Reset State Node</code>— varsayılana dönün (genellikle AÇIK).</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>Örnek: 15 sn Bekleme Süresi</h3>
+                <div class="diagram">
+!hello ──▶ Switch (ON?) ─▶ Send Reply ─▶ Set Gate: OFF ─▶ Delay 15s ─▶ Set Gate: ON
+                </div>
+                <div class="recipe">
+                    <h4>Oluşturma Adımları</h4>
+                    <ol>
+                        <li>Anahtar düğümünü ekleyin, adını “helloCooldown”, varsayılanını AÇIK yapın.</li>
+                        <li>Tetikleyici → anahtar → eylemler şeklinde bağlayın.</li>
+                        <li>Eyleminizden sonra şunu ekleyin: <em>Geçit Durumunu Ayarla</em> (KAPALI), “helloCooldown” seçili olarak.</li>
+                        <li>Şunu ekleyin: <em>Gecikme</em> düğümü (15 saniye).</li>
+                        <li>Bir tane daha ekleyin: <em>Geçit Durumunu Ayarla</em> (AÇIK), “helloCooldown” için.</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section id="counter">
+                <h2>03 · Sayaç</h2>
+                <p>Sayaçlar mesajlar arasında sayıları takip eder. Mesaj geçtiğinde otomatik artar; eylemlerle değerleri elle de ayarlayabilirsiniz.</p>
+                <div class="panel success">
+                    <strong>Otomatik artırma:</strong> Sayaç düğümünden her veri geçtiğinde 1 ekler (“Yalnızca geçit doğruyken say” seçeneğiyle duraklatmadığınız sürece).
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Kullanım Alanları</h4>
+                        <ul>
+                            <li>Her N'inci sohbet katılımcısı ödül tetikler.</li>
+                            <li>Topluluk hedefine ilerlemeyi takip edin.</li>
+                            <li>Komutlarla kullanılan puanları saklayın.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Eylemler</h4>
+                        <ul>
+                            <li><code>Increment Counter</code>— özel miktarlar ekleyin veya çıkarın.</li>
+                            <li><code>Set Counter Value</code>— belirli sayıya geçin.</li>
+                            <li><code>Reset State Node</code>— varsayılan başlangıç değerine dönün.</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>Örnek: Her 5 Mesajda Bir Kutlayın</h3>
+                <div class="diagram">
+Any Message ─▶ Counter (name: hype5) ─▶ Condition (value % 5 === 0?) ─▶ Play Celebration
+                </div>
+                <p>Koşul düğümünde şunu karşılaştırın: <code>state.hype5.value</code> veya Sayaç düğümü özelliklerindeki yerleşik “Değer Hedefle eşleştiğinde tetikle” seçeneğini kullanın.</p>
+            </section>
+
+            <section id="throttle">
+                <h2>04 · Hız Sınırlayıcı (Kısıtlama)</h2>
+                <p>Kısıtlayıcı zaman damgalarını hatırlar ve belirlediğiniz hıza uyulana kadar yeni etkinlikleri reddeder.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Şunlar Gerektiğinde Kullanışlıdır</h4>
+                        <ul>
+                            <li>“Dakikada yalnızca beş çekiliş katılımı.”</li>
+                            <li>“10 saniyede bir API çağrısı.”</li>
+                            <li>“Katman zaten meşgulse uyarıları at.”</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Yapılandırma</h4>
+                        <ul>
+                            <li>İzin verilen en fazla etkinlik sayısını ayarlayın.</li>
+                            <li>Zaman aralığını seçin (saniye).</li>
+                            <li>Sınırı aşanları kuyruğa mı alacağınıza, atacağınıza mı karar verin.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel warn">
+                    <strong>Dikkat:</strong> Akışı düzenlediğinizde kısıtlayıcılar otomatik sıfırlanmaz. Şunu kullanın: <code>Reset State Node</code> test sırasında temiz başlangıç gerekiyorsa.
+                </div>
+            </section>
+
+            <section id="user-memory">
+                <h2>05 · Kullanıcı Belleği</h2>
+                <p>Kullanıcı Belleği, benzersiz kişilerin adlandırılmış tek listesini tutar. Katıldıklarında kullanıcıları hatırlayın, sonraki mesajlarda listeyi kontrol edin, bir kişiyi kaldırın, rastgele kazanan seçin veya yalnızca o listeyi temizleyin.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>En uygun kullanım</h4>
+                        <ul>
+                            <li>Hediyeye veya rozete dayalı uygunluk.</li>
+                            <li>Beğenen, katılan veya etkileşen izleyicileri hatırlama.</li>
+                            <li>Kişi başına tek katılımlı ödül çekilişleri.</li>
+                            <li>Farklı kampanyalar için ayrı listeler.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>İşlemler</h4>
+                        <ul>
+                            <li><code>Remember User</code> ve <code>Forget User</code>.</li>
+                            <li><code>User Is Remembered</code>.</li>
+                            <li><code>Pick Random User</code>.</li>
+                            <li><code>Clear All Users</code> veya <code>Reset State Node</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="diagram">
+Participation Trigger ──▶ Remember User ······▶ User Memory: Entrants
+Draw Command ───────────▶ Pick Random User ···▶ User Memory: Entrants
+Reset Command ──────────▶ Clear All Users ·····▶ User Memory: Entrants
+                </div>
+                <p>Düz turkuaz bağlantılar etkinlik taşır. Kesikli mor bağlantılar işlemin hangi ortak belleği kullandığını gösterir. Her Kullanıcı Belleği'nin kendi sayısı, kalıcılık modu ve sıfırlama politikası vardır; bir listeyi temizlemek diğerini etkilemez.</p>
+                <div class="panel success">
+                    Özel rehbere bakın: <a href="user-memory-guide.html">Kullanıcı Belleği kılavuzu</a> incelenmiş ekran görüntüleri, indirilebilir çekiliş akışı, TikTok uygunluğu, katılım örnekleri ve sıfırlama ayrıntıları için.
+                </div>
+            </section>
+
+            <section id="recipes">
+                <h2>06 · Çözüm Paketleri</h2>
+                <p>Bir senaryo seçip adımları izleyin.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Komut Bekleme Süresi</h4>
+                        <ol>
+                            <li>“commandCooldown” adlı anahtar düğümü.</li>
+                            <li>Tetikleyici → anahtar → yanıt.</li>
+                            <li>Geçidi KAPALI Yap → Gecikme → Geçidi AÇIK Yap.</li>
+                            <li>İsterseniz yanlış çıkışına “Bekleme süresi etkin” sohbet mesajı ekleyin.</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>Sınırlı Ücretsiz Hediyeler</h4>
+                        <ol>
+                            <li>Sayaç varsayılanı 0, hedefi 3.</li>
+                            <li>Her ödül kullanımından sonra artırın.</li>
+                            <li>Değer ≥ 3 olduğunda “Üzgünüz, hepsi bitti” dalına geçin.</li>
+                            <li>Yayın sonunda Sıfırla eylemini kullanın.</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>İzleyici Anahtarı</h4>
+                        <ol>
+                            <li>“overlayToggle” adlı anahtar.</li>
+                            <li><code>!overlay on</code> komutu → Geçidi AÇIK Yap.</li>
+                            <li><code>!overlay off</code> komutu → Geçidi KAPALI Yap.</li>
+                            <li>Tüm katman tetikleyicileri anahtardan geçer.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <h3>Örnek Akış Şemaları</h3>
+                <div class="diagram">
+Trigger ─▶ Switch (overlayToggle) ─▶ If ON → Show Overlay
+           └─false─▶ Notify moderator “Overlay disabled”
+                </div>
+                <div class="diagram">
+Redeem Reward ─▶ Counter ticketsSold
+                      ├─value < 50 ─▶ Approve Redemption
+                      └─value ≥ 50 ─▶ Deny + Refund points
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>07 · Sorun Giderme ve SSS</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Belirti</th>
+                            <th>Olası Neden</th>
+                            <th>Çözüm</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Geçit Durumunu Ayarla eylemi kaydedilmiyor.</td>
+                            <td>Eşleşen anahtar düğümü yok (veya adlar farklı).</td>
+                            <td>Önce anahtar düğümünü ekleyin ve açılır listenin onu seçtiğini doğrulayın.</td>
+                        </tr>
+                        <tr>
+                            <td>Sayaç hiç artmıyor.</td>
+                            <td>Akış sayaç düğümünü atlıyor veya geçit yanlış.</td>
+                            <td>Tetikleyici bağlantısının sayaçtan geçtiğinden ve geçit çıkışının doğru olduğundan emin olun.</td>
+                        </tr>
+                        <tr>
+                            <td>Kısıtlayıcı her şeyi sürekli engelliyor.</td>
+                            <td>Zaman aralığı fazla kısıtlayıcı veya testten kalan durum var.</td>
+                            <td>Sınırı gevşetin ve yeniden test etmeden önce Durum Düğümünü Sıfırla eylemi ekleyin.</td>
+                        </tr>
+                        <tr>
+                            <td>Kullanıcı Belleği işleminin kesikli bağlantısı yok.</td>
+                            <td>Hedef bellek seçilmemiş.</td>
+                            <td>İşlemin özelliklerinde adlandırılmış belleği seçin veya mor yan bağlantısını belleğin üzerine sürükleyin.</td>
+                        </tr>
+                        <tr>
+                            <td>Rehber düğmeleri açılmıyor.</td>
+                            <td>web_accessible kaynakları güncellenmeden uzantı içinde çalıştırılıyor.</td>
+                            <td>Şunu doğrulayın: <code>actions/state-nodes-guide.html</code> manifest üzerinden sunulduğunu doğrulayıp uzantıyı yeniden yükleyin.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3>Test Kontrol Listesi</h3>
+                <ul>
+                    <li>Komutları canlandırmak için Etkinlik Akışı'nın “Test Etkinliği Gönder” aracını kullanın.</li>
+                    <li>Doğrularken bekleme sürelerini geçici olarak kısaltın (2 saniye) veya sayaç hedeflerini düşürün.</li>
+                    <li>Eski verileri okumamak için testler arasında durum düğümlerini sıfırlayın.</li>
+                    <li>Yolu görsel olarak izleyebilmek için dalları etiketleyin (ör. “yanlış → bekleme süresi etkin”).</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>08 · Sonraki Adımlar</h2>
+                <p>Durum düğümlerini Etkinlik Akışı'nın diğer araçlarıyla birleştirin:</p>
+                <ul>
+                    <li>Anahtarı kimin değiştirebileceğine karar vermek için öncesinde mantık kapıları (AND/OR/NOT) kullanın.</li>
+                    <li>Duruma bağlı üst verileri şu alanda saklayın: <code>meta</code> katmanların dalın neden tetiklendiğini bilmesi için.</li>
+                    <li>Ekibinizin daha sonra yeniden içe aktarabilmesi için çalışan örüntüleri şablon olarak dışa aktarın.</li>
+                </ul>
+                <div class="panel info">
+                    Denemeye devam edin! Yeni <a href="event-flow-guide.html">Etkinlik Akışı Kılavuzu</a> bu uygulama rehberini tamamlar; böylece hem mantık hem durum katmanında uzmanlaşabilirsiniz.
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

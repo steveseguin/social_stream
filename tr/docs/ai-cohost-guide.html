@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/tr/docs/ai-cohost-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/tr/docs/ai-cohost-guide.html">
+    <meta property="og:title" content="Yapay zekâ yardımcı sunucusu kılavuzu - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja yapay zekâ yardımcı sunucusu, panel kontrolleri ve yapay zekâ sahne katmanı için kurulum ve iş akışı kılavuzu.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/tr/docs/ai-cohost-guide.html">
+    <meta name="twitter:title" content="Yapay zekâ yardımcı sunucusu kılavuzu - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja yapay zekâ yardımcı sunucusu, panel kontrolleri ve yapay zekâ sahne katmanı için kurulum ve iş akışı kılavuzu.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yapay zekâ yardımcı sunucusu kılavuzu - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja yapay zekâ yardımcı sunucusu, panel kontrolleri ve yapay zekâ sahne katmanı için kurulum ve iş akışı kılavuzu.">
+    <style>
+        .cohost-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin: 22px 0;
+        }
+        .cohost-guide-card {
+            background: var(--card-bg, #fff);
+            border: 1px solid rgba(127, 127, 127, 0.22);
+            border-radius: 8px;
+            padding: 18px;
+        }
+        .cohost-guide-card h3 {
+            margin-top: 0;
+        }
+        .cohost-flow {
+            margin: 18px 0;
+            padding: 18px;
+            border-left: 4px solid #00a6ff;
+            background: rgba(0, 166, 255, 0.08);
+        }
+        .cohost-code {
+            display: block;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            background: #111827;
+            color: #e5e7eb;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.92rem;
+            line-height: 1.45;
+        }
+        .dark-mode .cohost-guide-card {
+            background: #161b22;
+        }
+
+        @media (max-width: 700px) {
+            .field-table, .steps-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/ai-cohost-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{"(the default), or explicitly choose":"(varsayılan) olarak bırakın veya açıkça şunu seçin:",", add your OpenAI project API key, and use":", OpenAI projenizin API anahtarını ekleyin ve şunu kullanın:",", allow microphone permission, check the operating system's default microphone, confirm internet access, and verify that Chrome Speech Recognition is available.":", mikrofon iznini verin, işletim sisteminin varsayılan mikrofonunu kontrol edin, internet erişimini doğrulayın ve Chrome Konuşma Tanıma'nın kullanılabilir olduğundan emin olun.",", and manual dock actions that send approved lines to":"; diğeri ise onaylanan satırları şu adrese gönderen elle panel işlemleridir:",", browser audio permissions, and OBS browser/app audio capture. Use":", tarayıcı ses izinlerini ve OBS tarayıcı/uygulama sesi yakalamayı kontrol edin. Şunu kullanın:",", confirm the selected microphone is not muted and allow the first model download to finish.":", seçili mikrofonun sessize alınmadığından emin olun ve ilk model indirmesinin tamamlanmasını bekleyin.",", keeping payloads predictable for overlays and automations.":"; böylece katmanlar ve otomasyonlar için veri yapıları öngörülebilir kalır.",", open":"üzerinde şunu açın:",", the volume slider, output-device selector, and":", ses kaydırıcısı, çıkış aygıtı seçicisi ve",", which uses":"; bunun kullandığı hizmet:","- allows overlay TTS even when the co-host controller is already playing audio; this intentionally creates a second voice.":"- yardımcı sunucu kontrol sayfası zaten ses çalarken bile katman TTS'sine izin verir; bu, bilerek ikinci bir ses oluşturur.","- controls stage placement.":"- sahnedeki yerleşimi kontrol eder.","- lets the overlay speak with browser TTS.":"- katmanın tarayıcı TTS'siyle konuşmasını sağlar.","- required for the dock and overlay to share a room.":"- panel ve katmanın aynı odayı paylaşması için gereklidir.","- scales the overlay.":"- katmanı ölçeklendirir.","- sets the display name on the overlay.":"- katmanda gösterilen adı ayarlar.","- sets the overlay target label.":"- katmanın hedef etiketini ayarlar.","- shows connection/status text on the overlay.":"- katmanda bağlantı/durum metnini gösterir.","- uses a custom avatar image.":"- özel bir avatar resmi kullanır.",". Add":". Şunu ekleyin:",". Ask “What is chat saying?” to have the same spoken AI discuss recent viewer messages.":". Aynı sesli yapay zekânın son izleyici mesajlarından söz etmesi için “Sohbette neler konuşuluyor?” diye sorun.",". Its default context-only mode lets the AI remember recent viewer messages and discuss them when the streamer asks.":". Varsayılan yalnızca bağlam modu, yapay zekânın son izleyici mesajlarını hatırlamasını ve yayıncı sorduğunda bunlar hakkında konuşmasını sağlar.",". OBS also needs at least one exact scene name in its allowlist.":". OBS'nin izin listesinde de en az bir sahne adının tam olarak yazılması gerekir.",". Replies are capped at 512 output tokens; Diagnostics shows cumulative token usage and measured first-output latency. OpenAI automatically truncates unplayed audio when the streamer interrupts. SSN retains at most 20 recent chat messages for up to 90 seconds, including paid-support, membership, moderator, event, and source-channel context, then removes that temporary context. SSN checks quiet sessions, reconnects failed transports, and rolls sessions over before the 60-minute limit. A recovered session reapplies the system instructions and performance settings, but starts without the previous spoken conversation.":". Yanıtlar 512 çıkış tokeniyle sınırlıdır; Tanılama, toplam token kullanımını ve ölçülen ilk çıktı gecikmesini gösterir. Yayıncı araya girdiğinde OpenAI henüz oynatılmamış sesi otomatik olarak keser. SSN, ücretli destek, üyelik, moderatör, etkinlik ve kaynak kanal bağlamıyla birlikte en fazla 20 son sohbet mesajını 90 saniyeye kadar saklar; ardından bu geçici bağlamı siler. SSN sessiz oturumları kontrol eder, başarısız bağlantıları yeniden kurar ve 60 dakikalık sınıra ulaşmadan oturumu yeniler. Kurtarılan oturum, sistem yönergelerini ve performans ayarlarını yeniden uygular, ancak önceki sesli konuşma olmadan başlar.",". The dock can read the message, ask the AI for an answer, or create a light roast draft.":". Panel mesajı okuyabilir, yapay zekâdan bir yanıt isteyebilir veya hafif takılma taslağı oluşturabilir.",". The first use downloads about 42 MB; later transcription runs offline.":". İlk kullanımda yaklaşık 42 MB indirilir; sonraki metne dönüştürme işlemleri çevrimdışı çalışır.",". The menu is hidden until the stage overlay is detected. Dock message rows do not yet expose this context menu to the keyboard; keyboard users can use the typed message field or voice controls on":". Sahne katmanı algılanana kadar menü gizli kalır. Paneldeki mesaj satırlarında bu bağlam menüsüne henüz klavyeyle erişilemez; klavye kullanıcıları yazılı mesaj alanını veya ses kontrollerini şu sayfada kullanabilir:",". The standard key stays in the SSN extension/Desktop background; the co-host page receives only a short-lived Realtime client secret.":". Standart anahtar, SSN uzantısının veya masaüstü uygulamasının arka planında kalır; yardımcı sunucu sayfasına yalnızca kısa ömürlü bir Realtime istemci sırrı verilir.",". With Desktop Whisper, it should show":". Masaüstü Whisper ile şu görünmelidir:",": ask it what chat is saying. Questions or All speak automatic replies from the co-host page; they do not post those replies into YouTube, Twitch, or Kick chat.":": sohbette neler konuşulduğunu sorun. Sorular veya Tümü modları, yardımcı sunucu sayfasından otomatik yanıtları seslendirir; bu yanıtları YouTube, Twitch veya Kick sohbetine göndermez.","AI Co-host Guide":"Yapay zekâ yardımcı sunucusu kılavuzu","AI Co-host Guide - Social Stream Ninja":"Yapay zekâ yardımcı sunucusu kılavuzu - Social Stream Ninja","AI Stage Overlay":"Yapay zekâ sahne katmanı","Action":"İşlem","Add the AI stage overlay to OBS:":"Yapay zekâ sahne katmanını OBS'ye ekleyin:","Answer":"Yanıtla","Answer / Light Roast:":"Yanıtla / Hafifçe takıl:","Answer and Light Roast use the configured LLM provider through the Private Chat Bot bridge. Read does not require AI.":"Yanıtla ve Hafifçe takıl, Özel Sohbet Botu köprüsü üzerinden yapılandırılmış LLM sağlayıcısını kullanır. Oku işlemi yapay zekâ gerektirmez.","Approval panel draft":"Onay paneli taslağı","Ask directly, for example “switch to BRB,” “feature that last message,” or “clear the featured chat.” Viewer messages cannot authorize tools, and only one stream-changing tool runs per direct streamer request.":"Örneğin “BRB'ye geç”, “son mesajı öne çıkar” veya “öne çıkan sohbeti temizle” diyerek doğrudan istekte bulunun. İzleyici mesajları araç kullanımına yetki veremez ve yayıncının her doğrudan isteğinde yayını değiştiren yalnızca bir araç çalışır.","Audio Response":"Sesli yanıt","Available Actions":"Kullanılabilir işlemler","Capture the audio from the co-host browser/app in OBS. The native OpenAI voice plays only from":"Yardımcı sunucu tarayıcısının veya uygulamasının sesini OBS'de yakalayın. Yerel OpenAI sesi yalnızca şu sayfadan çalınır:","Chat Bots and AI services > Chat Bot - Private Interface > Enable private chat bot option":"Sohbet Botları ve Yapay Zekâ Hizmetleri > Sohbet Botu - Özel Arayüz > Özel sohbet botu seçeneğini etkinleştir","Chat Bots and AI services > Configure LLM Service Provider":"Sohbet Botları ve Yapay Zekâ Hizmetleri > LLM Hizmet Sağlayıcısını Yapılandır","ChatGPT API":"ChatGPT API","Chrome / Chrome extension link:":"Chrome / Chrome uzantısı bağlantısı:","Co-host":"Yardımcı sunucu","Co-host Stream Controls":"Yardımcı sunucu yayın kontrolleri","Co-host output":"Yardımcı sunucu çıkışı","Commands & API":"Komutlar ve API","Connected":"Bağlı","Context only":"Yalnızca bağlam","Context only - answer when asked":"Yalnızca bağlam - sorulduğunda yanıtla","Copies the draft without sending it to the overlay.":"Taslağı katmana göndermeden kopyalar.","Copy":"Kopyala","Creates a short answer draft for streamer approval.":"Yayıncının onayına sunulmak üzere kısa bir yanıt taslağı oluşturur.","Creates a short, playful, PG draft for streamer approval.":"Yayıncının onayına sunulmak üzere kısa, şakacı ve aileye uygun bir taslak oluşturur.","Design Notes":"Tasarım notları","Diagnostics:":"Tanılama:","Dock Controls":"Panel kontrolleri","Dock Right-click Co-host Setup":"Panelde sağ tıklamayla yardımcı sunucu kurulumu","Download":"İndir","Enable":"Şunu etkinleştirin:","Explicitly choose the microphone you talk into, keep":"Konuştuğunuz mikrofonu açıkça seçin;","Fast waits up to about 2 seconds for the end of a thought; Balanced about 4 seconds; Patient about 8 seconds. Fast feels more responsive but can interrupt a natural pause.":"Hızlı modu, bir düşüncenin bitmesini yaklaşık 2 saniyeye kadar bekler; Dengeli yaklaşık 4 saniye, Sabırlı yaklaşık 8 saniye bekler. Hızlı modu daha çabuk tepki verir, ancak doğal bir duraklamayı bölebilir.","Features":"Özellikler","For AI answers, configure an LLM provider in the popup. For quick testing, choose":"Yapay zekâ yanıtları için açılır menüde bir LLM sağlayıcısı yapılandırın. Hızlı bir deneme için şunu seçin:","For OBS, enter the exact allowed scene names as a comma-separated list and keep":"OBS için izin verilen sahne adlarını virgülle ayrılmış bir liste olarak tam yazın ve","For dock/manual text workflows, the overlay is the visual and optional TTS playout source. For native OpenAI voice, capture":"Panel veya elle metin girişi iş akışlarında katman, görsel çıktı ve isteğe bağlı TTS oynatma kaynağıdır. Yerel OpenAI sesi için şu sayfanın","For longer-term use, use your own token or local provider if the trial service is disabled or rate-limited.":"Uzun süreli kullanımda, deneme hizmeti devre dışı bırakılır veya hız sınırına takılırsa kendi tokeninizi ya da yerel sağlayıcınızı kullanın.","Generated responses are not auto-spoken; the streamer must approve them first.":"Oluşturulan yanıtlar otomatik olarak seslendirilmez; önce yayıncının onaylaması gerekir.","Guides":"Kılavuzlar","Heard":"Duyulan","Hire":"Hizmet alın","Home":"Ana sayfa","How The Pages Talk":"Sayfalar nasıl iletişim kurar?","How the dock controls, private chat bot, and AI stage overlay work together.":"Panel kontrolleri, özel sohbet botu ve yapay zekâ sahne katmanının birlikte nasıl çalıştığı.","If":"Eğer","If Answer or Light Roast is disabled, the SSN bridge or Private Chat Bot is not available.":"Yanıtla veya Hafifçe takıl devre dışıysa SSN köprüsü ya da Özel Sohbet Botu kullanılamıyordur.","If Chrome never fills":"Chrome şu alanı hiç doldurmuyorsa:","If Desktop shows":"Masaüstünde şu görünüyorsa:","If Local Gemma cannot download its model files from the default asset host, set the asset host to your own mirrored Gemma folder.":"Yerel Gemma, model dosyalarını varsayılan dosya sunucusundan indiremiyorsa dosya sunucusunu kendi yansıttığınız Gemma klasörüne ayarlayın.","If OpenAI Realtime disconnects, leave the co-host running while it retries. Diagnostics identifies the data, peer, provider, or health-check failure. A recovered session keeps the selected system instructions and performance settings but cannot recover the previous spoken conversation.":"OpenAI Realtime bağlantısı kesilirse yeniden denerken yardımcı sunucuyu çalışır durumda bırakın. Tanılama, veri, eş, sağlayıcı veya sağlık kontrolü hatasını belirtir. Kurtarılan oturum, seçili sistem yönergelerini ve performans ayarlarını korur, ancak önceki sesli konuşmayı kurtaramaz.","If OpenAI Realtime replies are slow, try Mini, Low reasoning, and Fast turn-taking, then compare the Latency line in Diagnostics. Higher reasoning and Patient turn-taking deliberately trade speed for depth or longer pauses.":"OpenAI Realtime yanıtları yavaşsa Mini, Düşük akıl yürütme ve Hızlı konuşma sırası ayarlarını deneyin; ardından Tanılama'daki Gecikme satırını karşılaştırın. Daha yüksek akıl yürütme ve Sabırlı konuşma sırası ayarları, derinlik veya daha uzun duraklamalar için bilerek hızdan ödün verir.","If OpenAI Realtime text appears but no audio plays, verify":"OpenAI Realtime metni görünmesine rağmen ses çalmıyorsa şunları doğrulayın:","If a stream-control tool is unavailable, enable it in both the SSN popup and":"Bir yayın kontrol aracı kullanılamıyorsa hem SSN açılır menüsünde hem de şu sayfada etkinleştirin:","If an Answer, Light Roast, or SSN Configured LLM request times out, check that Social Stream is on, the session matches, Private Chat Bot is enabled, and the selected LLM provider is reachable. OpenAI Realtime does not require Private Chat Bot.":"Yanıtla, Hafifçe takıl veya SSN Yapılandırılmış LLM isteği zaman aşımına uğrarsa Social Stream'in açık, oturumun eşleşmiş, Özel Sohbet Botu'nun etkin ve seçili LLM sağlayıcısının erişilebilir olduğunu kontrol edin. OpenAI Realtime, Özel Sohbet Botu gerektirmez.","If multiple overlays are open, make sure the overlay label matches the dock target. The default label is":"Birden fazla katman açıksa katman etiketinin panel hedefiyle eşleştiğinden emin olun. Varsayılan etiket:","If the Co-host menu is missing, the co-host overlay is not detected in the same session.":"Yardımcı sunucu menüsü yoksa yardımcı sunucu katmanı aynı oturumda algılanmıyordur.","If the co-host knows chat but stays quiet, that is expected in":"Yardımcı sunucu sohbeti biliyor ama sessiz kalıyorsa bu, şu modda beklenen davranıştır:","If the hosted trial AI stops responding, it may be disabled or rate-limited; switch to your own token, Ollama, or Custom API.":"Barındırılan deneme yapay zekâsı yanıt vermeyi bırakırsa devre dışı bırakılmış veya hız sınırına takılmış olabilir; kendi tokeninize, Ollama'ya ya da Özel API'ye geçin.","In the SSN popup, choose":"SSN açılır menüsünde şunu seçin:","In the SSN popup, enable only the co-host tools you want: Spotify, OBS scenes, or featured chat.":"SSN açılır menüsünde yalnızca istediğiniz yardımcı sunucu araçlarını etkinleştirin: Spotify, OBS sahneleri veya öne çıkan sohbet.","Inspiration":"İlham","Keep the stage overlay's speech bubble visible, or provide captions, so the AI response is not available through audio alone.":"Yapay zekâ yanıtının yalnızca sesle sunulmaması için sahne katmanının konuşma balonunu görünür tutun veya altyazı sağlayın.","Latency reports the time from the end of the turn to first text or audio, and separates model delay when possible. Network conditions and provider load can still vary between otherwise similar requests.":"Gecikme, konuşma sırasının bitişinden ilk metin veya sese kadar geçen süreyi bildirir ve mümkün olduğunda model gecikmesini ayrı gösterir. Benzer isteklerde bile ağ koşulları ve sağlayıcı yükü değişebilir.","Leave Live Chat on":"Canlı Sohbet'i şu ayarda bırakın:","Leave the endpoint, token, and model blank for the default trial setup.":"Varsayılan deneme kurulumu için uç noktayı, tokeni ve modeli boş bırakın.","Light Roast":"Hafifçe takıl","Listening (Desktop Whisper)":"Dinleniyor (Masaüstü Whisper)","Listening (OpenAI WebRTC)":"Dinleniyor (OpenAI WebRTC)","Main navigation":"Ana gezinme","Mini is normally faster and costs less. Full quality is more capable and costs more.":"Mini genellikle daha hızlıdır ve daha az maliyetlidir. Tam kalite daha yeteneklidir ve daha pahalıdır.","Minimal or Low normally lowers response delay and billed output usage. High or Extra high can improve complex answers but may respond more slowly and cost more. Changes apply while connected.":"En az veya Düşük ayarı genellikle yanıt gecikmesini ve faturalandırılan çıktı kullanımını azaltır. Yüksek veya Çok yüksek, karmaşık yanıtları iyileştirebilir, ancak daha yavaş yanıt verebilir ve daha pahalı olabilir. Değişiklikler bağlantı açıkken uygulanır.","Model:":"Model:","Multimodal Co-host":"Çok kipli yardımcı sunucu","Mute co-host voice":"Yardımcı sunucunun sesini kapat","Mute microphone":"Mikrofonu sessize al","Mute shared system audio":"Paylaşılan sistem sesini kapat","No Video":"Video yok","Non-standard command details live inside":"Standart dışı komut ayrıntıları şu alanın içinde bulunur:","On":"Şu sayfada:","On this page":"Bu sayfada","Open":"Açın:","Open navigation menu":"Gezinme menüsünü aç","Open the Streaming Chat dock with your session:":"Yayın Sohbeti panelini kendi oturumunuzla açın:","Open the generated":"Açılır menüde oluşturulan şu bağlantıyı açın:","OpenAI Realtime":"OpenAI Realtime","OpenAI Realtime Setup":"OpenAI Realtime kurulumu","OpenAI Realtime supports the Spotify, OBS scene, and featured-chat tools below. SSN Configured LLM currently supports Spotify only; other co-host providers do not yet expose these tools.":"OpenAI Realtime, aşağıdaki Spotify, OBS sahnesi ve öne çıkan sohbet araçlarını destekler. SSN Yapılandırılmış LLM şu anda yalnızca Spotify'ı destekler; diğer yardımcı sunucu sağlayıcıları henüz bu araçları sunmaz.","OpenAI Realtime:":"OpenAI Realtime:","OpenAI Speed, Quality, And Cost":"OpenAI hız, kalite ve maliyet","Optional Stream Controls":"İsteğe bağlı yayın kontrolleri","Optional: leave Video source on":"İsteğe bağlı: Video kaynağını","Other browsers:":"Diğer tarayıcılar:","Overlay Gallery":"Katman galerisi","Privacy:":"Gizlilik:","Private Chat Bot":"Özel Sohbet Botu","Private Chat Bot + configured LLM or Hosted Trial LLM":"Özel Sohbet Botu + yapılandırılmış LLM veya Barındırılan Deneme LLM'si","Read on Co-host":"Yardımcı sunucuda oku","Read on Co-host:":"Yardımcı sunucuda oku:","Reads the selected chat message on the overlay.":"Seçili sohbet mesajını katmanda okur.","Reasoning effort:":"Akıl yürütme düzeyi:","Requires":"Gereksinimler","Result":"Sonuç","Right-click a dock message and select":"Panelde bir mesaja sağ tıklayın ve şunu seçin:","SSN Desktop:":"SSN Masaüstü:","SSN Hosted Trial LLM":"SSN Barındırılan Deneme LLM'si","SSN Hosted Trial LLM (experimental)":"SSN Barındırılan Deneme LLM'si (deneysel)","Screen Share":"Ekran paylaşımı","Select":"Seçin:","Sends the approved text to the AI stage overlay.":"Onaylanan metni yapay zekâ sahne katmanına gönderir.","Setup and workflow guide for the Social Stream Ninja AI co-host, dock controls, and AI stage overlay.":"Social Stream Ninja yapay zekâ yardımcı sunucusu, panel kontrolleri ve yapay zekâ sahne katmanı için kurulum ve iş akışı kılavuzu.","Simple AI Option":"Basit yapay zekâ seçeneği","Skip to main content":"Ana içeriğe geç","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 Lisansı.","Speak":"Seslendir","Start Co-host":"Yardımcı sunucuyu başlat","Status And Troubleshooting":"Durum ve sorun giderme","Stop speaking":"Konuşmayı durdur","Streams the microphone selected on":"Şu sayfada seçili mikrofonu aktarır:","Support":"Destek","Supported Sites":"Desteklenen siteler","Switch theme":"Temayı değiştir","Test overlay":"Katmanı test et","Test selected chat bot":"Seçili sohbet botunu test et","The":"Bu","The dock and overlay use the existing Social Stream session bridge. Messages are sent as":"Panel ve katman mevcut Social Stream oturum köprüsünü kullanır. Mesajlar şu türde gönderilir:","The dock is the control surface, so streamer approval stays off-stream.":"Panel kontrol arayüzüdür; dolayısıyla yayıncı onayı yayında görünmez.","The extension opens the hosted co-host page in a Chrome tab. OpenAI Realtime uses WebRTC with a short-lived client secret; text-response providers use Chrome Speech Recognition and may require internet.":"Uzantı, barındırılan yardımcı sunucu sayfasını bir Chrome sekmesinde açar. OpenAI Realtime, kısa ömürlü bir istemci sırrıyla WebRTC kullanır; metin yanıtı sağlayıcıları Chrome Konuşma Tanıma'yı kullanır ve internet gerektirebilir.","The overlay shows the avatar, speech bubble, and optional browser text-to-speech audio. This is the browser source you put in OBS.":"Katman avatarı, konuşma balonunu ve isteğe bağlı tarayıcı metinden konuşma sesini gösterir. OBS'ye eklediğiniz tarayıcı kaynağı budur.","The primary chat bot overlay toggle is optional and does not enable dock right-click co-host actions.":"Ana sohbet botu katmanı anahtarı isteğe bağlıdır ve paneldeki sağ tıklama yardımcı sunucu işlemlerini etkinleştirmez.","There are two co-host workflows: a continuous voice companion in":"İki yardımcı sunucu iş akışı vardır: biri sürekli sesli yardımcıdır ve şu sayfada çalışır:","This uses OpenAI API billing and creates one SSN Realtime conversation over WebRTC, separate from":"Bu özellik OpenAI API ücretlendirmesini kullanır ve WebRTC üzerinden tek bir SSN Realtime konuşması oluşturur; bundan ayrıdır:","Tip:":"İpucu:","Tool access is allowlisted, not general API access. OBS can select only scenes named in SSN settings. Feature requests use a recent captured chat message and require the Streaming Chat dock; tool replies report delivery, not proof that OBS or the overlay completed the action.":"Araç erişimi izin listesiyle sınırlıdır; genel API erişimi değildir. OBS yalnızca SSN ayarlarında adı belirtilen sahneleri seçebilir. Öne çıkarma istekleri, yakın zamanda yakalanmış bir sohbet mesajını kullanır ve Yayın Sohbeti panelini gerektirir; araç yanıtları iletimi bildirir, OBS'nin veya katmanın işlemi tamamladığını kanıtlamaz.","Turn-taking speed:":"Konuşma sırası hızı:","Use":"Kullanın:","Use the same":"Aynı","Useful URL Parameters":"Yararlı URL parametreleri","Uses local Whisper with the microphone selected on":"Yerel Whisper'ı, şu sayfada seçilen mikrofonla kullanır:","Voice Conversation Support":"Sesli konuşma desteği","Voice recognition is not guaranteed. Typed co-host chat, live-chat input, camera/screen input, and configured LLM responses can still work without speech recognition.":"Konuşma tanıma garantili değildir. Yazılı yardımcı sunucu sohbeti, canlı sohbet girdisi, kamera/ekran girdisi ve yapılandırılmış LLM yanıtları, konuşma tanıma olmadan da çalışabilir.","What It Does":"Ne yapar?","When the stage overlay is connected, right-click a chat message in the dock and choose":"Sahne katmanı bağlandığında panelde bir sohbet mesajına sağ tıklayın ve şunu seçin:","With OpenAI Realtime, Diagnostics should show":"OpenAI Realtime ile Tanılama'da şu görünmelidir:","and arm the same tools for that controller.":"ve bu kontrol sayfası için aynı araçları hazır duruma getirin.","and then the recognized text under":"ve ardından tanınan metin şu bölümde görünmelidir:","applies to text-overlay workflows. When native controller audio is active, SSN suppresses duplicate overlay TTS;":"metin katmanı iş akışlarına uygulanır. Kontrol sayfasının kendi sesi etkin olduğunda SSN yinelenen katman TTS'sini bastırır;","as a free simple option for testing while the trial is available.":"üzerinden, deneme sunulduğu sürece test için ücretsiz ve basit bir seçenek olarak kullanılabilir.","as the popup and that Live Chat is set to Context, Questions, or All.":"değerinin açılır menüyle aynı olduğunu ve Canlı Sohbet'in Bağlam, Sorular veya Tümü olarak ayarlandığını doğrulayın.","audio separately; the stage overlay does not replay that same WebRTC audio.":"sesini ayrı yakalayın; sahne katmanı aynı WebRTC sesini yeniden çalmaz.","but never fills":"ancak şu alan hiç dolmuyorsa:","cohost.html control page showing media devices, AI provider settings, system instructions, and live chat status":"Medya aygıtlarını, yapay zekâ sağlayıcı ayarlarını, sistem yönergelerini ve canlı sohbet durumunu gösteren cohost.html kontrol sayfası","connected to OBS, or use an OBS browser source with Full Permissions.":"sayfasını OBS'ye bağlı tutun ya da Tam İzinler verilmiş bir OBS tarayıcı kaynağı kullanın.","connects to the SSN live chat feed when opened with the same":"şu değer aynı olacak şekilde açıldığında SSN canlı sohbet akışına bağlanır:","control page: pick your camera and microphone, choose an AI provider, set system instructions, and watch the Live Chat status panel.":"kontrol sayfasında kameranızı ve mikrofonunuzu seçin, bir yapay zekâ sağlayıcısı belirleyin, sistem yönergelerini ayarlayın ve Canlı Sohbet durum panelini izleyin.","control playout.":"oynatmayı kontrol eder.","currently shares chat with the AI only for OpenAI Realtime. Other providers monitor the feed without injecting it into the model.":"şu anda sohbeti yalnızca OpenAI Realtime için yapay zekâyla paylaşır. Diğer sağlayıcılar akışı izler, ancak modele eklemez.","deliberately overrides that protection.":"bu korumayı bilerek geçersiz kılar.","directly to OpenAI for one native speech-to-speech conversation. The spoken conversation and live-chat context stay in the same co-host session.":". Tek bir yerel sesten sese konuşma için doğrudan OpenAI'ya gönderir. Sesli konuşma ve canlı sohbet bağlamı aynı yardımcı sunucu oturumunda kalır.","dock sends a private chatbot request to the SSN background service, shows the AI draft in the dock, then sends it to the overlay only after the streamer clicks Speak.":"panel, SSN arka plan hizmetine özel bir sohbet botu isteği gönderir, yapay zekâ taslağını panelde gösterir ve ancak yayıncı Seslendir'e tıkladıktan sonra katmana gönderir.","dock sends the selected chat message directly to":"panel, seçili sohbet mesajını doğrudan şu adrese gönderir:","for isolated OBS routing.":"altından sanal bir kablo seçerek OBS'ye ayrı ses yönlendirmesi yapın.","is available through":"şu seçenek","is not seeing chat, confirm the URL has the same":"sohbeti görmüyorsa URL'deki","is separate and appears for screen-capable providers.":"ayrıdır ve ekranı destekleyen sağlayıcılarda görünür.","link from the popup. Its private, expiring co-host capability authorizes Realtime without enabling the separate Private Chat Bot option.":". Bağlantının özel ve süreli yardımcı sunucu yetkisi, ayrı Özel Sohbet Botu seçeneğini etkinleştirmeden Realtime'a izin verir.","only for a text-response workflow.":"yalnızca metin yanıtı iş akışı için.","only for the separate text-overlay workflow.":"yalnızca ayrı metin katmanı iş akışı için.","or":"veya","or a camera. OpenAI receives one current image with each direct spoken or typed request rather than continuous video; this can add API cost and latency.":"veya bir kamera seçin. OpenAI sürekli video yerine her doğrudan sesli ya da yazılı istekte bir güncel görüntü alır; bu, API maliyetini ve gecikmeyi artırabilir.","payloads and targeted by label.":"veri yükleri olarak; etiketle hedeflenirler.","receives the avatar and text, not that same audio stream. When supported, choose a virtual cable under":"aynı ses akışını değil, avatarı ve metni alır. Destekleniyorsa","selected, and press":"seçili kalsın ve şu düğmeye basın:","stops audio sent to the co-host.":"yardımcı sunucuya gönderilen sesi durdurur.","the selected microphone, any explicitly selected camera/screen frames, and viewer messages shared by the chosen Live Chat mode are sent to that AI provider. Viewer messages are treated as untrusted context and cannot authorize co-host tools. Open the generated co-host controller link from the popup and keep it private; its private capability expires after 12 hours, is scoped to the current SSN session, and is removed from the address bar after the page loads.":"seçili mikrofon, açıkça seçilmiş kamera/ekran kareleri ve seçilen Canlı Sohbet modunun paylaştığı izleyici mesajları bu yapay zekâ sağlayıcısına gönderilir. İzleyici mesajları güvenilmeyen bağlam olarak ele alınır ve yardımcı sunucu araçlarına yetki veremez. Oluşturulan yardımcı sunucu kontrol bağlantısını açılır menüden açın ve gizli tutun; bu özel yetki 12 saat sonra sona erer, mevcut SSN oturumuyla sınırlıdır ve sayfa yüklendikten sonra adres çubuğundan kaldırılır.","to send a harmless visible test line, then confirm it appears in the AI Stage Overlay in OBS.":"ile zararsız, görünür bir test satırı gönderin; ardından bunun OBS'deki Yapay Zekâ Sahne Katmanında göründüğünü doğrulayın.","value for the dock and co-host overlay.":"değerini panel ve yardımcı sunucu katmanı için kullanın."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/ai-cohost-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<a class="skip-link" href="#main-content">Ana içeriğe geç</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="../index.html">Ana sayfa</a><a href="features.html">Özellikler</a><a href="inspiration.html" class="site-priority-inspiration">İlham</a><a href="download.html">İndir</a><a href="guides.html">Kılavuzlar</a><a href="commands.html">Komutlar ve API</a><a href="supported-sites.html">Desteklenen siteler</a><a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a><a href="services.html" class="site-priority-hire">Hizmet alın</a><a href="support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/ai-cohost-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/ai-cohost-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/ai-cohost-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/ai-cohost-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/ai-cohost-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/ai-cohost-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/ai-cohost-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/ai-cohost-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/ai-cohost-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/ai-cohost-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/ai-cohost-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/ai-cohost-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/ai-cohost-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/ai-cohost-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="ai-cohost-guide.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/ai-cohost-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/ai-cohost-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Yapay zekâ yardımcı sunucusu kılavuzu</h1>
+            <p>Panel kontrolleri, özel sohbet botu ve yapay zekâ sahne katmanının birlikte nasıl çalıştığı.</p>
+        </div>
+    </section>
+
+    <main class="guide-section" id="main-content">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Bu sayfada"><a href="#read-section-1">Ne yapar?</a><a href="#read-section-2">Panelde sağ tıklamayla yardımcı sunucu kurulumu</a><a href="#read-section-3">Basit yapay zekâ seçeneği</a><a href="#read-section-4">Sesli konuşma desteği</a><a href="#read-section-5">OpenAI Realtime kurulumu</a><a href="#read-section-6">OpenAI hız, kalite ve maliyet</a><a href="#read-section-12">Tasarım notları</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Ne yapar?</h2>
+				<p>İki yardımcı sunucu iş akışı vardır: biri sürekli sesli yardımcıdır ve şu sayfada çalışır: <code>cohost.html</code>; diğeri ise onaylanan satırları şu adrese gönderen elle panel işlemleridir: <code>cohost-overlay.html</code>.</p>
+                <div class="cohost-guide-grid">
+                    <div class="cohost-guide-card">
+                        <h3>Panel kontrolleri</h3>
+                        <p>Sahne katmanı bağlandığında panelde bir sohbet mesajına sağ tıklayın ve şunu seçin: <strong>Yardımcı sunucu</strong>. Panel mesajı okuyabilir, yapay zekâdan bir yanıt isteyebilir veya hafif takılma taslağı oluşturabilir.</p>
+                    </div>
+                    <div class="cohost-guide-card">
+                        <h3>Yapay zekâ sahne katmanı</h3>
+                        <p>Katman avatarı, konuşma balonunu ve isteğe bağlı tarayıcı metinden konuşma sesini gösterir. OBS'ye eklediğiniz tarayıcı kaynağı budur.</p>
+                    </div>
+                    <div class="cohost-guide-card">
+                        <h3>Özel Sohbet Botu</h3>
+                        <p>Yanıtla ve Hafifçe takıl, Özel Sohbet Botu köprüsü üzerinden yapılandırılmış LLM sağlayıcısını kullanır. Oku işlemi yapay zekâ gerektirmez.</p>
+                    </div>
+                    <div class="cohost-guide-card">
+                        <h3>Çok kipli yardımcı sunucu</h3>
+                        <p><code>cohost.html</code> şu değer aynı olacak şekilde açıldığında SSN canlı sohbet akışına bağlanır: <code>session</code>. Varsayılan yalnızca bağlam modu, yapay zekânın son izleyici mesajlarını hatırlamasını ve yayıncı sorduğunda bunlar hakkında konuşmasını sağlar.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+				<h2 id="read-section-2">Panelde sağ tıklamayla yardımcı sunucu kurulumu</h2>
+				<ol class="guide-steps">
+					<li>Yayın Sohbeti panelini kendi oturumunuzla açın: <code>dock.html?session=YOUR_SESSION_ID</code>.</li>
+					<li>Yapay zekâ sahne katmanını OBS'ye ekleyin: <code>cohost-overlay.html?session=YOUR_SESSION_ID</code>. Şunu ekleyin: <code>&amp;tts</code> yalnızca metin yanıtı iş akışı için.</li>
+                    <li>Yapay zekâ yanıtları için açılır menüde bir LLM sağlayıcısı yapılandırın. Hızlı bir deneme için şunu seçin: <strong>SSN Barındırılan Deneme LLM'si</strong>; bunun kullandığı hizmet: <code>llm.socialstream.ninja</code>.</li>
+                    <li>Şunu etkinleştirin: <strong>Sohbet Botları ve Yapay Zekâ Hizmetleri &gt; Sohbet Botu - Özel Arayüz &gt; Özel sohbet botu seçeneğini etkinleştir</strong>.</li>
+					<li>Panelde bir mesaja sağ tıklayın ve şunu seçin: <strong>Yardımcı sunucu</strong>. Sahne katmanı algılanana kadar menü gizli kalır. Paneldeki mesaj satırlarında bu bağlam menüsüne henüz klavyeyle erişilemez; klavye kullanıcıları yazılı mesaj alanını veya ses kontrollerini şu sayfada kullanabilir: <code>cohost.html</code>.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-ai-cohost-controls.png" alt="Medya aygıtlarını, yapay zekâ sağlayıcı ayarlarını, sistem yönergelerini ve canlı sohbet durumunu gösteren cohost.html kontrol sayfası" class="guide-image guide-image-medium">
+                    <figcaption>Bu <code>cohost.html</code> kontrol sayfasında kameranızı ve mikrofonunuzu seçin, bir yapay zekâ sağlayıcısı belirleyin, sistem yönergelerini ayarlayın ve Canlı Sohbet durum panelini izleyin.</figcaption>
+                </figure>
+                <div class="guide-note">
+					<p><strong>İpucu:</strong> Aynı <code>session</code> değerini panel ve yardımcı sunucu katmanı için kullanın. <code>&amp;tts</code> metin katmanı iş akışlarına uygulanır. Kontrol sayfasının kendi sesi etkin olduğunda SSN yinelenen katman TTS'sini bastırır; <code>&amp;forcetts</code> bu korumayı bilerek geçersiz kılar.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">Basit yapay zekâ seçeneği</h2>
+                <p><code>llm.socialstream.ninja</code> şu seçenek <strong>SSN Barındırılan Deneme LLM'si</strong> üzerinden, deneme sunulduğu sürece test için ücretsiz ve basit bir seçenek olarak kullanılabilir.</p>
+                <ul class="guide-list">
+                    <li>Açın: <strong>Sohbet Botları ve Yapay Zekâ Hizmetleri &gt; LLM Hizmet Sağlayıcısını Yapılandır</strong>.</li>
+                    <li>Seçin: <strong>SSN Barındırılan Deneme LLM'si (deneysel)</strong>.</li>
+                    <li>Varsayılan deneme kurulumu için uç noktayı, tokeni ve modeli boş bırakın.</li>
+                    <li>Uzun süreli kullanımda, deneme hizmeti devre dışı bırakılır veya hız sınırına takılırsa kendi tokeninizi ya da yerel sağlayıcınızı kullanın.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">Sesli konuşma desteği</h2>
+                <ul class="guide-list">
+                    <li><strong>OpenAI Realtime:</strong> Şu sayfada seçili mikrofonu aktarır: <code>cohost.html</code> . Tek bir yerel sesten sese konuşma için doğrudan OpenAI'ya gönderir. Sesli konuşma ve canlı sohbet bağlamı aynı yardımcı sunucu oturumunda kalır.</li>
+                    <li><strong>SSN Masaüstü:</strong> Yerel Whisper'ı, şu sayfada seçilen mikrofonla kullanır: <code>cohost.html</code>. İlk kullanımda yaklaşık 42 MB indirilir; sonraki metne dönüştürme işlemleri çevrimdışı çalışır.</li>
+					<li><strong>Chrome / Chrome uzantısı bağlantısı:</strong> Uzantı, barındırılan yardımcı sunucu sayfasını bir Chrome sekmesinde açar. OpenAI Realtime, kısa ömürlü bir istemci sırrıyla WebRTC kullanır; metin yanıtı sağlayıcıları Chrome Konuşma Tanıma'yı kullanır ve internet gerektirebilir.</li>
+                    <li><strong>Diğer tarayıcılar:</strong> Konuşma tanıma garantili değildir. Yazılı yardımcı sunucu sohbeti, canlı sohbet girdisi, kamera/ekran girdisi ve yapılandırılmış LLM yanıtları, konuşma tanıma olmadan da çalışabilir.</li>
+                </ul>
+				<div class="guide-note">
+					<p>OpenAI Realtime ile Tanılama'da şu görünmelidir: <strong>Dinleniyor (OpenAI WebRTC)</strong>. Masaüstü Whisper ile şu görünmelidir: <strong>Dinleniyor (Masaüstü Whisper)</strong> ve ardından tanınan metin şu bölümde görünmelidir: <strong>Duyulan</strong>.</p>
+				</div>
+				<div class="warning-note">
+					<p><strong>Gizlilik:</strong> seçili mikrofon, açıkça seçilmiş kamera/ekran kareleri ve seçilen Canlı Sohbet modunun paylaştığı izleyici mesajları bu yapay zekâ sağlayıcısına gönderilir. İzleyici mesajları güvenilmeyen bağlam olarak ele alınır ve yardımcı sunucu araçlarına yetki veremez. Oluşturulan yardımcı sunucu kontrol bağlantısını açılır menüden açın ve gizli tutun; bu özel yetki 12 saat sonra sona erer, mevcut SSN oturumuyla sınırlıdır ve sayfa yüklendikten sonra adres çubuğundan kaldırılır.</p>
+				</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">OpenAI Realtime kurulumu</h2>
+				<ol class="guide-steps">
+					<li>SSN açılır menüsünde şunu seçin: <strong>ChatGPT API</strong>, OpenAI projenizin API anahtarını ekleyin ve şunu kullanın: <strong>Seçili sohbet botunu test et</strong>.</li>
+					<li>Açılır menüde oluşturulan şu bağlantıyı açın: <code>cohost.html?session=YOUR_SESSION_ID</code> . Bağlantının özel ve süreli yardımcı sunucu yetkisi, ayrı Özel Sohbet Botu seçeneğini etkinleştirmeden Realtime'a izin verir.</li>
+					<li>Seçin: <strong>OpenAI Realtime</strong>. Standart anahtar, SSN uzantısının veya masaüstü uygulamasının arka planında kalır; yardımcı sunucu sayfasına yalnızca kısa ömürlü bir Realtime istemci sırrı verilir.</li>
+					<li>Konuştuğunuz mikrofonu açıkça seçin; <strong>Sesli yanıt</strong> seçili kalsın ve şu düğmeye basın: <strong>Yardımcı sunucuyu başlat</strong>.</li>
+					<li>İsteğe bağlı: Video kaynağını <strong>Video yok</strong> (varsayılan) olarak bırakın veya açıkça şunu seçin: <strong>Ekran paylaşımı</strong> veya bir kamera seçin. OpenAI sürekli video yerine her doğrudan sesli ya da yazılı istekte bir güncel görüntü alır; bu, API maliyetini ve gecikmeyi artırabilir.</li>
+                    <li>Canlı Sohbet'i şu ayarda bırakın: <strong>Yalnızca bağlam - sorulduğunda yanıtla</strong>. Aynı sesli yapay zekânın son izleyici mesajlarından söz etmesi için “Sohbette neler konuşuluyor?” diye sorun.</li>
+					<li>Yardımcı sunucu tarayıcısının veya uygulamasının sesini OBS'de yakalayın. Yerel OpenAI sesi yalnızca şu sayfadan çalınır: <code>cohost.html</code>; <code>cohost-overlay.html</code> aynı ses akışını değil, avatarı ve metni alır. Destekleniyorsa <strong>Yardımcı sunucu çıkışı</strong> altından sanal bir kablo seçerek OBS'ye ayrı ses yönlendirmesi yapın.</li>
+					<li>Yapay zekâ yanıtının yalnızca sesle sunulmaması için sahne katmanının konuşma balonunu görünür tutun veya altyazı sağlayın.</li>
+                </ol>
+				<div class="guide-note">
+					<p>Bu özellik OpenAI API ücretlendirmesini kullanır ve WebRTC üzerinden tek bir SSN Realtime konuşması oluşturur; bundan ayrıdır: <code>chatgpt.com</code>. Yanıtlar 512 çıkış tokeniyle sınırlıdır; Tanılama, toplam token kullanımını ve ölçülen ilk çıktı gecikmesini gösterir. Yayıncı araya girdiğinde OpenAI henüz oynatılmamış sesi otomatik olarak keser. SSN, ücretli destek, üyelik, moderatör, etkinlik ve kaynak kanal bağlamıyla birlikte en fazla 20 son sohbet mesajını 90 saniyeye kadar saklar; ardından bu geçici bağlamı siler. SSN sessiz oturumları kontrol eder, başarısız bağlantıları yeniden kurar ve 60 dakikalık sınıra ulaşmadan oturumu yeniler. Kurtarılan oturum, sistem yönergelerini ve performans ayarlarını yeniden uygular, ancak önceki sesli konuşma olmadan başlar.</p>
+				</div>
+            </div>
+
+			<div class="guide-card">
+				<h2 id="read-section-6">OpenAI hız, kalite ve maliyet</h2>
+				<ul class="guide-list">
+					<li><strong>Model:</strong> Mini genellikle daha hızlıdır ve daha az maliyetlidir. Tam kalite daha yeteneklidir ve daha pahalıdır.</li>
+					<li><strong>Akıl yürütme düzeyi:</strong> En az veya Düşük ayarı genellikle yanıt gecikmesini ve faturalandırılan çıktı kullanımını azaltır. Yüksek veya Çok yüksek, karmaşık yanıtları iyileştirebilir, ancak daha yavaş yanıt verebilir ve daha pahalı olabilir. Değişiklikler bağlantı açıkken uygulanır.</li>
+					<li><strong>Konuşma sırası hızı:</strong> Hızlı modu, bir düşüncenin bitmesini yaklaşık 2 saniyeye kadar bekler; Dengeli yaklaşık 4 saniye, Sabırlı yaklaşık 8 saniye bekler. Hızlı modu daha çabuk tepki verir, ancak doğal bir duraklamayı bölebilir.</li>
+					<li><strong>Tanılama:</strong> Gecikme, konuşma sırasının bitişinden ilk metin veya sese kadar geçen süreyi bildirir ve mümkün olduğunda model gecikmesini ayrı gösterir. Benzer isteklerde bile ağ koşulları ve sağlayıcı yükü değişebilir.</li>
+				</ul>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="read-section-7">İsteğe bağlı yayın kontrolleri</h2>
+				<p>OpenAI Realtime, aşağıdaki Spotify, OBS sahnesi ve öne çıkan sohbet araçlarını destekler. SSN Yapılandırılmış LLM şu anda yalnızca Spotify'ı destekler; diğer yardımcı sunucu sağlayıcıları henüz bu araçları sunmaz.</p>
+				<ol class="guide-steps">
+					<li>SSN açılır menüsünde yalnızca istediğiniz yardımcı sunucu araçlarını etkinleştirin: Spotify, OBS sahneleri veya öne çıkan sohbet.</li>
+					<li>OBS için izin verilen sahne adlarını virgülle ayrılmış bir liste olarak tam yazın ve <code>actions.html</code> sayfasını OBS'ye bağlı tutun ya da Tam İzinler verilmiş bir OBS tarayıcı kaynağı kullanın.</li>
+					<li>Şu sayfada: <code>cohost.html</code>üzerinde şunu açın: <strong>Yardımcı sunucu yayın kontrolleri</strong> ve bu kontrol sayfası için aynı araçları hazır duruma getirin.</li>
+					<li>Örneğin “BRB'ye geç”, “son mesajı öne çıkar” veya “öne çıkan sohbeti temizle” diyerek doğrudan istekte bulunun. İzleyici mesajları araç kullanımına yetki veremez ve yayıncının her doğrudan isteğinde yayını değiştiren yalnızca bir araç çalışır.</li>
+				</ol>
+				<div class="warning-note">
+					<p>Araç erişimi izin listesiyle sınırlıdır; genel API erişimi değildir. OBS yalnızca SSN ayarlarında adı belirtilen sahneleri seçebilir. Öne çıkarma istekleri, yakın zamanda yakalanmış bir sohbet mesajını kullanır ve Yayın Sohbeti panelini gerektirir; araç yanıtları iletimi bildirir, OBS'nin veya katmanın işlemi tamamladığını kanıtlamaz.</p>
+				</div>
+			</div>
+
+            <div class="guide-card">
+                <h2 id="read-section-8">Sayfalar nasıl iletişim kurar?</h2>
+                <p>Panel ve katman mevcut Social Stream oturum köprüsünü kullanır. Mesajlar şu türde gönderilir: <code>overlayNinja</code> veri yükleri olarak; etiketle hedeflenirler.</p>
+                <div class="cohost-flow">
+                    <p><strong>Yardımcı sunucuda oku:</strong> panel, seçili sohbet mesajını doğrudan şu adrese gönderir: <code>cohost-overlay.html</code>.</p>
+                    <p><strong>Yanıtla / Hafifçe takıl:</strong> panel, SSN arka plan hizmetine özel bir sohbet botu isteği gönderir, yapay zekâ taslağını panelde gösterir ve ancak yayıncı Seslendir'e tıkladıktan sonra katmana gönderir.</p>
+                </div>
+                <pre class="cohost-code">{
+  "action": "cohostOverlay",
+  "target": "cohost-overlay",
+  "meta": {
+    "command": "say",
+    "text": "The line the avatar should say",
+    "speak": true,
+    "emotion": "happy"
+  }
+}</pre>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-9">Kullanılabilir işlemler</h2>
+                <table class="field-table">
+                    <thead>
+                        <tr>
+                            <th>İşlem</th>
+                            <th>Gereksinimler</th>
+                            <th>Sonuç</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Yardımcı sunucuda oku</td>
+                            <td>Bağlı <code>cohost-overlay.html</code></td>
+                            <td>Seçili sohbet mesajını katmanda okur.</td>
+                        </tr>
+                        <tr>
+                            <td>Yanıtla</td>
+                            <td>Özel Sohbet Botu + yapılandırılmış LLM veya Barındırılan Deneme LLM'si</td>
+                            <td>Yayıncının onayına sunulmak üzere kısa bir yanıt taslağı oluşturur.</td>
+                        </tr>
+                        <tr>
+                            <td>Hafifçe takıl</td>
+                            <td>Özel Sohbet Botu + yapılandırılmış LLM veya Barındırılan Deneme LLM'si</td>
+                            <td>Yayıncının onayına sunulmak üzere kısa, şakacı ve aileye uygun bir taslak oluşturur.</td>
+                        </tr>
+                        <tr>
+                            <td>Seslendir</td>
+                            <td>Onay paneli taslağı</td>
+                            <td>Onaylanan metni yapay zekâ sahne katmanına gönderir.</td>
+                        </tr>
+                        <tr>
+                            <td>Kopyala</td>
+                            <td>Onay paneli taslağı</td>
+                            <td>Taslağı katmana göndermeden kopyalar.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-10">Durum ve sorun giderme</h2>
+                <ul class="guide-list">
+                    <li>Yardımcı sunucu menüsü yoksa yardımcı sunucu katmanı aynı oturumda algılanmıyordur.</li>
+                    <li>Yanıtla veya Hafifçe takıl devre dışıysa SSN köprüsü ya da Özel Sohbet Botu kullanılamıyordur.</li>
+                    <li>Ana sohbet botu katmanı anahtarı isteğe bağlıdır ve paneldeki sağ tıklama yardımcı sunucu işlemlerini etkinleştirmez.</li>
+					<li>Eğer <code>cohost.html</code> sohbeti görmüyorsa URL'deki <code>session</code> değerinin açılır menüyle aynı olduğunu ve Canlı Sohbet'in Bağlam, Sorular veya Tümü olarak ayarlandığını doğrulayın.</li>
+					<li><strong>Yalnızca bağlam</strong> şu anda sohbeti yalnızca OpenAI Realtime için yapay zekâyla paylaşır. Diğer sağlayıcılar akışı izler, ancak modele eklemez.</li>
+					<li><strong>Mikrofonu sessize al</strong> yardımcı sunucuya gönderilen sesi durdurur. <strong>Yardımcı sunucunun sesini kapat</strong>, ses kaydırıcısı, çıkış aygıtı seçicisi ve <strong>Konuşmayı durdur</strong> oynatmayı kontrol eder. <strong>Paylaşılan sistem sesini kapat</strong> ayrıdır ve ekranı destekleyen sağlayıcılarda görünür.</li>
+					<li>Bir yayın kontrol aracı kullanılamıyorsa hem SSN açılır menüsünde hem de şu sayfada etkinleştirin: <strong>Yardımcı sunucu yayın kontrolleri</strong>. OBS'nin izin listesinde de en az bir sahne adının tam olarak yazılması gerekir.</li>
+					<li>Kullanın: <strong>Katmanı test et</strong> ile zararsız, görünür bir test satırı gönderin; ardından bunun OBS'deki Yapay Zekâ Sahne Katmanında göründüğünü doğrulayın.</li>
+					<li>Yardımcı sunucu sohbeti biliyor ama sessiz kalıyorsa bu, şu modda beklenen davranıştır: <strong>Yalnızca bağlam</strong>: sohbette neler konuşulduğunu sorun. Sorular veya Tümü modları, yardımcı sunucu sayfasından otomatik yanıtları seslendirir; bu yanıtları YouTube, Twitch veya Kick sohbetine göndermez.</li>
+					<li>Masaüstünde şu görünüyorsa: <strong>Dinleniyor (Masaüstü Whisper)</strong> ancak şu alan hiç dolmuyorsa: <strong>Duyulan</strong>, seçili mikrofonun sessize alınmadığından emin olun ve ilk model indirmesinin tamamlanmasını bekleyin.</li>
+					<li>Chrome şu alanı hiç doldurmuyorsa: <strong>Duyulan</strong>, mikrofon iznini verin, işletim sisteminin varsayılan mikrofonunu kontrol edin, internet erişimini doğrulayın ve Chrome Konuşma Tanıma'nın kullanılabilir olduğundan emin olun.</li>
+					<li>OpenAI Realtime metni görünmesine rağmen ses çalmıyorsa şunları doğrulayın: <strong>Sesli yanıt</strong>, tarayıcı ses izinlerini ve OBS tarayıcı/uygulama sesi yakalamayı kontrol edin. Şunu kullanın: <code>&amp;tts</code> yalnızca ayrı metin katmanı iş akışı için.</li>
+					<li>OpenAI Realtime yanıtları yavaşsa Mini, Düşük akıl yürütme ve Hızlı konuşma sırası ayarlarını deneyin; ardından Tanılama'daki Gecikme satırını karşılaştırın. Daha yüksek akıl yürütme ve Sabırlı konuşma sırası ayarları, derinlik veya daha uzun duraklamalar için bilerek hızdan ödün verir.</li>
+					<li>OpenAI Realtime bağlantısı kesilirse yeniden denerken yardımcı sunucuyu çalışır durumda bırakın. Tanılama, veri, eş, sağlayıcı veya sağlık kontrolü hatasını belirtir. Kurtarılan oturum, seçili sistem yönergelerini ve performans ayarlarını korur, ancak önceki sesli konuşmayı kurtaramaz.</li>
+					<li>Yanıtla, Hafifçe takıl veya SSN Yapılandırılmış LLM isteği zaman aşımına uğrarsa Social Stream'in açık, oturumun eşleşmiş, Özel Sohbet Botu'nun etkin ve seçili LLM sağlayıcısının erişilebilir olduğunu kontrol edin. OpenAI Realtime, Özel Sohbet Botu gerektirmez.</li>
+                    <li>Yerel Gemma, model dosyalarını varsayılan dosya sunucusundan indiremiyorsa dosya sunucusunu kendi yansıttığınız Gemma klasörüne ayarlayın.</li>
+                    <li>Barındırılan deneme yapay zekâsı yanıt vermeyi bırakırsa devre dışı bırakılmış veya hız sınırına takılmış olabilir; kendi tokeninize, Ollama'ya ya da Özel API'ye geçin.</li>
+                    <li>Birden fazla katman açıksa katman etiketinin panel hedefiyle eşleştiğinden emin olun. Varsayılan etiket: <code>cohost-overlay</code>.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-11">Yararlı URL parametreleri</h2>
+                <ul class="guide-list">
+                    <li><code>session=YOUR_SESSION_ID</code> - panel ve katmanın aynı odayı paylaşması için gereklidir.</li>
+					<li><code>tts</code> veya <code>speak=1</code> - katmanın tarayıcı TTS'siyle konuşmasını sağlar.</li>
+					<li><code>forcetts</code> - yardımcı sunucu kontrol sayfası zaten ses çalarken bile katman TTS'sine izin verir; bu, bilerek ikinci bir ses oluşturur.</li>
+                    <li><code>label=cohost-overlay</code> - katmanın hedef etiketini ayarlar.</li>
+                    <li><code>name=NinjaBot</code> - katmanda gösterilen adı ayarlar.</li>
+                    <li><code>avatar=https://...</code> - özel bir avatar resmi kullanır.</li>
+                    <li><code>position=bottom-right</code> - sahnedeki yerleşimi kontrol eder.</li>
+                    <li><code>scale=1.2</code> - katmanı ölçeklendirir.</li>
+                    <li><code>status</code> - katmanda bağlantı/durum metnini gösterir.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-12">Tasarım notları</h2>
+                <ul class="guide-list">
+					<li>Panel veya elle metin girişi iş akışlarında katman, görsel çıktı ve isteğe bağlı TTS oynatma kaynağıdır. Yerel OpenAI sesi için şu sayfanın <code>cohost.html</code> sesini ayrı yakalayın; sahne katmanı aynı WebRTC sesini yeniden çalmaz.</li>
+                    <li>Panel kontrol arayüzüdür; dolayısıyla yayıncı onayı yayında görünmez.</li>
+                    <li>Oluşturulan yanıtlar otomatik olarak seslendirilmez; önce yayıncının onaylaması gerekir.</li>
+                    <li>Standart dışı komut ayrıntıları şu alanın içinde bulunur: <code>meta</code>; böylece katmanlar ve otomasyonlar için veri yapıları öngörülebilir kalır.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 Lisansı.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

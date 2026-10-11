@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/tr/docs/custom-fonts.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/tr/docs/custom-fonts.html">
+    <meta property="og:title" content="Kendi fontlarınız ve stilleriniz - Social Stream Ninja">
+    <meta property="og:description" content="Yazı tiplerini kendiniz barındırmayı ve dock.html ile featured.html gibi Social Stream Ninja katmanlarını özel CSS ile özelleştirmeyi öğrenin.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/tr/docs/custom-fonts.html">
+    <meta name="twitter:title" content="Kendi fontlarınız ve stilleriniz - Social Stream Ninja">
+    <meta name="twitter:description" content="Yazı tiplerini kendiniz barındırmayı ve dock.html ile featured.html gibi Social Stream Ninja katmanlarını özel CSS ile özelleştirmeyi öğrenin.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kendi fontlarınız ve stilleriniz - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Yazı tiplerini kendiniz barındırmayı ve dock.html ile featured.html gibi Social Stream Ninja katmanlarını özel CSS ile özelleştirmeyi öğrenin.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/custom-fonts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{"(both pages support these).":"(her iki sayfa da bunları destekler).",", and":", ve",", and row colors (":", ve satır renkleri (",", or":", veya",", plus the":", ayrıca",". The browser will fall back automatically if a glyph is missing.":". Bir glif eksikse tarayıcı otomatik olarak yedek yazı tipine geçer.","1) Host your font files":"1) Yazı tipi dosyalarınızı barındırın","2) Build the CSS":"2) CSS'yi oluşturun","3) Apply it to dock.html or featured.html":"3) dock.html veya featured.html sayfasına uygulayın","4) Tune the overlay text":"4) Katman metnini ayarlayın","5) Troubleshooting":"5) Sorun giderme","; mismatches are the most common issue.":"; en yaygın sorun adların uyuşmamasıdır.","API Reference":"API başvuru kaynağı","About":"Hakkında","Commands & API":"Komutlar ve API","Community":"Topluluk","Contribute":"Katkıda bulunun","Core typography variables used by both pages:":"Her iki sayfanın kullandığı temel tipografi değişkenleri:","Custom Overlays":"Özel katmanlar","Customization Guide":"Özelleştirme kılavuzu","Define the font with":"Yazı tipini şu kuralla tanımlayın:","Discord":"Discord","Dock-only extras:":"Yalnızca Panel için ek seçenekler:","Donate":"Bağış yapın","Download":"İndir","Durable options:":"Kalıcı seçenekler:","Featured layout tweaks:":"Öne çıkan mesaj düzeni ayarları:","Features":"Özellikler","For quick tests you can pass CSS directly with":"Hızlı testler için CSS'yi doğrudan şu parametreyle iletebilirsiniz:","GitHub":"GitHub","GitHub Pages, Cloudflare Pages, Netlify, your own web server.":"GitHub Pages, Cloudflare Pages, Netlify, kendi web sunucunuz.","GitHub Repository":"GitHub deposu","Guides":"Kılavuzlar","Hire":"Hizmet alın","Home":"Ana sayfa","How to host .ttf, .otf, or .woff2 files yourself (no Google or system font required).":".ttf, .otf veya .woff2 dosyalarını kendiniz nasıl barındırırsınız (Google veya sistem yazı tipi gerekmez).","How to load those fonts in":"Bu yazı tiplerini şu sayfalarda yükleme:","If the font does not appear, open the font URL directly in a browser to confirm it downloads and is served with HTTPS.":"Yazı tipi görünmüyorsa indirilebildiğini ve HTTPS üzerinden sunulduğunu doğrulamak için yazı tipi URL'sini doğrudan tarayıcıda açın.","Inline URL param:":"Satır içi URL parametresi:","Inspiration":"İlham","Join our Discord":"Discord sunucumuza katılın","Keep font-family names consistent between the":"font-family adlarını şu öğeler arasında tutarlı tutun:","Learn how to self-host fonts and customize Social Stream Ninja overlays like dock.html and featured.html with custom CSS.":"Yazı tiplerini kendiniz barındırmayı ve dock.html ile featured.html gibi Social Stream Ninja katmanlarını özel CSS ile özelleştirmeyi öğrenin.","Main navigation":"Ana gezinme","Need multiple fonts (for Armenian + Russian + Latin)? Declare each font-face and list them in":"Birden fazla yazı tipi mi gerekiyor (Ermenice + Rusça + Latin için)? Her font-face'i tanımlayın ve şurada listeleyin:","OBS Browser Source:":"OBS Tarayıcı Kaynağı:","Only host fonts you are licensed to redistribute. WOFF2 files are smaller and load faster than TTF/OTF when available.":"Yalnızca yeniden dağıtma lisansınız olan yazı tiplerini barındırın. WOFF2 dosyaları mevcutsa TTF/OTF'den daha küçüktür ve daha hızlı yüklenir.","Open navigation menu":"Gezinme menüsünü aç","Open your dock/featured URL in OBS > Browser Source > Custom CSS and paste the CSS block above.":"OBS > Tarayıcı Kaynağı > Özel CSS bölümünde panel/öne çıkan mesaj URL'nizi açın ve yukarıdaki CSS bloğunu yapıştırın.","Overlay Gallery":"Katman galerisi","Pair CSS changes with existing URL options like":"CSS değişikliklerini şu gibi mevcut URL seçenekleriyle birleştirin:","Privacy Policy":"Gizlilik politikası","Product":"Ürün","Quick fallbacks if you want to keep using Google Fonts or installed system fonts.":"Google Fonts veya kurulu sistem yazı tiplerini kullanmayı sürdürmek istiyorsanız hızlı alternatifler.","Quick font switches:":"Hızlı yazı tipi geçişleri:","Quick options:":"Hızlı seçenekler:","Reload the OBS Browser Source or refresh the dock/featured tab after changing CSS so cached fonts are re-requested.":"CSS'yi değiştirdikten sonra, önbelleğe alınmış yazı tiplerinin yeniden istenmesi için OBS Tarayıcı Kaynağını yeniden yükleyin veya panel/öne çıkan mesaj sekmesini yenileyin.","Report an Issue":"Sorun bildirin","Resources":"Kaynaklar","Self-Hosted Fonts & Overlay Styling":"Kendi barındırdığınız yazı tipleri ve katman biçimlendirme","Self-Hosted Fonts & Styling - Social Stream Ninja":"Kendi fontlarınız ve stilleriniz - Social Stream Ninja","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja lets you capture, mix, and display chat from over 100 platforms in real time. Built by Steve Seguin.":"Social Stream Ninja, 100'den fazla platformdan sohbeti gerçek zamanlı yakalamanızı, birleştirmenizi ve göstermenizi sağlar. Steve Seguin tarafından geliştirilmiştir.","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. GPLv3.0 Lisansı. Geliştiren:","Some hosts block hotlinking; switch to a host that allows direct file access or set the proper CORS headers.":"Bazı sunucular doğrudan dosya bağlantılarını engeller; doğrudan dosya erişimine izin veren bir sunucuya geçin veya uygun CORS başlıklarını ayarlayın.","Steve Seguin":"Steve Seguin","Support":"Destek","Supported Sites":"Desteklenen siteler","Switch theme":"Temayı değiştir","Templates":"Şablonlar","Terms of Service":"Hizmet koşulları","The same":"Aynı","These options work the same in the Chrome extension, Electron app, and the hosted site because they all load the same":"Bu seçenekler Chrome uzantısında, Electron uygulamasında ve barındırılan sitede aynı şekilde çalışır; çünkü hepsi aynı","URL parameter (hosted CSS):":"URL parametresi (barındırılan CSS):","Upload the CSS to the same host as your fonts, then append":"CSS'yi yazı tiplerinizle aynı sunucuya yükleyin, ardından şunu ekleyin:","Use":"Kullanın:","Use your own fonts with dock.html and featured.html, whether you load them in OBS Browser Source, the Chrome extension, or the desktop app.":"dock.html ve featured.html sayfalarını OBS Tarayıcı Kaynağı, Chrome uzantısı veya masaüstü uygulamasında açarken kendi yazı tiplerinizi kullanın.","What this guide covers":"Bu kılavuz neleri kapsar?","Which CSS variables adjust text sizing and layout on both pages.":"Her iki sayfada metin boyutunu ve düzenini hangi CSS değişkenlerinin ayarladığı.","X":"X","You need a direct HTTPS link to the font file. Pick a host that allows hotlinking/CORS so the browser inside OBS or the app can fetch it.":"Yazı tipi dosyasına doğrudan bir HTTPS bağlantısı gerekir. OBS veya uygulama içindeki tarayıcının dosyayı alabilmesi için doğrudan bağlantılara/CORS'a izin veren bir sunucu seçin.","adjust":"ayarlayın:","and point it at your hosted file, then set the overlay to use it via":"ve barındırdığınız dosyayı gösterin; ardından katmanı şu değişkenle onu kullanacak şekilde ayarlayın:","applied. Self-hosted fonts work the same way via":"uygulanmış hâli; kendi barındırdığınız yazı tipleri de şu parametreyle aynı şekilde çalışır:","blocks and":"blokları ve","catbox.moe, 0x0.st, file.io (short-lived).":"catbox.moe, 0x0.st, file.io (kısa ömürlü).","featured.html overlay message rendered in the Pacifico font with an avatar and name tag":"Avatar ve ad etiketiyle Pacifico yazı tipinde görüntülenen featured.html katman mesajı","files.":"dosyalarını yükler.","like":"örneğin","loads Google Fonts if you prefer not to self-host.":"kendiniz barındırmayı tercih etmiyorsanız Google Fonts'u yükler.","or":"veya","or base64 encode it with":"veya şu parametreyle base64 olarak kodlayabilirsiniz:","overlay with":"katmanı, şu ayar","to confirm a system font is visible when testing":"test sırasında bir sistem yazı tipinin görünür olduğunu doğrulamak için","to reposition the lower-third block without editing the HTML.":"HTML'yi düzenlemeden alt bant bloğunu yeniden konumlandırmak için.","to the page URL:":"sayfa URL'sine:","uses a system font name, while":"bir sistem yazı tipi adı kullanır; şu ise","using URL parameters or OBS custom CSS.":"URL parametreleri veya OBS özel CSS'si kullanarak.","variants).":"varyantları).","when you need layout adjustments in the dock.":"panelde düzen ayarları gerektiğinde.","with contributions from the community.":"topluluğun katkılarıyla."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/custom-fonts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/custom-fonts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/custom-fonts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/custom-fonts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/custom-fonts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/custom-fonts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/custom-fonts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/custom-fonts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/custom-fonts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/custom-fonts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/custom-fonts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/custom-fonts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/custom-fonts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/custom-fonts.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="../index.html">Ana sayfa</a><a href="features.html">Özellikler</a><a href="inspiration.html" class="site-priority-inspiration">İlham</a><a href="download.html">İndir</a><a href="guides.html">Kılavuzlar</a><a href="commands.html">Komutlar ve API</a><a href="supported-sites.html">Desteklenen siteler</a><a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a><a href="services.html" class="site-priority-hire">Hizmet alın</a><a href="support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/custom-fonts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/custom-fonts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/custom-fonts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/custom-fonts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/custom-fonts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/custom-fonts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/custom-fonts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/custom-fonts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/custom-fonts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/custom-fonts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/custom-fonts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/custom-fonts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/custom-fonts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/custom-fonts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="custom-fonts.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/custom-fonts.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/custom-fonts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Kendi barındırdığınız yazı tipleri ve katman biçimlendirme</h1>
+            <p>dock.html ve featured.html sayfalarını OBS Tarayıcı Kaynağı, Chrome uzantısı veya masaüstü uygulamasında açarken kendi yazı tiplerinizi kullanın.</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>Bu kılavuz neleri kapsar?</h3>
+                <ul class="guide-list">
+                    <li>.ttf, .otf veya .woff2 dosyalarını kendiniz nasıl barındırırsınız (Google veya sistem yazı tipi gerekmez).</li>
+                    <li>Bu yazı tiplerini şu sayfalarda yükleme: <code>dock.html</code> veya <code>featured.html</code> URL parametreleri veya OBS özel CSS'si kullanarak.</li>
+                    <li>Her iki sayfada metin boyutunu ve düzenini hangi CSS değişkenlerinin ayarladığı.</li>
+                    <li>Google Fonts veya kurulu sistem yazı tiplerini kullanmayı sürdürmek istiyorsanız hızlı alternatifler.</li>
+                </ul>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/custom-font-featured-demo.png" alt="Avatar ve ad etiketiyle Pacifico yazı tipinde görüntülenen featured.html katman mesajı" class="guide-image">
+                    <figcaption>Aynı <code>featured.html</code> katmanı, şu ayar <code>&amp;googlefont=Pacifico</code> uygulanmış hâli; kendi barındırdığınız yazı tipleri de şu parametreyle aynı şekilde çalışır: <code>@font-face</code>.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>1) Yazı tipi dosyalarınızı barındırın</h3>
+                <p>Yazı tipi dosyasına doğrudan bir HTTPS bağlantısı gerekir. OBS veya uygulama içindeki tarayıcının dosyayı alabilmesi için doğrudan bağlantılara/CORS'a izin veren bir sunucu seçin.</p>
+                <ul class="guide-list">
+                    <li><strong>Hızlı seçenekler:</strong> catbox.moe, 0x0.st, file.io (kısa ömürlü).</li>
+                    <li><strong>Kalıcı seçenekler:</strong> GitHub Pages, Cloudflare Pages, Netlify, kendi web sunucunuz.</li>
+                    <li>Yalnızca yeniden dağıtma lisansınız olan yazı tiplerini barındırın. WOFF2 dosyaları mevcutsa TTF/OTF'den daha küçüktür ve daha hızlı yüklenir.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h3>2) CSS'yi oluşturun</h3>
+                <p>Yazı tipini şu kuralla tanımlayın: <code>@font-face</code> ve barındırdığınız dosyayı gösterin; ardından katmanı şu değişkenle onu kullanacak şekilde ayarlayın: <code>--font-family</code>.</p>
+                <div class="code-block">
+<pre>@font-face {
+  font-family: 'MyDockFont';
+  src: url('https://your-site.example/fonts/MyDockFont.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* Optional second weight */
+@font-face {
+  font-family: 'MyDockFont';
+  src: url('https://your-site.example/fonts/MyDockFont-Bold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+}
+
+:root {
+  --font-family: 'MyDockFont', 'Segoe UI', 'Arial Unicode MS', sans-serif;
+  --comment-font-size: 28px;
+  --author-font-size: 24px;
+  --message-line-height: 32px;
+}</pre>
+                </div>
+                <div class="guide-note">
+                    <p>Birden fazla yazı tipi mi gerekiyor (Ermenice + Rusça + Latin için)? Her font-face'i tanımlayın ve şurada listeleyin: <code>--font-family</code> örneğin <code>'FontA', 'FontB', 'FontC', sans-serif</code>. Bir glif eksikse tarayıcı otomatik olarak yedek yazı tipine geçer.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h3>3) dock.html veya featured.html sayfasına uygulayın</h3>
+                <ul class="guide-list">
+                    <li><strong>OBS Tarayıcı Kaynağı:</strong> OBS &gt; Tarayıcı Kaynağı &gt; Özel CSS bölümünde panel/öne çıkan mesaj URL'nizi açın ve yukarıdaki CSS bloğunu yapıştırın.</li>
+                    <li><strong>URL parametresi (barındırılan CSS):</strong> CSS'yi yazı tiplerinizle aynı sunucuya yükleyin, ardından şunu ekleyin: <code>&css=https://your-site.example/my-font.css</code> sayfa URL'sine:
+                        <div class="code-block"><pre>https://socialstream.ninja/dock.html?session=YOURSESSION&css=https://your-site.example/my-font.css
+https://socialstream.ninja/featured.html?session=YOURSESSION&css=https://your-site.example/my-font.css</pre></div>
+                    </li>
+                    <li><strong>Satır içi URL parametresi:</strong> Hızlı testler için CSS'yi doğrudan şu parametreyle iletebilirsiniz: <code>&css=</code> veya şu parametreyle base64 olarak kodlayabilirsiniz: <code>&b64css=</code> (her iki sayfa da bunları destekler).</li>
+                    <li><strong>Hızlı yazı tipi geçişleri:</strong> <code>&font=YourInstalledFont</code> bir sistem yazı tipi adı kullanır; şu ise <code>&googlefont=Noto+Sans+Armenian,Noto+Sans</code> kendiniz barındırmayı tercih etmiyorsanız Google Fonts'u yükler.</li>
+                </ul>
+                <div class="guide-note">
+                    <p>Bu seçenekler Chrome uzantısında, Electron uygulamasında ve barındırılan sitede aynı şekilde çalışır; çünkü hepsi aynı <code>dock.html</code>/<code>featured.html</code> dosyalarını yükler.</p>
+                </div>
+			</div>
+
+			<div class="guide-card">
+				<h3>4) Katman metnini ayarlayın</h3>
+				<p>Her iki sayfanın kullandığı temel tipografi değişkenleri:</p>
+				<div class="code-block">
+<pre>:root {
+  --font-family: 'MyDockFont', 'FontB', sans-serif;
+  --comment-font-size: 28px;  /* message text size */
+  --author-font-size: 24px;   /* name text size */
+  --comment-font-weight: 600; /* featured.html */
+  --author-font-weight: 700;  /* featured.html */
+  --message-font-weight: 500; /* dock.html */
+  --name-font-weight: 700;    /* dock.html */
+  --comment-color: #ffffff;
+  --author-color: #ffe08a;
+  --comment-bg-color: #161616;
+  --author-bg-color: #202020;
+}</pre>
+				</div>
+				<p><strong>Yalnızca Panel için ek seçenekler:</strong> <code>--stylized-emoji</code>, <code>--stylized-img</code>, <code>--text-stroke-width</code>, <code>--text-shadow</code>, ve satır renkleri (<code>--highlight-base</code>, <code>--highlight-base2</code>, ayrıca <code>compact</code> varyantları).</p>
+				<p><strong>Öne çıkan mesaj düzeni ayarları:</strong> ayarlayın: <code>--comment-width</code>, <code>--comment-padding</code>, <code>--comment-area-bottom</code>, ve <code>--comment-area-height</code> HTML'yi düzenlemeden alt bant bloğunu yeniden konumlandırmak için.</p>
+				<p>CSS değişikliklerini şu gibi mevcut URL seçenekleriyle birleştirin: <code>&scale</code>, <code>&compact</code>, veya <code>&hidesource</code> panelde düzen ayarları gerektiğinde.</p>
+			</div>
+
+            <div class="guide-card">
+                <h3>5) Sorun giderme</h3>
+                <ul class="guide-list">
+                    <li>Yazı tipi görünmüyorsa indirilebildiğini ve HTTPS üzerinden sunulduğunu doğrulamak için yazı tipi URL'sini doğrudan tarayıcıda açın.</li>
+                    <li>Bazı sunucular doğrudan dosya bağlantılarını engeller; doğrudan dosya erişimine izin veren bir sunucuya geçin veya uygun CORS başlıklarını ayarlayın.</li>
+                    <li>CSS'yi değiştirdikten sonra, önbelleğe alınmış yazı tiplerinin yeniden istenmesi için OBS Tarayıcı Kaynağını yeniden yükleyin veya panel/öne çıkan mesaj sekmesini yenileyin.</li>
+                    <li>Kullanın: <code>https://socialstream.ninja/fonts.html</code> test sırasında bir sistem yazı tipinin görünür olduğunu doğrulamak için <code>&font=</code>.</li>
+                    <li>font-family adlarını şu öğeler arasında tutarlı tutun: <code>@font-face</code> blokları ve <code>--font-family</code>; en yaygın sorun adların uyuşmamasıdır.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Hakkında</h3>
+                    <p>Social Stream Ninja, 100'den fazla platformdan sohbeti gerçek zamanlı yakalamanızı, birleştirmenizi ve göstermenizi sağlar. Steve Seguin tarafından geliştirilmiştir.</p>
+                    <div class="social-links">
+                        <a href="https://discord.socialstream.ninja" target="_blank" aria-label="Discord">
+                            <img src="../../icons/discord.svg" alt="Discord">
+                        </a>
+                        <a href="https://x.com/ninjafytools" target="_blank" aria-label="X">
+                            <img src="../../icons/x.svg" alt="X">
+                        </a>
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank" aria-label="GitHub">
+                            <img src="../../icons/github.svg" alt="GitHub">
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Ürün</h3>
+                    <ul>
+                        <li><a href="../index.html">Ana sayfa</a></li>
+                        <li><a href="features.html">Özellikler</a></li>
+                        <li><a href="download.html">İndir</a></li>
+                        <li><a href="guides.html">Kılavuzlar</a></li>
+                        <li><a href="commands.html">Komutlar ve API</a></li>
+                        <li><a href="supported-sites.html">Desteklenen siteler</a></li>
+                        <li><a href="templates.html">Şablonlar</a></li>
+                        <li><a href="support.html">Destek</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Kaynaklar</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-customization">Özelleştirme kılavuzu</a></li>
+                        <li><a href="../../docs/customoverlays.md">Özel katmanlar</a></li>
+                        <li><a href="../../api.md">API başvuru kaynağı</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Sorun bildirin</a></li>
+                        <li><a href="../privacy.html">Gizlilik politikası</a></li>
+                        <li><a href="../TOS.html">Hizmet koşulları</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Topluluk</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Discord sunucumuza katılın</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub deposu</a></li>
+                        <li><a href="support.html#contribute">Katkıda bulunun</a></li>
+                        <li><a href="https://github.com/sponsors/steveseguin" target="_blank">Bağış yapın</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 Lisansı. Geliştiren: <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> topluluğun katkılarıyla.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

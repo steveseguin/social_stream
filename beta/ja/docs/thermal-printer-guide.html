@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ja/docs/thermal-printer-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ja/docs/thermal-printer-guide.html">
+    <meta property="og:title" content="感熱プリンターと配信ラベル - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream NinjaでUSB感熱レシート/ラベルプリンターを設定し、Event Flowから名前、寄付、購入、チケット、固定サイズのラベルを印刷します。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ja/docs/thermal-printer-guide.html">
+    <meta name="twitter:title" content="感熱プリンターと配信ラベル - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream NinjaでUSB感熱レシート/ラベルプリンターを設定し、Event Flowから名前、寄付、購入、チケット、固定サイズのラベルを印刷します。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>感熱プリンターと配信ラベル - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Social Stream NinjaでUSB感熱レシート/ラベルプリンターを設定し、Event Flowから名前、寄付、購入、チケット、固定サイズのラベルを印刷します。">
+	<style>
+		.printer-gallery { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; margin:24px 0; align-items:start; }
+		.paper-example { display:flex; flex-direction:column; align-items:center; gap:10px; margin:0; }
+		.paper { position:relative; width:min(100%,220px); min-height:260px; padding:25px 19px; color:#151515; background:#fffdf7; border:1px solid #d9d3c5; box-shadow:0 14px 26px rgba(28,25,18,.15); font-family:"Roboto Mono",monospace; text-align:center; }
+		.paper.receipt::after { content:""; position:absolute; inset:auto 0 -7px; height:13px; background:linear-gradient(135deg,transparent 7px,#fffdf7 0) 0 0/14px 14px repeat-x; }
+		.paper.label { min-height:170px; border-radius:6px; outline:8px solid #e9e5dc; }
+		.paper .eyebrow { font-size:11px; letter-spacing:.13em; text-transform:uppercase; }
+		.paper .big { margin:15px 0 6px; font-size:27px; font-weight:800; overflow-wrap:anywhere; }
+		.paper .amount { margin-top:9px; font-size:22px; font-weight:800; }
+		.paper .rule { border-top:2px dashed #777; margin:17px 0; }
+		.paper-caption { max-width:250px; color:var(--text-secondary); text-align:center; font-size:1.35rem; line-height:1.45; }
+		.flow-demo { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:16px; align-items:center; margin:22px 0; max-width:64rem; }
+		.flow-node { padding:16px 18px; border:1px solid var(--border-color); border-radius:12px; background:var(--background-card); }
+		.flow-node strong { display:block; margin-bottom:7px; }
+		.flow-arrow { color:var(--primary-color); font-size:28px; font-weight:700; text-align:center; }
+		.printer-types { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:20px 0; }
+		.printer-type { padding:16px 18px; border:1px solid var(--border-color); border-radius:12px; background:var(--background-card); }
+		.printer-type h3 { margin-top:0; font-size:1.7rem; }
+		.printer-type p { margin:0; font-size:1.45rem; line-height:1.55; }
+		@media (max-width:800px) {
+			.printer-gallery, .printer-types { grid-template-columns:minmax(0,1fr); }
+			.flow-demo { grid-template-columns:minmax(0,1fr); }
+			.flow-arrow { transform:rotate(90deg); }
+		}
+	</style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/thermal-printer-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{"$25.00 CAD":"$25.00 CAD","(under Integrations) and connect the trigger to it.":"（Integrations内）を選び、トリガーにつなぎます。",", a new line, then":"、改行、次の値を入力します：",", add an amount, and run it. This prints a real label.":"を選び、金額を入力して実行します。実際のラベルが印刷されます。",", and":"、および",", and pick the downloaded file.":"を選び、ダウンロードしたファイルを開きます。",", click":"で、次をクリックします：",", filtered to Whatnot. Bids and auction-ending notices don't print. See the":"をWhatnotに絞ります。入札やオークション終了通知は印刷しません。参照：",", or":"、または",", plus an error or code when something fails, for later steps. Success means the job was sent to Windows, not that paper came out. Check the Windows print queue before retrying, or you may get duplicate labels.":"と、失敗時のエラーやコードを後続の処理へ渡します。成功はWindowsにジョブを送ったという意味で、紙が出た証拠ではありません。再試行前にWindowsの印刷キューを確認し、ラベルの重複を防いでください。",", so it misses most sales.":"だけなので、大半の売上を拾えません。",", use":"では、次を使用します：",". Check both print actions. They use your Printer Control printer and label length.":"。両方の印刷アクションを確認してください。Printer Controlのプリンターとラベル長を使います。",". Enter a name, turn on":"。名前を付け、次を有効にします：",". Filter by provider if needed.":"。必要ならプロバイダーで絞り込みます。",". If an edge is cut off, raise that side's safe margin and test again.":"。端が切れる場合は、その側の安全余白を増やして再度試してください。",". It prints the buyer in bold, the item name, and an order ID when there is one. If a payment fails, it prints a separate":"。購入者名を太字で、商品名と、あれば注文IDを印刷します。支払い失敗時は別の",". It's usually":"。通常は、",". Pick the font size, weight, alignment, and copies.":"。文字サイズ、太さ、配置、枚数を選びます。",". Pick your printer by the name Windows shows.":"。Windowsに表示される名前でプリンターを選びます。",". Quantity may be in":"。数量は次に入る場合があります：",". Values made by earlier steps in the flow work too.":"。フロー内の前の処理で作った値も使えます。",". Your Printer Control settings will be used.":"。Printer Controlの設定を使います。","24 pt · bold · centred":"24 pt · 太字 · 中央揃え","3 × 1 inch labels (including a Munbyn BT320):":"3 × 1インチのラベル（Munbyn BT320を含む）：","58 mm receipt paper. Length grows with the text.":"58mmのレシート用紙。文章に応じて長さが変わります。","A 62 × 29 mm label is usually 62 mm wide with a 29 mm fixed length.":"62 × 29mmのラベルは通常、幅62mm、固定長29mmです。","A Counter numbers purchases, not unique buyers. Giving the same number to every purchase by one buyer needs a separate buyer-to-number list, reset at the start of each stream. User Memory's reason field is plain text, not a buyer-number counter.":"Counterが付けるのは購入ごとの番号で、購入者ごとの番号ではありません。同じ購入者の全購入に同じ番号を付けるには、購入者と番号の対応表を別に用意し、配信開始時にリセットします。User Memoryのreason欄は普通の文字列で、購入者番号のカウンターではありません。","A fixed die-cut label: name plus donation.":"固定サイズの型抜きラベル：名前と寄付。","A merch or pickup label using event details and a counter.":"イベント詳細とカウンターを使った物販・受け取りラベル。","A running order number":"連続した注文番号","A sale label doesn't mean it's paid.":"売上ラベルは支払い済みの証明ではありません。","A shared or networked label station":"共有またはネットワーク接続のラベル印刷所","A short to-do list for a producer sitting next to you.":"隣にいる制作担当者向けの短いやることリスト。","A sturdier receipt printer":"丈夫なレシートプリンター","A-037":"A-037","Add":"追加する項目：","Add a":"追加する項目：","Add the":"次を追加します：","An edge is cut off":"端が切れる","BUYER #12":"購入者 #12","Before you start:":"始める前に：","Blue Ninja Mug":"青いNinjaマグカップ","Bold the buyer, keep the item normal":"購入者を太字、商品を通常の太さにする","Brother QL-800":"Brother QL-800","Brother QL-820NWB":"Brother QL-820NWB","Cheap 58 mm receipts":"安価な58mmレシート","Click":"クリックする項目：","Commands & API":"コマンドとAPI","Completed gifts":"完了したギフト","Continuous sticker roll":"連続ステッカーロール","Counter":"カウンター","Die-cut labels":"ダイカットラベル","Do this":"操作","Don't print private info.":"非公開情報を印刷しないでください。","Donation / Tip":"寄付 / 投げ銭（Donation / Tip）","Donation trigger connected to a thermal print action":"感熱印刷アクションに接続された寄付トリガー","Download":"ダウンロード","Download the Whatnot example flow":"Whatnotのサンプルフローをダウンロード","Each notice prints as it arrives. The flow doesn't wait for payment, fix an earlier label, or give out buyer numbers. Missing fields print blank. A failure notice with no buyer, item, or order details can't tell you which label it belongs to.":"通知が届くたびに印刷します。支払いを待つ、以前のラベルを直す、購入者番号を割り当てるといった処理はしません。ない項目は空欄になります。購入者・商品・注文情報のない失敗通知では、どのラベルに対応するか特定できません。","Enter the":"次を入力します：","Enter this as the label text:":"ラベルの文字として次を入力します：","Epson TM-T20III":"Epson TM-T20III","Event Flow Editor":"Event Flowエディター","Event Type":"イベントの種類","Event Type (Advanced) → Custom Event":"イベントタイプ（高度）（Event Type (Advanced)）→ カスタムイベント（Custom Event）","Example printers":"プリンターの例","Examples of thermal receipt and label output":"感熱レシートとラベルの出力例","Features":"機能","Find printers":"プリンターを検索（Find printers）","Fix problems":"問題を解決する","Fixed label length":"固定ラベル長（Fixed label length）","Fixed means fixed":"固定長は変わりません","For flow builders: print results and buyer numbers":"フロー作成者向け：印刷結果と購入者番号","For matching badges and product labels. Set the exact fixed length, and pick the same stock in Windows Printing Preferences.":"サイズの揃ったバッジや商品ラベル向けです。正確な固定長を設定し、Windowsの印刷設定でも同じ用紙を選んでください。","For purchase slips, queue tickets, and receipts of any length. Leave fixed label length at 0.":"購入伝票、順番券、任意の長さのレシート向けです。固定ラベル長は0にします。","For sticky name strips of any length. Works like receipt paper, but the printer or driver must do the cutting.":"任意の長さの名前シール向けです。レシート用紙と同様に動きますが、カットはプリンターやドライバー側で行います。","Generic “POS-58”":"汎用「POS-58」","Get fixed-size labels right":"固定サイズのラベルを正しく設定する","Global settings and tools → Mechanics - Connections & Integrations → Printer Control":"Global settings and tools → Mechanics - Connections & Integrations → Printer Control","Good for":"適した用途","Guides":"ガイド","Has Donation":"寄付額（Has Donation）","Hire":"仕事を依頼する","Home":"ホーム","How the example flow works":"サンプルフローの動作","I want to print":"印刷したいもの","I want to print…":"印刷したいもの…","INKY":"INKY","Ideas":"アイデア","If an earlier step makes":"前の処理で次を作る場合、","Import":"インポート（Import）","In Social Stream, open":"Social Streamで次を開きます：","In the standalone app, set up":"デスクトップアプリで次を設定します：","Inky":"Inky","Inspiration":"活用アイデア","It says success, but nothing prints":"成功と出るが印刷されない","It uses":"使用するのは、","Keep Use printable area on. Raise the safe margin on that side.":"Use printable areaを有効にし、その側の安全余白を増やしてください。","Keep your Whatnot source open with stream-event capture on.":"Whatnotのソースを開き、配信イベントの取得を有効にしたままにします。","Label sizes":"ラベルのサイズ","Labels already set to All bold or Normal keep their look.":"All boldやNormalに設定済みのラベルの見た目は変わりません。","Leave":"次はそのままにします：","Leave the action's printer and fixed-length overrides blank or":"アクションのプリンターと固定長の上書き設定は空欄か、","Long names, product options, and extra lines need more room or smaller text.":"長い名前、商品オプション、追加の行には、広い領域や小さい文字が必要です。","Main navigation":"メインナビゲーション","Make sure Windows can print a test page. Restart Social Stream and click Find printers again.":"Windowsのテストページが印刷できるか確認します。Social Streamを再起動し、Find printersをもう一度クリックしてください。","Match Windows too":"Windows側の設定も揃える","Measure in the feed direction":"用紙が進む向きで測る","Merch, commission, drink, or pickup tags as orders come in.":"注文に合わせた物販、依頼、飲み物、受け取りの札。","Minimum Amount":"最低金額（Minimum Amount）","Minimum Amount:":"最低金額（Minimum Amount）：","Ninja Hoodie":"Ninjaパーカー","No extra feed is added. Text that's too tall may be cut off or spill over, depending on the driver.":"追加の用紙送りは行いません。文字が高すぎると、ドライバーによって切れたり次の用紙にはみ出したりします。","No printer shows up":"プリンターが表示されない","Notes":"補足","On this page":"このページの内容","One label prints as two":"1枚のラベルが2枚に分かれる","Only text inside":"次で囲んだ文字だけが、","Open navigation menu":"ナビゲーションメニューを開く","Open the":"開く項目：","Open the printer's Windows queue. Look for paused, offline, paper, driver, or port errors.":"Windowsの印刷キューを開き、一時停止、オフライン、用紙、ドライバー、ポートのエラーを確認してください。","Other handy placeholders:":"その他の便利なプレースホルダー：","Overlay Gallery":"オーバーレイギャラリー","PAYMENT FAILED":"支払い失敗","Paper width (mm)":"用紙幅（mm）","Pick a printer override on the Print Thermal Label step. When blank, testing in the editor uses the Windows default printer.":"Print Thermal Labelの処理でプリンターの上書きを選びます。空欄だと、編集画面でのテストはWindowsの既定プリンターを使います。","Pick your paper":"用紙を選ぶ","Pickup":"受け取り","Plug the printer in by USB, turn it on, and install its Windows driver. Print a Windows test page to be sure it works.":"プリンターをUSBで接続して電源を入れ、Windowsドライバーを入れます。Windowsのテストページを印刷して動作を確認してください。","Print Thermal Label":"感熱ラベルを印刷（Print Thermal Label）","Print a label when someone donates":"寄付を受けたらラベルを印刷する","Print on a donation":"寄付時に印刷する","Print sales":"売上を印刷する","Print sales, gifts, and order numbers":"売上、ギフト、注文番号を印刷する","Print test":"印刷テスト","Printer":"プリンター","Printer Control":"プリンター制御（Printer Control）","Problem":"問題","Purchase tag":"購入タグ","Raffle tickets. Add rate limits and eligibility checks before the print step.":"抽選券。印刷処理の前に頻度制限と参加資格の確認を追加してください。","Receipt roll":"レシートロール","Rule":"ルール","Sales":"売上","See the":"参照先：","Select":"選択する項目：","Selected text":"選択した文字","Set":"設定する項目：","Set it up":"設定する","Set it up in 6 steps":"6つの手順で設定する","Set the same stock, direction, gap/mark sensing, and cutter in the driver's Printing Preferences.":"ドライバーの印刷設定で、用紙、向き、隙間／マーク検出、カッターを揃えます。","Set up a USB thermal receipt or label printer in Social Stream Ninja and print names, donations, purchases, tickets, and fixed-size labels from Event Flow.":"Social Stream NinjaでUSB感熱レシート/ラベルプリンターを設定し、Event Flowから名前、寄付、購入、チケット、固定サイズのラベルを印刷します。","Shopify and eBay don't send the buyer's name. Use an order counter or a product-only tag for those.":"ShopifyとeBayは購入者名を送信しません。これらには注文カウンターや商品名だけの札を使ってください。","Size L":"Lサイズ","Skip addresses, emails, payment details, and private messages. Thermal paper also fades with heat, light, and time.":"住所、メール、決済情報、非公開メッセージは印刷しないでください。感熱紙は熱、光、時間で色が薄くなります。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0ライセンス。","Social Stream asks for at least 20 mm. The driver may still limit short page sizes.":"Social Streamは最低20mmを指定しますが、短いページはドライバーに制限される場合があります。","Stickers and name labels":"ステッカーと名前ラベル","Stream ideas":"配信のアイデア","Support":"サポート","Supported Sites":"対応サイト","Supporter name stickers for a wall, prop, map, or progress board.":"壁、小道具、地図、進捗ボードに貼る支援者名のシール。","Switch theme":"テーマを切り替え","Test Flow":"フローをテスト（Test Flow）","Test Flow uses the wrong printer":"Test Flowが違うプリンターを使う","Test your longest text":"最も長い文字列で試す","Thank you":"ありがとう","The action adds":"アクションは次を追加します：","The default 2 mm left and right safe margins suit many cheap 58 mm receipt printers. The driver decides the real printable area, so keep":"初期設定の左右2mmの安全余白は、多くの安価な58mmレシートプリンターに合います。実際の印刷領域はドライバーが決めるため、次を","The test print's side borders show the safe width. Its height follows the test text. It doesn't outline the whole label.":"テスト印刷の左右の線は安全な幅を示します。高さはテスト文に合わせるため、ラベル全体の枠ではありません。","The text is taller than the label, or Windows has the wrong stock size. Use less text, smaller font, tighter spacing, or smaller margins.":"文章がラベルより高いか、Windowsの用紙サイズが違います。文字量、文字サイズ、行間、余白を減らしてください。","Thermal Printers And Stream Labels":"感熱プリンターと配信ラベル","Thermal Printers And Stream Labels - Social Stream Ninja":"感熱プリンターと配信ラベル - Social Stream Ninja","These are examples, not a tested list. Before buying, check the exact model has a current Windows driver, fits your label size, and shows up as a normal Windows printer.":"これは例で、動作確認済み一覧ではありません。購入前に正確な型番の最新Windowsドライバー、ラベルサイズ対応、通常のWindowsプリンターとして認識されることを確認してください。","Too much blank paper":"余分な白紙が多い","Try this":"試すこと","Turn purchases, donations, and chat events into physical receipts, stickers, tickets, or pickup tags.":"購入、寄付、チャットイベントを、実物のレシート、ステッカー、チケット、受け取りタグに変えます。","Turn the flow on and save. It imports turned off.":"フローを有効にして保存します。取り込み直後は無効です。","Type":"入力するコマンド：","USB, Ethernet, Wi-Fi, and Bluetooth.":"USB、Ethernet、Wi-Fi、Bluetooth。","USB. 80 mm paper, or 58 mm with the included adapter.":"USB。80mm用紙、または付属アダプターで58mm。","USB. About 25–112 mm media. Direct-thermal and thermal-transfer versions.":"USB。約25〜112mmの用紙。感熱式と熱転写式があります。","USB. Up to 62 mm, die-cut or continuous, with an auto cutter.":"USB。最大62mm、型抜きまたは連続用紙、自動カッター付き。","Use":"使う項目：","Use fixed length 0 for receipts. Lower the bottom margin and extra feed. For labels, set the exact length.":"レシートは固定長0を使い、下余白と追加の送りを減らします。ラベルは正確な長さを設定してください。","Use printable area":"印刷可能領域を使用（Use printable area）","Use single braces. Sales put the product name in":"波かっこは1重で使います。売上の商品名が入るのは、","Usually USB. Names and drivers vary by seller. A basic POS-58 was used to test Social Stream.":"通常はUSB。名称やドライバーは販売者によって異なります。Social Streamのテストには基本的なPOS-58を使いました。","VIP badges, team picks, challenge tokens, or milestone labels.":"VIPバッジ、チーム選択、チャレンジ券、節目のラベル。","Very short labels may not work":"非常に短いラベルは使えない場合があります","Weight":"太さ","Whatnot event fields":"Whatnotのイベントフィールド","Whatnot item labels":"Whatnotの商品ラベル","Whatnot labels":"Whatnotラベル","Whatnot: Item Labels + Payment Warnings":"Whatnot：商品ラベルと支払い警告","Why":"理由","Wider product, shipping, or wristband labels":"幅広の商品、配送、リストバンド用ラベル","Zebra ZD220":"Zebra ZD220","and":"および","and make a new flow.":"で新しいフローを作ります。","and run its test print.":"を設定し、テスト印刷を実行します。","at":"の値を","before the print action.":"を印刷アクションの前に置きます。","commerce event fields":"コマースイベントのフィールド","for":"のための","for receipt paper. For die-cut labels, enter the label's length in mm (the direction the paper feeds).":"にします。型抜きラベルでは、紙が進む方向の長さをmmで入力します。","for what each sale includes.":"で各売上に含まれる項目を確認できます。","if only bigger donations should print.":"を、大きい寄付だけ印刷したい場合に設定します。","instead.":"を代わりに使います。","label with whatever details that notice includes.":"ラベルを、その通知に含まれる情報で印刷します。","mm and fixed length to":"mm、固定長を","mm when the 1-inch side feeds first. Pick the same stock and direction in Windows Printing Preferences. Start with 12–14 pt text.":"mmにします（1インチ側が送り方向の場合）。Windowsの印刷設定でも同じ用紙と向きを選び、文字は12〜14ptから試してください。","needs":"に必要なもの：","or":"または","selected unless you've tested something else.":"を選択したままにしてください。ほかの設定を検証した場合は変更できます。","set width to":"幅を","this needs the Windows standalone app. Your printer must show up as a normal Windows printer. Social Stream prints through the Windows driver. It does not send raw ESC/POS, ZPL, or maker SDK commands.":"Windowsのデスクトップアプリが必要です。通常のWindowsプリンターとして認識されるプリンターを使います。Social StreamはWindowsドライバー経由で印刷し、生のESC/POS、ZPL、メーカーSDKの命令は送信しません。","to":"→","trigger. Set":"トリガーを追加します。次を設定します：","turns bold. No HTML or JavaScript needed.":"太字になります。HTMLやJavaScriptは不要です。","with":"付随する値：","💰 Donation / Tip":"💰 寄付 / 投げ銭（Donation / Tip）","🖨️ Print Thermal Label":"🖨️ 感熱ラベルを印刷（Print Thermal Label）"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/thermal-printer-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション"><a href="../index.html">ホーム</a><a href="features.html">機能</a><a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a><a href="download.html">ダウンロード</a><a href="guides.html">ガイド</a><a href="commands.html">コマンドとAPI</a><a href="supported-sites.html">対応サイト</a><a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a><a href="services.html" class="site-priority-hire">仕事を依頼する</a><a href="support.html">サポート</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/thermal-printer-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/thermal-printer-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/thermal-printer-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/thermal-printer-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/thermal-printer-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/thermal-printer-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="thermal-printer-guide.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/thermal-printer-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/thermal-printer-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/thermal-printer-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/thermal-printer-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/thermal-printer-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/thermal-printer-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/thermal-printer-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/thermal-printer-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/thermal-printer-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/thermal-printer-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="テーマを切り替え"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero"><div class="container"><h1>感熱プリンターと配信ラベル</h1><p>購入、寄付、チャットイベントを、実物のレシート、ステッカー、チケット、受け取りタグに変えます。</p></div></section>
+
+	<main>
+		<section class="guide-section">
+		<div class="container">
+			<nav class="guide-jump-links" aria-label="このページの内容">
+				<a href="#setup">設定する</a>
+				<a href="#donation-label">寄付時に印刷する</a>
+				<a href="#sales">売上を印刷する</a>
+				<a href="#whatnot-item-labels">Whatnotラベル</a>
+				<a href="#paper">用紙を選ぶ</a>
+				<a href="#label-size">ラベルのサイズ</a>
+				<a href="#ideas">アイデア</a>
+				<a href="#problems">問題を解決する</a>
+			</nav>
+
+			<div class="guide-card">
+				<h2 id="setup">6つの手順で設定する</h2>
+				<div class="guide-note"><strong>始める前に：</strong> Windowsのデスクトップアプリが必要です。通常のWindowsプリンターとして認識されるプリンターを使います。Social StreamはWindowsドライバー経由で印刷し、生のESC/POS、ZPL、メーカーSDKの命令は送信しません。</div>
+				<ol class="guide-steps">
+					<li>プリンターをUSBで接続して電源を入れ、Windowsドライバーを入れます。Windowsのテストページを印刷して動作を確認してください。</li>
+					<li>Social Streamで次を開きます： <strong>Global settings and tools &rarr; Mechanics - Connections &amp; Integrations &rarr; Printer Control</strong>.</li>
+					<li>クリックする項目： <strong>プリンターを検索（Find printers）</strong>。Windowsに表示される名前でプリンターを選びます。</li>
+					<li>次を入力します： <strong>用紙幅（mm）</strong>。通常は、 <code>58</code>, <code>80</code>、または <code>62</code>.</li>
+					<li>次はそのままにします： <strong>固定ラベル長（Fixed label length）</strong> の値を <code>0</code> にします。型抜きラベルでは、紙が進む方向の長さをmmで入力します。</li>
+					<li>クリックする項目： <strong>印刷テスト</strong>。端が切れる場合は、その側の安全余白を増やして再度試してください。</li>
+				</ol>
+				<p>初期設定の左右2mmの安全余白は、多くの安価な58mmレシートプリンターに合います。実際の印刷領域はドライバーが決めるため、次を <strong>印刷可能領域を使用（Use printable area）</strong> を選択したままにしてください。ほかの設定を検証した場合は変更できます。</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="donation-label">寄付を受けたらラベルを印刷する</h2>
+				<div class="flow-demo" aria-label="感熱印刷アクションに接続された寄付トリガー"><div class="flow-node"><strong>💰 寄付 / 投げ銭（Donation / Tip）</strong>最低金額（Minimum Amount）： <code>10</code></div><div class="flow-arrow" aria-hidden="true">→</div><div class="flow-node"><strong>🖨️ 感熱ラベルを印刷（Print Thermal Label）</strong><code>{username}<br>{donation}</code><br>24 pt · 太字 · 中央揃え</div></div>
+				<ol class="guide-steps">
+					<li>開く項目： <a href="../../actions/">Event Flowエディター</a> で新しいフローを作ります。</li>
+					<li>次を追加します： <strong>寄付 / 投げ銭（Donation / Tip）</strong> トリガーを追加します。次を設定します： <strong>最低金額（Minimum Amount）</strong> を、大きい寄付だけ印刷したい場合に設定します。</li>
+					<li>追加する項目： <strong>感熱ラベルを印刷（Print Thermal Label）</strong> （Integrations内）を選び、トリガーにつなぎます。</li>
+					<li>入力するコマンド： <code>{username}</code>、改行、次の値を入力します： <code>{donation}</code>。文字サイズ、太さ、配置、枚数を選びます。</li>
+					<li>アクションのプリンターと固定長の上書き設定は空欄か、 <code>0</code>。Printer Controlの設定を使います。</li>
+					<li>クリックする項目： <strong>フローをテスト（Test Flow）</strong>。名前を付け、次を有効にします： <strong>寄付額（Has Donation）</strong>を選び、金額を入力して実行します。実際のラベルが印刷されます。</li>
+				</ol>
+				<p>その他の便利なプレースホルダー： <code>{message}</code>, <code>{source}</code>, <code>{donationAmount}</code>、および <code>{counterValue}</code>。フロー内の前の処理で作った値も使えます。</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="sales">売上、ギフト、注文番号を印刷する</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>印刷したいもの…</th><th>操作</th></tr></thead>
+					<tbody>
+						<tr><td data-label="印刷したいもの">売上</td><td data-label="操作">使う項目： <strong>イベントの種類</strong> 付随する値： <code>purchase</code>. <strong>寄付 / 投げ銭（Donation / Tip）</strong> に必要なもの： <code>hasDonation</code>だけなので、大半の売上を拾えません。</td></tr>
+						<tr><td data-label="印刷したいもの">完了したギフト</td><td data-label="操作">使う項目： <code>gift</code> または <code>giftfunded</code>。必要ならプロバイダーで絞り込みます。</td></tr>
+						<tr><td data-label="印刷したいもの">連続した注文番号</td><td data-label="操作">追加する項目： <strong>カウンター</strong> を印刷アクションの前に置きます。</td></tr>
+					</tbody>
+				</table>
+				<p>参照先： <a href="event-reference.html#commerce-events">コマースイベントのフィールド</a> で各売上に含まれる項目を確認できます。</p>
+
+				<h3>購入者を太字、商品を通常の太さにする</h3>
+				<ol class="guide-steps">
+					<li>設定する項目： <strong>太さ</strong> → <strong>選択した文字</strong>.</li>
+					<li>ラベルの文字として次を入力します：</li>
+				</ol>
+				<pre><code>**{username}**
+{subtitle}</code></pre>
+				<ul>
+					<li>次で囲んだ文字だけが、 <code>**</code> 太字になります。HTMLやJavaScriptは不要です。</li>
+					<li>波かっこは1重で使います。売上の商品名が入るのは、 <code>{subtitle}</code>。数量は次に入る場合があります： <code>{meta.commerce.quantity}</code>.</li>
+					<li>前の処理で次を作る場合、 <code>buyer</code>では、次を使用します： <code>**{buyer}**</code> を代わりに使います。</li>
+					<li>ShopifyとeBayは購入者名を送信しません。これらには注文カウンターや商品名だけの札を使ってください。</li>
+					<li>All boldやNormalに設定済みのラベルの見た目は変わりません。</li>
+				</ul>
+
+				<details class="guide-extra">
+					<summary>フロー作成者向け：印刷結果と購入者番号</summary>
+					<p>アクションは次を追加します： <code>meta.thermalPrintResult.success</code>と、失敗時のエラーやコードを後続の処理へ渡します。成功はWindowsにジョブを送ったという意味で、紙が出た証拠ではありません。再試行前にWindowsの印刷キューを確認し、ラベルの重複を防いでください。</p>
+					<p>Counterが付けるのは購入ごとの番号で、購入者ごとの番号ではありません。同じ購入者の全購入に同じ番号を付けるには、購入者と番号の対応表を別に用意し、配信開始時にリセットします。User Memoryのreason欄は普通の文字列で、購入者番号のカウンターではありません。</p>
+				</details>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="whatnot-item-labels">Whatnotの商品ラベル</h2>
+				<p><a href="../../actions/examples/whatnot-item-labels.json" download>Whatnotのサンプルフローをダウンロード</a>。購入者名を太字で、商品名と、あれば注文IDを印刷します。支払い失敗時は別の <strong>支払い失敗</strong> ラベルを、その通知に含まれる情報で印刷します。</p>
+				<ol class="guide-steps">
+					<li>デスクトップアプリで次を設定します： <strong>プリンター制御（Printer Control）</strong> を設定し、テスト印刷を実行します。</li>
+					<li>開く項目： <strong>Event Flowエディター</strong>で、次をクリックします： <strong>インポート（Import）</strong>を選び、ダウンロードしたファイルを開きます。</li>
+					<li>選択する項目： <strong>Whatnot：商品ラベルと支払い警告</strong>。両方の印刷アクションを確認してください。Printer Controlのプリンターとラベル長を使います。</li>
+					<li>フローを有効にして保存します。取り込み直後は無効です。</li>
+					<li>Whatnotのソースを開き、配信イベントの取得を有効にしたままにします。</li>
+				</ol>
+				<div class="warning-note"><strong>売上ラベルは支払い済みの証明ではありません。</strong> 通知が届くたびに印刷します。支払いを待つ、以前のラベルを直す、購入者番号を割り当てるといった処理はしません。ない項目は空欄になります。購入者・商品・注文情報のない失敗通知では、どのラベルに対応するか特定できません。</div>
+				<details class="guide-extra">
+					<summary>サンプルフローの動作</summary>
+					<p>使用するのは、 <strong>イベントタイプ（高度）（Event Type (Advanced)）→ カスタムイベント（Custom Event）</strong> のための <code>product_sold</code> および <code>payment_failed</code>をWhatnotに絞ります。入札やオークション終了通知は印刷しません。参照： <a href="event-reference.html#whatnot">Whatnotのイベントフィールド</a>.</p>
+				</details>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="paper">用紙を選ぶ</h2>
+				<div class="printer-types">
+					<div class="printer-type"><h3>レシートロール</h3><p>購入伝票、順番券、任意の長さのレシート向けです。固定ラベル長は0にします。</p></div>
+					<div class="printer-type"><h3>連続ステッカーロール</h3><p>任意の長さの名前シール向けです。レシート用紙と同様に動きますが、カットはプリンターやドライバー側で行います。</p></div>
+					<div class="printer-type"><h3>ダイカットラベル</h3><p>サイズの揃ったバッジや商品ラベル向けです。正確な固定長を設定し、Windowsの印刷設定でも同じ用紙を選んでください。</p></div>
+				</div>
+				<div class="printer-gallery" aria-label="感熱レシートとラベルの出力例">
+					<figure class="paper-example"><div class="paper receipt"><div class="eyebrow">購入タグ</div><div class="big">購入者 #12</div><div class="rule"></div><strong>Inky</strong><br>青いNinjaマグカップ</div><figcaption class="paper-caption">58mmのレシート用紙。文章に応じて長さが変わります。</figcaption></figure>
+					<figure class="paper-example"><div class="paper label"><div class="eyebrow">ありがとう</div><div class="big">INKY</div><div class="amount">$25.00 CAD</div></div><figcaption class="paper-caption">固定サイズの型抜きラベル：名前と寄付。</figcaption></figure>
+					<figure class="paper-example"><div class="paper label"><div class="eyebrow">受け取り</div><div class="big">A-037</div><div class="rule"></div><strong>Ninjaパーカー</strong><br>Lサイズ</div><figcaption class="paper-caption">イベント詳細とカウンターを使った物販・受け取りラベル。</figcaption></figure>
+				</div>
+
+				<h3>プリンターの例</h3>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>プリンター</th><th>適した用途</th><th>補足</th></tr></thead>
+					<tbody>
+						<tr><td data-label="プリンター">汎用「POS-58」</td><td data-label="適した用途">安価な58mmレシート</td><td data-label="補足">通常はUSB。名称やドライバーは販売者によって異なります。Social Streamのテストには基本的なPOS-58を使いました。</td></tr>
+						<tr><td data-label="プリンター"><a href="https://files.support.epson.com/pdf/pos/bulk/tm-t20iii_trg_en_reva.pdf" target="_blank" rel="noopener">Epson TM-T20III</a></td><td data-label="適した用途">丈夫なレシートプリンター</td><td data-label="補足">USB。80mm用紙、または付属アダプターで58mm。</td></tr>
+						<tr><td data-label="プリンター"><a href="https://www.brother-usa.com/products/ql800" target="_blank" rel="noopener">Brother QL-800</a></td><td data-label="適した用途">ステッカーと名前ラベル</td><td data-label="補足">USB。最大62mm、型抜きまたは連続用紙、自動カッター付き。</td></tr>
+						<tr><td data-label="プリンター"><a href="https://www.brother-usa.com/products/ql820nwb" target="_blank" rel="noopener">Brother QL-820NWB</a></td><td data-label="適した用途">共有またはネットワーク接続のラベル印刷所</td><td data-label="補足">USB、Ethernet、Wi-Fi、Bluetooth。</td></tr>
+						<tr><td data-label="プリンター"><a href="https://www.zebra.com/gb/en/products/spec-sheets/printers/desktop/zd220.html" target="_blank" rel="noopener">Zebra ZD220</a></td><td data-label="適した用途">幅広の商品、配送、リストバンド用ラベル</td><td data-label="補足">USB。約25〜112mmの用紙。感熱式と熱転写式があります。</td></tr>
+					</tbody>
+				</table>
+				<p>これは例で、動作確認済み一覧ではありません。購入前に正確な型番の最新Windowsドライバー、ラベルサイズ対応、通常のWindowsプリンターとして認識されることを確認してください。</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="label-size">固定サイズのラベルを正しく設定する</h2>
+				<div class="guide-note"><strong>3 × 1インチのラベル（Munbyn BT320を含む）：</strong> 幅を <code>76.2</code> mm、固定長を <code>25.4</code> mmにします（1インチ側が送り方向の場合）。Windowsの印刷設定でも同じ用紙と向きを選び、文字は12〜14ptから試してください。</div>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>ルール</th><th>理由</th></tr></thead>
+					<tbody>
+						<tr><td data-label="ルール">用紙が進む向きで測る</td><td data-label="理由">62 × 29mmのラベルは通常、幅62mm、固定長29mmです。</td></tr>
+						<tr><td data-label="ルール">Windows側の設定も揃える</td><td data-label="理由">ドライバーの印刷設定で、用紙、向き、隙間／マーク検出、カッターを揃えます。</td></tr>
+						<tr><td data-label="ルール">固定長は変わりません</td><td data-label="理由">追加の用紙送りは行いません。文字が高すぎると、ドライバーによって切れたり次の用紙にはみ出したりします。</td></tr>
+						<tr><td data-label="ルール">最も長い文字列で試す</td><td data-label="理由">長い名前、商品オプション、追加の行には、広い領域や小さい文字が必要です。</td></tr>
+						<tr><td data-label="ルール">非常に短いラベルは使えない場合があります</td><td data-label="理由">Social Streamは最低20mmを指定しますが、短いページはドライバーに制限される場合があります。</td></tr>
+					</tbody>
+				</table>
+				<p>テスト印刷の左右の線は安全な幅を示します。高さはテスト文に合わせるため、ラベル全体の枠ではありません。</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="ideas">配信のアイデア</h2>
+				<ul>
+					<li>壁、小道具、地図、進捗ボードに貼る支援者名のシール。</li>
+					<li>注文に合わせた物販、依頼、飲み物、受け取りの札。</li>
+					<li>抽選券。印刷処理の前に頻度制限と参加資格の確認を追加してください。</li>
+					<li>VIPバッジ、チーム選択、チャレンジ券、節目のラベル。</li>
+					<li>隣にいる制作担当者向けの短いやることリスト。</li>
+				</ul>
+				<div class="warning-note"><strong>非公開情報を印刷しないでください。</strong> 住所、メール、決済情報、非公開メッセージは印刷しないでください。感熱紙は熱、光、時間で色が薄くなります。</div>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="problems">問題を解決する</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>問題</th><th>試すこと</th></tr></thead>
+					<tbody>
+						<tr><td data-label="問題">プリンターが表示されない</td><td data-label="試すこと">Windowsのテストページが印刷できるか確認します。Social Streamを再起動し、Find printersをもう一度クリックしてください。</td></tr>
+						<tr><td data-label="問題">成功と出るが印刷されない</td><td data-label="試すこと">Windowsの印刷キューを開き、一時停止、オフライン、用紙、ドライバー、ポートのエラーを確認してください。</td></tr>
+						<tr><td data-label="問題">端が切れる</td><td data-label="試すこと">Use printable areaを有効にし、その側の安全余白を増やしてください。</td></tr>
+						<tr><td data-label="問題">余分な白紙が多い</td><td data-label="試すこと">レシートは固定長0を使い、下余白と追加の送りを減らします。ラベルは正確な長さを設定してください。</td></tr>
+						<tr><td data-label="問題">1枚のラベルが2枚に分かれる</td><td data-label="試すこと">文章がラベルより高いか、Windowsの用紙サイズが違います。文字量、文字サイズ、行間、余白を減らしてください。</td></tr>
+						<tr><td data-label="問題">Test Flowが違うプリンターを使う</td><td data-label="試すこと">Print Thermal Labelの処理でプリンターの上書きを選びます。空欄だと、編集画面でのテストはWindowsの既定プリンターを使います。</td></tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		</section>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja。GPLv3.0ライセンス。</p></div></div></footer>
+	<script data-copy-markdown src="../../docs/js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="cs" data-site-root="../" data-site-language="cs">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:url" content="https://socialstream.ninja/cs/fonts.html">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:url" content="https://socialstream.ninja/cs/fonts.html">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Detektor nainstalovaných písem — náhled písem a tvorba odkazů ?font</title>
+    <meta name="description" content="Zjistěte nainstalovaná písma v prohlížeči, prohlédněte si živé ukázky a zkopírujte odkazy s parametrem URL (?font=) kompatibilní s VDO.Ninja, SocialStream.Ninja a Caption.Ninja.">
+    <link rel="canonical" href="https://socialstream.ninja/cs/fonts.html">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="author" content="Installed Font Detector" />
+    <meta name="keywords" content="písma, nainstalovaná písma, zjištění písem, písma prohlížeče, náhled písma, parametr url, vdo.ninja, socialstream.ninja, caption.ninja" />
+    <meta name="theme-color" content="#0f1221" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Detektor nainstalovaných písem — náhled písem a tvorba odkazů ?font">
+    <meta property="og:description" content="Zjistěte nainstalovaná písma v prohlížeči, prohlédněte si živé ukázky a zkopírujte odkazy s parametrem URL (?font=) kompatibilní s VDO.Ninja, SocialStream.Ninja a Caption.Ninja.">
+    <meta property="og:locale" content="cs_CZ">
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Detektor nainstalovaných písem — náhled písem a tvorba odkazů ?font">
+    <meta name="twitter:description" content="Zjistěte nainstalovaná písma v prohlížeči, prohlédněte si živé ukázky a zkopírujte odkazy s parametrem URL (?font=) kompatibilní s VDO.Ninja, SocialStream.Ninja a Caption.Ninja.">
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Installed Font Detector",
+      "applicationCategory": "Utility",
+      "operatingSystem": "Windows, macOS, Linux, ChromeOS",
+      "isAccessibleForFree": true,
+      "inLanguage": "en",
+      "description": "Detects installed fonts in your browser, previews them, and generates ?font= URL parameters compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja.",
+      "featureList": [
+        "Detect installed fonts via text-metric comparison",
+        "Optional Local Fonts API for precise enumeration",
+        "Generate ?font=<family> links",
+        "Compatibility with VDO.Ninja, SocialStream.Ninja, Caption.Ninja"
+      ],
+      "softwareRequirements": "Optional Local Fonts API requires Chromium-based browser on HTTPS/localhost and user permission.",
+      "sameAs": [
+        "https://vdo.ninja",
+        "https://socialstream.ninja",
+        "https://caption.ninja"
+      ]
+    }
+    </script>
+    <style>
+      :root {
+        --font-family: Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif;
+        --bg: #0f1221;
+        --panel: #171a2b;
+        --text: #e7e9f4;
+        --muted: #a8aec9;
+        --accent: #7ab6ff;
+        --ok: #47d16a;
+        --warn: #ffb020;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        --radius: 10px;
+      }
+
+      html, body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-family);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .wrap {
+        max-width: 1100px;
+        margin: 24px auto 80px;
+        padding: 0 16px;
+      }
+
+      header h1 {
+        margin: 0 0 6px 0;
+        font-size: 28px;
+      }
+
+      header p {
+        margin: 0 0 16px 0;
+        color: var(--muted);
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr auto auto auto;
+        gap: 10px;
+        align-items: center;
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+      .controls input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #2a2e44;
+        background: #0f1221;
+        color: var(--text);
+      }
+
+      .controls button, .controls a.button {
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #2a2e44;
+        background: #0f1221;
+        color: var(--text);
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .controls .count {
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .results {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 12px;
+        border: 1px solid #20243a;
+      }
+
+      .sample {
+        font-size: 18px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .meta {
+        display: grid;
+        gap: 6px;
+        justify-items: end;
+      }
+
+      .fontname {
+        font-weight: 600;
+      }
+
+      .link {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--muted);
+        user-select: all;
+      }
+
+      .link a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      .badge {
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 999px;
+        border: 1px solid #2a2e44;
+        color: var(--muted);
+      }
+
+      .footer {
+        margin-top: 40px;
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 24px 28px;
+        border: 1px solid #20243a;
+        line-height: 1.6;
+      }
+
+      .footer h2 {
+        margin: 0 0 12px 0;
+        font-size: 18px;
+      }
+
+      .footer ul {
+        margin: 12px 0 0 24px;
+        padding: 0;
+        color: var(--muted);
+      }
+
+      .footer li { margin: 6px 0; }
+
+      .footer code {
+        font-family: var(--mono);
+        background: #0f1221;
+        padding: 2px 6px;
+        border-radius: 6px;
+        border: 1px solid #2a2e44;
+        color: #cfe2ff;
+      }
+
+      .note {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 14px;
+      }
+
+      @media (max-width: 700px) {
+        .controls {
+          grid-template-columns: minmax(0, 1fr) auto;
+        }
+        .controls input[type="text"], .controls button {
+          grid-column: 1 / -1;
+          box-sizing: border-box;
+          max-width: 100%;
+        }
+      }
+
+      @media (min-width: 900px) {
+        .results {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"fonts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"(generated links below use proper encoding).":"(níže vygenerované odkazy používají správné kódování).","; this page also respects it. Example:":"; tato stránka ho také respektuje. Příklad:","After installing, refresh this page to see your new fonts. If a font doesn't appear, try the \"Try Local Fonts API\" button (Chromium browsers only).":"Po instalaci stránku obnovte a zobrazte nová písma. Pokud se písmo nezobrazí, zkuste tlačítko „Vyzkoušet Local Fonts API“ (pouze prohlížeče Chromium).","Append":"Připojte","Applies to CSS var:":"Použije se na proměnnou CSS:","Apply":"Použít","Browsers don’t allow full font enumeration without permission. This page detects from a large known list and optional Local Fonts API.":"Prohlížeče neumožňují úplný výpis písem bez oprávnění. Tato stránka je zjišťuje pomocí rozsáhlého seznamu známých písem a volitelného Local Fonts API.","Browsers use TrueType/OpenType/WOFF. Legacy Type 1 and some bitmap fonts won’t work.":"Prohlížeče používají TrueType/OpenType/WOFF. Starší Type 1 a některá bitmapová písma nefungují.","Build links like:":"Vytvářejte odkazy například takto:","CJK and script fonts:":"Písma CJK a dalších písemných systémů:","Caption.Ninja:":"Caption.Ninja:","Compatibility (Ninja apps)":"Kompatibilita (aplikace Ninja)","Copied!":"Zkopírováno!","Copy font files to":"Zkopírujte soubory písem do","Copy param":"Zkopírovat parametr","Copy param:":"Zkopírovat parametr:","Could not access local fonts. The browser may require HTTPS/localhost and user approval.":"Nelze získat přístup k místním písmům. Prohlížeč může vyžadovat HTTPS/localhost a souhlas uživatele.","Detect installed fonts in your browser, preview live samples, and copy URL parameter links (?font=) compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja.":"Zjistěte nainstalovaná písma v prohlížeči, prohlédněte si živé ukázky a zkopírujte odkazy s parametrem URL (?font=) kompatibilní s VDO.Ninja, SocialStream.Ninja a Caption.Ninja.","Detecting…":"Zjišťování…","Do not include quotes in the parameter; they are not required in the CSS variable.":"Do parametru nevkládejte uvozovky; v proměnné CSS nejsou potřeba.","Double-click the .ttf or .otf file → click \"Install Font\" in Font Book → restart your browser.":"Dvakrát klikněte na soubor .ttf nebo .otf → v aplikaci Kniha písem klikněte na „Instalovat písmo“ → restartujte prohlížeč.","Encoding:":"Kódování:","Exact family name:":"Přesný název rodiny:","Filter fonts (e.g. Segoe, Mono, Arabic)":"Filtrovat písma (např. Segoe, Mono, Arabic)","Force a font:":"Vynutit písmo:","Generated":"Vygenerované","How to Install Custom Fonts":"Jak nainstalovat vlastní písma","If only Bold is installed, Normal text may fall back. Try a bold sample or install Regular as well.":"Pokud je nainstalován pouze tučný řez, běžný text může použít náhradní písmo. Zkuste tučnou ukázku nebo nainstalujte také běžný řez.","If you installed a font for a different Windows user or via an admin account only, your browser session may not see it. Install “for all users” if needed.":"Pokud jste písmo nainstalovali pro jiného uživatele Windows nebo pouze přes účet správce, vaše relace prohlížeče ho nemusí vidět. V případě potřeby ho nainstalujte „pro všechny uživatele“.","In Chromium on secure origins (https/localhost), clicking “Try Local Fonts API” can list your exact installed families after permission.":"V Chromiu na zabezpečených adresách (https/localhost) může kliknutí na „Vyzkoušet Local Fonts API“ po udělení oprávnění zobrazit přesný seznam nainstalovaných rodin písem.","In your CSS:":"Ve vašem CSS:","Installed Font Detector":"Detektor nainstalovaných písem","Installed Font Detector: Preview installed fonts and generate ?font links":"Detektor nainstalovaných písem — náhled písem a tvorba odkazů ?font","Installed only:":"Pouze nainstalovaná:","Linux:":"Linux:","Lists fonts your browser can use, shows a live sample, and provides a URL parameter to apply the font site‑wide.":"Vypíše písma dostupná prohlížeči, zobrazí živou ukázku a nabídne parametr URL pro použití písma na celém webu.","Local Fonts API not supported in this browser. Use recent Chromium on HTTPS/localhost.":"Tento prohlížeč nepodporuje Local Fonts API. Použijte novější Chromium přes HTTPS/localhost.","Local Fonts API:":"Local Fonts API:","Manual usage tips":"Tipy pro ruční použití","Note: This page does not install or download fonts; it only detects and previews families already available to your browser.":"Poznámka: Tato stránka písma neinstaluje ani nestahuje; pouze zjišťuje a zobrazuje rodiny písem, které už jsou prohlížeči dostupné.","Param":"Parametr","Param:":"Parametr:","Privacy limits:":"Omezení kvůli soukromí:","Quotes not needed:":"Uvozovky nejsou potřeba:","Requests permission (if supported) to list local fonts via the Local Fonts API":"Požádá o oprávnění (je-li podporováno) k vypsání místních písem přes Local Fonts API","Right install scope:":"Správný rozsah instalace:","Right-click the .ttf or .otf file → select \"Install\" or \"Install for all users\" → restart your browser.":"Klikněte pravým tlačítkem na soubor .ttf nebo .otf → zvolte „Instalovat“ nebo „Instalovat pro všechny uživatele“ → restartujte prohlížeč.","Show faces":"Zobrazit řezy","Social Stream Ninja logo":"Logo Social Stream Ninja","SocialStream.Ninja:":"SocialStream.Ninja:","Supported formats:":"Podporované formáty:","Test an arbitrary name:":"Vyzkoušení libovolného názvu:","The parameter only works for fonts already installed on your system. It does not download webfonts.":"Parametr funguje pouze pro písma už nainstalovaná ve vašem systému. Webová písma nestahuje.","The sample includes Latin, numerals, and symbols. Replace with script‑specific text to verify shaping.":"Ukázka obsahuje latinku, číslice a symboly. Nahraďte ji textem v požadovaném písmu a ověřte správné tvarování znaků.","These apps accept a font-family override when the":"Tyto aplikace umožňují přepsat rodinu písma, pokud je parametr","Troubleshooting (Windows)":"Řešení potíží (Windows)","Try Local Fonts API":"Vyzkoušet Local Fonts API","Use the font’s":"Použijte název","Use the same":"Použijte stejné","Use the search box to try any family; if found, it appears in results with a sample.":"Pomocí vyhledávacího pole vyzkoušejte libovolnou rodinu písem; pokud je nalezena, zobrazí se ve výsledcích s ukázkou.","Using a specific font via URL":"Použití konkrétního písma přes URL","VDO.Ninja:":"VDO.Ninja:","Weight/style availability:":"Dostupnost tlouštěk a stylů:","Windows:":"Windows:","Your site uses":"Váš web používá","family":"rodiny","fonts, installed fonts, detect fonts, browser fonts, font preview, url parameter, vdo.ninja, socialstream.ninja, caption.ninja":"písma, nainstalovaná písma, zjištění písem, písma prohlížeče, náhled písma, parametr url, vdo.ninja, socialstream.ninja, caption.ninja","links work with overlays/scenes that honor the":"odkazy fungují s překryvy/scénami, které respektují proměnnou","macOS:":"macOS:","name (not file name). Check Settings → Personalization → Fonts for the proper family label.":"písma (nikoli název souboru). Správný název rodiny najdete v Nastavení → Přizpůsobení → Písma.","parameter is supported in their URLs or embed links. This tool generates properly encoded values for drop‑in use.":"podporován v jejich URL nebo odkazech pro vložení. Tento nástroj vytváří správně zakódované hodnoty k okamžitému použití.","parameter to override the default font in supported widgets.":"pro přepsání výchozího písma v podporovaných widgetech.","to caption overlays that support custom font families.":"k překryvům titulků, které podporují vlastní rodiny písem.","to the URL. Spaces and symbols must be URL‑encoded.":"k URL. Mezery a symboly musí být zakódovány pro URL.","variable.":"CSS.","{0} item(s)":"Počet položek: {0}","→ restart your browser.":"→ restartujte prohlížeč.","→ run":"→ spusťte"}}</script>
+<script src="../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../docs/css/site-language.css">
+<script src="../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/fonts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/fonts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/fonts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/fonts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/fonts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/fonts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/fonts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/fonts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/fonts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/fonts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/fonts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/fonts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/fonts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/fonts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/fonts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/fonts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/fonts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/fonts.html">
+<!-- ssn-languages:end --></head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Detektor nainstalovaných písem</h1>
+        <p>Vypíše písma dostupná prohlížeči, zobrazí živou ukázku a nabídne parametr URL pro použití písma na celém webu.</p>
+      <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../fonts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../es/fonts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../pt-br/fonts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../ru/fonts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../fr/fonts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../de/fonts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../ja/fonts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../zh-cn/fonts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../zh-tw/fonts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../it/fonts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../pl/fonts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../ko/fonts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../uk/fonts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../ar/fonts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../tr/fonts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="fonts.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../th/fonts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></header>
+
+      <div class="footer" style="margin-top:0;margin-bottom:16px;">
+        <h2>Jak nainstalovat vlastní písma</h2>
+        <ul>
+          <li><b>Windows:</b> Klikněte pravým tlačítkem na soubor .ttf nebo .otf → zvolte „Instalovat“ nebo „Instalovat pro všechny uživatele“ → restartujte prohlížeč.</li>
+          <li><b>macOS:</b> Dvakrát klikněte na soubor .ttf nebo .otf → v aplikaci Kniha písem klikněte na „Instalovat písmo“ → restartujte prohlížeč.</li>
+          <li><b>Linux:</b> Zkopírujte soubory písem do <code>~/.local/share/fonts/</code> → spusťte <code>fc-cache -fv</code> → restartujte prohlížeč.</li>
+        </ul>
+        <p class="note">Po instalaci stránku obnovte a zobrazte nová písma. Pokud se písmo nezobrazí, zkuste tlačítko „Vyzkoušet Local Fonts API“ (pouze prohlížeče Chromium).</p>
+      </div>
+
+      <div class="controls">
+        <input id="filter" type="text" placeholder="Filtrovat písma (např. Segoe, Mono, Arabic)" />
+        <button id="tryLocalFonts" title="Požádá o oprávnění (je-li podporováno) k vypsání místních písem přes Local Fonts API">Vyzkoušet Local Fonts API</button>
+        <label class="count" style="display:flex;align-items:center;gap:6px;white-space:nowrap;">
+          <input id="facesToggle" type="checkbox" /> Zobrazit řezy
+        </label>
+        <div class="count" id="count">Zjišťování…</div>
+      </div>
+
+      <div class="results" id="results" role="list"></div>
+
+      <div class="footer">
+        <h2>Použití konkrétního písma přes URL</h2>
+        <ul>
+          <li><b>Parametr:</b> Připojte <code>?font=&lt;Font%20Family%20Name&gt;</code> k URL. Mezery a symboly musí být zakódovány pro URL.</li>
+          <li><b>Použije se na proměnnou CSS:</b> Váš web používá <code>--font-family</code>; tato stránka ho také respektuje. Příklad: <code>?font=Segoe%20UI</code>.</li>
+          <li><b>Uvozovky nejsou potřeba:</b> Do parametru nevkládejte uvozovky; v proměnné CSS nejsou potřeba.</li>
+          <li><b>Pouze nainstalovaná:</b> Parametr funguje pouze pro písma už nainstalovaná ve vašem systému. Webová písma nestahuje.</li>
+        </ul>
+
+        <h2>Kompatibilita (aplikace Ninja)</h2>
+        <ul>
+          <li><b>VDO.Ninja:</b> Vygenerované <code>?font=</code> odkazy fungují s překryvy/scénami, které respektují proměnnou <code>--font-family</code> CSS.</li>
+          <li><b>SocialStream.Ninja:</b> Použijte stejné <code>?font=</code> pro přepsání výchozího písma v podporovaných widgetech.</li>
+          <li><b>Caption.Ninja:</b> Použít <code>?font=</code> k překryvům titulků, které podporují vlastní rodiny písem.</li>
+        </ul>
+        <p class="note">Tyto aplikace umožňují přepsat rodinu písma, pokud je parametr <code>?font=</code> podporován v jejich URL nebo odkazech pro vložení. Tento nástroj vytváří správně zakódované hodnoty k okamžitému použití.</p>
+
+        <h2>Řešení potíží (Windows)</h2>
+        <ul>
+          <li><b>Přesný název rodiny:</b> Použijte název <i>rodiny</i> písma (nikoli název souboru). Správný název rodiny najdete v Nastavení → Přizpůsobení → Písma.</li>
+          <li><b>Správný rozsah instalace:</b> Pokud jste písmo nainstalovali pro jiného uživatele Windows nebo pouze přes účet správce, vaše relace prohlížeče ho nemusí vidět. V případě potřeby ho nainstalujte „pro všechny uživatele“.</li>
+          <li><b>Podporované formáty:</b> Prohlížeče používají TrueType/OpenType/WOFF. Starší Type 1 a některá bitmapová písma nefungují.</li>
+          <li><b>Dostupnost tlouštěk a stylů:</b> Pokud je nainstalován pouze tučný řez, běžný text může použít náhradní písmo. Zkuste tučnou ukázku nebo nainstalujte také běžný řez.</li>
+          <li><b>Omezení kvůli soukromí:</b> Prohlížeče neumožňují úplný výpis písem bez oprávnění. Tato stránka je zjišťuje pomocí rozsáhlého seznamu známých písem a volitelného Local Fonts API.</li>
+          <li><b>Local Fonts API:</b> V Chromiu na zabezpečených adresách (https/localhost) může kliknutí na „Vyzkoušet Local Fonts API“ po udělení oprávnění zobrazit přesný seznam nainstalovaných rodin písem.</li>
+        </ul>
+
+        <h2>Tipy pro ruční použití</h2>
+        <ul>
+          <li><b>Vynutit písmo:</b> Ve vašem CSS: <code>font-family: "Your Family", Avenir Next, Sora, Roboto, Helvetica, Arial, sans-serif;</code></li>
+          <li><b>Vyzkoušení libovolného názvu:</b> Pomocí vyhledávacího pole vyzkoušejte libovolnou rodinu písem; pokud je nalezena, zobrazí se ve výsledcích s ukázkou.</li>
+          <li><b>Kódování:</b> Vytvářejte odkazy například takto: <code>?font=<span id="egFont">Segoe%20UI</span></code> (níže vygenerované odkazy používají správné kódování).</li>
+          <li><b>Písma CJK a dalších písemných systémů:</b> Ukázka obsahuje latinku, číslice a symboly. Nahraďte ji textem v požadovaném písmu a ověřte správné tvarování znaků.</li>
+        </ul>
+        <p class="note">Poznámka: Tato stránka písma neinstaluje ani nestahuje; pouze zjišťuje a zobrazuje rodiny písem, které už jsou prohlížeči dostupné.</p>
+      </div>
+    </div>
+
+    <script>
+      function siteText(value) { return window.SSNSiteTranslate ? window.SSNSiteTranslate(value) : value; }
+      // Respect the provided code for applying a font from URL params
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("font")) {
+        const fontParam = urlParams.get("font").trim();
+        const fonts = fontParam.split(',').map(f => {
+          const clean = f.trim().replace(/^['"]|['"]$/g, "");
+          return clean ? `"${clean}"` : '';
+        }).filter(Boolean);
+        if (fonts.length) {
+          document.documentElement.style.setProperty(
+            "--font-family",
+            `${fonts.join(', ')}, Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`
+          );
+        }
+      }
+
+      const resultsEl = document.getElementById('results');
+      const countEl = document.getElementById('count');
+      const filterEl = document.getElementById('filter');
+      const facesToggleEl = document.getElementById('facesToggle');
+
+      // A broad list of common fonts across Windows/macOS/Linux + popular developer/Google fonts.
+      // Detection works by comparing text metrics against generic base families.
+      const CANDIDATE_FONTS = Array.from(new Set([
+        // Windows core UI/text
+        'Segoe UI','Segoe UI Variable','Segoe UI Emoji','Segoe UI Historic','Segoe UI Symbol','Bahnschrift','Ebrima','Gadugi','Javanese Text','Leelawadee UI','Lucida Sans Unicode','Malgun Gothic','Meiryo','Microsoft Himalaya','Microsoft JhengHei','Microsoft New Tai Lue','Microsoft PhagsPa','Microsoft Sans Serif','Microsoft Tai Le','Microsoft Uighur','Microsoft YaHei','Microsoft Yi Baiti','MingLiU-ExtB','Mongolian Baiti','MS Gothic','MS PGothic','MS UI Gothic','NSimSun','PMingLiU-ExtB','SimSun','SimSun-ExtB','Yu Gothic','Yu Gothic UI',
+        // Windows Latin staples
+        'Arial','Arial Black','Calibri','Cambria','Candara','Comic Sans MS','Consolas','Constantia','Corbel','Courier New','Franklin Gothic Medium','Gabriola','Georgia','Impact','Palatino Linotype','Tahoma','Times New Roman','Trebuchet MS','Verdana','Symbol','Webdings','Wingdings','Wingdings 2','Wingdings 3','Sitka Banner','Sitka Display','Sitka Heading','Sitka Small','Sitka Subheading','Sitka Text','Lucida Console',
+        // Developer favorites / code
+        'Cascadia Code','Cascadia Mono','Fira Code','Fira Mono','JetBrains Mono','Source Code Pro','IBM Plex Mono','Ubuntu Mono','Inconsolata','Monaspace Neon','Monaspace Argon',
+        // Popular sans/serif families
+        'Inter','Roboto','Open Sans','Noto Sans','Noto Serif','Noto Sans JP','Noto Sans KR','Noto Sans SC','Noto Serif JP','Noto Naskh Arabic','Lato','Montserrat','Poppins','Oswald','Raleway','Nunito','Merriweather','Playfair Display','PT Sans','PT Serif','Source Sans 3','Source Serif 4','Source Sans Pro','Source Serif Pro','IBM Plex Sans','IBM Plex Serif','Ubuntu','Work Sans','Sora','Avenir','Avenir Next','SF Pro Text','SF Pro Display','Helvetica Neue','Helvetica','Gill Sans',
+        // Other common
+        'Book Antiqua','Century Gothic','Garamond','Didot','Bodoni MT','Perpetua','Rockwell','Goudy Old Style','Copperplate','Brush Script MT','Candara',
+      ].sort((a,b)=>a.localeCompare(b))))
+
+      // Base families used for measuring vs installed font.
+      const BASES = ['serif','sans-serif','monospace'];
+
+      // Measurement string chosen to amplify dimension differences
+      const TEST_STRING = 'mmmmmmmmmmlliWWQy #@ 0123456789 The quick brown fox';
+      const TEST_SIZE = '72px';
+
+      function createMeasureSpan(base) {
+        const s = document.createElement('span');
+        s.textContent = TEST_STRING;
+        s.style.position = 'absolute';
+        s.style.left = '-9999px';
+        s.style.top = '-9999px';
+        s.style.fontSize = TEST_SIZE;
+        s.style.fontVariantLigatures = 'none';
+        s.style.whiteSpace = 'nowrap';
+        s.style.fontFamily = base;
+        document.body.appendChild(s);
+        return s;
+      }
+
+      function metricsFor(base) {
+        const el = createMeasureSpan(base);
+        const w = el.offsetWidth;
+        const h = el.offsetHeight;
+        el.remove();
+        return { w, h };
+      }
+
+      // Detect if a font is available by comparing width/height against all base families.
+      function isFontAvailable(fontName) {
+        try {
+          const baseline = BASES.map(b => metricsFor(b));
+          // If any base differs once we prepend the font, it's likely installed
+          return BASES.some((b, i) => {
+            const el = createMeasureSpan(`"${fontName}", ${b}`);
+            const different = el.offsetWidth !== baseline[i].w || el.offsetHeight !== baseline[i].h;
+            el.remove();
+            return different;
+          });
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function applyFilter(filter, items) {
+        if (!filter) return items;
+        const q = filter.trim().toLowerCase();
+        if (!q) return items;
+        return items.filter(item => {
+          if (typeof item === 'string') return item.toLowerCase().includes(q);
+          const hay = [item.family, item.fullName, item.style, item.weight, item.postscriptName].filter(Boolean).join(' ').toLowerCase();
+          return hay.includes(q);
+        });
+      }
+
+      function makeRow(item) {
+        const isFace = typeof item === 'object' && item && 'family' in item;
+        const name = isFace ? item.family : item;
+        const row = document.createElement('div');
+        row.className = 'row';
+
+        const sample = document.createElement('div');
+        sample.className = 'sample';
+        sample.setAttribute('translate', 'no');
+        sample.style.fontFamily = `"${name}", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`;
+        if (isFace) {
+          if (item.weight) sample.style.fontWeight = String(item.weight);
+          if (item.style) sample.style.fontStyle = item.style;
+          if (item.stretch) sample.style.fontStretch = item.stretch;
+        }
+        const faceSuffix = isFace ? ` (${[item.style||'normal', item.weight||'400'].filter(Boolean).join(', ')})` : '';
+        sample.textContent = `${name}${faceSuffix}: The quick brown fox jumps over the lazy dog 0123456789`;
+        row.appendChild(sample);
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+
+        const fontname = document.createElement('div');
+        fontname.className = 'fontname';
+        fontname.textContent = name + (isFace && item.fullName ? `: ${item.fullName}` : '');
+
+        const link = document.createElement('div');
+        link.className = 'link';
+        const enc = encodeURIComponent(name);
+        const param = `?font=${enc}`;
+        const url = `${location.origin}${location.pathname}${param}`;
+        link.innerHTML = `<span class="badge">Param</span> <a href="${param}">${param}</a>`;
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'button';
+        copyBtn.textContent = 'Copy param';
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(param);
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => (copyBtn.textContent = 'Copy param'), 1200);
+          } catch {
+            window.prompt(siteText('Copy param:'), param);
+          }
+        });
+
+        meta.appendChild(fontname);
+        meta.appendChild(link);
+        meta.appendChild(copyBtn);
+        row.appendChild(meta);
+        return row;
+      }
+
+      function render(list) {
+        resultsEl.innerHTML = '';
+        const frag = document.createDocumentFragment();
+        list.forEach(item => frag.appendChild(makeRow(item)));
+        resultsEl.appendChild(frag);
+        countEl.textContent = `${list.length} item(s)`;
+      }
+
+      async function detectFromCandidates(candidates) {
+        const seen = new Set();
+        const found = [];
+        for (const name of candidates) {
+          if (seen.has(name)) continue;
+          seen.add(name);
+          if (isFontAvailable(name)) found.push(name);
+        }
+        found.sort((a,b)=>a.localeCompare(b));
+        return found;
+      }
+
+      // Optional: Use Local Fonts API if supported + permitted
+      async function tryLocalFontsAPI() {
+        if (!('queryLocalFonts' in window)) {
+          alert(siteText('Local Fonts API not supported in this browser. Use recent Chromium on HTTPS/localhost.'));
+          return [];
+        }
+        try {
+          const families = new Set();
+          const fonts = await window.queryLocalFonts();
+          // Keep faces for optional detailed listing
+          window.__FACES__ = fonts.map(f => ({
+            family: f.family,
+            fullName: f.fullName,
+            postscriptName: f.postscriptName,
+            style: f.style,
+            weight: f.weight,
+            stretch: f.stretch,
+          }));
+          for (const f of fonts) {
+            if (f.family) families.add(f.family);
+          }
+          return Array.from(families).sort((a,b)=>a.localeCompare(b));
+        } catch (err) {
+          console.warn('Local Fonts API error:', err);
+          alert(siteText('Could not access local fonts. The browser may require HTTPS/localhost and user approval.'));
+          return [];
+        }
+      }
+
+      async function getLocalFontsIfGranted() {
+        if (!('queryLocalFonts' in window) || !('permissions' in navigator)) return [];
+        try {
+          const status = await navigator.permissions.query({ name: 'local-fonts' });
+          if (status.state === 'granted') {
+            const families = await tryLocalFontsAPI();
+            return families;
+          }
+        } catch (e) {
+          // Ignore if permissions API doesn't recognize 'local-fonts'
+        }
+        return [];
+      }
+
+      // Initial detection
+      (async function init() {
+        // If a font is set via URL param, reflect it in example in the “Manual usage tips”
+        const eg = document.getElementById('egFont');
+        if (eg) eg.textContent = encodeURIComponent(urlParams.get('font') || 'Segoe UI');
+
+        countEl.textContent = 'Detecting…';
+        const detected = await detectFromCandidates(CANDIDATE_FONTS);
+        window.__ALL_DETECTED__ = detected; // families
+
+        // If permission already granted, auto-merge Local Fonts API
+        const grantedFamilies = await getLocalFontsIfGranted();
+        if (grantedFamilies.length) {
+          const merged = Array.from(new Set([...(window.__ALL_DETECTED__||[]), ...grantedFamilies]));
+          merged.sort((a,b)=>a.localeCompare(b));
+          window.__ALL_DETECTED__ = merged;
+        }
+
+        const initialList = (facesToggleEl && facesToggleEl.checked && window.__FACES__) ? window.__FACES__ : window.__ALL_DETECTED__;
+        render(initialList);
+
+        // Filter UI
+        filterEl.addEventListener('input', () => {
+          const facesOn = facesToggleEl && facesToggleEl.checked && window.__FACES__;
+          const base = facesOn ? window.__FACES__ : (window.__ALL_DETECTED__ || []);
+          const list = applyFilter(filterEl.value, base);
+          render(list);
+        });
+
+        // Allow trying arbitrary names by typing and pressing Enter
+        filterEl.addEventListener('keydown', async (e) => {
+          if (e.key === 'Enter') {
+            const name = filterEl.value.trim();
+            if (!name) return;
+            if (!window.__ALL_DETECTED__.includes(name) && isFontAvailable(name)) {
+              window.__ALL_DETECTED__ = [...window.__ALL_DETECTED__, name].sort((a,b)=>a.localeCompare(b));
+            }
+            const facesOn = facesToggleEl && facesToggleEl.checked && window.__FACES__;
+            const base = facesOn ? window.__FACES__ : window.__ALL_DETECTED__;
+            const list = applyFilter(filterEl.value, base);
+            render(list);
+          }
+        });
+
+        // Local Fonts API button
+        document.getElementById('tryLocalFonts').addEventListener('click', async () => {
+          const families = await tryLocalFontsAPI();
+          if (families.length) {
+            // Merge Local Fonts API results with detected list
+            const merged = Array.from(new Set([...(window.__ALL_DETECTED__||[]), ...families]));
+            merged.sort((a,b)=>a.localeCompare(b));
+            window.__ALL_DETECTED__ = merged;
+            const facesOn = facesToggleEl && facesToggleEl.checked && window.__FACES__;
+            const base = facesOn ? window.__FACES__ : merged;
+            const list = applyFilter(filterEl.value, base);
+            render(list);
+          }
+        });
+
+        // Faces toggle
+        if (facesToggleEl) {
+          facesToggleEl.addEventListener('change', () => {
+            const facesOn = facesToggleEl.checked && window.__FACES__;
+            const base = facesOn ? window.__FACES__ : (window.__ALL_DETECTED__ || []);
+            const list = applyFilter(filterEl.value, base);
+            render(list);
+          });
+        }
+      })();
+    </script>
+  </body>
+  </html>

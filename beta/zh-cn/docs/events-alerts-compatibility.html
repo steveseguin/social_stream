@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-cn/docs/events-alerts-compatibility.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-cn/docs/events-alerts-compatibility.html">
+    <meta property="og:title" content="事件与提醒兼容性 - Social Stream Ninja">
+    <meta property="og:description" content="了解哪些 YouTube、Twitch 和 Kick 事件会进入 Social Stream Ninja 的提醒、Event Flow、TTS、目标、叠加层和 API 使用方。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-cn/docs/events-alerts-compatibility.html">
+    <meta name="twitter:title" content="事件与提醒兼容性 - Social Stream Ninja">
+    <meta name="twitter:description" content="了解哪些 YouTube、Twitch 和 Kick 事件会进入 Social Stream Ninja 的提醒、Event Flow、TTS、目标、叠加层和 API 使用方。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>事件与提醒兼容性 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="了解哪些 YouTube、Twitch 和 Kick 事件会进入 Social Stream Ninja 的提醒、Event Flow、TTS、目标、叠加层和 API 使用方。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/events-alerts-compatibility.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{"## Verified maintainer context - Multi Alerts currently normalizes follow, subscription, donation/gift, bits, raid, auction, and Hype Train aliases into seven alert categories. Auction and Hype Train are opt-in. - Its current classifier accepts canonical names plus legacy aliases. A payload with `hasDonation` and no event is valid: bits/cheer wording routes it to Bits, while other amounts route it to Donation. - Count/status events such as `viewer_update`, `follower_update`, `subscriber_update`, and ad-break status intentionally do not become general alert cards. - Kick's current official subscribed event set includes chat, follows, new/renewed/gifted subscriptions, reward redemptions, KICKs gifts, bans, and livestream status. Kick currently has no official raid/host subscription; raid handling is compatibility-only. - TTS defaults to skipping non-donation rows with an `event` value. `readevents` disables that skip, while normal source/member/donation filters still apply. - The popup preview verifies overlay handling only. Platform capture still requires a live source, matching session, correct role/scopes, and a real event.":"## 经核实的维护者说明\n\n- Multi Alerts 目前会将关注、订阅、打赏/礼物、Bits、突袭、拍卖和 Hype Train 的别名标准化为七个提醒类别。拍卖和 Hype Train 需要主动启用。\n- 当前分类器接受规范名称和旧版别名。包含 `hasDonation` 而没有 event 的载荷是有效的：带有 bits/cheer 措辞时会归入 Bits，其他金额则归入打赏。\n- `viewer_update`、`follower_update`、`subscriber_update` 和广告时段状态等计数/状态事件特意不生成常规提醒卡片。\n- Kick 当前的官方订阅事件集包含聊天、关注、新订阅/续订/赠送订阅、奖励兑换、KICKs 礼物、封禁和直播状态。Kick 目前没有官方的 raid/host 订阅；raid 处理仅用于兼容。\n- TTS 默认跳过带有 `event` 值的非打赏条目。`readevents` 可关闭此跳过行为，但常规的来源/会员/打赏过滤器仍然生效。\n- 弹出菜单预览仅验证叠加层处理。平台捕获仍需要活动来源、匹配的会话、正确的角色/权限范围，以及真实事件。",", and fields your source emits. Use the Test Message tool before relying on a live event.":"，以及来源发出的字段。在依赖真实事件前，请先使用“测试消息”工具。",", donation aliases":"、打赏别名",", membership aliases":"、会员别名",", membership fields, and selected":"、会员字段，以及所选的",", or a row with":"，或带有以下字段的条目：","; API-delayed and public subscriptions only":"；受 API 延迟影响，且仅包含公开订阅","A donation preview checks the overlay. Next, trigger or observe a real platform event to verify the source connection.":"打赏预览用于检查叠加层。接下来，触发或观察一个真实平台事件，以验证来源连接。","A donation-style chat row may instead use":"打赏类聊天条目也可以改用","A successful preview proves the alert layout works.":"预览成功证明提醒布局正常。","Activity":"活动","Auction":"拍卖","Auction-win alerts are opt-in.":"拍卖获胜提醒需要主动启用。","Availability and naming depend on the platform source.":"可用性和命名取决于平台来源。","Bits":"Bits","Category":"类别","Channel reward":"频道奖励","Chat plus lightweight page markers for gifts, rewards, and viewer updates.":"聊天，以及礼物、奖励和观众更新的轻量页面标记。","Chat-rendered rewards, gifted-sub notices, viewer updates, and a few page-only notices.":"在聊天中呈现的奖励、赠送订阅通知、观众更新，以及一些仅在页面中出现的通知。","Check minimum cash/donation filters when small tips or cheers are missing.":"缺少小额打赏或 cheers 时，请检查最低现金/打赏过滤器。","Check minimum-value filters for donations and bits.":"检查打赏和 Bits 的最低金额过滤器。","Check source filters if events work in the Dock but not in Multi Alerts.":"事件在停靠面板正常，但在 Multi Alerts 中不正常时，请检查来源过滤器。","Choose the source mode deliberately and complete authentication when the desired official events require it; do not expect an official raid event.":"有针对性地选择来源模式，并在所需官方事件要求身份验证时完成验证；不要预期会收到官方 raid 事件。","Classifies canonical":"将规范的","Commands & API":"命令与 API","Common Event Names":"常用事件名称","Compatibility Rule":"兼容规则","Compatibility input only; not a current official Kick event subscription":"仅接受兼容输入；不是当前官方 Kick 事件订阅","Configure each alert category independently. Enabling an alert does not grant the platform permission needed to capture it.":"分别配置每个提醒类别。启用提醒不会授予捕获该事件所需的平台权限。","Confirm that category is enabled and not excluded by source or channel filters.":"确认该类别已启用，且未被来源或频道过滤器排除。","Confirm that the selected source actually emits the event type, not only chat messages.":"确认所选来源实际会发出该事件类型，而不只是聊天消息。","Confirm the source and Multi Alerts page use the same session ID and password.":"确认来源和 Multi Alerts 页面使用相同的会话 ID 和密码。","Confirm the source received the event in its own log, Dock, or API output.":"确认在来源自身的日志、停靠面板或 API 输出中收到了该事件。","Connect and activate the platform source that provides the event.":"连接并激活提供该事件的平台来源。","Connect captured platform events to Multi Alerts without confusing normal chat, donations, and event payloads.":"将捕获到的平台事件连接到 Multi Alerts，避免混淆普通聊天、打赏和事件载荷。","Create Test Messages":"创建测试消息","Custom overlay / API consumer":"自定义叠加层 / API 使用方","Donation / gift":"打赏 / 礼物","Download":"下载","Enable The Alert Types You Want":"启用所需的提醒类型","Event Flow":"Event Flow","Event Flow Recipes":"Event Flow 实用示例","Event Reference":"事件参考","Event rows are skipped by default unless they are donation-style. Add":"默认会跳过事件条目，除非它们属于打赏类。添加","EventSub adds followers, subscriptions, renewals, cheers, raids, rewards, and supported count/status events when the account and scopes permit them.":"在账号和权限范围允许时，EventSub 会增加关注、订阅、续订、cheers、raids、奖励，以及受支持的计数/状态事件。","Events and Alerts Compatibility":"事件和提醒兼容性","Events and Alerts Compatibility - Social Stream Ninja":"事件与提醒兼容性 - Social Stream Ninja","Features":"功能","First Check":"首先检查","Follow":"关注","Follow / public subscriber alert":"关注 / 公开订阅者提醒","For Twitch or Kick, sign in again if chat works but protected events do not.":"对于 Twitch 或 Kick，如果聊天正常但受保护的事件不正常，请重新登录。","Gifted membership / subscription":"赠送会员 / 订阅","Guide":"指南","Guides":"指南","Hire":"雇用","Home":"首页","Hype Train":"Hype Train","Hype Train alerts are opt-in and require eligible Twitch EventSub access.":"Hype Train 提醒需要主动启用，并要求符合条件的 Twitch EventSub 访问权限。","If multiple devices or connection modes are involved, review":"如果涉及多个设备或连接模式，请查看","Includes recurring, gifted, and membership-style events where supported.":"在受支持时，包含周期性订阅、赠送和会员类事件。","Inspiration":"灵感","Interact with the browser page once if custom alert audio is blocked by autoplay rules.":"如果自定义提醒音频被自动播放规则阻止，请先与浏览器页面互动一次。","It does not prove the platform source has permission to receive that live event.":"这不能证明平台来源有权接收该真实事件。","Keep that source page or standalone-app source window active.":"保持该来源页面或独立应用的来源窗口活跃。","Keep the source window active long enough to observe a real event; a preview alone is not an end-to-end platform test.":"让来源窗口保持活跃，足够长时间以观察到真实事件；仅有预览不算平台的端到端测试。","Kick":"Kick","Kick raid note:":"Kick raid 说明：","Kick setup and authentication":"Kick 设置与身份验证","Main navigation":"主导航","Major Platform Events":"主要平台事件","Match the exact":"精确匹配","Multi Alerts":"Multi Alerts","Multi Alerts Categories":"Multi Alerts 类别","Multi Alerts displays events that Social Stream has already captured. It does not sign in to Twitch, Kick, YouTube, TikTok, or another platform by itself.":"Multi Alerts 展示的是 Social Stream 已经捕获到的事件。它本身不会登录 Twitch、Kick、YouTube、TikTok 或其他平台。","Multi Alerts donation preview showing a styled donation card and preview controls":"Multi Alerts 打赏预览，显示带样式的打赏卡片和预览控件","New member / subscriber":"新会员 / 订阅者","Normal mode uses donation amounts. Hype mode can also score membership, renewal, and gifted-membership fields.":"普通模式使用打赏金额。Hype 模式还可按会员、续订和赠送会员字段计分。","Notes":"说明","Official follow, subscription, gift, reward-redemption, KICKs, moderation, and live-status events when authenticated.":"身份验证后可接收官方的关注、订阅、礼物、奖励兑换、KICKs、管理和直播状态事件。","On this page":"本页内容","Open navigation menu":"打开导航菜单","Open the Multi Alerts options from Social Stream settings. Follows, subscriptions, donations, bits, and raids have their own enable, style, sound, and appearance controls. Auction and Hype Train alerts require their dedicated opt-in controls.":"从 Social Stream 设置中打开 Multi Alerts 选项。关注、订阅、打赏、Bits 和 raid 都有各自的启用、样式、声音和外观控件。拍卖和 Hype Train 提醒需要通过专用选项主动启用。","Other sources":"其他来源","Overlay Gallery":"叠加层图库","Paid messages, memberships, membership gifts, viewer updates, and limited page-detected events.":"付费消息、会员、会员赠礼、观众更新，以及有限的页面检测事件。","Paid support":"付费支持","Platform":"平台","Platform Setup Notes":"平台设置说明","Preview Before Going Live":"开播前预览","Queue alerts":"提醒排队","Raid":"突袭","Raid / host":"突袭 / 主持转播","Renewal":"续订","Requires a source that captures follow events and the necessary platform permission.":"需要能捕获关注事件的来源，以及必要的平台权限。","See which YouTube, Twitch, and Kick events reach Social Stream Ninja alerts, Event Flow, TTS, goals, overlays, and API consumers.":"了解哪些 YouTube、Twitch 和 Kick 事件会进入 Social Stream Ninja 的提醒、Event Flow、TTS、目标、叠加层和 API 使用方。","Sessions, Passwords, and Relay Modes":"会话、密码与中继模式","Sign in with the broadcaster or permitted moderator and keep EventSub connected.":"使用主播或有权限的版主账号登录，并保持 EventSub 连接。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Multi Alerts options showing separate alert-type controls for follows, subscriptions, donations, bits, raids, auction wins, and Hype Trains":"Social Stream Ninja Multi Alerts 选项，显示关注、订阅、打赏、Bits、raid、拍卖获胜和 Hype Train 各自独立的提醒类型控件","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Social Stream accepts a legacy raid/host-shaped payload for compatibility, but Kick's current official event catalog has no raid/host subscription. Do not make a Kick workflow depend on receiving one.":"为保持兼容，Social Stream 接受旧版 raid/host 结构的载荷，但 Kick 当前官方事件目录没有 raid/host 订阅。不要让 Kick 工作流依赖接收此类事件。","Standard Capture":"标准捕获","Standard Versus WebSocket Mode":"标准模式与 WebSocket 模式","Start With The Event Source":"从事件来源开始","Subscription":"订阅","Support":"支持","Supported Sites":"支持的网站","Supported sites":"支持的网站","Switch theme":"切换主题","TTS":"TTS","Test the alert overlay from its options before debugging the platform connection.":"排查平台连接前，先从提醒叠加层的选项中测试它。","The amount can be filtered with the minimum donation/cash option.":"可使用最低打赏/现金选项过滤金额。","The shared paid/member events plus member milestones, recent public-subscriber alerts, and supported count updates.":"共同支持的付费/会员事件，以及会员里程碑、近期公开订阅者提醒和受支持的计数更新。","These are the current canonical event names when the selected source mode can deliver the activity.":"当所选来源模式能够提供对应活动时，以下为当前的规范事件名称。","Tip Jar / Goal Meter":"打赏罐 / 目标进度条","Tool":"工具","Twitch":"Twitch","Twitch EventSub setup":"Twitch EventSub 设置","Use":"使用","Use the canonical payload fields from the Event Reference. Accept documented aliases only for backward compatibility.":"使用事件参考中的规范载荷字段。仅为向后兼容而接受文档中记录的别名。","Use the preview controls to verify the selected category, text, amount, media, sound, animation, and queue behavior.":"使用预览控件验证所选类别、文本、金额、媒体、声音、动画和队列行为。","Use the same Social Stream session ID in the source, popup, Dock, and Multi Alerts URL.":"在来源、弹出菜单、停靠面板和 Multi Alerts URL 中使用相同的 Social Stream 会话 ID。","Viewer counts, follower totals, stream status, and ad-break status are updates rather than normal alert cards. Use the":"观众人数、关注者总数、直播状态和广告时段状态属于更新，不是普通提醒卡片。请使用","WebSocket / API Capture":"WebSocket / API 捕获","WebSocket mode is normally the right choice for event-driven alerts. Standard capture remains useful when only rendered chat is needed or authentication is unavailable.":"对于由事件触发的提醒，WebSocket 模式通常是合适的选择。当仅需要页面中显示的聊天，或无法进行身份验证时，标准捕获仍然有用。","When A Real Alert Is Missing":"真实提醒缺失时","Which Fields Each Tool Uses":"各工具使用哪些字段","YouTube":"YouTube","and":"和","for KICKs gifts;":"用于 KICKs 礼物；","for support/tip events. Both populate":"用于支持/小费事件。两者都会填充","for working automation examples.":"，查看可用的自动化示例。","names, aliases,":"名称、别名、","to verify the expected event and":"，验证预期的事件以及","values into shared categories.":"值归入共享类别。","when building an API consumer or custom overlay.":"，用于构建 API 使用方或自定义叠加层。","when non-donation event messages should be spoken, then apply normal TTS filters.":"，让非打赏事件消息也能被朗读，然后应用常规 TTS 过滤器。","when several events may arrive together.":"，适用于可能同时到达多个事件的情况。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/events-alerts-compatibility.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/events-alerts-compatibility.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/events-alerts-compatibility.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/events-alerts-compatibility.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/events-alerts-compatibility.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/events-alerts-compatibility.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/events-alerts-compatibility.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/events-alerts-compatibility.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="events-alerts-compatibility.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/events-alerts-compatibility.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/events-alerts-compatibility.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/events-alerts-compatibility.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/events-alerts-compatibility.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/events-alerts-compatibility.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/events-alerts-compatibility.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/events-alerts-compatibility.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/events-alerts-compatibility.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/events-alerts-compatibility.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>事件和提醒兼容性</h1>
+            <p>将捕获到的平台事件连接到 Multi Alerts，避免混淆普通聊天、打赏和事件载荷。</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="本页内容"><a href="#read-section-1">从事件来源开始</a><a href="#read-section-2">Multi Alerts 类别</a><a href="#read-section-3">主要平台事件</a><a href="#read-section-4">标准模式与 WebSocket 模式</a><a href="#read-section-5">启用所需的提醒类型</a><a href="#read-section-6">开播前预览</a><a href="#read-section-9">真实提醒缺失时</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">从事件来源开始</h2>
+                <p>Multi Alerts 展示的是 Social Stream 已经捕获到的事件。它本身不会登录 Twitch、Kick、YouTube、TikTok 或其他平台。</p>
+                <ol class="guide-steps">
+                    <li>连接并激活提供该事件的平台来源。</li>
+                    <li>保持该来源页面或独立应用的来源窗口活跃。</li>
+                    <li>在来源、弹出菜单、停靠面板和 Multi Alerts URL 中使用相同的 Social Stream 会话 ID。</li>
+                    <li>排查平台连接前，先从提醒叠加层的选项中测试它。</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>预览成功证明提醒布局正常。</strong> 这不能证明平台来源有权接收该真实事件。</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">Multi Alerts 类别</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>类别</th><th>常用事件名称</th><th>说明</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="类别">关注</td><td data-label="常用事件名称"><code>new_follower</code>, <code>follow</code>, <code>followed</code></td><td data-label="说明">需要能捕获关注事件的来源，以及必要的平台权限。</td></tr>
+                        <tr><td data-label="类别">订阅</td><td data-label="常用事件名称"><code>new_subscriber</code>, <code>resub</code>, <code>subscription_gift</code>、会员别名</td><td data-label="说明">在受支持时，包含周期性订阅、赠送和会员类事件。</td></tr>
+                        <tr><td data-label="类别">打赏 / 礼物</td><td data-label="常用事件名称"><code>superchat</code>, <code>supersticker</code>, <code>gift</code>, <code>tip</code>、打赏别名</td><td data-label="说明">打赏类聊天条目也可以改用 <code>hasDonation</code> 和 <code>donoValue</code>.</td></tr>
+                        <tr><td data-label="类别">Bits</td><td data-label="常用事件名称"><code>cheer</code>, <code>bits</code></td><td data-label="说明">可使用最低打赏/现金选项过滤金额。</td></tr>
+                        <tr><td data-label="类别">突袭</td><td data-label="常用事件名称"><code>raid</code>, <code>host</code>, <code>redirect</code></td><td data-label="说明">可用性和命名取决于平台来源。</td></tr>
+                        <tr><td data-label="类别">拍卖</td><td data-label="常用事件名称"><code>auction_update</code></td><td data-label="说明">拍卖获胜提醒需要主动启用。</td></tr>
+                        <tr><td data-label="类别">Hype Train</td><td data-label="常用事件名称"><code>hype_train</code></td><td data-label="说明">Hype Train 提醒需要主动启用，并要求符合条件的 Twitch EventSub 访问权限。</td></tr>
+                    </tbody>
+                </table>
+                <p>观众人数、关注者总数、直播状态和广告时段状态属于更新，不是普通提醒卡片。请使用 <a href="event-reference.html">事件参考</a> ，用于构建 API 使用方或自定义叠加层。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">主要平台事件</h2>
+                <p>当所选来源模式能够提供对应活动时，以下为当前的规范事件名称。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>活动</th><th>YouTube</th><th>Twitch</th><th>Kick</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="活动">新会员 / 订阅者</td>
+                            <td data-label="YouTube"><code>sponsorship</code></td>
+                            <td data-label="Twitch"><code>new_subscriber</code></td>
+                            <td data-label="Kick"><code>new_subscriber</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="活动">续订</td>
+                            <td data-label="YouTube"><code>resub</code></td>
+                            <td data-label="Twitch"><code>resub</code></td>
+                            <td data-label="Kick"><code>resub</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="活动">赠送会员 / 订阅</td>
+                            <td data-label="YouTube"><code>giftpurchase</code>, <code>giftredemption</code></td>
+                            <td data-label="Twitch"><code>subscription_gift</code></td>
+                            <td data-label="Kick"><code>subscription_gift</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="活动">付费支持</td>
+                            <td data-label="YouTube"><code>superchat</code>, <code>supersticker</code>, <code>jeweldonation</code></td>
+                            <td data-label="Twitch"><code>cheer</code>，或带有以下字段的条目： <code>hasDonation</code></td>
+                            <td data-label="Kick"><code>gift</code> 用于 KICKs 礼物； <code>donation</code> 用于支持/小费事件。两者都会填充 <code>hasDonation</code>.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="活动">关注 / 公开订阅者提醒</td>
+                            <td data-label="YouTube"><code>new_follower</code>；受 API 延迟影响，且仅包含公开订阅</td>
+                            <td data-label="Twitch"><code>new_follower</code></td>
+                            <td data-label="Kick"><code>new_follower</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="活动">频道奖励</td>
+                            <td data-label="YouTube">-</td>
+                            <td data-label="Twitch"><code>reward</code></td>
+                            <td data-label="Kick"><code>reward</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="活动">突袭 / 主持转播</td>
+                            <td data-label="YouTube">-</td>
+                            <td data-label="Twitch"><code>raid</code></td>
+                            <td data-label="Kick">仅接受兼容输入；不是当前官方 Kick 事件订阅</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="warning-note">
+                    <p><strong>Kick raid 说明：</strong> 为保持兼容，Social Stream 接受旧版 raid/host 结构的载荷，但 Kick 当前官方事件目录没有 raid/host 订阅。不要让 Kick 工作流依赖接收此类事件。</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">标准模式与 WebSocket 模式</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>平台</th><th>标准捕获</th><th>WebSocket / API 捕获</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="平台">YouTube</td>
+                            <td data-label="标准捕获">付费消息、会员、会员赠礼、观众更新，以及有限的页面检测事件。</td>
+                            <td data-label="WebSocket / API 捕获">共同支持的付费/会员事件，以及会员里程碑、近期公开订阅者提醒和受支持的计数更新。</td>
+                        </tr>
+                        <tr>
+                            <td data-label="平台">Twitch</td>
+                            <td data-label="标准捕获">在聊天中呈现的奖励、赠送订阅通知、观众更新，以及一些仅在页面中出现的通知。</td>
+                            <td data-label="WebSocket / API 捕获">在账号和权限范围允许时，EventSub 会增加关注、订阅、续订、cheers、raids、奖励，以及受支持的计数/状态事件。</td>
+                        </tr>
+                        <tr>
+                            <td data-label="平台">Kick</td>
+                            <td data-label="标准捕获">聊天，以及礼物、奖励和观众更新的轻量页面标记。</td>
+                            <td data-label="WebSocket / API 捕获">身份验证后可接收官方的关注、订阅、礼物、奖励兑换、KICKs、管理和直播状态事件。</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>对于由事件触发的提醒，WebSocket 模式通常是合适的选择。当仅需要页面中显示的聊天，或无法进行身份验证时，标准捕获仍然有用。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">启用所需的提醒类型</h2>
+                <p>从 Social Stream 设置中打开 Multi Alerts 选项。关注、订阅、打赏、Bits 和 raid 都有各自的启用、样式、声音和外观控件。拍卖和 Hype Train 提醒需要通过专用选项主动启用。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/multi-alert-types-options.png" alt="Social Stream Ninja Multi Alerts 选项，显示关注、订阅、打赏、Bits、raid、拍卖获胜和 Hype Train 各自独立的提醒类型控件" class="guide-image">
+                    <figcaption>分别配置每个提醒类别。启用提醒不会授予捕获该事件所需的平台权限。</figcaption>
+                </figure>
+                <ul class="guide-list">
+                    <li>使用 <strong>提醒排队</strong> ，适用于可能同时到达多个事件的情况。</li>
+                    <li>事件在停靠面板正常，但在 Multi Alerts 中不正常时，请检查来源过滤器。</li>
+                    <li>缺少小额打赏或 cheers 时，请检查最低现金/打赏过滤器。</li>
+                    <li>如果自定义提醒音频被自动播放规则阻止，请先与浏览器页面互动一次。</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">开播前预览</h2>
+                <p>使用预览控件验证所选类别、文本、金额、媒体、声音、动画和队列行为。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/multi-alerts-donation-preview.png" alt="Multi Alerts 打赏预览，显示带样式的打赏卡片和预览控件" class="guide-image">
+                    <figcaption>打赏预览用于检查叠加层。接下来，触发或观察一个真实平台事件，以验证来源连接。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-7">各工具使用哪些字段</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>工具</th><th>兼容规则</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="工具">Multi Alerts</td><td data-label="兼容规则">将规范的 <code>event</code> 名称、别名、 <code>hasDonation</code>、会员字段，以及所选的 <code>meta</code> 值归入共享类别。</td></tr>
+                        <tr><td data-label="工具">Event Flow</td><td data-label="兼容规则">精确匹配 <code>type</code>, <code>event</code>，以及来源发出的字段。在依赖真实事件前，请先使用“测试消息”工具。</td></tr>
+                        <tr><td data-label="工具">TTS</td><td data-label="兼容规则">默认会跳过事件条目，除非它们属于打赏类。添加 <code>&amp;readevents</code> ，让非打赏事件消息也能被朗读，然后应用常规 TTS 过滤器。</td></tr>
+                        <tr><td data-label="工具">打赏罐 / 目标进度条</td><td data-label="兼容规则">普通模式使用打赏金额。Hype 模式还可按会员、续订和赠送会员字段计分。</td></tr>
+                        <tr><td data-label="工具">自定义叠加层 / API 使用方</td><td data-label="兼容规则">使用事件参考中的规范载荷字段。仅为向后兼容而接受文档中记录的别名。</td></tr>
+                    </tbody>
+                </table>
+                <p>使用 <a href="test-message-guide.html">创建测试消息</a> ，验证预期的事件以及 <a href="event-flow-recipes.html">Event Flow 实用示例</a> ，查看可用的自动化示例。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-8">平台设置说明</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>平台</th><th>首先检查</th><th>指南</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="平台">Twitch</td><td data-label="首先检查">使用主播或有权限的版主账号登录，并保持 EventSub 连接。</td><td data-label="指南"><a href="twitch-eventsub-setup.html">Twitch EventSub 设置</a></td></tr>
+                        <tr><td data-label="平台">Kick</td><td data-label="首先检查">有针对性地选择来源模式，并在所需官方事件要求身份验证时完成验证；不要预期会收到官方 raid 事件。</td><td data-label="指南"><a href="kick-setup-authentication.html">Kick 设置与身份验证</a></td></tr>
+                        <tr><td data-label="平台">其他来源</td><td data-label="首先检查">确认所选来源实际会发出该事件类型，而不只是聊天消息。</td><td data-label="指南"><a href="supported-sites.html">支持的网站</a></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-9">真实提醒缺失时</h2>
+                <ol class="guide-steps">
+                    <li>确认在来源自身的日志、停靠面板或 API 输出中收到了该事件。</li>
+                    <li>确认来源和 Multi Alerts 页面使用相同的会话 ID 和密码。</li>
+                    <li>确认该类别已启用，且未被来源或频道过滤器排除。</li>
+                    <li>检查打赏和 Bits 的最低金额过滤器。</li>
+                    <li>对于 Twitch 或 Kick，如果聊天正常但受保护的事件不正常，请重新登录。</li>
+                    <li>让来源窗口保持活跃，足够长时间以观察到真实事件；仅有预览不算平台的端到端测试。</li>
+                </ol>
+                <p>如果涉及多个设备或连接模式，请查看 <a href="sessions-passwords-relay-modes.html">会话、密码与中继模式</a>.</p>
+            </div>
+
+            <template data-copy-markdown-extra>
+## 经核实的维护者说明
+
+- Multi Alerts 目前会将关注、订阅、打赏/礼物、Bits、突袭、拍卖和 Hype Train 的别名标准化为七个提醒类别。拍卖和 Hype Train 需要主动启用。
+- 当前分类器接受规范名称和旧版别名。包含 `hasDonation` 而没有 event 的载荷是有效的：带有 bits/cheer 措辞时会归入 Bits，其他金额则归入打赏。
+- `viewer_update`、`follower_update`、`subscriber_update` 和广告时段状态等计数/状态事件特意不生成常规提醒卡片。
+- Kick 当前的官方订阅事件集包含聊天、关注、新订阅/续订/赠送订阅、奖励兑换、KICKs 礼物、封禁和直播状态。Kick 目前没有官方的 raid/host 订阅；raid 处理仅用于兼容。
+- TTS 默认跳过带有 `event` 值的非打赏条目。`readevents` 可关闭此跳过行为，但常规的来源/会员/打赏过滤器仍然生效。
+- 弹出菜单预览仅验证叠加层处理。平台捕获仍需要活动来源、匹配的会话、正确的角色/权限范围，以及真实事件。
+            </template>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja。GPLv3.0 许可证。</p></div></div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

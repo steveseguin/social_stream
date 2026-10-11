@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/ai-cohost-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/ai-cohost-guide.html">
+    <meta property="og:title" content="AI 共同主持指南 — Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja AI 共同主持、停駐面板控制與 AI 舞台疊加畫面的設定和工作流程指南。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/ai-cohost-guide.html">
+    <meta name="twitter:title" content="AI 共同主持指南 — Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja AI 共同主持、停駐面板控制與 AI 舞台疊加畫面的設定和工作流程指南。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 共同主持指南 — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja AI 共同主持、停駐面板控制與 AI 舞台疊加畫面的設定和工作流程指南。">
+    <style>
+        .cohost-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.4rem; margin: 1.4rem 0; }
+        .cohost-picker > div { padding: 1.4rem 1.6rem; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .cohost-picker strong { display: block; margin-bottom: .4rem; font-size: 1.65rem; }
+        .cohost-picker p { margin: 0; font-size: 1.45rem; line-height: 1.5; }
+        .cohost-picker .example { margin-top: .8rem; }
+        .cohost-flow {
+            margin: 18px 0;
+            padding: 18px;
+            border: 1px solid var(--border-color);
+            background: rgba(0, 166, 255, 0.08);
+        }
+        .cohost-code {
+            display: block;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            background: #111827;
+            color: #e5e7eb;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 1.3rem;
+            line-height: 1.45;
+        }
+        @media (max-width: 760px) {
+            .cohost-picker { grid-template-columns: minmax(0, 1fr); }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/ai-cohost-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{", and your words should appear under":"，你的話應顯示在",", browser audio permission, and that OBS captures the co-host page audio. Don't use":"、瀏覽器音訊權限，以及 OBS 是否正在擷取共同主持人頁面的音訊。不要使用",", if your setup supports it. Keep the speech bubble visible too, so viewers who can't hear can still follow along.":"（需環境支援）。同時保留對話泡泡，讓聽不到聲音的觀眾也能跟上內容。",", open":"，開啟",", paste your OpenAI project API key, and click":"，貼上 OpenAI 專案 API 金鑰，然後點擊",", so payloads stay predictable for overlays and automations.":"，以保持覆蓋層和自動化所接收的資料格式穩定。",", so you'll need an OpenAI API key. Other options are":"，因此需要 OpenAI API 金鑰。其他選項包括",", the volume slider, the output picker, and":"、音量滑桿、輸出選擇器，以及",". Add":"。新增",". Approval happens in the Dock, off-stream.":"。核准在不向觀眾顯示的 Dock 中進行。",". Ask “What is chat saying?” any time.":"。隨時可以問：「聊天室在說什麼？」",". If you pick":"。如果選擇",". It should say":"。應顯示",". It talks back and can discuss your chat when you ask.":"。它會語音回覆，也能在你詢問時討論聊天內容。","A draft.":"草稿。","A stream control tool is missing":"缺少某個直播控制工具","AI Co-host":"AI 共同主持人","AI Co-host Guide - Social Stream Ninja":"AI 共同主持指南 — Social Stream Ninja","AI drafts are never spoken until you click":"只有點擊以下按鈕後，AI 草稿才會被朗讀：","AI stage overlay":"AI 舞台覆蓋層","Add":"新增","Add the stage overlay to OBS:":"將舞台覆蓋層加入 OBS：","Add these to the end of your":"將這些參數加入以下連結末尾：","Add to the link":"加入連結","Allow the microphone, check your computer's default mic, check internet, and that Chrome speech recognition is available.":"允許麥克風存取，並檢查電腦預設麥克風、網路，以及 Chrome 語音辨識是否可用。","An AI sidekick you can talk to on stream. It can read your chat too.":"可以在直播中與你交談的 AI 搭檔，也能讀取聊天內容。","Answer":"回答","Answer / Light Roast:":"回答／輕度調侃：","Answer or Light Roast is greyed out":"Answer 或 Light Roast 呈灰色","Answer, Light Roast, or SSN Configured LLM times out":"Answer、Light Roast 或 SSN Configured LLM 逾時","Answers every message out loud.":"語音回覆每一則訊息。","Answers questions and mentions out loud by itself.":"自動語音回答問題和提及。","Ask it out loud, like “switch to BRB”, “feature that last message”, or “clear the featured chat”.":"直接說出請求，例如「切換到 BRB」、「展示最後一則訊息」或「清除精選聊天」。","Audio Response":"音訊回覆","Balanced: about 4 seconds. Patient: about 8.":"Balanced 約等待 4 秒，Patient 約等待 8 秒。","Both show an avatar and speech bubble in OBS using the":"兩種方式都可透過以下覆蓋層在 OBS 中顯示頭像和對話泡泡：","Button":"按鈕","Change the name shown":"更改顯示名稱","Chat Bots and AI services → Chat Bot - Private Interface → Enable private chat bot option":"Chat Bots and AI services → Chat Bot - Private Interface → Enable private chat bot option","Chat Bots and AI services → Configure LLM Service Provider":"Chat Bots and AI services → Configure LLM Service Provider","ChatGPT API":"ChatGPT API","Check":"檢查","Check Social Stream is on, the session matches, Private Chat Bot is on, and your AI provider is reachable.":"檢查 Social Stream 已啟用、工作階段一致、Private Chat Bot 已開啟，而且 AI 服務供應商可存取。","Check the mic isn't muted, and let the first download finish.":"確認麥克風沒有靜音，並等待首次下載完成。","Chrome (extension link)":"Chrome（擴充功能連結）","Chrome's speech recognition. May need internet.":"Chrome 的語音辨識，可能需要網路。","Click":"點選","Co-host":"共同主持","Co-host Stream Controls":"共同主持直播控制","Co-host output":"共同主持輸出","Co-host page doesn't see chat":"共同主持人頁面看不到聊天","Commands & API":"指令與 API","Connect to my Social Stream (required)":"連線到我的 Social Stream（必要）","Context only":"僅上下文","Context only - answer when asked (default)":"僅作為上下文，詢問時才回答（預設）","Copies the draft without sending it.":"複製草稿，不傳送。","Copy":"複製","Diagnostics":"診斷","Dock buttons":"Dock 按鈕","Dock buttons in 5 steps":"五步使用 Dock 按鈕","Download":"下載","Drafts a short answer for you to approve.":"產生簡短回答草稿供你核准。","Drafts a short, playful, PG roast for you to approve.":"產生簡短、輕鬆、適合闔家觀看的調侃草稿供你核准。","Extra command details go inside":"額外命令詳細資訊放在","Fast: waits about 2 seconds after you stop. May cut in on a pause.":"Fast：說完後約等待 2 秒，可能會在停頓時插話。","Faster and cheaper":"更快、更便宜","Features":"功能","Fix problems":"解決問題","For Dock text workflows, the overlay is the picture and optional TTS voice. For the OpenAI voice, capture":"使用 Dock 文字方式時，覆蓋層負責圖像和選用的 TTS 語音。使用 OpenAI 語音時，請擷取","For OBS, type the exact scene names it may switch to, separated by commas. Keep":"對於 OBS，輸入允許切換的確切場景名稱，用逗號分隔。保持","Force overlay speech even when the co-host page is talking (adds a second voice)":"共同主持人頁面正在說話時也強制覆蓋層朗讀（會疊加另一道聲音）","Free AI for testing":"用於測試的免費 AI","Free trial AI stopped answering":"免費試用 AI 停止回答","Full quality (costs more)":"完整品質（費用更高）","Guides":"指南","Have the overlay speak (Dock workflow)":"讓覆蓋層說話（Dock 方式）","Heard":"辨識內容","High or Extra high (costs more)":"High 或 Extra high（費用更高）","Hire":"聘用","Home":"首頁","How it hears you":"如何聽到你說話","How it uses chat":"如何使用聊天內容","How it uses your chat":"如何使用你的聊天內容","How the pages talk (for developers)":"頁面如何通訊（開發者說明）","I want to":"我想要","I want to…":"我想要…","If you talk over it, it stops and drops the unplayed audio.":"你插話時，它會停止並捨棄尚未播放的音訊。","In OBS, capture the audio from the co-host page or app. The AI's voice only plays there.":"在 OBS 中擷取共同主持人頁面或應用程式的音訊。AI 語音只在那裡播放。","In the Social Stream popup, pick":"在 Social Stream 彈出選單中選擇","In the Social Stream popup, turn on only the tools you want.":"在 Social Stream 彈出選單中，只啟用需要的工具。","Inspiration":"靈感","It keeps up to 20 recent chat messages for up to 90 seconds, including donations, memberships, moderator, event, and channel info. Then it forgets them.":"它最多保留 20 則最近的聊天訊息，最長 90 秒，包括捐款、會員、管理員、事件和頻道資訊，之後會忘記這些內容。","It knows chat but stays quiet":"知道聊天內容但保持安靜","It may be off or rate-limited. Use your own token, Ollama, or Custom API.":"服務可能已關閉或受到頻率限制。請使用自己的權杖、Ollama 或 Custom API。","It only appears once the Dock sees the stage overlay on the same session.":"只有 Dock 偵測到同一工作階段中的舞台覆蓋層後才會出現。","It reconnects by itself if the connection drops, and starts a fresh session before OpenAI's 60-minute limit. Your instructions and speed settings carry over, but it forgets what was said aloud.":"斷線後會自動重新連線，並在達到 OpenAI 的 60 分鐘限制前啟動新工作階段。指令和速度設定會保留，但之前說過的內容會被遺忘。","It's billed to your OpenAI API account. It's separate from chatgpt.com and doesn't join a ChatGPT website or app conversation.":"費用記入你的 OpenAI API 帳戶。它與 chatgpt.com 分開，不會加入 ChatGPT 網站或應用程式中的對話。","It's free while the trial lasts, and may be turned off or rate-limited. For long-term use, add your own token or use a local AI.":"試用期間免費，但可能被關閉或限制用量。長期使用請加入自己的權杖或使用本機 AI。","Leave":"將","Leave it running while it retries. Diagnostics shows what failed.":"重試期間保持執行。Diagnostics 會顯示失敗原因。","Leave the endpoint, token, and model blank.":"將端點、權杖和模型留白。","Let it control your stream":"讓它控制直播","Let it see your screen or camera?":"要讓它看到螢幕或攝影機嗎？","Light Roast":"輕度調侃","Link options":"連結選項","Listening (Desktop Whisper)":"正在聆聽（桌面 Whisper）","Listening (OpenAI WebRTC)":"正在聆聽（OpenAI WebRTC）","Live Chat":"即時聊天","Live Chat setting":"Live Chat 設定","Local Gemma won't download":"本機 Gemma 無法下載","Main navigation":"主導覽","Make it bigger or smaller":"放大或縮小","Make sure the overlay label matches the Dock's target. The default is":"確保覆蓋層標籤與 Dock 的目標一致。預設是","Message format and design notes":"訊息格式和設計說明","Mini":"Mini","Minimal or Low":"Minimal 或 Low","Model":"模型","More about OpenAI Realtime":"更多 OpenAI Realtime 資訊","Move it":"移動位置","Mute and volume buttons":"靜音和音量按鈕","Mute co-host voice":"將共同主持語音靜音","Mute microphone":"將麥克風靜音","Mute shared system audio":"將共享的系統音訊靜音","Needs":"需要","No Co-host menu in the Dock":"Dock 中沒有 Co-host 選單","No Co-host menu?":"沒有 Co-host 選單？","No Video":"無視訊","None of these post replies into YouTube, Twitch, or Kick chat.":"這些方式都不會在 YouTube、Twitch 或 Kick 聊天中傳送回覆。","Nothing shows in OBS":"OBS 中沒有顯示","On":"開啟","On this page":"本頁內容","Only you can trigger tools.":"只有你可以觸發工具。","Open":"開啟","Open navigation menu":"開啟導覽選單","Open the":"開啟","Open the Dock:":"開啟 Dock：","Open the co-host page with the same":"開啟共同主持人頁面，並使用相同的","OpenAI Realtime":"OpenAI Realtime","OpenAI keeps disconnecting":"OpenAI 不斷斷線","Optional. Video starts on":"選用。影片預設從以下狀態開始：","Other browsers":"其他瀏覽器","Overlay Gallery":"疊加畫面圖庫","Overlay link options":"疊加畫面連結選項","Pick a virtual cable under":"在以下選項中選擇虛擬音訊線：","Pick the microphone you talk into. Keep":"選擇你說話用的麥克風。保持","Point its asset host at your own copy of the Gemma files.":"將資源主機指向你自己的 Gemma 檔案副本。","Press":"新聞","Privacy:":"隱私權：","Private Chat Bot on, plus an AI provider.":"開啟 Private Chat Bot，並設定 AI 服務供應商。","Problem":"問題","Read on Co-host":"由共同主持朗讀","Read on Co-host:":"由共同主持朗讀：","Reasoning changes apply even while connected.":"連線期間也可更改推理設定。","Reasoning effort":"推理強度","Remembers recent messages and stays quiet until you ask about chat.":"記住最近的訊息，直到你問起聊天內容才開口。","Remove":"移除","Replies are capped at 512 output tokens.":"回覆最多輸出 512 個 token。","Replies are slow":"回覆緩慢","Right-click a Dock message and pick":"右鍵點擊 Dock 訊息並選擇","Right-click a chat message in the Dock. The AI avatar reads it, or drafts an answer or light roast that you approve first.":"右鍵點擊 Dock 中的聊天訊息。AI 頭像可以朗讀訊息，也可以產生回答或輕度調侃草稿，由你先核准。","SSN Desktop app":"SSN 桌面應用程式","SSN Hosted Trial LLM":"SSN 託管試用 LLM","SSN Hosted Trial LLM (experimental)":"SSN 託管試用 LLM（實驗性）","Screen Share":"螢幕分享","Select":"選擇","Sends your approved draft to the overlay.":"把核准的草稿傳送到覆蓋層。","Set it up":"進行設定","Set the overlay's label":"設定覆蓋層標籤","Set up an AI provider in the popup. For a quick test, use":"在彈出選單中設定 AI 服務供應商。快速測試可使用","Setting":"設定","Setup and workflow guide for the Social Stream Ninja AI co-host, dock controls, and AI stage overlay.":"Social Stream Ninja AI 共同主持、停駐面板控制與 AI 舞台疊加畫面的設定和工作流程指南。","Several overlays open":"開啟了多個覆蓋層","Show connection status":"顯示連線狀態","Skip to main content":"跳至主要內容","Smarter, slower":"更聰明，但更慢","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Speak":"朗讀","Speak a reply to every message":"語音回覆每則訊息","Speak replies to questions and mentions":"語音回答問題和提及","Speed and cost":"速度與費用","Speed, quality, and cost (OpenAI)":"速度、品質與費用（OpenAI）","Stage overlay connected. No AI needed.":"需要連線舞台覆蓋層。不需要 AI。","Start Co-host":"啟動共同主持","Stop speaking":"停止朗讀","Stream controls":"直播控制","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","Talk to the AI out loud on":"在以下頁面與 AI 語音交談：","Test overlay":"測試疊加畫面","Test selected chat bot":"測試所選聊天機器人","Text shows but no voice (OpenAI)":"顯示文字但沒有聲音（OpenAI）","That's normal in Context only. Ask it what chat is saying, or":"在 Context only 模式下這是正常的。問它聊天室在說什麼，或者","The Dock and overlay use the normal Social Stream session bridge. Messages are sent as":"Dock 和覆蓋層使用一般 Social Stream 工作階段橋接。訊息以下列形式傳送：","The avatar reads the message.":"頭像會朗讀訊息。","The co-host can play Spotify, switch OBS scenes, or feature a chat message. All are off by default. OpenAI Realtime supports all three. SSN Configured LLM supports Spotify only. Other providers don't support these yet.":"共同主持人可播放 Spotify、切換 OBS 場景或展示聊天訊息。這些功能預設都關閉。OpenAI Realtime 支援全部三項，SSN Configured LLM 只支援 Spotify，其他服務供應商暫不支援。","The co-host page: microphone, AI provider, instructions, and live chat status.":"共同主持人頁面：麥克風、AI 服務供應商、指令和即時聊天狀態。","The right-click menu doesn't work from the keyboard yet. Keyboard users can type or talk on":"右鍵選單目前不支援鍵盤操作。鍵盤使用者可在以下頁面輸入或說話：","The stage overlay isn't open on the same session. The Primary chat bot overlay toggle doesn't affect this.":"舞台覆蓋層沒有在同一工作階段中開啟。Primary chat bot overlay 開關不會影響此功能。","This uses":"它使用","To check it can hear you, open":"要確認它能聽到你，請開啟","Try Mini, Low reasoning, and Fast turn-taking. Compare the Latency line in Diagnostics.":"試試 Mini、Low 推理和 Fast 輪流發言。比較 Diagnostics 中的 Latency 一行。","Try this":"試試這個","Turn it on in both the popup and Co-host Stream Controls. OBS needs at least one scene name.":"在彈出選單和 Co-host Stream Controls 中都啟用。OBS 至少需要一個場景名稱。","Turn on":"開啟","Turn on the Private Chat Bot option, and check Social Stream is running.":"開啟 Private Chat Bot 選項，並確認 Social Stream 正在執行。","Turn-taking speed":"輪流發言速度","Two voices at once":"同時出現兩道聲音","Two ways to use it":"兩種使用方式","Use my own avatar":"使用自己的頭像","Use the same":"使用相同的","Viewers can't. It runs one tool per request, and can only pick scenes on your list. Featuring a message needs the Dock open. A “done” reply means the request was sent, not that OBS or the overlay finished it.":"觀眾無法觸發。每個請求執行一個工具，而且只能選擇清單中的場景。展示訊息需要開啟 Dock。回覆「完成」表示請求已傳送，不代表 OBS 或覆蓋層已執行完畢。","Voice co-host":"語音共同主持人","Voice co-host in 8 steps":"八步使用語音共同主持人","Voice co-host setup":"語音共同主持人設定","Voice may not work. Typing, live chat, camera or screen, and AI replies can still work.":"語音可能無法使用，但輸入文字、即時聊天、攝影機或螢幕以及 AI 回覆仍可能正常運作。","Voice without OpenAI":"不用 OpenAI 的語音方案","Want its own audio track in OBS?":"想在 OBS 中使用獨立音軌？","What it does":"功能","When the co-host page is already playing the voice, the overlay skips its own speech so you don't hear it twice.":"共同主持人頁面已經播放語音時，覆蓋層會略過自身朗讀，避免重複聲音。","Where you run it":"執行位置","Whisper, on your own computer. First use downloads about 42 MB. After that it works offline.":"在自己電腦上執行的 Whisper。首次使用下載約 42 MB，之後可離線執行。","Without OpenAI":"不用 OpenAI","You don't need to turn on the Private Chat Bot option for this.":"不需要為此開啟 Private Chat Bot 選項。","Your standard key stays in Social Stream. The co-host page only gets a short-lived pass.":"一般金鑰保留在 Social Stream 中。共同主持人頁面只獲得短期憑證。","and turn on the same tools.":"並啟用相同的工具。","as Social Stream and it can see your live chat. Choose how under":"，與 Social Stream 一致後即可讀取即時聊天。在以下選項中選擇方式：","as the popup. Set Live Chat to anything but Off.":"，與彈出選單一致。Live Chat 設為 Off 以外的選項。","audio separately. The overlay doesn't replay that WebRTC audio.":"的音訊需單獨擷取。覆蓋層不會重播該 WebRTC 音訊。","below":"（見下方）","cohost.html control page showing media devices, AI provider settings, system instructions, and live chat status":"cohost.html 控制頁面，顯示媒體裝置、AI 服務設定、系統指令和即時聊天狀態","connected to OBS, or use an OBS Browser Source with Full Permissions.":"並連線到 OBS，或使用具有 Full Permissions 的 OBS Browser Source。","control what you hear.":"控制你聽到的聲音。","for this.":"來執行此操作。","from the overlay link.":"從覆蓋層連結中移除。","if it should speak.":"，用於啟用朗讀。","instead.":"作為替代。","is separate, and only shows for providers that can use your screen.":"是獨立設定，只會在支援讀取螢幕的服務供應商中顯示。","link from the popup. Keep that link private.":"連結。請勿公開該連結。","link.":"連結。","on":"在","on the co-host page and check the line appears.":"並檢查對應資訊是否出現。","only feeds chat to the AI with OpenAI Realtime. Other providers watch the chat but don't pass it to the AI.":"只在使用 OpenAI Realtime 時把聊天傳給 AI。其他服務供應商會查看聊天，但不會傳給 AI。","or":"或","or a camera, OpenAI gets one picture each time you speak or type to it, not a live video. This can add cost and delay.":"或攝影機時，每次說話或輸入內容都會向 OpenAI 傳送一張圖片，而非即時影片。這可能增加費用和延遲。","payloads and targeted by label.":"訊息資料，並依標籤指定目標。","pick another mode":"選擇其他模式","selected.":"為選取狀態。","shows how long replies take to start. Network and OpenAI load can still vary.":"顯示回覆開始前的等待時間。網路和 OpenAI 負載仍可能變化。","shows total token use and how fast replies start.":"顯示總 token 用量和回覆開始速度。","stays empty (Chrome)":"一直空白（Chrome）","stays empty (Desktop)":"一直空白（桌面應用程式）","stops sending your voice to the co-host.":"會停止向共同主持人傳送你的語音。","the Dock asks the private chat bot in the background, shows the draft in the Dock, and only sends it to the overlay after you click Speak.":"：Dock 在背景請求私人聊天機器人，在 Dock 中顯示草稿，而且只有點擊 Speak 後才傳送到覆蓋層。","the Dock sends the chosen message straight to":"：Dock 將選取的訊息直接傳送到","to OBS as a Browser Source for the avatar and speech bubble.":"作為 OBS Browser Source，以顯示頭像和對話泡泡。","turns that off.":"會關閉此功能。","your microphone, any screen or camera you pick, and the chat messages you share go to OpenAI. Viewers can't use chat to make the co-host run tools. The co-host link expires after 12 hours, only works for your session, and is removed from the address bar once the page loads.":"麥克風、選取的螢幕或攝影機，以及分享的聊天訊息都會傳送到 OpenAI。觀眾無法透過聊天讓共同主持人執行工具。共同主持人連結 12 小時後到期，僅用於你的工作階段，頁面載入後會從網址列中移除。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/ai-cohost-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<a class="skip-link" href="#main-content">跳至主要內容</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/ai-cohost-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/ai-cohost-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/ai-cohost-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/ai-cohost-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/ai-cohost-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/ai-cohost-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/ai-cohost-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/ai-cohost-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="ai-cohost-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/ai-cohost-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/ai-cohost-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/ai-cohost-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/ai-cohost-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/ai-cohost-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/ai-cohost-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/ai-cohost-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/ai-cohost-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>AI 共同主持人</h1>
+            <p>可以在直播中與你交談的 AI 搭檔，也能讀取聊天內容。</p>
+        </div>
+    </section>
+
+    <main class="guide-section" id="main-content">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="本頁內容">
+                <a href="#two-ways">兩種使用方式</a>
+                <a href="#voice-setup">語音共同主持人設定</a>
+                <a href="#chat-modes">如何使用聊天內容</a>
+                <a href="#other-voice">不用 OpenAI</a>
+                <a href="#dock-setup">Dock 按鈕</a>
+                <a href="#speed">速度與費用</a>
+                <a href="#stream-controls">直播控制</a>
+                <a href="#problems">解決問題</a>
+                <a href="#link-options">連結選項</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="two-ways">兩種使用方式</h2>
+                <div class="cohost-picker">
+                    <div><strong>語音共同主持人</strong><p>在以下頁面與 AI 語音交談： <code>cohost.html</code>。它會語音回覆，也能在你詢問時討論聊天內容。</p><p class="example"><a href="#voice-setup">進行設定</a></p></div>
+                    <div><strong>Dock 按鈕</strong><p>右鍵點擊 Dock 中的聊天訊息。AI 頭像可以朗讀訊息，也可以產生回答或輕度調侃草稿，由你先核准。</p><p class="example"><a href="#dock-setup">進行設定</a></p></div>
+                </div>
+                <p>兩種方式都可透過以下覆蓋層在 OBS 中顯示頭像和對話泡泡： <strong>AI 舞台覆蓋層</strong>, <code>cohost-overlay.html</code>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-setup">八步使用語音共同主持人</h2>
+                <p>它使用 <strong>OpenAI Realtime</strong>，因此需要 OpenAI API 金鑰。其他選項包括 <a href="#other-voice">（見下方）</a>.</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>在 Social Stream 彈出選單中選擇 <strong>ChatGPT API</strong>，貼上 OpenAI 專案 API 金鑰，然後點擊 <strong>測試所選聊天機器人</strong>.</li>
+                        <li>開啟 <code>cohost.html</code> 連結。請勿公開該連結。</li>
+                        <li>選擇 <strong>OpenAI Realtime</strong>.</li>
+                        <li>選擇你說話用的麥克風。保持 <strong>音訊回覆</strong> 為選取狀態。</li>
+                        <li>新聞 <strong>啟動共同主持</strong>.</li>
+                        <li>將 <strong>即時聊天</strong> 在 <strong>僅上下文</strong>。隨時可以問：「聊天室在說什麼？」</li>
+                        <li>在 OBS 中擷取共同主持人頁面或應用程式的音訊。AI 語音只在那裡播放。</li>
+                        <li>新增 <code>cohost-overlay.html?session=YOUR_SESSION_ID</code> 作為 OBS Browser Source，以顯示頭像和對話泡泡。</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/guide-ai-cohost-controls.png" alt="cohost.html 控制頁面，顯示媒體裝置、AI 服務設定、系統指令和即時聊天狀態" class="guide-image">
+                        <figcaption>共同主持人頁面：麥克風、AI 服務供應商、指令和即時聊天狀態。</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>想在 OBS 中使用獨立音軌？</strong> 在以下選項中選擇虛擬音訊線： <strong>共同主持輸出</strong>（需環境支援）。同時保留對話泡泡，讓聽不到聲音的觀眾也能跟上內容。</div>
+                <div class="guide-note"><strong>要讓它看到螢幕或攝影機嗎？</strong> 選用。影片預設從以下狀態開始： <strong>無視訊</strong>。如果選擇 <strong>螢幕分享</strong> 或攝影機時，每次說話或輸入內容都會向 OpenAI 傳送一張圖片，而非即時影片。這可能增加費用和延遲。</div>
+                <div class="warning-note"><strong>隱私權：</strong> 麥克風、選取的螢幕或攝影機，以及分享的聊天訊息都會傳送到 OpenAI。觀眾無法透過聊天讓共同主持人執行工具。共同主持人連結 12 小時後到期，僅用於你的工作階段，頁面載入後會從網址列中移除。</div>
+                <details class="guide-extra">
+                    <summary>更多 OpenAI Realtime 資訊</summary>
+                    <ul>
+                        <li>費用記入你的 OpenAI API 帳戶。它與 chatgpt.com 分開，不會加入 ChatGPT 網站或應用程式中的對話。</li>
+                        <li>一般金鑰保留在 Social Stream 中。共同主持人頁面只獲得短期憑證。</li>
+                        <li>不需要為此開啟 Private Chat Bot 選項。</li>
+                        <li>回覆最多輸出 512 個 token。 <strong>診斷</strong> 顯示總 token 用量和回覆開始速度。</li>
+                        <li>你插話時，它會停止並捨棄尚未播放的音訊。</li>
+                        <li>它最多保留 20 則最近的聊天訊息，最長 90 秒，包括捐款、會員、管理員、事件和頻道資訊，之後會忘記這些內容。</li>
+                        <li>斷線後會自動重新連線，並在達到 OpenAI 的 60 分鐘限制前啟動新工作階段。指令和速度設定會保留，但之前說過的內容會被遺忘。</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="chat-modes">如何使用你的聊天內容</h2>
+                <p>開啟共同主持人頁面，並使用相同的 <code>session</code> ，與 Social Stream 一致後即可讀取即時聊天。在以下選項中選擇方式： <strong>即時聊天</strong>.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Live Chat 設定</th><th>功能</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Live Chat 設定">僅作為上下文，詢問時才回答（預設）</td><td data-label="功能">記住最近的訊息，直到你問起聊天內容才開口。</td></tr>
+                        <tr><td data-label="Live Chat 設定">語音回答問題和提及</td><td data-label="功能">自動語音回答問題和提及。</td></tr>
+                        <tr><td data-label="Live Chat 設定">語音回覆每則訊息</td><td data-label="功能">語音回覆每一則訊息。</td></tr>
+                    </tbody>
+                </table>
+                <p>這些方式都不會在 YouTube、Twitch 或 Kick 聊天中傳送回覆。 <strong>僅上下文</strong> 只在使用 OpenAI Realtime 時把聊天傳給 AI。其他服務供應商會查看聊天，但不會傳給 AI。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="other-voice">不用 OpenAI 的語音方案</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>執行位置</th><th>如何聽到你說話</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="執行位置">SSN 桌面應用程式</td><td data-label="如何聽到你說話">在自己電腦上執行的 Whisper。首次使用下載約 42 MB，之後可離線執行。</td></tr>
+                        <tr><td data-label="執行位置">Chrome（擴充功能連結）</td><td data-label="如何聽到你說話">Chrome 的語音辨識，可能需要網路。</td></tr>
+                        <tr><td data-label="執行位置">其他瀏覽器</td><td data-label="如何聽到你說話">語音可能無法使用，但輸入文字、即時聊天、攝影機或螢幕以及 AI 回覆仍可能正常運作。</td></tr>
+                    </tbody>
+                </table>
+                <p>要確認它能聽到你，請開啟 <strong>診斷</strong>。應顯示 <strong>正在聆聽（桌面 Whisper）</strong> 或 <strong>正在聆聽（OpenAI WebRTC）</strong>，你的話應顯示在 <strong>辨識內容</strong>.</p>
+                <h3>用於測試的免費 AI</h3>
+                <ol class="guide-steps">
+                    <li>開啟 <strong>Chat Bots and AI services &rarr; Configure LLM Service Provider</strong>.</li>
+                    <li>選擇 <strong>SSN 託管試用 LLM（實驗性）</strong>.</li>
+                    <li>將端點、權杖和模型留白。</li>
+                </ol>
+                <p>試用期間免費，但可能被關閉或限制用量。長期使用請加入自己的權杖或使用本機 AI。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="dock-setup">五步使用 Dock 按鈕</h2>
+                <ol class="guide-steps">
+                    <li>開啟 Dock： <code>dock.html?session=YOUR_SESSION_ID</code>.</li>
+                    <li>將舞台覆蓋層加入 OBS： <code>cohost-overlay.html?session=YOUR_SESSION_ID</code>。新增 <code>&amp;tts</code> ，用於啟用朗讀。</li>
+                    <li>在彈出選單中設定 AI 服務供應商。快速測試可使用 <a href="#other-voice">SSN 託管試用 LLM</a>.</li>
+                    <li>開啟 <strong>Chat Bots and AI services &rarr; Chat Bot - Private Interface &rarr; Enable private chat bot option</strong>.</li>
+                    <li>右鍵點擊 Dock 訊息並選擇 <strong>共同主持</strong>.</li>
+                </ol>
+                <div class="guide-note"><strong>沒有 Co-host 選單？</strong> 只有 Dock 偵測到同一工作階段中的舞台覆蓋層後才會出現。</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>按鈕</th><th>功能</th><th>需要</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="按鈕">由共同主持朗讀</td><td data-label="功能">頭像會朗讀訊息。</td><td data-label="需要">需要連線舞台覆蓋層。不需要 AI。</td></tr>
+                        <tr><td data-label="按鈕">回答</td><td data-label="功能">產生簡短回答草稿供你核准。</td><td data-label="需要">開啟 Private Chat Bot，並設定 AI 服務供應商。</td></tr>
+                        <tr><td data-label="按鈕">輕度調侃</td><td data-label="功能">產生簡短、輕鬆、適合闔家觀看的調侃草稿供你核准。</td><td data-label="需要">開啟 Private Chat Bot，並設定 AI 服務供應商。</td></tr>
+                        <tr><td data-label="按鈕">朗讀</td><td data-label="功能">把核准的草稿傳送到覆蓋層。</td><td data-label="需要">草稿。</td></tr>
+                        <tr><td data-label="按鈕">複製</td><td data-label="功能">複製草稿，不傳送。</td><td data-label="需要">草稿。</td></tr>
+                    </tbody>
+                </table>
+                <p>只有點擊以下按鈕後，AI 草稿才會被朗讀： <strong>朗讀</strong>。核准在不向觀眾顯示的 Dock 中進行。</p>
+                <p>右鍵選單目前不支援鍵盤操作。鍵盤使用者可在以下頁面輸入或說話： <code>cohost.html</code> 作為替代。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="speed">速度、品質與費用（OpenAI）</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>設定</th><th>更快、更便宜</th><th>更聰明，但更慢</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="設定">模型</td><td data-label="更快、更便宜">Mini</td><td data-label="更聰明，但更慢">完整品質（費用更高）</td></tr>
+                        <tr><td data-label="設定">推理強度</td><td data-label="更快、更便宜">Minimal 或 Low</td><td data-label="更聰明，但更慢">High 或 Extra high（費用更高）</td></tr>
+                        <tr><td data-label="設定">輪流發言速度</td><td data-label="更快、更便宜">Fast：說完後約等待 2 秒，可能會在停頓時插話。</td><td data-label="更聰明，但更慢">Balanced 約等待 4 秒，Patient 約等待 8 秒。</td></tr>
+                    </tbody>
+                </table>
+                <p>連線期間也可更改推理設定。 <strong>診斷</strong> 顯示回覆開始前的等待時間。網路和 OpenAI 負載仍可能變化。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="stream-controls">讓它控制直播</h2>
+                <p>共同主持人可播放 Spotify、切換 OBS 場景或展示聊天訊息。這些功能預設都關閉。OpenAI Realtime 支援全部三項，SSN Configured LLM 只支援 Spotify，其他服務供應商暫不支援。</p>
+                <ol class="guide-steps">
+                    <li>在 Social Stream 彈出選單中，只啟用需要的工具。</li>
+                    <li>對於 OBS，輸入允許切換的確切場景名稱，用逗號分隔。保持 <code>actions.html</code> 並連線到 OBS，或使用具有 Full Permissions 的 OBS Browser Source。</li>
+                    <li>開啟 <code>cohost.html</code>，開啟 <strong>共同主持直播控制</strong> 並啟用相同的工具。</li>
+                    <li>直接說出請求，例如「切換到 BRB」、「展示最後一則訊息」或「清除精選聊天」。</li>
+                </ol>
+                <div class="warning-note"><strong>只有你可以觸發工具。</strong> 觀眾無法觸發。每個請求執行一個工具，而且只能選擇清單中的場景。展示訊息需要開啟 Dock。回覆「完成」表示請求已傳送，不代表 OBS 或覆蓋層已執行完畢。</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">解決問題</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>問題</th><th>試試這個</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="問題">Dock 中沒有 Co-host 選單</td><td data-label="試試這個">舞台覆蓋層沒有在同一工作階段中開啟。Primary chat bot overlay 開關不會影響此功能。</td></tr>
+                        <tr><td data-label="問題">Answer 或 Light Roast 呈灰色</td><td data-label="試試這個">開啟 Private Chat Bot 選項，並確認 Social Stream 正在執行。</td></tr>
+                        <tr><td data-label="問題">Answer、Light Roast 或 SSN Configured LLM 逾時</td><td data-label="試試這個">檢查 Social Stream 已啟用、工作階段一致、Private Chat Bot 已開啟，而且 AI 服務供應商可存取。</td></tr>
+                        <tr><td data-label="問題">共同主持人頁面看不到聊天</td><td data-label="試試這個">使用相同的 <code>session</code> ，與彈出選單一致。Live Chat 設為 Off 以外的選項。</td></tr>
+                        <tr><td data-label="問題">知道聊天內容但保持安靜</td><td data-label="試試這個">在 Context only 模式下這是正常的。問它聊天室在說什麼，或者 <a href="#chat-modes">選擇其他模式</a>.</td></tr>
+                        <tr><td data-label="問題">OBS 中沒有顯示</td><td data-label="試試這個">點選 <strong>測試疊加畫面</strong> 並檢查對應資訊是否出現。</td></tr>
+                        <tr><td data-label="問題">顯示文字但沒有聲音（OpenAI）</td><td data-label="試試這個">檢查 <strong>音訊回覆</strong>、瀏覽器音訊權限，以及 OBS 是否正在擷取共同主持人頁面的音訊。不要使用 <code>&amp;tts</code> 來執行此操作。</td></tr>
+                        <tr><td data-label="問題">同時出現兩道聲音</td><td data-label="試試這個">移除 <code>&amp;forcetts</code> 從覆蓋層連結中移除。</td></tr>
+                        <tr><td data-label="問題"><strong>辨識內容</strong> 一直空白（桌面應用程式）</td><td data-label="試試這個">確認麥克風沒有靜音，並等待首次下載完成。</td></tr>
+                        <tr><td data-label="問題"><strong>辨識內容</strong> 一直空白（Chrome）</td><td data-label="試試這個">允許麥克風存取，並檢查電腦預設麥克風、網路，以及 Chrome 語音辨識是否可用。</td></tr>
+                        <tr><td data-label="問題">回覆緩慢</td><td data-label="試試這個">試試 Mini、Low 推理和 Fast 輪流發言。比較 Diagnostics 中的 Latency 一行。</td></tr>
+                        <tr><td data-label="問題">OpenAI 不斷斷線</td><td data-label="試試這個">重試期間保持執行。Diagnostics 會顯示失敗原因。</td></tr>
+                        <tr><td data-label="問題">缺少某個直播控制工具</td><td data-label="試試這個">在彈出選單和 Co-host Stream Controls 中都啟用。OBS 至少需要一個場景名稱。</td></tr>
+                        <tr><td data-label="問題">免費試用 AI 停止回答</td><td data-label="試試這個">服務可能已關閉或受到頻率限制。請使用自己的權杖、Ollama 或 Custom API。</td></tr>
+                        <tr><td data-label="問題">本機 Gemma 無法下載</td><td data-label="試試這個">將資源主機指向你自己的 Gemma 檔案副本。</td></tr>
+                        <tr><td data-label="問題">開啟了多個覆蓋層</td><td data-label="試試這個">確保覆蓋層標籤與 Dock 的目標一致。預設是 <code>cohost-overlay</code>.</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra">
+                    <summary>靜音和音量按鈕</summary>
+                    <ul>
+                        <li><strong>將麥克風靜音</strong> 會停止向共同主持人傳送你的語音。</li>
+                        <li><strong>將共同主持語音靜音</strong>、音量滑桿、輸出選擇器，以及 <strong>停止朗讀</strong> 控制你聽到的聲音。</li>
+                        <li><strong>將共享的系統音訊靜音</strong> 是獨立設定，只會在支援讀取螢幕的服務供應商中顯示。</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="link-options">疊加畫面連結選項</h2>
+                <p>將這些參數加入以下連結末尾： <code>cohost-overlay.html</code> 連結。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>我想要…</th><th>加入連結</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="我想要">連線到我的 Social Stream（必要）</td><td data-label="加入連結"><code>?session=YOUR_SESSION_ID</code></td></tr>
+                        <tr><td data-label="我想要">讓覆蓋層說話（Dock 方式）</td><td data-label="加入連結"><code>&amp;tts</code> 或 <code>&amp;speak=1</code></td></tr>
+                        <tr><td data-label="我想要">共同主持人頁面正在說話時也強制覆蓋層朗讀（會疊加另一道聲音）</td><td data-label="加入連結"><code>&amp;forcetts</code></td></tr>
+                        <tr><td data-label="我想要">設定覆蓋層標籤</td><td data-label="加入連結"><code>&amp;label=cohost-overlay</code></td></tr>
+                        <tr><td data-label="我想要">更改顯示名稱</td><td data-label="加入連結"><code>&amp;name=NinjaBot</code></td></tr>
+                        <tr><td data-label="我想要">使用自己的頭像</td><td data-label="加入連結"><code>&amp;avatar=https://&hellip;</code></td></tr>
+                        <tr><td data-label="我想要">移動位置</td><td data-label="加入連結"><code>&amp;position=bottom-right</code></td></tr>
+                        <tr><td data-label="我想要">放大或縮小</td><td data-label="加入連結"><code>&amp;scale=1.2</code></td></tr>
+                        <tr><td data-label="我想要">顯示連線狀態</td><td data-label="加入連結"><code>&amp;status</code></td></tr>
+                    </tbody>
+                </table>
+                <p>共同主持人頁面已經播放語音時，覆蓋層會略過自身朗讀，避免重複聲音。 <code>&amp;forcetts</code> 會關閉此功能。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="how-it-works">頁面如何通訊（開發者說明）</h2>
+                <details class="guide-extra">
+                    <summary>訊息格式和設計說明</summary>
+                    <p>Dock 和覆蓋層使用一般 Social Stream 工作階段橋接。訊息以下列形式傳送： <code>overlayNinja</code> 訊息資料，並依標籤指定目標。</p>
+                    <div class="cohost-flow">
+                        <p><strong>由共同主持朗讀：</strong> ：Dock 將選取的訊息直接傳送到 <code>cohost-overlay.html</code>.</p>
+                        <p><strong>回答／輕度調侃：</strong> ：Dock 在背景請求私人聊天機器人，在 Dock 中顯示草稿，而且只有點擊 Speak 後才傳送到覆蓋層。</p>
+                    </div>
+                    <pre class="cohost-code">{
+  "action": "cohostOverlay",
+  "target": "cohost-overlay",
+  "meta": {
+    "command": "say",
+    "text": "The line the avatar should say",
+    "speak": true,
+    "emotion": "happy"
+  }
+}</pre>
+                    <ul>
+                        <li>使用 Dock 文字方式時，覆蓋層負責圖像和選用的 TTS 語音。使用 OpenAI 語音時，請擷取 <code>cohost.html</code> 的音訊需單獨擷取。覆蓋層不會重播該 WebRTC 音訊。</li>
+                        <li>額外命令詳細資訊放在 <code>meta</code>，以保持覆蓋層和自動化所接收的資料格式穩定。</li>
+                    </ul>
+                </details>
+            </div>
+        </div>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 授權條款。</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

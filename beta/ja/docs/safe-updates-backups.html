@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ja/docs/safe-updates-backups.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ja/docs/safe-updates-backups.html">
+    <meta property="og:title" content="安全な更新、バックアップ、設定の復元 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninjaを安全に更新し、拡張機能やデスクトップアプリの設定を書き出して、データ損失を悪化させずにセッションを復元します。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ja/docs/safe-updates-backups.html">
+    <meta name="twitter:title" content="安全な更新、バックアップ、設定の復元 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninjaを安全に更新し、拡張機能やデスクトップアプリの設定を書き出して、データ損失を悪化させずにセッションを復元します。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全な更新、バックアップ、設定の復元 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninjaを安全に更新し、拡張機能やデスクトップアプリの設定を書き出して、データ損失を悪化させずにセッションを復元します。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/safe-updates-backups.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{"## Verified maintainer context - Desktop app verification: `npm run test:settings-transfer` passed against SSApp 0.4.7. It confirmed the Settings Backup menu, Advanced Full Session Transfer menu, settings export/import round trip, encrypted `.ssappbk` round trip, and creation of a `pre-restore-*` directory. - Current desktop normal backup recognizes cached `streamID`, `password`, `state`, and `settings`, plus selected app-local settings such as `socialStreamState`, `settings`, `betaMode`, language, and supported YouTube/TikTok mode flags. - Desktop cached-state recovery also maintains guarded copies such as `savedSync.json` and backup/mirror state. Do not tell a user to delete the profile while attempting recovery. - `Clear All Sources` is intentionally narrower than Full Reset. It removes configured sources/groups while preserving sessions, cookies, and settings. - The dock-link recovery helper reconstructs only the session/password and URL parameters present in the pasted URL.":"## メンテナーが確認した情報 - デスクトップアプリの検証：SSApp 0.4.7で`npm run test:settings-transfer`が成功しました。Settings Backupメニュー、Advanced Full Session Transferメニュー、設定のエクスポート／インポート、暗号化された`.ssappbk`の保存と復元、`pre-restore-*`ディレクトリの作成を確認しています。 - 現在のデスクトップアプリの通常バックアップは、キャッシュされた`streamID`、`password`、`state`、`settings`に加え、`socialStreamState`、`settings`、`betaMode`、言語、対応するYouTube／TikTokモードのフラグなど、選択されたアプリ内設定を対象にします。 - デスクトップのキャッシュ状態の復元では、`savedSync.json`やバックアップ／ミラー状態などの保護されたコピーも維持します。復元を試みているユーザーに、プロファイルの削除を案内しないでください。 - `Clear All Sources`は意図的にFull Resetより範囲を狭くしています。セッション、Cookie、設定を保持しながら、設定されたソース／グループを削除します。 - ドックリンクの復元ヘルパーが復元するのは、貼り付けたURLに含まれるセッション／パスワードとURLパラメーターだけです。",", choose a safe location, and keep the":"を選び、安全な場所を指定して、次の拡張子を維持します：",". It is narrower than Full Reset and is designed to preserve sessions, cookies, and settings.":"を試してください。Full Resetより範囲が狭く、セッション、Cookie、設定を保持するよう設計されています。",". Keep the unpacked folder in place and reload open chat tabs. See":"を選びます。展開したフォルダーは同じ場所に置き、開いているチャットタブを再読み込みしてください。参照：","A browser-extension":"ブラウザー拡張機能の","A settings export can contain a session password, webhook or source URLs, and other private configuration. Do not post it publicly.":"設定のエクスポートには、セッションのパスワード、WebhookやソースのURL、その他の非公開設定が含まれる場合があります。公開しないでください。","Advanced Full Session Transfer":"高度な完全セッション転送（Advanced Full Session Transfer）","After updating, reload the source pages.":"更新後はソースページを再読み込みしてください。","Backup":"バックアップ","Browser Extension Backup (Chrome, Edge, Firefox)":"ブラウザー拡張機能のバックアップ（Chrome、Edge、Firefox）","Chrome Web Store and other store-installed extensions:":"Chromeウェブストアなど、ストアから入れた拡張機能：","Clear All Sources":"すべてのソースをクリア（Clear All Sources）","Commands & API":"コマンドとAPI","Confirm that the saved":"保存した次のファイルを確認してください：","Desktop App Backup":"デスクトップアプリのバックアップ","Do not overwrite your only backup while troubleshooting a damaged setup.":"壊れた設定を調べている間に、唯一のバックアップを上書きしないでください。","Do not uninstall the browser extension just to update it.":"更新するためだけに、ブラウザー拡張機能をアンインストールしないでください。","Download":"ダウンロード","Export / import":"エクスポート／インポート（Export / import）","Export settings first.":"先に設定を書き出してください。","Export to disk":"ディスクにエクスポート（Export to disk）","Features":"機能","File → Advanced Full Session Transfer":"File → Advanced Full Session Transfer","File → Settings Backup → Export Settings…":"File → Settings Backup → Export Settings…","For a desktop whole-profile backup, use":"デスクトップのプロファイル全体をバックアップするには、次を使用します：","Full Session Transfer":"完全セッション転送（Full Session Transfer）","Global settings and tools":"全体設定とツール（Global settings and tools）","Guides":"ガイド","Hire":"仕事を依頼する","Home":"ホーム","If Settings Already Disappeared":"設定がすでに消えた場合","If only the desktop source list is damaged, try":"デスクトップのソース一覧だけが壊れている場合は、次を試します：","If the app or extension still has useful state, export it before doing anything else.":"アプリや拡張機能に役立つ状態が残っている場合、他の操作をする前に書き出してください。","If you have no export but still have an old dock URL, the":"エクスポートがなくても、古いドックURLが残っていれば、次を使用できます：","Import Settings…":"設定をインポート…（Import Settings…）","Import settings":"設定をインポート（Import settings）","Import the newest known-good":"正常であると確認できる最も新しい次のファイルを取り込みます：","Inspiration":"活用アイデア","Installing a newer version over the existing installation should preserve the existing profile. Still export first, especially before reinstalling, moving between portable and installed builds, changing channels, or trying a reset.":"既存のインストールに新しいバージョンを上書きすれば、通常は既存のプロファイルが保持されます。それでも、先にエクスポートしてください。特に、再インストール、ポータブル版とインストール版の切り替え、リリースチャンネルの変更、リセットを試す前には必要です。","Keep backup files private.":"バックアップファイルは非公開にしてください。","Keep one working copy.":"正常に使えるコピーを1つ残してください。","Keep the exported file somewhere outside the app or unpacked-extension folder.":"書き出したファイルは、アプリや展開した拡張機能のフォルダー以外の場所に保存してください。","Main navigation":"メインナビゲーション","Make one usable backup before updating, reinstalling, resetting, or changing release channels.":"更新、再インストール、リセット、リリースチャンネルの変更前に、使えるバックアップを1つ作成してください。","Manual unpacked update:":"展開した拡張機能を手動で更新する場合：","Menu":"メニュー","More changes can overwrite the best recovery copy.":"変更を重ねると、最も役立つ復元用コピーを上書きしてしまう場合があります。","Moving or preserving the whole desktop profile, including local sessions and sign-in state. It creates an encrypted":"ローカルセッションとサインイン状態を含む、デスクトップのプロファイル全体の移動や保存に使います。暗号化された次のファイルを作成します：","Normal updates, settings moves, and first-line recovery. Imports through":"通常の更新、設定の移行、最初に試す復元に使います。取り込みに使う項目：","On this page":"このページの内容","Open":"開く項目：","Open navigation menu":"ナビゲーションメニューを開く","Open the Social Stream Ninja control panel and scroll to":"Social Stream Ninjaのコントロールパネルを開き、次までスクロールします：","Overlay Gallery":"オーバーレイギャラリー","Reload":"再読み込み（Reload）","Reopen generated dock/overlay links and refresh saved OBS Browser Sources when their URLs changed.":"生成されたドック／オーバーレイのリンクを開き直し、URLが変わった場合は、保存済みのOBSブラウザーソースを更新してください。","Safe Updates, Backups, and Recovery":"安全な更新、バックアップ、復元","Safe Updates, Backups, and Settings Recovery - Social Stream Ninja":"安全な更新、バックアップ、設定の復元 - Social Stream Ninja","Safely update Social Stream Ninja, export extension or desktop app settings, and recover a session without making data loss worse.":"Social Stream Ninjaを安全に更新し、拡張機能やデスクトップアプリの設定を書き出して、データ損失を悪化させずにセッションを復元します。","Select":"選択する項目：","Selected desktop preferences used by the app.":"アプリが使用する一部のデスクトップ設定。","Settings Backup":"設定のバックアップ（Settings Backup）","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Export and import section showing Reset all settings, Export to disk, Import settings, and the dock-link recovery helper":"Reset all settings、Export to disk、Import settings、ドックリンクの復元ヘルパーを表示したSocial Stream Ninjaのエクスポート／インポート欄","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0ライセンス。","Source and global settings represented in the saved state.":"保存状態に含まれるソースと全体設定。","Stop resetting and reinstalling.":"リセットと再インストールを繰り返すのをやめてください。","Support":"サポート","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","The Safe Rule":"安全のための基本","The Social Stream session ID and optional session password.":"Social StreamのセッションIDと任意のセッションパスワード。","The current Export / import panel. Export before using Reset all settings.":"現在のExport / importパネル。Reset all settingsを使う前にエクスポートしてください。","The current desktop settings-transfer test verifies a round trip for the cached Social Stream state and selected app settings. The browser extension export includes its session ID, optional password, state, and settings object.":"現在のデスクトップ設定転送テストは、キャッシュされたSocial Streamの状態と一部のアプリ設定の保存と復元を検証しています。ブラウザー拡張機能のエクスポートには、セッションID、任意のパスワード、state、settingsオブジェクトが含まれます。","The desktop app does not update itself automatically.":"デスクトップアプリは自動更新されません。","The normal settings export is the right choice for most updates. Full Session Transfer is available only in the desktop app; it is larger and replaces the target profile during restore. The app first keeps a":"ほとんどの更新には、通常の設定エクスポートが適しています。Full Session Transferはデスクトップアプリだけで利用でき、容量が大きく、復元時に対象のプロファイルを置き換えます。アプリはその前に、現在のプロファイルの次のコピーを保存します：","Uninstalling removes that extension installation's stored settings.":"アンインストールすると、その拡張機能のインストール環境に保存された設定は削除されます。","Use":"使う項目：","Use Full Reset only after making a backup or after accepting a complete local cleanup.":"Full Resetは、バックアップを作成した後、またはローカルデータの完全な消去を受け入れた場合にだけ使ってください。","Use It For":"用途","What A Normal Settings Backup Covers":"通常の設定バックアップに含まれるもの","backup does not include browser cookies or site login sessions. In the desktop app, a normal settings export also does not copy every cookie or site login; use the desktop-only Full Session Transfer when the entire app profile must move.":"のバックアップには、ブラウザーCookieやサイトのログインセッションは含まれません。デスクトップアプリでも、通常の設定エクスポートはすべてのCookieやサイトログインをコピーするものではありません。アプリのプロファイル全体を移す必要がある場合、デスクトップ専用のFull Session Transferを使用してください。","can rebuild the session ID, password, and URL-driven settings found in that link. It cannot recreate settings or source accounts that were never present in the URL.":"は、そのリンクに含まれるセッションID、パスワード、URLで指定する設定を復元できます。URLにもともと含まれていなかった設定やソースアカウントは再作成できません。","copy of the current profile.":"という現在のプロファイルのコピー。","dock-link recovery helper":"ドックリンクの復元ヘルパー","download and extract the new build, replace the old extension files, then select":"新しいビルドをダウンロードして展開し、古い拡張機能ファイルを置き換えて、次を選びます：","extension on the filename.":"というファイル名の拡張子。","file is present before updating, uninstalling, or resetting anything.":"ファイルが存在することを、更新、アンインストール、リセットの前に確認してください。","file.":"ファイル。","manual installation":"手動インストール","on":"で","or":"または","settings backup.":"の設定バックアップ。","to restore that file later.":"で、後からそのファイルを復元します。","updates normally install in place and preserve settings. Do not uninstall and reinstall the extension just to force an update.":"更新は通常、既存の環境に適用され、設定は保持されます。更新を強制するためだけに、拡張機能をアンインストールして入れ直さないでください。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/safe-updates-backups.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション"><a href="../index.html">ホーム</a><a href="features.html">機能</a><a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a><a href="download.html">ダウンロード</a><a href="guides.html">ガイド</a><a href="commands.html">コマンドとAPI</a><a href="supported-sites.html">対応サイト</a><a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a><a href="services.html" class="site-priority-hire">仕事を依頼する</a><a href="support.html">サポート</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/safe-updates-backups.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/safe-updates-backups.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/safe-updates-backups.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/safe-updates-backups.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/safe-updates-backups.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/safe-updates-backups.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="safe-updates-backups.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/safe-updates-backups.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/safe-updates-backups.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/safe-updates-backups.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/safe-updates-backups.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/safe-updates-backups.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/safe-updates-backups.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/safe-updates-backups.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/safe-updates-backups.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/safe-updates-backups.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/safe-updates-backups.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="テーマを切り替え"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>安全な更新、バックアップ、復元</h1>
+            <p>更新、再インストール、リセット、リリースチャンネルの変更前に、使えるバックアップを1つ作成してください。</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="このページの内容"><a href="#read-section-1">安全のための基本</a><a href="#read-section-2">ブラウザー拡張機能のバックアップ（Chrome、Edge、Firefox）</a><a href="#read-section-3">デスクトップアプリのバックアップ</a><a href="#read-section-4">設定がすでに消えた場合</a><a href="#read-section-5">通常の設定バックアップに含まれるもの</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">安全のための基本</h2>
+                <ol class="guide-steps">
+                    <li><strong>先に設定を書き出してください。</strong> 書き出したファイルは、アプリや展開した拡張機能のフォルダー以外の場所に保存してください。</li>
+                    <li><strong>更新するためだけに、ブラウザー拡張機能をアンインストールしないでください。</strong> アンインストールすると、その拡張機能のインストール環境に保存された設定は削除されます。</li>
+                    <li><strong>正常に使えるコピーを1つ残してください。</strong> 壊れた設定を調べている間に、唯一のバックアップを上書きしないでください。</li>
+                    <li><strong>更新後はソースページを再読み込みしてください。</strong> 生成されたドック／オーバーレイのリンクを開き直し、URLが変わった場合は、保存済みのOBSブラウザーソースを更新してください。</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">ブラウザー拡張機能のバックアップ（Chrome、Edge、Firefox）</h2>
+                <ol class="guide-steps">
+                    <li>Social Stream Ninjaのコントロールパネルを開き、次までスクロールします： <strong>全体設定とツール（Global settings and tools）</strong>.</li>
+                    <li>開く項目： <strong>エクスポート／インポート（Export / import）</strong>.</li>
+                    <li>選択する項目： <strong>ディスクにエクスポート（Export to disk）</strong>を選び、安全な場所を指定して、次の拡張子を維持します： <code>.data</code> というファイル名の拡張子。</li>
+                    <li>保存した次のファイルを確認してください： <code>.data</code> ファイルが存在することを、更新、アンインストール、リセットの前に確認してください。</li>
+                    <li>使う項目： <strong>設定をインポート（Import settings）</strong> で、後からそのファイルを復元します。</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/settings-backup-export-recovery.png" alt="Reset all settings、Export to disk、Import settings、ドックリンクの復元ヘルパーを表示したSocial Stream Ninjaのエクスポート／インポート欄" class="guide-image">
+                    <figcaption>現在のExport / importパネル。Reset all settingsを使う前にエクスポートしてください。</figcaption>
+                </figure>
+                <div class="guide-note">
+                    <p><strong>Chromeウェブストアなど、ストアから入れた拡張機能：</strong> 更新は通常、既存の環境に適用され、設定は保持されます。更新を強制するためだけに、拡張機能をアンインストールして入れ直さないでください。</p>
+                </div>
+                <div class="guide-note">
+                    <p><strong>展開した拡張機能を手動で更新する場合：</strong> 新しいビルドをダウンロードして展開し、古い拡張機能ファイルを置き換えて、次を選びます： <strong>再読み込み（Reload）</strong> で <code>chrome://extensions</code>を選びます。展開したフォルダーは同じ場所に置き、開いているチャットタブを再読み込みしてください。参照： <a href="download.html#manual-install">手動インストール</a>.</p>
+                </div>
+                <div class="warning-note"><strong>バックアップファイルは非公開にしてください。</strong> 設定のエクスポートには、セッションのパスワード、WebhookやソースのURL、その他の非公開設定が含まれる場合があります。公開しないでください。</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">デスクトップアプリのバックアップ</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>バックアップ</th><th>メニュー</th><th>用途</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="バックアップ">設定のバックアップ（Settings Backup）</td>
+                            <td data-label="メニュー"><strong>File → Settings Backup → Export Settings…</strong></td>
+                            <td data-label="用途">通常の更新、設定の移行、最初に試す復元に使います。取り込みに使う項目： <strong>設定をインポート…（Import Settings…）</strong>.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="バックアップ">完全セッション転送（Full Session Transfer）</td>
+                            <td data-label="メニュー"><strong>File → Advanced Full Session Transfer</strong></td>
+                            <td data-label="用途">ローカルセッションとサインイン状態を含む、デスクトップのプロファイル全体の移動や保存に使います。暗号化された次のファイルを作成します： <code>.ssappbk</code> ファイル。</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>ほとんどの更新には、通常の設定エクスポートが適しています。Full Session Transferはデスクトップアプリだけで利用でき、容量が大きく、復元時に対象のプロファイルを置き換えます。アプリはその前に、現在のプロファイルの次のコピーを保存します： <code>pre-restore-*</code> という現在のプロファイルのコピー。</p>
+                <div class="guide-note">
+                    <p><strong>デスクトップアプリは自動更新されません。</strong> 既存のインストールに新しいバージョンを上書きすれば、通常は既存のプロファイルが保持されます。それでも、先にエクスポートしてください。特に、再インストール、ポータブル版とインストール版の切り替え、リリースチャンネルの変更、リセットを試す前には必要です。</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">設定がすでに消えた場合</h2>
+                <ol class="guide-steps">
+                    <li><strong>リセットと再インストールを繰り返すのをやめてください。</strong> 変更を重ねると、最も役立つ復元用コピーを上書きしてしまう場合があります。</li>
+                    <li>アプリや拡張機能に役立つ状態が残っている場合、他の操作をする前に書き出してください。</li>
+                    <li>正常であると確認できる最も新しい次のファイルを取り込みます： <code>.data</code> または <code>.json</code> の設定バックアップ。</li>
+                    <li>デスクトップのプロファイル全体をバックアップするには、次を使用します： <strong>高度な完全セッション転送（Advanced Full Session Transfer）</strong>.</li>
+                    <li>デスクトップのソース一覧だけが壊れている場合は、次を試します： <strong>すべてのソースをクリア（Clear All Sources）</strong>を試してください。Full Resetより範囲が狭く、セッション、Cookie、設定を保持するよう設計されています。</li>
+                    <li>Full Resetは、バックアップを作成した後、またはローカルデータの完全な消去を受け入れた場合にだけ使ってください。</li>
+                </ol>
+                <p>エクスポートがなくても、古いドックURLが残っていれば、次を使用できます： <a href="../../recover.html">ドックリンクの復元ヘルパー</a> は、そのリンクに含まれるセッションID、パスワード、URLで指定する設定を復元できます。URLにもともと含まれていなかった設定やソースアカウントは再作成できません。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">通常の設定バックアップに含まれるもの</h2>
+                <p>現在のデスクトップ設定転送テストは、キャッシュされたSocial Streamの状態と一部のアプリ設定の保存と復元を検証しています。ブラウザー拡張機能のエクスポートには、セッションID、任意のパスワード、state、settingsオブジェクトが含まれます。</p>
+                <ul class="guide-list">
+                    <li>保存状態に含まれるソースと全体設定。</li>
+                    <li>Social StreamのセッションIDと任意のセッションパスワード。</li>
+                    <li>アプリが使用する一部のデスクトップ設定。</li>
+                </ul>
+                <p>ブラウザー拡張機能の <code>.data</code> のバックアップには、ブラウザーCookieやサイトのログインセッションは含まれません。デスクトップアプリでも、通常の設定エクスポートはすべてのCookieやサイトログインをコピーするものではありません。アプリのプロファイル全体を移す必要がある場合、デスクトップ専用のFull Session Transferを使用してください。</p>
+            </div>
+
+            <template data-copy-markdown-extra>
+## メンテナーが確認した情報
+
+- デスクトップアプリの検証：SSApp 0.4.7で`npm run test:settings-transfer`が成功しました。Settings Backupメニュー、Advanced Full Session Transferメニュー、設定のエクスポート／インポート、暗号化された`.ssappbk`の保存と復元、`pre-restore-*`ディレクトリの作成を確認しています。
+
+- 現在のデスクトップアプリの通常バックアップは、キャッシュされた`streamID`、`password`、`state`、`settings`に加え、`socialStreamState`、`settings`、`betaMode`、言語、対応するYouTube／TikTokモードのフラグなど、選択されたアプリ内設定を対象にします。
+
+- デスクトップのキャッシュ状態の復元では、`savedSync.json`やバックアップ／ミラー状態などの保護されたコピーも維持します。復元を試みているユーザーに、プロファイルの削除を案内しないでください。
+
+- `Clear All Sources`は意図的にFull Resetより範囲を狭くしています。セッション、Cookie、設定を保持しながら、設定されたソース／グループを削除します。
+
+- ドックリンクの復元ヘルパーが復元するのは、貼り付けたURLに含まれるセッション／パスワードとURLパラメーターだけです。
+            </template>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja。GPLv3.0ライセンス。</p></div></div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

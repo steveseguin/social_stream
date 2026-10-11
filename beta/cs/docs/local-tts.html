@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/docs/local-tts.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/docs/local-tts.html">
+    <meta property="og:title" content="Průvodce místním AI TTS - Social Stream Ninja">
+    <meta property="og:description" content="Nastavte soukromý místní převod textu na řeč pro Social Stream Ninja, včetně vestavěných hlasů, vlastních hostovaných serverů, klonování hlasu, zvuku OBS a řešení problémů.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/docs/local-tts.html">
+    <meta name="twitter:title" content="Průvodce místním AI TTS - Social Stream Ninja">
+    <meta name="twitter:description" content="Nastavte soukromý místní převod textu na řeč pro Social Stream Ninja, včetně vestavěných hlasů, vlastních hostovaných serverů, klonování hlasu, zvuku OBS a řešení problémů.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Průvodce místním AI TTS - Social Stream Ninja</title>
+    <meta name="description" content="Nastavte soukromý místní převod textu na řeč pro Social Stream Ninja, včetně vestavěných hlasů, vlastních hostovaných serverů, klonování hlasu, zvuku OBS a řešení problémů.">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="stylesheet" href="../../docs/css/site-shell.css">
+    <script src="../../docs/js/site-shell.js"></script>
+    <link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/local-tts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"(0.6B / 1.7B)":"(0,6B / 1,7B)","(Kokoro-FastAPI, or your server's port). From the OBS PC, open":"(Kokoro-FastAPI nebo port vašeho serveru). Na počítači s OBS otevřete","(Piper)":"(Piper)","(Piper): real CPU speech, direct and through the bridge.":"(Piper): skutečná řeč na CPU, přímo i přes most.","(recommended)":"(doporučeno)",") and refresh. While testing, also remove":") a obnovte stránku. Během testování také odstraňte",", SSN sends a JSON POST:":", SSN odešle požadavek JSON POST:",", add it under the existing":", přidejte jej pod stávající",", and the first":"a první",", and the server uses Piper instead.":", a server místo toho použije Piper.",", direct and through the bridge.":", přímo i přes most.",", enter your server's address, like":", zadejte adresu serveru, například",", even if the voice server is on another PC.":", i když hlasový server běží na jiném počítači.",", like":", například",", local AI voices make their own audio, so OBS can capture them.":", místní hlasy AI vytvářejí vlastní zvuk, který OBS může zachytit.",", nested":", vnořené",", or any browser-playable type.":", nebo libovolný typ zvuku přehratelný v prohlížeči.",", or one from its web page. openedai-speech:":", případně hlas z jeho webové stránky. openedai-speech:",", then use:":", potom použijte:",", with that PC's local IP":", s místní IP adresou tohoto počítače",". All options:":". Všechny možnosti:",". Docker needs GPU access. The model downloads on first use.":". Docker potřebuje přístup ke GPU. Model se stáhne při prvním použití.",". If that fails, OBS can't reach it either. Check the server's firewall.":". Pokud to nefunguje, nedostane se k němu ani OBS. Zkontrolujte firewall serveru.",". Inside the":". Uvnitř",". Leave it running.":". Nechte jej běžet.",". Most people stop here.":". Většině uživatelů to stačí.",". OpenAI names like":". Názvy hlasů OpenAI, například",". Plan on about 4 GB of GPU memory. CPU works but is slow.":". Počítejte přibližně se 4 GB paměti GPU. CPU funguje, ale pomalu.",". Prefer clicking? Use the":". Raději klikáte? Použijte",". Project is archived.":". Projekt je archivovaný.",". Reading options like":". Možnosti čtení, například",". Some servers care about upper/lower case.":". Některé servery rozlišují velká a malá písmena.",". Still blocked? Run the bridge on the OBS PC.":". Stále blokováno? Spusťte most na počítači s OBS.",". TTS now shows in the OBS mixer.":". TTS se nyní objeví ve zvukovém mixéru OBS.",". That's the page that makes the sound.":". Právě tato stránka vytváří zvuk.",". The bridge translates for them.":". Most pro ně požadavky převádí.",". The hosted beta dock page is more likely to be blocked; the bridge or a local app window is easier.":". Hostovaná beta stránka Docku bývá blokována častěji; jednodušší je most nebo okno místní aplikace.",". To keep TTS separate from other sounds, send the app to a virtual cable:":". Chcete-li oddělit TTS od ostatních zvuků, přesměrujte aplikaci do virtuálního kabelu:",". Watch the OBS mixer meter during a test. Make sure you set":". Při testu sledujte ukazatel v mixéru OBS. Nezapomeňte nastavit",". You should see a page to test voices (67+ available).":". Měla by se zobrazit stránka pro zkoušení hlasů (dostupných je přes 67).","24 GB GPU or remote host":"GPU s 24 GB nebo vzdálený hostitel","3-second clip":"3sekundový klip","5 seconds; better with 1 minute":"5 sekund; lépe 1 minuta","6 GB+ NVIDIA GPU, 16 GB RAM":"GPU NVIDIA s 6 GB+, 16 GB RAM",": need a wrapper first (CLI, Gradio or library only).":": nejprve potřebují adaptér (pouze CLI, Gradio nebo knihovna).",": real CPU speech with":": skutečná řeč na CPU s",": request format tested, direct and through the bridge.":": formát požadavku ověřen přímo i přes most.",": through bridge modes only.":": pouze prostřednictvím režimů mostu.","; System TTS may need desktop audio or a virtual cable.":"; System TTS může vyžadovat zvuk plochy nebo virtuální kabel.","\u003c1 GB":"\u003c1 GB","A cloned voice":"Klonovaný hlas","A server gives you more voices, voice cloning, or one voice you reuse across tools. SSN talks to it like an":"Server vám poskytne více hlasů, klonování hlasu nebo jeden hlas použitelný ve více nástrojích. SSN s ním komunikuje jako se serverem","A small helper from SSN. It takes SSN's request, passes it to your voice server, and hands the audio back in a way browsers accept. Needs Node.js.":"Malý pomocný nástroj SSN. Přijme požadavek SSN, předá jej hlasovému serveru a vrátí zvuk způsobem, který prohlížeče přijímají. Vyžaduje Node.js.","A wrapper, or bridge":"Adaptér nebo most","API key":"API klíč (API key)","Add":"Přidejte","Add a":"Přidejte","Add its virtual environment's":"Přidejte z jeho virtuálního prostředí","Add that link to OBS as a":"Přidejte tento odkaz do OBS jako","All Guides":"Všechny návody","Also accepted:":"Také přijímá:","Also check the firewall allows the port, and that Docker published it (":"Ověřte také, že firewall port povoluje a Docker jej zveřejnil (","Any PC":"Libovolný počítač","App test works, OBS is silent":"Test v aplikaci funguje, OBS mlčí","App windows are less strict about browser permissions (CORS) than Chrome. The bridge is still the safest choice for servers that refuse browser requests. For built-in Kokoro, the app can use its own":"Okna aplikace jsou vůči oprávněním prohlížeče (CORS) méně přísná než Chrome. U serverů odmítajících požadavky prohlížeče je most stále nejspolehlivější volbou. Pro vestavěné Kokoro může aplikace použít vlastní","Archived project.":"Archivovaný projekt.","Audio Input Capture":"Zachytávání zvukového vstupu (Audio Input Capture)","Audio file":"Zvukový soubor","Best.":"Nejlepší.","Blocked by the browser?":"Blokuje jej prohlížeč?","Blocked by the browser? Run the":"Blokuje jej prohlížeč? Spusťte","Bridge":"Most","Browser Source":"Zdroj prohlížeče (Browser Source)","Built-in Kitten":"Vestavěný Kitten","Built-in Kokoro":"Vestavěné Kokoro","Built-in Kokoro and Kokoro-FastAPI don't clone voices.":"Vestavěné Kokoro ani Kokoro-FastAPI hlasy neklonují.","Built-in Piper":"Vestavěný Piper","Built-in eSpeak":"Vestavěný eSpeak","Built-in voices":"Vestavěné hlasy","Built-in voices (nothing to install)":"Vestavěné hlasy (bez instalace)","CPU for testing, slow":"CPU pro testování, pomalé","CPU on some builds, slow":"CPU u některých sestavení, pomalé","CPU only":"Pouze CPU","CPU, 4–8 GB RAM":"CPU, 4–8 GB RAM","CPU, 8 GB RAM":"CPU, 8 GB RAM","Change":"Změňte","Chatterbox":"Chatterbox","Chatterbox-TTS-Server":"Chatterbox-TTS-Server","Check Docker and the container are running. On the server PC, open":"Zkontrolujte, že Docker i kontejner běží. Na počítači se serverem otevřete","Checked with both":"Ověřeno s oběma stránkami","Checks":"Kontroly","Click":"Klikněte na","Clip plus its transcript":"Klip a jeho přepis","Clones from":"Klonuje z","Cloning isn't an SSN setting. It's a feature of some voice servers. SSN sends the chat text; the server picks the cloned voice.":"Klonování není nastavení SSN. Je to funkce některých hlasových serverů. SSN posílá text chatu; klonovaný hlas vybírá server.","Comfortable":"Pro pohodlný provoz","Commands & API":"Příkazy a API","Compare providers and hear samples":"Porovnejte poskytovatele a poslechněte si ukázky","Computer load":"Zátěž počítače","Connect a server":"Připojit server","Connect your own TTS server":"Připojte vlastní server TTS","Control audio via OBS":"Ovládat zvuk přes OBS (Control audio via OBS)","Copy the link into OBS and send a test chat.":"Zkopírujte odkaz do OBS a pošlete zkušební zprávu.","Coqui Public Model License":"Coqui Public Model License","Cost":"Cena","Custom / Local API Endpoint":"Custom / Local API Endpoint","Custom / Local TTS Endpoint":"Vlastní / místní koncový bod TTS","Desktop Audio":"Zvuk plochy","Diagram showing OBS calling the local bridge, and the bridge calling the TTS server":"Schéma ukazující volání místního mostu z OBS a následné volání serveru TTS z mostu","Diagram showing that localhost means the same computer, while another computer needs a LAN IP address":"Schéma ukazující, že localhost znamená stejný počítač, zatímco jiný počítač potřebuje IP adresu v místní síti","Direct or bridge. GPU runs smoother than CPU. Setup varies by fork.":"Přímo nebo přes most. GPU běží plynuleji než CPU. Nastavení se liší podle forku.","Direct,":"Přímo,","Disk":"Disk","Do I need this?":"Potřebuji to?","Do this":"Postupujte takto","Docker":"Docker","Docker Desktop":"Docker Desktop","Docker image not found":"Obraz Docker nebyl nalezen","Don't mix up the app test and OBS.":"Nezaměňujte test aplikace za test OBS.","Download":"Stáhnout","ElevenLabs":"ElevenLabs","Example":"Příklad","Example links:":"Příklady odkazů:","Excellent":"Výborný","F5-TTS":"F5-TTS","F5-TTS official":"Oficiální F5-TTS","F5-TTS server mode":"Serverový režim F5-TTS","F5-TTS_server":"F5-TTS_server","Features":"Funkce","First use is slow.":"První použití je pomalé.","Fish Audio in OBS":"Fish Audio v OBS","Fish Audio setup":"Nastavení Fish Audio","Fits 6 GB GPU?":"Stačí GPU s 6 GB?","Fix problems":"Řešení problémů","For server builders":"Pro tvůrce serverů","Formats:":"Formáty:","Free":"Zdarma","Free voices with nothing to install":"Bezplatné hlasy bez instalace","GPT-SoVITS":"GPT-SoVITS","GPT-SoVITS / F5-TTS / Qwen3-TTS":"GPT-SoVITS / F5-TTS / Qwen3-TTS","GPT-SoVITS mode":"Režim GPT-SoVITS","GPT-SoVITS uses its own":"GPT-SoVITS používá vlastní","GPU":"GPU","Get the audio into OBS":"Dostaňte zvuk do OBS","Get the server and start it:":"Stáhněte a spusťte server:","GitHub":"GitHub","Good":"Dobrý","Guides":"Návody","Hire":"Najmout odborníka","Home":"Domů","How SSN talks to a custom server. You only need this if you're building or debugging one.":"Jak SSN komunikuje s vlastním serverem. Tuto část potřebujete pouze při jeho vytváření nebo ladění.","How to connect":"Jak se připojit","I want":"Chci","I want…":"Chci…","If OBS is on one PC and the voice server on another,":"Pokud OBS běží na jednom počítači a hlasový server na druhém,","Image tags change. Check the current tag on":"Tagy obrazů se mění. Aktuální tag ověřte na","In":"V části","In SSN, open the TTS provider list and pick":"V SSN otevřete seznam poskytovatelů TTS a vyberte","In its properties, turn on":"V jeho vlastnostech zapněte","In the SSN folder, run":"Ve složce SSN spusťte","Inspiration":"Inspirace","Its":"Jeho","JSON with an audio URL":"JSON s adresou zvuku","JSON with base64 audio":"JSON se zvukem v base64","Kitten":"Kitten","Kokoro":"Kokoro","Kokoro 82M":"Kokoro 82M","Kokoro and Piper download their models first (about 50–200 MB). Later loads reuse them, but still take a moment to start. OBS keeps its own copy, separate from Chrome.":"Kokoro a Piper nejprve stáhnou modely (přibližně 50–200 MB). Další spuštění je znovu používají, ale zahájení stále chvíli trvá. OBS uchovává vlastní kopii odděleně od Chromu.","Kokoro-FastAPI":"Kokoro-FastAPI","Kokoro-FastAPI:":"Kokoro-FastAPI:","Laptop CPU, 8 GB RAM":"CPU notebooku, 8 GB RAM","Leave the API key blank.":"Pole pro klíč API nechte prázdné.","Likely (0.6B Base)":"Pravděpodobně (0.6B Base)","Likely with Turbo or small chunks":"Pravděpodobně s Turbo nebo malými úseky","Likely with fp16 / light install":"Pravděpodobně s fp16 / lehkou instalací","Link settings for your own server":"Nastavení odkazu pro vlastní server","Link value":"Hodnota v odkazu","Local AI TTS Guide":"Průvodce lokálním AI TTS","Low-end CPU, 4 GB RAM":"Slabší CPU, 4 GB RAM","Low. CPU only.":"Nízká. Pouze CPU.","Main navigation":"Hlavní navigace","Make a clean reference clip of a voice you have permission to use. Mono, 22050 Hz, 6–30 seconds:":"Vytvořte čistý referenční klip hlasu, k jehož použití máte svolení. Mono, 22050 Hz, 6–30 sekund:","Maybe":"Možná","Medium. Faster with a GPU.":"Střední. S GPU rychlejší.","Minimal. CPU only.":"Minimální. Pouze CPU.","Minimum":"Minimum","MisoTTS 8B":"MisoTTS 8B","Model":"Model","Model name. Default":"Název modelu. Výchozí","Modern CPU, 4–8 GB RAM":"Moderní CPU, 4–8 GB RAM","Modern CPU, 8 GB RAM":"Moderní CPU, 8 GB RAM","More desktop app details":"Další podrobnosti k desktopové aplikaci","NVIDIA GPU (faster):":"NVIDIA GPU (rychlejší):","NVIDIA GPU ~4 GB, 8–16 GB RAM":"NVIDIA GPU přibližně 4 GB, 8–16 GB RAM","Needs an OpenAI-compatible wrapper.":"Vyžaduje adaptér kompatibilní s OpenAI.","Needs audio routing":"Vyžaduje směrování zvuku","Needs the full server, not":"Vyžaduje celý server, nikoli","No":"Ne","No streaming yet.":"Streamování zatím nepodporuje.","No; 24 GB recommended":"Ne; doporučeno 24 GB","None":"Žádné","Not at 6 GB":"S 6 GB ne","Notes":"Poznámky","OBS Browser Source (recommended)":"Zdroj prohlížeče OBS (doporučeno)","OBS and the server on the same PC":"OBS a server na stejném počítači","OBS audio":"Zvuk v OBS","OBS must reach the server itself. Server on another PC? Replace":"OBS musí dosáhnout na server samo. Je server na jiném počítači? Nahraďte","OBS needs its own working address. The app test doesn't prove OBS can reach the server.":"OBS potřebuje vlastní funkční adresu. Test aplikace neprokazuje, že OBS dosáhne na server.","OBS on a different computer?":"OBS na jiném počítači?","OK":"OK","On macOS or Linux, use":"Na macOS nebo Linuxu použijte","On this page":"Na této stránce","Only clone voices you own or have permission to use.":"Klonujte pouze hlasy, které vlastníte nebo k jejichž použití máte svolení.","Only if wrapped":"Pouze s obálkou","Only the first letter or words are read":"Čte se pouze první písmeno nebo slova","Open":"Otevřít","Open a terminal (Command Prompt, PowerShell or Terminal) and run one of these:":"Otevřete terminál (Příkazový řádek, PowerShell nebo Terminal) a spusťte jeden z těchto příkazů:","Open navigation menu":"Otevřít navigační nabídku","OpenAI-compatible":"Kompatibilní s OpenAI","Option":"Možnost","Option A: Light Piper server (CPU)":"Možnost A: Lehký server Piper (CPU)","Option B: XTTS-v2 voice cloning (GPU)":"Možnost B: Klonování hlasu XTTS-v2 (GPU)","Optional":"Volitelné","Optional NVIDIA GPU, 8–16 GB RAM":"Volitelná NVIDIA GPU, 8–16 GB RAM","Overlay Gallery":"Galerie překryvů","Paid cloud voices":"Placené cloudové hlasy","Paid tiers":"Placené úrovně","Pick a voice your server knows:":"Vyberte hlas, který váš server zná:","Piper":"Piper","Plays, but OBS doesn't capture it":"Zvuk hraje, ale OBS jej nezachytává","Point SSN at the bridge:":"Nasměrujte SSN na most:","Port":"Port","Pressing Test in the app tests from the app. With a link in OBS, OBS must reach the server and play the audio.":"Tlačítko Test v aplikaci testuje z aplikace. Při použití odkazu v OBS musí na server dosáhnout a zvuk přehrát samo OBS.","Private":"Soukromý","Problem":"Problém","Prompt audio":"Referenční zvuk","Quality":"Kvalita","Qwen3-TTS":"Qwen3-TTS","Raw PCM":"Nezpracované PCM","Read the":"Přečtěte si","Record a clean clip of one speaker, usually 3–30 seconds, with little background noise.":"Nahrajte čistý klip jediného mluvčího, obvykle 3–30 sekund, s minimálním hlukem v pozadí.","Reference clip":"Referenční klip","Remote hosting only. No local REST endpoint in the repo.":"Pouze vzdálený hosting. V repozitáři není místní REST endpoint.","Remove":"Odstranit","Response":"Odpověď","Robotic":"Robotický","Rough starting points, not promises. Model size, text length and other apps all change memory use.":"Orientační výchozí hodnoty, nikoli záruky. Spotřebu paměti mění velikost modelu, délka textu i další aplikace.","Run":"Spusťte","Run chat voices on your own computer. Most streamers only need the built-in voices.":"Spouštějte hlasy chatu na vlastním počítači. Většině streamerů stačí vestavěné hlasy.","Running it from source on Windows (HTTP 500 errors)":"Spuštění ze zdrojového kódu ve Windows (chyby HTTP 500)","SSN app test works, OBS is silent":"Test aplikace SSN funguje, OBS mlčí","SSN desktop app":"Desktopová aplikace SSN","SSN sends chat text with":"SSN posílá text chatu pomocí","SSN waits for the whole response, then plays it. Keep chat messages short.":"SSN počká na celou odpověď a pak ji přehraje. Používejte krátké zprávy.","Screenshot-style checklist for local TTS troubleshooting":"Kontrolní seznam ve stylu snímku obrazovky pro řešení problémů místního TTS","Screenshot-style map of the local TTS fields in Social Stream Ninja":"Mapa polí místního TTS v Social Stream Ninja ve stylu snímku obrazovky","See":"Viz","See the":"Podívejte se na","Send a short test chat, like":"Pošlete krátkou zkušební zprávu, například","Send it as a WAV file or base64 WAV.":"Pošlete jej jako soubor WAV nebo WAV v base64.","Server":"Server","Server not responding":"Server neodpovídá","Server on another PC at home":"Server na jiném počítači doma","Server on another PC? Use its local IP, like":"Server na jiném počítači? Použijte jeho místní IP adresu, například","Set it up in 4 steps":"Nastavení ve 4 krocích","Set up XTTS-v2 in 4 steps":"Nastavení XTTS-v2 ve 4 krocích","Set up private local text-to-speech for Social Stream Ninja, including built-in voices, self-hosted servers, voice cloning, OBS audio, and troubleshooting.":"Nastavte soukromý místní převod textu na řeč pro Social Stream Ninja, včetně vestavěných hlasů, vlastních hostovaných serverů, klonování hlasu, zvuku OBS a řešení problémů.","Setting":"Nastavení","Setup":"Nastavení","Short WAV clip":"Krátký klip WAV","Side-by-side":"Srovnání vedle sebe","Simplest rule:":"Nejjednodušší pravidlo:","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja - Local AI TTS Guide":"Průvodce místním AI TTS - Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja: Local AI TTS Guide ·":"Social Stream Ninja: Průvodce místním AI TTS ·","Some F5-TTS wrappers use":"Některé adaptéry F5-TTS používají","Some servers also need the exact words spoken in the clip.":"Některé servery potřebují také přesný přepis slov v klipu.","Sound":"Zvuk","Speaking speed (0.5–2.0).":"Rychlost řeči (0,5–2,0).","Start it with Docker automatically:":"Automatické spuštění s Dockerem:","Start your server.":"Spusťte server.","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","System TTS":"Systémové TTS","System TTS / eSpeak":"Systémové TTS / eSpeak","TTS Voice Guide":"Průvodce hlasy TTS","TTS link.":"odkaz TTS.","TTS reference":"Referenční příručka TTS","TTS setup guide":"Průvodce nastavením TTS","Tell the bridge where your server is. PowerShell:":"Řekněte mostu, kde server běží. PowerShell:","The bridge":"Most","The browser blocked it before the server saw it. Run":"Prohlížeč jej zablokoval ještě před doručením serveru. Spusťte","The desktop app uses the same link settings. But the sound plays from the app, not OBS. Capture it with":"Desktopová aplikace používá stejná nastavení odkazu. Zvuk ale hraje z aplikace, nikoli z OBS. Zachyťte jej pomocí","The endpoint is the field that matters.":"Rozhodující je pole endpointu.","The first run downloads about 1.5–2 GB, once.":"První spuštění jednorázově stáhne přibližně 1,5–2 GB.","The local TTS bridge":"Místní most TTS","The localhost rule":"Pravidlo localhost","The server returns audio (usually WAV or MP3) and SSN plays it.":"Server vrátí zvuk, obvykle WAV nebo MP3, a SSN jej přehraje.","The server turns the clip into a voice profile.":"Server převede klip na hlasový profil.","These need":"Tyto možnosti vyžadují","These run inside SSN in your browser. No server, Docker, or API key.":"Běží uvnitř SSN ve vašem prohlížeči. Bez serveru, Dockeru nebo klíče API.","This is the most common mistake.":"Tohle je nejčastější chyba.","This works with any chat SSN captures. The voice belongs to SSN's player, not YouTube or Twitch. Unlike":"Funguje to s každým chatem, který SSN zachytí. Hlas patří přehrávači SSN, nikoli YouTube či Twitchi. Na rozdíl od","To use a voice server I already run":"Používat hlasový server, který už provozuji","Try this":"Vyzkoušejte","Turn on":"Zapněte","Turns on TTS, in English.":"Zapne TTS v angličtině.","Under 1 GB. No voice cloning.":"Méně než 1 GB. Bez klonování hlasu.","Use Kokoro voice names":"Používejte názvy hlasů Kokoro","Use the":"Použijte","Use this address":"Použijte tuto adresu","Use this link (change the address if the server is on another PC):":"Použijte tento odkaz (pokud server běží na jiném počítači, změňte adresu):","Use your own server. (":"Použijte vlastní server. (","Very good":"Velmi dobrý","Very low. CPU only.":"Velmi nízká. Pouze CPU.","Voice":"Hlas","Voice cloning":"Klonování hlasu","Voice name. Depends on the server.":"Název hlasu. Záleží na serveru.","Voices, speed, and other languages:":"Hlasy, rychlost a další jazyky:","Voices:":"Hlasy:","WebGPU GPU or fast CPU, 8–16 GB RAM":"GPU s WebGPU nebo rychlý CPU, 8–16 GB RAM","What SSN can play back":"Co SSN umí přehrát","What SSN sends":"Co SSN posílá","What computer do I need?":"Jaký počítač potřebuji?","What it does":"Co dělá","What was tested with SSN":"Co bylo ověřeno s SSN","With":"S","With 6 GB of GPU memory or less, start with small models on OpenAI-compatible servers. Bigger models work too if hosted elsewhere.":"S pamětí GPU 6 GB nebo méně začněte malými modely na serverech kompatibilních s OpenAI. Větší modely fungují také, pokud běží jinde.","With no API key set, SSN sends no Authorization header.":"Bez nastaveného klíče API neposílá SSN hlavičku Authorization.","Without it SSN sends":"Bez něj SSN odešle","Works in OBS":"Funguje v OBS","Works in one place but not another? Check in order: which computer, address, voice, browser permission, OBS audio.":"Na jednom místě funguje, na jiném ne? Zkontrolujte postupně počítač, adresu, hlas, oprávnění prohlížeče a zvuk OBS.","Works with built-in voices and your own server.":"Funguje s vestavěnými hlasy i vlastním serverem.","Works?":"Funguje?","Wrong voice, or voice not found":"Nesprávný hlas nebo hlas nenalezen","XTTS-v2 / openedai-speech":"XTTS-v2 / openedai-speech","XTTS-v2 is non-commercial by default.":"XTTS-v2 je ve výchozím stavu pouze pro nekomerční použití.","Yes":"Ano","Yes, about 4 GB":"Ano, přibližně 4 GB","Your server's address. Change the port to match.":"Adresa vašeho serveru. Upravte port tak, aby odpovídal.","Your setup":"Vaše nastavení","all link settings":"všechna nastavení odkazů","allows non-commercial use only. A monetized stream may not qualify. Check the license or get permission first.":"povoluje pouze nekomerční použití. Monetizovaný stream nemusí podmínky splňovat. Nejprve ověřte licenci nebo získejte svolení.","also works.)":"také funguje.)","always mean “this same computer.”":"vždy znamenají „tento stejný počítač“.","and":"a","and change only":"a změňte pouze","bridge":"most","bridge README":"README mostu","built-in voices":"vestavěné hlasy","chatterbox-tts-api":"chatterbox-tts-api","does the same. Change the port with":"dělá totéž. Port změňte pomocí","eSpeak-NG":"eSpeak-NG","fields, and data URLs.":"pole a datové URL.","first.":".","first. Otherwise it can't find":"nejprve. Jinak nenajde","folder to":"do složky","folder,":"složky,","for Kokoro,":"pro Kokoro,","for openedai-speech.":"pro openedai-speech.","format. The bridge translates for it.":"formát. Most pro něj požadavek převede.","from the OBS link (for example":"z odkazu OBS (například","in OBS points at the OBS PC.":"v OBS odkazuje na počítač s OBS.","installed and running. It's free for personal use.":"nainstalovaný a spuštěný. Pro osobní použití je zdarma.","is required.":"je povinné.","is small and widely supported.":"je malý a široce podporovaný.","is the easiest.":"je nejjednodušší.","item.":"položku.","kokoro-web":"kokoro-web","link. (Or":"odkaz. (Nebo","localhost rule":"pravidlo localhost","macOS/Linux, in one line:":"macOS/Linux, na jednom řádku:","may not work.":"nemusí fungovat.","mp3, wav, opus or flac.":"mp3, wav, opus nebo flac.","must match your voice name in the YAML file.":"musí odpovídat názvu hlasu v souboru YAML.","on the OBS PC and use":"na počítači s OBS a použijte","only if server and browser both support it.":"pouze pokud jej podporuje server i prohlížeč.","openedai-speech":"openedai-speech","openedai-speech (Piper and XTTS-v2)":"openedai-speech (Piper a XTTS-v2)","openedai-speech Piper":"openedai-speech Piper","openedai-speech XTTS":"openedai-speech XTTS","openedai-speech was archived in January 2026 and calls itself mostly obsolete. It still works as an example, but gets no updates. Keep it local. Never expose its port to the internet; it has no login.":"Projekt openedai-speech byl archivován v lednu 2026 a sám se označuje za převážně zastaralý. Jako příklad stále funguje, ale nedostává aktualizace. Provozujte jej místně. Nikdy nevystavujte jeho port internetu; nemá přihlašování.","or":"nebo","path instead of loading the model in the browser.":"cestu místo načítání modelu v prohlížeči.","provider settings":"nastavení poskytovatelů","routing steps":"postup směrování zvuku","run the bridge on the OBS computer. Then OBS always uses":"spusťte most na počítači s OBS. OBS pak vždy používá","runs Kokoro as a local server. Works on CPU; no GPU needed.":"spouští Kokoro jako místní server. Funguje na CPU, GPU není nutné.","section (keep the voices already there):":"sekce (ponechte stávající hlasy):","setup guide":"průvodce nastavením","speech server. No API key needed.":"hlasový server. Klíč API není potřeba.","suits cloning servers and bridge testing. Use":"se hodí pro servery klonování a testování mostu. Použijte","to":"na","to rule out timing issues.":"pro vyloučení problémů s načasováním.","to the name SSN will send.":"na název, který SSN odešle.","to your":"do svého","voice cloning":"klonování hlasu","with":"s","with its local IP. Check":"jeho místní IP adresou. Zkontrolujte","with no provider) depends on the voices OBS has. Often none, or voices that make no capturable sound. Use a provider above instead.":"bez poskytovatele) závisí na hlasech dostupných v OBS. Často nejsou žádné nebo nevytvářejí zachytitelný zvuk. Použijte místo toho některého poskytovatele výše.","with your":"se svým","work with any provider:":"fungují s libovolným poskytovatelem:","~2 GB":"~2 GB","“Blocked by CORS”, “private network”, or “failed fetch”":"„Blocked by CORS“, „private network“ nebo „failed fetch“","“Local” means one of two things: a voice built into SSN that runs in your browser, or a voice server you run yourself.":"„Místní“ znamená buď hlas vestavěný do SSN, který běží v prohlížeči, nebo hlasový server, který provozujete sami."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/local-tts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/local-tts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/local-tts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/local-tts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/local-tts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/local-tts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/local-tts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/local-tts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/local-tts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/local-tts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/local-tts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/local-tts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/local-tts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/local-tts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/local-tts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/local-tts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/local-tts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/local-tts.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/local-tts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/local-tts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/local-tts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/local-tts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/local-tts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/local-tts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/local-tts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/local-tts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/local-tts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/local-tts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/local-tts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/local-tts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/local-tts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/local-tts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/local-tts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="local-tts.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/local-tts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Průvodce lokálním AI TTS</h1>
+            <p>Spouštějte hlasy chatu na vlastním počítači. Většině streamerů stačí vestavěné hlasy.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Na této stránce">
+                <a href="#overview">Potřebuji to?</a>
+                <a href="#builtin">Vestavěné hlasy</a>
+                <a href="#server">Připojit server</a>
+                <a href="#which-computer">Pravidlo localhost</a>
+                <a href="#kokoro-fastapi">Kokoro-FastAPI</a>
+                <a href="#openedai">openedai-speech</a>
+                <a href="#bridge">Most</a>
+                <a href="#voice-cloning">Klonování hlasu</a>
+                <a href="#obs">Zvuk v OBS</a>
+                <a href="#troubleshooting">Řešení problémů</a>
+                <a href="#flow">Pro tvůrce serverů</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="overview">Potřebuji to?</h2>
+                <p>„Místní“ znamená buď hlas vestavěný do SSN, který běží v prohlížeči, nebo hlasový server, který provozujete sami.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Chci…</th><th>Postupujte takto</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Chci">Bezplatné hlasy bez instalace</td><td data-label="Postupujte takto">Použijte <a href="#builtin">vestavěné hlasy</a>. Většině uživatelů to stačí.</td></tr>
+                        <tr><td data-label="Chci">Používat hlasový server, který už provozuji</td><td data-label="Postupujte takto"><a href="#server">Připojit server</a>.</td></tr>
+                        <tr><td data-label="Chci">Klonovaný hlas</td><td data-label="Postupujte takto">Viz <a href="#voice-cloning">klonování hlasu</a>.</td></tr>
+                        <tr><td data-label="Chci">Fish Audio v OBS</td><td data-label="Postupujte takto">Podívejte se na <a href="tts-setup-guide.html#settings-fish">Nastavení Fish Audio</a>.</td></tr>
+                        <tr><td data-label="Chci">Placené cloudové hlasy</td><td data-label="Postupujte takto">Podívejte se na <a href="tts.html#providers">Referenční příručka TTS</a>.</td></tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">Funguje to s každým chatem, který SSN zachytí. Hlas patří přehrávači SSN, nikoli YouTube či Twitchi. Na rozdíl od <em>Systémové TTS</em>, místní hlasy AI vytvářejí vlastní zvuk, který OBS může zachytit. <a href="tts-setup-guide.html#voice-chooser">Porovnejte poskytovatele a poslechněte si ukázky</a>.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="builtin">Vestavěné hlasy (bez instalace)</h2>
+                <p>Běží uvnitř SSN ve vašem prohlížeči. Bez serveru, Dockeru nebo klíče API.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Hlas</th><th>Zvuk</th><th>Zátěž počítače</th><th>Hodnota v odkazu</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Hlas">Kokoro</td><td data-label="Zvuk">Výborný</td><td data-label="Zátěž počítače">Střední. S GPU rychlejší.</td><td data-label="Hodnota v odkazu"><code>ttsprovider=kokoro</code></td></tr>
+                        <tr><td data-label="Hlas">Piper</td><td data-label="Zvuk">Velmi dobrý</td><td data-label="Zátěž počítače">Nízká. Pouze CPU.</td><td data-label="Hodnota v odkazu"><code>ttsprovider=piper</code></td></tr>
+                        <tr><td data-label="Hlas">Kitten</td><td data-label="Zvuk">Dobrý</td><td data-label="Zátěž počítače">Velmi nízká. Pouze CPU.</td><td data-label="Hodnota v odkazu"><code>ttsprovider=kitten</code></td></tr>
+                        <tr><td data-label="Hlas">eSpeak-NG</td><td data-label="Zvuk">Robotický</td><td data-label="Zátěž počítače">Minimální. Pouze CPU.</td><td data-label="Hodnota v odkazu"><code>ttsprovider=espeak</code></td></tr>
+                    </tbody>
+                </table>
+                <h3 id="quick-setup">Nastavení ve 4 krocích</h3>
+                <ol class="guide-steps">
+                    <li>Přidejte <code>&amp;speech=en-US&amp;ttsprovider=kokoro</code> do svého <code>dock.html</code> odkaz. (Nebo <code>piper</code>, <code>kitten</code>, <code>espeak</code>.)</li>
+                    <li>Přidejte tento odkaz do OBS jako <strong>Zdroj prohlížeče (Browser Source)</strong>. Právě tato stránka vytváří zvuk.</li>
+                    <li>V jeho vlastnostech zapněte <strong>Ovládat zvuk přes OBS (Control audio via OBS)</strong>.</li>
+                    <li>Pošlete krátkou zkušební zprávu, například <code>Testing local TTS</code>.</li>
+                </ol>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=kokoro</pre>
+                <div class="warning-note"><strong>První použití je pomalé.</strong> Kokoro a Piper nejprve stáhnou modely (přibližně 50–200 MB). Další spuštění je znovu používají, ale zahájení stále chvíli trvá. OBS uchovává vlastní kopii odděleně od Chromu.</div>
+                <p>Hlasy, rychlost a další jazyky: <a href="tts.html#premium-options">nastavení poskytovatelů</a>. Raději klikáte? Použijte <a href="tts-setup-guide.html">průvodce nastavením</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="server">Připojte vlastní server TTS</h2>
+                <p>Server vám poskytne více hlasů, klonování hlasu nebo jeden hlas použitelný ve více nástrojích. SSN s ním komunikuje jako se serverem <strong>Kompatibilní s OpenAI</strong> hlasový server. Klíč API není potřeba.</p>
+                <div class="guide-step-layout" id="where-to-click">
+                    <ol class="guide-steps">
+                        <li>Spusťte server. <a href="#kokoro-fastapi">Kokoro-FastAPI</a> je nejjednodušší.</li>
+                        <li>V SSN otevřete seznam poskytovatelů TTS a vyberte <strong>Vlastní / místní koncový bod TTS</strong>.</li>
+                        <li>V části <strong>Custom / Local API Endpoint</strong>, zadejte adresu serveru, například <code>http://127.0.0.1:8880/v1/audio/speech</code>.</li>
+                        <li>Pole pro klíč API nechte prázdné.</li>
+                        <li>Vyberte hlas, který váš server zná: <code>af_bella</code> pro Kokoro, <code>nova</code> pro openedai-speech.</li>
+                        <li>Zkopírujte odkaz do OBS a pošlete zkušební zprávu.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/local-tts/tts-custom-endpoint-fields.png" alt="Mapa polí místního TTS v Social Stream Ninja ve stylu snímku obrazovky" class="guide-image" loading="lazy">
+                        <figcaption>Rozhodující je pole endpointu.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>OBS na jiném počítači?</strong> Přečtěte si <a href="#which-computer">pravidlo localhost</a> . <strong>Blokuje jej prohlížeč?</strong> Použijte <a href="#bridge">most</a>.</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Server</th><th>Model</th><th>GPU</th><th>Disk</th><th>Port</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Server"><a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> (doporučeno)</td><td data-label="Model">Kokoro 82M</td><td data-label="GPU">Volitelné</td><td data-label="Disk">~2 GB</td><td data-label="Port">8880</td></tr>
+                        <tr><td data-label="Server"><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a> (Piper)</td><td data-label="Model">Piper</td><td data-label="GPU">Pouze CPU</td><td data-label="Disk">&lt;1 GB</td><td data-label="Port">8000</td></tr>
+                        <tr><td data-label="Server"><a href="https://github.com/eduardolat/kokoro-web" target="_blank">kokoro-web</a></td><td data-label="Model">Kokoro 82M</td><td data-label="GPU">Volitelné</td><td data-label="Disk">~2 GB</td><td data-label="Port">3000</td></tr>
+                    </tbody>
+                </table>
+                <p>Tyto možnosti vyžadují <a href="https://www.docker.com/products/docker-desktop/" target="_blank">Docker Desktop</a> nainstalovaný a spuštěný. Pro osobní použití je zdarma.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="which-computer">Pravidlo localhost</h2>
+                <p>Tohle je nejčastější chyba.</p>
+                <div class="warning-note"><strong><code>localhost</code> a <code>127.0.0.1</code> vždy znamenají „tento stejný počítač“.</strong> Pokud OBS běží na jednom počítači a hlasový server na druhém, <code>127.0.0.1</code> v OBS odkazuje na počítač s OBS.</div>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/local-tts/tts-localhost-map.png" alt="Schéma ukazující, že localhost znamená stejný počítač, zatímco jiný počítač potřebuje IP adresu v místní síti" class="guide-image guide-image-medium" loading="lazy">
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Vaše nastavení</th><th>Použijte tuto adresu</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Vaše nastavení">OBS a server na stejném počítači</td><td data-label="Použijte tuto adresu"><code>http://127.0.0.1:8880/v1/audio/speech</code></td></tr>
+                        <tr><td data-label="Vaše nastavení">Server na jiném počítači doma</td><td data-label="Použijte tuto adresu"><code>http://192.168.x.x:8880/v1/audio/speech</code>, s místní IP adresou tohoto počítače</td></tr>
+                        <tr><td data-label="Vaše nastavení">Test aplikace SSN funguje, OBS mlčí</td><td data-label="Použijte tuto adresu">OBS potřebuje vlastní funkční adresu. Test aplikace neprokazuje, že OBS dosáhne na server.</td></tr>
+                    </tbody>
+                </table>
+                <p>Ověřte také, že firewall port povoluje a Docker jej zveřejnil (<code>-p 8880:8880</code>).</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="kokoro-fastapi">Kokoro-FastAPI</h2>
+                <p><a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> spouští Kokoro jako místní server. Funguje na CPU, GPU není nutné.</p>
+                <ol class="guide-steps">
+                    <li>Otevřete terminál (Příkazový řádek, PowerShell nebo Terminal) a spusťte jeden z těchto příkazů:
+                        <pre>docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</pre>
+                        <p>NVIDIA GPU (rychlejší):</p>
+                        <pre>docker run --gpus all -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-gpu:v0.2.0post4</pre>
+                        První spuštění jednorázově stáhne přibližně 1,5–2 GB.</li>
+                    <li>Otevřít <code>http://localhost:8880/web/</code>. Měla by se zobrazit stránka pro zkoušení hlasů (dostupných je přes 67).</li>
+                    <li>Použijte tento odkaz (pokud server běží na jiném počítači, změňte adresu):
+                        <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8880/v1/audio/speech&amp;voiceopenai=af_bella</pre></li>
+                </ol>
+                <div class="guide-note"><strong>Používejte názvy hlasů Kokoro</strong>, například <code>af_bella</code>, <code>af_sarah</code>, <code>am_adam</code> nebo <code>bf_emma</code>. Názvy hlasů OpenAI, například <code>nova</code> nebo <code>alloy</code> nemusí fungovat.</div>
+                <p><strong>Automatické spuštění s Dockerem:</strong></p>
+                <pre>docker run -d --restart unless-stopped -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</pre>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="openedai">openedai-speech (Piper a XTTS-v2)</h2>
+                <div class="warning-note"><strong>Archivovaný projekt.</strong> Projekt openedai-speech byl archivován v lednu 2026 a sám se označuje za převážně zastaralý. Jako příklad stále funguje, ale nedostává aktualizace. Provozujte jej místně. Nikdy nevystavujte jeho port internetu; nemá přihlašování.</div>
+                <h3>Možnost A: Lehký server Piper (CPU)</h3>
+                <p>Méně než 1 GB. Bez klonování hlasu.</p>
+                <pre>docker run -d --restart unless-stopped -p 8000:8000 ghcr.io/matatonic/openedai-speech-min</pre>
+                <p>Hlasy: <code>alloy</code>, <code>echo</code>, <code>fable</code>, <code>onyx</code>, <code>nova</code>, <code>shimmer</code>.</p>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=openai&amp;openaiendpoint=http://localhost:8000/v1/audio/speech&amp;voiceopenai=nova</pre>
+                <details class="guide-extra"><summary>Spuštění ze zdrojového kódu ve Windows (chyby HTTP 500)</summary>
+                    <p>Přidejte z jeho virtuálního prostředí <code>Scripts</code> do složky <code>PATH</code> nejprve. Jinak nenajde <code>piper.exe</code> nebo <code>ffmpeg.exe</code>.</p>
+                    <pre>cd openedai-speech
+$env:Path = "$PWD\.venv\Scripts;$env:Path"
+.\.venv\Scripts\python.exe speech.py --xtts_device none -H 127.0.0.1 -P 8000</pre>
+                </details>
+                <h3>Možnost B: Klonování hlasu XTTS-v2 (GPU)</h3>
+                <p>Vyžaduje celý server, nikoli <code>openedai-speech-min</code>. Počítejte přibližně se 4 GB paměti GPU. CPU funguje, ale pomalu.</p>
+                <details class="guide-extra"><summary>Nastavení XTTS-v2 ve 4 krocích</summary>
+                    <ol class="guide-steps">
+                        <li>Stáhněte a spusťte server:
+                            <pre>git clone https://github.com/matatonic/openedai-speech.git
+cd openedai-speech
+Copy-Item sample.env speech.env
+docker compose up -d</pre>
+                            Na macOS nebo Linuxu použijte <code>cp sample.env speech.env</code>. Docker potřebuje přístup ke GPU. Model se stáhne při prvním použití.</li>
+                        <li>Vytvořte čistý referenční klip hlasu, k jehož použití máte svolení. Mono, 22050 Hz, 6–30 sekund:
+                            <pre>ffmpeg -i input.mp3 -ac 1 -ar 22050 -t 6 -y voices/me.wav</pre></li>
+                        <li>V části <code>config/voice_to_speaker.yaml</code>, přidejte jej pod stávající <code>tts-1-hd</code> sekce (ponechte stávající hlasy):
+                            <pre>tts-1-hd:
+  me:
+    model: xtts
+    speaker: voices/me.wav
+    language: en</pre>
+                            Změňte <code>me</code> na název, který SSN odešle.</li>
+                        <li>Spusťte <code>docker compose restart</code>, potom použijte:
+                            <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8000/v1/audio/speech&amp;openaimodel=tts-1-hd&amp;voiceopenai=me&amp;openaiformat=wav</pre></li>
+                    </ol>
+                    <div class="guide-note"><strong><code>openaimodel=tts-1-hd</code> je povinné.</strong> Bez něj SSN odešle <code>tts-1</code>, a server místo toho použije Piper. <code>voiceopenai</code> musí odpovídat názvu hlasu v souboru YAML.</div>
+                    <p>Blokuje jej prohlížeč? Spusťte <a href="#bridge">most</a> a změňte pouze <code>openaiendpoint</code> na <code>http://127.0.0.1:8124/v1/audio/speech</code>.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="bridge">Místní most TTS</h2>
+                <p>Malý pomocný nástroj SSN. Přijme požadavek SSN, předá jej hlasovému serveru a vrátí zvuk způsobem, který prohlížeče přijímají. Vyžaduje Node.js.</p>
+                <div class="guide-note"><strong>Nejjednodušší pravidlo:</strong> spusťte most na počítači s OBS. OBS pak vždy používá <code>http://127.0.0.1:8124/v1/audio/speech</code>, i když hlasový server běží na jiném počítači.</div>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/local-tts/tts-bridge-flow.png" alt="Schéma ukazující volání místního mostu z OBS a následné volání serveru TTS z mostu" class="guide-image guide-image-medium" loading="lazy">
+                </figure>
+                <ol class="guide-steps">
+                    <li>Řekněte mostu, kde server běží. PowerShell:
+                        <pre>$env:SSN_TTS_TARGET="http://127.0.0.1:8880/v1/audio/speech"</pre>
+                        Server na jiném počítači? Použijte jeho místní IP adresu, například <code>http://192.168.x.x:8880/v1/audio/speech</code>.</li>
+                    <li>Ve složce SSN spusťte <code>node scripts/local-tts-bridge.cjs</code>. Nechte jej běžet.</li>
+                    <li>Nasměrujte SSN na most:
+                        <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;voiceopenai=af_bella</pre></li>
+                </ol>
+                <p>macOS/Linux, na jednom řádku: <code>SSN_TTS_TARGET="http://127.0.0.1:8880/v1/audio/speech" node scripts/local-tts-bridge.cjs</code>. Uvnitř <code>local-tts-bridge</code> složky, <code>node server.cjs</code> dělá totéž. Port změňte pomocí <code>SSN_TTS_BRIDGE_PORT=8125</code>. Všechny možnosti: <a href="../../local-tts-bridge/README.md" target="_blank">README mostu</a>.</p>
+                <details class="guide-extra"><summary>Režim GPT-SoVITS</summary>
+                    <p>GPT-SoVITS používá vlastní <code>/tts</code> formát. Most pro něj požadavek převede.</p>
+                    <pre>$env:SSN_TTS_REF_AUDIO_PATH="C:\voices\speaker.wav"
+$env:SSN_TTS_REF_TEXT="Reference audio transcript here."
+$env:SSN_TTS_TARGET="http://127.0.0.1:9880/tts"
+node scripts/local-tts-bridge.cjs --mode gptsovits</pre>
+                    <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;openaiformat=wav</pre>
+                </details>
+                <details class="guide-extra"><summary>Serverový režim F5-TTS</summary>
+                    <p>Některé adaptéry F5-TTS používají <code>/synthesize_speech/?text=...&amp;voice=...</code>. Most pro ně požadavky převádí.</p>
+                    <pre>$env:SSN_TTS_TARGET="http://127.0.0.1:7860/synthesize_speech/"
+node scripts/local-tts-bridge.cjs --mode f5</pre>
+                    <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;voiceopenai=default_en&amp;openaiformat=wav</pre>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-cloning">Klonování hlasu</h2>
+                <p>Klonování není nastavení SSN. Je to funkce některých hlasových serverů. SSN posílá text chatu; klonovaný hlas vybírá server.</p>
+                <ol class="guide-steps">
+                    <li>Nahrajte čistý klip jediného mluvčího, obvykle 3–30 sekund, s minimálním hlukem v pozadí.</li>
+                    <li>Některé servery potřebují také přesný přepis slov v klipu.</li>
+                    <li>Server převede klip na hlasový profil.</li>
+                    <li>SSN posílá text chatu pomocí <code>ttsprovider=customtts</code>.</li>
+                    <li>Server vrátí zvuk, obvykle WAV nebo MP3, a SSN jej přehraje.</li>
+                </ol>
+                <div class="warning-note"><strong>Klonujte pouze hlasy, které vlastníte nebo k jejichž použití máte svolení.</strong></div>
+                <div class="warning-note"><strong>XTTS-v2 je ve výchozím stavu pouze pro nekomerční použití.</strong> Jeho <a href="https://huggingface.co/coqui/XTTS-v2/blob/main/LICENSE.txt" target="_blank">Coqui Public Model License</a> povoluje pouze nekomerční použití. Monetizovaný stream nemusí podmínky splňovat. Nejprve ověřte licenci nebo získejte svolení.</div>
+                <p>S pamětí GPU 6 GB nebo méně začněte malými modely na serverech kompatibilních s OpenAI. Větší modely fungují také, pokud běží jinde.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Možnost</th><th>Klonuje z</th><th>Stačí GPU s 6 GB?</th><th>Jak se připojit</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Možnost"><a href="https://github.com/matatonic/openedai-speech" target="_blank">XTTS-v2 / openedai-speech</a></td><td data-label="Klonuje z">Krátký klip WAV</td><td data-label="Stačí GPU s 6 GB?">Ano, přibližně 4 GB</td><td data-label="Jak se připojit">Přímo, <code>/v1/audio/speech</code>. Projekt je archivovaný.</td></tr>
+                        <tr><td data-label="Možnost"><a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">chatterbox-tts-api</a> / <a href="https://github.com/devnen/Chatterbox-TTS-Server" target="_blank">Chatterbox-TTS-Server</a></td><td data-label="Klonuje z">Referenční klip</td><td data-label="Stačí GPU s 6 GB?">Pravděpodobně s Turbo nebo malými úseky</td><td data-label="Jak se připojit">Přímo nebo přes most. GPU běží plynuleji než CPU. Nastavení se liší podle forku.</td></tr>
+                        <tr><td data-label="Možnost"><a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">Qwen3-TTS</a> (0,6B / 1,7B)</td><td data-label="Klonuje z">3sekundový klip</td><td data-label="Stačí GPU s 6 GB?">Pravděpodobně (0.6B Base)</td><td data-label="Jak se připojit">Vyžaduje adaptér kompatibilní s OpenAI.</td></tr>
+                        <tr><td data-label="Možnost"><a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">GPT-SoVITS</a></td><td data-label="Klonuje z">5 sekund; lépe 1 minuta</td><td data-label="Stačí GPU s 6 GB?">Pravděpodobně s fp16 / lehkou instalací</td><td data-label="Jak se připojit">Most <code>--mode gptsovits</code>.</td></tr>
+                        <tr><td data-label="Možnost"><a href="https://github.com/SWivid/F5-TTS" target="_blank">F5-TTS</a></td><td data-label="Klonuje z">Klip a jeho přepis</td><td data-label="Stačí GPU s 6 GB?">Možná</td><td data-label="Jak se připojit">Adaptér nebo most <code>--mode f5</code> s <a href="https://github.com/ValyrianTech/F5-TTS_server" target="_blank">F5-TTS_server</a>.</td></tr>
+                        <tr><td data-label="Možnost"><a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">MisoTTS 8B</a></td><td data-label="Klonuje z">Referenční zvuk</td><td data-label="Stačí GPU s 6 GB?">Ne; doporučeno 24 GB</td><td data-label="Jak se připojit">Pouze vzdálený hosting. V repozitáři není místní REST endpoint.</td></tr>
+                    </tbody>
+                </table>
+                <p>Vestavěné Kokoro ani Kokoro-FastAPI hlasy neklonují.</p>
+                <details class="guide-extra" id="tested-servers"><summary>Co bylo ověřeno s SSN</summary>
+                    <p>Ověřeno s oběma stránkami <code>dock.html</code> a <code>featured.html</code>:</p>
+                    <ul class="guide-list">
+                        <li><strong>openedai-speech</strong> (Piper): skutečná řeč na CPU, přímo i přes most.</li>
+                        <li><strong>Chatterbox-TTS-Server</strong>: skutečná řeč na CPU s <code>Emily.wav</code>, přímo i přes most.</li>
+                        <li><strong>chatterbox-tts-api</strong>: formát požadavku ověřen přímo i přes most.</li>
+                        <li><strong>GPT-SoVITS</strong> a <strong>F5-TTS_server</strong>: pouze prostřednictvím režimů mostu.</li>
+                        <li><strong>Oficiální F5-TTS</strong> a <strong>Qwen3-TTS</strong>: nejprve potřebují adaptér (pouze CLI, Gradio nebo knihovna).</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="hardware">Jaký počítač potřebuji?</h2>
+                <p>Orientační výchozí hodnoty, nikoli záruky. Spotřebu paměti mění velikost modelu, délka textu i další aplikace.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Možnost</th><th>Minimum</th><th>Pro pohodlný provoz</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Možnost">Systémové TTS / eSpeak</td><td data-label="Minimum">Libovolný počítač</td><td data-label="Pro pohodlný provoz">Libovolný počítač</td></tr>
+                        <tr><td data-label="Možnost">Vestavěný Kitten</td><td data-label="Minimum">Slabší CPU, 4 GB RAM</td><td data-label="Pro pohodlný provoz">CPU notebooku, 8 GB RAM</td></tr>
+                        <tr><td data-label="Možnost">Vestavěný Piper</td><td data-label="Minimum">Moderní CPU, 4–8 GB RAM</td><td data-label="Pro pohodlný provoz">Moderní CPU, 8 GB RAM</td></tr>
+                        <tr><td data-label="Možnost">Vestavěné Kokoro</td><td data-label="Minimum">Moderní CPU, 8 GB RAM</td><td data-label="Pro pohodlný provoz">GPU s WebGPU nebo rychlý CPU, 8–16 GB RAM</td></tr>
+                        <tr><td data-label="Možnost">Kokoro-FastAPI</td><td data-label="Minimum">CPU, 8 GB RAM</td><td data-label="Pro pohodlný provoz">Volitelná NVIDIA GPU, 8–16 GB RAM</td></tr>
+                        <tr><td data-label="Možnost">openedai-speech Piper</td><td data-label="Minimum">CPU, 4&ndash;8 GB RAM</td><td data-label="Pro pohodlný provoz">CPU, 8 GB RAM</td></tr>
+                        <tr><td data-label="Možnost">openedai-speech XTTS</td><td data-label="Minimum">NVIDIA GPU přibližně 4 GB, 8–16 GB RAM</td><td data-label="Pro pohodlný provoz">GPU NVIDIA s 6 GB+, 16 GB RAM</td></tr>
+                        <tr><td data-label="Možnost">Chatterbox</td><td data-label="Minimum">CPU u některých sestavení, pomalé</td><td data-label="Pro pohodlný provoz">GPU NVIDIA s 6 GB+, 16 GB RAM</td></tr>
+                        <tr><td data-label="Možnost">GPT-SoVITS / F5-TTS / Qwen3-TTS</td><td data-label="Minimum">CPU pro testování, pomalé</td><td data-label="Pro pohodlný provoz">GPU NVIDIA s 6 GB+, 16 GB RAM</td></tr>
+                        <tr><td data-label="Možnost">MisoTTS 8B</td><td data-label="Minimum">S 6 GB ne</td><td data-label="Pro pohodlný provoz">GPU s 24 GB nebo vzdálený hostitel</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="obs">Dostaňte zvuk do OBS</h2>
+                <h3>Zdroj prohlížeče OBS (doporučeno)</h3>
+                <p>Funguje s vestavěnými hlasy i vlastním serverem.</p>
+                <ol class="guide-steps">
+                    <li>Přidejte <strong>Zdroj prohlížeče (Browser Source)</strong> se svým <code>dock.html</code> odkaz TTS.</li>
+                    <li>Zapněte <strong>Ovládat zvuk přes OBS (Control audio via OBS)</strong>.</li>
+                    <li>Klikněte na <strong>OK</strong>. TTS se nyní objeví ve zvukovém mixéru OBS.</li>
+                </ol>
+                <h3 id="desktop-app">Desktopová aplikace SSN</h3>
+                <p>Desktopová aplikace používá stejná nastavení odkazu. Zvuk ale hraje z aplikace, nikoli z OBS. Zachyťte jej pomocí <strong>Zvuk plochy</strong> nebo <strong>Zachytávání zvukového vstupu (Audio Input Capture)</strong>. Chcete-li oddělit TTS od ostatních zvuků, přesměrujte aplikaci do virtuálního kabelu: <a href="tts.html#audio-capture">postup směrování zvuku</a>.</p>
+                <div class="warning-note"><strong>Nezaměňujte test aplikace za test OBS.</strong> Tlačítko Test v aplikaci testuje z aplikace. Při použití odkazu v OBS musí na server dosáhnout a zvuk přehrát samo OBS.</div>
+                <details class="guide-extra"><summary>Další podrobnosti k desktopové aplikaci</summary>
+                    <p>Okna aplikace jsou vůči oprávněním prohlížeče (CORS) méně přísná než Chrome. U serverů odmítajících požadavky prohlížeče je most stále nejspolehlivější volbou. Pro vestavěné Kokoro může aplikace použít vlastní <code>ninjafy.tts</code> cestu místo načítání modelu v prohlížeči.</p>
+                </details>
+                <div class="warning-note"><strong>Systémové TTS</strong> (<code>&amp;speech=en-US</code> bez poskytovatele) závisí na hlasech dostupných v OBS. Často nejsou žádné nebo nevytvářejí zachytitelný zvuk. Použijte místo toho některého poskytovatele výše.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="comparison">Srovnání vedle sebe</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Možnost</th><th>Nastavení</th><th>Kvalita</th><th>Soukromý</th><th>Funguje v OBS</th><th>Cena</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Možnost">Vestavěné Kokoro</td><td data-label="Nastavení">Žádné</td><td data-label="Kvalita">5/5</td><td data-label="Soukromý">Ano</td><td data-label="Funguje v OBS">Ano</td><td data-label="Cena">Zdarma</td></tr>
+                        <tr><td data-label="Možnost">Vestavěný Piper</td><td data-label="Nastavení">Žádné</td><td data-label="Kvalita">4/5</td><td data-label="Soukromý">Ano</td><td data-label="Funguje v OBS">Ano</td><td data-label="Cena">Zdarma</td></tr>
+                        <tr><td data-label="Možnost">Vestavěný Kitten</td><td data-label="Nastavení">Žádné</td><td data-label="Kvalita">3/5</td><td data-label="Soukromý">Ano</td><td data-label="Funguje v OBS">Ano</td><td data-label="Cena">Zdarma</td></tr>
+                        <tr><td data-label="Možnost">Vestavěný eSpeak</td><td data-label="Nastavení">Žádné</td><td data-label="Kvalita">2/5</td><td data-label="Soukromý">Ano</td><td data-label="Funguje v OBS">Ano</td><td data-label="Cena">Zdarma</td></tr>
+                        <tr><td data-label="Možnost">Kokoro-FastAPI</td><td data-label="Nastavení">Docker</td><td data-label="Kvalita">5/5</td><td data-label="Soukromý">Ano</td><td data-label="Funguje v OBS">Ano</td><td data-label="Cena">Zdarma</td></tr>
+                        <tr><td data-label="Možnost">openedai-speech</td><td data-label="Nastavení">Docker</td><td data-label="Kvalita">4/5</td><td data-label="Soukromý">Ano</td><td data-label="Funguje v OBS">Ano</td><td data-label="Cena">Zdarma</td></tr>
+                        <tr><td data-label="Možnost">ElevenLabs</td><td data-label="Nastavení">API klíč (API key)</td><td data-label="Kvalita">5/5</td><td data-label="Soukromý">Ne</td><td data-label="Funguje v OBS">Ano</td><td data-label="Cena">Placené úrovně</td></tr>
+                        <tr><td data-label="Možnost">Systémové TTS</td><td data-label="Nastavení">Žádné</td><td data-label="Kvalita">2/5</td><td data-label="Soukromý">Ano</td><td data-label="Funguje v OBS">Vyžaduje směrování zvuku</td><td data-label="Cena">Zdarma</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="troubleshooting">Řešení problémů</h2>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/local-tts/tts-troubleshooting-checklist.png" alt="Kontrolní seznam ve stylu snímku obrazovky pro řešení problémů místního TTS" class="guide-image guide-image-medium" loading="lazy">
+                    <figcaption>Na jednom místě funguje, na jiném ne? Zkontrolujte postupně počítač, adresu, hlas, oprávnění prohlížeče a zvuk OBS.</figcaption>
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Problém</th><th>Vyzkoušejte</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Problém">Test v aplikaci funguje, OBS mlčí</td><td data-label="Vyzkoušejte">OBS musí dosáhnout na server samo. Je server na jiném počítači? Nahraďte <code>127.0.0.1</code> jeho místní IP adresou. Zkontrolujte <strong>Ovládat zvuk přes OBS (Control audio via OBS)</strong>. Stále blokováno? Spusťte most na počítači s OBS.</td></tr>
+                        <tr><td data-label="Problém">Čte se pouze první písmeno nebo slova</td><td data-label="Vyzkoušejte">Odstranit <code>ttsquick</code> z odkazu OBS (například <code>&amp;ttsquick=14</code>) a obnovte stránku. Během testování také odstraňte <code>typewriter=</code> pro vyloučení problémů s načasováním.</td></tr>
+                        <tr><td data-label="Problém">Server neodpovídá</td><td data-label="Vyzkoušejte">Zkontrolujte, že Docker i kontejner běží. Na počítači se serverem otevřete <code>http://127.0.0.1:8880/web/</code> (Kokoro-FastAPI nebo port vašeho serveru). Na počítači s OBS otevřete <code>http://SERVER_LAN_IP:8880/web/</code>. Pokud to nefunguje, nedostane se k němu ani OBS. Zkontrolujte firewall serveru.</td></tr>
+                        <tr><td data-label="Problém">„Blocked by CORS“, „private network“ nebo „failed fetch“</td><td data-label="Vyzkoušejte">Prohlížeč jej zablokoval ještě před doručením serveru. Spusťte <code>node scripts/local-tts-bridge.cjs</code> na počítači s OBS a použijte <code>http://127.0.0.1:8124/v1/audio/speech</code>. Hostovaná beta stránka Docku bývá blokována častěji; jednodušší je most nebo okno místní aplikace.</td></tr>
+                        <tr><td data-label="Problém">Nesprávný hlas nebo hlas nenalezen</td><td data-label="Vyzkoušejte">Kokoro-FastAPI: <code>af_bella</code>, <code>af_sarah</code>, <code>am_adam</code>, případně hlas z jeho webové stránky. openedai-speech: <code>nova</code>, <code>echo</code>, <code>alloy</code>. Některé servery rozlišují velká a malá písmena.</td></tr>
+                        <tr><td data-label="Problém">Zvuk hraje, ale OBS jej nezachytává</td><td data-label="Vyzkoušejte">Zapněte <strong>Ovládat zvuk přes OBS (Control audio via OBS)</strong>. Při testu sledujte ukazatel v mixéru OBS. Nezapomeňte nastavit <code>&amp;ttsprovider=</code>; System TTS může vyžadovat zvuk plochy nebo virtuální kabel.</td></tr>
+                        <tr><td data-label="Problém">Obraz Docker nebyl nalezen</td><td data-label="Vyzkoušejte">Tagy obrazů se mění. Aktuální tag ověřte na <a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> nebo <a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a>.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="flow">Pro tvůrce serverů</h2>
+                <p>Jak SSN komunikuje s vlastním serverem. Tuto část potřebujete pouze při jeho vytváření nebo ladění.</p>
+                <pre>chat text -&gt; SSN -&gt; your endpoint (or the bridge) -&gt; TTS server -&gt; audio -&gt; SSN plays it</pre>
+                <details class="guide-extra"><summary>Co SSN posílá</summary>
+                    <p>S <code>ttsprovider=customtts</code>, <code>localtts</code> nebo <code>openai</code>, SSN odešle požadavek JSON POST:</p>
+                    <pre>POST /v1/audio/speech
+{
+  "model": "tts-1",
+  "input": "Chat message text",
+  "voice": "af_bella",
+  "response_format": "mp3",
+  "speed": 1.0
+}</pre>
+                    <p>Bez nastaveného klíče API neposílá SSN hlavičku Authorization.</p>
+                </details>
+                <details class="guide-extra"><summary>Co SSN umí přehrát</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Odpověď</th><th>Funguje?</th><th>Poznámky</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Odpověď">Zvukový soubor</td><td data-label="Funguje?">Ano</td><td data-label="Poznámky">Nejlepší. <code>audio/mpeg</code>, <code>audio/wav</code>, <code>audio/ogg</code>, <code>audio/aac</code>, nebo libovolný typ zvuku přehratelný v prohlížeči.</td></tr>
+                            <tr><td data-label="Odpověď">JSON s adresou zvuku</td><td data-label="Funguje?">Ano</td><td data-label="Poznámky">Kontroly <code>url</code>, <code>audio_url</code>, <code>output_url</code>, <code>data.url</code>a první <code>data[]</code> položku.</td></tr>
+                            <tr><td data-label="Odpověď">JSON se zvukem v base64</td><td data-label="Funguje?">Ano</td><td data-label="Poznámky">Kontroly <code>audio</code>, <code>audio_data</code>, <code>audioContent</code>, <code>b64_json</code>, vnořené <code>data</code> pole a datové URL.</td></tr>
+                            <tr><td data-label="Odpověď">Nezpracované PCM</td><td data-label="Funguje?">Pouze s obálkou</td><td data-label="Poznámky">Pošlete jej jako soubor WAV nebo WAV v base64.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>Formáty: <code>mp3</code> je malý a široce podporovaný. <code>wav</code> se hodí pro servery klonování a testování mostu. Použijte <code>opus</code> pouze pokud jej podporuje server i prohlížeč.</p>
+                    <p><strong>Streamování zatím nepodporuje.</strong> SSN počká na celou odpověď a pak ji přehraje. Používejte krátké zprávy.</p>
+                </details>
+                <details class="guide-extra" id="connect" open><summary>Nastavení odkazu pro vlastní server</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Nastavení</th><th>Příklad</th><th>Co dělá</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Nastavení"><code>ttsprovider</code></td><td data-label="Příklad"><code>customtts</code></td><td data-label="Co dělá">Použijte vlastní server. (<code>openai</code> také funguje.)</td></tr>
+                            <tr><td data-label="Nastavení"><code>openaiendpoint</code></td><td data-label="Příklad"><code>http://localhost:8880/v1/audio/speech</code></td><td data-label="Co dělá">Adresa vašeho serveru. Upravte port tak, aby odpovídal.</td></tr>
+                            <tr><td data-label="Nastavení"><code>speech</code></td><td data-label="Příklad"><code>en-US</code></td><td data-label="Co dělá">Zapne TTS v angličtině.</td></tr>
+                            <tr><td data-label="Nastavení"><code>voiceopenai</code></td><td data-label="Příklad"><code>af_bella</code></td><td data-label="Co dělá">Název hlasu. Záleží na serveru.</td></tr>
+                            <tr><td data-label="Nastavení"><code>openaimodel</code></td><td data-label="Příklad"><code>tts-1-hd</code></td><td data-label="Co dělá">Název modelu. Výchozí <code>tts-1</code>.</td></tr>
+                            <tr><td data-label="Nastavení"><code>openaiformat</code></td><td data-label="Příklad"><code>mp3</code></td><td data-label="Co dělá">mp3, wav, opus nebo flac.</td></tr>
+                            <tr><td data-label="Nastavení"><code>openaispeed</code></td><td data-label="Příklad"><code>1.0</code></td><td data-label="Co dělá">Rychlost řeči (0,5–2,0).</td></tr>
+                        </tbody>
+                    </table>
+                    <p>Také přijímá: <code>customttsendpoint</code>, <code>localttsendpoint</code>, <code>customttsvoice</code>, <code>localttsvoice</code>, <code>customttsmodel</code>, <code>localttsmodel</code>, <code>customttsformat</code>, <code>localttsformat</code>. Možnosti čtení, například <code>simpletts</code>, <code>skipmessages</code> a <code>ttsquick</code> fungují s libovolným poskytovatelem: <a href="tts.html#parameters">všechna nastavení odkazů</a>.</p>
+                    <p>Příklady odkazů:</p>
+                    <pre>Kokoro-FastAPI:  dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://localhost:8880/v1/audio/speech&amp;voiceopenai=af_bella&amp;openaispeed=1.1
+openedai-speech: dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://localhost:8000/v1/audio/speech&amp;voiceopenai=nova
+kokoro-web:      dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://localhost:3000/api/v1/audio/speech&amp;voiceopenai=af_bella</pre>
+                </details>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>Social Stream Ninja: Průvodce místním AI TTS · <a href="tts-setup-guide.html">Průvodce nastavením TTS</a> &middot; <a href="tts.html">Průvodce hlasy TTS</a> &middot; <a href="guides.html">Všechny návody</a> &middot; <a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

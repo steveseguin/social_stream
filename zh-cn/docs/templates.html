@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/zh-cn/docs/templates.html">
+    <meta property="og:title" content="聊天叠加层模板与自定义皮肤 - Social Stream Ninja">
+    <meta property="og:description" content="为 OBS 选择聊天叠加层模板、自定义外观，或导入 StreamElements 聊天皮肤。查找预览和 Social Stream Ninja 设置指南。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-cn/docs/templates.html">
+    <meta name="twitter:title" content="聊天叠加层模板与自定义皮肤 - Social Stream Ninja">
+    <meta name="twitter:description" content="为 OBS 选择聊天叠加层模板、自定义外观，或导入 StreamElements 聊天皮肤。查找预览和 Social Stream Ninja 设置指南。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聊天叠加层模板与自定义皮肤 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/templates.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <meta name="description" content="为 OBS 选择聊天叠加层模板、自定义外观，或导入 StreamElements 聊天皮肤。查找预览和 Social Stream Ninja 设置指南。">
+    <link rel="canonical" href="https://socialstream.ninja/zh-cn/docs/templates.html">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/templates.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{", and select the downloaded HTML file.":"，并选择下载的 HTML 文件。",", enter your session details, then copy the links for OBS. Motion is optional.":"，输入会话信息，然后复制 OBS 链接。动画为可选。",", or explore custom templates and imports below.":"，或在下方探索自定义模板及导入功能。",", preview it, then download the OBS HTML. Use the original ZIP or files, not a screenshot or overlay URL.":"，预览后下载 OBS HTML。请使用原始 ZIP 或文件，而非截图或叠加层 URL。",". In OBS, add a Browser Source, enable":"。在 OBS 中添加浏览器源，启用","A cheerful corgi on a sky-blue postcard":"天蓝色明信片上的快乐柯基","A cheerful corgi on a sky-blue postcard. Includes matching chat, featured-message, and alert styles.":"天蓝色明信片上的快乐柯基。包含配套的聊天、精选消息和警报样式。","A clean, lightweight template with essential features. Perfect starting point for customization.":"整洁轻量、具备基本功能的模板。适合作为自定义的起点。","A more complete starting point with comments and documentation to help you build your own custom overlays.":"更完整的起始模板，附带注释和文档，帮助你构建自己的自定义叠加层。","A running feed from your connected platforms. Start with a chat template or":"来自已连接平台的持续消息流。从聊天模板开始，或使用","A sophisticated, fully animated theme with customizable colors and smooth transitions. Perfect for gaming streams.":"精致的全动画主题，支持自定义颜色及平滑过渡。非常适合游戏直播。","A storybook frog in a peaceful woodland":"宁静林地里的童话青蛙","A storybook frog in a peaceful woodland. Includes matching chat, featured-message, and alert styles.":"宁静林地中的童话青蛙。包含配套的聊天、精选消息和警报样式。","A tiny dragon with a luminous enchanted crystal":"带着发光魔法水晶的小龙","A tiny dragon with a luminous enchanted crystal. Includes matching chat, featured-message, and alert styles.":"小龙守护着发光的魔法水晶。包含配套的聊天、精选消息和警报样式。","Add Your SSN Session ID":"添加你的 SSN 会话 ID","Add Your Session ID":"添加你的会话 ID","Add the modified URL as a Browser Source in your streaming software:":"将修改后的 URL 作为浏览器源添加到直播软件中：","Add to OBS/Streamlabs":"添加到 OBS/Streamlabs","Add your CSS in the Browser Source properties":"在浏览器源属性中添加 CSS","Alert guide":"警报指南","All Templates":"所有模板","An astronaut bunny drifting through lilac stardust":"在淡紫星尘中漂浮的太空兔","An astronaut bunny drifting through lilac stardust. Includes matching chat, featured-message, and alert styles.":"在淡紫星尘中漂浮的兔子宇航员。包含配套的聊天、精选消息和警报样式。","Animated":"动画","Append":"附加","Apply your custom CSS through OBS browser source settings":"通过 OBS 浏览器源设置应用自定义 CSS","Bare Template":"基础模板（Bare Template）","Base64 CSS:":"Base64 CSS：","Bluesky":"Bluesky","Bold, high-contrast theme designed for gaming streams with excellent visibility even in fast-paced content.":"为游戏直播设计的醒目高对比主题，即使内容节奏很快也清晰可见。","Browse Overlay Gallery":"浏览叠加层图库","Browse the":"浏览","Browse the template library and select one that fits your stream style. Use the screenshot gallery to compare designs; most built-in templates work directly from a URL, with no download.":"浏览模板库，选择适合直播风格的模板。使用截图图库比较设计；大多数内置模板可直接通过 URL 使用，无需下载。","By Deuk":"作者：Deuk","By LuckyLootTube":"作者：LuckyLootTube","By NeutronStudio":"作者：NeutronStudio","By RetroTech":"作者：RetroTech","By Social Stream Ninja":"作者：Social Stream Ninja","By t3nk3y":"作者：t3nk3y","CSS Snippet":"CSS 片段","CSS copied to clipboard!":"CSS 已复制到剪贴板！","CSS not found":"未找到 CSS","Celebrate follows, memberships, and donations. Configure animations and audio in SSN’s alert settings.":"庆祝关注、会员及打赏。在 SSN 警报设置中配置动画和音频。","Chat Overlay Templates and Custom Skins - Social Stream Ninja":"聊天叠加层模板与自定义皮肤 - Social Stream Ninja","Choose Message History":"选择消息历史","Choose Your Template":"选择模板","Choose a chat overlay template for OBS, customize its appearance, or import a StreamElements chat skin. Find previews and Social Stream Ninja setup guides.":"为 OBS 选择聊天叠加层模板、自定义外观，或导入 StreamElements 聊天皮肤。查找预览和 Social Stream Ninja 设置指南。","Choose a look for your stream":"为直播选择外观","Choose a starting point, copy the prompt, and replace the bracketed design details. Attach source files if your AI cannot read links. Leave your private session ID and password out of the conversation.":"选择起点，复制提示词，并替换方括号中的设计细节。如果 AI 无法读取链接，请附上源文件。不要在对话中提供私密会话 ID 和密码。","Clean, modern design with smooth animations and excellent readability. Customizable color schemes.":"整洁现代的设计，动画流畅，易于阅读。可自定义配色。","Click":"点击","Click OK to add it to your scene":"点击“确定”将其添加到场景","Close":"关闭","Commands & API":"命令与 API","Community":"社区","Complete Package":"完整套装","Complete themed packages with documentation, sample images, and guides":"完整主题套装，包含文档、示例图片和指南","Configure OBS to use your customized template":"配置 OBS 以使用自定义模板","Confirm SSN Is Receiving Chat":"确认 SSN 正在接收聊天","Confirm chat reaches the SSN dock and that the session ID and optional password match exactly.":"确认聊天到达 SSN 停靠面板，且会话 ID 和可选密码完全一致。","Consolidates your live social messaging streams and more. Free and open source.":"汇聚你的社交直播消息等内容。免费且开源。","Contribute":"参与贡献","Converting a more complex widget?":"正在转换更复杂的组件？","Copy a working starter and edit its HTML, CSS, and JavaScript.":"复制一个可用起始模板，并编辑其 HTML、CSS 和 JavaScript。","Copy the template code to your clipboard":"将模板代码复制到剪贴板","Copy to Clipboard":"复制到剪贴板","Create a styled SSN consolidated chat overlay from https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html . Receive the normal live feed (dock label), with a bounded message list, configurable count and optional expiry. Preserve platform icons, donation and membership presentation. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"根据 https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html 创建带样式的 SSN 聚合聊天叠加层。接收普通实时消息流（dock 标签），消息列表长度应有上限，可配置条数并可选启用过期。保留平台图标、打赏和会员展示。请先检查下方当前 SSN 源码和文档。如果无法打开，请让我附上文件；不要猜测传输方式或事件结构。参考资料：https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 及 https://socialstream.ninja/beta/docs/event-reference.html 。保留起始叠加层的连接、session/password、label 和 server 选项、管理/删除/清空处理，以及现有消息字段。凭据使用 YOUR_SESSION_ID / YOUR_PASSWORD 占位符，绝不使用真实凭据。使用兼容 Chrome 80 和 OBS 的传统脚本；保留相对路径的本地依赖，并列出必须与 HTML 一同提供的文件。将 chatname 作为纯文本处理；textonly 仅适用于 chatmessage。保留安全的表情/徽章、仅图片的 contentimg 消息，以及混合的事件/元数据流量，但不要将仅含元数据的更新显示为聊天。不要插入未经检查的 HTML，也不要自行发明顶层数据字段。设计：[描述颜色、氛围、字体排版、位置和动画]。画布：[宽 x 高]。保持背景透明、文字在游戏画面上清晰可读，限制长名称/消息不超出边界，并提供减少动画的样式。返回完整的修改后文件、简单的设置说明，以及使用模拟数据且绝不连接实时会话的演示模式。测试长文本、emoji、仅图片消息、删除、清空、尺寸调整和重新连接。","Created an awesome template for Social Stream Ninja? Share it with the community by submitting a pull request to our GitHub repository.":"为 Social Stream Ninja 制作了出色模板？向 GitHub 仓库提交拉取请求，与社区分享。","Creating a Custom Chat Overlay for Social Stream Ninja":"为 Social Stream Ninja 创建自定义聊天叠加层","Custom CSS":"自定义 CSS","Customization Guide":"自定义指南","Customize Your Template":"自定义模板","Customize https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html . Inspect its shared alert dependencies and https://socialstream.ninja/beta/docs/alert-effects.html first. Reuse existing alert type filters, queue, sound library, mute/volume and effect rules. Keep USD thresholds on the existing currency.js conversion path; do not compare formatted currency strings. Support an optional animation and sound for a $100 USD donation rule, respecting enabled state and existing range semantics. Avoid duplicate playback. Use only audio I supply or have permission to use. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"自定义 https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html 。先检查其共享警报依赖及 https://socialstream.ninja/beta/docs/alert-effects.html 。复用现有警报类型过滤器、队列、声音库、静音/音量和效果规则。USD 阈值继续使用现有 currency.js 换算路径；不要比较格式化后的货币字符串。为 $100 USD 打赏规则支持可选动画和声音，并遵守启用状态及现有范围语义。避免重复播放。仅使用我提供或有权使用的音频。请先检查下方当前 SSN 源码和文档。如果无法打开，请让我附上文件；不要猜测传输方式或事件结构。参考资料：https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 及 https://socialstream.ninja/beta/docs/event-reference.html 。保留起始叠加层的连接、session/password、label 和 server 选项、管理/删除/清空处理，以及现有消息字段。凭据使用 YOUR_SESSION_ID / YOUR_PASSWORD 占位符，绝不使用真实凭据。使用兼容 Chrome 80 和 OBS 的传统脚本；保留相对路径的本地依赖，并列出必须与 HTML 一同提供的文件。将 chatname 作为纯文本处理；textonly 仅适用于 chatmessage。保留安全的表情/徽章、仅图片的 contentimg 消息，以及混合的事件/元数据流量，但不要将仅含元数据的更新显示为聊天。不要插入未经检查的 HTML，也不要自行发明顶层数据字段。设计：[描述颜色、氛围、字体排版、位置和动画]。画布：[宽 x 高]。保持背景透明、文字在游戏画面上清晰可读，限制长名称/消息不超出边界，并提供减少动画的样式。返回完整的修改后文件、简单的设置说明，以及使用模拟数据且绝不连接实时会话的演示模式。测试长文本、emoji、仅图片消息、删除、清空、尺寸调整和重新连接。","Customize https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html for a single selected message. Preserve its default featured/overlay routing and clear behavior; do not automatically show every chat message. Explain how to select a message from the SSN dock. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"自定义 https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html ，用于单条选中消息。保留默认 featured/overlay 路由及清空行为；不要自动显示每条聊天消息。说明如何从 SSN 停靠面板选择消息。请先检查下方当前 SSN 源码和文档。如果无法打开，请让我附上文件；不要猜测传输方式或事件结构。参考资料：https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 及 https://socialstream.ninja/beta/docs/event-reference.html 。保留起始叠加层的连接、session/password、label 和 server 选项、管理/删除/清空处理，以及现有消息字段。凭据使用 YOUR_SESSION_ID / YOUR_PASSWORD 占位符，绝不使用真实凭据。使用兼容 Chrome 80 和 OBS 的传统脚本；保留相对路径的本地依赖，并列出必须与 HTML 一同提供的文件。将 chatname 作为纯文本处理；textonly 仅适用于 chatmessage。保留安全的表情/徽章、仅图片的 contentimg 消息，以及混合的事件/元数据流量，但不要将仅含元数据的更新显示为聊天。不要插入未经检查的 HTML，也不要自行发明顶层数据字段。设计：[描述颜色、氛围、字体排版、位置和动画]。画布：[宽 x 高]。保持背景透明、文字在游戏画面上清晰可读，限制长名称/消息不超出边界，并提供减少动画的样式。返回完整的修改后文件、简单的设置说明，以及使用模拟数据且绝不连接实时会话的演示模式。测试长文本、emoji、仅图片消息、删除、清空、尺寸调整和重新连接。","Demo Preview":"演示预览","Demo is blank":"演示为空白","Deuk's Theme":"Deuk 的主题","Developer":"开发者","Developer Templates":"开发者模板","Developer guide":"开发者指南","Discord":"Discord","Do not add the session ID or edit the URL in OBS.":"不要在 OBS 中添加会话 ID 或编辑 URL。","Donate":"捐赠","Download":"下载","Download OBS HTML":"下载 OBS HTML","Download and Add It to OBS":"下载并添加到 OBS","Editable prompt":"可编辑提示词","Elegant design with smooth animations and visual effects. Eye-catching yet not distracting.":"优雅设计，动画流畅并带有视觉效果。醒目而不分散注意力。","Event Flow editor":"Event Flow 编辑器","Event fields":"事件字段","FAQ":"常见问题","Failed to copy. Try selecting and copying manually.":"复制失败。尝试手动选择并复制。","Featured":"精选","Features":"功能","Filter templates":"筛选模板","Find the perfect template for your stream":"为直播找到合适的模板","Find the sample overlay template (sampleoverlay.html)":"找到示例叠加层模板（sampleoverlay.html）","Follow these simple steps to get started":"按照这些简单步骤开始","For inline CSS, use":"对于内联 CSS，使用","For trigger-based behavior, start with the":"对于基于触发器的行为，从以下内容开始：","Friendly ghost, glowing pumpkin and midnight plum":"友善幽灵、发光南瓜与午夜梅紫","Friendly ghost, glowing pumpkin and midnight plum. Includes matching chat, featured-message, and alert styles.":"友善幽灵、发光南瓜与午夜梅紫色。包含配套的聊天、精选消息和警报样式。","Gaming":"游戏","Get":"获取","Get the Original Widget Export":"获取原始组件导出文件","GitHub":"GitHub","GitHub Repository":"GitHub 仓库","Guides":"指南","Have a StreamElements chat widget export?":"有 StreamElements 聊天组件导出文件？","Have a Template to Share?":"有想分享的模板？","Headphone raccoon and vinyl in mint and plum":"薄荷绿与梅紫色中的耳机浣熊和黑胶唱片","Headphone raccoon and vinyl in mint and plum. Includes matching chat, featured-message, and alert styles.":"耳机浣熊与黑胶唱片，搭配薄荷绿和梅紫色。包含配套的聊天、精选消息和警报样式。","Hire":"雇用","Home":"首页","Host your files and use their URL with your session and optional password. For a self-contained local export, follow its configuration instructions; OBS Local file has no URL field for session parameters.":"托管文件，并使用带会话及可选密码的 URL。对于独立本地导出，请遵循其配置说明；OBS Local file 没有用于会话参数的 URL 字段。","How to Use Templates":"如何使用模板","If the imported widget provides compatible settings, use":"如果导入的组件提供兼容设置，使用","Import StreamElements Widget":"导入 StreamElements 组件","In OBS, click the + under Sources and select \"Browser\"":"在 OBS 中点击“来源”下的 +，选择“浏览器”","Inspiration":"灵感","Installation Guide":"安装指南","Join our Discord":"加入我们的 Discord","Keep SSN running while streaming; the importer and StreamElements may be closed.":"直播时保持 SSN 运行；导入器和 StreamElements 可以关闭。","Keep referenced shared scripts, fonts, and images alongside your file with the same relative paths, or ask your AI for a self-contained export. Renaming one HTML file does not bundle its dependencies.":"将引用的共享脚本、字体和图片与文件一起保留，使用相同相对路径，或让 AI 提供独立导出。重命名一个 HTML 文件不会将其依赖打包。","Keep the original connection code. Chat and featured overlays receive different feeds; styling a chat feed does not make it a selected-message overlay.":"保留原始连接代码。聊天和精选叠加层接收不同的消息流；为聊天流改样式不会将其变成选中消息叠加层。","Learn how to create a custom chat overlay with AI assistance":"了解如何借助 AI 创建自定义聊天叠加层","Liquid Glass":"液态玻璃","Live Preview":"实时预览","Live Preview is blank":"实时预览为空白","Local file":"本地文件","LuckyLootTube Liquid Glass Theme":"LuckyLootTube 液态玻璃主题","LuckyLootTube's Theme":"LuckyLootTube 的主题","Main navigation":"主导航","Message history":"消息历史","Minimal":"极低","Minimal code needed to create your own overlay from scratch. Perfect for developers and LLM-assisted coding.":"用最少代码从头创建自己的叠加层。适合开发者及 LLM 辅助编程。","Modern":"现代","Modern Design":"现代设计","Name your source and click OK":"为来源命名并点击“确定”","Neutron Theme":"Neutron 主题","New":"新","New to importing?":"第一次导入？","No matches. Try another search or choose All Templates.":"没有匹配项。尝试其他搜索，或选择“所有模板”。","Nostalgic Windows 3.1 style chat overlay with classic window design and pixel-perfect detailing.":"怀旧的 Windows 3.1 风格聊天叠加层，带有经典窗口设计及像素级细节。","OBS Custom CSS:":"OBS 自定义 CSS：","OBS is blank":"OBS 显示为空白","One look across three browser sources. In the gallery, choose":"三个浏览器源使用统一外观。在图库中选择","One message you select in the dock. Choose a featured design for interviews, Q&A, or shout-outs.":"在停靠面板中选择的一条消息。为访谈、问答或致意选择精选消息设计。","Open Widget Importer":"打开组件导入器","Open navigation menu":"打开导航菜单","Open the Importer":"打开导入器","Open the StreamElements converter":"打开 StreamElements 转换器","Open the importer and choose the ZIP, folder, or files. It detects the widget parts and immediately shows a demo preview.":"打开导入器并选择 ZIP、文件夹或文件。它会识别组件部分并立即显示演示预览。","Open your platform sources in the SSN app or extension, then send a test message. Continue only after it appears in the SSN dock.":"在 SSN 应用或扩展中打开平台来源，然后发送测试消息。确认消息出现在 SSN 停靠面板后再继续。","Opening the importer from the SSN popup fills the session ID and password automatically. If you opened it directly, copy them from":"从 SSN 弹出菜单打开导入器时，会自动填入会话 ID 和密码。如果直接打开，请从以下位置复制：","Overlay Gallery":"叠加层图库","Paste your template URL with session ID":"粘贴带会话 ID 的模板 URL","Personalize your overlay with custom CSS in one of these ways:":"通过以下任一方式使用自定义 CSS 个性化叠加层：","Popular":"热门","Pretty Template":"美观模板（Pretty Template）","Preview & use pack":"预览并使用套装","Preview chat, featured-message, and alert overlays, then add your favorite to OBS or Streamlabs.":"预览聊天、精选消息及警报叠加层，然后将喜欢的样式添加到 OBS 或 Streamlabs。","Preview fake data first, then test with your own SSN session. Check selected messages, clearing, long names, images, and transparent backgrounds. Keep SSN running during live use.":"先用模拟数据预览，再使用自己的 SSN 会话测试。检查选中消息、清空、长名称、图片及透明背景。实时使用期间保持 SSN 运行。","Privacy Policy":"隐私政策","Prompt copied.":"提示词已复制。","Prompt selected. Press Ctrl+C (Command+C on Mac) to copy.":"提示词已选中。按 Ctrl+C（Mac 上为 Command+C）复制。","Prompt the AI to modify the CSS for your preferred style":"提示 AI 修改 CSS，以实现喜欢的样式","Quick Guide from the Video":"视频快速指南","Quick Links":"快捷链接","Quick start":"快速开始","Read the full chat skin guide":"阅读完整聊天皮肤指南","Ready-to-use templates that only require your session ID":"仅需会话 ID 即可使用的现成模板","Replace":"替换","Report an Issue":"报告问题","Resources":"资源","Restyle my existing SSN overlay using CSS only. I will provide its URL and source HTML/CSS. Keep all JavaScript and message routing unchanged. Inspect actual DOM selectors before writing CSS. Deliver CSS for the OBS Browser Source Custom CSS box plus any necessary local font/image assets. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"仅使用 CSS 重新设计我现有 SSN 叠加层的样式。我会提供其 URL 和源 HTML/CSS。保留所有 JavaScript 及消息路由不变。编写 CSS 前，检查实际 DOM 选择器。提供用于 OBS 浏览器源 Custom CSS 框的 CSS，以及所需本地字体/图片资源。请先检查下方当前 SSN 源码和文档。如果无法打开，请让我附上文件；不要猜测传输方式或事件结构。参考资料：https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 及 https://socialstream.ninja/beta/docs/event-reference.html 。保留起始叠加层的连接、session/password、label 和 server 选项、管理/删除/清空处理，以及现有消息字段。凭据使用 YOUR_SESSION_ID / YOUR_PASSWORD 占位符，绝不使用真实凭据。使用兼容 Chrome 80 和 OBS 的传统脚本；保留相对路径的本地依赖，并列出必须与 HTML 一同提供的文件。将 chatname 作为纯文本处理；textonly 仅适用于 chatmessage。保留安全的表情/徽章、仅图片的 contentimg 消息，以及混合的事件/元数据流量，但不要将仅含元数据的更新显示为聊天。不要插入未经检查的 HTML，也不要自行发明顶层数据字段。设计：[描述颜色、氛围、字体排版、位置和动画]。画布：[宽 x 高]。保持背景透明、文字在游戏画面上清晰可读，限制长名称/消息不超出边界，并提供减少动画的样式。返回完整的修改后文件、简单的设置说明，以及使用模拟数据且绝不连接实时会话的演示模式。测试长文本、emoji、仅图片消息、删除、清空、尺寸调整和重新连接。","Retro":"复古","Retro Style":"复古风格","Review the detected files in the importer and use Advanced file selection if it chose the wrong HTML, CSS, or JavaScript.":"检查导入器识别出的文件；如果选错 HTML、CSS 或 JavaScript，请使用 Advanced file selection。","Sample Overlay":"叠加层示例","Sample Overlay Template":"示例叠加层模板","Sample Template":"示例模板","Scarf-wrapped reindeer and festive evergreen":"围着围巾的驯鹿与节日常青树","Scarf-wrapped reindeer and festive evergreen. Includes matching chat, featured-message, and alert styles.":"围着围巾的驯鹿与节日常青树。包含配套的聊天、精选消息和警报样式。","Search templates by name, type, or feature...":"按名称、类型或功能搜索模板…","See setup below":"查看下方设置","Session Options":"会话选项","Set width and height (recommended: 1920×1080)":"设置宽度和高度（建议：1920×1080）","Setup":"设置","Simple Drop-in Templates":"简单即用模板","Sleek animated liquid-glass style chat overlay with smooth animations and cool emote rendering.":"时尚的液态玻璃风格聊天叠加层，动画流畅，表情渲染酷炫。","Sleepy calico, strawberry milk and blush stationery":"困倦的三花猫、草莓牛奶与柔粉文具","Sleepy calico, strawberry milk and blush stationery. Includes matching chat, featured-message, and alert styles.":"困倦的三花猫、草莓牛奶和粉色文具。包含配套的聊天、精选消息和警报样式。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja。GPLv3.0 许可证。创建者：","Source Code":"源代码","Start with a working overlay, then change its appearance.":"从可用叠加层开始，再修改外观。","Starting points for creating your own custom overlays":"创建自定义叠加层的起点","Steve Seguin":"Steve Seguin","StreamElements Setup Guide":"StreamElements 设置指南","Submit on GitHub":"在 GitHub 上提交","Support":"支持","Supported Sites":"支持的网站","Switch theme":"切换主题","Template Library":"模板库","Templates":"模板","Templates Gallery":"模板库","Templates that work with YouTube CSS styles":"支持 YouTube CSS 样式的模板","Terms of Service":"服务条款","Test Before Downloading":"下载前测试","Themed Packages":"主题套装","This works with both the SSN Windows desktop app and Chrome extension. No code editing is required.":"同时适用于 SSN Windows 桌面应用和 Chrome 扩展，无需编辑代码。","URL Parameter:":"URL 参数：","Use":"使用","Use CSS designed for YouTube with our YouTube-structured overlay page. Compatible with Septapus styles.":"在采用 YouTube 结构的叠加层页面上使用为 YouTube 设计的 CSS。兼容 Septapus 样式。","Use OBS Browser Source":"使用 OBS 浏览器源","Use a StreamElements Chat Widget with Social Stream Ninja":"将 StreamElements 聊天组件与 Social Stream Ninja 配合使用","Use an AI assistant like Claude to help customize it":"使用 Claude 等 AI 助手帮助自定义","Use matching set":"使用配套组合","Use the ZIP, folder, or files supplied by the widget designer. A useful export normally contains HTML, CSS, JavaScript, fields/data, and assets. A screenshot or StreamElements overlay URL is not enough.":"使用组件设计者提供的 ZIP、文件夹或文件。有效导出通常包含 HTML、CSS、JavaScript、fields/data 及资源。截图或 StreamElements 叠加层 URL 不够。","Use the downloaded HTML file, then refresh the OBS Browser Source. The importer page, original ZIP, and StreamElements URL cannot be used as the Browser Source.":"使用下载的 HTML 文件，而非导入器页面、原始 ZIP 或 StreamElements URL，然后刷新 OBS 浏览器源。","Use the full StreamElements / Streamlabs conversion prompt":"使用完整的 StreamElements / Streamlabs 转换提示词","Video Tutorial":"视频教程","Windows 3.1 Theme":"Windows 3.1 主题","X.com":"X.com","YouTube Compatible":"兼容 YouTube","YouTube-CSS Compatible Templates":"兼容 YouTube CSS 的模板","YouTube-CSS Template":"YouTube CSS 模板","alert effect rules":"警报效果规则","and":"和","before writing a new overlay.":"，然后再编写新叠加层。","checks the design with sample messages.":"通过示例消息检查设计。","checks the session using real chat from the running SSN app or extension.":"使用正在运行的 SSN 应用或扩展中的真实聊天检查会话。","complete visual overlay gallery":"完整叠加层视觉图库","featured-modern.html":"featured-modern.html","for colors, spacing, and typography. Keep the original SSN URL and connection.":"，以调整颜色、间距和排版。保留原始 SSN URL 和连接。","for consolidated chat,":"用于聚合聊天，","for events. Download the source and required assets from":"用于事件。从以下位置下载源文件及所需资源：","for finding widget files, supported formats, OBS setup and troubleshooting.":"，了解组件文件查找、支持的格式、OBS 设置及故障排查。","for selected messages, or":"用于选中消息，或","in the app or extension. You enter the session ID once in the importer; it is saved inside the downloaded file.":"，在应用或扩展中查找。只需在导入器中输入会话 ID 一次，它会保存在下载的文件内。","in the template URL with your actual Social Stream Ninja session ID found under Session Options in the SSN app or extension. Include the optional password if your session uses one.":"，在模板 URL 中替换为实际的 Social Stream Ninja 会话 ID，可在 SSN 应用或扩展的 Session Options 下找到。如果会话使用密码，也请包含可选密码。","multi-alerts.html":"multi-alerts.html","sampleoverlay.html":"sampleoverlay.html","t3nk3y's Theme":"t3nk3y 的主题","the beta repository":"beta 仓库","the dock":"停靠面板","to turn off timed removal or change how many messages stay on screen. This changes widget settings, not its code.":"以关闭定时移除，或更改屏幕上保留的消息数量。这会更改组件设置，不会更改代码。","to your template URL":"到模板 URL","with contributions from the community.":"，社区共同参与贡献。","{0} templates shown":"显示 {0} 个模板","✨ Copy AI Prompts":"✨ 复制 AI 提示词","✨ Copy a prompt for your AI":"✨ 为你的 AI 复制提示词","⭐ Featured message":"⭐ 精选消息","🌙 Moon Bunny":"🌙 月亮兔","🍄 Moss & Mushrooms":"🍄 苔藓与蘑菇","🎃 Pumpkin Haunt":"🎃 南瓜幽灵","🎄 Merry Little Reindeer":"🎄 欢乐小驯鹿","🎉 Alerts with sound":"🎉 带声音的警报","🎉 Event alerts":"🎉 事件警报","🎨 CSS-only makeover":"🎨 仅用 CSS 改造外观","🎨 Change the look":"🎨 更改外观","🎨 Matching packs":"🎨 配套套装","🎨 Matching theme packs":"🎨 配套主题套装","🎵 Midnight Mixtape":"🎵 午夜混音带","🐉 Crystal Guardian":"🐉 水晶守护者","🐱 Strawberry Cat":"🐱 草莓猫","🐶 Good Company":"🐶 温馨伙伴","💬 Consolidated chat":"💬 聚合聊天","📋 Copy prompt":"📋 复制提示词","📦 Bring a widget":"📦 导入组件","🔎 Find a template or theme pack":"🔎 查找模板或主题套装","🔧 Files, routing, and testing":"🔧 文件、路由及测试","🚀 Setup":"🚀 设置","🛠️ Make Your Own":"🛠️ 自己制作","🛠️ Make your own template":"🛠️ 制作自己的模板","🧩 Change behavior":"🧩 更改行为","🧭 Choose your overlay type":"🧭 选择叠加层类型"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/templates.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/templates.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/templates.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/templates.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/templates.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/templates.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/templates.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/templates.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/templates.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/templates.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/templates.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/templates.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/templates.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/templates.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/templates.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/templates.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/templates.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/templates.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/templates.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/templates.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/templates.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/templates.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/templates.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/templates.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/templates.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="templates.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/templates.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/templates.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/templates.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/templates.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/templates.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/templates.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/templates.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/templates.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/templates.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>模板库</h1>
+            <p>浏览 <a href="overlay-gallery.html">完整叠加层视觉图库</a>，或在下方探索自定义模板及导入功能。</p>
+        </div>
+    </section>
+
+    <section class="template-banner">
+        <div class="container">
+            <h2>为直播选择外观</h2>
+            <p>预览聊天、精选消息及警报叠加层，然后将喜欢的样式添加到 OBS 或 Streamlabs。</p>
+            <div class="hero-buttons">
+                <a href="overlay-gallery.html" class="btn btn-primary">浏览叠加层图库</a>
+                <a href="#how-to-use" class="btn btn-secondary">🚀 设置</a>
+                <a href="#make-your-own" class="btn btn-secondary">🛠️ 自己制作</a>
+                <a href="#ai-prompts" class="btn btn-secondary">✨ 复制 AI 提示词</a>
+                <a href="../../streamelements-importer.html" class="btn btn-secondary">导入 StreamElements 组件</a>
+                <a href="streamelements-chat-guide.html" class="btn btn-secondary">StreamElements 设置指南</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="template-details" aria-labelledby="choose-overlay">
+        <div class="container">
+            <h2 id="choose-overlay">🧭 选择叠加层类型</h2>
+            <div class="template-features">
+                <div class="template-feature"><h3>💬 聚合聊天</h3><p>来自已连接平台的持续消息流。从聊天模板开始，或使用 <a href="../../dock.html">停靠面板</a>.</p></div>
+                <div class="template-feature"><h3>⭐ 精选消息</h3><p>在停靠面板中选择的一条消息。为访谈、问答或致意选择精选消息设计。</p></div>
+                <div class="template-feature"><h3>🎉 事件警报</h3><p>庆祝关注、会员及打赏。在 SSN 警报设置中配置动画和音频。 <a href="alert-effects.html">警报指南</a></p></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="template-library" class="template-library">
+        <div class="container">
+            <h2>模板库</h2>
+            <p class="section-subtitle">为直播找到合适的模板</p>
+            
+            <div class="template-search">
+                <label for="template-search-input">🔎 查找模板或主题套装</label>
+                <input type="search" id="template-search-input" placeholder="按名称、类型或功能搜索模板…">
+            </div>
+            
+            <p id="template-results" role="status"></p>
+            <div class="tag-filters" aria-label="筛选模板">
+                <button type="button" class="filter-tag" data-filter="matching" aria-pressed="false">🎨 配套套装</button>
+                <button type="button" class="filter-tag active" data-filter="all" aria-pressed="true">所有模板</button>
+                <button type="button" class="filter-tag" data-filter="gaming" aria-pressed="false">游戏</button>
+                <button type="button" class="filter-tag" data-filter="minimal" aria-pressed="false">极低</button>
+                <button type="button" class="filter-tag" data-filter="animated" aria-pressed="false">动画</button>
+                <button type="button" class="filter-tag" data-filter="retro" aria-pressed="false">复古</button>
+                <button type="button" class="filter-tag" data-filter="modern" aria-pressed="false">现代</button>
+                <button type="button" class="filter-tag" data-filter="youtube-compatible" aria-pressed="false">兼容 YouTube</button>
+            </div>
+            
+<div id="matching-packs" class="template-category"><div class="category-header"><h3>🎨 配套主题套装</h3></div><p>三个浏览器源使用统一外观。在图库中选择 <strong>使用配套组合</strong>，输入会话信息，然后复制 OBS 链接。动画为可选。</p><div class="templates-main-grid"><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute cat cats kitten">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-cat.webp" loading="lazy" width="640" height="360" alt="困倦的三花猫、草莓牛奶与柔粉文具"></div>
+ <div class="template-content"><h3>🐱 草莓猫</h3><p class="template-description">困倦的三花猫、草莓牛奶和粉色文具。包含配套的聊天、精选消息和警报样式。</p><a class="btn btn-primary" href="overlay-gallery.html#pack-cat">预览并使用套装</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute dog dogs corgi puppy">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-dog.webp" loading="lazy" width="640" height="360" alt="天蓝色明信片上的快乐柯基"></div>
+ <div class="template-content"><h3>🐶 温馨伙伴</h3><p class="template-description">天蓝色明信片上的快乐柯基。包含配套的聊天、精选消息和警报样式。</p><a class="btn btn-primary" href="overlay-gallery.html#pack-dog">预览并使用套装</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute forest">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-forest.webp" loading="lazy" width="640" height="360" alt="宁静林地里的童话青蛙"></div>
+ <div class="template-content"><h3>🍄 苔藓与蘑菇</h3><p class="template-description">宁静林地中的童话青蛙。包含配套的聊天、精选消息和警报样式。</p><a class="btn btn-primary" href="overlay-gallery.html#pack-forest">预览并使用套装</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute space">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-space.webp" loading="lazy" width="640" height="360" alt="在淡紫星尘中漂浮的太空兔"></div>
+ <div class="template-content"><h3>🌙 月亮兔</h3><p class="template-description">在淡紫星尘中漂浮的兔子宇航员。包含配套的聊天、精选消息和警报样式。</p><a class="btn btn-primary" href="overlay-gallery.html#pack-space">预览并使用套装</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute dragon">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-dragon.webp" loading="lazy" width="640" height="360" alt="带着发光魔法水晶的小龙"></div>
+ <div class="template-content"><h3>🐉 水晶守护者</h3><p class="template-description">小龙守护着发光的魔法水晶。包含配套的聊天、精选消息和警报样式。</p><a class="btn btn-primary" href="overlay-gallery.html#pack-dragon">预览并使用套装</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute music">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-music.webp" loading="lazy" width="640" height="360" alt="薄荷绿与梅紫色中的耳机浣熊和黑胶唱片"></div>
+ <div class="template-content"><h3>🎵 午夜混音带</h3><p class="template-description">耳机浣熊与黑胶唱片，搭配薄荷绿和梅紫色。包含配套的聊天、精选消息和警报样式。</p><a class="btn btn-primary" href="overlay-gallery.html#pack-music">预览并使用套装</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute halloween">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-halloween.webp" loading="lazy" width="640" height="360" alt="友善幽灵、发光南瓜与午夜梅紫"></div>
+ <div class="template-content"><h3>🎃 南瓜幽灵</h3><p class="template-description">友善幽灵、发光南瓜与午夜梅紫色。包含配套的聊天、精选消息和警报样式。</p><a class="btn btn-primary" href="overlay-gallery.html#pack-halloween">预览并使用套装</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute christmas">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-christmas.webp" loading="lazy" width="640" height="360" alt="围着围巾的驯鹿与节日常青树"></div>
+ <div class="template-content"><h3>🎄 欢乐小驯鹿</h3><p class="template-description">围着围巾的驯鹿与节日常青树。包含配套的聊天、精选消息和警报样式。</p><a class="btn btn-primary" href="overlay-gallery.html#pack-christmas">预览并使用套装</a></div></article></div></div>
+            <div id="themed-packages" class="template-category">
+                <div class="category-header">
+                    <h3>主题套装</h3>
+                </div>
+                <p>完整主题套装，包含文档、示例图片和指南</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="gaming animated modern">
+                        <div class="template-badge badge-featured">精选</div>
+                        <div class="template-preview">
+                            <img src="../../media/deuks.png" alt="Deuk 的主题">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">完整套装</span>
+                            <h3>Deuk 的主题</h3>
+                            <p class="template-description">精致的全动画主题，支持自定义颜色及平滑过渡。非常适合游戏直播。</p>
+                            <div class="template-footer">
+                                <div class="template-author">作者：Deuk</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/tree/main/themes/deuks_overlay" class="btn btn-primary">获取</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="retro">
+                        <div class="template-badge badge-new">新</div>
+                        <div class="template-preview">
+                            <img src="../../media/windows.png" alt="Windows 3.1 主题">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">复古风格</span>
+                            <h3>Windows 3.1 主题</h3>
+                            <p class="template-description">怀旧的 Windows 3.1 风格聊天叠加层，带有经典窗口设计及像素级细节。</p>
+                            <div class="template-footer">
+                                <div class="template-author">作者：RetroTech</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/tree/main/themes/Windows3.1" class="btn btn-primary">获取</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="modern animated">
+                        <div class="template-preview">
+                            <img src="../../media/neutron.png" alt="Neutron 主题">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">现代设计</span>
+                            <h3>Neutron 主题</h3>
+                            <p class="template-description">整洁现代的设计，动画流畅，易于阅读。可自定义配色。</p>
+                            <div class="template-footer">
+                                <div class="template-author">作者：NeutronStudio</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/Neutron/" class="btn btn-primary">获取</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>简单即用模板</h3>
+                </div>
+                <p>仅需会话 ID 即可使用的现成模板</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-badge badge-popular">热门</div>
+                        <div class="template-preview">
+                            <img src="../../media/simple.png" alt="示例模板">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">极低</span>
+                            <h3>示例模板</h3>
+                            <p class="template-description">整洁轻量、具备基本功能的模板。适合作为自定义的起点。</p>
+                            <div class="template-footer">
+                                <div class="template-author">作者：Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/sampleoverlay.html?session=YOURSESSIONIDHERE" class="btn btn-primary">使用</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="animated modern">
+                        <div class="template-preview">
+                            <img src="../../media/prettyoverlay.png" alt="美观模板（Pretty Template）">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">动画</span>
+                            <h3>美观模板（Pretty Template）</h3>
+                            <p class="template-description">优雅设计，动画流畅并带有视觉效果。醒目而不分散注意力。</p>
+                            <div class="template-footer">
+                                <div class="template-author">作者：Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONIDHERE" class="btn btn-primary">使用</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="gaming">
+                        <div class="template-preview">
+                            <img src="../../media/t3nk3y.png" alt="t3nk3y 的主题">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">游戏</span>
+                            <h3>t3nk3y 的主题</h3>
+                            <p class="template-description">为游戏直播设计的醒目高对比主题，即使内容节奏很快也清晰可见。</p>
+                            <div class="template-footer">
+                                <div class="template-author">作者：t3nk3y</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/t3nk3y/?session=YOURSESSIONIDHERE" class="btn btn-primary">使用</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="template-card" data-tags="liquid-glass">
+                        <div class="template-preview">
+                            <img src="../../media/luckyloottube.png" alt="LuckyLootTube 液态玻璃主题">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">液态玻璃</span>
+                            <h3>LuckyLootTube 的主题</h3>
+                            <p class="template-description">时尚的液态玻璃风格聊天叠加层，动画流畅，表情渲染酷炫。</p>
+                            <div class="template-footer">
+                                <div class="template-author">作者：LuckyLootTube</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/LuckyLootTube/luckyloottube.html?session=YOURSESSIONIDHERE&amp;v=3.40.2" class="btn btn-primary" target="_blank" rel="noopener noreferrer">使用</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>兼容 YouTube CSS 的模板</h3>
+                </div>
+                <p>支持 YouTube CSS 样式的模板</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="youtube-compatible">
+                        <div class="template-preview">
+                            <img src="../../media/septapus.png" alt="YouTube CSS 模板">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">兼容 YouTube</span>
+                            <h3>YouTube CSS 模板</h3>
+                            <p class="template-description">在采用 YouTube 结构的叠加层页面上使用为 YouTube 设计的 CSS。兼容 Septapus 样式。</p>
+                            <div class="template-footer">
+                                <div class="template-author">作者：Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/septapus" class="btn btn-primary">设置</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>开发者模板</h3>
+                </div>
+                <p>创建自定义叠加层的起点</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-preview">
+                            <img  alt="基础模板（Bare Template）">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">开发者</span>
+                            <h3>基础模板（Bare Template）</h3>
+                            <p class="template-description">用最少代码从头创建自己的叠加层。适合开发者及 LLM 辅助编程。</p>
+                            <div class="template-footer">
+                                <div class="template-author">作者：Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/blob/main/baretempate.html" target="_blank" class="btn btn-primary">源代码</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-preview">
+                            <img src="../../media/simple.png" alt="叠加层示例">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">开发者</span>
+                            <h3>示例叠加层模板</h3>
+                            <p class="template-description">更完整的起始模板，附带注释和文档，帮助你构建自己的自定义叠加层。</p>
+                            <div class="template-footer">
+                                <div class="template-author">作者：Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/blob/main/sampleoverlay.html" class="btn btn-primary">源代码</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="submit-template">
+                <h3>有想分享的模板？</h3>
+                <p>为 Social Stream Ninja 制作了出色模板？向 GitHub 仓库提交拉取请求，与社区分享。</p>
+                <a href="https://github.com/steveseguin/social_stream" target="_blank" class="btn btn-primary">在 GitHub 上提交</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="streamelements-importer-guide" class="how-to-use">
+        <div class="container">
+            <h2>将 StreamElements 聊天组件与 Social Stream Ninja 配合使用</h2>
+            <p>第一次导入？ <a href="streamelements-chat-guide.html">阅读完整聊天皮肤指南</a> ，了解组件文件查找、支持的格式、OBS 设置及故障排查。</p>
+            <p class="section-subtitle">同时适用于 SSN Windows 桌面应用和 Chrome 扩展，无需编辑代码。</p>
+
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>确认 SSN 正在接收聊天</h4>
+                        <p>在 SSN 应用或扩展中打开平台来源，然后发送测试消息。确认消息出现在 SSN 停靠面板后再继续。</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>获取原始组件导出文件</h4>
+                        <p>使用组件设计者提供的 ZIP、文件夹或文件。有效导出通常包含 HTML、CSS、JavaScript、fields/data 及资源。截图或 StreamElements 叠加层 URL 不够。</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>打开导入器</h4>
+                        <p>打开导入器并选择 ZIP、文件夹或文件。它会识别组件部分并立即显示演示预览。</p>
+                        <a href="../../streamelements-importer.html" class="btn btn-primary">打开组件导入器</a>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>添加你的 SSN 会话 ID</h4>
+						<p>从 SSN 弹出菜单打开导入器时，会自动填入会话 ID 和密码。如果直接打开，请从以下位置复制： <strong>会话选项</strong> ，在应用或扩展中查找。只需在导入器中输入会话 ID 一次，它会保存在下载的文件内。</p>
+                    </div>
+                </div>
+
+				<div class="step-card">
+					<div class="step-number"></div>
+					<div class="step-content">
+						<h4>选择消息历史</h4>
+						<p>如果导入的组件提供兼容设置，使用 <strong>消息历史</strong> 以关闭定时移除，或更改屏幕上保留的消息数量。这会更改组件设置，不会更改代码。</p>
+					</div>
+				</div>
+
+				<div class="step-card">
+					<div class="step-number"></div>
+					<div class="step-content">
+						<h4>下载前测试</h4>
+                        <p><strong>演示预览</strong> 通过示例消息检查设计。 <strong>实时预览</strong> 使用正在运行的 SSN 应用或扩展中的真实聊天检查会话。</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>下载并添加到 OBS</h4>
+						<p>点击 <strong>下载 OBS HTML</strong>。在 OBS 中添加浏览器源，启用 <strong>本地文件</strong>，并选择下载的 HTML 文件。 <strong>不要在 OBS 中添加会话 ID 或编辑 URL。</strong> 直播时保持 SSN 运行；导入器和 StreamElements 可以关闭。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="template-features" style="margin-top: 2rem;">
+                <div class="template-feature">
+                    <h4>演示为空白</h4>
+                    <p>检查导入器识别出的文件；如果选错 HTML、CSS 或 JavaScript，请使用 Advanced file selection。</p>
+                </div>
+                <div class="template-feature">
+                    <h4>实时预览为空白</h4>
+                    <p>确认聊天到达 SSN 停靠面板，且会话 ID 和可选密码完全一致。</p>
+                </div>
+                <div class="template-feature">
+                    <h4>OBS 显示为空白</h4>
+                    <p>使用下载的 HTML 文件，而非导入器页面、原始 ZIP 或 StreamElements URL，然后刷新 OBS 浏览器源。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-to-use" class="how-to-use">
+        <div class="container">
+            <h2>如何使用模板</h2>
+            <p class="section-subtitle">按照这些简单步骤开始</p>
+            
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>选择模板</h4>
+                        <p>浏览模板库，选择适合直播风格的模板。使用截图图库比较设计；大多数内置模板可直接通过 URL 使用，无需下载。</p>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>添加你的会话 ID</h4>
+                        <p>替换 <code>YOURSESSIONID</code> ，在模板 URL 中替换为实际的 Social Stream Ninja 会话 ID，可在 SSN 应用或扩展的 Session Options 下找到。如果会话使用密码，也请包含可选密码。</p>
+                        <div class="code-block">
+                            <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>添加到 OBS/Streamlabs</h4>
+                        <p>将修改后的 URL 作为浏览器源添加到直播软件中：</p>
+                        <ol>
+                            <li>在 OBS 中点击“来源”下的 +，选择“浏览器”</li>
+                            <li>为来源命名并点击“确定”</li>
+                            <li>粘贴带会话 ID 的模板 URL</li>
+                            <li>设置宽度和高度（建议：1920×1080）</li>
+                            <li>点击“确定”将其添加到场景</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>自定义模板</h4>
+                        <p>通过以下任一方式使用自定义 CSS 个性化叠加层：</p>
+                        <ul>
+                            <li><strong>OBS 自定义 CSS：</strong> 在浏览器源属性中添加 CSS</li>
+                            <li><strong>URL 参数：</strong> 附加 <code>&css=URL_TO_YOUR_CSS_FILE</code> 到模板 URL</li>
+                            <li><strong>Base64 CSS：</strong> 对于内联 CSS，使用 <code>&b64css=YOUR_BASE64_ENCODED_CSS</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="make-your-own" class="how-to-use"><div class="container">
+<h2>🛠️ 制作自己的模板</h2><p>从可用叠加层开始，再修改外观。</p>
+<div class="template-features">
+<div class="template-feature"><h3>🎨 更改外观</h3><p>使用 OBS 浏览器源 <strong>自定义 CSS</strong> ，以调整颜色、间距和排版。保留原始 SSN URL 和连接。</p></div>
+<div class="template-feature"><h3>📦 导入组件</h3><p>有 StreamElements 聊天组件导出文件？ <a href="../../streamelements-importer.html">打开 StreamElements 转换器</a>，预览后下载 OBS HTML。请使用原始 ZIP 或文件，而非截图或叠加层 URL。 <a href="#streamelements-importer-guide">查看下方设置</a>.</p></div>
+<div class="template-feature"><h3>🧩 更改行为</h3><p>复制一个可用起始模板，并编辑其 HTML、CSS 和 JavaScript。 <a href="overlay-template-quick-start.html">快速开始</a> · <a href="https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md">开发者指南</a> · <a href="event-reference.html">事件字段</a></p></div>
+</div>
+<details class="template-instructions"><summary>🔧 文件、路由及测试</summary><ol>
+<li>使用 <a href="../../sampleoverlay.html">sampleoverlay.html</a> 用于聚合聊天， <a href="../../themes/featured-styles/featured-modern.html">featured-modern.html</a> 用于选中消息，或 <a href="../../multi-alerts.html">multi-alerts.html</a> 用于事件。从以下位置下载源文件及所需资源： <a href="https://github.com/steveseguin/social_stream/tree/beta">beta 仓库</a>.</li>
+<li>保留原始连接代码。聊天和精选叠加层接收不同的消息流；为聊天流改样式不会将其变成选中消息叠加层。</li>
+<li>将引用的共享脚本、字体和图片与文件一起保留，使用相同相对路径，或让 AI 提供独立导出。重命名一个 HTML 文件不会将其依赖打包。</li>
+<li>托管文件，并使用带会话及可选密码的 URL。对于独立本地导出，请遵循其配置说明；OBS Local file 没有用于会话参数的 URL 字段。</li>
+<li>先用模拟数据预览，再使用自己的 SSN 会话测试。检查选中消息、清空、长名称、图片及透明背景。实时使用期间保持 SSN 运行。</li>
+</ol><p>对于基于触发器的行为，从以下内容开始： <a href="../actions/event-flow-guide.html">Event Flow 编辑器</a> 和 <a href="alert-effects.html">警报效果规则</a> ，然后再编写新叠加层。</p></details>
+</div></section>
+<section id="ai-prompts" class="how-to-use"><div class="container"><h2>✨ 为你的 AI 复制提示词</h2><p>选择起点，复制提示词，并替换方括号中的设计细节。如果 AI 无法读取链接，请附上源文件。不要在对话中提供私密会话 ID 和密码。</p>
+<details class="template-instructions"><summary>💬 聚合聊天</summary><label for="prompt-chat">可编辑提示词</label><textarea id="prompt-chat" class="template-prompt" rows="10" spellcheck="false">根据 https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html 创建带样式的 SSN 聚合聊天叠加层。接收普通实时消息流（dock 标签），消息列表长度应有上限，可配置条数并可选启用过期。保留平台图标、打赏和会员展示。请先检查下方当前 SSN 源码和文档。如果无法打开，请让我附上文件；不要猜测传输方式或事件结构。参考资料：https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 及 https://socialstream.ninja/beta/docs/event-reference.html 。保留起始叠加层的连接、session/password、label 和 server 选项、管理/删除/清空处理，以及现有消息字段。凭据使用 YOUR_SESSION_ID / YOUR_PASSWORD 占位符，绝不使用真实凭据。使用兼容 Chrome 80 和 OBS 的传统脚本；保留相对路径的本地依赖，并列出必须与 HTML 一同提供的文件。将 chatname 作为纯文本处理；textonly 仅适用于 chatmessage。保留安全的表情/徽章、仅图片的 contentimg 消息，以及混合的事件/元数据流量，但不要将仅含元数据的更新显示为聊天。不要插入未经检查的 HTML，也不要自行发明顶层数据字段。设计：[描述颜色、氛围、字体排版、位置和动画]。画布：[宽 x 高]。保持背景透明、文字在游戏画面上清晰可读，限制长名称/消息不超出边界，并提供减少动画的样式。返回完整的修改后文件、简单的设置说明，以及使用模拟数据且绝不连接实时会话的演示模式。测试长文本、emoji、仅图片消息、删除、清空、尺寸调整和重新连接。</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-chat">📋 复制提示词</button></details>
+<details class="template-instructions"><summary>⭐ 精选消息</summary><label for="prompt-featured">可编辑提示词</label><textarea id="prompt-featured" class="template-prompt" rows="10" spellcheck="false">自定义 https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html ，用于单条选中消息。保留默认 featured/overlay 路由及清空行为；不要自动显示每条聊天消息。说明如何从 SSN 停靠面板选择消息。请先检查下方当前 SSN 源码和文档。如果无法打开，请让我附上文件；不要猜测传输方式或事件结构。参考资料：https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 及 https://socialstream.ninja/beta/docs/event-reference.html 。保留起始叠加层的连接、session/password、label 和 server 选项、管理/删除/清空处理，以及现有消息字段。凭据使用 YOUR_SESSION_ID / YOUR_PASSWORD 占位符，绝不使用真实凭据。使用兼容 Chrome 80 和 OBS 的传统脚本；保留相对路径的本地依赖，并列出必须与 HTML 一同提供的文件。将 chatname 作为纯文本处理；textonly 仅适用于 chatmessage。保留安全的表情/徽章、仅图片的 contentimg 消息，以及混合的事件/元数据流量，但不要将仅含元数据的更新显示为聊天。不要插入未经检查的 HTML，也不要自行发明顶层数据字段。设计：[描述颜色、氛围、字体排版、位置和动画]。画布：[宽 x 高]。保持背景透明、文字在游戏画面上清晰可读，限制长名称/消息不超出边界，并提供减少动画的样式。返回完整的修改后文件、简单的设置说明，以及使用模拟数据且绝不连接实时会话的演示模式。测试长文本、emoji、仅图片消息、删除、清空、尺寸调整和重新连接。</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-featured">📋 复制提示词</button></details>
+<details class="template-instructions"><summary>🎉 带声音的警报</summary><label for="prompt-alerts">可编辑提示词</label><textarea id="prompt-alerts" class="template-prompt" rows="10" spellcheck="false">自定义 https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html 。先检查其共享警报依赖及 https://socialstream.ninja/beta/docs/alert-effects.html 。复用现有警报类型过滤器、队列、声音库、静音/音量和效果规则。USD 阈值继续使用现有 currency.js 换算路径；不要比较格式化后的货币字符串。为 $100 USD 打赏规则支持可选动画和声音，并遵守启用状态及现有范围语义。避免重复播放。仅使用我提供或有权使用的音频。请先检查下方当前 SSN 源码和文档。如果无法打开，请让我附上文件；不要猜测传输方式或事件结构。参考资料：https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 及 https://socialstream.ninja/beta/docs/event-reference.html 。保留起始叠加层的连接、session/password、label 和 server 选项、管理/删除/清空处理，以及现有消息字段。凭据使用 YOUR_SESSION_ID / YOUR_PASSWORD 占位符，绝不使用真实凭据。使用兼容 Chrome 80 和 OBS 的传统脚本；保留相对路径的本地依赖，并列出必须与 HTML 一同提供的文件。将 chatname 作为纯文本处理；textonly 仅适用于 chatmessage。保留安全的表情/徽章、仅图片的 contentimg 消息，以及混合的事件/元数据流量，但不要将仅含元数据的更新显示为聊天。不要插入未经检查的 HTML，也不要自行发明顶层数据字段。设计：[描述颜色、氛围、字体排版、位置和动画]。画布：[宽 x 高]。保持背景透明、文字在游戏画面上清晰可读，限制长名称/消息不超出边界，并提供减少动画的样式。返回完整的修改后文件、简单的设置说明，以及使用模拟数据且绝不连接实时会话的演示模式。测试长文本、emoji、仅图片消息、删除、清空、尺寸调整和重新连接。</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-alerts">📋 复制提示词</button></details>
+<details class="template-instructions"><summary>🎨 仅用 CSS 改造外观</summary><label for="prompt-css">可编辑提示词</label><textarea id="prompt-css" class="template-prompt" rows="10" spellcheck="false">仅使用 CSS 重新设计我现有 SSN 叠加层的样式。我会提供其 URL 和源 HTML/CSS。保留所有 JavaScript 及消息路由不变。编写 CSS 前，检查实际 DOM 选择器。提供用于 OBS 浏览器源 Custom CSS 框的 CSS，以及所需本地字体/图片资源。请先检查下方当前 SSN 源码和文档。如果无法打开，请让我附上文件；不要猜测传输方式或事件结构。参考资料：https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 及 https://socialstream.ninja/beta/docs/event-reference.html 。保留起始叠加层的连接、session/password、label 和 server 选项、管理/删除/清空处理，以及现有消息字段。凭据使用 YOUR_SESSION_ID / YOUR_PASSWORD 占位符，绝不使用真实凭据。使用兼容 Chrome 80 和 OBS 的传统脚本；保留相对路径的本地依赖，并列出必须与 HTML 一同提供的文件。将 chatname 作为纯文本处理；textonly 仅适用于 chatmessage。保留安全的表情/徽章、仅图片的 contentimg 消息，以及混合的事件/元数据流量，但不要将仅含元数据的更新显示为聊天。不要插入未经检查的 HTML，也不要自行发明顶层数据字段。设计：[描述颜色、氛围、字体排版、位置和动画]。画布：[宽 x 高]。保持背景透明、文字在游戏画面上清晰可读，限制长名称/消息不超出边界，并提供减少动画的样式。返回完整的修改后文件、简单的设置说明，以及使用模拟数据且绝不连接实时会话的演示模式。测试长文本、emoji、仅图片消息、删除、清空、尺寸调整和重新连接。</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-css">📋 复制提示词</button></details>
+<p>正在转换更复杂的组件？ <a href="../../streamelements-importer-prompt.md">使用完整的 StreamElements / Streamlabs 转换提示词</a>.</p><p id="prompt-copy-status" role="status" aria-live="polite"></p></div></section>
+    <section class="guide-section alt">
+        <div class="container">
+            <h2>视频教程</h2>
+            <p class="section-subtitle">了解如何借助 AI 创建自定义聊天叠加层</p>
+            
+            <div style="max-width: 800px; margin: 0 auto; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+                <iframe width="100%" height="100%" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/GDy5ijQPTkU" title="为 Social Stream Ninja 创建自定义聊天叠加层" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            
+            <div style="max-width: 800px; margin: 3rem auto 0;">
+                <h3>视频快速指南</h3>
+                <ol class="guide-steps">
+                    <li>找到示例叠加层模板（sampleoverlay.html）</li>
+                    <li>将模板代码复制到剪贴板</li>
+                    <li>使用 Claude 等 AI 助手帮助自定义</li>
+                    <li>提示 AI 修改 CSS，以实现喜欢的样式</li>
+                    <li>配置 OBS 以使用自定义模板</li>
+                    <li>通过 OBS 浏览器源设置应用自定义 CSS</li>
+                </ol>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CSS Modal (hidden by default) -->
+    <div id="css-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; overflow: auto;">
+        <div style="background-color: var(--background-card); margin: 10% auto; padding: 20px; width: 80%; max-width: 800px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="css-modal-title" style="margin: 0;">CSS 片段</h2>
+                <button onclick="closeCssModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <pre id="css-modal-content" style="background-color: var(--background-dark); padding: 20px; border-radius: var(--radius-sm); overflow-x: auto; max-height: 60vh;"></pre>
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="copyCss()" class="btn btn-primary">复制到剪贴板</button>
+                <button onclick="closeCssModal()" class="btn btn-secondary">关闭</button>
+            </div>
+        </div>
+    </div>
+
+        <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>汇聚你的社交直播消息等内容。免费且开源。</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+					<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>快捷链接</h3>
+                    <ul>
+                        <li><a href="../index.html">首页</a></li>
+                        <li><a href="features.html">功能</a></li>
+                        <li><a href="download.html">下载</a></li>
+                        <li><a href="guides.html">指南</a></li>
+                        <li><a href="commands.html">命令与 API</a></li>
+                        <li><a href="supported-sites.html">支持的网站</a></li>
+                        <li><a href="templates.html">模板</a></li>
+                        <li><a href="support.html">支持</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>资源</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">安装指南</a></li>
+                        <li><a href="guides.html#extension-customization">自定义指南</a></li>
+                        <li><a href="guides.html#faq">常见问题</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">报告问题</a></li>
+                        <li><a href="../privacy.html">隐私政策</a></li>
+                        <li><a href="../TOS.html">服务条款</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>社区</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">加入我们的 Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub 仓库</a></li>
+                        <li><a href="support.html#contribute">参与贡献</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">捐赠</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 许可证。创建者： <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> ，社区共同参与贡献。</p>
+            </div>
+        </div>
+    </footer>
+	<script src="../../docs/js/main.js"></script>
+    <script src="../../docs/js/templates.js"></script>
+    <script>
+        // Current year for copyright
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        
+        function showCssModal(cssType) {
+            const modal = document.getElementById('css-modal');
+            const title = document.getElementById('css-modal-title');
+            const content = document.getElementById('css-modal-content');
+            
+            title.textContent = cssType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) + ' CSS';
+            content.textContent = cssSnippets[cssType] || 'CSS not found';
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeCssModal() {
+            document.getElementById('css-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+		function copyCss() {
+            const content = document.getElementById('css-modal-content').textContent;
+            navigator.clipboard.writeText(content)
+                .then(() => {
+                    alert(window.SSNSiteTranslate ? window.SSNSiteTranslate('CSS copied to clipboard!') : 'CSS copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Could not copy text: ', err);
+                    alert(window.SSNSiteTranslate ? window.SSNSiteTranslate('Failed to copy. Try selecting and copying manually.') : 'Failed to copy. Try selecting and copying manually.');
+                });
+        }
+		
+		
+        
+       document.addEventListener('DOMContentLoaded', () => {
+            // Number the steps
+			document.querySelectorAll('.steps-container').forEach(container => {
+				container.querySelectorAll('.step-number').forEach((el, index) => {
+					el.textContent = (index + 1).toString();
+				});
+            });
+            
+            // Auto-scroll to sections when clicking nav links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        e.preventDefault();
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+ </script>
+</body>
+</html>

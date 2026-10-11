@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ar" data-site-root="../../" data-site-language="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ar/docs/local-tts.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ar_AR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ar/docs/local-tts.html">
+    <meta property="og:title" content="دليل النطق بالذكاء الاصطناعي المحلي - Social Stream Ninja">
+    <meta property="og:description" content="أعد تحويل النص إلى كلام محليًا وبخصوصية لـSocial Stream Ninja، بما يشمل الأصوات المدمجة والخوادم المستضافة ذاتيًا واستنساخ الصوت وصوت OBS وحل المشكلات.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="شعار Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ar/docs/local-tts.html">
+    <meta name="twitter:title" content="دليل النطق بالذكاء الاصطناعي المحلي - Social Stream Ninja">
+    <meta name="twitter:description" content="أعد تحويل النص إلى كلام محليًا وبخصوصية لـSocial Stream Ninja، بما يشمل الأصوات المدمجة والخوادم المستضافة ذاتيًا واستنساخ الصوت وصوت OBS وحل المشكلات.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="شعار Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل النطق بالذكاء الاصطناعي المحلي - Social Stream Ninja</title>
+    <meta name="description" content="أعد تحويل النص إلى كلام محليًا وبخصوصية لـSocial Stream Ninja، بما يشمل الأصوات المدمجة والخوادم المستضافة ذاتيًا واستنساخ الصوت وصوت OBS وحل المشكلات.">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="stylesheet" href="../../docs/css/site-shell.css">
+    <script src="../../docs/js/site-shell.js"></script>
+    <link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ar">
+<script id="ssn-site-language" type="application/json">{"language":"ar","page":"docs/local-tts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"التبديل إلى السمة الفاتحة","Switch to dark theme":"التبديل إلى السمة الداكنة","Light mode":"الوضع الفاتح","Dark mode":"الوضع الداكن","Open navigation menu":"فتح قائمة التنقل","Close navigation menu":"إغلاق قائمة التنقل","Copy this document as Markdown to the clipboard":"نسخ هذا المستند بصيغة Markdown إلى الحافظة","Copy Markdown":"نسخ Markdown","Copying…":"جارٍ النسخ…","Markdown copied":"تم نسخ Markdown","Copy failed":"تعذّر النسخ","Copy comprehensive Markdown for an AI assistant":"نسخ Markdown شامل لمساعد ذكاء اصطناعي","Copy this documentation page as Markdown for an AI assistant":"نسخ صفحة التوثيق هذه بصيغة Markdown لمساعد ذكاء اصطناعي"},"strings":{"(0.6B / 1.7B)":"(0.6B / 1.7B)","(Kokoro-FastAPI, or your server's port). From the OBS PC, open":"(Kokoro-FastAPI أو منفذ خادمك). من حاسوب OBS، افتح","(Piper)":"(Piper)","(Piper): real CPU speech, direct and through the bridge.":"(Piper): كلام فعلي على المعالج، مباشرةً وعبر الجسر.","(recommended)":"(موصى به)",") and refresh. While testing, also remove":") وحدّث. أثناء الاختبار، أزل أيضاً",", SSN sends a JSON POST:":"، يرسل SSN طلب JSON POST:",", add it under the existing":"، أضفه تحت القسم الموجود",", and the first":"، وأول",", and the server uses Piper instead.":"، فيستخدم الخادم Piper بدلاً منه.",", direct and through the bridge.":"، مباشرة وعبر الجسر.",", enter your server's address, like":"، أدخل عنوان خادمك، مثل",", even if the voice server is on another PC.":"، حتى لو كان خادم الصوت على حاسوب آخر.",", like":"، مثل",", local AI voices make their own audio, so OBS can capture them.":"، تولّد أصوات الذكاء الاصطناعي المحلية صوتها بنفسها، فيستطيع OBS التقاطه.",", nested":"، والقيمة المتداخلة",", or any browser-playable type.":"، أو أي نوع صوت يستطيع المتصفح تشغيله.",", or one from its web page. openedai-speech:":"، أو صوتاً من صفحته. openedai-speech:",", then use:":"، ثم استخدم:",", with that PC's local IP":"، بعنوان IP المحلي لذلك الحاسوب",". All options:":". جميع الخيارات:",". Docker needs GPU access. The model downloads on first use.":". يحتاج Docker إلى الوصول إلى GPU. يُنزّل النموذج في أول استخدام.",". If that fails, OBS can't reach it either. Check the server's firewall.":". إذا فشل، فلن يصل إليه OBS أيضاً. تحقق من جدار الخادم الناري.",". Inside the":". داخل",". Leave it running.":". أبقِه قيد التشغيل.",". Most people stop here.":". يتوقف معظم المستخدمين هنا.",". OpenAI names like":". أسماء OpenAI مثل",". Plan on about 4 GB of GPU memory. CPU works but is slow.":". خطط لنحو 4 GB من ذاكرة GPU. يعمل المعالج لكنه بطيء.",". Prefer clicking? Use the":". تفضل النقر؟ استخدم",". Project is archived.":". المشروع مؤرشف.",". Reading options like":". خيارات القراءة مثل",". Some servers care about upper/lower case.":". تراعي بعض الخوادم حالة الأحرف.",". Still blocked? Run the bridge on the OBS PC.":". ما زال محظوراً؟ شغّل الجسر على حاسوب OBS.",". TTS now shows in the OBS mixer.":". يظهر TTS الآن في مازج OBS.",". That's the page that makes the sound.":". هذه هي الصفحة التي تُصدر الصوت.",". The bridge translates for them.":". يترجم الجسر الطلبات لها.",". The hosted beta dock page is more likely to be blocked; the bridge or a local app window is easier.":". صفحة Dock المستضافة على beta أكثر عرضة للحظر؛ الجسر أو نافذة التطبيق المحلي أسهل.",". To keep TTS separate from other sounds, send the app to a virtual cable:":". لفصل TTS عن الأصوات الأخرى، وجّه التطبيق إلى كابل افتراضي:",". Watch the OBS mixer meter during a test. Make sure you set":". راقب عداد مازج OBS خلال الاختبار. تأكد من ضبط",". You should see a page to test voices (67+ available).":". ينبغي أن تظهر صفحة لاختبار الأصوات، مع أكثر من 67 صوتاً.","24 GB GPU or remote host":"GPU بذاكرة 24 GB أو مضيف بعيد","3-second clip":"مقطع 3 ثوانٍ","5 seconds; better with 1 minute":"5 ثوانٍ؛ أفضل مع دقيقة واحدة","6 GB+ NVIDIA GPU, 16 GB RAM":"GPU من NVIDIA بذاكرة 6 GB+، و16 GB من RAM",": need a wrapper first (CLI, Gradio or library only).":": تحتاج طبقة توافق أولاً (CLI أو Gradio أو مكتبة فقط).",": real CPU speech with":": كلام فعلي على المعالج باستخدام",": request format tested, direct and through the bridge.":": اختُبرت صيغة الطلب مباشرةً وعبر الجسر.",": through bridge modes only.":": عبر أوضاع الجسر فقط.","; System TTS may need desktop audio or a virtual cable.":"؛ قد يحتاج System TTS إلى صوت سطح المكتب أو كابل افتراضي.","\u003c1 GB":"\u003c1 GB","A cloned voice":"صوت مستنسخ","A server gives you more voices, voice cloning, or one voice you reuse across tools. SSN talks to it like an":"يمنحك الخادم أصواتاً أكثر أو استنساخ صوت أو صوتاً تعيد استخدامه بين الأدوات. يتواصل SSN معه كما يتواصل مع","A small helper from SSN. It takes SSN's request, passes it to your voice server, and hands the audio back in a way browsers accept. Needs Node.js.":"أداة صغيرة من SSN. تستقبل طلب SSN وتمرره إلى خادم الصوت ثم تعيد الصوت بطريقة تقبلها المتصفحات. تتطلب Node.js.","A wrapper, or bridge":"طبقة توافق أو جسر","API key":"مفتاح API (API key)","Add":"أضف","Add a":"أضف","Add its virtual environment's":"أضف مجلد البيئة الافتراضية","Add that link to OBS as a":"أضف ذلك الرابط إلى OBS بوصفه","All Guides":"جميع الأدلة","Also accepted:":"مقبول أيضاً:","Also check the firewall allows the port, and that Docker published it (":"تحقق أيضاً من سماح الجدار الناري بالمنفذ ومن نشر Docker له (","Any PC":"أي جهاز PC","App test works, OBS is silent":"اختبار التطبيق يعمل وOBS صامت","App windows are less strict about browser permissions (CORS) than Chrome. The bridge is still the safest choice for servers that refuse browser requests. For built-in Kokoro, the app can use its own":"نوافذ التطبيق أقل تشدداً بشأن أذونات المتصفح CORS من Chrome. يظل الجسر الخيار الأضمن للخوادم التي ترفض طلبات المتصفح. لـ Kokoro المدمج، يستطيع التطبيق استخدام","Archived project.":"مشروع مؤرشف.","Audio Input Capture":"التقاط إدخال الصوت (Audio Input Capture)","Audio file":"ملف صوتي","Best.":"الأفضل.","Blocked by the browser?":"المتصفح يحظره؟","Blocked by the browser? Run the":"المتصفح يحظره؟ شغّل","Bridge":"الجسر","Browser Source":"مصدر المتصفح","Built-in Kitten":"Kitten المدمج","Built-in Kokoro":"Kokoro المدمج","Built-in Kokoro and Kokoro-FastAPI don't clone voices.":"Kokoro المدمج وKokoro-FastAPI لا يستنسخان الأصوات.","Built-in Piper":"Piper المدمج","Built-in eSpeak":"eSpeak المدمج","Built-in voices":"الأصوات المدمجة","Built-in voices (nothing to install)":"الأصوات المدمجة (بلا تثبيت)","CPU for testing, slow":"المعالج للاختبار، بطيء","CPU on some builds, slow":"المعالج في بعض الإصدارات، بطيء","CPU only":"CPU فقط","CPU, 4–8 GB RAM":"معالج و4–8 GB RAM","CPU, 8 GB RAM":"CPU، و8 GB من RAM","Change":"غيّر","Chatterbox":"Chatterbox","Chatterbox-TTS-Server":"Chatterbox-TTS-Server","Check Docker and the container are running. On the server PC, open":"تأكد من تشغيل Docker والحاوية. على حاسوب الخادم، افتح","Checked with both":"اختُبر بكليهما","Checks":"فحوص","Click":"انقر على","Clip plus its transcript":"مقطع مع نصه","Clones from":"يستنسخ من","Cloning isn't an SSN setting. It's a feature of some voice servers. SSN sends the chat text; the server picks the cloned voice.":"الاستنساخ ليس إعداداً في SSN بل ميزة في بعض خوادم الصوت. يرسل SSN نص الدردشة ويختار الخادم الصوت المستنسخ.","Comfortable":"مناسب","Commands & API":"الأوامر وAPI","Compare providers and hear samples":"مقارنة المزودين والاستماع للعينات","Computer load":"حمل الحاسوب","Connect a server":"توصيل خادم","Connect your own TTS server":"توصيل خادم TTS الخاص بك","Control audio via OBS":"التحكم بالصوت عبر OBS (Control audio via OBS)","Copy the link into OBS and send a test chat.":"انسخ الرابط إلى OBS وأرسل رسالة اختبار.","Coqui Public Model License":"ترخيص Coqui Public Model License","Cost":"التكلفة","Custom / Local API Endpoint":"Custom / Local API Endpoint","Custom / Local TTS Endpoint":"نقطة نهاية مخصصة أو محلية لتحويل النص إلى كلام","Desktop Audio":"صوت سطح المكتب","Diagram showing OBS calling the local bridge, and the bridge calling the TTS server":"رسم يوضح استدعاء OBS للجسر المحلي واستدعاء الجسر لخادم تحويل النص إلى كلام","Diagram showing that localhost means the same computer, while another computer needs a LAN IP address":"رسم يوضح أن localhost يعني الجهاز نفسه، بينما يحتاج جهاز آخر إلى عنوان LAN","Direct or bridge. GPU runs smoother than CPU. Setup varies by fork.":"مباشرةً أو عبر الجسر. GPU أكثر سلاسة من المعالج، ويختلف الإعداد حسب النسخة المتفرعة.","Direct,":"مباشرةً،","Disk":"القرص","Do I need this?":"هل أحتاج هذا؟","Do this":"افعل هذا","Docker":"Docker","Docker Desktop":"Docker Desktop","Docker image not found":"لم يُعثر على صورة Docker","Don't mix up the app test and OBS.":"لا تخلط بين اختبار التطبيق وOBS.","Download":"تنزيل","ElevenLabs":"ElevenLabs","Example":"مثال","Example links:":"روابط مثال:","Excellent":"ممتاز","F5-TTS":"F5-TTS","F5-TTS official":"F5-TTS الرسمي","F5-TTS server mode":"وضع خادم F5-TTS","F5-TTS_server":"F5-TTS_server","Features":"الميزات","First use is slow.":"أول استخدام بطيء.","Fish Audio in OBS":"Fish Audio في OBS","Fish Audio setup":"إعداد Fish Audio","Fits 6 GB GPU?":"يناسب GPU بذاكرة 6 GB؟","Fix problems":"حل المشكلات","For server builders":"لمطوري الخوادم","Formats:":"الصيغ:","Free":"مجاني","Free voices with nothing to install":"أصوات مجانية بلا تثبيت","GPT-SoVITS":"GPT-SoVITS","GPT-SoVITS / F5-TTS / Qwen3-TTS":"GPT-SoVITS / F5-TTS / Qwen3-TTS","GPT-SoVITS mode":"وضع GPT-SoVITS","GPT-SoVITS uses its own":"يستخدم GPT-SoVITS واجهته الخاصة","GPU":"GPU","Get the audio into OBS":"إدخال الصوت إلى OBS","Get the server and start it:":"نزّل الخادم وشغّله:","GitHub":"GitHub","Good":"جيد","Guides":"الأدلة","Hire":"الاستعانة بخدمات المطوّر","Home":"الرئيسية","How SSN talks to a custom server. You only need this if you're building or debugging one.":"كيف يتواصل SSN مع خادم مخصص. تحتاج هذا فقط إذا كنت تبني خادماً أو تشخّصه.","How to connect":"كيفية الاتصال","I want":"أريد","I want…":"أريد…","If OBS is on one PC and the voice server on another,":"إذا كان OBS على حاسوب وخادم الصوت على آخر،","Image tags change. Check the current tag on":"تتغير وسوم الصور. تحقق من الوسم الحالي على","In":"في","In SSN, open the TTS provider list and pick":"في SSN، افتح قائمة مزودي TTS واختر","In its properties, turn on":"في خصائصه، فعّل","In the SSN folder, run":"في مجلد SSN، شغّل","Inspiration":"أفكار ملهمة","Its":"خيار","JSON with an audio URL":"JSON يتضمن عنوان صوت","JSON with base64 audio":"JSON مع صوت بترميز base64","Kitten":"Kitten","Kokoro":"Kokoro","Kokoro 82M":"Kokoro 82M","Kokoro and Piper download their models first (about 50–200 MB). Later loads reuse them, but still take a moment to start. OBS keeps its own copy, separate from Chrome.":"ينزّل Kokoro وPiper نماذجهما أولاً (نحو 50–200 MB). تعيد مرات التحميل التالية استخدامها لكنها تحتاج لحظة للبدء. يحتفظ OBS بنسخته الخاصة منفصلةً عن Chrome.","Kokoro-FastAPI":"Kokoro-FastAPI","Kokoro-FastAPI:":"Kokoro-FastAPI:","Laptop CPU, 8 GB RAM":"معالج حاسوب محمول و8 GB RAM","Leave the API key blank.":"اترك مفتاح API فارغاً.","Likely (0.6B Base)":"على الأرجح (0.6B Base)","Likely with Turbo or small chunks":"على الأرجح مع Turbo أو مقاطع صغيرة","Likely with fp16 / light install":"على الأرجح مع fp16 / تثبيت خفيف","Link settings for your own server":"إعدادات الرابط لخادمك","Link value":"قيمة الرابط","Local AI TTS Guide":"دليل تحويل النص إلى كلام بالذكاء الاصطناعي محلياً","Low-end CPU, 4 GB RAM":"CPU منخفض المواصفات، و4 GB من RAM","Low. CPU only.":"منخفض. المعالج فقط.","Main navigation":"التنقل الرئيسي","Make a clean reference clip of a voice you have permission to use. Mono, 22050 Hz, 6–30 seconds:":"أنشئ مقطعاً مرجعياً نظيفاً لصوت تملك إذناً باستخدامه. أحادي القناة، 22050 Hz، من 6 إلى 30 ثانية:","Maybe":"ربما","Medium. Faster with a GPU.":"متوسط. أسرع مع GPU.","Minimal. CPU only.":"ضئيل جداً. المعالج فقط.","Minimum":"الحد الأدنى","MisoTTS 8B":"MisoTTS 8B","Model":"النموذج","Model name. Default":"اسم النموذج. الافتراضي","Modern CPU, 4–8 GB RAM":"معالج حديث و4–8 GB RAM","Modern CPU, 8 GB RAM":"CPU حديث، و8 GB من RAM","More desktop app details":"تفاصيل إضافية لتطبيق سطح المكتب","NVIDIA GPU (faster):":"بطاقة NVIDIA (أسرع):","NVIDIA GPU ~4 GB, 8–16 GB RAM":"NVIDIA GPU بنحو 4 GB، و8–16 GB RAM","Needs an OpenAI-compatible wrapper.":"يحتاج طبقة توافق مع OpenAI.","Needs audio routing":"يحتاج توجيه الصوت","Needs the full server, not":"يحتاج الخادم الكامل وليس","No":"لا","No streaming yet.":"لا بث متتابع بعد.","No; 24 GB recommended":"لا؛ يُوصى بـ 24 GB","None":"لا شيء","Not at 6 GB":"ليس مع 6 GB","Notes":"ملاحظات","OBS Browser Source (recommended)":"OBS Browser Source (موصى به)","OBS and the server on the same PC":"OBS والخادم على الحاسوب نفسه","OBS audio":"صوت OBS","OBS must reach the server itself. Server on another PC? Replace":"يجب أن يصل OBS إلى الخادم بنفسه. الخادم على حاسوب آخر؟ استبدل","OBS needs its own working address. The app test doesn't prove OBS can reach the server.":"يحتاج OBS إلى عنوان يعمل لديه. اختبار التطبيق لا يثبت قدرة OBS على الوصول إلى الخادم.","OBS on a different computer?":"OBS على حاسوب مختلف؟","OK":"موافق","On macOS or Linux, use":"على macOS أو Linux، استخدم","On this page":"في هذه الصفحة","Only clone voices you own or have permission to use.":"استنسخ فقط أصواتاً تملكها أو لديك إذن باستخدامها.","Only if wrapped":"فقط عند استخدام غلاف","Only the first letter or words are read":"تُقرأ أولى الحروف أو الكلمات فقط","Open":"افتح","Open a terminal (Command Prompt, PowerShell or Terminal) and run one of these:":"افتح طرفية (Command Prompt أو PowerShell أو Terminal) وشغّل أحد هذه الأوامر:","Open navigation menu":"فتح قائمة التنقل","OpenAI-compatible":"متوافق مع OpenAI","Option":"الخيار","Option A: Light Piper server (CPU)":"الخيار A: خادم Piper خفيف (CPU)","Option B: XTTS-v2 voice cloning (GPU)":"الخيار B: استنساخ الصوت XTTS-v2 (GPU)","Optional":"اختياري","Optional NVIDIA GPU, 8–16 GB RAM":"NVIDIA GPU اختياري، و8–16 GB RAM","Overlay Gallery":"معرض التراكبات","Paid cloud voices":"أصوات سحابية مدفوعة","Paid tiers":"خطط مدفوعة","Pick a voice your server knows:":"اختر صوتاً يعرفه خادمك:","Piper":"Piper","Plays, but OBS doesn't capture it":"الصوت يعمل لكن OBS لا يلتقطه","Point SSN at the bridge:":"وجّه SSN إلى الجسر:","Port":"المنفذ","Pressing Test in the app tests from the app. With a link in OBS, OBS must reach the server and play the audio.":"الضغط على Test في التطبيق يختبر من التطبيق. عند استخدام رابط في OBS، يجب أن يصل OBS إلى الخادم ويشغّل الصوت.","Private":"خاص","Problem":"المشكلة","Prompt audio":"صوت مرجعي","Quality":"الجودة","Qwen3-TTS":"Qwen3-TTS","Raw PCM":"PCM خام","Read the":"اقرأ","Record a clean clip of one speaker, usually 3–30 seconds, with little background noise.":"سجّل مقطعاً واضحاً لمتحدث واحد، عادةً من 3 إلى 30 ثانية، مع ضجيج خلفية قليل.","Reference clip":"مقطع مرجعي","Remote hosting only. No local REST endpoint in the repo.":"استضافة بعيدة فقط. لا توجد نقطة اتصال REST محلية في المستودع.","Remove":"إزالة (Remove)","Response":"الاستجابة","Robotic":"آلي","Rough starting points, not promises. Model size, text length and other apps all change memory use.":"تقديرات أولية لا ضمانات. يغير حجم النموذج وطول النص والتطبيقات الأخرى استهلاك الذاكرة.","Run":"شغّل","Run chat voices on your own computer. Most streamers only need the built-in voices.":"شغّل أصوات الدردشة على حاسوبك. يحتاج معظم أصحاب البث إلى الأصوات المدمجة فقط.","Running it from source on Windows (HTTP 500 errors)":"تشغيله من المصدر على Windows (أخطاء HTTP 500)","SSN app test works, OBS is silent":"اختبار تطبيق SSN يعمل وOBS صامت","SSN desktop app":"تطبيق سطح المكتب SSN","SSN sends chat text with":"يرسل SSN نص الدردشة باستخدام","SSN waits for the whole response, then plays it. Keep chat messages short.":"ينتظر SSN الاستجابة كاملة ثم يشغّلها. أبقِ رسائل الدردشة قصيرة.","Screenshot-style checklist for local TTS troubleshooting":"قائمة تحقق بأسلوب لقطة شاشة لحل مشكلات تحويل النص إلى كلام المحلي","Screenshot-style map of the local TTS fields in Social Stream Ninja":"خريطة بأسلوب لقطة شاشة لحقول تحويل النص إلى كلام المحلي في Social Stream Ninja","See":"راجع","See the":"راجع","Send a short test chat, like":"أرسل رسالة اختبار قصيرة، مثل","Send it as a WAV file or base64 WAV.":"أرسله كملف WAV أو WAV بترميز base64.","Server":"الخادم","Server not responding":"الخادم لا يستجيب","Server on another PC at home":"الخادم على حاسوب آخر في المنزل","Server on another PC? Use its local IP, like":"الخادم على حاسوب آخر؟ استخدم عنوان IP المحلي له، مثل","Set it up in 4 steps":"الإعداد في 4 خطوات","Set up XTTS-v2 in 4 steps":"إعداد XTTS-v2 في 4 خطوات","Set up private local text-to-speech for Social Stream Ninja, including built-in voices, self-hosted servers, voice cloning, OBS audio, and troubleshooting.":"أعد تحويل النص إلى كلام محليًا وبخصوصية لـSocial Stream Ninja، بما يشمل الأصوات المدمجة والخوادم المستضافة ذاتيًا واستنساخ الصوت وصوت OBS وحل المشكلات.","Setting":"الإعداد","Setup":"الإعداد","Short WAV clip":"مقطع WAV قصير","Side-by-side":"مقارنة متجاورة","Simplest rule:":"أبسط قاعدة:","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja - Local AI TTS Guide":"دليل النطق بالذكاء الاصطناعي المحلي - Social Stream Ninja","Social Stream Ninja logo":"شعار Social Stream Ninja","Social Stream Ninja: Local AI TTS Guide ·":"Social Stream Ninja: دليل TTS المحلي بالذكاء الاصطناعي ·","Some F5-TTS wrappers use":"تستخدم بعض طبقات F5-TTS","Some servers also need the exact words spoken in the clip.":"تحتاج بعض الخوادم أيضاً النص المطابق تماماً للكلام في المقطع.","Sound":"الصوت","Speaking speed (0.5–2.0).":"سرعة الكلام (0.5–2.0).","Start it with Docker automatically:":"تشغيله تلقائياً مع Docker:","Start your server.":"شغّل خادمك.","Support":"الدعم","Supported Sites":"المواقع المدعومة","Switch theme":"تبديل السمة","System TTS":"تحويل النص إلى كلام في النظام","System TTS / eSpeak":"تحويل النص إلى كلام في النظام / eSpeak","TTS Voice Guide":"دليل أصوات تحويل النص إلى كلام","TTS link.":"لـ TTS.","TTS reference":"مرجع TTS","TTS setup guide":"دليل إعداد تحويل النص إلى كلام","Tell the bridge where your server is. PowerShell:":"أخبر الجسر بمكان خادمك. PowerShell:","The bridge":"الجسر","The browser blocked it before the server saw it. Run":"حظره المتصفح قبل وصوله إلى الخادم. شغّل","The desktop app uses the same link settings. But the sound plays from the app, not OBS. Capture it with":"يستخدم تطبيق سطح المكتب إعدادات الرابط نفسها، لكن الصوت يخرج من التطبيق لا OBS. التقطه باستخدام","The endpoint is the field that matters.":"حقل endpoint هو المهم.","The first run downloads about 1.5–2 GB, once.":"ينزّل التشغيل الأول نحو 1.5–2 GB مرة واحدة.","The local TTS bridge":"جسر TTS المحلي","The localhost rule":"قاعدة localhost","The server returns audio (usually WAV or MP3) and SSN plays it.":"يعيد الخادم صوتاً، عادةً WAV أو MP3، ويشغّله SSN.","The server turns the clip into a voice profile.":"يحول الخادم المقطع إلى ملف تعريف صوت.","These need":"تحتاج هذه إلى","These run inside SSN in your browser. No server, Docker, or API key.":"تعمل هذه داخل SSN في متصفحك. لا خادم ولا Docker ولا مفتاح API.","This is the most common mistake.":"هذا أكثر الأخطاء شيوعاً.","This works with any chat SSN captures. The voice belongs to SSN's player, not YouTube or Twitch. Unlike":"يعمل مع أي دردشة يلتقطها SSN. الصوت تابع لمشغّل SSN وليس YouTube أو Twitch. بخلاف","To use a voice server I already run":"استخدام خادم أصوات أشغّله بالفعل","Try this":"جرّب هذا","Turn on":"فعّل","Turns on TTS, in English.":"يفعّل TTS بالإنجليزية.","Under 1 GB. No voice cloning.":"أقل من 1 GB. لا استنساخ أصوات.","Use Kokoro voice names":"استخدم أسماء أصوات Kokoro","Use the":"استخدم","Use this address":"استخدم هذا العنوان","Use this link (change the address if the server is on another PC):":"استخدم هذا الرابط (غيّر العنوان إن كان الخادم على حاسوب آخر):","Use your own server. (":"استخدم خادمك الخاص. (","Very good":"جيد جداً","Very low. CPU only.":"منخفض جداً. المعالج فقط.","Voice":"الصوت","Voice cloning":"استنساخ الصوت","Voice name. Depends on the server.":"اسم الصوت. يعتمد على الخادم.","Voices, speed, and other languages:":"الأصوات والسرعة واللغات الأخرى:","Voices:":"الأصوات:","WebGPU GPU or fast CPU, 8–16 GB RAM":"GPU يدعم WebGPU أو معالج سريع، و8–16 GB RAM","What SSN can play back":"ما يستطيع SSN تشغيله","What SSN sends":"ما يرسله SSN","What computer do I need?":"ما الحاسوب الذي أحتاجه؟","What it does":"ما الذي يفعله","What was tested with SSN":"ما اختُبر مع SSN","With":"مع","With 6 GB of GPU memory or less, start with small models on OpenAI-compatible servers. Bigger models work too if hosted elsewhere.":"إذا كانت ذاكرة GPU لديك 6 GB أو أقل، ابدأ بنماذج صغيرة على خوادم متوافقة مع OpenAI. تعمل النماذج الأكبر أيضاً إذا استُضيفت في مكان آخر.","With no API key set, SSN sends no Authorization header.":"عندما لا يُضبط مفتاح API، لا يرسل SSN ترويسة Authorization.","Without it SSN sends":"بدونه يرسل SSN","Works in OBS":"يعمل في OBS","Works in one place but not another? Check in order: which computer, address, voice, browser permission, OBS audio.":"يعمل في مكان دون آخر؟ افحص بالترتيب: الحاسوب والعنوان والصوت وأذونات المتصفح وصوت OBS.","Works with built-in voices and your own server.":"يعمل مع الأصوات المدمجة وخادمك الخاص.","Works?":"هل يعمل؟","Wrong voice, or voice not found":"صوت غير صحيح أو غير موجود","XTTS-v2 / openedai-speech":"XTTS-v2 / openedai-speech","XTTS-v2 is non-commercial by default.":"XTTS-v2 غير تجاري افتراضيًا.","Yes":"نعم","Yes, about 4 GB":"نعم، نحو 4 GB","Your server's address. Change the port to match.":"عنوان خادمك. غيّر المنفذ ليطابقه.","Your setup":"إعدادك","all link settings":"جميع إعدادات الروابط","allows non-commercial use only. A monetized stream may not qualify. Check the license or get permission first.":"يسمح بالاستخدام غير التجاري فقط. قد لا يكون البث الذي يحقق دخلاً مؤهلاً. تحقق من الترخيص أو احصل على إذن أولاً.","also works.)":"يعمل أيضاً.)","always mean “this same computer.”":"يعنيان دائماً «هذا الحاسوب نفسه».","and":"و","and change only":"وغيّر فقط","bridge":"الجسر","bridge README":"ملف README للجسر","built-in voices":"الأصوات المدمجة","chatterbox-tts-api":"chatterbox-tts-api","does the same. Change the port with":"يفعل الشيء نفسه. غيّر المنفذ باستخدام","eSpeak-NG":"eSpeak-NG","fields, and data URLs.":"، وعناوين URL للبيانات.","first.":"أولاً.","first. Otherwise it can't find":"أولاً، وإلا فلن يجد","folder to":"إلى","folder,":"،","for Kokoro,":"لـ Kokoro،","for openedai-speech.":"لـ openedai-speech.","format. The bridge translates for it.":". يترجم الجسر الطلبات له.","from the OBS link (for example":"من رابط OBS (مثلاً","in OBS points at the OBS PC.":"في OBS يشير إلى حاسوب OBS.","installed and running. It's free for personal use.":"مثبتاً وقيد التشغيل. وهو مجاني للاستخدام الشخصي.","is required.":"مطلوب.","is small and widely supported.":"صغير ومدعوم على نطاق واسع.","is the easiest.":"هو الأسهل.","item.":".","kokoro-web":"kokoro-web","link. (Or":". (أو","localhost rule":"قاعدة localhost","macOS/Linux, in one line:":"macOS/Linux، في سطر واحد:","may not work.":"قد لا يعمل.","mp3, wav, opus or flac.":"mp3 أو wav أو opus أو flac.","must match your voice name in the YAML file.":"يجب أن يطابق اسم الصوت في ملف YAML.","on the OBS PC and use":"على حاسوب OBS واستخدم","only if server and browser both support it.":"فقط إذا دعمه الخادم والمتصفح معاً.","openedai-speech":"openedai-speech","openedai-speech (Piper and XTTS-v2)":"openedai-speech (Piper وXTTS-v2)","openedai-speech Piper":"openedai-speech Piper","openedai-speech XTTS":"openedai-speech XTTS","openedai-speech was archived in January 2026 and calls itself mostly obsolete. It still works as an example, but gets no updates. Keep it local. Never expose its port to the internet; it has no login.":"أُرشف openedai-speech في يناير 2026 ويصف نفسه بأنه متقادم في معظمه. ما زال يعمل كمثال لكنه لا يتلقى تحديثات. أبقه محلياً ولا تعرض منفذه للإنترنت؛ فهو بلا تسجيل دخول.","or":"أو","path instead of loading the model in the browser.":"بدلاً من تحميل النموذج داخل المتصفح.","provider settings":"إعدادات المزود","routing steps":"خطوات توجيه الصوت","run the bridge on the OBS computer. Then OBS always uses":"شغّل الجسر على حاسوب OBS. عندها يستخدم OBS دائماً","runs Kokoro as a local server. Works on CPU; no GPU needed.":"يشغّل Kokoro كخادم محلي. يعمل على المعالج ولا يحتاج GPU.","section (keep the voices already there):":"(احتفظ بالأصوات الموجودة):","setup guide":"دليل الإعداد","speech server. No API key needed.":". لا تحتاج إلى مفتاح API.","suits cloning servers and bridge testing. Use":"يناسب خوادم الاستنساخ واختبار الجسر. استخدم","to":"إلى","to rule out timing issues.":"لاستبعاد مشكلات التوقيت.","to the name SSN will send.":"إلى الاسم الذي سيرسله SSN.","to your":"إلى","voice cloning":"استنساخ الصوت","with":"مع","with its local IP. Check":"بعنوان IP المحلي له. تحقق من","with no provider) depends on the voices OBS has. Often none, or voices that make no capturable sound. Use a provider above instead.":"دون مزود) يعتمد على الأصوات المتوفرة في OBS. غالباً لا توجد أصوات أو توجد أصوات لا تُنتج خرجاً قابلاً للالتقاط. استخدم أحد المزودين أعلاه بدلاً منه.","with your":"باستخدام","work with any provider:":"تعمل مع أي مزود:","~2 GB":"~2 GB","“Blocked by CORS”, “private network”, or “failed fetch”":"«Blocked by CORS» أو «private network» أو «failed fetch»","“Local” means one of two things: a voice built into SSN that runs in your browser, or a voice server you run yourself.":"تعني «محلي» أحد أمرين: صوت مدمج في SSN يعمل في متصفحك، أو خادم أصوات تشغّله بنفسك."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/local-tts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/local-tts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/local-tts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/local-tts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/local-tts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/local-tts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/local-tts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/local-tts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/local-tts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/local-tts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/local-tts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/local-tts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/local-tts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/local-tts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/local-tts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/local-tts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/local-tts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/local-tts.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="التنقل الرئيسي"><a href="../index.html">الرئيسية</a><a href="features.html">الميزات</a><a href="inspiration.html" class="site-priority-inspiration">أفكار ملهمة</a><a href="download.html">تنزيل</a><a href="guides.html">الأدلة</a><a href="commands.html">الأوامر وAPI</a><a href="supported-sites.html">المواقع المدعومة</a><a href="overlay-gallery.html" class="site-priority-gallery">معرض التراكبات</a><a href="services.html" class="site-priority-hire">الاستعانة بخدمات المطوّر</a><a href="support.html">الدعم</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="العربية"><span aria-hidden="true">🌐 </span><span lang="ar">العربية</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/local-tts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/local-tts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/local-tts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/local-tts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/local-tts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/local-tts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/local-tts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/local-tts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/local-tts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/local-tts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/local-tts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/local-tts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/local-tts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="local-tts.html" lang="ar" hreflang="ar" aria-current="true">العربية</a><a class="site-language-link" href="../../tr/docs/local-tts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/local-tts.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/local-tts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="تبديل السمة"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="فتح قائمة التنقل" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>دليل تحويل النص إلى كلام بالذكاء الاصطناعي محلياً</h1>
+            <p>شغّل أصوات الدردشة على حاسوبك. يحتاج معظم أصحاب البث إلى الأصوات المدمجة فقط.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="في هذه الصفحة">
+                <a href="#overview">هل أحتاج هذا؟</a>
+                <a href="#builtin">الأصوات المدمجة</a>
+                <a href="#server">توصيل خادم</a>
+                <a href="#which-computer">قاعدة localhost</a>
+                <a href="#kokoro-fastapi">Kokoro-FastAPI</a>
+                <a href="#openedai">openedai-speech</a>
+                <a href="#bridge">الجسر</a>
+                <a href="#voice-cloning">استنساخ الصوت</a>
+                <a href="#obs">صوت OBS</a>
+                <a href="#troubleshooting">حل المشكلات</a>
+                <a href="#flow">لمطوري الخوادم</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="overview">هل أحتاج هذا؟</h2>
+                <p>تعني «محلي» أحد أمرين: صوت مدمج في SSN يعمل في متصفحك، أو خادم أصوات تشغّله بنفسك.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>أريد…</th><th>افعل هذا</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="أريد">أصوات مجانية بلا تثبيت</td><td data-label="افعل هذا">استخدم <a href="#builtin">الأصوات المدمجة</a>. يتوقف معظم المستخدمين هنا.</td></tr>
+                        <tr><td data-label="أريد">استخدام خادم أصوات أشغّله بالفعل</td><td data-label="افعل هذا"><a href="#server">توصيل خادم</a>.</td></tr>
+                        <tr><td data-label="أريد">صوت مستنسخ</td><td data-label="افعل هذا">راجع <a href="#voice-cloning">استنساخ الصوت</a>.</td></tr>
+                        <tr><td data-label="أريد">Fish Audio في OBS</td><td data-label="افعل هذا">راجع <a href="tts-setup-guide.html#settings-fish">إعداد Fish Audio</a>.</td></tr>
+                        <tr><td data-label="أريد">أصوات سحابية مدفوعة</td><td data-label="افعل هذا">راجع <a href="tts.html#providers">مرجع TTS</a>.</td></tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">يعمل مع أي دردشة يلتقطها SSN. الصوت تابع لمشغّل SSN وليس YouTube أو Twitch. بخلاف <em>تحويل النص إلى كلام في النظام</em>، تولّد أصوات الذكاء الاصطناعي المحلية صوتها بنفسها، فيستطيع OBS التقاطه. <a href="tts-setup-guide.html#voice-chooser">مقارنة المزودين والاستماع للعينات</a>.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="builtin">الأصوات المدمجة (بلا تثبيت)</h2>
+                <p>تعمل هذه داخل SSN في متصفحك. لا خادم ولا Docker ولا مفتاح API.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>الصوت</th><th>الصوت</th><th>حمل الحاسوب</th><th>قيمة الرابط</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="الصوت">Kokoro</td><td data-label="الصوت">ممتاز</td><td data-label="حمل الحاسوب">متوسط. أسرع مع GPU.</td><td data-label="قيمة الرابط"><code>ttsprovider=kokoro</code></td></tr>
+                        <tr><td data-label="الصوت">Piper</td><td data-label="الصوت">جيد جداً</td><td data-label="حمل الحاسوب">منخفض. المعالج فقط.</td><td data-label="قيمة الرابط"><code>ttsprovider=piper</code></td></tr>
+                        <tr><td data-label="الصوت">Kitten</td><td data-label="الصوت">جيد</td><td data-label="حمل الحاسوب">منخفض جداً. المعالج فقط.</td><td data-label="قيمة الرابط"><code>ttsprovider=kitten</code></td></tr>
+                        <tr><td data-label="الصوت">eSpeak-NG</td><td data-label="الصوت">آلي</td><td data-label="حمل الحاسوب">ضئيل جداً. المعالج فقط.</td><td data-label="قيمة الرابط"><code>ttsprovider=espeak</code></td></tr>
+                    </tbody>
+                </table>
+                <h3 id="quick-setup">الإعداد في 4 خطوات</h3>
+                <ol class="guide-steps">
+                    <li>أضف <code>&amp;speech=en-US&amp;ttsprovider=kokoro</code> إلى <code>dock.html</code> . (أو <code>piper</code>, <code>kitten</code>, <code>espeak</code>.)</li>
+                    <li>أضف ذلك الرابط إلى OBS بوصفه <strong>مصدر المتصفح</strong>. هذه هي الصفحة التي تُصدر الصوت.</li>
+                    <li>في خصائصه، فعّل <strong>التحكم بالصوت عبر OBS (Control audio via OBS)</strong>.</li>
+                    <li>أرسل رسالة اختبار قصيرة، مثل <code>Testing local TTS</code>.</li>
+                </ol>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=kokoro</pre>
+                <div class="warning-note"><strong>أول استخدام بطيء.</strong> ينزّل Kokoro وPiper نماذجهما أولاً (نحو 50–200 MB). تعيد مرات التحميل التالية استخدامها لكنها تحتاج لحظة للبدء. يحتفظ OBS بنسخته الخاصة منفصلةً عن Chrome.</div>
+                <p>الأصوات والسرعة واللغات الأخرى: <a href="tts.html#premium-options">إعدادات المزود</a>. تفضل النقر؟ استخدم <a href="tts-setup-guide.html">دليل الإعداد</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="server">توصيل خادم TTS الخاص بك</h2>
+                <p>يمنحك الخادم أصواتاً أكثر أو استنساخ صوت أو صوتاً تعيد استخدامه بين الأدوات. يتواصل SSN معه كما يتواصل مع <strong>متوافق مع OpenAI</strong> . لا تحتاج إلى مفتاح API.</p>
+                <div class="guide-step-layout" id="where-to-click">
+                    <ol class="guide-steps">
+                        <li>شغّل خادمك. <a href="#kokoro-fastapi">Kokoro-FastAPI</a> هو الأسهل.</li>
+                        <li>في SSN، افتح قائمة مزودي TTS واختر <strong>نقطة نهاية مخصصة أو محلية لتحويل النص إلى كلام</strong>.</li>
+                        <li>في <strong>Custom / Local API Endpoint</strong>، أدخل عنوان خادمك، مثل <code>http://127.0.0.1:8880/v1/audio/speech</code>.</li>
+                        <li>اترك مفتاح API فارغاً.</li>
+                        <li>اختر صوتاً يعرفه خادمك: <code>af_bella</code> لـ Kokoro، <code>nova</code> لـ openedai-speech.</li>
+                        <li>انسخ الرابط إلى OBS وأرسل رسالة اختبار.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/local-tts/tts-custom-endpoint-fields.png" alt="خريطة بأسلوب لقطة شاشة لحقول تحويل النص إلى كلام المحلي في Social Stream Ninja" class="guide-image" loading="lazy">
+                        <figcaption>حقل endpoint هو المهم.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>OBS على حاسوب مختلف؟</strong> اقرأ <a href="#which-computer">قاعدة localhost</a> أولاً. <strong>المتصفح يحظره؟</strong> استخدم <a href="#bridge">الجسر</a>.</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>الخادم</th><th>النموذج</th><th>GPU</th><th>القرص</th><th>المنفذ</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="الخادم"><a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> (موصى به)</td><td data-label="النموذج">Kokoro 82M</td><td data-label="GPU">اختياري</td><td data-label="القرص">~2 GB</td><td data-label="المنفذ">8880</td></tr>
+                        <tr><td data-label="الخادم"><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a> (Piper)</td><td data-label="النموذج">Piper</td><td data-label="GPU">CPU فقط</td><td data-label="القرص">&lt;1 GB</td><td data-label="المنفذ">8000</td></tr>
+                        <tr><td data-label="الخادم"><a href="https://github.com/eduardolat/kokoro-web" target="_blank">kokoro-web</a></td><td data-label="النموذج">Kokoro 82M</td><td data-label="GPU">اختياري</td><td data-label="القرص">~2 GB</td><td data-label="المنفذ">3000</td></tr>
+                    </tbody>
+                </table>
+                <p>تحتاج هذه إلى <a href="https://www.docker.com/products/docker-desktop/" target="_blank">Docker Desktop</a> مثبتاً وقيد التشغيل. وهو مجاني للاستخدام الشخصي.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="which-computer">قاعدة localhost</h2>
+                <p>هذا أكثر الأخطاء شيوعاً.</p>
+                <div class="warning-note"><strong><code>localhost</code> و <code>127.0.0.1</code> يعنيان دائماً «هذا الحاسوب نفسه».</strong> إذا كان OBS على حاسوب وخادم الصوت على آخر، <code>127.0.0.1</code> في OBS يشير إلى حاسوب OBS.</div>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/local-tts/tts-localhost-map.png" alt="رسم يوضح أن localhost يعني الجهاز نفسه، بينما يحتاج جهاز آخر إلى عنوان LAN" class="guide-image guide-image-medium" loading="lazy">
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>إعدادك</th><th>استخدم هذا العنوان</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="إعدادك">OBS والخادم على الحاسوب نفسه</td><td data-label="استخدم هذا العنوان"><code>http://127.0.0.1:8880/v1/audio/speech</code></td></tr>
+                        <tr><td data-label="إعدادك">الخادم على حاسوب آخر في المنزل</td><td data-label="استخدم هذا العنوان"><code>http://192.168.x.x:8880/v1/audio/speech</code>، بعنوان IP المحلي لذلك الحاسوب</td></tr>
+                        <tr><td data-label="إعدادك">اختبار تطبيق SSN يعمل وOBS صامت</td><td data-label="استخدم هذا العنوان">يحتاج OBS إلى عنوان يعمل لديه. اختبار التطبيق لا يثبت قدرة OBS على الوصول إلى الخادم.</td></tr>
+                    </tbody>
+                </table>
+                <p>تحقق أيضاً من سماح الجدار الناري بالمنفذ ومن نشر Docker له (<code>-p 8880:8880</code>).</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="kokoro-fastapi">Kokoro-FastAPI</h2>
+                <p><a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> يشغّل Kokoro كخادم محلي. يعمل على المعالج ولا يحتاج GPU.</p>
+                <ol class="guide-steps">
+                    <li>افتح طرفية (Command Prompt أو PowerShell أو Terminal) وشغّل أحد هذه الأوامر:
+                        <pre>docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</pre>
+                        <p>بطاقة NVIDIA (أسرع):</p>
+                        <pre>docker run --gpus all -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-gpu:v0.2.0post4</pre>
+                        ينزّل التشغيل الأول نحو 1.5–2 GB مرة واحدة.</li>
+                    <li>افتح <code>http://localhost:8880/web/</code>. ينبغي أن تظهر صفحة لاختبار الأصوات، مع أكثر من 67 صوتاً.</li>
+                    <li>استخدم هذا الرابط (غيّر العنوان إن كان الخادم على حاسوب آخر):
+                        <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8880/v1/audio/speech&amp;voiceopenai=af_bella</pre></li>
+                </ol>
+                <div class="guide-note"><strong>استخدم أسماء أصوات Kokoro</strong>، مثل <code>af_bella</code>, <code>af_sarah</code>, <code>am_adam</code> أو <code>bf_emma</code>. أسماء OpenAI مثل <code>nova</code> أو <code>alloy</code> قد لا يعمل.</div>
+                <p><strong>تشغيله تلقائياً مع Docker:</strong></p>
+                <pre>docker run -d --restart unless-stopped -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</pre>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="openedai">openedai-speech (Piper وXTTS-v2)</h2>
+                <div class="warning-note"><strong>مشروع مؤرشف.</strong> أُرشف openedai-speech في يناير 2026 ويصف نفسه بأنه متقادم في معظمه. ما زال يعمل كمثال لكنه لا يتلقى تحديثات. أبقه محلياً ولا تعرض منفذه للإنترنت؛ فهو بلا تسجيل دخول.</div>
+                <h3>الخيار A: خادم Piper خفيف (CPU)</h3>
+                <p>أقل من 1 GB. لا استنساخ أصوات.</p>
+                <pre>docker run -d --restart unless-stopped -p 8000:8000 ghcr.io/matatonic/openedai-speech-min</pre>
+                <p>الأصوات: <code>alloy</code>, <code>echo</code>, <code>fable</code>, <code>onyx</code>, <code>nova</code>, <code>shimmer</code>.</p>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=openai&amp;openaiendpoint=http://localhost:8000/v1/audio/speech&amp;voiceopenai=nova</pre>
+                <details class="guide-extra"><summary>تشغيله من المصدر على Windows (أخطاء HTTP 500)</summary>
+                    <p>أضف مجلد البيئة الافتراضية <code>Scripts</code> إلى <code>PATH</code> أولاً، وإلا فلن يجد <code>piper.exe</code> أو <code>ffmpeg.exe</code>.</p>
+                    <pre>cd openedai-speech
+$env:Path = "$PWD\.venv\Scripts;$env:Path"
+.\.venv\Scripts\python.exe speech.py --xtts_device none -H 127.0.0.1 -P 8000</pre>
+                </details>
+                <h3>الخيار B: استنساخ الصوت XTTS-v2 (GPU)</h3>
+                <p>يحتاج الخادم الكامل وليس <code>openedai-speech-min</code>. خطط لنحو 4 GB من ذاكرة GPU. يعمل المعالج لكنه بطيء.</p>
+                <details class="guide-extra"><summary>إعداد XTTS-v2 في 4 خطوات</summary>
+                    <ol class="guide-steps">
+                        <li>نزّل الخادم وشغّله:
+                            <pre>git clone https://github.com/matatonic/openedai-speech.git
+cd openedai-speech
+Copy-Item sample.env speech.env
+docker compose up -d</pre>
+                            على macOS أو Linux، استخدم <code>cp sample.env speech.env</code>. يحتاج Docker إلى الوصول إلى GPU. يُنزّل النموذج في أول استخدام.</li>
+                        <li>أنشئ مقطعاً مرجعياً نظيفاً لصوت تملك إذناً باستخدامه. أحادي القناة، 22050 Hz، من 6 إلى 30 ثانية:
+                            <pre>ffmpeg -i input.mp3 -ac 1 -ar 22050 -t 6 -y voices/me.wav</pre></li>
+                        <li>في <code>config/voice_to_speaker.yaml</code>، أضفه تحت القسم الموجود <code>tts-1-hd</code> (احتفظ بالأصوات الموجودة):
+                            <pre>tts-1-hd:
+  me:
+    model: xtts
+    speaker: voices/me.wav
+    language: en</pre>
+                            غيّر <code>me</code> إلى الاسم الذي سيرسله SSN.</li>
+                        <li>شغّل <code>docker compose restart</code>، ثم استخدم:
+                            <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8000/v1/audio/speech&amp;openaimodel=tts-1-hd&amp;voiceopenai=me&amp;openaiformat=wav</pre></li>
+                    </ol>
+                    <div class="guide-note"><strong><code>openaimodel=tts-1-hd</code> مطلوب.</strong> بدونه يرسل SSN <code>tts-1</code>، فيستخدم الخادم Piper بدلاً منه. <code>voiceopenai</code> يجب أن يطابق اسم الصوت في ملف YAML.</div>
+                    <p>المتصفح يحظره؟ شغّل <a href="#bridge">الجسر</a> وغيّر فقط <code>openaiendpoint</code> إلى <code>http://127.0.0.1:8124/v1/audio/speech</code>.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="bridge">جسر TTS المحلي</h2>
+                <p>أداة صغيرة من SSN. تستقبل طلب SSN وتمرره إلى خادم الصوت ثم تعيد الصوت بطريقة تقبلها المتصفحات. تتطلب Node.js.</p>
+                <div class="guide-note"><strong>أبسط قاعدة:</strong> شغّل الجسر على حاسوب OBS. عندها يستخدم OBS دائماً <code>http://127.0.0.1:8124/v1/audio/speech</code>، حتى لو كان خادم الصوت على حاسوب آخر.</div>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/local-tts/tts-bridge-flow.png" alt="رسم يوضح استدعاء OBS للجسر المحلي واستدعاء الجسر لخادم تحويل النص إلى كلام" class="guide-image guide-image-medium" loading="lazy">
+                </figure>
+                <ol class="guide-steps">
+                    <li>أخبر الجسر بمكان خادمك. PowerShell:
+                        <pre>$env:SSN_TTS_TARGET="http://127.0.0.1:8880/v1/audio/speech"</pre>
+                        الخادم على حاسوب آخر؟ استخدم عنوان IP المحلي له، مثل <code>http://192.168.x.x:8880/v1/audio/speech</code>.</li>
+                    <li>في مجلد SSN، شغّل <code>node scripts/local-tts-bridge.cjs</code>. أبقِه قيد التشغيل.</li>
+                    <li>وجّه SSN إلى الجسر:
+                        <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;voiceopenai=af_bella</pre></li>
+                </ol>
+                <p>macOS/Linux، في سطر واحد: <code>SSN_TTS_TARGET="http://127.0.0.1:8880/v1/audio/speech" node scripts/local-tts-bridge.cjs</code>. داخل <code>local-tts-bridge</code> ، <code>node server.cjs</code> يفعل الشيء نفسه. غيّر المنفذ باستخدام <code>SSN_TTS_BRIDGE_PORT=8125</code>. جميع الخيارات: <a href="../../local-tts-bridge/README.md" target="_blank">ملف README للجسر</a>.</p>
+                <details class="guide-extra"><summary>وضع GPT-SoVITS</summary>
+                    <p>يستخدم GPT-SoVITS واجهته الخاصة <code>/tts</code> . يترجم الجسر الطلبات له.</p>
+                    <pre>$env:SSN_TTS_REF_AUDIO_PATH="C:\voices\speaker.wav"
+$env:SSN_TTS_REF_TEXT="Reference audio transcript here."
+$env:SSN_TTS_TARGET="http://127.0.0.1:9880/tts"
+node scripts/local-tts-bridge.cjs --mode gptsovits</pre>
+                    <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;openaiformat=wav</pre>
+                </details>
+                <details class="guide-extra"><summary>وضع خادم F5-TTS</summary>
+                    <p>تستخدم بعض طبقات F5-TTS <code>/synthesize_speech/?text=...&amp;voice=...</code>. يترجم الجسر الطلبات لها.</p>
+                    <pre>$env:SSN_TTS_TARGET="http://127.0.0.1:7860/synthesize_speech/"
+node scripts/local-tts-bridge.cjs --mode f5</pre>
+                    <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;voiceopenai=default_en&amp;openaiformat=wav</pre>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-cloning">استنساخ الصوت</h2>
+                <p>الاستنساخ ليس إعداداً في SSN بل ميزة في بعض خوادم الصوت. يرسل SSN نص الدردشة ويختار الخادم الصوت المستنسخ.</p>
+                <ol class="guide-steps">
+                    <li>سجّل مقطعاً واضحاً لمتحدث واحد، عادةً من 3 إلى 30 ثانية، مع ضجيج خلفية قليل.</li>
+                    <li>تحتاج بعض الخوادم أيضاً النص المطابق تماماً للكلام في المقطع.</li>
+                    <li>يحول الخادم المقطع إلى ملف تعريف صوت.</li>
+                    <li>يرسل SSN نص الدردشة باستخدام <code>ttsprovider=customtts</code>.</li>
+                    <li>يعيد الخادم صوتاً، عادةً WAV أو MP3، ويشغّله SSN.</li>
+                </ol>
+                <div class="warning-note"><strong>استنسخ فقط أصواتاً تملكها أو لديك إذن باستخدامها.</strong></div>
+                <div class="warning-note"><strong>XTTS-v2 غير تجاري افتراضيًا.</strong> خيار <a href="https://huggingface.co/coqui/XTTS-v2/blob/main/LICENSE.txt" target="_blank">ترخيص Coqui Public Model License</a> يسمح بالاستخدام غير التجاري فقط. قد لا يكون البث الذي يحقق دخلاً مؤهلاً. تحقق من الترخيص أو احصل على إذن أولاً.</div>
+                <p>إذا كانت ذاكرة GPU لديك 6 GB أو أقل، ابدأ بنماذج صغيرة على خوادم متوافقة مع OpenAI. تعمل النماذج الأكبر أيضاً إذا استُضيفت في مكان آخر.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>الخيار</th><th>يستنسخ من</th><th>يناسب GPU بذاكرة 6 GB؟</th><th>كيفية الاتصال</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="الخيار"><a href="https://github.com/matatonic/openedai-speech" target="_blank">XTTS-v2 / openedai-speech</a></td><td data-label="يستنسخ من">مقطع WAV قصير</td><td data-label="يناسب GPU بذاكرة 6 GB؟">نعم، نحو 4 GB</td><td data-label="كيفية الاتصال">مباشرةً، <code>/v1/audio/speech</code>. المشروع مؤرشف.</td></tr>
+                        <tr><td data-label="الخيار"><a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">chatterbox-tts-api</a> / <a href="https://github.com/devnen/Chatterbox-TTS-Server" target="_blank">Chatterbox-TTS-Server</a></td><td data-label="يستنسخ من">مقطع مرجعي</td><td data-label="يناسب GPU بذاكرة 6 GB؟">على الأرجح مع Turbo أو مقاطع صغيرة</td><td data-label="كيفية الاتصال">مباشرةً أو عبر الجسر. GPU أكثر سلاسة من المعالج، ويختلف الإعداد حسب النسخة المتفرعة.</td></tr>
+                        <tr><td data-label="الخيار"><a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">Qwen3-TTS</a> (0.6B / 1.7B)</td><td data-label="يستنسخ من">مقطع 3 ثوانٍ</td><td data-label="يناسب GPU بذاكرة 6 GB؟">على الأرجح (0.6B Base)</td><td data-label="كيفية الاتصال">يحتاج طبقة توافق مع OpenAI.</td></tr>
+                        <tr><td data-label="الخيار"><a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">GPT-SoVITS</a></td><td data-label="يستنسخ من">5 ثوانٍ؛ أفضل مع دقيقة واحدة</td><td data-label="يناسب GPU بذاكرة 6 GB؟">على الأرجح مع fp16 / تثبيت خفيف</td><td data-label="كيفية الاتصال">الجسر <code>--mode gptsovits</code>.</td></tr>
+                        <tr><td data-label="الخيار"><a href="https://github.com/SWivid/F5-TTS" target="_blank">F5-TTS</a></td><td data-label="يستنسخ من">مقطع مع نصه</td><td data-label="يناسب GPU بذاكرة 6 GB؟">ربما</td><td data-label="كيفية الاتصال">طبقة توافق أو جسر <code>--mode f5</code> مع <a href="https://github.com/ValyrianTech/F5-TTS_server" target="_blank">F5-TTS_server</a>.</td></tr>
+                        <tr><td data-label="الخيار"><a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">MisoTTS 8B</a></td><td data-label="يستنسخ من">صوت مرجعي</td><td data-label="يناسب GPU بذاكرة 6 GB؟">لا؛ يُوصى بـ 24 GB</td><td data-label="كيفية الاتصال">استضافة بعيدة فقط. لا توجد نقطة اتصال REST محلية في المستودع.</td></tr>
+                    </tbody>
+                </table>
+                <p>Kokoro المدمج وKokoro-FastAPI لا يستنسخان الأصوات.</p>
+                <details class="guide-extra" id="tested-servers"><summary>ما اختُبر مع SSN</summary>
+                    <p>اختُبر بكليهما <code>dock.html</code> و <code>featured.html</code>:</p>
+                    <ul class="guide-list">
+                        <li><strong>openedai-speech</strong> (Piper): كلام فعلي على المعالج، مباشرةً وعبر الجسر.</li>
+                        <li><strong>Chatterbox-TTS-Server</strong>: كلام فعلي على المعالج باستخدام <code>Emily.wav</code>، مباشرة وعبر الجسر.</li>
+                        <li><strong>chatterbox-tts-api</strong>: اختُبرت صيغة الطلب مباشرةً وعبر الجسر.</li>
+                        <li><strong>GPT-SoVITS</strong> و <strong>F5-TTS_server</strong>: عبر أوضاع الجسر فقط.</li>
+                        <li><strong>F5-TTS الرسمي</strong> و <strong>Qwen3-TTS</strong>: تحتاج طبقة توافق أولاً (CLI أو Gradio أو مكتبة فقط).</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="hardware">ما الحاسوب الذي أحتاجه؟</h2>
+                <p>تقديرات أولية لا ضمانات. يغير حجم النموذج وطول النص والتطبيقات الأخرى استهلاك الذاكرة.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>الخيار</th><th>الحد الأدنى</th><th>مناسب</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="الخيار">تحويل النص إلى كلام في النظام / eSpeak</td><td data-label="الحد الأدنى">أي جهاز PC</td><td data-label="مناسب">أي جهاز PC</td></tr>
+                        <tr><td data-label="الخيار">Kitten المدمج</td><td data-label="الحد الأدنى">CPU منخفض المواصفات، و4 GB من RAM</td><td data-label="مناسب">معالج حاسوب محمول و8 GB RAM</td></tr>
+                        <tr><td data-label="الخيار">Piper المدمج</td><td data-label="الحد الأدنى">معالج حديث و4–8 GB RAM</td><td data-label="مناسب">CPU حديث، و8 GB من RAM</td></tr>
+                        <tr><td data-label="الخيار">Kokoro المدمج</td><td data-label="الحد الأدنى">CPU حديث، و8 GB من RAM</td><td data-label="مناسب">GPU يدعم WebGPU أو معالج سريع، و8–16 GB RAM</td></tr>
+                        <tr><td data-label="الخيار">Kokoro-FastAPI</td><td data-label="الحد الأدنى">CPU، و8 GB من RAM</td><td data-label="مناسب">NVIDIA GPU اختياري، و8–16 GB RAM</td></tr>
+                        <tr><td data-label="الخيار">openedai-speech Piper</td><td data-label="الحد الأدنى">معالج و4–8 GB RAM</td><td data-label="مناسب">CPU، و8 GB من RAM</td></tr>
+                        <tr><td data-label="الخيار">openedai-speech XTTS</td><td data-label="الحد الأدنى">NVIDIA GPU بنحو 4 GB، و8–16 GB RAM</td><td data-label="مناسب">GPU من NVIDIA بذاكرة 6 GB+، و16 GB من RAM</td></tr>
+                        <tr><td data-label="الخيار">Chatterbox</td><td data-label="الحد الأدنى">المعالج في بعض الإصدارات، بطيء</td><td data-label="مناسب">GPU من NVIDIA بذاكرة 6 GB+، و16 GB من RAM</td></tr>
+                        <tr><td data-label="الخيار">GPT-SoVITS / F5-TTS / Qwen3-TTS</td><td data-label="الحد الأدنى">المعالج للاختبار، بطيء</td><td data-label="مناسب">GPU من NVIDIA بذاكرة 6 GB+، و16 GB من RAM</td></tr>
+                        <tr><td data-label="الخيار">MisoTTS 8B</td><td data-label="الحد الأدنى">ليس مع 6 GB</td><td data-label="مناسب">GPU بذاكرة 24 GB أو مضيف بعيد</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="obs">إدخال الصوت إلى OBS</h2>
+                <h3>OBS Browser Source (موصى به)</h3>
+                <p>يعمل مع الأصوات المدمجة وخادمك الخاص.</p>
+                <ol class="guide-steps">
+                    <li>أضف <strong>مصدر المتصفح</strong> باستخدام <code>dock.html</code> لـ TTS.</li>
+                    <li>فعّل <strong>التحكم بالصوت عبر OBS (Control audio via OBS)</strong>.</li>
+                    <li>انقر على <strong>موافق</strong>. يظهر TTS الآن في مازج OBS.</li>
+                </ol>
+                <h3 id="desktop-app">تطبيق سطح المكتب SSN</h3>
+                <p>يستخدم تطبيق سطح المكتب إعدادات الرابط نفسها، لكن الصوت يخرج من التطبيق لا OBS. التقطه باستخدام <strong>صوت سطح المكتب</strong> أو <strong>التقاط إدخال الصوت (Audio Input Capture)</strong>. لفصل TTS عن الأصوات الأخرى، وجّه التطبيق إلى كابل افتراضي: <a href="tts.html#audio-capture">خطوات توجيه الصوت</a>.</p>
+                <div class="warning-note"><strong>لا تخلط بين اختبار التطبيق وOBS.</strong> الضغط على Test في التطبيق يختبر من التطبيق. عند استخدام رابط في OBS، يجب أن يصل OBS إلى الخادم ويشغّل الصوت.</div>
+                <details class="guide-extra"><summary>تفاصيل إضافية لتطبيق سطح المكتب</summary>
+                    <p>نوافذ التطبيق أقل تشدداً بشأن أذونات المتصفح CORS من Chrome. يظل الجسر الخيار الأضمن للخوادم التي ترفض طلبات المتصفح. لـ Kokoro المدمج، يستطيع التطبيق استخدام <code>ninjafy.tts</code> بدلاً من تحميل النموذج داخل المتصفح.</p>
+                </details>
+                <div class="warning-note"><strong>تحويل النص إلى كلام في النظام</strong> (<code>&amp;speech=en-US</code> دون مزود) يعتمد على الأصوات المتوفرة في OBS. غالباً لا توجد أصوات أو توجد أصوات لا تُنتج خرجاً قابلاً للالتقاط. استخدم أحد المزودين أعلاه بدلاً منه.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="comparison">مقارنة متجاورة</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>الخيار</th><th>الإعداد</th><th>الجودة</th><th>خاص</th><th>يعمل في OBS</th><th>التكلفة</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="الخيار">Kokoro المدمج</td><td data-label="الإعداد">لا شيء</td><td data-label="الجودة">5/5</td><td data-label="خاص">نعم</td><td data-label="يعمل في OBS">نعم</td><td data-label="التكلفة">مجاني</td></tr>
+                        <tr><td data-label="الخيار">Piper المدمج</td><td data-label="الإعداد">لا شيء</td><td data-label="الجودة">4/5</td><td data-label="خاص">نعم</td><td data-label="يعمل في OBS">نعم</td><td data-label="التكلفة">مجاني</td></tr>
+                        <tr><td data-label="الخيار">Kitten المدمج</td><td data-label="الإعداد">لا شيء</td><td data-label="الجودة">3/5</td><td data-label="خاص">نعم</td><td data-label="يعمل في OBS">نعم</td><td data-label="التكلفة">مجاني</td></tr>
+                        <tr><td data-label="الخيار">eSpeak المدمج</td><td data-label="الإعداد">لا شيء</td><td data-label="الجودة">2/5</td><td data-label="خاص">نعم</td><td data-label="يعمل في OBS">نعم</td><td data-label="التكلفة">مجاني</td></tr>
+                        <tr><td data-label="الخيار">Kokoro-FastAPI</td><td data-label="الإعداد">Docker</td><td data-label="الجودة">5/5</td><td data-label="خاص">نعم</td><td data-label="يعمل في OBS">نعم</td><td data-label="التكلفة">مجاني</td></tr>
+                        <tr><td data-label="الخيار">openedai-speech</td><td data-label="الإعداد">Docker</td><td data-label="الجودة">4/5</td><td data-label="خاص">نعم</td><td data-label="يعمل في OBS">نعم</td><td data-label="التكلفة">مجاني</td></tr>
+                        <tr><td data-label="الخيار">ElevenLabs</td><td data-label="الإعداد">مفتاح API (API key)</td><td data-label="الجودة">5/5</td><td data-label="خاص">لا</td><td data-label="يعمل في OBS">نعم</td><td data-label="التكلفة">خطط مدفوعة</td></tr>
+                        <tr><td data-label="الخيار">تحويل النص إلى كلام في النظام</td><td data-label="الإعداد">لا شيء</td><td data-label="الجودة">2/5</td><td data-label="خاص">نعم</td><td data-label="يعمل في OBS">يحتاج توجيه الصوت</td><td data-label="التكلفة">مجاني</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="troubleshooting">حل المشكلات</h2>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/local-tts/tts-troubleshooting-checklist.png" alt="قائمة تحقق بأسلوب لقطة شاشة لحل مشكلات تحويل النص إلى كلام المحلي" class="guide-image guide-image-medium" loading="lazy">
+                    <figcaption>يعمل في مكان دون آخر؟ افحص بالترتيب: الحاسوب والعنوان والصوت وأذونات المتصفح وصوت OBS.</figcaption>
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>المشكلة</th><th>جرّب هذا</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="المشكلة">اختبار التطبيق يعمل وOBS صامت</td><td data-label="جرّب هذا">يجب أن يصل OBS إلى الخادم بنفسه. الخادم على حاسوب آخر؟ استبدل <code>127.0.0.1</code> بعنوان IP المحلي له. تحقق من <strong>التحكم بالصوت عبر OBS (Control audio via OBS)</strong>. ما زال محظوراً؟ شغّل الجسر على حاسوب OBS.</td></tr>
+                        <tr><td data-label="المشكلة">تُقرأ أولى الحروف أو الكلمات فقط</td><td data-label="جرّب هذا">إزالة (Remove) <code>ttsquick</code> من رابط OBS (مثلاً <code>&amp;ttsquick=14</code>) وحدّث. أثناء الاختبار، أزل أيضاً <code>typewriter=</code> لاستبعاد مشكلات التوقيت.</td></tr>
+                        <tr><td data-label="المشكلة">الخادم لا يستجيب</td><td data-label="جرّب هذا">تأكد من تشغيل Docker والحاوية. على حاسوب الخادم، افتح <code>http://127.0.0.1:8880/web/</code> (Kokoro-FastAPI أو منفذ خادمك). من حاسوب OBS، افتح <code>http://SERVER_LAN_IP:8880/web/</code>. إذا فشل، فلن يصل إليه OBS أيضاً. تحقق من جدار الخادم الناري.</td></tr>
+                        <tr><td data-label="المشكلة">«Blocked by CORS» أو «private network» أو «failed fetch»</td><td data-label="جرّب هذا">حظره المتصفح قبل وصوله إلى الخادم. شغّل <code>node scripts/local-tts-bridge.cjs</code> على حاسوب OBS واستخدم <code>http://127.0.0.1:8124/v1/audio/speech</code>. صفحة Dock المستضافة على beta أكثر عرضة للحظر؛ الجسر أو نافذة التطبيق المحلي أسهل.</td></tr>
+                        <tr><td data-label="المشكلة">صوت غير صحيح أو غير موجود</td><td data-label="جرّب هذا">Kokoro-FastAPI: <code>af_bella</code>, <code>af_sarah</code>, <code>am_adam</code>، أو صوتاً من صفحته. openedai-speech: <code>nova</code>, <code>echo</code>, <code>alloy</code>. تراعي بعض الخوادم حالة الأحرف.</td></tr>
+                        <tr><td data-label="المشكلة">الصوت يعمل لكن OBS لا يلتقطه</td><td data-label="جرّب هذا">فعّل <strong>التحكم بالصوت عبر OBS (Control audio via OBS)</strong>. راقب عداد مازج OBS خلال الاختبار. تأكد من ضبط <code>&amp;ttsprovider=</code>؛ قد يحتاج System TTS إلى صوت سطح المكتب أو كابل افتراضي.</td></tr>
+                        <tr><td data-label="المشكلة">لم يُعثر على صورة Docker</td><td data-label="جرّب هذا">تتغير وسوم الصور. تحقق من الوسم الحالي على <a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> أو <a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a>.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="flow">لمطوري الخوادم</h2>
+                <p>كيف يتواصل SSN مع خادم مخصص. تحتاج هذا فقط إذا كنت تبني خادماً أو تشخّصه.</p>
+                <pre>chat text -&gt; SSN -&gt; your endpoint (or the bridge) -&gt; TTS server -&gt; audio -&gt; SSN plays it</pre>
+                <details class="guide-extra"><summary>ما يرسله SSN</summary>
+                    <p>مع <code>ttsprovider=customtts</code>, <code>localtts</code> أو <code>openai</code>، يرسل SSN طلب JSON POST:</p>
+                    <pre>POST /v1/audio/speech
+{
+  "model": "tts-1",
+  "input": "Chat message text",
+  "voice": "af_bella",
+  "response_format": "mp3",
+  "speed": 1.0
+}</pre>
+                    <p>عندما لا يُضبط مفتاح API، لا يرسل SSN ترويسة Authorization.</p>
+                </details>
+                <details class="guide-extra"><summary>ما يستطيع SSN تشغيله</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>الاستجابة</th><th>هل يعمل؟</th><th>ملاحظات</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="الاستجابة">ملف صوتي</td><td data-label="هل يعمل؟">نعم</td><td data-label="ملاحظات">الأفضل. <code>audio/mpeg</code>, <code>audio/wav</code>, <code>audio/ogg</code>, <code>audio/aac</code>، أو أي نوع صوت يستطيع المتصفح تشغيله.</td></tr>
+                            <tr><td data-label="الاستجابة">JSON يتضمن عنوان صوت</td><td data-label="هل يعمل؟">نعم</td><td data-label="ملاحظات">فحوص <code>url</code>, <code>audio_url</code>, <code>output_url</code>, <code>data.url</code>، وأول <code>data[]</code> .</td></tr>
+                            <tr><td data-label="الاستجابة">JSON مع صوت بترميز base64</td><td data-label="هل يعمل؟">نعم</td><td data-label="ملاحظات">فحوص <code>audio</code>, <code>audio_data</code>, <code>audioContent</code>, <code>b64_json</code>، والقيمة المتداخلة <code>data</code> ، وعناوين URL للبيانات.</td></tr>
+                            <tr><td data-label="الاستجابة">PCM خام</td><td data-label="هل يعمل؟">فقط عند استخدام غلاف</td><td data-label="ملاحظات">أرسله كملف WAV أو WAV بترميز base64.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>الصيغ: <code>mp3</code> صغير ومدعوم على نطاق واسع. <code>wav</code> يناسب خوادم الاستنساخ واختبار الجسر. استخدم <code>opus</code> فقط إذا دعمه الخادم والمتصفح معاً.</p>
+                    <p><strong>لا بث متتابع بعد.</strong> ينتظر SSN الاستجابة كاملة ثم يشغّلها. أبقِ رسائل الدردشة قصيرة.</p>
+                </details>
+                <details class="guide-extra" id="connect" open><summary>إعدادات الرابط لخادمك</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>الإعداد</th><th>مثال</th><th>ما الذي يفعله</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="الإعداد"><code>ttsprovider</code></td><td data-label="مثال"><code>customtts</code></td><td data-label="ما الذي يفعله">استخدم خادمك الخاص. (<code>openai</code> يعمل أيضاً.)</td></tr>
+                            <tr><td data-label="الإعداد"><code>openaiendpoint</code></td><td data-label="مثال"><code>http://localhost:8880/v1/audio/speech</code></td><td data-label="ما الذي يفعله">عنوان خادمك. غيّر المنفذ ليطابقه.</td></tr>
+                            <tr><td data-label="الإعداد"><code>speech</code></td><td data-label="مثال"><code>en-US</code></td><td data-label="ما الذي يفعله">يفعّل TTS بالإنجليزية.</td></tr>
+                            <tr><td data-label="الإعداد"><code>voiceopenai</code></td><td data-label="مثال"><code>af_bella</code></td><td data-label="ما الذي يفعله">اسم الصوت. يعتمد على الخادم.</td></tr>
+                            <tr><td data-label="الإعداد"><code>openaimodel</code></td><td data-label="مثال"><code>tts-1-hd</code></td><td data-label="ما الذي يفعله">اسم النموذج. الافتراضي <code>tts-1</code>.</td></tr>
+                            <tr><td data-label="الإعداد"><code>openaiformat</code></td><td data-label="مثال"><code>mp3</code></td><td data-label="ما الذي يفعله">mp3 أو wav أو opus أو flac.</td></tr>
+                            <tr><td data-label="الإعداد"><code>openaispeed</code></td><td data-label="مثال"><code>1.0</code></td><td data-label="ما الذي يفعله">سرعة الكلام (0.5–2.0).</td></tr>
+                        </tbody>
+                    </table>
+                    <p>مقبول أيضاً: <code>customttsendpoint</code>, <code>localttsendpoint</code>, <code>customttsvoice</code>, <code>localttsvoice</code>, <code>customttsmodel</code>, <code>localttsmodel</code>, <code>customttsformat</code>, <code>localttsformat</code>. خيارات القراءة مثل <code>simpletts</code>, <code>skipmessages</code> و <code>ttsquick</code> تعمل مع أي مزود: <a href="tts.html#parameters">جميع إعدادات الروابط</a>.</p>
+                    <p>روابط مثال:</p>
+                    <pre>Kokoro-FastAPI:  dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://localhost:8880/v1/audio/speech&amp;voiceopenai=af_bella&amp;openaispeed=1.1
+openedai-speech: dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://localhost:8000/v1/audio/speech&amp;voiceopenai=nova
+kokoro-web:      dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://localhost:3000/api/v1/audio/speech&amp;voiceopenai=af_bella</pre>
+                </details>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>Social Stream Ninja: دليل TTS المحلي بالذكاء الاصطناعي · <a href="tts-setup-guide.html">دليل إعداد تحويل النص إلى كلام</a> &middot; <a href="tts.html">دليل أصوات تحويل النص إلى كلام</a> &middot; <a href="guides.html">جميع الأدلة</a> &middot; <a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

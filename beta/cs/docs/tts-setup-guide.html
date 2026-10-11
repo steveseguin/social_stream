@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/docs/tts-setup-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/docs/tts-setup-guide.html">
+    <meta property="og:title" content="Průvodce nastavením TTS - Social Stream Ninja">
+    <meta property="og:description" content="Srozumitelný průvodce nastavením převodu textu na řeč v Social Stream Ninja, zvuku v OBS, hlasů prohlížeče, místních hlasů a režimů serveru TTS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/docs/tts-setup-guide.html">
+    <meta name="twitter:title" content="Průvodce nastavením TTS - Social Stream Ninja">
+    <meta name="twitter:description" content="Srozumitelný průvodce nastavením převodu textu na řeč v Social Stream Ninja, zvuku v OBS, hlasů prohlížeče, místních hlasů a režimů serveru TTS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Průvodce nastavením TTS - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <style>
+        .tts-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+        .tts-preview { border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.6rem; min-width: 0; }
+        .tts-preview h3 { margin-top: 0; }
+        .tts-preview audio { width: 100%; margin: .8rem 0; }
+        .tts-preview code { overflow-wrap: anywhere; }
+        .guide-card [id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 52rem; }
+        @media (max-width: 700px) { .tts-preview-grid { grid-template-columns: 1fr; } }
+    </style>
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Srozumitelný průvodce nastavením převodu textu na řeč v Social Stream Ninja, zvuku v OBS, hlasů prohlížeče, místních hlasů a režimů serveru TTS.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/tts-setup-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"(Node.js required). Run it on the OBS computer.":"(vyžaduje Node.js). Spusťte jej na počítači s OBS.","(or":"(nebo","), optional":"), volitelně",", expand":", rozbalte",", optional":", volitelné",", or":", nebo",", set that source to":", nastavte tento zdroj na",", then a voice.":", poté hlas.",". Bigger download, more memory.":". Větší stažení, vyšší spotřeba paměti.",". Copy the voice's model ID, not its name or page link. Leave it blank for the default voice.":". Zkopírujte ID modelu hlasu, nikoli jeho název nebo odkaz na stránku. Pro výchozí hlas nechte prázdné.",". Fish Audio decides what's free and its fair-use terms. Paid models need account credit. SSN never switches to a paid model if a free request fails. Speed goes from 0.5 to 2. Fish Audio detects the language. Your chat text is sent to Fish Audio.":". Fish Audio určuje bezplatné možnosti i pravidla přiměřeného užívání. Placené modely vyžadují kredit. SSN po selhání bezplatného požadavku nikdy nepřejde na placený model. Rychlost je 0,5 až 2. Fish Audio rozpozná jazyk. Text chatu se posílá Fish Audio.",". Leave it running.":". Nechte jej běžet.",". Leave out":". Vynechte",". Pick":". Vyberte",". Piper has Spain, Mexico, Brazil and Portugal voices. Kokoro has three Spanish and three Brazilian Portuguese voices.":". Piper má hlasy pro Španělsko, Mexiko, Brazílii a Portugalsko. Kokoro má tři španělské a tři brazilské portugalské hlasy.",". Plays each part as it's ready. Slow PCs may pause between parts.":". Přehraje každou část, jakmile je připravena. Pomalé počítače mohou mezi částmi dělat pauzy.",". Streaming or FP32 turns on background generation automatically.":". Streamování nebo FP32 automaticky zapne generování na pozadí.",". These options make speech in the background so the page stays smooth.":". Tyto možnosti vytvářejí řeč na pozadí, aby stránka zůstala plynulá.",". Waits for the whole message first.":". Nejprve počká na celou zprávu.","A ChatGPT subscription doesn't include API credit.":"Předplatné ChatGPT nezahrnuje kredit API.","A quick link to try:":"Rychlý odkaz k vyzkoušení:","API Key":"Klíč API","API billing":"Účtování API","API charges may apply":"Mohou se účtovat poplatky za API","API terms apply":"Platí podmínky API","Account limits and network delay.":"Limity účtu a zpoždění sítě.","Actual SSN Custom / Local TTS provider settings":"Skutečné nastavení poskytovatele Custom / Local TTS v SSN","Actual SSN ElevenLabs provider settings":"Skutečné nastavení poskytovatele ElevenLabs v SSN","Actual SSN Gemini provider settings":"Skutečné nastavení poskytovatele Gemini v SSN","Actual SSN Google Cloud provider settings":"Skutečné nastavení poskytovatele Google Cloud v SSN","Actual SSN Kitten provider settings":"Skutečné nastavení poskytovatele Kitten v SSN","Actual SSN Kokoro provider settings":"Skutečné nastavení poskytovatele Kokoro v SSN","Actual SSN OpenAI provider settings":"Skutečné nastavení poskytovatele OpenAI v SSN","Actual SSN Piper provider settings":"Skutečné nastavení poskytovatele Piper v SSN","Actual SSN Speechify provider settings":"Skutečné nastavení poskytovatele Speechify v SSN","Actual SSN System TTS provider settings":"Skutečné nastavení poskytovatele System TTS v SSN","Actual SSN eSpeak provider settings":"Skutečné nastavení poskytovatele eSpeak v SSN","Actual popup: Message: Text to Speech, with Enable TTS in dock switched on":"Skutečné vyskakovací okno: Message — Text to Speech se zapnutou volbou Enable TTS in dock","Actual popup: Piper TTS selected, with English US Female HFC Medium voice":"Skutečné vyskakovací okno: vybrané Piper TTS s hlasem English US Female HFC Medium","Adam (American Male):":"Adam (americký mužský hlas) —","Add a":"Přidejte","Advanced Audio Properties":"Pokročilé vlastnosti zvuku","Alex (Brazilian Portuguese):":"Alex (brazilská portugalština):","Alex (Spanish):":"Alex (španělština):","Alice (British Female):":"Alice (britský ženský hlas) —","All four are free and run on your computer. Press play to compare.":"Všechny čtyři jsou zdarma a běží na vašem počítači. Porovnejte je přehráním.","Alloy (American Female):":"Alloy (americký ženský hlas) —","An OBS Custom Browser Dock is a control panel, not a scene source. For Featured Chat, turn on TTS in that overlay's own options and copy its link.":"Vlastní Dock prohlížeče v OBS je ovládací panel, nikoli zdroj scény. U Featured Chat zapněte TTS v možnostech daného překryvu a zkopírujte jeho odkaz.","Aoede (American Female):":"Aoede (americký ženský hlas) —","Automatic":"Automatické","Avoid gaps":"Vyhnout se mezerám","Background generation":"Generování na pozadí","Background processor":"Procesor na pozadí","Bella (American Female):":"Bella (americký ženský hlas) —","Bella, US English, female. Most natural, but slower on CPU.":"Bella, americká angličtina, ženský hlas. Nejpřirozenější, ale na CPU pomalejší.","Best Kokoro quality":"Nejvyšší kvalita Kokoro","Billing and quotas apply":"Platí účtování a kvóty","Blue switch = chat reading is on.":"Modrý přepínač = čtení chatu je zapnuté.","Brazilian Portuguese (Edresson) - Low:":"Brazilská portugalština (Edresson) - nízká kvalita —","Brazilian Portuguese (Faber) - Medium:":"Brazilská portugalština (Faber) - střední kvalita —","Bridge URL":"URL mostu","Browser Source":"Zdroj prohlížeče (Browser Source)","CPU":"CPU","Check mute and the recording tracks in OBS. Don't capture the monitoring output a second time. See the":"Zkontrolujte ztlumení a záznamové stopy OBS. Nezachytávejte monitorovaný výstup podruhé. Viz","Check the dock shows chat. Then check the TTS switch, provider and filters. Use a freshly copied link. Let the first voice download finish.":"Ověřte, že Dock zobrazuje chat. Pak zkontrolujte přepínač TTS, poskytovatele a filtry. Použijte čerstvě zkopírovaný odkaz a nechte dokončit první stažení hlasu.","Check your Gemini limits":"Ověřte limity Gemini","Click":"Klikněte na","Commands & API":"Příkazy a API","Control audio via OBS":"Ovládat zvuk přes OBS (Control audio via OBS)","Cost":"Cena","Custom / Local":"Vlastní / místní","Custom / Local TTS":"Vlastní / místní TTS","Daniel (British Male):":"Daniel (britský mužský hlas) —","DaveFX":"DaveFX","Do this":"Postupujte takto","Does my chat platform support TTS?":"Podporuje moje chatovací platforma TTS?","Dora":"Dora","Dora (Brazilian Portuguese):":"Dora (brazilská portugalština):","Dora (Spanish):":"Dora (španělština):","Download":"Stáhnout","Download Kitten sample":"Stáhnout ukázku Kitten","Download Kokoro sample":"Stáhnout ukázku Kokoro","Download Piper sample":"Stáhnout ukázku Piper","Download eSpeak sample":"Stáhnout ukázku eSpeak","Download sample":"Stáhnout ukázku","Download sizes and OBS test notes":"Velikosti stahování a poznámky k testům OBS","Echo (American Male):":"Echo (americký mužský hlas) —","Edit my TTS link by hand, or see every option":"Ručně upravit odkaz TTS nebo zobrazit všechny možnosti","Eight English voices: male and female versions of voices 2, 3, 4 and 5. The sample uses Voice 4 (Female).":"Osm anglických hlasů: mužské a ženské varianty hlasů 2, 3, 4 a 5. Ukázka používá Voice 4 (Female).","ElevenLabs":"ElevenLabs","ElevenLabs reference":"Reference ElevenLabs","Emma (British Female):":"Emma (britský ženský hlas) —","English US Female (HFC) - Medium:":"Americká angličtina, ženský hlas (HFC) - střední kvalita —","English only. Bundled model is about 24 MB.":"Pouze angličtina. Přibalený model má asi 24 MB.","English. Robotic, but tiny and fast.":"Angličtina. Robotický, ale malý a rychlý.","English:":"Angličtina —","Enter a Google Cloud TTS API key, the exact voice name, and its matching language.":"Zadejte klíč Google Cloud TTS API, přesný název hlasu a odpovídající jazyk.","Enter the API key and voice ID from your Speechify API account.":"Zadejte API klíč a ID hlasu ze svého účtu Speechify API.","Enter your API key. Then click":"Zadejte klíč API. Pak klikněte na","Eric (American Male):":"Eric (americký mužský hlas) —","Every message is read twice":"Každá zpráva se čte dvakrát","Faber":"Faber","Fable (British Male):":"Fable (britský mužský hlas) —","Faster Kokoro and Kitten":"Rychlejší Kokoro a Kitten","Features":"Funkce","Fenrir (American Male):":"Fenrir (americký mužský hlas) —","First time?":"Začínáte?","Fish Audio":"Fish Audio","Fish Audio API key":"API klíč Fish Audio","Fish Audio API reference":"Dokumentace API Fish Audio","Fish Audio blocks direct requests from web pages, so OBS needs SSN's":"Fish Audio blokuje přímé požadavky z webových stránek, proto OBS potřebuje od SSN","Fix GPU problems (Kokoro)":"Opravit problémy s GPU (Kokoro)","Fix problems":"Řešení problémů","For OBS: run the local bridge":"Pro OBS: spusťte místní most","Free":"Zdarma","Free model announcement and terms":"Oznámení bezplatného modelu a podmínky","Free model with your own key; voice IDs.":"Bezplatný model s vlastním klíčem; ID hlasů.","Free tier set by Fish Audio":"Bezplatnou úroveň určuje Fish Audio","Free, no key":"Zdarma, bez klíče","Full quality":"Plná kvalita","Gemini":"Gemini","Generation and playback":"Generování a přehrávání","George (British Male):":"George (britský mužský hlas) —","Go further":"Další možnosti","Go here":"Přejděte sem","Good for":"Hodí se pro","Google Cloud":"Google Cloud","Guides":"Návody","Have your chat read aloud on stream. Free, with no account or API key.":"Nechte si nahlas předčítat chat ve streamu. Zdarma, bez účtu či klíče API.","Hear speech sooner":"Začít poslouchat dříve","Hear the free voices":"Poslechněte si bezplatné hlasy","Hear the voices":"Poslechněte si hlasy","Hearing every message twice?":"Slyšíte každou zprávu dvakrát?","Heart (American Female):":"Heart (americký ženský hlas) —","Heavier on the CPU. First speech can be slow. Faster with a supported GPU.":"Vyšší zátěž CPU. První řeč může začít pomalu. S podporovanou GPU rychlejší.","Hire":"Najmout odborníka","Home":"Domů","How these samples were made":"Jak vznikly tyto ukázky","I want an OBS dock or Featured Chat to speak instead":"Chci, aby místo toho mluvil Dock OBS nebo Featured Chat","I want to":"Chci","I want to…":"Chci…","In OBS":"V OBS","In its properties, turn on":"V jeho vlastnostech zapněte","In the Fish Audio panel, set":"V panelu Fish Audio nastavte","In the SSN folder, run":"Ve složce SSN spusťte","Inspiration":"Inspirace","Isabella (British Female):":"Isabella (britský ženský hlas) —","Jessica (American Female):":"Jessica (americký ženský hlas) —","Keep in mind":"Na co pamatovat","Kitten":"Kitten","Kitten 0.8":"Kitten 0.8","Kitten 0.8 runs on the CPU, English only. Each model downloads on first use. Each browser or OBS keeps its own copy. NeuroSync gets the complete audio file either way. Old links keep working as before unless you change these options.":"Kitten 0.8 běží na CPU a podporuje jen angličtinu. Každý model se stáhne při prvním použití. Každý prohlížeč i OBS má vlastní kopii. NeuroSync v obou případech dostane celý zvukový soubor. Staré odkazy fungují beze změny, pokud tyto možnosti neupravíte.","Kitten voice sample":"Ukázka hlasu Kitten","Kitten:":"Kitten:","Kokoro":"Kokoro","Kokoro - Portuguese (Brazil)":"Kokoro - portugalština (Brazílie)","Kokoro - Portuguese (Brazil) sample":"Ukázka Kokoro - portugalština (Brazílie)","Kokoro - Spanish":"Kokoro - španělština","Kokoro - Spanish sample":"Ukázka Kokoro - španělština","Kokoro voice sample":"Ukázka hlasu Kokoro","Kokoro:":"Kokoro:","Kore (American Female):":"Kore (americký ženský hlas) —","Lewis (British Male):":"Lewis (britský mužský hlas) —","Liam (American Male):":"Liam (americký mužský hlas) —","Lily (British Female):":"Lily (britský ženský hlas) —","Link settings for Fish Audio":"Nastavení odkazů Fish Audio","List My Available Voices":"Vypsat moje dostupné hlasy","Local AI TTS guide":"Průvodce místním AI TTS","Main chat overlay & control dock":"Hlavní překryv chatu a ovládací dok (Main chat overlay & control dock)","Main navigation":"Hlavní navigace","Make a short test recording and play it back.":"Pořiďte krátký zkušební záznam a přehrajte jej.","Message – Text to Speech":"Message – Text to Speech","Meter moves, but the recording is silent":"Ukazatel se hýbe, ale záznam je tichý","Michael (American Male):":"Michael (americký mužský hlas) —","Monitor and Output":"Monitorovat a odesílat (Monitor and Output)","More detail and link settings":"Další podrobnosti a nastavení odkazů","More fixes:":"Další řešení:","More than one page is speaking. Keep TTS on in one place only.":"Mluví více než jedna stránka. TTS ponechte zapnuté jen na jednom místě.","Most setup. See the":"Nejvíce nastavování. Viz","Name reading was off. The clips skip loading time.":"Čtení jmen bylo vypnuté. Klipy neobsahují čas načítání.","Named voices, model and format controls.":"Pojmenované hlasy, nastavení modelu a formátu.","Named voices; language, rate and pitch.":"Pojmenované hlasy; jazyk, rychlost a výška.","Natural voices; English, Spanish, Portuguese.":"Přirozené hlasy; angličtina, španělština, portugalština.","Nicole (American Female):":"Nicole (americký ženský hlas) —","No chat connected yet?":"Ještě nemáte připojený chat?","No speech at all":"Žádná řeč","Not every voice supports every control. Cloud TTS API must be enabled.":"Ne každý hlas podporuje všechny ovladače. Cloud TTS API musí být zapnuté.","Nova (American Female):":"Nova (americký ženský hlas) —","OBS audio guide":"Průvodce zvukem v OBS","OBS has its own browser and voice list. System TTS often fails there. Switch to Piper, Kokoro, Kitten or eSpeak. A virtual audio cable can't fix missing speech.":"OBS má vlastní prohlížeč a seznam hlasů. System TTS v něm často nefunguje. Přejděte na Piper, Kokoro, Kitten nebo eSpeak. Virtuální kabel chybějící řeč nevyřeší.","OBS needs SSN's local bridge.":"OBS potřebuje místní most SSN.","Often silent in OBS. Some voices need internet.":"V OBS často mlčí. Některé hlasy potřebují internet.","On that PC, System TTS listed five voices but made no sound in the OBS recording. Your PC may differ, so always test your own link. Cloud voices weren't tested (no paid accounts).":"Na tomto počítači System TTS nabízel pět hlasů, ale v záznamu OBS nebyl zvuk. Váš počítač se může lišit, proto vždy otestujte vlastní odkaz. Cloudové hlasy nebyly testovány, protože nebyly k dispozici placené účty.","On this page":"Na této stránce","Only one page should read chat. Turn TTS off everywhere else.":"Chat má číst jen jedna stránka. Všude jinde TTS vypněte.","Onyx (American Male):":"Onyx (americký mužský hlas) —","Open navigation menu":"Otevřít navigační nabídku","Open the":"Otevřete","OpenAI":"OpenAI","Optional: paste a":"Volitelně vložte","Overlay Gallery":"Galerie překryvů","Paste the bridge token shown in the terminal into the":"Token mostu z terminálu vložte do","Paste your":"Vložte svůj","Pick":"Vyberte","Pick a":"Vyberte","Pick a TTS model and voice. Style instructions change how it's read. This uses the Gemini API, not Google Cloud TTS.":"Vyberte model TTS a hlas. Pokyny pro styl mění přednes. Používá se Gemini API, nikoli Google Cloud TTS.","Pick a language above the voice list in SSN, then press":"V SSN vyberte jazyk nad seznamem hlasů a stiskněte","Pick a language voice. You can change the speaking rate. It sounds robotic by design.":"Vyberte hlas pro jazyk. Rychlost řeči lze změnit. Robotický zvuk je záměrný.","Pick a provider":"Vyberte poskytovatele","Pick a voice and model, and enter an API key. A ChatGPT subscription doesn't give you API credit. Keep the default endpoint.":"Vyberte hlas a model a zadejte klíč API. Předplatné ChatGPT neposkytuje kredit API. Ponechte výchozí endpoint.","Pick a voice that matches your language. Changing the language alone doesn't change the voice. The sample uses HFC medium.":"Vyberte hlas odpovídající jazyku. Samotná změna jazyka hlas nezmění. Ukázka používá HFC medium.","Pick a voice. Use the language filter to find one, and":"Vyberte hlas. Najděte jej pomocí filtru jazyka a","Pick voices by ID; stability and style controls.":"Výběr hlasů podle ID; nastavení stability a stylu.","Piper":"Piper","Piper - Portuguese (Brazil)":"Piper - portugalština (Brazílie)","Piper - Portuguese (Brazil) sample":"Ukázka Piper - portugalština (Brazílie)","Piper - Spanish (Spain)":"Piper - španělština (Španělsko)","Piper - Spanish (Spain) sample":"Ukázka Piper - španělština (Španělsko)","Piper TTS":"Piper TTS","Piper downloads its voice on first use. Give it a moment.":"Piper stáhne hlas při prvním použití. Chvíli počkejte.","Piper is free. No account or API key.":"Piper je zdarma, bez účtu nebo klíče API.","Piper is the lighter choice. If Kokoro falls behind the chat, switch to Piper.":"Piper je lehčí volba. Pokud Kokoro nestíhá chat, přejděte na Piper.","Piper voice sample":"Ukázka hlasu Piper","Piper, Kokoro, Kitten and eSpeak passed OBS Browser Source recording tests. Cloud and custom voices also play through the page, but weren't tested with live accounts. Test System TTS on its own, even if it lists voices.":"Piper, Kokoro, Kitten a eSpeak prošly testy záznamu ve zdroji prohlížeče OBS. Cloudové a vlastní hlasy se také přehrávají přes stránku, ale nebyly ověřeny s živými účty. System TTS otestujte zvlášť, i když vypisuje hlasy.","Plain-English setup guide for Social Stream Ninja text-to-speech, OBS audio, browser voices, local voices, and TTS server modes.":"Srozumitelný průvodce nastavením převodu textu na řeč v Social Stream Ninja, zvuku v OBS, hlasů prohlížeče, místních hlasů a režimů serveru TTS.","Play complete message":"Přehrát celou zprávu","Play it in OBS":"Přehrávání v OBS","Portuguese Brazil:":"Portugalština, Brazílie —","Portuguese Portugal (Tugao) - Medium:":"Portugalština, Portugalsko (Tugao) - střední kvalita —","Portuguese Portugal:":"Portugalština, Portugalsko —","Press":"Stiskněte","Preview models and quotas can change.":"Náhledové modely a kvóty se mohou měnit.","Problem":"Problém","Processing":"Zpracování","Provider":"Poskytovatel","Provider settings":"Nastavení poskytovatelů","Puck (American Male):":"Puck (americký mužský hlas) —","Quality varies by voice. HFC medium is about 63 MB.":"Kvalita závisí na hlasu. HFC medium má asi 63 MB.","Real screenshots from the desktop app, with a fresh profile (key fields left empty). Open a provider to see its settings. Click a screenshot to enlarge it.":"Skutečné snímky desktopové aplikace s novým profilem a prázdnými poli klíčů. Otevřete poskytovatele a prohlédněte nastavení. Kliknutím snímek zvětšíte.","River (American Female):":"River (americký ženský hlas) —","Run my own voice server, or clone a voice":"Provozovat vlastní hlasový server nebo klonovat hlas","SSN extension popup":"Vyskakovací okno rozšíření SSN","Santa (American Male):":"Santa (americký mužský hlas) —","Santa (Brazilian Portuguese):":"Santa (brazilská portugalština):","Santa (Spanish):":"Santa (španělština):","Sarah (American Female):":"Sarah (americký ženský hlas) —","Scroll to":"Přejděte na","Send a chat message. The source's audio meter should move.":"Pošlete zprávu do chatu. Ukazatel zvuku zdroje by se měl pohnout.","Set":"Nastavte","Set it up":"Nastavení","Set it up in 5 steps":"Nastavení v 5 krocích","Set the":"Nastavte","Set up Speechify":"Nastavit Speechify","Settings and voices":"Nastavení a hlasy","Sizes are model files only, not memory use. Free voices run on the computer playing the dock or overlay. First use is slower. OBS keeps its own download cache, separate from Chrome.":"Velikosti se týkají souborů modelů, ne využití paměti. Bezplatné hlasy běží na počítači přehrávajícím Dock nebo překryv. První použití je pomalejší. OBS má vlastní cache oddělenou od Chromu.","Sky (American Female):":"Sky (americký ženský hlas) —","Small English model, eight voices.":"Malý anglický model, osm hlasů.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Sounds robotic on purpose.":"Záměrně zní roboticky.","Sources and Settings":"„Zdroje a nastavení“","Spanish Mexico (Ald) - Medium:":"Španělština, Mexiko (Ald) - střední kvalita —","Spanish Spain (DaveFX) - Medium:":"Španělština, Španělsko (DaveFX) - střední kvalita —","Spanish and Portuguese samples":"Španělské a portugalské ukázky","Spanish:":"Španělština —","Speak Text":"Přečíst text (Speak Text)","Speech falls behind chat":"Řeč zaostává za chatem","Speechify":"Speechify","Speechify guide":"Průvodce Speechify","Speechify setup":"Nastavení Speechify","Start as speech arrives":"Začít při příchodu zvuku","Start here":"Začněte zde","Start with Piper.":"Začněte s Piper.","Step-by-step Speechify guide":"Speechify krok za krokem","Support":"Podpora","Supported Sites":"Podporované weby","Switch from Kokoro to Piper, or try eSpeak.":"Přejděte z Kokoro na Piper nebo zkuste eSpeak.","Switch theme":"Přepnout vzhled","System TTS":"Systémové TTS","TTS Setup Guide":"Průvodce nastavením TTS","TTS Setup Guide - Social Stream Ninja":"Průvodce nastavením TTS - Social Stream Ninja","TTS reference":"Referenční příručka TTS","TTS reference: provider options":"Reference TTS: možnosti poskytovatelů","Test":"Test","Test TTS":"Otestovat TTS","Test the voice, then add the overlay link to OBS. Turn on":"Vyzkoušejte hlas a pak přidejte odkaz překryvu do OBS. Zapněte","Tested September 7, 2026 in OBS 32.2.2 on Windows 11. A real chat message reached the dock, spoke, moved the Browser Source meter, and showed up in a recording. Kokoro took noticeably longer to start on CPU.":"Ověřeno 7. září 2026 v OBS 32.2.2 na Windows 11. Skutečná zpráva dorazila do Docku, byla přečtena, pohnula ukazatelem zdroje prohlížeče a byla slyšet v záznamu. Kokoro na CPU začínalo znatelně pomaleji.","Text-to-Speech Service Provider":"Poskytovatel převodu textu na řeč","Text-to-speech incoming messages":"Předčítání příchozích zpráv","The English samples read:":"Anglické ukázky čtou:","The default model is":"Výchozí model je","The most natural free voices; English, Spanish, Brazilian Portuguese.":"Nejpřirozenější bezplatné hlasy; angličtina, španělština, brazilská portugalština.","The token changes each time the bridge restarts.":"Token se mění při každém restartu mostu.","The voice list depends on your browser or app and the voices installed. There's no fixed SSN list. This fresh profile showed an empty language list.":"Seznam hlasů závisí na prohlížeči či aplikaci a nainstalovaných hlasech. SSN nemá pevný seznam. Tento nový profil ukazoval prázdný seznam jazyků.","This reuses the OpenAI settings, so the heading still says OpenAI. Enter your server's address and a voice and model it supports. Whether you need a key depends on your server. See the":"Používá stávající nastavení OpenAI, proto nadpis zůstává OpenAI. Zadejte adresu serveru a podporovaný hlas a model. Potřeba klíče závisí na serveru. Viz","To keep it the same, set":"Pro zachování stejného tokenu nastavte","Try Kokoro if you like its sound better. Free voices run on your computer. Cloud voices need an account and API key, and your chat text is sent to that company.":"Zkuste Kokoro, pokud vám lépe zní. Bezplatné hlasy běží na vašem počítači. Cloudové vyžadují účet a klíč API a text chatu se posílá dané společnosti.","Try this":"Vyzkoušejte","Turn it on for Kitten":"Zapnout pro Kitten","Turn it on for Kokoro":"Zapnout pro Kokoro","Turn on":"Zapněte","US English, female. Light and quick.":"Americká angličtina, ženský hlas. Lehký a rychlý.","Under":"V části","Under Kokoro or Kitten, open":"U Kokoro nebo Kitten otevřete","Use Spanish or Portuguese voices in a link":"Použít španělské nebo portugalské hlasy v odkazu","Very light, many languages, starts fast.":"Velmi lehký, mnoho jazyků, rychlý začátek.","Voice 2 (Female):":"Hlas 2 (ženský) —","Voice 2 (Male):":"Hlas 2 (mužský) —","Voice 3 (Female):":"Hlas 3 (ženský) —","Voice 3 (Male):":"Hlas 3 (mužský) —","Voice 4 (Female):":"Hlas 4 (ženský) —","Voice 4 (Male):":"Hlas 4 (mužský) —","Voice 4, female. Small English model.":"Voice 4, ženský hlas. Malý anglický model.","Voice 5 (Female):":"Hlas 5 (ženský) —","Voice 5 (Male):":"Hlas 5 (mužský) —","Voice ID":"ID hlasu","Voice ID with speed, language and model.":"ID hlasu s rychlostí, jazykem a modelem.","Voice examples and requirements":"Ukázky hlasů a požadavky","Voice names and link values":"Názvy hlasů a hodnoty odkazů","Voice names and supported controls":"Názvy hlasů a podporované ovládací prvky","Voice styles and written delivery instructions.":"Styly hlasů a písemné pokyny k přednesu.","Voices already on your browser or PC.":"Hlasy již dostupné v prohlížeči nebo počítači.","Voices depend on your account.":"Hlasy závisí na vašem účtu.","Want to hear it yourself?":"Chcete si to poslechnout?","Welcome to the stream! Thanks for joining us. Which game should we play next?":"Vítejte na streamu! Díky, že jste se připojili. Kterou hru si zahrajeme příště?","With the bridge, add":"S mostem přidejte","Works in Chrome or Edge, not in OBS":"Funguje v Chromu nebo Edge, nikoli v OBS","Works in the chat dock, featured overlay, TTS page and Flow Actions.":"Funguje v Docku chatu, překryvu zvýrazněných zpráv, stránce TTS i akcích toku.","Yes, if SSN gets the chat as text. YouTube, Twitch, TikTok and the rest all work the same way. The platform doesn't need its own TTS.":"Ano, pokud SSN dostává chat jako text. YouTube, Twitch, TikTok i ostatní fungují stejně. Platforma nepotřebuje vlastní TTS.","Your hardware or hosting":"Váš hardware nebo hosting","Your own voice server.":"Váš vlastní hlasový server.","and paste the link you copied.":"a vložte zkopírovaný odkaz.","as the TTS provider.":"jako poskytovatele TTS.","beside":"vedle","copy link":"kopírovat odkaz","eSpeak":"eSpeak","eSpeak voice sample":"Ukázka hlasu eSpeak","environment variable to your Fish API key.":"proměnnou prostředí na svůj klíč Fish API.","field.":"pole.","first.":".","from":"z","if the bridge holds your key. Event Flow's":"pokud most uchovává váš klíč. Volba Event Flow","in the desktop app.":"v desktopové aplikaci.","local bridge":"místní most","local server guide":"průvodce místním serverem","local server problems":"problémy místního serveru","model: Nano (smallest), Micro or Mini.":"model: Nano (nejmenší), Micro nebo Mini.","or":"nebo","to":"na","to a long random secret. Keep links with a token or key private.":"na dlouhé náhodné tajemství. Odkazy s tokenem nebo klíčem chraňte.","to find a voice ID your account can use.":"pro nalezení ID hlasu dostupného vašemu účtu.","to hear it. The model loads on the page that speaks. Voices: US and UK English, Spanish, Brazilian Portuguese. Too slow? Try Piper.":"pro poslech. Model se načítá na stránce, která mluví. Hlasy: americká a britská angličtina, španělština, brazilská portugalština. Příliš pomalé? Zkuste Piper.","uses a supported GPU if there is one, otherwise the CPU. Automatic quality picks FP16 on compatible GPUs, full precision on other supported GPUs, and the compact model on CPU. If you force GPU and none is available, you'll get an error.":"použije podporovanou GPU, pokud je dostupná, jinak CPU. Automatická kvalita volí FP16 na kompatibilních GPU, plnou přesnost na ostatních podporovaných GPU a kompaktní model na CPU. Vynucení GPU bez dostupné GPU skončí chybou.","voice override accepts a Fish voice ID when the receiving page uses Fish Audio.":"pro přepsání hlasu přijímá ID hlasu Fish, pokud přijímající stránka používá Fish Audio."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tts-setup-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tts-setup-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tts-setup-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tts-setup-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tts-setup-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tts-setup-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tts-setup-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tts-setup-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tts-setup-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tts-setup-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tts-setup-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tts-setup-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tts-setup-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tts-setup-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tts-setup-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tts-setup-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="tts-setup-guide.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/tts-setup-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Průvodce nastavením TTS</h1>
+            <p>Nechte si nahlas předčítat chat ve streamu. Zdarma, bez účtu či klíče API.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Na této stránce">
+                <a href="#setup">Nastavení</a>
+                <a href="#obs-voices">Přehrávání v OBS</a>
+                <a href="#voice-samples">Poslechněte si hlasy</a>
+                <a href="#voice-chooser">Vyberte poskytovatele</a>
+                <a href="#problems">Řešení problémů</a>
+                <a href="#provider-settings">Nastavení poskytovatelů</a>
+                <a href="#more">Další možnosti</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="setup">Nastavení v 5 krocích</h2>
+                <p><strong>Ještě nemáte připojený chat?</strong> <a href="getting-started.html">Začněte zde</a> .</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>Otevřete <strong>Vyskakovací okno rozšíření SSN</strong>, nebo <strong>„Zdroje a nastavení“</strong> v desktopové aplikaci.</li>
+                        <li>V části <strong>Hlavní překryv chatu a ovládací dok (Main chat overlay &amp; control dock)</strong>, rozbalte <strong>Message &ndash; Text to Speech</strong>.</li>
+                        <li>Zapněte <strong>Předčítání příchozích zpráv</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <a href="../../docs/images/guides/tts-enable-dock-popup.png"><img src="../../docs/images/guides/tts-enable-dock-popup.png" alt="Skutečné vyskakovací okno: Message — Text to Speech se zapnutou volbou Enable TTS in dock" class="guide-image"></a>
+                        <figcaption>Modrý přepínač = čtení chatu je zapnuté.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps" start="4">
+                        <li>Přejděte na <strong>Poskytovatel převodu textu na řeč</strong>. Vyberte <strong>Piper TTS</strong>, poté hlas.</li>
+                        <li>Klikněte na <strong>kopírovat odkaz</strong> vedle <strong>Hlavní překryv chatu a ovládací dok (Main chat overlay &amp; control dock)</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <a href="../../docs/images/guides/tts-select-provider-popup.png"><img src="../../docs/images/guides/tts-select-provider-popup.png" alt="Skutečné vyskakovací okno: vybrané Piper TTS s hlasem English US Female HFC Medium" class="guide-image" loading="lazy"></a>
+                        <figcaption>Piper je zdarma, bez účtu nebo klíče API.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>Začínáte?</strong> Piper stáhne hlas při prvním použití. Chvíli počkejte.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="obs-voices">Přehrávání v OBS</h2>
+                <ol class="guide-steps">
+                    <li>Přidejte <strong>Zdroj prohlížeče (Browser Source)</strong> a vložte zkopírovaný odkaz.</li>
+                    <li>V jeho vlastnostech zapněte <strong>Ovládat zvuk přes OBS (Control audio via OBS)</strong>.</li>
+                    <li>Pošlete zprávu do chatu. Ukazatel zvuku zdroje by se měl pohnout.</li>
+                    <li>Pořiďte krátký zkušební záznam a přehrajte jej.</li>
+                </ol>
+                <div class="guide-note"><strong>Chcete si to poslechnout?</strong> V OBS <strong>Pokročilé vlastnosti zvuku</strong>, nastavte tento zdroj na <strong>Monitorovat a odesílat (Monitor and Output)</strong>.</div>
+                <div class="warning-note"><strong>Slyšíte každou zprávu dvakrát?</strong> Chat má číst jen jedna stránka. Všude jinde TTS vypněte.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-samples">Poslechněte si bezplatné hlasy</h2>
+                <p>Všechny čtyři jsou zdarma a běží na vašem počítači. Porovnejte je přehráním.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper</h3><p>Americká angličtina, ženský hlas. Lehký a rychlý.<br><code>en_US-hfc_female-medium</code></p><audio controls preload="none" aria-label="Ukázka hlasu Piper"><source src="../../docs/audio/tts/piper-hfc.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-hfc.mp3">Stáhnout ukázku Piper</a></audio><p><a href="#settings-piper">Nastavení a hlasy</a></p></div>
+<div class="tts-preview"><h3>Kokoro</h3><p>Bella, americká angličtina, ženský hlas. Nejpřirozenější, ale na CPU pomalejší.<br><code>af_bella</code></p><audio controls preload="none" aria-label="Ukázka hlasu Kokoro"><source src="../../docs/audio/tts/kokoro-bella.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-bella.mp3">Stáhnout ukázku Kokoro</a></audio><p><a href="#settings-kokoro">Nastavení a hlasy</a></p></div>
+<div class="tts-preview"><h3>Kitten</h3><p>Voice 4, ženský hlas. Malý anglický model.<br><code>expr-voice-4-f</code></p><audio controls preload="none" aria-label="Ukázka hlasu Kitten"><source src="../../docs/audio/tts/kitten-4f.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kitten-4f.mp3">Stáhnout ukázku Kitten</a></audio><p><a href="#settings-kitten">Nastavení a hlasy</a></p></div>
+<div class="tts-preview"><h3>eSpeak</h3><p>Angličtina. Robotický, ale malý a rychlý.<br><code>en</code></p><audio controls preload="none" aria-label="Ukázka hlasu eSpeak"><source src="../../docs/audio/tts/espeak-en.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/espeak-en.mp3">Stáhnout ukázku eSpeak</a></audio><p><a href="#settings-espeak">Nastavení a hlasy</a></p></div>
+                </div>
+                <details class="guide-extra"><summary>Španělské a portugalské ukázky</summary>
+                <p>V SSN vyberte jazyk nad seznamem hlasů a stiskněte <strong>Test</strong>. Piper má hlasy pro Španělsko, Mexiko, Brazílii a Portugalsko. Kokoro má tři španělské a tři brazilské portugalské hlasy.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper - španělština (Španělsko)</h3><p>DaveFX</p><audio controls preload="none" aria-label="Ukázka Piper - španělština (Španělsko)"><source src="../../docs/audio/tts/piper-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-spanish.mp3">Stáhnout ukázku</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - španělština</h3><p>Dora</p><audio controls preload="none" aria-label="Ukázka Kokoro - španělština"><source src="../../docs/audio/tts/kokoro-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-spanish.mp3">Stáhnout ukázku</a></audio></div>
+<div class="tts-preview"><h3>Piper - portugalština (Brazílie)</h3><p>Faber</p><audio controls preload="none" aria-label="Ukázka Piper - portugalština (Brazílie)"><source src="../../docs/audio/tts/piper-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-portuguese.mp3">Stáhnout ukázku</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - portugalština (Brazílie)</h3><p>Dora</p><audio controls preload="none" aria-label="Ukázka Kokoro - portugalština (Brazílie)"><source src="../../docs/audio/tts/kokoro-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-portuguese.mp3">Stáhnout ukázku</a></audio></div>
+                </div>
+                <p>Piper je lehčí volba. Pokud Kokoro nestíhá chat, přejděte na Piper.</p>
+                </details>
+                <details class="guide-extra"><summary>Jak vznikly tyto ukázky</summary>
+                <p>Anglické ukázky čtou: <em>Vítejte na streamu! Díky, že jste se připojili. Kterou hru si zahrajeme příště?</em> Čtení jmen bylo vypnuté. Klipy neobsahují čas načítání.</p>
+                <p>Ověřeno 7. září 2026 v OBS 32.2.2 na Windows 11. Skutečná zpráva dorazila do Docku, byla přečtena, pohnula ukazatelem zdroje prohlížeče a byla slyšet v záznamu. Kokoro na CPU začínalo znatelně pomaleji.</p>
+                <p>Na tomto počítači System TTS nabízel pět hlasů, ale v záznamu OBS nebyl zvuk. Váš počítač se může lišit, proto vždy otestujte vlastní odkaz. Cloudové hlasy nebyly testovány, protože nebyly k dispozici placené účty.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-chooser">Vyberte poskytovatele</h2>
+                <p><strong>Začněte s Piper.</strong> Zkuste Kokoro, pokud vám lépe zní. Bezplatné hlasy běží na vašem počítači. Cloudové vyžadují účet a klíč API a text chatu se posílá dané společnosti.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Poskytovatel</th><th>Hodí se pro</th><th>Na co pamatovat</th><th>Cena</th></tr></thead><tbody>
+<tr><td data-label="Poskytovatel"><a href="#settings-piper">Piper</a></td><td data-label="Hodí se pro">Přirozené hlasy; angličtina, španělština, portugalština.</td><td data-label="Na co pamatovat">Kvalita závisí na hlasu. HFC medium má asi 63 MB.</td><td data-label="Cena">Zdarma, bez klíče</td></tr>
+<tr><td data-label="Poskytovatel"><a href="#settings-kokoro">Kokoro</a></td><td data-label="Hodí se pro">Nejpřirozenější bezplatné hlasy; angličtina, španělština, brazilská portugalština.</td><td data-label="Na co pamatovat">Vyšší zátěž CPU. První řeč může začít pomalu. S podporovanou GPU rychlejší.</td><td data-label="Cena">Zdarma, bez klíče</td></tr>
+<tr><td data-label="Poskytovatel"><a href="#settings-kitten">Kitten</a></td><td data-label="Hodí se pro">Malý anglický model, osm hlasů.</td><td data-label="Na co pamatovat">Pouze angličtina. Přibalený model má asi 24 MB.</td><td data-label="Cena">Zdarma, bez klíče</td></tr>
+<tr><td data-label="Poskytovatel"><a href="#settings-espeak">eSpeak</a></td><td data-label="Hodí se pro">Velmi lehký, mnoho jazyků, rychlý začátek.</td><td data-label="Na co pamatovat">Záměrně zní roboticky.</td><td data-label="Cena">Zdarma, bez klíče</td></tr>
+<tr><td data-label="Poskytovatel"><a href="#settings-system">Systémové TTS</a></td><td data-label="Hodí se pro">Hlasy již dostupné v prohlížeči nebo počítači.</td><td data-label="Na co pamatovat">V OBS často mlčí. Některé hlasy potřebují internet.</td><td data-label="Cena">Zdarma</td></tr>
+<tr><td data-label="Poskytovatel"><a href="#settings-elevenlabs">ElevenLabs</a></td><td data-label="Hodí se pro">Výběr hlasů podle ID; nastavení stability a stylu.</td><td data-label="Na co pamatovat">Limity účtu a zpoždění sítě.</td><td data-label="Cena">Mohou se účtovat poplatky za API</td></tr>
+<tr><td data-label="Poskytovatel"><a href="#settings-google">Google Cloud</a></td><td data-label="Hodí se pro">Pojmenované hlasy; jazyk, rychlost a výška.</td><td data-label="Na co pamatovat">Ne každý hlas podporuje všechny ovladače. Cloud TTS API musí být zapnuté.</td><td data-label="Cena">Platí účtování a kvóty</td></tr>
+<tr><td data-label="Poskytovatel"><a href="#settings-gemini">Gemini</a></td><td data-label="Hodí se pro">Styly hlasů a písemné pokyny k přednesu.</td><td data-label="Na co pamatovat">Náhledové modely a kvóty se mohou měnit.</td><td data-label="Cena">Ověřte limity Gemini</td></tr>
+<tr><td data-label="Poskytovatel"><a href="#settings-fish">Fish Audio</a></td><td data-label="Hodí se pro">Bezplatný model s vlastním klíčem; ID hlasů.</td><td data-label="Na co pamatovat">OBS potřebuje místní most SSN.</td><td data-label="Cena">Bezplatnou úroveň určuje Fish Audio</td></tr>
+<tr><td data-label="Poskytovatel"><a href="#settings-speechify">Speechify</a></td><td data-label="Hodí se pro">ID hlasu s rychlostí, jazykem a modelem.</td><td data-label="Na co pamatovat">Hlasy závisí na vašem účtu.</td><td data-label="Cena">Platí podmínky API</td></tr>
+<tr><td data-label="Poskytovatel"><a href="#settings-openai">OpenAI</a></td><td data-label="Hodí se pro">Pojmenované hlasy, nastavení modelu a formátu.</td><td data-label="Na co pamatovat">Předplatné ChatGPT nezahrnuje kredit API.</td><td data-label="Cena">Účtování API</td></tr>
+<tr><td data-label="Poskytovatel"><a href="#settings-customtts">Vlastní / místní</a></td><td data-label="Hodí se pro">Váš vlastní hlasový server.</td><td data-label="Na co pamatovat">Nejvíce nastavování. Viz <a href="local-tts.html">průvodce místním serverem</a>.</td><td data-label="Cena">Váš hardware nebo hosting</td></tr>
+</tbody></table>
+                <details class="guide-extra"><summary>Velikosti stahování a poznámky k testům OBS</summary>
+                <p>Velikosti se týkají souborů modelů, ne využití paměti. Bezplatné hlasy běží na počítači přehrávajícím Dock nebo překryv. První použití je pomalejší. OBS má vlastní cache oddělenou od Chromu.</p>
+                <p>Piper, Kokoro, Kitten a eSpeak prošly testy záznamu ve zdroji prohlížeče OBS. Cloudové a vlastní hlasy se také přehrávají přes stránku, ale nebyly ověřeny s živými účty. System TTS otestujte zvlášť, i když vypisuje hlasy.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">Řešení problémů</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Problém</th><th>Vyzkoušejte</th></tr></thead>
+                    <tbody>
+                        <tr id="chat-platforms"><td data-label="Problém">Podporuje moje chatovací platforma TTS?</td><td data-label="Vyzkoušejte">Ano, pokud SSN dostává chat jako text. YouTube, Twitch, TikTok i ostatní fungují stejně. Platforma nepotřebuje vlastní TTS.</td></tr>
+                        <tr><td data-label="Problém">Žádná řeč</td><td data-label="Vyzkoušejte">Ověřte, že Dock zobrazuje chat. Pak zkontrolujte přepínač TTS, poskytovatele a filtry. Použijte čerstvě zkopírovaný odkaz a nechte dokončit první stažení hlasu.</td></tr>
+                        <tr><td data-label="Problém">Funguje v Chromu nebo Edge, nikoli v OBS</td><td data-label="Vyzkoušejte">OBS má vlastní prohlížeč a seznam hlasů. System TTS v něm často nefunguje. Přejděte na Piper, Kokoro, Kitten nebo eSpeak. Virtuální kabel chybějící řeč nevyřeší.</td></tr>
+                        <tr><td data-label="Problém">Ukazatel se hýbe, ale záznam je tichý</td><td data-label="Vyzkoušejte">Zkontrolujte ztlumení a záznamové stopy OBS. Nezachytávejte monitorovaný výstup podruhé. Viz <a href="https://obsproject.com/kb/audio-mixer-guide">Průvodce zvukem v OBS</a>.</td></tr>
+                        <tr><td data-label="Problém">Řeč zaostává za chatem</td><td data-label="Vyzkoušejte">Přejděte z Kokoro na Piper nebo zkuste eSpeak.</td></tr>
+                        <tr><td data-label="Problém">Každá zpráva se čte dvakrát</td><td data-label="Vyzkoušejte">Mluví více než jedna stránka. TTS ponechte zapnuté jen na jednom místě.</td></tr>
+                        <tr><td data-label="Problém">Chci, aby místo toho mluvil Dock OBS nebo Featured Chat</td><td data-label="Vyzkoušejte">Vlastní Dock prohlížeče v OBS je ovládací panel, nikoli zdroj scény. U Featured Chat zapněte TTS v možnostech daného překryvu a zkopírujte jeho odkaz.</td></tr>
+                    </tbody>
+                </table>
+                <p>Další řešení: <a href="tts.html#troubleshooting">Referenční příručka TTS</a> &middot; <a href="local-tts.html#troubleshooting">problémy místního serveru</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="provider-settings">Nastavení poskytovatelů</h2>
+                <p>Skutečné snímky desktopové aplikace s novým profilem a prázdnými poli klíčů. Otevřete poskytovatele a prohlédněte nastavení. Kliknutím snímek zvětšíte.</p>
+<details class="guide-extra" id="settings-system"><summary>Systémové TTS</summary><p>Seznam hlasů závisí na prohlížeči či aplikaci a nainstalovaných hlasech. SSN nemá pevný seznam. Tento nový profil ukazoval prázdný seznam jazyků.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-system.png"><img src="../../docs/images/guides/tts-settings-system.png" alt="Skutečné nastavení poskytovatele System TTS v SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-kokoro"><summary>Kokoro</summary><p>Vyberte hlas. Najděte jej pomocí filtru jazyka a <strong>Test</strong> pro poslech. Model se načítá na stránce, která mluví. Hlasy: americká a britská angličtina, španělština, brazilská portugalština. Příliš pomalé? Zkuste Piper.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kokoro.png"><img src="../../docs/images/guides/tts-settings-kokoro.png" alt="Skutečné nastavení poskytovatele Kokoro v SSN" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Názvy hlasů a hodnoty odkazů</summary><ul class="guide-list">
+<li>Heart (americký ženský hlas) — <code>af_heart</code></li>
+<li>Alloy (americký ženský hlas) — <code>af_alloy</code></li>
+<li>Aoede (americký ženský hlas) — <code>af_aoede</code></li>
+<li>Bella (americký ženský hlas) — <code>af_bella</code></li>
+<li>Jessica (americký ženský hlas) — <code>af_jessica</code></li>
+<li>Kore (americký ženský hlas) — <code>af_kore</code></li>
+<li>Nicole (americký ženský hlas) — <code>af_nicole</code></li>
+<li>Nova (americký ženský hlas) — <code>af_nova</code></li>
+<li>River (americký ženský hlas) — <code>af_river</code></li>
+<li>Sarah (americký ženský hlas) — <code>af_sarah</code></li>
+<li>Sky (americký ženský hlas) — <code>af_sky</code></li>
+<li>Adam (americký mužský hlas) — <code>am_adam</code></li>
+<li>Echo (americký mužský hlas) — <code>am_echo</code></li>
+<li>Eric (americký mužský hlas) — <code>am_eric</code></li>
+<li>Fenrir (americký mužský hlas) — <code>am_fenrir</code></li>
+<li>Liam (americký mužský hlas) — <code>am_liam</code></li>
+<li>Michael (americký mužský hlas) — <code>am_michael</code></li>
+<li>Onyx (americký mužský hlas) — <code>am_onyx</code></li>
+<li>Puck (americký mužský hlas) — <code>am_puck</code></li>
+<li>Santa (americký mužský hlas) — <code>am_santa</code></li>
+<li>Emma (britský ženský hlas) — <code>bf_emma</code></li>
+<li>Isabella (britský ženský hlas) — <code>bf_isabella</code></li>
+<li>George (britský mužský hlas) — <code>bm_george</code></li>
+<li>Lewis (britský mužský hlas) — <code>bm_lewis</code></li>
+<li>Alice (britský ženský hlas) — <code>bf_alice</code></li>
+<li>Lily (britský ženský hlas) — <code>bf_lily</code></li>
+<li>Daniel (britský mužský hlas) — <code>bm_daniel</code></li>
+<li>Fable (britský mužský hlas) — <code>bm_fable</code></li>
+<li>Dora (španělština): <code>ef_dora</code></li>
+<li>Alex (španělština): <code>em_alex</code></li>
+<li>Santa (španělština): <code>em_santa</code></li>
+<li>Dora (brazilská portugalština): <code>pf_dora</code></li>
+<li>Alex (brazilská portugalština): <code>pm_alex</code></li>
+<li>Santa (brazilská portugalština): <code>pm_santa</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-kitten"><summary>Kitten</summary><p>Osm anglických hlasů: mužské a ženské varianty hlasů 2, 3, 4 a 5. Ukázka používá Voice 4 (Female).</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kitten.png"><img src="../../docs/images/guides/tts-settings-kitten.png" alt="Skutečné nastavení poskytovatele Kitten v SSN" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Názvy hlasů a hodnoty odkazů</summary><ul class="guide-list">
+<li>Hlas 2 (mužský) — <code>expr-voice-2-m</code></li>
+<li>Hlas 2 (ženský) — <code>expr-voice-2-f</code></li>
+<li>Hlas 3 (mužský) — <code>expr-voice-3-m</code></li>
+<li>Hlas 3 (ženský) — <code>expr-voice-3-f</code></li>
+<li>Hlas 4 (mužský) — <code>expr-voice-4-m</code></li>
+<li>Hlas 4 (ženský) — <code>expr-voice-4-f</code></li>
+<li>Hlas 5 (mužský) — <code>expr-voice-5-m</code></li>
+<li>Hlas 5 (ženský) — <code>expr-voice-5-f</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-piper"><summary>Piper</summary><p>Vyberte hlas odpovídající jazyku. Samotná změna jazyka hlas nezmění. Ukázka používá HFC medium.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-piper.png"><img src="../../docs/images/guides/tts-settings-piper.png" alt="Skutečné nastavení poskytovatele Piper v SSN" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Názvy hlasů a hodnoty odkazů</summary><ul class="guide-list">
+<li>Americká angličtina, ženský hlas (HFC) - střední kvalita — <code>en_US-hfc_female-medium</code></li>
+<li>Španělština, Španělsko (DaveFX) - střední kvalita — <code>es_ES-davefx-medium</code></li>
+<li>Španělština, Mexiko (Ald) - střední kvalita — <code>es_MX-ald-medium</code></li>
+<li>Brazilská portugalština (Faber) - střední kvalita — <code>pt_BR-faber-medium</code></li>
+<li>Brazilská portugalština (Edresson) - nízká kvalita — <code>pt_BR-edresson-low</code></li>
+<li>Portugalština, Portugalsko (Tugao) - střední kvalita — <code>pt_PT-tug&atilde;o-medium</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-espeak"><summary>eSpeak</summary><p>Vyberte hlas pro jazyk. Rychlost řeči lze změnit. Robotický zvuk je záměrný.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-espeak.png"><img src="../../docs/images/guides/tts-settings-espeak.png" alt="Skutečné nastavení poskytovatele eSpeak v SSN" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Názvy hlasů a hodnoty odkazů</summary><ul class="guide-list">
+<li>Angličtina — <code>en</code></li>
+<li>Španělština — <code>es</code></li>
+<li>Portugalština, Brazílie — <code>pt-br</code></li>
+<li>Portugalština, Portugalsko — <code>pt-pt</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-elevenlabs"><summary>ElevenLabs</summary><p>Zadejte klíč API. Pak klikněte na <strong>Vypsat moje dostupné hlasy</strong> pro nalezení ID hlasu dostupného vašemu účtu. <a href="https://elevenlabs.io/docs/api-reference/text-to-speech/convert">Reference ElevenLabs</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-elevenlabs.png"><img src="../../docs/images/guides/tts-settings-elevenlabs.png" alt="Skutečné nastavení poskytovatele ElevenLabs v SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-google"><summary>Google Cloud</summary><p>Zadejte klíč Google Cloud TTS API, přesný název hlasu a odpovídající jazyk. <a href="https://cloud.google.com/text-to-speech/docs/voices">Názvy hlasů a podporované ovládací prvky</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-google.png"><img src="../../docs/images/guides/tts-settings-google.png" alt="Skutečné nastavení poskytovatele Google Cloud v SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-gemini"><summary>Gemini</summary><p>Vyberte model TTS a hlas. Pokyny pro styl mění přednes. Používá se Gemini API, nikoli Google Cloud TTS. <a href="https://ai.google.dev/gemini-api/docs/speech-generation">Ukázky hlasů a požadavky</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-gemini.png"><img src="../../docs/images/guides/tts-settings-gemini.png" alt="Skutečné nastavení poskytovatele Gemini v SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-fish"><summary>Fish Audio</summary>
+<p>Funguje v Docku chatu, překryvu zvýrazněných zpráv, stránce TTS i akcích toku.</p>
+<ol class="guide-steps">
+<li>Vyberte <strong>Fish Audio</strong> jako poskytovatele TTS.</li>
+<li>Vložte svůj <a href="https://fish.audio/app/api-keys">API klíč Fish Audio</a>.</li>
+<li>Volitelně vložte <strong>ID hlasu</strong> z <a href="https://fish.audio/">Fish Audio</a>. Zkopírujte ID modelu hlasu, nikoli jeho název nebo odkaz na stránku. Pro výchozí hlas nechte prázdné.</li>
+<li>Stiskněte <strong>Otestovat TTS</strong>.</li>
+</ol>
+<p>Výchozí model je <code>s2.1-pro-free</code>. Fish Audio určuje bezplatné možnosti i pravidla přiměřeného užívání. Placené modely vyžadují kredit. SSN po selhání bezplatného požadavku nikdy nepřejde na placený model. Rychlost je 0,5 až 2. Fish Audio rozpozná jazyk. Text chatu se posílá Fish Audio.</p>
+<h4>Pro OBS: spusťte místní most</h4>
+<p>Fish Audio blokuje přímé požadavky z webových stránek, proto OBS potřebuje od SSN <a href="../../local-tts-bridge/README.md#fish-audio-for-obs">místní most</a> (vyžaduje Node.js). Spusťte jej na počítači s OBS.</p>
+<ol class="guide-steps">
+<li>Nastavte <code>SSN_TTS_TARGET_BEARER</code> proměnnou prostředí na svůj klíč Fish API.</li>
+<li>Ve složce SSN spusťte <code>node scripts/local-tts-bridge.cjs --mode fish</code>. Nechte jej běžet.</li>
+<li>V panelu Fish Audio nastavte <strong>URL mostu</strong> na <code>http://127.0.0.1:8124/v1/audio/speech</code>.</li>
+<li>Token mostu z terminálu vložte do <strong>Klíč API</strong> pole.</li>
+<li>Vyzkoušejte hlas a pak přidejte odkaz překryvu do OBS. Zapněte <strong>Ovládat zvuk přes OBS (Control audio via OBS)</strong>.</li>
+</ol>
+<div class="warning-note"><strong>Token se mění při každém restartu mostu.</strong> Pro zachování stejného tokenu nastavte <code>SSN_TTS_BRIDGE_TOKEN</code> na dlouhé náhodné tajemství. Odkazy s tokenem nebo klíčem chraňte.</div>
+<details class="guide-extra"><summary>Nastavení odkazů Fish Audio</summary>
+<pre>&amp;ttsprovider=fish&amp;fishkey=YOUR_KEY&amp;voicefish=VOICE_ID&amp;fishmodel=s2.1-pro-free&amp;fishspeed=1</pre>
+<p>S mostem přidejte <code>&amp;fishendpoint=http%3A%2F%2F127.0.0.1%3A8124%2Fv1%2Faudio%2Fspeech</code>. Vynechte <code>fishkey</code> pokud most uchovává váš klíč. Volba Event Flow <strong>Přečíst text (Speak Text)</strong> pro přepsání hlasu přijímá ID hlasu Fish, pokud přijímající stránka používá Fish Audio.</p>
+<p><a href="https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech">Dokumentace API Fish Audio</a> &middot; <a href="https://fish.audio/blog/s2-1-pro-free-api/">Oznámení bezplatného modelu a podmínky</a></p>
+</details>
+</details>
+<details class="guide-extra" id="settings-speechify"><summary>Speechify</summary><p>Zadejte API klíč a ID hlasu ze svého účtu Speechify API. <a href="speechify-setup-guide.html"><strong>Speechify krok za krokem</strong></a> &middot; <a href="https://docs.speechify.ai/docs/get-started/overview">Nastavení Speechify</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-speechify.png"><img src="../../docs/images/guides/tts-settings-speechify.png" alt="Skutečné nastavení poskytovatele Speechify v SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-openai"><summary>OpenAI</summary><p>Vyberte hlas a model a zadejte klíč API. Předplatné ChatGPT neposkytuje kredit API. Ponechte výchozí endpoint.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-openai.png"><img src="../../docs/images/guides/tts-settings-openai.png" alt="Skutečné nastavení poskytovatele OpenAI v SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-customtts"><summary>Vlastní / místní TTS</summary><p>Používá stávající nastavení OpenAI, proto nadpis zůstává OpenAI. Zadejte adresu serveru a podporovaný hlas a model. Potřeba klíče závisí na serveru. Viz <a href="local-tts.html">průvodce místním serverem</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-customtts.png"><img src="../../docs/images/guides/tts-settings-customtts.png" alt="Skutečné nastavení poskytovatele Custom / Local TTS v SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="background-speech">Rychlejší Kokoro a Kitten</h2>
+                <p>U Kokoro nebo Kitten otevřete <strong>Generování a přehrávání</strong>. Tyto možnosti vytvářejí řeč na pozadí, aby stránka zůstala plynulá.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Chci…</th><th>Postupujte takto</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Chci">Zapnout pro Kokoro</td><td data-label="Postupujte takto">Nastavte <strong>Zpracování</strong> na <strong>Generování na pozadí</strong>.</td></tr>
+                        <tr><td data-label="Chci">Zapnout pro Kitten</td><td data-label="Postupujte takto">Vyberte <strong>Kitten 0.8</strong> model: Nano (nejmenší), Micro nebo Mini.</td></tr>
+                        <tr><td data-label="Chci">Začít poslouchat dříve</td><td data-label="Postupujte takto"><strong>Začít při příchodu zvuku</strong>. Přehraje každou část, jakmile je připravena. Pomalé počítače mohou mezi částmi dělat pauzy.</td></tr>
+                        <tr><td data-label="Chci">Vyhnout se mezerám</td><td data-label="Postupujte takto"><strong>Přehrát celou zprávu</strong>. Nejprve počká na celou zprávu.</td></tr>
+                        <tr><td data-label="Chci">Opravit problémy s GPU (Kokoro)</td><td data-label="Postupujte takto">Nastavte <strong>Procesor na pozadí</strong> na <strong>CPU</strong>.</td></tr>
+                        <tr><td data-label="Chci">Nejvyšší kvalita Kokoro</td><td data-label="Postupujte takto"><strong>Plná kvalita</strong>. Větší stažení, vyšší spotřeba paměti.</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra"><summary>Další podrobnosti a nastavení odkazů</summary>
+                <p><strong>Automatické</strong> použije podporovanou GPU, pokud je dostupná, jinak CPU. Automatická kvalita volí FP16 na kompatibilních GPU, plnou přesnost na ostatních podporovaných GPU a kompaktní model na CPU. Vynucení GPU bez dostupné GPU skončí chybou.</p>
+                <p>Kitten 0.8 běží na CPU a podporuje jen angličtinu. Každý model se stáhne při prvním použití. Každý prohlížeč i OBS má vlastní kopii. NeuroSync v obou případech dostane celý zvukový soubor. Staré odkazy fungují beze změny, pokud tyto možnosti neupravíte.</p>
+                <p>Kokoro: <code>&amp;kokororuntime=worker</code>, volitelné <code>&amp;kokoroplayback=stream</code>, <code>&amp;kokorodevice=wasm</code> nebo <code>webgpu</code>, <code>&amp;kokorodtype=q8</code>, <code>fp16</code> nebo <code>fp32</code>. Streamování nebo FP32 automaticky zapne generování na pozadí.</p>
+                <p>Kitten: <code>&amp;kittenmodel=nano</code> (nebo <code>micro</code>, <code>mini</code>), volitelně <code>&amp;kittenplayback=stream</code>.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="more">Další možnosti</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Chci…</th><th>Přejděte sem</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Chci">Ručně upravit odkaz TTS nebo zobrazit všechny možnosti</td><td data-label="Přejděte sem"><a href="tts.html">Referenční příručka TTS</a></td></tr>
+                        <tr><td data-label="Chci">Použít španělské nebo portugalské hlasy v odkazu</td><td data-label="Přejděte sem"><a href="tts.html#premium-options">Reference TTS: možnosti poskytovatelů</a></td></tr>
+                        <tr id="local-server"><td data-label="Chci">Provozovat vlastní hlasový server nebo klonovat hlas</td><td data-label="Přejděte sem"><a href="local-tts.html">Průvodce místním AI TTS</a></td></tr>
+                        <tr><td data-label="Chci">Nastavit Speechify</td><td data-label="Přejděte sem"><a href="speechify-setup-guide.html">Průvodce Speechify</a></td></tr>
+                    </tbody>
+                </table>
+                <p>Rychlý odkaz k vyzkoušení: <code>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=piper</code></p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function revealGuideSection() {
+            var target;
+            try { target = document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { return; }
+            if (!target) return;
+            for (var node = target; node; node = node.parentElement) {
+                if (node.tagName === "DETAILS") node.open = true;
+            }
+            target.scrollIntoView();
+        }
+        window.addEventListener("hashchange", revealGuideSection);
+        revealGuideSection();
+    </script>
+</body>
+</html>

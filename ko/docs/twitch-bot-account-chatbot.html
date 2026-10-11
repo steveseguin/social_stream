@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ko/docs/twitch-bot-account-chatbot.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/ko/docs/twitch-bot-account-chatbot.html">
+    <meta property="og:title" content="자동 답변용 봇 계정 - Social Stream Ninja">
+    <meta property="og:description" content="Twitch WebSocket 봇 계정이나 별도의 답변 전용 소스를 사용하여 다른 계정으로 Social Stream Ninja 자동 답변을 보내세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ko/docs/twitch-bot-account-chatbot.html">
+    <meta name="twitter:title" content="자동 답변용 봇 계정 - Social Stream Ninja">
+    <meta name="twitter:description" content="Twitch WebSocket 봇 계정이나 별도의 답변 전용 소스를 사용하여 다른 계정으로 Social Stream Ninja 자동 답변을 보내세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자동 답변용 봇 계정 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Twitch WebSocket 봇 계정이나 별도의 답변 전용 소스를 사용하여 다른 계정으로 Social Stream Ninja 자동 답변을 보내세요.">
+    <style>
+        .bot-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin: 22px 0;
+        }
+        .bot-guide-card {
+            background: var(--card-bg, #fff);
+            border: 1px solid rgba(127, 127, 127, 0.22);
+            border-radius: 8px;
+            padding: 18px;
+        }
+        .bot-guide-card h3 {
+            margin-top: 0;
+        }
+        .bot-guide-shot {
+            display: block;
+            width: auto;
+            max-width: 100%;
+            border: 1px solid rgba(127, 127, 127, 0.28);
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            margin: 16px auto 8px;
+        }
+        .bot-guide-caption {
+            color: var(--text-secondary);
+            font-size: 1.4rem;
+            margin-bottom: 22px;
+        }
+        .dark-mode .bot-guide-card {
+            background: #161b22;
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/twitch-bot-account-chatbot.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", and its separate session at the top.":"와 별도 세션이 상단에 표시됩니다.",", click":"에서 다음을 클릭하세요:",", the separate bot source takes priority. SSN will not also send the same reply through the attached Twitch WebSocket bot account.":"로 설정되어 있으면 별도의 봇 소스가 우선합니다. SSN은 연결된 Twitch WebSocket 봇 계정으로 같은 답변을 추가 전송하지 않습니다.","A separate SSApp Twitch source configured as Reply only with Role Bot and a bot-account browser session":"Reply only, Role Bot, bot-account 브라우저 세션으로 설정한 별도의 SSApp Twitch 소스","Account role":"계정 역할 (Account role)","Account roles can support more advanced routing setups.":"계정 역할을 사용하면 더 고급 라우팅 구성이 가능합니다.","Activate the bot source and leave it running whenever it needs to send replies.":"봇 소스를 활성화하고 답변을 보내야 할 때는 계속 실행해 두세요.","Add the same channel or source again. If SSApp asks whether to make it a reply-only bot source, choose":"같은 채널이나 소스를 다시 추가하세요. SSApp에서 답변 전용 봇 소스로 만들지 물으면 다음을 선택하세요:","Add your normal source for capturing chat.":"채팅을 캡처하는 일반 소스를 추가하세요.","Automatic reply account: @BotName":"자동 답변 계정: @BotName","Automatic reply account: Main account":"자동 답변 계정: 기본 계정 (Automatic reply account: Main account)","Best for":"적합한 대상","Bot":"봇 (Bot)","Bot Accounts for Automatic Replies":"자동 답변용 봇 계정","Bot Accounts for Automatic Replies - Social Stream Ninja":"자동 답변용 봇 계정 - Social Stream Ninja","Bot reply-only (no capture)":"봇 답장 전용(캡처 없음) (Bot reply-only (no capture))","Both methods make automatic replies appear under a bot account instead of your main account. They do it in different ways.":"두 방식 모두 기본 계정 대신 봇 계정으로 자동 답변을 표시합니다. 구현 방식은 서로 다릅니다.","Browser Session Settings":"브라우저 세션 설정 (Browser Session Settings)","Can work with other platforms that support outgoing replies.":"답변 전송을 지원하는 다른 플랫폼에서도 사용할 수 있습니다.","Chatbot and scheduled automatic replies use the bot account.":"챗봇 및 예약된 자동 답변은 봇 계정을 사용합니다.","Choose the simple Twitch WebSocket option or the existing separate reply-only source method.":"간단한 Twitch WebSocket 옵션이나 기존의 별도 답변 전용 소스 방식을 선택하세요.","Click":"클릭:","Click the source's":"소스에서 클릭할 버튼:","Commands & API":"명령 및 API","Connect bot account":"봇 계정 연결 (Connect bot account)","Cons":"단점","Download":"다운로드","Enter this value:":"입력할 값:","Extra source?":"추가 소스 필요 여부","Features":"기능","Guides":"가이드","Hire":"작업 의뢰","Home":"홈","If Both Methods Are Configured":"두 방식을 모두 설정한 경우","If reply-only is disabled, the second source can capture duplicate messages.":"답변 전용을 끄면 두 번째 소스가 메시지를 중복 캡처할 수 있습니다.","In SSApp, find your Twitch source and make sure":"SSApp에서 Twitch 소스를 찾아 다음을 확인하세요:","In Twitch Shared Chat, bot replies stay in this source's channel.":"Twitch 공유 채팅에서 봇 답변은 이 소스의 채널에만 전송됩니다.","In the settings panel on the right, switch to full mode and search for":"오른쪽 설정 패널에서 전체 모드로 전환한 뒤 검색하세요:","Inspiration":"아이디어","It does not create another source or permanent browser session.":"다른 소스나 영구 브라우저 세션을 만들지는 않습니다.","It is not available for Twitch Standard mode, other platforms, or the browser extension.":"Twitch Standard 모드, 다른 플랫폼, 브라우저 확장 프로그램에서는 사용할 수 없습니다.","Main navigation":"기본 탐색 메뉴","Manual sends still use the main Twitch account.":"수동 전송은 계속 기본 Twitch 계정을 사용합니다.","Method":"방식","Method 1: Twitch WebSocket Bot Account":"방법 1: Twitch WebSocket 봇 계정","Method 2: Separate Reply-Only Bot Source":"방법 2: 별도의 답변 전용 봇 소스","More settings must be kept in sync.":"더 많은 설정을 서로 맞춰 유지해야 합니다.","No":"아니요","No second source to create or keep running.":"두 번째 소스를 만들거나 계속 실행할 필요가 없습니다.","On the second source, open":"두 번째 소스에서 다음을 여세요:","On this page":"이 페이지에서","Open its gear menu. Enable":"톱니바퀴 메뉴를 여세요. 활성화할 항목:","Open navigation menu":"탐색 메뉴 열기","Overlay Gallery":"오버레이 갤러리","Pros":"장점","Replies still use the main account:":"여전히 기본 계정으로 답변할 때:","Reply only":"답변 전용 (Reply only)","Requires a second source and a separate session.":"두 번째 소스와 별도 세션이 필요합니다.","Review the explanation, then click":"설명을 읽은 뒤 클릭하세요:","Role: Bot":"역할: 봇 (Role: Bot)","SSApp Automatic reply account dialog with the Connect bot account button":"봇 계정 연결 버튼이 있는 SSApp 자동 답변 계정 대화상자","SSApp Twitch WebSocket source with its gear menu open and Automatic reply account set to Main account":"톱니바퀴 메뉴가 열려 있고 자동 답변 계정이 기본 계정으로 설정된 SSApp Twitch WebSocket 소스","SSApp opens a separate Twitch sign-in window. Sign in with the account that should send bot replies.":"SSApp이 별도의 Twitch 로그인 창을 엽니다. 봇 답변을 보낼 계정으로 로그인하세요.","SSN setting Send bot replies through these SSApp account roles filled with bot":"값이 bot으로 지정된 SSN의 다음 SSApp 계정 역할로 봇 답변 보내기 설정","Send bot replies through these SSApp account roles":"다음 SSApp 계정 역할로 봇 답변 보내기","Separate reply-only bot source":"별도의 답변 전용 봇 소스","Set":"설정:","Sign in":"로그인","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","The attached Twitch bot cannot send:":"연결된 Twitch 봇이 전송하지 못할 때:","The bot must be a moderator, or the channel owner may need to reconnect once to approve Twitch bot access.":"봇이 관리자여야 합니다. 또는 채널 소유자가 한 번 다시 연결하여 Twitch 봇 접근 권한을 승인해야 할 수 있습니다.","The bot source has its own browser session and source controls.":"봇 소스에는 자체 브라우저 세션과 소스 컨트롤이 있습니다.","The bot source must be active to send.":"전송하려면 봇 소스가 활성화되어 있어야 합니다.","The easiest Twitch-only setup":"가장 쉬운 Twitch 전용 설정","The finished second source shows":"설정이 끝난 두 번째 소스에는","The new attached-account method is only for Twitch WebSocket sources in the SSApp desktop app.":"새로운 계정 연결 방식은 SSApp 데스크톱 앱의 Twitch WebSocket 소스에서만 사용할 수 있습니다.","The new option is missing:":"새 옵션이 보이지 않을 때:","The screenshots below use Twitch, but this method is not Twitch-only. It can also be used with other SSApp sources that support signing in and sending replies.":"아래 스크린샷은 Twitch를 사용하지만 이 방식은 Twitch 전용이 아닙니다. 로그인과 답변 전송을 지원하는 다른 SSApp 소스에도 사용할 수 있습니다.","The separate sign-in window prevents your normal browser's Twitch login from silently choosing the wrong account.":"별도 로그인 창을 사용하므로 일반 브라우저의 Twitch 로그인 상태 때문에 잘못된 계정이 자동 선택되는 것을 막을 수 있습니다.","The separate source captures duplicate chat:":"별도 소스가 채팅을 중복 캡처할 때:","The separate source sends nothing:":"별도 소스가 아무것도 보내지 않을 때:","The wrong Twitch account was selected:":"잘못된 Twitch 계정이 선택되었을 때:","This attaches a second Twitch login to your existing WebSocket source.":"기존 WebSocket 소스에 두 번째 Twitch 로그인을 연결합니다.","This is the original SSApp method and it is still supported. It creates a second source, gives that source its own browser session, and routes automatic replies through sources with the":"기존 SSApp 방식이며 계속 지원됩니다. 두 번째 소스를 만들고 자체 브라우저 세션을 부여한 뒤 자동 답변을 다음 역할의 소스로 보냅니다:","This section appears only when that Twitch source is using WebSocket mode.":"이 섹션은 해당 Twitch 소스가 WebSocket 모드를 사용할 때만 표시됩니다.","Tip: Click or tap any screenshot to open it at full size.":"팁: 스크린샷을 클릭하거나 탭하면 원래 크기로 열립니다.","Troubleshooting":"문제 해결","Twitch Standard mode or another platform that can send replies":"Twitch Standard 모드 또는 답변 전송이 가능한 다른 플랫폼","Twitch WebSocket bot account":"Twitch WebSocket 봇 계정","Twitch WebSocket sending":"Twitch WebSocket 전송 (Twitch WebSocket sending)","Twitch only.":"Twitch 전용.","Under":"다음 항목 아래에서:","Use a Twitch WebSocket bot account or a separate reply-only source to send Social Stream Ninja automatic replies from another account.":"Twitch WebSocket 봇 계정이나 별도의 답변 전용 소스를 사용하여 다른 계정으로 Social Stream Ninja 자동 답변을 보내세요.","Use one method for a given reply path. If":"하나의 답변 경로에는 한 가지 방식을 사용하세요. 설정 항목","Very little setup after the WebSocket source is connected.":"WebSocket 소스 연결 후 추가 설정이 거의 필요하지 않습니다.","WebSocket":"WebSocket","WebSocket mode only.":"WebSocket 모드 전용.","When the sign-in finishes, the source menu changes to":"로그인을 마치면 소스 메뉴가 다음으로 바뀝니다:","Which Method Should I Use?":"어떤 방식을 사용해야 하나요?","Works with Twitch Standard mode.":"Twitch Standard 모드에서 작동합니다.","Yes":"예","activate it, confirm it is signed in as the bot, and verify the routing field contains exactly":"소스를 활성화하고 봇으로 로그인했는지 확인한 뒤 라우팅 입력란에 정확히 다음 값이 있는지 확인하세요:","and cycle":"을 켜고 다음 항목을 전환하세요:","and use a separate session such as":"에서 별도 세션을 사용하세요. 예:","bot replies":"bot replies","choose the account again and sign into the separate SSApp Twitch window with the bot account.":"계정을 다시 선택하고 SSApp의 별도 Twitch 창에서 봇 계정으로 로그인하세요.","confirm this is the SSApp desktop app and the Twitch source is set to WebSocket mode.":"SSApp 데스크톱 앱을 사용 중이며 Twitch 소스가 WebSocket 모드인지 확인하세요.","enable":"활성화:","gear button":"톱니바퀴 버튼","in this field. The two relay-role fields above it are separate settings and can stay blank.":"을 이 입력란에 넣으세요. 위의 릴레이 역할 입력란 두 개는 별도 설정이므로 비워 두어도 됩니다.","is configured as":"의 설정값:","is selected.":"이 선택되어 있어야 합니다.","make the bot a moderator. If it is not a moderator, reconnect the main Twitch account once using the channel owner and approve the requested permission.":"봇을 관리자로 지정하세요. 관리자가 아니라면 채널 소유자로 기본 Twitch 계정을 한 번 다시 연결하고 요청된 권한을 승인하세요.","on that second source and sign in with the bot account.":"을 두 번째 소스에서 클릭하고 봇 계정으로 로그인하세요.","role.":".","to":"대상:","until it says":"의 표시가 다음이 될 때까지 전환하세요:","verify the attached account is shown by username, or verify the separate source says":"연결된 계정이 사용자 이름으로 표시되는지 확인하거나 별도 소스의 표시를 확인하세요:"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/twitch-bot-account-chatbot.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/twitch-bot-account-chatbot.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/twitch-bot-account-chatbot.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/twitch-bot-account-chatbot.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/twitch-bot-account-chatbot.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/twitch-bot-account-chatbot.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/twitch-bot-account-chatbot.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/twitch-bot-account-chatbot.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/twitch-bot-account-chatbot.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/twitch-bot-account-chatbot.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/twitch-bot-account-chatbot.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/twitch-bot-account-chatbot.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="twitch-bot-account-chatbot.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/twitch-bot-account-chatbot.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/twitch-bot-account-chatbot.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/twitch-bot-account-chatbot.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/twitch-bot-account-chatbot.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/twitch-bot-account-chatbot.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>자동 답변용 봇 계정</h1>
+            <p>간단한 Twitch WebSocket 옵션이나 기존의 별도 답변 전용 소스 방식을 선택하세요.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="이 페이지에서"><a href="#read-section-1">어떤 방식을 사용해야 하나요?</a><a href="#read-section-2">방법 1: Twitch WebSocket 봇 계정</a><a href="#read-section-3">방법 2: 별도의 답변 전용 봇 소스</a><a href="#read-section-4">두 방식을 모두 설정한 경우</a><a href="#read-section-5">문제 해결</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">어떤 방식을 사용해야 하나요?</h2>
+                <p>두 방식 모두 기본 계정 대신 봇 계정으로 자동 답변을 표시합니다. 구현 방식은 서로 다릅니다.</p>
+                <div class="guide-note">
+                    <p><strong>새로운 계정 연결 방식은 SSApp 데스크톱 앱의 Twitch WebSocket 소스에서만 사용할 수 있습니다.</strong> Twitch Standard 모드, 다른 플랫폼, 브라우저 확장 프로그램에서는 사용할 수 없습니다.</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr>
+                            <th>방식</th>
+                            <th>적합한 대상</th>
+                            <th>추가 소스 필요 여부</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="방식"><strong>Twitch WebSocket 봇 계정</strong></td>
+                            <td data-label="적합한 대상">가장 쉬운 Twitch 전용 설정</td>
+                            <td data-label="추가 소스 필요 여부">아니요</td>
+                        </tr>
+                        <tr>
+                            <td data-label="방식"><strong>별도의 답변 전용 봇 소스</strong></td>
+                            <td data-label="적합한 대상">Twitch Standard 모드 또는 답변 전송이 가능한 다른 플랫폼</td>
+                            <td data-label="추가 소스 필요 여부">예</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">방법 1: Twitch WebSocket 봇 계정</h2>
+                <p>기존 WebSocket 소스에 두 번째 Twitch 로그인을 연결합니다. <strong>다른 소스나 영구 브라우저 세션을 만들지는 않습니다.</strong></p>
+                <p><small>팁: 스크린샷을 클릭하거나 탭하면 원래 크기로 열립니다.</small></p>
+                <ol class="guide-steps">
+                    <li>SSApp에서 Twitch 소스를 찾아 다음을 확인하세요: <strong>WebSocket</strong> 이 선택되어 있어야 합니다.</li>
+                    <li>소스에서 클릭할 버튼: <strong>톱니바퀴 버튼</strong>.</li>
+                    <li>다음 항목 아래에서: <strong>Twitch WebSocket 전송 (Twitch WebSocket sending)</strong>에서 다음을 클릭하세요: <strong>자동 답변 계정: 기본 계정 (Automatic reply account: Main account)</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-websocket-bot-menu.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-websocket-bot-menu.png" alt="톱니바퀴 메뉴가 열려 있고 자동 답변 계정이 기본 계정으로 설정된 SSApp Twitch WebSocket 소스">
+                </a>
+                <p class="bot-guide-caption">이 섹션은 해당 Twitch 소스가 WebSocket 모드를 사용할 때만 표시됩니다.</p>
+
+                <ol class="guide-steps" start="4">
+                    <li>설명을 읽은 뒤 클릭하세요: <strong>봇 계정 연결 (Connect bot account)</strong>.</li>
+                    <li>SSApp이 별도의 Twitch 로그인 창을 엽니다. 봇 답변을 보낼 계정으로 로그인하세요.</li>
+                    <li>로그인을 마치면 소스 메뉴가 다음으로 바뀝니다: <strong>자동 답변 계정: @BotName</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-bot-account-dialog.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-bot-account-dialog.png" alt="봇 계정 연결 버튼이 있는 SSApp 자동 답변 계정 대화상자">
+                </a>
+                <p class="bot-guide-caption">별도 로그인 창을 사용하므로 일반 브라우저의 Twitch 로그인 상태 때문에 잘못된 계정이 자동 선택되는 것을 막을 수 있습니다.</p>
+
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>장점</h3>
+                        <ul class="guide-list">
+                            <li>두 번째 소스를 만들거나 계속 실행할 필요가 없습니다.</li>
+                            <li>WebSocket 소스 연결 후 추가 설정이 거의 필요하지 않습니다.</li>
+                            <li>챗봇 및 예약된 자동 답변은 봇 계정을 사용합니다.</li>
+                            <li>Twitch 공유 채팅에서 봇 답변은 이 소스의 채널에만 전송됩니다.</li>
+                        </ul>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>단점</h3>
+                        <ul class="guide-list">
+                            <li>Twitch 전용.</li>
+                            <li>WebSocket 모드 전용.</li>
+                            <li>수동 전송은 계속 기본 Twitch 계정을 사용합니다.</li>
+                            <li>봇이 관리자여야 합니다. 또는 채널 소유자가 한 번 다시 연결하여 Twitch 봇 접근 권한을 승인해야 할 수 있습니다.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">방법 2: 별도의 답변 전용 봇 소스</h2>
+                <p>기존 SSApp 방식이며 계속 지원됩니다. 두 번째 소스를 만들고 자체 브라우저 세션을 부여한 뒤 자동 답변을 다음 역할의 소스로 보냅니다: <code>bot</code> .</p>
+                <p>아래 스크린샷은 Twitch를 사용하지만 이 방식은 Twitch 전용이 아닙니다. 로그인과 답변 전송을 지원하는 다른 SSApp 소스에도 사용할 수 있습니다.</p>
+                <ol class="guide-steps">
+                    <li>채팅을 캡처하는 일반 소스를 추가하세요.</li>
+                    <li>같은 채널이나 소스를 다시 추가하세요. SSApp에서 답변 전용 봇 소스로 만들지 물으면 다음을 선택하세요: <strong>예</strong>.</li>
+                    <li>두 번째 소스에서 다음을 여세요: <strong>브라우저 세션 설정 (Browser Session Settings)</strong> 에서 별도 세션을 사용하세요. 예: <code>bot-account</code>.</li>
+                    <li>클릭: <strong>로그인</strong> 을 두 번째 소스에서 클릭하고 봇 계정으로 로그인하세요.</li>
+                    <li>톱니바퀴 메뉴를 여세요. 활성화할 항목: <strong>봇 답장 전용(캡처 없음) (Bot reply-only (no capture))</strong> 을 켜고 다음 항목을 전환하세요: <strong>계정 역할 (Account role)</strong> 의 표시가 다음이 될 때까지 전환하세요: <strong>봇 (Bot)</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-separate-reply-only-bot-source.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-separate-reply-only-bot-source.png" alt="Reply only, Role Bot, bot-account 브라우저 세션으로 설정한 별도의 SSApp Twitch 소스">
+                </a>
+                <p class="bot-guide-caption">설정이 끝난 두 번째 소스에는 <strong>답변 전용 (Reply only)</strong>, <strong>역할: 봇 (Role: Bot)</strong>와 별도 세션이 상단에 표시됩니다.</p>
+
+                <ol class="guide-steps" start="6">
+                    <li>오른쪽 설정 패널에서 전체 모드로 전환한 뒤 검색하세요: <strong>bot replies</strong>.</li>
+                    <li>설정: <strong>다음 SSApp 계정 역할로 봇 답변 보내기</strong> 대상: <code>bot</code>.</li>
+                    <li>봇 소스를 활성화하고 답변을 보내야 할 때는 계속 실행해 두세요.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssn-bot-reply-role-routing.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssn-bot-reply-role-routing.png" alt="값이 bot으로 지정된 SSN의 다음 SSApp 계정 역할로 봇 답변 보내기 설정">
+                </a>
+                <p class="bot-guide-caption">입력할 값: <code>bot</code> 을 이 입력란에 넣으세요. 위의 릴레이 역할 입력란 두 개는 별도 설정이므로 비워 두어도 됩니다.</p>
+
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>장점</h3>
+                        <ul class="guide-list">
+                            <li>Twitch Standard 모드에서 작동합니다.</li>
+                            <li>답변 전송을 지원하는 다른 플랫폼에서도 사용할 수 있습니다.</li>
+                            <li>봇 소스에는 자체 브라우저 세션과 소스 컨트롤이 있습니다.</li>
+                            <li>계정 역할을 사용하면 더 고급 라우팅 구성이 가능합니다.</li>
+                        </ul>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>단점</h3>
+                        <ul class="guide-list">
+                            <li>두 번째 소스와 별도 세션이 필요합니다.</li>
+                            <li>전송하려면 봇 소스가 활성화되어 있어야 합니다.</li>
+                            <li>더 많은 설정을 서로 맞춰 유지해야 합니다.</li>
+                            <li>답변 전용을 끄면 두 번째 소스가 메시지를 중복 캡처할 수 있습니다.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">두 방식을 모두 설정한 경우</h2>
+                <p>하나의 답변 경로에는 한 가지 방식을 사용하세요. 설정 항목 <strong>다음 SSApp 계정 역할로 봇 답변 보내기</strong> 의 설정값: <code>bot</code>로 설정되어 있으면 별도의 봇 소스가 우선합니다. SSN은 연결된 Twitch WebSocket 봇 계정으로 같은 답변을 추가 전송하지 않습니다.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">문제 해결</h2>
+                <ul class="guide-list">
+                    <li><strong>새 옵션이 보이지 않을 때:</strong> SSApp 데스크톱 앱을 사용 중이며 Twitch 소스가 WebSocket 모드인지 확인하세요.</li>
+                    <li><strong>연결된 Twitch 봇이 전송하지 못할 때:</strong> 봇을 관리자로 지정하세요. 관리자가 아니라면 채널 소유자로 기본 Twitch 계정을 한 번 다시 연결하고 요청된 권한을 승인하세요.</li>
+                    <li><strong>잘못된 Twitch 계정이 선택되었을 때:</strong> 계정을 다시 선택하고 SSApp의 별도 Twitch 창에서 봇 계정으로 로그인하세요.</li>
+                    <li><strong>별도 소스가 아무것도 보내지 않을 때:</strong> 소스를 활성화하고 봇으로 로그인했는지 확인한 뒤 라우팅 입력란에 정확히 다음 값이 있는지 확인하세요: <code>bot</code>.</li>
+                    <li><strong>별도 소스가 채팅을 중복 캡처할 때:</strong> 활성화: <strong>봇 답장 전용(캡처 없음) (Bot reply-only (no capture))</strong>.</li>
+                    <li><strong>여전히 기본 계정으로 답변할 때:</strong> 연결된 계정이 사용자 이름으로 표시되는지 확인하거나 별도 소스의 표시를 확인하세요: <strong>역할: 봇 (Role: Bot)</strong>.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

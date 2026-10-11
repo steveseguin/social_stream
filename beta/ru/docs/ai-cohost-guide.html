@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ru" data-site-root="../../" data-site-language="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ru/docs/ai-cohost-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ru/docs/ai-cohost-guide.html">
+    <meta property="og:title" content="Руководство по ИИ-соведущему — Social Stream Ninja">
+    <meta property="og:description" content="Руководство по настройке и использованию ИИ-соведущего Social Stream Ninja, управления из док-панели и сценического оверлея ИИ.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Логотип Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ru/docs/ai-cohost-guide.html">
+    <meta name="twitter:title" content="Руководство по ИИ-соведущему — Social Stream Ninja">
+    <meta name="twitter:description" content="Руководство по настройке и использованию ИИ-соведущего Social Stream Ninja, управления из док-панели и сценического оверлея ИИ.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Логотип Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Руководство по ИИ-соведущему — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Руководство по настройке и использованию ИИ-соведущего Social Stream Ninja, управления из док-панели и сценического оверлея ИИ.">
+    <style>
+        .cohost-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.4rem; margin: 1.4rem 0; }
+        .cohost-picker > div { padding: 1.4rem 1.6rem; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .cohost-picker strong { display: block; margin-bottom: .4rem; font-size: 1.65rem; }
+        .cohost-picker p { margin: 0; font-size: 1.45rem; line-height: 1.5; }
+        .cohost-picker .example { margin-top: .8rem; }
+        .cohost-flow {
+            margin: 18px 0;
+            padding: 18px;
+            border: 1px solid var(--border-color);
+            background: rgba(0, 166, 255, 0.08);
+        }
+        .cohost-code {
+            display: block;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            background: #111827;
+            color: #e5e7eb;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 1.3rem;
+            line-height: 1.45;
+        }
+        @media (max-width: 760px) {
+            .cohost-picker { grid-template-columns: minmax(0, 1fr); }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ru">
+<script id="ssn-site-language" type="application/json">{"language":"ru","page":"docs/ai-cohost-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Переключиться на светлую тему","Switch to dark theme":"Переключиться на тёмную тему","Light mode":"Светлая тема","Dark mode":"Тёмная тема","Open navigation menu":"Открыть меню навигации","Close navigation menu":"Закрыть меню навигации","Copy this document as Markdown to the clipboard":"Скопировать этот документ в формате Markdown в буфер обмена","Copy Markdown":"Копировать Markdown","Copying…":"Копирование…","Markdown copied":"Markdown скопирован","Copy failed":"Не удалось скопировать","Copy comprehensive Markdown for an AI assistant":"Скопировать полное описание в Markdown для ИИ-помощника","Copy this documentation page as Markdown for an AI assistant":"Скопировать эту страницу документации в Markdown для ИИ-помощника"},"strings":{", and your words should appear under":"и ваши слова должны появиться в",", browser audio permission, and that OBS captures the co-host page audio. Don't use":", разрешение браузера на звук и захват аудио страницы соведущего в OBS. Не используйте",", if your setup supports it. Keep the speech bubble visible too, so viewers who can't hear can still follow along.":", если ваша система поддерживает. Оставьте речевой пузырь видимым, чтобы зрители без звука могли читать.",", open":", откройте",", paste your OpenAI project API key, and click":", вставьте ключ API проекта OpenAI и нажмите",", so payloads stay predictable for overlays and automations.":"чтобы формат данных оставался предсказуемым для оверлеев и автоматизации.",", so you'll need an OpenAI API key. Other options are":"поэтому нужен ключ OpenAI API. Другие варианты:",", the volume slider, the output picker, and":", ползунок громкости, выбор выхода и",". Add":". Добавьте",". Approval happens in the Dock, off-stream.":". Подтверждение происходит в доке вне эфира.",". Ask “What is chat saying?” any time.":". В любой момент спросите: «Что пишет чат?»",". If you pick":". Если выбрать",". It should say":". Должно быть указано",". It talks back and can discuss your chat when you ask.":". Он отвечает вам и может обсудить чат по просьбе.","A draft.":"Черновик.","A stream control tool is missing":"Нет инструмента управления эфиром","AI Co-host":"ИИ-соведущий","AI Co-host Guide - Social Stream Ninja":"Руководство по ИИ-соведущему — Social Stream Ninja","AI drafts are never spoken until you click":"Черновики ИИ озвучиваются только после нажатия","AI stage overlay":"Сценический оверлей ИИ","Add":"Добавить","Add the stage overlay to OBS:":"Добавьте сценический оверлей в OBS:","Add these to the end of your":"Добавьте это в конец","Add to the link":"Добавить к ссылке","Allow the microphone, check your computer's default mic, check internet, and that Chrome speech recognition is available.":"Разрешите микрофон, проверьте микрофон по умолчанию, интернет и доступность распознавания речи Chrome.","An AI sidekick you can talk to on stream. It can read your chat too.":"ИИ-помощник для разговора в эфире. Он также может читать чат.","Answer":"Ответить (Answer)","Answer / Light Roast:":"Ответить / Лёгкая подколка (Answer / Light Roast):","Answer or Light Roast is greyed out":"Ответ или лёгкая шутка недоступны","Answer, Light Roast, or SSN Configured LLM times out":"Тайм-аут ответа, лёгкой шутки или настроенной LLM SSN","Answers every message out loud.":"Отвечает вслух на каждое сообщение.","Answers questions and mentions out loud by itself.":"Самостоятельно отвечает вслух на вопросы и упоминания.","Ask it out loud, like “switch to BRB”, “feature that last message”, or “clear the featured chat”.":"Попросите вслух, например: «переключись на BRB», «выдели последнее сообщение» или «очисти выделенный чат».","Audio Response":"Голосовой ответ (Audio Response)","Balanced: about 4 seconds. Patient: about 8.":"Сбалансированный: около 4 секунд. Терпеливый: около 8.","Both show an avatar and speech bubble in OBS using the":"Оба показывают аватар и речевой пузырь в OBS через","Button":"Кнопка","Change the name shown":"Изменить отображаемое имя","Chat Bots and AI services → Chat Bot - Private Interface → Enable private chat bot option":"Чат-боты и службы ИИ → Чат-бот — Личный интерфейс → Включить личного чат-бота","Chat Bots and AI services → Configure LLM Service Provider":"Чат-боты и службы ИИ → Настроить поставщика LLM","ChatGPT API":"ChatGPT API","Check":"Проверьте","Check Social Stream is on, the session matches, Private Chat Bot is on, and your AI provider is reachable.":"Проверьте, что Social Stream включён, сеанс совпадает, личный чат-бот включён и поставщик ИИ доступен.","Check the mic isn't muted, and let the first download finish.":"Проверьте, что микрофон не выключен, и дождитесь первой загрузки.","Chrome (extension link)":"Chrome (ссылка расширения)","Chrome's speech recognition. May need internet.":"Распознавание речи Chrome. Может требовать интернет.","Click":"Нажмите","Co-host":"Соведущий (Co-host)","Co-host Stream Controls":"Управление трансляцией через соведущего (Co-host Stream Controls)","Co-host output":"Вывод соведущего","Co-host page doesn't see chat":"Страница соведущего не видит чат","Commands & API":"Команды и API","Connect to my Social Stream (required)":"Подключить к моему Social Stream (обязательно)","Context only":"Только контекст (Context only)","Context only - answer when asked (default)":"Только контекст — отвечать по запросу (по умолчанию)","Copies the draft without sending it.":"Копирует черновик без отправки.","Copy":"Копировать","Diagnostics":"Диагностика","Dock buttons":"Кнопки дока","Dock buttons in 5 steps":"Кнопки дока за 5 шагов","Download":"Скачать","Drafts a short answer for you to approve.":"Готовит короткий ответ для вашего одобрения.","Drafts a short, playful, PG roast for you to approve.":"Готовит короткую безобидную шутку-поддёвку для одобрения.","Extra command details go inside":"Дополнительные детали команды помещаются в","Fast: waits about 2 seconds after you stop. May cut in on a pause.":"Быстрый: ждёт около 2 секунд после окончания речи. Может перебить на паузе.","Faster and cheaper":"Быстрее и дешевле","Features":"Возможности","Fix problems":"Устранение неполадок","For Dock text workflows, the overlay is the picture and optional TTS voice. For the OpenAI voice, capture":"В текстовых сценариях дока оверлей даёт изображение и необязательный голос TTS. Для голоса OpenAI захватывайте","For OBS, type the exact scene names it may switch to, separated by commas. Keep":"Для OBS введите точные разрешённые имена сцен через запятую. Оставьте","Force overlay speech even when the co-host page is talking (adds a second voice)":"Принудительно озвучивать оверлей, когда говорит страница соведущего (добавляет второй голос)","Free AI for testing":"Бесплатный ИИ для проверки","Free trial AI stopped answering":"Пробный бесплатный ИИ перестал отвечать","Full quality (costs more)":"Полное качество (дороже)","Guides":"Руководства","Have the overlay speak (Dock workflow)":"Озвучивать оверлей (сценарий дока)","Heard":"Распознано (Heard)","High or Extra high (costs more)":"Высокий или очень высокий (дороже)","Hire":"Найти специалиста","Home":"Главная","How it hears you":"Как он вас слышит","How it uses chat":"Как использует чат","How it uses your chat":"Как использует ваш чат","How the pages talk (for developers)":"Как общаются страницы (для разработчиков)","I want to":"Я хочу","I want to…":"Я хочу…","If you talk over it, it stops and drops the unplayed audio.":"Если вы перебьёте его, он остановится и отбросит ещё не воспроизведённое аудио.","In OBS, capture the audio from the co-host page or app. The AI's voice only plays there.":"В OBS захватывайте звук со страницы или приложения соведущего. Голос ИИ воспроизводится только там.","In the Social Stream popup, pick":"Во всплывающем окне Social Stream выберите","In the Social Stream popup, turn on only the tools you want.":"Во всплывающем окне Social Stream включите только нужные инструменты.","Inspiration":"Идеи","It keeps up to 20 recent chat messages for up to 90 seconds, including donations, memberships, moderator, event, and channel info. Then it forgets them.":"Он хранит до 20 последних сообщений не более 90 секунд, включая сведения о пожертвованиях, спонсорстве, модераторах, событиях и канале. Затем забывает их.","It knows chat but stays quiet":"Он знает содержимое чата, но молчит","It may be off or rate-limited. Use your own token, Ollama, or Custom API.":"Сервис может быть отключён или ограничивать частоту запросов. Используйте собственный токен, Ollama или Custom API.","It only appears once the Dock sees the stage overlay on the same session.":"Оно появляется, только когда Dock обнаружит сценический оверлей в той же сессии.","It reconnects by itself if the connection drops, and starts a fresh session before OpenAI's 60-minute limit. Your instructions and speed settings carry over, but it forgets what was said aloud.":"При обрыве соединения он переподключается сам и начинает новую сессию до достижения 60-минутного лимита OpenAI. Инструкции и настройки скорости сохраняются, но произнесённое вслух забывается.","It's billed to your OpenAI API account. It's separate from chatgpt.com and doesn't join a ChatGPT website or app conversation.":"Оплата списывается с вашего аккаунта OpenAI API. Это отдельный сервис от chatgpt.com, не участвующий в разговорах на сайте или в приложении ChatGPT.","It's free while the trial lasts, and may be turned off or rate-limited. For long-term use, add your own token or use a local AI.":"Во время пробного периода это бесплатно; сервис могут отключить или ограничить частоту запросов. Для постоянного использования добавьте свой токен или используйте локальный ИИ.","Leave":"Оставьте","Leave it running while it retries. Diagnostics shows what failed.":"Оставьте его работать, пока он повторяет попытки. Диагностика покажет причину сбоя.","Leave the endpoint, token, and model blank.":"Оставьте поля конечной точки, токена и модели пустыми.","Let it control your stream":"Разрешите ему управлять трансляцией","Let it see your screen or camera?":"Дать ему доступ к экрану или камере?","Light Roast":"Лёгкая подколка (Light Roast)","Link options":"Параметры ссылки","Listening (Desktop Whisper)":"Слушаю (Desktop Whisper)","Listening (OpenAI WebRTC)":"Слушаю (OpenAI WebRTC)","Live Chat":"Живой чат","Live Chat setting":"Настройка живого чата","Local Gemma won't download":"Локальная Gemma не скачивается","Main navigation":"Основная навигация","Make it bigger or smaller":"Увеличить или уменьшить","Make sure the overlay label matches the Dock's target. The default is":"Убедитесь, что метка оверлея совпадает с целью в Dock. По умолчанию это","Message format and design notes":"Формат сообщений и устройство системы","Mini":"Mini","Minimal or Low":"Минимальный или Низкий","Model":"Модель","More about OpenAI Realtime":"Подробнее об OpenAI Realtime","Move it":"Переместить","Mute and volume buttons":"Кнопки отключения звука и громкости","Mute co-host voice":"Выключить голос соведущего","Mute microphone":"Выключить микрофон","Mute shared system audio":"Выключить передаваемый системный звук","Needs":"Требуется","No Co-host menu in the Dock":"В Dock нет меню соведущего","No Co-host menu?":"Нет меню соведущего?","No Video":"Без видео (No Video)","None of these post replies into YouTube, Twitch, or Kick chat.":"Ни один из этих вариантов не отправляет ответы в чат YouTube, Twitch или Kick.","Nothing shows in OBS":"В OBS ничего не видно","On":"На странице","On this page":"На этой странице","Only you can trigger tools.":"Только вы можете запускать инструменты.","Open":"Открыть","Open navigation menu":"Открыть меню навигации","Open the":"Откройте","Open the Dock:":"Откройте Dock:","Open the co-host page with the same":"Откройте страницу соведущего с тем же","OpenAI Realtime":"OpenAI Realtime","OpenAI keeps disconnecting":"OpenAI постоянно отключается","Optional. Video starts on":"Необязательно. Видео запускается в режиме","Other browsers":"Другие браузеры","Overlay Gallery":"Галерея оверлеев","Overlay link options":"Параметры ссылки оверлея","Pick a virtual cable under":"Выберите виртуальный аудиокабель в поле","Pick the microphone you talk into. Keep":"Выберите микрофон, в который говорите. Оставьте","Point its asset host at your own copy of the Gemma files.":"Укажите в качестве хоста ресурсов свою копию файлов Gemma.","Press":"Нажмите","Privacy:":"Конфиденциальность:","Private Chat Bot on, plus an AI provider.":"Включённый приватный чат-бот и провайдер ИИ.","Problem":"Проблема","Read on Co-host":"Озвучить через соведущего (Read on Co-host)","Read on Co-host:":"Озвучить через соведущего (Read on Co-host):","Reasoning changes apply even while connected.":"Изменения глубины рассуждения применяются даже при активном соединении.","Reasoning effort":"Глубина рассуждения","Remembers recent messages and stays quiet until you ask about chat.":"Помнит последние сообщения и молчит, пока вы не спросите о чате.","Remove":"Удалить","Replies are capped at 512 output tokens.":"Ответы ограничены 512 выходными токенами.","Replies are slow":"Ответы приходят медленно","Right-click a Dock message and pick":"Нажмите правой кнопкой на сообщение в Dock и выберите","Right-click a chat message in the Dock. The AI avatar reads it, or drafts an answer or light roast that you approve first.":"Нажмите правой кнопкой на сообщение в Dock. ИИ-аватар прочитает его или подготовит ответ либо лёгкую шутку, которую вы сначала одобрите.","SSN Desktop app":"Настольное приложение SSN","SSN Hosted Trial LLM":"Пробная размещённая модель SSN (SSN Hosted Trial LLM)","SSN Hosted Trial LLM (experimental)":"Пробная размещённая модель SSN (SSN Hosted Trial LLM, экспериментальная)","Screen Share":"Демонстрация экрана (Screen Share)","Select":"Выберите","Sends your approved draft to the overlay.":"Отправляет одобренный черновик в оверлей.","Set it up":"Настройка","Set the overlay's label":"Задайте метку оверлея","Set up an AI provider in the popup. For a quick test, use":"Настройте провайдера ИИ во всплывающем окне. Для быстрой проверки используйте","Setting":"Настройка","Setup and workflow guide for the Social Stream Ninja AI co-host, dock controls, and AI stage overlay.":"Руководство по настройке и использованию ИИ-соведущего Social Stream Ninja, управления из док-панели и сценического оверлея ИИ.","Several overlays open":"Открыто несколько оверлеев","Show connection status":"Показать состояние соединения","Skip to main content":"Перейти к основному содержимому","Smarter, slower":"Умнее, медленнее","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Логотип Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Лицензия GPLv3.0.","Speak":"Озвучить (Speak)","Speak a reply to every message":"Озвучивать ответ на каждое сообщение","Speak replies to questions and mentions":"Озвучивать ответы на вопросы и упоминания","Speed and cost":"Скорость и стоимость","Speed, quality, and cost (OpenAI)":"Скорость, качество и стоимость (OpenAI)","Stage overlay connected. No AI needed.":"Сценический оверлей подключён. ИИ не нужен.","Start Co-host":"Запустить соведущего (Start Co-host)","Stop speaking":"Остановить озвучивание","Stream controls":"Управление трансляцией","Support":"Поддержка","Supported Sites":"Поддерживаемые сайты","Switch theme":"Сменить тему","Talk to the AI out loud on":"Говорите с ИИ вслух на","Test overlay":"Проверить оверлей (Test overlay)","Test selected chat bot":"Проверить выбранного чат-бота","Text shows but no voice (OpenAI)":"Текст есть, но голоса нет (OpenAI)","That's normal in Context only. Ask it what chat is saying, or":"В режиме «Только контекст» это нормально. Спросите, о чём говорят в чате, или","The Dock and overlay use the normal Social Stream session bridge. Messages are sent as":"Dock и оверлей используют обычный мост сессии Social Stream. Сообщения отправляются как","The avatar reads the message.":"Аватар читает сообщение.","The co-host can play Spotify, switch OBS scenes, or feature a chat message. All are off by default. OpenAI Realtime supports all three. SSN Configured LLM supports Spotify only. Other providers don't support these yet.":"Соведущий может воспроизводить Spotify, переключать сцены OBS или выводить сообщение чата на экран. Всё по умолчанию отключено. OpenAI Realtime поддерживает все три функции. SSN Configured LLM поддерживает только Spotify. Другие провайдеры пока их не поддерживают.","The co-host page: microphone, AI provider, instructions, and live chat status.":"Страница соведущего: микрофон, провайдер ИИ, инструкции и состояние живого чата.","The right-click menu doesn't work from the keyboard yet. Keyboard users can type or talk on":"Контекстное меню пока не работает с клавиатуры. Пользователи клавиатуры могут писать или говорить на","The stage overlay isn't open on the same session. The Primary chat bot overlay toggle doesn't affect this.":"Сценический оверлей не открыт в той же сессии. Переключатель основного оверлея чат-бота на это не влияет.","This uses":"Здесь используется","To check it can hear you, open":"Чтобы проверить, слышит ли он вас, откройте","Try Mini, Low reasoning, and Fast turn-taking. Compare the Latency line in Diagnostics.":"Попробуйте Mini, низкую глубину рассуждения и быстрое переключение реплик. Сравните строку задержки в Диагностике.","Try this":"Что попробовать","Turn it on in both the popup and Co-host Stream Controls. OBS needs at least one scene name.":"Включите это и во всплывающем окне, и в управлении трансляцией соведущего. Для OBS нужно хотя бы одно название сцены.","Turn on":"Включите","Turn on the Private Chat Bot option, and check Social Stream is running.":"Включите приватного чат-бота и убедитесь, что Social Stream работает.","Turn-taking speed":"Скорость переключения реплик","Two voices at once":"Два голоса одновременно","Two ways to use it":"Два способа использования","Use my own avatar":"Использовать свой аватар","Use the same":"Используйте то же значение","Viewers can't. It runs one tool per request, and can only pick scenes on your list. Featuring a message needs the Dock open. A “done” reply means the request was sent, not that OBS or the overlay finished it.":"Зрители этого делать не могут. На один запрос запускается один инструмент; доступны только сцены из вашего списка. Для вывода сообщения нужен открытый Dock. Ответ «готово» означает, что запрос отправлен, а не что OBS или оверлей завершили действие.","Voice co-host":"Голосовой соведущий","Voice co-host in 8 steps":"Голосовой соведущий за 8 шагов","Voice co-host setup":"Настройка голосового соведущего","Voice may not work. Typing, live chat, camera or screen, and AI replies can still work.":"Голос может не работать. Ввод текста, живой чат, камера или экран и ответы ИИ могут по-прежнему работать.","Voice without OpenAI":"Голос без OpenAI","Want its own audio track in OBS?":"Нужна отдельная аудиодорожка в OBS?","What it does":"Что делает","When the co-host page is already playing the voice, the overlay skips its own speech so you don't hear it twice.":"Если страница соведущего уже воспроизводит голос, оверлей пропускает собственную озвучку, чтобы звук не дублировался.","Where you run it":"Где запускается","Whisper, on your own computer. First use downloads about 42 MB. After that it works offline.":"Whisper на вашем компьютере. При первом использовании скачивается около 42 МБ. Затем работает офлайн.","Without OpenAI":"Без OpenAI","You don't need to turn on the Private Chat Bot option for this.":"Для этого не нужно включать приватного чат-бота.","Your standard key stays in Social Stream. The co-host page only gets a short-lived pass.":"Ваш обычный ключ остаётся в Social Stream. Страница соведущего получает только краткосрочный пропуск.","and turn on the same tools.":"и включите те же инструменты.","as Social Stream and it can see your live chat. Choose how under":"что и в Social Stream, чтобы он видел ваш живой чат. Выберите режим в разделе","as the popup. Set Live Chat to anything but Off.":"что и во всплывающем окне. Для живого чата выберите любое значение, кроме «Выключен».","audio separately. The overlay doesn't replay that WebRTC audio.":"захватывайте отдельно. Оверлей не воспроизводит это аудио WebRTC повторно.","below":"ниже","cohost.html control page showing media devices, AI provider settings, system instructions, and live chat status":"Страница управления cohost.html с устройствами мультимедиа, настройками провайдера ИИ, системными инструкциями и состоянием чата трансляции","connected to OBS, or use an OBS Browser Source with Full Permissions.":"подключённым к OBS или используйте браузерный источник OBS с полными разрешениями.","control what you hear.":"управляют тем, что вы слышите.","for this.":"для этого.","from the overlay link.":"из ссылки оверлея.","if it should speak.":"если он должен говорить.","instead.":"вместо этого.","is separate, and only shows for providers that can use your screen.":"работает отдельно и показывается только для провайдеров, которые могут использовать ваш экран.","link from the popup. Keep that link private.":"из всплывающего окна. Не раскрывайте эту ссылку.","link.":".","on":"на","on the co-host page and check the line appears.":"на странице соведущего и проверьте, появилась ли строка.","only feeds chat to the AI with OpenAI Realtime. Other providers watch the chat but don't pass it to the AI.":"передаёт чат ИИ только при использовании OpenAI Realtime. Другие провайдеры отслеживают чат, но не передают его ИИ.","or":"или","or a camera, OpenAI gets one picture each time you speak or type to it, not a live video. This can add cost and delay.":"или камеру, OpenAI получает один снимок при каждой вашей голосовой или текстовой реплике, а не живое видео. Это может увеличить стоимость и задержку.","payloads and targeted by label.":"с адресацией по метке.","pick another mode":"выберите другой режим","selected.":"включённым.","shows how long replies take to start. Network and OpenAI load can still vary.":"показывает, сколько времени проходит до начала ответа. Состояние сети и нагрузка OpenAI всё равно могут меняться.","shows total token use and how fast replies start.":"показывает общий расход токенов и скорость начала ответов.","stays empty (Chrome)":"остаётся пустым (Chrome)","stays empty (Desktop)":"остаётся пустым (настольное приложение)","stops sending your voice to the co-host.":"останавливает передачу вашего голоса соведущему.","the Dock asks the private chat bot in the background, shows the draft in the Dock, and only sends it to the overlay after you click Speak.":"Dock обращается к приватному чат-боту в фоне, показывает черновик и отправляет его в оверлей только после нажатия «Произнести».","the Dock sends the chosen message straight to":"Dock отправляет выбранное сообщение напрямую в","to OBS as a Browser Source for the avatar and speech bubble.":"в OBS как браузерный источник для аватара и облачка речи.","turns that off.":"отключает это.","your microphone, any screen or camera you pick, and the chat messages you share go to OpenAI. Viewers can't use chat to make the co-host run tools. The co-host link expires after 12 hours, only works for your session, and is removed from the address bar once the page loads.":"ваш микрофон, выбранные экран или камера и сообщения чата, которыми вы делитесь, передаются OpenAI. Зрители не могут через чат заставить соведущего запускать инструменты. Ссылка соведущего истекает через 12 часов, работает только в вашей сессии и удаляется из адресной строки после загрузки страницы."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/ai-cohost-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<a class="skip-link" href="#main-content">Перейти к основному содержимому</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Основная навигация"><a href="../index.html">Главная</a><a href="features.html">Возможности</a><a href="inspiration.html" class="site-priority-inspiration">Идеи</a><a href="download.html">Скачать</a><a href="guides.html">Руководства</a><a href="commands.html">Команды и API</a><a href="supported-sites.html">Поддерживаемые сайты</a><a href="overlay-gallery.html" class="site-priority-gallery">Галерея оверлеев</a><a href="services.html" class="site-priority-hire">Найти специалиста</a><a href="support.html">Поддержка</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Русский"><span aria-hidden="true">🌐 </span><span lang="ru">Русский</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/ai-cohost-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/ai-cohost-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/ai-cohost-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="ai-cohost-guide.html" lang="ru" hreflang="ru" aria-current="true">Русский</a><a class="site-language-link" href="../../fr/docs/ai-cohost-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/ai-cohost-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/ai-cohost-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/ai-cohost-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/ai-cohost-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/ai-cohost-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/ai-cohost-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/ai-cohost-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/ai-cohost-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/ai-cohost-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/ai-cohost-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/ai-cohost-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/ai-cohost-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Сменить тему"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Открыть меню навигации" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>ИИ-соведущий</h1>
+            <p>ИИ-помощник для разговора в эфире. Он также может читать чат.</p>
+        </div>
+    </section>
+
+    <main class="guide-section" id="main-content">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="На этой странице">
+                <a href="#two-ways">Два способа использования</a>
+                <a href="#voice-setup">Настройка голосового соведущего</a>
+                <a href="#chat-modes">Как использует чат</a>
+                <a href="#other-voice">Без OpenAI</a>
+                <a href="#dock-setup">Кнопки дока</a>
+                <a href="#speed">Скорость и стоимость</a>
+                <a href="#stream-controls">Управление трансляцией</a>
+                <a href="#problems">Устранение неполадок</a>
+                <a href="#link-options">Параметры ссылки</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="two-ways">Два способа использования</h2>
+                <div class="cohost-picker">
+                    <div><strong>Голосовой соведущий</strong><p>Говорите с ИИ вслух на <code>cohost.html</code>. Он отвечает вам и может обсудить чат по просьбе.</p><p class="example"><a href="#voice-setup">Настройка</a></p></div>
+                    <div><strong>Кнопки дока</strong><p>Нажмите правой кнопкой на сообщение в Dock. ИИ-аватар прочитает его или подготовит ответ либо лёгкую шутку, которую вы сначала одобрите.</p><p class="example"><a href="#dock-setup">Настройка</a></p></div>
+                </div>
+                <p>Оба показывают аватар и речевой пузырь в OBS через <strong>Сценический оверлей ИИ</strong>, <code>cohost-overlay.html</code>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-setup">Голосовой соведущий за 8 шагов</h2>
+                <p>Здесь используется <strong>OpenAI Realtime</strong>поэтому нужен ключ OpenAI API. Другие варианты: <a href="#other-voice">ниже</a>.</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>Во всплывающем окне Social Stream выберите <strong>ChatGPT API</strong>, вставьте ключ API проекта OpenAI и нажмите <strong>Проверить выбранного чат-бота</strong>.</li>
+                        <li>Откройте <code>cohost.html</code> из всплывающего окна. Не раскрывайте эту ссылку.</li>
+                        <li>Выберите <strong>OpenAI Realtime</strong>.</li>
+                        <li>Выберите микрофон, в который говорите. Оставьте <strong>Голосовой ответ (Audio Response)</strong> включённым.</li>
+                        <li>Нажмите <strong>Запустить соведущего (Start Co-host)</strong>.</li>
+                        <li>Оставьте <strong>Живой чат</strong> на <strong>Только контекст (Context only)</strong>. В любой момент спросите: «Что пишет чат?»</li>
+                        <li>В OBS захватывайте звук со страницы или приложения соведущего. Голос ИИ воспроизводится только там.</li>
+                        <li>Добавить <code>cohost-overlay.html?session=YOUR_SESSION_ID</code> в OBS как браузерный источник для аватара и облачка речи.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/guide-ai-cohost-controls.png" alt="Страница управления cohost.html с устройствами мультимедиа, настройками провайдера ИИ, системными инструкциями и состоянием чата трансляции" class="guide-image">
+                        <figcaption>Страница соведущего: микрофон, провайдер ИИ, инструкции и состояние живого чата.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>Нужна отдельная аудиодорожка в OBS?</strong> Выберите виртуальный аудиокабель в поле <strong>Вывод соведущего</strong>, если ваша система поддерживает. Оставьте речевой пузырь видимым, чтобы зрители без звука могли читать.</div>
+                <div class="guide-note"><strong>Дать ему доступ к экрану или камере?</strong> Необязательно. Видео запускается в режиме <strong>Без видео (No Video)</strong>. Если выбрать <strong>Демонстрация экрана (Screen Share)</strong> или камеру, OpenAI получает один снимок при каждой вашей голосовой или текстовой реплике, а не живое видео. Это может увеличить стоимость и задержку.</div>
+                <div class="warning-note"><strong>Конфиденциальность:</strong> ваш микрофон, выбранные экран или камера и сообщения чата, которыми вы делитесь, передаются OpenAI. Зрители не могут через чат заставить соведущего запускать инструменты. Ссылка соведущего истекает через 12 часов, работает только в вашей сессии и удаляется из адресной строки после загрузки страницы.</div>
+                <details class="guide-extra">
+                    <summary>Подробнее об OpenAI Realtime</summary>
+                    <ul>
+                        <li>Оплата списывается с вашего аккаунта OpenAI API. Это отдельный сервис от chatgpt.com, не участвующий в разговорах на сайте или в приложении ChatGPT.</li>
+                        <li>Ваш обычный ключ остаётся в Social Stream. Страница соведущего получает только краткосрочный пропуск.</li>
+                        <li>Для этого не нужно включать приватного чат-бота.</li>
+                        <li>Ответы ограничены 512 выходными токенами. <strong>Диагностика</strong> показывает общий расход токенов и скорость начала ответов.</li>
+                        <li>Если вы перебьёте его, он остановится и отбросит ещё не воспроизведённое аудио.</li>
+                        <li>Он хранит до 20 последних сообщений не более 90 секунд, включая сведения о пожертвованиях, спонсорстве, модераторах, событиях и канале. Затем забывает их.</li>
+                        <li>При обрыве соединения он переподключается сам и начинает новую сессию до достижения 60-минутного лимита OpenAI. Инструкции и настройки скорости сохраняются, но произнесённое вслух забывается.</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="chat-modes">Как использует ваш чат</h2>
+                <p>Откройте страницу соведущего с тем же <code>session</code> что и в Social Stream, чтобы он видел ваш живой чат. Выберите режим в разделе <strong>Живой чат</strong>.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Настройка живого чата</th><th>Что делает</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Настройка живого чата">Только контекст — отвечать по запросу (по умолчанию)</td><td data-label="Что делает">Помнит последние сообщения и молчит, пока вы не спросите о чате.</td></tr>
+                        <tr><td data-label="Настройка живого чата">Озвучивать ответы на вопросы и упоминания</td><td data-label="Что делает">Самостоятельно отвечает вслух на вопросы и упоминания.</td></tr>
+                        <tr><td data-label="Настройка живого чата">Озвучивать ответ на каждое сообщение</td><td data-label="Что делает">Отвечает вслух на каждое сообщение.</td></tr>
+                    </tbody>
+                </table>
+                <p>Ни один из этих вариантов не отправляет ответы в чат YouTube, Twitch или Kick. <strong>Только контекст (Context only)</strong> передаёт чат ИИ только при использовании OpenAI Realtime. Другие провайдеры отслеживают чат, но не передают его ИИ.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="other-voice">Голос без OpenAI</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Где запускается</th><th>Как он вас слышит</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Где запускается">Настольное приложение SSN</td><td data-label="Как он вас слышит">Whisper на вашем компьютере. При первом использовании скачивается около 42 МБ. Затем работает офлайн.</td></tr>
+                        <tr><td data-label="Где запускается">Chrome (ссылка расширения)</td><td data-label="Как он вас слышит">Распознавание речи Chrome. Может требовать интернет.</td></tr>
+                        <tr><td data-label="Где запускается">Другие браузеры</td><td data-label="Как он вас слышит">Голос может не работать. Ввод текста, живой чат, камера или экран и ответы ИИ могут по-прежнему работать.</td></tr>
+                    </tbody>
+                </table>
+                <p>Чтобы проверить, слышит ли он вас, откройте <strong>Диагностика</strong>. Должно быть указано <strong>Слушаю (Desktop Whisper)</strong> или <strong>Слушаю (OpenAI WebRTC)</strong>и ваши слова должны появиться в <strong>Распознано (Heard)</strong>.</p>
+                <h3>Бесплатный ИИ для проверки</h3>
+                <ol class="guide-steps">
+                    <li>Открыть <strong>Чат-боты и службы ИИ → Настроить поставщика LLM</strong>.</li>
+                    <li>Выберите <strong>Пробная размещённая модель SSN (SSN Hosted Trial LLM, экспериментальная)</strong>.</li>
+                    <li>Оставьте поля конечной точки, токена и модели пустыми.</li>
+                </ol>
+                <p>Во время пробного периода это бесплатно; сервис могут отключить или ограничить частоту запросов. Для постоянного использования добавьте свой токен или используйте локальный ИИ.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="dock-setup">Кнопки дока за 5 шагов</h2>
+                <ol class="guide-steps">
+                    <li>Откройте Dock: <code>dock.html?session=YOUR_SESSION_ID</code>.</li>
+                    <li>Добавьте сценический оверлей в OBS: <code>cohost-overlay.html?session=YOUR_SESSION_ID</code>. Добавьте <code>&amp;tts</code> если он должен говорить.</li>
+                    <li>Настройте провайдера ИИ во всплывающем окне. Для быстрой проверки используйте <a href="#other-voice">Пробная размещённая модель SSN (SSN Hosted Trial LLM)</a>.</li>
+                    <li>Включите <strong>Чат-боты и службы ИИ → Чат-бот — Личный интерфейс → Включить личного чат-бота</strong>.</li>
+                    <li>Нажмите правой кнопкой на сообщение в Dock и выберите <strong>Соведущий (Co-host)</strong>.</li>
+                </ol>
+                <div class="guide-note"><strong>Нет меню соведущего?</strong> Оно появляется, только когда Dock обнаружит сценический оверлей в той же сессии.</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Кнопка</th><th>Что делает</th><th>Требуется</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Кнопка">Озвучить через соведущего (Read on Co-host)</td><td data-label="Что делает">Аватар читает сообщение.</td><td data-label="Требуется">Сценический оверлей подключён. ИИ не нужен.</td></tr>
+                        <tr><td data-label="Кнопка">Ответить (Answer)</td><td data-label="Что делает">Готовит короткий ответ для вашего одобрения.</td><td data-label="Требуется">Включённый приватный чат-бот и провайдер ИИ.</td></tr>
+                        <tr><td data-label="Кнопка">Лёгкая подколка (Light Roast)</td><td data-label="Что делает">Готовит короткую безобидную шутку-поддёвку для одобрения.</td><td data-label="Требуется">Включённый приватный чат-бот и провайдер ИИ.</td></tr>
+                        <tr><td data-label="Кнопка">Озвучить (Speak)</td><td data-label="Что делает">Отправляет одобренный черновик в оверлей.</td><td data-label="Требуется">Черновик.</td></tr>
+                        <tr><td data-label="Кнопка">Копировать</td><td data-label="Что делает">Копирует черновик без отправки.</td><td data-label="Требуется">Черновик.</td></tr>
+                    </tbody>
+                </table>
+                <p>Черновики ИИ озвучиваются только после нажатия <strong>Озвучить (Speak)</strong>. Подтверждение происходит в доке вне эфира.</p>
+                <p>Контекстное меню пока не работает с клавиатуры. Пользователи клавиатуры могут писать или говорить на <code>cohost.html</code> вместо этого.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="speed">Скорость, качество и стоимость (OpenAI)</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Настройка</th><th>Быстрее и дешевле</th><th>Умнее, медленнее</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Настройка">Модель</td><td data-label="Быстрее и дешевле">Mini</td><td data-label="Умнее, медленнее">Полное качество (дороже)</td></tr>
+                        <tr><td data-label="Настройка">Глубина рассуждения</td><td data-label="Быстрее и дешевле">Минимальный или Низкий</td><td data-label="Умнее, медленнее">Высокий или очень высокий (дороже)</td></tr>
+                        <tr><td data-label="Настройка">Скорость переключения реплик</td><td data-label="Быстрее и дешевле">Быстрый: ждёт около 2 секунд после окончания речи. Может перебить на паузе.</td><td data-label="Умнее, медленнее">Сбалансированный: около 4 секунд. Терпеливый: около 8.</td></tr>
+                    </tbody>
+                </table>
+                <p>Изменения глубины рассуждения применяются даже при активном соединении. <strong>Диагностика</strong> показывает, сколько времени проходит до начала ответа. Состояние сети и нагрузка OpenAI всё равно могут меняться.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="stream-controls">Разрешите ему управлять трансляцией</h2>
+                <p>Соведущий может воспроизводить Spotify, переключать сцены OBS или выводить сообщение чата на экран. Всё по умолчанию отключено. OpenAI Realtime поддерживает все три функции. SSN Configured LLM поддерживает только Spotify. Другие провайдеры пока их не поддерживают.</p>
+                <ol class="guide-steps">
+                    <li>Во всплывающем окне Social Stream включите только нужные инструменты.</li>
+                    <li>Для OBS введите точные разрешённые имена сцен через запятую. Оставьте <code>actions.html</code> подключённым к OBS или используйте браузерный источник OBS с полными разрешениями.</li>
+                    <li>На странице <code>cohost.html</code>, откройте <strong>Управление трансляцией через соведущего (Co-host Stream Controls)</strong> и включите те же инструменты.</li>
+                    <li>Попросите вслух, например: «переключись на BRB», «выдели последнее сообщение» или «очисти выделенный чат».</li>
+                </ol>
+                <div class="warning-note"><strong>Только вы можете запускать инструменты.</strong> Зрители этого делать не могут. На один запрос запускается один инструмент; доступны только сцены из вашего списка. Для вывода сообщения нужен открытый Dock. Ответ «готово» означает, что запрос отправлен, а не что OBS или оверлей завершили действие.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">Устранение неполадок</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Проблема</th><th>Что попробовать</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Проблема">В Dock нет меню соведущего</td><td data-label="Что попробовать">Сценический оверлей не открыт в той же сессии. Переключатель основного оверлея чат-бота на это не влияет.</td></tr>
+                        <tr><td data-label="Проблема">Ответ или лёгкая шутка недоступны</td><td data-label="Что попробовать">Включите приватного чат-бота и убедитесь, что Social Stream работает.</td></tr>
+                        <tr><td data-label="Проблема">Тайм-аут ответа, лёгкой шутки или настроенной LLM SSN</td><td data-label="Что попробовать">Проверьте, что Social Stream включён, сеанс совпадает, личный чат-бот включён и поставщик ИИ доступен.</td></tr>
+                        <tr><td data-label="Проблема">Страница соведущего не видит чат</td><td data-label="Что попробовать">Используйте то же значение <code>session</code> что и во всплывающем окне. Для живого чата выберите любое значение, кроме «Выключен».</td></tr>
+                        <tr><td data-label="Проблема">Он знает содержимое чата, но молчит</td><td data-label="Что попробовать">В режиме «Только контекст» это нормально. Спросите, о чём говорят в чате, или <a href="#chat-modes">выберите другой режим</a>.</td></tr>
+                        <tr><td data-label="Проблема">В OBS ничего не видно</td><td data-label="Что попробовать">Нажмите <strong>Проверить оверлей (Test overlay)</strong> на странице соведущего и проверьте, появилась ли строка.</td></tr>
+                        <tr><td data-label="Проблема">Текст есть, но голоса нет (OpenAI)</td><td data-label="Что попробовать">Проверьте <strong>Голосовой ответ (Audio Response)</strong>, разрешение браузера на звук и захват аудио страницы соведущего в OBS. Не используйте <code>&amp;tts</code> для этого.</td></tr>
+                        <tr><td data-label="Проблема">Два голоса одновременно</td><td data-label="Что попробовать">Удалить <code>&amp;forcetts</code> из ссылки оверлея.</td></tr>
+                        <tr><td data-label="Проблема"><strong>Распознано (Heard)</strong> остаётся пустым (настольное приложение)</td><td data-label="Что попробовать">Проверьте, что микрофон не выключен, и дождитесь первой загрузки.</td></tr>
+                        <tr><td data-label="Проблема"><strong>Распознано (Heard)</strong> остаётся пустым (Chrome)</td><td data-label="Что попробовать">Разрешите микрофон, проверьте микрофон по умолчанию, интернет и доступность распознавания речи Chrome.</td></tr>
+                        <tr><td data-label="Проблема">Ответы приходят медленно</td><td data-label="Что попробовать">Попробуйте Mini, низкую глубину рассуждения и быстрое переключение реплик. Сравните строку задержки в Диагностике.</td></tr>
+                        <tr><td data-label="Проблема">OpenAI постоянно отключается</td><td data-label="Что попробовать">Оставьте его работать, пока он повторяет попытки. Диагностика покажет причину сбоя.</td></tr>
+                        <tr><td data-label="Проблема">Нет инструмента управления эфиром</td><td data-label="Что попробовать">Включите это и во всплывающем окне, и в управлении трансляцией соведущего. Для OBS нужно хотя бы одно название сцены.</td></tr>
+                        <tr><td data-label="Проблема">Пробный бесплатный ИИ перестал отвечать</td><td data-label="Что попробовать">Сервис может быть отключён или ограничивать частоту запросов. Используйте собственный токен, Ollama или Custom API.</td></tr>
+                        <tr><td data-label="Проблема">Локальная Gemma не скачивается</td><td data-label="Что попробовать">Укажите в качестве хоста ресурсов свою копию файлов Gemma.</td></tr>
+                        <tr><td data-label="Проблема">Открыто несколько оверлеев</td><td data-label="Что попробовать">Убедитесь, что метка оверлея совпадает с целью в Dock. По умолчанию это <code>cohost-overlay</code>.</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra">
+                    <summary>Кнопки отключения звука и громкости</summary>
+                    <ul>
+                        <li><strong>Выключить микрофон</strong> останавливает передачу вашего голоса соведущему.</li>
+                        <li><strong>Выключить голос соведущего</strong>, ползунок громкости, выбор выхода и <strong>Остановить озвучивание</strong> управляют тем, что вы слышите.</li>
+                        <li><strong>Выключить передаваемый системный звук</strong> работает отдельно и показывается только для провайдеров, которые могут использовать ваш экран.</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="link-options">Параметры ссылки оверлея</h2>
+                <p>Добавьте это в конец <code>cohost-overlay.html</code> .</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Я хочу…</th><th>Добавить к ссылке</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Я хочу">Подключить к моему Social Stream (обязательно)</td><td data-label="Добавить к ссылке"><code>?session=YOUR_SESSION_ID</code></td></tr>
+                        <tr><td data-label="Я хочу">Озвучивать оверлей (сценарий дока)</td><td data-label="Добавить к ссылке"><code>&amp;tts</code> или <code>&amp;speak=1</code></td></tr>
+                        <tr><td data-label="Я хочу">Принудительно озвучивать оверлей, когда говорит страница соведущего (добавляет второй голос)</td><td data-label="Добавить к ссылке"><code>&amp;forcetts</code></td></tr>
+                        <tr><td data-label="Я хочу">Задайте метку оверлея</td><td data-label="Добавить к ссылке"><code>&amp;label=cohost-overlay</code></td></tr>
+                        <tr><td data-label="Я хочу">Изменить отображаемое имя</td><td data-label="Добавить к ссылке"><code>&amp;name=NinjaBot</code></td></tr>
+                        <tr><td data-label="Я хочу">Использовать свой аватар</td><td data-label="Добавить к ссылке"><code>&amp;avatar=https://&hellip;</code></td></tr>
+                        <tr><td data-label="Я хочу">Переместить</td><td data-label="Добавить к ссылке"><code>&amp;position=bottom-right</code></td></tr>
+                        <tr><td data-label="Я хочу">Увеличить или уменьшить</td><td data-label="Добавить к ссылке"><code>&amp;scale=1.2</code></td></tr>
+                        <tr><td data-label="Я хочу">Показать состояние соединения</td><td data-label="Добавить к ссылке"><code>&amp;status</code></td></tr>
+                    </tbody>
+                </table>
+                <p>Если страница соведущего уже воспроизводит голос, оверлей пропускает собственную озвучку, чтобы звук не дублировался. <code>&amp;forcetts</code> отключает это.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="how-it-works">Как общаются страницы (для разработчиков)</h2>
+                <details class="guide-extra">
+                    <summary>Формат сообщений и устройство системы</summary>
+                    <p>Dock и оверлей используют обычный мост сессии Social Stream. Сообщения отправляются как <code>overlayNinja</code> с адресацией по метке.</p>
+                    <div class="cohost-flow">
+                        <p><strong>Озвучить через соведущего (Read on Co-host):</strong> Dock отправляет выбранное сообщение напрямую в <code>cohost-overlay.html</code>.</p>
+                        <p><strong>Ответить / Лёгкая подколка (Answer / Light Roast):</strong> Dock обращается к приватному чат-боту в фоне, показывает черновик и отправляет его в оверлей только после нажатия «Произнести».</p>
+                    </div>
+                    <pre class="cohost-code">{
+  "action": "cohostOverlay",
+  "target": "cohost-overlay",
+  "meta": {
+    "command": "say",
+    "text": "The line the avatar should say",
+    "speak": true,
+    "emotion": "happy"
+  }
+}</pre>
+                    <ul>
+                        <li>В текстовых сценариях дока оверлей даёт изображение и необязательный голос TTS. Для голоса OpenAI захватывайте <code>cohost.html</code> захватывайте отдельно. Оверлей не воспроизводит это аудио WebRTC повторно.</li>
+                        <li>Дополнительные детали команды помещаются в <code>meta</code>чтобы формат данных оставался предсказуемым для оверлеев и автоматизации.</li>
+                    </ul>
+                </details>
+            </div>
+        </div>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Лицензия GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

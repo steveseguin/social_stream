@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ar" data-site-root="../../" data-site-language="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="أنشئ أتمتة Social Stream Ninja باستخدام مشغّلات Event Flow وشروطه وإجراءاته. اربط أحداث الدردشة المباشرة بالأصوات والوسائط والمكافآت وعناصر التحكم في OBS.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ar_AR">
+    <meta property="og:url" content="https://socialstream.ninja/ar/actions/event-flow-guide.html">
+    <meta property="og:title" content="دليل Event Flow - Social Stream Ninja">
+    <meta property="og:description" content="أنشئ أتمتة Social Stream Ninja باستخدام مشغّلات Event Flow وشروطه وإجراءاته. اربط أحداث الدردشة المباشرة بالأصوات والوسائط والمكافآت وعناصر التحكم في OBS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="شعار Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ar/actions/event-flow-guide.html">
+    <meta name="twitter:title" content="دليل Event Flow - Social Stream Ninja">
+    <meta name="twitter:description" content="أنشئ أتمتة Social Stream Ninja باستخدام مشغّلات Event Flow وشروطه وإجراءاته. اربط أحداث الدردشة المباشرة بالأصوات والوسائط والمكافآت وعناصر التحكم في OBS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="شعار Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل Event Flow - Social Stream Ninja</title>
+    <link rel="canonical" href="https://socialstream.ninja/ar/actions/event-flow-guide.html">
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1f2937 40%, #312e81 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .guide-shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(4, 12, 38, 0.5);
+        }
+        header {
+            background: radial-gradient(circle at top left, rgba(109,40,217,0.15), transparent),
+                        linear-gradient(135deg, #4c1d95, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+        }
+        header p {
+            font-size: 1.2rem;
+            max-width: 640px;
+            opacity: 0.92;
+        }
+        .content {
+            padding: 45px 55px 65px;
+        }
+        section {
+            margin-bottom: 60px;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 18px;
+            color: #312e81;
+        }
+        h3 {
+            font-size: 1.4rem;
+            margin: 25px 0 10px;
+            color: #4338ca;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 25px;
+            margin: 15px 0;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .panel {
+            background: #f7f7fb;
+            border: 1px solid rgba(67,56,202,0.12);
+            border-radius: 12px;
+            padding: 22px 25px;
+            margin: 22px 0;
+        }
+        .panel strong {
+            color: #312e81;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            padding: 22px;
+            border-radius: 14px;
+            margin: 25px 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 22px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+        }
+        .card h4 {
+            margin-bottom: 12px;
+            color: #4c1d95;
+        }
+        code {
+            background: rgba(226,232,240,0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .callout {
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            border-left: 4px solid;
+        }
+        .callout.tip { background: #eef2ff; border-color: #4338ca; }
+        .callout.warn { background: #fef3c7; border-color: #d97706; }
+        .callout.danger { background: #fee2e2; border-color: #b91c1c; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+        .var-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            font-size: 0.95rem;
+        }
+        .var-table th, .var-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .var-table th {
+            background: #f7f7fb;
+            color: #312e81;
+            font-weight: 600;
+        }
+        .var-table tr:hover {
+            background: rgba(99,102,241,0.04);
+        }
+        .var-table code {
+            background: rgba(99,102,241,0.1);
+            color: #4338ca;
+        }
+        /* ── Custom JS section additions ── */
+        .code-js {
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 18px 22px;
+            border-radius: 10px;
+            margin: 16px 0;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.88rem;
+            line-height: 1.65;
+            overflow-x: auto;
+            white-space: pre;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .snippet-block {
+            margin: 28px 0;
+            border: 1px solid rgba(67,56,202,0.15);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .snippet-label {
+            background: rgba(67,56,202,0.07);
+            padding: 10px 18px;
+            font-weight: 600;
+            color: #312e81;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .snippet-desc {
+            padding: 10px 18px 0;
+            font-size: 0.93rem;
+            color: #475569;
+        }
+        .snippet-block .code-js {
+            border-radius: 0;
+            margin: 0;
+            border: none;
+            border-top: 1px solid rgba(0,0,0,0.15);
+        }
+        figure.screenshot {
+            margin: 24px 0;
+            text-align: center;
+        }
+        figure.screenshot img {
+            max-width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(15,23,42,0.12);
+            box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+        }
+        figure.screenshot figcaption {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #64748b;
+            font-style: italic;
+        }
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 24px 0;
+            align-items: start;
+        }
+        .desktop-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #312e81;
+            color: #e0e7ff;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            padding: 3px 10px;
+            border-radius: 999px;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        .snippet-heading {
+            margin: 28px 0 4px;
+            color: #4c1d95;
+        }
+        @media (max-width: 700px) {
+            header, .content { padding: 35px 20px; }
+            h1 { font-size: 2rem; }
+            .diagram { font-size: 0.85rem; }
+            .var-table { font-size: 0.85rem; display: block; max-width: 100%; overflow-x: auto; }
+            .var-table th, .var-table td { padding: 8px 10px; }
+            .panel code { overflow-wrap: anywhere; }
+            .two-col { grid-template-columns: 1fr; }
+            .code-js { font-size: 0.8rem; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="ar">
+<script id="ssn-site-language" type="application/json">{"language":"ar","page":"actions/event-flow-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"التبديل إلى السمة الفاتحة","Switch to dark theme":"التبديل إلى السمة الداكنة","Light mode":"الوضع الفاتح","Dark mode":"الوضع الداكن","Open navigation menu":"فتح قائمة التنقل","Close navigation menu":"إغلاق قائمة التنقل","Copy this document as Markdown to the clipboard":"نسخ هذا المستند بصيغة Markdown إلى الحافظة","Copy Markdown":"نسخ Markdown","Copying…":"جارٍ النسخ…","Markdown copied":"تم نسخ Markdown","Copy failed":"تعذّر النسخ","Copy comprehensive Markdown for an AI assistant":"نسخ Markdown شامل لمساعد ذكاء اصطناعي","Copy this documentation page as Markdown for an AI assistant":"نسخ صفحة التوثيق هذه بصيغة Markdown لمساعد ذكاء اصطناعي"},"strings":{"\"Desktop only\"":"«سطح المكتب فقط»","\"chat message contains !raffle\").":"«رسالة الدردشة تحتوي على !raffle»).","$5.00, 500 bits":"$5.00، 500 bits","(Send Test Event) before pushing a flow live.":"(Send Test Event) قبل تفعيل التدفق للاستخدام المباشر.","(Twitch Message, Timers, Manual Trigger, etc.) ignore upstream input. They generate their own payload and always emit":"(Twitch Message وTimers وManual Trigger وغيرها) تتجاهل المدخلات السابقة — فهي تنشئ حمولتها الخاصة وتُصدر دائمًا","(action). They are the escape hatch for anything the built-in nodes cannot express.":"(إجراء). وهما الوسيلة المتاحة لكل ما لا تستطيع العقد المدمجة التعبير عنه.","(counters, toggles, timers) to track context between events.":"(العدادات ومفاتيح التبديل والمؤقتات) لتتبع السياق بين الأحداث.","(current flow result state),":"(حالة نتيجة التدفق الحالية)،","(left ports) expect the message context.":"(المنافذ اليسرى) تتوقع سياق الرسالة.","(paste into the action's JavaScript Code field):":"(الصقه في حقل JavaScript Code للإجراء):","(paste into the trigger's JavaScript Code field):":"(الصقه في حقل JavaScript Code للمشغّل):","(platform, type, chatname, chatmessage, etc.). Attach custom data under":"(platform وtype وchatname وchatmessage وغيرها). أرفق البيانات المخصصة ضمن","(right ports) emit the same context plus any edits.":"(المنافذ اليمنى) تُخرج السياق نفسه مع أي تعديلات.","(see":"(راجع","(the event payload),":"(حمولة الحدث)،","(top-right of the editor) to send a synthetic message through the pipeline without needing a live stream. Set the chatname to a subscriber, add a message like":"(أعلى يمين المحرر) لإرسال رسالة اصطناعية عبر المسار دون الحاجة إلى بث مباشر. عيّن chatname إلى اسم مشترك، وأضف رسالة مثل","(trigger) and":"(مشغّل) و","(trigger) or a no-op (action) and logs to the DevTools console. The flow doesn't crash.":"(للمشغّل) أو لا ينفّذ شيئًا (للإجراء)، ويسجّل الخطأ في وحدة تحكم DevTools — ولا يتعطل التدفق.","). Treat imported flow files like executable code. Only import flows from sources you trust.":"). تعامل مع ملفات التدفق المستوردة كشيفرة قابلة للتنفيذ — لا تستورد إلا تدفقات من مصادر تثق بها.",", a new line, then":"، ثم سطر جديد، ثم",", and":"، و",", and confirm the Relay Chat destination receives the reformatted string.":"، وتأكد من أن وجهة Relay Chat تتلقى السلسلة النصية المعاد تنسيقها.",", and the OBS controls need a rendering surface. That surface is the Flow Actions overlay page served from":"، وعناصر تحكم OBS تحتاج إلى واجهة عرض. وهذه الواجهة هي صفحة تراكب Flow Actions المقدمة من",", not when it happens:":"، وليس متى يحدث:",", or":"، أو",", or leave it blank to use the Flow Actions TTS default.":"، أو اتركه فارغًا لاستخدام إعداد TTS الافتراضي في Flow Actions.",", plus":"، بالإضافة إلى",", so the output is":"، لذا يكون الخرج",", source / filter / mute / text actions will not work until OBS / obs-websocket is upgraded.":"، فلن تعمل إجراءات المصدر والمرشح والكتم والنص إلى أن تتم ترقية OBS أو obs-websocket.",", then return":"، ثم أرجع",". A flow built only from actions chained together looks valid but is permanently idle, because nothing ever starts the chain. Node names describe what the node":". يبدو التدفق المكوّن من إجراءات متسلسلة فقط صالحًا، لكنه يظل خاملًا لأن لا شيء يبدأ السلسلة. تصف أسماء العقد ما",". Connect that wire into NOT to invert the result.":". اربط ذلك السلك بـ NOT لعكس النتيجة.",". Drag a wire from the colored output you need (green = true, gray/red = false) to the next node.":". اسحب سلكًا من المخرج الملون المطلوب (الأخضر = true، والرمادي أو الأحمر = false) إلى العقدة التالية.",". Each flow can subscribe to multiple platforms at once.":". يمكن لكل تدفق الاشتراك في منصات متعددة في الوقت نفسه.",". Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set.":". Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set.",". If you're accepting shared flows from others, audit the JS before activating them.":". إذا كنت تقبل تدفقات مشتركة من الآخرين، فراجع JavaScript قبل تفعيلها.",". Keep it running in your broadcasting software (OBS/Streamer.bot browser docks/etc.) so Event Flow actions have somewhere to appear.":". أبقِه يعمل في برنامج البث لديك (OBS أو لوحات متصفح Streamer.bot أو غيرها) حتى تجد إجراءات Event Flow موضعًا للظهور.",". Keep it wired to something meaningful or disable the node so it does not accidentally unblock a flow.":". أبقِها موصولة بشيء ذي معنى أو عطّل العقدة حتى لا ترفع الحظر عن تدفق عن طريق الخطأ.",". Open the editor through the":". افتح المحرر من خلال",". Paste it into an OBS Browser Source (1920×1080 suggested) or open it in any overlay browser.":". الصقه في مصدر متصفح OBS (يُقترح 1920×1080) أو افتحه في أي متصفح للتراكبات.",". Returning the Promise lets Event Flow wait for submission and report errors.":". يتيح إرجاع Promise لـ Event Flow انتظار الإرسال والإبلاغ عن الأخطاء.",". SSApp queues the job silently through the native Windows printer API and uses those saved settings. A flow can override them with options such as":". يضع SSApp المهمة في قائمة الانتظار بصمت عبر واجهة الطباعة الأصلية في Windows ويستخدم تلك الإعدادات المحفوظة. يمكن للتدفق تجاوزها بخيارات مثل",". Scene switching works here, and recording / streaming / replay buffer actions can fall back to it.":". يعمل تبديل المشاهد هنا، ويمكن لإجراءات التسجيل والبث ومخزن الإعادة استخدامه كبديل احتياطي.",". See the":". راجع",". The":".",". The fields below are always available; platform-specific events may include additional ones.":". الحقول أدناه متاحة دائمًا؛ وقد تتضمن أحداث المنصات حقولًا إضافية.",". They can still output an updated payload if you want to keep chaining actions.":". ويمكنها مع ذلك إخراج حمولة محدثة إذا أردت مواصلة سلسلة الإجراءات.",". This controls display on re-ingest, not sending. Follow the":". يتحكم هذا في العرض عند إعادة الاستقبال، لا في الإرسال. اتبع",". Use two relay actions when a message should reach both variants. See":". استخدم إجراءَي ترحيل عندما ينبغي أن تصل الرسالة إلى كلا النوعين. راجع","0. Quick Orientation":"0. نظرة سريعة","1. What Moves Through a Node?":"1. ما الذي يمر عبر العقدة؟","2. Logic Node Cheatsheet":"2. مرجع سريع للعقد المنطقية","3. Example Micro-Flows":"3. أمثلة تدفقات مصغرة","4. Preventing Echoes, Loops, and Relay Feedback":"4. منع الصدى والحلقات والتغذية الراجعة للترحيل","5. Inputs, Outputs, and Practical Questions":"5. المدخلات والمخرجات وأسئلة عملية","6. Template Variables Reference":"6. مرجع متغيرات القوالب","7. Best Practices Checklist":"7. قائمة أفضل الممارسات","8. Further Exploration":"8. استكشاف إضافي","9. Custom JavaScript":"9. JavaScript مخصص",": add a standard Relay Chat node after the action and configure it to point at your Discord (or other) destination. No custom code is needed here. The reformatted":": أضف عقدة Relay Chat عادية بعد الإجراء واضبطها لتشير إلى وجهة Discord أو وجهة أخرى. لا حاجة إلى شيفرة مخصصة هنا — فالحقل المعاد تنسيقه",": named triggers, a starter template, workflow discovery, extra data, HTTP/WebSocket/P2P examples, and dial gestures.":": مشغّلات مسماة وقالب بداية واكتشاف مسارات العمل وبيانات إضافية وأمثلة HTTP وWebSocket وP2P وإيماءات القرص.","; see":"— راجع","; with no trigger on top, nothing starts the chain.":"؛ فمن دون مشغّل في البداية، لا شيء يبدأ السلسلة.","= continue,":"= متابعة،","= stop). Use":"= إيقاف). استخدم","A 50/50 coin flip between two audio clips. The RANDOM gate rolls once per matching message: when it passes, sound A plays; when it fails, the NOT gate flips the result and the AND gate lets sound B play instead.":"اختيار عشوائي بنسبة 50/50 بين مقطعين صوتيين. تجري بوابة RANDOM اختيارًا واحدًا لكل رسالة مطابقة: عندما يمر الاختبار، يعمل الصوت A؛ وعندما يفشل، تعكس بوابة NOT النتيجة وتسمح بوابة AND بتشغيل الصوت B بدلًا منه.","A Custom Code trigger (blue) and Execute Custom Code action (green) placed on the canvas. Wire the trigger's output port to the action's input port to connect them.":"مشغّل Custom Code (أزرق) وإجراء Execute Custom Code (أخضر) موضوعان على مساحة العمل. اربط منفذ خرج المشغّل بمنفذ دخل الإجراء لتوصيلهما.","A bare NOT would output":"ستُخرج عقدة NOT وحدها","A floating NOT node will still output":"ستظل عقدة NOT غير الموصولة تُخرج","A recalculated gate bit (logic nodes) or passthrough bit (actions).":"قيمة بوابة منطقية يُعاد حسابها (للعقد المنطقية) أو تُمرَّر كما هي (للإجراءات).","A reflection is an outgoing message captured again from a destination chat. Current Relay Chat actions skip these recognized reflections; there is no separate No Reflections checkbox. To hide or limit their display in the Dock and overlays, use a":"الرسالة المرتدة هي رسالة صادرة تُلتقط مجددًا من دردشة الوجهة. تتخطى إجراءات Relay Chat الحالية هذه الرسائل المرتدة المعروفة؛ ولا يوجد مربع اختيار منفصل باسم No Reflections. لإخفاء عرضها أو تقييده في لوحة الإرساء والتراكبات، استخدم","A runtime error in your code returns":"يُرجع خطأ وقت التشغيل في شيفرتك","A. Auto-reply Unless the Message Is a Command":"A. الرد التلقائي ما لم تكن الرسالة أمرًا","AND":"AND","Action Nodes":"عقد الإجراءات","Action code can call":"يمكن لشيفرة الإجراء استدعاء","Action nodes (green) never run on their own. They only fire when a trigger node (blue) above them evaluates":"لا تعمل عقد الإجراءات (الخضراء) من تلقاء نفسها — ولا تُنفَّذ إلا عندما تكون نتيجة عقدة مشغّل (زرقاء) سابقة لها","Action panel showing Execute Custom Code under the Integrations group":"لوحة الإجراءات تعرض Execute Custom Code ضمن مجموعة Integrations","Action properties. Return an object to merge changes back into the flow result.":"خصائص الإجراء. أرجع كائنًا لدمج التغييرات في نتيجة التدفق.","Action snippets: return":"مقاطع شيفرة الإجراءات — أرجع","Actions":"الإجراءات","Add a visual indicator at the end of every message that passes through this action.":"أضف مؤشرًا مرئيًا إلى نهاية كل رسالة تمر عبر هذا الإجراء.","Additional context":"سياق إضافي","Advanced":"متقدم (Advanced)","Advanced Access Level":"مستوى الوصول المتقدم (Advanced Access Level)","Alias":"الاسم البديل","Allow All":"السماح بالكل (Allow All)","Allow First":"السماح بالأولى (Allow First)","An error of type":"خطأ من النوع","Any Message":"أي رسالة (Any Message)","Any Message trigger connected to Feature Message and Speak Text actions":"مشغّل Any Message متصل بإجراءَي Feature Message وSpeak Text","Any Message trigger connected to a Play Audio Clip action":"مشغّل Any Message متصل بإجراء Play Audio Clip","Any node with a green output emits":"أي عقدة ذات مخرج أخضر تُصدر","Append a badge or tag to the message":"إلحاق شارة أو وسم بالرسالة","Arbitrary structured data attached to the event":"بيانات منظمة مخصصة مرفقة بالحدث","Attach routing metadata for downstream nodes":"إرفاق بيانات وصفية للتوجيه للعقد اللاحقة","Attached image URL":"رابط الصورة المرفقة","Available:":"المتاح:","Avoid duplicate relay systems.":"تجنب أنظمة الترحيل المكررة.","B. Require Multiple Checks with AND":"B. اشتراط فحوص متعددة باستخدام AND","Block All":"حظر الكل (Block All)","Block message conditionally":"حظر الرسالة بشروط","Both nodes receive the full event payload as":"تستقبل العقدتان حمولة الحدث كاملة بوصفها","Break cycles intentionally.":"اقطع الدورات عمدًا.","Browser Source API:":"Browser Source API:","Build Social Stream Ninja automations with Event Flow triggers, conditions and actions. Connect live chat events to sounds, media, rewards and OBS controls.":"أنشئ أتمتة Social Stream Ninja باستخدام مشغّلات Event Flow وشروطه وإجراءاته. اربط أحداث الدردشة المباشرة بالأصوات والوسائط والمكافآت وعناصر التحكم في OBS.","Build loyalty-based commands, keyword games, or raffle gating with AND/OR/NOT logic.":"أنشئ أوامر قائمة على الولاء أو ألعاب كلمات مفتاحية أو بوابات للسحب باستخدام منطق AND/OR/NOT.","Build reliable automations for Social Stream Ninja. This guide walks through the basics, logic nodes, signal flow, and the practical tricks that creators ask about most (like avoiding chat echoes and knowing when to stack AND/NOT blocks).":"أنشئ أتمتة موثوقة لـ Social Stream Ninja. يشرح هذا الدليل الأساسيات والعقد المنطقية وتدفق الإشارات والحيل العملية التي يسأل عنها منشئو المحتوى كثيرًا (مثل تجنب صدى الدردشة ومعرفة متى تُجمَّع كتل AND وNOT).","C. NOT Node to Block Repeat Alerts":"C. عقدة NOT لمنع التنبيهات المتكررة","Call Webhook JSON:":"JSON لإجراء Call Webhook:","Can a node emit a payload even if it returns false?":"هل تستطيع عقدة إخراج حمولة حتى إذا أرجعت false؟","Can each Speak Text node use a different voice?":"هل تستطيع كل عقدة Speak Text استخدام صوت مختلف؟","Canvas showing a Custom Code trigger and Execute Custom Code action side by side":"مساحة عمل تعرض مشغّل Custom Code وإجراء Execute Custom Code جنبًا إلى جنب","Chat message text":"نص رسالة الدردشة","Check the":"تحقق من","Choose":"اختر","Choose Local File":"اختيار ملف محلي (Choose Local File)","Click":"انقر على","Click this button:":"انقر على الزر:","Closing the Flow Actions page pauses every overlay/audio/OBS action in Event Flow. Hide it or put it on a separate monitor instead of closing it outright.":"يؤدي إغلاق صفحة Flow Actions إلى إيقاف كل إجراءات التراكب والصوت وOBS في Event Flow مؤقتًا. أخفِها أو ضعها على شاشة منفصلة بدلًا من إغلاقها تمامًا.","Combine":"ادمج","Combine role check and message content in a single expression that no built-in trigger covers.":"اجمع فحص الدور ومحتوى الرسالة في تعبير واحد لا يغطيه أي مشغّل مدمج.","Common Q & A":"أسئلة وأجوبة شائعة","Complete example: VIP feature request bot":"مثال كامل — بوت طلبات إضافة ميزات للمشاهدين المميزين (VIP)","Condition, Compare, Regex, and Logic nodes emit two ports.":"تُخرج عقد Condition وCompare وRegex وLogic منفذين.","Confirm":"تأكد من أن","Continue the flow only when the message contains a specific word or phrase.":"تابع التدفق فقط عندما تحتوي الرسالة على كلمة أو عبارة محددة.","Convert the standard YouTube donation label to EUR, exclude Jewels/Gifts, and select one sound or visual range.":"حوّل تسمية تبرع YouTube القياسية إلى EUR، واستبعد Jewels/Gifts، واختر نطاقًا واحدًا للصوت أو التأثير المرئي.","CoolViewer123":"CoolViewer123","Copy Local Flow Actions URL for OBS":"نسخ رابط Flow Actions المحلي لـOBS ‏(Copy Local Flow Actions URL for OBS)","Copy any of these into the JavaScript Code textarea of the matching node type.":"انسخ أيًا من هذه المقاطع إلى مساحة نص JavaScript Code في نوع العقدة المطابق.","Core Variables (backward compatible)":"المتغيرات الأساسية (متوافقة مع الإصدارات السابقة)","Counter target minus current value, clamped at 0":"هدف العداد ناقص قيمته الحالية، بحد أدنى 0","Counter target value":"قيمة هدف العداد","Currency conversion:":"تحويل العملات:","Current counter value after a Counter or Check Counter step":"قيمة العداد الحالية بعد خطوة Counter أو Check Counter","Custom Code":"شيفرة مخصصة (Custom Code)","Custom Code lives under the":"يوجد Custom Code ضمن","Custom Code trigger properties panel showing the JavaScript code editor":"لوحة خصائص مشغّل Custom Code تعرض محرر JavaScript","Custom Code: Trigger node":"Custom Code — عقدة مشغّل","Custom JavaScript nodes":"عقد JavaScript المخصصة","Custom JavaScript nodes are disabled in the browser extension because Chrome's Manifest V3 Content Security Policy blocks":"عقد JavaScript المخصصة معطلة في إضافة المتصفح لأن سياسة أمان المحتوى في Manifest V3 لـ Chrome تحظر","Custom code runs with renderer-process privileges.":"تعمل الشيفرة المخصصة بصلاحيات عملية العرض.","D. Randomly Play One of Two Sounds":"D. تشغيل أحد صوتين عشوائيًا","Data type":"نوع البيانات","Default behavior:":"السلوك الافتراضي:","Description":"الوصف","Desktop app required.":"يتطلب تطبيق سطح المكتب.","Disable global Relay all when using equivalent Event Flow routes, and check for other services bridging the same chats. Custom metadata is not guaranteed to survive a trip through a platform chat.":"عطّل خيار Relay all العام عند استخدام مسارات Event Flow المكافئة، وتحقق من الخدمات الأخرى التي تربط الدردشات نفسها. لا يُضمن بقاء البيانات الوصفية المخصصة بعد المرور عبر دردشة منصة.","Discord Call Webhook:":"Call Webhook في Discord:","Display Media Overlay":"عرض تراكب وسائط (Display Media Overlay)","Display name (alternate field)":"اسم العرض (حقل بديل)","Display name of the sender":"اسم عرض المرسل","Display name of the user":"اسم عرض المستخدم","Do I always need an AND node?":"هل أحتاج دائمًا إلى عقدة AND؟","Do I have to use AND for every pair of filters?":"هل يجب استخدام AND لكل زوج من المرشحات؟","Document meta fields.":"وثّق حقول meta.","Donation Alert:":"تنبيه تبرع:","Donation above a threshold":"تبرع أعلى من حد معين","Donation/tip display label":"تسمية عرض التبرع أو الإكرامية","Donation: animation + sound + OBS filter":"تبرع: حركة + صوت + مرشح OBS","Donation: celebration + voice":"تبرع: احتفال + كلام","Drag":"اسحب","Editing code:":"تحرير الشيفرة:","Effect":"التأثير","Emits":"يصدر","Enable audio":"تفعيل الصوت","Errors are caught.":"تُلتقط الأخطاء.","Even if you didn't change anything, returning":"حتى إذا لم تغيّر شيئًا، فإن إرجاع","Event Flow":"Event Flow","Event Flow Editor Guide":"دليل محرر Event Flow","Event Flow Editor: empty state":"محرر Event Flow — الحالة الفارغة","Event Flow Guide - Social Stream Ninja":"دليل Event Flow - Social Stream Ninja","Event Flow System":"نظام Event Flow","Event Flow plays through the":"يشغّل Event Flow الصوت عبر","Event Payload ─▶ State Check (isAlertMuted) └─false─▶ NOT ─▶ Play Celebration":"حمولة الحدث ─▶ فحص الحالة (isAlertMuted) └─false─▶ NOT ─▶ تشغيل احتفال","Event Reference":"مرجع الأحداث","Event Sources":"مصادر الأحداث","Event type identifier":"معرّف نوع الحدث","Every flow starts with a trigger":"يبدأ كل تدفق بمشغّل","Every message carries a JSON object. Mandatory keys follow":"تحمل كل رسالة كائن JSON. وتتبع المفاتيح الإلزامية","Every project is saved locally until exported. Use":"يُحفظ كل مشروع محليًا إلى أن يُصدَّر. استخدم","Example":"مثال","Example Templates":"قوالب أمثلة","Example:":"مثال:","Execute Custom Code":"تنفيذ شيفرة مخصصة (Execute Custom Code)","Execute Custom Code action properties panel showing the code editor":"لوحة خصائص إجراء Execute Custom Code تعرض محرر الشيفرة","Execute Custom Code under the":"Execute Custom Code ضمن","Execute Custom Code: Action node":"Execute Custom Code — عقدة إجراء","Export your flow whenever you reach a milestone. Imports are the easiest rollback if an experiment goes sideways.":"صدّر تدفقك عند بلوغ كل مرحلة مهمة. الاستيراد هو أسهل طريقة للعودة إلى نسخة سابقة إذا فشلت تجربة.","Extended Variables":"المتغيرات الموسعة","Feature Message":"إبراز الرسالة (Feature Message)","Feeding the trigger into the AND as a second input restricts sound B to matching messages only. The same pattern works for any either/or pair of actions, not just audio.":"توصيل المشغّل إلى AND كمدخل ثانٍ يقصر الصوت B على الرسائل المطابقة فقط. يعمل النمط نفسه مع أي زوج من الإجراءات البديلة، وليس الصوت وحده.","Field":"الحقل","Filter as early as possible to avoid extra processing down the line.":"رشّح في أبكر مرحلة ممكنة لتجنب معالجة إضافية لاحقًا.","Fire only when a donation meets or exceeds a minimum amount.":"نفّذ فقط عندما يساوي التبرع مبلغًا أدنى أو يتجاوزه.","Flow Actions":"Flow Actions","Flow Actions Overlay (Action Output)":"تراكب Flow Actions (خرج الإجراءات)","Flow using a RANDOM gate, NOT gate, and AND gate to play one of two audio clips at random":"تدفق يستخدم بوابات RANDOM وNOT وAND لتشغيل أحد مقطعين صوتيين عشوائيًا","Flow-added fields also work.":"تعمل أيضًا الحقول التي يضيفها التدفق.","Format a donation announcement":"تنسيق إعلان تبرع","Formatted donation string if present":"سلسلة نصية منسقة للتبرع إن وُجدت","Gate signal":"إشارة البوابة","Great for multi-platform triggers: feed Twitch + YouTube message nodes into a single OR, then unify the downstream action.":"مفيد للمشغّلات متعددة المنصات: أوصل عقد رسائل Twitch وYouTube ببوابة OR واحدة، ثم وحّد الإجراء اللاحق.","Group logic near the source.":"اجمع المنطق بالقرب من المصدر.","Hello everyone!":"مرحبًا بالجميع!","Here the Regex node emits":"هنا تُصدر عقدة Regex","Highlight My Message":"أبرز رسالتي","Hook into the":"اربط بـ","How do I match TikTok Team members?":"كيف أطابق أعضاء فريق TikTok؟","How do true/false values reach the NOT node?":"كيف تصل قيم true وfalse إلى عقدة NOT؟","How to open it (from the popup/dash):":"كيفية فتحه (من النافذة المنبثقة أو لوحة التحكم):","If a node outputs false:":"إذا أخرجت عقدة false:","If an earlier action adds a top-level value to the message, later templates can read it directly. This is how":"إذا أضاف إجراء سابق قيمة في المستوى الأعلى إلى الرسالة، فيمكن للقوالب اللاحقة قراءتها مباشرة. بهذه الطريقة","If an event does not have a particular field (e.g.,":"إذا لم يتضمن حدث حقلًا معينًا (مثل","If nothing is connected to the NOT input it evaluates to":"إذا لم يكن شيء موصولًا بمدخل NOT، فإن نتيجتها تكون","If two branches feed each other, add a logic node that checks a state variable (\"currentlyRelaying\") so the flow exits early when the flag is set.":"إذا كان فرعان يغذي أحدهما الآخر، فأضف عقدة منطقية تفحص متغير حالة (“currentlyRelaying”) حتى يخرج التدفق مبكرًا عندما يكون العلم مفعّلًا.","If you do nothing with a":"إذا لم تفعل شيئًا بإشارة","In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose":"In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose","In a Play Audio Clip or Display Media Overlay action, click":"في إجراء Play Audio Clip أو Display Media Overlay، انقر على","Incoming triggers and outgoing Relay Chat destinations both distinguish between":"تميّز المشغّلات الواردة ووجهات Relay Chat الصادرة بين","Input Expectations":"متطلبات المدخلات","Inputs":"المدخلات","Inputs: 1 boolean (true/false) derived from the previous node.":"المدخلات: قيمة منطقية واحدة (true/false) مشتقة من العقدة السابقة.","Inputs: two or more boolean signals (A, B, ...). You can leave extra ports empty.":"المدخلات: إشارتان منطقيتان أو أكثر (A وB و...). يمكنك ترك المنافذ الإضافية فارغة.","Inside the SSApp, code in Custom JS nodes has full access to the":"داخل SSApp، تتمتع الشيفرة في عقد Custom JS بوصول كامل إلى","Inspect the content and silently drop the message if a rule matches. This is useful for spam patterns the keyword filter can't express.":"افحص المحتوى وأسقط الرسالة بصمت عند مطابقة قاعدة — مفيد لأنماط الرسائل المزعجة التي لا يستطيع مرشح الكلمات المفتاحية التعبير عنها.","Integrations":"التكاملات (Integrations)","Keep SSApp running. If a selected file moves, return to the action and click":"أبقِ SSApp يعمل. إذا نُقل ملف محدد، فعُد إلى الإجراء وانقر على","Keep the overlay open.":"أبقِ التراكب مفتوحًا.","Keyword match (case-insensitive)":"مطابقة كلمة مفتاحية (دون حساسية لحالة الأحرف)","Launch + Basics":"البدء والأساسيات","Let the flow continue only for privileged users.":"اسمح باستمرار التدفق للمستخدمين ذوي الصلاحيات فقط.","Logic nodes may emit both the":"قد تُخرج العقد المنطقية قناة","MEMBERSHIP, new_sponsor":"MEMBERSHIP, new_sponsor","Match messages that start with a command from a defined list (e.g.":"طابق الرسائل التي تبدأ بأمر من قائمة محددة (مثل","Media Files for Event Flow guide":"دليل ملفات الوسائط لـ Event Flow","Member for 3 months":"عضو منذ 3 أشهر","Membership state":"حالة العضوية","Membership state when applicable":"حالة العضوية عند انطباقها","Message length gate":"بوابة طول الرسالة","Minimal safe return:":"أبسط قيمة إرجاع آمنة:","Missing variables become empty strings.":"تتحول المتغيرات المفقودة إلى سلاسل نصية فارغة.","Mix multiple platforms inside a single automation (Kick + Twitch + YouTube routed through one flow).":"امزج منصات متعددة داخل أتمتة واحدة (توجيه Kick وTwitch وYouTube عبر تدفق واحد).","Most nodes expose one output. Whatever enters (payload + gate) exits unchanged unless the node edits it.":"توفر معظم العقد مخرجًا واحدًا. كل ما يدخل (الحمولة والبوابة) يخرج دون تغيير ما لم تعدّله العقدة.","Most side effects (like sending chat) do not alter the payload, but points actions can attach status fields such as":"لا تغيّر معظم التأثيرات الجانبية (مثل إرسال الدردشة) الحمولة، لكن يمكن لإجراءات النقاط إرفاق حقول حالة مثل","Multi-condition: VIP + keyword":"شروط متعددة — VIP وكلمة مفتاحية","Must return:":"يجب إرجاع:","NOT":"NOT","NOT & empty inputs:":"NOT والمدخلات الفارغة:","Name & color":"سمِّ ولوِّن","Need to remember participants, check later eligibility, run a unique-user draw, or clear one named list? Open the":"هل تحتاج إلى تذكّر المشاركين أو فحص الأهلية لاحقًا أو إجراء سحب لمستخدمين فريدين أو مسح قائمة مسماة واحدة؟ افتح","No network sandbox.":"لا توجد بيئة عزل للشبكة.","No. Many nodes already provide all-in-one filters (for example \"Filter User Level\" + \"Contains Text\"). Use AND only when the built-in options do not cover your combination, or when you want a reusable logic junction that other branches can share.":"لا. توفر عقد كثيرة بالفعل مرشحات شاملة (مثل “Filter User Level” مع “Contains Text”). استخدم AND فقط عندما لا تغطي الخيارات المدمجة تركيبتك، أو عندما تريد نقطة وصل منطقية قابلة لإعادة الاستخدام تشترك فيها فروع أخرى.","No. Many nodes include multiple checks (for example, the basic Message Filter supports keyword + role). Use AND only for advanced combinations or when merging signals from different nodes.":"لا. تتضمن عقد كثيرة فحوصًا متعددة (مثل مرشح الرسائل الأساسي الذي يدعم كلمة مفتاحية ودورًا). استخدم AND للتركيبات المتقدمة فقط أو عند دمج إشارات من عقد مختلفة.","Nodes at a Glance":"العقد في لمحة","Nodes such as":"العقد مثل","OBS Control Guide":"دليل التحكم في OBS","OBS WebSocket:":"OBS WebSocket:","OBS control modes:":"أوضاع التحكم في OBS:","OR":"OR","Old 4.x installs:":"تثبيتات 4.x القديمة:","Once loaded, that overlay can:":"بعد تحميل ذلك التراكب، يمكنه:","Only process events from specific platforms.":"معالجة أحداث منصات محددة فقط.","Only process messages that have enough content (useful for TTS or relay to avoid single-emoji spam).":"معالجة الرسائل ذات المحتوى الكافي فقط (مفيد لـ TTS أو الترحيل لتجنب الإغراق برمز تعبيري واحد).","Open":"افتح","Open Code Editor":"فتح محرر الشيفرة (Open Code Editor)","Open the Event Flow editor from the main dashboard's menu (desktop or extension).":"افتح محرر Event Flow من قائمة لوحة التحكم الرئيسية (في تطبيق سطح المكتب أو الإضافة).","Open the main Social Stream Ninja popup (the window loaded from":"افتح نافذة Social Stream Ninja المنبثقة الرئيسية (النافذة المحمّلة من","Optional context (state variables, timers) that the node asks for explicitly.":"سياق اختياري (متغيرات الحالة والمؤقتات) تطلبه العقدة صراحةً.","Output Patterns":"أنماط المخرجات","Outputs":"المخرجات","Outputs:":"المخرجات:","Outputs: the inverted boolean plus the untouched payload.":"المخرجات: القيمة المنطقية المعكوسة بالإضافة إلى الحمولة دون تعديل.","Overlay diagnostics:":"تشخيص التراكب:","Pass the (possibly mutated) message back so downstream nodes receive your changes.":"أعِد تمرير الرسالة (التي ربما عُدّلت) حتى تستقبل العقد اللاحقة تغييراتك.","Pass-Through vs. Override":"التمرير كما هو مقابل التجاوز","Password:":"كلمة المرور:","Payload":"الحمولة","Payload Structure":"بنية الحمولة","Place NOT after \"Contains Keyword\" to trigger an alert when a viewer":"ضع NOT بعد \"Contains Keyword\" لتشغيل تنبيه عندما","Platform filter":"مرشح المنصة","Platform name (capitalized)":"اسم المنصة (بحرف أول كبير)","Platform name (raw)":"اسم المنصة (خام)","Platform user ID":"معرّف المستخدم في المنصة","Platform-aware message prefix":"بادئة رسالة تراعي المنصة","Play Audio Clip":"تشغيل مقطع صوتي (Play Audio Clip)","Play Audio Clip → Browse sounds":"Play Audio Clip → Browse sounds","Play sounds (TTS, audio clips) locally so viewers hear them.":"تشغيل الأصوات (TTS والمقاطع الصوتية) محليًا ليسمعها المشاهدون.","Playback options":"Playback options","Points & Rewards":"النقاط والمكافآت","Prepend a platform label when relaying cross-platform so viewers know the source.":"أضف تسمية المنصة في بداية الرسالة عند الترحيل بين المنصات حتى يعرف المشاهدون المصدر.","Printer Control":"التحكم في الطابعة (Printer Control)","Properties panel after placing the trigger. Write any expression that returns":"لوحة الخصائص بعد وضع المشغّل. اكتب أي تعبير يُرجع","Ready for more depth?":"هل أنت جاهز لمزيد من التفاصيل؟","Recommended diagnostic path:":"مسار التشخيص الموصى به:","Reflection Filter":"مرشح الرسائل المرتدة (Reflection Filter)","Regex command detection":"اكتشاف الأوامر بتعبير منتظم","Relay Chat":"تمرير الدردشة (Relay Chat)","Relay Chat skips recognized reflections automatically.":"يتخطى Relay Chat الرسائل المرتدة المعروفة تلقائيًا.","Relay Chat:":"Relay Chat:","Relay chat between services with filters (e.g., mirror Twitch to Discord but block commands).":"مرّر الدردشة بين الخدمات مع مرشحات (مثل نسخ Twitch إلى Discord مع حظر الأوامر).","Relaying chat between surfaces is powerful but can echo infinitely if you listen to your own output. Follow these safeguards:":"ترحيل الدردشة بين الواجهات أداة قوية، لكنه قد يسبب صدى لا نهائيًا إذا استمعت إلى خرجك نفسه. اتبع هذه الاحتياطات:","Relink":"إعادة الربط (Relink)","Remember:":"تذكّر:","Remove all @username mentions from a message before relaying it to another platform.":"أزِل جميع إشارات @username من الرسالة قبل ترحيلها إلى منصة أخرى.","Return a plain object from your action code. Any fields you include are merged into the flow's":"أرجع كائنًا عاديًا من شيفرة الإجراء. تُدمج أي حقول تُضمّنها في كائن التدفق","Return field":"حقل الإرجاع","Reward name when the source exposes a top-level reward title field":"اسم المكافأة عندما يوفر المصدر حقل عنوان مكافأة في المستوى الأعلى","Rewrite the chatmessage into a consistent announcement string when a donation is present.":"أعِد كتابة chatmessage كسلسلة إعلان موحدة عند وجود تبرع.","Run Test":"تشغيل الاختبار (Run Test)","Run custom workflows from Stream Deck or the API":"تشغيل مسارات عمل مخصصة من Stream Deck أو API","Run the matching action check there before testing the full Event Flow automation.":"نفّذ فحص الإجراء المطابق هناك قبل اختبار أتمتة Event Flow كاملة.","Running the":"هل تستخدم","SSApp / Desktop only":"SSApp / سطح المكتب فقط","SSApp desktop app":"تطبيق SSApp لسطح المكتب","SSApp desktop app?":"تطبيق SSApp لسطح المكتب؟","Save & Close":"حفظ وإغلاق (Save & Close)","Save versions.":"احفظ نسخًا.","Scroll to the “Flow Actions” card. Use the":"مرّر إلى بطاقة “Flow Actions”. استخدم","Secondary context line":"سطر سياق ثانوي","Security considerations":"اعتبارات الأمان","See the dedicated":"راجع","Send Message":"إرسال رسالة (Send Message)","Sender has VIP status":"لدى المرسل حالة VIP","Sender is a moderator":"المرسل مشرف","Sender is a subscriber":"المرسل مشترك","Set":"اضبط","Set OBS Text Source:":"Set OBS Text Source:","Set Text Source:":"Set Text Source:","Several action nodes (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) support":"تدعم عدة عقد إجراءات (Show Text وSet Text Source وSend Message وRelay Chat وTTS Speak وCall Webhook وPrint Thermal Label)","Should return:":"ينبغي إرجاع:","Show GIPHY or direct media URLs, text, and confetti triggered by your flows.":"عرض GIPHY أو روابط وسائط مباشرة ونص وقصاصات احتفالية تُفعّلها تدفقاتك.","Show Text:":"Show Text:","Signature:":"توقيع الدالة:","Single Output":"مخرج واحد","Snippet examples":"أمثلة مقاطع شيفرة","Social Stream Ninja logo":"شعار Social Stream Ninja","Some nodes (Set Variable, Math, Text Replace) mutate the payload but still forward the":"تعدّل بعض العقد (Set Variable وMath وText Replace) الحمولة لكنها تظل تمرّر","Sound Library":"Sound Library","Source platform (lowercase)":"منصة المصدر (بحروف صغيرة)","Speak Text":"نطق النص (Speak Text)","Start with an alert template:":"ابدأ بقالب تنبيه:","State Nodes":"عقد الحالة (State Nodes)","Step 1: Custom Code trigger":"الخطوة 1 — مشغّل Custom Code","Step 2: Execute Custom Code action":"الخطوة 2 — إجراء Execute Custom Code","Step 3: Relay Chat action":"الخطوة 3 — إجراء Relay Chat","Stop Audio Clips":"Stop Audio Clips","Store repeats in State nodes.":"خزّن التكرارات في عقد الحالة.","Strip @mentions":"إزالة إشارات @mentions","Structured event data (JSON)":"بيانات حدث منظمة (JSON)","Subscriber / VIP / mod gate":"بوابة المشترك أو VIP أو المشرف","Syntax errors too.":"وأخطاء الصياغة أيضًا.","TTS:":"TTS:","Tag the message with a custom field that a later":"وسِم الرسالة بحقل مخصص يمكن لإجراء لاحق من نوع","Talk to OBS via the WebSocket settings that live under the Flow Actions section in the popup (scene switching, source toggles, GDI+/FreeType text updates, replay buffer, etc.).":"تواصل مع OBS عبر إعدادات WebSocket الموجودة ضمن قسم Flow Actions في النافذة المنبثقة (تبديل المشاهد وتبديل المصادر وتحديث نص GDI+/FreeType ومخزن الإعادة وغيرها).","Template variables work in JSON string values at any nested object or array depth. Object keys are not templated, and a custom body without placeholders is sent unchanged.":"تعمل متغيرات القوالب داخل قيم السلاسل النصية في JSON عند أي مستوى تداخل للكائنات أو المصفوفات. لا تُطبَّق القوالب على مفاتيح الكائنات، ويُرسل المتن المخصص الخالي من العناصر النائبة دون تغيير.","Test Flow":"اختبار التدفق (Test Flow)","Test with the built-in simulator":"اختبر باستخدام المحاكي المدمج","Testing the flow.":"اختبار التدفق.","The AND gate is not optional.":"بوابة AND ليست اختيارية.","The AND node ensures only members using the right keyword relay to Discord. Both branches send their boolean result to the AND node; the payload from the":"تضمن عقدة AND ترحيل رسائل الأعضاء الذين يستخدمون الكلمة المفتاحية الصحيحة فقط إلى Discord. يرسل الفرعان نتيجتهما المنطقية إلى عقدة AND؛ وتمرّ حمولة الفرع","The Chrome extension cannot serve disk files by itself. Use Upload or a hosted URL when no desktop companion is available. See the":"لا تستطيع إضافة Chrome تقديم ملفات القرص بمفردها. استخدم Upload أو رابطًا مستضافًا عندما لا يتوفر مرافق سطح المكتب. راجع","The Event Flow Editor. The left panel lists all available nodes; the dotted canvas is where you build flows; the right panel shows properties for the selected node.":"محرر Event Flow. تسرد اللوحة اليسرى جميع العقد المتاحة؛ وتُنشئ التدفقات على مساحة العمل المنقطة؛ وتعرض اللوحة اليمنى خصائص العقدة المحددة.","The Event Flow editor is the “advanced automation” layer for Social Stream Ninja. It sits above the simple popup switches and lets you script your own routing logic. Use it when you need to:":"محرر Event Flow هو طبقة «الأتمتة المتقدمة» في Social Stream Ninja. يعمل فوق مفاتيح التبديل البسيطة في النافذة المنبثقة ويتيح لك كتابة منطق التوجيه الخاص بك. استخدمه عندما تحتاج إلى:","The Event Flow runtime passes two things through every wire:":"تمرّر بيئة تشغيل Event Flow شيئين عبر كل سلك:","The Test Flow panel for sending synthetic test events":"لوحة Test Flow لإرسال أحداث اختبار مصطنعة","The Test Flow panel. Fill in fields matching your trigger conditions and click":"لوحة Test Flow. املأ الحقول بما يطابق شروط المشغّل وانقر على","The chat message text (may contain HTML)":"نص رسالة الدردشة (قد يحتوي على HTML)","The editor's Preview button plays locally; live playback needs the overlay open. If the browser blocks autoplay, click":"يشغّل زر المعاينة في المحرر الصوت محليًا؛ أما التشغيل الفعلي فيتطلب فتح التراكب. إذا حظر المتصفح التشغيل التلقائي، فانقر على","The full message payload.":"حمولة الرسالة كاملة.","The gate bit (":"قيمة البوابة المنطقية (","The link looks like":"يبدو الرابط مثل","The object":"الكائن","The same payload unless the node edits it.":"الحمولة نفسها ما لم تعدّلها العقدة.","Thermal Label:":"ملصق حراري:","Thermal Printer Guide":"دليل الطابعة الحرارية","Thermal printing in SSApp:":"الطباعة الحرارية في SSApp:","These blocks answer the most common \"What does true/false mean?\" questions.":"تجيب هذه الكتل عن أكثر الأسئلة شيوعًا حول معنى true وfalse.","Think of the popup as “quick presets” and Event Flow as the toolkit for bespoke workflows.":"اعتبر النافذة المنبثقة «إعدادات سريعة جاهزة»، وEvent Flow مجموعة أدوات لمسارات عمل مخصصة.","This flow is complete and fires on every message, but the sound plays on the Flow Actions overlay page,":"هذا التدفق مكتمل ويعمل مع كل رسالة — لكن الصوت يُشغَّل على صفحة تراكب Flow Actions،","This flow listens for":"يستمع هذا التدفق إلى","This guide is intentionally standalone. Copy it locally, adapt it for your team, and keep experimenting inside the editor.":"هذا الدليل مستقل عمدًا — انسخه محليًا، وكيّفه لفريقك، وواصل التجربة داخل المحرر.","TikTok Team Member":"عضو فريق TikTok (TikTok Team Member)","Transform & Logic Nodes":"عقد التحويل والمنطق","Trigger custom overlays, audio, OBS scenes, or webhooks based on data you enrich in the flow.":"فعّل تراكبات مخصصة أو أصواتًا أو مشاهد OBS أو webhooks بناءً على البيانات التي تُثريها في التدفق.","Trigger panel showing Custom Code node under the Advanced group":"لوحة المشغّلات تعرض عقدة Custom Code ضمن مجموعة Advanced","Trigger snippets: return":"مقاطع شيفرة المشغّلات — أرجع","Trigger ──▶ RANDOM (50%) ──▶ Play Sound A │ └──▶ NOT ──▶ AND ──▶ Play Sound B Trigger ──────────────────▲":"مشغّل ──▶ RANDOM (50%) ──▶ تشغيل الصوت A │ └──▶ NOT ──▶ AND ──▶ تشغيل الصوت B مشغّل ──────────────────▲","Triggers":"المحفزات","True":"صحيح (True)","True/False Outputs":"مخرجات true وfalse","Twitch Message ──▶ Regex Match \"^!\" ─┐ │ ├─false──▶ Auto Reply (\"Thanks for chatting!\") │ └─true──▶ Do nothing":"رسالة Twitch ──▶ مطابقة Regex \"^!\" ─┐ │ ├─false──▶ رد تلقائي («شكرًا للدردشة!») │ └─true──▶ لا تفعل شيئًا","Twitch and YouTube relay walkthrough":"شرح ترحيل Twitch وYouTube خطوة بخطوة","Twitch, YouTube":"Twitch، YouTube","Two action nodes chained together with no trigger node":"عقدتا إجراء موصولتان تسلسليًا دون عقدة مشغّل","Two nodes in the Event Flow editor let you write arbitrary JavaScript that runs inside the flow pipeline:":"تتيح لك عقدتان في محرر Event Flow كتابة أي JavaScript لتُنفَّذ داخل مسار التدفق:","USD donation equivalent when the source provides one; valid zero values are honored. Event Flow falls back to":"مكافئ التبرع بالدولار الأمريكي عندما يوفره المصدر؛ وتُحترم القيم الصفرية الصالحة. يلجأ Event Flow إلى","USD donation equivalent, supplied or estimated; Event Flow derives threshold values from normalized":"مكافئ التبرع بالدولار الأمريكي، المقدم أو المقدر؛ ويستمد Event Flow قيم العتبات من الحقل الموحّد","Unlock":"فعِّل","Use":"استخدم","Use AND when multiple conditions must be satisfied simultaneously (\"is subscriber\"":"استخدم AND عندما يجب استيفاء شروط متعددة في الوقت نفسه («مشترك»","Use Debounce or Cooldown nodes":"استخدم عقد Debounce أو Cooldown","Use counters, toggles, and timestamps to avoid double alerts.":"استخدم العدادات ومفاتيح التبديل والطوابع الزمنية لتجنب التنبيهات المزدوجة.","Use random set":"Use random set","Use sound":"Use sound","User Memory guide":"دليل ذاكرة المستخدم","User avatar URL":"رابط الصورة الرمزية للمستخدم","User's platform ID":"معرّف المستخدم في المنصة","Using local media in the standalone app:":"استخدام وسائط محلية في التطبيق المستقل:","Variable":"المتغير","Variable matching is case-insensitive.":"مطابقة المتغيرات غير حساسة لحالة الأحرف.","Variables + Logic":"المتغيرات والمنطق","Voice Override":"تجاوز الصوت (Voice Override)","What comes into a node?":"ما الذي يدخل إلى العقدة؟","What is this editor?":"ما هذا المحرر؟","What leaves a node?":"ما الذي يخرج من العقدة؟","What the action returns":"ما الذي يُرجعه الإجراء","When to branch?":"متى تتفرع؟","When you add custom":"عندما تضيف حقولًا مخصصة إلى","Whenever you want to react differently to":"كلما أردت الاستجابة بشكل مختلف لـ","Work inside canvases called":"اعمل داخل مساحات عمل تُسمى","Yes. Enter a provider-supported voice name or ID in":"نعم. أدخل اسم صوت أو معرّفه المدعوم لدى الموفّر في","Yes. The payload still travels through the false output; it is up to you to decide where that branch should go.":"نعم. تظل الحمولة تمر عبر مخرج false؛ ويعود إليك تحديد وجهة ذلك الفرع.","YouTube Message ──▶ Contains \"!queue\" ─▶ AND ─▶ Relay to Discord Gifted Membership ─▶ User Role = Member ──▲":"رسالة YouTube ──▶ تحتوي على “!queue” ─▶ AND ─▶ ترحيل إلى Discord عضوية مهداة ─▶ دور المستخدم = عضو ──▲","YouTube Shorts and Event Flow":"YouTube Shorts وEvent Flow","YouTube Shorts destination note:":"ملاحظة وجهة YouTube Shorts:","YouTube Super Chat or Super Sticker in a EUR range":"YouTube Super Chat أو Super Sticker ضمن نطاق باليورو","[copy link]":"[نسخ الرابط]","a boolean:":"قيمة منطقية —","action can read from a template variable (":"قراءته من متغير قالب (","action with":"بالقيمة","actions":"إجراءات","actions.html":"actions.html","all work the same way.":"تعمل كلها بالطريقة نفسها.","also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.":"also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.","an object or Promise merged into":"كائنًا أو Promise تُدمج في","and":"و","and use that generated localhost URL instead of the hosted Flow Actions URL.":"واستخدم رابط localhost المُنشأ بدلًا من رابط Flow Actions المستضاف.","any":"كان أيٌّ","append":"أضف","at compile time is caught the same way. Check DevTools (F12) if a node appears to do nothing.":"وقت الترجمة يُلتقط بالطريقة نفسها. تحقق من DevTools ‏(F12) إذا بدت عقدة وكأنها لا تفعل شيئًا.","available only when":"متاح فقط عندما","becomes available on the gray/red port.":"تتوفر على المنفذ الرمادي أو الأحمر.","below), plus":"أدناه)، بالإضافة إلى","bit telling the next node whether to run.":"التي تخبر العقدة التالية بما إذا كان ينبغي تنفيذها.","boolean":"قيمة منطقية","browser source; Multi-Alerts plays through its own browser source. Keep sound enabled in only one for the same event to avoid duplicate playback. Tab to a flow node and press Enter or Space to edit its properties.":"كمصدر متصفح؛ ويشغّل Multi-Alerts الصوت عبر مصدر متصفح خاص به. أبقِ الصوت مفعّلًا في واحد فقط للحدث نفسه لتجنب التشغيل المزدوج. انتقل إلى عقدة تدفق بمفتاح Tab واضغط Enter أو المسافة لتحرير خصائصها.","button or click the URL inside the card.":"أو انقر على الرابط داخل البطاقة.","by default. When a condition fails, it emits":"افتراضيًا. عندما يفشل شرط، تُصدر","channel and an optional":"وقناة اختيارية","channel.":".","checks the JavaScript syntax and saves the whole flow;":"يتحقق من صياغة JavaScript ويحفظ التدفق بالكامل؛","cheer, raid, new_follower":"cheer, raid, new_follower","choose the printer and calibrate its paper width and safe margins under":"اختر الطابعة وعاير عرض الورق والهوامش الآمنة ضمن","connected input is true.":"من المدخلات الموصولة يساوي true.","continues downstream.":"إلى العقد اللاحقة.","continues through the green port;":"تستمر عبر المنفذ الأخضر؛","controls overlap, queueing, and the action's cooldown;":"controls overlap, queueing, and the action's cooldown;","conversion of normalized":"لتحويل التسميات الموحّدة في","docs/event-reference.html":"docs/event-reference.html","does":"تفعله","does not use the keyword.":"لا يستخدم المشاهد الكلمة المفتاحية.","does the same. Cancel leaves the node unchanged.":"يفعل الشيء نفسه. يترك Cancel العقدة دون تغيير.","doesn't match your trigger.":"لا تطابق المشغّل.","downstream nodes stop executing unless they receive input on a separate branch (for example, the":"تتوقف العقد اللاحقة عن التنفيذ ما لم تتلقَّ مدخلات عبر فرع منفصل (مثل منفذ","exposes":"يتيح","false":"false","features a message when the flow reaches it. It does not fire when you feature a message elsewhere.":"يُبرز رسالة عندما يصل إليه التدفق — ولا يعمل عندما تُبرز رسالة في مكان آخر.","fields. Tells downstream nodes the payload has been edited.":". يخبر العقد اللاحقة بأن الحمولة عُدّلت.","fire only when the gate remains":"لا تعمل إلا عندما تظل البوابة","first branch":"الأول","flows":"تدفقات","flows through automatically.":"يمر تلقائيًا.","for a complete setup.":"لإعداد كامل.","for a large editing window.":"لفتح نافذة تحرير كبيرة.","for a ready-made animation and synthetic thank-you clip, or the advanced":"لحركة جاهزة ومقطع شكر اصطناعي، أو القالب المتقدم","for alerts that should only fire once every X seconds.":"للتنبيهات التي ينبغي أن تعمل مرة واحدة فقط كل X ثانية.","for arbitrary logic that no built-in node covers.":"لأي منطق لا تغطيه عقدة مدمجة.","for detailed payload documentation across all platforms.":"للوثائق التفصيلية عن الحمولات عبر جميع المنصات.","for downstream logic.":"للمنطق اللاحق.","for every trigger, action, setup step, and tested recipe.":"المخصص للاطلاع على كل مشغّل وإجراء وخطوة إعداد ووصفة مختبرة.","for printer setup, fixed-size labels, and a complete flow.":"لإعداد الطابعة والملصقات ذات الحجم الثابت وتدفق كامل.","for the full setup.":"للإعداد الكامل.","for the shared-state model, screenshots, and an importable example.":"لنموذج الحالة المشتركة ولقطات الشاشة ومثال قابل للاستيراد.","from subscribers, VIPs, or mods, reformats it as a feature request, and relays it to a second destination (e.g. Discord).":"من المشتركين أو المشاهدين المميزين (VIP) أو المشرفين، ويعيد تنسيقه كطلب إضافة ميزة، ثم يرحّله إلى وجهة ثانية (مثل Discord).","from the":"من","group in the":"في لوحة","group in the Actions panel.":"في لوحة الإجراءات.","group in the Triggers panel.":"في لوحة المشغّلات.","https://...":"https://...","if":"إذا","if you are still using obs-websocket 4.x / port":"إذا كنت لا تزال تستخدم obs-websocket 4.x أو المنفذ","if you changed":"إذا غيّرت حقول","if you want a small live OBS connection badge on the overlay while troubleshooting.":"إذا أردت شارة صغيرة مباشرة لاتصال OBS على التراكب أثناء استكشاف الأخطاء.","in the User Role node. It recognizes TikTok Fan Club/team levels and badges on the incoming message and does not depend on Main Chat Overlay settings.":"في عقدة User Role. يتعرف على مستويات وشارات TikTok Fan Club أو الفريق في الرسالة الواردة ولا يعتمد على إعدادات Main Chat Overlay.","is a legacy alias":"اسم بديل قديم","is a node-based editor. Each line carries a message payload plus a boolean state (":"محرر قائم على العقد. يحمل كل خط حمولة رسالة بالإضافة إلى حالة منطقية (","is running inside OBS Browser Source with":"يعمل داخل مصدر متصفح OBS مع","keeps it flowing to the next node.":"يُبقيه يمر إلى العقدة التالية.","keys, note them so overlays and remote clients stay consistent.":"، فوثّقها حتى تظل التراكبات والعملاء البعيدون متوافقين.","labels for threshold comparisons, including 100 unknown named units = $0.01 USD. It does not parse":"لإجراء مقارنات العتبات، بما في ذلك 100 وحدة مسمّاة غير معروفة = $0.01 USD. ولا يحلل","labels such as value,":"بصيغ مثل القيمة،","logic nodes":"العقد المنطقية","message API":"واجهة API للرسائل","not in the editor.":"وليس في المحرر.","number / string":"عدد / سلسلة نصية","object":"كائن","object and any APIs the preload script exposes (e.g.":"وأي واجهات API تتيحها شيفرة التحميل المسبق (مثل","object; fields you omit keep their current values.":"؛ وتحتفظ الحقول التي تحذفها من النتيجة بقيمها الحالية.","obs-websocket-test.html":"obs-websocket-test.html","on a regular chat message), the placeholder is replaced with an empty string rather than showing the literal":"في رسالة دردشة عادية)، يُستبدل العنصر النائب بسلسلة نصية فارغة بدلًا من إظهار النص الحرفي","on the Flow Actions page to retry the latest blocked clip. Clicking elsewhere on that page also enables playback. An OBS Browser Source normally allows autoplay.":"في صفحة Flow Actions لإعادة محاولة آخر مقطع محظور. يتيح النقر في مكان آخر من تلك الصفحة التشغيل أيضًا. ويسمح مصدر متصفح OBS عادةً بالتشغيل التلقائي.","only if all connected inputs equal":"فقط إذا كانت جميع المدخلات الموصولة تساوي","optional. Only append":"اختيارية. أضف فقط","or":"أو","or the extension icon).":"أو أيقونة الإضافة).","output, the flow simply ends there. That is perfect for filters (\"block everything that fails the check\") but do not forget to connect the":"، ينتهي التدفق هناك ببساطة. وهذا مناسب للمرشحات («حظر كل ما يفشل في الفحص»)، لكن لا تنسَ توصيل مسار","outputs a value of":"يُخرج القيمة","panel onto the canvas. It acts as a gate: the flow continues only when your code returns":"إلى مساحة العمل. يعمل كبوابة: لا يستمر التدفق إلا عندما تُرجع شيفرتك","panel. It can mutate the message, block it, or attach metadata that downstream nodes can read.":". ويمكنه تعديل الرسالة أو حظرها أو إرفاق بيانات وصفية تستطيع العقد اللاحقة قراءتها.","path if you need fallbacks.":"إذا كنت تحتاج إلى بدائل احتياطية.","popup.html":"popup.html","prose for donation values.":"لاستخراج قيم التبرعات.","read the payload and may rewrite fields, set state, or flip the gate signal to":"تقرأ الحمولة وقد تعيد كتابة الحقول أو تضبط الحالة أو تقلب إشارة البوابة إلى","recommended for consistent control. Social Stream Ninja Flow Actions use the OBS WebSocket v5 API from OBS 28+ and expect the modern request set on port":"يُوصى به للتحكم المتسق. تستخدم Flow Actions في Social Stream Ninja واجهة OBS WebSocket v5 API من OBS 28 أو أحدث وتتوقع مجموعة الطلبات الحديثة على المنفذ","result API":"واجهة API للنتيجة","select a Custom Code node and click":"حدد عقدة Custom Code وانقر على","socket on a Condition node). That makes it easy to build fallback logic without duplicating whole flows.":"في عقدة Condition). يسهل ذلك بناء منطق احتياطي دون تكرار تدفقات كاملة.","socket to our reply, so regular chatters get an acknowledgement while commands simply pass through.":"إلى ردنا، فيتلقى المشاركون العاديون إقرارًا بينما تمر الأوامر ببساطة.","sources":"مصادر","state from their input. Others (NOT, AND, OR) recalculate the boolean themselves.":"من مدخلاتها. وتعيد عقد أخرى (NOT وAND وOR) حساب القيمة المنطقية بنفسها.","stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use":"stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use","string":"سلسلة نصية","succeed.":"تنجح.","system so viewers can intentionally trigger flows.":"حتى يتمكن المشاهدون من تفعيل التدفقات عمدًا.","template variables":"متغيرات القوالب","template. New alert templates start disabled so you can configure and test them first. For the OBS template, choose a source and the same normally-off filter in both filter actions.":". تبدأ قوالب التنبيهات الجديدة معطلة لتتمكن من ضبطها واختبارها أولًا. لقالب OBS، اختر مصدرًا والمرشح نفسه الذي يكون معطلًا عادةً في إجراءَي المرشح.","text.":".","that get replaced with event data at runtime. Wrap variable names in curly braces like":"تُستبدل ببيانات الحدث وقت التشغيل. ضع أسماء المتغيرات بين أقواس معقوفة مثل","the object":"الكائن","to back up or share.":"للنسخ الاحتياطي أو المشاركة.","to build queue systems, raffles, or scoring engines.":"لإنشاء أنظمة قوائم انتظار أو سحوبات أو محركات تسجيل نقاط.","to continue the flow":"لمتابعة التدفق","to convert the formatted donation label into EUR. It returns a number, or":"لتحويل تسمية التبرع المنسقة إلى EUR. تُرجع رقمًا، أو","to enable them. In extension mode the nodes appear greyed-out with the label":"لتفعيلها. في وضع الإضافة تظهر العقد بالرمادي مع التسمية","to filter decisions, and":"لترشيح القرارات، و","to inject events,":"لإدخال أحداث،","to let the flow continue,":"للسماح باستمرار التدفق،","to make things happen (send chat, control overlays, relay messages, etc.).":"لتنفيذ عمليات (إرسال دردشة أو التحكم بالتراكبات أو ترحيل رسائل وغيرها).","to prevent the message from being displayed or relayed.":"لمنع عرض الرسالة أو ترحيلها.","to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing":"to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing","to stop it.":"لإيقافه.","to the Flow Actions URL if your OBS server is configured to require authentication.":"إلى رابط Flow Actions إذا كان خادم OBS مضبوطًا ليتطلب المصادقة.","to the URL for":"إلى رابط","to validate the full pipeline.":"للتحقق من المسار الكامل.","trigger (or Message Contains, a regex, a donation event, etc.) starts the chain; both actions then run for each matching message.":"(أو Message Contains أو تعبير منتظم أو حدث تبرع أو غير ذلك) يبدأ السلسلة؛ ثم يعمل الإجراءان لكل رسالة مطابقة.","true":"true","twitch, youtube":"twitch, youtube","unless the node itself errors.":"إلا إذا حدث خطأ في العقدة نفسها.","updates OBS Text (GDI+) and Text (FreeType 2) inputs directly and supports Event Flow template variables such as":"يحدّث مُدخلات OBS Text (GDI+) وText (FreeType 2) مباشرة ويدعم متغيرات قوالب Event Flow مثل","use":"استخدم","value, value + unit, or compact unit/value. Unknown named virtual units use 100 units = $0.01 USD; unpriced TikTok gifts use one coin per gift ($0.01 each).":"القيمة أو القيمة + الوحدة أو وحدة وقيمة بصيغة مختصرة. تستخدم الوحدات الافتراضية المسماة غير المعروفة معدل 100 وحدة = $0.01 USD؛ وتستخدم هدايا TikTok غير المسعّرة عملة واحدة لكل هدية ($0.01 لكل منها).","vs":"مقابل","when the alert is muted. By inverting that result, the NOT node makes sure we only play the celebration when the flag is":"عندما يكون التنبيه مكتومًا. بعكس تلك النتيجة، تضمن عقدة NOT تشغيل الاحتفال فقط عندما يكون العلم","when the message is a command. We route the":"عندما تكون الرسالة أمرًا. نوجّه منفذ","when the requested target currency is unsupported. The converter uses Social Stream Ninja's approximate internal rates; it does not contact an external exchange service.":"عندما تكون العملة المستهدفة المطلوبة غير مدعومة. يستخدم المحوّل أسعار Social Stream Ninja الداخلية التقريبية؛ ولا يتصل بخدمة صرف خارجية.","whenever the RANDOM gate sits idle, so sound B would play on every chat message that":"كلما كانت بوابة RANDOM خاملة، لذا سيعمل الصوت B مع كل رسالة دردشة","your code runs as":"تُنفَّذ شيفرتك بصيغة","your nodes so future-you knows which branch is which.":"عقدك حتى تعرف مستقبلًا هوية كل فرع.","{\"viewers\":100}":"{\"viewers\":100}","– a":"— قيمة","– the event or message data object.":"— كائن بيانات الحدث أو الرسالة.","┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│ Relay Chat │ │ │ │ │ │ (to Discord) │ │ Gate: VIP/sub/mod │ │ Reformat message text │ │ │ │ + starts with │ │ → \"📋 Feature Request │ │ │ │ !feature │ │ from {name}: {text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘":"┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ مشغّل Custom Code │────▶│ إجراء Execute Custom Code │────▶│ Relay Chat │ │ │ │ │ │ (إلى Discord) │ │ بوابة: VIP/sub/mod │ │ إعادة تنسيق نص الرسالة │ │ │ │ + يبدأ بـ │ │ → \"📋 طلب إضافة ميزة │ │ │ │ !feature │ │ من {name}: {text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘","✅ Works. An":"✅ يعمل. مشغّل","❌ Never runs. Feature Message and Speak Text are both":"❌ لا يعمل أبدًا. Feature Message وSpeak Text كلاهما"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/actions/event-flow-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="guide-shell">
+        <header>
+            <p class="badge">نظام Event Flow</p>
+            <h1>دليل محرر Event Flow</h1>
+            <p>أنشئ أتمتة موثوقة لـ Social Stream Ninja. يشرح هذا الدليل الأساسيات والعقد المنطقية وتدفق الإشارات والحيل العملية التي يسأل عنها منشئو المحتوى كثيرًا (مثل تجنب صدى الدردشة ومعرفة متى تُجمَّع كتل AND وNOT).</p>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="العربية"><span aria-hidden="true">🌐 </span><span lang="ar">العربية</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/event-flow-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/event-flow-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/event-flow-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/event-flow-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/event-flow-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/event-flow-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/event-flow-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/event-flow-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/event-flow-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/event-flow-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/event-flow-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/event-flow-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/event-flow-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="event-flow-guide.html" lang="ar" hreflang="ar" aria-current="true">العربية</a><a class="site-language-link" href="../../tr/actions/event-flow-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/event-flow-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/event-flow-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></header>
+        <div class="content">
+            <section>
+                <h2>0. نظرة سريعة</h2>
+                <div class="panel">
+                    <strong>Event Flow</strong> محرر قائم على العقد. يحمل كل خط حمولة رسالة بالإضافة إلى حالة منطقية (<em>true</em> = متابعة، <em>false</em> = إيقاف). استخدم <strong>مصادر</strong> لإدخال أحداث، <strong>العقد المنطقية</strong> لترشيح القرارات، و <strong>إجراءات</strong> لتنفيذ عمليات (إرسال دردشة أو التحكم بالتراكبات أو ترحيل رسائل وغيرها).
+                </div>
+                <div class="callout">
+                    هل تحتاج إلى تذكّر المشاركين أو فحص الأهلية لاحقًا أو إجراء سحب لمستخدمين فريدين أو مسح قائمة مسماة واحدة؟ افتح <a href="user-memory-guide.html">دليل ذاكرة المستخدم</a> لنموذج الحالة المشتركة ولقطات الشاشة ومثال قابل للاستيراد.
+                </div>
+                <h3 id="what-is-event-flow">ما هذا المحرر؟</h3>
+                <p>محرر Event Flow هو طبقة «الأتمتة المتقدمة» في Social Stream Ninja. يعمل فوق مفاتيح التبديل البسيطة في النافذة المنبثقة ويتيح لك كتابة منطق التوجيه الخاص بك. استخدمه عندما تحتاج إلى:</p>
+                <ul>
+                    <li>مرّر الدردشة بين الخدمات مع مرشحات (مثل نسخ Twitch إلى Discord مع حظر الأوامر).</li>
+                    <li>أنشئ أوامر قائمة على الولاء أو ألعاب كلمات مفتاحية أو بوابات للسحب باستخدام منطق AND/OR/NOT.</li>
+                    <li>فعّل تراكبات مخصصة أو أصواتًا أو مشاهد OBS أو webhooks بناءً على البيانات التي تُثريها في التدفق.</li>
+                    <li>امزج منصات متعددة داخل أتمتة واحدة (توجيه Kick وTwitch وYouTube عبر تدفق واحد).</li>
+                </ul>
+                <p>اعتبر النافذة المنبثقة «إعدادات سريعة جاهزة»، وEvent Flow مجموعة أدوات لمسارات عمل مخصصة.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>البدء والأساسيات</h4>
+                        <ul>
+                            <li>افتح محرر Event Flow من قائمة لوحة التحكم الرئيسية (في تطبيق سطح المكتب أو الإضافة).</li>
+                            <li>يُحفظ كل مشروع محليًا إلى أن يُصدَّر. استخدم <code>Export</code> للنسخ الاحتياطي أو المشاركة.</li>
+                            <li>اعمل داخل مساحات عمل تُسمى <em>تدفقات</em>. يمكن لكل تدفق الاشتراك في منصات متعددة في الوقت نفسه.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>العقد في لمحة</h4>
+                        <ul>
+                            <li><strong>المدخلات</strong> (المنافذ اليسرى) تتوقع سياق الرسالة.</li>
+                            <li><strong>المخرجات</strong> (المنافذ اليمنى) تُخرج السياق نفسه مع أي تعديلات.</li>
+                            <li>قد تُخرج العقد المنطقية قناة <code>true</code> وقناة اختيارية <code>false</code> .</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>بنية الحمولة</h4>
+                        <p>تحمل كل رسالة كائن JSON. وتتبع المفاتيح الإلزامية <a href="../docs/event-reference.html" target="_blank" rel="noopener">docs/event-reference.html</a> (platform وtype وchatname وchatmessage وغيرها). أرفق البيانات المخصصة ضمن <code>meta</code>.</p>
+                    </div>
+                </div>
+                <h3 id="every-flow-needs-a-trigger">يبدأ كل تدفق بمشغّل</h3>
+                <p>لا تعمل عقد الإجراءات (الخضراء) من تلقاء نفسها — ولا تُنفَّذ إلا عندما تكون نتيجة عقدة مشغّل (زرقاء) سابقة لها <code>true</code>. يبدو التدفق المكوّن من إجراءات متسلسلة فقط صالحًا، لكنه يظل خاملًا لأن لا شيء يبدأ السلسلة. تصف أسماء العقد ما <em>تفعله</em>، وليس متى يحدث: <em>إبراز الرسالة (Feature Message)</em> يُبرز رسالة عندما يصل إليه التدفق — ولا يعمل عندما تُبرز رسالة في مكان آخر.</p>
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-missing-trigger.png" alt="عقدتا إجراء موصولتان تسلسليًا دون عقدة مشغّل">
+                        <figcaption>❌ لا يعمل أبدًا. Feature Message وSpeak Text كلاهما <em>إجراءات</em>؛ فمن دون مشغّل في البداية، لا شيء يبدأ السلسلة.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-trigger-first.png" alt="مشغّل Any Message متصل بإجراءَي Feature Message وSpeak Text">
+                        <figcaption>✅ يعمل. مشغّل <em>أي رسالة (Any Message)</em> (أو Message Contains أو تعبير منتظم أو حدث تبرع أو غير ذلك) يبدأ السلسلة؛ ثم يعمل الإجراءان لكل رسالة مطابقة.</figcaption>
+                    </figure>
+                </div>
+            </section>
+            <section id="flow-actions-overlay">
+                <h2>تراكب Flow Actions (خرج الإجراءات)</h2>
+                <div class="panel">
+                    <strong>ابدأ بقالب تنبيه:</strong>
+                    <p>اختر <em>تبرع: احتفال + كلام</em> لحركة جاهزة ومقطع شكر اصطناعي، أو القالب المتقدم <em>تبرع: حركة + صوت + مرشح OBS</em> . تبدأ قوالب التنبيهات الجديدة معطلة لتتمكن من ضبطها واختبارها أولًا. لقالب OBS، اختر مصدرًا والمرشح نفسه الذي يكون معطلًا عادةً في إجراءَي المرشح.</p>
+                    <p>اختر <em>Play Audio Clip → Browse sounds</em> to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing <em>Use sound</em>. <a href="../../audio-library.html" target="_blank" rel="noopener">Sound Library</a> also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.</p>
+                    <p>In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose <em>Use random set</em>. Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set. <em>Playback options</em> controls overlap, queueing, and the action's cooldown; <em>Stop Audio Clips</em> stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use <em>نطق النص (Speak Text)</em>.</p>
+                    <p>يشغّل Event Flow الصوت عبر <strong>Flow Actions</strong> كمصدر متصفح؛ ويشغّل Multi-Alerts الصوت عبر مصدر متصفح خاص به. أبقِ الصوت مفعّلًا في واحد فقط للحدث نفسه لتجنب التشغيل المزدوج. انتقل إلى عقدة تدفق بمفتاح Tab واضغط Enter أو المسافة لتحرير خصائصها.</p>
+                </div>
+                <p>العقد مثل <em>تشغيل مقطع صوتي (Play Audio Clip)</em>, <em>عرض تراكب وسائط (Display Media Overlay)</em>، وعناصر تحكم OBS تحتاج إلى واجهة عرض. وهذه الواجهة هي صفحة تراكب Flow Actions المقدمة من <a href="../../actions.html" target="_blank" rel="noopener">actions.html</a>. أبقِه يعمل في برنامج البث لديك (OBS أو لوحات متصفح Streamer.bot أو غيرها) حتى تجد إجراءات Event Flow موضعًا للظهور.</p>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-audio-overlay.png" alt="مشغّل Any Message متصل بإجراء Play Audio Clip">
+                    <figcaption>هذا التدفق مكتمل ويعمل مع كل رسالة — لكن الصوت يُشغَّل على صفحة تراكب Flow Actions، <em>وليس في المحرر.</em> يشغّل زر المعاينة في المحرر الصوت محليًا؛ أما التشغيل الفعلي فيتطلب فتح التراكب. إذا حظر المتصفح التشغيل التلقائي، فانقر على <strong>تفعيل الصوت</strong> في صفحة Flow Actions لإعادة محاولة آخر مقطع محظور. يتيح النقر في مكان آخر من تلك الصفحة التشغيل أيضًا. ويسمح مصدر متصفح OBS عادةً بالتشغيل التلقائي.</figcaption>
+                </figure>
+                <div class="panel">
+                    <strong>كيفية فتحه (من النافذة المنبثقة أو لوحة التحكم):</strong>
+                    <ol>
+                        <li>افتح نافذة Social Stream Ninja المنبثقة الرئيسية (النافذة المحمّلة من <a href="../../popup.html" target="_blank" rel="noopener">popup.html</a> أو أيقونة الإضافة).</li>
+                        <li>مرّر إلى بطاقة “Flow Actions”. استخدم <em>[نسخ الرابط]</em> أو انقر على الرابط داخل البطاقة.</li>
+                        <li>يبدو الرابط مثل <code>https://socialstream.ninja/actions.html?session=YOURSESSION</code>. الصقه في مصدر متصفح OBS (يُقترح 1920×1080) أو افتحه في أي متصفح للتراكبات.</li>
+                    </ol>
+                </div>
+                <div class="panel">
+                    <strong>استخدام وسائط محلية في التطبيق المستقل:</strong>
+                    <ol>
+                        <li>في إجراء Play Audio Clip أو Display Media Overlay، انقر على <em>اختيار ملف محلي (Choose Local File)</em>.</li>
+                        <li>انقر على <em>نسخ رابط Flow Actions المحلي لـOBS ‏(Copy Local Flow Actions URL for OBS)</em> واستخدم رابط localhost المُنشأ بدلًا من رابط Flow Actions المستضاف.</li>
+                        <li>أبقِ SSApp يعمل. إذا نُقل ملف محدد، فعُد إلى الإجراء وانقر على <em>إعادة الربط (Relink)</em>.</li>
+                    </ol>
+                    <p>لا تستطيع إضافة Chrome تقديم ملفات القرص بمفردها. استخدم Upload أو رابطًا مستضافًا عندما لا يتوفر مرافق سطح المكتب. راجع <a href="../docs/media-hosting-event-flow.html" target="_blank" rel="noopener">دليل ملفات الوسائط لـ Event Flow</a> للإعداد الكامل.</p>
+                </div>
+                <p>بعد تحميل ذلك التراكب، يمكنه:</p>
+                <ul>
+                    <li>عرض GIPHY أو روابط وسائط مباشرة ونص وقصاصات احتفالية تُفعّلها تدفقاتك.</li>
+                    <li>تشغيل الأصوات (TTS والمقاطع الصوتية) محليًا ليسمعها المشاهدون.</li>
+                    <li>تواصل مع OBS عبر إعدادات WebSocket الموجودة ضمن قسم Flow Actions في النافذة المنبثقة (تبديل المشاهد وتبديل المصادر وتحديث نص GDI+/FreeType ومخزن الإعادة وغيرها).</li>
+                </ul>
+                <div class="panel">
+                    <strong>أوضاع التحكم في OBS:</strong>
+                    <ul>
+                        <li><strong>Browser Source API:</strong> متاح فقط عندما <code>actions.html</code> يعمل داخل مصدر متصفح OBS مع <em>مستوى الوصول المتقدم (Advanced Access Level)</em>. يعمل تبديل المشاهد هنا، ويمكن لإجراءات التسجيل والبث ومخزن الإعادة استخدامه كبديل احتياطي.</li>
+                        <li><strong>OBS WebSocket:</strong> يُوصى به للتحكم المتسق. تستخدم Flow Actions في Social Stream Ninja واجهة OBS WebSocket v5 API من OBS 28 أو أحدث وتتوقع مجموعة الطلبات الحديثة على المنفذ <code>4455</code>.</li>
+                        <li><strong>كلمة المرور:</strong> اختيارية. أضف فقط <code>&amp;obspw=...</code> إلى رابط Flow Actions إذا كان خادم OBS مضبوطًا ليتطلب المصادقة.</li>
+                        <li><strong>تشخيص التراكب:</strong> أضف <code>&amp;obsdebug=1</code> إلى رابط <code>actions.html</code> إذا أردت شارة صغيرة مباشرة لاتصال OBS على التراكب أثناء استكشاف الأخطاء.</li>
+                        <li><strong>Set Text Source:</strong> يحدّث مُدخلات OBS Text (GDI+) وText (FreeType 2) مباشرة ويدعم متغيرات قوالب Event Flow مثل <code>{counterValue}</code> و <code>{counterTarget}</code>.</li>
+                        <li><strong>تثبيتات 4.x القديمة:</strong> إذا كنت لا تزال تستخدم obs-websocket 4.x أو المنفذ <code>4444</code>، فلن تعمل إجراءات المصدر والمرشح والكتم والنص إلى أن تتم ترقية OBS أو obs-websocket.</li>
+                    </ul>
+                    <p>راجع <a href="obs-control-guide.html">دليل التحكم في OBS</a> المخصص للاطلاع على كل مشغّل وإجراء وخطوة إعداد ووصفة مختبرة.</p>
+                </div>
+                <div class="panel">
+                    <strong>مسار التشخيص الموصى به:</strong>
+                    <ol>
+                        <li>افتح <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">obs-websocket-test.html</a>.</li>
+                        <li>تأكد من أن <code>GetVersion</code>, <code>GetCurrentProgramScene</code>، و <code>GetSceneList</code> تنجح.</li>
+                        <li>نفّذ فحص الإجراء المطابق هناك قبل اختبار أتمتة Event Flow كاملة.</li>
+                    </ol>
+                </div>
+                <div class="panel warn">
+                    <strong>أبقِ التراكب مفتوحًا.</strong> يؤدي إغلاق صفحة Flow Actions إلى إيقاف كل إجراءات التراكب والصوت وOBS في Event Flow مؤقتًا. أخفِها أو ضعها على شاشة منفصلة بدلًا من إغلاقها تمامًا.
+                </div>
+            </section>
+
+            <section>
+                <h2>1. ما الذي يمر عبر العقدة؟</h2>
+                <p>تمرّر بيئة تشغيل Event Flow شيئين عبر كل سلك:</p>
+                <ol>
+                    <li><strong>الحمولة</strong> — كائن بيانات الحدث أو الرسالة.</li>
+                    <li><strong>إشارة البوابة</strong> — قيمة <em>true</em>/<em>false</em> التي تخبر العقدة التالية بما إذا كان ينبغي تنفيذها.</li>
+                </ol>
+                <div class="panel">
+                    <strong>إذا أخرجت عقدة false:</strong> تتوقف العقد اللاحقة عن التنفيذ ما لم تتلقَّ مدخلات عبر فرع منفصل (مثل منفذ <code>false</code> في عقدة Condition). يسهل ذلك بناء منطق احتياطي دون تكرار تدفقات كاملة.
+                </div>
+                <h3>متطلبات المدخلات</h3>
+                <ul>
+                    <li><strong>مصادر الأحداث</strong> (Twitch Message وTimers وManual Trigger وغيرها) تتجاهل المدخلات السابقة — فهي تنشئ حمولتها الخاصة وتُصدر دائمًا <code>true</code> إلا إذا حدث خطأ في العقدة نفسها.</li>
+                    <li><strong>عقد التحويل والمنطق</strong> تقرأ الحمولة وقد تعيد كتابة الحقول أو تضبط الحالة أو تقلب إشارة البوابة إلى <code>false</code>.</li>
+                    <li><strong>عقد الإجراءات</strong> لا تعمل إلا عندما تظل البوابة <code>true</code>. ويمكنها مع ذلك إخراج حمولة محدثة إذا أردت مواصلة سلسلة الإجراءات.</li>
+                </ul>
+                <h3>أنماط المخرجات</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>مخرج واحد</h4>
+                        <p>توفر معظم العقد مخرجًا واحدًا. كل ما يدخل (الحمولة والبوابة) يخرج دون تغيير ما لم تعدّله العقدة.</p>
+                    </div>
+                    <div class="card">
+                        <h4>مخرجات true وfalse</h4>
+                        <p>تُخرج عقد Condition وCompare وRegex وLogic منفذين. <em>صحيح (True)</em> تستمر عبر المنفذ الأخضر؛ <em>false</em> تتوفر على المنفذ الرمادي أو الأحمر.</p>
+                    </div>
+                    <div class="card">
+                        <h4>التمرير كما هو مقابل التجاوز</h4>
+                        <p>تعدّل بعض العقد (Set Variable وMath وText Replace) الحمولة لكنها تظل تمرّر <em>true</em>/<em>false</em> من مدخلاتها. وتعيد عقد أخرى (NOT وAND وOR) حساب القيمة المنطقية بنفسها.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>2. مرجع سريع للعقد المنطقية</h2>
+                <p>تجيب هذه الكتل عن أكثر الأسئلة شيوعًا حول معنى true وfalse.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>NOT</h4>
+                        <ul>
+                            <li>المدخلات: قيمة منطقية واحدة (true/false) مشتقة من العقدة السابقة.</li>
+                            <li>المخرجات: القيمة المنطقية المعكوسة بالإضافة إلى الحمولة دون تعديل.</li>
+                            <li><strong>السلوك الافتراضي:</strong> إذا لم يكن شيء موصولًا بمدخل NOT، فإن نتيجتها تكون <code>false</code>، لذا يكون الخرج <code>true</code>.</li>
+                        </ul>
+                        <div class="panel">
+                            <strong>مثال:</strong> ضع NOT بعد "Contains Keyword" لتشغيل تنبيه عندما <em>لا يستخدم المشاهد الكلمة المفتاحية.</em>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>AND</h4>
+                        <ul>
+                            <li>المدخلات: إشارتان منطقيتان أو أكثر (A وB و...). يمكنك ترك المنافذ الإضافية فارغة.</li>
+                            <li>المخرجات: <code>true</code> فقط إذا كانت جميع المدخلات الموصولة تساوي <code>true</code>.</li>
+                            <li>استخدم AND عندما يجب استيفاء شروط متعددة في الوقت نفسه («مشترك» <em>و</em> «رسالة الدردشة تحتوي على !raffle»).</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>OR</h4>
+                        <ul>
+                            <li>يصدر <code>true</code> إذا <strong>كان أيٌّ</strong> من المدخلات الموصولة يساوي true.</li>
+                            <li>مفيد للمشغّلات متعددة المنصات: أوصل عقد رسائل Twitch وYouTube ببوابة OR واحدة، ثم وحّد الإجراء اللاحق.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="callout tip">
+                    <strong>هل أحتاج دائمًا إلى عقدة AND؟</strong><br>
+                    لا. توفر عقد كثيرة بالفعل مرشحات شاملة (مثل “Filter User Level” مع “Contains Text”). استخدم AND فقط عندما لا تغطي الخيارات المدمجة تركيبتك، أو عندما تريد نقطة وصل منطقية قابلة لإعادة الاستخدام تشترك فيها فروع أخرى.
+                </div>
+                <div class="callout.warn">
+                    <strong>NOT والمدخلات الفارغة:</strong> ستظل عقدة NOT غير الموصولة تُخرج <code>true</code>. أبقِها موصولة بشيء ذي معنى أو عطّل العقدة حتى لا ترفع الحظر عن تدفق عن طريق الخطأ.
+                </div>
+            </section>
+
+            <section>
+                <h2>3. أمثلة تدفقات مصغرة</h2>
+                <h3>A. الرد التلقائي ما لم تكن الرسالة أمرًا</h3>
+                <div class="diagram">
+رسالة Twitch ──▶ مطابقة Regex "^!" ─┐ │ ├─false──▶ رد تلقائي («شكرًا للدردشة!») │ └─true──▶ لا تفعل شيئًا
+                </div>
+                <p>هنا تُصدر عقدة Regex <code>true</code> عندما تكون الرسالة أمرًا. نوجّه منفذ <code>false</code> إلى ردنا، فيتلقى المشاركون العاديون إقرارًا بينما تمر الأوامر ببساطة.</p>
+                <h3>B. اشتراط فحوص متعددة باستخدام AND</h3>
+                <div class="diagram">
+رسالة YouTube ──▶ تحتوي على “!queue” ─▶ AND ─▶ ترحيل إلى Discord عضوية مهداة ─▶ دور المستخدم = عضو ──▲
+                </div>
+                <p>تضمن عقدة AND ترحيل رسائل الأعضاء الذين يستخدمون الكلمة المفتاحية الصحيحة فقط إلى Discord. يرسل الفرعان نتيجتهما المنطقية إلى عقدة AND؛ وتمرّ حمولة الفرع <em>الأول</em> إلى العقد اللاحقة.</p>
+                <h3>C. عقدة NOT لمنع التنبيهات المتكررة</h3>
+                <div class="diagram">
+حمولة الحدث ─▶ فحص الحالة (isAlertMuted) └─false─▶ NOT ─▶ تشغيل احتفال
+                </div>
+                <p><code>State Check</code> يُخرج القيمة <code>true</code> عندما يكون التنبيه مكتومًا. بعكس تلك النتيجة، تضمن عقدة NOT تشغيل الاحتفال فقط عندما يكون العلم <code>false</code>.</p>
+                <h3>D. تشغيل أحد صوتين عشوائيًا</h3>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-random-two-sounds.png" alt="تدفق يستخدم بوابات RANDOM وNOT وAND لتشغيل أحد مقطعين صوتيين عشوائيًا">
+                    <figcaption>اختيار عشوائي بنسبة 50/50 بين مقطعين صوتيين. تجري بوابة RANDOM اختيارًا واحدًا لكل رسالة مطابقة: عندما يمر الاختبار، يعمل الصوت A؛ وعندما يفشل، تعكس بوابة NOT النتيجة وتسمح بوابة AND بتشغيل الصوت B بدلًا منه.</figcaption>
+                </figure>
+                <div class="diagram">
+مشغّل ──▶ RANDOM (50%) ──▶ تشغيل الصوت A │ └──▶ NOT ──▶ AND ──▶ تشغيل الصوت B مشغّل ──────────────────▲
+                </div>
+                <p><strong>بوابة AND ليست اختيارية.</strong> ستُخرج عقدة NOT وحدها <code>true</code> كلما كانت بوابة RANDOM خاملة، لذا سيعمل الصوت B مع كل رسالة دردشة <em>لا تطابق المشغّل.</em> توصيل المشغّل إلى AND كمدخل ثانٍ يقصر الصوت B على الرسائل المطابقة فقط. يعمل النمط نفسه مع أي زوج من الإجراءات البديلة، وليس الصوت وحده.</p>
+            </section>
+
+            <section>
+                <h2>4. منع الصدى والحلقات والتغذية الراجعة للترحيل</h2>
+                <p>ترحيل الدردشة بين الواجهات أداة قوية، لكنه قد يسبب صدى لا نهائيًا إذا استمعت إلى خرجك نفسه. اتبع هذه الاحتياطات:</p>
+                <div class="callout tip">
+                    <strong>ملاحظة وجهة YouTube Shorts:</strong><br>
+                    تميّز المشغّلات الواردة ووجهات Relay Chat الصادرة بين <code>youtube</code> و <code>youtubeshorts</code>. استخدم إجراءَي ترحيل عندما ينبغي أن تصل الرسالة إلى كلا النوعين. راجع <a href="../docs/source-types-guide.html#youtube-shorts-event-flow">YouTube Shorts وEvent Flow</a>.
+                </div>
+                <div class="callout.danger">
+                    <strong>يتخطى Relay Chat الرسائل المرتدة المعروفة تلقائيًا.</strong><br>
+                    الرسالة المرتدة هي رسالة صادرة تُلتقط مجددًا من دردشة الوجهة. تتخطى إجراءات Relay Chat الحالية هذه الرسائل المرتدة المعروفة؛ ولا يوجد مربع اختيار منفصل باسم No Reflections. لإخفاء عرضها أو تقييده في لوحة الإرساء والتراكبات، استخدم <strong>مرشح الرسائل المرتدة (Reflection Filter)</strong> بالقيمة <strong>حظر الكل (Block All)</strong>, <strong>السماح بالأولى (Allow First)</strong>، أو <strong>السماح بالكل (Allow All)</strong>. يتحكم هذا في العرض عند إعادة الاستقبال، لا في الإرسال. اتبع <a href="../docs/chat-relay-guide.html">شرح ترحيل Twitch وYouTube خطوة بخطوة</a> لإعداد كامل.
+                </div>
+                <ul>
+                    <li><strong>تجنب أنظمة الترحيل المكررة.</strong> عطّل خيار Relay all العام عند استخدام مسارات Event Flow المكافئة، وتحقق من الخدمات الأخرى التي تربط الدردشات نفسها. لا يُضمن بقاء البيانات الوصفية المخصصة بعد المرور عبر دردشة منصة.</li>
+                    <li><strong>استخدم عقد Debounce أو Cooldown</strong> للتنبيهات التي ينبغي أن تعمل مرة واحدة فقط كل X ثانية.</li>
+                    <li><strong>اقطع الدورات عمدًا.</strong> إذا كان فرعان يغذي أحدهما الآخر، فأضف عقدة منطقية تفحص متغير حالة (“currentlyRelaying”) حتى يخرج التدفق مبكرًا عندما يكون العلم مفعّلًا.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>5. المدخلات والمخرجات وأسئلة عملية</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h4>ما الذي يدخل إلى العقدة؟</h4>
+                        <ul>
+                            <li>حمولة الرسالة كاملة.</li>
+                            <li>قيمة البوابة المنطقية (<code>true</code>/<code>false</code>).</li>
+                            <li>سياق اختياري (متغيرات الحالة والمؤقتات) تطلبه العقدة صراحةً.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>ما الذي يخرج من العقدة؟</h4>
+                        <ul>
+                            <li>الحمولة نفسها ما لم تعدّلها العقدة.</li>
+                            <li>قيمة بوابة منطقية يُعاد حسابها (للعقد المنطقية) أو تُمرَّر كما هي (للإجراءات).</li>
+                            <li>لا تغيّر معظم التأثيرات الجانبية (مثل إرسال الدردشة) الحمولة، لكن يمكن لإجراءات النقاط إرفاق حقول حالة مثل <code>pointsTotal</code> أو <code>pointsSpendError</code> للمنطق اللاحق.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>متى تتفرع؟</h4>
+                        <p>كلما أردت الاستجابة بشكل مختلف لـ <code>true</code> مقابل <code>false</code>. اسحب سلكًا من المخرج الملون المطلوب (الأخضر = true، والرمادي أو الأحمر = false) إلى العقدة التالية.</p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <strong>تذكّر:</strong> إذا لم تفعل شيئًا بإشارة <code>false</code> ، ينتهي التدفق هناك ببساطة. وهذا مناسب للمرشحات («حظر كل ما يفشل في الفحص»)، لكن لا تنسَ توصيل مسار <code>false</code> إذا كنت تحتاج إلى بدائل احتياطية.
+                </div>
+                <h3>أسئلة وأجوبة شائعة</h3>
+                <ul>
+                    <li><strong>هل يجب استخدام AND لكل زوج من المرشحات؟</strong> لا. تتضمن عقد كثيرة فحوصًا متعددة (مثل مرشح الرسائل الأساسي الذي يدعم كلمة مفتاحية ودورًا). استخدم AND للتركيبات المتقدمة فقط أو عند دمج إشارات من عقد مختلفة.</li>
+                    <li><strong>كيف تصل قيم true وfalse إلى عقدة NOT؟</strong> أي عقدة ذات مخرج أخضر تُصدر <code>true</code> افتراضيًا. عندما يفشل شرط، تُصدر <code>false</code>. اربط ذلك السلك بـ NOT لعكس النتيجة.</li>
+                    <li><strong>هل تستطيع عقدة إخراج حمولة حتى إذا أرجعت false؟</strong> نعم. تظل الحمولة تمر عبر مخرج false؛ ويعود إليك تحديد وجهة ذلك الفرع.</li>
+					<li><strong>كيف أطابق أعضاء فريق TikTok؟</strong> اختر <em>عضو فريق TikTok (TikTok Team Member)</em> في عقدة User Role. يتعرف على مستويات وشارات TikTok Fan Club أو الفريق في الرسالة الواردة ولا يعتمد على إعدادات Main Chat Overlay.</li>
+					<li><strong>هل تستطيع كل عقدة Speak Text استخدام صوت مختلف؟</strong> نعم. أدخل اسم صوت أو معرّفه المدعوم لدى الموفّر في <em>تجاوز الصوت (Voice Override)</em>، أو اتركه فارغًا لاستخدام إعداد TTS الافتراضي في Flow Actions.</li>
+                </ul>
+            </section>
+
+            <section id="template-variables">
+                <h2>6. مرجع متغيرات القوالب</h2>
+                <p>تدعم عدة عقد إجراءات (Show Text وSet Text Source وSend Message وRelay Chat وTTS Speak وCall Webhook وPrint Thermal Label) <strong>متغيرات القوالب</strong> تُستبدل ببيانات الحدث وقت التشغيل. ضع أسماء المتغيرات بين أقواس معقوفة مثل <code>{username}</code>.</p>
+
+                <h3>المتغيرات الأساسية (متوافقة مع الإصدارات السابقة)</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>المتغير</th><th>الاسم البديل</th><th>الوصف</th><th>مثال</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{username}</code></td><td><code>{chatname}</code></td><td>اسم عرض المستخدم</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{message}</code></td><td><code>{chatmessage}</code></td><td>نص رسالة الدردشة</td><td>مرحبًا بالجميع!</td></tr>
+                        <tr><td><code>{source}</code></td><td>-</td><td>اسم المنصة (بحرف أول كبير)</td><td>Twitch، YouTube</td></tr>
+                        <tr><td><code>{type}</code></td><td>-</td><td>اسم المنصة (خام)</td><td>twitch, youtube</td></tr>
+                        <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>تسمية عرض التبرع أو الإكرامية</td><td>$5.00، 500 bits</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>المتغيرات الموسعة</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>المتغير</th><th>الوصف</th><th>مثال</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{displayname}</code></td><td>اسم العرض (حقل بديل)</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{donoValue}</code></td><td>مكافئ التبرع بالدولار الأمريكي، المقدم أو المقدر؛ ويستمد Event Flow قيم العتبات من الحقل الموحّد <code>hasDonation</code> بصيغ مثل القيمة، <code>$</code>القيمة أو القيمة + الوحدة أو وحدة وقيمة بصيغة مختصرة. تستخدم الوحدات الافتراضية المسماة غير المعروفة معدل 100 وحدة = $0.01 USD؛ وتستخدم هدايا TikTok غير المسعّرة عملة واحدة لكل هدية ($0.01 لكل منها). <code>{donationAmount}</code> اسم بديل قديم</td><td>5.00</td></tr>
+                        <tr><td><code>{event}</code></td><td>معرّف نوع الحدث</td><td>cheer, raid, new_follower</td></tr>
+                        <tr><td><code>{membership}</code></td><td>حالة العضوية</td><td>MEMBERSHIP, new_sponsor</td></tr>
+                        <tr><td><code>{subtitle}</code></td><td>سياق إضافي</td><td>عضو منذ 3 أشهر</td></tr>
+                        <tr><td><code>{userid}</code></td><td>معرّف المستخدم في المنصة</td><td>12345678</td></tr>
+                        <tr><td><code>{chatimg}</code></td><td>رابط الصورة الرمزية للمستخدم</td><td>https://...</td></tr>
+                        <tr><td><code>{contentimg}</code></td><td>رابط الصورة المرفقة</td><td>https://...</td></tr>
+                        <tr><td><code>{rewardTitle}</code></td><td>اسم المكافأة عندما يوفر المصدر حقل عنوان مكافأة في المستوى الأعلى</td><td>أبرز رسالتي</td></tr>
+                        <tr><td><code>{meta}</code></td><td>بيانات حدث منظمة (JSON)</td><td>{"viewers":100}</td></tr>
+                        <tr><td><code>{counterValue}</code></td><td>قيمة العداد الحالية بعد خطوة Counter أو Check Counter</td><td>12</td></tr>
+                        <tr><td><code>{counterTarget}</code></td><td>قيمة هدف العداد</td><td>30</td></tr>
+                        <tr><td><code>{counterRemaining}</code></td><td>هدف العداد ناقص قيمته الحالية، بحد أدنى 0</td><td>18</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>مطابقة المتغيرات غير حساسة لحالة الأحرف.</strong> <code>{USERNAME}</code>, <code>{Username}</code>، و <code>{username}</code> تعمل كلها بالطريقة نفسها.
+                </div>
+                <div class="panel">
+                    <strong>تعمل أيضًا الحقول التي يضيفها التدفق.</strong> إذا أضاف إجراء سابق قيمة في المستوى الأعلى إلى الرسالة، فيمكن للقوالب اللاحقة قراءتها مباشرة. بهذه الطريقة <code>Check Counter</code> يتيح <code>{counterValue}</code>, <code>{counterTarget}</code>، و <code>{counterRemaining}</code>.
+                </div>
+                <div class="panel">
+                    <strong>JSON لإجراء Call Webhook:</strong> تعمل متغيرات القوالب داخل قيم السلاسل النصية في JSON عند أي مستوى تداخل للكائنات أو المصفوفات. لا تُطبَّق القوالب على مفاتيح الكائنات، ويُرسل المتن المخصص الخالي من العناصر النائبة دون تغيير.
+                </div>
+
+                <h3>قوالب أمثلة</h3>
+                <ul>
+                    <li><strong>Show Text:</strong> <code>{username} just cheered {hasDonation}!</code></li>
+                    <li><strong>Set OBS Text Source:</strong> <code>{username}: now {counterValue}, need {counterTarget}</code></li>
+                    <li><strong>Relay Chat:</strong> <code>[{source}] {username}: {message}</code></li>
+                    <li><strong>TTS:</strong> <code>{username} says {message}</code></li>
+                    <li><strong>تنبيه تبرع:</strong> <code>{username} donated {donation} - {subtitle}</code></li>
+					<li><strong>ملصق حراري:</strong> <code>{username}</code>، ثم سطر جديد، ثم <code>{donation}</code>. راجع <a href="../docs/thermal-printer-guide.html">دليل الطابعة الحرارية</a> لإعداد الطابعة والملصقات ذات الحجم الثابت وتدفق كامل.</li>
+                    <li><strong>Call Webhook في Discord:</strong> <code>{&quot;content&quot;:&quot;{message}&quot;,&quot;username&quot;:&quot;{username}&quot;,&quot;avatar_url&quot;:&quot;{chatimg}&quot;}</code></li>
+                </ul>
+
+                <div class="callout tip">
+                    <strong>تتحول المتغيرات المفقودة إلى سلاسل نصية فارغة.</strong> إذا لم يتضمن حدث حقلًا معينًا (مثل <code>{donation}</code> في رسالة دردشة عادية)، يُستبدل العنصر النائب بسلسلة نصية فارغة بدلًا من إظهار النص الحرفي <code>{donation}</code> .
+                </div>
+            </section>
+
+            <section>
+                <h2>7. قائمة أفضل الممارسات</h2>
+                <ul>
+                    <li><strong>سمِّ ولوِّن</strong> عقدك حتى تعرف مستقبلًا هوية كل فرع.</li>
+                    <li><strong>اختبر باستخدام المحاكي المدمج</strong> (Send Test Event) قبل تفعيل التدفق للاستخدام المباشر.</li>
+                    <li><strong>اجمع المنطق بالقرب من المصدر.</strong> رشّح في أبكر مرحلة ممكنة لتجنب معالجة إضافية لاحقًا.</li>
+                    <li><strong>خزّن التكرارات في عقد الحالة.</strong> استخدم العدادات ومفاتيح التبديل والطوابع الزمنية لتجنب التنبيهات المزدوجة.</li>
+                    <li><strong>وثّق حقول meta.</strong> عندما تضيف حقولًا مخصصة إلى <code>meta</code> ، فوثّقها حتى تظل التراكبات والعملاء البعيدون متوافقين.</li>
+                </ul>
+                <div class="callout tip">
+                    <strong>احفظ نسخًا.</strong> صدّر تدفقك عند بلوغ كل مرحلة مهمة. الاستيراد هو أسهل طريقة للعودة إلى نسخة سابقة إذا فشلت تجربة.
+                </div>
+            </section>
+
+            <section>
+                <h2>8. استكشاف إضافي</h2>
+                <p><a href="../docs/streamdeck-event-flow.html">تشغيل مسارات عمل مخصصة من Stream Deck أو API</a>: مشغّلات مسماة وقالب بداية واكتشاف مسارات العمل وبيانات إضافية وأمثلة HTTP وWebSocket وP2P وإيماءات القرص.</p>
+                <p>هل أنت جاهز لمزيد من التفاصيل؟</p>
+                <ul>
+                    <li>استخدم <strong>عقد الحالة (State Nodes)</strong> (العدادات ومفاتيح التبديل والمؤقتات) لتتبع السياق بين الأحداث.</li>
+                    <li>ادمج <strong>المتغيرات والمنطق</strong> لإنشاء أنظمة قوائم انتظار أو سحوبات أو محركات تسجيل نقاط.</li>
+                    <li>اربط بـ <strong>النقاط والمكافآت</strong> حتى يتمكن المشاهدون من تفعيل التدفقات عمدًا.</li>
+                    <li>هل تستخدم <strong>تطبيق SSApp لسطح المكتب؟</strong> فعِّل <a href="#custom-js"><strong>عقد JavaScript المخصصة</strong></a> لأي منطق لا تغطيه عقدة مدمجة.</li>
+                    <li>تحقق من <a href="../docs/event-reference.html"><strong>مرجع الأحداث</strong></a> للوثائق التفصيلية عن الحمولات عبر جميع المنصات.</li>
+                </ul>
+                <p>هذا الدليل مستقل عمدًا — انسخه محليًا، وكيّفه لفريقك، وواصل التجربة داخل المحرر.</p>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 SECTION 9: CUSTOM JAVASCRIPT
+                 Direct link anchors:
+                   #custom-js              → section root
+                   #custom-js-trigger      → Custom Code trigger node
+                   #custom-js-action       → Execute Custom Code action node
+                   #custom-js-message-api  → message object reference table
+                   #custom-js-result-api   → result return object reference
+                   #custom-js-examples     → snippet library
+                   #custom-js-example-flow → complete worked example
+            ══════════════════════════════════════════════════════════════ -->
+            <section id="custom-js">
+                <h2>9. JavaScript مخصص <span class="desktop-badge">SSApp / سطح المكتب فقط</span></h2>
+                <p>تتيح لك عقدتان في محرر Event Flow كتابة أي JavaScript لتُنفَّذ داخل مسار التدفق: <strong>شيفرة مخصصة (Custom Code)</strong> (مشغّل) و <strong>تنفيذ شيفرة مخصصة (Execute Custom Code)</strong> (إجراء). وهما الوسيلة المتاحة لكل ما لا تستطيع العقد المدمجة التعبير عنه.</p>
+
+                <div class="callout warn">
+                    <strong>يتطلب تطبيق سطح المكتب.</strong> عقد JavaScript المخصصة معطلة في إضافة المتصفح لأن سياسة أمان المحتوى في Manifest V3 لـ Chrome تحظر <code>new Function()</code> / <code>eval()</code>. افتح المحرر من خلال <strong>تطبيق SSApp لسطح المكتب</strong> لتفعيلها. في وضع الإضافة تظهر العقد بالرمادي مع التسمية <em>«سطح المكتب فقط»</em>.
+                </div>
+
+                <div class="panel">
+                    <strong>تحرير الشيفرة:</strong> حدد عقدة Custom Code وانقر على <strong>فتح محرر الشيفرة (Open Code Editor)</strong> لفتح نافذة تحرير كبيرة. <strong>حفظ وإغلاق (Save &amp; Close)</strong> يتحقق من صياغة JavaScript ويحفظ التدفق بالكامل؛ <code>Ctrl+S</code> أو <code>Cmd+S</code> يفعل الشيء نفسه. يترك Cancel العقدة دون تغيير.
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/editor-overview.png" alt="محرر Event Flow — الحالة الفارغة">
+                    <figcaption>محرر Event Flow. تسرد اللوحة اليسرى جميع العقد المتاحة؛ وتُنشئ التدفقات على مساحة العمل المنقطة؛ وتعرض اللوحة اليمنى خصائص العقدة المحددة.</figcaption>
+                </figure>
+
+                <!-- ─── Trigger ─── -->
+                <h3 id="custom-js-trigger">Custom Code — عقدة مشغّل</h3>
+                <p>اسحب <strong>شيفرة مخصصة (Custom Code)</strong> من <em>متقدم (Advanced)</em> في لوحة <strong>المحفزات</strong> إلى مساحة العمل. يعمل كبوابة: لا يستمر التدفق إلا عندما تُرجع شيفرتك <code>true</code>.</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/trigger-panel.png" alt="لوحة المشغّلات تعرض عقدة Custom Code ضمن مجموعة Advanced">
+                        <figcaption>يوجد Custom Code ضمن <em>متقدم (Advanced)</em> في لوحة المشغّلات.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-trigger-props.png" alt="لوحة خصائص مشغّل Custom Code تعرض محرر JavaScript">
+                        <figcaption>لوحة الخصائص بعد وضع المشغّل. اكتب أي تعبير يُرجع <code>true</code> أو <code>false</code>.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>توقيع الدالة:</strong> تُنفَّذ شيفرتك بصيغة <code>function(message) { ... }</code><br>
+                    <strong>يجب إرجاع:</strong> قيمة منطقية — <code>true</code> للسماح باستمرار التدفق، <code>false</code> لإيقافه.<br>
+                    <strong>المتاح:</strong> الكائن <code>message</code> (راجع <a href="#custom-js-message-api">واجهة API للرسائل</a> أدناه)، بالإضافة إلى <code>convertCurrency(value, targetCurrency, source)</code> و <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <!-- ─── Action ─── -->
+                <h3 id="custom-js-action">Execute Custom Code — عقدة إجراء</h3>
+                <p>اسحب <strong>تنفيذ شيفرة مخصصة (Execute Custom Code)</strong> من <em>التكاملات (Integrations)</em> في لوحة <strong>الإجراءات</strong> . ويمكنه تعديل الرسالة أو حظرها أو إرفاق بيانات وصفية تستطيع العقد اللاحقة قراءتها.</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/action-panel.png" alt="لوحة الإجراءات تعرض Execute Custom Code ضمن مجموعة Integrations">
+                        <figcaption>Execute Custom Code ضمن <em>التكاملات (Integrations)</em> في لوحة الإجراءات.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-action-props.png" alt="لوحة خصائص إجراء Execute Custom Code تعرض محرر الشيفرة">
+                        <figcaption>خصائص الإجراء. أرجع كائنًا لدمج التغييرات في نتيجة التدفق.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>توقيع الدالة:</strong> تُنفَّذ شيفرتك بصيغة <code>function(message, result) { ... }</code><br>
+                    <strong>ينبغي إرجاع:</strong> كائنًا أو Promise تُدمج في <code>result</code>— راجع <a href="#custom-js-result-api">واجهة API للنتيجة</a>.<br>
+                    <strong>المتاح:</strong> <code>message</code> (حمولة الحدث)، <code>result</code> (حالة نتيجة التدفق الحالية)، <code>printThermal(html, options)</code>، بالإضافة إلى <code>convertCurrency(value, targetCurrency, source)</code> و <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <div class="panel">
+                    <strong>الطباعة الحرارية في SSApp:</strong> اختر الطابعة وعاير عرض الورق والهوامش الآمنة ضمن <em>التحكم في الطابعة (Printer Control)</em>، ثم أرجع <code>printThermal('&lt;strong&gt;' + message.chatname + '&lt;/strong&gt;')</code>. يضع SSApp المهمة في قائمة الانتظار بصمت عبر واجهة الطباعة الأصلية في Windows ويستخدم تلك الإعدادات المحفوظة. يمكن للتدفق تجاوزها بخيارات مثل <code>{ width: '58mm', marginLeft: '3mm', marginRight: '3mm', marginTop: '2mm', marginBottom: '2mm', feed: '3mm', marginType: 'printableArea' }</code>. يتيح إرجاع Promise لـ Event Flow انتظار الإرسال والإبلاغ عن الأخطاء.
+                </div>
+
+                <!-- ─── Both nodes on canvas ─── -->
+                <figure class="screenshot">
+                    <img src="../../actions/img/both-nodes-canvas.png" alt="مساحة عمل تعرض مشغّل Custom Code وإجراء Execute Custom Code جنبًا إلى جنب">
+                    <figcaption>مشغّل Custom Code (أزرق) وإجراء Execute Custom Code (أخضر) موضوعان على مساحة العمل. اربط منفذ خرج المشغّل بمنفذ دخل الإجراء لتوصيلهما.</figcaption>
+                </figure>
+
+                <!-- ─── message API ─── -->
+                <h3 id="custom-js-message-api">الكائن <code>message</code></h3>
+                <p>تستقبل العقدتان حمولة الحدث كاملة بوصفها <code>message</code>. الحقول أدناه متاحة دائمًا؛ وقد تتضمن أحداث المنصات حقولًا إضافية.</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>الحقل</th><th>نوع البيانات</th><th>الوصف</th><th>مثال</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>message.chatmessage</code></td><td>سلسلة نصية</td><td>نص رسالة الدردشة (قد يحتوي على HTML)</td><td><code>"Hello stream!"</code></td></tr>
+                        <tr><td><code>message.chatname</code></td><td>سلسلة نصية</td><td>اسم عرض المرسل</td><td><code>"CoolViewer"</code></td></tr>
+                        <tr><td><code>message.userid</code></td><td>سلسلة نصية</td><td>معرّف المستخدم في المنصة</td><td><code>"12345678"</code></td></tr>
+                        <tr><td><code>message.type</code></td><td>سلسلة نصية</td><td>منصة المصدر (بحروف صغيرة)</td><td><code>"twitch"</code>, <code>"youtube"</code>, <code>"kick"</code></td></tr>
+                        <tr><td><code>message.hasDonation</code></td><td>سلسلة نصية</td><td>سلسلة نصية منسقة للتبرع إن وُجدت</td><td><code>"$5.00"</code>, <code>"500 bits"</code></td></tr>
+                        <tr><td><code>message.donoValue</code></td><td>عدد / سلسلة نصية</td><td>مكافئ التبرع بالدولار الأمريكي عندما يوفره المصدر؛ وتُحترم القيم الصفرية الصالحة. يلجأ Event Flow إلى <code>currency.js</code> لتحويل التسميات الموحّدة في <code>hasDonation</code> لإجراء مقارنات العتبات، بما في ذلك 100 وحدة مسمّاة غير معروفة = $0.01 USD. ولا يحلل <code>chatmessage</code> لاستخراج قيم التبرعات.</td><td><code>5</code></td></tr>
+                        <tr><td><code>message.event</code></td><td>سلسلة نصية</td><td>معرّف نوع الحدث</td><td><code>"new_follower"</code>, <code>"cheer"</code>, <code>"raid"</code></td></tr>
+                        <tr><td><code>message.membership</code></td><td>سلسلة نصية</td><td>حالة العضوية عند انطباقها</td><td><code>"MEMBERSHIP"</code></td></tr>
+                        <tr><td><code>message.subtitle</code></td><td>سلسلة نصية</td><td>سطر سياق ثانوي</td><td><code>"Member for 3 months"</code></td></tr>
+                        <tr><td><code>message.mod</code></td><td>قيمة منطقية</td><td>المرسل مشرف</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.subscriber</code></td><td>قيمة منطقية</td><td>المرسل مشترك</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.vip</code></td><td>قيمة منطقية</td><td>لدى المرسل حالة VIP</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.chatimg</code></td><td>سلسلة نصية</td><td>رابط الصورة الرمزية للمستخدم</td><td><code>"https://..."</code></td></tr>
+                        <tr><td><code>message.meta</code></td><td>كائن</td><td>بيانات منظمة مخصصة مرفقة بالحدث</td><td><code>{ viewers: 120 }</code></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>تحويل العملات:</strong> استخدم <code>convertCurrency(message.hasDonation, 'EUR', message.type)</code> لتحويل تسمية التبرع المنسقة إلى EUR. تُرجع رقمًا، أو <code>null</code> عندما تكون العملة المستهدفة المطلوبة غير مدعومة. يستخدم المحوّل أسعار Social Stream Ninja الداخلية التقريبية؛ ولا يتصل بخدمة صرف خارجية.
+                </div>
+
+                <!-- ─── result API ─── -->
+                <h3 id="custom-js-result-api">ما الذي يُرجعه الإجراء</h3>
+                <p>أرجع كائنًا عاديًا من شيفرة الإجراء. تُدمج أي حقول تُضمّنها في كائن التدفق <code>result</code> ؛ وتحتفظ الحقول التي تحذفها من النتيجة بقيمها الحالية.</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>حقل الإرجاع</th><th>نوع البيانات</th><th>التأثير</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>modified</code></td><td>قيمة منطقية</td><td>اضبط <code>true</code> إذا غيّرت حقول <code>message</code> . يخبر العقد اللاحقة بأن الحمولة عُدّلت.</td></tr>
+                        <tr><td><code>message</code></td><td>كائن</td><td>أعِد تمرير الرسالة (التي ربما عُدّلت) حتى تستقبل العقد اللاحقة تغييراتك.</td></tr>
+                        <tr><td><code>blocked</code></td><td>قيمة منطقية</td><td>اضبط <code>true</code> لمنع عرض الرسالة أو ترحيلها.</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>أبسط قيمة إرجاع آمنة:</strong> <code>return { modified: false, message };</code><br>
+                    حتى إذا لم تغيّر شيئًا، فإن إرجاع <code>message</code> يُبقيه يمر إلى العقدة التالية.
+                </div>
+
+                <!-- ─── Snippet Examples ─── -->
+                <h3 id="custom-js-examples">أمثلة مقاطع شيفرة</h3>
+                <p>انسخ أيًا من هذه المقاطع إلى مساحة نص JavaScript Code في نوع العقدة المطابق.</p>
+
+                <h4 class="snippet-heading">مقاطع شيفرة المشغّلات — أرجع <code>true</code> لمتابعة التدفق</h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">مطابقة كلمة مفتاحية (دون حساسية لحالة الأحرف)</div>
+                    <div class="snippet-desc">تابع التدفق فقط عندما تحتوي الرسالة على كلمة أو عبارة محددة.</div>
+                    <div class="code-js">// Matches "!hello" anywhere in the message
+return (message.chatmessage || '').toLowerCase().includes('!hello');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">اكتشاف الأوامر بتعبير منتظم</div>
+                    <div class="snippet-desc">طابق الرسائل التي تبدأ بأمر من قائمة محددة (مثل <code>!queue</code>, <code>!raffle</code>, <code>!enter</code>).</div>
+                    <div class="code-js">return /^!(queue|raffle|enter)\b/i.test(message.chatmessage || '');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">تبرع أعلى من حد معين</div>
+                    <div class="snippet-desc">نفّذ فقط عندما يساوي التبرع مبلغًا أدنى أو يتجاوزه.</div>
+                    <div class="code-js">const amount = message.donoValue !== undefined && message.donoValue !== null && message.donoValue !== ''
+  ? Number(message.donoValue)
+  : (typeof convertToUSD === 'function' ? convertToUSD(message.hasDonation || '', message.type || '') : Number(String(message.hasDonation || '').replace(/[^0-9.]/g, '') || 0));
+return amount >= 5;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">YouTube Super Chat أو Super Sticker ضمن نطاق باليورو</div>
+                    <div class="snippet-desc">حوّل تسمية تبرع YouTube القياسية إلى EUR، واستبعد Jewels/Gifts، واختر نطاقًا واحدًا للصوت أو التأثير المرئي.</div>
+                    <div class="code-js">var eventName = String(message.event || '').toLowerCase();
+if (eventName !== 'superchat' &amp;&amp; eventName !== 'supersticker') return false;
+
+var eurValue = convertCurrency(message.hasDonation || '', 'EUR', message.type || '');
+if (typeof eurValue !== 'number' || !isFinite(eurValue)) return false;
+
+message.eurValue = eurValue;
+return eurValue &gt;= 10 &amp;&amp; eurValue &lt; 25;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">مرشح المنصة</div>
+                    <div class="snippet-desc">معالجة أحداث منصات محددة فقط.</div>
+                    <div class="code-js">return ['twitch', 'youtube'].includes(message.type);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">بوابة المشترك أو VIP أو المشرف</div>
+                    <div class="snippet-desc">اسمح باستمرار التدفق للمستخدمين ذوي الصلاحيات فقط.</div>
+                    <div class="code-js">return !!(message.subscriber || message.vip || message.mod);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">شروط متعددة — VIP وكلمة مفتاحية</div>
+                    <div class="snippet-desc">اجمع فحص الدور ومحتوى الرسالة في تعبير واحد لا يغطيه أي مشغّل مدمج.</div>
+                    <div class="code-js">const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test(message.chatmessage || '');
+return isPrivileged && isCommand;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">بوابة طول الرسالة</div>
+                    <div class="snippet-desc">معالجة الرسائل ذات المحتوى الكافي فقط (مفيد لـ TTS أو الترحيل لتجنب الإغراق برمز تعبيري واحد).</div>
+                    <div class="code-js">return (message.chatmessage || '').replace(/<[^>]+>/g, '').trim().length >= 20;</div>
+                </div>
+
+                <h4 class="snippet-heading" style="margin-top:36px;">مقاطع شيفرة الإجراءات — أرجع <code>{ modified, message }</code></h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">إلحاق شارة أو وسم بالرسالة</div>
+                    <div class="snippet-desc">أضف مؤشرًا مرئيًا إلى نهاية كل رسالة تمر عبر هذا الإجراء.</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').trimEnd() + ' ✅';
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">حظر الرسالة بشروط</div>
+                    <div class="snippet-desc">افحص المحتوى وأسقط الرسالة بصمت عند مطابقة قاعدة — مفيد لأنماط الرسائل المزعجة التي لا يستطيع مرشح الكلمات المفتاحية التعبير عنها.</div>
+                    <div class="code-js">const text = (message.chatmessage || '').toLowerCase();
+const spamPatterns = ['buy followers', 'free nitro', 'click here'];
+
+if (spamPatterns.some(p => text.includes(p))) {
+    return { blocked: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">إزالة إشارات @mentions</div>
+                    <div class="snippet-desc">أزِل جميع إشارات @username من الرسالة قبل ترحيلها إلى منصة أخرى.</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').replace(/@\w+/g, '').trim();
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">تنسيق إعلان تبرع</div>
+                    <div class="snippet-desc">أعِد كتابة chatmessage كسلسلة إعلان موحدة عند وجود تبرع.</div>
+                    <div class="code-js">const amount = parseFloat(message.donoValue || 0);
+if (amount > 0) {
+    const note = (message.chatmessage || '').trim();
+    message.chatmessage = `💰 ${message.chatname} donated $${amount.toFixed(2)}!`
+        + (note ? ` "${note}"` : '');
+    return { modified: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">إرفاق بيانات وصفية للتوجيه للعقد اللاحقة</div>
+                    <div class="snippet-desc">وسِم الرسالة بحقل مخصص يمكن لإجراء لاحق من نوع <em>تمرير الدردشة (Relay Chat)</em> أو <em>إرسال رسالة (Send Message)</em> قراءته من متغير قالب (<code>{meta}</code>).</div>
+                    <div class="code-js">message.meta = message.meta || {};
+
+// Assign a donation tier so the next node can use {meta} to decide overlay colour
+const amount = parseFloat(message.donoValue || 0);
+message.meta.donationTier = amount >= 20 ? 'gold' : amount >= 5 ? 'silver' : 'bronze';
+
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">بادئة رسالة تراعي المنصة</div>
+                    <div class="snippet-desc">أضف تسمية المنصة في بداية الرسالة عند الترحيل بين المنصات حتى يعرف المشاهدون المصدر.</div>
+                    <div class="code-js">const labels = {
+    twitch:  '[Twitch]',
+    youtube: '[YouTube]',
+    kick:    '[Kick]',
+    tiktok:  '[TikTok]',
+};
+const label = labels[message.type] || `[${message.type || 'Chat'}]`;
+message.chatmessage = `${label} ${message.chatname}: ${message.chatmessage || ''}`;
+return { modified: true, message };</div>
+                </div>
+
+                <!-- ─── Complete worked example ─── -->
+                <h3 id="custom-js-example-flow">مثال كامل — بوت طلبات إضافة ميزات للمشاهدين المميزين (VIP)</h3>
+                <p>يستمع هذا التدفق إلى <code>!feature &lt;text&gt;</code> من المشتركين أو المشاهدين المميزين (VIP) أو المشرفين، ويعيد تنسيقه كطلب إضافة ميزة، ثم يرحّله إلى وجهة ثانية (مثل Discord).</p>
+
+                <div class="diagram">
+┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ مشغّل Custom Code │────▶│ إجراء Execute Custom Code │────▶│ Relay Chat │ │ │ │ │ │ (إلى Discord) │ │ بوابة: VIP/sub/mod │ │ إعادة تنسيق نص الرسالة │ │ │ │ + يبدأ بـ │ │ → "📋 طلب إضافة ميزة │ │ │ │ !feature │ │ من {name}: {text}" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘</div>
+
+                <p><strong>الخطوة 1 — مشغّل Custom Code</strong> (الصقه في حقل JavaScript Code للمشغّل):</p>
+                <div class="code-js">// Only let VIPs, subscribers, and mods through, and only for !feature commands
+const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test((message.chatmessage || '').trim());
+return isPrivileged && isCommand;</div>
+
+                <p><strong>الخطوة 2 — إجراء Execute Custom Code</strong> (الصقه في حقل JavaScript Code للإجراء):</p>
+                <div class="code-js">// Strip the "!feature" command word and format a clean announcement
+const featureText = (message.chatmessage || '')
+    .replace(/^!feature\s*/i, '')
+    .trim();
+
+if (!featureText) {
+    // No text after the command: block rather than relay an empty request
+    return { blocked: true, message };
+}
+
+message.chatmessage = `📋 Feature request from ${message.chatname}: ${featureText}`;
+return { modified: true, message };</div>
+
+                <p><strong>الخطوة 3 — إجراء Relay Chat</strong>: أضف عقدة Relay Chat عادية بعد الإجراء واضبطها لتشير إلى وجهة Discord أو وجهة أخرى. لا حاجة إلى شيفرة مخصصة هنا — فالحقل المعاد تنسيقه <code>message.chatmessage</code> يمر تلقائيًا.</p>
+
+                <div class="callout tip">
+                    <strong>اختبار التدفق.</strong> انقر على الزر: <strong>اختبار التدفق (Test Flow)</strong> (أعلى يمين المحرر) لإرسال رسالة اصطناعية عبر المسار دون الحاجة إلى بث مباشر. عيّن chatname إلى اسم مشترك، وأضف رسالة مثل <code>!feature dark mode support</code>، وتأكد من أن وجهة Relay Chat تتلقى السلسلة النصية المعاد تنسيقها.
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/test-panel.png" alt="لوحة Test Flow لإرسال أحداث اختبار مصطنعة">
+                    <figcaption>لوحة Test Flow. املأ الحقول بما يطابق شروط المشغّل وانقر على <em>تشغيل الاختبار (Run Test)</em> للتحقق من المسار الكامل.</figcaption>
+                </figure>
+
+                <!-- ─── Security note ─── -->
+                <h3 id="custom-js-security">اعتبارات الأمان</h3>
+                <div class="callout warn">
+                    <strong>تعمل الشيفرة المخصصة بصلاحيات عملية العرض.</strong> داخل SSApp، تتمتع الشيفرة في عقد Custom JS بوصول كامل إلى <code>window</code> وأي واجهات API تتيحها شيفرة التحميل المسبق (مثل <code>window.ninjafy</code>). تعامل مع ملفات التدفق المستوردة كشيفرة قابلة للتنفيذ — لا تستورد إلا تدفقات من مصادر تثق بها.
+                </div>
+                <ul>
+                    <li><strong>لا توجد بيئة عزل للشبكة.</strong> يمكن لشيفرة الإجراء استدعاء <code>fetch()</code>. إذا كنت تقبل تدفقات مشتركة من الآخرين، فراجع JavaScript قبل تفعيلها.</li>
+                    <li><strong>تُلتقط الأخطاء.</strong> يُرجع خطأ وقت التشغيل في شيفرتك <code>false</code> (للمشغّل) أو لا ينفّذ شيئًا (للإجراء)، ويسجّل الخطأ في وحدة تحكم DevTools — ولا يتعطل التدفق.</li>
+                    <li><strong>وأخطاء الصياغة أيضًا.</strong> خطأ من النوع <code>SyntaxError</code> وقت الترجمة يُلتقط بالطريقة نفسها. تحقق من DevTools ‏(F12) إذا بدت عقدة وكأنها لا تفعل شيئًا.</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

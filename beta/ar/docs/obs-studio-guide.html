@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ar" data-site-root="../../" data-site-language="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:locale" content="ar_AR">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="شعار Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ar/docs/obs-studio-guide.html">
+    <meta name="twitter:title" content="دليل المبتدئين في استوديو OBS - Social Stream Ninja">
+    <meta name="twitter:description" content="قم بإعداد OBS Studio، وقم بإنشاء مشهد، واختيار برنامج تشفير الأجهزة ومعدل بت النظام الأساسي، ومزج الصوت ومراقبته، وإضافة مصادر المتصفح.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="شعار Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل المبتدئين في استوديو OBS - Social Stream Ninja</title>
+    <meta name="description" content="قم بإعداد OBS Studio، وقم بإنشاء مشهد، واختيار برنامج تشفير الأجهزة ومعدل بت النظام الأساسي، ومزج الصوت ومراقبته، وإضافة مصادر المتصفح.">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ar/docs/obs-studio-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:title" content="دليل المبتدئين في استوديو OBS - Social Stream Ninja">
+    <meta property="og:description" content="قم بإعداد OBS Studio، وقم بإنشاء مشهد، واختيار برنامج تشفير الأجهزة ومعدل بت النظام الأساسي، ومزج الصوت ومراقبته، وإضافة مصادر المتصفح.">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ar/docs/obs-studio-guide.html">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="stylesheet" href="../../docs/css/site-shell.css">
+    <script src="../../docs/js/site-shell.js"></script>
+    <style>
+        body.obs-page { padding-top: 76px; background: var(--site-bg); color: var(--site-text); font-family: var(--site-font); }
+        .obs-page .obs-guide, .obs-page .obs-hero { max-width: 1160px; margin: auto; padding: 0 28px; }
+        .obs-page .obs-hero { padding-top: 52px; padding-bottom: 30px; }
+        .obs-page .obs-eyebrow { color: var(--site-muted); font-size: 13px; letter-spacing: .06em; margin-bottom: 20px; }
+        .obs-page .obs-hero h1 { font-size: 52px; line-height: 1.1; letter-spacing: -.045em; max-width: 750px; margin-bottom: 20px; }
+        .obs-page .obs-lead { max-width: 620px; color: var(--site-muted); font-size: 19px; line-height: 1.6; }
+        .obs-page a { color: var(--site-accent); text-underline-offset: 3px; }
+        .obs-guide a, .obs-hero a { text-decoration: underline; }
+        .obs-guide .obs-jumps { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 0 30px; }
+        .obs-guide .obs-jumps a { background: var(--site-surface); border: 1px solid var(--site-line); border-radius: 24px; padding: 8px 16px; color: var(--site-text); text-decoration: none; font-size: 14px; }
+        .obs-guide .obs-jumps a:hover { border-color: var(--site-accent); }
+        .obs-guide .obs-step { padding: 48px 0; border-top: 1px solid var(--site-line); scroll-margin-top: 94px; }
+        .obs-guide .obs-heading { display: flex; align-items: baseline; gap: 14px; margin-bottom: 24px; }
+        .obs-guide .obs-number { color: var(--site-accent); font-size: 14px; font-weight: 700; }
+        .obs-guide h2 { text-align: left; font-size: 28px; line-height: 1.25; letter-spacing: -.025em; margin: 0; padding: 0; }
+        .obs-guide h3 { font-size: 17px; line-height: 1.4; margin: 0 0 10px; color: var(--site-text); }
+        .obs-guide p, .obs-guide li, .obs-guide dd { font-size: 16px; line-height: 1.7; }
+        .obs-guide p { margin: 0 0 18px; }
+        .obs-guide .obs-copy > :last-child { margin-bottom: 0; }
+        .obs-guide .obs-split { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.3fr); gap: 40px; align-items: start; }
+        .obs-guide .obs-split > * { min-width: 0; }
+        .obs-guide .obs-split-small { grid-template-columns: minmax(0, 1.3fr) minmax(0, .85fr); }
+        .obs-guide ol { padding-left: 22px; margin: 0 0 20px; }
+        .obs-guide li { margin-bottom: 12px; padding-left: 3px; }
+        .obs-guide .obs-shot { margin: 0; }
+        .obs-guide .obs-image-link { display: block; overflow: hidden; border: 1px solid var(--site-line); border-radius: 14px; background: #20212b; }
+        .obs-guide .obs-shot img { display: block; width: 100%; height: auto; }
+        .obs-guide .obs-shot figcaption { color: var(--site-muted); font-size: 13px; line-height: 1.6; margin-top: 12px; }
+        .obs-guide .obs-compact .obs-image-link { display: flex; justify-content: center; padding: 24px; background: var(--site-surface); }
+        .obs-guide .obs-compact img { width: auto; max-width: 100%; max-height: 410px; object-fit: contain; }
+        .obs-guide .obs-facts { margin: 20px 0; }
+        .obs-guide .obs-facts > div { display: flex; justify-content: space-between; gap: 20px; padding: 10px 0; border-bottom: 1px solid var(--site-line); }
+        .obs-guide dt { font-size: 15px; font-weight: 650; }
+        .obs-guide dd { margin: 0; text-align: right; font-size: 15px; }
+        .obs-guide .obs-note { padding: 16px 20px; border: 1px solid var(--border-color); background: var(--site-surface); border-radius: 10px; }
+        .obs-guide .obs-muted, .obs-guide .obs-small { color: var(--site-muted); }
+        .obs-guide .obs-small { font-size: 13px; }
+        .obs-guide details { background: var(--site-surface); border: 1px solid var(--site-line); border-radius: 12px; padding: 16px 20px; margin-top: 18px; }
+        .obs-guide summary { cursor: pointer; color: var(--site-text); font-size: 15px; font-weight: 650; }
+        .obs-guide details[open] summary { margin-bottom: 18px; }
+        .obs-guide details > :last-child { margin-bottom: 0; }
+        .obs-guide .obs-platforms, .obs-guide .obs-routing { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 24px 0; align-items: start; }
+        .obs-guide .obs-platforms details { margin: 0; }
+        .obs-guide .obs-platforms summary { font-size: 19px; }
+        .obs-guide .obs-platforms summary span { display: block; padding: 7px 0 0 18px; font-size: 13px; color: var(--site-muted); font-weight: 400; }
+        .obs-guide .obs-platforms p { font-size: 14px; }
+        .obs-guide table { border-collapse: collapse; width: 100%; font-size: 14px; margin-bottom: 18px; }
+        .obs-guide th, .obs-guide td { text-align: left; padding: 10px 0; border-bottom: 1px solid var(--site-line); }
+        .obs-guide th:last-child, .obs-guide td:last-child { text-align: right; }
+        .obs-guide caption { text-align: left; font-size: 13px; color: var(--site-muted); margin-bottom: 6px; }
+        .obs-guide .obs-route { border: 1px solid var(--site-line); border-radius: 12px; background: var(--site-surface); padding: 22px; }
+        .obs-guide .obs-route p { font-size: 14px; margin-bottom: 12px; }
+        .obs-guide .obs-route p:last-child { margin: 0; color: var(--site-muted); }
+        .obs-guide .obs-routing strong { display: inline-block; min-width: 106px; }
+        .obs-guide .obs-route-icon { width: 28px; height: 28px; margin-bottom: 16px; color: var(--site-accent); }
+        .obs-guide .obs-fixes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; }
+        .obs-guide .obs-fixes p { font-size: 15px; }
+        .obs-guide a:focus, .obs-guide summary:focus { outline: 2px solid var(--site-accent); outline-offset: 4px; }
+        .obs-skip { position: absolute; left: 16px; top: -80px; z-index: 3000; padding: 12px; background: var(--site-surface); }
+        .obs-skip:focus { top: 16px; }
+        @media (max-width: 760px) {
+            .obs-page .obs-guide, .obs-page .obs-hero { padding-left: 20px; padding-right: 20px; }
+            .obs-page .obs-hero { padding-top: 36px; }
+            .obs-page .obs-hero h1 { font-size: 38px; }
+            .obs-guide .obs-step { padding: 32px 0; }
+            .obs-guide .obs-split, .obs-guide .obs-split-small, .obs-guide .obs-platforms, .obs-guide .obs-routing, .obs-guide .obs-fixes { grid-template-columns: 1fr; gap: 24px; }
+            .obs-guide .obs-heading { gap: 12px; }
+            .obs-guide h2 { font-size: 25px; }
+            .obs-guide .obs-platforms, .obs-guide .obs-routing { gap: 12px; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="ar">
+<script id="ssn-site-language" type="application/json">{"language":"ar","page":"docs/obs-studio-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"التبديل إلى السمة الفاتحة","Switch to dark theme":"التبديل إلى السمة الداكنة","Light mode":"الوضع الفاتح","Dark mode":"الوضع الداكن","Open navigation menu":"فتح قائمة التنقل","Close navigation menu":"إغلاق قائمة التنقل","Copy this document as Markdown to the clipboard":"نسخ هذا المستند بصيغة Markdown إلى الحافظة","Copy Markdown":"نسخ Markdown","Copying…":"جارٍ النسخ…","Markdown copied":"تم نسخ Markdown","Copy failed":"تعذّر النسخ","Copy comprehensive Markdown for an AI assistant":"نسخ Markdown شامل لمساعد ذكاء اصطناعي","Copy this documentation page as Markdown for an AI assistant":"نسخ صفحة التوثيق هذه بصيغة Markdown لمساعد ذكاء اصطناعي"},"strings":{", and":"، و",", choose a hardware":"اختر الأجهزة",". Check its preview and stream health; some platforms also require":". تحقق من معاينته وصحة البث؛ تتطلب بعض المنصات أيضًا",". On macOS 13+, use OBS’s":". في macOS 13+، استخدم OBS",". Open your platform below.":". افتح النظام الأساسي الخاص بك أدناه.",". Shared source and audio changes can still affect the live output.":". لا يزال من الممكن أن تؤثر التغييرات في المصدر والصوت المشترك على الإخراج المباشر.",". Talk, play sound, and switch scenes.":". التحدث وتشغيل الصوت وتبديل المشاهد.",". Then open the mixer’s":". ثم افتحي الخلاط","/ OBS STUDIO":"/ استوديو OBS","1080p30":"1080p30","1080p60":"1080p60","1280 × 720 output":"إخراج 1280 × 720","1920 × 1080 canvas":"قماش 1920 × 1080","2-second keyframes":"إطارات رئيسية مدتها ثانيتان","30 FPS":"30 إطارًا في الثانية","6,000 kbps uses about 6 Mbps, plus audio and overhead. Lower bitrate or resolution if your connection cannot keep up.":"يستخدم 6,000 كيلوبت في الثانية حوالي 6 ميجابت في الثانية، بالإضافة إلى الصوت والنفقات العامة. انخفاض معدل البت أو الدقة إذا لم يتمكن اتصالك من الاستمرار.","60 FPS":"60 إطارًا في الثانية","720p30":"720ص30","720p30 / 60":"720ص30 / 60","720p60 / 1080p30":"720p60 / 1080p30","8,000 max.":"8,000 كحد أقصى.",": try light noise suppression, then a compressor and limiter. Add one at a time and listen.":": جرب قمع الضوضاء الخفيفة، ثم الضاغط والمحدد. أضف واحدًا تلو الآخر واستمع.","; avoid hitting 0.":"؛ تجنب ضرب 0.","A":"إن","A simple start:":"بداية بسيطة:","AAC stereo":"ستيريو AAC","AMD":"أيه إم دي","AMD HW H.264 / AVC":"معالج AMD HW H.264 / AVC","Add Existing":"إضافة موجود","Add a chat or alert overlay":"إضافة دردشة أو تراكب التنبيه","Advanced Audio Properties":"خصائص الصوت المتقدمة (Advanced Audio Properties)","All guides":"كل الأدلة","Allow camera, microphone, and screen capture access when your computer asks.":"السماح بالوصول إلى الكاميرا والميكروفون والتقاط الشاشة عندما يطلب جهاز الكمبيوتر الخاص بك ذلك.","App / whole monitor":"التطبيق / الشاشة بأكملها","App audio, macOS, and microphone filters":"مرشحات صوت التطبيق وmacOS والميكروفون","Apple Silicon":"أبل سيليكون","Apple VT H264 Hardware":"أجهزة Apple VT H264","Application Audio Capture":"تطبيق التقاط الصوت","Assumes the source is unmuted and on your output track. “Monitor Off” does not mute the stream.":"بافتراض أن المصدر تم إلغاء كتم صوته وأنه موجود في مسار الإخراج الخاص بك. لا يؤدي \"إيقاف تشغيل الشاشة\" إلى كتم صوت الدفق.","Audio":"الصوت","Audio: 128 kbps, 44.1 kHz stereo. These are recommendations, not minimums.":"الصوت: 128 كيلوبت في الثانية، 44.1 kHz ستيريو. هذه توصيات وليست الحد الأدنى.","Audio: up to 160 kbps.":"الصوت: حتى 160 كيلوبت في الثانية.","Avoid echo:":"تجنب الصدى:","Bitrate":"معدل البت","Blank overlay or repeated audio?":"تراكب فارغ أم صوت متكرر؟","Bring your camera, screen, and sound together. Make a test recording, then go live.":"اجمع الكاميرا والشاشة والصوت معًا. قم بإجراء تسجيل اختباري، ثم ابدأ البث المباشر.","Browser":"المتصفح","Browser Source properties with URL, Width, Height, and Control audio via OBS":"خصائص مصدر المتصفح مع عنوان URL والعرض والارتفاع والتحكم في الصوت عبر OBS","Build one scene":"بناء مشهد واحد","CBR":"التأهيل المجتمعي","Camera / capture card":"الكاميرا/بطاقة الالتقاط","Canvas":"قماش","Cap game FPS; simplify the scene.":"لعبة كاب FPS؛ تبسيط المشهد.","Capture each sound once.":"التقط كل صوت مرة واحدة.","Change Output to stream at a smaller size.":"قم بتغيير الإخراج للبث بحجم أصغر.","Chat or alerts":"الدردشة أو التنبيهات","Check hardware support and update your graphics driver. OBS still needs GPU capacity to draw scenes; cap game FPS or lower output FPS if it falls behind.":"تحقق من دعم الأجهزة وقم بتحديث برنامج تشغيل الرسومات لديك. لا تزال OBS بحاجة إلى سعة وحدة معالجة الرسومات لرسم المشاهد؛ cap game FPS أو انخفاض إخراج FPS إذا تأخرت.","Check mute, monitoring mode, and audio track.":"تحقق من كتم الصوت ووضع المراقبة والمسار الصوتي.","Check the session matches your chat source. Refresh the Browser Source. Keep only one copy playing TTS.":"تحقق من تطابق الجلسة مع مصدر الدردشة الخاص بك. قم بتحديث مصدر المتصفح. احتفظ بنسخة واحدة فقط لتشغيل TTS.","Choose":"اختر","Choose a recording folder in":"اختر مجلد التسجيل فيه","Choose headphones in":"اختر سماعات الرأس","Choose what to capture.":"اختر ما تريد التقاطه.","Choose what you hear":"اختر ما تسمعه","Choose what you want to do.":"اختر ما تريد أن تفعله.","Choose your encoder here; use the platform bitrates below.":"اختر برنامج التشفير الخاص بك هنا؛ استخدم معدلات البت الخاصة بالمنصة أدناه.","Choose your microphone in":"اختر الميكروفون الخاص بك","Choose your video size":"اختر حجم الفيديو الخاص بك","Connect your platform":"قم بتوصيل النظام الأساسي الخاص بك","Control audio via OBS":"التحكم بالصوت عبر OBS (Control audio via OBS)","Copy the overlay URL from Social Stream Ninja.":"انسخ عنوان URL للتراكب من Social Stream Ninja.","Download":"تنزيل","Drag corners to resize. Sources at the top cover those below. Use the eye to hide and the lock to prevent movement.":"اسحب الزوايا لتغيير حجمها. المصادر في الأعلى تغطي تلك الموجودة أدناه. استخدم العين للإخفاء والقفل لمنع الحركة.","Encoder compatibility":"توافق التشفير","Encoders":"التشفير","Encoding lag":"تأخر الترميز","Enhanced Broadcasting":"البث المحسن","Features":"الميزات","File → Remux Recordings":"ملف → تسجيلات Remux","Filters":"عوامل التصفية (Filters)","For TTS or alerts, enable":"بالنسبة إلى TTS أو التنبيهات، قم بتمكينها","For manual output settings, choose":"لإعدادات الإخراج اليدوي، اختر","For persistent chat, leave automatic shutdown and scene-activation refresh off initially.":"بالنسبة للدردشة المستمرة، اترك إيقاف التشغيل التلقائي وتحديث تنشيط المشهد مبدئيًا.","For portrait video, use a 1080 × 1920 canvas and rearrange your sources to fit.":"بالنسبة للفيديو العمودي، استخدم لوحة قماشية بدقة 1080 × 1920 وأعد ترتيب مصادرك لتناسبها.","For separate editing tracks, keep a full mix on track 1, then assign mic/game to additional tracks in Advanced Audio Properties and enable them under Recording.":"بالنسبة لمسارات التحرير المنفصلة، ​​احتفظ بمزيج كامل على المسار 1، ثم قم بتعيين ميكروفون/لعبة لمسارات إضافية في خصائص الصوت المتقدمة وقم بتمكينها ضمن التسجيل.","GUIDES":"الأدلة","Game Capture":"التقاط اللعبة (Game Capture)","Game on Windows":"اللعبة على ويندوز","Give your CPU a break":"امنح وحدة المعالجة المركزية الخاصة بك فترة راحة","Go Live":"اذهب مباشرة","Guides":"الأدلة","H.264":"ح.264","H.264 recommended targets":"الأهداف الموصى بها في التوصية H.264","H.264 · CBR required":"H.264 · مطلوب CBR","Headphones":"سماعات الرأس","Home":"الرئيسية","If something looks wrong":"إذا ظهر شيء خاطئ","If your Mac’s hardware encoder cannot provide CBR, use x264.":"إذا لم يتمكن برنامج تشفير أجهزة Mac الخاص بك من توفير CBR، فاستخدم x264.","In":"في","In this guide":"في هذا الدليل","Install":"ثبّت","Intel":"إنتل","Kick":"Kick","Kick settings":"إعدادات الركلة","Leave upload headroom.":"اترك مساحة التحميل.","Let OBS do the first setup":"دع OBS يقوم بالإعداد الأول","Listen without sending the source directly to output.":"الاستماع دون إرسال المصدر مباشرة إلى الإخراج.","Lower bitrate; try wired Ethernet.":"معدل بت أقل؛ حاول إيثرنت سلكية.","Lower game, music, and alert sliders until speech is clear.":"قم بخفض أشرطة تمرير اللعبة والموسيقى والتنبيه حتى يصبح الكلام واضحًا.","MKV tolerates an interrupted recording. Use":"يسمح MKV بالتسجيل المتقطع. استخدم","Main navigation":"التنقل الرئيسي","Make your voice easy to hear":"اجعل صوتك سهل السمع","Meters show signal level; sliders change the mix.":"تظهر العدادات مستوى الإشارة؛ المتزلجون يغيرون المزيج.","Microphone →":"الميكروفون →","Missing encoder or overloaded computer?":"جهاز التشفير مفقود أو جهاز كمبيوتر مثقل؟","Monitor Off":"إيقاف تشغيل الشاشة","Monitor Only (mute output)":"المراقبة فقط (كتم المخرج) (Monitor Only (mute output))","Monitor and Output":"المراقبة والإخراج (Monitor and Output)","NVENC H.264":"إنفينك H.264","NVIDIA":"نفيديا","Network drops":"انقطاع الشبكة","No":"لا","No hardware option? Use":"لا يوجد خيار الأجهزة؟ استخدم","OBS Audio Mixer with separate meters, volume sliders, and mute controls":"جهاز مزج الصوت OBS المزود بعدادات منفصلة ومنزلقات مستوى الصوت وأدوات التحكم في كتم الصوت","OBS Auto-Configuration Wizard with streaming and recording choices":"معالج التكوين التلقائي OBS مع خيارات البث والتسجيل","OBS Controls with Start Streaming, Start Recording, Studio Mode, and Settings buttons":"عناصر تحكم OBS من خلال أزرار بدء البث، وبدء التسجيل، ووضع الاستوديو، والإعدادات","OBS Output settings with the hardware NVENC H.264 encoder selected":"إعدادات الإخراج OBS مع تحديد جهاز التشفير NVENC H.264","OBS Studio":"OBS Studio","OBS Studio Beginner Guide - Social Stream Ninja":"دليل المبتدئين في استوديو OBS - Social Stream Ninja","OBS Video settings with Base Canvas Resolution, Output Scaled Resolution, and FPS fields":"إعدادات الفيديو OBS مع دقة اللوحة الأساسية، ودقة قياس الإخراج، وحقول FPS","OBS performance help":"مساعدة الأداء OBS","OBS source menu listing Game Capture, Browser, and Video Capture Device":"قائمة مصدر OBS تدرج جهاز التقاط الألعاب والمتصفح وجهاز التقاط الفيديو","October 2026 guidance. Follow your platform’s current requirements. For Facebook or TikTok, first confirm your account offers an external encoder connection.":"إرشادات أكتوبر 2026. اتبع المتطلبات الحالية لمنصتك. بالنسبة إلى Facebook أو TikTok، تأكد أولاً من أن حسابك يوفر اتصالاً خارجيًا بالتشفير.","On macOS, use":"في macOS، استخدم","Open":"افتح","Open navigation menu":"فتح قائمة التنقل","Output":"الإخراج","Output → Advanced → Streaming":"الإخراج → متقدم → البث","Overlays":"التراكبات","Place it above your game or camera. Send a test message; select one in the SSN dock if using the featured-message overlay.":"ضعه فوق اللعبة أو الكاميرا. إرسال رسالة اختبارية؛ حدد واحدًا في قاعدة SSN في حالة استخدام تراكب الرسائل المميزة.","Platform settings":"إعدادات المنصة","Press":"اضغط","QuickSync / QSV H.264":"كويك سينك / كيو اس في H.264","Record a minute. Then go live.":"سجل دقيقة. ثم انتقل مباشرة.","Recording format and separate audio tracks":"تنسيق التسجيل والمسارات الصوتية المنفصلة","Recording saves a file; streaming sends to your platform.":"التسجيل يحفظ الملف؛ يرسل البث إلى النظام الأساسي الخاص بك.","Rendering lag":"تأخر العرض","Replace this default URL and size with your overlay’s settings.":"استبدل عنوان URL والحجم الافتراضيين بإعدادات التراكب.","SSN overlay help":"مساعدة تراكب SSN","SSN overlay setup":"إعداد تراكب SSN","Scene changes normally go straight to output.":"تنتقل تغييرات المشهد عادةً مباشرةً إلى الإخراج.","Scene switching and macOS":"تبديل المشهد وmacOS","Scenes":"مشاهد","Screenshot: OBS Project":"لقطة الشاشة: مشروع OBS","Screenshots open at full size when selected. Labels may vary slightly by OBS version.":"يتم فتح لقطات الشاشة بالحجم الكامل عند تحديدها. قد تختلف التسميات قليلاً حسب إصدار OBS.","Select streaming or recording, follow the prompts, and apply the settings.":"حدد البث أو التسجيل، واتبع المطالبات، وقم بتطبيق الإعدادات.","Set the overlay size; use":"ضبط حجم التراكب؛ استخدام","Set up OBS Studio, build a scene, choose a hardware encoder and platform bitrate, mix and monitor audio, and add browser sources.":"قم بإعداد OBS Studio، وقم بإنشاء مشهد، واختيار برنامج تشفير الأجهزة ومعدل بت النظام الأساسي، ومزج الصوت ومراقبته، وإضافة مصادر المتصفح.","Set your platform’s title and visibility, then":"قم بتعيين عنوان النظام الأساسي الخاص بك وإمكانية رؤيته بعد ذلك","Settings → Audio":"الإعدادات ← الصوت","Settings → Audio → Advanced → Monitoring Device":"الإعدادات ← الصوت ← متقدم ← جهاز المراقبة","Settings → Output":"الإعدادات ← الإخراج","Settings → Stream:":"الإعدادات ← البث:","Settings → Video":"الإعدادات ← الفيديو","Silent output":"إخراج صامت","Skip to guide":"انتقل إلى الدليل","Smoother fast motion":"حركة سريعة أكثر سلاسة","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"شعار Social Stream Ninja","Social Stream Ninja ·":"Social Stream Ninja ·","Sources → + → Browser":"المصادر → + → متصفح (Sources → + → Browser)","Speak normally. Aim for peaks around":"تحدث بشكل طبيعي. تهدف إلى قمم حولها","Standard H.264":"المعيار H.264","Start Recording":"بدء التسجيل (Start Recording)","Start Streaming":"بدء البث (Start Streaming)","Start Streaming can make you publicly live.":"بدء البث يمكن أن يجعلك تعيش علنًا.","Start here":"ابدأ هنا","Stop and watch the file. Check volume, framing, and lip sync.":"توقف وشاهد الملف. تحقق من الحجم والتأطير ومزامنة الشفاه.","Stream":"تيار","Studio Mode":"وضع الاستوديو","Support":"الدعم","Switch theme":"تبديل السمة","TTS setup":"إعداد تحويل النص إلى كلام","Talking / lighter workload":"التحدث / تخفيف عبء العمل","The lower range is a suggested starting test. Try 160 kbps audio; use stereo at no more than 48 kHz.":"النطاق الأدنى هو اختبار البدء المقترح. جرب صوتًا بسرعة 160 كيلوبت في الثانية؛ استخدم الاستريو بما لا يزيد عن 48 kHz.","The video you send":"الفيديو الذي ترسله","Tools → Auto-Configuration Wizard":"الأدوات → معالج التكوين التلقائي","Transition":"الانتقال","Try 720p30":"حاول 720p30","Twitch":"Twitch","Twitch settings":"إعدادات Twitch","Up to 1080p60":"دقة تصل إلى 1080p60","Use Desktop Audio for the whole output device, or separate application capture. Capturing both can double the sound.":"استخدم Desktop Audio لجهاز الإخراج بالكامل، أو التقط تطبيقًا منفصلاً. يمكن أن يؤدي التقاط كليهما إلى مضاعفة الصوت.","Use a private test where available. When finished, stop streaming and confirm the platform event has ended.":"استخدم اختبارًا خاصًا حيثما كان ذلك متاحًا. عند الانتهاء، توقف عن البث وتأكد من انتهاء حدث المنصة.","Use hardware encoding or lower output FPS.":"استخدم تشفير الأجهزة أو خفض معدل الإطارات في الثانية (FPS).","Useful for alerts or TTS you want to hear too.":"مفيد للتنبيهات أو تحويل النص إلى كلام الذي تريد سماعه أيضًا.","Usually right for your mic and games you already hear.":"عادةً ما يكون مناسبًا للميكروفون والألعاب التي تسمعها بالفعل.","Video":"فيديو","Video Capture Device":"جهاز التقاط الفيديو","Video bitrate · kbps":"معدل البت للفيديو · كيلو بايت في الثانية","View → Stats":"عرض → الإحصائيات","Window / Display Capture":"لقطة الشاشة/النافذة","Windows: use":"النوافذ: الاستخدام","With supported AV1 / HEVC encoding, the corresponding targets are 6,000 / 10,000 / 12,000 kbps.":"مع تشفير AV1 / HEVC المدعوم، تكون الأهداف المقابلة هي 6,000 / 10,000 / 12,000 كيلوبت في الثانية.","Yes":"نعم","YouTube":"YouTube","YouTube settings":"إعدادات YouTube","Your first OBS setup.":"أول إعداد لـ OBS.","Your layout’s size":"حجم التخطيط الخاص بك","and open it.":"وفتحه.","and paste it. Keep its session and password options.":"وألصقه. احتفظ بخيارات الجلسة وكلمة المرور.","and start at 720p30.":"وتبدأ عند 720p30.","connect your account, or paste the server URL and private stream key from its dashboard.":"قم بتوصيل حسابك، أو الصق عنوان URL للخادم ومفتاح الدفق الخاص من لوحة التحكم الخاصة به.","don’t capture your monitoring device again through Desktop Audio. That can also send “Monitor Only” audio to viewers. Keep the platform’s live player muted.":"لا تلتقط جهاز المراقبة الخاص بك مرة أخرى من خلال Desktop Audio. ويمكن أن يؤدي ذلك أيضًا إلى إرسال صوت \"الشاشة فقط\" إلى المشاهدين. حافظ على كتم صوت المشغل المباشر للمنصة.","encoder. Dedicated hardware handles video compression, reducing CPU use.":"التشفير. أجهزة مخصصة تتعامل مع ضغط الفيديو، مما يقلل من استخدام وحدة المعالجة المركزية.","for MP4 afterward. Current OBS also offers resilient Hybrid MP4/MOV.":"لـ MP4 بعد ذلك. توفر OBS الحالية أيضًا ملفات MP4/MOV الهجينة المرنة.","for a full-frame landscape overlay.":"لتراكب أفقي كامل الإطار.","for a window or display.":"للنافذة أو العرض.","in Scenes, name your layout, then press":"في المشاهد، قم بتسمية التخطيط الخاص بك، ثم اضغط","in Sources.":"في المصادر.","is a layout. A":"هو التخطيط. أ","is something inside it.":"هو شيء داخله.","lets you prepare a scene, then press":"يتيح لك إعداد مشهد، ثم اضغط","macOS Screen Capture":"لقطة الشاشة macOS","macOS audio/screen capture":"macOS التقاط الصوت/الشاشة","scene":"المشهد","sends multiple qualities and needs a separate bandwidth budget.":"يرسل بصفات متعددة ويحتاج إلى ميزانية منفصلة لعرض النطاق الترددي.","source":"مصدر","to identify the bottleneck.":"للتعرف على عنق الزجاجة.","to reuse a source in another scene.":"لإعادة استخدام المصدر في مشهد آخر.","x264 → veryfast":"x264 → سريع جدًا","−12 to −6 dBFS":"من −12 إلى −6 dBFS"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/obs-studio-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="obs-page">
+    <a class="obs-skip" href="#obs-guide">انتقل إلى الدليل</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="التنقل الرئيسي"><a href="../index.html">الرئيسية</a><a href="features.html">الميزات</a><a href="download.html">تنزيل</a><a href="guides.html">الأدلة</a><a href="support.html">الدعم</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="العربية"><span aria-hidden="true">🌐 </span><span lang="ar">العربية</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-studio-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-studio-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-studio-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-studio-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-studio-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-studio-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-studio-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-studio-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-studio-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-studio-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-studio-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/obs-studio-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/obs-studio-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="obs-studio-guide.html" lang="ar" hreflang="ar" aria-current="true">العربية</a><a class="site-language-link" href="../../tr/docs/obs-studio-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/obs-studio-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/obs-studio-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="تبديل السمة"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="فتح قائمة التنقل" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="obs-hero">
+        <p class="obs-eyebrow"><a href="guides.html#guide-directory">الأدلة</a> / استوديو OBS</p>
+        <h1>أول إعداد لـ OBS.</h1>
+        <p class="obs-lead">اجمع الكاميرا والشاشة والصوت معًا. قم بإجراء تسجيل اختباري، ثم ابدأ البث المباشر.</p>
+    </section>
+
+    <main id="obs-guide" class="obs-guide" tabindex="-1">
+        <div class="obs-jumps" role="navigation" aria-label="في هذا الدليل">
+            <a href="#install">ابدأ هنا</a><a href="#scenes">مشاهد</a><a href="#encoders">التشفير</a><a href="#platforms">إعدادات المنصة</a><a href="#mixing">الصوت</a><a href="#browser-sources">التراكبات</a>
+        </div>
+
+        <section class="obs-step" id="install">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">01</span><h2>دع OBS يقوم بالإعداد الأول</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <ol>
+                        <li>ثبّت <a href="https://obsproject.com/download">OBS Studio</a> وفتحه.</li>
+                        <li>اختر <strong>الأدوات → معالج التكوين التلقائي</strong>.</li>
+                        <li>حدد البث أو التسجيل، واتبع المطالبات، وقم بتطبيق الإعدادات.</li>
+                    </ol>
+                    <p class="obs-note">السماح بالوصول إلى الكاميرا والميكروفون والتقاط الشاشة عندما يطلب جهاز الكمبيوتر الخاص بك ذلك.</p>
+                    <p class="obs-small">يتم فتح لقطات الشاشة بالحجم الكامل عند تحديدها. قد تختلف التسميات قليلاً حسب إصدار OBS.</p>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-auto-config.png"><img src="../../docs/images/guides/obs-studio-auto-config.png" width="1028" height="914" alt="معالج التكوين التلقائي OBS مع خيارات البث والتسجيل"></a>
+                    <figcaption>اختر ما تريد أن تفعله. <a href="https://obsproject.com/kb/quick-start-guide">لقطة الشاشة: مشروع OBS</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="scenes">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">02</span><h2>بناء مشهد واحد</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <p>إن <strong>المشهد</strong> هو التخطيط. أ <strong>مصدر</strong> هو شيء داخله.</p>
+                    <p>اضغط <strong>+</strong> في المشاهد، قم بتسمية التخطيط الخاص بك، ثم اضغط <strong>+</strong> في المصادر.</p>
+                    <dl class="obs-facts">
+                        <div><dt>الكاميرا/بطاقة الالتقاط</dt><dd>جهاز التقاط الفيديو</dd></div>
+                        <div><dt>اللعبة على ويندوز</dt><dd>التقاط اللعبة (Game Capture)</dd></div>
+                        <div><dt>التطبيق / الشاشة بأكملها</dt><dd>لقطة الشاشة/النافذة</dd></div>
+                        <div><dt>الدردشة أو التنبيهات</dt><dd>المتصفح</dd></div>
+                    </dl>
+                    <p>اسحب الزوايا لتغيير حجمها. المصادر في الأعلى تغطي تلك الموجودة أدناه. استخدم العين للإخفاء والقفل لمنع الحركة.</p>
+                    <details><summary>تبديل المشهد وmacOS</summary>
+                        <p>في macOS، استخدم <strong>لقطة الشاشة macOS</strong> للنافذة أو العرض.</p>
+                        <p>تنتقل تغييرات المشهد عادةً مباشرةً إلى الإخراج. <strong>وضع الاستوديو</strong> يتيح لك إعداد مشهد، ثم اضغط <strong>الانتقال</strong>. لا يزال من الممكن أن تؤثر التغييرات في المصدر والصوت المشترك على الإخراج المباشر.</p>
+                        <p>اختر <strong>إضافة موجود</strong> لإعادة استخدام المصدر في مشهد آخر.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-sources.png"><img src="../../docs/images/guides/obs-studio-sources.png" width="265" height="580" loading="lazy" alt="قائمة مصدر OBS تدرج جهاز التقاط الألعاب والمتصفح وجهاز التقاط الفيديو"></a>
+                    <figcaption>اختر ما تريد التقاطه. <a href="https://obsproject.com/kb/quick-start-guide">لقطة الشاشة: مشروع OBS</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="video">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">03</span><h2>اختر حجم الفيديو الخاص بك</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <p>افتح <strong>الإعدادات ← الفيديو</strong>.</p>
+                    <dl class="obs-facts">
+                        <div><dt>قماش</dt><dd>حجم التخطيط الخاص بك</dd></div>
+                        <div><dt>الإخراج</dt><dd>الفيديو الذي ترسله</dd></div>
+                        <div><dt>30 إطارًا في الثانية</dt><dd>التحدث / تخفيف عبء العمل</dd></div>
+                        <div><dt>60 إطارًا في الثانية</dt><dd>حركة سريعة أكثر سلاسة</dd></div>
+                    </dl>
+                    <p class="obs-note">بداية بسيطة: <strong>قماش 1920 × 1080</strong>, <strong>إخراج 1280 × 720</strong>, <strong>30 إطارًا في الثانية</strong>.</p>
+                    <p class="obs-small">بالنسبة للفيديو العمودي، استخدم لوحة قماشية بدقة 1080 × 1920 وأعد ترتيب مصادرك لتناسبها.</p>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-video.png"><img src="../../docs/images/guides/obs-studio-video.png" width="983" height="758" loading="lazy" alt="إعدادات الفيديو OBS مع دقة اللوحة الأساسية، ودقة قياس الإخراج، وحقول FPS"></a>
+                    <figcaption>قم بتغيير الإخراج للبث بحجم أصغر. <a href="https://obsproject.com/kb/obs-studio-overview">لقطة الشاشة: مشروع OBS</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="encoders">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">04</span><h2>امنح وحدة المعالجة المركزية الخاصة بك فترة راحة</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <p>في <strong>الإعدادات ← الإخراج</strong>اختر الأجهزة <strong>ح.264</strong> التشفير. أجهزة مخصصة تتعامل مع ضغط الفيديو، مما يقلل من استخدام وحدة المعالجة المركزية.</p>
+                    <dl class="obs-facts">
+                        <div><dt>نفيديا</dt><dd>إنفينك H.264</dd></div>
+                        <div><dt>أيه إم دي</dt><dd>معالج AMD HW H.264 / AVC</dd></div>
+                        <div><dt>إنتل</dt><dd>كويك سينك / كيو اس في H.264</dd></div>
+                        <div><dt>أبل سيليكون</dt><dd>أجهزة Apple VT H264</dd></div>
+                    </dl>
+                    <p>لا يوجد خيار الأجهزة؟ استخدم <strong>x264 → سريع جدًا</strong> وتبدأ عند 720p30.</p>
+                    <details><summary>جهاز التشفير مفقود أو جهاز كمبيوتر مثقل؟</summary>
+                        <p>تحقق من دعم الأجهزة وقم بتحديث برنامج تشغيل الرسومات لديك. لا تزال OBS بحاجة إلى سعة وحدة معالجة الرسومات لرسم المشاهد؛ cap game FPS أو انخفاض إخراج FPS إذا تأخرت.</p>
+                        <p>إذا لم يتمكن برنامج تشفير أجهزة Mac الخاص بك من توفير CBR، فاستخدم x264. <a href="https://obsproject.com/kb/hardware-encoding">توافق التشفير</a>.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-output.png"><img src="../../docs/images/guides/obs-studio-output.png" width="977" height="759" loading="lazy" alt="إعدادات الإخراج OBS مع تحديد جهاز التشفير NVENC H.264"></a>
+                    <figcaption>اختر برنامج التشفير الخاص بك هنا؛ استخدم معدلات البت الخاصة بالمنصة أدناه. <a href="https://obsproject.com/kb/standard-recording-output-guide">لقطة الشاشة: مشروع OBS</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="platforms">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">05</span><h2>قم بتوصيل النظام الأساسي الخاص بك</h2></div>
+            <p><strong>الإعدادات ← البث:</strong> قم بتوصيل حسابك، أو الصق عنوان URL للخادم ومفتاح الدفق الخاص من لوحة التحكم الخاصة به.</p>
+            <p>لإعدادات الإخراج اليدوي، اختر <strong>الإخراج → متقدم → البث</strong>: <strong>التأهيل المجتمعي</strong>, <strong>إطارات رئيسية مدتها ثانيتان</strong>، و <strong>ستيريو AAC</strong>. افتح النظام الأساسي الخاص بك أدناه.</p>
+            <div class="obs-platforms">
+                <details><summary>Twitch<span>المعيار H.264</span></summary>
+                    <table><caption>معدل البت للفيديو · كيلو بايت في الثانية</caption><thead><tr><th scope="col">فيديو</th><th scope="col">معدل البت</th></tr></thead><tbody>
+                        <tr><td>720ص30</td><td>3,000</td></tr><tr><td>720p60 / 1080p30</td><td>4,500</td></tr><tr><td>1080p60</td><td>6,000</td></tr>
+                    </tbody></table>
+                    <p>الصوت: حتى 160 كيلوبت في الثانية. <a href="https://help.twitch.tv/s/article/broadcasting-guidelines?language=en_US">إعدادات Twitch</a>.</p>
+                    <p><a href="https://help.twitch.tv/s/article/enhanced-broadcasting?language=en_US">البث المحسن</a> يرسل بصفات متعددة ويحتاج إلى ميزانية منفصلة لعرض النطاق الترددي.</p>
+                </details>
+                <details><summary>YouTube<span>الأهداف الموصى بها في التوصية H.264</span></summary>
+                    <table><caption>معدل البت للفيديو · كيلو بايت في الثانية</caption><thead><tr><th scope="col">فيديو</th><th scope="col">معدل البت</th></tr></thead><tbody>
+                        <tr><td>720ص30 / 60</td><td>8,000</td></tr><tr><td>1080p30</td><td>14,000</td></tr><tr><td>1080p60</td><td>17,000</td></tr>
+                    </tbody></table>
+                    <p>الصوت: 128 كيلوبت في الثانية، 44.1 kHz ستيريو. هذه توصيات وليست الحد الأدنى. <a href="https://support.google.com/youtube/answer/2853702?hl=en">إعدادات YouTube</a>.</p>
+                    <p>مع تشفير AV1 / HEVC المدعوم، تكون الأهداف المقابلة هي 6,000 / 10,000 / 12,000 كيلوبت في الثانية.</p>
+                </details>
+                <details><summary>Kick<span>H.264 · مطلوب CBR</span></summary>
+                    <table><caption>معدل البت للفيديو · كيلو بايت في الثانية</caption><thead><tr><th scope="col">فيديو</th><th scope="col">معدل البت</th></tr></thead><tbody>
+                        <tr><td>حاول 720p30</td><td>3,000–4,000</td></tr><tr><td>دقة تصل إلى 1080p60</td><td>8,000 كحد أقصى.</td></tr>
+                    </tbody></table>
+                    <p>النطاق الأدنى هو اختبار البدء المقترح. جرب صوتًا بسرعة 160 كيلوبت في الثانية؛ استخدم الاستريو بما لا يزيد عن 48 kHz. <a href="https://help.kick.com/en/articles/7066931-how-to-stream-on-kick-com">إعدادات الركلة</a>.</p>
+                </details>
+            </div>
+            <p class="obs-note"><strong>اترك مساحة التحميل.</strong> يستخدم 6,000 كيلوبت في الثانية حوالي 6 ميجابت في الثانية، بالإضافة إلى الصوت والنفقات العامة. انخفاض معدل البت أو الدقة إذا لم يتمكن اتصالك من الاستمرار.</p>
+            <p class="obs-small">إرشادات أكتوبر 2026. اتبع المتطلبات الحالية لمنصتك. بالنسبة إلى Facebook أو TikTok، تأكد أولاً من أن حسابك يوفر اتصالاً خارجيًا بالتشفير.</p>
+        </section>
+
+        <section class="obs-step" id="mixing">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">06</span><h2>اجعل صوتك سهل السمع</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <ol>
+                        <li>اختر الميكروفون الخاص بك <strong>الإعدادات ← الصوت</strong>.</li>
+                        <li>تحدث بشكل طبيعي. تهدف إلى قمم حولها <strong>من −12 إلى −6 dBFS</strong>؛ تجنب ضرب 0.</li>
+                        <li>قم بخفض أشرطة تمرير اللعبة والموسيقى والتنبيه حتى يصبح الكلام واضحًا.</li>
+                    </ol>
+                    <p><strong>التقط كل صوت مرة واحدة.</strong> استخدم Desktop Audio لجهاز الإخراج بالكامل، أو التقط تطبيقًا منفصلاً. يمكن أن يؤدي التقاط كليهما إلى مضاعفة الصوت.</p>
+                    <details><summary>مرشحات صوت التطبيق وmacOS والميكروفون</summary>
+                        <p>النوافذ: الاستخدام <a href="https://obsproject.com/kb/application-audio-capture-guide">تطبيق التقاط الصوت</a>. في macOS 13+، استخدم OBS <a href="https://obsproject.com/kb/macos-desktop-audio-capture-guide">macOS التقاط الصوت/الشاشة</a>.</p>
+                        <p>الميكروفون → <strong>عوامل التصفية (Filters)</strong>: جرب قمع الضوضاء الخفيفة، ثم الضاغط والمحدد. أضف واحدًا تلو الآخر واستمع.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-mixer.png"><img src="../../docs/images/guides/obs-studio-mixer.png" width="265" height="378" loading="lazy" alt="جهاز مزج الصوت OBS المزود بعدادات منفصلة ومنزلقات مستوى الصوت وأدوات التحكم في كتم الصوت"></a>
+                    <figcaption>تظهر العدادات مستوى الإشارة؛ المتزلجون يغيرون المزيج. <a href="https://obsproject.com/kb/quick-start-guide">لقطة الشاشة: مشروع OBS</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="monitoring">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">07</span><h2>اختر ما تسمعه</h2></div>
+            <p>اختر سماعات الرأس <strong>الإعدادات ← الصوت ← متقدم ← جهاز المراقبة</strong>. ثم افتحي الخلاط <strong>خصائص الصوت المتقدمة (Advanced Audio Properties)</strong>.</p>
+            <div class="obs-routing">
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 21h8m-4-5v5"/></svg>
+                    <h3>إيقاف تشغيل الشاشة</h3><p><strong>سماعات الرأس</strong> لا<br><strong>تيار</strong> نعم</p><p>عادةً ما يكون مناسبًا للميكروفون والألعاب التي تسمعها بالفعل.</p>
+                </div>
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 14V11a8 8 0 0 1 16 0v3"/><rect x="3" y="12" width="4" height="9" rx="2"/><rect x="17" y="12" width="4" height="9" rx="2"/></svg>
+                    <h3>المراقبة فقط (كتم المخرج) (Monitor Only (mute output))</h3><p><strong>سماعات الرأس</strong> نعم<br><strong>تيار</strong> لا</p><p>الاستماع دون إرسال المصدر مباشرة إلى الإخراج.</p>
+                </div>
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M11 4 5 9H2v6h3l6 5Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg>
+                    <h3>المراقبة والإخراج (Monitor and Output)</h3><p><strong>سماعات الرأس</strong> نعم<br><strong>تيار</strong> نعم</p><p>مفيد للتنبيهات أو تحويل النص إلى كلام الذي تريد سماعه أيضًا.</p>
+                </div>
+            </div>
+            <p class="obs-small">بافتراض أن المصدر تم إلغاء كتم صوته وأنه موجود في مسار الإخراج الخاص بك. لا يؤدي "إيقاف تشغيل الشاشة" إلى كتم صوت الدفق.</p>
+            <p class="obs-note"><strong>تجنب الصدى:</strong> لا تلتقط جهاز المراقبة الخاص بك مرة أخرى من خلال Desktop Audio. ويمكن أن يؤدي ذلك أيضًا إلى إرسال صوت "الشاشة فقط" إلى المشاهدين. حافظ على كتم صوت المشغل المباشر للمنصة.</p>
+        </section>
+
+        <section class="obs-step" id="browser-sources">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">08</span><h2>إضافة دردشة أو تراكب التنبيه</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <ol>
+                        <li>انسخ عنوان URL للتراكب من Social Stream Ninja.</li>
+                        <li>اختر <strong>المصادر → + → متصفح (Sources → + → Browser)</strong> وألصقه. احتفظ بخيارات الجلسة وكلمة المرور.</li>
+                        <li>ضبط حجم التراكب؛ استخدام <strong>1920 × 1080</strong> لتراكب أفقي كامل الإطار.</li>
+                        <li>بالنسبة إلى TTS أو التنبيهات، قم بتمكينها <strong>التحكم بالصوت عبر OBS (Control audio via OBS)</strong>.</li>
+                    </ol>
+                    <p>ضعه فوق اللعبة أو الكاميرا. إرسال رسالة اختبارية؛ حدد واحدًا في قاعدة SSN في حالة استخدام تراكب الرسائل المميزة.</p>
+                    <details><summary>تراكب فارغ أم صوت متكرر؟</summary>
+                        <p>تحقق من تطابق الجلسة مع مصدر الدردشة الخاص بك. قم بتحديث مصدر المتصفح. احتفظ بنسخة واحدة فقط لتشغيل TTS.</p>
+                        <p>بالنسبة للدردشة المستمرة، اترك إيقاف التشغيل التلقائي وتحديث تنشيط المشهد مبدئيًا. <a href="obs-quick-start.html">إعداد تراكب SSN</a> · <a href="tts-setup-guide.html">إعداد تحويل النص إلى كلام</a>.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-browser-source-properties.png"><img src="../../docs/images/guides/obs-browser-source-properties.png" width="1468" height="1232" loading="lazy" alt="خصائص مصدر المتصفح مع عنوان URL والعرض والارتفاع والتحكم في الصوت عبر OBS"></a>
+                    <figcaption>استبدل عنوان URL والحجم الافتراضيين بإعدادات التراكب.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="recording">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">09</span><h2>سجل دقيقة. ثم انتقل مباشرة.</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <ol>
+                        <li>اختر مجلد التسجيل فيه <strong>الإعدادات ← الإخراج</strong>.</li>
+                        <li>اضغط <strong>بدء التسجيل (Start Recording)</strong>. التحدث وتشغيل الصوت وتبديل المشاهد.</li>
+                        <li>توقف وشاهد الملف. تحقق من الحجم والتأطير ومزامنة الشفاه.</li>
+                        <li>قم بتعيين عنوان النظام الأساسي الخاص بك وإمكانية رؤيته بعد ذلك <strong>بدء البث (Start Streaming)</strong>. تحقق من معاينته وصحة البث؛ تتطلب بعض المنصات أيضًا <strong>اذهب مباشرة</strong>.</li>
+                    </ol>
+                    <p><strong>بدء البث يمكن أن يجعلك تعيش علنًا.</strong> استخدم اختبارًا خاصًا حيثما كان ذلك متاحًا. عند الانتهاء، توقف عن البث وتأكد من انتهاء حدث المنصة.</p>
+                    <details><summary>تنسيق التسجيل والمسارات الصوتية المنفصلة</summary>
+                        <p>يسمح MKV بالتسجيل المتقطع. استخدم <strong>ملف → تسجيلات Remux</strong> لـ MP4 بعد ذلك. توفر OBS الحالية أيضًا ملفات MP4/MOV الهجينة المرنة.</p>
+                        <p>بالنسبة لمسارات التحرير المنفصلة، ​​احتفظ بمزيج كامل على المسار 1، ثم قم بتعيين ميكروفون/لعبة لمسارات إضافية في خصائص الصوت المتقدمة وقم بتمكينها ضمن التسجيل.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-controls.png"><img src="../../docs/images/guides/obs-studio-controls.png" width="265" height="262" loading="lazy" alt="عناصر تحكم OBS من خلال أزرار بدء البث، وبدء التسجيل، ووضع الاستوديو، والإعدادات"></a>
+                    <figcaption>التسجيل يحفظ الملف؛ يرسل البث إلى النظام الأساسي الخاص بك. <a href="https://obsproject.com/kb/quick-start-guide">لقطة الشاشة: مشروع OBS</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="troubleshooting">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">10</span><h2>إذا ظهر شيء خاطئ</h2></div>
+            <p>افتح <strong>عرض → الإحصائيات</strong> للتعرف على عنق الزجاجة.</p>
+            <div class="obs-fixes">
+                <p><strong>انقطاع الشبكة</strong><br>معدل بت أقل؛ حاول إيثرنت سلكية.</p>
+                <p><strong>تأخر العرض</strong><br>لعبة كاب FPS؛ تبسيط المشهد.</p>
+                <p><strong>تأخر الترميز</strong><br>استخدم تشفير الأجهزة أو خفض معدل الإطارات في الثانية (FPS).</p>
+                <p><strong>إخراج صامت</strong><br>تحقق من كتم الصوت ووضع المراقبة والمسار الصوتي.</p>
+            </div>
+            <p class="obs-small"><a href="https://obsproject.com/kb/encoding-performance-troubleshooting">مساعدة الأداء OBS</a> · <a href="obs-troubleshooting.html">مساعدة تراكب SSN</a> · <a href="guides.html#guide-directory">كل الأدلة</a></p>
+        </section>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja · <a href="guides.html">الأدلة</a> · <a href="support.html">الدعم</a></p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:url" content="https://socialstream.ninja/ja/docs/waitlist-customization-guide.html">
+    <meta name="twitter:title" content="独自の待機リスト オーバーレイをデザインする - Social Stream Ninja">
+    <meta name="twitter:description" content="ホストのエントリと選択の制御を維持しながら、視聴者のキューまたは待機リストの勝者抽選をブランド化します。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>独自の待機リスト オーバーレイをデザインする - Social Stream Ninja</title>
+<meta name="description" content="ホストのエントリと選択の制御を維持しながら、視聴者のキューまたは待機リストの勝者抽選をブランド化します。">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://socialstream.ninja/ja/docs/waitlist-customization-guide.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Social Stream Ninja">
+<meta property="og:title" content="独自の待機リスト オーバーレイをデザインする - Social Stream Ninja">
+<meta property="og:description" content="ホストのエントリと選択の制御を維持しながら、視聴者のキューまたは待機リストの勝者抽選をブランド化します。">
+<meta property="og:url" content="https://socialstream.ninja/ja/docs/waitlist-customization-guide.html">
+<meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+<meta name="twitter:card" content="summary">
+<script>
+(function() {
+    var savedTheme = localStorage.getItem("darkMode");
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+})();
+</script>
+<link rel="stylesheet" href="../../docs/css/styles.css">
+<link rel="stylesheet" href="../../docs/css/guides.css">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/waitlist-customization-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{". These are different tools even when both can draw a winner.":"。どちらも勝者を引き出せる場合でも、これらは異なるツールです。","AI prompt":"AIプロンプト","All guides":"すべてのガイド","All overlay design guides":"すべてのオーバーレイ デザイン ガイド","Also run the":"また、","Brand a viewer queue or waitlist winner draw while keeping the host's entry and selection controls.":"ホストのエントリと選択の制御を維持しながら、視聴者のキューまたは待機リストの勝者抽選をブランド化します。","Change queue cards, position numbers, selected/winning states, title, avatars, and entry-message styling. Keep the renderer's status checks, including entries removed from the active queue. Build the empty, populated, stopped, and selected states with the same visual language.":"キュー カード、位置番号、選択/勝利状態、タイトル、アバター、およびエントリ メッセージのスタイルを変更します。アクティブ キューから削除されたエントリを含む、レンダラーのステータス チェックを保持します。同じビジュアル言語を使用して、空、実装済み、停止、および選択された状態を構築します。","Choose a file":"ファイルを選択する","Choose the right starting page":"適切な開始ページを選択する","Commands & API":"コマンドとAPI","Configure a test entry command in SSN and send entries from distinct fictional users. Confirm queue order and a duplicate entrant's behavior.":"SSN でテスト エントリ コマンドを設定し、個別の架空のユーザーからエントリを送信します。キューの順番と重複入場者の動作を確認します。","Connect your copy and open it in OBS":"コピーを接続し、OBS で開きます","Copy":"コピー","Copy everything from":"からすべてをコピーします","Copy this AI prompt":"この AI プロンプトをコピーします","Design":"デザイン","Design your own waitlist overlay":"独自の待機リスト オーバーレイをデザインする","Design your own waitlist overlay - Social Stream Ninja":"独自の待機リスト オーバーレイをデザインする - Social Stream Ninja","Display sanitization; load libs/objects.js first.":"ディスプレイの消毒。最初に libs/objects.js をロードします。","Download":"ダウンロード","Download and keep the file structure":"ダウンロードしてファイル構造を保持する","Download the source ZIP":"ソースZIPをダウンロードする","Drag your edited HTML file into Chrome or Edge. Copy its address from the address bar; it starts with":"編集したHTMLファイルをChromeまたはEdgeにドラッグします。アドレスバーからアドレスをコピーします。それはから始まります","Event reference":"イベントリファレンス","Features":"機能","File":"ファイル","Find the waitlist controls and overlay link in settings.":"設定で待機リストのコントロールとオーバーレイのリンクを見つけます。","For the starting file above, the local address looks like this; your actual link may contain additional required options:":"上記の開始ファイルのローカル アドレスは次のようになります。実際のリンクには追加の必須オプションが含まれている場合があります。","Give the AI your copied source files and reference artwork. Replace the bracketed details. Keep the input-safety instructions in the prompt.":"コピーしたソースファイルと参照アートワークを AI に渡します。括弧で囲まれた詳細を置き換えます。プロンプトにある入力の安全性に関する指示をそのままにしておきます。","Guides":"ガイド","Highlight an entry, remove it, stop entries, and reset from SSN. Check that the custom view follows each state.":"エントリを強調表示して削除し、エントリを停止して、SSN からリセットします。カスタム ビューが各状態に従っていることを確認します。","Hire":"仕事を依頼する","Home":"ホーム","Host-controlled queue updates.":"ホスト制御のキュー更新。","If using winner-draw mode, test that mode separately and inspect the winning state, then test long names and optional entry messages.":"勝者抽選モードを使用している場合は、そのモードを個別にテストし、勝利状態を検査してから、長い名前とオプションのエントリ メッセージをテストします。","Inspiration":"活用アイデア","Local file":"ローカルファイル","Local setup troubleshooting":"ローカルセットアップのトラブルシューティング","Main navigation":"メインナビゲーション","More references:":"その他の資料：","On this page":"このページの内容","Open navigation menu":"ナビゲーションメニューを開く","Open the copied HTML and its referenced CSS/JS in your editor or AI tool. Add supplied artwork/fonts to the same project and use relative paths. Start with CSS overrides; include the renderer when changing generated markup.":"コピーした HTML とその参照先の CSS/JS をエディターまたは AI ツールで開きます。提供されたアートワーク/フォントを同じプロジェクトに追加し、相対パスを使用します。 CSS オーバーライドから始めます。生成されたマークアップを変更するときにレンダラーを含めます。","Open the result in a browser, then set an OBS Browser Source's":"結果をブラウザで開き、OBS ブラウザのソースを設定します。","Overlay Gallery":"オーバーレイギャラリー","Overlay design guides":"オーバーレイ設計ガイド","Platform icon assets under sources/images/.":"プラットフォームアイコンアセットはsources/images/の下にあります。","Queue and draw display.":"キューと描画表示。","Queue controls":"キュー制御","Session and OBS":"セッションとOBS","Show the full prompt":"プロンプト全体を表示する","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja ·":"Social Stream Ninja ·","Start SSN and make the original generated overlay URL work first. The":"SSN を起動し、最初に生成された元のオーバーレイ URL が機能するようにします。の","Support":"サポート","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","Test":"テスト","Test this overlay type":"このオーバーレイ タイプをテストする","The following files help you find the design and behavior. This is a reading list, not a complete dependency bundle: keep the extracted folder intact, including images, fonts, scripts, and any data files.":"次のファイルは、設計と動作を見つけるのに役立ちます。これはリーディング リストであり、完全な依存関係バンドルではありません。画像、フォント、スクリプト、データ ファイルなど、抽出されたフォルダーはそのままにしておきます。","The host supplies waitlist state; a replacement that counts every chat message locally will not match the host's queue. Keep the complete generated link, including draw-mode or alignment options, and continue using the existing SSN entry and selection controls.":"ホストは待機リスト状態を提供します。すべてのチャット メッセージをローカルでカウントする置き換えは、ホストのキューと一致しません。描画モードや配置オプションを含む、生成された完全なリンクを保持し、既存の SSN エントリおよび選択コントロールを引き続き使用します。","URL":"URL","Use":"使う項目：","Use a preview or test setup first. The":"最初にプレビューまたはテスト設定を使用します。の","Use the actual file address on your computer. OBS saves it with the source; keep the downloaded folder in the same place. After saving design changes, refresh the Browser Source. The":"コンピュータ上の実際のファイル アドレスを使用します。 OBS はソースと一緒に保存します。ダウンロードしたフォルダーを同じ場所に保存します。デザインの変更を保存した後、ブラウザのソースを更新します。の","Waitlist winner draw":"ウェイティングリストの当選者抽選","Where to change the design":"デザインを変更する場所","Why it matters":"なぜそれが重要なのか","against the render paths you changed. After saving edits, refresh the OBS Browser Source between rehearsals and repeat the visible interaction. Browser previews do not establish live capture or OBS behavior.":"。編集内容を保存した後、リハーサルの合間に OBS ブラウザ ソースを更新し、表示されるインタラクションを繰り返します。ブラウザのプレビューでは、ライブ キャプチャや OBS の動作は確立されません。","and extract it. These guides use the beta source; keep the files from one download together.":"を選択して抽出します。これらのガイドではベータ ソースを使用します。 1 回のダウンロードで得たファイルをまとめて保存します。","beside the original. If choosing a different page or theme, keep its copy in that file's original folder.":"オリジナルの横にあります。別のページまたはテーマを選択した場合は、そのコピーをそのファイルの元のフォルダーに保存してください。","design guide":"デザインガイド","ending.":"エンディング。","explains how to send fictional payloads through SSN; a test submitted to your production session can trigger its existing automations.":"SSN を通じて架空のペイロードを送信する方法について説明しています。実稼働セッションに送信されたテストは、既存の自動化をトリガーできます。","for the existing Wait List / Winner Draw feature. The dedicated Giveaway Tool has its own":"既存の待機リスト/勝者抽選機能。専用のプレゼントツールには独自の\nソースプロパティについては","includes Mac examples and an optional launcher for the Local file checkbox.":"には、Mac の例と、[ローカル ファイル] チェックボックスのオプションのランチャーが含まれています。","input-rendering checks":"入力レンダリング チェック","onward in your working SSN overlay link and add it to the end of that file address. Keep all settings, including the session, password, and any":"作業中の SSN オーバーレイ リンク内に移動し、そのファイル アドレスの末尾に追加します。セッション、パスワード、その他の設定を含むすべての設定を保持します。","shared setup guide":"共通セットアップガイド","test-message guide":"テストメッセージガイド","to":"→","to the same address with":"を同じアドレスに","unchecked. Match the source dimensions to your intended design.":"チェックを外します。ソースの寸法を意図したデザインに合わせます。","value connects to that SSN session; it is not your channel name or this file's name. Keep SSN, the relevant feature, and its data sources running.":"値は SSN セッションに接続します。それはあなたのチャンネル名やこのファイルの名前ではありません。 SSN、関連機能、およびそのデータ ソースを実行したままにします。\nアップストリームの修正が必要な場合は、"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/waitlist-customization-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/waitlist-customization-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide visual-guide">
+<header class="site-header"><div class="site-bar">
+<a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション">
+<a href="../index.html">ホーム</a><a href="features.html">機能</a><a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a><a href="download.html">ダウンロード</a><a href="guides.html">ガイド</a><a href="commands.html">コマンドとAPI</a><a href="supported-sites.html">対応サイト</a><a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a><a href="services.html" class="site-priority-hire">仕事を依頼する</a><a href="support.html">サポート</a>
+</nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/waitlist-customization-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/waitlist-customization-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/waitlist-customization-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/waitlist-customization-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/waitlist-customization-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/waitlist-customization-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="waitlist-customization-guide.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/waitlist-customization-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/waitlist-customization-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/waitlist-customization-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/waitlist-customization-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/waitlist-customization-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/waitlist-customization-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/waitlist-customization-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/waitlist-customization-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/waitlist-customization-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/waitlist-customization-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="テーマを切り替え"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button>
+<button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button>
+</div></div></header>
+<section class="page-hero"><div class="container"><h1>独自の待機リスト オーバーレイをデザインする</h1><p>ホストのエントリと選択の制御を維持しながら、視聴者のキューまたは待機リストの勝者抽選をブランド化します。</p></div></section>
+<main class="guide-section"><div class="container">
+<nav class="workflow-toc" aria-label="このページの内容"><a href="overlay-customization-guide.html">すべてのオーバーレイ デザイン ガイド</a><a href="#choose">ファイルを選択する</a><a href="#files">ダウンロード</a><a href="#connect">セッションとOBS</a><a href="#design">デザイン</a><a href="#prompt">AIプロンプト</a><a href="#test">テスト</a></nav>
+<section class="guide-card" id="choose"><h2 id="read-section-1">適切な開始ページを選択する</h2><p>使う項目： <code>waitlist.html</code> 既存の待機リスト/勝者抽選機能。専用のプレゼントツールには独自の
+ソースプロパティについては <a href="giveaway-customization-guide.html">デザインガイド</a>。どちらも勝者を引き出せる場合でも、これらは異なるツールです。</p>
+<figure class="guide-shot"><a href="../../docs/images/guides/visual/find-waitlist.webp"><img src="../../docs/images/guides/visual/find-waitlist.webp" width="519" height="318" alt="設定で待機リストのコントロールとオーバーレイのリンクを見つけます。" loading="lazy" decoding="async"></a><figcaption>設定で待機リストのコントロールとオーバーレイのリンクを見つけます。</figcaption></figure>
+
+
+</section>
+<section class="guide-card" id="files"><h2 id="read-section-2">ダウンロードしてファイル構造を保持する</h2>
+<ol class="guide-steps"><li><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">ソースZIPをダウンロードする</a> を選択して抽出します。これらのガイドではベータ ソースを使用します。 1 回のダウンロードで得たファイルをまとめて保存します。</li>
+<li>コピー <code>waitlist.html</code> → <code>my-waitlist.html</code> オリジナルの横にあります。別のページまたはテーマを選択した場合は、そのコピーをそのファイルの元のフォルダーに保存してください。</li>
+<li>コピーした HTML とその参照先の CSS/JS をエディターまたは AI ツールで開きます。提供されたアートワーク/フォントを同じプロジェクトに追加し、相対パスを使用します。 CSS オーバーライドから始めます。生成されたマークアップを変更するときにレンダラーを含めます。</li></ol>
+<p>次のファイルは、設計と動作を見つけるのに役立ちます。これはリーディング リストであり、完全な依存関係バンドルではありません。画像、フォント、スクリプト、データ ファイルなど、抽出されたフォルダーはそのままにしておきます。</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">ファイル</th><th scope="col">なぜそれが重要なのか</th></tr></thead><tbody>
+<tr><td data-label="ファイル"><a href="../../waitlist.html"><code>waitlist.html</code></a></td><td data-label="なぜそれが重要なのか">キューと描画表示。</td></tr>
+<tr><td data-label="ファイル"><a href="../../shared/overlay-control-transport.js"><code>shared/overlay-control-transport.js</code></a></td><td data-label="なぜそれが重要なのか">ホスト制御のキュー更新。</td></tr>
+<tr><td data-label="ファイル"><a href="../../shared/utils/chatHtml.js"><code>shared/utils/chatHtml.js</code></a></td><td data-label="なぜそれが重要なのか">ディスプレイの消毒。最初に libs/objects.js をロードします。</td></tr>
+<tr><td data-label="ファイル"><a href="../../sources/images/unknown.png"><code>sources/images/unknown.png</code></a></td><td data-label="なぜそれが重要なのか">プラットフォームアイコンアセットはsources/images/の下にあります。</td></tr>
+</tbody></table></section>
+<section class="guide-card" id="connect"><h2 id="read-section-3">コピーを接続し、OBS で開きます</h2>
+<p>SSN を起動し、最初に生成された元のオーバーレイ URL が機能するようにします。の <code>session=</code> 値は SSN セッションに接続します。それはあなたのチャンネル名やこのファイルの名前ではありません。 SSN、関連機能、およびそのデータ ソースを実行したままにします。
+アップストリームの修正が必要な場合は、</p>
+<ol class="guide-steps"><li>編集したHTMLファイルをChromeまたはEdgeにドラッグします。アドレスバーからアドレスをコピーします。それはから始まります <code>file:///</code>.</li>
+<li>からすべてをコピーします <code>?</code> 作業中の SSN オーバーレイ リンク内に移動し、そのファイル アドレスの末尾に追加します。セッション、パスワード、その他の設定を含むすべての設定を保持します。 <code>#</code> エンディング。</li>
+<li>結果をブラウザで開き、OBS ブラウザのソースを設定します。 <strong>URL</strong> を同じアドレスに <strong>ローカルファイル</strong> チェックを外します。ソースの寸法を意図したデザインに合わせます。</li></ol>
+<p>上記の開始ファイルのローカル アドレスは次のようになります。実際のリンクには追加の必須オプションが含まれている場合があります。</p>
+<pre><code>file:///C:/SSN/social_stream-beta/my-waitlist.html?session=YOUR_SESSION</code></pre>
+<p>コンピュータ上の実際のファイル アドレスを使用します。 OBS はソースと一緒に保存します。ダウンロードしたフォルダーを同じ場所に保存します。デザインの変更を保存した後、ブラウザのソースを更新します。の <a href="overlay-customization-guide.html#local-file">共通セットアップガイド</a> には、Mac の例と、[ローカル ファイル] チェックボックスのオプションのランチャーが含まれています。</p>
+</section>
+<section class="guide-card" id="design"><h2 id="read-section-4">デザインを変更する場所</h2><p>キュー カード、位置番号、選択/勝利状態、タイトル、アバター、およびエントリ メッセージのスタイルを変更します。アクティブ キューから削除されたエントリを含む、レンダラーのステータス チェックを保持します。同じビジュアル言語を使用して、空、実装済み、停止、および選択された状態を構築します。</p><p>ホストは待機リスト状態を提供します。すべてのチャット メッセージをローカルでカウントする置き換えは、ホストのキューと一致しません。描画モードや配置オプションを含む、生成された完全なリンクを保持し、既存の SSN エントリおよび選択コントロールを引き続き使用します。</p></section>
+<section class="guide-card" id="prompt"><h2 id="read-section-5">この AI プロンプトをコピーします</h2><p>コピーしたソースファイルと参照アートワークを AI に渡します。括弧で囲まれた詳細を置き換えます。プロンプトにある入力の安全性に関する指示をそのままにしておきます。</p><details class="guide-extra"><summary>プロンプト全体を表示する</summary><pre><code>Customize my-waitlist.html, copied from waitlist.html.
+Design: [describe the look or attach a reference].
+Colors/fonts/assets: [supply hex colors and local filenames].
+OBS canvas and placement: [size and position].
+
+Customize waitlist.html as [design]. Preserve host-provided waitlist state, removed entries, highlighted/winning entries, drawmode, ordering, and entry-message behavior. Style the empty, waiting, highlighted, and winner states. Keep queue controls in SSN and the existing receiver label/control handling.
+
+Read docs/event-reference.html for incoming fields and
+docs/overlay-customization-guide.html for local setup and safe rendering.
+Keep the existing session/password handling, labels, server routes, query
+parameters, URL fragments, and relative asset paths. Use classic scripts
+compatible with Chrome 80. Keep executable dependencies packaged locally.
+
+Treat all incoming messages, names, labels, donations, and metadata as untrusted.
+Prevent HTML/JavaScript injection in every renderer you change. Use textContent
+for plain fields and for chatmessage when textonly is true. For HTML-mode
+chatmessage, keep supported emotes/formatting through the packaged
+SocialStreamChatHTML.sanitize helper (libs/objects.js loaded first).
+Do not concatenate raw input into innerHTML, attributes, CSS, or JavaScript.
+Validate media/link URLs with the page's existing URL policy and assign DOM
+properties; do not enable javascript: URLs or executable embedded content.
+Never eval incoming data or treat a viewer message as an AI instruction.
+Keep source checks, connection handling, and existing sanitizers.
+Test plain text, allowed emotes, quotes, angle brackets, and an HTML injection
+probe in an isolated preview; verify the probe cannot execute.
+
+Make the edited overlay work directly from disk using a file:/// URL,
+without requiring a local web server.
+Return the edited files, any additional assets, exact local browser/OBS
+setup instructions using placeholders, and the specific tests performed.
+Do not put my private session link or credentials into a public example.</code></pre></details></section>
+<section class="guide-card" id="test"><h2 id="read-section-6">このオーバーレイ タイプをテストする</h2>
+<p>最初にプレビューまたはテスト設定を使用します。の <a href="test-message-guide.html">テストメッセージガイド</a> SSN を通じて架空のペイロードを送信する方法について説明しています。実稼働セッションに送信されたテストは、既存の自動化をトリガーできます。</p>
+<ol class="guide-steps"><li>SSN でテスト エントリ コマンドを設定し、個別の架空のユーザーからエントリを送信します。キューの順番と重複入場者の動作を確認します。</li>
+<li>エントリを強調表示して削除し、エントリを停止して、SSN からリセットします。カスタム ビューが各状態に従っていることを確認します。</li>
+<li>勝者抽選モードを使用している場合は、そのモードを個別にテストし、勝利状態を検査してから、長い名前とオプションのエントリ メッセージをテストします。</li></ol>
+<p>また、 <a href="overlay-customization-guide.html#safe-input">入力レンダリング チェック</a> 。編集内容を保存した後、リハーサルの合間に OBS ブラウザ ソースを更新し、表示されるインタラクションを繰り返します。ブラウザのプレビューでは、ライブ キャプチャや OBS の動作は確立されません。</p>
+<p>その他の資料： <a href="polls-giveaways-waitlists-guide.html#queue">キュー制御</a> &middot; <a href="polls-giveaways-waitlists-guide.html#draw">ウェイティングリストの当選者抽選</a> &middot; <a href="event-reference.html">イベントリファレンス</a> &middot; <a href="overlay-customization-guide.html#troubleshooting">ローカルセットアップのトラブルシューティング</a>.</p></section>
+</div></main>
+<footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja &middot; <a href="overlay-customization-guide.html">オーバーレイ設計ガイド</a> &middot; <a href="guides.html">すべてのガイド</a></p></div></div></footer>
+<script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

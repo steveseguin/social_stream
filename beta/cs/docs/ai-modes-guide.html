@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/docs/ai-modes-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/docs/ai-modes-guide.html">
+    <meta property="og:title" content="Úplný průvodce AI — Social Stream Ninja">
+    <meta property="og:description" content="Vyberte a nastavte funkce AI v Social Stream Ninja: hlasové spolumoderátory, veřejné a soukromé chatboty, doprovodný režim ChatGPT v prohlížeči, moderování, překlad, RAG, shrnutí, TTS a překryvy vytvořené AI.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/docs/ai-modes-guide.html">
+    <meta name="twitter:title" content="Úplný průvodce AI — Social Stream Ninja">
+    <meta name="twitter:description" content="Vyberte a nastavte funkce AI v Social Stream Ninja: hlasové spolumoderátory, veřejné a soukromé chatboty, doprovodný režim ChatGPT v prohlížeči, moderování, překlad, RAG, shrnutí, TTS a překryvy vytvořené AI.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Úplný průvodce AI — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Vyberte a nastavte funkce AI v Social Stream Ninja: hlasové spolumoderátory, veřejné a soukromé chatboty, doprovodný režim ChatGPT v prohlížeči, moderování, překlad, RAG, shrnutí, TTS a překryvy vytvořené AI.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/ai-modes-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"(experimental)":"(experimentální)",", and":", a",", and send a new message.":", a pošlete novou zprávu.",", so viewer messages only go to ChatGPT.":", aby zprávy diváků šly pouze do ChatGPT.",", then press":", pak stiskněte",", then preview and save it. Add":", pak zobrazte náhled a uložte jej. Přidejte",", then reload it.":", pak stránku znovu načtěte.",", turn on":", zapněte",". The key stays in Social Stream. The co-host page only gets a short-lived pass, and audio travels over WebRTC.":". Klíč zůstává v Social Stream. Stránka spolumoderátora dostává jen krátkodobý přístup a zvuk se přenáší přes WebRTC.",". Turn on TTS if replies should be spoken.":". Pro mluvené odpovědi zapněte TTS.",". When on, it sends one picture per request, not live video. This adds cost and delay.":". Po zapnutí posílá jeden snímek na požadavek, nikoli živé video. Zvyšuje to cenu a zpoždění.","A one-on-one helper, good for testing prompts.":"Osobní pomocník vhodný pro zkoušení zadání.","AI Integration in Commands & API":"Integrace AI v příkazech a API","AI Overlay Builder showing prompt, preview, save controls, and event simulation buttons":"AI Overlay Builder se zadáním, náhledem, ovládáním uložení a tlačítky simulace událostí","AI cohost controls showing media devices, AI provider settings, system instructions, and live chat mode":"Ovládání AI spolumoderátora s mediálními zařízeními, nastavením poskytovatele AI, systémovými pokyny a režimem živého chatu","AI in Social Stream Ninja":"AI v Social Stream Ninja","API key?":"Klíč API?","Add":"Přidejte","Adding an OpenAI API key doesn't connect Social Stream to a ChatGPT website or voice conversation you already have.":"Přidání klíče API OpenAI nepřipojí Social Stream k vaší existující webové nebo hlasové konverzaci ChatGPT.","Already use ChatGPT in Chrome and don't want an API key? Social Stream can pick up new messages from your ChatGPT tab, like any other chat source (type":"Používáte ChatGPT v Chromu a nechcete klíč API? Social Stream může zachytávat nové zprávy z karty ChatGPT jako z jiného zdroje chatu (typ","Answers everything out loud.":"Nahlas odpovídá na vše.","Answers those out loud by itself.":"Sám na ně nahlas odpovídá.","Answers viewer messages on an overlay, out loud with TTS, or back in chat where supported.":"Odpovídá divákům v překryvu, nahlas pomocí TTS nebo v chatu, pokud je to podporováno.","Audio Response":"Zvuková odpověď (Audio Response)","Auto-answer YouTube, Twitch, Kick, or other chat":"Automaticky odpovídat na chat YouTube, Twitch, Kick a další","Bot can't post in chat":"Bot nemůže psát do chatu","Bot replies ONLY go to the bot overlay page":"Odpovědi bota jdou POUZE na stránku překryvu bota","Bot skips most messages":"Bot vynechává většinu zpráv","Camera and Screen Share are optional. Default is":"Kamera a sdílení obrazovky jsou volitelné. Výchozí je","Capture your ChatGPT tab":"Zachyťte kartu ChatGPT","Censor bot":"Cenzurní bot","Chat Bot - Primary":"Chat Bot - Primary","Chat Bot - Private Interface":"Chat Bot - Private Interface","Chat Bots and AI services":"Chat Bots and AI services","Chat bot":"Chatbot","Chat privately with an AI helper":"Soukromě chatovat s AI pomocníkem","Chat summaries":"Shrnutí chatu","Chat tools":"Nástroje chatu","ChatGPT":"ChatGPT","ChatGPT API":"ChatGPT API","ChatGPT API provider":"Poskytovatel ChatGPT API","ChatGPT browser source":"Zdroj ChatGPT v prohlížeči","ChatGPT tab":"Karta ChatGPT","ChatGPT tab (experimental)":"Karta ChatGPT (experimentální)","ChatGPT tab shows nothing":"Karta ChatGPT nic nezobrazuje","Check that platform supports it, you're logged in, the account can post, and rate limits.":"Ověřte podporu platformy, přihlášení, oprávnění účtu psát a omezení frekvence.","Check trigger words, moderators-only, rate limits, and your instructions. It's picky by design.":"Zkontrolujte spouštěcí slova, omezení na moderátory, limity a pokyny. Záměrně si vybírá.","Checks, cleans up, or blocks incoming messages.":"Kontroluje, upravuje nebo blokuje příchozí zprávy.","Choices":"Možnosti","Choose and configure Social Stream Ninja AI features: voice cohosts, public and private chat bots, ChatGPT browser companion mode, moderation, translation, RAG, summaries, TTS, and AI-built overlays.":"Vyberte a nastavte funkce AI v Social Stream Ninja: hlasové spolumoderátory, veřejné a soukromé chatboty, doprovodný režim ChatGPT v prohlížeči, moderování, překlad, RAG, shrnutí, TTS a překryvy vytvořené AI.","Claude":"Claude","Click":"Klikněte na","Cloud":"Cloud","Co-host Stream Controls":"Ovládání vysílání spolumoderátorem","Co-host sees chat but stays quiet":"Spolumoderátor vidí chat, ale mlčí","Commands & API":"Příkazy a API","Complete AI Guide - Social Stream Ninja":"Úplný průvodce AI — Social Stream Ninja","Configure LLM Service Provider":"Nastavit poskytovatele LLM (Configure LLM Service Provider)","Connect an AI":"Připojte AI","Connect an AI in 5 steps":"Připojení AI v 5 krocích","Connected isn't the finish line.":"Připojení samo nestačí.","Connected, but no replies to chat":"Připojeno, ale bez odpovědí na chat","Context only - answer when asked":"Pouze kontext — odpovídat na vyžádání","Custom API (OpenAI-compatible)":"Custom API (kompatibilní s OpenAI)","Depends on the AI":"Záleží na AI","Describe an overlay and have AI build it":"Popsat překryv a nechat ho vytvořit AI","Describe an overlay in":"Popište překryv v","Download":"Stáhnout","Each service sets its own keys, billing, limits, and model names.":"Každá služba určuje vlastní klíče, účtování, limity a názvy modelů.","Enable the LLM AI chat bot":"Zapnout AI chatbota LLM (Enable the LLM AI chat bot)","Every option except the ChatGPT tab needs this first.":"Všechny možnosti kromě karty ChatGPT nejprve vyžadují tento krok.","Experimental.":"Experimentální.","Experimental. Captures new text messages, not history. Relay can type into its message box.":"Experimentální. Zachytává nové textové zprávy, nikoli historii. Přeposílání může psát do pole zpráv.","Experimental. May be turned off or rate-limited.":"Experimentální. Může být vypnuto nebo omezeno.","Features":"Funkce","Fill in its address, model, API key, or download settings.":"Vyplňte adresu, model, klíč API nebo nastavení stahování.","Filter, translate, or summarize chat, or answer from my documents":"Filtrovat, překládat či shrnovat chat nebo odpovídat podle mých dokumentů","Fix problems":"Řešení problémů","For a safe first test, turn on":"Pro bezpečné první vyzkoušení zapněte","For llama.cpp, LM Studio, vLLM, and similar. Ollama should use its own option.":"Pro llama.cpp, LM Studio, vLLM a podobné. Ollama má používat vlastní možnost.","For speed: Mini model, Low reasoning, Fast turn-taking. Full quality and higher reasoning are smarter but slower and cost more. Fast can cut in on pauses.":"Pro rychlost: model Mini, uvažování Low a střídání Fast. Plná kvalita a vyšší uvažování jsou chytřejší, ale pomalejší a dražší. Fast může vstoupit do pauzy.","Free trial":"Bezplatné vyzkoušení","Full AI Chat Bot Guide":"Úplný průvodce AI chatbotem","Full AI Co-host Guide":"Úplný průvodce AI spolumoderátorem","Full AI Overlay Builder Guide":"Úplný průvodce tvorbou překryvů pomocí AI","Gemini, Copilot, Perplexity, others":"Gemini, Copilot, Perplexity a další","Good to know":"Co je dobré vědět","Guides":"Návody","Hire":"Najmout odborníka","Home":"Domů","I want to":"Chci","I want to…":"Chci…","In the Social Stream popup, open":"V nabídce Social Stream otevřete","In the popup, turn on the":"V nabídce zapněte zdroj","Inspiration":"Inspirace","Install and turn on the Social Stream Ninja Chrome extension.":"Nainstalujte a zapněte rozšíření Social Stream Ninja pro Chrome.","It doesn't take over a conversation in the ChatGPT website or app.":"Nepřebírá konverzaci na webu ani v aplikaci ChatGPT.","It only means the AI answered the test. Nothing reads your chat until you turn on a feature.":"Znamená to jen, že AI odpověděla na test. Dokud nezapnete funkci, nic chat nečte.","It reconnects by itself. A fresh session keeps your instructions and settings, but forgets what was said aloud.":"Sám se znovu připojí. Nová relace zachová pokyny a nastavení, ale zapomene mluvenou konverzaci.","It's separate from the Primary bot. It doesn't share its document knowledge (RAG) or chat history.":"Je oddělený od hlavního bota. Nesdílí jeho znalosti dokumentů (RAG) ani historii chatu.","Its own, separate from chatgpt.com.":"Vlastní, oddělená od chatgpt.com.","Keep the tab open. ChatGPT's replies come back as":"Nechte kartu otevřenou. Odpovědi ChatGPT se vracejí jako zprávy typu","Kind":"Typ","Knowledge base (RAG)":"Znalostní báze (RAG)","Lets the Primary bot look things up in files you upload.":"Umožňuje hlavnímu botovi hledat v nahraných souborech.","Live Chat setting":"Nastavení živého chatu","Local AI TTS":"Lokální AI TTS","Local or cloud AI":"Místní nebo cloudová AI","Main navigation":"Hlavní navigace","Make sure the page making the sound is open and OBS captures its audio.":"Ověřte, že je stránka přehrávající zvuk otevřená a OBS její zvuk zachytává.","Management":"Správa","More:":"Další:","No":"Ne","No Video":"Bez videa (No Video)","No cloud key. Speed depends on your computer.":"Bez cloudového klíče. Rychlost závisí na počítači.","No conversation capture. The included Claude script only changes the page style.":"Nezachytává konverzace. Přiložený skript Claude mění pouze vzhled stránky.","No website capture. Their APIs may still work if listed as a provider.":"Bez zachytávání webu. Jejich API mohou fungovat, pokud jsou uvedena mezi poskytovateli.","None of these post into platform chat. Keep the speech bubble visible so viewers can read along.":"Žádná možnost nepíše do chatu platformy. Nechte viditelnou řečovou bublinu, aby diváci mohli číst.","Normal in Context only. Ask it about chat, or pick a mode that speaks replies.":"V režimu Pouze kontext je to normální. Zeptejte se na chat nebo vyberte režim s mluvenými odpověďmi.","Ollama, Local Gemma, Local Qwen":"Ollama, místní Gemma, místní Qwen","On this page":"Na této stránce","On your computer":"Na vašem počítači","Open":"Otevřít","Open navigation menu":"Otevřít navigační nabídku","Open the Dock with the same session.":"Otevřete Dock se stejnou relací.","OpenAI Realtime details":"Podrobnosti OpenAI Realtime","OpenAI, Gemini, DeepSeek, xAI, AWS Bedrock, OpenRouter, Groq, OpenCode Zen":"OpenAI, Gemini, DeepSeek, xAI, AWS Bedrock, OpenRouter, Groq, OpenCode Zen","Option":"Možnost","Other AI websites":"Další weby AI","Overlay Gallery":"Galerie překryvů","Overlay builder":"Tvůrce překryvů","Pick a voice AI, or the AI you set up in the popup.":"Vyberte hlasovou AI nebo AI nastavenou v nabídce.","Pick one":"Vyberte jednu možnost","Pick the AI, mic, reply type, instructions, and chat mode.":"Vyberte AI, mikrofon, typ odpovědi, pokyny a režim chatu.","Pick what you want the AI to do, then follow that setup.":"Vyberte, co má AI dělat, a postupujte podle odpovídajícího nastavení.","Pick your microphone and":"Vyberte mikrofon a","Primary chat bot":"Hlavní chatbot","Private bot":"Soukromý bot","Problem":"Problém","Relay all messages":"Přeposílat všechny zprávy","Remembers chat, stays quiet until you ask about it. Works with OpenAI Realtime.":"Pamatuje si chat a mlčí, dokud se nezeptáte. Funguje s OpenAI Realtime.","Replies are capped at 512 output tokens. Diagnostics shows usage and delay.":"Odpovědi mají limit 512 výstupních tokenů. Diagnostika ukazuje využití a zpoždění.","Replies post from your logged-in account. For a separate name, use a YouTube, Twitch, or Kick bot account where supported.":"Odpovědi se posílají z přihlášeného účtu. Pro jiné jméno použijte účet bota YouTube, Twitch nebo Kick, kde je to podporováno.","SSN Hosted Trial LLM":"SSN Hosted Trial LLM","Send a new ChatGPT message. Both sides should show in the Dock. Older messages are skipped on purpose.":"Pošlete novou zprávu ChatGPT. Obě strany se mají objevit v Docku. Starší zprávy se záměrně vynechávají.","Send your live chat into ChatGPT":"Posílejte živý chat do ChatGPT","Set":"Nastavte","Set trigger words, moderators-only, rate limits, history, and instructions.":"Nastavte spouštěcí slova, omezení na moderátory, limity frekvence, historii a pokyny.","Show or speak AI answers without posting in chat":"Zobrazovat nebo číst odpovědi AI bez psaní do chatu","Skip to main content":"Přeskočit na hlavní obsah","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Social Stream sends prompts to OpenAI with your API key.":"Social Stream posílá zadání OpenAI s vaším klíčem API.","Speak a reply to every message":"Nahlas odpovídat na každou zprávu","Speak replies to questions and mentions":"Nahlas odpovídat na otázky a zmínky","Spotify, OBS scene, and featured-chat tools are off by default. Turn them on in the popup, then in":"Nástroje Spotify, scén OBS a zvýrazněného chatu jsou standardně vypnuté. Zapněte je v nabídce a pak v","Start Co-host":"Spustit spolumoderátora (Start Co-host)","Start in non-blocking mode and review what it flags.":"Začněte bez blokování a zkontrolujte označené zprávy.","Start safely":"Začněte bezpečně","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","TTS Setup":"Nastavení TTS","Talk to an AI on stream that also hears chat":"Mluvit během vysílání s AI, která sleduje i chat","Talk to an AI on stream. It hears your microphone, sees chat you share, and can answer out loud.":"Mluvte s AI během vysílání. Slyší mikrofon, vidí sdílený chat a může odpovídat nahlas.","Test it with fake chat and alerts before adding it to OBS.":"Před přidáním do OBS otestujte s fiktivním chatem a upozorněními.","Test on a private or unlisted stream, in a normal text chat.":"Testujte v soukromém nebo neveřejném vysílání v běžném textovém chatu.","Test one language. Avoid block mode until it's reliable.":"Otestujte jeden jazyk. Dokud není výsledek spolehlivý, nepoužívejte blokování.","Test selected chat bot":"Otestovat vybraného chatbota (Test selected chat bot)","Text shows but no sound":"Text se zobrazuje, ale zvuk chybí","The ChatGPT site can change. Relaying all chat can flood the conversation. Voice mode may not accept typed-in text. Use filters or a test stream first.":"Web ChatGPT se může změnit. Přeposílání celého chatu může zahltit konverzaci. Hlasový režim nemusí přijímat psaný text. Nejprve použijte filtry nebo testovací vysílání.","The extension reads new messages from an open":"Rozšíření čte nové zprávy z otevřené karty","The one in your tab. No API key.":"Ta ve vaší kartě. Bez klíče API.","The overlay doesn't get the OpenAI voice. Use the co-host output picker for a virtual cable if supported.":"Překryv nedostává hlas OpenAI. Pokud je to podporováno, vyberte pro výstup spolumoderátora virtuální kabel.","Tool":"Nástroj","Translates incoming chat, and optionally your own messages.":"Překládá příchozí chat a volitelně i vaše zprávy.","Translation":"Překlad","Try this":"Vyzkoušejte","Turn on":"Zapněte","Turn on the ChatGPT source, reload":"Zapněte zdroj ChatGPT, znovu načtěte","Turn on the Primary bot or the feature you want. Connecting an AI alone does nothing to chat.":"Zapněte hlavního bota nebo požadovanou funkci. Samotné připojení AI chat nijak nemění.","Turn on the feature that should use it, like the Primary bot or translation.":"Zapněte funkci, která ji má používat, například hlavního bota nebo překlad.","Turn overlay-only off only after you've checked that platform supports posting.":"Režim pouze překryvu vypněte až po ověření podpory psaní na platformě.","Under":"V části","Use ChatGPT's audio, or Social Stream TTS or an overlay, to put replies on stream.":"Pro odpovědi ve vysílání použijte zvuk ChatGPT, TTS Social Stream nebo překryv.","Use my open ChatGPT tab as a companion":"Použít otevřenou kartu ChatGPT jako pomocníka","Use this":"Použijte","Use up-to-date, focused text or Markdown files.":"Používejte aktuální a věcně zaměřené textové nebo Markdown soubory.","Uses the OpenAI key saved under":"Používá klíč OpenAI uložený v","Viewers type":"Diváci píší","Voice co-host":"Hlasový spolumoderátor","Watch history size, cost, and private content.":"Sledujte velikost historie, cenu a soukromý obsah.","Website":"Web","What do you want the AI to do?":"Co má AI dělat?","What it does":"Co dělá","What it is":"Co to je","Which conversation":"Která konverzace","With OpenAI Realtime, capture the co-host page audio in OBS.":"S OpenAI Realtime zachytávejte zvuk stránky spolumoderátora v OBS.","Your own server":"Vlastní server","adds a second, separate overlay voice.":"přidá druhý samostatný hlas překryvu.","and pick the AI you use.":"a vyberte používanou AI.","and test it.":"a otestujte ji.","and turn on":"a zapněte","messages.":"zprávy.","relay destinations":"cíle přeposílání","source.":"zdroj.","tab.":"kartě.","to":"na","to OBS for the avatar and speech bubble.":"do OBS pro avatar a řečovou bublinu.","to OBS to show it.":"do OBS pro jeho zobrazení.","to get an AI summary.":"pro shrnutí pomocí AI.","with overlay-only and TTS":"s režimem pouze překryvu a TTS","with your session.":"s vaší relací.","“ChatGPT API” vs. your ChatGPT tab":"„ChatGPT API“ a karta ChatGPT"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/ai-modes-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<a class="skip-link" href="#main-content">Přeskočit na hlavní obsah</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/ai-modes-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/ai-modes-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/ai-modes-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/ai-modes-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/ai-modes-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/ai-modes-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/ai-modes-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/ai-modes-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/ai-modes-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/ai-modes-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/ai-modes-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/ai-modes-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/ai-modes-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/ai-modes-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/ai-modes-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="ai-modes-guide.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/ai-modes-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>AI v Social Stream Ninja</h1>
+            <p>Vyberte, co má AI dělat, a postupujte podle odpovídajícího nastavení.</p>
+        </div>
+    </section>
+
+    <main class="guide-section" id="main-content">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Na této stránce">
+                <a href="#pick">Vyberte jednu možnost</a>
+                <a href="#providers">Připojte AI</a>
+                <a href="#voice-cohost">Hlasový spolumoderátor</a>
+                <a href="#primary-bot">Chatbot</a>
+                <a href="#private-bot">Soukromý bot</a>
+                <a href="#processing-tools">Nástroje chatu</a>
+                <a href="#overlay-builder">Tvůrce překryvů</a>
+                <a href="#browser-companion">Karta ChatGPT</a>
+                <a href="#problems">Řešení problémů</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="pick">Co má AI dělat?</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Chci…</th><th>Použijte</th><th>Klíč API?</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Chci">Mluvit během vysílání s AI, která sleduje i chat</td><td data-label="Použijte"><a href="#voice-cohost"><strong>Hlasový spolumoderátor</strong></a></td><td data-label="Klíč API?">Záleží na AI</td></tr>
+                        <tr><td data-label="Chci">Automaticky odpovídat na chat YouTube, Twitch, Kick a další</td><td data-label="Použijte"><a href="#primary-bot"><strong>Hlavní chatbot</strong></a></td><td data-label="Klíč API?">Místní nebo cloudová AI</td></tr>
+                        <tr><td data-label="Chci">Zobrazovat nebo číst odpovědi AI bez psaní do chatu</td><td data-label="Použijte"><a href="#primary-bot"><strong>Hlavní chatbot</strong></a> s režimem pouze překryvu a TTS</td><td data-label="Klíč API?">Místní nebo cloudová AI</td></tr>
+                        <tr><td data-label="Chci">Soukromě chatovat s AI pomocníkem</td><td data-label="Použijte"><a href="#private-bot"><strong>Soukromý bot</strong></a></td><td data-label="Klíč API?">Místní nebo cloudová AI</td></tr>
+                        <tr><td data-label="Chci">Filtrovat, překládat či shrnovat chat nebo odpovídat podle mých dokumentů</td><td data-label="Použijte"><a href="#processing-tools"><strong>Nástroje chatu</strong></a></td><td data-label="Klíč API?">Místní nebo cloudová AI</td></tr>
+                        <tr><td data-label="Chci">Popsat překryv a nechat ho vytvořit AI</td><td data-label="Použijte"><a href="#overlay-builder"><strong>Tvůrce překryvů</strong></a></td><td data-label="Klíč API?">Místní nebo cloudová AI</td></tr>
+                        <tr><td data-label="Chci">Použít otevřenou kartu ChatGPT jako pomocníka</td><td data-label="Použijte"><a href="#browser-companion"><strong>Karta ChatGPT</strong></a> (experimentální)</td><td data-label="Klíč API?">Ne</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="providers">Připojení AI v 5 krocích</h2>
+                <p>Všechny možnosti kromě karty ChatGPT nejprve vyžadují tento krok.</p>
+                <ol class="guide-steps">
+                    <li>V nabídce Social Stream otevřete <strong>Chat Bots and AI services</strong>.</li>
+                    <li>Otevřít <strong>Nastavit poskytovatele LLM (Configure LLM Service Provider)</strong> a vyberte používanou AI.</li>
+                    <li>Vyplňte adresu, model, klíč API nebo nastavení stahování.</li>
+                    <li>Klikněte na <strong>Otestovat vybraného chatbota (Test selected chat bot)</strong>.</li>
+                    <li>Zapněte funkci, která ji má používat, například hlavního bota nebo překlad.</li>
+                </ol>
+                <div class="guide-note"><strong>Připojení samo nestačí.</strong> Znamená to jen, že AI odpověděla na test. Dokud nezapnete funkci, nic chat nečte.</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Typ</th><th>Možnosti</th><th>Co je dobré vědět</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Typ">Na vašem počítači</td><td data-label="Možnosti">Ollama, místní Gemma, místní Qwen</td><td data-label="Co je dobré vědět">Bez cloudového klíče. Rychlost závisí na počítači.</td></tr>
+                        <tr><td data-label="Typ">Vlastní server</td><td data-label="Možnosti">Custom API (kompatibilní s OpenAI)</td><td data-label="Co je dobré vědět">Pro llama.cpp, LM Studio, vLLM a podobné. Ollama má používat vlastní možnost.</td></tr>
+                        <tr><td data-label="Typ">Cloud</td><td data-label="Možnosti">OpenAI, Gemini, DeepSeek, xAI, AWS Bedrock, OpenRouter, Groq, OpenCode Zen</td><td data-label="Co je dobré vědět">Každá služba určuje vlastní klíče, účtování, limity a názvy modelů.</td></tr>
+                        <tr><td data-label="Typ">Bezplatné vyzkoušení</td><td data-label="Možnosti">SSN Hosted Trial LLM</td><td data-label="Co je dobré vědět">Experimentální. Může být vypnuto nebo omezeno.</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra">
+                    <summary>„ChatGPT API“ a karta ChatGPT</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Možnost</th><th>Co to je</th><th>Která konverzace</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Možnost">Poskytovatel ChatGPT API</td><td data-label="Co to je">Social Stream posílá zadání OpenAI s vaším klíčem API.</td><td data-label="Která konverzace">Vlastní, oddělená od chatgpt.com.</td></tr>
+                            <tr><td data-label="Možnost">Zdroj ChatGPT v prohlížeči</td><td data-label="Co to je">Rozšíření čte nové zprávy z otevřené karty <code>chatgpt.com</code> kartě.</td><td data-label="Která konverzace">Ta ve vaší kartě. Bez klíče API.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>Přidání klíče API OpenAI nepřipojí Social Stream k vaší existující webové nebo hlasové konverzaci ChatGPT.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-cohost">Hlasový spolumoderátor</h2>
+                <p>Mluvte s AI během vysílání. Slyší mikrofon, vidí sdílený chat a může odpovídat nahlas.</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>Otevřít <code>cohost.html?session=YOUR_SESSION</code>.</li>
+                        <li>Vyberte hlasovou AI nebo AI nastavenou v nabídce.</li>
+                        <li>Vyberte mikrofon a <strong>Zvuková odpověď (Audio Response)</strong>, pak stiskněte <strong>Spustit spolumoderátora (Start Co-host)</strong>.</li>
+                        <li>S OpenAI Realtime zachytávejte zvuk stránky spolumoderátora v OBS.</li>
+                        <li>Přidejte <code>cohost-overlay.html?session=YOUR_SESSION</code> do OBS pro avatar a řečovou bublinu.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/guide-ai-cohost-controls.png" alt="Ovládání AI spolumoderátora s mediálními zařízeními, nastavením poskytovatele AI, systémovými pokyny a režimem živého chatu" class="guide-image">
+                        <figcaption>Vyberte AI, mikrofon, typ odpovědi, pokyny a režim chatu.</figcaption>
+                    </figure>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Nastavení živého chatu</th><th>Co dělá</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Nastavení živého chatu">Pouze kontext — odpovídat na vyžádání</td><td data-label="Co dělá">Pamatuje si chat a mlčí, dokud se nezeptáte. Funguje s OpenAI Realtime.</td></tr>
+                        <tr><td data-label="Nastavení živého chatu">Nahlas odpovídat na otázky a zmínky</td><td data-label="Co dělá">Sám na ně nahlas odpovídá.</td></tr>
+                        <tr><td data-label="Nastavení živého chatu">Nahlas odpovídat na každou zprávu</td><td data-label="Co dělá">Nahlas odpovídá na vše.</td></tr>
+                    </tbody>
+                </table>
+                <p>Žádná možnost nepíše do chatu platformy. Nechte viditelnou řečovou bublinu, aby diváci mohli číst.</p>
+                <details class="guide-extra">
+                    <summary>Podrobnosti OpenAI Realtime</summary>
+                    <ul>
+                        <li>Používá klíč OpenAI uložený v <strong>ChatGPT API</strong>. Klíč zůstává v Social Stream. Stránka spolumoderátora dostává jen krátkodobý přístup a zvuk se přenáší přes WebRTC.</li>
+                        <li>Překryv nedostává hlas OpenAI. Pokud je to podporováno, vyberte pro výstup spolumoderátora virtuální kabel. <code>&amp;forcetts</code> přidá druhý samostatný hlas překryvu.</li>
+                        <li>Pro rychlost: model Mini, uvažování Low a střídání Fast. Plná kvalita a vyšší uvažování jsou chytřejší, ale pomalejší a dražší. Fast může vstoupit do pauzy.</li>
+                        <li>Kamera a sdílení obrazovky jsou volitelné. Výchozí je <strong>Bez videa (No Video)</strong>. Po zapnutí posílá jeden snímek na požadavek, nikoli živé video. Zvyšuje to cenu a zpoždění.</li>
+                        <li>Nástroje Spotify, scén OBS a zvýrazněného chatu jsou standardně vypnuté. Zapněte je v nabídce a pak v <strong>Ovládání vysílání spolumoderátorem</strong>.</li>
+                        <li>Odpovědi mají limit 512 výstupních tokenů. Diagnostika ukazuje využití a zpoždění.</li>
+                        <li>Sám se znovu připojí. Nová relace zachová pokyny a nastavení, ale zapomene mluvenou konverzaci.</li>
+                        <li>Nepřebírá konverzaci na webu ani v aplikaci ChatGPT.</li>
+                    </ul>
+                </details>
+                <p><a href="ai-cohost-guide.html" class="btn btn-primary">Úplný průvodce AI spolumoderátorem</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="primary-bot">Hlavní chatbot</h2>
+                <p>Odpovídá divákům v překryvu, nahlas pomocí TTS nebo v chatu, pokud je to podporováno.</p>
+                <ol class="guide-steps">
+                    <li><a href="#providers">Připojte AI</a> a otestujte ji.</li>
+                    <li>Otevřít <strong>Chat Bot - Primary</strong> a zapněte <strong>Zapnout AI chatbota LLM (Enable the LLM AI chat bot)</strong>.</li>
+                    <li>Nastavte spouštěcí slova, omezení na moderátory, limity frekvence, historii a pokyny.</li>
+                    <li>Pro bezpečné první vyzkoušení zapněte <strong>Odpovědi bota jdou POUZE na stránku překryvu bota</strong>.</li>
+                    <li>Otevřít <code>bot.html?session=YOUR_SESSION</code>. Pro mluvené odpovědi zapněte TTS.</li>
+                    <li>Režim pouze překryvu vypněte až po ověření podpory psaní na platformě.</li>
+                </ol>
+                <p>Odpovědi se posílají z přihlášeného účtu. Pro jiné jméno použijte účet bota YouTube, Twitch nebo Kick, kde je to podporováno.</p>
+                <p><a href="chatbot-basics-guide.html" class="btn btn-primary">Úplný průvodce AI chatbotem</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="private-bot">Soukromý bot</h2>
+                <p>Osobní pomocník vhodný pro zkoušení zadání.</p>
+                <ol class="guide-steps">
+                    <li>Zapněte <strong>Chat Bot - Private Interface</strong>.</li>
+                    <li>Otevřít <code>chatbot.html</code> s vaší relací.</li>
+                </ol>
+                <div class="guide-note">Je oddělený od hlavního bota. Nesdílí jeho znalosti dokumentů (RAG) ani historii chatu.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="processing-tools">Nástroje chatu</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Nástroj</th><th>Co dělá</th><th>Začněte bezpečně</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Nástroj">Cenzurní bot</td><td data-label="Co dělá">Kontroluje, upravuje nebo blokuje příchozí zprávy.</td><td data-label="Začněte bezpečně">Začněte bez blokování a zkontrolujte označené zprávy.</td></tr>
+                        <tr><td data-label="Nástroj">Překlad</td><td data-label="Co dělá">Překládá příchozí chat a volitelně i vaše zprávy.</td><td data-label="Začněte bezpečně">Otestujte jeden jazyk. Dokud není výsledek spolehlivý, nepoužívejte blokování.</td></tr>
+                        <tr><td data-label="Nástroj">Znalostní báze (RAG)</td><td data-label="Co dělá">Umožňuje hlavnímu botovi hledat v nahraných souborech.</td><td data-label="Začněte bezpečně">Používejte aktuální a věcně zaměřené textové nebo Markdown soubory.</td></tr>
+                        <tr><td data-label="Nástroj">Shrnutí chatu</td><td data-label="Co dělá">Diváci píší <code>!summary</code> pro shrnutí pomocí AI.</td><td data-label="Začněte bezpečně">Sledujte velikost historie, cenu a soukromý obsah.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="overlay-builder">Tvůrce překryvů</h2>
+                <p>Popište překryv v <code>aiprompt.html</code>, pak zobrazte náhled a uložte jej. Přidejte <code>aioverlay.html</code> do OBS pro jeho zobrazení.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-ai-overlay-builder.png" alt="AI Overlay Builder se zadáním, náhledem, ovládáním uložení a tlačítky simulace událostí" class="guide-image">
+                    <figcaption>Před přidáním do OBS otestujte s fiktivním chatem a upozorněními.</figcaption>
+                </figure>
+                <p><a href="ai-overlay-builder-guide.html" class="btn btn-primary">Úplný průvodce tvorbou překryvů pomocí AI</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="browser-companion">Karta ChatGPT (experimentální)</h2>
+                <p>Používáte ChatGPT v Chromu a nechcete klíč API? Social Stream může zachytávat nové zprávy z karty ChatGPT jako z jiného zdroje chatu (typ <code>openai</code>).</p>
+                <h3>Zachyťte kartu ChatGPT</h3>
+                <ol class="guide-steps">
+                    <li>Nainstalujte a zapněte rozšíření Social Stream Ninja pro Chrome.</li>
+                    <li>V nabídce zapněte zdroj <strong>ChatGPT</strong> zdroj.</li>
+                    <li>Otevřít <code>https://chatgpt.com/</code>, pak stránku znovu načtěte.</li>
+                    <li>Otevřete Dock se stejnou relací.</li>
+                    <li>Pošlete novou zprávu ChatGPT. Obě strany se mají objevit v Docku. Starší zprávy se záměrně vynechávají.</li>
+                </ol>
+                <h3>Posílejte živý chat do ChatGPT</h3>
+                <ol class="guide-steps">
+                    <li>Testujte v soukromém nebo neveřejném vysílání v běžném textovém chatu.</li>
+                    <li>V části <strong>Správa</strong>, zapněte <strong>Přeposílat všechny zprávy</strong>.</li>
+                    <li>Nastavte <strong>cíle přeposílání</strong> na <code>openai</code>, aby zprávy diváků šly pouze do ChatGPT.</li>
+                    <li>Nechte kartu otevřenou. Odpovědi ChatGPT se vracejí jako zprávy typu <code>openai</code> zprávy.</li>
+                    <li>Pro odpovědi ve vysílání použijte zvuk ChatGPT, TTS Social Stream nebo překryv.</li>
+                </ol>
+                <div class="warning-note"><strong>Experimentální.</strong> Web ChatGPT se může změnit. Přeposílání celého chatu může zahltit konverzaci. Hlasový režim nemusí přijímat psaný text. Nejprve použijte filtry nebo testovací vysílání.</div>
+                <details class="guide-extra">
+                    <summary>Další weby AI</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Web</th><th>Podpora</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Web">ChatGPT</td><td data-label="Podpora">Experimentální. Zachytává nové textové zprávy, nikoli historii. Přeposílání může psát do pole zpráv.</td></tr>
+                            <tr><td data-label="Web">Claude</td><td data-label="Podpora">Nezachytává konverzace. Přiložený skript Claude mění pouze vzhled stránky.</td></tr>
+                            <tr><td data-label="Web">Gemini, Copilot, Perplexity a další</td><td data-label="Podpora">Bez zachytávání webu. Jejich API mohou fungovat, pokud jsou uvedena mezi poskytovateli.</td></tr>
+                        </tbody>
+                    </table>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">Řešení problémů</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Problém</th><th>Vyzkoušejte</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Problém">Připojeno, ale bez odpovědí na chat</td><td data-label="Vyzkoušejte">Zapněte hlavního bota nebo požadovanou funkci. Samotné připojení AI chat nijak nemění.</td></tr>
+                        <tr><td data-label="Problém">Spolumoderátor vidí chat, ale mlčí</td><td data-label="Vyzkoušejte">V režimu Pouze kontext je to normální. Zeptejte se na chat nebo vyberte režim s mluvenými odpověďmi.</td></tr>
+                        <tr><td data-label="Problém">Karta ChatGPT nic nezobrazuje</td><td data-label="Vyzkoušejte">Zapněte zdroj ChatGPT, znovu načtěte <code>chatgpt.com</code>, a pošlete novou zprávu.</td></tr>
+                        <tr><td data-label="Problém">Bot vynechává většinu zpráv</td><td data-label="Vyzkoušejte">Zkontrolujte spouštěcí slova, omezení na moderátory, limity a pokyny. Záměrně si vybírá.</td></tr>
+                        <tr><td data-label="Problém">Text se zobrazuje, ale zvuk chybí</td><td data-label="Vyzkoušejte">Ověřte, že je stránka přehrávající zvuk otevřená a OBS její zvuk zachytává.</td></tr>
+                        <tr><td data-label="Problém">Bot nemůže psát do chatu</td><td data-label="Vyzkoušejte">Ověřte podporu platformy, přihlášení, oprávnění účtu psát a omezení frekvence.</td></tr>
+                    </tbody>
+                </table>
+                <p>Další: <a href="tts-setup-guide.html">Nastavení TTS</a>, <a href="local-tts.html">Lokální AI TTS</a>, a <a href="commands.html#ai-integration">Integrace AI v příkazech a API</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

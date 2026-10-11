@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-site-root="../../" data-site-language="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/pt-br/docs/event-flow-recipes.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/pt-br/docs/event-flow-recipes.html">
+    <meta property="og:title" content="Exemplos práticos de Event Flow - Social Stream Ninja">
+    <meta property="og:description" content="Exemplos práticos de Event Flow no Social Stream Ninja: sons, mídia, recompensas, ações do OBS, webhooks e testes seguros.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logotipo do Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/pt-br/docs/event-flow-recipes.html">
+    <meta name="twitter:title" content="Exemplos práticos de Event Flow - Social Stream Ninja">
+    <meta name="twitter:description" content="Exemplos práticos de Event Flow no Social Stream Ninja: sons, mídia, recompensas, ações do OBS, webhooks e testes seguros.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logotipo do Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemplos práticos de Event Flow - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Exemplos práticos de Event Flow no Social Stream Ninja: sons, mídia, recompensas, ações do OBS, webhooks e testes seguros.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="pt-br">
+<script id="ssn-site-language" type="application/json">{"language":"pt-br","page":"docs/event-flow-recipes.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Mudar para o tema claro","Switch to dark theme":"Mudar para o tema escuro","Light mode":"Modo claro","Dark mode":"Modo escuro","Open navigation menu":"Abrir menu de navegação","Close navigation menu":"Fechar menu de navegação","Copy this document as Markdown to the clipboard":"Copiar este documento em Markdown para a área de transferência","Copy Markdown":"Copiar Markdown","Copying…":"Copiando…","Markdown copied":"Markdown copiado","Copy failed":"Falha ao copiar","Copy comprehensive Markdown for an AI assistant":"Copiar Markdown completo para um assistente de IA","Copy this documentation page as Markdown for an AI assistant":"Copiar esta página de documentação como Markdown para um assistente de IA"},"strings":{", password, and permissions.":", senha e permissões.","Action":"Ação","Audio or media does not play:":"Áudio ou mídia não toca:","Before Any Recipe":"Antes de qualquer exemplo","Build useful automations one small recipe at a time.":"Crie automações úteis, um pequeno exemplo por vez.","Commands & API":"Comandos e API","Common Fixes":"Correções comuns","Donation alert":"Alerta de doação","Download":"Baixar","Event Flow Editor Guide":"Guia do editor Event Flow","Event Flow Guide overview explaining sources, logic nodes, actions, and payloads":"Visão geral do guia Event Flow explicando fontes, nós lógicos, ações e dados","Event Flow Recipes":"Exemplos práticos de Event Flow","Event Flow Recipes - Social Stream Ninja":"Exemplos práticos de Event Flow - Social Stream Ninja","Event Flow is the advanced automation editor. Use it when popup toggles are not enough: filter chat, trigger media, relay messages, call webhooks, or control OBS.":"Event Flow é o editor de automação avançada. Use quando os interruptores do painel não forem suficientes: filtre chat, acione mídia, retransmita mensagens, chame webhooks ou controle o OBS.","Event Flow media action fields for reward-triggered sound or media":"Campos de ação de mídia do Event Flow para som ou mídia ativados por recompensas","Event Flow media hosting guide":"Guia de hospedagem de mídia do Event Flow","Event Flow reward trigger example for Kick rewards":"Exemplo de acionador de recompensa do Event Flow para recompensas da Kick","Export a working flow before making a large edit.":"Exporte um fluxo funcionando antes de fazer uma grande alteração.","Feature the message or show a welcome overlay.":"Destaque a mensagem ou mostre um overlay de boas-vindas.","Features":"Recursos","First-time chatter":"Novo participante do chat","First-time chatter flag or filter":"Indicador ou filtro de novo participante","Flow fires too often:":"O fluxo dispara demais:","Full deep dive:":"Explicação completa:","Full reference:":"Referência completa:","Giveaways, paid tickets, game prizes and recovery guide":"Guia de sorteios, bilhetes pagos, prêmios de jogos e recuperação","Guides":"Guias","Hire":"Contratar","Home":"Início","Inspiration":"Inspiração","Keyword + RANDOM gate":"Palavra-chave + porta RANDOM","Keyword sound":"Som por palavra-chave","Kick Reward Media Example":"Exemplo de mídia para recompensa da Kick","Kick reward media":"Mídia de recompensas da Kick","Kick rewards sounds/media guide":"Guia de sons e mídia de recompensas da Kick","Main navigation":"Navegação principal","Message contains":"A mensagem contém","Nothing happens:":"Nada acontece:","OBS action fails:":"A ação de OBS falha:","On this page":"Nesta página","Open":"Abrir","Open navigation menu":"Abrir menu de navegação","Open the dock and confirm chat arrives.":"Abra o dock e confirme que o chat chega.","Overlay Gallery":"Galeria de overlays","POST a selected payload to your service.":"Envie os dados selecionados por POST ao seu serviço.","Platform/type filter":"Filtro de plataforma ou tipo","Play audio clip in":"Reproduza um clipe de áudio em","Play one of two clips at random. See":"Reproduza aleatoriamente um de dois clipes; veja","Practical Event Flow recipes for Social Stream Ninja: sounds, media, rewards, OBS actions, webhooks, and safe testing.":"Exemplos práticos de Event Flow no Social Stream Ninja: sons, mídia, recompensas, ações do OBS, webhooks e testes seguros.","Random sound pick":"Seleção aleatória de som","Recipe":"Exemplo","Recipe Ideas":"Ideias de exemplos","Reward/channel point event":"Evento de recompensa ou pontos de canal","Run a custom workflow from a Stream Deck key or HTTP/WebSocket/P2P API call":"Execute um fluxo personalizado com uma tecla do Stream Deck ou chamada de API HTTP/WebSocket/P2P","Send to alert overlay, webhook, or OBS scene action.":"Envie ao overlay de alertas, webhook ou ação de cena do OBS.","Show an image, video, or sound.":"Mostre uma imagem, vídeo ou som.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logotipo do Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licença GPLv3.0.","Start with a specific trigger so the flow does not fire for every chat message.":"Comece com um acionador específico para o fluxo não disparar em toda mensagem.","Support":"Suporte","Supported Sites":"Sites compatíveis","Switch theme":"Alternar tema","Test with a fake message or a safe trigger before going live.":"Teste com uma mensagem fictícia ou acionador seguro antes de entrar ao vivo.","Then point the action to the sound, image, video, or overlay output you want.":"Depois aponte a ação para o som, imagem, vídeo ou saída de overlay que deseja.","Think in three pieces: source event, logic/filter, action.":"Pense em três partes: evento de origem, lógica/filtro e ação.","This is the most common practical Event Flow pattern: match a reward, then play media through Flow Actions.":"Este é o padrão prático mais comum do Event Flow: detectar uma recompensa e reproduzir mídia pelo Flow Actions.","Trigger":"Acionador","Use one test platform and one Social Stream session.":"Use uma plataforma de teste e uma sessão do Social Stream.","Webhook relay":"Retransmissão por webhook","What Event Flow Is For":"Para que serve o Event Flow","add a stricter platform, event, keyword, or user filter.":"adicione um filtro mais restrito de plataforma, evento, palavra-chave ou usuário.","check OBS WebSocket v5, port":"confira o OBS WebSocket v5, a porta","confirm the source event arrives in the dock first.":"confirme primeiro que o evento de origem chega ao dock.","if the recipe plays audio, media, or controls OBS.":"se o exemplo reproduzir áudio, mídia ou controlar OBS.","keep":"mantenha","micro-flow D in the editor guide":"microfluxo D no guia do editor","open with the same session, then check the":"aberto com a mesma sessão e confira o","or donation event":"ou evento de doação"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/event-flow-recipes.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navegação principal"><a href="../index.html">Início</a><a href="features.html">Recursos</a><a href="inspiration.html" class="site-priority-inspiration">Inspiração</a><a href="download.html">Baixar</a><a href="guides.html">Guias</a><a href="commands.html">Comandos e API</a><a href="supported-sites.html">Sites compatíveis</a><a href="overlay-gallery.html" class="site-priority-gallery">Galeria de overlays</a><a href="services.html" class="site-priority-hire">Contratar</a><a href="support.html">Suporte</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Português (Brasil)"><span aria-hidden="true">🌐 </span><span lang="pt-br">Português (Brasil)</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/event-flow-recipes.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/event-flow-recipes.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="event-flow-recipes.html" lang="pt-br" hreflang="pt-br" aria-current="true">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/event-flow-recipes.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/event-flow-recipes.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/event-flow-recipes.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/event-flow-recipes.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/event-flow-recipes.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/event-flow-recipes.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/event-flow-recipes.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/event-flow-recipes.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/event-flow-recipes.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/event-flow-recipes.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/event-flow-recipes.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/event-flow-recipes.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/event-flow-recipes.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/event-flow-recipes.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Alternar tema"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>Exemplos práticos de Event Flow</h1>
+<p><a href="giveaway-points-guide.html">Guia de sorteios, bilhetes pagos, prêmios de jogos e recuperação</a></p><p>Crie automações úteis, um pequeno exemplo por vez.</p></div></section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Nesta página"><a href="#read-section-1">Para que serve o Event Flow</a><a href="#read-section-2">Antes de qualquer exemplo</a><a href="#read-section-3">Ideias de exemplos</a><a href="#read-section-4">Exemplo de mídia para recompensa da Kick</a><a href="#read-section-5">Correções comuns</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Para que serve o Event Flow</h2>
+                <p><a href="streamdeck-event-flow.html">Execute um fluxo personalizado com uma tecla do Stream Deck ou chamada de API HTTP/WebSocket/P2P</a>.</p>
+                <p>Event Flow é o editor de automação avançada. Use quando os interruptores do painel não forem suficientes: filtre chat, acione mídia, retransmita mensagens, chame webhooks ou controle o OBS.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-event-flow-overview.png" alt="Visão geral do guia Event Flow explicando fontes, nós lógicos, ações e dados" class="guide-image">
+                    <figcaption>Pense em três partes: evento de origem, lógica/filtro e ação.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">Antes de qualquer exemplo</h2>
+                <ol class="guide-steps">
+                    <li>Use uma plataforma de teste e uma sessão do Social Stream.</li>
+                    <li>Abra o dock e confirme que o chat chega.</li>
+                    <li>Abrir <code>actions.html?session=YOUR_SESSION</code> se o exemplo reproduzir áudio, mídia ou controlar OBS.</li>
+                    <li>Teste com uma mensagem fictícia ou acionador seguro antes de entrar ao vivo.</li>
+                    <li>Exporte um fluxo funcionando antes de fazer uma grande alteração.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">Ideias de exemplos</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Exemplo</th><th>Acionador</th><th>Ação</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Exemplo">Som por palavra-chave</td><td data-label="Acionador">A mensagem contém <code>!hype</code></td><td data-label="Ação">Reproduza um clipe de áudio em <code>actions.html</code>.</td></tr>
+                        <tr><td data-label="Exemplo">Mídia de recompensas da Kick</td><td data-label="Acionador">Evento de recompensa ou pontos de canal</td><td data-label="Ação">Mostre uma imagem, vídeo ou som.</td></tr>
+                        <tr><td data-label="Exemplo">Novo participante do chat</td><td data-label="Acionador">Indicador ou filtro de novo participante</td><td data-label="Ação">Destaque a mensagem ou mostre um overlay de boas-vindas.</td></tr>
+                        <tr><td data-label="Exemplo">Alerta de doação</td><td data-label="Acionador"><code>hasDonation</code> ou evento de doação</td><td data-label="Ação">Envie ao overlay de alertas, webhook ou ação de cena do OBS.</td></tr>
+                        <tr><td data-label="Exemplo">Retransmissão por webhook</td><td data-label="Acionador">Filtro de plataforma ou tipo</td><td data-label="Ação">Envie os dados selecionados por POST ao seu serviço.</td></tr>
+                        <tr><td data-label="Exemplo">Seleção aleatória de som</td><td data-label="Acionador">Palavra-chave + porta RANDOM</td><td data-label="Ação">Reproduza aleatoriamente um de dois clipes; veja <a href="../actions/event-flow-guide.html">microfluxo D no guia do editor</a>.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">Exemplo de mídia para recompensa da Kick</h2>
+                <p>Este é o padrão prático mais comum do Event Flow: detectar uma recompensa e reproduzir mídia pelo Flow Actions.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/kick-channel-points-event-flow/event-flow-reward-trigger.png" alt="Exemplo de acionador de recompensa do Event Flow para recompensas da Kick" class="guide-image">
+                    <figcaption>Comece com um acionador específico para o fluxo não disparar em toda mensagem.</figcaption>
+                </figure>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/kick-channel-points-event-flow/event-flow-media-action-values.png" alt="Campos de ação de mídia do Event Flow para som ou mídia ativados por recompensas" class="guide-image guide-image-narrow">
+                    <figcaption>Depois aponte a ação para o som, imagem, vídeo ou saída de overlay que deseja.</figcaption>
+                </figure>
+                <p>Explicação completa: <a href="../../docs/index.html?file=kick-channel-points-event-flow.md">Guia de sons e mídia de recompensas da Kick</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">Correções comuns</h2>
+                <ul class="guide-list">
+                    <li><strong>Nada acontece:</strong> confirme primeiro que o evento de origem chega ao dock.</li>
+                    <li><strong>Áudio ou mídia não toca:</strong> mantenha <code>actions.html</code> aberto com a mesma sessão e confira o <a href="media-hosting-event-flow.html">Guia de hospedagem de mídia do Event Flow</a>.</li>
+                    <li><strong>A ação de OBS falha:</strong> confira o OBS WebSocket v5, a porta <code>4455</code>, senha e permissões.</li>
+                    <li><strong>O fluxo dispara demais:</strong> adicione um filtro mais restrito de plataforma, evento, palavra-chave ou usuário.</li>
+                </ul>
+                <p>Referência completa: <a href="../actions/event-flow-guide.html">Guia do editor Event Flow</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licença GPLv3.0.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

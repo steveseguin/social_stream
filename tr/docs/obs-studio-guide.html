@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/tr/docs/obs-studio-guide.html">
+    <meta name="twitter:title" content="OBS Studio Başlangıç Kılavuzu - Social Stream Ninja">
+    <meta name="twitter:description" content="OBS Studio&#x27;yu kurun, bir sahne oluşturun, bir donanım kodlayıcı ve platform bit hızı seçin, sesi karıştırıp izleyin ve tarayıcı kaynakları ekleyin.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Studio Başlangıç Kılavuzu - Social Stream Ninja</title>
+    <meta name="description" content="OBS Studio&#x27;yu kurun, bir sahne oluşturun, bir donanım kodlayıcı ve platform bit hızı seçin, sesi karıştırıp izleyin ve tarayıcı kaynakları ekleyin.">
+    <link rel="canonical" href="https://socialstream.ninja/tr/docs/obs-studio-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:title" content="OBS Studio Başlangıç Kılavuzu - Social Stream Ninja">
+    <meta property="og:description" content="OBS Studio&#x27;yu kurun, bir sahne oluşturun, bir donanım kodlayıcı ve platform bit hızı seçin, sesi karıştırıp izleyin ve tarayıcı kaynakları ekleyin.">
+    <meta property="og:url" content="https://socialstream.ninja/tr/docs/obs-studio-guide.html">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="stylesheet" href="../../docs/css/site-shell.css">
+    <script src="../../docs/js/site-shell.js"></script>
+    <style>
+        body.obs-page { padding-top: 76px; background: var(--site-bg); color: var(--site-text); font-family: var(--site-font); }
+        .obs-page .obs-guide, .obs-page .obs-hero { max-width: 1160px; margin: auto; padding: 0 28px; }
+        .obs-page .obs-hero { padding-top: 52px; padding-bottom: 30px; }
+        .obs-page .obs-eyebrow { color: var(--site-muted); font-size: 13px; letter-spacing: .06em; margin-bottom: 20px; }
+        .obs-page .obs-hero h1 { font-size: 52px; line-height: 1.1; letter-spacing: -.045em; max-width: 750px; margin-bottom: 20px; }
+        .obs-page .obs-lead { max-width: 620px; color: var(--site-muted); font-size: 19px; line-height: 1.6; }
+        .obs-page a { color: var(--site-accent); text-underline-offset: 3px; }
+        .obs-guide a, .obs-hero a { text-decoration: underline; }
+        .obs-guide .obs-jumps { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 0 30px; }
+        .obs-guide .obs-jumps a { background: var(--site-surface); border: 1px solid var(--site-line); border-radius: 24px; padding: 8px 16px; color: var(--site-text); text-decoration: none; font-size: 14px; }
+        .obs-guide .obs-jumps a:hover { border-color: var(--site-accent); }
+        .obs-guide .obs-step { padding: 48px 0; border-top: 1px solid var(--site-line); scroll-margin-top: 94px; }
+        .obs-guide .obs-heading { display: flex; align-items: baseline; gap: 14px; margin-bottom: 24px; }
+        .obs-guide .obs-number { color: var(--site-accent); font-size: 14px; font-weight: 700; }
+        .obs-guide h2 { text-align: left; font-size: 28px; line-height: 1.25; letter-spacing: -.025em; margin: 0; padding: 0; }
+        .obs-guide h3 { font-size: 17px; line-height: 1.4; margin: 0 0 10px; color: var(--site-text); }
+        .obs-guide p, .obs-guide li, .obs-guide dd { font-size: 16px; line-height: 1.7; }
+        .obs-guide p { margin: 0 0 18px; }
+        .obs-guide .obs-copy > :last-child { margin-bottom: 0; }
+        .obs-guide .obs-split { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.3fr); gap: 40px; align-items: start; }
+        .obs-guide .obs-split > * { min-width: 0; }
+        .obs-guide .obs-split-small { grid-template-columns: minmax(0, 1.3fr) minmax(0, .85fr); }
+        .obs-guide ol { padding-left: 22px; margin: 0 0 20px; }
+        .obs-guide li { margin-bottom: 12px; padding-left: 3px; }
+        .obs-guide .obs-shot { margin: 0; }
+        .obs-guide .obs-image-link { display: block; overflow: hidden; border: 1px solid var(--site-line); border-radius: 14px; background: #20212b; }
+        .obs-guide .obs-shot img { display: block; width: 100%; height: auto; }
+        .obs-guide .obs-shot figcaption { color: var(--site-muted); font-size: 13px; line-height: 1.6; margin-top: 12px; }
+        .obs-guide .obs-compact .obs-image-link { display: flex; justify-content: center; padding: 24px; background: var(--site-surface); }
+        .obs-guide .obs-compact img { width: auto; max-width: 100%; max-height: 410px; object-fit: contain; }
+        .obs-guide .obs-facts { margin: 20px 0; }
+        .obs-guide .obs-facts > div { display: flex; justify-content: space-between; gap: 20px; padding: 10px 0; border-bottom: 1px solid var(--site-line); }
+        .obs-guide dt { font-size: 15px; font-weight: 650; }
+        .obs-guide dd { margin: 0; text-align: right; font-size: 15px; }
+        .obs-guide .obs-note { padding: 16px 20px; border-left: 3px solid var(--site-accent); background: var(--site-surface); border-radius: 0 10px 10px 0; }
+        .obs-guide .obs-muted, .obs-guide .obs-small { color: var(--site-muted); }
+        .obs-guide .obs-small { font-size: 13px; }
+        .obs-guide details { background: var(--site-surface); border: 1px solid var(--site-line); border-radius: 12px; padding: 16px 20px; margin-top: 18px; }
+        .obs-guide summary { cursor: pointer; color: var(--site-text); font-size: 15px; font-weight: 650; }
+        .obs-guide details[open] summary { margin-bottom: 18px; }
+        .obs-guide details > :last-child { margin-bottom: 0; }
+        .obs-guide .obs-platforms, .obs-guide .obs-routing { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 24px 0; align-items: start; }
+        .obs-guide .obs-platforms details { margin: 0; }
+        .obs-guide .obs-platforms summary { font-size: 19px; }
+        .obs-guide .obs-platforms summary span { display: block; padding: 7px 0 0 18px; font-size: 13px; color: var(--site-muted); font-weight: 400; }
+        .obs-guide .obs-platforms p { font-size: 14px; }
+        .obs-guide table { border-collapse: collapse; width: 100%; font-size: 14px; margin-bottom: 18px; }
+        .obs-guide th, .obs-guide td { text-align: left; padding: 10px 0; border-bottom: 1px solid var(--site-line); }
+        .obs-guide th:last-child, .obs-guide td:last-child { text-align: right; }
+        .obs-guide caption { text-align: left; font-size: 13px; color: var(--site-muted); margin-bottom: 6px; }
+        .obs-guide .obs-route { border: 1px solid var(--site-line); border-radius: 12px; background: var(--site-surface); padding: 22px; }
+        .obs-guide .obs-route p { font-size: 14px; margin-bottom: 12px; }
+        .obs-guide .obs-route p:last-child { margin: 0; color: var(--site-muted); }
+        .obs-guide .obs-routing strong { display: inline-block; min-width: 106px; }
+        .obs-guide .obs-route-icon { width: 28px; height: 28px; margin-bottom: 16px; color: var(--site-accent); }
+        .obs-guide .obs-fixes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; }
+        .obs-guide .obs-fixes p { font-size: 15px; }
+        .obs-guide a:focus, .obs-guide summary:focus { outline: 2px solid var(--site-accent); outline-offset: 4px; }
+        .obs-skip { position: absolute; left: 16px; top: -80px; z-index: 3000; padding: 12px; background: var(--site-surface); }
+        .obs-skip:focus { top: 16px; }
+        @media (max-width: 760px) {
+            .obs-page .obs-guide, .obs-page .obs-hero { padding-left: 20px; padding-right: 20px; }
+            .obs-page .obs-hero { padding-top: 36px; }
+            .obs-page .obs-hero h1 { font-size: 38px; }
+            .obs-guide .obs-step { padding: 32px 0; }
+            .obs-guide .obs-split, .obs-guide .obs-split-small, .obs-guide .obs-platforms, .obs-guide .obs-routing, .obs-guide .obs-fixes { grid-template-columns: 1fr; gap: 24px; }
+            .obs-guide .obs-heading { gap: 12px; }
+            .obs-guide h2 { font-size: 25px; }
+            .obs-guide .obs-platforms, .obs-guide .obs-routing { gap: 12px; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/obs-studio-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{", and":", ve",", choose a hardware":", bir donanım seçin",". Check its preview and stream health; some platforms also require":". Önizlemesini ve yayın durumunu kontrol edin; bazı platformlar da gerektirir",". On macOS 13+, use OBS’s":". macOS 13+ üzerinde OBS'leri kullanın",". Open your platform below.":". Aşağıdan platformunuzu açın.",". Shared source and audio changes can still affect the live output.":". Paylaşılan kaynak ve ses değişiklikleri canlı çıkışı hâlâ etkileyebilir.",". Talk, play sound, and switch scenes.":". Konuşun, ses çalın ve sahneleri değiştirin.",". Then open the mixer’s":". Daha sonra mikserin kapağını açın.","/ OBS STUDIO":"/ OBS STÜDYO","1080p30":"1080p30","1080p60":"1080p60","1280 × 720 output":"1280 × 720 çıktı","1920 × 1080 canvas":"1920 × 1080 tuval","2-second keyframes":"2 saniyelik animasyon kareleri","30 FPS":"30 FPS","6,000 kbps uses about 6 Mbps, plus audio and overhead. Lower bitrate or resolution if your connection cannot keep up.":"6.000 kbps, yaklaşık 6 Mbps artı ses ve ek yükü kullanır. Bağlantınız devam edemiyorsa bit hızını veya çözünürlüğü düşürün.","60 FPS":"60 FPS","720p30":"720p30","720p30 / 60":"720p30 / 60","720p60 / 1080p30":"720p60 / 1080p30","8,000 max.":"8.000 maks.",": try light noise suppression, then a compressor and limiter. Add one at a time and listen.":": hafif gürültü bastırmayı, ardından bir kompresör ve sınırlayıcıyı deneyin. Birer birer ekleyin ve dinleyin.","; avoid hitting 0.":"; 0'a çarpmaktan kaçının.","A":"Bir","A simple start:":"Basit bir başlangıç:","AAC stereo":"AAC stereo","AMD":"AMD","AMD HW H.264 / AVC":"AMD HW H.264 / AVC","Add Existing":"Mevcut Ekle","Add a chat or alert overlay":"Bir sohbet veya uyarı katmanı ekleyin","Advanced Audio Properties":"Gelişmiş Ses Özellikleri","All guides":"Tüm kılavuzlar","Allow camera, microphone, and screen capture access when your computer asks.":"Bilgisayarınız istediğinde kamera, mikrofon ve ekran yakalama erişimine izin verin.","App / whole monitor":"Uygulama / tüm monitör","App audio, macOS, and microphone filters":"Uygulama sesi, macOS ve mikrofon filtreleri","Apple Silicon":"Elma Silikonu","Apple VT H264 Hardware":"Apple VT H264 Donanımı","Application Audio Capture":"Uygulama Sesi Yakalama","Assumes the source is unmuted and on your output track. “Monitor Off” does not mute the stream.":"Kaynağın sesinin açık olduğunu ve çıkış parçanızda olduğunu varsayar. \"Monitör Kapalı\" akışın sesini kapatmaz.","Audio":"Ses","Audio: 128 kbps, 44.1 kHz stereo. These are recommendations, not minimums.":"Ses: 128 kbps, 44,1 kHz stereo. Bunlar minimum değerler değil tavsiyelerdir.","Audio: up to 160 kbps.":"Ses: 160 kbps'ye kadar.","Avoid echo:":"Yankıdan kaçının:","Bitrate":"Bit Hızı","Blank overlay or repeated audio?":"Boş katman mı yoksa tekrarlanan ses mi?","Bring your camera, screen, and sound together. Make a test recording, then go live.":"Kameranızı, ekranınızı ve sesinizi bir araya getirin. Bir test kaydı yapın ve ardından canlı yayına geçin.","Browser":"Tarayıcı","Browser Source properties with URL, Width, Height, and Control audio via OBS":"OBS aracılığıyla URL, Genişlik, Yükseklik ve Kontrol sesine sahip Tarayıcı Kaynağı özellikleri","Build one scene":"Bir sahne oluşturun","CBR":"CBR","Camera / capture card":"Kamera / yakalama kartı","Canvas":"Kanvas","Cap game FPS; simplify the scene.":"Cap oyunu FPS'si; sahneyi basitleştirin.","Capture each sound once.":"Her sesi bir kez yakalayın.","Change Output to stream at a smaller size.":"Çıkışı daha küçük boyutta akışa değiştirin.","Chat or alerts":"Sohbet veya uyarılar","Check hardware support and update your graphics driver. OBS still needs GPU capacity to draw scenes; cap game FPS or lower output FPS if it falls behind.":"Donanım desteğini kontrol edin ve grafik sürücünüzü güncelleyin. OBS'nin sahneleri çizmek için hâlâ GPU kapasitesine ihtiyacı var; Cap oyun FPS'si veya geride kalması durumunda daha düşük çıkış FPS'si.","Check mute, monitoring mode, and audio track.":"Sessizi, izleme modunu ve ses parçasını kontrol edin.","Check the session matches your chat source. Refresh the Browser Source. Keep only one copy playing TTS.":"Oturumun sohbet kaynağınızla eşleştiğini kontrol edin. Tarayıcı Kaynağını yenileyin. TTS oynatırken yalnızca bir kopyayı koruyun.","Choose":"Seçin:","Choose a recording folder in":"İçinde bir kayıt klasörü seçin","Choose headphones in":"Kulaklıkları seçin","Choose what to capture.":"Ne yakalayacağınızı seçin.","Choose what you hear":"Ne duyacağınızı seçin","Choose what you want to do.":"Ne yapmak istediğinizi seçin.","Choose your encoder here; use the platform bitrates below.":"Burada kodlayıcınızı seçin; aşağıdaki platform bit hızlarını kullanın.","Choose your microphone in":"Mikrofonunuzu seçin","Choose your video size":"Video boyutunuzu seçin","Connect your platform":"Platformunuzu bağlayın","Control audio via OBS":"Sesi OBS üzerinden denetle","Copy the overlay URL from Social Stream Ninja.":"Kaplama URL'sini Social Stream Ninja'den kopyalayın.","Download":"İndir","Drag corners to resize. Sources at the top cover those below. Use the eye to hide and the lock to prevent movement.":"Yeniden boyutlandırmak için köşeleri sürükleyin. Üstteki kaynaklar aşağıdakileri kapsamaktadır. Gizlemek için gözü, hareketi önlemek için de kilidi kullanın.","Encoder compatibility":"Kodlayıcı uyumluluğu","Encoders":"Kodlayıcılar","Encoding lag":"Kodlama gecikmesi","Enhanced Broadcasting":"Gelişmiş Yayıncılık","Features":"Özellikler","File → Remux Recordings":"Dosya → Remux Kayıtları","Filters":"Filtreler","For TTS or alerts, enable":"TTS veya uyarılar için etkinleştirin","For manual output settings, choose":"Manuel çıkış ayarları için","For persistent chat, leave automatic shutdown and scene-activation refresh off initially.":"Kalıcı sohbet için, başlangıçta otomatik kapatma ve sahne etkinleştirme yenilemesini kapalı bırakın.","For portrait video, use a 1080 × 1920 canvas and rearrange your sources to fit.":"Portre video için 1080 × 1920 tuval kullanın ve kaynaklarınızı sığacak şekilde yeniden düzenleyin.","For separate editing tracks, keep a full mix on track 1, then assign mic/game to additional tracks in Advanced Audio Properties and enable them under Recording.":"Ayrı düzenleme parçaları için, tam miksajı parça 1'de tutun, ardından Gelişmiş Ses Özellikleri'nde ek parçalara mikrofon/oyun atayın ve bunları Kayıt altında etkinleştirin.","GUIDES":"KILAVUZLAR","Game Capture":"Oyun Yakalama","Game on Windows":"Windows'ta Oyun","Give your CPU a break":"CPU'nuza bir mola verin","Go Live":"Canlı Yayına Geçin","Guides":"Kılavuzlar","H.264":"H.264","H.264 recommended targets":"H.264 önerilen hedefler","H.264 · CBR required":"H.264 · CBR gerekli","Headphones":"Kulaklıklar","Home":"Ana sayfa","If something looks wrong":"Bir şeyler ters görünüyorsa","If your Mac’s hardware encoder cannot provide CBR, use x264.":"Mac'inizin donanım kodlayıcısı CBR sağlayamıyorsa x264 kullanın.","In":"Şurada:","In this guide":"Bu kılavuzda","Install":"Şunu kurun:","Intel":"Intel","Kick":"Kick","Kick settings":"Kick ayarları","Leave upload headroom.":"Yükleme boşluğunu bırakın.","Let OBS do the first setup":"İlk kurulumu OBS yapsın","Listen without sending the source directly to output.":"Kaynağı doğrudan çıkışa göndermeden dinleyin.","Lower bitrate; try wired Ethernet.":"Daha düşük bit hızı; kablolu Ethernet'i deneyin.","Lower game, music, and alert sliders until speech is clear.":"Konuşma netleşinceye kadar oyun, müzik ve uyarı kaydırıcılarını indirin.","MKV tolerates an interrupted recording. Use":"MKV kesintiye uğrayan kaydı tolere eder. Kullanım","Main navigation":"Ana gezinme","Make your voice easy to hear":"Sesinizin duyulmasını kolaylaştırın","Meters show signal level; sliders change the mix.":"Sayaçlar sinyal seviyesini gösterir; kaydırıcılar karışımı değiştirir.","Microphone →":"Mikrofon →","Missing encoder or overloaded computer?":"Kodlayıcı eksik veya bilgisayar aşırı yüklendi mi?","Monitor Off":"Monitör Kapalı","Monitor Only (mute output)":"Yalnızca İzle (çıkışı sustur)","Monitor and Output":"İzle ve Çıkış Ver","NVENC H.264":"NVENC H.264","NVIDIA":"NVIDIA","Network drops":"Ağ düşüyor","No":"Hayır","No hardware option? Use":"Donanım seçeneği yok mu? Kullanım","OBS Audio Mixer with separate meters, volume sliders, and mute controls":"OBS Ses Mikseri, ayrı göstergeler, ses seviyesi kaydırıcıları ve sessize alma kontrolleri ile","OBS Auto-Configuration Wizard with streaming and recording choices":"Akış ve kayıt seçenekleriyle OBS Otomatik Yapılandırma Sihirbazı","OBS Controls with Start Streaming, Start Recording, Studio Mode, and Settings buttons":"OBS Yayını Başlat, Kaydı Başlat, Stüdyo Modu ve Ayarlar düğmeleriyle kontroller","OBS Output settings with the hardware NVENC H.264 encoder selected":"OBS Donanım NVENC H.264 kodlayıcı seçiliyken çıkış ayarları","OBS Studio":"OBS Studio","OBS Studio Beginner Guide - Social Stream Ninja":"OBS Studio Başlangıç Kılavuzu - Social Stream Ninja","OBS Video settings with Base Canvas Resolution, Output Scaled Resolution, and FPS fields":"OBS Temel Kanvas Çözünürlüğü, Çıkış Ölçeklendirilmiş Çözünürlük ve FPS alanlarına sahip video ayarları","OBS performance help":"OBS performans yardımı","OBS source menu listing Game Capture, Browser, and Video Capture Device":"Oyun Yakalama, Tarayıcı ve Video Yakalama Aygıtını listeleyen OBS kaynak menüsü","October 2026 guidance. Follow your platform’s current requirements. For Facebook or TikTok, first confirm your account offers an external encoder connection.":"Ekim 2026 kılavuzu. Platformunuzun mevcut gereksinimlerini takip edin. Facebook veya TikTok için öncelikle hesabınızın harici bir kodlayıcı bağlantısı sunduğunu doğrulayın.","On macOS, use":"macOS'de şunu kullanın:","Open":"Açın:","Open navigation menu":"Gezinme menüsünü aç","Output":"Çıkış","Output → Advanced → Streaming":"Çıkış → Gelişmiş → Akış","Overlays":"Kaplamalar","Place it above your game or camera. Send a test message; select one in the SSN dock if using the featured-message overlay.":"Oyununuzun veya kameranızın üzerine yerleştirin. Bir test mesajı gönderin; öne çıkan mesaj katmanını kullanıyorsanız SSN dock'tan birini seçin.","Platform settings":"Platform ayarları","Press":"Basın","QuickSync / QSV H.264":"QuickSync / QSV H.264","Record a minute. Then go live.":"Bir dakika kaydedin. O zaman canlı yayına geçin.","Recording format and separate audio tracks":"Kayıt formatı ve ayrı ses parçaları","Recording saves a file; streaming sends to your platform.":"Kayıt bir dosyayı kaydeder; akış platformunuza gönderilir.","Rendering lag":"Oluşturma gecikmesi","Replace this default URL and size with your overlay’s settings.":"Bu varsayılan URL'yi ve boyutu kaplamanızın ayarlarıyla değiştirin.","SSN overlay help":"SSN yer paylaşımı yardımı","SSN overlay setup":"SSN yer paylaşımı kurulumu","Scene changes normally go straight to output.":"Sahne değişiklikleri normalde doğrudan çıkışa gider.","Scene switching and macOS":"Sahne değiştirme ve macOS","Scenes":"Sahneler","Screenshot: OBS Project":"Ekran Görüntüsü: OBS Projesi","Screenshots open at full size when selected. Labels may vary slightly by OBS version.":"Ekran görüntüleri seçildiğinde tam boyutta açılır. Etiketler OBS sürümüne göre biraz farklılık gösterebilir.","Select streaming or recording, follow the prompts, and apply the settings.":"Akışı veya kaydı seçin, talimatları izleyin ve ayarları uygulayın.","Set the overlay size; use":"Kaplama boyutunu ayarlayın; kullanmak","Set up OBS Studio, build a scene, choose a hardware encoder and platform bitrate, mix and monitor audio, and add browser sources.":"OBS Studio'yu kurun, bir sahne oluşturun, bir donanım kodlayıcı ve platform bit hızı seçin, sesi karıştırıp izleyin ve tarayıcı kaynakları ekleyin.","Set your platform’s title and visibility, then":"Platformunuzun başlığını ve görünürlüğünü ayarlayın, ardından","Settings → Audio":"Ayarlar → Ses","Settings → Audio → Advanced → Monitoring Device":"Ayarlar → Ses → Gelişmiş → İzleme Cihazı","Settings → Output":"Ayarlar → Çıkış","Settings → Stream:":"Ayarlar → Akış:","Settings → Video":"Ayarlar → Video","Silent output":"Sessiz çıkış","Skip to guide":"Kılavuza atla","Smoother fast motion":"Daha akıcı hızlı hareket","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja ·":"Social Stream Ninja ·","Sources → + → Browser":"Kaynaklar → + → Tarayıcı","Speak normally. Aim for peaks around":"Normal konuşun. Etrafınızdaki zirveleri hedefleyin","Standard H.264":"Standart H.264","Start Recording":"Kaydı Başlat","Start Streaming":"Yayını Başlat","Start Streaming can make you publicly live.":"Yayını Başlat, herkese açık olarak canlı yayın yapmanızı sağlayabilir.","Start here":"Buradan başlayın","Stop and watch the file. Check volume, framing, and lip sync.":"Durdurun ve dosyayı izleyin. Ses seviyesini, çerçeveyi ve dudak senkronizasyonunu kontrol edin.","Stream":"Akış","Studio Mode":"Stüdyo Modu","Support":"Destek","Switch theme":"Temayı değiştir","TTS setup":"TTS kurulumu","Talking / lighter workload":"Konuşma / daha hafif iş yükü","The lower range is a suggested starting test. Try 160 kbps audio; use stereo at no more than 48 kHz.":"Alt aralık önerilen bir başlangıç ​​testidir. 160 kbps sesi deneyin; 48 kHz'den fazla stereo kullanmayın.","The video you send":"Gönderdiğiniz video","Tools → Auto-Configuration Wizard":"Araçlar → Otomatik Yapılandırma Sihirbazı","Transition":"Geçiş","Try 720p30":"720p30'u deneyin","Twitch":"Twitch","Twitch settings":"Twitch ayarları","Up to 1080p60":"1080p60'a kadar","Use Desktop Audio for the whole output device, or separate application capture. Capturing both can double the sound.":"Çıkış cihazının tamamı için Masaüstü Sesi kullanın veya ayrı uygulama yakalamayı kullanın. Her ikisini de yakalamak sesi ikiye katlayabilir.","Use a private test where available. When finished, stop streaming and confirm the platform event has ended.":"Mümkün olduğunda özel bir test kullanın. Bittiğinde akışı durdurun ve platform etkinliğinin sona erdiğini onaylayın.","Use hardware encoding or lower output FPS.":"Donanım kodlaması kullanın veya çıkış FPS'sini düşürün.","Useful for alerts or TTS you want to hear too.":"Duymak istediğiniz uyarılar veya TTS için de kullanışlıdır.","Usually right for your mic and games you already hear.":"Genellikle mikrofonunuz ve zaten duyduğunuz oyunlar için uygundur.","Video":"Video","Video Capture Device":"Video Yakalama Cihazı","Video bitrate · kbps":"Video bit hızı · kbps","View → Stats":"Görünüm → İstatistikler","Window / Display Capture":"Pencere / Ekran Yakalama","Windows: use":"Windows: kullanım","With supported AV1 / HEVC encoding, the corresponding targets are 6,000 / 10,000 / 12,000 kbps.":"Desteklenen AV1/HEVC kodlamayla karşılık gelen hedefler 6.000/10.000/12.000 kbps'dir.","Yes":"Evet","YouTube":"YouTube","YouTube settings":"YouTube ayarları","Your first OBS setup.":"İlk OBS kurulumunuz.","Your layout’s size":"Düzeninizin boyutu","and open it.":"ve açın.","and paste it. Keep its session and password options.":"ve yapıştırın. Oturum ve şifre seçeneklerini koruyun.","and start at 720p30.":"ve 720p30'da başlayın.","connect your account, or paste the server URL and private stream key from its dashboard.":"hesabınızı bağlayın veya sunucu URL'sini ve özel akış anahtarını kontrol panelinden yapıştırın.","don’t capture your monitoring device again through Desktop Audio. That can also send “Monitor Only” audio to viewers. Keep the platform’s live player muted.":"izleme cihazınızı Masaüstü Sesi aracılığıyla tekrar yakalamayın. Bu aynı zamanda izleyicilere \"Yalnızca Monitör\" sesi de gönderebilir. Platformun canlı oynatıcısının sesini kapalı tutun.","encoder. Dedicated hardware handles video compression, reducing CPU use.":"kodlayıcı. Özel donanım video sıkıştırmayı yöneterek CPU kullanımını azaltır.","for MP4 afterward. Current OBS also offers resilient Hybrid MP4/MOV.":"daha sonra MP4 için. Mevcut OBS ayrıca dayanıklı Hibrit MP4/MOV sunar.","for a full-frame landscape overlay.":"tam çerçeve yatay kaplama için.","for a window or display.":"bir pencere veya ekran için.","in Scenes, name your layout, then press":"Sahneler'de düzeninize bir ad verin ve ardından tuşuna basın.","in Sources.":"Kaynaklarda.","is a layout. A":"bir düzendir. bir","is something inside it.":"onun içindeki bir şeydir.","lets you prepare a scene, then press":"bir sahne hazırlamanızı ve ardından tuşuna basmanızı sağlar","macOS Screen Capture":"macOS Ekran Yakalama","macOS audio/screen capture":"macOS ses/ekran yakalama","scene":"sahne","sends multiple qualities and needs a separate bandwidth budget.":"birden fazla kalite gönderiyor ve ayrı bir bant genişliği bütçesine ihtiyaç duyuyor.","source":"kaynağı","to identify the bottleneck.":"darboğazı belirlemek için.","to reuse a source in another scene.":"bir kaynağı başka bir sahnede yeniden kullanmak için.","x264 → veryfast":"x264 → çok hızlı","−12 to −6 dBFS":"−12 ila −6 dBFS"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/obs-studio-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="obs-page">
+    <a class="obs-skip" href="#obs-guide">Kılavuza atla</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="../index.html">Ana sayfa</a><a href="features.html">Özellikler</a><a href="download.html">İndir</a><a href="guides.html">Kılavuzlar</a><a href="support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-studio-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-studio-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-studio-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-studio-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-studio-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-studio-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-studio-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-studio-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-studio-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-studio-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-studio-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/obs-studio-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/obs-studio-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/obs-studio-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="obs-studio-guide.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/obs-studio-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/obs-studio-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="obs-hero">
+        <p class="obs-eyebrow"><a href="guides.html#guide-directory">KILAVUZLAR</a> / OBS STÜDYO</p>
+        <h1>İlk OBS kurulumunuz.</h1>
+        <p class="obs-lead">Kameranızı, ekranınızı ve sesinizi bir araya getirin. Bir test kaydı yapın ve ardından canlı yayına geçin.</p>
+    </section>
+
+    <main id="obs-guide" class="obs-guide" tabindex="-1">
+        <div class="obs-jumps" role="navigation" aria-label="Bu kılavuzda">
+            <a href="#install">Buradan başlayın</a><a href="#scenes">Sahneler</a><a href="#encoders">Kodlayıcılar</a><a href="#platforms">Platform ayarları</a><a href="#mixing">Ses</a><a href="#browser-sources">Kaplamalar</a>
+        </div>
+
+        <section class="obs-step" id="install">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">01</span><h2>İlk kurulumu OBS yapsın</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Şunu kurun: <a href="https://obsproject.com/download">OBS Studio</a> ve açın.</li>
+                        <li>Seçin: <strong>Araçlar → Otomatik Yapılandırma Sihirbazı</strong>.</li>
+                        <li>Akışı veya kaydı seçin, talimatları izleyin ve ayarları uygulayın.</li>
+                    </ol>
+                    <p class="obs-note">Bilgisayarınız istediğinde kamera, mikrofon ve ekran yakalama erişimine izin verin.</p>
+                    <p class="obs-small">Ekran görüntüleri seçildiğinde tam boyutta açılır. Etiketler OBS sürümüne göre biraz farklılık gösterebilir.</p>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-auto-config.png"><img src="../../docs/images/guides/obs-studio-auto-config.png" width="1028" height="914" alt="Akış ve kayıt seçenekleriyle OBS Otomatik Yapılandırma Sihirbazı"></a>
+                    <figcaption>Ne yapmak istediğinizi seçin. <a href="https://obsproject.com/kb/quick-start-guide">Ekran Görüntüsü: OBS Projesi</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="scenes">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">02</span><h2>Bir sahne oluşturun</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <p>Bir <strong>sahne</strong> bir düzendir. bir <strong>kaynağı</strong> onun içindeki bir şeydir.</p>
+                    <p>Basın <strong>+</strong> Sahneler'de düzeninize bir ad verin ve ardından tuşuna basın. <strong>+</strong> Kaynaklarda.</p>
+                    <dl class="obs-facts">
+                        <div><dt>Kamera / yakalama kartı</dt><dd>Video Yakalama Cihazı</dd></div>
+                        <div><dt>Windows'ta Oyun</dt><dd>Oyun Yakalama</dd></div>
+                        <div><dt>Uygulama / tüm monitör</dt><dd>Pencere / Ekran Yakalama</dd></div>
+                        <div><dt>Sohbet veya uyarılar</dt><dd>Tarayıcı</dd></div>
+                    </dl>
+                    <p>Yeniden boyutlandırmak için köşeleri sürükleyin. Üstteki kaynaklar aşağıdakileri kapsamaktadır. Gizlemek için gözü, hareketi önlemek için de kilidi kullanın.</p>
+                    <details><summary>Sahne değiştirme ve macOS</summary>
+                        <p>macOS'de şunu kullanın: <strong>macOS Ekran Yakalama</strong> bir pencere veya ekran için.</p>
+                        <p>Sahne değişiklikleri normalde doğrudan çıkışa gider. <strong>Stüdyo Modu</strong> bir sahne hazırlamanızı ve ardından tuşuna basmanızı sağlar <strong>Geçiş</strong>. Paylaşılan kaynak ve ses değişiklikleri canlı çıkışı hâlâ etkileyebilir.</p>
+                        <p>Seçin: <strong>Mevcut Ekle</strong> bir kaynağı başka bir sahnede yeniden kullanmak için.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-sources.png"><img src="../../docs/images/guides/obs-studio-sources.png" width="265" height="580" loading="lazy" alt="Oyun Yakalama, Tarayıcı ve Video Yakalama Aygıtını listeleyen OBS kaynak menüsü"></a>
+                    <figcaption>Ne yakalayacağınızı seçin. <a href="https://obsproject.com/kb/quick-start-guide">Ekran Görüntüsü: OBS Projesi</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="video">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">03</span><h2>Video boyutunuzu seçin</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <p>Açın: <strong>Ayarlar → Video</strong>.</p>
+                    <dl class="obs-facts">
+                        <div><dt>Kanvas</dt><dd>Düzeninizin boyutu</dd></div>
+                        <div><dt>Çıkış</dt><dd>Gönderdiğiniz video</dd></div>
+                        <div><dt>30 FPS</dt><dd>Konuşma / daha hafif iş yükü</dd></div>
+                        <div><dt>60 FPS</dt><dd>Daha akıcı hızlı hareket</dd></div>
+                    </dl>
+                    <p class="obs-note">Basit bir başlangıç: <strong>1920 × 1080 tuval</strong>, <strong>1280 × 720 çıktı</strong>, <strong>30 FPS</strong>.</p>
+                    <p class="obs-small">Portre video için 1080 × 1920 tuval kullanın ve kaynaklarınızı sığacak şekilde yeniden düzenleyin.</p>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-video.png"><img src="../../docs/images/guides/obs-studio-video.png" width="983" height="758" loading="lazy" alt="OBS Temel Kanvas Çözünürlüğü, Çıkış Ölçeklendirilmiş Çözünürlük ve FPS alanlarına sahip video ayarları"></a>
+                    <figcaption>Çıkışı daha küçük boyutta akışa değiştirin. <a href="https://obsproject.com/kb/obs-studio-overview">Ekran Görüntüsü: OBS Projesi</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="encoders">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">04</span><h2>CPU'nuza bir mola verin</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <p>Şurada: <strong>Ayarlar → Çıkış</strong>, bir donanım seçin <strong>H.264</strong> kodlayıcı. Özel donanım video sıkıştırmayı yöneterek CPU kullanımını azaltır.</p>
+                    <dl class="obs-facts">
+                        <div><dt>NVIDIA</dt><dd>NVENC H.264</dd></div>
+                        <div><dt>AMD</dt><dd>AMD HW H.264 / AVC</dd></div>
+                        <div><dt>Intel</dt><dd>QuickSync / QSV H.264</dd></div>
+                        <div><dt>Elma Silikonu</dt><dd>Apple VT H264 Donanımı</dd></div>
+                    </dl>
+                    <p>Donanım seçeneği yok mu? Kullanım <strong>x264 → çok hızlı</strong> ve 720p30'da başlayın.</p>
+                    <details><summary>Kodlayıcı eksik veya bilgisayar aşırı yüklendi mi?</summary>
+                        <p>Donanım desteğini kontrol edin ve grafik sürücünüzü güncelleyin. OBS'nin sahneleri çizmek için hâlâ GPU kapasitesine ihtiyacı var; Cap oyun FPS'si veya geride kalması durumunda daha düşük çıkış FPS'si.</p>
+                        <p>Mac'inizin donanım kodlayıcısı CBR sağlayamıyorsa x264 kullanın. <a href="https://obsproject.com/kb/hardware-encoding">Kodlayıcı uyumluluğu</a>.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-output.png"><img src="../../docs/images/guides/obs-studio-output.png" width="977" height="759" loading="lazy" alt="OBS Donanım NVENC H.264 kodlayıcı seçiliyken çıkış ayarları"></a>
+                    <figcaption>Burada kodlayıcınızı seçin; aşağıdaki platform bit hızlarını kullanın. <a href="https://obsproject.com/kb/standard-recording-output-guide">Ekran Görüntüsü: OBS Projesi</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="platforms">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">05</span><h2>Platformunuzu bağlayın</h2></div>
+            <p><strong>Ayarlar → Akış:</strong> hesabınızı bağlayın veya sunucu URL'sini ve özel akış anahtarını kontrol panelinden yapıştırın.</p>
+            <p>Manuel çıkış ayarları için <strong>Çıkış → Gelişmiş → Akış</strong>: <strong>CBR</strong>, <strong>2 saniyelik animasyon kareleri</strong>, ve <strong>AAC stereo</strong>. Aşağıdan platformunuzu açın.</p>
+            <div class="obs-platforms">
+                <details><summary>Twitch<span>Standart H.264</span></summary>
+                    <table><caption>Video bit hızı · kbps</caption><thead><tr><th scope="col">Video</th><th scope="col">Bit Hızı</th></tr></thead><tbody>
+                        <tr><td>720p30</td><td>3,000</td></tr><tr><td>720p60 / 1080p30</td><td>4,500</td></tr><tr><td>1080p60</td><td>6,000</td></tr>
+                    </tbody></table>
+                    <p>Ses: 160 kbps'ye kadar. <a href="https://help.twitch.tv/s/article/broadcasting-guidelines?language=en_US">Twitch ayarları</a>.</p>
+                    <p><a href="https://help.twitch.tv/s/article/enhanced-broadcasting?language=en_US">Gelişmiş Yayıncılık</a> birden fazla kalite gönderiyor ve ayrı bir bant genişliği bütçesine ihtiyaç duyuyor.</p>
+                </details>
+                <details><summary>YouTube<span>H.264 önerilen hedefler</span></summary>
+                    <table><caption>Video bit hızı · kbps</caption><thead><tr><th scope="col">Video</th><th scope="col">Bit Hızı</th></tr></thead><tbody>
+                        <tr><td>720p30 / 60</td><td>8,000</td></tr><tr><td>1080p30</td><td>14,000</td></tr><tr><td>1080p60</td><td>17,000</td></tr>
+                    </tbody></table>
+                    <p>Ses: 128 kbps, 44,1 kHz stereo. Bunlar minimum değerler değil tavsiyelerdir. <a href="https://support.google.com/youtube/answer/2853702?hl=en">YouTube ayarları</a>.</p>
+                    <p>Desteklenen AV1/HEVC kodlamayla karşılık gelen hedefler 6.000/10.000/12.000 kbps'dir.</p>
+                </details>
+                <details><summary>Kick<span>H.264 · CBR gerekli</span></summary>
+                    <table><caption>Video bit hızı · kbps</caption><thead><tr><th scope="col">Video</th><th scope="col">Bit Hızı</th></tr></thead><tbody>
+                        <tr><td>720p30'u deneyin</td><td>3,000–4,000</td></tr><tr><td>1080p60'a kadar</td><td>8.000 maks.</td></tr>
+                    </tbody></table>
+                    <p>Alt aralık önerilen bir başlangıç ​​testidir. 160 kbps sesi deneyin; 48 kHz'den fazla stereo kullanmayın. <a href="https://help.kick.com/en/articles/7066931-how-to-stream-on-kick-com">Kick ayarları</a>.</p>
+                </details>
+            </div>
+            <p class="obs-note"><strong>Yükleme boşluğunu bırakın.</strong> 6.000 kbps, yaklaşık 6 Mbps artı ses ve ek yükü kullanır. Bağlantınız devam edemiyorsa bit hızını veya çözünürlüğü düşürün.</p>
+            <p class="obs-small">Ekim 2026 kılavuzu. Platformunuzun mevcut gereksinimlerini takip edin. Facebook veya TikTok için öncelikle hesabınızın harici bir kodlayıcı bağlantısı sunduğunu doğrulayın.</p>
+        </section>
+
+        <section class="obs-step" id="mixing">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">06</span><h2>Sesinizin duyulmasını kolaylaştırın</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Mikrofonunuzu seçin <strong>Ayarlar → Ses</strong>.</li>
+                        <li>Normal konuşun. Etrafınızdaki zirveleri hedefleyin <strong>−12 ila −6 dBFS</strong>; 0'a çarpmaktan kaçının.</li>
+                        <li>Konuşma netleşinceye kadar oyun, müzik ve uyarı kaydırıcılarını indirin.</li>
+                    </ol>
+                    <p><strong>Her sesi bir kez yakalayın.</strong> Çıkış cihazının tamamı için Masaüstü Sesi kullanın veya ayrı uygulama yakalamayı kullanın. Her ikisini de yakalamak sesi ikiye katlayabilir.</p>
+                    <details><summary>Uygulama sesi, macOS ve mikrofon filtreleri</summary>
+                        <p>Windows: kullanım <a href="https://obsproject.com/kb/application-audio-capture-guide">Uygulama Sesi Yakalama</a>. macOS 13+ üzerinde OBS'leri kullanın <a href="https://obsproject.com/kb/macos-desktop-audio-capture-guide">macOS ses/ekran yakalama</a>.</p>
+                        <p>Mikrofon → <strong>Filtreler</strong>: hafif gürültü bastırmayı, ardından bir kompresör ve sınırlayıcıyı deneyin. Birer birer ekleyin ve dinleyin.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-mixer.png"><img src="../../docs/images/guides/obs-studio-mixer.png" width="265" height="378" loading="lazy" alt="OBS Ses Mikseri, ayrı göstergeler, ses seviyesi kaydırıcıları ve sessize alma kontrolleri ile"></a>
+                    <figcaption>Sayaçlar sinyal seviyesini gösterir; kaydırıcılar karışımı değiştirir. <a href="https://obsproject.com/kb/quick-start-guide">Ekran Görüntüsü: OBS Projesi</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="monitoring">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">07</span><h2>Ne duyacağınızı seçin</h2></div>
+            <p>Kulaklıkları seçin <strong>Ayarlar → Ses → Gelişmiş → İzleme Cihazı</strong>. Daha sonra mikserin kapağını açın. <strong>Gelişmiş Ses Özellikleri</strong>.</p>
+            <div class="obs-routing">
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 21h8m-4-5v5"/></svg>
+                    <h3>Monitör Kapalı</h3><p><strong>Kulaklıklar</strong> Hayır<br><strong>Akış</strong> Evet</p><p>Genellikle mikrofonunuz ve zaten duyduğunuz oyunlar için uygundur.</p>
+                </div>
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 14V11a8 8 0 0 1 16 0v3"/><rect x="3" y="12" width="4" height="9" rx="2"/><rect x="17" y="12" width="4" height="9" rx="2"/></svg>
+                    <h3>Yalnızca İzle (çıkışı sustur)</h3><p><strong>Kulaklıklar</strong> Evet<br><strong>Akış</strong> Hayır</p><p>Kaynağı doğrudan çıkışa göndermeden dinleyin.</p>
+                </div>
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M11 4 5 9H2v6h3l6 5Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg>
+                    <h3>İzle ve Çıkış Ver</h3><p><strong>Kulaklıklar</strong> Evet<br><strong>Akış</strong> Evet</p><p>Duymak istediğiniz uyarılar veya TTS için de kullanışlıdır.</p>
+                </div>
+            </div>
+            <p class="obs-small">Kaynağın sesinin açık olduğunu ve çıkış parçanızda olduğunu varsayar. "Monitör Kapalı" akışın sesini kapatmaz.</p>
+            <p class="obs-note"><strong>Yankıdan kaçının:</strong> izleme cihazınızı Masaüstü Sesi aracılığıyla tekrar yakalamayın. Bu aynı zamanda izleyicilere "Yalnızca Monitör" sesi de gönderebilir. Platformun canlı oynatıcısının sesini kapalı tutun.</p>
+        </section>
+
+        <section class="obs-step" id="browser-sources">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">08</span><h2>Bir sohbet veya uyarı katmanı ekleyin</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Kaplama URL'sini Social Stream Ninja'den kopyalayın.</li>
+                        <li>Seçin: <strong>Kaynaklar → + → Tarayıcı</strong> ve yapıştırın. Oturum ve şifre seçeneklerini koruyun.</li>
+                        <li>Kaplama boyutunu ayarlayın; kullanmak <strong>1920 × 1080</strong> tam çerçeve yatay kaplama için.</li>
+                        <li>TTS veya uyarılar için etkinleştirin <strong>Sesi OBS üzerinden denetle</strong>.</li>
+                    </ol>
+                    <p>Oyununuzun veya kameranızın üzerine yerleştirin. Bir test mesajı gönderin; öne çıkan mesaj katmanını kullanıyorsanız SSN dock'tan birini seçin.</p>
+                    <details><summary>Boş katman mı yoksa tekrarlanan ses mi?</summary>
+                        <p>Oturumun sohbet kaynağınızla eşleştiğini kontrol edin. Tarayıcı Kaynağını yenileyin. TTS oynatırken yalnızca bir kopyayı koruyun.</p>
+                        <p>Kalıcı sohbet için, başlangıçta otomatik kapatma ve sahne etkinleştirme yenilemesini kapalı bırakın. <a href="obs-quick-start.html">SSN yer paylaşımı kurulumu</a> · <a href="tts-setup-guide.html">TTS kurulumu</a>.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-browser-source-properties.png"><img src="../../docs/images/guides/obs-browser-source-properties.png" width="1468" height="1232" loading="lazy" alt="OBS aracılığıyla URL, Genişlik, Yükseklik ve Kontrol sesine sahip Tarayıcı Kaynağı özellikleri"></a>
+                    <figcaption>Bu varsayılan URL'yi ve boyutu kaplamanızın ayarlarıyla değiştirin.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="recording">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">09</span><h2>Bir dakika kaydedin. O zaman canlı yayına geçin.</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <ol>
+                        <li>İçinde bir kayıt klasörü seçin <strong>Ayarlar → Çıkış</strong>.</li>
+                        <li>Basın <strong>Kaydı Başlat</strong>. Konuşun, ses çalın ve sahneleri değiştirin.</li>
+                        <li>Durdurun ve dosyayı izleyin. Ses seviyesini, çerçeveyi ve dudak senkronizasyonunu kontrol edin.</li>
+                        <li>Platformunuzun başlığını ve görünürlüğünü ayarlayın, ardından <strong>Yayını Başlat</strong>. Önizlemesini ve yayın durumunu kontrol edin; bazı platformlar da gerektirir <strong>Canlı Yayına Geçin</strong>.</li>
+                    </ol>
+                    <p><strong>Yayını Başlat, herkese açık olarak canlı yayın yapmanızı sağlayabilir.</strong> Mümkün olduğunda özel bir test kullanın. Bittiğinde akışı durdurun ve platform etkinliğinin sona erdiğini onaylayın.</p>
+                    <details><summary>Kayıt formatı ve ayrı ses parçaları</summary>
+                        <p>MKV kesintiye uğrayan kaydı tolere eder. Kullanım <strong>Dosya → Remux Kayıtları</strong> daha sonra MP4 için. Mevcut OBS ayrıca dayanıklı Hibrit MP4/MOV sunar.</p>
+                        <p>Ayrı düzenleme parçaları için, tam miksajı parça 1'de tutun, ardından Gelişmiş Ses Özellikleri'nde ek parçalara mikrofon/oyun atayın ve bunları Kayıt altında etkinleştirin.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-controls.png"><img src="../../docs/images/guides/obs-studio-controls.png" width="265" height="262" loading="lazy" alt="OBS Yayını Başlat, Kaydı Başlat, Stüdyo Modu ve Ayarlar düğmeleriyle kontroller"></a>
+                    <figcaption>Kayıt bir dosyayı kaydeder; akış platformunuza gönderilir. <a href="https://obsproject.com/kb/quick-start-guide">Ekran Görüntüsü: OBS Projesi</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="troubleshooting">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">10</span><h2>Bir şeyler ters görünüyorsa</h2></div>
+            <p>Açın: <strong>Görünüm → İstatistikler</strong> darboğazı belirlemek için.</p>
+            <div class="obs-fixes">
+                <p><strong>Ağ düşüyor</strong><br>Daha düşük bit hızı; kablolu Ethernet'i deneyin.</p>
+                <p><strong>Oluşturma gecikmesi</strong><br>Cap oyunu FPS'si; sahneyi basitleştirin.</p>
+                <p><strong>Kodlama gecikmesi</strong><br>Donanım kodlaması kullanın veya çıkış FPS'sini düşürün.</p>
+                <p><strong>Sessiz çıkış</strong><br>Sessizi, izleme modunu ve ses parçasını kontrol edin.</p>
+            </div>
+            <p class="obs-small"><a href="https://obsproject.com/kb/encoding-performance-troubleshooting">OBS performans yardımı</a> · <a href="obs-troubleshooting.html">SSN yer paylaşımı yardımı</a> · <a href="guides.html#guide-directory">Tüm kılavuzlar</a></p>
+        </section>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja · <a href="guides.html">Kılavuzlar</a> · <a href="support.html">Destek</a></p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

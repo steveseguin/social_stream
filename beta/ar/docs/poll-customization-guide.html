@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ar" data-site-root="../../" data-site-language="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta property="og:locale" content="ar_AR">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ar/docs/poll-customization-guide.html">
+    <meta name="twitter:title" content="قم بتخصيص الاستطلاع الرسومي الخاص بك - Social Stream Ninja">
+    <meta name="twitter:description" content="امنح استطلاع Social Stream Ninja الخاص بك تصميمًا مخصصًا باستخدام OBS CSS أو ملف poll.html مُعدل، بما في ذلك مطالبات الذكاء الاصطناعي وتعليمات الإعداد المحلية.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="شعار Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قم بتخصيص الاستطلاع الرسومي الخاص بك - Social Stream Ninja</title>
+    <meta name="description" content="امنح استطلاع Social Stream Ninja الخاص بك تصميمًا مخصصًا باستخدام OBS CSS أو ملف poll.html مُعدل، بما في ذلك مطالبات الذكاء الاصطناعي وتعليمات الإعداد المحلية.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ar/docs/poll-customization-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ar/docs/poll-customization-guide.html">
+    <meta property="og:title" content="قم بتخصيص الاستطلاع الرسومي الخاص بك - Social Stream Ninja">
+    <meta property="og:description" content="امنح استطلاع Social Stream Ninja الخاص بك تصميمًا مخصصًا باستخدام OBS CSS أو ملف poll.html مُعدل، بما في ذلك مطالبات الذكاء الاصطناعي وتعليمات الإعداد المحلية.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:alt" content="شعار Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="stylesheet" href="../../docs/css/site-shell.css">
+    <link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ar">
+<script id="ssn-site-language" type="application/json">{"language":"ar","page":"docs/poll-customization-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"التبديل إلى السمة الفاتحة","Switch to dark theme":"التبديل إلى السمة الداكنة","Light mode":"الوضع الفاتح","Dark mode":"الوضع الداكن","Open navigation menu":"فتح قائمة التنقل","Close navigation menu":"إغلاق قائمة التنقل","Copy this document as Markdown to the clipboard":"نسخ هذا المستند بصيغة Markdown إلى الحافظة","Copy Markdown":"نسخ Markdown","Copying…":"جارٍ النسخ…","Markdown copied":"تم نسخ Markdown","Copy failed":"تعذّر النسخ","Copy comprehensive Markdown for an AI assistant":"نسخ Markdown شامل لمساعد ذكاء اصطناعي","Copy this documentation page as Markdown for an AI assistant":"نسخ صفحة التوثيق هذه بصيغة Markdown لمساعد ذكاء اصطناعي"},"strings":{"\"Return only CSS for OBS Custom CSS, using the existing poll selectors and the Default theme; do not include HTML or script tags.\"":"\"إرجاع CSS فقط لـ OBS Custom CSS، باستخدام محددات الاستقصاء الموجودة والموضوع الافتراضي؛ لا تقم بتضمين علامات HTML أو علامات البرنامج النصي.\"",", and":"، و",", enable the poll, set":"، تمكين الاستطلاع، ضبط",", enter a question, and choose":"، أدخل سؤالاً، ثم اختر",", leave":"، اترك",", then click":"، ثم انقر على",", which build the answer rows.":"وهو بناء صفوف الإجابة.",". A layout change may also need matching edits in both":". قد يحتاج تغيير التخطيط أيضًا إلى تعديلات مطابقة في كليهما",". Check":". تحقق",". Choose":". اختر",". Copy your browser's actual address so the path and any spaces are handled for you.":". انسخ العنوان الفعلي للمتصفح الخاص بك حتى يتم التعامل مع المسار وأي مسافات نيابةً عنك.",". Keep it beside the original, at the top level of the folder.":". احتفظ به بجانب النسخة الأصلية، في المستوى العلوي من المجلد.",". Keep the full generated Graphical Poll link for the connection step below.":". احتفظ برابط الاستطلاع الرسومي الذي تم إنشاؤه بالكامل لخطوة الاتصال أدناه.",". Paste the CSS below into":". الصق CSS أدناه في",". Save any CSS already there if you want to reuse it.":". احفظ أي ملف CSS موجود هناك إذا كنت تريد إعادة استخدامه.",". Selecting the HTML file alone does not. The":". لا يؤدي تحديد ملف HTML وحده إلى ذلك. ال",". The example above works there too. Save the file with the":". المثال أعلاه يعمل هناك أيضًا. احفظ الملف بامتداد",". Use OBS Custom CSS or edit the file for this overlay.":". استخدم OBS Custom CSS أو قم بتحرير الملف لهذا التراكب.",". With multiple votes disabled, repeating a vote from the same user will not add another vote.":". مع تعطيل الأصوات المتعددة، لن يؤدي تكرار التصويت من نفس المستخدم إلى إضافة صوت آخر.","1. Style it in OBS":"1. صممه باللون OBS","1. Style the hosted poll in OBS":"1. قم بتصميم الاستطلاع المستضاف في OBS","2. Edit the HTML file":"2. قم بتحرير ملف HTML","2. Make an editable copy of the poll":"2. عمل نسخة قابلة للتحرير من الاستطلاع","3. Ask AI for a design":"3. اطلب تصميمًا من الذكاء الاصطناعي","3. Give AI the existing file and a specific brief":"3. قم بإعطاء الذكاء الاصطناعي الملف الموجود وملخصًا محددًا","4. Open your edited poll in OBS":"4. افتح الاستطلاع الذي تم تحريره في OBS","4. Run your edited poll":"4. قم بتشغيل الاستطلاع الذي تم تحريره","5. Test and troubleshoot":"5. الاختبار واستكشاف الأخطاء وإصلاحها","5. Test the design with a real poll":"5. اختبر التصميم من خلال استطلاع رأي حقيقي","; that element is rebuilt on updates.":"; يتم إعادة بناء هذا العنصر على التحديثات.","Actual poll with the example navy and gold CSS and fictional coffee and tea votes":"استطلاع فعلي مع مثال البحرية والذهبية CSS وأصوات القهوة والشاي الخيالية","All guides":"كل الأدلة","Attach":"إرفاق","Blank overlay:":"تراكب فارغ:","Browse all guides":"تصفّح جميع الأدلة","Browser Source":"مصدر المتصفح","Change the color values and sizes to suit your design. These selectors target the existing poll elements. Keep the bar widths controlled by the poll code, and keep the":"قم بتغيير قيم الألوان والأحجام لتناسب تصميمك. تستهدف هذه المحددات عناصر الاستقصاء الموجودة. حافظ على التحكم في عرض الشريط بواسطة رمز الاستطلاع، واحتفظ بـ","Check the bars and totals in OBS. Try a long question, a long answer, and the":"تحقق من الأشرطة والإجماليات في OBS. جرب سؤالاً طويلاً، وإجابة طويلة، و","Commands & API":"الأوامر وAPI","Copy everything from":"نسخ كل شيء من","Copy the Graphical Poll link. In OBS, add or open its":"انسخ رابط الاستطلاع الرسومي. في OBS، قم بإضافة أو فتح ملف","Custom CSS":"CSS مخصص","Customize your graphical poll":"قم بتخصيص الاستطلاع الرسومي الخاص بك","Customize your graphical poll - Social Stream Ninja":"قم بتخصيص الاستطلاع الرسومي الخاص بك - Social Stream Ninja","Default":"افتراضي","Do I edit the OBS link or the HTML file?":"هل أقوم بتحرير رابط OBS أو ملف HTML؟","Download":"تنزيل","Download the":"تحميل","Drag":"اسحب","Enable Poll":"تفعيل الاستطلاع (Enable Poll)","End Poll":"إنهاء الاستطلاع (End Poll)","Exact vote only":"التصويت المطابق تمامًا فقط (Exact vote only)","Features":"الميزات","First get a regular poll working using":"قم أولاً بإجراء استطلاع منتظم باستخدام","For a CSS-only edit, place your rules at the end of the existing":"بالنسبة لتحرير CSS فقط، ضع القواعد الخاصة بك في نهاية القائمة","For colors, fonts, spacing, and bar styling, you can keep the hosted URL and add":"بالنسبة للألوان والخطوط والمسافات وتصميم الشريط، يمكنك الاحتفاظ بعنوان URL المستضاف وإضافته","For direct disk loading, OBS Local file launchers, safe rendering examples, and supporting references, see the":"للتحميل المباشر للقرص، ومشغلات الملفات المحلية OBS، وأمثلة العرض الآمن، والمراجع الداعمة، راجع","For example, this copied link:":"مثلاً هذا الرابط المنسوخ:","For manual edits, the main styling hooks are":"بالنسبة للتعديلات اليدوية، فإن خطافات التصميم الرئيسية هي","For the OBS CSS route, change the last instruction to:":"بالنسبة لمسار OBS CSS، قم بتغيير التعليمات الأخيرة إلى:","Free-form":"شكل حر","Give your Social Stream Ninja poll a custom design with OBS CSS or an edited poll.html file, including AI prompts and local setup instructions.":"امنح استطلاع Social Stream Ninja الخاص بك تصميمًا مخصصًا باستخدام OBS CSS أو ملف poll.html مُعدل، بما في ذلك مطالبات الذكاء الاصطناعي وتعليمات الإعداد المحلية.","Graphical Poll → Poll Options":"الاستطلاع الرسومي → خيارات الاستطلاع (Graphical Poll → Poll Options)","Guides":"الأدلة","Hashtag anywhere":"وسم في أي موضع (Hashtag anywhere)","Hire":"الاستعانة بخدمات المطوّر","Home":"الرئيسية","In SSN, open":"في SSN، افتح","In the extracted folder, duplicate":"في المجلد المستخرج مكرر","Inspiration":"أفكار ملهمة","It contains the poll's layout, styles, and voting code. The URL you copy into OBS points to that file and adds connection settings, such as your session ID, after the":"يحتوي على تخطيط الاستطلاع وأنماطه ورمز التصويت. يشير عنوان URL الذي تنسخه إلى OBS إلى هذا الملف ويضيف إعدادات الاتصال، مثل معرف الجلسة، بعد","Keep SSN and a captured chat source running. In":"استمر في تشغيل SSN ومصدر الدردشة الذي تم التقاطه. في","Keep the supporting files.":"احتفظ بالملفات الداعمة.","Local file":"ملف محلي","Local page does not open:":"الصفحة المحلية لا تفتح:","Logo disappears after a vote:":"يختفي الشعار بعد التصويت:","Looks different in OBS:":"يبدو مختلفًا في OBS:","Main navigation":"التنقل الرئيسي","Match your show's colors, fonts, and layout with OBS CSS or your own copy of the poll page.":"قم بمطابقة ألوان العرض الخاص بك وخطوطه وتخطيطه باستخدام OBS CSS أو نسختك الخاصة من صفحة الاستطلاع.","OBS Custom CSS affects that Browser Source only; opening the same URL in a normal browser will show the original styling. See":"يؤثر OBS Custom CSS على مصدر المتصفح هذا فقط؛ سيؤدي فتح نفس عنوان URL في متصفح عادي إلى إظهار التصميم الأصلي. انظر","OBS saves the address. Keep the downloaded folder in the same place and keep SSN and your chat source running when using the poll. After saving an edit, use":"يقوم OBS بحفظ العنوان. احتفظ بالمجلد الذي تم تنزيله في نفس المكان واستمر في تشغيل SSN ومصدر الدردشة عند استخدام الاستطلاع. بعد حفظ التعديل، استخدم","OBS's Browser Source reference":"مرجع مصدر متصفح OBS","OK":"موافق","On this page":"في هذه الصفحة","Open":"افتح","Open navigation menu":"فتح قائمة التنقل","Open that combined address in your browser to check it. Then paste it into the OBS Browser Source's":"افتح هذا العنوان المدمج في متصفحك للتحقق منه. ثم قم بلصقه في مصدر متصفح OBS","Overlay Gallery":"معرض التراكبات","Poll Options":"خيارات الاستطلاع","Poll Style/Theme":"نمط/موضوع الاستطلاع","Poll-specific limitation:":"القيود الخاصة بالاستطلاع:","Refresh cache of current page":"تحديث ذاكرة التخزين المؤقت للصفحة الحالية (Refresh cache of current page)","Reset Poll":"إعادة تعيين الاستطلاع (Reset Poll)","Send":"أرسل","Set the Browser Source size to your canvas size, for example":"اضبط حجم مصدر المتصفح على حجم اللوحة القماشية الخاصة بك، على سبيل المثال","Set this up once.":"قم بإعداد هذا مرة واحدة.","Show number of votes instead of percent":"إظهار عدد الأصوات بدلاً من النسبة المئوية","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"شعار Social Stream Ninja","Social Stream Ninja source ZIP (beta)":"Social Stream Ninja المصدر ZIP (تجريبي)","Social Stream Ninja ·":"Social Stream Ninja ·","Stuck at \"Loading poll\":":"عالق في \"جاري تحميل الاستطلاع\":","Support":"الدعم","Supported Sites":"المواقع المدعومة","Switch theme":"تبديل السمة","Test":"اختبار","The current poll loads these scripts relative to its own location; copying only the HTML to a new folder is not enough:":"يقوم الاستطلاع الحالي بتحميل هذه البرامج النصية نسبة إلى موقعه الخاص؛ لا يكفي نسخ HTML فقط إلى مجلد جديد:","The example CSS applied to poll.html with fictional votes.":"تم تطبيق مثال CSS على poll.html بأصوات خيالية.","The file address above is a Windows example. On macOS it starts with":"عنوان الملف أعلاه هو مثال لنظام التشغيل Windows. على macOS يبدأ بـ","The file and the URL":"الملف وعنوان URL","The font and favicon are referenced assets; the four JavaScript files support voting and connections. Leaving the extracted folder intact keeps these paths available. Add any logo or font files your design uses there as well.":"يعتبر الخط والأيقونة المفضلة من الأصول المرجعية؛ تدعم ملفات JavaScript الأربعة التصويت والاتصالات. يؤدي ترك المجلد المستخرج سليمًا إلى إبقاء هذه المسارات متاحة. أضف أي شعار أو ملفات خطوط يستخدمها تصميمك هناك أيضًا.","The overlay file is":"ملف التراكب هو","These are placeholders: use your actual copied link, including only the options it already has. Keep using SSN's":"هذه عبارة عن عناصر نائبة: استخدم الرابط المنسوخ الفعلي، بما في ذلك فقط الخيارات الموجودة به بالفعل. استمر في استخدام SSN","URL":"URL","Using the URL field includes the session settings after":"يتضمن استخدام حقل URL إعدادات الجلسة بعد ذلك","Votes do not count:":"الأصوات لا تحتسب:","Why leave Local file unchecked?":"لماذا تترك الملف المحلي دون تحديد؟","Your edited copy is maintained separately from SSN's hosted poll. Keep a backup of the design, and compare it with newer":"يتم الاحتفاظ بنسختك المحررة بشكل منفصل عن الاستطلاع المستضاف على SSN. احتفظ بنسخة احتياطية من التصميم، وقارنه بالأحدث","also covers an optional launcher for the file picker.":"يغطي أيضًا مشغلًا اختياريًا لمنتقي الملفات.","and":"و","and extract it. You can inspect":"واستخرجه. يمكنك فحص","and point OBS at your copy. A custom copy does not automatically appear in SSN's theme dropdown.":"وأشر OBS إلى نسختك. لا تظهر النسخة المخصصة تلقائيًا في القائمة المنسدلة لموضوع SSN.","and your design reference, or open the extracted folder in your coding tool. Replace the bracketed details in this prompt:":"ومرجع التصميم الخاص بك، أو افتح المجلد المستخرج في أداة الترميز الخاصة بك. استبدل التفاصيل الموجودة بين قوسين في هذه المطالبة:","as":"كـ","as the starting point for this example, and turn on":"كنقطة بداية لهذا المثال، وقم بتشغيله","becomes:":"يصبح:","behavior so Enable Poll can show and hide the graphic.":"السلوك حتى يتمكن Enable Poll من إظهار الرسم وإخفائه.","block, just before":"الكتلة، قبل ذلك","check Enable Poll and the copied session settings. A free-form poll has no answer rows until votes arrive.":"حدد تمكين الاستطلاع وإعدادات الجلسة المنسوخة. لا يحتوي الاستطلاع الحر على صفوف إجابات حتى وصول الأصوات.","check the Browser Source dimensions, any older Custom CSS overriding the file's design, and whether a refresh is needed.":"تحقق من أبعاد مصدر المتصفح، وأي CSS مخصص قديم يتجاوز تصميم الملف، وما إذا كانت هناك حاجة إلى التحديث.","check the supporting scripts and their folder paths, SSN's running state, and the complete query string from the working hosted poll.":"تحقق من البرامج النصية الداعمة ومسارات المجلدات الخاصة بها، وحالة تشغيل SSN، وسلسلة الاستعلام الكاملة من الاستطلاع المستضاف العامل.","confirm voting is open, the message matches the selected voting mode, and the test user has not already voted.":"تأكد من أن التصويت مفتوح، وأن الرسالة تتطابق مع وضع التصويت المحدد، ولم يقم المستخدم الاختباري بالتصويت بالفعل.","custom overlays guide":"دليل التراكبات المخصصة","directly from your computer. There is no server to install or start.":"مباشرة من جهاز الكمبيوتر الخاص بك. لا يوجد خادم للتثبيت أو البدء.","does not read":"لا يقرأ","drag the file into your browser again and copy its current address. Check the filename is not accidentally":"اسحب الملف إلى متصفحك مرة أخرى وانسخ عنوانه الحالي. التحقق من اسم الملف ليس عن طريق الصدفة","extension.":".","field with":"المجال مع","for the source properties.":"لخصائص المصدر.","from different chat users, or use distinct fictional users with the":"من مستخدمي دردشة مختلفين، أو استخدم مستخدمين خياليين متميزين مع","in OBS. For a design with new artwork, a logo, or a different layout, edit a copy of":"في OBS. للحصول على تصميم يتضمن عملاً فنيًا جديدًا أو شعارًا أو تخطيطًا مختلفًا، قم بتحرير نسخة منه","in a text/code editor, or give that file to ChatGPT or Codex along with a reference image, brand colors, fonts, and your intended OBS canvas size.":"في محرر نص/رمز، أو قم بإعطاء هذا الملف إلى ChatGPT أو Codex مع صورة مرجعية وألوان العلامة التجارية والخطوط وحجم قماش OBS المقصود.","in the source properties.":"في خصائص المصدر.","into Chrome or Edge. Copy the address from the address bar; it starts with":"إلى Chrome أو Edge. انسخ العنوان من شريط العناوين؛ يبدأ بـ","onward in your working Graphical Poll link from SSN. Add it to the end of the file address. This keeps your session, password, and other settings.":"فصاعدًا في رابط الاستطلاع الرسومي الخاص بك من SSN. أضفه إلى نهاية عنوان الملف. يؤدي هذا إلى الاحتفاظ بجلستك وكلمة المرور والإعدادات الأخرى.","option to check text fits.":"خيار التحقق من ملاءمة النص.","or":"أو","put permanent artwork outside":"وضع الأعمال الفنية الدائمة بالخارج","shared guide":"الدليل المشترك","shared overlay design guide":"دليل تصميم التراكب المشترك","so the custom design handles closed, empty, and hidden states.":"لذا فإن التصميم المخصص يتعامل مع الحالات المغلقة والفارغة والمخفية.","test-message tools":"أدوات رسالة الاختبار","the current":"التيار","the poll setup guide":"دليل إعداد الاستطلاع","the poll.html source on GitHub":"مصدر poll.html على GitHub","to set the question, vote matching, and poll controls.":"لضبط السؤال ومطابقة الأصوات وضوابط الاقتراع.","unchecked, and paste the link into":"قم بإلغاء التحديد، ثم قم بلصق الرابط فيه","unchecked. Set the intended width and height.":"غير محدد. اضبط العرض والارتفاع المقصودين.","under":"ضمن","versions when you need upstream fixes. For building a different overlay from scratch, see the":"الإصدارات عندما تحتاج إلى إصلاحات المنبع. لإنشاء تراكب مختلف من البداية، راجع","with a longer message such as":"مع رسالة أطول مثل"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/poll-customization-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide visual-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="التنقل الرئيسي">
+<a href="../index.html">الرئيسية</a>
+<a href="features.html">الميزات</a>
+<a href="inspiration.html" class="site-priority-inspiration">أفكار ملهمة</a>
+<a href="download.html">تنزيل</a>
+<a href="guides.html">الأدلة</a>
+<a href="commands.html">الأوامر وAPI</a>
+<a href="supported-sites.html">المواقع المدعومة</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">معرض التراكبات</a>
+<a href="services.html" class="site-priority-hire">الاستعانة بخدمات المطوّر</a>
+<a href="support.html">الدعم</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="العربية"><span aria-hidden="true">🌐 </span><span lang="ar">العربية</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/poll-customization-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/poll-customization-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/poll-customization-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/poll-customization-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/poll-customization-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/poll-customization-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/poll-customization-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/poll-customization-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/poll-customization-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/poll-customization-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/poll-customization-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/poll-customization-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/poll-customization-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="poll-customization-guide.html" lang="ar" hreflang="ar" aria-current="true">العربية</a><a class="site-language-link" href="../../tr/docs/poll-customization-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/poll-customization-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/poll-customization-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="تبديل السمة"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button>
+<button class="site-menu" type="button" aria-label="فتح قائمة التنقل" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>قم بتخصيص الاستطلاع الرسومي الخاص بك</h1>
+<p>قم بمطابقة ألوان العرض الخاص بك وخطوطه وتخطيطه باستخدام OBS CSS أو نسختك الخاصة من صفحة الاستطلاع.</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="في هذه الصفحة">
+<a href="guides.html">كل الأدلة</a>
+<a href="#file-or-url">الملف وعنوان URL</a>
+<a href="#obs-css">1. صممه باللون OBS</a>
+<a href="#edit-file">2. قم بتحرير ملف HTML</a>
+<a href="#ai-prompt">3. اطلب تصميمًا من الذكاء الاصطناعي</a>
+<a href="#local-setup">4. قم بتشغيل الاستطلاع الذي تم تحريره</a>
+<a href="#check">5. الاختبار واستكشاف الأخطاء وإصلاحها</a>
+</nav>
+
+<section class="guide-card" id="file-or-url">
+<h2 id="read-section-1">هل أقوم بتحرير رابط OBS أو ملف HTML؟</h2>
+<p><strong>ملف التراكب هو <code>poll.html</code>.</strong> يحتوي على تخطيط الاستطلاع وأنماطه ورمز التصويت. يشير عنوان URL الذي تنسخه إلى OBS إلى هذا الملف ويضيف إعدادات الاتصال، مثل معرف الجلسة، بعد <code>?</code>.</p>
+<pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION</code></pre>
+<p>بالنسبة للألوان والخطوط والمسافات وتصميم الشريط، يمكنك الاحتفاظ بعنوان URL المستضاف وإضافته <strong>CSS مخصص</strong> في OBS. للحصول على تصميم يتضمن عملاً فنيًا جديدًا أو شعارًا أو تخطيطًا مختلفًا، قم بتحرير نسخة منه <code>poll.html</code> وأشر OBS إلى نسختك. لا تظهر النسخة المخصصة تلقائيًا في القائمة المنسدلة لموضوع SSN.</p>
+<p>للتحميل المباشر للقرص، ومشغلات الملفات المحلية OBS، وأمثلة العرض الآمن، والمراجع الداعمة، راجع <a href="overlay-customization-guide.html">دليل تصميم التراكب المشترك</a>.</p>
+<p>قم أولاً بإجراء استطلاع منتظم باستخدام <a href="polls-giveaways-waitlists-guide.html#poll">دليل إعداد الاستطلاع</a>. احتفظ برابط الاستطلاع الرسومي الذي تم إنشاؤه بالكامل لخطوة الاتصال أدناه.</p>
+</section>
+
+<section class="guide-card" id="obs-css">
+<h2 id="read-section-2">1. قم بتصميم الاستطلاع المستضاف في OBS</h2>
+<ol class="guide-steps">
+<li>في SSN، افتح <strong>الاستطلاع الرسومي → خيارات الاستطلاع (Graphical Poll → Poll Options)</strong>. اختر <strong>افتراضي</strong> ضمن <strong>نمط/موضوع الاستطلاع</strong> كنقطة بداية لهذا المثال، وقم بتشغيله <strong>تفعيل الاستطلاع (Enable Poll)</strong>.</li>
+<li>انسخ رابط الاستطلاع الرسومي. في OBS، قم بإضافة أو فتح ملف <strong>مصدر المتصفح</strong>، اترك <strong>ملف محلي</strong> قم بإلغاء التحديد، ثم قم بلصق الرابط فيه <strong>URL</strong>.</li>
+<li>اضبط حجم مصدر المتصفح على حجم اللوحة القماشية الخاصة بك، على سبيل المثال <strong>1920 &times; 1080</strong>. الصق CSS أدناه في <strong>CSS مخصص</strong>، ثم انقر على <strong>موافق</strong>. احفظ أي ملف CSS موجود هناك إذا كنت تريد إعادة استخدامه.</li>
+</ol>
+<pre><code id="poll-css-example">body {
+    margin: 0;
+    background: transparent;
+    overflow: hidden;
+}
+
+#poll-container {
+    box-sizing: border-box;
+    width: 880px;
+    max-width: 90%;
+    padding: 28px;
+    border-radius: 0;
+    border-left: 8px solid #f5c542;
+    background: rgba(8, 24, 48, 0.95);
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+}
+
+#poll-container .poll-title {
+    color: #ffffff;
+    font-size: 36px;
+    text-align: left;
+    margin: 0 0 24px;
+}
+
+#poll-container .poll-option {
+    background: #162e50;
+    border-radius: 0;
+    padding: 14px 16px;
+    font-size: 26px;
+}
+
+#poll-container .poll-bar {
+    background: #3266ad;
+}
+
+#poll-container .poll-instruction {
+    font-size: 22px;
+    margin-bottom: 18px;
+}</code></pre>
+<figure class="guide-figure"><a href="../../docs/images/guides/custom-poll-preview.png"><img class="guide-image" src="../../docs/images/guides/custom-poll-preview.png" alt="استطلاع فعلي مع مثال البحرية والذهبية CSS وأصوات القهوة والشاي الخيالية" loading="lazy"></a><figcaption>تم تطبيق مثال CSS على poll.html بأصوات خيالية.</figcaption></figure>
+<p>قم بتغيير قيم الألوان والأحجام لتناسب تصميمك. تستهدف هذه المحددات عناصر الاستقصاء الموجودة. حافظ على التحكم في عرض الشريط بواسطة رمز الاستطلاع، واحتفظ بـ <code>.hidden</code> السلوك حتى يتمكن Enable Poll من إظهار الرسم وإخفائه.</p>
+<p>يؤثر OBS Custom CSS على مصدر المتصفح هذا فقط؛ سيؤدي فتح نفس عنوان URL في متصفح عادي إلى إظهار التصميم الأصلي. انظر <a href="https://obsproject.com/kb/browser-source">مرجع مصدر متصفح OBS</a> لخصائص المصدر.</p>
+<p><strong>القيود الخاصة بالاستطلاع:</strong> التيار <code>poll.html</code> لا يقرأ <code>&amp;css=</code> أو <code>&amp;b64css=</code>. استخدم OBS Custom CSS أو قم بتحرير الملف لهذا التراكب.</p>
+</section>
+
+<section class="guide-card" id="edit-file">
+<h2 id="read-section-3">2. عمل نسخة قابلة للتحرير من الاستطلاع</h2>
+<ol class="guide-steps">
+<li>تحميل <a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">Social Stream Ninja المصدر ZIP (تجريبي)</a> واستخرجه. يمكنك فحص <a href="https://github.com/steveseguin/social_stream/blob/beta/poll.html">مصدر poll.html على GitHub</a>.</li>
+<li>في المجلد المستخرج مكرر <code>poll.html</code> كـ <code>my-poll.html</code>. احتفظ به بجانب النسخة الأصلية، في المستوى العلوي من المجلد.</li>
+<li>افتح <code>my-poll.html</code> في محرر نص/رمز، أو قم بإعطاء هذا الملف إلى ChatGPT أو Codex مع صورة مرجعية وألوان العلامة التجارية والخطوط وحجم قماش OBS المقصود.</li>
+<li>بالنسبة لتحرير CSS فقط، ضع القواعد الخاصة بك في نهاية القائمة <code>&lt;style&gt;</code> الكتلة، قبل ذلك <code>&lt;/style&gt;</code>. المثال أعلاه يعمل هناك أيضًا. احفظ الملف بامتداد <code>.html</code> .</li>
+</ol>
+<p><strong>احتفظ بالملفات الداعمة.</strong> يقوم الاستطلاع الحالي بتحميل هذه البرامج النصية نسبة إلى موقعه الخاص؛ لا يكفي نسخ HTML فقط إلى مجلد جديد:</p>
+<pre><code>your-poll-folder/
+    my-poll.html
+    currency.js
+    js/
+        transport-dedupe.js
+        local-server-url.js
+    shared/
+        overlay-control-transport.js
+    thirdparty/
+        NotoColorEmoji.ttf
+    favicon.ico</code></pre>
+<p>يعتبر الخط والأيقونة المفضلة من الأصول المرجعية؛ تدعم ملفات JavaScript الأربعة التصويت والاتصالات. يؤدي ترك المجلد المستخرج سليمًا إلى إبقاء هذه المسارات متاحة. أضف أي شعار أو ملفات خطوط يستخدمها تصميمك هناك أيضًا.</p>
+</section>
+
+<section class="guide-card" id="ai-prompt">
+<h2 id="read-section-4">3. قم بإعطاء الذكاء الاصطناعي الملف الموجود وملخصًا محددًا</h2>
+<p>إرفاق <code>my-poll.html</code> ومرجع التصميم الخاص بك، أو افتح المجلد المستخرج في أداة الترميز الخاصة بك. استبدل التفاصيل الموجودة بين قوسين في هذه المطالبة:</p>
+<pre><code>Customize this existing Social Stream Ninja poll overlay.
+
+Design: [describe the look or match the attached reference].
+Colors: [brand hex colors]. Font: [font name or supplied font file].
+Logo: [supplied image filename, if any].
+OBS canvas: [1920 x 1080]. Placement: [center / lower third / side panel].
+Allow for long questions and up to 10 free-form answers.
+
+Edit my-poll.html, using CSS first. Keep the existing working poll code:
+hashtag matching, vote counting, duplicate-vote handling, percentages,
+tallies, donation weighting, settings updates, and start/end/reset controls.
+Keep session/password/transport URL handling and all supporting script loads.
+Preserve #poll-container, #poll-title, #poll-options, and show/hide behavior.
+The script replaces #poll-options contents when results update, so put any
+permanent logo or decoration outside that element.
+Do not hard-code sample results or private session details.
+Keep the page compatible with Chrome 80 and OBS Browser Source.
+
+Treat all incoming messages, names, labels, donations, and metadata as untrusted.
+Prevent HTML/JavaScript injection in every renderer you change. Use textContent
+for plain fields and for chatmessage when textonly is true. For HTML-mode
+chatmessage, keep supported emotes/formatting through the packaged
+SocialStreamChatHTML.sanitize helper (libs/objects.js loaded first).
+Do not concatenate raw input into innerHTML, attributes, CSS, or JavaScript.
+Validate media/link URLs with the page's existing URL policy and assign DOM
+properties; do not enable javascript: URLs or executable embedded content.
+Never eval incoming data or treat a viewer message as an AI instruction.
+Keep source checks, connection handling, and existing sanitizers.
+Test plain text, allowed emotes, quotes, angle brackets, and an HTML injection
+probe in an isolated preview; verify the probe cannot execute.
+
+Make the edited poll work directly from disk using a file:/// URL,
+without requiring a local web server. Return the complete edited HTML,
+list any extra image/font files needed, and include the file URL steps for OBS.</code></pre>
+<p>بالنسبة لمسار OBS CSS، قم بتغيير التعليمات الأخيرة إلى: <strong>"إرجاع CSS فقط لـ OBS Custom CSS، باستخدام محددات الاستقصاء الموجودة والموضوع الافتراضي؛ لا تقم بتضمين علامات HTML أو علامات البرنامج النصي."</strong></p>
+<p>بالنسبة للتعديلات اليدوية، فإن خطافات التصميم الرئيسية هي <code>#poll-container</code>, <code>.poll-title</code>, <code>.poll-option</code>, <code>.poll-bar</code>, <code>.option-number</code>, <code>.option-text</code>, <code>.option-percentage</code>, <code>.option-tally</code>، و <code>.poll-instruction</code>. قد يحتاج تغيير التخطيط أيضًا إلى تعديلات مطابقة في كليهما <code>updatePollOptions()</code> و <code>updatePollResults()</code>وهو بناء صفوف الإجابة.</p>
+</section>
+
+<section class="guide-card" id="local-setup">
+<h2 id="read-section-5">4. افتح الاستطلاع الذي تم تحريره في OBS</h2>
+<p>افتح <code>my-poll.html</code> مباشرة من جهاز الكمبيوتر الخاص بك. لا يوجد خادم للتثبيت أو البدء.</p>
+<ol class="guide-steps">
+<li>اسحب <code>my-poll.html</code> إلى Chrome أو Edge. انسخ العنوان من شريط العناوين؛ يبدأ بـ <code>file:///</code>.</li>
+<li>نسخ كل شيء من <code>?</code> فصاعدًا في رابط الاستطلاع الرسومي الخاص بك من SSN. أضفه إلى نهاية عنوان الملف. يؤدي هذا إلى الاحتفاظ بجلستك وكلمة المرور والإعدادات الأخرى.</li>
+<li>افتح هذا العنوان المدمج في متصفحك للتحقق منه. ثم قم بلصقه في مصدر متصفح OBS <strong>URL</strong> المجال مع <strong>ملف محلي</strong> غير محدد. اضبط العرض والارتفاع المقصودين.</li>
+</ol>
+<p>مثلاً هذا الرابط المنسوخ:</p>
+<pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>يصبح:</p>
+<pre><code>file:///C:/SSN/social_stream-beta/my-poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>هذه عبارة عن عناصر نائبة: استخدم الرابط المنسوخ الفعلي، بما في ذلك فقط الخيارات الموجودة به بالفعل. استمر في استخدام SSN <strong>خيارات الاستطلاع</strong> لضبط السؤال ومطابقة الأصوات وضوابط الاقتراع.</p>
+<p>عنوان الملف أعلاه هو مثال لنظام التشغيل Windows. على macOS يبدأ بـ <code>file:///Users/...</code>. انسخ العنوان الفعلي للمتصفح الخاص بك حتى يتم التعامل مع المسار وأي مسافات نيابةً عنك.</p>
+<p><strong>قم بإعداد هذا مرة واحدة.</strong> يقوم OBS بحفظ العنوان. احتفظ بالمجلد الذي تم تنزيله في نفس المكان واستمر في تشغيل SSN ومصدر الدردشة عند استخدام الاستطلاع. بعد حفظ التعديل، استخدم <strong>تحديث ذاكرة التخزين المؤقت للصفحة الحالية (Refresh cache of current page)</strong> في خصائص المصدر.</p>
+<p><strong>لماذا تترك الملف المحلي دون تحديد؟</strong> يتضمن استخدام حقل URL إعدادات الجلسة بعد ذلك <code>?</code>. لا يؤدي تحديد ملف HTML وحده إلى ذلك. ال <a href="overlay-customization-guide.html#local-file">الدليل المشترك</a> يغطي أيضًا مشغلًا اختياريًا لمنتقي الملفات.</p>
+</section>
+
+<section class="guide-card" id="check">
+<h2 id="read-section-6">5. اختبر التصميم من خلال استطلاع رأي حقيقي</h2>
+<ol class="guide-steps">
+<li>استمر في تشغيل SSN ومصدر الدردشة الذي تم التقاطه. في <strong>خيارات الاستطلاع</strong>، تمكين الاستطلاع، ضبط <strong>شكل حر</strong>، أدخل سؤالاً، ثم اختر <strong>التصويت المطابق تمامًا فقط (Exact vote only)</strong>.</li>
+<li>أرسل <code>#coffee</code> و <code>#tea</code> من مستخدمي دردشة مختلفين، أو استخدم مستخدمين خياليين متميزين مع <a href="test-message-guide.html">أدوات رسالة الاختبار</a>. مع تعطيل الأصوات المتعددة، لن يؤدي تكرار التصويت من نفس المستخدم إلى إضافة صوت آخر.</li>
+<li>تحقق من الأشرطة والإجماليات في OBS. جرب سؤالاً طويلاً، وإجابة طويلة، و <strong>إظهار عدد الأصوات بدلاً من النسبة المئوية</strong> خيار التحقق من ملاءمة النص.</li>
+<li>اختبار <strong>وسم في أي موضع (Hashtag anywhere)</strong> مع رسالة أطول مثل <code>I vote #coffee today</code>. تحقق <strong>إنهاء الاستطلاع (End Poll)</strong>, <strong>إعادة تعيين الاستطلاع (Reset Poll)</strong>، و <strong>تفعيل الاستطلاع (Enable Poll)</strong> لذا فإن التصميم المخصص يتعامل مع الحالات المغلقة والفارغة والمخفية.</li>
+</ol>
+<ul class="guide-list">
+<li><strong>تراكب فارغ:</strong> حدد تمكين الاستطلاع وإعدادات الجلسة المنسوخة. لا يحتوي الاستطلاع الحر على صفوف إجابات حتى وصول الأصوات.</li>
+<li><strong>الصفحة المحلية لا تفتح:</strong> اسحب الملف إلى متصفحك مرة أخرى وانسخ عنوانه الحالي. التحقق من اسم الملف ليس عن طريق الصدفة <code>my-poll.html.txt</code>.</li>
+<li><strong>عالق في "جاري تحميل الاستطلاع":</strong> تحقق من البرامج النصية الداعمة ومسارات المجلدات الخاصة بها، وحالة تشغيل SSN، وسلسلة الاستعلام الكاملة من الاستطلاع المستضاف العامل.</li>
+<li><strong>الأصوات لا تحتسب:</strong> تأكد من أن التصويت مفتوح، وأن الرسالة تتطابق مع وضع التصويت المحدد، ولم يقم المستخدم الاختباري بالتصويت بالفعل.</li>
+<li><strong>يبدو مختلفًا في OBS:</strong> تحقق من أبعاد مصدر المتصفح، وأي CSS مخصص قديم يتجاوز تصميم الملف، وما إذا كانت هناك حاجة إلى التحديث.</li>
+<li><strong>يختفي الشعار بعد التصويت:</strong> وضع الأعمال الفنية الدائمة بالخارج <code>#poll-options</code>; يتم إعادة بناء هذا العنصر على التحديثات.</li>
+</ul>
+<p>يتم الاحتفاظ بنسختك المحررة بشكل منفصل عن الاستطلاع المستضاف على SSN. احتفظ بنسخة احتياطية من التصميم، وقارنه بالأحدث <code>poll.html</code> الإصدارات عندما تحتاج إلى إصلاحات المنبع. لإنشاء تراكب مختلف من البداية، راجع <a href="../../docs/index.html?file=customoverlays.md">دليل التراكبات المخصصة</a>.</p>
+</section>
+</div>
+</main>
+<footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja &middot; <a href="guides.html">تصفّح جميع الأدلة</a></p></div></div></footer>
+<script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

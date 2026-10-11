@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/tr/docs/kick-setup-authentication.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/tr/docs/kick-setup-authentication.html">
+    <meta property="og:title" content="Kick kurulumu ve kimlik doğrulama - Social Stream Ninja">
+    <meta property="og:description" content="Kick sohbetini ve uyarılarını Social Stream Ninja&#x27;ya bağlayın, Standart veya WebSocket modunu seçin, güvenli biçimde oturum açın ve kanal kısa adı ya da OAuth sorunlarını giderin.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/tr/docs/kick-setup-authentication.html">
+    <meta name="twitter:title" content="Kick kurulumu ve kimlik doğrulama - Social Stream Ninja">
+    <meta name="twitter:description" content="Kick sohbetini ve uyarılarını Social Stream Ninja&#x27;ya bağlayın, Standart veya WebSocket modunu seçin, güvenli biçimde oturum açın ve kanal kısa adı ya da OAuth sorunlarını giderin.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kick kurulumu ve kimlik doğrulama - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Kick sohbetini ve uyarılarını Social Stream Ninja&#x27;ya bağlayın, Standart veya WebSocket modunu seçin, güvenli biçimde oturum açın ve kanal kısa adı ya da OAuth sorunlarını giderin.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/kick-setup-authentication.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{"## Verified maintainer context Current `sources/websocket/kick.js` OAuth scopes: `user:read`, `channel:read`, `channel:write`, `channel:rewards:read`, `chat:write`, `events:subscribe`, `moderation:ban`, `moderation:chat_message:manage`, `kicks:read`. Current default official subscriptions: `chat.message.sent`, `channel.followed`, `channel.subscription.new`, `channel.subscription.renewal`, `channel.subscription.gifts`, `channel.reward.redemption.updated`, `kicks.gifted`, `moderation.banned`, `livestream.status.updated`. The source can add custom and newly advertised donation/support event names when Kick returns them from its event-type endpoint. Do not document those dynamic names as guaranteed. The current official Kick event list has no raid/host webhook. Standard browser capture is implemented by the current manifest-injected `sources/kick.js`. The structured source is `sources/websocket/kick.html` plus `sources/websocket/kick.js`; the stale `sources/kick_new.js` file is not the manifest source of truth.":"## Doğrulanmış bakımcı bağlamı\n\nGeçerli `sources/websocket/kick.js` OAuth kapsamları:\n\n`user:read`, `channel:read`, `channel:write`, `channel:rewards:read`, `chat:write`, `events:subscribe`, `moderation:ban`, `moderation:chat_message:manage`, `kicks:read`.\n\nGeçerli varsayılan resmî abonelikler:\n\n`chat.message.sent`, `channel.followed`, `channel.subscription.new`, `channel.subscription.renewal`, `channel.subscription.gifts`, `channel.reward.redemption.updated`, `kicks.gifted`, `moderation.banned`, `livestream.status.updated`.\n\nKick, etkinlik türü uç noktasından döndürdüğünde kaynak özel ve yeni duyurulan bağış/destek etkinliği adlarını ekleyebilir. Bu dinamik adları garanti edilmiş gibi belgelemeyin. Geçerli resmî Kick etkinlik listesinde baskın/host webhook'u yoktur.\n\nStandart tarayıcı yakalama, manifest tarafından eklenen geçerli `sources/kick.js` ile uygulanır. Yapılandırılmış kaynak `sources/websocket/kick.html` ve `sources/websocket/kick.js` dosyalarıdır; eski `sources/kick_new.js` dosyası manifest için doğruluk kaynağı değildir.",", and":", ve",", and the":", ve",", the source value is":", kaynak değeri",". You may paste the full URL or enter only that slug.":". Tam URL'yi yapıştırabilir veya yalnızca bu kısa adı girebilirsiniz.","A display name may contain underscores while the URL uses hyphens. Copy the slug from the address bar instead of retyping the displayed name.":"Görünen ad alt çizgi içerebilirken URL kısa çizgi kullanabilir. Görünen adı yeniden yazmak yerine kısa adı adres çubuğundan kopyalayın.","A fresh Kick WebSocket source before sign-in. In the desktop app, External browser is usually easiest when embedded login is blocked or a CAPTCHA appears.":"Oturum açmadan önce yeni bir Kick WebSocket kaynağı. Masaüstü uygulamasında gömülü giriş engellendiğinde veya CAPTCHA göründüğünde Harici tarayıcı genellikle en kolay seçenektir.","Activate source":"Kaynağı etkinleştir","Add source → Kick":"Kaynak ekle → Kick","Ban/unban users and manage chat messages when the account has permission.":"Hesabın yetkisi varsa kullanıcıları yasaklayın/yasaklarını kaldırın ve sohbet mesajlarını yönetin.","Best For":"En uygun kullanım","Bridge":"Köprü","Browser Extension WebSocket Setup":"Tarayıcı uzantısında WebSocket kurulumu","Channel":"Kanal","Channel write":"Kanal yazma","Chat socket":"Sohbet soketi","Chat write":"Sohbet yazma","Chat:":"Sohbet:","Check that":"Şunu kontrol edin:","Check the Social Stream dock before debugging OBS. If the dock receives Kick data, the remaining problem is the overlay or OBS URL.":"OBS'de hata aramadan önce Social Stream panelini kontrol edin. Panel Kick verilerini alıyorsa kalan sorun katman veya OBS URL'sidir.","Choose A Kick Source Mode":"Bir Kick kaynak modu seçin","Commands & API":"Komutlar ve API","Confirm the signed-in account owns or may moderate the channel before testing send/moderation controls.":"Gönderme/moderasyon kontrollerini test etmeden önce oturum açan hesabın kanalın sahibi veya moderatörü olduğunu doğrulayın.","Connect Kick chat and alerts to Social Stream Ninja, choose Standard or WebSocket mode, sign in safely, and fix channel slug or OAuth problems.":"Kick sohbetini ve uyarılarını Social Stream Ninja'ya bağlayın, Standart veya WebSocket modunu seçin, güvenli biçimde oturum açın ve kanal kısa adı ya da OAuth sorunlarını giderin.","Connect channel":"Kanalı bağla","Copy the exact channel slug from the Kick URL.":"Kanalın kısa adını Kick URL'sinden tam olarak kopyalayın.","Desktop App Setup":"Masaüstü uygulaması kurulumu","Download":"İndir","Event subscriptions":"Etkinlik abonelikleri","Events and Alerts Compatibility guide":"Etkinlikler ve uyarılar uyumluluk kılavuzu","External browser":"Harici tarayıcı","Features":"Özellikler","Fix A Kick Source That Will Not Connect":"Bağlanmayan Kick kaynağını düzeltin","Follows:":"Takipler:","For":"Şunun için:","For Standard capture, open":"Standart yakalama için şunu açın:","Guides":"Kılavuzlar","Hire":"Hizmet alın","Home":"Ana sayfa","If chat works but official alerts do not, sign in again and wait for":"Sohbet çalışıyor ancak resmî uyarılar çalışmıyorsa yeniden oturum açın ve şunu bekleyin:","If embedded login or CAPTCHA fails, use":"Gömülü giriş veya CAPTCHA başarısız olursa şunu kullanın:","In the Kick source window, select":"Kick kaynak penceresinde şunu seçin:","Inspiration":"İlham","Install and enable the current Social Stream Ninja extension.":"Güncel Social Stream Ninja uzantısını yükleyip etkinleştirin.","KICKs":"KICKs","KICKs gifts:":"KICKs hediyeleri:","Keep the page open while streaming.":"Yayın sırasında sayfayı açık tutun.","Keep the source window open and check the Channel, Chat socket, Bridge, and Subscriptions status chips.":"Kaynak penceresini açık tutun ve Kanal, Sohbet soketi, Köprü ve Abonelikler durum göstergelerini kontrol edin.","Kick API reference":"Kick API başvuru kaynağı","Kick Alerts for Social Stream source showing channel status, chat socket, bridge, subscription status, authentication methods, and channel slug input":"Kanal durumunu, sohbet soketini, köprüyü, abonelik durumunu, kimlik doğrulama yöntemlerini ve kanal kısa adı girişini gösteren Social Stream için Kick Alerts kaynağı","Kick Setup and Authentication":"Kick kurulumu ve kimlik doğrulama","Kick Setup and Authentication - Social Stream Ninja":"Kick kurulumu ve kimlik doğrulama - Social Stream Ninja","Kick WebSocket source page":"Kick WebSocket kaynak sayfası","Kick display names can differ from URL slugs.":"Kick'teki görünen adlar URL kısa adlarından farklı olabilir.","Kick's current OAuth flow uses authorization-code login with PKCE. Do not paste an access token, refresh token, client secret, or browser cookie into a guide, chat, or support ticket.":"Kick'in geçerli OAuth akışı PKCE ile yetkilendirme kodu girişini kullanır. Erişim belirtecini, yenileme belirtecini, istemci gizli anahtarını veya tarayıcı çerezini bir kılavuza, sohbete ya da destek talebine yapıştırmayın.","Kick's current official webhook list does not publish a raid/host event. Social Stream has compatibility handling if Kick exposes one through a connected feed, but a Kick raid alert should not be treated as guaranteed.":"Kick'in geçerli resmî webhook listesinde baskın/host etkinliği yayımlanmaz. Kick bağlı bir akış üzerinden böyle bir etkinlik sunarsa Social Stream bunu uyumlu biçimde işler, ancak Kick baskın uyarısı garanti edilmiş sayılmamalıdır.","Leave":"Bırakın:","Main navigation":"Ana gezinme","Mode":"Mod","Moderation":"Moderasyon","Moderation:":"Moderasyon:","OAuth 2.1":"OAuth 2.1","Official Events The Current Source Subscribes To":"Geçerli kaynağın abone olduğu resmî etkinlikler","Official references:":"Resmî kaynaklar:","On this page":"Bu sayfada","Open navigation menu":"Gezinme menüsünü aç","Open the":"Şunu açın:","Overlay Gallery":"Katman galerisi","Paste the full Kick channel URL or enter its URL slug.":"Tam Kick kanal URL'sini yapıştırın veya URL kısa adını girin.","Permission Group":"İzin grubu","Public chat can connect separately, but OAuth is required for official event subscriptions, sending chat, and channel/moderation controls.":"Herkese açık sohbet ayrı olarak bağlanabilir, ancak resmî etkinlik abonelikleri, sohbet gönderme ve kanal/moderasyon kontrolleri için OAuth gerekir.","Raid/host note:":"Baskın/host notu:","Read KICKs-related support information.":"KICKs ile ilgili destek bilgilerini okuyun.","Read channel reward information and normalize reward redemptions.":"Kanal ödülü bilgilerini okuyun ve ödül kullanımlarını standartlaştırın.","Reading visible Kick chat from the normal or popout chat page.":"Normal veya açılır sohbet sayfasındaki görünür Kick sohbetini okuma.","Replace":"Değiştirin:","Resolve the signed-in user, channel, category, and current channel information.":"Oturum açan kullanıcıyı, kanalı, kategoriyi ve geçerli kanal bilgilerini çözümleyin.","Rewards":"Ödüller","Rewards:":"Ödüller:","See Kick's current official":"Kick'in güncel resmî belgelerine bakın:","Select":"Seçin:","Send broadcaster or bot chat from the source.":"Kaynaktan yayıncı veya bot sohbeti gönderin.","Sign in with Kick":"Kick ile oturum aç","Sign-In":"Oturum açma","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 Lisansı.","Standard":"Standart","Stream status:":"Yayın durumu:","Structured chat plus official follow, subscription, reward, KICKs, moderation, and live-status events.":"Yapılandırılmış sohbet ile resmî takip, abonelik, ödül, KICKs, moderasyon ve canlı yayın durumu etkinlikleri.","Subscribe to official real-time Kick events.":"Resmî gerçek zamanlı Kick etkinliklerine abone olun.","Subscriptions":"Abonelikler","Subscriptions:":"Abonelikler:","Support":"Destek","Supported Sites":"Desteklenen siteler","Switch theme":"Temayı değiştir","Update stream title/category from Advanced Controls.":"Gelişmiş Kontroller'den yayın başlığını/kategorisini güncelleyin.","Use The URL Slug, Not The Display Name":"Görünen adı değil, URL kısa adını kullanın","Use the exact channel URL slug, then choose simple page capture or the richer WebSocket alert source.":"Kanalın URL kısa adını tam olarak kullanın, ardından basit sayfa yakalamayı veya daha kapsamlı WebSocket uyarı kaynağını seçin.","Used For":"Kullanım amacı","User and channel read":"Kullanıcı ve kanal okuma","Usually not required for public chat capture. The page still must load and show chat.":"Herkese açık sohbet yakalama için genellikle gerekli değildir. Sayfanın yine de yüklenmesi ve sohbeti göstermesi gerekir.","WebSocket":"WebSocket","What The Current Kick Login Requests":"Geçerli Kick girişinin istediği izinler","and":"ve","and Social Stream's":"ve Social Stream'in","and approve the requested permissions.":"ve istenen izinleri onaylayın.","changes from disconnected.":"bağlantısız durumundan çıkar.","if the page has not connected automatically.":"sayfa otomatik bağlanmadıysa.","in the desktop app.":"masaüstü uygulamasında.","new, renewal, and gifts →":"yeni, yenileme ve hediyeler →","or":"veya","or its popout chat and leave chat visible.":"veya açılır sohbetini açın ve sohbeti görünür tutun.","scopes":"kapsamlar","selected for structured alerts. Kick currently defaults to WebSocket mode in the app.":"yapılandırılmış uyarılar için seçili olsun. Kick, uygulamada şu anda varsayılan olarak WebSocket modunu kullanır.","shows the intended slug and":"istenen kısa adı gösterir ve","to connect.":"için bağlantı kurulmasını bekleyin.","to enable official event subscriptions and account controls.":"resmî etkinlik aboneliklerini ve hesap kontrollerini etkinleştirmek için.","webhook event list":"webhook etkinlik listesi","with the KICKs amount.":"KICKs miktarıyla.","with the channel's exact URL slug.":"kanalın tam URL kısa adıyla.","→ Social Stream":"→ Social Stream"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/kick-setup-authentication.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="../index.html">Ana sayfa</a><a href="features.html">Özellikler</a><a href="inspiration.html" class="site-priority-inspiration">İlham</a><a href="download.html">İndir</a><a href="guides.html">Kılavuzlar</a><a href="commands.html">Komutlar ve API</a><a href="supported-sites.html">Desteklenen siteler</a><a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a><a href="services.html" class="site-priority-hire">Hizmet alın</a><a href="support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/kick-setup-authentication.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/kick-setup-authentication.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/kick-setup-authentication.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/kick-setup-authentication.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/kick-setup-authentication.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/kick-setup-authentication.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/kick-setup-authentication.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/kick-setup-authentication.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/kick-setup-authentication.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/kick-setup-authentication.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/kick-setup-authentication.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/kick-setup-authentication.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/kick-setup-authentication.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/kick-setup-authentication.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="kick-setup-authentication.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/kick-setup-authentication.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/kick-setup-authentication.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Kick kurulumu ve kimlik doğrulama</h1>
+            <p>Kanalın URL kısa adını tam olarak kullanın, ardından basit sayfa yakalamayı veya daha kapsamlı WebSocket uyarı kaynağını seçin.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Bu sayfada"><a href="#read-section-1">Bir Kick kaynak modu seçin</a><a href="#read-section-2">Görünen adı değil, URL kısa adını kullanın</a><a href="#read-section-3">Masaüstü uygulaması kurulumu</a><a href="#read-section-4">Tarayıcı uzantısında WebSocket kurulumu</a><a href="#read-section-5">Geçerli Kick girişinin istediği izinler</a><a href="#read-section-6">Geçerli kaynağın abone olduğu resmî etkinlikler</a><a href="#read-section-7">Bağlanmayan Kick kaynağını düzeltin</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Bir Kick kaynak modu seçin</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Mod</th><th>En uygun kullanım</th><th>Oturum açma</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Mod">Standart</td>
+                            <td data-label="En uygun kullanım">Normal veya açılır sohbet sayfasındaki görünür Kick sohbetini okuma.</td>
+                            <td data-label="Oturum açma">Herkese açık sohbet yakalama için genellikle gerekli değildir. Sayfanın yine de yüklenmesi ve sohbeti göstermesi gerekir.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Mod">WebSocket</td>
+                            <td data-label="En uygun kullanım">Yapılandırılmış sohbet ile resmî takip, abonelik, ödül, KICKs, moderasyon ve canlı yayın durumu etkinlikleri.</td>
+                            <td data-label="Oturum açma">Herkese açık sohbet ayrı olarak bağlanabilir, ancak resmî etkinlik abonelikleri, sohbet gönderme ve kanal/moderasyon kontrolleri için OAuth gerekir.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">Görünen adı değil, URL kısa adını kullanın</h2>
+                <p>Şunun için: <code>https://kick.com/example-channel</code>, kaynak değeri <code>example-channel</code>. Tam URL'yi yapıştırabilir veya yalnızca bu kısa adı girebilirsiniz.</p>
+                <div class="warning-note">
+                    <p><strong>Kick'teki görünen adlar URL kısa adlarından farklı olabilir.</strong> Görünen ad alt çizgi içerebilirken URL kısa çizgi kullanabilir. Görünen adı yeniden yazmak yerine kısa adı adres çubuğundan kopyalayın.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">Masaüstü uygulaması kurulumu</h2>
+                <ol class="guide-steps">
+                    <li>Seçin: <strong>Kaynak ekle → Kick</strong>.</li>
+                    <li>Tam Kick kanal URL'sini yapıştırın veya URL kısa adını girin.</li>
+                    <li>Bırakın: <strong>WebSocket</strong> yapılandırılmış uyarılar için seçili olsun. Kick, uygulamada şu anda varsayılan olarak WebSocket modunu kullanır.</li>
+                    <li>Seçin: <strong>Kaynağı etkinleştir</strong>.</li>
+                    <li>Kick kaynak penceresinde şunu seçin: <strong>Kick ile oturum aç</strong> ve istenen izinleri onaylayın.</li>
+                    <li>Kaynak penceresini açık tutun ve Kanal, Sohbet soketi, Köprü ve Abonelikler durum göstergelerini kontrol edin.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/kick-authentication-source.png" alt="Kanal durumunu, sohbet soketini, köprüyü, abonelik durumunu, kimlik doğrulama yöntemlerini ve kanal kısa adı girişini gösteren Social Stream için Kick Alerts kaynağı" class="guide-image">
+                    <figcaption>Oturum açmadan önce yeni bir Kick WebSocket kaynağı. Masaüstü uygulamasında gömülü giriş engellendiğinde veya CAPTCHA göründüğünde Harici tarayıcı genellikle en kolay seçenektir.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">Tarayıcı uzantısında WebSocket kurulumu</h2>
+                <ol class="guide-steps">
+                    <li>Güncel Social Stream Ninja uzantısını yükleyip etkinleştirin.</li>
+                    <li>Şunu açın: <a href="https://socialstream.ninja/sources/websocket/kick.html?channel=example-channel" target="_blank" rel="noopener">Kick WebSocket kaynak sayfası</a>.</li>
+                    <li>Değiştirin: <code>example-channel</code> kanalın tam URL kısa adıyla.</li>
+                    <li>Seçin: <strong>Kanalı bağla</strong> sayfa otomatik bağlanmadıysa.</li>
+                    <li>Seçin: <strong>Kick ile oturum aç</strong> resmî etkinlik aboneliklerini ve hesap kontrollerini etkinleştirmek için.</li>
+                    <li>Yayın sırasında sayfayı açık tutun.</li>
+                </ol>
+                <pre><code>https://socialstream.ninja/sources/websocket/kick.html?channel=CHANNEL_SLUG</code></pre>
+                <p>Standart yakalama için şunu açın: <code>https://kick.com/CHANNEL_SLUG</code> veya açılır sohbetini açın ve sohbeti görünür tutun.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">Geçerli Kick girişinin istediği izinler</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>İzin grubu</th><th>Kullanım amacı</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="İzin grubu">Kullanıcı ve kanal okuma</td><td data-label="Kullanım amacı">Oturum açan kullanıcıyı, kanalı, kategoriyi ve geçerli kanal bilgilerini çözümleyin.</td></tr>
+                        <tr><td data-label="İzin grubu">Kanal yazma</td><td data-label="Kullanım amacı">Gelişmiş Kontroller'den yayın başlığını/kategorisini güncelleyin.</td></tr>
+                        <tr><td data-label="İzin grubu">Ödüller</td><td data-label="Kullanım amacı">Kanal ödülü bilgilerini okuyun ve ödül kullanımlarını standartlaştırın.</td></tr>
+                        <tr><td data-label="İzin grubu">Sohbet yazma</td><td data-label="Kullanım amacı">Kaynaktan yayıncı veya bot sohbeti gönderin.</td></tr>
+                        <tr><td data-label="İzin grubu">Etkinlik abonelikleri</td><td data-label="Kullanım amacı">Resmî gerçek zamanlı Kick etkinliklerine abone olun.</td></tr>
+                        <tr><td data-label="İzin grubu">Moderasyon</td><td data-label="Kullanım amacı">Hesabın yetkisi varsa kullanıcıları yasaklayın/yasaklarını kaldırın ve sohbet mesajlarını yönetin.</td></tr>
+                        <tr><td data-label="İzin grubu">KICKs</td><td data-label="Kullanım amacı">KICKs ile ilgili destek bilgilerini okuyun.</td></tr>
+                    </tbody>
+                </table>
+                <p>Kick'in geçerli OAuth akışı PKCE ile yetkilendirme kodu girişini kullanır. Erişim belirtecini, yenileme belirtecini, istemci gizli anahtarını veya tarayıcı çerezini bir kılavuza, sohbete ya da destek talebine yapıştırmayın.</p>
+                <p>Resmî kaynaklar: <a href="https://github.com/KickEngineering/KickDevDocs/blob/main/getting-started/generating-tokens-oauth2-flow.md" target="_blank" rel="noopener">OAuth 2.1</a>, <a href="https://github.com/KickEngineering/KickDevDocs/blob/main/scopes/scopes.md" target="_blank" rel="noopener">kapsamlar</a>, ve <a href="https://api.kick.com/swagger/index.html" target="_blank" rel="noopener">Kick API başvuru kaynağı</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">Geçerli kaynağın abone olduğu resmî etkinlikler</h2>
+                <ul class="guide-list">
+                    <li><strong>Sohbet:</strong> <code>chat.message.sent</code>.</li>
+                    <li><strong>Takipler:</strong> <code>channel.followed</code> → Social Stream <code>new_follower</code>.</li>
+                    <li><strong>Abonelikler:</strong> yeni, yenileme ve hediyeler → <code>new_subscriber</code>, <code>resub</code>, ve <code>subscription_gift</code>.</li>
+                    <li><strong>Ödüller:</strong> <code>channel.reward.redemption.updated</code> → <code>reward</code>.</li>
+                    <li><strong>KICKs hediyeleri:</strong> <code>kicks.gifted</code> → <code>donation</code> KICKs miktarıyla.</li>
+                    <li><strong>Moderasyon:</strong> <code>moderation.banned</code>.</li>
+                    <li><strong>Yayın durumu:</strong> <code>livestream.status.updated</code> → <code>stream_online</code> veya <code>stream_offline</code>.</li>
+                </ul>
+                <div class="guide-note">
+                    <p><strong>Baskın/host notu:</strong> Kick'in geçerli resmî webhook listesinde baskın/host etkinliği yayımlanmaz. Kick bağlı bir akış üzerinden böyle bir etkinlik sunarsa Social Stream bunu uyumlu biçimde işler, ancak Kick baskın uyarısı garanti edilmiş sayılmamalıdır.</p>
+                </div>
+                <p>Kick'in güncel resmî belgelerine bakın: <a href="https://github.com/KickEngineering/KickDevDocs/blob/main/events/event-types.md" target="_blank" rel="noopener">webhook etkinlik listesi</a> ve Social Stream'in <a href="events-alerts-compatibility.html">Etkinlikler ve uyarılar uyumluluk kılavuzu</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-7">Bağlanmayan Kick kaynağını düzeltin</h2>
+                <ol class="guide-steps">
+                    <li>Kanalın kısa adını Kick URL'sinden tam olarak kopyalayın.</li>
+                    <li>Şunu kontrol edin: <strong>Kanal</strong> istenen kısa adı gösterir ve <strong>Sohbet soketi</strong> bağlantısız durumundan çıkar.</li>
+                    <li>Sohbet çalışıyor ancak resmî uyarılar çalışmıyorsa yeniden oturum açın ve şunu bekleyin: <strong>Köprü</strong> ve <strong>Abonelikler</strong> için bağlantı kurulmasını bekleyin.</li>
+                    <li>Gömülü giriş veya CAPTCHA başarısız olursa şunu kullanın: <strong>Harici tarayıcı</strong> masaüstü uygulamasında.</li>
+                    <li>Gönderme/moderasyon kontrollerini test etmeden önce oturum açan hesabın kanalın sahibi veya moderatörü olduğunu doğrulayın.</li>
+                    <li>OBS'de hata aramadan önce Social Stream panelini kontrol edin. Panel Kick verilerini alıyorsa kalan sorun katman veya OBS URL'sidir.</li>
+                </ol>
+            </div>
+
+            <template data-copy-markdown-extra>
+## Doğrulanmış bakımcı bağlamı
+
+Geçerli `sources/websocket/kick.js` OAuth kapsamları:
+
+`user:read`, `channel:read`, `channel:write`, `channel:rewards:read`, `chat:write`, `events:subscribe`, `moderation:ban`, `moderation:chat_message:manage`, `kicks:read`.
+
+Geçerli varsayılan resmî abonelikler:
+
+`chat.message.sent`, `channel.followed`, `channel.subscription.new`, `channel.subscription.renewal`, `channel.subscription.gifts`, `channel.reward.redemption.updated`, `kicks.gifted`, `moderation.banned`, `livestream.status.updated`.
+
+Kick, etkinlik türü uç noktasından döndürdüğünde kaynak özel ve yeni duyurulan bağış/destek etkinliği adlarını ekleyebilir. Bu dinamik adları garanti edilmiş gibi belgelemeyin. Geçerli resmî Kick etkinlik listesinde baskın/host webhook'u yoktur.
+
+Standart tarayıcı yakalama, manifest tarafından eklenen geçerli `sources/kick.js` ile uygulanır. Yapılandırılmış kaynak `sources/websocket/kick.html` ve `sources/websocket/kick.js` dosyalarıdır; eski `sources/kick_new.js` dosyası manifest için doğruluk kaynağı değildir.
+            </template>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 Lisansı.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Připojte OBS WebSocket k Social Stream Ninja Event Flow. Nastavte akce a události OBS, otestujte připojení a vyřešte potíže s automatizací.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/actions/obs-control-guide.html">
+    <meta property="og:title" content="Návod k ovládání OBS – Social Stream Ninja">
+    <meta property="og:description" content="Připojte OBS WebSocket k Social Stream Ninja Event Flow. Nastavte akce a události OBS, otestujte připojení a vyřešte potíže s automatizací.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/actions/obs-control-guide.html">
+    <meta name="twitter:title" content="Návod k ovládání OBS – Social Stream Ninja">
+    <meta name="twitter:description" content="Připojte OBS WebSocket k Social Stream Ninja Event Flow. Nastavte akce a události OBS, otestujte připojení a vyřešte potíže s automatizací.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Návod k ovládání OBS – Social Stream Ninja</title>
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/actions/obs-control-guide.html">
+    <style>
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+            color: #172033;
+            background: linear-gradient(145deg, #090d18, #172554 48%, #3b0764);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        }
+        .shell {
+            max-width: 1160px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 20px;
+            background: #fbfcff;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+        }
+        header {
+            padding: 58px 58px 48px;
+            color: #fff;
+            background: radial-gradient(circle at 85% 10%, rgba(168, 85, 247, 0.5), transparent 32%),
+                        linear-gradient(135deg, #172554, #5b21b6);
+        }
+        header h1 { margin: 0 0 12px; font-size: 2.8rem; line-height: 1.08; }
+        header p { max-width: 720px; margin: 0; font-size: 1.15rem; line-height: 1.6; opacity: 0.94; }
+        .quick-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+        .quick-links a {
+            padding: 9px 13px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 999px;
+            color: #fff;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        main { padding: 44px 58px 70px; }
+        section { margin: 0 0 58px; }
+        h2 { margin: 0 0 16px; color: #312e81; font-size: 2rem; }
+        h3 { margin: 28px 0 10px; color: #4c1d95; font-size: 1.35rem; }
+        p, li { line-height: 1.62; }
+        p { margin: 0 0 13px; }
+        ol, ul { margin: 14px 0; padding-left: 25px; }
+        li { margin: 7px 0; }
+        a { color: #4338ca; }
+        code {
+            padding: 2px 6px;
+            border-radius: 5px;
+            color: #3730a3;
+            background: #eef2ff;
+            font-family: Consolas, "Courier New", monospace;
+            overflow-wrap: anywhere;
+        }
+        .lead {
+            margin: -8px 0 24px;
+            color: #475569;
+            font-size: 1.08rem;
+        }
+        .panel, .callout {
+            margin: 20px 0;
+            padding: 20px 23px;
+            border-radius: 13px;
+            border: 1px solid #dbe3f3;
+            background: #f7f9ff;
+        }
+        .callout { border-left: 5px solid #4f46e5; }
+        .callout.warning { border-left-color: #d97706; background: #fffbeb; }
+        .callout.danger { border-left-color: #dc2626; background: #fef2f2; }
+        .diagram {
+            margin: 22px 0;
+            padding: 20px 22px;
+            overflow-x: auto;
+            border-radius: 13px;
+            color: #e0e7ff;
+            background: #111827;
+            font-family: Consolas, "Courier New", monospace;
+            line-height: 1.65;
+            white-space: pre;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .card {
+            padding: 20px;
+            border: 1px solid #e1e7f2;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(30, 41, 59, 0.07);
+        }
+        .card h3 { margin-top: 0; }
+        .table-wrap { margin: 20px 0; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 720px; }
+        th, td { padding: 12px 14px; border-bottom: 1px solid #dde4f0; text-align: left; vertical-align: top; line-height: 1.5; }
+        th { color: #312e81; background: #eef2ff; }
+        tbody tr:nth-child(even) { background: #fafbff; }
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            color: #155e75;
+            background: #cffafe;
+            font-size: 0.78rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        figure { margin: 24px 0; text-align: center; }
+        figure img {
+            max-width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            box-shadow: 0 12px 34px rgba(30, 41, 59, 0.14);
+        }
+        figcaption { margin-top: 9px; color: #64748b; font-size: 0.9rem; }
+        footer { padding: 23px 58px; color: #c7d2fe; background: #111827; }
+        footer a { color: #a5f3fc; }
+        @media (max-width: 720px) {
+            body { padding: 0; }
+            .shell { border-radius: 0; }
+            header, main, footer { padding-left: 22px; padding-right: 22px; }
+            header { padding-top: 40px; }
+            header h1 { font-size: 2.15rem; }
+            h2 { font-size: 1.65rem; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"actions/obs-control-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"(filter to":"(filtrovat na",", and":", a",", and password matches. Port":", a heslo odpovídá. Port",", keep Social Stream and the destination chat connected, then save and enable the flow":", nechte Social Stream i cílový chat připojený, pak scénář uložte a zapněte",", plus values added by earlier flow nodes such as":", a také hodnoty přidané předchozími uzly scénáře, například",". It starts disabled and contains three branches in one flow:":". Na začátku je vypnutý a obsahuje tři větve v jednom scénáři:",". Otherwise OBS may continue displaying the file contents instead of the text sent by Event Flow.":". Jinak může OBS dál zobrazovat obsah souboru místo textu odeslaného z Event Flow.",". The switch waits for an OBS start event; loading it during an existing stream does not turn it ON. Restarting Social Stream also resets the switch to OFF.":". Přepínač čeká na událost zahájení z OBS; načtení během probíhajícího vysílání ho nezapne. Restart Social Stream také vrátí přepínač do stavu OFF.",". Use":". Použijte","1. Connect Flow Actions to OBS":"1. Připojení Flow Actions k OBS","2. Add OBS nodes to a flow":"2. Přidání uzlů OBS do scénáře","3. OBS triggers":"3. Spouštěče OBS","4. OBS actions":"4. Akce OBS","5. Useful recipes":"5. Užitečné postupy","6. Other built-in OBS controls":"6. Další vestavěné ovládání OBS","7. Troubleshooting":"7. Řešení potíží","; OBS-specific details are under":"; podrobnosti specifické pro OBS jsou pod","; a separate trusted command runs":"; samostatný důvěryhodný příkaz spouští","; set a password if wanted.":"; v případě potřeby nastavte heslo.","A media input finishes playback. Optionally filter by exact Media Source Name.":"Mediální vstup dokončí přehrávání. Volitelně filtrujte podle přesného názvu zdroje Media Source Name.","Action":"Akce","Actions":"Akce","Actions stop when a scene changes":"Akce se při změně scény zastaví","Add":"Přidejte","Both Set Gate State actions already target the same switch, which defaults to OFF. Edit":"Obě akce Set Gate State již cílí na stejný přepínač, jehož výchozí stav je OFF. Upravte","Change Scene":"Změnit scénu (Change Scene)","Chat / stream event │ ▼ Social Stream Ninja Event Flow │ same session ID ▼ Flow Actions page (actions.html) │ OBS WebSocket v5 · ws://127.0.0.1:4455 ▼ OBS Studio":"Událost chatu / vysílání\n        │\n        ▼\nSocial Stream Ninja Event Flow\n        │  stejné ID relace\n        ▼\nStránka Flow Actions (actions.html)\n        │  OBS WebSocket v5 · ws://127.0.0.1:4455\n        ▼\nOBS Studio","Chat-controlled media restart":"Restart média ovládaný chatem","Check":"Zkontrolujte","Checks version, connection, scenes, and individual requests before using Event Flow.":"Před použitím Event Flow zkontroluje verzi, připojení, scény a jednotlivé požadavky.","Configuration and behavior":"Konfigurace a chování","Connect Flow Actions to OBS":"Připojení Flow Actions k OBS","Connect OBS WebSocket to Social Stream Ninja Event Flow. Configure OBS actions and events, test your connection and troubleshoot automation.":"Připojte OBS WebSocket k Social Stream Ninja Event Flow. Nastavte akce a události OBS, otestujte připojení a vyřešte potíže s automatizací.","Connect the trigger to the action, configure the exact OBS scene/source names, save, and enable the flow.":"Propojte spouštěč s akcí, nastavte přesné názvy scén/zdrojů v OBS, scénář uložte a zapněte.","Connection":"Připojení","Control Media Source":"Ovládat zdroj médií (Control Media Source)","Control Media Source: Restart":"Ovládat zdroj médií: Restartovat","Control OBS directly from Event Flow without Streamer.bot. This guide covers setup, every OBS trigger and action, practical recipes, and the older dock/browser-source controls.":"Ovládejte OBS přímo z Event Flow — Streamer.bot není potřeba. Tento návod popisuje nastavení, všechny spouštěče a akce OBS, praktické postupy i starší ovládání z doku a zdroje prohlížeče.","Control Replay Buffer":"Ovládat vyrovnávací paměť záznamu (Control Replay Buffer)","Control Replay Buffer: Start":"Ovládat vyrovnávací paměť záznamu: Spustit","Copy the Flow Actions URL and keep it open. An OBS Browser Source is recommended for overlay/audio actions.":"Zkopírujte URL Flow Actions a nechte ji otevřenou. Pro akce překryvů a zvuku se doporučuje zdroj prohlížeče v OBS.","Copy the exact OBS name. For visibility, set Scene or Group when the item is nested or outside the current scene.":"Zkopírujte přesný název z OBS. U viditelnosti nastavte Scene nebo Group, pokud je položka vnořená nebo mimo aktuální scénu.","Counter text in OBS":"Text počítadla v OBS","Current OBS scene indicator":"Ukazatel aktuální scény OBS","Cycles to the next OBS scene, rate-limited to once per 10 seconds.":"Přejde na další scénu OBS, s omezením na jednou za 10 sekund.","Diagnostic order: open the":"Pořadí diagnostiky: otevřete","Direct URL example":"Příklad přímé URL","Disable":"Vypněte","Displays scenes and can switch scenes or toggle streaming/recording when the target OBS dock grants the required control level.":"Zobrazuje scény a umožňuje je přepínat nebo zapínat a vypínat vysílání/nahrávání, pokud cílový dok OBS uděluje potřebnou úroveň ovládání.","Dock loaded inside OBS with read permission.":"Dok načtený v OBS s oprávněním ke čtení.","Drag a trigger onto the canvas.":"Přetáhněte spouštěč na plátno.","Duck music for an alert":"Ztlumit hudbu při upozornění","Enable Replay Buffer in OBS Output settings and start it before saving.":"Zapněte Replay Buffer v nastavení výstupu OBS a před uložením ho spusťte.","Enable the WebSocket server. Keep the default port":"Zapněte server WebSocket. Ponechte výchozí port","Enable the popup option; dock loaded inside OBS with Advanced access.":"Zapněte volbu v nabídce rozšíření; dok musí být načten v OBS s pokročilým přístupem Advanced.","Enable the popup option; dock loaded inside OBS with Full/Advanced control permission.":"Zapněte volbu v nabídce rozšíření; dok musí být načten v OBS s oprávněním ovládání Full/Advanced.","Enable, disable, or toggle a named source filter.":"Zapněte, vypněte nebo přepněte pojmenovaný filtr zdroje.","Event Flow Editor":"Editor Event Flow","Event Flow Guide":"Průvodce Event Flow","Every trigger and action in this guide.":"Všechny spouštěče a akce v tomto návodu.","Expand":"Rozbalte","Fallback for scene changes, start/stop streaming, start/stop recording, and saving replay buffer.":"Náhradní možnost pro změny scén, spuštění/zastavení vysílání a nahrávání a ukládání vyrovnávací paměti záznamu.","First enable Replay Buffer in":"Nejprve zapněte Replay Buffer v","Flow Actions":"Flow Actions","Flow Actions loaded inside OBS with Advanced Access Level. Source, filter, text, volume, media, refresh, and media-ended features still require WebSocket.":"Flow Actions načtené v OBS s úrovní přístupu Advanced. Funkce zdrojů, filtrů, textu, hlasitosti, médií, obnovení a ukončení médií stále vyžadují WebSocket.","Flow is saved and enabled; Flow Actions is open; both use the same session ID.":"Scénář je uložený a zapnutý; Flow Actions jsou otevřené; obojí používá stejné ID relace.","For a Text (GDI+) or Text (FreeType 2) source, turn off":"U zdroje Text (GDI+) nebo Text (FreeType 2) vypněte","Guests can use !cycle":"Hosté mohou použít !cycle","Guide sections":"Sekce návodu","Hourly message while OBS is live":"Zpráva každou hodinu během živého vysílání OBS","In OBS, open":"V OBS otevřete","In Social Stream Ninja, open the":"V Social Stream Ninja otevřete","In the Event Flow editor, choose":"V editoru Event Flow zvolte","It is the bridge that receives Event Flow actions and sends OBS WebSocket requests. If it is an OBS Browser Source, turn off":"Je to most, který přijímá akce Event Flow a odesílá požadavky OBS WebSocket. Pokud běží jako zdroj prohlížeče v OBS, vypněte","Keep the Flow Actions page running.":"Nechte stránku Flow Actions spuštěnou.","Live-output warning:":"Upozornění k živému výstupu:","Media Ended never fires":"Media Ended se nikdy nespustí","Media Source controls":"Ovládání zdroje médií","Message Equals":"Zpráva je rovna (Message Equals)","Mode":"Režim","More help:":"Další pomoc:","Moves through playlist-capable inputs, such as VLC Video Source. A single-file Media Source may ignore these actions.":"Přechází mezi položkami vstupů podporujících seznam skladeb, například VLC Video Source. Zdroj médií s jediným souborem může tyto akce ignorovat.","Mute, unmute, or toggle an input.":"Ztlumte, zapněte zvuk nebo přepněte stav vstupu.","Mute/Unmute Audio":"Ztlumit/zapnout zvuk (Mute/Unmute Audio)","Next / Previous":"Další / Předchozí","Next/Previous does nothing":"Další/Předchozí nic nedělá","Nothing happens":"Nic se neděje","OBS 28+, WebSocket server enabled, Flow Actions page open.":"OBS 28+, zapnutý server WebSocket, otevřená stránka Flow Actions.","OBS Browser Source API":"OBS Browser Source API","OBS Control Guide - Social Stream Ninja":"Návod k ovládání OBS – Social Stream Ninja","OBS Control with Social Stream Ninja":"Ovládání OBS pomocí Social Stream Ninja","OBS Media Ended":"Médium OBS skončilo (OBS Media Ended)","OBS Recording Started":"Nahrávání OBS zahájeno (OBS Recording Started)","OBS Recording Stopped":"Nahrávání OBS zastaveno (OBS Recording Stopped)","OBS Replay Buffer Saved":"Vyrovnávací paměť záznamu OBS uložena (OBS Replay Buffer Saved)","OBS Scene Changed":"Scéna OBS změněna (OBS Scene Changed)","OBS Settings → Output":"Nastavení OBS → Výstup","OBS Stream Started":"Vysílání OBS zahájeno (OBS Stream Started)","OBS Stream Started → Set Gate State: ON":"Vysílání OBS zahájeno → Nastavit stav brány: ON","OBS Stream Stopped":"Vysílání OBS zastaveno (OBS Stream Stopped)","OBS Stream Stopped → Set Gate State: OFF":"Vysílání OBS zastaveno → Nastavit stav brány: OFF","OBS Studio":"OBS Studio","OBS Studio action list in the Social Stream Ninja Event Flow Editor":"Seznam akcí OBS Studio v editoru Social Stream Ninja Event Flow","OBS WebSocket Tester":"Tester OBS WebSocket","OBS WebSocket v5":"OBS WebSocket v5","OBS WebSocket v5 is built into OBS 28 and newer. Social Stream Ninja uses it for full OBS control and media events.":"OBS WebSocket v5 je součástí OBS 28 a novějšího. Social Stream Ninja ho používá pro úplné ovládání OBS a události médií.","OBS event payload reference":"Referenční příručka datových zpráv událostí OBS","OBS finishes saving a replay.":"OBS dokončí ukládání záznamu z vyrovnávací paměti.","OBS names must match exactly, including spaces and punctuation. Source actions target the OBS input name, not the scene-item label if it was renamed independently.":"Názvy OBS se musí přesně shodovat, včetně mezer a interpunkce. Akce zdrojů cílí na název vstupu OBS, nikoli na popisek položky scény, pokud byl přejmenován samostatně.","OBS will not connect":"OBS se nepřipojí","Open tester":"Otevřít tester","Open the":"Otevřete","Option":"Možnost","Other controls":"Další ovládání","Pause":"Pozastavit","Place":"Umístěte","Play":"Přehrát","Play / Pause":"Přehrát / Pozastavit","Play/resume, pause, restart, stop, next, or previous.":"Přehrát/pokračovat, pozastavit, restartovat, zastavit, další nebo předchozí.","Privileged users can use !start / !stop":"Oprávnění uživatelé mohou použít !start / !stop","Problem":"Problém","Read from file":"Číst ze souboru (Read from file)","Recipes":"Příklady postupů","Recording starts.":"Nahrávání se zahájí.","Recording stops.":"Nahrávání se zastaví.","Refresh Browser Source":"Obnovit zdroj prohlížeče (Refresh Browser Source)","Refresh an alert page":"Obnovit stránku upozornění","Reloads a Browser Source without cache.":"Znovu načte zdroj prohlížeče bez mezipaměti.","Remote OBS control panel":"Panel vzdáleného ovládání OBS","Replay Buffer":"Vyrovnávací paměť záznamu (Replay Buffer)","Replay save fails":"Uložení záznamu z vyrovnávací paměti selže","Replay workflow":"Postup práce s vyrovnávací pamětí záznamu","Requirement":"Požadavek","Restart":"Restartovat","Restart / Stop":"Restartovat / Zastavit","Run something after a video":"Spustit něco po videu","Save Replay Buffer":"Uložit vyrovnávací paměť záznamu (Save Replay Buffer)","Saves the currently running replay buffer.":"Uloží právě běžící vyrovnávací paměť záznamu.","Scene/source/filter is not found":"Scéna/zdroj/filtr nebyl nalezen","Send Message":"Odeslat zprávu (Send Message)","Set Source Volume":"Nastavit hlasitost zdroje (Set Source Volume)","Set Text Source":"Nastavit textový zdroj (Set Text Source)","Set Text Source and flow variables":"Nastavení textového zdroje a proměnné scénáře","Set Text Source properties with counter template variables":"Vlastnosti Set Text Source s proměnnými šablony počítadla","Set Text Source writes the resolved value straight into the named OBS text input.":"Set Text Source zapíše vyhodnocenou hodnotu přímo do pojmenovaného textového vstupu OBS.","Sets an input from":"Nastaví vstup od","Setup":"Nastavení","Show, hide, or toggle a scene item. Scene and Group are optional targeting fields.":"Zobrazí, skryje nebo přepne položku scény. Scene a Group jsou volitelná pole pro určení cíle.","Shows the active scene in the Streaming Chat dock.":"Zobrazuje aktivní scénu v doku Streaming Chat.","Shutdown source when not visible":"Vypnout zdroj, když není viditelný (Shutdown source when not visible)","Social Stream Ninja also has older OBS Browser Source controls in the Streaming Chat dock. These do not use the Flow Actions WebSocket bridge.":"Social Stream Ninja obsahuje také starší ovládání zdrojů prohlížeče OBS v doku Streaming Chat. To nepoužívá most WebSocket z Flow Actions.","Social Stream Ninja logo":"Logo Social Stream Ninja","Start Recording":"Spustit nahrávání (Start Recording)","Start Streaming":"Spustit vysílání (Start Streaming)","Start with a template → Intermediate → Hourly message while OBS is live":"Začít se šablonou → Středně pokročilé → Zpráva každou hodinu během živého vysílání OBS","Start, stop, or toggle the replay buffer.":"Spustí, zastaví nebo přepne vyrovnávací paměť záznamu.","Start/Stop Streaming and Start/Stop Recording act immediately. Use restrictive triggers, permissions, and cooldowns so ordinary chat messages cannot fire them accidentally.":"Start/Stop Streaming a Start/Stop Recording se provedou okamžitě. Používejte přísně vymezené spouštěče, oprávnění a čekací doby, aby je běžné zprávy chatu nemohly nechtěně spustit.","Starts OBS recording.":"Spustí nahrávání OBS.","Starts or stops streaming from trusted chat users.":"Spouští nebo zastavuje vysílání na pokyn důvěryhodných uživatelů chatu.","Starts the configured OBS stream output.":"Spustí nastavený výstup vysílání OBS.","Stop":"Zastavit","Stop Recording":"Zastavit nahrávání (Stop Recording)","Stop Streaming":"Zastavit vysílání (Stop Streaming)","Stops OBS recording.":"Zastaví nahrávání OBS.","Stops the OBS stream output.":"Zastaví výstup vysílání OBS.","Streaming Chat dock paired to a dock running inside OBS.":"Dok Streaming Chat spárovaný s dokem spuštěným v OBS.","Streaming reaches the started state.":"Vysílání přejde do stavu zahájeno.","Streaming reaches the stopped state.":"Vysílání přejde do stavu zastaveno.","Switches the active program scene by exact scene name.":"Přepne aktivní programovou scénu podle přesného názvu.","Text does not change":"Text se nemění","The OBS Studio group contains scene, source, text, media, audio, filter, output, and replay-buffer controls.":"Skupina OBS Studio obsahuje ovládání scén, zdrojů, textu, médií, zvuku, filtrů, výstupu a vyrovnávací paměti záznamu.","The active program scene changes.":"Aktivní programová scéna se změní.","The text field supports normal message placeholders such as":"Textové pole podporuje běžné zástupné symboly zpráv, například","These start a flow when OBS reports a matching event. They arrive as":"Spustí scénář, když OBS nahlásí odpovídající událost. Přicházejí jako","Time Interval (3600 seconds) → ON/OFF Switch → Send Message":"Časový interval (3600 sekund) → Přepínač ON/OFF → Odeslat zprávu","Timing:":"Načasování:","Toggle Filter":"Přepnout filtr (Toggle Filter)","Toggle Source":"Přepnout zdroj (Toggle Source)","Tools → WebSocket Server Settings":"Nástroje → Nastavení serveru WebSocket","Trigger":"Spouštěč","Triggers":"Spouštěče","Troubleshooting":"Řešení potíží","Two OBS connection modes":"Dva režimy připojení OBS","Updates Text (GDI+) or Text (FreeType 2), with template placeholders.":"Aktualizuje Text (GDI+) nebo Text (FreeType 2) se zástupnými symboly šablony.","Use OBS WebSocket v5 and a real media input. Looping media does not reach an ended state.":"Použijte OBS WebSocket v5 a skutečný mediální vstup. Média ve smyčce nedosáhnou stavu ukončení.","Use Text (GDI+) or Text (FreeType 2), confirm the input name, and disable":"Použijte Text (GDI+) nebo Text (FreeType 2), ověřte název vstupu a vypněte","Use a playlist-capable source such as VLC Video Source.":"Použijte zdroj podporující seznam skladeb, například VLC Video Source.","Use the":"Použijte","Useful data":"Užitečná data","Volume, mute, and filters":"Hlasitost, ztlumení a filtry","WebSocket":"WebSocket","WebSocket or Browser Source API fallback":"WebSocket nebo náhradní Browser Source API","WebSocket server is enabled, URL is":"Server WebSocket je zapnutý, URL je","What it does":"Co dělá","What it supports":"Co podporuje","When it fires":"Kdy se spustí","after the counter/check path and use:":"za cestu počítadla/kontroly a použijte:","and create or edit a flow.":"a vytvořete nebo upravte scénář.","before starting your stream":"před zahájením vysílání","dB.":"dB.","ends playback and resets the input.":"ukončí přehrávání a resetuje vstup.","holds its current position.":"zachová aktuální pozici.","in the Actions list and drag in the OBS action you need.":"v seznamu Actions a přetáhněte požadovanou akci OBS.","is effectively silent. Mute is a separate state. Toggle Filter changes only the enabled state of an existing filter; it does not edit filter settings.":"je prakticky ticho. Ztlumení je samostatný stav. Toggle Filter mění pouze zapnutí existujícího filtru; neupravuje jeho nastavení.","is the obsolete v4 default.":"je zastaralý výchozí port verze v4.","is unchanged gain, negative values are quieter, and":"znamená nezměněné zesílení, záporné hodnoty jsou tišší a","on the Flow Actions Browser Source, or keep the page open elsewhere.":"u zdroje prohlížeče Flow Actions nebo nechte stránku otevřenou jinde.","only when OBS requires authentication. Add":"pouze když OBS vyžaduje ověření. Přidejte","resumes paused media.":"obnoví přehrávání pozastaveného média.","section and set the OBS WebSocket URL and optional password.":"a nastavte URL OBS WebSocket a volitelné heslo.","starts from the beginning.":"spustí přehrávání od začátku.","tester":"tester","the interval runs on its own schedule, so the first reminder may arrive sooner than one hour after streaming starts. Later reminders repeat every hour while the switch is ON. Change the Time Interval value for a different frequency; it is measured in seconds.":"interval běží podle vlastního rozvrhu, takže první připomínka může dorazit dříve než hodinu po zahájení vysílání. Další připomínky se opakují každou hodinu, dokud je přepínač ve stavu ON. Pro jinou četnost změňte hodnotu Time Interval; uvádí se v sekundách.","to":"na","to choose your chat platform (the example uses Twitch) and message. Choose a platform or All Platforms; Reply to Source cannot reply to an OBS event or timer tick.":"a zvolte platformu chatu (příklad používá Twitch) a zprávu. Vyberte platformu nebo All Platforms; Reply to Source nemůže odpovědět na událost OBS ani na tik časovače.","to confirm the connection before building a flow.":"a před vytvořením scénáře ověřte připojení.","to show a small connection-status badge while diagnosing problems.":"pro zobrazení malého odznaku stavu připojení při diagnostice problémů.","to start/stop it, then":"ke spuštění/zastavení, pak","to write the recent buffered segment to disk.":"pro zápis posledního úseku z vyrovnávací paměti na disk.","uses dB, matching the OBS mixer scale:":"používá dB odpovídající stupnici mixážního pultu OBS:","when the source must keep controlling OBS while hidden.":"když má zdroj dál ovládat OBS i ve skrytém stavu.","→ alert action → Delay → restore to":"→ akce upozornění → Prodleva → obnovit na","→ confirm":"→ ověřit","→ confirm scenes/inputs → test the individual request → test the full Event Flow.":"→ ověřit scény/vstupy → otestovat jednotlivý požadavek → otestovat celý scénář Event Flow.","→ moderator condition →":"→ podmínka moderátora →","→ permission condition →":"→ podmínka oprávnění →"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/actions/obs-control-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="shell">
+        <header>
+            <h1>Ovládání OBS pomocí Social Stream Ninja</h1>
+            <p>Ovládejte OBS přímo z Event Flow — Streamer.bot není potřeba. Tento návod popisuje nastavení, všechny spouštěče a akce OBS, praktické postupy i starší ovládání z doku a zdroje prohlížeče.</p>
+            <nav class="quick-links" aria-label="Sekce návodu">
+                <a href="#setup">Nastavení</a>
+                <a href="#triggers">Spouštěče</a>
+                <a href="#actions">Akce</a>
+                <a href="#recipes">Příklady postupů</a>
+                <a href="#other-controls">Další ovládání</a>
+                <a href="#troubleshooting">Řešení potíží</a>
+            </nav>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/obs-control-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/obs-control-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/obs-control-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/obs-control-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/obs-control-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/obs-control-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/obs-control-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/obs-control-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/obs-control-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/obs-control-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/obs-control-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/obs-control-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/obs-control-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/obs-control-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/obs-control-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="obs-control-guide.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/actions/obs-control-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></header>
+
+        <main>
+            <section id="setup">
+                <h2>1. Připojení Flow Actions k OBS</h2>
+                <p class="lead">OBS WebSocket v5 je součástí OBS 28 a novějšího. Social Stream Ninja ho používá pro úplné ovládání OBS a události médií.</p>
+                <ol>
+                    <li>V OBS otevřete <strong>Nástroje → Nastavení serveru WebSocket</strong>.</li>
+                    <li>Zapněte server WebSocket. Ponechte výchozí port <code>4455</code>; v případě potřeby nastavte heslo.</li>
+                    <li>V Social Stream Ninja otevřete <strong>Flow Actions</strong> a nastavte URL OBS WebSocket a volitelné heslo.</li>
+                    <li>Zkopírujte URL Flow Actions a nechte ji otevřenou. Pro akce překryvů a zvuku se doporučuje zdroj prohlížeče v OBS.</li>
+                    <li>Použijte <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">Tester OBS WebSocket</a> a před vytvořením scénáře ověřte připojení.</li>
+                </ol>
+
+                <div class="panel">
+                    <strong>Příklad přímé URL</strong><br>
+                    <code>https://socialstream.ninja/actions.html?session=YOUR_SESSION&amp;obsws=ws://127.0.0.1:4455</code><br><br>
+                    Přidejte <code>&amp;obspw=YOUR_PASSWORD</code> pouze když OBS vyžaduje ověření. Přidejte <code>&amp;obsdebug=1</code> pro zobrazení malého odznaku stavu připojení při diagnostice problémů.
+                </div>
+
+                <div class="callout warning">
+                    <strong>Nechte stránku Flow Actions spuštěnou.</strong> Je to most, který přijímá akce Event Flow a odesílá požadavky OBS WebSocket. Pokud běží jako zdroj prohlížeče v OBS, vypněte <em>Vypnout zdroj, když není viditelný (Shutdown source when not visible)</em> když má zdroj dál ovládat OBS i ve skrytém stavu.
+                </div>
+
+                <div class="diagram">Událost chatu / vysílání
+        │
+        ▼
+Social Stream Ninja Event Flow
+        │  stejné ID relace
+        ▼
+Stránka Flow Actions (actions.html)
+        │  OBS WebSocket v5 · ws://127.0.0.1:4455
+        ▼
+OBS Studio</div>
+
+                <h3>Dva režimy připojení OBS</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Režim</th><th>Co podporuje</th><th>Požadavek</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>OBS WebSocket v5</strong></td><td>Všechny spouštěče a akce v tomto návodu.</td><td>OBS 28+, zapnutý server WebSocket, otevřená stránka Flow Actions.</td></tr>
+                            <tr><td><strong>OBS Browser Source API</strong></td><td>Náhradní možnost pro změny scén, spuštění/zastavení vysílání a nahrávání a ukládání vyrovnávací paměti záznamu.</td><td>Flow Actions načtené v OBS s úrovní přístupu Advanced. Funkce zdrojů, filtrů, textu, hlasitosti, médií, obnovení a ukončení médií stále vyžadují WebSocket.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="build-flow">
+                <h2>2. Přidání uzlů OBS do scénáře</h2>
+                <ol>
+                    <li>Otevřete <a href="../../actions/index.html" target="_blank" rel="noopener">Editor Event Flow</a> a vytvořete nebo upravte scénář.</li>
+                    <li>Přetáhněte spouštěč na plátno.</li>
+                    <li>Rozbalte <strong>OBS Studio</strong> v seznamu Actions a přetáhněte požadovanou akci OBS.</li>
+                    <li>Propojte spouštěč s akcí, nastavte přesné názvy scén/zdrojů v OBS, scénář uložte a zapněte.</li>
+                </ol>
+                <figure>
+                    <img src="../../actions/img/obs-control-actions.png" alt="Seznam akcí OBS Studio v editoru Social Stream Ninja Event Flow">
+                    <figcaption>Skupina OBS Studio obsahuje ovládání scén, zdrojů, textu, médií, zvuku, filtrů, výstupu a vyrovnávací paměti záznamu.</figcaption>
+                </figure>
+                <div class="callout">
+                    Názvy OBS se musí přesně shodovat, včetně mezer a interpunkce. Akce zdrojů cílí na název vstupu OBS, nikoli na popisek položky scény, pokud byl přejmenován samostatně.
+                </div>
+            </section>
+
+            <section id="triggers">
+                <h2>3. Spouštěče OBS</h2>
+                <p>Spustí scénář, když OBS nahlásí odpovídající událost. Přicházejí jako <code>type: "obs"</code>; podrobnosti specifické pro OBS jsou pod <code>meta</code>.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Spouštěč</th><th>Kdy se spustí</th><th>Užitečná data</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Vysílání OBS zahájeno (OBS Stream Started)</strong></td><td>Vysílání přejde do stavu zahájeno.</td><td><code>meta.outputState</code>, <code>meta.outputActive</code></td></tr>
+                            <tr><td><strong>Vysílání OBS zastaveno (OBS Stream Stopped)</strong></td><td>Vysílání přejde do stavu zastaveno.</td><td><code>meta.outputState</code>, <code>meta.outputActive</code></td></tr>
+                            <tr><td><strong>Nahrávání OBS zahájeno (OBS Recording Started)</strong></td><td>Nahrávání se zahájí.</td><td><code>meta.outputState</code></td></tr>
+                            <tr><td><strong>Nahrávání OBS zastaveno (OBS Recording Stopped)</strong></td><td>Nahrávání se zastaví.</td><td><code>meta.outputState</code></td></tr>
+                            <tr><td><strong>Scéna OBS změněna (OBS Scene Changed)</strong></td><td>Aktivní programová scéna se změní.</td><td><code>meta.sceneName</code></td></tr>
+                            <tr><td><strong>Médium OBS skončilo (OBS Media Ended)</strong> <span class="tag">WebSocket</span></td><td>Mediální vstup dokončí přehrávání. Volitelně filtrujte podle přesného názvu zdroje Media Source Name.</td><td><code>meta.inputName</code>, <code>meta.inputUuid</code></td></tr>
+                            <tr><td><strong>Vyrovnávací paměť záznamu OBS uložena (OBS Replay Buffer Saved)</strong></td><td>OBS dokončí ukládání záznamu z vyrovnávací paměti.</td><td><code>meta.savedReplayPath</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="actions">
+                <h2>4. Akce OBS</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Akce</th><th>Konfigurace a chování</th><th>Připojení</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Změnit scénu (Change Scene)</strong></td><td>Přepne aktivní programovou scénu podle přesného názvu.</td><td>WebSocket nebo náhradní Browser Source API</td></tr>
+                            <tr><td><strong>Přepnout zdroj (Toggle Source)</strong></td><td>Zobrazí, skryje nebo přepne položku scény. Scene a Group jsou volitelná pole pro určení cíle.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Nastavit textový zdroj (Set Text Source)</strong></td><td>Aktualizuje Text (GDI+) nebo Text (FreeType 2) se zástupnými symboly šablony.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Ovládat zdroj médií (Control Media Source)</strong></td><td>Přehrát/pokračovat, pozastavit, restartovat, zastavit, další nebo předchozí.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Nastavit hlasitost zdroje (Set Source Volume)</strong></td><td>Nastaví vstup od <code>-100</code> na <code>+26</code> dB.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Obnovit zdroj prohlížeče (Refresh Browser Source)</strong></td><td>Znovu načte zdroj prohlížeče bez mezipaměti.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Přepnout filtr (Toggle Filter)</strong></td><td>Zapněte, vypněte nebo přepněte pojmenovaný filtr zdroje.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Ztlumit/zapnout zvuk (Mute/Unmute Audio)</strong></td><td>Ztlumte, zapněte zvuk nebo přepněte stav vstupu.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Spustit nahrávání (Start Recording)</strong></td><td>Spustí nahrávání OBS.</td><td>WebSocket nebo náhradní Browser Source API</td></tr>
+                            <tr><td><strong>Zastavit nahrávání (Stop Recording)</strong></td><td>Zastaví nahrávání OBS.</td><td>WebSocket nebo náhradní Browser Source API</td></tr>
+                            <tr><td><strong>Spustit vysílání (Start Streaming)</strong></td><td>Spustí nastavený výstup vysílání OBS.</td><td>WebSocket nebo náhradní Browser Source API</td></tr>
+                            <tr><td><strong>Zastavit vysílání (Stop Streaming)</strong></td><td>Zastaví výstup vysílání OBS.</td><td>WebSocket nebo náhradní Browser Source API</td></tr>
+                            <tr><td><strong>Ovládat vyrovnávací paměť záznamu (Control Replay Buffer)</strong></td><td>Spustí, zastaví nebo přepne vyrovnávací paměť záznamu.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Uložit vyrovnávací paměť záznamu (Save Replay Buffer)</strong></td><td>Uloží právě běžící vyrovnávací paměť záznamu.</td><td>WebSocket nebo náhradní Browser Source API</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Nastavení textového zdroje a proměnné scénáře</h3>
+                <p>Textové pole podporuje běžné zástupné symboly zpráv, například <code>{username}</code>, <code>{message}</code>, <code>{source}</code>, a <code>{donation}</code>, a také hodnoty přidané předchozími uzly scénáře, například <code>{counterValue}</code>, <code>{counterTarget}</code>, a <code>{counterRemaining}</code>.</p>
+                <div class="panel"><code>{username}: now {counterValue}, need {counterTarget}</code></div>
+                <figure>
+                    <img src="../../actions/img/obs-set-text-properties.png" alt="Vlastnosti Set Text Source s proměnnými šablony počítadla">
+                    <figcaption>Set Text Source zapíše vyhodnocenou hodnotu přímo do pojmenovaného textového vstupu OBS.</figcaption>
+                </figure>
+                <div class="callout warning">
+                    U zdroje Text (GDI+) nebo Text (FreeType 2) vypněte <em>Číst ze souboru (Read from file)</em>. Jinak může OBS dál zobrazovat obsah souboru místo textu odeslaného z Event Flow.
+                </div>
+
+                <h3>Ovládání zdroje médií</h3>
+                <div class="grid">
+                    <div class="card"><h3>Přehrát / Pozastavit</h3><p><strong>Přehrát</strong> obnoví přehrávání pozastaveného média. <strong>Pozastavit</strong> zachová aktuální pozici.</p></div>
+                    <div class="card"><h3>Restartovat / Zastavit</h3><p><strong>Restartovat</strong> spustí přehrávání od začátku. <strong>Zastavit</strong> ukončí přehrávání a resetuje vstup.</p></div>
+                    <div class="card"><h3>Další / Předchozí</h3><p>Přechází mezi položkami vstupů podporujících seznam skladeb, například VLC Video Source. Zdroj médií s jediným souborem může tyto akce ignorovat.</p></div>
+                </div>
+
+                <h3>Hlasitost, ztlumení a filtry</h3>
+                <p><strong>Nastavit hlasitost zdroje (Set Source Volume)</strong> používá dB odpovídající stupnici mixážního pultu OBS: <code>0 dB</code> znamená nezměněné zesílení, záporné hodnoty jsou tišší a <code>-100 dB</code> je prakticky ticho. Ztlumení je samostatný stav. Toggle Filter mění pouze zapnutí existujícího filtru; neupravuje jeho nastavení.</p>
+
+                <h3>Vyrovnávací paměť záznamu (Replay Buffer)</h3>
+                <p>Nejprve zapněte Replay Buffer v <strong>Nastavení OBS → Výstup</strong>. Použijte <strong>Ovládat vyrovnávací paměť záznamu (Control Replay Buffer)</strong> ke spuštění/zastavení, pak <strong>Uložit vyrovnávací paměť záznamu (Save Replay Buffer)</strong> pro zápis posledního úseku z vyrovnávací paměti na disk.</p>
+
+                <div class="callout danger">
+                    <strong>Upozornění k živému výstupu:</strong> Start/Stop Streaming a Start/Stop Recording se provedou okamžitě. Používejte přísně vymezené spouštěče, oprávnění a čekací doby, aby je běžné zprávy chatu nemohly nechtěně spustit.
+                </div>
+            </section>
+
+            <section id="recipes">
+                <h2>5. Užitečné postupy</h2>
+                <div class="panel" id="hourly-message">
+                    <h3>Zpráva každou hodinu během živého vysílání OBS</h3>
+                    <p>V editoru Event Flow zvolte <strong>Začít se šablonou → Středně pokročilé → Zpráva každou hodinu během živého vysílání OBS</strong>. Na začátku je vypnutý a obsahuje tři větve v jednom scénáři:</p>
+                    <ul>
+                        <li><strong>Vysílání OBS zahájeno → Nastavit stav brány: ON</strong></li>
+                        <li><strong>Časový interval (3600 sekund) → Přepínač ON/OFF → Odeslat zprávu</strong></li>
+                        <li><strong>Vysílání OBS zastaveno → Nastavit stav brány: OFF</strong></li>
+                    </ul>
+                    <p>Obě akce Set Gate State již cílí na stejný přepínač, jehož výchozí stav je OFF. Upravte <strong>Odeslat zprávu (Send Message)</strong> a zvolte platformu chatu (příklad používá Twitch) a zprávu. Vyberte platformu nebo All Platforms; Reply to Source nemůže odpovědět na událost OBS ani na tik časovače.</p>
+                    <p><a href="#setup">Připojení Flow Actions k OBS</a>, nechte Social Stream i cílový chat připojený, pak scénář uložte a zapněte <strong>před zahájením vysílání</strong>. Přepínač čeká na událost zahájení z OBS; načtení během probíhajícího vysílání ho nezapne. Restart Social Stream také vrátí přepínač do stavu OFF.</p>
+                    <p><strong>Načasování:</strong> interval běží podle vlastního rozvrhu, takže první připomínka může dorazit dříve než hodinu po zahájení vysílání. Další připomínky se opakují každou hodinu, dokud je přepínač ve stavu ON. Pro jinou četnost změňte hodnotu Time Interval; uvádí se v sekundách.</p>
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Text počítadla v OBS</h3>
+                        <p>Umístěte <strong>Nastavit textový zdroj (Set Text Source)</strong> za cestu počítadla/kontroly a použijte:</p>
+                        <p><code>{username}: now {counterValue}, need {counterTarget}</code></p>
+                    </div>
+                    <div class="card">
+                        <h3>Spustit něco po videu</h3>
+                        <p><strong>Médium OBS skončilo (OBS Media Ended)</strong> (filtrovat na <code>Intro Video</code>) → <strong>Změnit scénu (Change Scene)</strong> na <code>Main</code>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Restart média ovládaný chatem</h3>
+                        <p><strong>Zpráva je rovna (Message Equals)</strong> <code>!replayintro</code> → podmínka oprávnění → <strong>Ovládat zdroj médií: Restartovat</strong>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Obnovit stránku upozornění</h3>
+                        <p><strong>Zpráva je rovna (Message Equals)</strong> <code>!refreshalerts</code> → podmínka moderátora → <strong>Obnovit zdroj prohlížeče (Refresh Browser Source)</strong>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Ztlumit hudbu při upozornění</h3>
+                        <p><strong>Nastavit hlasitost zdroje (Set Source Volume)</strong> na <code>-24 dB</code> → akce upozornění → Prodleva → obnovit na <code>0 dB</code>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Postup práce s vyrovnávací pamětí záznamu</h3>
+                        <p><strong>Vysílání OBS zahájeno (OBS Stream Started)</strong> → <strong>Ovládat vyrovnávací paměť záznamu: Spustit</strong>; samostatný důvěryhodný příkaz spouští <strong>Uložit vyrovnávací paměť záznamu (Save Replay Buffer)</strong>.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="other-controls">
+                <h2>6. Další vestavěné ovládání OBS</h2>
+                <p>Social Stream Ninja obsahuje také starší ovládání zdrojů prohlížeče OBS v doku Streaming Chat. To nepoužívá most WebSocket z Flow Actions.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Možnost</th><th>Co dělá</th><th>Požadavek</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Ukazatel aktuální scény OBS</strong></td><td>Zobrazuje aktivní scénu v doku Streaming Chat.</td><td>Dok načtený v OBS s oprávněním ke čtení.</td></tr>
+                            <tr><td><strong>Hosté mohou použít !cycle</strong></td><td>Přejde na další scénu OBS, s omezením na jednou za 10 sekund.</td><td>Zapněte volbu v nabídce rozšíření; dok musí být načten v OBS s pokročilým přístupem Advanced.</td></tr>
+                            <tr><td><strong>Oprávnění uživatelé mohou použít !start / !stop</strong></td><td>Spouští nebo zastavuje vysílání na pokyn důvěryhodných uživatelů chatu.</td><td>Zapněte volbu v nabídce rozšíření; dok musí být načten v OBS s oprávněním ovládání Full/Advanced.</td></tr>
+                            <tr><td><strong>Panel vzdáleného ovládání OBS</strong></td><td>Zobrazuje scény a umožňuje je přepínat nebo zapínat a vypínat vysílání/nahrávání, pokud cílový dok OBS uděluje potřebnou úroveň ovládání.</td><td>Dok Streaming Chat spárovaný s dokem spuštěným v OBS.</td></tr>
+                            <tr><td><strong>Tester OBS WebSocket</strong></td><td>Před použitím Event Flow zkontroluje verzi, připojení, scény a jednotlivé požadavky.</td><td><a href="../../obs-websocket-test.html" target="_blank" rel="noopener">Otevřít tester</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>7. Řešení potíží</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Problém</th><th>Zkontrolujte</th></tr></thead>
+                        <tbody>
+                            <tr><td>Nic se neděje</td><td>Scénář je uložený a zapnutý; Flow Actions jsou otevřené; obojí používá stejné ID relace.</td></tr>
+                            <tr><td>OBS se nepřipojí</td><td>Server WebSocket je zapnutý, URL je <code>ws://127.0.0.1:4455</code>, a heslo odpovídá. Port <code>4444</code> je zastaralý výchozí port verze v4.</td></tr>
+                            <tr><td>Scéna/zdroj/filtr nebyl nalezen</td><td>Zkopírujte přesný název z OBS. U viditelnosti nastavte Scene nebo Group, pokud je položka vnořená nebo mimo aktuální scénu.</td></tr>
+                            <tr><td>Text se nemění</td><td>Použijte Text (GDI+) nebo Text (FreeType 2), ověřte název vstupu a vypněte <em>Číst ze souboru (Read from file)</em>.</td></tr>
+                            <tr><td>Media Ended se nikdy nespustí</td><td>Použijte OBS WebSocket v5 a skutečný mediální vstup. Média ve smyčce nedosáhnou stavu ukončení.</td></tr>
+                            <tr><td>Další/Předchozí nic nedělá</td><td>Použijte zdroj podporující seznam skladeb, například VLC Video Source.</td></tr>
+                            <tr><td>Uložení záznamu z vyrovnávací paměti selže</td><td>Zapněte Replay Buffer v nastavení výstupu OBS a před uložením ho spusťte.</td></tr>
+                            <tr><td>Akce se při změně scény zastaví</td><td>Vypněte <em>Vypnout zdroj, když není viditelný (Shutdown source when not visible)</em> u zdroje prohlížeče Flow Actions nebo nechte stránku otevřenou jinde.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="panel">
+                    Pořadí diagnostiky: otevřete <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">tester</a> → ověřit <code>GetVersion</code> → ověřit scény/vstupy → otestovat jednotlivý požadavek → otestovat celý scénář Event Flow.
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            Další pomoc: <a href="event-flow-guide.html">Průvodce Event Flow</a> · <a href="../docs/event-reference.html#obs-flow-actions">Referenční příručka datových zpráv událostí OBS</a> · <a href="../../obs-websocket-test.html">Tester OBS WebSocket</a>
+        </footer>
+    </div>
+</body>
+</html>

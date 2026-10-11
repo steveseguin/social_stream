@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/cs/docs/video-stats-bitrate.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/cs/docs/video-stats-bitrate.html">
+    <meta property="og:title" content="Statistiky videa a datový tok - Social Stream Ninja">
+    <meta property="og:description" content="Nastavte dotazování video serveru a zobrazujte aktuální metadata datového toku v doku Social Stream Ninja.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/cs/docs/video-stats-bitrate.html">
+    <meta name="twitter:title" content="Statistiky videa a datový tok - Social Stream Ninja">
+    <meta name="twitter:description" content="Nastavte dotazování video serveru a zobrazujte aktuální metadata datového toku v doku Social Stream Ninja.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistiky videa a datový tok - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Nastavte dotazování video serveru a zobrazujte aktuální metadata datového toku v doku Social Stream Ninja.">
+    <style>
+        .quick-note { background: rgba(26,115,232,.08); border-left: 4px solid #1a73e8; padding: 1.2rem 1.4rem; margin: 1.5rem 0; }
+        .warning-note { background: rgba(251,188,5,.14); border-left-color: #f9ab00; }
+        .dark-mode .quick-note { background: rgba(26,115,232,.18); }
+        .field-table { width: 100%; border-collapse: collapse; }
+        .field-table th, .field-table td { border: 1px solid var(--border-color); padding: .65rem; text-align: left; vertical-align: top; }
+        pre { overflow-x: auto; }
+
+        @media (max-width: 700px) {
+            .field-table, .steps-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/video-stats-bitrate.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{", enable":", zapněte",", then open or refresh the Dock link.":", poté otevřete nebo obnovte odkaz doku.",", with":", s",". Fields may be top-level or inside":". Pole mohou být na nejvyšší úrovni nebo uvnitř",". It also reads stream time and optional video/audio codec metadata.":". Čte také dobu streamu a volitelná metadata video/audio kodeků.",". SSN automatically uses it when the response contains only one publisher.":". SSN ho použije automaticky, pokud odpověď obsahuje pouze jednoho vysílatele.","Add authorization if required. The SRT API key field is sent as the complete":"V případě potřeby přidejte ověření. Pole API klíče SRT se odesílá jako úplná","Advanced: protocol, formats, and units":"Pokročilé: protokol, formáty a jednotky","Belabox Cloud:":"Belabox Cloud:","Bitrate is Kbps, viewers is a count, and duration is seconds.":"Datový tok je v Kbps, diváci jako počet a délka v sekundách.","Boolean;":"Logická hodnota;","Choose a polling interval from 1 to 60 seconds; the default is five seconds.":"Vyberte interval dotazování od 1 do 60 sekund; výchozí je pět sekund.","Commands & API":"Příkazy a API","Compatibility":"Kompatibilita","Configure video server polling and show live bitrate metadata in the Social Stream Ninja Dock.":"Nastavte dotazování video serveru a zobrazujte aktuální metadata datového toku v doku Social Stream Ninja.","Confirm both video stats options are enabled in SSN.":"Ověřte, že jsou v SSN zapnuté obě možnosti statistik videa.","Confirm the endpoint responds within five seconds and the source type and stream identifiers match.":"Ověřte, že koncový bod odpovídá do pěti sekund a typ zdroje i identifikátory streamu se shodují.","Download":"Stáhnout","Enable the compatible server's HTTP stats endpoint and confirm the computer running SSN can open its URL.":"Zapněte HTTP koncový bod statistik kompatibilního serveru a ověřte, že počítač s SSN dokáže otevřít jeho URL.","Event Reference":"Referenční příručka událostí","Features":"Funkce","Field":"Pole","For NGINX RTMP or Node Media Server, enter the application and stream key/name, such as":"Pro NGINX RTMP nebo Node Media Server zadejte aplikaci a klíč/název streamu, například","For SRT or Belabox, enter the exact publisher ID, such as":"Pro SRT nebo Belabox zadejte přesné ID vysílatele, například","Global settings":"Globální nastavení","Guides":"Návody","Hire":"Najmout odborníka","Home":"Domů","How to use it":"Jak to používat","If nothing appears":"Pokud se nic nezobrazuje","Important:":"Důležité:","In Dock options, enable":"V možnostech doku zapněte","In SSN":"V SSN","Inspiration":"Inspirace","JSON":"JSON","Kbps, whole number":"Kbps, celé číslo","Loss/drop fields":"Pole ztrát/zahozených dat","Main navigation":"Hlavní navigace","Mbps":"Mbps","Milliseconds":"Milisekundy","NGINX RTMP":"NGINX RTMP","NGINX RTMP:":"NGINX RTMP:","Node Media Server":"Node Media Server","Node Media Server:":"Node Media Server:","Normalized SSN event":"Normalizovaná událost SSN","OBS can send video to a compatible server, but OBS WebSocket and SSN browser sources do not provide this data.":"OBS může odesílat video na kompatibilní server, ale OBS WebSocket ani zdroje prohlížeče SSN tato data neposkytují.","OBS is not a stats source:":"OBS není zdrojem statistik:","On this page":"Na této stránce","Open navigation menu":"Otevřít navigační nabídku","Overlay Gallery":"Galerie překryvů","Packet counts or bytes":"Počty paketů nebo bajty","Resources":"Zdroje informací","SRT Live Server / SLS and Belabox Cloud":"SRT Live Server / SLS a Belabox Cloud","SRT Live Server / SLS:":"SRT Live Server / SLS:","SSN also normalizes available latency, buffer, packet-loss, uptime, codec, and viewer data into a":"SSN také normalizuje dostupná data o latenci, vyrovnávací paměti, ztrátě paketů, době provozu, kodecích a divácích do","SSN does not read bitrate from OBS or a streaming platform automatically. It polls the stats API of the video server receiving your stream.":"SSN automaticky nečte datový tok z OBS ani streamovací platformy. Dotazuje se API statistik video serveru, který přijímá váš stream.","SSN performs an HTTP or HTTPS":"SSN provádí HTTP nebo HTTPS","SSN requests":"SSN požaduje","Seconds":"Sekundy","Select the source type and enter the stats URL.":"Vyberte typ zdroje a zadejte URL statistik.","Show bitrate metadata if available; top-right":"Zobrazit metadata datového toku, jsou-li dostupná; vpravo nahoře","Show the incoming stream bitrate in the top-right of the Social Stream Ninja Dock.":"Zobrazte datový tok příchozího streamu v pravém horním rohu doku Social Stream Ninja.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Start publishing video. The bitrate appears after a valid online response.":"Začněte vysílat video. Datový tok se zobrazí po platné odpovědi se stavem online.","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","The Dock accepts":"Dok přijímá","The URL must return NGINX RTMP status XML. SSN matches the configured application and stream. It reads":"URL musí vracet stavové XML NGINX RTMP. SSN vyhledá nastavenou aplikaci a stream. Čte","The readout disappears when the stream is offline, bitrate is missing or zero, or no fresh stats arrive for about 130 seconds.":"Údaj zmizí, když je stream offline, datový tok chybí nebo je nulový, případně když přibližně 130 sekund nepřijdou nové statistiky.","This gives a host or producer a small, live bitrate readout in the Dock. It is useful when OBS, a mobile encoder, or another sender publishes to your own relay or ingest server.":"To moderátorovi pořadu nebo producentovi poskytuje malý aktuální ukazatel datového toku v doku. Hodí se, když OBS, mobilní enkodér nebo jiný odesílatel vysílá na váš vlastní přenosový nebo přijímací server.","Unit/type":"Jednotka/typ","Video Stats and Bitrate":"Statistiky videa a datový tok","Video Stats and Bitrate Guide - Social Stream Ninja":"Statistiky videa a datový tok - Social Stream Ninja","Video stats polling":"Dotazování statistik videa","What it is for":"K čemu to slouží","XML from the NGINX RTMP status module.":"XML ze stavového modulu NGINX RTMP.","and":"a","as bytes per second and divides by 1024 for":"jako bajty za sekundu a dělí 1024 pro","as fallbacks. Values below 1000 display as rounded Kbps; larger values display as Mbps rounded to one decimal. The stats URL, stream key, and credentials are never sent to overlays.":"jako záložní hodnoty. Hodnoty pod 1000 se zobrazují jako zaokrouhlené Kbps; vyšší jako Mbps zaokrouhlené na jedno desetinné místo. URL statistik, klíč streamu a přihlašovací údaje se nikdy neposílají překryvům.","at the configured interval with caching disabled and a five-second timeout.":"v nastaveném intervalu s vypnutou mezipamětí a časovým limitem pěti sekund.","endpoint containing a":"koncový bod obsahující","header. Node Media Server uses the username/password as HTTP Basic authentication.":"hlavička. Node Media Server používá uživatelské jméno a heslo pro HTTP Basic ověřování.","hides the Dock value":"skryje hodnotu v doku","is Kbps; RTT and receive buffer are milliseconds; receive rate and bandwidth are Mbps; uptime is seconds; loss/drop values are packet counts or bytes.":"je v Kbps; RTT a přijímací vyrovnávací paměť jsou v milisekundách; rychlost příjmu a šířka pásma v Mbps; doba provozu v sekundách; hodnoty ztrát/zahození jsou počty paketů nebo bajty.","its JSON stream API, with optional HTTP Basic authentication.":"jeho JSON API streamů s volitelným HTTP Basic ověřováním.","its SRT-style JSON receiver/relay stats response.":"jeho odpověď JSON se statistikami přijímače/přenosu ve stylu SRT.","means the computer running SSN. Use the server's LAN address when it is another device.":"znamená počítač, na kterém běží SSN. Pokud je server na jiném zařízení, použijte jeho adresu v místní síti.","metadata event. The standard Dock readout shows only bitrate.":"události metadat. Běžný údaj v doku zobrazuje pouze datový tok.","object.":"objektu.","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja. Všechna práva vyhrazena."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/video-stats-bitrate.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/video-stats-bitrate.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/video-stats-bitrate.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/video-stats-bitrate.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/video-stats-bitrate.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/video-stats-bitrate.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/video-stats-bitrate.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/video-stats-bitrate.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/video-stats-bitrate.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/video-stats-bitrate.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/video-stats-bitrate.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/video-stats-bitrate.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/video-stats-bitrate.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/video-stats-bitrate.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/video-stats-bitrate.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/video-stats-bitrate.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="video-stats-bitrate.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/video-stats-bitrate.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <main>
+        <section class="page-hero"><div class="container"><h1>Statistiky videa a datový tok</h1><p>Zobrazte datový tok příchozího streamu v pravém horním rohu doku Social Stream Ninja.</p></div></section>
+        <section class="guide-content"><div class="container">
+            <div class="quick-note"><strong>Důležité:</strong> SSN automaticky nečte datový tok z OBS ani streamovací platformy. Dotazuje se API statistik video serveru, který přijímá váš stream.</div>
+
+            <nav class="guide-jump-links" aria-label="Na této stránce"><a href="#read-section-1">K čemu to slouží</a><a href="#read-section-2">Kompatibilita</a><a href="#read-section-3">Jak to používat</a><a href="#read-section-4">Pokud se nic nezobrazuje</a><a href="#read-section-5">Pokročilé: protokol, formáty a jednotky</a></nav>
+<div class="guide-card"><h2 id="read-section-1">K čemu to slouží</h2>
+                <p>To moderátorovi pořadu nebo producentovi poskytuje malý aktuální ukazatel datového toku v doku. Hodí se, když OBS, mobilní enkodér nebo jiný odesílatel vysílá na váš vlastní přenosový nebo přijímací server.</p>
+                <p>SSN také normalizuje dostupná data o latenci, vyrovnávací paměti, ztrátě paketů, době provozu, kodecích a divácích do <code>video_stats</code> události metadat. Běžný údaj v doku zobrazuje pouze datový tok.</p>
+            </div>
+
+            <div class="guide-card"><h2 id="read-section-2">Kompatibilita</h2><ul class="guide-list">
+                <li><strong>SRT Live Server / SLS:</strong> JSON <code>/stats</code> koncový bod obsahující <code>publishers</code> objektu.</li>
+                <li><strong>Belabox Cloud:</strong> jeho odpověď JSON se statistikami přijímače/přenosu ve stylu SRT.</li>
+                <li><strong>NGINX RTMP:</strong> XML ze stavového modulu NGINX RTMP.</li>
+                <li><strong>Node Media Server:</strong> jeho JSON API streamů s volitelným HTTP Basic ověřováním.</li>
+            </ul><div class="quick-note warning-note"><strong>OBS není zdrojem statistik:</strong> OBS může odesílat video na kompatibilní server, ale OBS WebSocket ani zdroje prohlížeče SSN tato data neposkytují.</div></div>
+
+            <div class="guide-card"><h2 id="read-section-3">Jak to používat</h2><ol class="guide-steps">
+                <li>Zapněte HTTP koncový bod statistik kompatibilního serveru a ověřte, že počítač s SSN dokáže otevřít jeho URL.</li>
+                <li>V SSN <strong>Globální nastavení</strong>, zapněte <strong>Dotazování statistik videa</strong>.</li>
+                <li>Vyberte typ zdroje a zadejte URL statistik.</li>
+                <li>Pro SRT nebo Belabox zadejte přesné ID vysílatele, například <code>publish/live/feed1</code>. SSN ho použije automaticky, pokud odpověď obsahuje pouze jednoho vysílatele.</li>
+                <li>Pro NGINX RTMP nebo Node Media Server zadejte aplikaci a klíč/název streamu, například <code>live</code> a <code>feed1</code>.</li>
+                <li>V případě potřeby přidejte ověření. Pole API klíče SRT se odesílá jako úplná <code>Authorization</code> hlavička. Node Media Server používá uživatelské jméno a heslo pro HTTP Basic ověřování.</li>
+                <li>Vyberte interval dotazování od 1 do 60 sekund; výchozí je pět sekund.</li>
+                <li>V možnostech doku zapněte <strong>Zobrazit metadata datového toku, jsou-li dostupná; vpravo nahoře</strong>, poté otevřete nebo obnovte odkaz doku.</li>
+                <li>Začněte vysílat video. Datový tok se zobrazí po platné odpovědi se stavem online.</li>
+            </ol></div>
+
+            <div class="guide-card"><h2 id="read-section-4">Pokud se nic nezobrazuje</h2><ul class="guide-list">
+                <li>Ověřte, že jsou v SSN zapnuté obě možnosti statistik videa.</li>
+                <li>Ověřte, že koncový bod odpovídá do pěti sekund a typ zdroje i identifikátory streamu se shodují.</li>
+                <li><code>127.0.0.1</code> znamená počítač, na kterém běží SSN. Pokud je server na jiném zařízení, použijte jeho adresu v místní síti.</li>
+                <li>Údaj zmizí, když je stream offline, datový tok chybí nebo je nulový, případně když přibližně 130 sekund nepřijdou nové statistiky.</li>
+            </ul></div>
+
+            <div class="guide-card"><h2 id="read-section-5">Pokročilé: protokol, formáty a jednotky</h2>
+                <p>SSN provádí HTTP nebo HTTPS <code>GET</code> v nastaveném intervalu s vypnutou mezipamětí a časovým limitem pěti sekund.</p>
+                <h3>SRT Live Server / SLS a Belabox Cloud</h3>
+                <pre><code>{
+  "publishers": {
+    "publish/live/feed1": {
+      "bitrate": 4500, "rtt": 32.5, "msRcvBuf": 120,
+      "mbpsRecvRate": 4.5, "mbpsBandwidth": 12.8,
+      "pktRcvDrop": 2, "pktRcvLoss": 1,
+      "bytesRcvDrop": 2632, "bytesRcvLoss": 1316, "uptime": 3600
+    }
+  }
+}</code></pre>
+                <p><code>bitrate</code> je v Kbps; RTT a přijímací vyrovnávací paměť jsou v milisekundách; rychlost příjmu a šířka pásma v Mbps; doba provozu v sekundách; hodnoty ztrát/zahození jsou počty paketů nebo bajty.</p>
+                <h3>NGINX RTMP</h3>
+                <p>URL musí vracet stavové XML NGINX RTMP. SSN vyhledá nastavenou aplikaci a stream. Čte <code>bw_video</code> jako bajty za sekundu a dělí 1024 pro <code>bitrateKbps</code>. Čte také dobu streamu a volitelná metadata video/audio kodeků.</p>
+                <h3>Node Media Server</h3>
+                <p>SSN požaduje <code>STATS_URL/APPLICATION/STREAM_NAME</code>. Pole mohou být na nejvyšší úrovni nebo uvnitř <code>data</code>.</p>
+                <pre><code>{ "data": { "isLive": true, "bitrate": 4500, "viewers": 3, "duration": 3600 } }</code></pre>
+                <p>Datový tok je v Kbps, diváci jako počet a délka v sekundách.</p>
+                <h3>Normalizovaná událost SSN</h3>
+                <pre><code>{
+  "type": "generic",
+  "event": "video_stats",
+  "meta": {
+    "provider": "srt-live-server", "source": "srt-live-server",
+    "label": "SRT", "online": true,
+    "updatedAt": "2026-07-13T14:45:00.000Z",
+    "bitrateKbps": 4500, "rttMs": 32.5, "bufferMs": 120,
+    "summary": "4500 Kbps, 33 ms, 120 ms"
+  }
+}</code></pre>
+                <table class="field-table"><thead><tr><th>Pole</th><th>Jednotka/typ</th></tr></thead><tbody>
+                    <tr><td><code>bitrateKbps</code></td><td>Kbps, celé číslo</td></tr>
+                    <tr><td><code>rttMs</code> / <code>bufferMs</code></td><td>Milisekundy</td></tr>
+                    <tr><td><code>recvRateMbps</code> / <code>bandwidthMbps</code></td><td>Mbps</td></tr>
+                    <tr><td>Pole ztrát/zahozených dat</td><td>Počty paketů nebo bajty</td></tr>
+                    <tr><td><code>uptimeSeconds</code> / <code>durationSeconds</code></td><td>Sekundy</td></tr>
+                    <tr><td><code>online</code></td><td>Logická hodnota; <code>false</code> skryje hodnotu v doku</td></tr>
+                </tbody></table>
+                <p>Dok přijímá <code>meta.bitrateKbps</code>, s <code>meta.bitrate</code> a <code>meta.kbps</code> jako záložní hodnoty. Hodnoty pod 1000 se zobrazují jako zaokrouhlené Kbps; vyšší jako Mbps zaokrouhlené na jedno desetinné místo. URL statistik, klíč streamu a přihlašovací údaje se nikdy neposílají překryvům.</p>
+            </div>
+        </div></section>
+    </main>
+    <footer><div class="container"><div class="footer-content"><div class="footer-logo"><img src="../../media/logo.png" alt="Logo Social Stream Ninja"><span>Social Stream Ninja</span></div><div class="footer-links"><div class="footer-section"><h4>Zdroje informací</h4><ul><li><a href="guides.html">Návody</a></li><li><a href="event-reference.html">Referenční příručka událostí</a></li><li><a href="support.html">Podpora</a></li></ul></div></div></div><div class="footer-bottom"><p>© 2026 Social Stream Ninja. Všechna práva vyhrazena.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

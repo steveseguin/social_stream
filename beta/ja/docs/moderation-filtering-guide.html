@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ja/docs/moderation-filtering-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ja/docs/moderation-filtering-guide.html">
+    <meta property="og:title" content="モデレーションとメッセージのフィルタリング - Social Stream Ninja">
+    <meta property="og:description" content="SSNの出力に届く内容と、個別のドックやオーバーレイに表示される内容を選びます。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ja/docs/moderation-filtering-guide.html">
+    <meta name="twitter:title" content="モデレーションとメッセージのフィルタリング - Social Stream Ninja">
+    <meta name="twitter:description" content="SSNの出力に届く内容と、個別のドックやオーバーレイに表示される内容を選びます。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>モデレーションとメッセージのフィルタリング - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="SSNの出力に届く内容と、個別のドックやオーバーレイに表示される内容を選びます。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/moderation-filtering-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{", use":"では、次を使用します：",". A platform suffix limits classification to that source type.":"。プラットフォームの接尾辞を付けると、そのソースタイプだけに分類を適用します。",". Censoring replaces matched text; blocking removes the whole message. Choose the behavior you want before testing.":"。伏せ字は一致したテキストを置き換え、ブロックはメッセージ全体を削除します。テスト前に、必要な動作を選んでください。",". Enter, for example,":"。入力例：",". For example:":"。例：",". Matching is case-insensitive and checks both message text and the chatter’s name. A short fragment can match inside a longer word. If blur mode is enabled, matches can be blurred instead of removed.":"。大文字と小文字を区別せず、メッセージ本文と投稿者名の両方を確認します。短い文字列は、長い単語の一部にも一致する場合があります。ぼかしモードが有効な場合、一致したものを削除せず、ぼかすこともできます。",". This removes that user’s messages and adds them to the SSN hide-user list.":"。そのユーザーのメッセージを削除し、SSNの非表示ユーザー一覧に追加します。",". Use menu search to find the exact labels below.":"。メニュー検索で、以下の正確なラベルを探してください。",". Use this on your personal Dock; a separate OBS Dock without the option uses the existing behavior of removing deleted messages. This cannot show messages that were blocked before SSN captured them.":"。これを個人の Dock で使用します。オプションのない別の OBS Dock は、削除されたメッセージを削除する既存の動作を使用します。これでは、SSN がキャプチャする前にブロックされたメッセージを表示することはできません。","1. Choose where to filter":"1. フィルターを適用する場所を選ぶ","2. Block or restore a user":"2. ユーザーをブロック・解除する","3. Filter words and commands":"3. 単語とコマンドを絞り込む","4. Handle bots and trusted links":"4. Botと信頼するリンクを扱う","5. Verify the boundary":"5. 適用範囲を確認する",": a normal line, a blocked phrase, a command, and a bot message. Local filters should affect only the configured page; global filters should affect downstream outputs. Test manual and automatic featuring separately.":"：通常の文、ブロック対象の語句、コマンド、Botメッセージを送ります。ローカルフィルターは設定したページだけに、全体フィルターは後続の出力に影響する必要があります。手動と自動の注目表示は、別々にテストしてください。","Add":"追加する項目：","All guides":"すべてのガイド","Block messages that contain swear words":"Block messages that contain swear words","Blocked users":"ブロックしたユーザー（Blocked users）","Browse all guides":"すべてのガイドを見る","Captured source messages":"取得したソースのメッセージ","Censor":"Censor","Changes that generated Dock URL. Other open Docks and overlays keep their own options.":"生成されるそのドックURLを変更します。他に開いているドックやオーバーレイは、それぞれの設定を保持します。","Choose what reaches SSN outputs and what appears in an individual Dock or overlay.":"SSNの出力に届く内容と、個別のドックやオーバーレイに表示される内容を選びます。","Commands & API":"コマンドとAPI","Contains text or name":"テキストまたは名前を含む（Contains text or name）","Controls the original platform chat. Hiding someone inside SSN does not establish a native platform ban.":"元のプラットフォームのチャットを操作します。SSN内で誰かを非表示にしても、元のプラットフォームでBANしたことにはなりません。","Copy the updated Dock link and replace the URL wherever that Dock is open. For command clutter, the Dock supports":"更新されたドックのリンクをコピーし、そのドックを開いている場所のURLをすべて置き換えてください。コマンドの表示が多い場合、ドックは次に対応しています：","Deleted":"削除されました","Download":"ダウンロード","Drops or changes captured messages for downstream SSN outputs. Use when something should not reach any output.":"取得したメッセージを、後続のSSN出力向けに削除または変更します。どの出力にも届かせたくないものに使用してください。","Each page applies its own URL options":"各ページがそれぞれのURLオプションを適用します","Effect":"効果","Features":"機能","Filter before distribution":"配信前にフィルタリング","Find command filtering in settings.":"設定でコマンド フィルタリングを見つけます。","For a custom Dock-only phrase list, find":"ドックだけに適用する独自の語句一覧には、次を探します：","For a message already in the Dock, right-click and open":"すでにドックにあるメッセージでは、右クリックして次を開きます：","For a prepared list, find":"事前に用意した一覧には、次を探します：","For global profanity handling, search for":"全体の不適切な言葉の処理には、次を検索します：","Global filtering happens before distribution. A Dock URL filter affects only that Dock.":"全体フィルターは配信前に適用されます。ドックURLのフィルターは、そのドックだけに影響します。","Global settings":"全体設定","Global settings and tools → Message - Visibility":"Global settings and tools → Message - Visibility","Guides":"ガイド","Hire":"仕事を依頼する","Home":"ホーム","Identify by name who are bots":"名前でBotを識別（Identify by name who are bots）","If too much disappears, turn off the last filter you added, check the blocked-user list, and check donation/member/queue-only toolbar modes. Old OBS URLs retain old options. For a reviewed-message workflow, see":"消えるメッセージが多すぎる場合、最後に追加したフィルターをオフにし、ブロックユーザー一覧と、ツールバーの寄付／メンバー／キュー限定モードを確認してください。古いOBSのURLには古い設定が残ります。確認済みメッセージを使うワークフローについては、次を参照してください：","Incoming chat":"受信チャット","Individual pages":"個別のページ","Inspiration":"活用アイデア","Main navigation":"メインナビゲーション","Message - Visibility → Assign roles/classes to certain users":"Message - Visibility → Assign roles/classes to certain users","Moderation and message filtering":"モデレーションとメッセージのフィルタリング","Moderation and message filtering - Social Stream Ninja":"モデレーションとメッセージのフィルタリング - Social Stream Ninja","Native platform moderation":"元のプラットフォームのモデレーション","On this page":"このページの内容","Open SSN’s popup or desktop":"SSNのポップアップ、またはデスクトップの次を開きます：","Open navigation menu":"ナビゲーションメニューを開く","Open one unfiltered Dock and one filtered Dock on the same session. Send fictional":"同じセッションで、フィルターなしとフィルターありのドックを1つずつ開きます。架空のテスト用データを送ります：","Overlay Gallery":"オーバーレイギャラリー","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja ·":"Social Stream Ninja ·","Sources and Settings":"ソースと設定","Streaming Chat Dock link options":"Streaming Chat Dockのリンクオプション","Support":"サポート","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","The bot must be identified first. Assigning an SSN role does not grant privileges on Twitch or another platform. See the":"まずBotを識別する必要があります。SSNの役割を割り当てても、Twitchなどのプラットフォームでの権限は付与されません。参照：","Then choose a global bot-hiding option if no output needs those messages, or add":"どの出力にもそのメッセージが必要なければ、全体のBot非表示オプションを選びます。または、次を追加します：","This example changes a Dock’s presentation. It does not disable commands in Points, Waitlist, or Event Flow.":"この例は、ドックの表示を変更します。Points、Waitlist、Event Flowのコマンドを無効にはしません。","To keep messages visible after the Dock receives a deletion, add":"Dock が削除を受け取った後もメッセージを表示し続けるには、以下を追加します","To unblock, remove the username from that list. Test with a new message; previously removed rows do not automatically return.":"ブロックを解除するには、その一覧からユーザー名を削除します。新しいメッセージでテストしてください。以前削除された行は自動では戻りません。","Under global":"全体設定の次の項目で：","Use the platform’s own moderation tools when you need to ban or time out someone on the source platform. SSN’s visibility and role lists are not a substitute for platform permissions.":"元のプラットフォームでBANやタイムアウトを行う場合、そのプラットフォーム自身のモデレーションツールを使用してください。SSNの表示設定と役割一覧は、プラットフォームの権限の代わりにはなりません。","User Actions → Block User":"User Actions → Block User","Using the Dock":"ドックの使用方法","Where":"場所","in the Streaming Chat Dock options. Turn it on, enter a word or phrase, and select":"をStreaming Chat Dockのオプションで探します。有効にし、単語や語句を入力して、次を選択します：","label and dimmed text. For example:":"ラベルと淡色表示のテキスト。たとえば:","or":"または","role controls reference":"役割の設定リファレンス","test messages":"テストメッセージ","to a Dock URL to hide them only there. To replace ordinary links while allowing bot links, use:":"をドックURLに追加すると、そのドックだけで非表示にできます。Botのリンクを許可しながら通常のリンクを置き換えるには、次を使用します：","to that Dock’s URL. Deleted messages stay readable with a":"をその Dock の URL に追加します。削除されたメッセージは、引き続き読み取れるようになります。","under global Message - Visibility. Enable its switch and enter comma-separated usernames.":"を全体設定のMessage - Visibilityで探します。スイッチを有効にし、カンマ区切りでユーザー名を入力します。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/moderation-filtering-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide visual-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション">
+<a href="../index.html">ホーム</a>
+<a href="features.html">機能</a>
+<a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a>
+<a href="download.html">ダウンロード</a>
+<a href="guides.html">ガイド</a>
+<a href="commands.html">コマンドとAPI</a>
+<a href="supported-sites.html">対応サイト</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a>
+<a href="services.html" class="site-priority-hire">仕事を依頼する</a>
+<a href="support.html">サポート</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/moderation-filtering-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/moderation-filtering-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/moderation-filtering-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/moderation-filtering-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/moderation-filtering-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/moderation-filtering-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="moderation-filtering-guide.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/moderation-filtering-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/moderation-filtering-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/moderation-filtering-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/moderation-filtering-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/moderation-filtering-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/moderation-filtering-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/moderation-filtering-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/moderation-filtering-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/moderation-filtering-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/moderation-filtering-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="テーマを切り替え">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>モデレーションとメッセージのフィルタリング</h1>
+<p>SSNの出力に届く内容と、個別のドックやオーバーレイに表示される内容を選びます。</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="このページの内容">
+<a href="guides.html">すべてのガイド</a>
+<a href="#scope">1. フィルターを適用する場所を選ぶ</a>
+<a href="#users">2. ユーザーをブロック・解除する</a>
+<a href="#words">3. 単語とコマンドを絞り込む</a>
+<a href="#roles">4. Botと信頼するリンクを扱う</a>
+<a href="#check">5. 適用範囲を確認する</a>
+</nav>
+<section class="guide-card" id="scope">
+<h2 id="read-section-1">1. フィルターを適用する場所を選ぶ</h2>
+<p>SSNのポップアップ、またはデスクトップの次を開きます： <strong>ソースと設定</strong>。メニュー検索で、以下の正確なラベルを探してください。</p>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>受信チャット</strong>
+<span>取得したソースのメッセージ</span>
+</li>
+<li>
+<strong>全体設定</strong>
+<span>配信前にフィルタリング</span>
+</li>
+<li>
+<strong>個別のページ</strong>
+<span>各ページがそれぞれのURLオプションを適用します</span>
+</li>
+</ol>
+<figcaption>全体フィルターは配信前に適用されます。ドックURLのフィルターは、そのドックだけに影響します。</figcaption>
+</figure>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">場所</th>
+<th scope="col">効果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td data-label="場所">
+<strong>Global settings and tools → Message - Visibility</strong>
+</td>
+<td data-label="効果">取得したメッセージを、後続のSSN出力向けに削除または変更します。どの出力にも届かせたくないものに使用してください。</td>
+</tr>
+<tr>
+<td data-label="場所">
+<strong>Streaming Chat Dockのリンクオプション</strong>
+</td>
+<td data-label="効果">生成されるそのドックURLを変更します。他に開いているドックやオーバーレイは、それぞれの設定を保持します。</td>
+</tr>
+<tr>
+<td data-label="場所">
+<strong>元のプラットフォームのモデレーション</strong>
+</td>
+<td data-label="効果">元のプラットフォームのチャットを操作します。SSN内で誰かを非表示にしても、元のプラットフォームでBANしたことにはなりません。</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="guide-card" id="users">
+<h2 id="read-section-2">2. ユーザーをブロック・解除する</h2>
+<ol class="guide-steps">
+<li>すでにドックにあるメッセージでは、右クリックして次を開きます： <strong>User Actions → Block User</strong>。そのユーザーのメッセージを削除し、SSNの非表示ユーザー一覧に追加します。</li>
+<li>事前に用意した一覧には、次を探します： <strong>ブロックしたユーザー（Blocked users）</strong> を全体設定のMessage - Visibilityで探します。スイッチを有効にし、カンマ区切りでユーザー名を入力します。</li>
+<li>ブロックを解除するには、その一覧からユーザー名を削除します。新しいメッセージでテストしてください。以前削除された行は自動では戻りません。</li>
+</ol>
+<p>元のプラットフォームでBANやタイムアウトを行う場合、そのプラットフォーム自身のモデレーションツールを使用してください。SSNの表示設定と役割一覧は、プラットフォームの権限の代わりにはなりません。</p>
+<p>Dock が削除を受け取った後もメッセージを表示し続けるには、以下を追加します <code>&amp;showdeleted</code> をその Dock の URL に追加します。削除されたメッセージは、引き続き読み取れるようになります。 <strong>削除されました</strong> ラベルと淡色表示のテキスト。たとえば: <code>dock.html?session=YOUR_SESSION_ID&amp;showdeleted</code>。これを個人の Dock で使用します。オプションのない別の OBS Dock は、削除されたメッセージを削除する既存の動作を使用します。これでは、SSN がキャプチャする前にブロックされたメッセージを表示することはできません。</p>
+</section>
+<section class="guide-card" id="words">
+<h2 id="read-section-3">3. 単語とコマンドを絞り込む</h2>
+<p>全体の不適切な言葉の処理には、次を検索します： <strong>Censor</strong> または <strong>Block messages that contain swear words</strong>。伏せ字は一致したテキストを置き換え、ブロックはメッセージ全体を削除します。テスト前に、必要な動作を選んでください。</p>
+<figure class="guide-shot"><a href="../../docs/images/guides/visual/find-filters.webp"><img src="../../docs/images/guides/visual/find-filters.webp" width="519" height="192" alt="設定でコマンド フィルタリングを見つけます。" loading="lazy" decoding="async"></a><figcaption>設定でコマンド フィルタリングを見つけます。</figcaption></figure>
+
+<p>ドックだけに適用する独自の語句一覧には、次を探します： <strong>テキストまたは名前を含む（Contains text or name）</strong> をStreaming Chat Dockのオプションで探します。有効にし、単語や語句を入力して、次を選択します： <strong>追加する項目：</strong>。大文字と小文字を区別せず、メッセージ本文と投稿者名の両方を確認します。短い文字列は、長い単語の一部にも一致する場合があります。ぼかしモードが有効な場合、一致したものを削除せず、ぼかすこともできます。</p>
+<p>更新されたドックのリンクをコピーし、そのドックを開いている場所のURLをすべて置き換えてください。コマンドの表示が多い場合、ドックは次に対応しています： <code>&amp;hidecommands</code>。例：</p>
+<pre>
+<code>dock.html?session=YOUR_SESSION_ID&amp;hidecommands&amp;blockedwords=spoiler</code>
+</pre>
+<p>この例は、ドックの表示を変更します。Points、Waitlist、Event Flowのコマンドを無効にはしません。</p>
+</section>
+<section class="guide-card" id="roles">
+<h2 id="read-section-4">4. Botと信頼するリンクを扱う</h2>
+<p>全体設定の次の項目で： <strong>Message - Visibility → Assign roles/classes to certain users</strong>では、次を使用します： <strong>名前でBotを識別（Identify by name who are bots）</strong>。入力例： <code>moobot:twitch,nightbot:twitch</code>。プラットフォームの接尾辞を付けると、そのソースタイプだけに分類を適用します。</p>
+<p>どの出力にもそのメッセージが必要なければ、全体のBot非表示オプションを選びます。または、次を追加します： <code>&amp;hidebots</code> をドックURLに追加すると、そのドックだけで非表示にできます。Botのリンクを許可しながら通常のリンクを置き換えるには、次を使用します：</p>
+<pre>
+<code>dock.html?session=YOUR_SESSION_ID&amp;striplinks&amp;allowbotlinks</code>
+</pre>
+<p>まずBotを識別する必要があります。SSNの役割を割り当てても、Twitchなどのプラットフォームでの権限は付与されません。参照： <a href="../../docs/index.html?file=role-based-controls.md">役割の設定リファレンス</a>.</p>
+</section>
+<section class="guide-card" id="check">
+<h2 id="read-section-5">5. 適用範囲を確認する</h2>
+<p>同じセッションで、フィルターなしとフィルターありのドックを1つずつ開きます。架空のテスト用データを送ります： <a href="test-message-guide.html">テストメッセージ</a>：通常の文、ブロック対象の語句、コマンド、Botメッセージを送ります。ローカルフィルターは設定したページだけに、全体フィルターは後続の出力に影響する必要があります。手動と自動の注目表示は、別々にテストしてください。</p>
+<p>消えるメッセージが多すぎる場合、最後に追加したフィルターをオフにし、ブロックユーザー一覧と、ツールバーの寄付／メンバー／キュー限定モードを確認してください。古いOBSのURLには古い設定が残ります。確認済みメッセージを使うワークフローについては、次を参照してください： <a href="dock-live-guide.html">ドックの使用方法</a>.</p>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">すべてのガイドを見る</a>
+</p>
+</div>
+</div>
+</footer>
+<script data-copy-markdown src="../../docs/js/main.js">
+</script>
+</body>
+</html>

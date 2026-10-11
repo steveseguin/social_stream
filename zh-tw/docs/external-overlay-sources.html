@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-tw/docs/external-overlay-sources.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/zh-tw/docs/external-overlay-sources.html">
+    <meta property="og:title" content="Discord StreamKit 與 TikFinity 來源 - Social Stream Ninja">
+    <meta property="og:description" content="將 Discord StreamKit 或 TikFinity OBS 停駐面板 URL 用作 Social Stream Ninja 中的唯讀聊天來源。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-tw/docs/external-overlay-sources.html">
+    <meta name="twitter:title" content="Discord StreamKit 與 TikFinity 來源 - Social Stream Ninja">
+    <meta name="twitter:description" content="將 Discord StreamKit 或 TikFinity OBS 停駐面板 URL 用作 Social Stream Ninja 中的唯讀聊天來源。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord StreamKit 與 TikFinity 來源 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="將 Discord StreamKit 或 TikFinity OBS 停駐面板 URL 用作 Social Stream Ninja 中的唯讀聊天來源。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/external-overlay-sources.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{", paste the link, and add the source.":"，貼上連結並新增來源。","Add your preferred Social Stream overlay URL to an OBS Browser Source using the same session ID.":"將你選擇的 Social Stream 疊加畫面 URL 新增為 OBS 瀏覽器來源，使用相同的工作階段 ID。","Avoid duplicates:":"避免重複：","Browser-extension users can also open a supported TikFinity Activity Feed widget URL containing":"瀏覽器擴充功能使用者也可以開啟支援的 TikFinity Activity Feed 小工具 URL，其中包含","Chat":"聊天","Check the Social Stream dock before troubleshooting OBS. If the dock is empty, OBS is not the problem yet.":"排查 OBS 前先檢查 Social Stream 停駐面板。如果停駐面板為空，問題還不在 OBS。","Choose":"選擇","Commands & API":"指令與 API","Confirm Discord or TikFinity is still open, signed in, and connected.":"確認 Discord 或 TikFinity 仍保持開啟、已登入且已連線。","Confirm it appears once in the Social Stream dock with the correct name and text.":"確認它在 Social Stream 停駐面板中只出現一次，且名稱和文字正確。","Confirm the copied link is for the Chat widget or OBS Dock, not its setup page.":"確認複製的連結指向聊天小工具或 OBS 停駐面板，而非其設定頁面。","Copy the Chat widget's installation link. It should start with":"複製聊天小工具的安裝連結。它應以下列內容開頭：","Copy the URL for Dock 1 or Dock 2.":"複製 Dock 1 或 Dock 2 的 URL。","Discord":"Discord","Discord StreamKit":"Discord StreamKit","Discord StreamKit Overlay":"Discord StreamKit 疊加畫面","Discord StreamKit and TikFinity Sources":"Discord StreamKit 與 TikFinity 來源","Discord StreamKit and TikFinity Sources - Social Stream Ninja":"Discord StreamKit 與 TikFinity 來源 - Social Stream Ninja","Does not require you to install a bot in the server.":"無需在伺服器中安裝機器人。","Download":"下載","Features":"功能","Follow the":"請遵循","Go to":"前往","Guides":"指南","Hire":"聘用","Home":"首頁","If Messages Do Not Appear":"如果訊息沒有出現","If you only want the original Discord or TikFinity design on screen, paste its link directly into an OBS Browser Source. Use it as a Social Stream source when you want one combined chat, TTS, filtering, message highlighting, or other Social Stream features.":"如果只想在畫面上展示 Discord 或 TikFinity 的原始設計，請直接將其連結貼到 OBS 瀏覽器來源。如果需要統一聊天、TTS、篩選、訊息醒目顯示或其他 Social Stream 功能，再將它用作 Social Stream 來源。","In the Social Stream desktop app, choose":"在 Social Stream 桌面應用程式中選擇","In the Social Stream desktop app, open":"在 Social Stream 桌面應用程式中開啟","Input link:":"輸入連結：","Inspiration":"靈感","Install for OBS":"為 OBS 安裝","It captures new text, names, basic formatting, emoji, and the displayed name color.":"它會擷取新文字、名字、基本格式、表情符號和顯示的名稱顏色。","It does not capture Discord calls, old message history, or reliably provide every avatar, attachment, reply, and role detail.":"它不會擷取 Discord 通話或舊訊息記錄，也無法可靠地提供所有頭像、附件、回覆和角色詳細資料。","Keep TikFinity open and connected while you are live.":"直播期間保持 TikFinity 開啟並連線。","Keep the Discord desktop app running while you capture.":"擷取期間保持 Discord 桌面應用程式執行。","Leave the source running for several minutes and confirm later messages continue arriving.":"讓來源執行幾分鐘，確認後續訊息仍持續到達。","Main navigation":"主導覽","OBS Quick Start":"OBS 快速入門","Open TikFinity and connect it to the TikTok LIVE account.":"開啟 TikFinity 並將其連接到 TikTok LIVE 帳號。","Open navigation menu":"開啟導覽選單","Open the":"開啟","Open the Social Stream dock using your session ID.":"使用你的工作階段 ID 開啟 Social Stream 停駐面板。","Other chat sites":"其他聊天網站","Output link:":"輸出連結：","Overlay Gallery":"疊加畫面圖庫","Overlays -> OBS Docks":"疊加畫面 -> OBS 停駐面板","Paste the TikFinity dock URL and activate the new source.":"貼上 TikFinity 停駐面板 URL，並啟用新來源。","Read-only: Social Stream cannot reply to Discord through StreamKit.":"唯讀：Social Stream 無法透過 StreamKit 回覆 Discord。","Read-only: use a direct TikTok mode if you need replies.":"唯讀：如需回覆，請使用 TikTok 直連模式。","Reads new text messages from one Discord server channel through Discord's official Chat widget.":"透過 Discord 官方聊天小工具，讀取一個 Discord 伺服器頻道中的新文字訊息。","Reload or recreate the Social Stream source after changing the selected server, channel, dock, or events.":"變更所選伺服器、頻道、停駐面板或事件後，請重新載入或重新建立 Social Stream 來源。","Requires TikFinity to remain open and connected.":"需要 TikFinity 保持開啟並連線。","Requires the Discord desktop app to remain open.":"需要 Discord 桌面應用程式保持開啟。","See":"參閱","Select the":"選擇","Send another message and confirm it appears once in both the dock and OBS.":"再傳送一則訊息，確認它在停駐面板和 OBS 中都只出現一次。","Send one new test message in the selected Discord channel or TikTok LIVE chat.":"在所選 Discord 頻道或 TikTok LIVE 聊天中傳送一則新的測試訊息。","Set Up A TikFinity OBS Dock":"設定 TikFinity OBS 停駐面板","Set Up Discord StreamKit":"設定 Discord StreamKit","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Social Stream skips messages already visible when the page first opens. Send a new test message after the source is ready.":"Social Stream 會略過頁面首次開啟時已經可見的訊息。請在來源就緒後傳送新的測試訊息。","Sources and Settings -> Discord":"來源和設定 -> Discord","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","Test with a new message. Existing messages are intentionally not imported.":"使用新訊息測試。已有訊息刻意不匯入。","The source is labelled TikFinity in setup, but its messages use the normal":"此來源在設定中標為 TikFinity，但其訊息在 Social Stream 內使用一般的","These setups use two different links:":"這些設定使用兩個不同的連結：","This is a fallback reader, not a way to send TikTok replies.":"這是備用讀取器，不是傳送 TikTok 回覆的方式。","TikFinity OBS Dock":"TikFinity OBS 停駐面板","TikFinity setup guide with screenshots":"附擷圖的 TikFinity 設定指南","TikTok Guide":"TikTok 指南","TikTok fallback":"TikTok 備用方案","Treat copied source links as private setup information. Do not publish them or expose them while screen sharing.":"請將複製的來源連結視為私人設定資訊。不要公開，也不要在分享螢幕時暴露。","Understand The Two Links":"瞭解兩個連結的差異","Use Discord StreamKit or a TikFinity OBS Dock URL as a read-only chat source in Social Stream Ninja.":"將 Discord StreamKit 或 TikFinity OBS 停駐面板 URL 用作 Social Stream Ninja 中的唯讀聊天來源。","Use a Discord StreamKit URL":"使用 Discord StreamKit URL","Use a third-party overlay link as a read-only chat source in Social Stream Ninja.":"將第三方疊加畫面連結用作 Social Stream Ninja 中的唯讀聊天來源。","Use the gear button to choose the events the dock should show, including chat.":"使用齒輪按鈕選擇停駐面板應顯示的事件，包括聊天。","Useful when direct TikTok modes are missing or dropping messages.":"適用於 TikTok 直連模式缺少或遺失訊息的情況。","Uses TikFinity as a fallback reader for TikTok LIVE chat and events.":"使用 TikFinity 作為 TikTok LIVE 聊天和事件的備用讀取器。","Validate The Full Workflow":"驗證完整工作流程","Which Option Should I Use?":"應該使用哪個選項？","With the Social Stream browser extension, enable":"使用 Social Stream 瀏覽器擴充功能時，啟用","and authorize StreamKit when Discord asks.":"，並在 Discord 提示時授權 StreamKit。","do not capture the same chat with both a direct source and one of these fallback sources at the same time.":"不要同時用直連來源和這些備用來源之一擷取同一個聊天。","for the username, OBS Dock settings, and SSApp steps. For direct TikTok modes and reply options, see the":"，查看使用者名稱、OBS 停駐面板設定和 SSApp 步驟。關於 TikTok 直連模式和回覆選項，請參閱","if you need the dock and Browser Source steps.":"，查看停駐面板和瀏覽器來源的設定步驟。","source type inside Social Stream.":"來源類型。","the Discord StreamKit or TikFinity URL that you paste into Social Stream Ninja. Social Stream reads messages from it.":"貼到 Social Stream Ninja 中的 Discord StreamKit 或 TikFinity URL。Social Stream 從中讀取訊息。","under the optional chat services and open the generated StreamKit Chat link in a browser tab.":"，位於選用聊天服務下，然後在瀏覽器分頁中開啟產生的 StreamKit Chat 連結。","widget, then choose the server and text channel you want to capture.":"小工具，然後選擇要擷取的伺服器和文字頻道。","your Social Stream dock or overlay URL. Open the dock to test messages, then add an overlay URL to OBS.":"你的 Social Stream 停駐面板或疊加畫面 URL。開啟停駐面板測試訊息，然後將疊加畫面 URL 新增到 OBS。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/external-overlay-sources.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/external-overlay-sources.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/external-overlay-sources.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/external-overlay-sources.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/external-overlay-sources.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/external-overlay-sources.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/external-overlay-sources.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/external-overlay-sources.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/external-overlay-sources.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/external-overlay-sources.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="external-overlay-sources.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/external-overlay-sources.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/external-overlay-sources.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/external-overlay-sources.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/external-overlay-sources.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/external-overlay-sources.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/external-overlay-sources.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/external-overlay-sources.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/external-overlay-sources.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Discord StreamKit 與 TikFinity 來源</h1>
+            <p>將第三方疊加畫面連結用作 Social Stream Ninja 中的唯讀聊天來源。</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>瞭解兩個連結的差異</h3>
+                <p>這些設定使用兩個不同的連結：</p>
+                <ul class="guide-list">
+                    <li><strong>輸入連結：</strong> 貼到 Social Stream Ninja 中的 Discord StreamKit 或 TikFinity URL。Social Stream 從中讀取訊息。</li>
+                    <li><strong>輸出連結：</strong> 你的 Social Stream 停駐面板或疊加畫面 URL。開啟停駐面板測試訊息，然後將疊加畫面 URL 新增到 OBS。</li>
+                </ul>
+                <p>如果只想在畫面上展示 Discord 或 TikFinity 的原始設計，請直接將其連結貼到 OBS 瀏覽器來源。如果需要統一聊天、TTS、篩選、訊息醒目顯示或其他 Social Stream 功能，再將它用作 Social Stream 來源。</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>應該使用哪個選項？</h3>
+                <div class="setup-grid">
+                    <div class="guide-card">
+                        <h4>Discord StreamKit</h4>
+                        <p>透過 Discord 官方聊天小工具，讀取一個 Discord 伺服器頻道中的新文字訊息。</p>
+                        <ul class="guide-list">
+                            <li>需要 Discord 桌面應用程式保持開啟。</li>
+                            <li>無需在伺服器中安裝機器人。</li>
+                            <li>唯讀：Social Stream 無法透過 StreamKit 回覆 Discord。</li>
+                        </ul>
+                    </div>
+                    <div class="guide-card">
+                        <h4>TikFinity OBS 停駐面板</h4>
+                        <p>使用 TikFinity 作為 TikTok LIVE 聊天和事件的備用讀取器。</p>
+                        <ul class="guide-list">
+                            <li>需要 TikFinity 保持開啟並連線。</li>
+                            <li>適用於 TikTok 直連模式缺少或遺失訊息的情況。</li>
+                            <li>唯讀：如需回覆，請使用 TikTok 直連模式。</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="callout-box">
+                    <strong>避免重複：</strong> 不要同時用直連來源和這些備用來源之一擷取同一個聊天。
+                </div>
+            </div>
+
+            <div class="guide-card" id="discord-streamkit">
+                <span class="mini-label">Discord</span>
+                <h3>設定 Discord StreamKit</h3>
+                <ol class="guide-steps">
+                    <li>開啟 <a href="https://streamkit.discord.com/overlay" target="_blank" rel="noopener noreferrer">Discord StreamKit 疊加畫面</a>.</li>
+                    <li>選擇 <strong>為 OBS 安裝</strong> ，並在 Discord 提示時授權 StreamKit。</li>
+                    <li>選擇 <strong>聊天</strong> 小工具，然後選擇要擷取的伺服器和文字頻道。</li>
+                    <li>複製聊天小工具的安裝連結。它應以下列內容開頭： <code>https://streamkit.discord.com/overlay/chat/</code>.</li>
+                    <li>在 Social Stream 桌面應用程式中開啟 <strong>來源和設定 -&gt; Discord</strong>.</li>
+                    <li>選擇 <strong>使用 Discord StreamKit URL</strong>，貼上連結並新增來源。</li>
+                    <li>擷取期間保持 Discord 桌面應用程式執行。</li>
+                </ol>
+                <p>使用 Social Stream 瀏覽器擴充功能時，啟用 <strong>Discord</strong> ，位於選用聊天服務下，然後在瀏覽器分頁中開啟產生的 StreamKit Chat 連結。</p>
+                <ul class="guide-list">
+                    <li>Social Stream 會略過頁面首次開啟時已經可見的訊息。請在來源就緒後傳送新的測試訊息。</li>
+                    <li>它會擷取新文字、名字、基本格式、表情符號和顯示的名稱顏色。</li>
+                    <li>它不會擷取 Discord 通話或舊訊息記錄，也無法可靠地提供所有頭像、附件、回覆和角色詳細資料。</li>
+                </ul>
+            </div>
+
+            <div class="guide-card" id="tikfinity">
+                <span class="mini-label">TikTok 備用方案</span>
+                <h3>設定 TikFinity OBS 停駐面板</h3>
+                <ol class="guide-steps">
+                    <li>開啟 TikFinity 並將其連接到 TikTok LIVE 帳號。</li>
+                    <li>前往 <strong>疊加畫面 -&gt; OBS 停駐面板</strong>.</li>
+                    <li>使用齒輪按鈕選擇停駐面板應顯示的事件，包括聊天。</li>
+                    <li>複製 Dock 1 或 Dock 2 的 URL。</li>
+                    <li>在 Social Stream 桌面應用程式中選擇 <strong>其他聊天網站</strong>.</li>
+                    <li>貼上 TikFinity 停駐面板 URL，並啟用新來源。</li>
+                    <li>直播期間保持 TikFinity 開啟並連線。</li>
+                </ol>
+                <ul class="guide-list">
+                    <li>此來源在設定中標為 TikFinity，但其訊息在 Social Stream 內使用一般的 <code>tiktok</code> 來源類型。</li>
+                    <li>這是備用讀取器，不是傳送 TikTok 回覆的方式。</li>
+                    <li>瀏覽器擴充功能使用者也可以開啟支援的 TikFinity Activity Feed 小工具 URL，其中包含 <code>/widget/vite/src/activity-feed/</code>.</li>
+                </ul>
+                <p>請遵循 <a href="tikfinity-setup.html">附擷圖的 TikFinity 設定指南</a> ，查看使用者名稱、OBS 停駐面板設定和 SSApp 步驟。關於 TikTok 直連模式和回覆選項，請參閱 <a href="tiktok-guide.html">TikTok 指南</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>驗證完整工作流程</h3>
+                <ol class="guide-steps">
+                    <li>使用你的工作階段 ID 開啟 Social Stream 停駐面板。</li>
+                    <li>在所選 Discord 頻道或 TikTok LIVE 聊天中傳送一則新的測試訊息。</li>
+                    <li>確認它在 Social Stream 停駐面板中只出現一次，且名稱和文字正確。</li>
+                    <li>將你選擇的 Social Stream 疊加畫面 URL 新增為 OBS 瀏覽器來源，使用相同的工作階段 ID。</li>
+                    <li>再傳送一則訊息，確認它在停駐面板和 OBS 中都只出現一次。</li>
+                    <li>讓來源執行幾分鐘，確認後續訊息仍持續到達。</li>
+                </ol>
+                <p>參閱 <a href="obs-quick-start.html">OBS 快速入門</a> ，查看停駐面板和瀏覽器來源的設定步驟。</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>如果訊息沒有出現</h3>
+                <ul class="guide-list">
+                    <li>使用新訊息測試。已有訊息刻意不匯入。</li>
+                    <li>確認 Discord 或 TikFinity 仍保持開啟、已登入且已連線。</li>
+                    <li>確認複製的連結指向聊天小工具或 OBS 停駐面板，而非其設定頁面。</li>
+                    <li>變更所選伺服器、頻道、停駐面板或事件後，請重新載入或重新建立 Social Stream 來源。</li>
+                    <li>排查 OBS 前先檢查 Social Stream 停駐面板。如果停駐面板為空，問題還不在 OBS。</li>
+                    <li>請將複製的來源連結視為私人設定資訊。不要公開，也不要在分享螢幕時暴露。</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 授權條款。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

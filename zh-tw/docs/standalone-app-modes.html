@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-tw/docs/standalone-app-modes.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/zh-tw/docs/standalone-app-modes.html">
+    <meta property="og:title" content="獨立應用程式模式 - Social Stream Ninja">
+    <meta property="og:description" content="以易懂語言介紹 Social Stream Ninja 桌面應用程式來源模式、標準模式、WebSocket 模式、TikTok 預設、來源視窗與常見應用程式疑難排解。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-tw/docs/standalone-app-modes.html">
+    <meta name="twitter:title" content="獨立應用程式模式 - Social Stream Ninja">
+    <meta name="twitter:description" content="以易懂語言介紹 Social Stream Ninja 桌面應用程式來源模式、標準模式、WebSocket 模式、TikTok 預設、來源視窗與常見應用程式疑難排解。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>獨立應用程式模式 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="以易懂語言介紹 Social Stream Ninja 桌面應用程式來源模式、標準模式、WebSocket 模式、TikTok 預設、來源視窗與常見應用程式疑難排解。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/standalone-app-modes.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"A compatibility path that checks for updates instead of using the preferred live socket path.":"透過檢查更新來運作的相容路徑，而不是使用首選的即時通訊端路徑。","Advanced setups.":"進階設定。","App is using the wrong source files:":"應用程式正在使用錯誤的來源檔案：","App-native reading and reply-support paths.":"應用程式原生的讀取與回覆支援路徑。","Auto":"自動","Chrome is logged in but the app is not:":"Chrome 已登入但應用程式未登入：","Commands & API":"指令與 API","Common Failure Point":"常見故障點","Common Fixes":"常見解決方式","Confirm the app source is activated.":"確認應用程式來源已啟用。","Confirm the dock receives chat with the same session ID.":"確認停駐面板透過相同工作階段 ID 收到聊天。","Confirm the source window is signed in if the platform needs login.":"如果平台需要登入，確認來源視窗已登入。","Download":"下載","Fallback when socket/signing paths fail.":"通訊端／簽署路徑失敗時的備援方式。","Features":"功能","First try for most users.":"大多數使用者應首先嘗試。","For a normal first attempt, add TikTok, leave the preset on Auto, activate the source, and watch the app status text.":"首次一般嘗試時，新增 TikTok，將預設保留為自動，啟用來源，並觀察應用程式狀態文字。","Guides":"指南","Hire":"聘用","Home":"首頁","If Chrome works but the app does not, remember that app sessions and Chrome sessions are separate.":"如果 Chrome 正常但應用程式不正常，請記住應用程式工作階段與 Chrome 工作階段是分開的。","Inspiration":"靈感","Less rich than the preferred connector.":"資訊不如首選連接器豐富。","Local Signer":"本機簽署器","Login, CAPTCHA, redirected page, or hidden chat.":"登入、驗證碼、重新導向頁面或隱藏聊天。","Main navigation":"主導覽","Mode":"模式","Mode Names":"模式名稱","OBS is blank:":"OBS 空白：","On this page":"本頁內容","Only after the dock works, add or refresh the OBS overlay URL.":"只有停駐面板正常後，才新增或重新整理 OBS 疊加畫面 URL。","Open navigation menu":"開啟導覽選單","Overlay Gallery":"疊加畫面圖庫","Plain Meaning":"白話說明","Plain-English guide to Social Stream Ninja desktop app source modes, Standard mode, WebSocket mode, TikTok presets, source windows, and common app troubleshooting.":"以易懂語言介紹 Social Stream Ninja 桌面應用程式來源模式、標準模式、WebSocket 模式、TikTok 預設、來源視窗與常見應用程式疑難排解。","Platform Setup Picker":"平台設定選擇器","Polling/Compatibility":"輪詢／相容","Polling/Legacy":"輪詢／舊版","Provider availability, API key, room ID, or rate limits.":"供應商可用性、API 金鑰、房間 ID 或速率限制。","Proxy or custom signing":"代理或自訂簽署","Related guide:":"相關指南：","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Some sources have more than one connection mode. The right mode depends on the platform, login state, and whether you need richer events or simple page capture.":"某些來源有多種連線模式。正確模式取決於平台、登入狀態，以及您需要更豐富的事件還是簡單頁面擷取。","Source says active but no chat arrives:":"來源顯示作用中，但沒有聊天到達：","Standalone App Modes":"獨立應用程式模式","Standalone App Modes - Social Stream Ninja":"獨立應用程式模式 - Social Stream Ninja","Standalone app Add source sidebar with YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook, and TikTok source buttons":"獨立應用程式的新增來源側邊欄，含 YouTube、Twitch、Kick、VPZONE、Velora、Instagram Live、Facebook 與 TikTok 來源按鈕","Standalone app sample source entries showing Standard and WebSocket connection mode controls, plus TikTok connection preset controls":"獨立應用程式範例來源項目，顯示標準與 WebSocket 連線模式控制項，以及 TikTok 連線預設控制項","Standard":"標準","Standard and WebSocket are common source modes. TikTok has its own preset selector because it has extra app-specific connection paths.":"標準與 WebSocket 是常見來源模式。TikTok 有自己的預設選擇器，因為它還有額外的應用程式專用連線路徑。","Standard mode can still fail if the platform changes its page layout, blocks embedded/app browsers, asks for CAPTCHA, or hides chat behind a login.":"如果平台變更頁面配置、封鎖嵌入式／應用程式瀏覽器、要求驗證碼或將聊天藏在登入之後，標準模式仍可能失敗。","Start by adding the platform source you need. The app then creates and manages that source entry.":"先新增所需的平台來源。應用程式隨後會建立並管理該來源項目。","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","The app TikTok session/cookies must be valid.":"應用程式中的 TikTok 工作階段／Cookie 必須有效。","The app chooses the best TikTok path and may fall back if one fails.":"應用程式選擇最佳 TikTok 路徑，並可能在某條路徑失敗時切換備援。","The app may fall back, so check the status text.":"應用程式可能切換備援，請檢查狀態文字。","The app opens a normal platform/source page and reads the rendered page.":"應用程式開啟一般平台／來源頁面並讀取已繪製的頁面。","The desktop app manages Social Stream source windows outside your normal browser. It can help with source organization and some browser-tab throttling problems. It is not the same as Chrome, and it does not automatically share your Chrome login or cookies.":"桌面應用程式在一般瀏覽器之外管理 Social Stream 來源視窗。它可協助整理來源並解決一些瀏覽器分頁節流問題。它與 Chrome 不同，不會自動共享 Chrome 登入狀態或 Cookie。","The newer connector fails or a platform-specific fallback is needed.":"新連接器失敗，或需要平台專用備援方式。","The platform supports it and you want better background reliability or richer event data.":"平台支援該模式，且您希望取得更可靠的背景執行或更豐富的事件資料。","The platform works when you can see the live page or popout chat.":"在能看到直播頁面或彈出聊天時，平台可以正常運作。","The site needs you to sign in, solve a prompt, or keep a visible chat panel open.":"網站要求您登入、完成提示驗證，或保持聊天面板可見。","The source connects through a platform API, socket, or Social Stream source page.":"來源透過平台 API、通訊端或 Social Stream 來源頁面連線。","The source specifically supports WebSocket/API mode.":"來源明確支援 WebSocket／API 模式。","TikTok Auto":"TikTok 自動","TikTok In The App":"應用程式中的 TikTok","TikTok Path":"TikTok 路徑","TikTok fails:":"TikTok 失敗：","TikTok in the desktop app is not one single mode. Always note which preset is active before troubleshooting.":"桌面應用程式中的 TikTok 不只有一種模式。疑難排解前，請始終記錄目前啟用的預設。","Understand source windows, Standard mode, WebSocket mode, and TikTok presets.":"了解來源視窗、標準模式、WebSocket 模式與 TikTok 預設。","Use Case":"使用情境","Use Standard Mode When":"適合使用標準模式的情況","Use WebSocket Or API Mode When":"適合使用 WebSocket 或 API 模式的情況","Use When":"適用情況","Visible TikTok page capture.":"擷取可見 TikTok 頁面。","WebSocket/API":"WebSocket/API","WebSocket/API mode is not always better. If auth, tokens, provider access, or a platform API is failing, Standard mode may be the faster test.":"WebSocket／API 模式不一定更好。如果驗證、權杖、供應商存取或平台 API 失敗，標準模式可能更便於快速測試。","What The App Is For":"應用程式的用途","What To Check Before OBS":"使用 OBS 前要檢查什麼","You are comparing app behavior against the Chrome extension.":"您正在比較應用程式與 Chrome 擴充功能的行為。","You are not sure which TikTok mode to use.":"您不確定使用哪種 TikTok 模式。","You can handle provider tokens, account permissions, API scopes, or source-page setup.":"您能處理供應商權杖、帳號權限、API 範圍或來源頁面設定。","You need event families that normal page scraping may not expose.":"您需要一般頁面擷取可能無法提供的事件類別。","You need the most familiar troubleshooting path: open page, see chat, test dock, then OBS.":"您需要最熟悉的排查路徑：開啟頁面、看到聊天、測試停駐面板，然後測試 OBS。","You need the simplest visible page capture, login, or manual verification.":"您需要最簡單的可見頁面擷取、登入或手動驗證。","You want a source that can keep working better in the background.":"您希望來源在背景也能更穩定地運作。","check the mode, source window, live URL/user name, and dock session.":"檢查模式、來源視窗、直播 URL／使用者名稱與停駐面板工作階段。","check whether the app is using packaged, cached, remote, beta, stable, or local Social Stream assets.":"檢查應用程式使用的是封裝、快取、遠端、beta、穩定版還是本機 Social Stream 資源。","record the current preset, status text, app version, and whether the source switched to a fallback mode.":"記錄目前預設、狀態文字、應用程式版本，以及來源是否切換至備援模式。","sign in to the platform inside the app source window or use the extension as the capture path.":"在應用程式來源視窗內登入平台，或使用擴充功能作為擷取方式。","test the dock first. If the dock is empty, OBS is not the problem yet.":"先測試停駐面板。如果停駐面板為空，問題還不在 OBS。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/standalone-app-modes.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/standalone-app-modes.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/standalone-app-modes.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/standalone-app-modes.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/standalone-app-modes.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/standalone-app-modes.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/standalone-app-modes.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/standalone-app-modes.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/standalone-app-modes.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="standalone-app-modes.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/standalone-app-modes.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/standalone-app-modes.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/standalone-app-modes.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/standalone-app-modes.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/standalone-app-modes.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/standalone-app-modes.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/standalone-app-modes.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/standalone-app-modes.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>獨立應用程式模式</h1>
+            <p>了解來源視窗、標準模式、WebSocket 模式與 TikTok 預設。</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="本頁內容"><a href="#read-section-1">應用程式的用途</a><a href="#read-section-2">模式名稱</a><a href="#read-section-3">適合使用標準模式的情況</a><a href="#read-section-4">適合使用 WebSocket 或 API 模式的情況</a><a href="#tiktok-in-the-app">應用程式中的 TikTok</a><a href="#read-section-6">使用 OBS 前要檢查什麼</a><a href="#read-section-7">常見解決方式</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">應用程式的用途</h2>
+                <p>桌面應用程式在一般瀏覽器之外管理 Social Stream 來源視窗。它可協助整理來源並解決一些瀏覽器分頁節流問題。它與 Chrome 不同，不會自動共享 Chrome 登入狀態或 Cookie。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-standalone-add-source.png" alt="獨立應用程式的新增來源側邊欄，含 YouTube、Twitch、Kick、VPZONE、Velora、Instagram Live、Facebook 與 TikTok 來源按鈕" class="guide-image guide-image-narrow">
+                    <figcaption>先新增所需的平台來源。應用程式隨後會建立並管理該來源項目。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">模式名稱</h2>
+                <p>某些來源有多種連線模式。正確模式取決於平台、登入狀態，以及您需要更豐富的事件還是簡單頁面擷取。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-standalone-source-modes.png" alt="獨立應用程式範例來源項目，顯示標準與 WebSocket 連線模式控制項，以及 TikTok 連線預設控制項" class="guide-image">
+                    <figcaption>標準與 WebSocket 是常見來源模式。TikTok 有自己的預設選擇器，因為它還有額外的應用程式專用連線路徑。</figcaption>
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>模式</th><th>白話說明</th><th>適用情況</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="模式">標準</td><td data-label="白話說明">應用程式開啟一般平台／來源頁面並讀取已繪製的頁面。</td><td data-label="適用情況">您需要最簡單的可見頁面擷取、登入或手動驗證。</td></tr>
+                        <tr><td data-label="模式">WebSocket/API</td><td data-label="白話說明">來源透過平台 API、通訊端或 Social Stream 來源頁面連線。</td><td data-label="適用情況">平台支援該模式，且您希望取得更可靠的背景執行或更豐富的事件資料。</td></tr>
+                        <tr><td data-label="模式">輪詢／舊版</td><td data-label="白話說明">透過檢查更新來運作的相容路徑，而不是使用首選的即時通訊端路徑。</td><td data-label="適用情況">新連接器失敗，或需要平台專用備援方式。</td></tr>
+                        <tr><td data-label="模式">TikTok 自動</td><td data-label="白話說明">應用程式選擇最佳 TikTok 路徑，並可能在某條路徑失敗時切換備援。</td><td data-label="適用情況">您不確定使用哪種 TikTok 模式。</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">適合使用標準模式的情況</h2>
+                <ul class="guide-list">
+                    <li>在能看到直播頁面或彈出聊天時，平台可以正常運作。</li>
+                    <li>網站要求您登入、完成提示驗證，或保持聊天面板可見。</li>
+                    <li>您正在比較應用程式與 Chrome 擴充功能的行為。</li>
+                    <li>您需要最熟悉的排查路徑：開啟頁面、看到聊天、測試停駐面板，然後測試 OBS。</li>
+                </ul>
+                <p>如果平台變更頁面配置、封鎖嵌入式／應用程式瀏覽器、要求驗證碼或將聊天藏在登入之後，標準模式仍可能失敗。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">適合使用 WebSocket 或 API 模式的情況</h2>
+                <ul class="guide-list">
+                    <li>來源明確支援 WebSocket／API 模式。</li>
+                    <li>您希望來源在背景也能更穩定地運作。</li>
+                    <li>您需要一般頁面擷取可能無法提供的事件類別。</li>
+                    <li>您能處理供應商權杖、帳號權限、API 範圍或來源頁面設定。</li>
+                </ul>
+                <p>WebSocket／API 模式不一定更好。如果驗證、權杖、供應商存取或平台 API 失敗，標準模式可能更便於快速測試。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="tiktok-in-the-app">應用程式中的 TikTok</h2>
+                <p>桌面應用程式中的 TikTok 不只有一種模式。疑難排解前，請始終記錄目前啟用的預設。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>TikTok 路徑</th><th>使用情境</th><th>常見故障點</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="TikTok 路徑">自動</td><td data-label="使用情境">大多數使用者應首先嘗試。</td><td data-label="常見故障點">應用程式可能切換備援，請檢查狀態文字。</td></tr>
+                        <tr><td data-label="TikTok 路徑">標準</td><td data-label="使用情境">擷取可見 TikTok 頁面。</td><td data-label="常見故障點">登入、驗證碼、重新導向頁面或隱藏聊天。</td></tr>
+                        <tr><td data-label="TikTok 路徑">本機簽署器</td><td data-label="使用情境">應用程式原生的讀取與回覆支援路徑。</td><td data-label="常見故障點">應用程式中的 TikTok 工作階段／Cookie 必須有效。</td></tr>
+                        <tr><td data-label="TikTok 路徑">輪詢／相容</td><td data-label="使用情境">通訊端／簽署路徑失敗時的備援方式。</td><td data-label="常見故障點">資訊不如首選連接器豐富。</td></tr>
+                        <tr><td data-label="TikTok 路徑">代理或自訂簽署</td><td data-label="使用情境">進階設定。</td><td data-label="常見故障點">供應商可用性、API 金鑰、房間 ID 或速率限制。</td></tr>
+                    </tbody>
+                </table>
+                <p>首次一般嘗試時，新增 TikTok，將預設保留為自動，啟用來源，並觀察應用程式狀態文字。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">使用 OBS 前要檢查什麼</h2>
+                <ol class="guide-steps">
+                    <li>確認應用程式來源已啟用。</li>
+                    <li>如果平台需要登入，確認來源視窗已登入。</li>
+                    <li>確認停駐面板透過相同工作階段 ID 收到聊天。</li>
+                    <li>只有停駐面板正常後，才新增或重新整理 OBS 疊加畫面 URL。</li>
+                    <li>如果 Chrome 正常但應用程式不正常，請記住應用程式工作階段與 Chrome 工作階段是分開的。</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-7">常見解決方式</h2>
+                <ul class="guide-list">
+                    <li><strong>Chrome 已登入但應用程式未登入：</strong> 在應用程式來源視窗內登入平台，或使用擴充功能作為擷取方式。</li>
+                    <li><strong>來源顯示作用中，但沒有聊天到達：</strong> 檢查模式、來源視窗、直播 URL／使用者名稱與停駐面板工作階段。</li>
+                    <li><strong>應用程式正在使用錯誤的來源檔案：</strong> 檢查應用程式使用的是封裝、快取、遠端、beta、穩定版還是本機 Social Stream 資源。</li>
+                    <li><strong>TikTok 失敗：</strong> 記錄目前預設、狀態文字、應用程式版本，以及來源是否切換至備援模式。</li>
+                    <li><strong>OBS 空白：</strong> 先測試停駐面板。如果停駐面板為空，問題還不在 OBS。</li>
+                </ul>
+                <p>相關指南： <a href="platform-setup-picker.html">平台設定選擇器</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 授權條款。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

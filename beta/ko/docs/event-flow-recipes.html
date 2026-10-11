@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/event-flow-recipes.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/event-flow-recipes.html">
+    <meta property="og:title" content="Event Flow 활용 예시 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja의 실용적인 Event Flow 활용 예시: 소리, 미디어, 보상, OBS 동작, 웹훅, 안전한 테스트.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/event-flow-recipes.html">
+    <meta name="twitter:title" content="Event Flow 활용 예시 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja의 실용적인 Event Flow 활용 예시: 소리, 미디어, 보상, OBS 동작, 웹훅, 안전한 테스트.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Flow 활용 예시 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja의 실용적인 Event Flow 활용 예시: 소리, 미디어, 보상, OBS 동작, 웹훅, 안전한 테스트.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/event-flow-recipes.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", password, and permissions.":", 비밀번호, 권한을 확인하세요.","Action":"동작","Audio or media does not play:":"오디오나 미디어가 재생되지 않음:","Before Any Recipe":"예시를 시작하기 전","Build useful automations one small recipe at a time.":"작은 예시 하나씩 따라 하며 유용한 자동화를 만드세요.","Commands & API":"명령 및 API","Common Fixes":"일반적인 해결 방법","Donation alert":"후원 알림","Download":"다운로드","Event Flow Editor Guide":"Event Flow 편집기 가이드","Event Flow Guide overview explaining sources, logic nodes, actions, and payloads":"소스, 논리 노드, 동작, 페이로드를 설명하는 Event Flow 가이드 개요","Event Flow Recipes":"Event Flow 활용 예시","Event Flow Recipes - Social Stream Ninja":"Event Flow 활용 예시 - Social Stream Ninja","Event Flow is the advanced automation editor. Use it when popup toggles are not enough: filter chat, trigger media, relay messages, call webhooks, or control OBS.":"Event Flow는 고급 자동화 편집기입니다. 팝업 스위치만으로 부족할 때 채팅 필터링, 미디어 실행, 메시지 릴레이, 웹훅 호출, OBS 제어에 사용하세요.","Event Flow media action fields for reward-triggered sound or media":"보상으로 실행하는 소리 또는 미디어용 Event Flow 미디어 동작 필드","Event Flow media hosting guide":"Event Flow 미디어 호스팅 가이드","Event Flow reward trigger example for Kick rewards":"Kick 보상용 Event Flow 보상 트리거 예시","Export a working flow before making a large edit.":"크게 수정하기 전에 작동하는 흐름을 내보내세요.","Feature the message or show a welcome overlay.":"메시지를 강조 표시하거나 환영 오버레이를 표시하세요.","Features":"기능","First-time chatter":"첫 채팅 참여자","First-time chatter flag or filter":"첫 채팅 참여자 플래그 또는 필터","Flow fires too often:":"흐름이 너무 자주 실행됨:","Full deep dive:":"전체 상세 설명:","Full reference:":"전체 참고 문서:","Giveaways, paid tickets, game prizes and recovery guide":"경품 추첨, 유료 참가권, 게임 경품, 복구 가이드","Guides":"가이드","Hire":"작업 의뢰","Home":"홈","Inspiration":"아이디어","Keyword + RANDOM gate":"키워드 + RANDOM 게이트","Keyword sound":"키워드 소리","Kick Reward Media Example":"Kick 보상 미디어 예시","Kick reward media":"Kick 보상 미디어","Kick rewards sounds/media guide":"Kick 보상 소리/미디어 가이드","Main navigation":"기본 탐색 메뉴","Message contains":"메시지 포함 문자열","Nothing happens:":"아무 일도 일어나지 않음:","OBS action fails:":"OBS 동작 실패:","On this page":"이 페이지에서","Open":"열기","Open navigation menu":"탐색 메뉴 열기","Open the dock and confirm chat arrives.":"도크를 열고 채팅이 도착하는지 확인하세요.","Overlay Gallery":"오버레이 갤러리","POST a selected payload to your service.":"선택한 페이로드를 서비스에 POST로 보내세요.","Platform/type filter":"플랫폼/유형 필터","Play audio clip in":"다음에서 오디오 클립 재생:","Play one of two clips at random. See":"클립 두 개 중 하나를 무작위로 재생 — 참고:","Practical Event Flow recipes for Social Stream Ninja: sounds, media, rewards, OBS actions, webhooks, and safe testing.":"Social Stream Ninja의 실용적인 Event Flow 활용 예시: 소리, 미디어, 보상, OBS 동작, 웹훅, 안전한 테스트.","Random sound pick":"무작위 소리 선택","Recipe":"예시","Recipe Ideas":"활용 아이디어","Reward/channel point event":"보상/채널 포인트 이벤트","Run a custom workflow from a Stream Deck key or HTTP/WebSocket/P2P API call":"Stream Deck 키 또는 HTTP/WebSocket/P2P API 호출로 사용자 지정 작업 흐름 실행","Send to alert overlay, webhook, or OBS scene action.":"알림 오버레이, 웹훅 또는 OBS 장면 동작으로 보내세요.","Show an image, video, or sound.":"이미지, 동영상 또는 소리를 표시/재생하세요.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Start with a specific trigger so the flow does not fire for every chat message.":"모든 채팅 메시지에 흐름이 실행되지 않도록 구체적인 트리거로 시작하세요.","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Test with a fake message or a safe trigger before going live.":"생방송 전에 가상 메시지나 안전한 트리거로 테스트하세요.","Then point the action to the sound, image, video, or overlay output you want.":"그런 다음 원하는 소리, 이미지, 동영상 또는 오버레이 출력을 동작의 대상으로 지정하세요.","Think in three pieces: source event, logic/filter, action.":"소스 이벤트, 논리/필터, 동작의 세 부분으로 생각하세요.","This is the most common practical Event Flow pattern: match a reward, then play media through Flow Actions.":"이는 가장 흔한 실용 Event Flow 패턴입니다. 보상을 감지한 뒤 Flow Actions를 통해 미디어를 재생합니다.","Trigger":"트리거","Use one test platform and one Social Stream session.":"테스트 플랫폼 하나와 Social Stream 세션 하나를 사용하세요.","Webhook relay":"웹훅 릴레이","What Event Flow Is For":"Event Flow의 용도","add a stricter platform, event, keyword, or user filter.":"플랫폼, 이벤트, 키워드 또는 사용자 필터를 더 엄격하게 추가하세요.","check OBS WebSocket v5, port":"OBS WebSocket v5, 포트","confirm the source event arrives in the dock first.":"먼저 소스 이벤트가 도크에 도착하는지 확인하세요.","if the recipe plays audio, media, or controls OBS.":"를 예시가 오디오나 미디어를 재생하거나 OBS를 제어할 때 여세요.","keep":"유지:","micro-flow D in the editor guide":"편집기 가이드의 미니 흐름 D","open with the same session, then check the":"를 같은 세션으로 열어 두고 다음을 확인하세요:","or donation event":"또는 후원 이벤트"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/event-flow-recipes.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/event-flow-recipes.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/event-flow-recipes.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/event-flow-recipes.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/event-flow-recipes.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/event-flow-recipes.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/event-flow-recipes.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/event-flow-recipes.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/event-flow-recipes.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/event-flow-recipes.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/event-flow-recipes.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/event-flow-recipes.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="event-flow-recipes.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/event-flow-recipes.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/event-flow-recipes.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/event-flow-recipes.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/event-flow-recipes.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/event-flow-recipes.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>Event Flow 활용 예시</h1>
+<p><a href="giveaway-points-guide.html">경품 추첨, 유료 참가권, 게임 경품, 복구 가이드</a></p><p>작은 예시 하나씩 따라 하며 유용한 자동화를 만드세요.</p></div></section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="이 페이지에서"><a href="#read-section-1">Event Flow의 용도</a><a href="#read-section-2">예시를 시작하기 전</a><a href="#read-section-3">활용 아이디어</a><a href="#read-section-4">Kick 보상 미디어 예시</a><a href="#read-section-5">일반적인 해결 방법</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Event Flow의 용도</h2>
+                <p><a href="streamdeck-event-flow.html">Stream Deck 키 또는 HTTP/WebSocket/P2P API 호출로 사용자 지정 작업 흐름 실행</a>.</p>
+                <p>Event Flow는 고급 자동화 편집기입니다. 팝업 스위치만으로 부족할 때 채팅 필터링, 미디어 실행, 메시지 릴레이, 웹훅 호출, OBS 제어에 사용하세요.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-event-flow-overview.png" alt="소스, 논리 노드, 동작, 페이로드를 설명하는 Event Flow 가이드 개요" class="guide-image">
+                    <figcaption>소스 이벤트, 논리/필터, 동작의 세 부분으로 생각하세요.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">예시를 시작하기 전</h2>
+                <ol class="guide-steps">
+                    <li>테스트 플랫폼 하나와 Social Stream 세션 하나를 사용하세요.</li>
+                    <li>도크를 열고 채팅이 도착하는지 확인하세요.</li>
+                    <li>열기 <code>actions.html?session=YOUR_SESSION</code> 를 예시가 오디오나 미디어를 재생하거나 OBS를 제어할 때 여세요.</li>
+                    <li>생방송 전에 가상 메시지나 안전한 트리거로 테스트하세요.</li>
+                    <li>크게 수정하기 전에 작동하는 흐름을 내보내세요.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">활용 아이디어</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>예시</th><th>트리거</th><th>동작</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="예시">키워드 소리</td><td data-label="트리거">메시지 포함 문자열 <code>!hype</code></td><td data-label="동작">다음에서 오디오 클립 재생: <code>actions.html</code>.</td></tr>
+                        <tr><td data-label="예시">Kick 보상 미디어</td><td data-label="트리거">보상/채널 포인트 이벤트</td><td data-label="동작">이미지, 동영상 또는 소리를 표시/재생하세요.</td></tr>
+                        <tr><td data-label="예시">첫 채팅 참여자</td><td data-label="트리거">첫 채팅 참여자 플래그 또는 필터</td><td data-label="동작">메시지를 강조 표시하거나 환영 오버레이를 표시하세요.</td></tr>
+                        <tr><td data-label="예시">후원 알림</td><td data-label="트리거"><code>hasDonation</code> 또는 후원 이벤트</td><td data-label="동작">알림 오버레이, 웹훅 또는 OBS 장면 동작으로 보내세요.</td></tr>
+                        <tr><td data-label="예시">웹훅 릴레이</td><td data-label="트리거">플랫폼/유형 필터</td><td data-label="동작">선택한 페이로드를 서비스에 POST로 보내세요.</td></tr>
+                        <tr><td data-label="예시">무작위 소리 선택</td><td data-label="트리거">키워드 + RANDOM 게이트</td><td data-label="동작">클립 두 개 중 하나를 무작위로 재생 — 참고: <a href="../actions/event-flow-guide.html">편집기 가이드의 미니 흐름 D</a>.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">Kick 보상 미디어 예시</h2>
+                <p>이는 가장 흔한 실용 Event Flow 패턴입니다. 보상을 감지한 뒤 Flow Actions를 통해 미디어를 재생합니다.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/kick-channel-points-event-flow/event-flow-reward-trigger.png" alt="Kick 보상용 Event Flow 보상 트리거 예시" class="guide-image">
+                    <figcaption>모든 채팅 메시지에 흐름이 실행되지 않도록 구체적인 트리거로 시작하세요.</figcaption>
+                </figure>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/kick-channel-points-event-flow/event-flow-media-action-values.png" alt="보상으로 실행하는 소리 또는 미디어용 Event Flow 미디어 동작 필드" class="guide-image guide-image-narrow">
+                    <figcaption>그런 다음 원하는 소리, 이미지, 동영상 또는 오버레이 출력을 동작의 대상으로 지정하세요.</figcaption>
+                </figure>
+                <p>전체 상세 설명: <a href="../../docs/index.html?file=kick-channel-points-event-flow.md">Kick 보상 소리/미디어 가이드</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">일반적인 해결 방법</h2>
+                <ul class="guide-list">
+                    <li><strong>아무 일도 일어나지 않음:</strong> 먼저 소스 이벤트가 도크에 도착하는지 확인하세요.</li>
+                    <li><strong>오디오나 미디어가 재생되지 않음:</strong> 유지: <code>actions.html</code> 를 같은 세션으로 열어 두고 다음을 확인하세요: <a href="media-hosting-event-flow.html">Event Flow 미디어 호스팅 가이드</a>.</li>
+                    <li><strong>OBS 동작 실패:</strong> OBS WebSocket v5, 포트 <code>4455</code>, 비밀번호, 권한을 확인하세요.</li>
+                    <li><strong>흐름이 너무 자주 실행됨:</strong> 플랫폼, 이벤트, 키워드 또는 사용자 필터를 더 엄격하게 추가하세요.</li>
+                </ul>
+                <p>전체 참고 문서: <a href="../actions/event-flow-guide.html">Event Flow 편집기 가이드</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

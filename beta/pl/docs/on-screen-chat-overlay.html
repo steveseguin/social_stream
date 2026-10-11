@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pl" data-site-root="../../" data-site-language="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/pl/docs/on-screen-chat-overlay.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="pl_PL">
+    <meta property="og:url" content="https://socialstream.ninja/beta/pl/docs/on-screen-chat-overlay.html">
+    <meta property="og:title" content="Nakładka czatu na ekranie podczas grania - Social Stream Ninja">
+    <meta property="og:description" content="Pokaż prywatną nakładkę czatu Social Stream Ninja nad grą za pomocą samodzielnej aplikacji komputerowej lub Electron Capture, z przezroczystością, skrótami przepuszczania kliknięć, przykładami wiersza poleceń i uwagami o przechwytywaniu OBS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/pl/docs/on-screen-chat-overlay.html">
+    <meta name="twitter:title" content="Nakładka czatu na ekranie podczas grania - Social Stream Ninja">
+    <meta name="twitter:description" content="Pokaż prywatną nakładkę czatu Social Stream Ninja nad grą za pomocą samodzielnej aplikacji komputerowej lub Electron Capture, z przezroczystością, skrótami przepuszczania kliknięć, przykładami wiersza poleceń i uwagami o przechwytywaniu OBS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nakładka czatu na ekranie podczas grania - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Pokaż prywatną nakładkę czatu Social Stream Ninja nad grą za pomocą samodzielnej aplikacji komputerowej lub Electron Capture, z przezroczystością, skrótami przepuszczania kliknięć, przykładami wiersza poleceń i uwagami o przechwytywaniu OBS.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="pl">
+<script id="ssn-site-language" type="application/json">{"language":"pl","page":"docs/on-screen-chat-overlay.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Przełącz na jasny motyw","Switch to dark theme":"Przełącz na ciemny motyw","Light mode":"Tryb jasny","Dark mode":"Tryb ciemny","Open navigation menu":"Otwórz menu nawigacji","Close navigation menu":"Zamknij menu nawigacji","Copy this document as Markdown to the clipboard":"Skopiuj ten dokument w formacie Markdown do schowka","Copy Markdown":"Kopiuj Markdown","Copying…":"Kopiowanie…","Markdown copied":"Skopiowano Markdown","Copy failed":"Nie udało się skopiować","Copy comprehensive Markdown for an AI assistant":"Skopiuj pełny Markdown dla asystenta AI","Copy this documentation page as Markdown for an AI assistant":"Skopiuj tę stronę dokumentacji jako Markdown dla asystenta AI"},"strings":{"(or":"(lub",". Activate your chat sources normally.":". Aktywuj źródła czatu jak zwykle.",". If the URL has no question mark yet, use":". Jeśli URL nie ma jeszcze znaku zapytania, użyj",". Mouse clicks will pass through to the game.":". Kliknięcia myszy będą przechodzić do gry.",". SSApp opens it as its own overlay window.":". SSApp otwiera go jako własne okno nakładki.",". The browser extension and an OBS Browser Source cannot create a system-wide click-through window by themselves.":". Rozszerzenie przeglądarkowe i źródło przeglądarkowe OBS nie mogą samodzielnie utworzyć systemowego okna przepuszczającego kliknięcia.",". The generated URL should contain":". Wygenerowany URL powinien zawierać","A Dock or Featured URL with the wrong session ID will remain empty.":"URL doku lub Featured z błędnym identyfikatorem sesji pozostanie pusty.","A test recording confirms viewers cannot see the private overlay.":"Nagranie testowe potwierdza, że widzowie nie widzą prywatnej nakładki.","Action":"Działanie","Alternative transparent background mode; useful when the Dock's normal":"Alternatywny tryb przezroczystego tła; przydatny, gdy zwykły tryb doku","Always on top":"Zawsze na wierzchu","An exclusive fullscreen game may cover all normal desktop windows, including an always-on-top overlay.":"Gra w wyłącznym trybie pełnoekranowym może zakrywać wszystkie zwykłe okna pulpitu, w tym nakładkę zawsze na wierzchu.","Avoid":"Unikaj","Best When":"Najlepsze, gdy","Borderless or windowed fullscreen is the reliable game mode.":"Tryb bez ramek lub pełnoekranowy w oknie to niezawodny tryb gry.","Capture third-party overlays (such as Steam)":"Przechwytuj nakładki innych firm (np. Steam)","Chat is arriving in Social Stream.":"Czat dociera do Social Stream.","Choose The Chat View":"Wybierz widok czatu","Choose a zero-based monitor when a monitor index is easier than desktop coordinates.":"Wybierz monitor według indeksu od zera, gdy indeks monitora jest łatwiejszy niż współrzędne pulpitu.","Click the generated Dock or Featured link":"Kliknij wygenerowane łącze Dock lub Featured","Click-through disables mouse interaction.":"Przepuszczanie kliknięć wyłącza interakcję myszą.","Click-through is enabled only after positioning.":"Przepuszczanie kliknięć jest włączane dopiero po ustawieniu pozycji.","Closing SSApp or Electron Capture closes the local overlay.":"Zamknięcie SSApp lub Electron Capture zamyka lokalną nakładkę.","Commands & API":"Polecenia i API","Continuous Chat Dock":"Dok ciągłego czatu","Copy your generated Social Stream Dock, Featured, template, or custom overlay URL.":"Skopiuj wygenerowany URL doku Social Stream, Featured, szablonu lub własnej nakładki.","Display Capture":"Przechwytywanie ekranu","Display capture includes what you see.":"Przechwytywanie ekranu obejmuje to, co widzisz.","Do not add this overlay URL as an OBS Browser Source":"Nie dodawaj tego URL nakładki jako źródła przeglądarkowego OBS","Do not attempt to bypass a game's security controls.":"Nie próbuj obchodzić zabezpieczeń gry.","Download":"Pobierz","Electron Capture":"Electron Capture","Electron Capture Command-Line Launch":"Uruchamianie Electron Capture z wiersza poleceń","Electron Capture feature cards for Pin on Top, Frameless Window, Transparency Support, Click-Through Mode, Auto Screen Capture, and Game and App Capture":"Karty funkcji Electron Capture: Pin on Top, Frameless Window, Transparency Support, Click-Through Mode, Auto Screen Capture oraz Game and App Capture","Electron Capture provides the pin, frameless transparency, and click-through controls needed for a private on-screen overlay.":"Electron Capture zapewnia przypinanie, przezroczystość bez ramek i przepuszczanie kliknięć potrzebne do prywatnej nakładki ekranowej.","Example placement using the real SSApp Featured Chat overlay over a simulated gameplay scene. A Dock URL can show the full running chat instead.":"Przykładowe położenie rzeczywistej nakładki Featured Chat SSApp nad symulowaną sceną gry. URL doku może zamiast tego pokazywać cały bieżący czat.","Featured Chat Only":"Tylko wyróżniony czat","Featured Chat Overlay":"Nakładka wyróżnionych wiadomości","Featured Chat Overlay:":"Nakładka wyróżnionego czatu:","Featured Chat is not the full feed.":"Featured Chat nie jest pełnym strumieniem.","Features":"Funkcje","For templates, custom CSS, fonts, and more URL controls, see the":"Szablony, własny CSS, czcionki i więcej opcji URL znajdziesz w","Force transparent background":"Wymuś przezroczyste tło","Frameless transparency, pinning, click-through, monitor selection, and command-line control.":"Przezroczystość bez ramek, przypinanie, przepuszczanie kliknięć, wybór monitora i sterowanie wierszem poleceń.","Game Capture":"Przechwytywanie gry","Guides":"Poradniki","Hide platform source labels or icons in the Dock.":"Ukryj etykiety lub ikony źródeł platform w doku.","Hide the Dock toolbar after setup.":"Ukryj pasek narzędzi doku po konfiguracji.","Hire":"Zleć pracę","Home":"Strona główna","If you cannot isolate the game from the monitor in your capture software, this overlay cannot be guaranteed private.":"Jeśli w programie przechwytującym nie możesz oddzielić gry od monitora, nie można zagwarantować prywatności tej nakładki.","Important Limitations":"Ważne ograniczenia","In the Social Stream settings panel, find":"W panelu ustawień Social Stream znajdź","Initial position in the virtual desktop. Negative coordinates may be valid for monitors placed left or above the primary monitor.":"Początkowa pozycja na wirtualnym pulpicie. Ujemne współrzędne mogą być prawidłowe dla monitorów umieszczonych po lewej lub nad głównym monitorem.","Initial window size in pixels.":"Początkowy rozmiar okna w pikselach.","Inject a local CSS file for advanced styling.":"Wstrzyknij lokalny plik CSS do zaawansowanej stylizacji.","Inspiration":"Inspiracje","Install and open the":"Zainstaluj i otwórz","It only shows a message after you select one in the Dock.":"Pokazuje wiadomość dopiero po jej wybraniu w doku.","Keep It On Your Monitor, Not On The Stream":"Zachowaj ją na monitorze, poza transmisją","Keep Social Stream chat visible on your monitor without automatically putting it on the stream.":"Pozostaw czat Social Stream widoczny na monitorze bez automatycznego umieszczania go w transmisji.","Leave OBS's":"Pozostaw w OBS opcję","Leave it off unless a page specifically needs screen capture or another elevated Electron feature.":"Pozostaw wyłączone, chyba że strona konkretnie wymaga przechwytywania ekranu lub innej uprzywilejowanej funkcji Electron.","Limit the number of retained messages on supported pages.":"Ogranicz liczbę zachowywanych wiadomości na obsługiwanych stronach.","Main navigation":"Nawigacja główna","Make UnClickable":"Make UnClickable","Make a short local recording and watch it back before going live. Capture methods and games differ.":"Przed transmisją zrób krótkie lokalne nagranie i obejrzyj je. Metody przechwytywania i gry się różnią.","Make sure it includes":"Upewnij się, że zawiera","Method 1: Social Stream Standalone App":"Metoda 1: samodzielna aplikacja Social Stream","Method 2: Electron Capture":"Metoda 2: Electron Capture","Move and resize it, then enable":"Przesuń i zmień rozmiar, a następnie włącz","Move and size the window before locking it. Right-click the overlay for size presets and select":"Przesuń i dostosuj rozmiar okna przed zablokowaniem. Kliknij nakładkę prawym przyciskiem, aby zobaczyć gotowe rozmiary, i wybierz","No reliable system-wide transparency or mouse click-through.":"Brak niezawodnej przezroczystości systemowej lub przepuszczania kliknięć myszy.","Normal browser or OBS only":"Tylko zwykła przeglądarka lub OBS","OBS Game Capture is Windows-only. If your setup must capture the entire display, the on-screen overlay will also be captured. Use a separate monitor or a window/application capture method that excludes the overlay, then verify with a recording.":"Przechwytywanie gry OBS działa tylko w Windows. Jeśli konfiguracja wymaga przechwytywania całego ekranu, nakładka ekranowa również zostanie przechwycona. Użyj osobnego monitora lub metody przechwytywania okna/aplikacji wykluczającej nakładkę, a następnie sprawdź nagraniem.","OBS captures the game/window, not the entire display.":"OBS przechwytuje grę/okno, a nie cały ekran.","On Windows, prefer an OBS":"W Windows preferuj źródło OBS","On this page":"Na tej stronie","On-Screen Chat Overlay While Gaming - Social Stream Ninja":"Nakładka czatu na ekranie podczas grania - Social Stream Ninja","On-Screen Chat While Gaming":"Czat na ekranie podczas grania","Open its options and enable":"Otwórz jego opcje i włącz","Open navigation menu":"Otwórz menu nawigacji","Open the URL in Electron Capture.":"Otwórz URL w Electron Capture.","Option":"Opcja","Overlay Customization guide":"przewodniku dostosowywania nakładek","Overlay Gallery":"Galeria nakładek","Positioning tip:":"Wskazówka pozycjonowania:","Purpose":"Cel","Quick Checklist":"Krótka lista kontrolna","Reload the focused overlay window.":"Przeładuj aktywne okno nakładki.","Remove the page background and request a transparent desktop window.":"Usuń tło strony i zażądaj przezroczystego okna pulpitu.","Right-click an SSApp overlay window to resize, pin, or make it click-through. Set click-through last so you do not lock yourself out while positioning it.":"Kliknij prawym przyciskiem okno nakładki SSApp, aby zmienić rozmiar, przypiąć lub włączyć przepuszczanie kliknięć. Ustaw przepuszczanie kliknięć na końcu, aby nie utracić interakcji podczas ustawiania pozycji.","Right-click its window and enable":"Kliknij jego okno prawym przyciskiem i włącz","Run a separate Electron Capture process when you need more than one independent overlay.":"Uruchom osobny proces Electron Capture, gdy potrzebujesz więcej niż jednej niezależnej nakładki.","SSApp Hotkeys":"Skróty SSApp","SSApp overlay right-click menu showing Resize window, Always on top, and Make UnClickable until in-focus with the Ctrl Shift Alt X hotkey":"Menu kontekstowe nakładki SSApp z Resize window, Always on top i Make UnClickable until in-focus oraz skrótem Ctrl Shift Alt X","Scale supported overlays down without changing window size.":"Pomniejsz obsługiwane nakładki bez zmiany rozmiaru okna.","See Electron Capture's":"Zobacz należącą do Electron Capture","See Live Chat While Gaming! Transparent Overlay Guide":"Zobacz Live Chat While Gaming! Transparent Overlay Guide","Show a private Social Stream Ninja chat overlay over a game using the standalone desktop app or Electron Capture, with transparency, click-through hotkeys, command-line examples, and OBS capture notes.":"Pokaż prywatną nakładkę czatu Social Stream Ninja nad grą za pomocą samodzielnej aplikacji komputerowej lub Electron Capture, z przezroczystością, skrótami przepuszczania kliknięć, przykładami wiersza poleceń i uwagami o przechwytywaniu OBS.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja featured chat message positioned over a simulated gameplay scene":"Wyróżniona wiadomość Social Stream Ninja umieszczona nad symulowaną sceną gry","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja standalone app":"Samodzielnej aplikacji Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licencja GPLv3.0.","Social Stream can sit above a game as a transparent, always-on-top window. This is a separate desktop window, not a game HUD injection.":"Social Stream może znajdować się nad grą jako przezroczyste okno zawsze na wierzchu. To osobne okno pulpitu, a nie wstrzyknięcie HUD do gry.","Social Stream standalone app":"Samodzielna aplikacja Social Stream","Some games and anti-cheat systems restrict overlays.":"Niektóre gry i systemy antycheat ograniczają nakładki.","Start always-on-top.":"Uruchom zawsze na wierzchu.","Start in click-through mode. Remember the recovery hotkey before using it.":"Uruchom w trybie przepuszczania kliknięć. Zapamiętaj skrót przywracania przed użyciem.","Streaming Chat":"Czat transmisji","Streaming Chat / Dock:":"Czat transmisji / dok:","Support":"Pomoc","Supported Sites":"Obsługiwane witryny","Switch theme":"Zmień motyw","Template or custom overlay:":"Szablon lub własna nakładka:","The URL contains":"URL zawiera","The chat should appear on the broadcast rather than privately on your monitor.":"Czat ma pojawiać się w transmisji zamiast prywatnie na monitorze.","The complete Social Stream overlay URL. Quote it because it contains":"Pełny URL nakładki Social Stream. Ujmij go w cudzysłowy, ponieważ zawiera","The desktop app must stay open.":"Aplikacja komputerowa musi pozostać otwarta.","The desktop wrapper is pinned above the game.":"Okno aplikacji jest przypięte nad grą.","The game uses borderless or windowed fullscreen if exclusive fullscreen hides the overlay.":"Gra używa trybu bez ramek lub pełnoekranowego w oknie, jeśli wyłączny pełny ekran ukrywa nakładkę.","The overlay URL uses the correct session ID.":"URL nakładki używa prawidłowego identyfikatora sesji.","The overlay stays private only when your streaming software captures the game or game window rather than the whole monitor.":"Nakładka pozostaje prywatna tylko wtedy, gdy program transmisyjny przechwytuje grę lub okno gry zamiast całego monitora.","The portable Windows build is the simplest version to automate. Replace":"Przenośna wersja Windows jest najprostsza do automatyzacji. Zastąp","The session must match.":"Sesja musi się zgadzać.","This older video shows the transparent, always-on-top, click-through chat setup. The app interface may look different in current versions.":"Ten starszy film pokazuje konfigurację przezroczystego czatu zawsze na wierzchu z przepuszczaniem kliknięć. Interfejs aplikacji w obecnych wersjach może wyglądać inaczej.","Toggle mouse click-through so you can interact with the overlay again.":"Przełącz przepuszczanie kliknięć myszy, aby ponownie móc korzystać z nakładki.","Transparency varies by operating system and graphics setup.":"Przezroczystość zależy od systemu operacyjnego i konfiguracji grafiki.","Transparent popup windows, always-on-top, resizing, and click-through.":"Przezroczyste osobne okna, zawsze na wierzchu, zmiana rozmiaru i przepuszczanie kliknięć.","URL Option":"Opcja URL","Update the desktop app and graphics driver if a transparent area appears white or black.":"Zaktualizuj aplikację komputerową i sterownik grafiki, jeśli przezroczysty obszar jest biały lub czarny.","Use":"Użyj","Use a denser Dock layout.":"Użyj gęstszego układu doku.","Use the":"Użyj","Use the recovery hotkey before trying to right-click the window again.":"Użyj skrótu przywracania przed ponowną próbą kliknięcia okna prawym przyciskiem.","Use the same session ID as your active Social Stream setup. In the Social Stream settings panel, open the options for the view you chose and enable":"Użyj tego samego identyfikatora sesji co aktywna konfiguracja Social Stream. W panelu ustawień Social Stream otwórz opcje wybranego widoku i włącz","Useful Overlay URL Options":"Przydatne opcje URL nakładki","Video Walkthrough":"Przewodnik wideo","What It Adds":"Co dodaje","When placement is finished, right-click it again and select":"Po ustawieniu pozycji kliknij ponownie prawym przyciskiem i wybierz","Windows / Linux":"Windows / Linux","Yes, With A Desktop Overlay Window":"Tak, za pomocą okna nakładki pulpitu","You already capture chat in SSApp and want the shortest setup.":"Już przechwytujesz czat w SSApp i chcesz najkrótszej konfiguracji.","You need a desktop wrapper.":"Potrzebujesz aplikacji otwierającej stronę w oknie pulpitu.","You want exact size and position, reusable launch commands, or a dedicated overlay wrapper.":"Chcesz dokładnego rozmiaru i pozycji, poleceń uruchamiania wielokrotnego użytku lub dedykowanej aplikacji nakładki.","and":"i","and adjust the size and position for your display.":"i dostosuj rozmiar oraz pozycję do ekranu.","characters.":"znaki.","complete command-line reference":"pełną dokumentację wiersza poleceń","for additional parameters.":"aby poznać dodatkowe parametry.","for this workflow. It captures the entire monitor, including the chat overlay.":"w tym przepływie. Przechwytuje cały monitor, w tym nakładkę czatu.","from inside the standalone app":"z wnętrza samodzielnej aplikacji","if viewers should not see it.":"jeśli widzowie nie mają jej widzieć.","is a separate free, open-source app that can wrap a Social Stream URL in a transparent desktop window. It is often the easier option when you only want a dedicated overlay window.":"to osobna bezpłatna aplikacja z otwartym kodem, która może otworzyć URL Social Stream w przezroczystym oknie pulpitu. Często jest łatwiejsza, gdy potrzebujesz tylko dedykowanego okna nakładki.","is not needed for a normal Social Stream overlay.":"nie jest potrzebne dla zwykłej nakładki Social Stream.","macOS":"macOS","macOS And Linux":"macOS i Linux","macOS and Linux limitation:":"Ograniczenie macOS i Linux:","mode hides its scrollbar.":"ukrywa pasek przewijania.","on macOS) to toggle click-through later.":"w macOS), aby później przełączać przepuszczanie kliknięć.","option off unless you have tested that it does not include this window.":"wyłączoną, chyba że sprawdzisz, że nie obejmuje tego okna.","options for exact placement.":"opcji do dokładnego pozycjonowania.","or":"lub","shows one message selected from the Dock. Use this when you only want highlighted messages.":"pokazuje jedną wiadomość wybraną z doku. Użyj, gdy chcesz tylko wyróżnionych wiadomości.","shows the ongoing combined chat. This is usually the best choice while gaming.":"pokazuje bieżący połączony czat. Zwykle to najlepszy wybór podczas grania.","source targeting the game.":"skierowane na grę.","standalone desktop app":"samodzielną aplikację komputerową","transparent areas can be hard to grab. Keep the Dock menu visible while positioning it, use your operating system's window movement shortcuts, or use Electron Capture's":"przezroczyste obszary mogą być trudne do złapania. Pozostaw menu doku widoczne podczas ustawiania pozycji, użyj skrótów systemu operacyjnego do przesuwania okien lub należących do Electron Capture","works too, as long as the page supports a transparent background.":"również działa, o ile strona obsługuje przezroczyste tło."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/on-screen-chat-overlay.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Nawigacja główna"><a href="../index.html">Strona główna</a><a href="features.html">Funkcje</a><a href="inspiration.html" class="site-priority-inspiration">Inspiracje</a><a href="download.html">Pobierz</a><a href="guides.html">Poradniki</a><a href="commands.html">Polecenia i API</a><a href="supported-sites.html">Obsługiwane witryny</a><a href="overlay-gallery.html" class="site-priority-gallery">Galeria nakładek</a><a href="services.html" class="site-priority-hire">Zleć pracę</a><a href="support.html">Pomoc</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Polski"><span aria-hidden="true">🌐 </span><span lang="pl">Polski</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/on-screen-chat-overlay.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/on-screen-chat-overlay.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/on-screen-chat-overlay.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/on-screen-chat-overlay.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/on-screen-chat-overlay.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/on-screen-chat-overlay.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/on-screen-chat-overlay.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/on-screen-chat-overlay.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/on-screen-chat-overlay.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/on-screen-chat-overlay.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="on-screen-chat-overlay.html" lang="pl" hreflang="pl" aria-current="true">Polski</a><a class="site-language-link" href="../../ko/docs/on-screen-chat-overlay.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/on-screen-chat-overlay.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/on-screen-chat-overlay.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/on-screen-chat-overlay.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/on-screen-chat-overlay.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/on-screen-chat-overlay.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Zmień motyw"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otwórz menu nawigacji" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Czat na ekranie podczas grania</h1>
+            <p>Pozostaw czat Social Stream widoczny na monitorze bez automatycznego umieszczania go w transmisji.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Na tej stronie"><a href="#read-section-1">Tak, za pomocą okna nakładki pulpitu</a><a href="#read-section-2">Przewodnik wideo</a><a href="#read-section-3">Wybierz widok czatu</a><a href="#read-section-4">Metoda 1: samodzielna aplikacja Social Stream</a><a href="#read-section-5">Metoda 2: Electron Capture</a><a href="#read-section-6">Uruchamianie Electron Capture z wiersza poleceń</a><a href="#read-section-10">Krótka lista kontrolna</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Tak, za pomocą okna nakładki pulpitu</h2>
+                <p>Social Stream może znajdować się nad grą jako przezroczyste okno zawsze na wierzchu. To osobne okno pulpitu, a nie wstrzyknięcie HUD do gry.</p>
+                <div class="guide-note">
+                    <p><strong>Potrzebujesz aplikacji otwierającej stronę w oknie pulpitu.</strong> Użyj <a href="download.html">Samodzielnej aplikacji Social Stream Ninja</a> lub <a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a>. Rozszerzenie przeglądarkowe i źródło przeglądarkowe OBS nie mogą samodzielnie utworzyć systemowego okna przepuszczającego kliknięcia.</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Opcja</th><th>Najlepsze, gdy</th><th>Co dodaje</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Opcja">Samodzielna aplikacja Social Stream</td>
+                            <td data-label="Najlepsze, gdy">Już przechwytujesz czat w SSApp i chcesz najkrótszej konfiguracji.</td>
+                            <td data-label="Co dodaje">Przezroczyste osobne okna, zawsze na wierzchu, zmiana rozmiaru i przepuszczanie kliknięć.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Opcja">Electron Capture</td>
+                            <td data-label="Najlepsze, gdy">Chcesz dokładnego rozmiaru i pozycji, poleceń uruchamiania wielokrotnego użytku lub dedykowanej aplikacji nakładki.</td>
+                            <td data-label="Co dodaje">Przezroczystość bez ramek, przypinanie, przepuszczanie kliknięć, wybór monitora i sterowanie wierszem poleceń.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Opcja">Tylko zwykła przeglądarka lub OBS</td>
+                            <td data-label="Najlepsze, gdy">Czat ma pojawiać się w transmisji zamiast prywatnie na monitorze.</td>
+                            <td data-label="Co dodaje">Brak niezawodnej przezroczystości systemowej lub przepuszczania kliknięć myszy.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">Przewodnik wideo</h2>
+                <p>Ten starszy film pokazuje konfigurację przezroczystego czatu zawsze na wierzchu z przepuszczaniem kliknięć. Interfejs aplikacji w obecnych wersjach może wyglądać inaczej.</p>
+                <div class="video-container">
+                    <iframe
+                        src="https://www.youtube.com/embed/bMVVof_L0sI"
+                        title="Zobacz Live Chat While Gaming! Transparent Overlay Guide"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">Wybierz widok czatu</h2>
+                <ul class="guide-list">
+                    <li><strong>Czat transmisji / dok:</strong> pokazuje bieżący połączony czat. Zwykle to najlepszy wybór podczas grania.</li>
+                    <li><strong>Nakładka wyróżnionego czatu:</strong> pokazuje jedną wiadomość wybraną z doku. Użyj, gdy chcesz tylko wyróżnionych wiadomości.</li>
+                    <li><strong>Szablon lub własna nakładka:</strong> również działa, o ile strona obsługuje przezroczyste tło.</li>
+                </ul>
+                <p>Użyj tego samego identyfikatora sesji co aktywna konfiguracja Social Stream. W panelu ustawień Social Stream otwórz opcje wybranego widoku i włącz <strong>Wymuś przezroczyste tło</strong>. Wygenerowany URL powinien zawierać <code>transparent</code>.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/on-screen-overlay-preview.png" alt="Wyróżniona wiadomość Social Stream Ninja umieszczona nad symulowaną sceną gry" class="guide-image">
+                    <figcaption>Przykładowe położenie rzeczywistej nakładki Featured Chat SSApp nad symulowaną sceną gry. URL doku może zamiast tego pokazywać cały bieżący czat.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">Metoda 1: samodzielna aplikacja Social Stream</h2>
+                <ol class="guide-steps">
+                    <li>Zainstaluj i otwórz <a href="download.html">samodzielną aplikację komputerową</a>. Aktywuj źródła czatu jak zwykle.</li>
+                    <li>W panelu ustawień Social Stream znajdź <strong>Czat transmisji</strong> lub <strong>Nakładka wyróżnionych wiadomości</strong>.</li>
+                    <li>Otwórz jego opcje i włącz <strong>Wymuś przezroczyste tło</strong>.</li>
+                    <li>Kliknij wygenerowane łącze Dock lub Featured <strong>z wnętrza samodzielnej aplikacji</strong>. SSApp otwiera go jako własne okno nakładki.</li>
+                    <li>Przesuń i dostosuj rozmiar okna przed zablokowaniem. Kliknij nakładkę prawym przyciskiem, aby zobaczyć gotowe rozmiary, i wybierz <strong>Zawsze na wierzchu</strong>.</li>
+                    <li>Po ustawieniu pozycji kliknij ponownie prawym przyciskiem i wybierz <strong>Make UnClickable</strong>. Kliknięcia myszy będą przechodzić do gry.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/ssapp-on-screen-overlay-menu.png" alt="Menu kontekstowe nakładki SSApp z Resize window, Always on top i Make UnClickable until in-focus oraz skrótem Ctrl Shift Alt X" class="guide-image">
+                    <figcaption>Kliknij prawym przyciskiem okno nakładki SSApp, aby zmienić rozmiar, przypiąć lub włączyć przepuszczanie kliknięć. Ustaw przepuszczanie kliknięć na końcu, aby nie utracić interakcji podczas ustawiania pozycji.</figcaption>
+                </figure>
+                <h3>Skróty SSApp</h3>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Windows / Linux</th><th>macOS</th><th>Działanie</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+X</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+X</code></td>
+                            <td data-label="Działanie">Przełącz przepuszczanie kliknięć myszy, aby ponownie móc korzystać z nakładki.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+R</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+R</code></td>
+                            <td data-label="Działanie">Przeładuj aktywne okno nakładki.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">
+                    <p><strong>Wskazówka pozycjonowania:</strong> przezroczyste obszary mogą być trudne do złapania. Pozostaw menu doku widoczne podczas ustawiania pozycji, użyj skrótów systemu operacyjnego do przesuwania okien lub należących do Electron Capture <code>--x</code> i <code>--y</code> opcji do dokładnego pozycjonowania.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">Metoda 2: Electron Capture</h2>
+                <p><a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a> to osobna bezpłatna aplikacja z otwartym kodem, która może otworzyć URL Social Stream w przezroczystym oknie pulpitu. Często jest łatwiejsza, gdy potrzebujesz tylko dedykowanego okna nakładki.</p>
+                <ol class="guide-steps">
+                    <li>Skopiuj wygenerowany URL doku Social Stream, Featured, szablonu lub własnej nakładki.</li>
+                    <li>Upewnij się, że zawiera <code>&amp;transparent</code>. Jeśli URL nie ma jeszcze znaku zapytania, użyj <code>?transparent</code>.</li>
+                    <li>Otwórz URL w Electron Capture.</li>
+                    <li>Kliknij jego okno prawym przyciskiem i włącz <strong>Zawsze na wierzchu</strong>.</li>
+                    <li>Przesuń i zmień rozmiar, a następnie włącz <strong>Make UnClickable</strong>.</li>
+                    <li>Użyj <code>Ctrl+Shift+Alt+X</code> (lub <code>Command+Shift+Option+X</code> w macOS), aby później przełączać przepuszczanie kliknięć.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/electron-capture-overlay-features.png" alt="Karty funkcji Electron Capture: Pin on Top, Frameless Window, Transparency Support, Click-Through Mode, Auto Screen Capture oraz Game and App Capture" class="guide-image">
+                    <figcaption>Electron Capture zapewnia przypinanie, przezroczystość bez ramek i przepuszczanie kliknięć potrzebne do prywatnej nakładki ekranowej.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">Uruchamianie Electron Capture z wiersza poleceń</h2>
+                <p>Przenośna wersja Windows jest najprostsza do automatyzacji. Zastąp <code>YOUR_SESSION_ID</code> i dostosuj rozmiar oraz pozycję do ekranu.</p>
+
+                <h3>Dok ciągłego czatu</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;transparent&amp;compact&amp;hidemenu" --width=520 --height=760 --x=1380 --y=80 --pin --unclickable --title="SSN Chat"</code></pre>
+
+                <h3>Tylko wyróżniony czat</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID&amp;transparent" --width=700 --height=500 --x=1160 --y=80 --pin --unclickable --title="SSN Featured"</code></pre>
+
+                <h3>macOS i Linux</h3>
+                <pre><code># macOS
+"/Applications/elecap.app/Contents/MacOS/elecap" --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable
+
+# Linux AppImage; replace the filename with the version you downloaded
+./elecap-VERSION-x86_64.AppImage --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable</code></pre>
+
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Opcja</th><th>Cel</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Opcja"><code>--url</code></td><td data-label="Cel">Pełny URL nakładki Social Stream. Ujmij go w cudzysłowy, ponieważ zawiera <code>&amp;</code> znaki.</td></tr>
+                        <tr><td data-label="Opcja"><code>--width</code>, <code>--height</code></td><td data-label="Cel">Początkowy rozmiar okna w pikselach.</td></tr>
+                        <tr><td data-label="Opcja"><code>--x</code>, <code>--y</code></td><td data-label="Cel">Początkowa pozycja na wirtualnym pulpicie. Ujemne współrzędne mogą być prawidłowe dla monitorów umieszczonych po lewej lub nad głównym monitorem.</td></tr>
+                        <tr><td data-label="Opcja"><code>--monitor=0</code></td><td data-label="Cel">Wybierz monitor według indeksu od zera, gdy indeks monitora jest łatwiejszy niż współrzędne pulpitu.</td></tr>
+                        <tr><td data-label="Opcja"><code>--pin</code></td><td data-label="Cel">Uruchom zawsze na wierzchu.</td></tr>
+                        <tr><td data-label="Opcja"><code>--unclickable</code></td><td data-label="Cel">Uruchom w trybie przepuszczania kliknięć. Zapamiętaj skrót przywracania przed użyciem.</td></tr>
+                        <tr><td data-label="Opcja"><code>--css="C:\path\chat.css"</code></td><td data-label="Cel">Wstrzyknij lokalny plik CSS do zaawansowanej stylizacji.</td></tr>
+                        <tr><td data-label="Opcja"><code>--multiinstance</code></td><td data-label="Cel">Uruchom osobny proces Electron Capture, gdy potrzebujesz więcej niż jednej niezależnej nakładki.</td></tr>
+                    </tbody>
+                </table>
+                <p>Zobacz należącą do Electron Capture <a href="https://electroncapture.app/command-line.html" target="_blank" rel="noopener">pełną dokumentację wiersza poleceń</a> aby poznać dodatkowe parametry.</p>
+                <div class="guide-note">
+                    <p><strong><code>--node</code> nie jest potrzebne dla zwykłej nakładki Social Stream.</strong> Pozostaw wyłączone, chyba że strona konkretnie wymaga przechwytywania ekranu lub innej uprzywilejowanej funkcji Electron.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-7">Przydatne opcje URL nakładki</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Opcja URL</th><th>Użyj</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Opcja URL"><code>transparent</code></td><td data-label="Użyj">Usuń tło strony i zażądaj przezroczystego okna pulpitu.</td></tr>
+                        <tr><td data-label="Opcja URL"><code>compact</code></td><td data-label="Użyj">Użyj gęstszego układu doku.</td></tr>
+                        <tr><td data-label="Opcja URL"><code>hidemenu</code></td><td data-label="Użyj">Ukryj pasek narzędzi doku po konfiguracji.</td></tr>
+                        <tr><td data-label="Opcja URL"><code>scale=0.85</code></td><td data-label="Użyj">Pomniejsz obsługiwane nakładki bez zmiany rozmiaru okna.</td></tr>
+                        <tr><td data-label="Opcja URL"><code>limit=15</code></td><td data-label="Użyj">Ogranicz liczbę zachowywanych wiadomości na obsługiwanych stronach.</td></tr>
+                        <tr><td data-label="Opcja URL"><code>hidesource</code></td><td data-label="Użyj">Ukryj etykiety lub ikony źródeł platform w doku.</td></tr>
+                        <tr><td data-label="Opcja URL"><code>chroma=0000</code></td><td data-label="Użyj">Alternatywny tryb przezroczystego tła; przydatny, gdy zwykły tryb doku <code>transparent</code> ukrywa pasek przewijania.</td></tr>
+                    </tbody>
+                </table>
+                <p>Szablony, własny CSS, czcionki i więcej opcji URL znajdziesz w <a href="overlay-customization-guide.html">przewodniku dostosowywania nakładek</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-8">Zachowaj ją na monitorze, poza transmisją</h2>
+                <p>Nakładka pozostaje prywatna tylko wtedy, gdy program transmisyjny przechwytuje grę lub okno gry zamiast całego monitora.</p>
+                <ol class="guide-steps">
+                    <li><strong>Nie dodawaj tego URL nakładki jako źródła przeglądarkowego OBS</strong> jeśli widzowie nie mają jej widzieć.</li>
+                    <li>W Windows preferuj źródło OBS <a href="https://obsproject.com/kb/game-capture-source" target="_blank" rel="noopener">Przechwytywanie gry</a> skierowane na grę.</li>
+                    <li>Pozostaw w OBS opcję <strong>Przechwytuj nakładki innych firm (np. Steam)</strong> wyłączoną, chyba że sprawdzisz, że nie obejmuje tego okna.</li>
+                    <li>Unikaj <a href="https://obsproject.com/kb/display-capture-sources" target="_blank" rel="noopener">Przechwytywanie ekranu</a> w tym przepływie. Przechwytuje cały monitor, w tym nakładkę czatu.</li>
+                    <li>Przed transmisją zrób krótkie lokalne nagranie i obejrzyj je. Metody przechwytywania i gry się różnią.</li>
+                </ol>
+                <div class="warning-note">
+                    <p><strong>Ograniczenie macOS i Linux:</strong> Przechwytywanie gry OBS działa tylko w Windows. Jeśli konfiguracja wymaga przechwytywania całego ekranu, nakładka ekranowa również zostanie przechwycona. Użyj osobnego monitora lub metody przechwytywania okna/aplikacji wykluczającej nakładkę, a następnie sprawdź nagraniem.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-9">Ważne ograniczenia</h2>
+                <ul class="guide-list">
+                    <li><strong>Tryb bez ramek lub pełnoekranowy w oknie to niezawodny tryb gry.</strong> Gra w wyłącznym trybie pełnoekranowym może zakrywać wszystkie zwykłe okna pulpitu, w tym nakładkę zawsze na wierzchu.</li>
+                    <li><strong>Aplikacja komputerowa musi pozostać otwarta.</strong> Zamknięcie SSApp lub Electron Capture zamyka lokalną nakładkę.</li>
+                    <li><strong>Sesja musi się zgadzać.</strong> URL doku lub Featured z błędnym identyfikatorem sesji pozostanie pusty.</li>
+                    <li><strong>Featured Chat nie jest pełnym strumieniem.</strong> Pokazuje wiadomość dopiero po jej wybraniu w doku.</li>
+                    <li><strong>Przepuszczanie kliknięć wyłącza interakcję myszą.</strong> Użyj skrótu przywracania przed ponowną próbą kliknięcia okna prawym przyciskiem.</li>
+                    <li><strong>Niektóre gry i systemy antycheat ograniczają nakładki.</strong> Nie próbuj obchodzić zabezpieczeń gry.</li>
+                    <li><strong>Przezroczystość zależy od systemu operacyjnego i konfiguracji grafiki.</strong> Zaktualizuj aplikację komputerową i sterownik grafiki, jeśli przezroczysty obszar jest biały lub czarny.</li>
+                    <li><strong>Przechwytywanie ekranu obejmuje to, co widzisz.</strong> Jeśli w programie przechwytującym nie możesz oddzielić gry od monitora, nie można zagwarantować prywatności tej nakładki.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-10">Krótka lista kontrolna</h2>
+                <ol class="guide-steps">
+                    <li>Czat dociera do Social Stream.</li>
+                    <li>URL nakładki używa prawidłowego identyfikatora sesji.</li>
+                    <li>URL zawiera <code>transparent</code>.</li>
+                    <li>Okno aplikacji jest przypięte nad grą.</li>
+                    <li>Przepuszczanie kliknięć jest włączane dopiero po ustawieniu pozycji.</li>
+                    <li>Gra używa trybu bez ramek lub pełnoekranowego w oknie, jeśli wyłączny pełny ekran ukrywa nakładkę.</li>
+                    <li>OBS przechwytuje grę/okno, a nie cały ekran.</li>
+                    <li>Nagranie testowe potwierdza, że widzowie nie widzą prywatnej nakładki.</li>
+                </ol>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licencja GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

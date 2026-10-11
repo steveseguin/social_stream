@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ko/docs/on-screen-chat-overlay.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/ko/docs/on-screen-chat-overlay.html">
+    <meta property="og:title" content="게임 중 화면 채팅 오버레이 - Social Stream Ninja">
+    <meta property="og:description" content="독립 실행형 데스크톱 앱이나 Electron Capture로 게임 위에 비공개 Social Stream Ninja 채팅 오버레이를 표시하세요. 투명도, 클릭 통과 단축키, 명령줄 예제, OBS 캡처 참고 사항을 안내합니다.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ko/docs/on-screen-chat-overlay.html">
+    <meta name="twitter:title" content="게임 중 화면 채팅 오버레이 - Social Stream Ninja">
+    <meta name="twitter:description" content="독립 실행형 데스크톱 앱이나 Electron Capture로 게임 위에 비공개 Social Stream Ninja 채팅 오버레이를 표시하세요. 투명도, 클릭 통과 단축키, 명령줄 예제, OBS 캡처 참고 사항을 안내합니다.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게임 중 화면 채팅 오버레이 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="독립 실행형 데스크톱 앱이나 Electron Capture로 게임 위에 비공개 Social Stream Ninja 채팅 오버레이를 표시하세요. 투명도, 클릭 통과 단축키, 명령줄 예제, OBS 캡처 참고 사항을 안내합니다.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/on-screen-chat-overlay.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"(or":"(또는",". Activate your chat sources normally.":"을 여세요. 평소처럼 채팅 소스를 활성화하세요.",". If the URL has no question mark yet, use":"가 포함되어야 합니다. URL에 아직 물음표가 없다면 다음을 사용하세요:",". Mouse clicks will pass through to the game.":"을 선택하세요. 마우스 클릭이 게임으로 통과합니다.",". SSApp opens it as its own overlay window.":"클릭하세요. SSApp이 별도 오버레이 창으로 엽니다.",". The browser extension and an OBS Browser Source cannot create a system-wide click-through window by themselves.":"이 필요합니다. 브라우저 확장 프로그램이나 OBS 브라우저 소스만으로는 시스템 전체에서 클릭이 통과하는 창을 만들 수 없습니다.",". The generated URL should contain":"을 활성화하세요. 생성된 URL에는 다음이 포함되어야 합니다:","A Dock or Featured URL with the wrong session ID will remain empty.":"세션 ID가 잘못된 도크 또는 강조 URL은 비어 있습니다.","A test recording confirms viewers cannot see the private overlay.":"테스트 녹화로 시청자에게 비공개 오버레이가 보이지 않는지 확인했습니다.","Action":"동작","Alternative transparent background mode; useful when the Dock's normal":"대체 투명 배경 모드입니다. 도크의 일반","Always on top":"항상 위에 (Always on top)","An exclusive fullscreen game may cover all normal desktop windows, including an always-on-top overlay.":"독점 전체 화면 게임은 항상 위에 표시하는 오버레이를 포함한 모든 일반 데스크톱 창을 가릴 수 있습니다.","Avoid":"피해야 할 방식:","Best When":"적합한 경우","Borderless or windowed fullscreen is the reliable game mode.":"테두리 없는 전체 화면이나 창 모드 전체 화면이 안정적입니다.","Capture third-party overlays (such as Steam)":"타사 오버레이 캡처(예: Steam) (Capture third-party overlays (such as Steam))","Chat is arriving in Social Stream.":"Social Stream에 채팅이 도착하고 있습니다.","Choose The Chat View":"채팅 화면 선택","Choose a zero-based monitor when a monitor index is easier than desktop coordinates.":"데스크톱 좌표보다 모니터 번호가 편하다면 0부터 시작하는 모니터 인덱스를 선택하세요.","Click the generated Dock or Featured link":"생성된 도크 또는 강조 링크를","Click-through disables mouse interaction.":"클릭 통과를 켜면 마우스로 조작할 수 없습니다.","Click-through is enabled only after positioning.":"위치 조정을 마친 뒤에만 클릭 통과를 활성화했습니다.","Closing SSApp or Electron Capture closes the local overlay.":"SSApp이나 Electron Capture를 닫으면 로컬 오버레이도 닫힙니다.","Commands & API":"명령 및 API","Continuous Chat Dock":"연속 채팅 도크","Copy your generated Social Stream Dock, Featured, template, or custom overlay URL.":"생성된 Social Stream 도크, 강조, 템플릿 또는 사용자 지정 오버레이 URL을 복사하세요.","Display Capture":"디스플레이 캡처","Display capture includes what you see.":"디스플레이 캡처에는 보이는 모든 것이 포함됩니다.","Do not add this overlay URL as an OBS Browser Source":"이 오버레이 URL을 OBS 브라우저 소스로 추가하지 마세요","Do not attempt to bypass a game's security controls.":"게임의 보안 제어를 우회하려고 하지 마세요.","Download":"다운로드","Electron Capture":"Electron Capture","Electron Capture Command-Line Launch":"Electron Capture 명령줄 실행","Electron Capture feature cards for Pin on Top, Frameless Window, Transparency Support, Click-Through Mode, Auto Screen Capture, and Game and App Capture":"맨 위에 고정, 프레임 없는 창, 투명도 지원, 클릭 통과 모드, 자동 화면 캡처, 게임 및 앱 캡처를 보여 주는 Electron Capture 기능 카드","Electron Capture provides the pin, frameless transparency, and click-through controls needed for a private on-screen overlay.":"Electron Capture는 비공개 화면 오버레이에 필요한 고정, 프레임 없는 투명 창, 클릭 통과 제어를 제공합니다.","Example placement using the real SSApp Featured Chat overlay over a simulated gameplay scene. A Dock URL can show the full running chat instead.":"가상 게임 장면 위에 실제 SSApp 강조 채팅 오버레이를 배치한 예입니다. 도크 URL을 사용하면 대신 전체 실시간 채팅을 표시할 수 있습니다.","Featured Chat Only":"강조 채팅만","Featured Chat Overlay":"선택한 채팅 오버레이","Featured Chat Overlay:":"강조 채팅 오버레이:","Featured Chat is not the full feed.":"강조 채팅은 전체 피드가 아닙니다.","Features":"기능","For templates, custom CSS, fonts, and more URL controls, see the":"템플릿, 사용자 지정 CSS, 글꼴 및 더 많은 URL 제어는 다음을 참고하세요:","Force transparent background":"투명 배경 강제 (Force transparent background)","Frameless transparency, pinning, click-through, monitor selection, and command-line control.":"프레임 없는 투명 창, 고정, 클릭 통과, 모니터 선택, 명령줄 제어.","Game Capture":"게임 캡처","Guides":"가이드","Hide platform source labels or icons in the Dock.":"도크에서 플랫폼 소스 레이블이나 아이콘을 숨깁니다.","Hide the Dock toolbar after setup.":"설정 후 도크 도구 모음을 숨깁니다.","Hire":"작업 의뢰","Home":"홈","If you cannot isolate the game from the monitor in your capture software, this overlay cannot be guaranteed private.":"캡처 소프트웨어에서 모니터 전체와 게임을 분리할 수 없다면 이 오버레이가 비공개로 유지된다고 보장할 수 없습니다.","Important Limitations":"주요 제한 사항","In the Social Stream settings panel, find":"Social Stream 설정 패널에서 다음을 찾으세요:","Initial position in the virtual desktop. Negative coordinates may be valid for monitors placed left or above the primary monitor.":"가상 데스크톱에서의 초기 위치입니다. 기본 모니터의 왼쪽이나 위에 있는 모니터는 음수 좌표를 사용할 수 있습니다.","Initial window size in pixels.":"초기 창 크기(픽셀)입니다.","Inject a local CSS file for advanced styling.":"고급 스타일을 적용할 로컬 CSS 파일을 삽입합니다.","Inspiration":"아이디어","Install and open the":"다음을 설치하고 여세요:","It only shows a message after you select one in the Dock.":"도크에서 메시지를 선택한 뒤에만 표시합니다.","Keep It On Your Monitor, Not On The Stream":"방송에 내보내지 않고 내 모니터에만 표시","Keep Social Stream chat visible on your monitor without automatically putting it on the stream.":"Social Stream 채팅을 방송에 자동으로 내보내지 않고 내 모니터에 표시하세요.","Leave OBS's":"OBS의","Leave it off unless a page specifically needs screen capture or another elevated Electron feature.":"페이지에 화면 캡처나 다른 높은 권한의 Electron 기능이 특별히 필요하지 않다면 꺼 두세요.","Limit the number of retained messages on supported pages.":"지원되는 페이지에서 유지할 메시지 수를 제한합니다.","Main navigation":"기본 탐색 메뉴","Make UnClickable":"클릭 불가로 설정 (Make UnClickable)","Make a short local recording and watch it back before going live. Capture methods and games differ.":"방송 전에 짧게 로컬 녹화하고 다시 확인하세요. 캡처 방식과 게임마다 다릅니다.","Make sure it includes":"다음이 포함되어 있는지 확인하세요:","Method 1: Social Stream Standalone App":"방법 1: Social Stream 독립 실행형 앱","Method 2: Electron Capture":"방법 2: Electron Capture","Move and resize it, then enable":"위치와 크기를 조정한 뒤 다음을 활성화하세요:","Move and size the window before locking it. Right-click the overlay for size presets and select":"잠그기 전에 창의 위치와 크기를 조정하세요. 오버레이를 마우스 오른쪽 버튼으로 클릭해 크기 프리셋을 선택하고 다음을 선택하세요:","No reliable system-wide transparency or mouse click-through.":"시스템 전체에서 안정적인 투명도나 마우스 클릭 통과를 제공하지 않습니다.","Normal browser or OBS only":"일반 브라우저 또는 OBS만 사용","OBS Game Capture is Windows-only. If your setup must capture the entire display, the on-screen overlay will also be captured. Use a separate monitor or a window/application capture method that excludes the overlay, then verify with a recording.":"OBS 게임 캡처는 Windows 전용입니다. 전체 디스플레이를 캡처해야 하는 설정이라면 화면 오버레이도 함께 캡처됩니다. 별도 모니터를 사용하거나 오버레이를 제외하는 창/애플리케이션 캡처 방식을 사용한 뒤 녹화로 확인하세요.","OBS captures the game/window, not the entire display.":"OBS가 전체 디스플레이가 아닌 게임/창을 캡처합니다.","On Windows, prefer an OBS":"Windows에서는 다음 OBS 소스를 권장합니다:","On this page":"이 페이지에서","On-Screen Chat Overlay While Gaming - Social Stream Ninja":"게임 중 화면 채팅 오버레이 - Social Stream Ninja","On-Screen Chat While Gaming":"게임 중 화면에 채팅 표시","Open its options and enable":"옵션을 열고 다음을 활성화하세요:","Open navigation menu":"탐색 메뉴 열기","Open the URL in Electron Capture.":"Electron Capture에서 URL을 여세요.","Option":"옵션","Overlay Customization guide":"오버레이 사용자 지정 가이드","Overlay Gallery":"오버레이 갤러리","Positioning tip:":"위치 조정 팁:","Purpose":"목적","Quick Checklist":"빠른 확인 목록","Reload the focused overlay window.":"포커스된 오버레이 창을 다시 로드합니다.","Remove the page background and request a transparent desktop window.":"페이지 배경을 제거하고 투명한 데스크톱 창을 요청합니다.","Right-click an SSApp overlay window to resize, pin, or make it click-through. Set click-through last so you do not lock yourself out while positioning it.":"SSApp 오버레이 창을 마우스 오른쪽 버튼으로 클릭해 크기를 조절하거나 고정하거나 클릭 통과를 설정하세요. 위치를 조정하는 동안 조작할 수 없게 되지 않도록 클릭 통과는 마지막에 설정하세요.","Right-click its window and enable":"창을 마우스 오른쪽 버튼으로 클릭하고 다음을 활성화하세요:","Run a separate Electron Capture process when you need more than one independent overlay.":"독립적인 오버레이가 여러 개 필요하면 Electron Capture 프로세스를 별도로 실행하세요.","SSApp Hotkeys":"SSApp 단축키","SSApp overlay right-click menu showing Resize window, Always on top, and Make UnClickable until in-focus with the Ctrl Shift Alt X hotkey":"창 크기 조절, 항상 위에, 포커스될 때까지 클릭 불가 및 Ctrl Shift Alt X 단축키가 표시된 SSApp 오버레이 오른쪽 클릭 메뉴","Scale supported overlays down without changing window size.":"창 크기를 바꾸지 않고 지원되는 오버레이를 축소합니다.","See Electron Capture's":"Electron Capture의 다음 자료를 참고하세요:","See Live Chat While Gaming! Transparent Overlay Guide":"게임 중 라이브 채팅 보기! 투명 오버레이 가이드","Show a private Social Stream Ninja chat overlay over a game using the standalone desktop app or Electron Capture, with transparency, click-through hotkeys, command-line examples, and OBS capture notes.":"독립 실행형 데스크톱 앱이나 Electron Capture로 게임 위에 비공개 Social Stream Ninja 채팅 오버레이를 표시하세요. 투명도, 클릭 통과 단축키, 명령줄 예제, OBS 캡처 참고 사항을 안내합니다.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja featured chat message positioned over a simulated gameplay scene":"가상 게임 장면 위에 배치된 Social Stream Ninja 강조 채팅 메시지","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja standalone app":"Social Stream Ninja 독립 실행형 앱","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Social Stream can sit above a game as a transparent, always-on-top window. This is a separate desktop window, not a game HUD injection.":"Social Stream은 투명하고 항상 위에 표시되는 창으로 게임 위에 놓을 수 있습니다. 게임 HUD 삽입이 아닌 별도의 데스크톱 창입니다.","Social Stream standalone app":"Social Stream 독립 실행형 앱","Some games and anti-cheat systems restrict overlays.":"일부 게임과 안티치트 시스템은 오버레이를 제한합니다.","Start always-on-top.":"항상 위에 표시되는 상태로 시작합니다.","Start in click-through mode. Remember the recovery hotkey before using it.":"클릭 통과 모드로 시작합니다. 사용 전에 복구 단축키를 기억하세요.","Streaming Chat":"스트리밍 채팅","Streaming Chat / Dock:":"스트리밍 채팅 / 도크:","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Template or custom overlay:":"템플릿 또는 사용자 지정 오버레이:","The URL contains":"URL에 포함된 값:","The chat should appear on the broadcast rather than privately on your monitor.":"채팅이 내 모니터에 비공개로 보이는 대신 방송에 나와야 하는 경우입니다.","The complete Social Stream overlay URL. Quote it because it contains":"전체 Social Stream 오버레이 URL입니다. 다음 문자가 포함되므로 따옴표로 감싸세요:","The desktop app must stay open.":"데스크톱 앱을 계속 열어 두어야 합니다.","The desktop wrapper is pinned above the game.":"데스크톱 래퍼가 게임 위에 고정되어 있습니다.","The game uses borderless or windowed fullscreen if exclusive fullscreen hides the overlay.":"독점 전체 화면에서 오버레이가 숨겨진다면 게임을 테두리 없는 전체 화면이나 창 모드 전체 화면으로 사용합니다.","The overlay URL uses the correct session ID.":"오버레이 URL이 올바른 세션 ID를 사용합니다.","The overlay stays private only when your streaming software captures the game or game window rather than the whole monitor.":"방송 소프트웨어가 모니터 전체가 아닌 게임 또는 게임 창을 캡처할 때만 오버레이가 비공개로 유지됩니다.","The portable Windows build is the simplest version to automate. Replace":"자동화하기에는 Windows 포터블 빌드가 가장 간단합니다. 다음을 바꾸세요:","The session must match.":"세션이 일치해야 합니다.","This older video shows the transparent, always-on-top, click-through chat setup. The app interface may look different in current versions.":"이 이전 영상은 투명하고 항상 위에 표시되며 클릭이 통과하는 채팅 설정을 보여 줍니다. 최신 버전의 앱 인터페이스는 다를 수 있습니다.","Toggle mouse click-through so you can interact with the overlay again.":"오버레이를 다시 조작할 수 있도록 마우스 클릭 통과를 전환합니다.","Transparency varies by operating system and graphics setup.":"투명도는 운영체제와 그래픽 설정에 따라 다릅니다.","Transparent popup windows, always-on-top, resizing, and click-through.":"투명 팝업 창, 항상 위에 표시, 크기 조절, 클릭 통과.","URL Option":"URL 옵션","Update the desktop app and graphics driver if a transparent area appears white or black.":"투명 영역이 흰색이나 검은색으로 나타나면 데스크톱 앱과 그래픽 드라이버를 업데이트하세요.","Use":"사용:","Use a denser Dock layout.":"더 조밀한 도크 배치를 사용합니다.","Use the":"사용:","Use the recovery hotkey before trying to right-click the window again.":"창을 다시 마우스 오른쪽 버튼으로 클릭하기 전에 복구 단축키를 사용하세요.","Use the same session ID as your active Social Stream setup. In the Social Stream settings panel, open the options for the view you chose and enable":"사용 중인 Social Stream 설정과 같은 세션 ID를 사용하세요. Social Stream 설정 패널에서 선택한 화면의 옵션을 열고 다음을 활성화하세요:","Useful Overlay URL Options":"유용한 오버레이 URL 옵션","Video Walkthrough":"영상 안내","What It Adds":"추가되는 기능","When placement is finished, right-click it again and select":"위치 조정을 마치면 다시 마우스 오른쪽 버튼으로 클릭하고 다음을 선택하세요:","Windows / Linux":"Windows / Linux","Yes, With A Desktop Overlay Window":"데스크톱 오버레이 창으로 가능합니다","You already capture chat in SSApp and want the shortest setup.":"이미 SSApp에서 채팅을 캡처하며 가장 간단하게 설정하려는 경우.","You need a desktop wrapper.":"데스크톱 래퍼가 필요합니다.","You want exact size and position, reusable launch commands, or a dedicated overlay wrapper.":"정확한 크기와 위치, 재사용 가능한 실행 명령 또는 전용 오버레이 래퍼가 필요한 경우.","and":"그리고","and adjust the size and position for your display.":"를 바꾸고 디스플레이에 맞게 크기와 위치를 조정하세요.","characters.":"문자입니다.","complete command-line reference":"전체 명령줄 참고 문서","for additional parameters.":"에서 추가 매개변수를 확인하세요.","for this workflow. It captures the entire monitor, including the chat overlay.":"는 이 용도로 피하세요. 채팅 오버레이를 포함한 모니터 전체를 캡처합니다.","from inside the standalone app":"독립 실행형 앱 안에서","if viewers should not see it.":"(시청자에게 보이면 안 되는 경우).","is a separate free, open-source app that can wrap a Social Stream URL in a transparent desktop window. It is often the easier option when you only want a dedicated overlay window.":"는 Social Stream URL을 투명한 데스크톱 창으로 감쌀 수 있는 별도의 무료 오픈 소스 앱입니다. 전용 오버레이 창만 필요하다면 대개 더 쉬운 선택입니다.","is not needed for a normal Social Stream overlay.":"는 일반 Social Stream 오버레이에는 필요하지 않습니다.","macOS":"macOS","macOS And Linux":"macOS 및 Linux","macOS and Linux limitation:":"macOS 및 Linux 제한 사항:","mode hides its scrollbar.":"모드에서 스크롤바가 숨겨질 때 유용합니다.","on macOS) to toggle click-through later.":" [macOS])로 나중에 클릭 통과를 전환하세요.","option off unless you have tested that it does not include this window.":"옵션은 이 창이 포함되지 않는다고 시험으로 확인한 경우가 아니면 꺼 두세요.","options for exact placement.":"옵션으로 정확히 배치하세요.","or":"또는","shows one message selected from the Dock. Use this when you only want highlighted messages.":"는 도크에서 선택한 메시지 하나를 보여 줍니다. 강조한 메시지만 표시하려면 사용하세요.","shows the ongoing combined chat. This is usually the best choice while gaming.":"는 계속 들어오는 통합 채팅을 보여 줍니다. 게임 중에는 대개 가장 적합합니다.","source targeting the game.":"소스에서 게임을 대상으로 지정하세요.","standalone desktop app":"독립 실행형 데스크톱 앱","transparent areas can be hard to grab. Keep the Dock menu visible while positioning it, use your operating system's window movement shortcuts, or use Electron Capture's":"투명 영역은 잡기 어려울 수 있습니다. 위치 조정 중에는 도크 메뉴를 표시해 두거나 운영체제의 창 이동 단축키를 사용하거나 Electron Capture의","works too, as long as the page supports a transparent background.":"도 페이지가 투명 배경을 지원한다면 사용할 수 있습니다."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/on-screen-chat-overlay.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/on-screen-chat-overlay.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/on-screen-chat-overlay.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/on-screen-chat-overlay.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/on-screen-chat-overlay.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/on-screen-chat-overlay.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/on-screen-chat-overlay.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/on-screen-chat-overlay.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/on-screen-chat-overlay.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/on-screen-chat-overlay.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/on-screen-chat-overlay.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/on-screen-chat-overlay.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="on-screen-chat-overlay.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/on-screen-chat-overlay.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/on-screen-chat-overlay.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/on-screen-chat-overlay.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/on-screen-chat-overlay.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/on-screen-chat-overlay.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>게임 중 화면에 채팅 표시</h1>
+            <p>Social Stream 채팅을 방송에 자동으로 내보내지 않고 내 모니터에 표시하세요.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="이 페이지에서"><a href="#read-section-1">데스크톱 오버레이 창으로 가능합니다</a><a href="#read-section-2">영상 안내</a><a href="#read-section-3">채팅 화면 선택</a><a href="#read-section-4">방법 1: Social Stream 독립 실행형 앱</a><a href="#read-section-5">방법 2: Electron Capture</a><a href="#read-section-6">Electron Capture 명령줄 실행</a><a href="#read-section-10">빠른 확인 목록</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">데스크톱 오버레이 창으로 가능합니다</h2>
+                <p>Social Stream은 투명하고 항상 위에 표시되는 창으로 게임 위에 놓을 수 있습니다. 게임 HUD 삽입이 아닌 별도의 데스크톱 창입니다.</p>
+                <div class="guide-note">
+                    <p><strong>데스크톱 래퍼가 필요합니다.</strong> 사용: <a href="download.html">Social Stream Ninja 독립 실행형 앱</a> 또는 <a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a>이 필요합니다. 브라우저 확장 프로그램이나 OBS 브라우저 소스만으로는 시스템 전체에서 클릭이 통과하는 창을 만들 수 없습니다.</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>옵션</th><th>적합한 경우</th><th>추가되는 기능</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="옵션">Social Stream 독립 실행형 앱</td>
+                            <td data-label="적합한 경우">이미 SSApp에서 채팅을 캡처하며 가장 간단하게 설정하려는 경우.</td>
+                            <td data-label="추가되는 기능">투명 팝업 창, 항상 위에 표시, 크기 조절, 클릭 통과.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="옵션">Electron Capture</td>
+                            <td data-label="적합한 경우">정확한 크기와 위치, 재사용 가능한 실행 명령 또는 전용 오버레이 래퍼가 필요한 경우.</td>
+                            <td data-label="추가되는 기능">프레임 없는 투명 창, 고정, 클릭 통과, 모니터 선택, 명령줄 제어.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="옵션">일반 브라우저 또는 OBS만 사용</td>
+                            <td data-label="적합한 경우">채팅이 내 모니터에 비공개로 보이는 대신 방송에 나와야 하는 경우입니다.</td>
+                            <td data-label="추가되는 기능">시스템 전체에서 안정적인 투명도나 마우스 클릭 통과를 제공하지 않습니다.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">영상 안내</h2>
+                <p>이 이전 영상은 투명하고 항상 위에 표시되며 클릭이 통과하는 채팅 설정을 보여 줍니다. 최신 버전의 앱 인터페이스는 다를 수 있습니다.</p>
+                <div class="video-container">
+                    <iframe
+                        src="https://www.youtube.com/embed/bMVVof_L0sI"
+                        title="게임 중 라이브 채팅 보기! 투명 오버레이 가이드"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">채팅 화면 선택</h2>
+                <ul class="guide-list">
+                    <li><strong>스트리밍 채팅 / 도크:</strong> 는 계속 들어오는 통합 채팅을 보여 줍니다. 게임 중에는 대개 가장 적합합니다.</li>
+                    <li><strong>강조 채팅 오버레이:</strong> 는 도크에서 선택한 메시지 하나를 보여 줍니다. 강조한 메시지만 표시하려면 사용하세요.</li>
+                    <li><strong>템플릿 또는 사용자 지정 오버레이:</strong> 도 페이지가 투명 배경을 지원한다면 사용할 수 있습니다.</li>
+                </ul>
+                <p>사용 중인 Social Stream 설정과 같은 세션 ID를 사용하세요. Social Stream 설정 패널에서 선택한 화면의 옵션을 열고 다음을 활성화하세요: <strong>투명 배경 강제 (Force transparent background)</strong>을 활성화하세요. 생성된 URL에는 다음이 포함되어야 합니다: <code>transparent</code>.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/on-screen-overlay-preview.png" alt="가상 게임 장면 위에 배치된 Social Stream Ninja 강조 채팅 메시지" class="guide-image">
+                    <figcaption>가상 게임 장면 위에 실제 SSApp 강조 채팅 오버레이를 배치한 예입니다. 도크 URL을 사용하면 대신 전체 실시간 채팅을 표시할 수 있습니다.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">방법 1: Social Stream 독립 실행형 앱</h2>
+                <ol class="guide-steps">
+                    <li>다음을 설치하고 여세요: <a href="download.html">독립 실행형 데스크톱 앱</a>을 여세요. 평소처럼 채팅 소스를 활성화하세요.</li>
+                    <li>Social Stream 설정 패널에서 다음을 찾으세요: <strong>스트리밍 채팅</strong> 또는 <strong>선택한 채팅 오버레이</strong>.</li>
+                    <li>옵션을 열고 다음을 활성화하세요: <strong>투명 배경 강제 (Force transparent background)</strong>.</li>
+                    <li>생성된 도크 또는 강조 링크를 <strong>독립 실행형 앱 안에서</strong>클릭하세요. SSApp이 별도 오버레이 창으로 엽니다.</li>
+                    <li>잠그기 전에 창의 위치와 크기를 조정하세요. 오버레이를 마우스 오른쪽 버튼으로 클릭해 크기 프리셋을 선택하고 다음을 선택하세요: <strong>항상 위에 (Always on top)</strong>.</li>
+                    <li>위치 조정을 마치면 다시 마우스 오른쪽 버튼으로 클릭하고 다음을 선택하세요: <strong>클릭 불가로 설정 (Make UnClickable)</strong>을 선택하세요. 마우스 클릭이 게임으로 통과합니다.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/ssapp-on-screen-overlay-menu.png" alt="창 크기 조절, 항상 위에, 포커스될 때까지 클릭 불가 및 Ctrl Shift Alt X 단축키가 표시된 SSApp 오버레이 오른쪽 클릭 메뉴" class="guide-image">
+                    <figcaption>SSApp 오버레이 창을 마우스 오른쪽 버튼으로 클릭해 크기를 조절하거나 고정하거나 클릭 통과를 설정하세요. 위치를 조정하는 동안 조작할 수 없게 되지 않도록 클릭 통과는 마지막에 설정하세요.</figcaption>
+                </figure>
+                <h3>SSApp 단축키</h3>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Windows / Linux</th><th>macOS</th><th>동작</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+X</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+X</code></td>
+                            <td data-label="동작">오버레이를 다시 조작할 수 있도록 마우스 클릭 통과를 전환합니다.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+R</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+R</code></td>
+                            <td data-label="동작">포커스된 오버레이 창을 다시 로드합니다.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">
+                    <p><strong>위치 조정 팁:</strong> 투명 영역은 잡기 어려울 수 있습니다. 위치 조정 중에는 도크 메뉴를 표시해 두거나 운영체제의 창 이동 단축키를 사용하거나 Electron Capture의 <code>--x</code> 그리고 <code>--y</code> 옵션으로 정확히 배치하세요.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">방법 2: Electron Capture</h2>
+                <p><a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a> 는 Social Stream URL을 투명한 데스크톱 창으로 감쌀 수 있는 별도의 무료 오픈 소스 앱입니다. 전용 오버레이 창만 필요하다면 대개 더 쉬운 선택입니다.</p>
+                <ol class="guide-steps">
+                    <li>생성된 Social Stream 도크, 강조, 템플릿 또는 사용자 지정 오버레이 URL을 복사하세요.</li>
+                    <li>다음이 포함되어 있는지 확인하세요: <code>&amp;transparent</code>가 포함되어야 합니다. URL에 아직 물음표가 없다면 다음을 사용하세요: <code>?transparent</code>.</li>
+                    <li>Electron Capture에서 URL을 여세요.</li>
+                    <li>창을 마우스 오른쪽 버튼으로 클릭하고 다음을 활성화하세요: <strong>항상 위에 (Always on top)</strong>.</li>
+                    <li>위치와 크기를 조정한 뒤 다음을 활성화하세요: <strong>클릭 불가로 설정 (Make UnClickable)</strong>.</li>
+                    <li>사용: <code>Ctrl+Shift+Alt+X</code> (또는 <code>Command+Shift+Option+X</code>  [macOS])로 나중에 클릭 통과를 전환하세요.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/electron-capture-overlay-features.png" alt="맨 위에 고정, 프레임 없는 창, 투명도 지원, 클릭 통과 모드, 자동 화면 캡처, 게임 및 앱 캡처를 보여 주는 Electron Capture 기능 카드" class="guide-image">
+                    <figcaption>Electron Capture는 비공개 화면 오버레이에 필요한 고정, 프레임 없는 투명 창, 클릭 통과 제어를 제공합니다.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">Electron Capture 명령줄 실행</h2>
+                <p>자동화하기에는 Windows 포터블 빌드가 가장 간단합니다. 다음을 바꾸세요: <code>YOUR_SESSION_ID</code> 를 바꾸고 디스플레이에 맞게 크기와 위치를 조정하세요.</p>
+
+                <h3>연속 채팅 도크</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;transparent&amp;compact&amp;hidemenu" --width=520 --height=760 --x=1380 --y=80 --pin --unclickable --title="SSN Chat"</code></pre>
+
+                <h3>강조 채팅만</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID&amp;transparent" --width=700 --height=500 --x=1160 --y=80 --pin --unclickable --title="SSN Featured"</code></pre>
+
+                <h3>macOS 및 Linux</h3>
+                <pre><code># macOS
+"/Applications/elecap.app/Contents/MacOS/elecap" --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable
+
+# Linux AppImage; replace the filename with the version you downloaded
+./elecap-VERSION-x86_64.AppImage --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable</code></pre>
+
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>옵션</th><th>목적</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="옵션"><code>--url</code></td><td data-label="목적">전체 Social Stream 오버레이 URL입니다. 다음 문자가 포함되므로 따옴표로 감싸세요: <code>&amp;</code> 문자입니다.</td></tr>
+                        <tr><td data-label="옵션"><code>--width</code>, <code>--height</code></td><td data-label="목적">초기 창 크기(픽셀)입니다.</td></tr>
+                        <tr><td data-label="옵션"><code>--x</code>, <code>--y</code></td><td data-label="목적">가상 데스크톱에서의 초기 위치입니다. 기본 모니터의 왼쪽이나 위에 있는 모니터는 음수 좌표를 사용할 수 있습니다.</td></tr>
+                        <tr><td data-label="옵션"><code>--monitor=0</code></td><td data-label="목적">데스크톱 좌표보다 모니터 번호가 편하다면 0부터 시작하는 모니터 인덱스를 선택하세요.</td></tr>
+                        <tr><td data-label="옵션"><code>--pin</code></td><td data-label="목적">항상 위에 표시되는 상태로 시작합니다.</td></tr>
+                        <tr><td data-label="옵션"><code>--unclickable</code></td><td data-label="목적">클릭 통과 모드로 시작합니다. 사용 전에 복구 단축키를 기억하세요.</td></tr>
+                        <tr><td data-label="옵션"><code>--css="C:\path\chat.css"</code></td><td data-label="목적">고급 스타일을 적용할 로컬 CSS 파일을 삽입합니다.</td></tr>
+                        <tr><td data-label="옵션"><code>--multiinstance</code></td><td data-label="목적">독립적인 오버레이가 여러 개 필요하면 Electron Capture 프로세스를 별도로 실행하세요.</td></tr>
+                    </tbody>
+                </table>
+                <p>Electron Capture의 다음 자료를 참고하세요: <a href="https://electroncapture.app/command-line.html" target="_blank" rel="noopener">전체 명령줄 참고 문서</a> 에서 추가 매개변수를 확인하세요.</p>
+                <div class="guide-note">
+                    <p><strong><code>--node</code> 는 일반 Social Stream 오버레이에는 필요하지 않습니다.</strong> 페이지에 화면 캡처나 다른 높은 권한의 Electron 기능이 특별히 필요하지 않다면 꺼 두세요.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-7">유용한 오버레이 URL 옵션</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>URL 옵션</th><th>사용:</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="URL 옵션"><code>transparent</code></td><td data-label="사용:">페이지 배경을 제거하고 투명한 데스크톱 창을 요청합니다.</td></tr>
+                        <tr><td data-label="URL 옵션"><code>compact</code></td><td data-label="사용:">더 조밀한 도크 배치를 사용합니다.</td></tr>
+                        <tr><td data-label="URL 옵션"><code>hidemenu</code></td><td data-label="사용:">설정 후 도크 도구 모음을 숨깁니다.</td></tr>
+                        <tr><td data-label="URL 옵션"><code>scale=0.85</code></td><td data-label="사용:">창 크기를 바꾸지 않고 지원되는 오버레이를 축소합니다.</td></tr>
+                        <tr><td data-label="URL 옵션"><code>limit=15</code></td><td data-label="사용:">지원되는 페이지에서 유지할 메시지 수를 제한합니다.</td></tr>
+                        <tr><td data-label="URL 옵션"><code>hidesource</code></td><td data-label="사용:">도크에서 플랫폼 소스 레이블이나 아이콘을 숨깁니다.</td></tr>
+                        <tr><td data-label="URL 옵션"><code>chroma=0000</code></td><td data-label="사용:">대체 투명 배경 모드입니다. 도크의 일반 <code>transparent</code> 모드에서 스크롤바가 숨겨질 때 유용합니다.</td></tr>
+                    </tbody>
+                </table>
+                <p>템플릿, 사용자 지정 CSS, 글꼴 및 더 많은 URL 제어는 다음을 참고하세요: <a href="overlay-customization-guide.html">오버레이 사용자 지정 가이드</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-8">방송에 내보내지 않고 내 모니터에만 표시</h2>
+                <p>방송 소프트웨어가 모니터 전체가 아닌 게임 또는 게임 창을 캡처할 때만 오버레이가 비공개로 유지됩니다.</p>
+                <ol class="guide-steps">
+                    <li><strong>이 오버레이 URL을 OBS 브라우저 소스로 추가하지 마세요</strong> (시청자에게 보이면 안 되는 경우).</li>
+                    <li>Windows에서는 다음 OBS 소스를 권장합니다: <a href="https://obsproject.com/kb/game-capture-source" target="_blank" rel="noopener">게임 캡처</a> 소스에서 게임을 대상으로 지정하세요.</li>
+                    <li>OBS의 <strong>타사 오버레이 캡처(예: Steam) (Capture third-party overlays (such as Steam))</strong> 옵션은 이 창이 포함되지 않는다고 시험으로 확인한 경우가 아니면 꺼 두세요.</li>
+                    <li>피해야 할 방식: <a href="https://obsproject.com/kb/display-capture-sources" target="_blank" rel="noopener">디스플레이 캡처</a> 는 이 용도로 피하세요. 채팅 오버레이를 포함한 모니터 전체를 캡처합니다.</li>
+                    <li>방송 전에 짧게 로컬 녹화하고 다시 확인하세요. 캡처 방식과 게임마다 다릅니다.</li>
+                </ol>
+                <div class="warning-note">
+                    <p><strong>macOS 및 Linux 제한 사항:</strong> OBS 게임 캡처는 Windows 전용입니다. 전체 디스플레이를 캡처해야 하는 설정이라면 화면 오버레이도 함께 캡처됩니다. 별도 모니터를 사용하거나 오버레이를 제외하는 창/애플리케이션 캡처 방식을 사용한 뒤 녹화로 확인하세요.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-9">주요 제한 사항</h2>
+                <ul class="guide-list">
+                    <li><strong>테두리 없는 전체 화면이나 창 모드 전체 화면이 안정적입니다.</strong> 독점 전체 화면 게임은 항상 위에 표시하는 오버레이를 포함한 모든 일반 데스크톱 창을 가릴 수 있습니다.</li>
+                    <li><strong>데스크톱 앱을 계속 열어 두어야 합니다.</strong> SSApp이나 Electron Capture를 닫으면 로컬 오버레이도 닫힙니다.</li>
+                    <li><strong>세션이 일치해야 합니다.</strong> 세션 ID가 잘못된 도크 또는 강조 URL은 비어 있습니다.</li>
+                    <li><strong>강조 채팅은 전체 피드가 아닙니다.</strong> 도크에서 메시지를 선택한 뒤에만 표시합니다.</li>
+                    <li><strong>클릭 통과를 켜면 마우스로 조작할 수 없습니다.</strong> 창을 다시 마우스 오른쪽 버튼으로 클릭하기 전에 복구 단축키를 사용하세요.</li>
+                    <li><strong>일부 게임과 안티치트 시스템은 오버레이를 제한합니다.</strong> 게임의 보안 제어를 우회하려고 하지 마세요.</li>
+                    <li><strong>투명도는 운영체제와 그래픽 설정에 따라 다릅니다.</strong> 투명 영역이 흰색이나 검은색으로 나타나면 데스크톱 앱과 그래픽 드라이버를 업데이트하세요.</li>
+                    <li><strong>디스플레이 캡처에는 보이는 모든 것이 포함됩니다.</strong> 캡처 소프트웨어에서 모니터 전체와 게임을 분리할 수 없다면 이 오버레이가 비공개로 유지된다고 보장할 수 없습니다.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-10">빠른 확인 목록</h2>
+                <ol class="guide-steps">
+                    <li>Social Stream에 채팅이 도착하고 있습니다.</li>
+                    <li>오버레이 URL이 올바른 세션 ID를 사용합니다.</li>
+                    <li>URL에 포함된 값: <code>transparent</code>.</li>
+                    <li>데스크톱 래퍼가 게임 위에 고정되어 있습니다.</li>
+                    <li>위치 조정을 마친 뒤에만 클릭 통과를 활성화했습니다.</li>
+                    <li>독점 전체 화면에서 오버레이가 숨겨진다면 게임을 테두리 없는 전체 화면이나 창 모드 전체 화면으로 사용합니다.</li>
+                    <li>OBS가 전체 디스플레이가 아닌 게임/창을 캡처합니다.</li>
+                    <li>테스트 녹화로 시청자에게 비공개 오버레이가 보이지 않는지 확인했습니다.</li>
+                </ol>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스.</p>
+            </div>
+        </div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

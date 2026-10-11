@@ -1,0 +1,271 @@
+<!doctype html><html lang="ja" data-site-root="../../" data-site-language="ja"><head>
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ja/docs/giveaway-points-guide.html">
+    <meta property="og:title" content="抽選、チケット、ポイント賞品 — Social Stream Ninja">
+    <meta property="og:description" content="無料抽選の実施、SSNロイヤルティポイントでのチケット販売、ゲーム賞品の付与、Stream DeckとEvent Flowからの抽選操作、ローカルバックアップの復元を行います。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ja/docs/giveaway-points-guide.html">
+    <meta name="twitter:title" content="抽選、チケット、ポイント賞品 — Social Stream Ninja">
+    <meta name="twitter:description" content="無料抽選の実施、SSNロイヤルティポイントでのチケット販売、ゲーム賞品の付与、Stream DeckとEvent Flowからの抽選操作、ローカルバックアップの復元を行います。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ"><meta name="viewport" content="width=device-width,initial-scale=1"><title>抽選、チケット、ポイント賞品 — Social Stream Ninja</title><meta name="description" content="無料抽選の実施、SSNロイヤルティポイントでのチケット販売、ゲーム賞品の付与、Stream DeckとEvent Flowからの抽選操作、ローカルバックアップの復元を行います。"><link rel="canonical" href="https://socialstream.ninja/beta/ja/docs/giveaway-points-guide.html"><link rel="stylesheet" href="../../docs/css/styles.css"><link rel="stylesheet" href="../../docs/css/guides.css"><link rel="stylesheet" href="../../docs/css/workflow-guides.css"><link rel="stylesheet" href="../../docs/css/visual-guides.css">    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/giveaway-points-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{"(JSON) or save a full points and giveaway backup. Nothing is uploaded.":"（JSON）、またはポイントと抽選の完全バックアップを保存します。アップロードは行いません。","(letters, numbers,":"（英数字、","(use your giveaway ID).":"（自分の抽選IDを使います）。",") and add":"）を使い、次を追加します：",", a viewer buys 5 tickets with":"の場合、視聴者は次のコマンドで5枚購入します：",", a walkthrough with screenshots.":"にスクリーンショット付きの手順があります。",", and":"、および",", enter that session ID.":"で、そのセッションIDを入力します。",", or":"、または",", pick your full backup. Wait for the message and note the session ID it lists.":"で完全バックアップを選びます。表示されるメッセージを待ち、記載されたセッションIDを控えます。",", then":"、次に",". (Drawing closes entries for you if you forget.)":"。（忘れていても抽選すると受付は閉じます。）",". Add a point prize if you want one.":"。必要なら賞品としてポイントを設定します。",". Check the rules, entries, and winners. Rounds come back closed.":"。ルール、応募者、当選者を確認します。復元した回は受付が閉じています。",". For a giveaway named":"。抽選名が次の場合、",". Keep ticket price and point prize at":"。チケット価格とポイント賞品は次の値にします：",". Leave the ID as":"。IDは次のままにします：",". Preview it, then copy its link into OBS as a":"。プレビューした後、リンクをOBSへ次のソースとして追加します：",". Set":"。次を設定します：",". The regular games don't award SSN points.":"。通常のゲームではSSNポイントは付与されません。",". Then save a new backup.":"。その後、新しいバックアップを保存してください。",". Viewers type the keyword in chat to enter.":"。視聴者はチャットにキーワードを入力して参加します。","A backup misses anything after it was saved, and doesn't include popup settings.":"保存後の内容はバックアップに含まれず、ポップアップ設定も含まれません。","A finished draw can't be undone.":"完了した抽選は取り消せません。","A key confirms Social Stream replied, not that OBS shows it. If it times out, check the state before drawing again.":"キーで確認できるのはSocial Streamの応答で、OBSの表示ではありません。タイムアウトした場合は、再抽選前に状態を確認してください。","A name change can confuse wallets. Check on the host. Platforms are never merged.":"名前の変更で残高の識別が混乱する場合があります。ホスト側で確認してください。異なるプラットフォームの残高は統合しません。","A viewer buys tickets":"視聴者がチケットを購入","A viewer can't enter":"視聴者が参加できない","A viewer's account looks wrong":"視聴者のアカウントが正しくない","API reference":"APIリファレンス","Add the":"次を追加します：","After a reconnect, it shows the saved result. Reduced-motion settings skip the animation.":"再接続後は保存された結果を表示します。動きを減らす設定ではアニメーションを省略します。","After a restart,":"再起動後、","All guides":"すべてのガイド","All tickets come out of the viewer's one points balance.":"すべてのチケットは、その視聴者の1つのポイント残高から支払われます。","Are held. They can't be spent elsewhere.":"確保され、ほかで使えなくなります。","Are spent.":"消費されます。","Aren't charged. No tickets.":"引かれず、チケットも発行されません。","Back in the manager, pick the giveaway ID and click":"管理画面へ戻り、抽選IDを選んで次をクリックします：","Backups":"バックアップ","Balance-only imports can't restore held tickets. Resetting points is blocked while tickets are held, and doesn't erase giveaway history.":"残高だけの取り込みでは確保中のチケットを復元できません。チケットが確保されている間はポイントをリセットできず、リセットしても抽選履歴は消えません。","Before opening entries, set":"受付開始前に次を設定します：","Both sides need a player, or the draw is refused. Cancel before the draw to refund everyone.":"両方に参加者がいないと抽選できません。抽選前にキャンセルすると全員へ返還します。","Brand new to giveaways?":"抽選を初めて使いますか？","Browser Source":"ブラウザソース","Browser Source. The background is see-through unless you pick":"Browser Sourceとして追加します。背景は透明ですが、次を選ぶと変わります：","Buttons don't respond":"ボタンが反応しない","Buy tickets already spends the points.":"「Buy tickets」はそれ自体でポイントを消費します。","Buying tickets through the API":"APIでチケットを購入する","Can't reset or import points":"ポイントをリセット・取り込みできない","Cancel and refund":"キャンセルして返金（Cancel and refund）","Check the ID, keyword, members-only, that entries are open, and that the platform is captured. Bot, private, old, replayed, and test messages never count.":"ID、キーワード、メンバー限定、受付中か、プラットフォームが取得対象か確認します。ボット、非公開、古い、再送、テストのメッセージは数えません。","Clearing browser data can delete them, so keep backups outside that profile.":"ブラウザーデータを消すと失われる場合があるため、プロファイルの外にバックアップを保管してください。","Click":"クリックする項目：","Close entries":"応募を締め切る（Close entries）","Close entries and draw. It's a 50/50 flip, whatever the bets.":"受付を閉じて抽選します。賭けた量に関係なく、表裏は50対50です。","Close giveaway":"抽選の受付を閉じる","Coin Flip Pot":"コイントスのポット（Coin Flip Pot）","Commands & API":"コマンドとAPI","Community wheel":"コミュニティホイール（Community wheel）","Don't put a Spend Points action before it.":"前にSpend Pointsアクションを置かないでください。","Download":"ダウンロード","Draw giveaway":"抽選する","Draw one winner at a time. Each winner gets the prize added to their points.":"1人ずつ抽選し、当選者のポイントに賞品分を加算します。","Draw winner":"当選者を抽選（Draw winner）","Event Flow":"Event Flow","Event Reference":"イベントリファレンス","Event reference":"イベントリファレンス","Export winner history":"当選履歴を書き出す","Features":"機能","Finish or cancel held ticket purchases first. For a backup with held tickets, use full recovery.":"先に確保中のチケット購入を完了またはキャンセルします。確保中チケットを含むバックアップは完全復元を使ってください。","Fix problems":"問題を解決する","Free giveaway":"無料の抽選","Games":"ゲーム","Games with point rewards":"ポイント報酬付きゲーム","Give away points":"ポイントを賞品にする","Give each a short":"それぞれに短い次の値を付けます：","Give each free giveaway its own keyword. A shared keyword won't enter both.":"無料抽選ごとに別のキーワードを使います。同じキーワードで両方には参加できません。","Giveaway / Tickets":"抽選／チケット（Giveaway / Tickets）","Giveaway ID":"抽選ID（Giveaway ID）","Giveaway Options":"抽選オプション（Giveaway Options）","Giveaway state":"抽選の状態","Giveaways, tickets and point prizes":"抽選、チケット、ポイント賞品","Giveaways, tickets and point prizes: Social Stream Ninja":"抽選、チケット、ポイント賞品 — Social Stream Ninja","Go back to everyone.":"全員へ返還されます。","Go back to that viewer.":"その視聴者へ返還されます。","Guides":"ガイド","Hire":"仕事を依頼する","History and backups":"履歴とバックアップ","Home":"ホーム","Host API access can spend any viewer's points. Never expose it as a public form.":"ホストAPIのアクセス権では、どの視聴者のポイントも使えます。公開フォームとして出さないでください。","How leftover single points are split":"端数の1ポイントの分け方","If it fails, dependent actions stop. The chat message still shows.":"失敗すると依存する処理は停止しますが、チャットメッセージは表示されます。","In Giveaway Options, open":"Giveaway Optionsで次を開きます：","In the popup's":"ポップアップの次の項目で：","In the popup, open":"ポップアップで次を開きます：","Inspiration":"活用アイデア","It acts for the viewer who sent the message. Put a trusted trigger or filter before grants and host controls.":"メッセージを送った視聴者として動作します。ポイント付与やホスト操作の前に、信頼できるトリガーやフィルターを置いてください。","It needs a set-up reward with a price.":"価格を設定した特典が必要です。","It runs the draw. You never need to click inside the OBS source.":"これで抽選を実行します。OBSソースの内部をクリックする必要はありません。","Keep Social Stream Ninja running.":"Social Stream Ninjaを動かしたままにします。","Keep the old host turned off. Open SSN in a fresh browser profile and open the giveaway manager.":"古いホストは停止したままにします。新しいブラウザープロファイルでSSNと抽選管理画面を開きます。","Keep the same operation ID when retrying. Use a new one for a new purchase.":"再試行には同じ操作IDを使い、新しい購入には新しいIDを使います。","Keep these private:":"非公開にするもの：","Leftover points go to the biggest fractional shares first. Ties go to whoever entered first.":"余りのポイントは小数部分の大きい人から配り、同じ場合は先に参加した人を優先します。","Loyalty Points System":"ロイヤルティポイントシステム（Loyalty Points System）","Loyalty points":"ロイヤルティポイント","Main navigation":"メインナビゲーション","Make sure the right SSN host is running with host controls on. Refresh before retrying.":"正しいSSNホストが動いていて、ホスト操作が有効か確認します。再試行前に更新してください。","Manage giveaways and history":"抽選と履歴を管理（Manage giveaways and history）","More Event Flow details":"Event Flowの詳細","More about where data lives":"データの保存先の詳細","Name reel":"名前のリール（Name reel）","Never run the old and restored host at the same time.":"古いホストと復元したホストを同時に動かさないでください。","New giveaway round":"新しい抽選回","New round":"新しいラウンド（New round）","No cloud backup or cash-out. Server backup may come later.":"クラウドバックアップや換金はありません。サーバーバックアップは将来追加される可能性があります。","Number Hunt":"Number Hunt","Number Hunt (host-controlled)":"Number Hunt（ホスト管理）","Number of prizes":"賞品数（Number of prizes）","OBS display":"OBS表示","On this page":"このページの内容","Only works on a":"動くのは次の環境だけです：","Open entries":"応募を開始（Open entries）","Open entries as usual.":"通常どおり受付を開きます。","Open giveaway":"抽選の受付を開く","Open navigation menu":"ナビゲーションメニューを開く","Overlay Gallery":"オーバーレイギャラリー","Pick a":"次を選びます：","Pick the giveaway ID and ticket count. For a pot, pick heads or tails.":"抽選IDとチケット枚数を選びます。ポット形式では表か裏も選びます。","Pick what it does: Enter free giveaway, Buy tickets, Grant free tickets, Close entries, Draw winner, Cancel and refund, or Query state.":"処理を選びます：無料抽選への参加、チケット購入、無料チケット付与、受付終了、当選者抽選、キャンセルと返還、状態照会。","Players guess with":"参加者は次で予想します：","Point prize per winner":"当選者1人あたりのポイント賞品（Point prize per winner）","Point prizes":"ポイント賞品","Points live in this browser or app profile and don't sync elsewhere. Rounds are kept per session.":"ポイントはこのブラウザーやアプリのプロファイルに保存され、ほかへ同期されません。抽選回はセッションごとに保存します。","Points per ticket":"チケット1枚のポイント","Polls and waitlists":"投票と待機リスト","Prize points are new points, not taken from ticket sales. The most you can pay out is prize × number of prizes.":"賞品ポイントは新規発行で、チケット売上から引きません。支払い上限は賞品ポイント × 賞品数です。","Problem":"問題","Recover on a fresh host":"新しいホストで復元（Recover on a fresh host）","Refresh":"更新（Refresh）","Reopen, draw, or":"再開、抽選、または","Repeat protection is strongest on sources with their own message IDs.":"独自のメッセージIDを持つソースでは、重複防止がより確実です。","Resources":"資料","Restore a backup":"バックアップを復元する","Rules lock after the first entry.":"最初の参加後はルールを変更できません。","Run a free giveaway in 5 steps":"5つの手順で無料抽選を行う","Run a free giveaway, let viewers buy tickets with SSN points, or hand out points as prizes.":"無料抽選、SSNポイントでのチケット購入、ポイント賞品の配布ができます。","Run free giveaways, sell tickets for SSN loyalty points, award game prizes, control draws with Stream Deck and Event Flow, and recover local backups.":"無料抽選の実施、SSNロイヤルティポイントでのチケット販売、ゲーム賞品の付与、Stream DeckとEvent Flowからの抽選操作、ローカルバックアップの復元を行います。","Run several giveaways at once":"複数の抽選を同時に行う","Scheduled events with no viewer can't buy tickets.":"視聴者のいない予約イベントではチケットを購入できません。","See who entered under":"次で参加者を確認します：","Sell tickets for SSN points":"SSNポイントでチケットを販売する","Session Options":"セッションオプション（Session Options）","Set the type to":"種類を次に設定します：","Several giveaways":"複数の抽選","Show it with the giveaway display or":"抽選表示、または次を使います：","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream can't tell whether the OBS scene is live.":"Social StreamはOBSのシーンが配信中か判断できません。","Social Stream picks a secret number from 1 to 100.":"Social Streamが1〜100の秘密の数を選びます。","Start with":"最初の設定：","Stream Deck and API":"Stream DeckとAPI","Support":"サポート","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","The OBS display":"OBSの表示","The Stream Deck plugin has:":"Stream Deckプラグインには次があります：","The balance is checked when it runs, so the entry message can't earn its own last point.":"実行時に残高を確認するため、応募メッセージ自身で最後の不足ポイントを得ることはできません。","The old standalone community wheel still works if you leave":"従来の独立したコミュニティホイールは、次を","The points":"ポイントの動き","The points…":"ポイントは…","The popup sets up new rounds. To see a running round's real rules, check the manager. Editing an OBS link only changes the look.":"ポップアップで設定するのは新しい回です。実行中の回の本当のルールは管理画面で確認してください。OBSリンクの編集で変わるのは見た目だけです。","The result is in":"結果は次に入ります：","The test panel only simulates it. For real tests, use a separate host or profile.":"テスト画面はシミュレーションだけです。実際のテストには別のホストやプロファイルを使ってください。","The viewer doesn't have enough":"視聴者の残高が不足しています：","The wheel shows up to 120 names, but the winner is picked from every ticket.":"ホイールは最大120人の名前を表示しますが、当選者は全チケットから選びます。","Themed panel":"テーマ付きパネル（Themed panel）","They use the":"使うのは、","Ticket and guess commands name the giveaway, like":"チケットや予想のコマンドでは抽選名を指定します。例：","Tickets":"チケット","Tickets and point prizes":"チケットとポイント賞品（Tickets and point prizes）","Tickets per viewer, maximum":"視聴者1人あたりの最大チケット数","To change them, cancel and refund, then start a new round. New round won't discard a paid round. Close and reopen just pauses it.":"変更するにはキャンセルして返還し、新しい回を始めます。New roundは有料の回を破棄しません。受付を閉じて再開するだけなら一時停止です。","To fix a mistake, adjust that viewer's points by hand. Reconnecting the display never pays twice.":"間違いは視聴者のポイントを手動調整してください。表示の再接続で二重に賞品を支払うことはありません。","Try this":"試すこと","Turn on the":"次を有効にします：","Unconfirmed sticker purchases are released after a timeout.":"未確認のステッカー購入はタイムアウト後に確保を解除します。","Under":"次のセクションで：","Use a":"次を使います：","Viewers bet with":"視聴者は次で賭けます：","When this happens":"この操作をしたとき","When this happens…":"この操作をしたとき…","Winner card":"当選者カード（Winner card）","Winners get their bet back plus a share of the losers' bets, by bet size. No fee, no new points. Example: winners bet 2 and 1, losers bet 5, so the 8-point pot pays 5 and 3.":"勝った人は自分の賭け金を取り戻し、負けた人のポイントを賭けた比率で受け取ります。手数料や新しいポイントはありません。例：勝者が2と1、敗者が5を賭けた場合、合計8ポイントを5と3に分けます。","Wrong guesses narrow the range for everyone. The first right answer wins. One guess per viewer every 5 seconds.":"外れた予想で全員の範囲が狭まり、最初の正解者が勝ちます。1人につき5秒に1回予想できます。","You click":"クリックしたとき：","You draw a winner":"当選者を抽選したとき","You remove one viewer before the draw":"抽選前に視聴者1人を削除したとき","Your first giveaway":"初めてのプレゼント抽選","action (under the points actions).":"アクション（ポイント用アクション内）を使います。","and":"および","and the keyword as":"にし、キーワードを次にします：","controller links, session IDs, and backup files.":"操作用リンク、セッションID、バックアップファイル。","for another draw. Past winners stay in the history.":"で再抽選できます。過去の当選者は履歴に残ります。","fresh host":"新しいホスト","giveaway. For another, put":"抽選で動きます。別の抽選には、次を","in the popup. (These are SSN points, not Twitch channel points.)":"をポップアップで有効にします。これはSSNポイントで、Twitchのチャンネルポイントではありません。","in the value field. Open giveaway also takes a":"をvalue欄に入れます。Open giveawayには次も指定できます：","names the purchase;":"は購入を識別し、","names the reply.":"は応答を識別します。","object.":"オブジェクト。","off the link. Points and remote controls need the managed link.":"をリンクから除けば動きます。ポイントや遠隔操作には管理用リンクが必要です。","open rounds come back closed, with tickets still held. Reopen, draw, or cancel and refund.":"受付中の回は閉じた状態で戻り、チケットは確保されたままです。再開、抽選、またはキャンセルと返還を行ってください。","or":"または","says unknown reward":"でunknown rewardと出る","shows rounds, entries, and winners. You can":"に回、応募者、当選者が表示されます。次ができます：","to its OBS link.":"をそのOBSリンクへ追加します。","with no points or giveaways.":"を、ポイントや抽選のない状態で使います。","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja. All rights reserved."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/giveaway-points-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/giveaway-points-guide.html">
+<!-- ssn-languages:end --></head><body class="workflow-guide visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション"><a href="../index.html">ホーム</a><a href="features.html">機能</a><a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a><a href="download.html">ダウンロード</a><a href="guides.html">ガイド</a><a href="commands.html">コマンドとAPI</a><a href="supported-sites.html">対応サイト</a><a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a><a href="services.html" class="site-priority-hire">仕事を依頼する</a><a href="support.html">サポート</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/giveaway-points-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/giveaway-points-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/giveaway-points-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/giveaway-points-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/giveaway-points-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/giveaway-points-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="giveaway-points-guide.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/giveaway-points-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/giveaway-points-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/giveaway-points-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/giveaway-points-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/giveaway-points-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/giveaway-points-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/giveaway-points-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/giveaway-points-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/giveaway-points-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/giveaway-points-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="テーマを切り替え"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+<section class="page-hero">
+    <div class="container">
+        <h1>抽選、チケット、ポイント賞品</h1>
+        <p>無料抽選、SSNポイントでのチケット購入、ポイント賞品の配布ができます。</p>
+    </div>
+</section>
+
+<main>
+    <section class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="このページの内容">
+                <a href="guides.html">すべてのガイド</a>
+                <a href="#quickstart">無料の抽選</a>
+                <a href="#tickets">チケット</a>
+                <a href="#prizes">ポイント賞品</a>
+                <a href="#games">ゲーム</a>
+                <a href="#multiple">複数の抽選</a>
+                <a href="#obs">OBS表示</a>
+                <a href="#automation">Event Flow</a>
+                <a href="#streamdeck">Stream DeckとAPI</a>
+                <a href="#recovery">バックアップ</a>
+                <a href="#troubleshooting">問題を解決する</a>
+            </nav>
+
+            <div class="guide-note"><strong>抽選を初めて使いますか？</strong> 最初の設定： <a href="giveaway-guide.html">初めてのプレゼント抽選</a>にスクリーンショット付きの手順があります。</div>
+
+            <div class="guide-card">
+                <h2 id="quickstart">5つの手順で無料抽選を行う</h2>
+                <ol class="guide-steps">
+                    <li>ポップアップで次を開きます： <strong>抽選オプション（Giveaway Options）</strong>。IDは次のままにします： <code>default</code> にし、キーワードを次にします： <code>!enter</code>。チケット価格とポイント賞品は次の値にします： <code>0</code>.</li>
+                    <li>次を選びます： <strong>当選者カード（Winner card）</strong>, <strong>名前のリール（Name reel）</strong>、または <strong>コミュニティホイール（Community wheel）</strong>。プレビューした後、リンクをOBSへ次のソースとして追加します： <strong>ブラウザソース</strong>.</li>
+                    <li>クリックする項目： <strong>応募を開始（Open entries）</strong>。視聴者はチャットにキーワードを入力して参加します。</li>
+                    <li>クリックする項目： <strong>応募を締め切る（Close entries）</strong>、次に <strong>当選者を抽選（Draw winner）</strong>。（忘れていても抽選すると受付は閉じます。）</li>
+                    <li>クリックする項目： <strong>新しいラウンド（New round）</strong> で再抽選できます。過去の当選者は履歴に残ります。</li>
+                </ol>
+                <div class="guide-note"><strong>Social Stream Ninjaを動かしたままにします。</strong> これで抽選を実行します。OBSソースの内部をクリックする必要はありません。</div>
+                <p>従来の独立したコミュニティホイールは、次を <code>&amp;managed</code> をリンクから除けば動きます。ポイントや遠隔操作には管理用リンクが必要です。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="tickets">SSNポイントでチケットを販売する</h2>
+                <ol class="guide-steps">
+                    <li>次を有効にします： <strong>ロイヤルティポイントシステム（Loyalty Points System）</strong> をポップアップで有効にします。これはSSNポイントで、Twitchのチャンネルポイントではありません。</li>
+                    <li>Giveaway Optionsで次を開きます： <strong>チケットとポイント賞品（Tickets and point prizes）</strong>。次を設定します： <strong>チケット1枚のポイント</strong> および <strong>視聴者1人あたりの最大チケット数</strong>.</li>
+                    <li>クリックする項目： <strong>応募を開始（Open entries）</strong>。抽選名が次の場合、 <code>friday</code>の場合、視聴者は次のコマンドで5枚購入します： <code>!ticket friday 5</code>.</li>
+                    <li>次で参加者を確認します： <strong>抽選と履歴を管理（Manage giveaways and history）</strong>.</li>
+                </ol>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>この操作をしたとき…</th><th>ポイントは…</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="この操作をしたとき">視聴者がチケットを購入</td><td data-label="ポイントの動き">確保され、ほかで使えなくなります。</td></tr>
+                        <tr><td data-label="この操作をしたとき">視聴者の残高が不足しています：</td><td data-label="ポイントの動き">引かれず、チケットも発行されません。</td></tr>
+                        <tr><td data-label="この操作をしたとき">当選者を抽選したとき</td><td data-label="ポイントの動き">消費されます。</td></tr>
+                        <tr><td data-label="この操作をしたとき">クリックしたとき： <strong>キャンセルして返金（Cancel and refund）</strong></td><td data-label="ポイントの動き">全員へ返還されます。</td></tr>
+                        <tr><td data-label="この操作をしたとき">抽選前に視聴者1人を削除したとき</td><td data-label="ポイントの動き">その視聴者へ返還されます。</td></tr>
+                    </tbody>
+                </table>
+                <div class="warning-note"><strong>最初の参加後はルールを変更できません。</strong> 変更するにはキャンセルして返還し、新しい回を始めます。New roundは有料の回を破棄しません。受付を閉じて再開するだけなら一時停止です。</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="prizes">ポイントを賞品にする</h2>
+                <ol class="guide-steps">
+                    <li>受付開始前に次を設定します： <strong>当選者1人あたりのポイント賞品（Point prize per winner）</strong> および <strong>賞品数（Number of prizes）</strong>.</li>
+                    <li>通常どおり受付を開きます。</li>
+                    <li>1人ずつ抽選し、当選者のポイントに賞品分を加算します。</li>
+                </ol>
+                <p>賞品ポイントは新規発行で、チケット売上から引きません。支払い上限は賞品ポイント × 賞品数です。</p>
+                <div class="warning-note"><strong>完了した抽選は取り消せません。</strong> 間違いは視聴者のポイントを手動調整してください。表示の再接続で二重に賞品を支払うことはありません。</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="games">ポイント報酬付きゲーム</h2>
+
+                <h3>Number Hunt</h3>
+                <ol class="guide-steps">
+                    <li>種類を次に設定します： <strong>Number Hunt（ホスト管理）</strong>, <strong>チケット1枚のポイント</strong> <code>0</code>、および <strong>賞品数（Number of prizes）</strong> <code>1</code>。必要なら賞品としてポイントを設定します。</li>
+                    <li>Social Streamが1〜100の秘密の数を選びます。</li>
+                    <li>参加者は次で予想します： <code>!guess friday 50</code> （自分の抽選IDを使います）。</li>
+                </ol>
+                <p>外れた予想で全員の範囲が狭まり、最初の正解者が勝ちます。1人につき5秒に1回予想できます。</p>
+                <p>抽選表示、または次を使います： <code>games/numberhunt.html?session=YOUR_SESSION&amp;managed&amp;giveaway=friday</code>。通常のゲームではSSNポイントは付与されません。</p>
+
+                <h3>コイントスのポット（Coin Flip Pot）</h3>
+                <ol class="guide-steps">
+                    <li>種類を次に設定します： <strong>コイントスのポット（Coin Flip Pot）</strong>, <strong>チケット1枚のポイント</strong> <code>1</code>, <strong>賞品数（Number of prizes）</strong> <code>1</code>、および <strong>当選者1人あたりのポイント賞品（Point prize per winner）</strong> <code>0</code>.</li>
+                    <li>視聴者は次で賭けます： <code>!ticket friday 3 heads</code> または <code>!ticket friday 3 tails</code>.</li>
+                    <li>受付を閉じて抽選します。賭けた量に関係なく、表裏は50対50です。</li>
+                </ol>
+                <p>勝った人は自分の賭け金を取り戻し、負けた人のポイントを賭けた比率で受け取ります。手数料や新しいポイントはありません。例：勝者が2と1、敗者が5を賭けた場合、合計8ポイントを5と3に分けます。</p>
+                <p>両方に参加者がいないと抽選できません。抽選前にキャンセルすると全員へ返還します。</p>
+                <details class="guide-extra">
+                    <summary>端数の1ポイントの分け方</summary>
+                    <p>余りのポイントは小数部分の大きい人から配り、同じ場合は先に参加した人を優先します。</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="multiple">複数の抽選を同時に行う</h2>
+                <ul>
+                    <li>それぞれに短い次の値を付けます： <strong>抽選ID（Giveaway ID）</strong> （英数字、 <code>-</code>, <code>_</code>）を使い、次を追加します： <code>&amp;giveaway=ID</code> をそのOBSリンクへ追加します。</li>
+                    <li>チケットや予想のコマンドでは抽選名を指定します。例： <code>!ticket friday 5</code>.</li>
+                    <li>無料抽選ごとに別のキーワードを使います。同じキーワードで両方には参加できません。</li>
+                    <li>すべてのチケットは、その視聴者の1つのポイント残高から支払われます。</li>
+                </ul>
+                <div class="guide-note">ポップアップで設定するのは新しい回です。実行中の回の本当のルールは管理画面で確認してください。OBSリンクの編集で変わるのは見た目だけです。</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="obs">OBSの表示</h2>
+                <ul>
+                    <li>次を使います： <strong>1280 &times; 720</strong> Browser Sourceとして追加します。背景は透明ですが、次を選ぶと変わります： <strong>テーマ付きパネル（Themed panel）</strong>.</li>
+                    <li>ホイールは最大120人の名前を表示しますが、当選者は全チケットから選びます。</li>
+                    <li>再接続後は保存された結果を表示します。動きを減らす設定ではアニメーションを省略します。</li>
+                    <li>Social StreamはOBSのシーンが配信中か判断できません。</li>
+                </ul>
+                <div class="warning-note"><strong>非公開にするもの：</strong> 操作用リンク、セッションID、バックアップファイル。</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="automation">Event Flow</h2>
+                <ol class="guide-steps">
+                    <li>次を追加します： <strong>抽選／チケット（Giveaway / Tickets）</strong> アクション（ポイント用アクション内）を使います。</li>
+                    <li>処理を選びます：無料抽選への参加、チケット購入、無料チケット付与、受付終了、当選者抽選、キャンセルと返還、状態照会。</li>
+                    <li>抽選IDとチケット枚数を選びます。ポット形式では表か裏も選びます。</li>
+                </ol>
+                <div class="warning-note"><strong>「Buy tickets」はそれ自体でポイントを消費します。</strong> 前にSpend Pointsアクションを置かないでください。</div>
+                <p>メッセージを送った視聴者として動作します。ポイント付与やホスト操作の前に、信頼できるトリガーやフィルターを置いてください。</p>
+                <details class="guide-extra">
+                    <summary>Event Flowの詳細</summary>
+                    <ul>
+                        <li>失敗すると依存する処理は停止しますが、チャットメッセージは表示されます。</li>
+                        <li>結果は次に入ります： <code>meta.giveawayControlResult</code>.</li>
+                        <li>テスト画面はシミュレーションだけです。実際のテストには別のホストやプロファイルを使ってください。</li>
+                        <li>実行時に残高を確認するため、応募メッセージ自身で最後の不足ポイントを得ることはできません。</li>
+                        <li>独自のメッセージIDを持つソースでは、重複防止がより確実です。</li>
+                        <li>視聴者のいない予約イベントではチケットを購入できません。</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="streamdeck">Stream DeckとAPI</h2>
+                <p>Stream Deckプラグインには次があります： <strong>抽選の受付を開く</strong>, <strong>抽選の受付を閉じる</strong>, <strong>抽選する</strong>, <strong>キャンセルして返金（Cancel and refund）</strong>, <strong>新しい抽選回</strong>、および <strong>抽選の状態</strong>.</p>
+                <ul>
+                    <li>使うのは、 <code>default</code> 抽選で動きます。別の抽選には、次を <code>{"giveawayId":"friday"}</code> をvalue欄に入れます。Open giveawayには次も指定できます： <code>config</code> オブジェクト。</li>
+                    <li>キーで確認できるのはSocial Streamの応答で、OBSの表示ではありません。タイムアウトした場合は、再抽選前に状態を確認してください。</li>
+                </ul>
+                <details class="guide-extra">
+                    <summary>APIでチケットを購入する</summary>
+                    <pre><code>{"protocol":2,"action":"buygiveawaytickets","get":"callback-1","value":{"giveawayId":"friday","roundId":"ROUND_ID","operationId":"purchase-123","count":5,"actor":{"chatname":"Avery","type":"youtube","userid":"SOURCE_USER_ID"}}}</code></pre>
+                    <ul>
+                        <li><code>operationId</code> は購入を識別し、 <code>get</code> は応答を識別します。</li>
+                        <li>再試行には同じ操作IDを使い、新しい購入には新しいIDを使います。</li>
+                    </ul>
+                    <div class="warning-note">ホストAPIのアクセス権では、どの視聴者のポイントも使えます。公開フォームとして出さないでください。</div>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="recovery">履歴とバックアップ</h2>
+                <p><strong>抽選と履歴を管理（Manage giveaways and history）</strong> に回、応募者、当選者が表示されます。次ができます： <strong>当選履歴を書き出す</strong> （JSON）、またはポイントと抽選の完全バックアップを保存します。アップロードは行いません。</p>
+                <div class="guide-note"><strong>再起動後、</strong> 受付中の回は閉じた状態で戻り、チケットは確保されたままです。再開、抽選、またはキャンセルと返還を行ってください。</div>
+
+                <h3 id="recovery-checklist">バックアップを復元する</h3>
+                <p>動くのは次の環境だけです： <strong>新しいホスト</strong> を、ポイントや抽選のない状態で使います。</p>
+                <ol class="guide-steps">
+                    <li>古いホストは停止したままにします。新しいブラウザープロファイルでSSNと抽選管理画面を開きます。</li>
+                    <li>次のセクションで： <strong>新しいホストで復元（Recover on a fresh host）</strong>で完全バックアップを選びます。表示されるメッセージを待ち、記載されたセッションIDを控えます。</li>
+                    <li>ポップアップの次の項目で： <strong>セッションオプション（Session Options）</strong>で、そのセッションIDを入力します。</li>
+                    <li>管理画面へ戻り、抽選IDを選んで次をクリックします： <strong>更新（Refresh）</strong>。ルール、応募者、当選者を確認します。復元した回は受付が閉じています。</li>
+                    <li>再開、抽選、または <strong>キャンセルして返金（Cancel and refund）</strong>。その後、新しいバックアップを保存してください。</li>
+                </ol>
+                <div class="warning-note"><strong>古いホストと復元したホストを同時に動かさないでください。</strong> 保存後の内容はバックアップに含まれず、ポップアップ設定も含まれません。</div>
+                <details class="guide-extra">
+                    <summary>データの保存先の詳細</summary>
+                    <ul>
+                        <li>ポイントはこのブラウザーやアプリのプロファイルに保存され、ほかへ同期されません。抽選回はセッションごとに保存します。</li>
+                        <li>ブラウザーデータを消すと失われる場合があるため、プロファイルの外にバックアップを保管してください。</li>
+                        <li>残高だけの取り込みでは確保中のチケットを復元できません。チケットが確保されている間はポイントをリセットできず、リセットしても抽選履歴は消えません。</li>
+                        <li>未確認のステッカー購入はタイムアウト後に確保を解除します。</li>
+                        <li>クラウドバックアップや換金はありません。サーバーバックアップは将来追加される可能性があります。</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="troubleshooting">問題を解決する</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>問題</th><th>試すこと</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="問題">視聴者が参加できない</td><td data-label="試すこと">ID、キーワード、メンバー限定、受付中か、プラットフォームが取得対象か確認します。ボット、非公開、古い、再送、テストのメッセージは数えません。</td></tr>
+                        <tr><td data-label="問題">視聴者のアカウントが正しくない</td><td data-label="試すこと">名前の変更で残高の識別が混乱する場合があります。ホスト側で確認してください。異なるプラットフォームの残高は統合しません。</td></tr>
+                        <tr><td data-label="問題">ボタンが反応しない</td><td data-label="試すこと">正しいSSNホストが動いていて、ホスト操作が有効か確認します。再試行前に更新してください。</td></tr>
+                        <tr><td data-label="問題">ポイントをリセット・取り込みできない</td><td data-label="試すこと">先に確保中のチケット購入を完了またはキャンセルします。確保中チケットを含むバックアップは完全復元を使ってください。</td></tr>
+                        <tr><td data-label="問題"><code>!spend</code> でunknown rewardと出る</td><td data-label="試すこと">価格を設定した特典が必要です。</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p><a href="loyalty-points-guide.html">ロイヤルティポイント</a> &middot; <a href="chat-games.html">ゲーム</a> &middot; <a href="polls-giveaways-waitlists-guide.html">投票と待機リスト</a> &middot; <a href="../../api.md">APIリファレンス</a> &middot; <a href="event-reference.html">イベントリファレンス</a></p>
+        </div>
+    </section>
+</main>
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo"><img src="../../media/logo.png" alt="Social Stream Ninjaのロゴ"><span>Social Stream Ninja</span></div>
+                <div class="footer-links"><div class="footer-section"><h4>資料</h4><ul><li><a href="guides.html">ガイド</a></li><li><a href="event-reference.html">イベントリファレンス</a></li><li><a href="support.html">サポート</a></li></ul></div></div>
+            </div>
+            <div class="footer-bottom"><p>&copy; 2026 Social Stream Ninja. All rights reserved.</p></div>
+        </div>
+    </footer>
+</body></html>

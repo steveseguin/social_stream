@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/ai-modes-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/ai-modes-guide.html">
+    <meta property="og:title" content="전체 AI 가이드 - Social Stream Ninja">
+    <meta property="og:description" content="음성 공동 진행자, 공개 및 비공개 챗봇, ChatGPT 브라우저 도우미 모드, 채팅 관리, 번역, RAG, 요약, 음성 읽기, AI 생성 오버레이 등 Social Stream Ninja AI 기능을 선택하고 설정하세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/ai-modes-guide.html">
+    <meta name="twitter:title" content="전체 AI 가이드 - Social Stream Ninja">
+    <meta name="twitter:description" content="음성 공동 진행자, 공개 및 비공개 챗봇, ChatGPT 브라우저 도우미 모드, 채팅 관리, 번역, RAG, 요약, 음성 읽기, AI 생성 오버레이 등 Social Stream Ninja AI 기능을 선택하고 설정하세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전체 AI 가이드 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="음성 공동 진행자, 공개 및 비공개 챗봇, ChatGPT 브라우저 도우미 모드, 채팅 관리, 번역, RAG, 요약, 음성 읽기, AI 생성 오버레이 등 Social Stream Ninja AI 기능을 선택하고 설정하세요.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/ai-modes-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"(experimental)":"(실험적)",", and":", 그리고",", and send a new message.":"를 선택하고 새 메시지를 보내세요.",", so viewer messages only go to ChatGPT.":"로 설정하여 시청자 메시지가 ChatGPT로만 가도록 하세요.",", then press":", 그런 다음 누르세요:",", then preview and save it. Add":"에서 만든 뒤 미리 보고 저장하세요. 다음을 추가하세요:",", then reload it.":"를 다시 로드하세요.",", turn on":"에서 다음을 켜세요:",". The key stays in Social Stream. The co-host page only gets a short-lived pass, and audio travels over WebRTC.":". 키는 Social Stream에 보관됩니다. 공동 진행자 페이지에는 단기 인증 정보만 전달되며 오디오는 WebRTC를 통해 전송됩니다.",". Turn on TTS if replies should be spoken.":". 답변을 읽어 주게 하려면 TTS를 켜세요.",". When on, it sends one picture per request, not live video. This adds cost and delay.":". 켜면 요청마다 사진 한 장을 보내며 실시간 영상은 아닙니다. 비용과 지연이 늘어납니다.","A one-on-one helper, good for testing prompts.":"프롬프트 테스트에 좋은 일대일 도우미입니다.","AI Integration in Commands & API":"Commands & API의 AI 통합","AI Overlay Builder showing prompt, preview, save controls, and event simulation buttons":"프롬프트, 미리보기, 저장 제어, 이벤트 시뮬레이션 버튼을 보여주는 AI 오버레이 빌더","AI cohost controls showing media devices, AI provider settings, system instructions, and live chat mode":"미디어 장치, AI 제공자 설정, 시스템 지침, 실시간 채팅 모드를 보여주는 AI 공동 진행자 제어 화면","AI in Social Stream Ninja":"Social Stream Ninja의 AI","API key?":"API 키 필요 여부","Add":"추가:","Adding an OpenAI API key doesn't connect Social Stream to a ChatGPT website or voice conversation you already have.":"OpenAI API 키를 추가해도 Social Stream이 기존 ChatGPT 웹사이트나 음성 대화에 연결되지는 않습니다.","Already use ChatGPT in Chrome and don't want an API key? Social Stream can pick up new messages from your ChatGPT tab, like any other chat source (type":"Chrome에서 ChatGPT를 쓰고 있고 API 키를 원하지 않나요? Social Stream은 다른 채팅 소스처럼 ChatGPT 탭의 새 메시지를 가져올 수 있습니다(유형:","Answers everything out loud.":"모든 메시지에 음성으로 답합니다.","Answers those out loud by itself.":"해당 메시지에 자동으로 음성 응답합니다.","Answers viewer messages on an overlay, out loud with TTS, or back in chat where supported.":"시청자 메시지에 오버레이, TTS 음성 또는 지원되는 플랫폼 채팅으로 답합니다.","Audio Response":"음성 응답(Audio Response)","Auto-answer YouTube, Twitch, Kick, or other chat":"YouTube, Twitch, Kick 또는 다른 채팅에 자동 답변","Bot can't post in chat":"봇이 채팅에 게시할 수 없음","Bot replies ONLY go to the bot overlay page":"봇 답변을 봇 오버레이 페이지로만 보내기","Bot skips most messages":"봇이 대부분의 메시지를 건너뜀","Camera and Screen Share are optional. Default is":"카메라와 화면 공유는 선택 사항입니다. 기본값은","Capture your ChatGPT tab":"ChatGPT 탭 캡처","Censor bot":"검열 봇","Chat Bot - Primary":"챗봇 - 기본(Chat Bot - Primary)","Chat Bot - Private Interface":"챗봇 - 비공개 인터페이스","Chat Bots and AI services":"챗봇 및 AI 서비스","Chat bot":"챗봇","Chat privately with an AI helper":"AI 도우미와 비공개 대화","Chat summaries":"채팅 요약","Chat tools":"채팅 도구","ChatGPT":"ChatGPT","ChatGPT API":"ChatGPT API","ChatGPT API provider":"ChatGPT API 제공자","ChatGPT browser source":"ChatGPT 브라우저 소스","ChatGPT tab":"ChatGPT 탭","ChatGPT tab (experimental)":"ChatGPT 탭(실험적)","ChatGPT tab shows nothing":"ChatGPT 탭 내용이 표시되지 않음","Check that platform supports it, you're logged in, the account can post, and rate limits.":"플랫폼 지원 여부, 로그인 여부, 계정의 게시 권한과 사용량 제한을 확인하세요.","Check trigger words, moderators-only, rate limits, and your instructions. It's picky by design.":"트리거 단어, 관리자 전용 설정, 사용량 제한, 지침을 확인하세요. 의도적으로 대상을 엄격하게 고르도록 설계되었습니다.","Checks, cleans up, or blocks incoming messages.":"들어오는 메시지를 확인하고 수정하거나 차단합니다.","Choices":"선택지","Choose and configure Social Stream Ninja AI features: voice cohosts, public and private chat bots, ChatGPT browser companion mode, moderation, translation, RAG, summaries, TTS, and AI-built overlays.":"음성 공동 진행자, 공개 및 비공개 챗봇, ChatGPT 브라우저 도우미 모드, 채팅 관리, 번역, RAG, 요약, 음성 읽기, AI 생성 오버레이 등 Social Stream Ninja AI 기능을 선택하고 설정하세요.","Claude":"Claude","Click":"클릭:","Cloud":"클라우드","Co-host Stream Controls":"공동 진행자의 방송 제어","Co-host sees chat but stays quiet":"공동 진행자가 채팅을 보지만 말하지 않음","Commands & API":"명령 및 API","Complete AI Guide - Social Stream Ninja":"전체 AI 가이드 - Social Stream Ninja","Configure LLM Service Provider":"LLM 서비스 제공자 설정","Connect an AI":"AI 연결","Connect an AI in 5 steps":"5단계로 AI 연결하기","Connected isn't the finish line.":"연결만으로 설정이 끝나지는 않습니다.","Connected, but no replies to chat":"연결되었지만 채팅에 답하지 않음","Context only - answer when asked":"문맥만 — 요청받으면 답변","Custom API (OpenAI-compatible)":"사용자 지정 API(OpenAI 호환)","Depends on the AI":"AI에 따라 다름","Describe an overlay and have AI build it":"오버레이를 설명하고 AI로 만들기","Describe an overlay in":"다음 기능에서 원하는 오버레이를 설명하세요:","Download":"다운로드","Each service sets its own keys, billing, limits, and model names.":"서비스마다 키, 요금, 제한, 모델 이름이 다릅니다.","Enable the LLM AI chat bot":"LLM AI 챗봇 활성화","Every option except the ChatGPT tab needs this first.":"ChatGPT 탭을 제외한 모든 옵션은 이 설정을 먼저 해야 합니다.","Experimental.":"실험적 기능입니다.","Experimental. Captures new text messages, not history. Relay can type into its message box.":"실험적 기능입니다. 기록이 아닌 새 텍스트 메시지를 캡처합니다. 릴레이는 메시지 입력란에 글을 입력할 수 있습니다.","Experimental. May be turned off or rate-limited.":"실험적 기능입니다. 중단되거나 사용량이 제한될 수 있습니다.","Features":"기능","Fill in its address, model, API key, or download settings.":"주소, 모델, API 키 또는 다운로드 설정을 입력하세요.","Filter, translate, or summarize chat, or answer from my documents":"채팅 필터링, 번역, 요약 또는 내 문서로 답변하기","Fix problems":"문제 해결","For a safe first test, turn on":"첫 테스트는 안전하게 진행하도록 다음을 켜세요:","For llama.cpp, LM Studio, vLLM, and similar. Ollama should use its own option.":"llama.cpp, LM Studio, vLLM 등에 사용합니다. Ollama는 전용 옵션을 사용하세요.","For speed: Mini model, Low reasoning, Fast turn-taking. Full quality and higher reasoning are smarter but slower and cost more. Fast can cut in on pauses.":"속도를 원하면 Mini 모델, Low 추론, Fast 대화 전환을 사용하세요. Full quality와 높은 추론 수준은 더 똑똑하지만 느리고 비용이 더 듭니다. Fast는 잠깐 멈추면 끼어들 수 있습니다.","Free trial":"무료 체험","Full AI Chat Bot Guide":"AI 챗봇 전체 가이드","Full AI Co-host Guide":"AI 공동 진행자 전체 가이드","Full AI Overlay Builder Guide":"AI 오버레이 빌더 전체 가이드","Gemini, Copilot, Perplexity, others":"Gemini, Copilot, Perplexity 등","Good to know":"알아 두면 좋은 내용","Guides":"가이드","Hire":"작업 의뢰","Home":"홈","I want to":"원하는 작업","I want to…":"원하는 작업…","In the Social Stream popup, open":"Social Stream 팝업에서 다음을 여세요:","In the popup, turn on the":"팝업에서 다음을 켜세요:","Inspiration":"아이디어","Install and turn on the Social Stream Ninja Chrome extension.":"Social Stream Ninja Chrome 확장 프로그램을 설치하고 켜세요.","It doesn't take over a conversation in the ChatGPT website or app.":"ChatGPT 웹사이트나 앱의 기존 대화를 이어받지 않습니다.","It only means the AI answered the test. Nothing reads your chat until you turn on a feature.":"AI가 테스트에 답했다는 뜻일 뿐입니다. 기능을 켜기 전까지는 채팅을 읽지 않습니다.","It reconnects by itself. A fresh session keeps your instructions and settings, but forgets what was said aloud.":"자동으로 다시 연결됩니다. 새 세션에서도 지침과 설정은 유지되지만 음성 대화 내용은 잊습니다.","It's separate from the Primary bot. It doesn't share its document knowledge (RAG) or chat history.":"Primary 봇과 별개입니다. 해당 봇의 문서 지식(RAG)이나 채팅 기록을 공유하지 않습니다.","Its own, separate from chatgpt.com.":"chatgpt.com과 별도의 자체 대화입니다.","Keep the tab open. ChatGPT's replies come back as":"탭을 열어 두세요. ChatGPT 답변은 다음 유형으로 돌아옵니다:","Kind":"종류","Knowledge base (RAG)":"지식 기반(RAG)","Lets the Primary bot look things up in files you upload.":"Primary 봇이 업로드한 파일에서 정보를 찾을 수 있게 합니다.","Live Chat setting":"Live Chat 설정","Local AI TTS":"로컬 AI 음성 읽기","Local or cloud AI":"로컬 또는 클라우드 AI","Main navigation":"기본 탐색 메뉴","Make sure the page making the sound is open and OBS captures its audio.":"소리를 내는 페이지가 열려 있고 OBS에서 해당 오디오를 캡처하는지 확인하세요.","Management":"관리","More:":"자세히:","No":"아니요","No Video":"영상 없음","No cloud key. Speed depends on your computer.":"클라우드 키는 필요하지 않습니다. 속도는 컴퓨터 성능에 따라 달라집니다.","No conversation capture. The included Claude script only changes the page style.":"대화를 캡처하지 않습니다. 포함된 Claude 스크립트는 페이지 모양만 바꿉니다.","No website capture. Their APIs may still work if listed as a provider.":"웹사이트 캡처는 없습니다. 제공업체 목록에 있다면 해당 API는 사용할 수 있습니다.","None of these post into platform chat. Keep the speech bubble visible so viewers can read along.":"어떤 방식도 플랫폼 채팅에 게시하지 않습니다. 시청자가 읽으며 따라올 수 있도록 말풍선을 표시하세요.","Normal in Context only. Ask it about chat, or pick a mode that speaks replies.":"Context only에서는 정상입니다. 채팅에 관해 물어보거나 답변을 읽어 주는 모드를 선택하세요.","Ollama, Local Gemma, Local Qwen":"Ollama, Local Gemma, Local Qwen","On this page":"이 페이지에서","On your computer":"내 컴퓨터에서","Open":"열기","Open navigation menu":"탐색 메뉴 열기","Open the Dock with the same session.":"같은 세션으로 Dock을 여세요.","OpenAI Realtime details":"OpenAI Realtime 세부 정보","OpenAI, Gemini, DeepSeek, xAI, AWS Bedrock, OpenRouter, Groq, OpenCode Zen":"OpenAI, Gemini, DeepSeek, xAI, AWS Bedrock, OpenRouter, Groq, OpenCode Zen","Option":"옵션","Other AI websites":"다른 AI 웹사이트","Overlay Gallery":"오버레이 갤러리","Overlay builder":"오버레이 빌더","Pick a voice AI, or the AI you set up in the popup.":"음성 AI 또는 팝업에서 설정한 AI를 선택하세요.","Pick one":"하나 선택","Pick the AI, mic, reply type, instructions, and chat mode.":"AI, 마이크, 답변 유형, 지침, 채팅 모드를 선택하세요.","Pick what you want the AI to do, then follow that setup.":"AI가 할 일을 선택한 뒤 해당 설정을 따르세요.","Pick your microphone and":"마이크와 다음 항목을 선택하세요:","Primary chat bot":"기본 챗봇","Private bot":"비공개 봇","Problem":"문제","Relay all messages":"모든 메시지 릴레이","Remembers chat, stays quiet until you ask about it. Works with OpenAI Realtime.":"채팅을 기억하며 물어볼 때까지 조용히 있습니다. OpenAI Realtime에서 작동합니다.","Replies are capped at 512 output tokens. Diagnostics shows usage and delay.":"답변 출력은 최대 512토큰입니다. Diagnostics에서 사용량과 지연을 볼 수 있습니다.","Replies post from your logged-in account. For a separate name, use a YouTube, Twitch, or Kick bot account where supported.":"답변은 로그인한 계정으로 게시됩니다. 별도 이름을 쓰려면 지원되는 YouTube, Twitch 또는 Kick 봇 계정을 사용하세요.","SSN Hosted Trial LLM":"SSN Hosted Trial LLM","Send a new ChatGPT message. Both sides should show in the Dock. Older messages are skipped on purpose.":"ChatGPT에 새 메시지를 보내세요. 양쪽 메시지가 Dock에 표시되어야 합니다. 이전 메시지는 의도적으로 건너뜁니다.","Send your live chat into ChatGPT":"실시간 채팅을 ChatGPT에 보내기","Set":"설정:","Set trigger words, moderators-only, rate limits, history, and instructions.":"트리거 단어, 관리자 전용 설정, 사용량 제한, 기록, 지침을 설정하세요.","Show or speak AI answers without posting in chat":"채팅에 게시하지 않고 AI 답변을 표시하거나 읽어 주기","Skip to main content":"본문으로 건너뛰기","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Social Stream sends prompts to OpenAI with your API key.":"Social Stream은 사용자의 API 키로 OpenAI에 프롬프트를 보냅니다.","Speak a reply to every message":"모든 메시지에 음성으로 답하기","Speak replies to questions and mentions":"질문과 멘션에 음성으로 답하기","Spotify, OBS scene, and featured-chat tools are off by default. Turn them on in the popup, then in":"Spotify, OBS 장면, 강조 채팅 도구는 기본적으로 꺼져 있습니다. 팝업에서 켠 뒤 다음에서도 켜세요:","Start Co-host":"공동 진행자 시작","Start in non-blocking mode and review what it flags.":"차단하지 않는 모드로 시작하고 어떤 항목을 표시하는지 검토하세요.","Start safely":"안전하게 시작하기","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","TTS Setup":"음성 읽기 설정","Talk to an AI on stream that also hears chat":"채팅도 듣는 AI와 방송 중 대화하기","Talk to an AI on stream. It hears your microphone, sees chat you share, and can answer out loud.":"방송 중 AI와 대화하세요. 마이크 소리를 듣고 공유한 채팅을 읽으며 음성으로 답할 수 있습니다.","Test it with fake chat and alerts before adding it to OBS.":"OBS에 추가하기 전에 가짜 채팅과 알림으로 테스트하세요.","Test on a private or unlisted stream, in a normal text chat.":"비공개 또는 일부 공개 방송의 일반 텍스트 채팅에서 테스트하세요.","Test one language. Avoid block mode until it's reliable.":"한 언어로 테스트하세요. 신뢰할 수 있을 때까지 차단 모드는 피하세요.","Test selected chat bot":"선택한 챗봇 테스트","Text shows but no sound":"텍스트는 표시되지만 소리가 없음","The ChatGPT site can change. Relaying all chat can flood the conversation. Voice mode may not accept typed-in text. Use filters or a test stream first.":"ChatGPT 사이트는 변경될 수 있습니다. 모든 채팅을 전달하면 대화가 메시지로 가득 찰 수 있습니다. 음성 모드가 입력한 텍스트를 받지 않을 수 있으므로 먼저 필터나 테스트 방송을 사용하세요.","The extension reads new messages from an open":"확장 프로그램은 열려 있는 다음 탭에서 새 메시지를 읽습니다:","The one in your tab. No API key.":"탭에 있는 대화입니다. API 키는 필요하지 않습니다.","The overlay doesn't get the OpenAI voice. Use the co-host output picker for a virtual cable if supported.":"오버레이에는 OpenAI 음성이 전달되지 않습니다. 지원되는 경우 공동 진행자 출력 선택기에서 가상 오디오 케이블을 선택하세요.","Tool":"도구","Translates incoming chat, and optionally your own messages.":"들어오는 채팅과, 선택적으로 자신의 메시지를 번역합니다.","Translation":"번역","Try this":"시도할 방법","Turn on":"켜기:","Turn on the ChatGPT source, reload":"ChatGPT 소스를 켜고 다음을 다시 로드하세요:","Turn on the Primary bot or the feature you want. Connecting an AI alone does nothing to chat.":"Primary 봇이나 원하는 기능을 켜세요. AI를 연결하는 것만으로는 채팅에 아무 일도 일어나지 않습니다.","Turn on the feature that should use it, like the Primary bot or translation.":"Primary 봇이나 번역처럼 AI를 사용할 기능을 켜세요.","Turn overlay-only off only after you've checked that platform supports posting.":"플랫폼의 게시 지원 여부를 확인한 뒤에만 overlay-only를 끄세요.","Under":"다음 항목 아래에서:","Use ChatGPT's audio, or Social Stream TTS or an overlay, to put replies on stream.":"ChatGPT 오디오, Social Stream TTS 또는 오버레이로 답변을 방송에 내보내세요.","Use my open ChatGPT tab as a companion":"열려 있는 ChatGPT 탭을 조수로 사용","Use this":"사용할 기능","Use up-to-date, focused text or Markdown files.":"최신 내용을 담은 주제별 텍스트나 Markdown 파일을 사용하세요.","Uses the OpenAI key saved under":"다음에 저장한 OpenAI 키를 사용합니다:","Viewers type":"시청자가 입력:","Voice co-host":"음성 공동 진행자","Watch history size, cost, and private content.":"기록 크기, 비용, 비공개 내용을 주의해서 확인하세요.","Website":"웹사이트","What do you want the AI to do?":"AI가 무엇을 하길 원하나요?","What it does":"역할","What it is":"기능 설명","Which conversation":"사용하는 대화","With OpenAI Realtime, capture the co-host page audio in OBS.":"OpenAI Realtime에서는 공동 진행자 페이지 오디오를 OBS에서 캡처하세요.","Your own server":"내 서버","adds a second, separate overlay voice.":"는 별도의 오버레이 음성을 추가합니다.","and pick the AI you use.":"에서 사용하는 AI를 선택하세요.","and test it.":"를 설정하고 테스트하세요.","and turn on":"에서 다음을 켜세요:","messages.":"메시지.","relay destinations":"릴레이 대상","source.":"소스.","tab.":"탭.","to":"대상:","to OBS for the avatar and speech bubble.":"를 OBS에 추가하여 아바타와 말풍선을 표시하세요.","to OBS to show it.":"를 OBS에 추가해 표시하세요.","to get an AI summary.":"로 AI 요약을 받을 수 있습니다.","with overlay-only and TTS":"를 overlay-only 및 TTS와 함께 사용하세요.","with your session.":"를 자신의 세션으로 여세요.","“ChatGPT API” vs. your ChatGPT tab":"‘ChatGPT API’와 ChatGPT 탭의 차이"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/ai-modes-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/ai-modes-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/ai-modes-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/ai-modes-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/ai-modes-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/ai-modes-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/ai-modes-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/ai-modes-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/ai-modes-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/ai-modes-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/ai-modes-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/ai-modes-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="ai-modes-guide.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/ai-modes-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/ai-modes-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/ai-modes-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/ai-modes-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/ai-modes-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Social Stream Ninja의 AI</h1>
+            <p>AI가 할 일을 선택한 뒤 해당 설정을 따르세요.</p>
+        </div>
+    </section>
+
+    <main class="guide-section" id="main-content">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="이 페이지에서">
+                <a href="#pick">하나 선택</a>
+                <a href="#providers">AI 연결</a>
+                <a href="#voice-cohost">음성 공동 진행자</a>
+                <a href="#primary-bot">챗봇</a>
+                <a href="#private-bot">비공개 봇</a>
+                <a href="#processing-tools">채팅 도구</a>
+                <a href="#overlay-builder">오버레이 빌더</a>
+                <a href="#browser-companion">ChatGPT 탭</a>
+                <a href="#problems">문제 해결</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="pick">AI가 무엇을 하길 원하나요?</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>원하는 작업…</th><th>사용할 기능</th><th>API 키 필요 여부</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="원하는 작업">채팅도 듣는 AI와 방송 중 대화하기</td><td data-label="사용할 기능"><a href="#voice-cohost"><strong>음성 공동 진행자</strong></a></td><td data-label="API 키 필요 여부">AI에 따라 다름</td></tr>
+                        <tr><td data-label="원하는 작업">YouTube, Twitch, Kick 또는 다른 채팅에 자동 답변</td><td data-label="사용할 기능"><a href="#primary-bot"><strong>기본 챗봇</strong></a></td><td data-label="API 키 필요 여부">로컬 또는 클라우드 AI</td></tr>
+                        <tr><td data-label="원하는 작업">채팅에 게시하지 않고 AI 답변을 표시하거나 읽어 주기</td><td data-label="사용할 기능"><a href="#primary-bot"><strong>기본 챗봇</strong></a> 를 overlay-only 및 TTS와 함께 사용하세요.</td><td data-label="API 키 필요 여부">로컬 또는 클라우드 AI</td></tr>
+                        <tr><td data-label="원하는 작업">AI 도우미와 비공개 대화</td><td data-label="사용할 기능"><a href="#private-bot"><strong>비공개 봇</strong></a></td><td data-label="API 키 필요 여부">로컬 또는 클라우드 AI</td></tr>
+                        <tr><td data-label="원하는 작업">채팅 필터링, 번역, 요약 또는 내 문서로 답변하기</td><td data-label="사용할 기능"><a href="#processing-tools"><strong>채팅 도구</strong></a></td><td data-label="API 키 필요 여부">로컬 또는 클라우드 AI</td></tr>
+                        <tr><td data-label="원하는 작업">오버레이를 설명하고 AI로 만들기</td><td data-label="사용할 기능"><a href="#overlay-builder"><strong>오버레이 빌더</strong></a></td><td data-label="API 키 필요 여부">로컬 또는 클라우드 AI</td></tr>
+                        <tr><td data-label="원하는 작업">열려 있는 ChatGPT 탭을 조수로 사용</td><td data-label="사용할 기능"><a href="#browser-companion"><strong>ChatGPT 탭</strong></a> (실험적)</td><td data-label="API 키 필요 여부">아니요</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="providers">5단계로 AI 연결하기</h2>
+                <p>ChatGPT 탭을 제외한 모든 옵션은 이 설정을 먼저 해야 합니다.</p>
+                <ol class="guide-steps">
+                    <li>Social Stream 팝업에서 다음을 여세요: <strong>챗봇 및 AI 서비스</strong>.</li>
+                    <li>열기 <strong>LLM 서비스 제공자 설정</strong> 에서 사용하는 AI를 선택하세요.</li>
+                    <li>주소, 모델, API 키 또는 다운로드 설정을 입력하세요.</li>
+                    <li>클릭: <strong>선택한 챗봇 테스트</strong>.</li>
+                    <li>Primary 봇이나 번역처럼 AI를 사용할 기능을 켜세요.</li>
+                </ol>
+                <div class="guide-note"><strong>연결만으로 설정이 끝나지는 않습니다.</strong> AI가 테스트에 답했다는 뜻일 뿐입니다. 기능을 켜기 전까지는 채팅을 읽지 않습니다.</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>종류</th><th>선택지</th><th>알아 두면 좋은 내용</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="종류">내 컴퓨터에서</td><td data-label="선택지">Ollama, Local Gemma, Local Qwen</td><td data-label="알아 두면 좋은 내용">클라우드 키는 필요하지 않습니다. 속도는 컴퓨터 성능에 따라 달라집니다.</td></tr>
+                        <tr><td data-label="종류">내 서버</td><td data-label="선택지">사용자 지정 API(OpenAI 호환)</td><td data-label="알아 두면 좋은 내용">llama.cpp, LM Studio, vLLM 등에 사용합니다. Ollama는 전용 옵션을 사용하세요.</td></tr>
+                        <tr><td data-label="종류">클라우드</td><td data-label="선택지">OpenAI, Gemini, DeepSeek, xAI, AWS Bedrock, OpenRouter, Groq, OpenCode Zen</td><td data-label="알아 두면 좋은 내용">서비스마다 키, 요금, 제한, 모델 이름이 다릅니다.</td></tr>
+                        <tr><td data-label="종류">무료 체험</td><td data-label="선택지">SSN Hosted Trial LLM</td><td data-label="알아 두면 좋은 내용">실험적 기능입니다. 중단되거나 사용량이 제한될 수 있습니다.</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra">
+                    <summary>‘ChatGPT API’와 ChatGPT 탭의 차이</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>옵션</th><th>기능 설명</th><th>사용하는 대화</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="옵션">ChatGPT API 제공자</td><td data-label="기능 설명">Social Stream은 사용자의 API 키로 OpenAI에 프롬프트를 보냅니다.</td><td data-label="사용하는 대화">chatgpt.com과 별도의 자체 대화입니다.</td></tr>
+                            <tr><td data-label="옵션">ChatGPT 브라우저 소스</td><td data-label="기능 설명">확장 프로그램은 열려 있는 다음 탭에서 새 메시지를 읽습니다: <code>chatgpt.com</code> 탭.</td><td data-label="사용하는 대화">탭에 있는 대화입니다. API 키는 필요하지 않습니다.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>OpenAI API 키를 추가해도 Social Stream이 기존 ChatGPT 웹사이트나 음성 대화에 연결되지는 않습니다.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-cohost">음성 공동 진행자</h2>
+                <p>방송 중 AI와 대화하세요. 마이크 소리를 듣고 공유한 채팅을 읽으며 음성으로 답할 수 있습니다.</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>열기 <code>cohost.html?session=YOUR_SESSION</code>.</li>
+                        <li>음성 AI 또는 팝업에서 설정한 AI를 선택하세요.</li>
+                        <li>마이크와 다음 항목을 선택하세요: <strong>음성 응답(Audio Response)</strong>, 그런 다음 누르세요: <strong>공동 진행자 시작</strong>.</li>
+                        <li>OpenAI Realtime에서는 공동 진행자 페이지 오디오를 OBS에서 캡처하세요.</li>
+                        <li>추가: <code>cohost-overlay.html?session=YOUR_SESSION</code> 를 OBS에 추가하여 아바타와 말풍선을 표시하세요.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/guide-ai-cohost-controls.png" alt="미디어 장치, AI 제공자 설정, 시스템 지침, 실시간 채팅 모드를 보여주는 AI 공동 진행자 제어 화면" class="guide-image">
+                        <figcaption>AI, 마이크, 답변 유형, 지침, 채팅 모드를 선택하세요.</figcaption>
+                    </figure>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Live Chat 설정</th><th>역할</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Live Chat 설정">문맥만 — 요청받으면 답변</td><td data-label="역할">채팅을 기억하며 물어볼 때까지 조용히 있습니다. OpenAI Realtime에서 작동합니다.</td></tr>
+                        <tr><td data-label="Live Chat 설정">질문과 멘션에 음성으로 답하기</td><td data-label="역할">해당 메시지에 자동으로 음성 응답합니다.</td></tr>
+                        <tr><td data-label="Live Chat 설정">모든 메시지에 음성으로 답하기</td><td data-label="역할">모든 메시지에 음성으로 답합니다.</td></tr>
+                    </tbody>
+                </table>
+                <p>어떤 방식도 플랫폼 채팅에 게시하지 않습니다. 시청자가 읽으며 따라올 수 있도록 말풍선을 표시하세요.</p>
+                <details class="guide-extra">
+                    <summary>OpenAI Realtime 세부 정보</summary>
+                    <ul>
+                        <li>다음에 저장한 OpenAI 키를 사용합니다: <strong>ChatGPT API</strong>. 키는 Social Stream에 보관됩니다. 공동 진행자 페이지에는 단기 인증 정보만 전달되며 오디오는 WebRTC를 통해 전송됩니다.</li>
+                        <li>오버레이에는 OpenAI 음성이 전달되지 않습니다. 지원되는 경우 공동 진행자 출력 선택기에서 가상 오디오 케이블을 선택하세요. <code>&amp;forcetts</code> 는 별도의 오버레이 음성을 추가합니다.</li>
+                        <li>속도를 원하면 Mini 모델, Low 추론, Fast 대화 전환을 사용하세요. Full quality와 높은 추론 수준은 더 똑똑하지만 느리고 비용이 더 듭니다. Fast는 잠깐 멈추면 끼어들 수 있습니다.</li>
+                        <li>카메라와 화면 공유는 선택 사항입니다. 기본값은 <strong>영상 없음</strong>. 켜면 요청마다 사진 한 장을 보내며 실시간 영상은 아닙니다. 비용과 지연이 늘어납니다.</li>
+                        <li>Spotify, OBS 장면, 강조 채팅 도구는 기본적으로 꺼져 있습니다. 팝업에서 켠 뒤 다음에서도 켜세요: <strong>공동 진행자의 방송 제어</strong>.</li>
+                        <li>답변 출력은 최대 512토큰입니다. Diagnostics에서 사용량과 지연을 볼 수 있습니다.</li>
+                        <li>자동으로 다시 연결됩니다. 새 세션에서도 지침과 설정은 유지되지만 음성 대화 내용은 잊습니다.</li>
+                        <li>ChatGPT 웹사이트나 앱의 기존 대화를 이어받지 않습니다.</li>
+                    </ul>
+                </details>
+                <p><a href="ai-cohost-guide.html" class="btn btn-primary">AI 공동 진행자 전체 가이드</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="primary-bot">기본 챗봇</h2>
+                <p>시청자 메시지에 오버레이, TTS 음성 또는 지원되는 플랫폼 채팅으로 답합니다.</p>
+                <ol class="guide-steps">
+                    <li><a href="#providers">AI 연결</a> 를 설정하고 테스트하세요.</li>
+                    <li>열기 <strong>챗봇 - 기본(Chat Bot - Primary)</strong> 에서 다음을 켜세요: <strong>LLM AI 챗봇 활성화</strong>.</li>
+                    <li>트리거 단어, 관리자 전용 설정, 사용량 제한, 기록, 지침을 설정하세요.</li>
+                    <li>첫 테스트는 안전하게 진행하도록 다음을 켜세요: <strong>봇 답변을 봇 오버레이 페이지로만 보내기</strong>.</li>
+                    <li>열기 <code>bot.html?session=YOUR_SESSION</code>. 답변을 읽어 주게 하려면 TTS를 켜세요.</li>
+                    <li>플랫폼의 게시 지원 여부를 확인한 뒤에만 overlay-only를 끄세요.</li>
+                </ol>
+                <p>답변은 로그인한 계정으로 게시됩니다. 별도 이름을 쓰려면 지원되는 YouTube, Twitch 또는 Kick 봇 계정을 사용하세요.</p>
+                <p><a href="chatbot-basics-guide.html" class="btn btn-primary">AI 챗봇 전체 가이드</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="private-bot">비공개 봇</h2>
+                <p>프롬프트 테스트에 좋은 일대일 도우미입니다.</p>
+                <ol class="guide-steps">
+                    <li>켜기: <strong>챗봇 - 비공개 인터페이스</strong>.</li>
+                    <li>열기 <code>chatbot.html</code> 를 자신의 세션으로 여세요.</li>
+                </ol>
+                <div class="guide-note">Primary 봇과 별개입니다. 해당 봇의 문서 지식(RAG)이나 채팅 기록을 공유하지 않습니다.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="processing-tools">채팅 도구</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>도구</th><th>역할</th><th>안전하게 시작하기</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="도구">검열 봇</td><td data-label="역할">들어오는 메시지를 확인하고 수정하거나 차단합니다.</td><td data-label="안전하게 시작하기">차단하지 않는 모드로 시작하고 어떤 항목을 표시하는지 검토하세요.</td></tr>
+                        <tr><td data-label="도구">번역</td><td data-label="역할">들어오는 채팅과, 선택적으로 자신의 메시지를 번역합니다.</td><td data-label="안전하게 시작하기">한 언어로 테스트하세요. 신뢰할 수 있을 때까지 차단 모드는 피하세요.</td></tr>
+                        <tr><td data-label="도구">지식 기반(RAG)</td><td data-label="역할">Primary 봇이 업로드한 파일에서 정보를 찾을 수 있게 합니다.</td><td data-label="안전하게 시작하기">최신 내용을 담은 주제별 텍스트나 Markdown 파일을 사용하세요.</td></tr>
+                        <tr><td data-label="도구">채팅 요약</td><td data-label="역할">시청자가 입력: <code>!summary</code> 로 AI 요약을 받을 수 있습니다.</td><td data-label="안전하게 시작하기">기록 크기, 비용, 비공개 내용을 주의해서 확인하세요.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="overlay-builder">오버레이 빌더</h2>
+                <p>다음 기능에서 원하는 오버레이를 설명하세요: <code>aiprompt.html</code>에서 만든 뒤 미리 보고 저장하세요. 다음을 추가하세요: <code>aioverlay.html</code> 를 OBS에 추가해 표시하세요.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-ai-overlay-builder.png" alt="프롬프트, 미리보기, 저장 제어, 이벤트 시뮬레이션 버튼을 보여주는 AI 오버레이 빌더" class="guide-image">
+                    <figcaption>OBS에 추가하기 전에 가짜 채팅과 알림으로 테스트하세요.</figcaption>
+                </figure>
+                <p><a href="ai-overlay-builder-guide.html" class="btn btn-primary">AI 오버레이 빌더 전체 가이드</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="browser-companion">ChatGPT 탭(실험적)</h2>
+                <p>Chrome에서 ChatGPT를 쓰고 있고 API 키를 원하지 않나요? Social Stream은 다른 채팅 소스처럼 ChatGPT 탭의 새 메시지를 가져올 수 있습니다(유형: <code>openai</code>).</p>
+                <h3>ChatGPT 탭 캡처</h3>
+                <ol class="guide-steps">
+                    <li>Social Stream Ninja Chrome 확장 프로그램을 설치하고 켜세요.</li>
+                    <li>팝업에서 다음을 켜세요: <strong>ChatGPT</strong> 소스.</li>
+                    <li>열기 <code>https://chatgpt.com/</code>를 다시 로드하세요.</li>
+                    <li>같은 세션으로 Dock을 여세요.</li>
+                    <li>ChatGPT에 새 메시지를 보내세요. 양쪽 메시지가 Dock에 표시되어야 합니다. 이전 메시지는 의도적으로 건너뜁니다.</li>
+                </ol>
+                <h3>실시간 채팅을 ChatGPT에 보내기</h3>
+                <ol class="guide-steps">
+                    <li>비공개 또는 일부 공개 방송의 일반 텍스트 채팅에서 테스트하세요.</li>
+                    <li>다음 항목 아래에서: <strong>관리</strong>에서 다음을 켜세요: <strong>모든 메시지 릴레이</strong>.</li>
+                    <li>설정: <strong>릴레이 대상</strong> 대상: <code>openai</code>로 설정하여 시청자 메시지가 ChatGPT로만 가도록 하세요.</li>
+                    <li>탭을 열어 두세요. ChatGPT 답변은 다음 유형으로 돌아옵니다: <code>openai</code> 메시지.</li>
+                    <li>ChatGPT 오디오, Social Stream TTS 또는 오버레이로 답변을 방송에 내보내세요.</li>
+                </ol>
+                <div class="warning-note"><strong>실험적 기능입니다.</strong> ChatGPT 사이트는 변경될 수 있습니다. 모든 채팅을 전달하면 대화가 메시지로 가득 찰 수 있습니다. 음성 모드가 입력한 텍스트를 받지 않을 수 있으므로 먼저 필터나 테스트 방송을 사용하세요.</div>
+                <details class="guide-extra">
+                    <summary>다른 AI 웹사이트</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>웹사이트</th><th>지원</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="웹사이트">ChatGPT</td><td data-label="지원">실험적 기능입니다. 기록이 아닌 새 텍스트 메시지를 캡처합니다. 릴레이는 메시지 입력란에 글을 입력할 수 있습니다.</td></tr>
+                            <tr><td data-label="웹사이트">Claude</td><td data-label="지원">대화를 캡처하지 않습니다. 포함된 Claude 스크립트는 페이지 모양만 바꿉니다.</td></tr>
+                            <tr><td data-label="웹사이트">Gemini, Copilot, Perplexity 등</td><td data-label="지원">웹사이트 캡처는 없습니다. 제공업체 목록에 있다면 해당 API는 사용할 수 있습니다.</td></tr>
+                        </tbody>
+                    </table>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">문제 해결</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>문제</th><th>시도할 방법</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="문제">연결되었지만 채팅에 답하지 않음</td><td data-label="시도할 방법">Primary 봇이나 원하는 기능을 켜세요. AI를 연결하는 것만으로는 채팅에 아무 일도 일어나지 않습니다.</td></tr>
+                        <tr><td data-label="문제">공동 진행자가 채팅을 보지만 말하지 않음</td><td data-label="시도할 방법">Context only에서는 정상입니다. 채팅에 관해 물어보거나 답변을 읽어 주는 모드를 선택하세요.</td></tr>
+                        <tr><td data-label="문제">ChatGPT 탭 내용이 표시되지 않음</td><td data-label="시도할 방법">ChatGPT 소스를 켜고 다음을 다시 로드하세요: <code>chatgpt.com</code>를 선택하고 새 메시지를 보내세요.</td></tr>
+                        <tr><td data-label="문제">봇이 대부분의 메시지를 건너뜀</td><td data-label="시도할 방법">트리거 단어, 관리자 전용 설정, 사용량 제한, 지침을 확인하세요. 의도적으로 대상을 엄격하게 고르도록 설계되었습니다.</td></tr>
+                        <tr><td data-label="문제">텍스트는 표시되지만 소리가 없음</td><td data-label="시도할 방법">소리를 내는 페이지가 열려 있고 OBS에서 해당 오디오를 캡처하는지 확인하세요.</td></tr>
+                        <tr><td data-label="문제">봇이 채팅에 게시할 수 없음</td><td data-label="시도할 방법">플랫폼 지원 여부, 로그인 여부, 계정의 게시 권한과 사용량 제한을 확인하세요.</td></tr>
+                    </tbody>
+                </table>
+                <p>자세히: <a href="tts-setup-guide.html">음성 읽기 설정</a>, <a href="local-tts.html">로컬 AI 음성 읽기</a>, 그리고 <a href="commands.html#ai-integration">Commands &amp; API의 AI 통합</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

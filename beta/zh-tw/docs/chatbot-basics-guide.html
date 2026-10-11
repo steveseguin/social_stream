@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/chatbot-basics-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/chatbot-basics-guide.html">
+    <meta property="og:title" content="AI 聊天機器人的設定與使用 - Social Stream Ninja">
+    <meta property="og:description" content="設定和使用 Social Stream Ninja AI 聊天機器人，連接 AI 供應商、安全測試、控制直播回覆，並排查沒有回應的問題。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/chatbot-basics-guide.html">
+    <meta name="twitter:title" content="AI 聊天機器人的設定與使用 - Social Stream Ninja">
+    <meta name="twitter:description" content="設定和使用 Social Stream Ninja AI 聊天機器人，連接 AI 供應商、安全測試、控制直播回覆，並排查沒有回應的問題。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 聊天機器人的設定與使用 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="設定和使用 Social Stream Ninja AI 聊天機器人，連接 AI 供應商、安全測試、控制直播回覆，並排查沒有回應的問題。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/chatbot-basics-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"(default 120000)":"（預設 120000）","(default 500)":"（預設 500）","(defaults 4000 and 30000)":"（預設 4000 和 30000）","(milliseconds, so 10 seconds)":"（毫秒，即 10 秒）","(or":"（或",") and fill in the boxes it shows.":"），然後填寫顯示的欄位。","), not the featured chat overlay. The overlay options in settings cover the common ones.":"），不影響精選聊天覆蓋層。設定中的覆蓋層選項已包含常用項目。",", paste the whole key, enter a model your project can use, and click":"，貼上完整金鑰，輸入專案可用的模型，然後點擊",", then":"，然後",", type a message in the real YouTube or Twitch chat. Check it shows up in the Dock.":"，在實際 YouTube 或 Twitch 聊天中輸入訊息，並確認它出現在 Dock 中。",". A real text reply should appear under the button.":"。按鈕下方應出現實際文字回覆。",". Don't use this for Ollama.":"。不要將它用於 Ollama。",". Follow its model download steps.":"。依照步驟下載模型。",". Full provider list:":"。完整服務供應商清單：",". If the voice never starts,":"。如果語音始終未開始，",". Not an Admin key.":"。不要使用 Admin 金鑰。",". The usual address is":"。常用位址是","A chat source that supports sending, logged in and allowed to post, still open, with host chat not disabled.":"支援傳送訊息的聊天來源，已登入、有發言權限、保持開啟，而且沒有停用主持人聊天。","A paid service, like OpenAI or Gemini":"OpenAI 或 Gemini 等付費服務","A short, plain name viewers can type.":"觀眾容易輸入的簡短名稱。","AI Chat Bot Setup and Use - Social Stream Ninja":"AI 聊天機器人的設定與使用 - Social Stream Ninja","AI Integration in Commands & API":"「指令與 API」中的 AI 整合","AI Modes Guide":"AI 模式指南","Add a word if the bot shouldn't consider every message.":"若不想讓機器人考慮每則訊息，請加入觸發詞。","Add to the link":"加入連結","Adding credit won't fix a 401.":"儲值不能解決 401 錯誤。","Additional Bot Instructions":"機器人的附加指示","Blank":"留白","Bot replies ONLY go to the bot overlay page":"機器人回覆僅傳送到機器人疊加畫面頁面","Chat Bot - Primary":"聊天機器人 - 主要機器人","Chat Bots and AI services → Configure LLM Service Provider":"Chat Bots and AI services → Configure LLM Service Provider","Chat isn't being captured. Check Social Stream is on, the chat window is open and logged in, the right live chat is open, and your source filters.":"聊天沒有被擷取。檢查 Social Stream 是否開啟、聊天視窗是否開啟並登入、是否開啟了正確的直播聊天，以及來源篩選器。","ChatGPT API":"ChatGPT API","Check API billing and budget (separate from a ChatGPT subscription). Slow down or wait.":"檢查 API 計費與預算，它們與 ChatGPT 訂閱分開。降低頻率或稍候。","Check it's a normal key in the right project with model requests allowed. If unsure, make a new key and replace the saved one.":"確認是正確專案的一般金鑰，而且允許模型請求。不確定時，建立新金鑰並替換已儲存的金鑰。","Clear bot overlay now":"立即清除機器人疊加畫面","Clear it from the API, and custom styling":"透過 API 清除與自訂樣式","Clear it right now":"立即清除","Click":"點選","Commands & API":"指令與 API","Configure LLM section with Ollama selected, local endpoint and model fields filled in, and the provider test showing Connected":"「設定 LLM」區域已選擇 Ollama，已填寫本機端點和模型欄位，供應商測試顯示「已連線」","Connected":"已連線","Connected means the AI answered. It doesn't turn the bot on.":"Connected 表示 AI 已回答，不代表機器人已經啟用。","Connected, but the viewer's message isn't in the Dock":"已連線，但觀眾訊息不在 Dock 中","Copy the status, code, missing scope, and Request ID shown in Social Stream. Then send the in-app diagnostic report soon after. It leaves out API keys and prompts.":"複製 Social Stream 顯示的狀態、代碼、缺少的權限和 Request ID，然後盡快傳送應用程式內診斷報告。報告不包含 API 金鑰和提示詞。","Credit and permissions are separate. See OpenAI's":"餘額與權限是兩回事。參閱 OpenAI 的","Custom API":"自訂 API","Custom CSS on the normal":"在一般覆蓋層上使用自訂 CSS：","Customize bot name":"自訂機器人名稱","Disable the host chat and block functions":"停用主持人聊天和封鎖功能","Do not screen out any of the bot's replies":"不篩除機器人的任何回覆","Don't test from the Dock.":"不要從 Dock 測試。","Download":"下載","Enable the LLM AI chat bot":"啟用 LLM AI 聊天機器人","Error":"錯誤","Features":"功能","Find the last thing that worked, then check the next row.":"找出最後一個正常運作的環節，然後檢查下一列。","First test":"首次測試","Fix problems":"解決問題","From a":"使用","From that account, send:":"從該帳戶傳送：","Give up waiting for a stuck voice":"停止等待卡住的語音","Guides":"指南","Hide after TTS, autohide, or a fixed time":"在 TTS 結束後、自動隱藏或固定時間後隱藏","Hide each reply after a set time":"經過指定時間後隱藏每則回覆","Hide it when the voice finishes":"語音結束時隱藏","Hide longer replies later, shorter ones sooner":"長回覆顯示久些，短回覆早點隱藏","Hide old replies":"隱藏舊回覆","Hire":"聘用","Home":"首頁","I use":"我使用的服務","I use…":"我使用…","I want to":"我想要","I want to…":"我想要…","If you set a trigger word, the message must contain it.":"設定了觸發詞時，訊息必須包含該詞。","If your browser auto-translates the OpenAI site and the key settings act strangely, switch to the original English page. This helped one user, but isn't a known cause of 401 errors.":"如果瀏覽器自動翻譯 OpenAI 網站，而且金鑰設定操作異常，請切換到原始英文頁面。這曾幫助一位使用者，但並非已知的 401 錯誤原因。","If your key and project look right, give OpenAI support the Request ID and time.":"如果金鑰和專案看起來正確，請向 OpenAI 支援提供 Request ID 和時間。","In Social Stream settings, open":"在 Social Stream 設定中開啟","In Social Stream, pick":"在 Social Stream 中選擇","Inspiration":"靈感","It answers one message at a time by default. When posting into chat, it also waits 5 seconds per source.":"預設每次只回答一則訊息。向聊天發言時，每個來源還會等待 5 秒。","It skips its own messages, empty messages, and messages too close to its last reply.":"略過自己的訊息、空訊息，以及距離上次回覆過近的訊息。","It's just added to the start of the reply. Replies post from the account you're logged in with, unless you set up account roles in the standalone app. For a separate Twitch bot account, see the":"它只是加在回覆開頭的名稱。除非在獨立應用程式中設定帳戶角色，否則回覆會從目前登入帳戶發出。使用獨立 Twitch 機器人帳戶請參閱","Keep":"保持","Keep low unless your AI can handle more.":"除非 AI 能處理更多請求，否則保持較低。","Keep on while the bot should watch chat.":"需要機器人監看聊天時保持開啟。","LM Studio, llama.cpp, vLLM, or similar":"LM Studio、llama.cpp、vLLM 或類似服務","Later":"之後","Let an AI answer your viewers in chat, on screen, or out loud.":"讓 AI 在聊天、螢幕或語音中回答觀眾。","List of words to trigger bot":"觸發機器人的詞語清單","Local Gemma":"Local Gemma","Local Qwen":"Local Qwen","Look for a missing character or extra space. Check it wasn't deleted, it's in the right project, and Social Stream isn't using an old saved key.":"檢查缺字或多餘空格。確認金鑰未刪除、屬於正確專案，而且 Social Stream 沒有使用先前儲存的舊金鑰。","Main navigation":"主導覽","Make a normal project API key on the":"在以下頁面建立一般專案 API 金鑰：","Make sure it's in the project you want billed, and it's allowed to make model requests.":"確保它屬於希望計費的專案，而且允許進行模型請求。","Max parallel bot replies":"最大並行機器人回覆數","Message is in the Dock, but no reply on the overlay":"訊息在 Dock 中，但覆蓋層沒有回覆","Messages typed in the Dock or host chat can be skipped on purpose, so the bot doesn't reply to itself.":"Dock 或主持人聊天中輸入的訊息可能被刻意略過，避免機器人自問自答。","Moderators-only mode skips everyone else.":"僅限管理員模式會略過其他所有人。","Need Ollama? Get it from the":"需要 Ollama？請從以下位置下載：","Never paste your key":"切勿貼上金鑰","Nothing yet, and want it to run in the browser":"尚未使用任何服務，希望在瀏覽器內執行","Off":"關閉","Ollama (Native Local API)":"Ollama（原生本機 API）","Ollama download page":"Ollama 下載頁面","Ollama keep-alive set to 0?":"Ollama keep-alive 設為 0？","Ollama on my computer":"電腦上的 Ollama","On":"開啟","On this page":"本頁內容","Once it works, turn":"確認正常後，將","Only if you want that.":"僅在需要時使用。","Only the first test gets a reply":"只有首次測試收到回覆","Open":"開啟","Open navigation menu":"開啟導覽選單","Open the":"開啟","OpenAI API keys page":"OpenAI API 金鑰頁面","OpenAI error like":"出現如下 OpenAI 錯誤：","OpenAI key errors":"OpenAI 金鑰錯誤","Or send":"或傳送","Other AI bot pages":"其他 AI 機器人頁面","Other AI pages":"其他 AI 頁面","Out of quota, or too many requests.":"配額不足或請求過多。","Overlay Gallery":"疊加畫面圖庫","Overlay Page and TTS for Chat Bot":"聊天機器人的疊加畫面頁面與 TTS","Overlay-only setting":"僅覆蓋層設定","Pick an AI":"選擇 AI","Pick this":"選擇此項","Pick your AI (":"選擇 AI（","Private":"私人","Problem":"問題","Raise it if the bot posts too often. Only matters when posting into chat.":"機器人發言太頻繁時提高此值。僅在向聊天發言時生效。","Rate limit for responses per tab / source":"每個分頁／來源的回覆頻率限制","Read the error under the button. Check the address, API key, model name, that your local AI is running, firewall, and your provider's limits.":"閱讀按鈕下方的錯誤。檢查位址、API 金鑰、模型名稱、本機 AI 是否執行、防火牆及服務供應商限制。","Reference table comparing the Primary bot overlay, private chatbot, censor bot, and AI cohost":"比較主要機器人疊加畫面、私人聊天機器人、審查機器人和 AI 搭檔的參考表","Replies show on the bot overlay only. Nothing is posted to chat.":"回覆只顯示在機器人覆蓋層，不會傳送到聊天。","Replies still go to the overlay, and Social Stream also tries to post them in the chat they came from.":"回覆仍會顯示在覆蓋層，Social Stream 也會嘗試傳到訊息來源的聊天中。","Reply shows on the overlay, but not in chat":"覆蓋層有回覆，但聊天沒有","Reply stays on screen after the voice":"語音結束後回覆仍留在螢幕上","Run the test":"執行測試","See":"參閱","See all AI features in the":"全部 AI 功能請查看","Send it from the real platform chat, not the Dock. Then check the bot is on, the trigger word, moderators-only, the bot name, the rate limit, and your instructions. Turn on":"從真實平台聊天傳送，而非 Dock。再檢查機器人是否開啟、觸發詞、僅限管理員設定、機器人名稱、頻率限制和指令。開啟","Send it once, then wait. A local AI may still be loading.":"只傳送一次，然後等待。本機 AI 可能仍在載入。","Set Up the AI Chat Bot":"設定 AI 聊天機器人","Set it up":"進行設定","Set it up in 6 steps":"六步完成設定","Set the shortest and longest time for autohide":"設定自動隱藏的最短和最長時間","Set up and use the Social Stream Ninja AI chat bot, connect an AI provider, test safely, control live replies, and troubleshoot missing responses.":"設定和使用 Social Stream Ninja AI 聊天機器人，連接 AI 供應商、安全測試、控制直播回覆，並排查沒有回應的問題。","Setting":"設定","Short messages like":"簡短訊息，例如","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Still stuck?":"仍然遇到問題？","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","Test button fails":"測試按鈕失敗","Test it":"測試","Test selected chat bot":"測試所選聊天機器人","That service. Enter its API key and model. They set the prices, limits, and model names.":"選擇該服務，輸入其 API 金鑰和模型。價格、限制和模型名稱由該服務決定。","That unloads the model after each request. The bot still works, but every reply may be slow while the model loads again.":"這會在每次請求後卸載模型。機器人仍能運作，但每次回覆都可能因為重新載入模型而變慢。","The Primary bot, private chat, censor bot, and AI co-host are separate tools. Each has its own settings and history.":"Primary 機器人、私人聊天、審查機器人和 AI 共同主持人是獨立工具，各自有設定和歷史記錄。","The bot is picky by design. An empty trigger list means it":"機器人本來就會挑選訊息。觸發詞清單為空，表示它會","The bot name is not a new account.":"機器人名稱不是新帳戶。","The key is wrong or gone.":"金鑰錯誤或已失效。","The key isn't allowed to make model requests.":"金鑰沒有模型請求權限。","The private bot can't stand in for testing the Primary bot.":"測試私人機器人不能代替測試 Primary 機器人。","The reply should appear on the":"回覆應顯示在","These only affect the bot overlay (":"這些設定只影響機器人覆蓋層（","Three parts, all needed:":"三個部分，缺一不可：","Trigger starts with":"觸發詞開頭為","Try this":"試試這個","Turn Social Stream on and open your live chat source.":"開啟 Social Stream，並開啟直播聊天來源。","Turn off overlay-only. Check that source can send, the account can post, the chat box is available, account roles, and":"關閉 overlay-only。檢查來源能否傳送、帳戶能否發言、聊天輸入框是否可用、帳戶角色，以及","Turn off when you're ready to post into real chat.":"準備好向真實聊天發言時關閉。","Turn on":"開啟","Turn on the private chat bot option and use its link with the same session. It's a separate bot, so it doesn't test the Primary bot.":"開啟私人聊天機器人選項，並使用同一工作階段的連結。它是獨立機器人，因此不能測試 Primary 機器人。","Twitch Bot Account guide":"Twitch 機器人帳號指南","Use":"使用","Use a plain-word trigger, or let that command through your command filter.":"使用普通詞作為觸發詞，或在命令篩選器中允許該命令。","Use these settings in":"在以下位置使用這些設定：","Using more than one?":"使用多個機器人？","Usually off, so the bot can skip pointless replies.":"通常關閉，讓機器人略過無意義的回覆。","Wait a bit after the voice finishes":"語音結束後稍等","Wait for the first reply and the rate limit. Keep-alive":"等待首次回覆及頻率限制解除。Keep-alive 為","What happens":"會發生什麼","What it means":"含義","Where replies go":"回覆傳送到哪裡","Why it's quiet":"為什麼不回應","Why the bot is quiet":"機器人為什麼不回應","Will respond to Moderators only":"僅回覆版主","With Remote API Control on, open":"開啟 Remote API Control 後，開啟","You need":"需要","Your command filter setting may drop that message before the bot sees it. Use a plain word instead.":"命令篩選器可能在機器人看到訊息前將其捨棄。請改用普通詞。","and":"和","and turn on":"並開啟","authentication reference":"驗證參考","back off. Then pick a trigger word and rate limit, and decide if replies should go into real chat.":"重新關閉。然後選擇觸發詞和頻率限制，決定是否把回覆傳到真實聊天。","does nothing":"沒有反應","error guide":"錯誤指南","every message, not that it answers every one.":"每則訊息，但不代表逐則回答。","falls back to a length-based time.":"會改用基於文字長度的時間。","for now. This keeps replies off your real chat while you test.":"暫時啟用，以免測試回覆傳到真實聊天。","for your first test.":"用於首次測試。","in settings. This removes the reply on screen and any waiting ones, but won't stop a voice that's already talking.":"。這會清除螢幕上的回覆及等待中的回覆，但不會停止已經開始播放的語音。","into a support message or diagnostic report.":"到支援訊息或診斷報告中。","is an OpenAI permission, not something to type into Social Stream.":"是 OpenAI 權限名稱，不是需要輸入 Social Stream 的內容。","is blank":"為空白","is optional.":"是選用的。","link keeps all of these features. A copied or edited local":"連結保留這些全部功能。複製或編輯過的本機","link under":"連結，位於","looks at":"查看","makes every reply slow to start.":"會導致每次回覆都啟動緩慢。","may be skipped. Say the bot's name to be clear.":"可能被略過。叫出機器人的名字以明確呼叫。","ms":"毫秒","only proves the first part.":"只能證明第一部分正常。","open with the same session. Also needed for TTS.":"，使用同一工作階段開啟。TTS 也需要它。","or":"或","over the API WebSocket.":"，透過 API WebSocket 傳送。","page.":"頁面。","second account":"第二個帳戶","see below":"見下文","short at first, like:":"最初保持簡短，例如：","the AI (writes the reply), the Primary bot (picks which chat messages to answer), and where replies go (overlay, chat, or both). A green":"AI（編寫回覆）、Primary 機器人（選擇要回答的聊天訊息）、回覆目的地（覆蓋層、聊天或兩者）。綠色的","to test.":"進行測試。","wins, then":"優先，然後是","won't get later fixes unless you update it.":"不會自動獲得後續修正，需要自行更新。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/chatbot-basics-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/chatbot-basics-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/chatbot-basics-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/chatbot-basics-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/chatbot-basics-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/chatbot-basics-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/chatbot-basics-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/chatbot-basics-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/chatbot-basics-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="chatbot-basics-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/chatbot-basics-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/chatbot-basics-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/chatbot-basics-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/chatbot-basics-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/chatbot-basics-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/chatbot-basics-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/chatbot-basics-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/chatbot-basics-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>設定 AI 聊天機器人</h1>
+            <p>讓 AI 在聊天、螢幕或語音中回答觀眾。</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="本頁內容">
+                <a href="#setup">進行設定</a>
+                <a href="#provider">選擇 AI</a>
+                <a href="#first-test">測試</a>
+                <a href="#replies">回覆傳送到哪裡</a>
+                <a href="#quiet">為什麼不回應</a>
+                <a href="#hide">隱藏舊回覆</a>
+                <a href="#problems">解決問題</a>
+                <a href="#openai">OpenAI 金鑰錯誤</a>
+                <a href="#other-pages">其他 AI 頁面</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="setup">六步完成設定</h2>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>在 Social Stream 設定中開啟 <strong>Chat Bots and AI services &rarr; Configure LLM Service Provider</strong>.</li>
+                        <li>選擇 AI（<a href="#provider">見下文</a>），然後填寫顯示的欄位。</li>
+                        <li>點選 <strong>測試所選聊天機器人</strong>。按鈕下方應出現實際文字回覆。</li>
+                        <li>開啟 <strong>聊天機器人 - 主要機器人</strong> 並開啟 <strong>啟用 LLM AI 聊天機器人</strong>.</li>
+                        <li>開啟 <strong>機器人回覆僅傳送到機器人疊加畫面頁面</strong> 暫時啟用，以免測試回覆傳到真實聊天。</li>
+                        <li>開啟 <code>bot.html</code> 連結，位於 <strong>聊天機器人的疊加畫面頁面與 TTS</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/guide-llm-provider-connected.png" alt="「設定 LLM」區域已選擇 Ollama，已填寫本機端點和模型欄位，供應商測試顯示「已連線」" class="guide-image">
+                        <figcaption>Connected 表示 AI 已回答，不代表機器人已經啟用。</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>三個部分，缺一不可：</strong> AI（編寫回覆）、Primary 機器人（選擇要回答的聊天訊息）、回覆目的地（覆蓋層、聊天或兩者）。綠色的 <strong>已連線</strong> 只能證明第一部分正常。</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="provider">選擇 AI</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>我使用…</th><th>選擇此項</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="我使用的服務">電腦上的 Ollama</td><td data-label="選擇此項"><strong>Ollama（原生本機 API）</strong>。常用位址是 <code>http://localhost:11434</code>.</td></tr>
+                        <tr><td data-label="我使用的服務">LM Studio、llama.cpp、vLLM 或類似服務</td><td data-label="選擇此項"><strong>自訂 API</strong>。不要將它用於 Ollama。</td></tr>
+                        <tr><td data-label="我使用的服務">OpenAI 或 Gemini 等付費服務</td><td data-label="選擇此項">選擇該服務，輸入其 API 金鑰和模型。價格、限制和模型名稱由該服務決定。</td></tr>
+                        <tr><td data-label="我使用的服務">尚未使用任何服務，希望在瀏覽器內執行</td><td data-label="選擇此項"><strong>Local Gemma</strong> 或 <strong>Local Qwen</strong>。依照步驟下載模型。</td></tr>
+                    </tbody>
+                </table>
+                <p>需要 Ollama？請從以下位置下載： <a href="https://ollama.com/download" target="_blank" rel="noopener">Ollama 下載頁面</a>。完整服務供應商清單： <a href="commands.html#ai-integration">「指令與 API」中的 AI 整合</a>.</p>
+                <details class="guide-extra">
+                    <summary>Ollama keep-alive 設為 0？</summary>
+                    <p>這會在每次請求後卸載模型。機器人仍能運作，但每次回覆都可能因為重新載入模型而變慢。</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="first-test">測試</h2>
+                <p>在以下位置使用這些設定： <strong>聊天機器人 - 主要機器人</strong> 用於首次測試。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>設定</th><th>首次測試</th><th>之後</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="設定">啟用 LLM AI 聊天機器人</td><td data-label="首次測試">開啟</td><td data-label="之後">需要機器人監看聊天時保持開啟。</td></tr>
+                        <tr><td data-label="設定">自訂機器人名稱</td><td data-label="首次測試"><code>NinjaBot</code></td><td data-label="之後">觀眾容易輸入的簡短名稱。</td></tr>
+                        <tr><td data-label="設定">機器人回覆僅傳送到機器人疊加畫面頁面</td><td data-label="首次測試">開啟</td><td data-label="之後">準備好向真實聊天發言時關閉。</td></tr>
+                        <tr><td data-label="設定">不篩除機器人的任何回覆</td><td data-label="首次測試">開啟</td><td data-label="之後">通常關閉，讓機器人略過無意義的回覆。</td></tr>
+                        <tr><td data-label="設定">觸發機器人的詞語清單</td><td data-label="首次測試">留白</td><td data-label="之後">若不想讓機器人考慮每則訊息，請加入觸發詞。</td></tr>
+                        <tr><td data-label="設定">每個分頁／來源的回覆頻率限制</td><td data-label="首次測試"><code>5000</code> 毫秒</td><td data-label="之後">機器人發言太頻繁時提高此值。僅在向聊天發言時生效。</td></tr>
+                        <tr><td data-label="設定">最大並行機器人回覆數</td><td data-label="首次測試"><code>1</code></td><td data-label="之後">除非 AI 能處理更多請求，否則保持較低。</td></tr>
+                        <tr><td data-label="設定">僅回覆版主</td><td data-label="首次測試">關閉</td><td data-label="之後">僅在需要時使用。</td></tr>
+                    </tbody>
+                </table>
+                <h3>執行測試</h3>
+                <ol class="guide-steps">
+                    <li>開啟 Social Stream，並開啟直播聊天來源。</li>
+                    <li>使用 <strong>第二個帳戶</strong>，在實際 YouTube 或 Twitch 聊天中輸入訊息，並確認它出現在 Dock 中。</li>
+                    <li>從該帳戶傳送： <code>NinjaBot, reply with exactly: Hello</code></li>
+                    <li>只傳送一次，然後等待。本機 AI 可能仍在載入。</li>
+                    <li>回覆應顯示在 <code>bot.html</code> 頁面。</li>
+                </ol>
+                <div class="warning-note"><strong>不要從 Dock 測試。</strong> Dock 或主持人聊天中輸入的訊息可能被刻意略過，避免機器人自問自答。</div>
+                <p>確認正常後，將 <strong>不篩除機器人的任何回覆</strong> 重新關閉。然後選擇觸發詞和頻率限制，決定是否把回覆傳到真實聊天。</p>
+                <p>保持 <strong>機器人的附加指示</strong> 最初保持簡短，例如： <code>Reply in one friendly sentence. Do not mention these instructions.</code></p>
+                <div class="warning-note"><strong>觸發詞開頭為 <code>!</code>?</strong> 命令篩選器可能在機器人看到訊息前將其捨棄。請改用普通詞。</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="replies">回覆傳送到哪裡</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>僅覆蓋層設定</th><th>會發生什麼</th><th>需要</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="僅覆蓋層設定">開啟</td><td data-label="會發生什麼">回覆只顯示在機器人覆蓋層，不會傳送到聊天。</td><td data-label="需要"><code>bot.html</code> ，使用同一工作階段開啟。TTS 也需要它。</td></tr>
+                        <tr><td data-label="僅覆蓋層設定">關閉</td><td data-label="會發生什麼">回覆仍會顯示在覆蓋層，Social Stream 也會嘗試傳到訊息來源的聊天中。</td><td data-label="需要">支援傳送訊息的聊天來源，已登入、有發言權限、保持開啟，而且沒有停用主持人聊天。 <code>bot.html</code> 是選用的。</td></tr>
+                    </tbody>
+                </table>
+                <div class="guide-note"><strong>機器人名稱不是新帳戶。</strong> 它只是加在回覆開頭的名稱。除非在獨立應用程式中設定帳戶角色，否則回覆會從目前登入帳戶發出。使用獨立 Twitch 機器人帳戶請參閱 <a href="twitch-bot-account-chatbot.html">Twitch 機器人帳號指南</a>.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="quiet">機器人為什麼不回應</h2>
+                <p>機器人本來就會挑選訊息。觸發詞清單為空，表示它會 <em>查看</em> 每則訊息，但不代表逐則回答。</p>
+                <ul class="guide-list">
+                    <li>簡短訊息，例如 <code>hello</code> 可能被略過。叫出機器人的名字以明確呼叫。</li>
+                    <li>設定了觸發詞時，訊息必須包含該詞。</li>
+                    <li>僅限管理員模式會略過其他所有人。</li>
+                    <li>預設每次只回答一則訊息。向聊天發言時，每個來源還會等待 5 秒。</li>
+                    <li>略過自己的訊息、空訊息，以及距離上次回覆過近的訊息。</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="hide">隱藏舊回覆</h2>
+                <p>這些設定只影響機器人覆蓋層（<code>bot.html</code>），不影響精選聊天覆蓋層。設定中的覆蓋層選項已包含常用項目。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>我想要…</th><th>加入連結</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="我想要">經過指定時間後隱藏每則回覆</td><td data-label="加入連結"><code>&amp;showtime=10000</code> （毫秒，即 10 秒）</td></tr>
+                        <tr><td data-label="我想要">長回覆顯示久些，短回覆早點隱藏</td><td data-label="加入連結"><code>&amp;autohide</code> （或 <code>&amp;autotime</code>)</td></tr>
+                        <tr><td data-label="我想要">設定自動隱藏的最短和最長時間</td><td data-label="加入連結"><code>&amp;mintime=5000&amp;maxtime=20000</code> （預設 4000 和 30000）</td></tr>
+                        <tr><td data-label="我想要">語音結束時隱藏</td><td data-label="加入連結"><code>&amp;hideaftertts</code></td></tr>
+                        <tr><td data-label="我想要">語音結束後稍等</td><td data-label="加入連結"><code>&amp;hidedelay=1000</code> （預設 500）</td></tr>
+                        <tr><td data-label="我想要">停止等待卡住的語音</td><td data-label="加入連結"><code>&amp;ttstimeout=60000</code> （預設 120000）</td></tr>
+                    </tbody>
+                </table>
+                <p>使用多個機器人？ <code>hideaftertts</code> 優先，然後是 <code>autohide</code>，然後 <code>showtime</code>。如果語音始終未開始， <code>hideaftertts</code> 會改用基於文字長度的時間。</p>
+                <h3>立即清除</h3>
+                <p>點選 <strong>立即清除機器人疊加畫面</strong> 。這會清除螢幕上的回覆及等待中的回覆，但不會停止已經開始播放的語音。</p>
+                <details class="guide-extra">
+                    <summary>透過 API 清除與自訂樣式</summary>
+                    <ul>
+                        <li>開啟 Remote API Control 後，開啟 <code>https://io.socialstream.ninja/SESSION_ID/clearBotOverlay</code>.</li>
+                        <li>或傳送 <code>{"action":"clearBotOverlay"}</code> ，透過 API WebSocket 傳送。</li>
+                    </ul>
+                    <p>在一般覆蓋層上使用自訂 CSS： <code>bot.html</code> 連結保留這些全部功能。複製或編輯過的本機 <code>bot.html</code> 不會自動獲得後續修正，需要自行更新。</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">解決問題</h2>
+                <p>找出最後一個正常運作的環節，然後檢查下一列。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>問題</th><th>試試這個</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="問題">測試按鈕失敗</td><td data-label="試試這個">閱讀按鈕下方的錯誤。檢查位址、API 金鑰、模型名稱、本機 AI 是否執行、防火牆及服務供應商限制。</td></tr>
+                        <tr><td data-label="問題">已連線，但觀眾訊息不在 Dock 中</td><td data-label="試試這個">聊天沒有被擷取。檢查 Social Stream 是否開啟、聊天視窗是否開啟並登入、是否開啟了正確的直播聊天，以及來源篩選器。</td></tr>
+                        <tr><td data-label="問題">訊息在 Dock 中，但覆蓋層沒有回覆</td><td data-label="試試這個">從真實平台聊天傳送，而非 Dock。再檢查機器人是否開啟、觸發詞、僅限管理員設定、機器人名稱、頻率限制和指令。開啟 <strong>不篩除機器人的任何回覆</strong> 進行測試。</td></tr>
+                        <tr><td data-label="問題">覆蓋層有回覆，但聊天沒有</td><td data-label="試試這個">關閉 overlay-only。檢查來源能否傳送、帳戶能否發言、聊天輸入框是否可用、帳戶角色，以及 <strong>停用主持人聊天和封鎖功能</strong>.</td></tr>
+                        <tr><td data-label="問題"><code>!bot</code> 沒有反應</td><td data-label="試試這個">使用普通詞作為觸發詞，或在命令篩選器中允許該命令。</td></tr>
+                        <tr><td data-label="問題">只有首次測試收到回覆</td><td data-label="試試這個">等待首次回覆及頻率限制解除。Keep-alive 為 <code>0</code> 會導致每次回覆都啟動緩慢。</td></tr>
+                        <tr><td data-label="問題">語音結束後回覆仍留在螢幕上</td><td data-label="試試這個">使用 <a href="#hide">在 TTS 結束後、自動隱藏或固定時間後隱藏</a>.</td></tr>
+                        <tr><td data-label="問題">出現如下 OpenAI 錯誤： <code>401</code> 或 <code>429</code></td><td data-label="試試這個">參閱 <a href="#openai">OpenAI 金鑰錯誤</a>.</td></tr>
+                        <tr><td data-label="問題">私人 <code>chatbot.html</code> 為空白</td><td data-label="試試這個">開啟私人聊天機器人選項，並使用同一工作階段的連結。它是獨立機器人，因此不能測試 Primary 機器人。</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="openai">OpenAI 金鑰錯誤</h2>
+                <ol class="guide-steps">
+                    <li>在以下頁面建立一般專案 API 金鑰： <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI API 金鑰頁面</a>。不要使用 Admin 金鑰。</li>
+                    <li>確保它屬於希望計費的專案，而且允許進行模型請求。</li>
+                    <li>在 Social Stream 中選擇 <strong>ChatGPT API</strong>，貼上完整金鑰，輸入專案可用的模型，然後點擊 <strong>測試所選聊天機器人</strong>.</li>
+                </ol>
+                <div class="warning-note"><strong>切勿貼上金鑰</strong> 到支援訊息或診斷報告中。</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>錯誤</th><th>含義</th><th>試試這個</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="錯誤"><code>401 missing_scope</code> / <code>model.request</code></td><td data-label="含義">金鑰沒有模型請求權限。 <code>model.request</code> 是 OpenAI 權限名稱，不是需要輸入 Social Stream 的內容。</td><td data-label="試試這個">確認是正確專案的一般金鑰，而且允許模型請求。不確定時，建立新金鑰並替換已儲存的金鑰。</td></tr>
+                        <tr><td data-label="錯誤"><code>401 invalid_api_key</code></td><td data-label="含義">金鑰錯誤或已失效。</td><td data-label="試試這個">檢查缺字或多餘空格。確認金鑰未刪除、屬於正確專案，而且 Social Stream 沒有使用先前儲存的舊金鑰。</td></tr>
+                        <tr><td data-label="錯誤"><code>429</code></td><td data-label="含義">配額不足或請求過多。</td><td data-label="試試這個">檢查 API 計費與預算，它們與 ChatGPT 訂閱分開。降低頻率或稍候。</td></tr>
+                    </tbody>
+                </table>
+                <p><strong>儲值不能解決 401 錯誤。</strong> 餘額與權限是兩回事。參閱 OpenAI 的 <a href="https://developers.openai.com/api/docs/guides/error-codes" target="_blank" rel="noopener">錯誤指南</a> 和 <a href="https://developers.openai.com/api/reference/overview#start-here" target="_blank" rel="noopener">驗證參考</a>.</p>
+                <details class="guide-extra">
+                    <summary>仍然遇到問題？</summary>
+                    <ul>
+                        <li>如果瀏覽器自動翻譯 OpenAI 網站，而且金鑰設定操作異常，請切換到原始英文頁面。這曾幫助一位使用者，但並非已知的 401 錯誤原因。</li>
+                        <li>複製 Social Stream 顯示的狀態、代碼、缺少的權限和 Request ID，然後盡快傳送應用程式內診斷報告。報告不包含 API 金鑰和提示詞。</li>
+                        <li>如果金鑰和專案看起來正確，請向 OpenAI 支援提供 Request ID 和時間。</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="other-pages">其他 AI 機器人頁面</h2>
+                <p>Primary 機器人、私人聊天、審查機器人和 AI 共同主持人是獨立工具，各自有設定和歷史記錄。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-chatbot-pages-reference.png" alt="比較主要機器人疊加畫面、私人聊天機器人、審查機器人和 AI 搭檔的參考表" class="guide-image">
+                    <figcaption>測試私人機器人不能代替測試 Primary 機器人。</figcaption>
+                </figure>
+                <p>全部 AI 功能請查看 <a href="ai-modes-guide.html">AI 模式指南</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 授權條款。</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

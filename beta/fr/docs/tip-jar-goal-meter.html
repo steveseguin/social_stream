@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr" data-site-root="../../" data-site-language="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/fr/docs/tip-jar-goal-meter.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/fr/docs/tip-jar-goal-meter.html">
+    <meta property="og:title" content="Guide Tip Jar et Goal Meter - Social Stream Ninja">
+    <meta property="og:description" content="Configurez Tip Jar et Goal Meter dans Social Stream Ninja et dépannez les dons, adhésions et adhésions offertes manquants.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/fr/docs/tip-jar-goal-meter.html">
+    <meta name="twitter:title" content="Guide Tip Jar et Goal Meter - Social Stream Ninja">
+    <meta name="twitter:description" content="Configurez Tip Jar et Goal Meter dans Social Stream Ninja et dépannez les dons, adhésions et adhésions offertes manquants.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide Tip Jar et Goal Meter - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Configurez Tip Jar et Goal Meter dans Social Stream Ninja et dépannez les dons, adhésions et adhésions offertes manquants.">
+    <style>
+        .style-group { margin: 2.4rem 0 1rem; font-size: 1.6rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; }
+        .visual-guide .guide-card > .style-grid { max-width: none; list-style: none; padding: 0; margin: 0; }
+        .style-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: 1.4rem; margin: 0; padding: 0; list-style: none; }
+        .visual-guide main .style-grid li { margin: 0; padding: 0; }
+        .style-grid li::before { content: none !important; display: none !important; }
+        .style-tile { height: 100%; overflow: hidden; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .style-tile img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; }
+        .style-tile div { padding: .9rem 1.2rem 1.1rem; }
+        .style-tile strong { display: block; font-size: 1.55rem; color: var(--text-primary); }
+        .style-tile span { display: block; margin-top: .2rem; font-size: 1.35rem; line-height: 1.45; color: var(--text-secondary); }
+        .style-tile code { font-size: 1.2rem; }
+        .setup-screenshots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem; align-items: start; }
+        .setup-screenshots > .guide-figure { min-width: 0; margin: 1rem 0; }
+        .count-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4rem; margin: 1.4rem 0; }
+        .count-picker > div { padding: 1.4rem 1.6rem; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .count-picker strong { display: block; margin-bottom: .4rem; font-size: 1.65rem; }
+        .count-picker p { margin: 0; font-size: 1.45rem; line-height: 1.5; }
+        .count-picker .example { margin-top: .8rem; color: var(--text-secondary); }
+        @media (max-width: 760px) {
+            .setup-screenshots { grid-template-columns: minmax(0, 1fr); }
+            .count-picker { grid-template-columns: minmax(0, 1fr); }
+            .style-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
+            .style-tile span { display: none; }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="fr">
+<script id="ssn-site-language" type="application/json">{"language":"fr","page":"docs/tip-jar-goal-meter.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Passer au thème clair","Switch to dark theme":"Passer au thème sombre","Light mode":"Mode clair","Dark mode":"Mode sombre","Open navigation menu":"Ouvrir le menu de navigation","Close navigation menu":"Fermer le menu de navigation","Copy this document as Markdown to the clipboard":"Copier ce document au format Markdown dans le presse-papiers","Copy Markdown":"Copier le Markdown","Copying…":"Copie en cours…","Markdown copied":"Markdown copié","Copy failed":"Échec de la copie","Copy comprehensive Markdown for an AI assistant":"Copier le Markdown complet pour un assistant IA","Copy this documentation page as Markdown for an AI assistant":"Copier cette page de documentation en Markdown pour un assistant IA"},"strings":{"(0 to 1).":"(de 0 à 1).","(12 to 96 pixels).":"(de 12 à 96 pixels).","(hex colours, with":"(couleurs hexadécimales, avec",". An animated GIF keeps playing, but this setting does not switch images as progress changes or add artwork beside a bar.":". Un GIF animé continue de jouer, mais ce réglage ne change pas les images selon la progression et n'ajoute pas d'illustration à côté d'une barre.",". Its previews use sample data and do not change your live totals.":". Les aperçus utilisent des données d'exemple et ne modifient pas vos totaux réels.",". Leave a box blank to keep the style's default. Bar text size and “bar only” apply to Fluid Goal Bar only.":". Laissez un champ vide pour conserver la valeur par défaut du style. La taille du texte et « barre seule » s'appliquent uniquement à Fluid Goal Bar.",". The styles below include built-in animations.":". Les styles ci-dessous incluent des animations intégrées.",". These do not apply to every style; check the preview. The four panels below also support":". Ces options ne s'appliquent pas à tous les styles ; vérifiez l'aperçu. Les quatre panneaux ci-dessous prennent aussi en charge",". Use the fill colours above for Fluid Goal Bar.":". Pour Fluid Goal Bar, utilisez les couleurs de remplissage ci-dessus.","340 / 1000 points":"340 / 1000 points de Hype","3D Rotating Jar":"Pot rotatif 3D","7 / 20 Super Chats":"7 sur 20 Super Chats","A $1 and a $100 Super Chat each add one. To count Super Stickers too, change the paid event filter.":"Un Super Chat de 1 $ et un de 100 $ comptent chacun pour un. Pour compter aussi les Super Stickers, modifiez le filtre d'événements payants.","A money goal in the Goal Meter style.":"Un objectif monétaire avec le style Goal Meter.","A slowly turning glass.":"Un verre qui tourne lentement.","A sweeping needle.":"Une aiguille qui se déplace.","Add to the link":"Ajouter au lien","All donations":"Tous les dons (All donations)","An old total comes back":"Un ancien total réapparaît","Animated artwork":"Illustrations animées","Bar plus recent supporters.":"Barre avec les soutiens récents.","Bars":"Barres","Battery":"Batterie","Beer Mug":"Chope de bière","Big total, slim bar.":"Grand total, barre fine.","Bigger total:":"Total plus grand :","Carry extra points":"Reporter les points excédentaires (Carry extra points)","Change artwork as the goal fills":"Changer l'illustration selon la progression","Change the Fluid Goal Bar fill colours":"Changer les couleurs de remplissage de Fluid Goal Bar","Change the Glass Tip Jar label":"Changer l'étiquette de Glass Tip Jar","Change the celebration effect":"Changer l'effet de célébration","Change what falls into the jar":"Changer les objets qui tombent dans le bocal","Charges red to green.":"Se charge du rouge au vert.","Check the source is on, the session IDs match, and your filters allow that event.":"Vérifiez que la source est active, que les identifiants de session correspondent et que vos filtres autorisent cet événement.","Choose a Display Style, such as Fluid Goal Bar.":"Choisissez un style d’affichage, par exemple Barre d’objectif fluide.","Chunky RPG bar.":"Barre épaisse de style RPG.","Circle with a percentage.":"Cercle avec un pourcentage.","Classic Jar":"Bocal classique (Classic Jar)","Classic fundraiser look.":"Style classique de collecte de fonds.","Click [copy link] beside Tip Jar and Goal Meter and add the link to OBS as a Browser Source.":"Cliquez sur [copier le lien] à côté de Tirelire et jauge d’objectif, puis ajoutez le lien à OBS comme source navigateur.","Click either screenshot to enlarge.":"Cliquez sur l’une des captures pour l’agrandir.","Coffee Mug":"Tasse à café","Commands & API":"Commandes et API","Compact Bar":"Barre compacte (Compact Bar)","Count Super Chats instead of money":"Compter les Super Chats plutôt que l'argent","Count individual gift recipients too":"Compter aussi les destinataires individuels de cadeaux (Count individual gift recipients too)","Count subs and memberships too":"Compter aussi les abonnements et adhésions","Count unit label":"Libellé de l’unité de comptage (Count unit label)","Custom jar image":"Image personnalisée du bocal","Default for Hype goals. The completion delay sets how long it stays full.":"Par défaut pour les objectifs Hype. Le délai de fin détermine combien de temps l'objectif reste plein.","Default for money and count goals.":"Par défaut pour les objectifs monétaires et de comptage.","Default, Neon, or Gold.":"Par défaut, Néon ou Or.","Dial":"Composer","Donation points per USD":"Points de don par USD","Donation type filter":"Filtre de type de don (Donation type filter)","Donations":"Dons","Download":"Télécharger","Event Reference":"Référence des événements","Every donation adds one, whatever the amount.":"Chaque don compte pour un, quel que soit le montant.","Every style tracks the same goal. Only the appearance changes. Compare sample layouts in the":"Tous les styles suivent le même objectif. Seule l'apparence change. Comparez les exemples dans la","Extra options for Goal Card, Progress Ring, Lower Third, and Segmented Bar":"Options supplémentaires pour Goal Card, Progress Ring, Lower Third et Segmented Bar","Features":"Fonctionnalités","Fill colours you set yourself win over":"Les couleurs de remplissage que vous définissez priment sur","Five checkpoints light up.":"Cinq jalons s'allument.","Fix problems":"Résoudre les problèmes","Fluid Goal Bar":"Barre d’objectif fluide (Fluid Goal Bar)","Foam and bubbles.":"Mousse et bulles.","Follow the step-by-step GIF tutorial":"Suivez le tutoriel GIF étape par étape","For a bar that fills with donations, choose":"Pour une barre qui se remplit avec les dons, choisissez","Game-style level bar.":"Barre de niveau de jeu vidéo.","Gifted memberships":"Adhésions offertes","Gifted memberships add too little":"Les adhésions offertes ajoutent trop peu","Gifted memberships count twice":"Les adhésions offertes sont comptées deux fois","Gifted memberships shouldn't count":"Les adhésions offertes ne devraient pas compter","Gifted sub/member points":"Points par abonnement ou adhésion offert","Glass Tip Jar":"Pot à pointe de verre","Glowing and bubbling.":"Brille et bouillonne.","Glowing, flickering tube.":"Tube lumineux qui scintille.","Go up in levels (100, 200, 300…)":"Monter par niveaux (100, 200, 300…)","Goal Card":"Carte d’objectif (Goal Card)","Goal Meter":"Jauge d’objectif (Goal Meter)","Goal Settings with Goal target set to 500 and Custom Title set to Community Fundraiser.":"Paramètres de l’objectif avec une cible de 500 et le titre personnalisé Community Fundraiser.","Goal and title fields, further down in the same section.":"Champs de l’objectif et du titre, plus bas dans la même section.","Goal measures":"Mesure de l’objectif (Goal measures)","Goal meter bar showing $63.50 of a $100 goal with recent supporters":"Barre d'objectif affichant 63,50 $ sur 100 $ avec les soutiens récents","Guides":"Guides","Health Bar":"Barre de santé","Hide the dollar signs (":"Masquer les symboles dollar (","Hide the title or percentage on newer jars and meters":"Masquer le titre ou le pourcentage sur les nouveaux bocaux et compteurs","Hire":"Faire appel à nos services","Home":"Accueil","How YouTube gifts are counted":"Comment sont comptés les cadeaux YouTube","How it counts":"Méthode de comptage","Hype Cup Scoring":"Score Hype Cup (Hype Cup Scoring)","Hype goals restart by default. Use Keep total and advance target.":"Les objectifs Hype redémarrent par défaut. Utilisez Conserver le total et augmenter l'objectif.","Hype only: number of gifts × gift points. YouTube doesn't send the price, so the cash value is unknown.":"Hype uniquement : nombre de cadeaux × points par cadeau. YouTube ne transmet pas le prix ; la valeur monétaire est donc inconnue.","Hype points":"Points Hype","I want the goal to":"Je veux que l'objectif","I want the goal to…":"Je veux que l'objectif…","I want to":"Je souhaite","I want to…":"Je souhaite…","Ignored by default, so gifts aren't counted twice.":"Ignorés par défaut pour ne pas compter les cadeaux deux fois.","In the menu, find Tip Jar and Goal Meter and open Style, Goal, and Filters.":"Dans le menu, trouvez Tirelire et jauge d’objectif et ouvrez Style, objectif et filtres.","Inspiration":"Inspiration","Its value for a money goal, one for a donation-count goal, or your configured donation points in Hype mode. The event must pass your filters.":"Sa valeur pour un objectif monétaire, un pour un objectif de nombre de dons, ou les points de don configurés en mode Hype. L'événement doit passer vos filtres.","Jars and objects":"Bocaux et objets","Jewels / virtual gifts":"Joyaux / cadeaux virtuels","Just big numbers.":"De grands nombres, tout simplement.","Keep amount between sessions":"Conserver le montant entre les sessions (Keep amount between sessions)","Keep amount between sessions is on. Reset the amount.":"Conserver le montant entre les sessions est activé. Réinitialisez le montant.","Keep counting and raise the target":"Continuer à compter et augmenter l'objectif","Keep leftover points when it starts over":"Conserver les points excédentaires au redémarrage","Keep total and advance target":"Conserver le total et augmenter la cible (Keep total and advance target)","Leave":"Laissez","Lid opens as it fills.":"Le couvercle s'ouvre à mesure du remplissage.","Low and wide.":"Bas et large.","Lower Third":"Bandeau inférieur (Lower Third)","Main navigation":"Navigation principale","Memberships or subs don't count":"Les adhésions ou abonnements ne comptent pas","Milestone Track":"Piste des jalons","Minimal":"Minimal","Money":"Argent","Most of these are settings in the Tip Jar options. You can also add the code to the end of your overlay link.":"La plupart figurent dans les options Tip Jar. Vous pouvez aussi ajouter le code à la fin du lien de votre overlay.","Neon Tube":"Tube Néon","Nothing showing up?":"Rien ne s'affiche ?","Nothing updates":"Rien ne se met à jour","Number of donations":"Nombre de dons","Number of qualifying donations":"Nombre de dons admissibles","Old-school loading bar.":"Barre de chargement rétro.","On this page":"Sur cette page","One GIF inside the Classic Jar?":"Un GIF dans Classic Jar ?","One line of text.":"Une ligne de texte.","Only turn on":"Activez uniquement","Open navigation menu":"Ouvrir le menu de navigation","Overlay Gallery":"Galerie d’incrustations","Paid event filter":"Filtre d’événements payants (Paid event filter)","Panels and text":"Panneaux et texte","Pick a look":"Choisir un style","Pick one. Changing the look (jar, bar, etc.) never changes what counts.":"Choisissez-en un. Changer l'apparence (bocal, barre, etc.) ne change jamais ce qui est compté.","Piggy Bank":"Tirelire","Pixel Bar":"Barre de pixels","Point unit label":"Libellé de l'unité de points","Points for each dollar donated.":"Points par dollar donné.","Points for each new sub or renewal.":"Points par nouvel abonnement ou renouvellement.","Points per gift. 5 gifts = 5 × this number.":"Points par cadeau. 5 cadeaux = 5 × ce nombre.","Potion Flask":"Flacon de potion","Problem":"Problème","Progress Ring":"Anneau de progression (Progress Ring)","Put a donation goal on stream that fills up every time someone supports you.":"Affichez en direct un objectif de dons qui se remplit chaque fois que quelqu'un vous soutient.","Quick tweaks":"Réglages rapides","Recurring goal increment":"Incrément d’objectif récurrent (Recurring goal increment)","Remember the total after a restart":"Mémoriser le total après un redémarrage","Resources":"Ressources","Retro block meter.":"Compteur rétro à blocs.","Reusing OBS for a new goal?":"Vous réutilisez OBS pour un nouvel objectif ?","Saved totals are stored in that browser or OBS profile, not per session. Reset the amount first.":"Les totaux sont enregistrés dans ce navigateur ou profil OBS, pas par session. Réinitialisez d'abord le montant.","See-through panel:":"Panneau transparent :","Segmented Bar":"Barre segmentée (Segmented Bar)","Set":"Définissez","Set Paid event filter to Super Chats only.":"Réglez Paid event filter sur Super Chats only.","Set an accent on newer panels, jars, or meters":"Définir une couleur d'accent sur les nouveaux panneaux, bocaux ou compteurs","Set how many points each thing is worth (below).":"Définissez combien de points vaut chaque élément (ci-dessous).","Set it up":"Configuration","Set it up in 5 steps":"Configurer en 5 étapes","Set the goal, for example":"Définissez l'objectif, par exemple","Set up the Social Stream Ninja Tip Jar and Goal Meter and troubleshoot missing donations, memberships, and gifted memberships.":"Configurez Tip Jar et Goal Meter dans Social Stream Ninja et dépannez les dons, adhésions et adhésions offertes manquants.","Setting":"Paramètre","Small, for a corner.":"Petit, pour un coin.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Someone receiving a gift":"Personne recevant un cadeau","Source filter":"Filtre de source (Source filter)","Start over after it fills":"Recommencer une fois rempli","Stay full until I reset it":"Rester plein jusqu'à ma réinitialisation","Stop the 3D jar spinning":"Arrêter la rotation du bocal 3D","Style selector and copy-link button.":"Sélecteur de style et bouton de copie du lien.","Sub/member points":"Points par abonnement ou adhésion","Super Chat / Super Sticker":"Super Chat / Super Sticker","Super Chat count includes Super Stickers":"Le nombre de Super Chats inclut les Super Stickers","Super Chats only":"Super Chats uniquement (Super Chats only)","Super Chats, Bits, tips, and other donations add their value.":"Les Super Chats, Bits, pourboires et autres dons ajoutent leur valeur.","Support":"Assistance","Supported Sites":"Sites pris en charge","Switch theme":"Changer de thème","Tall, for a side column.":"Haut, pour une colonne latérale.","Terminal":"Borne","Text Only":"Texte seul (Text Only)","The original, with falling items.":"L'original, avec des objets qui tombent.","The overlay link and Social Stream must use the same session ID. Keep that link private.":"Le lien de l'overlay et Social Stream doivent utiliser le même identifiant de session. Gardez ce lien privé.","The test buttons only send donations. To test memberships or gifts, watch the Dock or Events Dashboard on the same session and check the event arrives.":"Les boutons de test envoient uniquement des dons. Pour tester les adhésions ou cadeaux, observez le Dock ou le tableau de bord des événements sur la même session et vérifiez que l'événement arrive.","The word or symbol shown, like":"Le mot ou symbole affiché, par exemple","Theme:":"Thème :","Thermometer":"Thermomètre","They use your gift points setting, not a price. Raise the points.":"Elles utilisent vos points par cadeau, pas un prix. Augmentez les points.","Tip Jar and Goal Meter":"Tirelire et jauge d'objectif","Tip Jar and Goal Meter Guide - Social Stream Ninja":"Guide Tip Jar et Goal Meter - Social Stream Ninja","Tip Jar and Goal Meter menu with Style, Goal, and Filters expanded and Fluid Goal Bar selected.":"Menu Tirelire et jauge d’objectif avec la section Style, objectif et filtres développée et le style Barre d’objectif fluide sélectionné.","Tips drop through the lid.":"Les pourboires tombent à travers le couvercle.","To show your own GIF at 0%, 25%, 50%, 75%, and 100%, customize a copy of the overlay. There is no milestone-GIF picker in the built-in options. Keep the artwork and bar in the same custom overlay so they use the same total.":"Pour afficher vos propres GIF à 0 %, 25 %, 50 %, 75 % et 100 %, personnalisez une copie de l'overlay. Les options intégrées ne proposent pas de sélecteur de GIF par jalon. Gardez l'illustration et la barre dans le même overlay personnalisé pour qu'elles utilisent le même total.","Total drops to zero at the goal":"Le total retombe à zéro à l'objectif","Treasure Chest":"Coffre au trésor","Try this":"À essayer","Turn off Count individual gift recipients.":"Désactivez Compter les bénéficiaires individuels des cadeaux.","Turn on":"Activez","Turn on Exclude YouTube gifted memberships.":"Activez Exclure les adhésions YouTube offertes.","Turn on Hype Cup Scoring and set Donation type filter to All donations.":"Activez Hype Cup Scoring et réglez le filtre de type de don sur Tous les dons.","Turn on your YouTube, Twitch, or other chat source in Social Stream Ninja.":"Activez votre source de chat YouTube, Twitch ou autre dans Social Stream Ninja.","Twenty easy-to-read blocks.":"Vingt blocs faciles à lire.","Under Goal Settings, set Goal target to 500 and enter a Custom Title.":"Dans Paramètres de l’objectif, définissez le montant cible sur 500 et saisissez un titre personnalisé.","Use":"Utilisez","Use a solid or gradient fill":"Utiliser un remplissage uni ou dégradé","Use my own jar picture (Classic Jar only)":"Utiliser ma propre image de bocal (Classic Jar uniquement)","Use the matching donation type filter.":"Utilisez le filtre de type de don correspondant.","Use the newer look on older styles":"Utiliser le nouvel aspect sur les anciens styles","Use this":"Utilisez ceci","Vertical Bar":"Barre verticale (Vertical Bar)","What counts":"Ce qui compte","What counts toward the goal":"Ce qui contribue à l'objectif","What it does":"Fonction","When the goal fills":"Quand l'objectif est rempli","When the goal fills up":"Quand l'objectif se remplit","Wide animated bar.":"Large barre animée.","With drifting steam.":"Avec de la vapeur qui s'élève.","Wobbles on each tip.":"Oscille à chaque pourboire.","XP Bar":"Barre d'XP","YouTube":"YouTube","YouTube event":"Événement YouTube","changes the word shown.":"change le mot affiché.","for a $500 example, artwork filenames, an AI customization prompt, and preview checks.":"pour un exemple à 500 $, les noms des fichiers d'illustration, une consigne de personnalisation pour l'IA et des vérifications d'aperçu.","if you want to add points on top of the gift itself.":"si vous souhaitez ajouter des points en plus de ceux du cadeau lui-même.","instead of":"au lieu de","off.":"désactivé.","on":"sur","or":"ou","plus":"plus","style preview gallery":"galerie d'aperçus des styles","subs, memberships, and gifted subs.":"abonnements, adhésions et abonnements offerts.","to":"à","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja. Tous droits réservés.","· also":"· aussi"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tip-jar-goal-meter.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navigation principale"><a href="../index.html">Accueil</a><a href="features.html">Fonctionnalités</a><a href="inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="download.html">Télécharger</a><a href="guides.html">Guides</a><a href="commands.html">Commandes et API</a><a href="supported-sites.html">Sites pris en charge</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie d’incrustations</a><a href="services.html" class="site-priority-hire">Faire appel à nos services</a><a href="support.html">Assistance</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Français"><span aria-hidden="true">🌐 </span><span lang="fr">Français</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tip-jar-goal-meter.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tip-jar-goal-meter.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tip-jar-goal-meter.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tip-jar-goal-meter.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="tip-jar-goal-meter.html" lang="fr" hreflang="fr" aria-current="true">Français</a><a class="site-language-link" href="../../de/docs/tip-jar-goal-meter.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tip-jar-goal-meter.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tip-jar-goal-meter.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tip-jar-goal-meter.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tip-jar-goal-meter.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tip-jar-goal-meter.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tip-jar-goal-meter.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tip-jar-goal-meter.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tip-jar-goal-meter.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tip-jar-goal-meter.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tip-jar-goal-meter.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tip-jar-goal-meter.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Changer de thème"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Ouvrir le menu de navigation" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Tirelire et jauge d'objectif</h1>
+            <p>Affichez en direct un objectif de dons qui se remplit chaque fois que quelqu'un vous soutient.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <nav class="guide-jump-links" aria-label="Sur cette page">
+                    <a href="#setup">Configuration</a>
+                    <a href="#artwork">Illustrations animées</a>
+                    <a href="#styles">Choisir un style</a>
+                    <a href="#tweaks">Réglages rapides</a>
+                    <a href="#what-counts">Ce qui compte</a>
+                    <a href="#goal-reached">Quand l'objectif est rempli</a>
+                    <a href="#problems">Résoudre les problèmes</a>
+                </nav>
+
+                <div class="guide-card">
+                    <h2 id="setup">Configurer en 5 étapes</h2>
+                    <ol class="guide-steps">
+                        <li>Activez votre source de chat YouTube, Twitch ou autre dans Social Stream Ninja.</li>
+                        <li>Dans le menu, trouvez Tirelire et jauge d’objectif et ouvrez Style, objectif et filtres.</li>
+                        <li>Choisissez un style d’affichage, par exemple Barre d’objectif fluide.</li>
+                        <li>Dans Paramètres de l’objectif, définissez le montant cible sur 500 et saisissez un titre personnalisé.</li>
+                        <li>Cliquez sur [copier le lien] à côté de Tirelire et jauge d’objectif, puis ajoutez le lien à OBS comme source navigateur.</li>
+                    </ol>
+                    <p>Cliquez sur l’une des captures pour l’agrandir.</p>
+                    <div class="setup-screenshots">
+                        <figure class="guide-figure">
+                            <a href="../../docs/images/guides/tip-jar-popup-style.png"><img src="../../docs/images/guides/tip-jar-popup-style.png" alt="Menu Tirelire et jauge d’objectif avec la section Style, objectif et filtres développée et le style Barre d’objectif fluide sélectionné." class="guide-image" width="1040" height="730" loading="lazy"></a>
+                            <figcaption>Sélecteur de style et bouton de copie du lien.</figcaption>
+                        </figure>
+                        <figure class="guide-figure">
+                            <a href="../../docs/images/guides/tip-jar-popup-goal.png"><img src="../../docs/images/guides/tip-jar-popup-goal.png" alt="Paramètres de l’objectif avec une cible de 500 et le titre personnalisé Community Fundraiser." class="guide-image" width="988" height="660" loading="lazy"></a>
+                            <figcaption>Champs de l’objectif et du titre, plus bas dans la même section.</figcaption>
+                        </figure>
+                    </div>
+                    <div class="guide-note"><strong>Rien ne s'affiche ?</strong> Le lien de l'overlay et Social Stream doivent utiliser le même identifiant de session. Gardez ce lien privé.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="artwork">Changer l'illustration selon la progression</h2>
+                    <p>Pour une barre qui se remplit avec les dons, choisissez <strong>Barre d’objectif fluide (Fluid Goal Bar)</strong> ou <strong>Jauge d’objectif (Goal Meter)</strong>. Les styles ci-dessous incluent des animations intégrées.</p>
+                    <p>Pour afficher vos propres GIF à 0 %, 25 %, 50 %, 75 % et 100 %, personnalisez une copie de l'overlay. Les options intégrées ne proposent pas de sélecteur de GIF par jalon. Gardez l'illustration et la barre dans le même overlay personnalisé pour qu'elles utilisent le même total.</p>
+                    <p><a href="goals-customization-guide.html#milestone-artwork">Suivez le tutoriel GIF étape par étape</a> pour un exemple à 500 $, les noms des fichiers d'illustration, une consigne de personnalisation pour l'IA et des vérifications d'aperçu.</p>
+                    <div class="guide-note"><strong>Un GIF dans Classic Jar ?</strong> Utilisez <strong>Image personnalisée du bocal</strong> ou <code>&amp;jarimage=https://&hellip;</code>. Un GIF animé continue de jouer, mais ce réglage ne change pas les images selon la progression et n'ajoute pas d'illustration à côté d'une barre.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="styles">Choisir un style</h2>
+                    <p>Tous les styles suivent le même objectif. Seule l'apparence change. Comparez les exemples dans la <a href="../../tipjar-preview.html">galerie d'aperçus des styles</a>. Les aperçus utilisent des données d'exemple et ne modifient pas vos totaux réels.</p>
+
+                    <h3 class="style-group">Barres</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/bar.jpg" alt="Barre d’objectif fluide (Fluid Goal Bar)" loading="lazy" width="480" height="320"><div><strong>Barre d’objectif fluide (Fluid Goal Bar)</strong><span>Large barre animée.</span><code>style=bar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/meter.jpg" alt="Jauge d’objectif (Goal Meter)" loading="lazy" width="480" height="320"><div><strong>Jauge d’objectif (Goal Meter)</strong><span>Barre avec les soutiens récents.</span><code>style=meter</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/compact.jpg" alt="Barre compacte (Compact Bar)" loading="lazy" width="480" height="320"><div><strong>Barre compacte (Compact Bar)</strong><span>Petit, pour un coin.</span><code>style=compact</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/vertical.jpg" alt="Barre verticale (Vertical Bar)" loading="lazy" width="480" height="320"><div><strong>Barre verticale (Vertical Bar)</strong><span>Haut, pour une colonne latérale.</span><code>style=vertical</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/segmented.jpg" alt="Barre segmentée (Segmented Bar)" loading="lazy" width="480" height="320"><div><strong>Barre segmentée (Segmented Bar)</strong><span>Vingt blocs faciles à lire.</span><code>style=segmented</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/milestones.jpg" alt="Piste des jalons" loading="lazy" width="480" height="320"><div><strong>Piste des jalons</strong><span>Cinq jalons s'allument.</span><code>style=milestones</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/xpbar.jpg" alt="Barre d&#x27;XP" loading="lazy" width="480" height="320"><div><strong>Barre d'XP</strong><span>Barre de niveau de jeu vidéo.</span><code>style=xpbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/healthbar.jpg" alt="Barre de santé" loading="lazy" width="480" height="320"><div><strong>Barre de santé</strong><span>Barre épaisse de style RPG.</span><code>style=healthbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/battery.jpg" alt="Batterie" loading="lazy" width="480" height="320"><div><strong>Batterie</strong><span>Se charge du rouge au vert.</span><code>style=battery</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/pixelbar.jpg" alt="Barre de pixels" loading="lazy" width="480" height="320"><div><strong>Barre de pixels</strong><span>Compteur rétro à blocs.</span><code>style=pixelbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/neonbar.jpg" alt="Tube Néon" loading="lazy" width="480" height="320"><div><strong>Tube Néon</strong><span>Tube lumineux qui scintille.</span><code>style=neonbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/terminal.jpg" alt="Borne" loading="lazy" width="480" height="320"><div><strong>Borne</strong><span>Barre de chargement rétro.</span><code>style=terminal</code></div></div></li>
+                    </ul>
+
+                    <h3 class="style-group">Bocaux et objets</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/jar.jpg" alt="Bocal classique (Classic Jar)" loading="lazy" width="480" height="320"><div><strong>Bocal classique (Classic Jar)</strong><span>L'original, avec des objets qui tombent.</span><code>style=jar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/glassjar.jpg" alt="Pot à pointe de verre" loading="lazy" width="480" height="320"><div><strong>Pot à pointe de verre</strong><span>Les pourboires tombent à travers le couvercle.</span><code>style=glassjar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/jar3d.jpg" alt="Pot rotatif 3D" loading="lazy" width="480" height="320"><div><strong>Pot rotatif 3D</strong><span>Un verre qui tourne lentement.</span><code>style=jar3d</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/beermug.jpg" alt="Chope de bière" loading="lazy" width="480" height="320"><div><strong>Chope de bière</strong><span>Mousse et bulles.</span><code>style=beermug</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/coffeemug.jpg" alt="Tasse à café" loading="lazy" width="480" height="320"><div><strong>Tasse à café</strong><span>Avec de la vapeur qui s'élève.</span><code>style=coffeemug</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/potion.jpg" alt="Flacon de potion" loading="lazy" width="480" height="320"><div><strong>Flacon de potion</strong><span>Brille et bouillonne.</span><code>style=potion</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/piggybank.jpg" alt="Tirelire" loading="lazy" width="480" height="320"><div><strong>Tirelire</strong><span>Oscille à chaque pourboire.</span><code>style=piggybank</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/chest.jpg" alt="Coffre au trésor" loading="lazy" width="480" height="320"><div><strong>Coffre au trésor</strong><span>Le couvercle s'ouvre à mesure du remplissage.</span><code>style=chest</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/thermometer.jpg" alt="Thermomètre" loading="lazy" width="480" height="320"><div><strong>Thermomètre</strong><span>Style classique de collecte de fonds.</span><code>style=thermometer</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/gauge.jpg" alt="Composer" loading="lazy" width="480" height="320"><div><strong>Composer</strong><span>Une aiguille qui se déplace.</span><code>style=gauge</code></div></div></li>
+                    </ul>
+
+                    <h3 class="style-group">Panneaux et texte</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/card.jpg" alt="Carte d’objectif (Goal Card)" loading="lazy" width="480" height="320"><div><strong>Carte d’objectif (Goal Card)</strong><span>Grand total, barre fine.</span><code>style=card</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/ring.jpg" alt="Anneau de progression (Progress Ring)" loading="lazy" width="480" height="320"><div><strong>Anneau de progression (Progress Ring)</strong><span>Cercle avec un pourcentage.</span><code>style=ring</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/lowerthird.jpg" alt="Bandeau inférieur (Lower Third)" loading="lazy" width="480" height="320"><div><strong>Bandeau inférieur (Lower Third)</strong><span>Bas et large.</span><code>style=lowerthird</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/minimal.jpg" alt="Minimal" loading="lazy" width="480" height="320"><div><strong>Minimal</strong><span>De grands nombres, tout simplement.</span><code>style=minimal</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/text.jpg" alt="Texte seul (Text Only)" loading="lazy" width="480" height="320"><div><strong>Texte seul (Text Only)</strong><span>Une ligne de texte.</span><code>style=text</code></div></div></li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="tweaks">Réglages rapides</h2>
+                    <p>La plupart figurent dans les options Tip Jar. Vous pouvez aussi ajouter le code à la fin du lien de votre overlay.</p>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Je souhaite…</th><th>Ajouter au lien</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Je souhaite">Masquer les symboles dollar (<code>0 / 500</code>)</td><td data-label="Ajouter au lien"><code>&amp;hidecurrency</code></td></tr>
+                            <tr><td data-label="Je souhaite">Changer les objets qui tombent dans le bocal</td><td data-label="Ajouter au lien"><code>&amp;dropitem=coins</code> · aussi <code>gems</code>, <code>stars</code>, <code>bills</code>, <code>hearts</code></td></tr>
+                            <tr><td data-label="Je souhaite">Changer l'effet de célébration</td><td data-label="Ajouter au lien"><code>&amp;celebration=confetti</code> · aussi <code>hearts</code>, <code>fireworks</code>, <code>none</code></td></tr>
+                            <tr><td data-label="Je souhaite">Changer les couleurs de remplissage de Fluid Goal Bar</td><td data-label="Ajouter au lien"><code>&amp;fillstart=%2366d9b2&amp;fillend=%23ffcc88</code> (couleurs hexadécimales, avec <code>%23</code> au lieu de <code>#</code>)</td></tr>
+                            <tr><td data-label="Je souhaite">Définir une couleur d'accent sur les nouveaux panneaux, bocaux ou compteurs</td><td data-label="Ajouter au lien"><code>&amp;accent=%23ffcc88</code>. Pour Fluid Goal Bar, utilisez les couleurs de remplissage ci-dessus.</td></tr>
+                            <tr><td data-label="Je souhaite">Masquer le titre ou le pourcentage sur les nouveaux bocaux et compteurs</td><td data-label="Ajouter au lien"><code>&amp;hidetitle</code> &middot; <code>&amp;hidepercent</code>. Ces options ne s'appliquent pas à tous les styles ; vérifiez l'aperçu. Les quatre panneaux ci-dessous prennent aussi en charge <code>hidepercent</code>.</td></tr>
+                            <tr><td data-label="Je souhaite">Changer l'étiquette de Glass Tip Jar</td><td data-label="Ajouter au lien"><code>&amp;jarlabel=TIPS</code></td></tr>
+                            <tr><td data-label="Je souhaite">Arrêter la rotation du bocal 3D</td><td data-label="Ajouter au lien"><code>&amp;nospin</code></td></tr>
+                            <tr><td data-label="Je souhaite">Utiliser ma propre image de bocal (Classic Jar uniquement)</td><td data-label="Ajouter au lien"><code>&amp;jarimage=https://&hellip;</code></td></tr>
+                            <tr><td data-label="Je souhaite">Utiliser un remplissage uni ou dégradé</td><td data-label="Ajouter au lien"><code>&amp;fillmode=solid</code> &middot; <code>&amp;fillmode=gradient</code></td></tr>
+                            <tr><td data-label="Je souhaite">Utiliser le nouvel aspect sur les anciens styles</td><td data-label="Ajouter au lien"><code>&amp;refresh</code></td></tr>
+                        </tbody>
+                    </table>
+
+                    <details class="guide-extra">
+                        <summary>Options supplémentaires pour Goal Card, Progress Ring, Lower Third et Segmented Bar</summary>
+                        <ul>
+                            <li><strong>Thème :</strong> Par défaut, Néon ou Or.</li>
+                            <li><strong>Panneau transparent :</strong> <code>&amp;panelopacity=0.5</code> (de 0 à 1).</li>
+                            <li><strong>Total plus grand :</strong> <code>&amp;amountsize=32</code> (de 12 à 96 pixels).</li>
+                        </ul>
+                        <p>Les couleurs de remplissage que vous définissez priment sur <code>accent</code>. Laissez un champ vide pour conserver la valeur par défaut du style. La taille du texte et « barre seule » s'appliquent uniquement à Fluid Goal Bar.</p>
+                    </details>
+
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="what-counts">Ce qui contribue à l'objectif</h2>
+                    <p>Choisissez-en un. Changer l'apparence (bocal, barre, etc.) ne change jamais ce qui est compté.</p>
+                    <div class="count-picker">
+                        <div><strong>Argent</strong><p>Les Super Chats, Bits, pourboires et autres dons ajoutent leur valeur.</p><p class="example">$63.50 / $100</p></div>
+                        <div><strong>Nombre de dons</strong><p>Chaque don compte pour un, quel que soit le montant.</p><p class="example">7 sur 20 Super Chats</p></div>
+                        <div><strong>Points Hype</strong><p>Dons <em>plus</em> abonnements, adhésions et abonnements offerts.</p><p class="example">340 / 1000 points de Hype</p></div>
+                    </div>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/goal-meter-bar-demo.png" alt="Barre d&#x27;objectif affichant 63,50 $ sur 100 $ avec les soutiens récents" class="guide-image guide-image-medium" loading="lazy">
+                        <figcaption>Un objectif monétaire avec le style Goal Meter.</figcaption>
+                    </figure>
+
+                    <h3>Compter les Super Chats plutôt que l'argent</h3>
+                    <ol class="guide-steps">
+                        <li>Laissez <strong>Score Hype Cup (Hype Cup Scoring)</strong> désactivé.</li>
+                        <li>Définissez <strong>Mesure de l’objectif (Goal measures)</strong> à <strong>Nombre de dons admissibles</strong>.</li>
+                        <li>Définissez <strong>Filtre de source (Source filter)</strong> à <strong>YouTube</strong>.</li>
+                        <li>Définissez <strong>Filtre d’événements payants (Paid event filter)</strong> à <strong>Super Chats uniquement (Super Chats only)</strong>.</li>
+                        <li>Définissez l'objectif, par exemple <code>20</code>.</li>
+                    </ol>
+                    <p>Un Super Chat de 1 $ et un de 100 $ comptent chacun pour un. Pour compter aussi les Super Stickers, modifiez le filtre d'événements payants. <strong>Libellé de l’unité de comptage (Count unit label)</strong> change le mot affiché.</p>
+
+                    <h3>Compter aussi les abonnements et adhésions</h3>
+                    <ol class="guide-steps">
+                        <li>Activez <strong>Score Hype Cup (Hype Cup Scoring)</strong>.</li>
+                        <li>Laissez <strong>Filtre de type de don (Donation type filter)</strong> sur <strong>Tous les dons (All donations)</strong>.</li>
+                        <li>Définissez combien de points vaut chaque élément (ci-dessous).</li>
+                    </ol>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Paramètre</th><th>Fonction</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Paramètre">Points par abonnement ou adhésion</td><td data-label="Fonction">Points par nouvel abonnement ou renouvellement.</td></tr>
+                            <tr><td data-label="Paramètre">Points par abonnement ou adhésion offert</td><td data-label="Fonction">Points par cadeau. 5 cadeaux = 5 × ce nombre.</td></tr>
+                            <tr><td data-label="Paramètre">Points de don par USD</td><td data-label="Fonction">Points par dollar donné.</td></tr>
+                            <tr><td data-label="Paramètre">Libellé de l'unité de points</td><td data-label="Fonction">Le mot ou symbole affiché, par exemple <code>pts</code>.</td></tr>
+                        </tbody>
+                    </table>
+
+                    <details class="guide-extra">
+                        <summary>Comment sont comptés les cadeaux YouTube</summary>
+                        <table class="guide-table guide-table-stack">
+                            <thead><tr><th>Événement YouTube</th><th>Méthode de comptage</th></tr></thead>
+                            <tbody>
+                                <tr><td data-label="Événement YouTube">Super Chat / Super Sticker</td><td data-label="Méthode de comptage">Sa valeur pour un objectif monétaire, un pour un objectif de nombre de dons, ou les points de don configurés en mode Hype. L'événement doit passer vos filtres.</td></tr>
+                                <tr><td data-label="Événement YouTube">Adhésions offertes</td><td data-label="Méthode de comptage">Hype uniquement : nombre de cadeaux × points par cadeau. YouTube ne transmet pas le prix ; la valeur monétaire est donc inconnue.</td></tr>
+                                <tr><td data-label="Événement YouTube">Personne recevant un cadeau</td><td data-label="Méthode de comptage">Ignorés par défaut pour ne pas compter les cadeaux deux fois.</td></tr>
+                                <tr><td data-label="Événement YouTube">Joyaux / cadeaux virtuels</td><td data-label="Méthode de comptage">Utilisez le filtre de type de don correspondant.</td></tr>
+                            </tbody>
+                        </table>
+                        <p>Activez uniquement <strong>Compter aussi les destinataires individuels de cadeaux (Count individual gift recipients too)</strong> si vous souhaitez ajouter des points en plus de ceux du cadeau lui-même.</p>
+                    </details>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="goal-reached">Quand l'objectif se remplit</h2>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Je veux que l'objectif…</th><th>Utilisez ceci</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Je veux que l&#x27;objectif">Rester plein jusqu'à ma réinitialisation</td><td data-label="Utilisez ceci">Par défaut pour les objectifs monétaires et de comptage.</td></tr>
+                            <tr><td data-label="Je veux que l&#x27;objectif">Recommencer une fois rempli</td><td data-label="Utilisez ceci">Par défaut pour les objectifs Hype. Le délai de fin détermine combien de temps l'objectif reste plein.</td></tr>
+                            <tr><td data-label="Je veux que l&#x27;objectif">Conserver les points excédentaires au redémarrage</td><td data-label="Utilisez ceci"><strong>Reporter les points excédentaires (Carry extra points)</strong></td></tr>
+                            <tr><td data-label="Je veux que l&#x27;objectif">Continuer à compter et augmenter l'objectif</td><td data-label="Utilisez ceci"><strong>Conserver le total et augmenter la cible (Keep total and advance target)</strong></td></tr>
+                            <tr><td data-label="Je veux que l&#x27;objectif">Monter par niveaux (100, 200, 300…)</td><td data-label="Utilisez ceci"><strong>Incrément d’objectif récurrent (Recurring goal increment)</strong></td></tr>
+                            <tr><td data-label="Je veux que l&#x27;objectif">Mémoriser le total après un redémarrage</td><td data-label="Utilisez ceci"><strong>Conserver le montant entre les sessions (Keep amount between sessions)</strong></td></tr>
+                        </tbody>
+                    </table>
+                    <div class="warning-note"><strong>Vous réutilisez OBS pour un nouvel objectif ?</strong> Les totaux sont enregistrés dans ce navigateur ou profil OBS, pas par session. Réinitialisez d'abord le montant.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="problems">Résoudre les problèmes</h2>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Problème</th><th>À essayer</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Problème">Rien ne se met à jour</td><td data-label="À essayer">Vérifiez que la source est active, que les identifiants de session correspondent et que vos filtres autorisent cet événement.</td></tr>
+                            <tr><td data-label="Problème">Les adhésions ou abonnements ne comptent pas</td><td data-label="À essayer">Activez Hype Cup Scoring et réglez le filtre de type de don sur Tous les dons.</td></tr>
+                            <tr><td data-label="Problème">Les adhésions offertes ajoutent trop peu</td><td data-label="À essayer">Elles utilisent vos points par cadeau, pas un prix. Augmentez les points.</td></tr>
+                            <tr><td data-label="Problème">Les adhésions offertes sont comptées deux fois</td><td data-label="À essayer">Désactivez Compter les bénéficiaires individuels des cadeaux.</td></tr>
+                            <tr><td data-label="Problème">Les adhésions offertes ne devraient pas compter</td><td data-label="À essayer">Activez Exclure les adhésions YouTube offertes.</td></tr>
+                            <tr><td data-label="Problème">Le total retombe à zéro à l'objectif</td><td data-label="À essayer">Les objectifs Hype redémarrent par défaut. Utilisez Conserver le total et augmenter l'objectif.</td></tr>
+                            <tr><td data-label="Problème">Un ancien total réapparaît</td><td data-label="À essayer">Conserver le montant entre les sessions est activé. Réinitialisez le montant.</td></tr>
+                            <tr><td data-label="Problème">Le nombre de Super Chats inclut les Super Stickers</td><td data-label="À essayer">Réglez Paid event filter sur Super Chats only.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>Les boutons de test envoient uniquement des dons. Pour tester les adhésions ou cadeaux, observez le Dock ou le tableau de bord des événements sur la même session et vérifiez que l'événement arrive.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo"><img src="../../media/logo.png" alt="Logo Social Stream Ninja"><span>Social Stream Ninja</span></div>
+                <div class="footer-links"><div class="footer-section"><h4>Ressources</h4><ul><li><a href="guides.html">Guides</a></li><li><a href="event-reference.html">Référence des événements</a></li><li><a href="support.html">Assistance</a></li></ul></div></div>
+            </div>
+            <div class="footer-bottom"><p>© 2026 Social Stream Ninja. Tous droits réservés.</p></div>
+        </div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

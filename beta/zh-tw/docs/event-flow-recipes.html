@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/event-flow-recipes.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/event-flow-recipes.html">
+    <meta property="og:title" content="Event Flow 實用範例 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja 的實用 Event Flow 範例：聲音、媒體、獎勵、OBS 動作、webhook 和安全測試。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/event-flow-recipes.html">
+    <meta name="twitter:title" content="Event Flow 實用範例 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja 的實用 Event Flow 範例：聲音、媒體、獎勵、OBS 動作、webhook 和安全測試。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Flow 實用範例 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja 的實用 Event Flow 範例：聲音、媒體、獎勵、OBS 動作、webhook 和安全測試。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/event-flow-recipes.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{", password, and permissions.":"、密碼和權限。","Action":"操作","Audio or media does not play:":"音訊或媒體不播放：","Before Any Recipe":"開始任何範例前","Build useful automations one small recipe at a time.":"一次完成一個小範例，逐步建立實用的自動化。","Commands & API":"指令與 API","Common Fixes":"常見解決方式","Donation alert":"贊助提醒","Download":"下載","Event Flow Editor Guide":"Event Flow 編輯器指南","Event Flow Guide overview explaining sources, logic nodes, actions, and payloads":"Event Flow 指南概述，說明來源、邏輯節點、動作和承載資料","Event Flow Recipes":"Event Flow 實用範例","Event Flow Recipes - Social Stream Ninja":"Event Flow 實用範例 - Social Stream Ninja","Event Flow is the advanced automation editor. Use it when popup toggles are not enough: filter chat, trigger media, relay messages, call webhooks, or control OBS.":"Event Flow 是進階自動化編輯器。當彈出選單中的開關無法滿足需求時，可用它篩選聊天、觸發媒體、轉送訊息、呼叫 webhook 或控制 OBS。","Event Flow media action fields for reward-triggered sound or media":"Event Flow 媒體動作欄位，用於由獎勵觸發的聲音或媒體","Event Flow media hosting guide":"Event Flow 媒體託管指南","Event Flow reward trigger example for Kick rewards":"用於 Kick 獎勵的 Event Flow 獎勵觸發範例","Export a working flow before making a large edit.":"進行大幅編輯前，先匯出一個正常運作的流程。","Feature the message or show a welcome overlay.":"精選該訊息，或顯示歡迎疊加畫面。","Features":"功能","First-time chatter":"首次發言者","First-time chatter flag or filter":"首次發言者旗標或篩選器","Flow fires too often:":"流程觸發過於頻繁：","Full deep dive:":"完整深入說明：","Full reference:":"完整參考：","Giveaways, paid tickets, game prizes and recovery guide":"抽獎、付費票券、遊戲獎品與復原指南","Guides":"指南","Hire":"聘用","Home":"首頁","Inspiration":"靈感","Keyword + RANDOM gate":"關鍵字 + RANDOM 邏輯閘","Keyword sound":"關鍵字聲音","Kick Reward Media Example":"Kick 獎勵媒體範例","Kick reward media":"Kick 獎勵媒體","Kick rewards sounds/media guide":"Kick 獎勵聲音／媒體指南","Main navigation":"主導覽","Message contains":"訊息包含","Nothing happens:":"沒有反應：","OBS action fails:":"OBS 動作失敗：","On this page":"本頁內容","Open":"開啟","Open navigation menu":"開啟導覽選單","Open the dock and confirm chat arrives.":"開啟停駐面板，確認能收到聊天。","Overlay Gallery":"疊加畫面圖庫","POST a selected payload to your service.":"將選定的承載資料透過 POST 傳送到你的服務。","Platform/type filter":"平台／類型篩選器","Play audio clip in":"在下列位置播放音訊片段：","Play one of two clips at random. See":"隨機播放兩個片段中的一個 — 參閱","Practical Event Flow recipes for Social Stream Ninja: sounds, media, rewards, OBS actions, webhooks, and safe testing.":"Social Stream Ninja 的實用 Event Flow 範例：聲音、媒體、獎勵、OBS 動作、webhook 和安全測試。","Random sound pick":"隨機選擇聲音","Recipe":"範例","Recipe Ideas":"範例構想","Reward/channel point event":"獎勵／頻道點數事件","Run a custom workflow from a Stream Deck key or HTTP/WebSocket/P2P API call":"透過 Stream Deck 按鍵或 HTTP／WebSocket／P2P API 呼叫執行自訂工作流程","Send to alert overlay, webhook, or OBS scene action.":"傳送到提醒疊加畫面、webhook 或 OBS 場景動作。","Show an image, video, or sound.":"顯示圖片、播放影片或聲音。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Start with a specific trigger so the flow does not fire for every chat message.":"從明確的觸發條件開始，避免每則聊天訊息都觸發流程。","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","Test with a fake message or a safe trigger before going live.":"正式開播前，使用模擬訊息或安全的觸發條件測試。","Then point the action to the sound, image, video, or overlay output you want.":"然後將動作指向所需的聲音、圖片、影片或疊加畫面輸出。","Think in three pieces: source event, logic/filter, action.":"按三個部分思考：來源事件、邏輯／篩選器、動作。","This is the most common practical Event Flow pattern: match a reward, then play media through Flow Actions.":"這是最常見的實用 Event Flow 模式：符合一個獎勵條件，然後透過 Flow Actions 播放媒體。","Trigger":"觸發器","Use one test platform and one Social Stream session.":"使用一個測試平台和一個 Social Stream 工作階段。","Webhook relay":"Webhook 轉送","What Event Flow Is For":"Event Flow 的用途","add a stricter platform, event, keyword, or user filter.":"新增更嚴格的平台、事件、關鍵字或使用者篩選器。","check OBS WebSocket v5, port":"檢查 OBS WebSocket v5、連接埠","confirm the source event arrives in the dock first.":"先確認來源事件到達停駐面板。","if the recipe plays audio, media, or controls OBS.":"，適用於範例播放音訊、媒體或控制 OBS 的情況。","keep":"保持","micro-flow D in the editor guide":"編輯器指南中的微流程 D","open with the same session, then check the":"使用相同工作階段保持開啟，然後檢查","or donation event":"或贊助事件"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/event-flow-recipes.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/event-flow-recipes.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/event-flow-recipes.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/event-flow-recipes.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/event-flow-recipes.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/event-flow-recipes.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/event-flow-recipes.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/event-flow-recipes.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/event-flow-recipes.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="event-flow-recipes.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/event-flow-recipes.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/event-flow-recipes.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/event-flow-recipes.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/event-flow-recipes.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/event-flow-recipes.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/event-flow-recipes.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/event-flow-recipes.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/event-flow-recipes.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>Event Flow 實用範例</h1>
+<p><a href="giveaway-points-guide.html">抽獎、付費票券、遊戲獎品與復原指南</a></p><p>一次完成一個小範例，逐步建立實用的自動化。</p></div></section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="本頁內容"><a href="#read-section-1">Event Flow 的用途</a><a href="#read-section-2">開始任何範例前</a><a href="#read-section-3">範例構想</a><a href="#read-section-4">Kick 獎勵媒體範例</a><a href="#read-section-5">常見解決方式</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Event Flow 的用途</h2>
+                <p><a href="streamdeck-event-flow.html">透過 Stream Deck 按鍵或 HTTP／WebSocket／P2P API 呼叫執行自訂工作流程</a>.</p>
+                <p>Event Flow 是進階自動化編輯器。當彈出選單中的開關無法滿足需求時，可用它篩選聊天、觸發媒體、轉送訊息、呼叫 webhook 或控制 OBS。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-event-flow-overview.png" alt="Event Flow 指南概述，說明來源、邏輯節點、動作和承載資料" class="guide-image">
+                    <figcaption>按三個部分思考：來源事件、邏輯／篩選器、動作。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">開始任何範例前</h2>
+                <ol class="guide-steps">
+                    <li>使用一個測試平台和一個 Social Stream 工作階段。</li>
+                    <li>開啟停駐面板，確認能收到聊天。</li>
+                    <li>開啟 <code>actions.html?session=YOUR_SESSION</code> ，適用於範例播放音訊、媒體或控制 OBS 的情況。</li>
+                    <li>正式開播前，使用模擬訊息或安全的觸發條件測試。</li>
+                    <li>進行大幅編輯前，先匯出一個正常運作的流程。</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">範例構想</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>範例</th><th>觸發器</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="範例">關鍵字聲音</td><td data-label="觸發器">訊息包含 <code>!hype</code></td><td data-label="操作">在下列位置播放音訊片段： <code>actions.html</code>.</td></tr>
+                        <tr><td data-label="範例">Kick 獎勵媒體</td><td data-label="觸發器">獎勵／頻道點數事件</td><td data-label="操作">顯示圖片、播放影片或聲音。</td></tr>
+                        <tr><td data-label="範例">首次發言者</td><td data-label="觸發器">首次發言者旗標或篩選器</td><td data-label="操作">精選該訊息，或顯示歡迎疊加畫面。</td></tr>
+                        <tr><td data-label="範例">贊助提醒</td><td data-label="觸發器"><code>hasDonation</code> 或贊助事件</td><td data-label="操作">傳送到提醒疊加畫面、webhook 或 OBS 場景動作。</td></tr>
+                        <tr><td data-label="範例">Webhook 轉送</td><td data-label="觸發器">平台／類型篩選器</td><td data-label="操作">將選定的承載資料透過 POST 傳送到你的服務。</td></tr>
+                        <tr><td data-label="範例">隨機選擇聲音</td><td data-label="觸發器">關鍵字 + RANDOM 邏輯閘</td><td data-label="操作">隨機播放兩個片段中的一個 — 參閱 <a href="../actions/event-flow-guide.html">編輯器指南中的微流程 D</a>.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">Kick 獎勵媒體範例</h2>
+                <p>這是最常見的實用 Event Flow 模式：符合一個獎勵條件，然後透過 Flow Actions 播放媒體。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/kick-channel-points-event-flow/event-flow-reward-trigger.png" alt="用於 Kick 獎勵的 Event Flow 獎勵觸發範例" class="guide-image">
+                    <figcaption>從明確的觸發條件開始，避免每則聊天訊息都觸發流程。</figcaption>
+                </figure>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/kick-channel-points-event-flow/event-flow-media-action-values.png" alt="Event Flow 媒體動作欄位，用於由獎勵觸發的聲音或媒體" class="guide-image guide-image-narrow">
+                    <figcaption>然後將動作指向所需的聲音、圖片、影片或疊加畫面輸出。</figcaption>
+                </figure>
+                <p>完整深入說明： <a href="../../docs/index.html?file=kick-channel-points-event-flow.md">Kick 獎勵聲音／媒體指南</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">常見解決方式</h2>
+                <ul class="guide-list">
+                    <li><strong>沒有反應：</strong> 先確認來源事件到達停駐面板。</li>
+                    <li><strong>音訊或媒體不播放：</strong> 保持 <code>actions.html</code> 使用相同工作階段保持開啟，然後檢查 <a href="media-hosting-event-flow.html">Event Flow 媒體託管指南</a>.</li>
+                    <li><strong>OBS 動作失敗：</strong> 檢查 OBS WebSocket v5、連接埠 <code>4455</code>、密碼和權限。</li>
+                    <li><strong>流程觸發過於頻繁：</strong> 新增更嚴格的平台、事件、關鍵字或使用者篩選器。</li>
+                </ul>
+                <p>完整參考： <a href="../actions/event-flow-guide.html">Event Flow 編輯器指南</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 授權條款。</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

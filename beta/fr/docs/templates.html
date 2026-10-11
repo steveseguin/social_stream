@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="fr" data-site-root="../../" data-site-language="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/fr/docs/templates.html">
+    <meta property="og:title" content="Modèles et thèmes de chat - Social Stream Ninja">
+    <meta property="og:description" content="Choisissez un modèle d’incrustation de chat pour OBS, personnalisez son apparence ou importez un thème de chat StreamElements. Découvrez les aperçus et les guides de configuration Social Stream Ninja.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/fr/docs/templates.html">
+    <meta name="twitter:title" content="Modèles et thèmes de chat - Social Stream Ninja">
+    <meta name="twitter:description" content="Choisissez un modèle d’incrustation de chat pour OBS, personnalisez son apparence ou importez un thème de chat StreamElements. Découvrez les aperçus et les guides de configuration Social Stream Ninja.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modèles et thèmes de chat - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/templates.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <meta name="description" content="Choisissez un modèle d’incrustation de chat pour OBS, personnalisez son apparence ou importez un thème de chat StreamElements. Découvrez les aperçus et les guides de configuration Social Stream Ninja.">
+    <link rel="canonical" href="https://socialstream.ninja/beta/fr/docs/templates.html">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="fr">
+<script id="ssn-site-language" type="application/json">{"language":"fr","page":"docs/templates.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Passer au thème clair","Switch to dark theme":"Passer au thème sombre","Light mode":"Mode clair","Dark mode":"Mode sombre","Open navigation menu":"Ouvrir le menu de navigation","Close navigation menu":"Fermer le menu de navigation","Copy this document as Markdown to the clipboard":"Copier ce document au format Markdown dans le presse-papiers","Copy Markdown":"Copier le Markdown","Copying…":"Copie en cours…","Markdown copied":"Markdown copié","Copy failed":"Échec de la copie","Copy comprehensive Markdown for an AI assistant":"Copier le Markdown complet pour un assistant IA","Copy this documentation page as Markdown for an AI assistant":"Copier cette page de documentation en Markdown pour un assistant IA"},"strings":{", and select the downloaded HTML file.":", puis sélectionnez le fichier HTML téléchargé.",", enter your session details, then copy the links for OBS. Motion is optional.":", saisissez les informations de votre session, puis copiez les liens pour OBS. Les animations sont facultatives.",", or explore custom templates and imports below.":", ou explorez les modèles personnalisés et les importations ci-dessous.",", preview it, then download the OBS HTML. Use the original ZIP or files, not a screenshot or overlay URL.":", prévisualisez-le, puis téléchargez le HTML OBS. Utilisez le ZIP ou les fichiers originaux, pas une capture d’écran ni une URL d’incrustation.",". In OBS, add a Browser Source, enable":". Dans OBS, ajoutez une source Navigateur et activez","A cheerful corgi on a sky-blue postcard":"Un corgi joyeux sur une carte postale bleu ciel","A cheerful corgi on a sky-blue postcard. Includes matching chat, featured-message, and alert styles.":"Un corgi joyeux sur une carte postale bleu ciel. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.","A clean, lightweight template with essential features. Perfect starting point for customization.":"Un modèle simple et léger avec les fonctions essentielles. Un point de départ idéal pour la personnalisation.","A more complete starting point with comments and documentation to help you build your own custom overlays.":"Un point de départ plus complet, avec commentaires et documentation pour créer vos propres incrustations.","A running feed from your connected platforms. Start with a chat template or":"Un fil continu provenant de vos plateformes connectées. Commencez par un modèle de chat ou","A sophisticated, fully animated theme with customizable colors and smooth transitions. Perfect for gaming streams.":"Un thème soigné et entièrement animé, avec des couleurs personnalisables et des transitions fluides. Idéal pour les diffusions de jeux vidéo.","A storybook frog in a peaceful woodland":"Une grenouille de conte dans un bois paisible","A storybook frog in a peaceful woodland. Includes matching chat, featured-message, and alert styles.":"Une grenouille de conte dans une forêt paisible. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.","A tiny dragon with a luminous enchanted crystal":"Un petit dragon avec un cristal enchanté lumineux","A tiny dragon with a luminous enchanted crystal. Includes matching chat, featured-message, and alert styles.":"Un petit dragon avec un cristal enchanté lumineux. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.","Add Your SSN Session ID":"Ajouter votre identifiant de session SSN","Add Your Session ID":"Ajouter votre identifiant de session","Add the modified URL as a Browser Source in your streaming software:":"Ajoutez l’URL modifiée comme source Navigateur dans votre logiciel de diffusion :","Add to OBS/Streamlabs":"Ajouter à OBS/Streamlabs","Add your CSS in the Browser Source properties":"Ajoutez votre CSS dans les propriétés de la source Navigateur","Alert guide":"Guide des alertes","All Templates":"Tous les modèles","An astronaut bunny drifting through lilac stardust":"Un lapin astronaute flotte dans une poussière d'étoiles lilas","An astronaut bunny drifting through lilac stardust. Includes matching chat, featured-message, and alert styles.":"Un lapin astronaute flottant dans une poussière d’étoiles lilas. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.","Animated":"Animé","Append":"Ajoutez","Apply your custom CSS through OBS browser source settings":"Appliquez votre CSS personnalisé dans les paramètres de la source Navigateur OBS","Bare Template":"Modèle minimal","Base64 CSS:":"CSS en Base64 :","Bluesky":"Bluesky","Bold, high-contrast theme designed for gaming streams with excellent visibility even in fast-paced content.":"Un thème affirmé et très contrasté pour les diffusions de jeux vidéo, offrant une excellente lisibilité même pendant les séquences rapides.","Browse Overlay Gallery":"Parcourir la galerie d’incrustations","Browse the":"Parcourez la","Browse the template library and select one that fits your stream style. Use the screenshot gallery to compare designs; most built-in templates work directly from a URL, with no download.":"Parcourez la bibliothèque et choisissez un modèle adapté au style de votre diffusion. Comparez les designs dans la galerie de captures ; la plupart des modèles intégrés fonctionnent directement depuis une URL, sans téléchargement.","By Deuk":"Par Deuk","By LuckyLootTube":"Par LuckyLootTube","By NeutronStudio":"Par NeutronStudio","By RetroTech":"Par RetroTech","By Social Stream Ninja":"Par Social Stream Ninja","By t3nk3y":"Par t3nk3y","CSS Snippet":"Extrait CSS","CSS copied to clipboard!":"CSS copié dans le presse-papiers !","CSS not found":"CSS introuvable","Celebrate follows, memberships, and donations. Configure animations and audio in SSN’s alert settings.":"Célébrez les nouveaux followers, les abonnements et les dons. Configurez les animations et le son dans les paramètres d’alertes SSN.","Chat Overlay Templates and Custom Skins - Social Stream Ninja":"Modèles et thèmes de chat - Social Stream Ninja","Choose Message History":"Choisir l’historique des messages","Choose Your Template":"Choisir votre modèle","Choose a chat overlay template for OBS, customize its appearance, or import a StreamElements chat skin. Find previews and Social Stream Ninja setup guides.":"Choisissez un modèle d’incrustation de chat pour OBS, personnalisez son apparence ou importez un thème de chat StreamElements. Découvrez les aperçus et les guides de configuration Social Stream Ninja.","Choose a look for your stream":"Choisissez un style pour votre diffusion","Choose a starting point, copy the prompt, and replace the bracketed design details. Attach source files if your AI cannot read links. Leave your private session ID and password out of the conversation.":"Choisissez un point de départ, copiez la consigne et remplacez les détails de design entre crochets. Joignez les fichiers sources si votre IA ne peut pas lire les liens. N’incluez pas votre identifiant de session privé ni votre mot de passe dans la conversation.","Clean, modern design with smooth animations and excellent readability. Customizable color schemes.":"Un design moderne et épuré, avec des animations fluides et une excellente lisibilité. Palettes de couleurs personnalisables.","Click":"Cliquez sur","Click OK to add it to your scene":"Cliquez sur OK pour l’ajouter à votre scène","Close":"Fermer","Commands & API":"Commandes et API","Community":"Communauté","Complete Package":"Pack complet","Complete themed packages with documentation, sample images, and guides":"Packs thématiques complets avec documentation, images d’exemple et guides","Configure OBS to use your customized template":"Configurez OBS pour utiliser votre modèle personnalisé","Confirm SSN Is Receiving Chat":"Vérifier que SSN reçoit le chat","Confirm chat reaches the SSN dock and that the session ID and optional password match exactly.":"Vérifiez que le chat arrive au dock SSN et que l’identifiant de session et le mot de passe facultatif correspondent exactement.","Consolidates your live social messaging streams and more. Free and open source.":"Réunit vos flux de messages sociaux en direct et bien plus. Gratuit et open source.","Contribute":"Contribuer","Converting a more complex widget?":"Vous convertissez un widget plus complexe ?","Copy a working starter and edit its HTML, CSS, and JavaScript.":"Copiez un modèle fonctionnel et modifiez son HTML, son CSS et son JavaScript.","Copy the template code to your clipboard":"Copiez le code du modèle dans le presse-papiers","Copy to Clipboard":"Copier dans le presse-papiers","Create a styled SSN consolidated chat overlay from https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html . Receive the normal live feed (dock label), with a bounded message list, configurable count and optional expiry. Preserve platform icons, donation and membership presentation. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"Créez une incrustation stylisée de chat consolidé SSN à partir de https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html . Recevez le flux normal en direct (label dock), avec une liste de messages limitée, un nombre configurable et une expiration facultative. Préservez les icônes de plateformes et la présentation des dons et abonnements. Examinez d’abord le code source SSN actuel et la documentation ci-dessous. Si vous ne pouvez pas les ouvrir, demandez-moi de joindre les fichiers ; ne devinez pas le transport ou le schéma des événements. Références : https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md et https://socialstream.ninja/beta/docs/event-reference.html Préservez la connexion de l’incrustation initiale, les options de session/mot de passe, de label et de serveur, la gestion de la modération/suppression/effacement et les champs de messages existants. Gardez les identifiants sous forme de valeurs fictives YOUR_SESSION_ID / YOUR_PASSWORD, jamais de véritables identifiants. Utilisez des scripts classiques compatibles Chrome 80 et OBS ; conservez les dépendances locales relatives et indiquez les fichiers qui doivent accompagner le HTML. Traitez chatname comme du texte brut ; textonly s’applique uniquement à chatmessage. Préservez les émoticônes/badges sûrs, les messages contentimg contenant seulement une image et le trafic mixte d’événements/métadonnées, sans afficher les mises à jour de métadonnées seules comme des messages. N’insérez pas de HTML non vérifié et n’inventez pas de champs de premier niveau. Design : [describe colors, mood, typography, placement and motion]. Canevas : [width x height]. Gardez le fond transparent, le texte lisible sur le jeu, les noms/messages longs contenus et prévoyez un style à animations réduites. Renvoyez les fichiers modifiés complets, des instructions simples et un mode de démonstration à données fictives qui ne se connecte jamais à une session en direct. Testez les textes longs, emojis, messages contenant seulement une image, suppressions, effacements, redimensionnements et reconnexions.","Created an awesome template for Social Stream Ninja? Share it with the community by submitting a pull request to our GitHub repository.":"Vous avez créé un excellent modèle pour Social Stream Ninja ? Partagez-le avec la communauté en proposant une pull request sur notre dépôt GitHub.","Creating a Custom Chat Overlay for Social Stream Ninja":"Créer une incrustation de chat personnalisée pour Social Stream Ninja","Custom CSS":"CSS personnalisé","Customization Guide":"Guide de personnalisation","Customize Your Template":"Personnaliser votre modèle","Customize https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html . Inspect its shared alert dependencies and https://socialstream.ninja/beta/docs/alert-effects.html first. Reuse existing alert type filters, queue, sound library, mute/volume and effect rules. Keep USD thresholds on the existing currency.js conversion path; do not compare formatted currency strings. Support an optional animation and sound for a $100 USD donation rule, respecting enabled state and existing range semantics. Avoid duplicate playback. Use only audio I supply or have permission to use. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"Personnalisez https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html . Examinez d’abord ses dépendances d’alertes partagées et https://socialstream.ninja/beta/docs/alert-effects.html . Réutilisez les filtres de types d’alertes, la file d’attente, la bibliothèque sonore, les contrôles muet/volume et les règles d’effets existants. Conservez les seuils en USD sur le chemin de conversion currency.js existant ; ne comparez pas des montants formatés en chaînes. Prenez en charge une animation et un son facultatifs pour une règle de don de $100 USD, en respectant l’activation et la sémantique des plages existantes. Évitez toute lecture en double. Utilisez uniquement du son que je fournis ou que je suis autorisé à utiliser. Examinez d’abord le code source SSN actuel et la documentation ci-dessous. Si vous ne pouvez pas les ouvrir, demandez-moi de joindre les fichiers ; ne devinez pas le transport ou le schéma des événements. Références : https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md et https://socialstream.ninja/beta/docs/event-reference.html Préservez la connexion de l’incrustation initiale, les options de session/mot de passe, de label et de serveur, la gestion de la modération/suppression/effacement et les champs de messages existants. Gardez les identifiants sous forme de valeurs fictives YOUR_SESSION_ID / YOUR_PASSWORD, jamais de véritables identifiants. Utilisez des scripts classiques compatibles Chrome 80 et OBS ; conservez les dépendances locales relatives et indiquez les fichiers qui doivent accompagner le HTML. Traitez chatname comme du texte brut ; textonly s’applique uniquement à chatmessage. Préservez les émoticônes/badges sûrs, les messages contentimg contenant seulement une image et le trafic mixte d’événements/métadonnées, sans afficher les mises à jour de métadonnées seules comme des messages. N’insérez pas de HTML non vérifié et n’inventez pas de champs de premier niveau. Design : [describe colors, mood, typography, placement and motion]. Canevas : [width x height]. Gardez le fond transparent, le texte lisible sur le jeu, les noms/messages longs contenus et prévoyez un style à animations réduites. Renvoyez les fichiers modifiés complets, des instructions simples et un mode de démonstration à données fictives qui ne se connecte jamais à une session en direct. Testez les textes longs, emojis, messages contenant seulement une image, suppressions, effacements, redimensionnements et reconnexions.","Customize https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html for a single selected message. Preserve its default featured/overlay routing and clear behavior; do not automatically show every chat message. Explain how to select a message from the SSN dock. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"Personnalisez https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html pour un seul message sélectionné. Préservez son routage featured/overlay par défaut et son comportement d’effacement ; n’affichez pas automatiquement tous les messages. Expliquez comment sélectionner un message depuis le dock SSN. Examinez d’abord le code source SSN actuel et la documentation ci-dessous. Si vous ne pouvez pas les ouvrir, demandez-moi de joindre les fichiers ; ne devinez pas le transport ou le schéma des événements. Références : https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md et https://socialstream.ninja/beta/docs/event-reference.html Préservez la connexion de l’incrustation initiale, les options de session/mot de passe, de label et de serveur, la gestion de la modération/suppression/effacement et les champs de messages existants. Gardez les identifiants sous forme de valeurs fictives YOUR_SESSION_ID / YOUR_PASSWORD, jamais de véritables identifiants. Utilisez des scripts classiques compatibles Chrome 80 et OBS ; conservez les dépendances locales relatives et indiquez les fichiers qui doivent accompagner le HTML. Traitez chatname comme du texte brut ; textonly s’applique uniquement à chatmessage. Préservez les émoticônes/badges sûrs, les messages contentimg contenant seulement une image et le trafic mixte d’événements/métadonnées, sans afficher les mises à jour de métadonnées seules comme des messages. N’insérez pas de HTML non vérifié et n’inventez pas de champs de premier niveau. Design : [describe colors, mood, typography, placement and motion]. Canevas : [width x height]. Gardez le fond transparent, le texte lisible sur le jeu, les noms/messages longs contenus et prévoyez un style à animations réduites. Renvoyez les fichiers modifiés complets, des instructions simples et un mode de démonstration à données fictives qui ne se connecte jamais à une session en direct. Testez les textes longs, emojis, messages contenant seulement une image, suppressions, effacements, redimensionnements et reconnexions.","Demo Preview":"Aperçu de démonstration (Demo Preview)","Demo is blank":"La démonstration est vide","Deuk's Theme":"Thème de Deuk","Developer":"Développeur","Developer Templates":"Modèles pour développeurs","Developer guide":"Guide de développement","Discord":"Discord","Do not add the session ID or edit the URL in OBS.":"N’ajoutez pas l’identifiant de session et ne modifiez pas l’URL dans OBS.","Donate":"Faire un don","Download":"Télécharger","Download OBS HTML":"Télécharger le HTML OBS (Download OBS HTML)","Download and Add It to OBS":"Télécharger et ajouter à OBS","Editable prompt":"Consigne modifiable","Elegant design with smooth animations and visual effects. Eye-catching yet not distracting.":"Design élégant avec des animations fluides et des effets visuels. Attrayant sans distraire.","Event Flow editor":"éditeur Event Flow","Event fields":"Champs d’événements","FAQ":"FAQ","Failed to copy. Try selecting and copying manually.":"Échec de la copie. Essayez de sélectionner et copier manuellement.","Featured":"Mis en avant","Features":"Fonctionnalités","Filter templates":"Filtrer les modèles","Find the perfect template for your stream":"Trouvez le modèle idéal pour votre diffusion","Find the sample overlay template (sampleoverlay.html)":"Trouvez le modèle d’incrustation d’exemple (sampleoverlay.html)","Follow these simple steps to get started":"Suivez ces étapes simples pour commencer","For inline CSS, use":"Pour du CSS intégré, utilisez","For trigger-based behavior, start with the":"Pour un comportement fondé sur des déclencheurs, commencez par l’","Friendly ghost, glowing pumpkin and midnight plum":"Fantôme sympathique, citrouille lumineuse et prune de minuit","Friendly ghost, glowing pumpkin and midnight plum. Includes matching chat, featured-message, and alert styles.":"Fantôme sympathique, citrouille lumineuse et tons prune nocturnes. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.","Gaming":"Jeux vidéo","Get":"Récupérez","Get the Original Widget Export":"Récupérer l’exportation originale du widget","GitHub":"GitHub","GitHub Repository":"Dépôt GitHub","Guides":"Guides","Have a StreamElements chat widget export?":"Vous avez exporté un widget de chat StreamElements ?","Have a Template to Share?":"Un modèle à partager ?","Headphone raccoon and vinyl in mint and plum":"Raton laveur au casque et vinyle en menthe et prune","Headphone raccoon and vinyl in mint and plum. Includes matching chat, featured-message, and alert styles.":"Raton laveur au casque et vinyle en menthe et prune. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.","Hire":"Faire appel à nos services","Home":"Accueil","Host your files and use their URL with your session and optional password. For a self-contained local export, follow its configuration instructions; OBS Local file has no URL field for session parameters.":"Hébergez vos fichiers et utilisez leur URL avec votre session et votre mot de passe facultatif. Pour une exportation locale autonome, suivez ses instructions de configuration ; l’option Fichier local d’OBS n’a pas de champ URL pour les paramètres de session.","How to Use Templates":"Utiliser les modèles","If the imported widget provides compatible settings, use":"Si le widget importé propose des paramètres compatibles, utilisez","Import StreamElements Widget":"Importer un widget StreamElements","In OBS, click the + under Sources and select \"Browser\"":"Dans OBS, cliquez sur + sous Sources et sélectionnez « Navigateur » (Browser)","Inspiration":"Inspiration","Installation Guide":"Guide d’installation","Join our Discord":"Rejoindre notre Discord","Keep SSN running while streaming; the importer and StreamElements may be closed.":"Gardez SSN ouvert pendant la diffusion ; l’importateur et StreamElements peuvent être fermés.","Keep referenced shared scripts, fonts, and images alongside your file with the same relative paths, or ask your AI for a self-contained export. Renaming one HTML file does not bundle its dependencies.":"Conservez les scripts partagés, polices et images référencés à côté du fichier, avec les mêmes chemins relatifs, ou demandez à votre IA une exportation autonome. Renommer un fichier HTML n’intègre pas ses dépendances.","Keep the original connection code. Chat and featured overlays receive different feeds; styling a chat feed does not make it a selected-message overlay.":"Gardez le code de connexion original. Les incrustations de chat et de messages mis en avant reçoivent des flux distincts ; modifier le style d’un flux de chat n’en fait pas une incrustation de message sélectionné.","Learn how to create a custom chat overlay with AI assistance":"Apprenez à créer une incrustation de chat personnalisée avec l’aide d’une IA","Liquid Glass":"Verre liquide","Live Preview":"Aperçu en direct (Live Preview)","Live Preview is blank":"L’aperçu en direct est vide","Local file":"Fichier local","LuckyLootTube Liquid Glass Theme":"Thème Liquid Glass de LuckyLootTube","LuckyLootTube's Theme":"Thème de LuckyLootTube","Main navigation":"Navigation principale","Message history":"Historique des messages (Message history)","Minimal":"Minimal","Minimal code needed to create your own overlay from scratch. Perfect for developers and LLM-assisted coding.":"Le minimum de code pour créer votre propre incrustation. Idéal pour les développeurs et le codage assisté par LLM.","Modern":"Moderne","Modern Design":"Design moderne","Name your source and click OK":"Nommez votre source et cliquez sur OK","Neutron Theme":"Thème Neutron","New":"Nouveau","New to importing?":"Vous découvrez l’importation ?","No matches. Try another search or choose All Templates.":"Aucun résultat. Essayez une autre recherche ou choisissez Tous les modèles.","Nostalgic Windows 3.1 style chat overlay with classic window design and pixel-perfect detailing.":"Une incrustation de chat nostalgique au style Windows 3.1, avec des fenêtres classiques et des détails au pixel près.","OBS Custom CSS:":"CSS personnalisé OBS :","OBS is blank":"OBS est vide","One look across three browser sources. In the gallery, choose":"Un même style sur trois sources Navigateur. Dans la galerie, choisissez","One message you select in the dock. Choose a featured design for interviews, Q&A, or shout-outs.":"Un message que vous sélectionnez dans le dock. Choisissez un style de message mis en avant pour les interviews, questions-réponses ou dédicaces.","Open Widget Importer":"Ouvrir l’importateur de widgets","Open navigation menu":"Ouvrir le menu de navigation","Open the Importer":"Ouvrir l’importateur","Open the StreamElements converter":"Ouvrir le convertisseur StreamElements","Open the importer and choose the ZIP, folder, or files. It detects the widget parts and immediately shows a demo preview.":"Ouvrez l’importateur et choisissez le ZIP, le dossier ou les fichiers. Il détecte les éléments du widget et affiche aussitôt un aperçu de démonstration.","Open your platform sources in the SSN app or extension, then send a test message. Continue only after it appears in the SSN dock.":"Ouvrez les sources de vos plateformes dans l’application ou l’extension SSN, puis envoyez un message de test. Continuez uniquement après son apparition dans le dock SSN.","Opening the importer from the SSN popup fills the session ID and password automatically. If you opened it directly, copy them from":"Ouvrir l’importateur depuis le panneau SSN renseigne automatiquement l’identifiant de session et le mot de passe. Si vous l’avez ouvert directement, copiez-les depuis","Overlay Gallery":"Galerie d’incrustations","Paste your template URL with session ID":"Collez l’URL de votre modèle avec l’identifiant de session","Personalize your overlay with custom CSS in one of these ways:":"Personnalisez votre incrustation avec du CSS selon l’une de ces méthodes :","Popular":"Populaire","Pretty Template":"Modèle décoratif","Preview & use pack":"Prévisualiser et utiliser le pack","Preview chat, featured-message, and alert overlays, then add your favorite to OBS or Streamlabs.":"Prévisualisez les incrustations de chat, de messages mis en avant et d’alertes, puis ajoutez votre préférée à OBS ou Streamlabs.","Preview fake data first, then test with your own SSN session. Check selected messages, clearing, long names, images, and transparent backgrounds. Keep SSN running during live use.":"Prévisualisez d’abord avec des données fictives, puis testez avec votre session SSN. Vérifiez les messages sélectionnés, l’effacement, les noms longs, les images et les fonds transparents. Gardez SSN ouvert en utilisation réelle.","Privacy Policy":"Politique de confidentialité","Prompt copied.":"Consigne copiée.","Prompt selected. Press Ctrl+C (Command+C on Mac) to copy.":"Consigne sélectionnée. Appuyez sur Ctrl+C, ou Command+C sur Mac, pour copier.","Prompt the AI to modify the CSS for your preferred style":"Demandez à l’IA de modifier le CSS selon le style souhaité","Quick Guide from the Video":"Guide rapide de la vidéo","Quick Links":"Liens rapides","Quick start":"Démarrage rapide","Read the full chat skin guide":"Lire le guide complet des thèmes de chat","Ready-to-use templates that only require your session ID":"Modèles prêts à l’emploi nécessitant uniquement votre identifiant de session","Replace":"Remplacez","Report an Issue":"Signaler un problème","Resources":"Ressources","Restyle my existing SSN overlay using CSS only. I will provide its URL and source HTML/CSS. Keep all JavaScript and message routing unchanged. Inspect actual DOM selectors before writing CSS. Deliver CSS for the OBS Browser Source Custom CSS box plus any necessary local font/image assets. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"Modifiez le style de mon incrustation SSN existante uniquement avec du CSS. Je fournirai son URL et son code HTML/CSS. Gardez tout le JavaScript et le routage des messages inchangés. Examinez les sélecteurs DOM réels avant d’écrire le CSS. Fournissez le CSS pour le champ CSS personnalisé de la source Navigateur OBS, ainsi que les ressources locales de polices/images nécessaires. Examinez d’abord le code source SSN actuel et la documentation ci-dessous. Si vous ne pouvez pas les ouvrir, demandez-moi de joindre les fichiers ; ne devinez pas le transport ou le schéma des événements. Références : https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md et https://socialstream.ninja/beta/docs/event-reference.html Préservez la connexion de l’incrustation initiale, les options de session/mot de passe, de label et de serveur, la gestion de la modération/suppression/effacement et les champs de messages existants. Gardez les identifiants sous forme de valeurs fictives YOUR_SESSION_ID / YOUR_PASSWORD, jamais de véritables identifiants. Utilisez des scripts classiques compatibles Chrome 80 et OBS ; conservez les dépendances locales relatives et indiquez les fichiers qui doivent accompagner le HTML. Traitez chatname comme du texte brut ; textonly s’applique uniquement à chatmessage. Préservez les émoticônes/badges sûrs, les messages contentimg contenant seulement une image et le trafic mixte d’événements/métadonnées, sans afficher les mises à jour de métadonnées seules comme des messages. N’insérez pas de HTML non vérifié et n’inventez pas de champs de premier niveau. Design : [describe colors, mood, typography, placement and motion]. Canevas : [width x height]. Gardez le fond transparent, le texte lisible sur le jeu, les noms/messages longs contenus et prévoyez un style à animations réduites. Renvoyez les fichiers modifiés complets, des instructions simples et un mode de démonstration à données fictives qui ne se connecte jamais à une session en direct. Testez les textes longs, emojis, messages contenant seulement une image, suppressions, effacements, redimensionnements et reconnexions.","Retro":"Rétro","Retro Style":"Style rétro","Review the detected files in the importer and use Advanced file selection if it chose the wrong HTML, CSS, or JavaScript.":"Examinez les fichiers détectés dans l’importateur et utilisez Sélection avancée des fichiers s’il a choisi le mauvais HTML, CSS ou JavaScript.","Sample Overlay":"Exemple d'incrustation","Sample Overlay Template":"Modèle d’incrustation d’exemple","Sample Template":"Modèle d’exemple","Scarf-wrapped reindeer and festive evergreen":"Renne emmitouflé dans une écharpe et sapin festif","Scarf-wrapped reindeer and festive evergreen. Includes matching chat, featured-message, and alert styles.":"Renne en écharpe et sapin de fête. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.","Search templates by name, type, or feature...":"Chercher : nom, type ou fonction…","See setup below":"Voir la configuration ci-dessous","Session Options":"Options de session (Session Options)","Set width and height (recommended: 1920×1080)":"Réglez la largeur et la hauteur, idéalement sur 1920×1080","Setup":"Configuration","Simple Drop-in Templates":"Modèles simples prêts à intégrer","Sleek animated liquid-glass style chat overlay with smooth animations and cool emote rendering.":"Une incrustation de chat élégante en verre liquide animé, avec des animations fluides et un rendu soigné des émoticônes.","Sleepy calico, strawberry milk and blush stationery":"Chat tricolore endormi, lait à la fraise et papeterie rose poudré","Sleepy calico, strawberry milk and blush stationery. Includes matching chat, featured-message, and alert styles.":"Chat calico endormi, lait à la fraise et papeterie rose tendre. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. Licence GPLv3.0. Créé par","Source Code":"Code source","Start with a working overlay, then change its appearance.":"Partez d’une incrustation fonctionnelle, puis modifiez son apparence.","Starting points for creating your own custom overlays":"Points de départ pour créer vos propres incrustations","Steve Seguin":"Steve Seguin","StreamElements Setup Guide":"Guide de configuration StreamElements","Submit on GitHub":"Proposer sur GitHub","Support":"Assistance","Supported Sites":"Sites pris en charge","Switch theme":"Changer de thème","Template Library":"Bibliothèque de modèles","Templates":"Modèles","Templates Gallery":"Galerie de modèles","Templates that work with YouTube CSS styles":"Modèles compatibles avec les styles CSS YouTube","Terms of Service":"Conditions d’utilisation","Test Before Downloading":"Tester avant de télécharger","Themed Packages":"Packs thématiques","This works with both the SSN Windows desktop app and Chrome extension. No code editing is required.":"Fonctionne avec l’application de bureau SSN pour Windows et l’extension Chrome ; aucune modification de code n’est nécessaire.","URL Parameter:":"Paramètre d’URL :","Use":"Utilisez","Use CSS designed for YouTube with our YouTube-structured overlay page. Compatible with Septapus styles.":"Utilisez du CSS conçu pour YouTube avec notre page d’incrustation structurée comme YouTube. Compatible avec les styles Septapus.","Use OBS Browser Source":"Utiliser une source Navigateur OBS","Use a StreamElements Chat Widget with Social Stream Ninja":"Utiliser un widget de chat StreamElements avec Social Stream Ninja","Use an AI assistant like Claude to help customize it":"Utilisez un assistant IA comme Claude pour vous aider à le personnaliser","Use matching set":"Utiliser l'ensemble assorti","Use the ZIP, folder, or files supplied by the widget designer. A useful export normally contains HTML, CSS, JavaScript, fields/data, and assets. A screenshot or StreamElements overlay URL is not enough.":"Utilisez le ZIP, le dossier ou les fichiers fournis par le créateur du widget. Une exportation utile contient généralement le HTML, le CSS, le JavaScript, les champs/données et les ressources. Une capture d’écran ou une URL d’incrustation StreamElements ne suffit pas.","Use the downloaded HTML file, then refresh the OBS Browser Source. The importer page, original ZIP, and StreamElements URL cannot be used as the Browser Source.":"Utilisez le fichier HTML téléchargé, puis actualisez la source Navigateur OBS. La page d’importation, le ZIP original et l’URL StreamElements ne sont pas le fichier à utiliser.","Use the full StreamElements / Streamlabs conversion prompt":"Utiliser la consigne complète de conversion StreamElements / Streamlabs","Video Tutorial":"Tutoriel vidéo","Windows 3.1 Theme":"Thème Windows 3.1","X.com":"X.com","YouTube Compatible":"Compatible YouTube","YouTube-CSS Compatible Templates":"Modèles compatibles CSS YouTube","YouTube-CSS Template":"Modèle CSS YouTube","alert effect rules":"règles d’effets d’alerte","and":"et","before writing a new overlay.":"avant d’écrire une nouvelle incrustation.","checks the design with sample messages.":"vérifie le design avec des messages d’exemple.","checks the session using real chat from the running SSN app or extension.":"vérifie la session avec de vrais messages de l’application ou de l’extension SSN en cours d’exécution.","complete visual overlay gallery":"galerie visuelle complète des incrustations","featured-modern.html":"featured-modern.html","for colors, spacing, and typography. Keep the original SSN URL and connection.":"pour les couleurs, l’espacement et la typographie. Gardez l’URL SSN et la connexion originales.","for consolidated chat,":"pour le chat consolidé,","for events. Download the source and required assets from":"pour les événements. Téléchargez le code source et les ressources requises depuis","for finding widget files, supported formats, OBS setup and troubleshooting.":"pour trouver les fichiers du widget, les formats pris en charge, la configuration OBS et le dépannage.","for selected messages, or":"pour les messages sélectionnés, ou","in the app or extension. You enter the session ID once in the importer; it is saved inside the downloaded file.":"dans l’application ou l’extension. Saisissez l’identifiant de session une seule fois dans l’importateur ; il est enregistré dans le fichier téléchargé.","in the template URL with your actual Social Stream Ninja session ID found under Session Options in the SSN app or extension. Include the optional password if your session uses one.":"dans l’URL du modèle par votre véritable identifiant de session Social Stream Ninja, disponible sous Options de session dans l’application ou l’extension SSN. Ajoutez le mot de passe facultatif si votre session en utilise un.","multi-alerts.html":"multi-alerts.html","sampleoverlay.html":"sampleoverlay.html","t3nk3y's Theme":"Thème de t3nk3y","the beta repository":"le dépôt beta","the dock":"le dock","to turn off timed removal or change how many messages stay on screen. This changes widget settings, not its code.":"pour désactiver la suppression temporisée ou modifier le nombre de messages conservés à l’écran. Cela modifie les paramètres du widget, pas son code.","to your template URL":"à l’URL de votre modèle","with contributions from the community.":"avec les contributions de la communauté.","{0} templates shown":"{0} modèles affichés","✨ Copy AI Prompts":"✨ Copier des consignes pour l’IA","✨ Copy a prompt for your AI":"✨ Copier une consigne pour votre IA","⭐ Featured message":"⭐ Message mis en avant","🌙 Moon Bunny":"🌙 Moon Bunny","🍄 Moss & Mushrooms":"🍄 Moss & Mushrooms","🎃 Pumpkin Haunt":"🎃 Pumpkin Haunt","🎄 Merry Little Reindeer":"🎄 Merry Little Reindeer","🎉 Alerts with sound":"🎉 Alertes sonores","🎉 Event alerts":"🎉 Alertes d’événements","🎨 CSS-only makeover":"🎨 Refonte par CSS uniquement","🎨 Change the look":"🎨 Modifier l’apparence","🎨 Matching packs":"🎨 Packs assortis","🎨 Matching theme packs":"🎨 Packs de thèmes assortis","🎵 Midnight Mixtape":"🎵 Midnight Mixtape","🐉 Crystal Guardian":"🐉 Crystal Guardian","🐱 Strawberry Cat":"🐱 Strawberry Cat","🐶 Good Company":"🐶 Good Company","💬 Consolidated chat":"💬 Chat consolidé","📋 Copy prompt":"📋 Copier la consigne","📦 Bring a widget":"📦 Importer un widget","🔎 Find a template or theme pack":"🔎 Trouver un modèle ou un pack de thèmes","🔧 Files, routing, and testing":"🔧 Fichiers, routage et tests","🚀 Setup":"🚀 Configuration","🛠️ Make Your Own":"🛠️ Créer le vôtre","🛠️ Make your own template":"🛠️ Créer votre propre modèle","🧩 Change behavior":"🧩 Modifier le comportement","🧭 Choose your overlay type":"🧭 Choisir votre type d’incrustation"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/templates.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/templates.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/templates.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/templates.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/templates.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/templates.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/templates.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/templates.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/templates.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/templates.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/templates.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/templates.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/templates.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/templates.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/templates.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/templates.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/templates.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/templates.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navigation principale"><a href="../index.html">Accueil</a><a href="features.html">Fonctionnalités</a><a href="inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="download.html">Télécharger</a><a href="guides.html">Guides</a><a href="commands.html">Commandes et API</a><a href="supported-sites.html">Sites pris en charge</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie d’incrustations</a><a href="services.html" class="site-priority-hire">Faire appel à nos services</a><a href="support.html">Assistance</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Français"><span aria-hidden="true">🌐 </span><span lang="fr">Français</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/templates.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/templates.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/templates.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/templates.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="templates.html" lang="fr" hreflang="fr" aria-current="true">Français</a><a class="site-language-link" href="../../de/docs/templates.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/templates.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/templates.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/templates.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/templates.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/templates.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/templates.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/templates.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/templates.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/templates.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/templates.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/templates.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Changer de thème"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Ouvrir le menu de navigation" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Galerie de modèles</h1>
+            <p>Parcourez la <a href="overlay-gallery.html">galerie visuelle complète des incrustations</a>, ou explorez les modèles personnalisés et les importations ci-dessous.</p>
+        </div>
+    </section>
+
+    <section class="template-banner">
+        <div class="container">
+            <h2>Choisissez un style pour votre diffusion</h2>
+            <p>Prévisualisez les incrustations de chat, de messages mis en avant et d’alertes, puis ajoutez votre préférée à OBS ou Streamlabs.</p>
+            <div class="hero-buttons">
+                <a href="overlay-gallery.html" class="btn btn-primary">Parcourir la galerie d’incrustations</a>
+                <a href="#how-to-use" class="btn btn-secondary">🚀 Configuration</a>
+                <a href="#make-your-own" class="btn btn-secondary">🛠️ Créer le vôtre</a>
+                <a href="#ai-prompts" class="btn btn-secondary">✨ Copier des consignes pour l’IA</a>
+                <a href="../../streamelements-importer.html" class="btn btn-secondary">Importer un widget StreamElements</a>
+                <a href="streamelements-chat-guide.html" class="btn btn-secondary">Guide de configuration StreamElements</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="template-details" aria-labelledby="choose-overlay">
+        <div class="container">
+            <h2 id="choose-overlay">🧭 Choisir votre type d’incrustation</h2>
+            <div class="template-features">
+                <div class="template-feature"><h3>💬 Chat consolidé</h3><p>Un fil continu provenant de vos plateformes connectées. Commencez par un modèle de chat ou <a href="../../dock.html">le dock</a>.</p></div>
+                <div class="template-feature"><h3>⭐ Message mis en avant</h3><p>Un message que vous sélectionnez dans le dock. Choisissez un style de message mis en avant pour les interviews, questions-réponses ou dédicaces.</p></div>
+                <div class="template-feature"><h3>🎉 Alertes d’événements</h3><p>Célébrez les nouveaux followers, les abonnements et les dons. Configurez les animations et le son dans les paramètres d’alertes SSN. <a href="alert-effects.html">Guide des alertes</a></p></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="template-library" class="template-library">
+        <div class="container">
+            <h2>Bibliothèque de modèles</h2>
+            <p class="section-subtitle">Trouvez le modèle idéal pour votre diffusion</p>
+            
+            <div class="template-search">
+                <label for="template-search-input">🔎 Trouver un modèle ou un pack de thèmes</label>
+                <input type="search" id="template-search-input" placeholder="Chercher : nom, type ou fonction…">
+            </div>
+            
+            <p id="template-results" role="status"></p>
+            <div class="tag-filters" aria-label="Filtrer les modèles">
+                <button type="button" class="filter-tag" data-filter="matching" aria-pressed="false">🎨 Packs assortis</button>
+                <button type="button" class="filter-tag active" data-filter="all" aria-pressed="true">Tous les modèles</button>
+                <button type="button" class="filter-tag" data-filter="gaming" aria-pressed="false">Jeux vidéo</button>
+                <button type="button" class="filter-tag" data-filter="minimal" aria-pressed="false">Minimal</button>
+                <button type="button" class="filter-tag" data-filter="animated" aria-pressed="false">Animé</button>
+                <button type="button" class="filter-tag" data-filter="retro" aria-pressed="false">Rétro</button>
+                <button type="button" class="filter-tag" data-filter="modern" aria-pressed="false">Moderne</button>
+                <button type="button" class="filter-tag" data-filter="youtube-compatible" aria-pressed="false">Compatible YouTube</button>
+            </div>
+            
+<div id="matching-packs" class="template-category"><div class="category-header"><h3>🎨 Packs de thèmes assortis</h3></div><p>Un même style sur trois sources Navigateur. Dans la galerie, choisissez <strong>Utiliser l'ensemble assorti</strong>, saisissez les informations de votre session, puis copiez les liens pour OBS. Les animations sont facultatives.</p><div class="templates-main-grid"><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute cat cats kitten">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-cat.webp" loading="lazy" width="640" height="360" alt="Chat tricolore endormi, lait à la fraise et papeterie rose poudré"></div>
+ <div class="template-content"><h3>🐱 Strawberry Cat</h3><p class="template-description">Chat calico endormi, lait à la fraise et papeterie rose tendre. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-cat">Prévisualiser et utiliser le pack</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute dog dogs corgi puppy">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-dog.webp" loading="lazy" width="640" height="360" alt="Un corgi joyeux sur une carte postale bleu ciel"></div>
+ <div class="template-content"><h3>🐶 Good Company</h3><p class="template-description">Un corgi joyeux sur une carte postale bleu ciel. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-dog">Prévisualiser et utiliser le pack</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute forest">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-forest.webp" loading="lazy" width="640" height="360" alt="Une grenouille de conte dans un bois paisible"></div>
+ <div class="template-content"><h3>🍄 Moss &amp; Mushrooms</h3><p class="template-description">Une grenouille de conte dans une forêt paisible. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-forest">Prévisualiser et utiliser le pack</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute space">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-space.webp" loading="lazy" width="640" height="360" alt="Un lapin astronaute flotte dans une poussière d&#x27;étoiles lilas"></div>
+ <div class="template-content"><h3>🌙 Moon Bunny</h3><p class="template-description">Un lapin astronaute flottant dans une poussière d’étoiles lilas. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-space">Prévisualiser et utiliser le pack</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute dragon">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-dragon.webp" loading="lazy" width="640" height="360" alt="Un petit dragon avec un cristal enchanté lumineux"></div>
+ <div class="template-content"><h3>🐉 Crystal Guardian</h3><p class="template-description">Un petit dragon avec un cristal enchanté lumineux. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-dragon">Prévisualiser et utiliser le pack</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute music">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-music.webp" loading="lazy" width="640" height="360" alt="Raton laveur au casque et vinyle en menthe et prune"></div>
+ <div class="template-content"><h3>🎵 Midnight Mixtape</h3><p class="template-description">Raton laveur au casque et vinyle en menthe et prune. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-music">Prévisualiser et utiliser le pack</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute halloween">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-halloween.webp" loading="lazy" width="640" height="360" alt="Fantôme sympathique, citrouille lumineuse et prune de minuit"></div>
+ <div class="template-content"><h3>🎃 Pumpkin Haunt</h3><p class="template-description">Fantôme sympathique, citrouille lumineuse et tons prune nocturnes. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-halloween">Prévisualiser et utiliser le pack</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute christmas">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-christmas.webp" loading="lazy" width="640" height="360" alt="Renne emmitouflé dans une écharpe et sapin festif"></div>
+ <div class="template-content"><h3>🎄 Merry Little Reindeer</h3><p class="template-description">Renne en écharpe et sapin de fête. Comprend des styles assortis pour le chat, les messages mis en avant et les alertes.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-christmas">Prévisualiser et utiliser le pack</a></div></article></div></div>
+            <div id="themed-packages" class="template-category">
+                <div class="category-header">
+                    <h3>Packs thématiques</h3>
+                </div>
+                <p>Packs thématiques complets avec documentation, images d’exemple et guides</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="gaming animated modern">
+                        <div class="template-badge badge-featured">Mis en avant</div>
+                        <div class="template-preview">
+                            <img src="../../media/deuks.png" alt="Thème de Deuk">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Pack complet</span>
+                            <h3>Thème de Deuk</h3>
+                            <p class="template-description">Un thème soigné et entièrement animé, avec des couleurs personnalisables et des transitions fluides. Idéal pour les diffusions de jeux vidéo.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Par Deuk</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/tree/main/themes/deuks_overlay" class="btn btn-primary">Récupérez</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="retro">
+                        <div class="template-badge badge-new">Nouveau</div>
+                        <div class="template-preview">
+                            <img src="../../media/windows.png" alt="Thème Windows 3.1">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Style rétro</span>
+                            <h3>Thème Windows 3.1</h3>
+                            <p class="template-description">Une incrustation de chat nostalgique au style Windows 3.1, avec des fenêtres classiques et des détails au pixel près.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Par RetroTech</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/tree/main/themes/Windows3.1" class="btn btn-primary">Récupérez</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="modern animated">
+                        <div class="template-preview">
+                            <img src="../../media/neutron.png" alt="Thème Neutron">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Design moderne</span>
+                            <h3>Thème Neutron</h3>
+                            <p class="template-description">Un design moderne et épuré, avec des animations fluides et une excellente lisibilité. Palettes de couleurs personnalisables.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Par NeutronStudio</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/Neutron/" class="btn btn-primary">Récupérez</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>Modèles simples prêts à intégrer</h3>
+                </div>
+                <p>Modèles prêts à l’emploi nécessitant uniquement votre identifiant de session</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-badge badge-popular">Populaire</div>
+                        <div class="template-preview">
+                            <img src="../../media/simple.png" alt="Modèle d’exemple">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Minimal</span>
+                            <h3>Modèle d’exemple</h3>
+                            <p class="template-description">Un modèle simple et léger avec les fonctions essentielles. Un point de départ idéal pour la personnalisation.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Par Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/sampleoverlay.html?session=YOURSESSIONIDHERE" class="btn btn-primary">Utilisez</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="animated modern">
+                        <div class="template-preview">
+                            <img src="../../media/prettyoverlay.png" alt="Modèle décoratif">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Animé</span>
+                            <h3>Modèle décoratif</h3>
+                            <p class="template-description">Design élégant avec des animations fluides et des effets visuels. Attrayant sans distraire.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Par Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONIDHERE" class="btn btn-primary">Utilisez</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="gaming">
+                        <div class="template-preview">
+                            <img src="../../media/t3nk3y.png" alt="Thème de t3nk3y">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Jeux vidéo</span>
+                            <h3>Thème de t3nk3y</h3>
+                            <p class="template-description">Un thème affirmé et très contrasté pour les diffusions de jeux vidéo, offrant une excellente lisibilité même pendant les séquences rapides.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Par t3nk3y</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/t3nk3y/?session=YOURSESSIONIDHERE" class="btn btn-primary">Utilisez</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="template-card" data-tags="liquid-glass">
+                        <div class="template-preview">
+                            <img src="../../media/luckyloottube.png" alt="Thème Liquid Glass de LuckyLootTube">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Verre liquide</span>
+                            <h3>Thème de LuckyLootTube</h3>
+                            <p class="template-description">Une incrustation de chat élégante en verre liquide animé, avec des animations fluides et un rendu soigné des émoticônes.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Par LuckyLootTube</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/LuckyLootTube/luckyloottube.html?session=YOURSESSIONIDHERE&amp;v=3.40.2" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Utilisez</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>Modèles compatibles CSS YouTube</h3>
+                </div>
+                <p>Modèles compatibles avec les styles CSS YouTube</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="youtube-compatible">
+                        <div class="template-preview">
+                            <img src="../../media/septapus.png" alt="Modèle CSS YouTube">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Compatible YouTube</span>
+                            <h3>Modèle CSS YouTube</h3>
+                            <p class="template-description">Utilisez du CSS conçu pour YouTube avec notre page d’incrustation structurée comme YouTube. Compatible avec les styles Septapus.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Par Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/septapus" class="btn btn-primary">Configuration</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>Modèles pour développeurs</h3>
+                </div>
+                <p>Points de départ pour créer vos propres incrustations</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-preview">
+                            <img  alt="Modèle minimal">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Développeur</span>
+                            <h3>Modèle minimal</h3>
+                            <p class="template-description">Le minimum de code pour créer votre propre incrustation. Idéal pour les développeurs et le codage assisté par LLM.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Par Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/blob/main/baretempate.html" target="_blank" class="btn btn-primary">Code source</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-preview">
+                            <img src="../../media/simple.png" alt="Exemple d&#x27;incrustation">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Développeur</span>
+                            <h3>Modèle d’incrustation d’exemple</h3>
+                            <p class="template-description">Un point de départ plus complet, avec commentaires et documentation pour créer vos propres incrustations.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Par Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/blob/main/sampleoverlay.html" class="btn btn-primary">Code source</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="submit-template">
+                <h3>Un modèle à partager ?</h3>
+                <p>Vous avez créé un excellent modèle pour Social Stream Ninja ? Partagez-le avec la communauté en proposant une pull request sur notre dépôt GitHub.</p>
+                <a href="https://github.com/steveseguin/social_stream" target="_blank" class="btn btn-primary">Proposer sur GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="streamelements-importer-guide" class="how-to-use">
+        <div class="container">
+            <h2>Utiliser un widget de chat StreamElements avec Social Stream Ninja</h2>
+            <p>Vous découvrez l’importation ? <a href="streamelements-chat-guide.html">Lire le guide complet des thèmes de chat</a> pour trouver les fichiers du widget, les formats pris en charge, la configuration OBS et le dépannage.</p>
+            <p class="section-subtitle">Fonctionne avec l’application de bureau SSN pour Windows et l’extension Chrome ; aucune modification de code n’est nécessaire.</p>
+
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Vérifier que SSN reçoit le chat</h4>
+                        <p>Ouvrez les sources de vos plateformes dans l’application ou l’extension SSN, puis envoyez un message de test. Continuez uniquement après son apparition dans le dock SSN.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Récupérer l’exportation originale du widget</h4>
+                        <p>Utilisez le ZIP, le dossier ou les fichiers fournis par le créateur du widget. Une exportation utile contient généralement le HTML, le CSS, le JavaScript, les champs/données et les ressources. Une capture d’écran ou une URL d’incrustation StreamElements ne suffit pas.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Ouvrir l’importateur</h4>
+                        <p>Ouvrez l’importateur et choisissez le ZIP, le dossier ou les fichiers. Il détecte les éléments du widget et affiche aussitôt un aperçu de démonstration.</p>
+                        <a href="../../streamelements-importer.html" class="btn btn-primary">Ouvrir l’importateur de widgets</a>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Ajouter votre identifiant de session SSN</h4>
+						<p>Ouvrir l’importateur depuis le panneau SSN renseigne automatiquement l’identifiant de session et le mot de passe. Si vous l’avez ouvert directement, copiez-les depuis <strong>Options de session (Session Options)</strong> dans l’application ou l’extension. Saisissez l’identifiant de session une seule fois dans l’importateur ; il est enregistré dans le fichier téléchargé.</p>
+                    </div>
+                </div>
+
+				<div class="step-card">
+					<div class="step-number"></div>
+					<div class="step-content">
+						<h4>Choisir l’historique des messages</h4>
+						<p>Si le widget importé propose des paramètres compatibles, utilisez <strong>Historique des messages (Message history)</strong> pour désactiver la suppression temporisée ou modifier le nombre de messages conservés à l’écran. Cela modifie les paramètres du widget, pas son code.</p>
+					</div>
+				</div>
+
+				<div class="step-card">
+					<div class="step-number"></div>
+					<div class="step-content">
+						<h4>Tester avant de télécharger</h4>
+                        <p><strong>Aperçu de démonstration (Demo Preview)</strong> vérifie le design avec des messages d’exemple. <strong>Aperçu en direct (Live Preview)</strong> vérifie la session avec de vrais messages de l’application ou de l’extension SSN en cours d’exécution.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Télécharger et ajouter à OBS</h4>
+						<p>Cliquez sur <strong>Télécharger le HTML OBS (Download OBS HTML)</strong>. Dans OBS, ajoutez une source Navigateur et activez <strong>Fichier local</strong>, puis sélectionnez le fichier HTML téléchargé. <strong>N’ajoutez pas l’identifiant de session et ne modifiez pas l’URL dans OBS.</strong> Gardez SSN ouvert pendant la diffusion ; l’importateur et StreamElements peuvent être fermés.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="template-features" style="margin-top: 2rem;">
+                <div class="template-feature">
+                    <h4>La démonstration est vide</h4>
+                    <p>Examinez les fichiers détectés dans l’importateur et utilisez Sélection avancée des fichiers s’il a choisi le mauvais HTML, CSS ou JavaScript.</p>
+                </div>
+                <div class="template-feature">
+                    <h4>L’aperçu en direct est vide</h4>
+                    <p>Vérifiez que le chat arrive au dock SSN et que l’identifiant de session et le mot de passe facultatif correspondent exactement.</p>
+                </div>
+                <div class="template-feature">
+                    <h4>OBS est vide</h4>
+                    <p>Utilisez le fichier HTML téléchargé, puis actualisez la source Navigateur OBS. La page d’importation, le ZIP original et l’URL StreamElements ne sont pas le fichier à utiliser.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-to-use" class="how-to-use">
+        <div class="container">
+            <h2>Utiliser les modèles</h2>
+            <p class="section-subtitle">Suivez ces étapes simples pour commencer</p>
+            
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Choisir votre modèle</h4>
+                        <p>Parcourez la bibliothèque et choisissez un modèle adapté au style de votre diffusion. Comparez les designs dans la galerie de captures ; la plupart des modèles intégrés fonctionnent directement depuis une URL, sans téléchargement.</p>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Ajouter votre identifiant de session</h4>
+                        <p>Remplacez <code>YOURSESSIONID</code> dans l’URL du modèle par votre véritable identifiant de session Social Stream Ninja, disponible sous Options de session dans l’application ou l’extension SSN. Ajoutez le mot de passe facultatif si votre session en utilise un.</p>
+                        <div class="code-block">
+                            <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Ajouter à OBS/Streamlabs</h4>
+                        <p>Ajoutez l’URL modifiée comme source Navigateur dans votre logiciel de diffusion :</p>
+                        <ol>
+                            <li>Dans OBS, cliquez sur + sous Sources et sélectionnez « Navigateur » (Browser)</li>
+                            <li>Nommez votre source et cliquez sur OK</li>
+                            <li>Collez l’URL de votre modèle avec l’identifiant de session</li>
+                            <li>Réglez la largeur et la hauteur, idéalement sur 1920×1080</li>
+                            <li>Cliquez sur OK pour l’ajouter à votre scène</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Personnaliser votre modèle</h4>
+                        <p>Personnalisez votre incrustation avec du CSS selon l’une de ces méthodes :</p>
+                        <ul>
+                            <li><strong>CSS personnalisé OBS :</strong> Ajoutez votre CSS dans les propriétés de la source Navigateur</li>
+                            <li><strong>Paramètre d’URL :</strong> Ajoutez <code>&css=URL_TO_YOUR_CSS_FILE</code> à l’URL de votre modèle</li>
+                            <li><strong>CSS en Base64 :</strong> Pour du CSS intégré, utilisez <code>&b64css=YOUR_BASE64_ENCODED_CSS</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="make-your-own" class="how-to-use"><div class="container">
+<h2>🛠️ Créer votre propre modèle</h2><p>Partez d’une incrustation fonctionnelle, puis modifiez son apparence.</p>
+<div class="template-features">
+<div class="template-feature"><h3>🎨 Modifier l’apparence</h3><p>Utiliser une source Navigateur OBS <strong>CSS personnalisé</strong> pour les couleurs, l’espacement et la typographie. Gardez l’URL SSN et la connexion originales.</p></div>
+<div class="template-feature"><h3>📦 Importer un widget</h3><p>Vous avez exporté un widget de chat StreamElements ? <a href="../../streamelements-importer.html">Ouvrir le convertisseur StreamElements</a>, prévisualisez-le, puis téléchargez le HTML OBS. Utilisez le ZIP ou les fichiers originaux, pas une capture d’écran ni une URL d’incrustation. <a href="#streamelements-importer-guide">Voir la configuration ci-dessous</a>.</p></div>
+<div class="template-feature"><h3>🧩 Modifier le comportement</h3><p>Copiez un modèle fonctionnel et modifiez son HTML, son CSS et son JavaScript. <a href="overlay-template-quick-start.html">Démarrage rapide</a> · <a href="https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md">Guide de développement</a> · <a href="event-reference.html">Champs d’événements</a></p></div>
+</div>
+<details class="template-instructions"><summary>🔧 Fichiers, routage et tests</summary><ol>
+<li>Utilisez <a href="../../sampleoverlay.html">sampleoverlay.html</a> pour le chat consolidé, <a href="../../themes/featured-styles/featured-modern.html">featured-modern.html</a> pour les messages sélectionnés, ou <a href="../../multi-alerts.html">multi-alerts.html</a> pour les événements. Téléchargez le code source et les ressources requises depuis <a href="https://github.com/steveseguin/social_stream/tree/beta">le dépôt beta</a>.</li>
+<li>Gardez le code de connexion original. Les incrustations de chat et de messages mis en avant reçoivent des flux distincts ; modifier le style d’un flux de chat n’en fait pas une incrustation de message sélectionné.</li>
+<li>Conservez les scripts partagés, polices et images référencés à côté du fichier, avec les mêmes chemins relatifs, ou demandez à votre IA une exportation autonome. Renommer un fichier HTML n’intègre pas ses dépendances.</li>
+<li>Hébergez vos fichiers et utilisez leur URL avec votre session et votre mot de passe facultatif. Pour une exportation locale autonome, suivez ses instructions de configuration ; l’option Fichier local d’OBS n’a pas de champ URL pour les paramètres de session.</li>
+<li>Prévisualisez d’abord avec des données fictives, puis testez avec votre session SSN. Vérifiez les messages sélectionnés, l’effacement, les noms longs, les images et les fonds transparents. Gardez SSN ouvert en utilisation réelle.</li>
+</ol><p>Pour un comportement fondé sur des déclencheurs, commencez par l’ <a href="../actions/event-flow-guide.html">éditeur Event Flow</a> et <a href="alert-effects.html">règles d’effets d’alerte</a> avant d’écrire une nouvelle incrustation.</p></details>
+</div></section>
+<section id="ai-prompts" class="how-to-use"><div class="container"><h2>✨ Copier une consigne pour votre IA</h2><p>Choisissez un point de départ, copiez la consigne et remplacez les détails de design entre crochets. Joignez les fichiers sources si votre IA ne peut pas lire les liens. N’incluez pas votre identifiant de session privé ni votre mot de passe dans la conversation.</p>
+<details class="template-instructions"><summary>💬 Chat consolidé</summary><label for="prompt-chat">Consigne modifiable</label><textarea id="prompt-chat" class="template-prompt" rows="10" spellcheck="false">Créez une incrustation stylisée de chat consolidé SSN à partir de https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html . Recevez le flux normal en direct (label dock), avec une liste de messages limitée, un nombre configurable et une expiration facultative. Préservez les icônes de plateformes et la présentation des dons et abonnements. Examinez d’abord le code source SSN actuel et la documentation ci-dessous. Si vous ne pouvez pas les ouvrir, demandez-moi de joindre les fichiers ; ne devinez pas le transport ou le schéma des événements. Références : https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md et https://socialstream.ninja/beta/docs/event-reference.html Préservez la connexion de l’incrustation initiale, les options de session/mot de passe, de label et de serveur, la gestion de la modération/suppression/effacement et les champs de messages existants. Gardez les identifiants sous forme de valeurs fictives YOUR_SESSION_ID / YOUR_PASSWORD, jamais de véritables identifiants. Utilisez des scripts classiques compatibles Chrome 80 et OBS ; conservez les dépendances locales relatives et indiquez les fichiers qui doivent accompagner le HTML. Traitez chatname comme du texte brut ; textonly s’applique uniquement à chatmessage. Préservez les émoticônes/badges sûrs, les messages contentimg contenant seulement une image et le trafic mixte d’événements/métadonnées, sans afficher les mises à jour de métadonnées seules comme des messages. N’insérez pas de HTML non vérifié et n’inventez pas de champs de premier niveau. Design : [describe colors, mood, typography, placement and motion]. Canevas : [width x height]. Gardez le fond transparent, le texte lisible sur le jeu, les noms/messages longs contenus et prévoyez un style à animations réduites. Renvoyez les fichiers modifiés complets, des instructions simples et un mode de démonstration à données fictives qui ne se connecte jamais à une session en direct. Testez les textes longs, emojis, messages contenant seulement une image, suppressions, effacements, redimensionnements et reconnexions.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-chat">📋 Copier la consigne</button></details>
+<details class="template-instructions"><summary>⭐ Message mis en avant</summary><label for="prompt-featured">Consigne modifiable</label><textarea id="prompt-featured" class="template-prompt" rows="10" spellcheck="false">Personnalisez https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html pour un seul message sélectionné. Préservez son routage featured/overlay par défaut et son comportement d’effacement ; n’affichez pas automatiquement tous les messages. Expliquez comment sélectionner un message depuis le dock SSN. Examinez d’abord le code source SSN actuel et la documentation ci-dessous. Si vous ne pouvez pas les ouvrir, demandez-moi de joindre les fichiers ; ne devinez pas le transport ou le schéma des événements. Références : https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md et https://socialstream.ninja/beta/docs/event-reference.html Préservez la connexion de l’incrustation initiale, les options de session/mot de passe, de label et de serveur, la gestion de la modération/suppression/effacement et les champs de messages existants. Gardez les identifiants sous forme de valeurs fictives YOUR_SESSION_ID / YOUR_PASSWORD, jamais de véritables identifiants. Utilisez des scripts classiques compatibles Chrome 80 et OBS ; conservez les dépendances locales relatives et indiquez les fichiers qui doivent accompagner le HTML. Traitez chatname comme du texte brut ; textonly s’applique uniquement à chatmessage. Préservez les émoticônes/badges sûrs, les messages contentimg contenant seulement une image et le trafic mixte d’événements/métadonnées, sans afficher les mises à jour de métadonnées seules comme des messages. N’insérez pas de HTML non vérifié et n’inventez pas de champs de premier niveau. Design : [describe colors, mood, typography, placement and motion]. Canevas : [width x height]. Gardez le fond transparent, le texte lisible sur le jeu, les noms/messages longs contenus et prévoyez un style à animations réduites. Renvoyez les fichiers modifiés complets, des instructions simples et un mode de démonstration à données fictives qui ne se connecte jamais à une session en direct. Testez les textes longs, emojis, messages contenant seulement une image, suppressions, effacements, redimensionnements et reconnexions.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-featured">📋 Copier la consigne</button></details>
+<details class="template-instructions"><summary>🎉 Alertes sonores</summary><label for="prompt-alerts">Consigne modifiable</label><textarea id="prompt-alerts" class="template-prompt" rows="10" spellcheck="false">Personnalisez https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html . Examinez d’abord ses dépendances d’alertes partagées et https://socialstream.ninja/beta/docs/alert-effects.html . Réutilisez les filtres de types d’alertes, la file d’attente, la bibliothèque sonore, les contrôles muet/volume et les règles d’effets existants. Conservez les seuils en USD sur le chemin de conversion currency.js existant ; ne comparez pas des montants formatés en chaînes. Prenez en charge une animation et un son facultatifs pour une règle de don de $100 USD, en respectant l’activation et la sémantique des plages existantes. Évitez toute lecture en double. Utilisez uniquement du son que je fournis ou que je suis autorisé à utiliser. Examinez d’abord le code source SSN actuel et la documentation ci-dessous. Si vous ne pouvez pas les ouvrir, demandez-moi de joindre les fichiers ; ne devinez pas le transport ou le schéma des événements. Références : https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md et https://socialstream.ninja/beta/docs/event-reference.html Préservez la connexion de l’incrustation initiale, les options de session/mot de passe, de label et de serveur, la gestion de la modération/suppression/effacement et les champs de messages existants. Gardez les identifiants sous forme de valeurs fictives YOUR_SESSION_ID / YOUR_PASSWORD, jamais de véritables identifiants. Utilisez des scripts classiques compatibles Chrome 80 et OBS ; conservez les dépendances locales relatives et indiquez les fichiers qui doivent accompagner le HTML. Traitez chatname comme du texte brut ; textonly s’applique uniquement à chatmessage. Préservez les émoticônes/badges sûrs, les messages contentimg contenant seulement une image et le trafic mixte d’événements/métadonnées, sans afficher les mises à jour de métadonnées seules comme des messages. N’insérez pas de HTML non vérifié et n’inventez pas de champs de premier niveau. Design : [describe colors, mood, typography, placement and motion]. Canevas : [width x height]. Gardez le fond transparent, le texte lisible sur le jeu, les noms/messages longs contenus et prévoyez un style à animations réduites. Renvoyez les fichiers modifiés complets, des instructions simples et un mode de démonstration à données fictives qui ne se connecte jamais à une session en direct. Testez les textes longs, emojis, messages contenant seulement une image, suppressions, effacements, redimensionnements et reconnexions.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-alerts">📋 Copier la consigne</button></details>
+<details class="template-instructions"><summary>🎨 Refonte par CSS uniquement</summary><label for="prompt-css">Consigne modifiable</label><textarea id="prompt-css" class="template-prompt" rows="10" spellcheck="false">Modifiez le style de mon incrustation SSN existante uniquement avec du CSS. Je fournirai son URL et son code HTML/CSS. Gardez tout le JavaScript et le routage des messages inchangés. Examinez les sélecteurs DOM réels avant d’écrire le CSS. Fournissez le CSS pour le champ CSS personnalisé de la source Navigateur OBS, ainsi que les ressources locales de polices/images nécessaires. Examinez d’abord le code source SSN actuel et la documentation ci-dessous. Si vous ne pouvez pas les ouvrir, demandez-moi de joindre les fichiers ; ne devinez pas le transport ou le schéma des événements. Références : https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md et https://socialstream.ninja/beta/docs/event-reference.html Préservez la connexion de l’incrustation initiale, les options de session/mot de passe, de label et de serveur, la gestion de la modération/suppression/effacement et les champs de messages existants. Gardez les identifiants sous forme de valeurs fictives YOUR_SESSION_ID / YOUR_PASSWORD, jamais de véritables identifiants. Utilisez des scripts classiques compatibles Chrome 80 et OBS ; conservez les dépendances locales relatives et indiquez les fichiers qui doivent accompagner le HTML. Traitez chatname comme du texte brut ; textonly s’applique uniquement à chatmessage. Préservez les émoticônes/badges sûrs, les messages contentimg contenant seulement une image et le trafic mixte d’événements/métadonnées, sans afficher les mises à jour de métadonnées seules comme des messages. N’insérez pas de HTML non vérifié et n’inventez pas de champs de premier niveau. Design : [describe colors, mood, typography, placement and motion]. Canevas : [width x height]. Gardez le fond transparent, le texte lisible sur le jeu, les noms/messages longs contenus et prévoyez un style à animations réduites. Renvoyez les fichiers modifiés complets, des instructions simples et un mode de démonstration à données fictives qui ne se connecte jamais à une session en direct. Testez les textes longs, emojis, messages contenant seulement une image, suppressions, effacements, redimensionnements et reconnexions.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-css">📋 Copier la consigne</button></details>
+<p>Vous convertissez un widget plus complexe ? <a href="../../streamelements-importer-prompt.md">Utiliser la consigne complète de conversion StreamElements / Streamlabs</a>.</p><p id="prompt-copy-status" role="status" aria-live="polite"></p></div></section>
+    <section class="guide-section alt">
+        <div class="container">
+            <h2>Tutoriel vidéo</h2>
+            <p class="section-subtitle">Apprenez à créer une incrustation de chat personnalisée avec l’aide d’une IA</p>
+            
+            <div style="max-width: 800px; margin: 0 auto; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+                <iframe width="100%" height="100%" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/GDy5ijQPTkU" title="Créer une incrustation de chat personnalisée pour Social Stream Ninja" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            
+            <div style="max-width: 800px; margin: 3rem auto 0;">
+                <h3>Guide rapide de la vidéo</h3>
+                <ol class="guide-steps">
+                    <li>Trouvez le modèle d’incrustation d’exemple (sampleoverlay.html)</li>
+                    <li>Copiez le code du modèle dans le presse-papiers</li>
+                    <li>Utilisez un assistant IA comme Claude pour vous aider à le personnaliser</li>
+                    <li>Demandez à l’IA de modifier le CSS selon le style souhaité</li>
+                    <li>Configurez OBS pour utiliser votre modèle personnalisé</li>
+                    <li>Appliquez votre CSS personnalisé dans les paramètres de la source Navigateur OBS</li>
+                </ol>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CSS Modal (hidden by default) -->
+    <div id="css-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; overflow: auto;">
+        <div style="background-color: var(--background-card); margin: 10% auto; padding: 20px; width: 80%; max-width: 800px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="css-modal-title" style="margin: 0;">Extrait CSS</h2>
+                <button onclick="closeCssModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <pre id="css-modal-content" style="background-color: var(--background-dark); padding: 20px; border-radius: var(--radius-sm); overflow-x: auto; max-height: 60vh;"></pre>
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="copyCss()" class="btn btn-primary">Copier dans le presse-papiers</button>
+                <button onclick="closeCssModal()" class="btn btn-secondary">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+        <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Réunit vos flux de messages sociaux en direct et bien plus. Gratuit et open source.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+					<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Liens rapides</h3>
+                    <ul>
+                        <li><a href="../index.html">Accueil</a></li>
+                        <li><a href="features.html">Fonctionnalités</a></li>
+                        <li><a href="download.html">Télécharger</a></li>
+                        <li><a href="guides.html">Guides</a></li>
+                        <li><a href="commands.html">Commandes et API</a></li>
+                        <li><a href="supported-sites.html">Sites pris en charge</a></li>
+                        <li><a href="templates.html">Modèles</a></li>
+                        <li><a href="support.html">Assistance</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Ressources</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">Guide d’installation</a></li>
+                        <li><a href="guides.html#extension-customization">Guide de personnalisation</a></li>
+                        <li><a href="guides.html#faq">FAQ</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Signaler un problème</a></li>
+                        <li><a href="../privacy.html">Politique de confidentialité</a></li>
+                        <li><a href="../TOS.html">Conditions d’utilisation</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Communauté</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Rejoindre notre Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">Dépôt GitHub</a></li>
+                        <li><a href="support.html#contribute">Contribuer</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">Faire un don</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0. Créé par <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> avec les contributions de la communauté.</p>
+            </div>
+        </div>
+    </footer>
+	<script src="../../docs/js/main.js"></script>
+    <script src="../../docs/js/templates.js"></script>
+    <script>
+        // Current year for copyright
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        
+        function showCssModal(cssType) {
+            const modal = document.getElementById('css-modal');
+            const title = document.getElementById('css-modal-title');
+            const content = document.getElementById('css-modal-content');
+            
+            title.textContent = cssType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) + ' CSS';
+            content.textContent = cssSnippets[cssType] || 'CSS not found';
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeCssModal() {
+            document.getElementById('css-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+		function copyCss() {
+            const content = document.getElementById('css-modal-content').textContent;
+            navigator.clipboard.writeText(content)
+                .then(() => {
+                    alert(window.SSNSiteTranslate ? window.SSNSiteTranslate('CSS copied to clipboard!') : 'CSS copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Could not copy text: ', err);
+                    alert(window.SSNSiteTranslate ? window.SSNSiteTranslate('Failed to copy. Try selecting and copying manually.') : 'Failed to copy. Try selecting and copying manually.');
+                });
+        }
+		
+		
+        
+       document.addEventListener('DOMContentLoaded', () => {
+            // Number the steps
+			document.querySelectorAll('.steps-container').forEach(container => {
+				container.querySelectorAll('.step-number').forEach((el, index) => {
+					el.textContent = (index + 1).toString();
+				});
+            });
+            
+            // Auto-scroll to sections when clicking nav links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        e.preventDefault();
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+ </script>
+</body>
+</html>

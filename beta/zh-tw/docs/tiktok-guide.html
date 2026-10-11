@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/tiktok-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/tiktok-guide.html">
+    <meta property="og:title" content="TikTok 指南 - Social Stream Ninja">
+    <meta property="og:description" content="了解如何將 TikTok 與 Social Stream Ninja 搭配使用，包括 Standard 模式、TikTok WS、回覆、Polling、Euler 選項和 TikFinity 備援。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/tiktok-guide.html">
+    <meta name="twitter:title" content="TikTok 指南 - Social Stream Ninja">
+    <meta name="twitter:description" content="了解如何將 TikTok 與 Social Stream Ninja 搭配使用，包括 Standard 模式、TikTok WS、回覆、Polling、Euler 選項和 TikFinity 備援。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok 指南 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="了解如何將 TikTok 與 Social Stream Ninja 搭配使用，包括 Standard 模式、TikTok WS、回覆、Polling、Euler 選項和 TikFinity 備援。">
+    <style>
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .setup-grid .guide-card {
+            margin-bottom: 0;
+        }
+
+        .mini-label {
+            display: inline-block;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .callout-box {
+            background: rgba(26, 115, 232, 0.08);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 1.6rem;
+            margin: 2rem 0;
+        }
+
+        .callout-box.warning {
+            background: rgba(251, 188, 5, 0.14);
+        }
+
+        .dark-mode .callout-box {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .dark-mode .callout-box.warning {
+            background: rgba(251, 188, 5, 0.2);
+        }
+
+        .steps-table-wrap {
+            overflow-x: auto;
+            margin-top: 1.5rem;
+        }
+
+        .steps-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .steps-table th,
+        .steps-table td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .steps-table th {
+            color: var(--primary-color);
+        }
+
+        .steps-table code,
+        .guide-card code,
+        .callout-box code {
+            word-break: break-word;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            margin-top: 2rem;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+        }
+
+        @media (max-width: 700px) {
+            .field-table, .steps-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/tiktok-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"\"I keep getting rate-limited\"":"「我不斷受到速率限制」","\"It says I am offline\"":"「它說我離線了」","\"Messages are missing\"":"「有訊息缺失」","\"Messages duplicate after reconnects\"":"「重新連接後訊息重複」","\"The auth window closes\"":"「驗證視窗關閉了」","\"What should I try first?\"":"「我應該先嘗試什麼？」",". For event payload details, see the":"。有關事件承載資料詳細資訊，請參閱","Activate source":"啟用來源","Activate the new source and keep TikFinity open while live.":"啟用新來源，並在直播時保持 TikFinity 開啟。","Advanced signing options for users with their own API key or custom setup.":"適用於擁有 API 金鑰或自訂設定的使用者的進階簽章選項。","Auto for reading":"讀取使用 Auto","Auto, Polling, TikFinity fallback":"Auto、Polling、TikFinity 備援","Back To Guides":"返回指南","Best default for most users. Uses WebSocket first, then falls back to Polling if needed.":"適合大多數使用者的預設選項。先使用 WebSocket，必要時改用 Polling 作為備援。","Best for":"適合","Best reply mode:":"最佳回覆模式：","Best when you want to send replies from SSN and use the live TikTok page inside the app.":"適合希望從 SSN 傳送回覆，並在應用程式內使用 TikTok 直播頁面的情況。","Bluesky":"Bluesky","Choose the TikTok mode or preset you want.":"選擇所需的 TikTok 模式或預設組合。","Click":"點選","Click the":"點擊","Close extra TikTok tabs or apps on the same device if possible.":"盡可能關閉同一裝置上額外的 TikTok 分頁或應用程式。","Close other TikTok tabs, apps, or duplicate viewers on the same device.":"關閉同一裝置上的其他 TikTok 分頁、應用程式或重複的觀看視窗。","Commands & API":"指令與 API","Common TikTok problems":"常見 TikTok 問題","Community":"社群","Compatibility mode. Slower, but useful when WebSocket paths fail.":"相容模式。較慢，但在 WebSocket 路徑失敗時有用。","Connect TikTok in SSN":"在 SSN 中連接 TikTok","Consolidates your live social messaging streams and more. Free and open source.":"匯聚你的社群直播訊息等內容。免費且開源。","Contribute":"參與貢獻","Copy the dock URL.":"複製停駐面板 URL。","Customization Guide":"自訂指南","Discord":"Discord","Discord StreamKit and TikFinity Sources":"Discord StreamKit 與 TikFinity 來源","Donate":"贊助","Download":"下載","Download Desktop App":"下載桌面應用程式","Enter the TikTok username, live URL, or requested value.":"輸入 TikTok 使用者名稱、直播 URL 或所要求的值。","Euler Proxy / Euler Signing":"Euler Proxy / Euler Signing","Event Reference":"事件參考","Extension":"擴充功能","FAQ":"常見問題","Fallback":"備援","Fallback reply mode:":"備用回覆模式：","Fallback when Standard is flaky but you still want replies.":"Standard 不穩定但仍需要回覆時的備援方式。","Features":"功能","For a complete walkthrough of this fallback and Discord StreamKit, see":"如需此備援方式和 Discord StreamKit 的完整教學，請參閱","GitHub":"GitHub","GitHub Repository":"GitHub 儲存庫","Go live first, then try":"先開始直播，再嘗試","Go to":"前往","Guides":"指南","Hire":"聘用","Home":"首頁","How to connect TikTok in Social Stream Ninja, choose the right mode, send replies, and use TikFinity as a fallback when needed.":"了解如何在 Social Stream Ninja 中連接 TikTok、選擇合適模式、傳送回覆，並在需要時使用 TikFinity 作為備援方式。","How to send replies to TikTok chat":"如何向 TikTok 聊天傳送回覆","How to use TikFinity OBS Dock":"如何使用 TikFinity OBS Dock","How to use TikTok with Social Stream Ninja, including Standard mode, TikTok WS, replies, Polling, Euler options, and TikFinity fallback.":"了解如何將 TikTok 與 Social Stream Ninja 搭配使用，包括 Standard 模式、TikTok WS、回覆、Polling、Euler 選項和 TikFinity 備援。","If Standard is flaky, try":"如果 Standard 不穩定，嘗試","If Standard is unstable":"如果 Standard 不穩定","If TikTok keeps missing chat, use":"如果 TikTok 持續遺漏聊天，使用","If TikTok still misses too much chat, switch to the TikFinity fallback below.":"如果 TikTok 仍遺漏太多聊天，請切換至下方 TikFinity 備援方式。","If WebSocket still fails, try":"如果 WebSocket 仍失敗，嘗試","If it still duplicates, switch modes or use TikFinity temporarily.":"如果仍重複，請切換模式或暫時使用 TikFinity。","If you already use TikFinity activity-feed widgets, SSN can also work with supported TikFinity widget pages in browser-based workflows.":"如果已經使用 TikFinity 活動動態元件，SSN 也可以在以瀏覽器為基礎的工作流程中使用支援的 TikFinity 元件頁面。","If you need replies":"如果需要回覆","If you need to reply, switch to":"如果需要回覆，切換至","If you use the browser extension instead":"如果改用瀏覽器擴充功能","Important:":"重要：","In SSN, click":"在 SSN 中，點擊","Inspiration":"靈感","Installation Guide":"安裝指南","Join our Discord":"加入我們的 Discord","Keep the signer window open.":"保持簽章器視窗開啟。","Local Signer":"本機簽署器","Local Signer if Standard is unstable":"Standard 不穩定時使用 Local Signer","Main navigation":"主導覽","Make sure you are logged into the TikTok account that should send messages.":"確保登入的是應傳送訊息的 TikTok 帳號。","Modes":"模式","No":"否","Not meant for replies:":"不適合回覆：","Open":"開啟","Open TikFinity.":"開啟 TikFinity。","Open navigation menu":"開啟導覽選單","Open the broadcaster's TikTok live page in your browser and keep the extension enabled.":"在瀏覽器中開啟實況主的 TikTok 直播頁面，並保持擴充功能啟用。","Open the standalone app.":"開啟獨立應用程式。","Option":"選項","Other chat sites":"其他聊天網站","Overlay -> OBS Docks":"Overlay -> OBS Docks","Overlay Gallery":"疊加畫面圖庫","Overview":"概述","Paste the TikFinity dock URL.":"貼上 TikFinity 停駐面板 URL。","Pick a dock slot and configure it for chat.":"選擇一個停駐面板欄位，並將其設定為聊天。","Polling":"輪詢（Polling）","Practical rule:":"實用原則：","Privacy Policy":"隱私權政策","Quick Links":"快速連結","Quick recommendation:":"快速建議：","Read-only fallback when TikTok native modes miss too much chat or fail to connect.":"當 TikTok 原生模式遺漏太多聊天或無法連接時的唯讀備援方式。","Reload":"重新載入","Replies":"回覆","Reply support depends on having a valid signed-in TikTok session.":"回覆支援取決於是否擁有有效的已登入 TikTok 工作階段。","Report an Issue":"回報問題","Resources":"資源","Show capture page":"顯示擷取頁面（Show capture page）","Sign in":"登入（Sign in）","Sign in if you need authenticated-only or host-only page events on your own live.":"如果需要自己直播中僅限已驗證使用者或主持人的頁面事件，請登入。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja。GPLv3.0 授權條款。建立者：","Standard":"標準","Standard for replies":"回覆使用 Standard","Start here":"從這裡開始","Start with":"先使用","Step 1":"步驟 1","Step 2":"步驟 2","Step 3":"步驟 3","Steve Seguin":"Steve Seguin","Stop the source fully, then reconnect cleanly.":"完全停止來源，然後重新建立乾淨連接。","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","Templates":"範本","Terms of Service":"服務條款","Testing after a stream ends will often fail.":"直播結束後測試通常會失敗。","The Supported Sites entry for TikTok Live: use a":"Supported Sites 中的 TikTok Live 項目：使用","The standalone app still offers the widest TikTok mode selection and the cleanest fallback options.":"獨立應用程式仍提供最廣泛的 TikTok 模式選擇和最清楚的備援選項。","This can be a TikTok-side limitation, not always an SSN bug.":"這可能是 TikTok 端的限制，並不總是 SSN 錯誤。","This is a backup reader, not a reply tool.":"這是備用讀取器，不是回覆工具。","TikFinity OBS Dock":"TikFinity OBS 停駐面板","TikFinity activity-feed pages can also work in browser-based SSN setups.":"TikFinity 活動動態頁面也可用於以瀏覽器為基礎的 SSN 設定。","TikFinity can work as a backup source when TikTok itself is dropping or hiding too much chat.":"當 TikTok 本身遺失或隱藏太多聊天時，TikFinity 可以作為備用來源。","TikFinity if TikTok itself is the problem":"TikTok 本身有問題時使用 TikFinity","TikTok":"TikTok","TikTok Guide":"TikTok 指南","TikTok Guide - Social Stream Ninja":"TikTok 指南 - Social Stream Ninja","TikTok Live setup instructions modal from the Supported Sites page":"Supported Sites 頁面中的 TikTok Live 設定說明對話方塊","TikTok WS + Auto":"TikTok WS + Auto","TikTok WS + Local Signer":"TikTok WS + Local Signer","TikTok chat only works when the account is actually live.":"只有帳號確實正在直播時，TikTok 聊天才能運作。","TikTok is one of the hardest platforms to keep stable because TikTok changes behavior often and not every account sees the same thing.":"TikTok 是最難保持穩定的平台之一，因為它經常改變行為，而且不同帳號看到的內容並不總是相同。","TikTok issues are not always caused by SSN. Missing messages, auth failures, and throttling can be caused by TikTok itself, by account state, or by region-specific restrictions.":"TikTok 問題並不總是由 SSN 引起。訊息缺失、驗證失敗和節流限制可能由 TikTok 本身、帳號狀態或地區限制導致。","Troubleshooting":"疑難排解","Try":"試試","Try another mode before deciding one path is permanently best.":"先嘗試其他模式，再決定是否某一條路徑始終最好。","Try another mode or signing path.":"嘗試其他模式或簽章路徑。","URL and keep the chat page open while the extension captures it.":"URL，並在擴充功能擷取期間保持聊天頁面開啟。","Update to the newest app build first.":"先更新至最新應用程式版本。","Use":"使用","Use TikFinity as a fallback if it is behaving better for your account.":"如果 TikFinity 對您的帳號表現更好，就將它用作備援方式。","Usually No":"通常不支援","Wait a few minutes before retrying.":"等候幾分鐘再重試。","Which TikTok option should I use?":"應該使用哪個 TikTok 選項？","X.com":"X.com","Yes":"是","after sign-in.":"登入之後。","button in the left sidebar.":"按鈕，位於左側邊欄。","if needed.":"（如有需要）。","if reading reliability matters most, start with Auto or Polling. If replying matters most, use Standard or Local Signer.":"如果最重視讀取可靠性，從 Auto 或 Polling 開始。如果最重視回覆，使用 Standard 或 Local Signer。","mode first.":"模式，作為首選。","so you can see sign-in or CAPTCHA.":"以便看到登入或驗證碼。","through":"透過","with contributions from the community.":"，社群共同參與貢獻。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tiktok-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tiktok-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tiktok-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tiktok-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tiktok-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tiktok-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tiktok-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tiktok-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tiktok-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="tiktok-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/tiktok-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tiktok-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tiktok-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tiktok-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tiktok-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tiktok-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tiktok-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tiktok-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>TikTok 指南</h1>
+            <p>了解如何在 Social Stream Ninja 中連接 TikTok、選擇合適模式、傳送回覆，並在需要時使用 TikFinity 作為備援方式。</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <span class="mini-label">概述</span>
+                    <h3>從這裡開始</h3>
+                    <p>TikTok 是最難保持穩定的平台之一，因為它經常改變行為，而且不同帳號看到的內容並不總是相同。</p>
+                    <div class="callout-box">
+                        <strong>快速建議：</strong>
+                        <ul class="guide-list">
+                            <li>先使用 <strong>TikTok WS + Auto</strong>.</li>
+                            <li>如果需要回覆，切換至 <strong>標準</strong>.</li>
+                            <li>如果 Standard 不穩定，嘗試 <strong>本機簽署器</strong>.</li>
+                            <li>如果 TikTok 持續遺漏聊天，使用 <strong>TikFinity OBS 停駐面板</strong> 透過 <strong>其他聊天網站</strong>.</li>
+                        </ul>
+                    </div>
+                    <div class="callout-box warning">
+                        <strong>重要：</strong> TikTok 問題並不總是由 SSN 引起。訊息缺失、驗證失敗和節流限制可能由 TikTok 本身、帳號狀態或地區限制導致。
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">模式</span>
+                    <h3>應該使用哪個 TikTok 選項？</h3>
+                    <div class="steps-table-wrap">
+                    <table class="steps-table">
+                        <thead>
+                            <tr>
+                                <th>選項</th>
+                                <th>適合</th>
+                                <th>回覆</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>TikTok WS + Auto</strong></td>
+                                <td>適合大多數使用者的預設選項。先使用 WebSocket，必要時改用 Polling 作為備援。</td>
+                                <td>否</td>
+                            </tr>
+                            <tr>
+                                <td><strong>標準</strong></td>
+                                <td>適合希望從 SSN 傳送回覆，並在應用程式內使用 TikTok 直播頁面的情況。</td>
+                                <td>是</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TikTok WS + Local Signer</strong></td>
+                                <td>Standard 不穩定但仍需要回覆時的備援方式。</td>
+                                <td>是</td>
+                            </tr>
+                            <tr>
+                                <td><strong>輪詢（Polling）</strong></td>
+                                <td>相容模式。較慢，但在 WebSocket 路徑失敗時有用。</td>
+                                <td>否</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Euler Proxy / Euler Signing</strong></td>
+                                <td>適用於擁有 API 金鑰或自訂設定的使用者的進階簽章選項。</td>
+                                <td>通常不支援</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TikFinity OBS 停駐面板</strong></td>
+                                <td>當 TikTok 原生模式遺漏太多聊天或無法連接時的唯讀備援方式。</td>
+                                <td>否</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+
+                <div class="setup-grid">
+                    <div class="guide-card">
+                        <span class="mini-label">步驟 1</span>
+                        <h3>在 SSN 中連接 TikTok</h3>
+                        <ol class="guide-steps">
+                            <li>開啟獨立應用程式。</li>
+                            <li>點擊 <strong>TikTok</strong> 按鈕，位於左側邊欄。</li>
+                            <li>輸入 TikTok 使用者名稱、直播 URL 或所要求的值。</li>
+                            <li>選擇所需的 TikTok 模式或預設組合。</li>
+                            <li>點選 <strong>啟用來源</strong>.</li>
+                        </ol>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">步驟 2</span>
+                        <h3>如果需要回覆</h3>
+                        <ol class="guide-steps">
+                            <li>使用 <strong>標準</strong> 模式，作為首選。</li>
+                            <li>點選 <strong>登入（Sign in）</strong> （如有需要）。</li>
+                            <li>開啟 <strong>顯示擷取頁面（Show capture page）</strong>.</li>
+                            <li>確保登入的是應傳送訊息的 TikTok 帳號。</li>
+                        </ol>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">步驟 3</span>
+                        <h3>如果 Standard 不穩定</h3>
+                        <ol class="guide-steps">
+                            <li>試試 <strong>本機簽署器</strong>.</li>
+                            <li>保持簽章器視窗開啟。</li>
+                            <li>如果 WebSocket 仍失敗，嘗試 <strong>輪詢（Polling）</strong>.</li>
+                            <li>如果 TikTok 仍遺漏太多聊天，請切換至下方 TikFinity 備援方式。</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">回覆</span>
+                    <h3>如何向 TikTok 聊天傳送回覆</h3>
+                    <p>回覆支援取決於是否擁有有效的已登入 TikTok 工作階段。</p>
+                    <ul class="guide-list">
+                        <li><strong>最佳回覆模式：</strong> <strong>標準</strong></li>
+                        <li><strong>備用回覆模式：</strong> <strong>本機簽署器</strong></li>
+                        <li><strong>不適合回覆：</strong> Auto、Polling、TikFinity 備援</li>
+                    </ul>
+                    <div class="callout-box">
+                        <strong>實用原則：</strong> 如果最重視讀取可靠性，從 Auto 或 Polling 開始。如果最重視回覆，使用 Standard 或 Local Signer。
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">備援</span>
+                    <h3>如何使用 TikFinity OBS Dock</h3>
+                    <p>當 TikTok 本身遺失或隱藏太多聊天時，TikFinity 可以作為備用來源。</p>
+                    <ol class="guide-steps">
+                        <li>開啟 TikFinity。</li>
+                        <li>前往 <strong>Overlay -&gt; OBS Docks</strong>.</li>
+                        <li>選擇一個停駐面板欄位，並將其設定為聊天。</li>
+                        <li>複製停駐面板 URL。</li>
+                        <li>在 SSN 中，點擊 <strong>其他聊天網站</strong>.</li>
+                        <li>貼上 TikFinity 停駐面板 URL。</li>
+                        <li>啟用新來源，並在直播時保持 TikFinity 開啟。</li>
+                    </ol>
+                    <ul class="guide-list">
+                        <li>這是備用讀取器，不是回覆工具。</li>
+                        <li>如果已經使用 TikFinity 活動動態元件，SSN 也可以在以瀏覽器為基礎的工作流程中使用支援的 TikFinity 元件頁面。</li>
+                    </ul>
+                    <p>如需此備援方式和 Discord StreamKit 的完整教學，請參閱 <a href="external-overlay-sources.html#tikfinity">Discord StreamKit 與 TikFinity 來源</a>。有關事件承載資料詳細資訊，請參閱 <a href="event-reference.html">事件參考</a>.</p>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">疑難排解</span>
+                    <h3>常見 TikTok 問題</h3>
+                    <div class="setup-grid">
+                        <div class="guide-card">
+                            <h4>「它說我離線了」</h4>
+                            <ul class="guide-list">
+                                <li>只有帳號確實正在直播時，TikTok 聊天才能運作。</li>
+                                <li>先開始直播，再嘗試 <strong>重新載入</strong>.</li>
+                                <li>直播結束後測試通常會失敗。</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>「驗證視窗關閉了」</h4>
+                            <ul class="guide-list">
+                                <li>使用 <strong>顯示擷取頁面（Show capture page）</strong> 以便看到登入或驗證碼。</li>
+                                <li>試試 <strong>重新載入</strong> 登入之後。</li>
+                                <li>盡可能關閉同一裝置上額外的 TikTok 分頁或應用程式。</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>「有訊息缺失」</h4>
+                            <ul class="guide-list">
+                                <li>這可能是 TikTok 端的限制，並不總是 SSN 錯誤。</li>
+                                <li>先嘗試其他模式，再決定是否某一條路徑始終最好。</li>
+                                <li>如果 TikFinity 對您的帳號表現更好，就將它用作備援方式。</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>「重新連接後訊息重複」</h4>
+                            <ul class="guide-list">
+                                <li>先更新至最新應用程式版本。</li>
+                                <li>完全停止來源，然後重新建立乾淨連接。</li>
+                                <li>如果仍重複，請切換模式或暫時使用 TikFinity。</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>「我不斷受到速率限制」</h4>
+                            <ul class="guide-list">
+                                <li>關閉同一裝置上的其他 TikTok 分頁、應用程式或重複的觀看視窗。</li>
+                                <li>等候幾分鐘再重試。</li>
+                                <li>嘗試其他模式或簽章路徑。</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>「我應該先嘗試什麼？」</h4>
+                            <ul class="guide-list">
+                                <li>讀取使用 Auto</li>
+                                <li>回覆使用 Standard</li>
+                                <li>Standard 不穩定時使用 Local Signer</li>
+                                <li>TikTok 本身有問題時使用 TikFinity</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">擴充功能</span>
+                    <h3>如果改用瀏覽器擴充功能</h3>
+                    <ul class="guide-list">
+                        <li>在瀏覽器中開啟實況主的 TikTok 直播頁面，並保持擴充功能啟用。</li>
+                        <li>如果需要自己直播中僅限已驗證使用者或主持人的頁面事件，請登入。</li>
+                        <li>TikFinity 活動動態頁面也可用於以瀏覽器為基礎的 SSN 設定。</li>
+                        <li>獨立應用程式仍提供最廣泛的 TikTok 模式選擇和最清楚的備援選項。</li>
+                    </ul>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/tiktok-live-setup-modal.png" alt="Supported Sites 頁面中的 TikTok Live 設定說明對話方塊" class="guide-image guide-image-medium">
+                        <figcaption>Supported Sites 中的 TikTok Live 項目：使用 <code>tiktok.com/*/live</code> URL，並在擴充功能擷取期間保持聊天頁面開啟。</figcaption>
+                    </figure>
+                </div>
+
+                <div class="footer-links">
+                    <a href="guides.html#standalone-tiktok" class="btn btn-secondary">返回指南</a>
+                    <a href="download.html#standalone" class="btn btn-primary">下載桌面應用程式</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>匯聚你的社群直播訊息等內容。免費且開源。</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+                        <a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+                        <a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>快速連結</h3>
+                    <ul>
+                        <li><a href="../index.html">首頁</a></li>
+                        <li><a href="features.html">功能</a></li>
+                        <li><a href="download.html">下載</a></li>
+                        <li><a href="guides.html">指南</a></li>
+                        <li><a href="commands.html">指令與 API</a></li>
+                        <li><a href="supported-sites.html">支援的網站</a></li>
+                        <li><a href="templates.html">範本</a></li>
+                        <li><a href="support.html">支援</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>資源</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">安裝指南</a></li>
+                        <li><a href="guides.html#extension-customization">自訂指南</a></li>
+                        <li><a href="guides.html#faq">常見問題</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">回報問題</a></li>
+                        <li><a href="../privacy.html">隱私權政策</a></li>
+                        <li><a href="../TOS.html">服務條款</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>社群</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">加入我們的 Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub 儲存庫</a></li>
+                        <li><a href="support.html#contribute">參與貢獻</a></li>
+                        <li><a href="https://github.com/sponsors/steveseguin" target="_blank">贊助</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 授權條款。建立者： <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> ，社群共同參與貢獻。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

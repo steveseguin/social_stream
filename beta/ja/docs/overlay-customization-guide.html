@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ja/docs/overlay-customization-guide.html">
+    <meta name="twitter:title" content="独自のソーシャル ストリーム オーバーレイをデザインする - Social Stream Ninja">
+    <meta name="twitter:description" content="各オーバーレイ ファミリのガイドを使用して、OBS でローカル オーバーレイ デザインをダウンロード、カスタマイズ、接続、テストします。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>独自のソーシャル ストリーム オーバーレイをデザインする - Social Stream Ninja</title>
+<meta name="description" content="各オーバーレイ ファミリのガイドを使用して、OBS でローカル オーバーレイ デザインをダウンロード、カスタマイズ、接続、テストします。">
+<meta name="robots" content="noindex, follow">
+<link rel="canonical" href="https://socialstream.ninja/beta/ja/docs/overlay-customization-guide.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Social Stream Ninja">
+<meta property="og:title" content="独自のソーシャル ストリーム オーバーレイをデザインする - Social Stream Ninja">
+<meta property="og:description" content="各オーバーレイ ファミリのガイドを使用して、OBS でローカル オーバーレイ デザインをダウンロード、カスタマイズ、接続、テストします。">
+<meta property="og:url" content="https://socialstream.ninja/beta/ja/docs/overlay-customization-guide.html">
+<meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+<meta name="twitter:card" content="summary">
+<script>
+(function() {
+    var savedTheme = localStorage.getItem("darkMode");
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+})();
+</script>
+<link rel="stylesheet" href="../../docs/css/styles.css">
+<link rel="stylesheet" href="../../docs/css/guides.css">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/overlay-customization-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{", for example, reads neither. Check the page's code first.":"などは、どちらも読み取りません。先にページのコードを確認してください。",", including zero.":"、ゼロを含む。",", keep the copy in the same folder.":"の場合はコピーを同じフォルダーに置きます。",", links":"、リンク",", local endpoints, labels, and version values differ by page. Don't add a server flag just because another overlay uses it.":"、ローカルエンドポイント、ラベル、バージョン値はページによって異なります。別のオーバーレイで使われているという理由だけでサーバーフラグを追加しないでください。",", not":"ではありません",", on Linux usually":"、Linuxでは通常",", then false. One should show the tags as text; the other should show bold text.":"にしてからfalseにします。一方ではタグが文字として、もう一方では太字として表示されることを確認します。",", unzip it, and copy that overlay's HTML file.":"をダウンロードして展開し、対象オーバーレイのHTMLファイルをコピーします。",", which browsers can block when opening from disk. For a simple map restyle, use its hosted link with OBS Custom CSS. For an edited copy, ask your AI to put the map data inside the page so it opens from disk. Hosting is an advanced option for pages that really need it, not a normal step.":"を使っており、ディスクから開くとブラウザーにブロックされる場合があります。地図の見た目だけを変えるなら、公開リンクとOBSのカスタムCSSを使います。ファイルを編集する場合は、ディスクから開けるよう地図データをページ内に組み込むようAIに依頼してください。ホスティングは必要なページ向けの上級オプションであり、通常の手順ではありません。",". Bringing a StreamElements or Streamlabs chat skin? Follow the":"。StreamElementsやStreamlabsのチャットスキンを使う場合は、次を参照してください：",". Copying from the browser handles spaces and slashes for you.":"。ブラウザーからコピーすれば、空白やスラッシュも適切に扱われます。",". Don't edit inside the ZIP. You don't need to reinstall SSN.":"。ZIP内のファイルを直接編集しないでください。SSNの再インストールは不要です。",". For a theme such as":"。たとえば次のテーマでは：",". In the browser or OBS URL box, use a plain":"。ブラウザーやOBSのURL欄では通常の",". It forwards to your overlay with the settings and":"を使います。設定と次の値を付けてオーバーレイを開きます：",". It must not run, set the marker, or leave event attributes behind. Test a script-scheme link too.":"。実行されたり、マーカーが設定されたり、イベント属性が残ったりしてはいけません。スクリプトスキームのリンクもテストしてください。",". Leave":"。次の設定はそのままにします：",". Or open the":"。または次を開きます：",". Picking the file with Local file doesn't add those settings.":"。ローカルファイルの選択だけでは、これらの設定は追加されません。",". That export comes with its own setup steps.":"。そのエクスポートには専用の設定手順があります。",". The brackets should show as text.":"。山括弧は文字として表示される必要があります。","A design that only works with hard-coded sample messages isn't done. Keep the original file and compare both with the same test inputs.":"固定のサンプルメッセージでしか動かないデザインは未完成です。元のファイルを残し、同じ入力で両方を比較してください。","A passing probe only covers the paths you tested. Focus on the renderers and fields your design changed.":"テストで確認できるのは試した経路だけです。デザイン変更で触れた描画処理とフィールドを中心に確認します。","A path like":"次のようなパス：","AI prompt":"AIプロンプト","Add your styles after the existing ones, or link a local stylesheet after them.":"既存のスタイルの後に追加するか、その後にローカルのスタイルシートを読み込みます。","Alerts and event feeds":"アラートとイベントフィード","All guides":"すべてのガイド","Blank or “waiting” display":"空白または「待機中」の表示","Browser Source":"ブラウザソース","Browser Source reference":"ブラウザソースリファレンス","Change the HTML layout":"HTMLレイアウトを変更する","Change the design":"デザインを変更する","Change the design, or ask AI to":"デザインを変更するか、AIに次を依頼します：","Chat and Dock":"チャットとドック","Check a real message or event reaches both the original and your copy. A fake event only proves the display works.":"実際のメッセージやイベントが元のページとコピーの両方に届くことを確認します。テストイベントでは表示の動作しか確認できません。","Check a supported emote and an image-only message still work.":"対応しているエモートと画像だけのメッセージが引き続き表示されることを確認します。","Check refresh/unload settings, duplicate copies of the overlay or controls, and the page's own duplicate and state handling.":"再読み込み・終了設定、オーバーレイや操作ページの重複、ページ自体の重複処理と状態管理を確認します。","Check the final size, transparency, animations, audio, fonts, and layering. Try show/hide, clear/reset, and a refresh. OBS and your browser don't share logins or saved storage.":"最終サイズ、透明度、アニメーション、音声、フォント、重なり順を確認します。表示切り替え、クリア・リセット、再読み込みも試してください。OBSとブラウザーはログインや保存データを共有しません。","Check the session, password, full":"セッション、パスワード、完全な","Check width/height, old Custom CSS, fonts, cache, and browser storage. Refresh after saving.":"幅と高さ、古いカスタムCSS、フォント、キャッシュ、ブラウザーの保存データを確認します。保存後は再読み込みしてください。","Choose a working overlay before changing its appearance.":"外観を変更する前に、作業用オーバーレイを選択します。","Cleaned HTML still isn't safe to run as JavaScript or to use as an AI instruction.":"無害化したHTMLでも、JavaScriptとして実行したりAIへの指示として使ったりしてはいけません。","Click":"クリックする項目：","Code → Download ZIP":"コード→ZIPをダウンロード","Collected participants and credits controls":"集められた参加者とクレジット管理","Commands & API":"コマンドとAPI","Configured support/count/Hype metric":"設定されたサポート/カウント/誇大宣伝メトリクス","Configured ticker content":"設定されたティッカーコンテンツ","Copy it and point your page at the copy, so only your design changes.":"ファイルをコピーしてページの参照先を変え、自分のデザインだけに変更が適用されるようにします。","Copy them, don't retype. Inside an HTML attribute write":"入力し直さずコピーしてください。HTML属性内では次のように記述します：","Counters and rankings":"カウンターとランキング","Counts, metadata, activity, or point snapshots":"カウント、メタデータ、アクティビティ、またはポイント スナップショット","Create Test Message":"テストメッセージを作成（Create Test Message）","Credits":"クレジット","Custom CSS":"カスタムCSS","Custom receivers and connection examples.":"独自の受信ページと接続例。","Data resets or actions happen twice":"データがリセットされる／操作が2回実行される","Design guide":"デザインガイド","Design your own Social Stream overlays":"独自のソーシャル ストリーム オーバーレイをデザインする","Design your own Social Stream overlays - Social Stream Ninja":"独自のソーシャル ストリーム オーバーレイをデザインする - Social Stream Ninja","Details":"詳細","Do this":"操作","Don't accept a fake.":"見せかけの動作で済ませない。","Don't paste raw names into attribute strings or raw colors into style markup. Check style values before setting them one property at a time.":"生の名前を属性文字列に、生の色をスタイルのHTMLに挿入しないでください。スタイル値を検証し、プロパティごとに設定します。","Double-click the launcher to test it. In OBS, check":"ランチャーをダブルクリックしてテストします。OBSでは次をオンにします：","Download":"ダウンロード","Download the beta source ZIP":"ベータ版のソース ZIP をダウンロード","Download the files":"ファイルをダウンロードする","Download the source ZIP":"ソースZIPをダウンロードする","Download, customize, connect, and test local overlay designs in OBS, with guides for each overlay family.":"各オーバーレイ ファミリのガイドを使用して、OBS でローカル オーバーレイ デザインをダウンロード、カスタマイズ、接続、テストします。","Drag the HTML into your browser again and copy its address. Check the name ends in .html, not .html.txt.":"HTMLを再びブラウザーにドラッグし、アドレスをコピーします。ファイル名が.html.txtではなく.htmlで終わっていることを確認してください。","Drag your HTML copy into Chrome or Edge. Copy its address. It starts with":"HTMLのコピーをChromeやEdgeにドラッグし、アドレスをコピーします。先頭は","Each overlay type listens for different things. A chat page, a featured-message page, and a poll don't use the same input. Open the design guide for the one you use:":"オーバーレイの種類によって受け取る入力は異なります。チャット、選択メッセージ、投票のページは同じ入力を使いません。使う種類のデザインガイドを開いてください：","Edit a shared stylesheet or script":"共有スタイルシートやスクリプトを編集する","Edit the copy":"コピーを編集する","Event Flow":"Event Flow","Events and Alerts Compatibility":"イベントとアラートの互換性","Every captured chat message":"キャプチャされたすべてのチャット メッセージ","Example: this SSN link…":"例：このSSNリンクが…","Existing badge and image handling.":"既存のバッジ・画像処理。","Existing connection support, when your page loads them.":"ページが読み込む場合の既存の接続機能。","Feature a Dock message for a featured card, vote in a poll, pick a giveaway winner, change ticker text, or start a timer. Plain chat doesn't test everything.":"Dockのメッセージを選んでカードを表示する、投票する、抽選の当選者を選ぶ、ティッカーの文を変える、タイマーを開始するなどを試します。通常のチャットだけでは全機能をテストできません。","Featured messages":"注目メッセージ","Features":"機能","Field":"フィールド","File":"ファイル","File not found":"ファイルが見つかりません","Files for AI":"AI用のファイル","Files to give your AI":"AIに渡すファイル","Find your overlay's file (see the table above). Make a copy next to the original, like":"上の表で対象のオーバーレイファイルを探し、元の隣にコピーを作ります。例：","Fix problems":"問題を解決する","Fix the smallest confirmed problem first. A restyle shouldn't need changes to capture scripts or new event fields. If you share a public fork, include its assets and leave private launchers out.":"確認できた最小の問題から直します。見た目を変えるためにキャプチャースクリプトやイベント項目を変更する必要はありません。公開フォークを共有する場合は素材を含め、非公開のランチャーは含めないでください。","For a theme in a subfolder, put the launcher next to that theme copy. Keep the launcher private, since it holds your connection link. A self-contained export that already includes its settings follows its own instructions instead.":"サブフォルダーのテーマでは、そのコピーの隣にランチャーを置きます。接続リンクが入るため、ランチャーは非公開にしてください。設定を含む自己完結型エクスポートは、その専用手順に従います。","For files in subfolders, fix the script paths.":"サブフォルダー内のファイルでは、スクリプトのパスを調整します。","From your working SSN overlay link, copy everything from":"動作しているSSNオーバーレイのリンクから、次の位置以降をすべてコピーします：","Game-specific chat, gifts, and commands":"ゲーム固有のチャット、ギフト、コマンド","Games and rewards":"ゲームと報酬","Generated AI overlays":"生成された AI オーバーレイ","Give the AI the overlay's own file and the CSS/JS it loads, plus these. The event reference alone doesn't explain a poll's controls or each overlay's layout code.":"オーバーレイ自身のファイル、読み込むCSS・JS、および以下をAIに渡してください。イベントリファレンスだけでは、投票の操作方法や各オーバーレイのレイアウトコードは分かりません。","Giveaway displays":"景品展示","Good to know":"知っておくと便利なこと","Graphical polls":"グラフィカル投票","Guides":"ガイド","HTML file":"HTMLファイル","Have the AI test a harmless probe like":"AIに次のような無害な確認用入力を試させます：","Have your logo, font files, brand colors, canvas size, and a visual reference ready. A web page generally can't load fonts or images from another computer's disk.":"ロゴ、フォントファイル、ブランドカラー、キャンバスサイズ、参考画像を用意します。通常、Webページは別のコンピューターのディスクからフォントや画像を読み込めません。","Hire":"仕事を依頼する","Home":"ホーム","Host queue and winner state":"ホストキューと勝者の状態","How":"方法","How to show it":"表示方法","How to test the renderer safely":"描画処理を安全にテストする方法","I want to":"したいこと","I want to…":"したいこと…","If the page already has a sanitizer, keep it. Don't add a second one.":"既にサニタイザーがある場合は維持し、2つ目を追加しないでください。","If your copy stays blank, check the original link first. Some pages ask for missing settings; others stay hidden or redirect. Putting the right session in the link avoids guessing.":"コピーが空白なら、まず元のリンクを確認します。足りない設定を尋ねるページもあれば、非表示のままやリダイレクトするページもあります。正しいセッションをリンクに入れれば推測せずに済みます。","In OBS, add a":"OBSで次を追加します：","Inspiration":"活用アイデア","It can matter. AI Event Overlay, for example, uses a private":"影響することがあります。たとえばAI Event Overlayは非公開の","Just want new colors or fonts?":"色やフォントだけを変えたい場合","Keep":"次の項目は維持します：","Keep IDs and classes that scripts use. If a script rebuilds an element on every update, put permanent artwork outside it, or add it to the renderer.":"スクリプトで使うIDとクラスを維持します。更新のたびに要素を作り直す場合は、固定の装飾をその外に置くか、描画処理に追加します。","Keep SSN on and use":"SSNを起動したまま、次を使います：","Keep chat safe":"チャットを安全に表示する","Keep everything after":"次の位置以降をすべて維持する：","Keep incoming chat from becoming code":"受信チャットをコードとして実行させない","Keep the hosted link and use OBS's":"公開リンクを使い、OBSの次の機能を利用します：","Keep the server settings":"サーバー設定を維持する","Keep the unzipped folder as it is, with your copy next to the original. Check your added artwork and fonts are where the page expects.":"展開したフォルダー構成を保ち、元のファイルの隣にコピーを置きます。追加した画像やフォントが、ページから参照できる場所にあることを確認します。","Keep the whole unzipped folder.":"展開したフォルダー全体を残してください。","Keep your real session, password, and private tokens out of screenshots, repos, and AI prompts.":"本物のセッション、パスワード、非公開トークンをスクリーンショット、リポジトリ、AIへのプロンプトに含めないでください。","Keep your session link":"セッションリンクを維持する","Layout":"レイアウト","Local file":"ローカルファイル","Logo disappears on update":"更新するとロゴが消える","Looks different in OBS than the browser":"OBSとブラウザーで見た目が違う","Main navigation":"メインナビゲーション","Make your own overlay in 5 steps":"5手順で独自のオーバーレイを作る","Managed giveaway state or legacy entry feed":"管理されたプレゼント状態またはレガシーエントリーフィード","Matching events / paid chat rows":"マッチングイベント/有料チャット行","Matching words or location entries":"一致する単語または場所のエントリ","May hold emotes and allowed formatting. Use the packaged sanitizer.":"エモートや許可された書式を含む場合があります。同梱のサニタイザーを使ってください。","Missing script, font, or image":"スクリプト、フォント、または画像がありません","More background:":"詳しい説明：","Music and AI displays":"音楽とAIの表示","Names, amounts, titles, other plain fields":"名前、金額、タイトルなどの通常のテキスト項目","Names, messages, titles, amounts, and links come from viewers and outside services. Treat them as text, never as code. Clean them where your renderer puts them on the page.":"名前、メッセージ、タイトル、金額、リンクは視聴者や外部サービスから届きます。コードではなくテキストとして扱い、描画処理がページに挿入する箇所で無害化してください。","Now-playing or bot/cohost updates":"再生中またはボット/共同ホストの更新","OBS":"OBS","OBS URL":"OBS URL","OBS explains file/URL modes, sizes, Custom CSS, and refresh in its":"OBSのファイル・URLモード、サイズ、カスタムCSS、再読み込みは、次の資料で説明されています：","OBS saves the address. Keep the folder where it is, and keep SSN and your chat source running.":"OBSはアドレスを保存します。フォルダーを移動せず、SSNとチャットソースを動かし続けてください。","OBS's file picker picks a file but can't add your settings. A small launcher page can open your edited page with the settings attached:":"OBSのファイル選択では設定を追加できません。小さなランチャーページを使えば、設定付きで編集済みページを開けます：","OWASP's guide to safe sinks and HTML sanitization":"OWASPの安全な出力先とHTML無害化のガイド","Official fields, named events, metadata, media, and donation values.":"正式な項目、名前付きイベント、メタデータ、メディア、寄付金額。","On macOS it starts with":"macOSでは先頭が","On this page":"このページの内容","One HTML file can load scripts, styles, fonts, images, audio, or data from nearby folders. Moving the page breaks those links. GitHub's page view or a browser's “Save page” won't get everything.":"1つのHTMLファイルが周囲のフォルダーからスクリプト、スタイル、フォント、画像、音声、データを読み込むことがあります。ページを移動すると参照が切れます。GitHubのページ表示やブラウザーの「ページを保存」では、必要なすべてを取得できません。","Only change CSS":"CSSだけを変更する","Only some pages support it.":"対応しているのは一部のページだけです。","Open in OBS":"OBSでオープン","Open navigation menu":"ナビゲーションメニューを開く","Open that combined address in your browser to test it.":"組み合わせたアドレスをブラウザーで開いてテストします。","Open the copy in a text or code editor. Save it as":"コピーをテキストエディターやコードエディターで開き、次の名前で保存します：","Open the edited file straight from your computer. No server needed.":"編集したファイルはコンピューターから直接開けます。サーバーは不要です。","Open your copy in OBS":"コピーをOBSで開く","Open your file in OBS":"ファイルをOBSで開く","Optional: use the Local file checkbox with a launcher":"オプション: ランチャーでローカル ファイル チェックボックスを使用します","Overlay Gallery":"オーバーレイギャラリー","Overlay design guides":"オーバーレイ設計ガイド","Pick an overlay":"オーバーレイを選ぶ","Pick the overlay":"対象のオーバーレイを選ぶ","Pick the overlay to change":"変更するオーバーレイを選ぶ","Plain text (":"プレーンテキスト（","Problem":"問題","Products and boards":"製品と基板","Quick start":"クイックスタート","Reactions and media effects":"反応とメディア効果","Real capture":"実際のキャプチャー","Refresh cache of current page":"現在のページのキャッシュを更新（Refresh cache of current page）","Refreshing can lose data.":"再読み込みでデータが失われることがあります。","Replace the placeholder link with your full copied SSN link. Change":"仮のリンクを、コピーした完全なSSNリンクに置き換えます。変更する項目：","Restyle my edited HTML copy":"編集したHTMLコピーの見た目を変える","Reuse existing controls when the design needs a trigger.":"デザインに操作のきっかけが必要なら、既存の操作機能を再利用します。","Rule":"ルール","Run these in a private local preview, not in public chat.":"公開チャットではなく、非公開のローカルプレビューで実行してください。","SSN delivery":"SSNからの配信","Sample payloads and delivery modes.":"ペイロード例と配信モード。","Save the code below as":"下のコードを次の名前で保存します：","Saved a change?":"変更を保存したら","Saved designs and their configured event route":"保存されたデザインとその設定されたイベント ルート","Selected messages and clear commands":"選択されたメッセージとクリアコマンド","Send":"送信","Session link":"セッションリンク","Shared commerce state":"共有コマース状態","Skip the download. Keep the normal hosted link and paste CSS into the OBS Browser Source's":"ダウンロードせず、通常の公開リンクを使い、OBSブラウザーソースの次の欄にCSSを貼り付けます：","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja ·":"Social Stream Ninja ·","Some pages keep data in memory. Check the type guide before turning on auto-refresh or shutdown-when-hidden. Remove":"一部のページはデータをメモリ内に保持します。自動更新や非表示時の終了を有効にする前に、種類別ガイドを確認してください。削除する項目：","Special case: pages that read separate data files":"特殊なケース: 個別のデータ ファイルを読み取るページ","Start SSN, connect a source, and check the original overlay works. Then copy the":"SSNを起動してソースを接続し、元のオーバーレイが動くことを確認します。その後、次をコピーします：","Start from an overlay that already works.":"既に動いているオーバーレイから始めます。","Starting files":"起動ファイル","Support":"サポート","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","Templates Gallery":"テンプレートギャラリー","Test":"テスト","Test it":"試す","Test it, one piece at a time":"1つずつテストする","Test-message guide":"テストメッセージガイド","The URL box lets you add":"URL欄では次を追加できます：","The map loads local JSON files with":"地図はローカルのJSONファイルを次の方法で読み込みます：","The packaged display sanitizer.":"同梱の表示用サニタイザー。","The page's specific media/event/action trigger":"ページの特定のメディア/イベント/アクションのトリガー","The real trigger":"実際のトリガー","The script may be rebuilding its container. Put permanent decoration outside it, or update the rendering template.":"スクリプトがコンテナーを作り直している可能性があります。固定の装飾を外に置くか、描画テンプレートを変更します。","The value after":"次の後にある値：","Tickers":"ティッカー","Timer state and controls":"タイマーの状態とコントロール","Timers":"タイマー","Tip jars and goals":"チップジャーとゴール","Try this":"試すこと","URL":"URL","URLs, not HTML. Check them with the page's existing media/link rules, then set DOM properties.":"HTMLではなくURLです。既存のメディア・リンク用ルールで検証してからDOMプロパティに設定します。","Unzip it into a folder you'll keep, like":"今後も使うフォルダーに展開します。例：","Use":"使う項目：","Use a name like":"次のような名前を使います：","Use placeholders when sharing":"共有時は仮の値を使う","Use the page's preview/demo mode if it has one, or made-up local samples. Try long names and messages, missing avatars, empty data, and the expected number of rows.":"ページにプレビュー・デモモードがあれば使い、なければ架空のローカルデータを用意します。長い名前やメッセージ、アバターなし、空データ、想定する行数を試してください。","Use the type-specific prompt in each design guide, or start with this one. Give the AI your copied file and the styles and scripts it loads.":"各デザインガイドの種類別プロンプトを使うか、これを出発点にしてください。コピーしたファイルと、そのCSS・スクリプトをAIに渡します。","Votes plus host poll settings":"投票とホストの投票設定","Waitlists and queue draws":"順番待ちリストと順番待ちの抽選","Want something ready-made? Try the":"完成済みのものを使いたい場合は、次を試してください：","What drives it":"何がそれを動かすのか","What it's for":"用途","What the folder looks like, and how paths work":"フォルダーの構成とパスの仕組み","Which events and fields each source sends.":"各ソースが送るイベントと項目。","Why":"理由","Why leave Local file unchecked?":"ローカル ファイルのチェックを外したままにするのはなぜですか?","Word clouds and maps":"ワードクラウドとマップ","You can change an overlay's colors, fonts, layout, artwork, and motion. The":"オーバーレイの色、フォント、配置、画像、動きを変えられます。","You only set this up once":"この設定は1回だけです","and":"および","and choose":"を開き、次を選択します：","and pick the":"を選び、次を指定します：","and set the width and height.":"を設定し、幅と高さを指定します。","beta repository":"ベータ版リポジトリ","box.":"欄。","box. It only affects that OBS source, not a normal browser.":"欄に貼り付けます。そのOBSソースだけに適用され、通常のブラウザーには反映されません。","characters.":"の文字。","for display, and use a valid numeric USD":"を表示用に使い、USDの有効な数値を次に指定します：","from the SSN tool for that overlay.":"を、そのオーバーレイ用のSSNツールから取得します。","from the link before expecting live data.":"をリンクから外してからライブデータを確認します。","full link":"完全なリンク","import guide":"輸入ガイド","in the source properties.":"。","is relative to the page that loads it. Move that page to the root and the path breaks. Copy your own artwork and fonts into the folder too, and use relative paths. Your edited copy won't get future SSN fixes automatically.":"は読み込むページからの相対パスです。ページをルートへ移動すると参照が切れます。独自の画像やフォントもフォルダーにコピーし、相対パスを使います。編集したコピーに今後のSSNの修正は自動適用されません。","is the page. The":"がページです。","is your SSN session. It's not your YouTube channel, Twitch name, file name, or poll title. SSN and your page must use the same session and password. Keep SSN running: overlays only receive data. They don't capture chat themselves.":"がSSNのセッションです。YouTubeチャンネル、Twitch名、ファイル名、投票タイトルではありません。SSNとページで同じセッションとパスワードを使います。オーバーレイは受信するだけで、自分ではチャットを取得しないため、SSNを動かし続けてください。","joins the rest":"で残りをつなぎます","launcher":"ランチャー","next to":"の隣に","onward. Paste it on the end of the file address. This keeps your session, password, settings, and any":"以降をファイルのアドレスの末尾に貼り付けます。セッション、パスワード、設定、そして次を維持できます：","or":"または","otherwise":"それ以外の場合","part.":"部分。","parts, that SSN is running, the feature is on, and the right input is arriving. Compare with the original SSN link.":"の部分、SSNの起動状態、機能がオンかどうか、正しい入力が届いているかを確認し、元のSSNリンクと比較します。","points to it and adds your session and display settings.":"はそのファイルを指し、セッションと表示設定を追加します。","remote API control of extension":"拡張機能のリモートAPI制御（remote API control of extension）","starts the settings,":"から設定が始まり、","to your file name. Keep the link in quotes, with plain":"を自分のファイル名にします。リンクを引用符で囲み、通常の","token.":"トークン。","true":"true","turned on. Use a test setup: test messages can set off your automations.":"を有効にします。テストメッセージで自動処理が動くことがあるため、テスト用の環境を使ってください。","unchecked. Paste the full address into":"をオフにして、完全なアドレスを次に貼り付けます：","with":"付随する値：","with the overlay's real trigger.":"を、そのオーバーレイの実際のトリガーで確認します。","with the same session. The usual Extension API mode needs":"を同じセッションで使います。通常のExtension APIモードには次が必要です：","with your SSN session settings added to its address.":"のアドレスにSSNのセッション設定を追加します。","you want to change.":"のうち変更したいもの。","yourself, or ask an AI tool to.":"は自分で行うか、AIツールに依頼します。","…becomes this for a downloaded poll copy on Windows:":"…Windowsにダウンロードした投票ページでは、このようになります："}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/overlay-customization-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide visual-guide">
+<header class="site-header"><div class="site-bar">
+<a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション">
+<a href="../index.html">ホーム</a><a href="features.html">機能</a><a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a><a href="download.html">ダウンロード</a><a href="guides.html">ガイド</a><a href="commands.html">コマンドとAPI</a><a href="supported-sites.html">対応サイト</a><a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a><a href="services.html" class="site-priority-hire">仕事を依頼する</a><a href="support.html">サポート</a>
+</nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/overlay-customization-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/overlay-customization-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/overlay-customization-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/overlay-customization-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/overlay-customization-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/overlay-customization-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="overlay-customization-guide.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/overlay-customization-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/overlay-customization-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/overlay-customization-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/overlay-customization-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/overlay-customization-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/overlay-customization-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/overlay-customization-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/overlay-customization-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/overlay-customization-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/overlay-customization-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="テーマを切り替え"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button>
+<button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button>
+</div></div></header>
+<section class="page-hero"><div class="container"><h1>独自のソーシャル ストリーム オーバーレイをデザインする</h1><p>各オーバーレイ ファミリのガイドを使用して、OBS でローカル オーバーレイ デザインをダウンロード、カスタマイズ、接続、テストします。</p></div></section>
+<main class="guide-section"><div class="container">
+<nav class="guide-jump-links" aria-label="このページの内容"><a href="#quick-start">クイックスタート</a><a href="#choose">オーバーレイを選ぶ</a><a href="#download">ダウンロード</a><a href="#session">セッションリンク</a><a href="#local-file">OBSでオープン</a><a href="#design">デザインを変更する</a><a href="#safe-input">チャットを安全に表示する</a><a href="#test">試す</a><a href="#references">AI用のファイル</a><a href="#troubleshooting">問題を解決する</a></nav>
+
+<section class="guide-card" id="quick-start"><h2>5手順で独自のオーバーレイを作る</h2>
+<div class="guide-flow-visual"><strong>ファイルをダウンロードする</strong><span aria-hidden="true">→</span><strong>デザインを変更する</strong><span aria-hidden="true">→</span><strong>OBSでオープン</strong></div>
+<ol class="guide-steps">
+<li><a href="#choose">対象のオーバーレイを選ぶ</a> のうち変更したいもの。</li>
+<li><a href="#download">ソースZIPをダウンロードする</a>をダウンロードして展開し、対象オーバーレイのHTMLファイルをコピーします。</li>
+<li><a href="#design">コピーを編集する</a> は自分で行うか、AIツールに依頼します。</li>
+<li><a href="#local-file">コピーをOBSで開く</a> のアドレスにSSNのセッション設定を追加します。</li>
+<li><a href="#test">試す</a> を、そのオーバーレイの実際のトリガーで確認します。</li>
+</ol>
+<div class="guide-note"><strong>色やフォントだけを変えたい場合</strong> ダウンロードせず、通常の公開リンクを使い、OBSブラウザーソースの次の欄にCSSを貼り付けます： <strong>カスタムCSS</strong> 欄。</div>
+</section>
+
+<section class="guide-card" id="choose"><h2>変更するオーバーレイを選ぶ</h2>
+<p>オーバーレイの色、フォント、配置、画像、動きを変えられます。 <strong>HTMLファイル</strong> がページです。 <strong>OBS URL</strong> はそのファイルを指し、セッションと表示設定を追加します。</p>
+<figure class="guide-shot"><a href="../../docs/images/guides/custom-chat-preview.png"><img src="../../docs/images/guides/custom-chat-preview.png" width="960" height="520" alt="外観を変更する前に、作業用オーバーレイを選択します。" loading="lazy" decoding="async"></a><figcaption>既に動いているオーバーレイから始めます。</figcaption></figure>
+<p>オーバーレイの種類によって受け取る入力は異なります。チャット、選択メッセージ、投票のページは同じ入力を使いません。使う種類のデザインガイドを開いてください：</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">デザインガイド</th><th scope="col">起動ファイル</th><th scope="col">何がそれを動かすのか</th></tr></thead><tbody>
+<tr><td data-label="デザインガイド"><a href="chat-customization-guide.html">チャットとドック</a></td><td data-label="起動ファイル"><code>sampleoverlay.html, dock.html, themes/*</code></td><td data-label="何がそれを動かすのか">キャプチャされたすべてのチャット メッセージ</td></tr>
+<tr><td data-label="デザインガイド"><a href="featured-customization-guide.html">注目メッセージ</a></td><td data-label="起動ファイル"><code>featured.html, samplefeatured.html, themes/featured-styles/*</code></td><td data-label="何がそれを動かすのか">選択されたメッセージとクリアコマンド</td></tr>
+<tr><td data-label="デザインガイド"><a href="alerts-customization-guide.html">アラートとイベントフィード</a></td><td data-label="起動ファイル"><code>multi-alerts.html, events.html, themes/events/index.html</code></td><td data-label="何がそれを動かすのか">マッチングイベント/有料チャット行</td></tr>
+<tr><td data-label="デザインガイド"><a href="poll-customization-guide.html">グラフィカル投票</a></td><td data-label="起動ファイル"><code>poll.html</code></td><td data-label="何がそれを動かすのか">投票とホストの投票設定</td></tr>
+<tr><td data-label="デザインガイド"><a href="goals-customization-guide.html">チップジャーとゴール</a></td><td data-label="起動ファイル"><code>tipjar.html</code></td><td data-label="何がそれを動かすのか">設定されたサポート/カウント/誇大宣伝メトリクス</td></tr>
+<tr><td data-label="デザインガイド"><a href="stats-customization-guide.html">カウンターとランキング</a></td><td data-label="起動ファイル"><code>hype.html, meta.html, leaderboard.html, scoreboard.html</code></td><td data-label="何がそれを動かすのか">カウント、メタデータ、アクティビティ、またはポイント スナップショット</td></tr>
+<tr><td data-label="デザインガイド"><a href="waitlist-customization-guide.html">順番待ちリストと順番待ちの抽選</a></td><td data-label="起動ファイル"><code>waitlist.html</code></td><td data-label="何がそれを動かすのか">ホストキューと勝者の状態</td></tr>
+<tr><td data-label="デザインガイド"><a href="giveaway-customization-guide.html">景品展示</a></td><td data-label="起動ファイル"><code>giveaway.html, giveaway-obs-entries.html</code></td><td data-label="何がそれを動かすのか">管理されたプレゼント状態またはレガシーエントリーフィード</td></tr>
+<tr><td data-label="デザインガイド"><a href="timer-customization-guide.html">タイマー</a></td><td data-label="起動ファイル"><code>timer.html</code></td><td data-label="何がそれを動かすのか">タイマーの状態とコントロール</td></tr>
+<tr><td data-label="デザインガイド"><a href="ticker-customization-guide.html">ティッカー</a></td><td data-label="起動ファイル"><code>ticker.html</code></td><td data-label="何がそれを動かすのか">設定されたティッカーコンテンツ</td></tr>
+<tr><td data-label="デザインガイド"><a href="community-customization-guide.html">ワードクラウドとマップ</a></td><td data-label="起動ファイル"><code>wordcloud.html, map.html</code></td><td data-label="何がそれを動かすのか">一致する単語または場所のエントリ</td></tr>
+<tr><td data-label="デザインガイド"><a href="effects-customization-guide.html">反応とメディア効果</a></td><td data-label="起動ファイル"><code>reactions.html, emotes.html, content.html, gif.html, confetti.html, stickers.html, actions.html</code></td><td data-label="何がそれを動かすのか">ページの特定のメディア/イベント/アクションのトリガー</td></tr>
+<tr><td data-label="デザインガイド"><a href="credits-customization-guide.html">クレジット</a></td><td data-label="起動ファイル"><code>credits.html</code></td><td data-label="何がそれを動かすのか">集められた参加者とクレジット管理</td></tr>
+<tr><td data-label="デザインガイド"><a href="media-customization-guide.html">音楽とAIの表示</a></td><td data-label="起動ファイル"><code>spotify-overlay.html, cohost-overlay.html, bot.html, chatbot.html</code></td><td data-label="何がそれを動かすのか">再生中またはボット/共同ホストの更新</td></tr>
+<tr><td data-label="デザインガイド"><a href="commerce-customization-guide.html">製品と基板</a></td><td data-label="起動ファイル"><code>monetization.html, commerce-board.html, shop_the_stream.html</code></td><td data-label="何がそれを動かすのか">共有コマース状態</td></tr>
+<tr><td data-label="デザインガイド"><a href="making-games.html#custom-design">ゲームと報酬</a></td><td data-label="起動ファイル"><code>games/*, games/templates/*, games.html, battle.html</code></td><td data-label="何がそれを動かすのか">ゲーム固有のチャット、ギフト、コマンド</td></tr>
+<tr><td data-label="デザインガイド"><a href="ai-overlay-builder-guide.html">生成された AI オーバーレイ</a></td><td data-label="起動ファイル"><code>aioverlay.html, aievent-overlay.html</code></td><td data-label="何がそれを動かすのか">保存されたデザインとその設定されたイベント ルート</td></tr>
+</tbody></table>
+<p>完成済みのものを使いたい場合は、次を試してください： <a href="overlay-gallery.html">オーバーレイギャラリー</a> または <a href="templates.html">テンプレートギャラリー</a>。StreamElementsやStreamlabsのチャットスキンを使う場合は、次を参照してください： <a href="streamelements-chat-guide.html">輸入ガイド</a>。そのエクスポートには専用の設定手順があります。</p>
+</section>
+
+<section class="guide-card" id="download"><h2>ファイルをダウンロードする</h2>
+<ol class="guide-steps"><li><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">ベータ版のソース ZIP をダウンロード</a>。または次を開きます： <a href="https://github.com/steveseguin/social_stream/tree/beta">ベータ版リポジトリ</a> を開き、次を選択します： <strong>コード→ZIPをダウンロード</strong>.</li>
+<li>今後も使うフォルダーに展開します。例： <code>C:\SSN\social_stream-beta\</code>。ZIP内のファイルを直接編集しないでください。SSNの再インストールは不要です。</li>
+<li>上の表で対象のオーバーレイファイルを探し、元の隣にコピーを作ります。例： <code>poll.html</code> &rarr; <code>my-poll.html</code>。たとえば次のテーマでは： <code>themes/featured-styles/featured-modern.html</code>の場合はコピーを同じフォルダーに置きます。</li>
+<li>コピーをテキストエディターやコードエディターで開き、次の名前で保存します： <code>.html</code>ではありません <code>.html.txt</code>.</li></ol>
+<div class="warning-note"><strong>展開したフォルダー全体を残してください。</strong> 1つのHTMLファイルが周囲のフォルダーからスクリプト、スタイル、フォント、画像、音声、データを読み込むことがあります。ページを移動すると参照が切れます。GitHubのページ表示やブラウザーの「ページを保存」では、必要なすべてを取得できません。</div>
+<details class="guide-extra"><summary>フォルダーの構成とパスの仕組み</summary>
+<pre><code>social_stream-beta/
+    poll.html
+    my-poll.html
+    currency.js
+    js/
+    libs/
+    shared/
+    thirdparty/
+    media/
+    sources/images/
+    themes/
+        featured-styles/
+            featured-modern.html
+            my-featured.html
+    docs/
+        event-reference.html</code></pre>
+<p>次のようなパス： <code>../../shared/utils/chatHtml.js</code> は読み込むページからの相対パスです。ページをルートへ移動すると参照が切れます。独自の画像やフォントもフォルダーにコピーし、相対パスを使います。編集したコピーに今後のSSNの修正は自動適用されません。</p>
+</details>
+</section>
+
+<section class="guide-card" id="session"><h2>セッションリンクを維持する</h2>
+<p>SSNを起動してソースを接続し、元のオーバーレイが動くことを確認します。その後、次をコピーします： <strong>完全なリンク</strong> を、そのオーバーレイ用のSSNツールから取得します。</p>
+<pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>次の後にある値： <code>session=</code> がSSNのセッションです。YouTubeチャンネル、Twitch名、ファイル名、投票タイトルではありません。SSNとページで同じセッションとパスワードを使います。オーバーレイは受信するだけで、自分ではチャットを取得しないため、SSNを動かし続けてください。</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">ルール</th><th scope="col">理由</th></tr></thead><tbody>
+<tr><td data-label="ルール"><code>?</code> から設定が始まり、 <code>&amp;</code> で残りをつなぎます</td><td data-label="理由">入力し直さずコピーしてください。HTML属性内では次のように記述します： <code>&amp;amp;</code>。ブラウザーやOBSのURL欄では通常の <code>&amp;</code>.</td></tr>
+<tr><td data-label="ルール">サーバー設定を維持する</td><td data-label="理由"><code>server</code>, <code>server2</code>, <code>server3</code>、ローカルエンドポイント、ラベル、バージョン値はページによって異なります。別のオーバーレイで使われているという理由だけでサーバーフラグを追加しないでください。</td></tr>
+<tr><td data-label="ルール">次の位置以降をすべて維持する： <code>#</code></td><td data-label="理由">影響することがあります。たとえばAI Event Overlayは非公開の <code>#aieventauth=...</code> トークン。</td></tr>
+<tr><td data-label="ルール">共有時は仮の値を使う</td><td data-label="理由">本物のセッション、パスワード、非公開トークンをスクリーンショット、リポジトリ、AIへのプロンプトに含めないでください。</td></tr>
+</tbody></table>
+<p>コピーが空白なら、まず元のリンクを確認します。足りない設定を尋ねるページもあれば、非表示のままやリダイレクトするページもあります。正しいセッションをリンクに入れれば推測せずに済みます。</p>
+</section>
+
+<section class="guide-card" id="local-file"><h2>ファイルをOBSで開く</h2>
+<p>編集したファイルはコンピューターから直接開けます。サーバーは不要です。</p>
+<ol class="guide-steps"><li>HTMLのコピーをChromeやEdgeにドラッグし、アドレスをコピーします。先頭は <code>file:///</code>.</li>
+<li>動作しているSSNオーバーレイのリンクから、次の位置以降をすべてコピーします： <code>?</code> 以降をファイルのアドレスの末尾に貼り付けます。セッション、パスワード、設定、そして次を維持できます： <code>#</code> 部分。</li>
+<li>組み合わせたアドレスをブラウザーで開いてテストします。</li>
+<li>OBSで次を追加します： <strong>ブラウザソース</strong>。次の設定はそのままにします： <strong>ローカルファイル</strong> をオフにして、完全なアドレスを次に貼り付けます： <strong>URL</strong> を設定し、幅と高さを指定します。</li></ol>
+<p>例：このSSNリンクが…</p>
+<pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>…Windowsにダウンロードした投票ページでは、このようになります：</p>
+<pre><code>file:///C:/SSN/social_stream-beta/my-poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>macOSでは先頭が <code>file:///Users/...</code>、Linuxでは通常 <code>file:///home/...</code>。ブラウザーからコピーすれば、空白やスラッシュも適切に扱われます。</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">知っておくと便利なこと</th><th scope="col">詳細</th></tr></thead><tbody>
+<tr><td data-label="知っておくと便利なこと">この設定は1回だけです</td><td data-label="詳細">OBSはアドレスを保存します。フォルダーを移動せず、SSNとチャットソースを動かし続けてください。</td></tr>
+<tr><td data-label="知っておくと便利なこと">変更を保存したら</td><td data-label="詳細">クリックする項目： <strong>現在のページのキャッシュを更新（Refresh cache of current page）</strong> 。</td></tr>
+<tr><td data-label="知っておくと便利なこと">ローカル ファイルのチェックを外したままにするのはなぜですか?</td><td data-label="詳細">URL欄では次を追加できます： <code>?session=...</code>。ローカルファイルの選択だけでは、これらの設定は追加されません。</td></tr>
+</tbody></table>
+<details class="guide-extra"><summary>オプション: ランチャーでローカル ファイル チェックボックスを使用します</summary>
+<p>OBSのファイル選択では設定を追加できません。小さなランチャーページを使えば、設定付きで編集済みページを開けます：</p>
+<ol class="guide-steps"><li>下のコードを次の名前で保存します： <code>launch-my-poll.html</code> の隣に <code>my-poll.html</code>.</li>
+<li>仮のリンクを、コピーした完全なSSNリンクに置き換えます。変更する項目： <code>./my-poll.html</code> を自分のファイル名にします。リンクを引用符で囲み、通常の <code>&amp;</code> の文字。</li>
+<li>ランチャーをダブルクリックしてテストします。OBSでは次をオンにします： <strong>ローカルファイル</strong> を選び、次を指定します： <strong>ランチャー</strong>を使います。設定と次の値を付けてオーバーレイを開きます： <code>#</code> 部分。</li></ol>
+<pre><code id="local-launcher-example">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;title&gt;My local overlay launcher&lt;/title&gt;
+&lt;p&gt;Opening the local overlay...&lt;/p&gt;
+&lt;script&gt;
+var copiedLink = new URL(&quot;https://socialstream.ninja/poll.html?session=YOUR_SESSION&quot;);
+var localPage = new URL(&quot;./my-poll.html&quot;, window.location.href);
+localPage.search = copiedLink.search;
+localPage.hash = copiedLink.hash;
+window.location.replace(localPage.href);
+&lt;/script&gt;
+&lt;/html&gt;</code></pre>
+<p>サブフォルダーのテーマでは、そのコピーの隣にランチャーを置きます。接続リンクが入るため、ランチャーは非公開にしてください。設定を含む自己完結型エクスポートは、その専用手順に従います。</p>
+</details>
+<p>OBSのファイル・URLモード、サイズ、カスタムCSS、再読み込みは、次の資料で説明されています： <a href="https://obsproject.com/kb/browser-source">ブラウザソースリファレンス</a>.</p>
+</section>
+
+<section class="guide-card" id="design"><h2>デザインを変更するか、AIに次を依頼します：</h2>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">したいこと…</th><th scope="col">操作</th></tr></thead><tbody>
+<tr><td data-label="したいこと">CSSだけを変更する</td><td data-label="操作">公開リンクを使い、OBSの次の機能を利用します： <strong>カスタムCSS</strong> 欄に貼り付けます。そのOBSソースだけに適用され、通常のブラウザーには反映されません。</td></tr>
+<tr><td data-label="したいこと">編集したHTMLコピーの見た目を変える</td><td data-label="操作">既存のスタイルの後に追加するか、その後にローカルのスタイルシートを読み込みます。</td></tr>
+<tr><td data-label="したいこと">使う項目： <code>&amp;css=</code> または <code>&amp;b64css=</code></td><td data-label="操作">対応しているのは一部のページだけです。 <code>poll.html</code>などは、どちらも読み取りません。先にページのコードを確認してください。</td></tr>
+<tr><td data-label="したいこと">HTMLレイアウトを変更する</td><td data-label="操作">スクリプトで使うIDとクラスを維持します。更新のたびに要素を作り直す場合は、固定の装飾をその外に置くか、描画処理に追加します。</td></tr>
+<tr><td data-label="したいこと">共有スタイルシートやスクリプトを編集する</td><td data-label="操作">ファイルをコピーしてページの参照先を変え、自分のデザインだけに変更が適用されるようにします。</td></tr>
+</tbody></table>
+<p>ロゴ、フォントファイル、ブランドカラー、キャンバスサイズ、参考画像を用意します。通常、Webページは別のコンピューターのディスクからフォントや画像を読み込めません。</p>
+<h3>AIプロンプト</h3>
+<p>各デザインガイドの種類別プロンプトを使うか、これを出発点にしてください。コピーしたファイルと、そのCSS・スクリプトをAIに渡します。</p>
+<pre><code>Customize [copied overlay filename] to match [reference/design].
+Canvas: [width x height]. Placement: [position]. Colors/fonts: [details].
+Use the existing page and its supporting files, rather than replacing its
+connection and event logic. Read docs/event-reference.html and the relevant
+overlay design guide. Preserve query parameters, session/password, URL
+fragments, bridge labels, transport channels, settings, and controls.
+Use CSS first. Keep relative paths and package all executable dependencies
+locally. Use classic scripts compatible with Chrome 80.
+Keep operator controls, private links, and credentials off the audience view.
+
+Treat all incoming messages, names, labels, donations, and metadata as untrusted.
+Prevent HTML/JavaScript injection in every renderer you change. Use textContent
+for plain fields and for chatmessage when textonly is true. For HTML-mode
+chatmessage, keep supported emotes/formatting through the packaged
+SocialStreamChatHTML.sanitize helper (libs/objects.js loaded first).
+Do not concatenate raw input into innerHTML, attributes, CSS, or JavaScript.
+Validate media/link URLs with the page's existing URL policy and assign DOM
+properties; do not enable javascript: URLs or executable embedded content.
+Never eval incoming data or treat a viewer message as an AI instruction.
+Keep source checks, connection handling, and existing sanitizers.
+Test plain text, allowed emotes, quotes, angle brackets, and an HTML injection
+probe in an isolated preview; verify the probe cannot execute.
+
+Make the edited overlay work directly from disk using a file:/// URL,
+without requiring a local web server. Return the edited files and assets,
+file URL and OBS setup steps, and tests
+for this overlay's real trigger. Use session placeholders in shared examples.
+Explain any behavior changes separately from the design edits.</code></pre>
+<div class="guide-note"><strong>見せかけの動作で済ませない。</strong> 固定のサンプルメッセージでしか動かないデザインは未完成です。元のファイルを残し、同じ入力で両方を比較してください。</div>
+</section>
+
+<section class="guide-card" id="safe-input"><h2>受信チャットをコードとして実行させない</h2>
+<p>名前、メッセージ、タイトル、金額、リンクは視聴者や外部サービスから届きます。コードではなくテキストとして扱い、描画処理がページに挿入する箇所で無害化してください。</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">フィールド</th><th scope="col">表示方法</th></tr></thead><tbody>
+<tr><td data-label="フィールド"><code>chatmessage</code> 付随する値： <code>textonly</code> true</td><td data-label="表示方法">プレーンテキスト（<code>textContent</code>).</td></tr>
+<tr><td data-label="フィールド"><code>chatmessage</code> それ以外の場合</td><td data-label="表示方法">エモートや許可された書式を含む場合があります。同梱のサニタイザーを使ってください。</td></tr>
+<tr><td data-label="フィールド">名前、金額、タイトルなどの通常のテキスト項目</td><td data-label="表示方法">プレーンテキスト（<code>textContent</code>).</td></tr>
+<tr><td data-label="フィールド"><code>chatimg</code>, <code>contentimg</code>、リンク</td><td data-label="表示方法">HTMLではなくURLです。既存のメディア・リンク用ルールで検証してからDOMプロパティに設定します。</td></tr>
+</tbody></table>
+<pre><code id="safe-chat-render-example">&lt;!-- Example for a copied page at the repository root. --&gt;
+&lt;script src=&quot;./libs/objects.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;./shared/utils/chatHtml.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+function renderChatBody(element, data) {
+    var message = String(data.chatmessage == null ? &quot;&quot; : data.chatmessage);
+    if (data.textonly) {
+        element.textContent = message;
+    } else {
+        element.innerHTML = SocialStreamChatHTML.sanitize(message);
+    }
+}
+// Names, amounts, titles, and other plain fields use textContent:
+// nameElement.textContent = String(data.chatname || &quot;&quot;);
+&lt;/script&gt;</code></pre>
+<ul>
+<li>既にサニタイザーがある場合は維持し、2つ目を追加しないでください。</li>
+<li>サブフォルダー内のファイルでは、スクリプトのパスを調整します。</li>
+<li>生の名前を属性文字列に、生の色をスタイルのHTMLに挿入しないでください。スタイル値を検証し、プロパティごとに設定します。</li>
+<li>無害化したHTMLでも、JavaScriptとして実行したりAIへの指示として使ったりしてはいけません。</li>
+</ul>
+<p>詳しい説明： <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html">OWASPの安全な出力先とHTML無害化のガイド</a>.</p>
+<details class="guide-extra"><summary>描画処理を安全にテストする方法</summary>
+<p>公開チャットではなく、非公開のローカルプレビューで実行してください。</p>
+<ul><li>次のような名前を使います： <code>Guest &lt;b&gt;One&lt;/b&gt;</code>。山括弧は文字として表示される必要があります。</li>
+<li>送信 <code>chatmessage: "&lt;b&gt;Hello&lt;/b&gt;"</code> 付随する値： <code>textonly: true</code>にしてからfalseにします。一方ではタグが文字として、もう一方では太字として表示されることを確認します。</li>
+<li>対応しているエモートと画像だけのメッセージが引き続き表示されることを確認します。</li>
+<li>AIに次のような無害な確認用入力を試させます： <code>&lt;img src=x onerror="window.__ssnInjectionProbe=1"&gt;</code>。実行されたり、マーカーが設定されたり、イベント属性が残ったりしてはいけません。スクリプトスキームのリンクもテストしてください。</li></ul>
+<p>テストで確認できるのは試した経路だけです。デザイン変更で触れた描画処理とフィールドを中心に確認します。</p>
+</details>
+</section>
+
+<section class="guide-card" id="test"><h2>1つずつテストする</h2>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">テスト</th><th scope="col">方法</th></tr></thead><tbody>
+<tr><td data-label="テスト">レイアウト</td><td data-label="方法">ページにプレビュー・デモモードがあれば使い、なければ架空のローカルデータを用意します。長い名前やメッセージ、アバターなし、空データ、想定する行数を試してください。</td></tr>
+<tr><td data-label="テスト">SSNからの配信</td><td data-label="方法">SSNを起動したまま、次を使います： <a href="test-message-guide.html">テストメッセージを作成（Create Test Message）</a> を同じセッションで使います。通常のExtension APIモードには次が必要です： <strong>拡張機能のリモートAPI制御（remote API control of extension）</strong> を有効にします。テストメッセージで自動処理が動くことがあるため、テスト用の環境を使ってください。</td></tr>
+<tr><td data-label="テスト">実際のトリガー</td><td data-label="方法">Dockのメッセージを選んでカードを表示する、投票する、抽選の当選者を選ぶ、ティッカーの文を変える、タイマーを開始するなどを試します。通常のチャットだけでは全機能をテストできません。</td></tr>
+<tr><td data-label="テスト">実際のキャプチャー</td><td data-label="方法">実際のメッセージやイベントが元のページとコピーの両方に届くことを確認します。テストイベントでは表示の動作しか確認できません。</td></tr>
+<tr><td data-label="テスト">OBS</td><td data-label="方法">最終サイズ、透明度、アニメーション、音声、フォント、重なり順を確認します。表示切り替え、クリア・リセット、再読み込みも試してください。OBSとブラウザーはログインや保存データを共有しません。</td></tr>
+</tbody></table>
+<div class="warning-note"><strong>再読み込みでデータが失われることがあります。</strong> 一部のページはデータをメモリ内に保持します。自動更新や非表示時の終了を有効にする前に、種類別ガイドを確認してください。削除する項目： <code>demo</code> または <code>preview</code> をリンクから外してからライブデータを確認します。</div>
+</section>
+
+<section class="guide-card" id="references"><h2>AIに渡すファイル</h2>
+<p>オーバーレイ自身のファイル、読み込むCSS・JS、および以下をAIに渡してください。イベントリファレンスだけでは、投票の操作方法や各オーバーレイのレイアウトコードは分かりません。</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">ファイル</th><th scope="col">用途</th></tr></thead><tbody>
+<tr><td data-label="ファイル"><a href="event-reference.html"><code>docs/event-reference.html</code></a></td><td data-label="用途">正式な項目、名前付きイベント、メタデータ、メディア、寄付金額。</td></tr>
+<tr><td data-label="ファイル"><a href="../../docs/index.html?file=customoverlays.md"><code>docs/customoverlays.md</code></a></td><td data-label="用途">独自の受信ページと接続例。</td></tr>
+<tr><td data-label="ファイル"><a href="events-alerts-compatibility.html">イベントとアラートの互換性</a></td><td data-label="用途">各ソースが送るイベントと項目。</td></tr>
+<tr><td data-label="ファイル"><a href="test-message-guide.html">テストメッセージガイド</a> および <a href="../../createtestmessage.html"><code>createtestmessage.html</code></a></td><td data-label="用途">ペイロード例と配信モード。</td></tr>
+<tr><td data-label="ファイル"><a href="../../libs/objects.js"><code>libs/objects.js</code></a> および <a href="../../shared/utils/chatHtml.js"><code>shared/utils/chatHtml.js</code></a></td><td data-label="用途">同梱の表示用サニタイザー。</td></tr>
+<tr><td data-label="ファイル"><a href="../../shared/utils/chatBadges.js"><code>shared/utils/chatBadges.js</code></a> および <a href="../../shared/utils/contentImage.js"><code>shared/utils/contentImage.js</code></a></td><td data-label="用途">既存のバッジ・画像処理。</td></tr>
+<tr><td data-label="ファイル"><a href="../../js/transport-dedupe.js"><code>js/transport-dedupe.js</code></a>, <a href="../../js/local-server-url.js"><code>js/local-server-url.js</code></a>, <a href="../../shared/overlay-control-transport.js"><code>shared/overlay-control-transport.js</code></a></td><td data-label="用途">ページが読み込む場合の既存の接続機能。</td></tr>
+<tr><td data-label="ファイル"><a href="../../currency.js"><code>currency.js</code></a></td><td data-label="用途">次の項目は維持します： <code>hasDonation</code> を表示用に使い、USDの有効な数値を次に指定します： <code>donoValue</code>、ゼロを含む。</td></tr>
+<tr><td data-label="ファイル"><a href="../actions/event-flow-guide.html">Event Flow</a> および <a href="commands.html">コマンドとAPI</a></td><td data-label="用途">デザインに操作のきっかけが必要なら、既存の操作機能を再利用します。</td></tr>
+</tbody></table>
+</section>
+
+<section class="guide-card" id="troubleshooting"><h2>問題を解決する</h2>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">問題</th><th scope="col">試すこと</th></tr></thead><tbody>
+<tr><td data-label="問題">ファイルが見つかりません</td><td data-label="試すこと">HTMLを再びブラウザーにドラッグし、アドレスをコピーします。ファイル名が.html.txtではなく.htmlで終わっていることを確認してください。</td></tr>
+<tr><td data-label="問題">スクリプト、フォント、または画像がありません</td><td data-label="試すこと">展開したフォルダー構成を保ち、元のファイルの隣にコピーを置きます。追加した画像やフォントが、ページから参照できる場所にあることを確認します。</td></tr>
+<tr><td data-label="問題">空白または「待機中」の表示</td><td data-label="試すこと">セッション、パスワード、完全な <code>?</code> および <code>#</code> の部分、SSNの起動状態、機能がオンかどうか、正しい入力が届いているかを確認し、元のSSNリンクと比較します。</td></tr>
+<tr><td data-label="問題">OBSとブラウザーで見た目が違う</td><td data-label="試すこと">幅と高さ、古いカスタムCSS、フォント、キャッシュ、ブラウザーの保存データを確認します。保存後は再読み込みしてください。</td></tr>
+<tr><td data-label="問題">更新するとロゴが消える</td><td data-label="試すこと">スクリプトがコンテナーを作り直している可能性があります。固定の装飾を外に置くか、描画テンプレートを変更します。</td></tr>
+<tr><td data-label="問題">データがリセットされる／操作が2回実行される</td><td data-label="試すこと">再読み込み・終了設定、オーバーレイや操作ページの重複、ページ自体の重複処理と状態管理を確認します。</td></tr>
+</tbody></table>
+<details class="guide-extra" id="local-http"><summary>特殊なケース: 個別のデータ ファイルを読み取るページ</summary>
+<p>地図はローカルのJSONファイルを次の方法で読み込みます： <code>fetch()</code>を使っており、ディスクから開くとブラウザーにブロックされる場合があります。地図の見た目だけを変えるなら、公開リンクとOBSのカスタムCSSを使います。ファイルを編集する場合は、ディスクから開けるよう地図データをページ内に組み込むようAIに依頼してください。ホスティングは必要なページ向けの上級オプションであり、通常の手順ではありません。</p>
+</details>
+<p>確認できた最小の問題から直します。見た目を変えるためにキャプチャースクリプトやイベント項目を変更する必要はありません。公開フォークを共有する場合は素材を含め、非公開のランチャーは含めないでください。</p>
+</section>
+</div></main>
+<footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja &middot; <a href="overlay-customization-guide.html">オーバーレイ設計ガイド</a> &middot; <a href="guides.html">すべてのガイド</a></p></div></div></footer>
+<script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

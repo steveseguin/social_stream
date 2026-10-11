@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/chatbot-basics-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/chatbot-basics-guide.html">
+    <meta property="og:title" content="AI 챗봇 설정 및 사용 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja AI 챗봇을 설정하고 사용하세요. AI 제공자 연결, 안전한 테스트, 실시간 답변 제어, 응답 누락 문제 해결을 안내합니다.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/chatbot-basics-guide.html">
+    <meta name="twitter:title" content="AI 챗봇 설정 및 사용 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja AI 챗봇을 설정하고 사용하세요. AI 제공자 연결, 안전한 테스트, 실시간 답변 제어, 응답 누락 문제 해결을 안내합니다.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 챗봇 설정 및 사용 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja AI 챗봇을 설정하고 사용하세요. AI 제공자 연결, 안전한 테스트, 실시간 답변 제어, 응답 누락 문제 해결을 안내합니다.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/chatbot-basics-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"(default 120000)":"(기본값 120000)","(default 500)":"(기본값 500)","(defaults 4000 and 30000)":"(기본값 4000 및 30000)","(milliseconds, so 10 seconds)":"(밀리초 단위이므로 10초)","(or":"(또는",") and fill in the boxes it shows.":")를 선택하고 표시된 칸을 채우세요.","), not the featured chat overlay. The overlay options in settings cover the common ones.":")에만 적용되며 강조 채팅 오버레이에는 적용되지 않습니다. 일반적인 항목은 설정의 오버레이 옵션에 있습니다.",", paste the whole key, enter a model your project can use, and click":"를 선택하고 전체 키를 붙여 넣은 뒤 프로젝트에서 사용할 수 있는 모델을 입력하고 다음을 클릭하세요:",", then":", 그다음은",", type a message in the real YouTube or Twitch chat. Check it shows up in the Dock.":"를 설정한 뒤 실제 YouTube나 Twitch 채팅에 메시지를 보내고 Dock에 나타나는지 확인하세요.",". A real text reply should appear under the button.":". 버튼 아래에 실제 텍스트 답변이 나타나야 합니다.",". Don't use this for Ollama.":". Ollama에는 사용하지 마세요.",". Follow its model download steps.":". 모델 다운로드 단계를 따르세요.",". Full provider list:":". 전체 제공업체 목록:",". If the voice never starts,":". 음성이 시작되지 않으면",". Not an Admin key.":". Admin 키가 아닙니다.",". The usual address is":". 일반적인 주소는","A chat source that supports sending, logged in and allowed to post, still open, with host chat not disabled.":"전송을 지원하고 로그인되어 있으며 게시 권한이 있는 채팅 소스가 열려 있어야 합니다. 호스트 채팅을 끄지 마세요.","A paid service, like OpenAI or Gemini":"OpenAI나 Gemini 같은 유료 서비스","A short, plain name viewers can type.":"시청자가 입력하기 쉬운 짧고 간단한 이름.","AI Chat Bot Setup and Use - Social Stream Ninja":"AI 챗봇 설정 및 사용 - Social Stream Ninja","AI Integration in Commands & API":"Commands & API의 AI 통합","AI Modes Guide":"AI 모드 가이드","Add a word if the bot shouldn't consider every message.":"모든 메시지를 검토하게 하고 싶지 않으면 단어를 추가하세요.","Add to the link":"링크에 추가","Adding credit won't fix a 401.":"잔액을 충전해도 401 오류는 해결되지 않습니다.","Additional Bot Instructions":"봇 추가 지침(Additional Bot Instructions)","Blank":"빈칸","Bot replies ONLY go to the bot overlay page":"봇 답변을 봇 오버레이 페이지로만 보내기","Chat Bot - Primary":"챗봇 - 기본(Chat Bot - Primary)","Chat Bots and AI services → Configure LLM Service Provider":"Chat Bots and AI services → Configure LLM Service Provider","Chat isn't being captured. Check Social Stream is on, the chat window is open and logged in, the right live chat is open, and your source filters.":"채팅이 캡처되지 않습니다. Social Stream이 켜져 있는지, 채팅 창이 열려 있고 로그인되었는지, 올바른 실시간 채팅을 열었는지, 소스 필터를 확인하세요.","ChatGPT API":"ChatGPT API","Check API billing and budget (separate from a ChatGPT subscription). Slow down or wait.":"API 결제와 예산을 확인하세요. ChatGPT 구독과는 별개입니다. 빈도를 줄이거나 기다리세요.","Check it's a normal key in the right project with model requests allowed. If unsure, make a new key and replace the saved one.":"올바른 프로젝트의 일반 키이며 모델 요청이 허용되어 있는지 확인하세요. 확실하지 않으면 새 키를 만들어 저장된 키를 바꾸세요.","Clear bot overlay now":"지금 봇 오버레이 지우기","Clear it from the API, and custom styling":"API로 지우기 및 사용자 지정 스타일","Clear it right now":"지금 바로 지우기","Click":"클릭:","Commands & API":"명령 및 API","Configure LLM section with Ollama selected, local endpoint and model fields filled in, and the provider test showing Connected":"Ollama가 선택되고 로컬 엔드포인트와 모델 필드가 입력되어 있으며 제공자 테스트에 연결됨이 표시된 Configure LLM 섹션","Connected":"연결됨(Connected)","Connected means the AI answered. It doesn't turn the bot on.":"Connected는 AI가 응답했다는 뜻이며 봇을 켜 주지는 않습니다.","Connected, but the viewer's message isn't in the Dock":"연결되었지만 시청자 메시지가 Dock에 없음","Copy the status, code, missing scope, and Request ID shown in Social Stream. Then send the in-app diagnostic report soon after. It leaves out API keys and prompts.":"Social Stream에 표시된 상태, 코드, 누락된 권한, Request ID를 복사하세요. 곧바로 앱 내 진단 보고서도 보내세요. API 키와 프롬프트는 제외됩니다.","Credit and permissions are separate. See OpenAI's":"잔액과 권한은 별개입니다. OpenAI의 다음 문서를 보세요:","Custom API":"사용자 지정 API","Custom CSS on the normal":"일반 오버레이에 사용자 지정 CSS 적용:","Customize bot name":"봇 이름 맞춤 설정","Disable the host chat and block functions":"호스트 채팅 및 차단 기능 비활성화","Do not screen out any of the bot's replies":"봇의 답변을 걸러내지 않기","Don't test from the Dock.":"Dock에서 테스트하지 마세요.","Download":"다운로드","Enable the LLM AI chat bot":"LLM AI 챗봇 활성화","Error":"오류","Features":"기능","Find the last thing that worked, then check the next row.":"마지막으로 작동한 지점을 찾고 다음 행을 확인하세요.","First test":"첫 테스트","Fix problems":"문제 해결","From a":"다음 계정 사용:","From that account, send:":"그 계정에서 다음을 보내세요:","Give up waiting for a stuck voice":"멈춘 음성을 기다리지 않기","Guides":"가이드","Hide after TTS, autohide, or a fixed time":"TTS 종료 후, 자동 또는 정해진 시간에 숨기기","Hide each reply after a set time":"정해진 시간이 지나면 답변 숨기기","Hide it when the voice finishes":"음성이 끝나면 숨기기","Hide longer replies later, shorter ones sooner":"긴 답변은 오래, 짧은 답변은 짧게 표시","Hide old replies":"이전 답변 숨기기","Hire":"작업 의뢰","Home":"홈","I use":"사용 환경","I use…":"사용하는 것…","I want to":"원하는 작업","I want to…":"원하는 작업…","If you set a trigger word, the message must contain it.":"트리거 단어를 설정했다면 메시지에 해당 단어가 있어야 합니다.","If your browser auto-translates the OpenAI site and the key settings act strangely, switch to the original English page. This helped one user, but isn't a known cause of 401 errors.":"브라우저가 OpenAI 사이트를 자동 번역하고 키 설정이 이상하게 동작하면 원래 영어 페이지로 바꿔 보세요. 한 사용자에게 도움이 되었지만 401 오류의 알려진 원인은 아닙니다.","If your key and project look right, give OpenAI support the Request ID and time.":"키와 프로젝트가 올바르면 Request ID와 시간을 OpenAI 지원팀에 알려 주세요.","In Social Stream settings, open":"Social Stream 설정에서 다음을 여세요:","In Social Stream, pick":"Social Stream에서 다음을 선택하세요:","Inspiration":"아이디어","It answers one message at a time by default. When posting into chat, it also waits 5 seconds per source.":"기본적으로 한 번에 메시지 하나에 답합니다. 채팅에 게시할 때는 소스마다 5초도 기다립니다.","It skips its own messages, empty messages, and messages too close to its last reply.":"자신의 메시지, 빈 메시지, 직전 답변과 너무 가까운 메시지는 건너뜁니다.","It's just added to the start of the reply. Replies post from the account you're logged in with, unless you set up account roles in the standalone app. For a separate Twitch bot account, see the":"이름은 답변 앞에 붙을 뿐입니다. 독립 실행 앱에서 계정 역할을 설정하지 않았다면 로그인한 계정으로 게시됩니다. 별도의 Twitch 봇 계정은 다음을 보세요:","Keep":"유지:","Keep low unless your AI can handle more.":"AI가 더 처리할 수 있는 경우가 아니라면 낮게 유지하세요.","Keep on while the bot should watch chat.":"봇이 채팅을 지켜보는 동안 켜 두세요.","LM Studio, llama.cpp, vLLM, or similar":"LM Studio, llama.cpp, vLLM 등","Later":"나중에","Let an AI answer your viewers in chat, on screen, or out loud.":"AI가 시청자에게 채팅, 화면 또는 음성으로 답하도록 하세요.","List of words to trigger bot":"봇을 호출할 단어 목록","Local Gemma":"Local Gemma","Local Qwen":"Local Qwen","Look for a missing character or extra space. Check it wasn't deleted, it's in the right project, and Social Stream isn't using an old saved key.":"빠진 글자나 불필요한 공백을 확인하세요. 키가 삭제되지 않았는지, 올바른 프로젝트에 있는지, Social Stream이 이전에 저장한 키를 쓰고 있지 않은지도 확인하세요.","Main navigation":"기본 탐색 메뉴","Make a normal project API key on the":"다음 페이지에서 일반 프로젝트 API 키를 만드세요:","Make sure it's in the project you want billed, and it's allowed to make model requests.":"요금을 청구할 프로젝트에 속하고 모델 요청이 허용되어 있는지 확인하세요.","Max parallel bot replies":"최대 동시 봇 답변 수","Message is in the Dock, but no reply on the overlay":"메시지는 Dock에 있지만 오버레이에 답변이 없음","Messages typed in the Dock or host chat can be skipped on purpose, so the bot doesn't reply to itself.":"봇이 자신에게 답하지 않도록 Dock이나 호스트 채팅에서 입력한 메시지를 의도적으로 건너뛸 수 있습니다.","Moderators-only mode skips everyone else.":"관리자 전용 모드는 그 외 모든 사람을 건너뜁니다.","Need Ollama? Get it from the":"Ollama가 필요하면 다음에서 받으세요:","Never paste your key":"키를 절대 붙여 넣지 마세요:","Nothing yet, and want it to run in the browser":"아직 아무것도 없으며 브라우저에서 실행하고 싶음","Off":"꺼짐","Ollama (Native Local API)":"Ollama(전용 로컬 API)","Ollama download page":"Ollama 다운로드 페이지","Ollama keep-alive set to 0?":"Ollama keep-alive가 0인가요?","Ollama on my computer":"내 컴퓨터의 Ollama","On":"켜짐","On this page":"이 페이지에서","Once it works, turn":"작동하면 다음을","Only if you want that.":"원하는 경우에만 사용하세요.","Only the first test gets a reply":"첫 테스트에만 답변이 옴","Open":"열기","Open navigation menu":"탐색 메뉴 열기","Open the":"다음을 여세요:","OpenAI API keys page":"OpenAI API 키 페이지","OpenAI error like":"다음과 같은 OpenAI 오류:","OpenAI key errors":"OpenAI 키 오류","Or send":"또는 다음을 보내세요:","Other AI bot pages":"다른 AI 봇 페이지","Other AI pages":"다른 AI 페이지","Out of quota, or too many requests.":"할당량 부족 또는 요청 과다.","Overlay Gallery":"오버레이 갤러리","Overlay Page and TTS for Chat Bot":"챗봇용 오버레이 페이지 및 음성 읽기","Overlay-only setting":"overlay-only 설정","Pick an AI":"AI 선택","Pick this":"선택할 항목","Pick your AI (":"사용할 AI(","Private":"비공개","Problem":"문제","Raise it if the bot posts too often. Only matters when posting into chat.":"봇이 너무 자주 게시하면 늘리세요. 채팅에 게시할 때만 적용됩니다.","Rate limit for responses per tab / source":"탭/소스별 응답 빈도 제한","Read the error under the button. Check the address, API key, model name, that your local AI is running, firewall, and your provider's limits.":"버튼 아래 오류를 읽으세요. 주소, API 키, 모델 이름, 로컬 AI 실행 여부, 방화벽, 제공업체 제한을 확인하세요.","Reference table comparing the Primary bot overlay, private chatbot, censor bot, and AI cohost":"기본 봇 오버레이, 비공개 챗봇, 검열 봇, AI 공동 진행자를 비교한 참고 표","Replies show on the bot overlay only. Nothing is posted to chat.":"답변은 봇 오버레이에만 표시되며 채팅에는 게시되지 않습니다.","Replies still go to the overlay, and Social Stream also tries to post them in the chat they came from.":"답변은 오버레이에 표시되고 Social Stream은 원래 채팅에도 게시를 시도합니다.","Reply shows on the overlay, but not in chat":"오버레이에는 답변이 있지만 채팅에는 없음","Reply stays on screen after the voice":"음성 종료 후 답변이 화면에 남음","Run the test":"테스트 실행","See":"참고:","See all AI features in the":"전체 AI 기능은 다음을 보세요:","Send it from the real platform chat, not the Dock. Then check the bot is on, the trigger word, moderators-only, the bot name, the rate limit, and your instructions. Turn on":"Dock이 아닌 실제 플랫폼 채팅에서 보내세요. 봇이 켜져 있는지, 트리거 단어, 관리자 전용, 봇 이름, 빈도 제한, 지침을 확인하세요. 다음을 켜세요:","Send it once, then wait. A local AI may still be loading.":"한 번 보낸 뒤 기다리세요. 로컬 AI가 아직 로드 중일 수 있습니다.","Set Up the AI Chat Bot":"AI 챗봇 설정","Set it up":"설정하기","Set it up in 6 steps":"6단계로 설정하기","Set the shortest and longest time for autohide":"자동 숨김의 최소 및 최대 시간 설정","Set up and use the Social Stream Ninja AI chat bot, connect an AI provider, test safely, control live replies, and troubleshoot missing responses.":"Social Stream Ninja AI 챗봇을 설정하고 사용하세요. AI 제공자 연결, 안전한 테스트, 실시간 답변 제어, 응답 누락 문제 해결을 안내합니다.","Setting":"설정","Short messages like":"다음과 같은 짧은 메시지:","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Still stuck?":"아직 해결되지 않았나요?","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Test button fails":"테스트 버튼 실패","Test it":"테스트하기","Test selected chat bot":"선택한 챗봇 테스트","That service. Enter its API key and model. They set the prices, limits, and model names.":"해당 서비스를 선택하고 API 키와 모델을 입력하세요. 가격, 제한, 모델 이름은 서비스에서 정합니다.","That unloads the model after each request. The bot still works, but every reply may be slow while the model loads again.":"요청이 끝날 때마다 모델을 메모리에서 내립니다. 봇은 작동하지만 모델을 다시 로드하느라 매번 답변이 느릴 수 있습니다.","The Primary bot, private chat, censor bot, and AI co-host are separate tools. Each has its own settings and history.":"Primary 봇, 비공개 채팅, 검열 봇, AI 공동 진행자는 별도 도구이며 각각 자체 설정과 기록을 가집니다.","The bot is picky by design. An empty trigger list means it":"봇은 의도적으로 대상을 가립니다. 트리거 목록이 비어 있다는 것은","The bot name is not a new account.":"봇 이름은 새 계정이 아닙니다.","The key is wrong or gone.":"키가 틀렸거나 삭제되었습니다.","The key isn't allowed to make model requests.":"키에 모델 요청 권한이 없습니다.","The private bot can't stand in for testing the Primary bot.":"비공개 봇으로 Primary 봇 테스트를 대신할 수 없습니다.","The reply should appear on the":"답변이 다음에 나타나야 합니다:","These only affect the bot overlay (":"이 설정은 봇 오버레이(","Three parts, all needed:":"세 부분이 모두 필요합니다:","Trigger starts with":"트리거가 다음 문자로 시작함:","Try this":"시도할 방법","Turn Social Stream on and open your live chat source.":"Social Stream을 켜고 실시간 채팅 소스를 여세요.","Turn off overlay-only. Check that source can send, the account can post, the chat box is available, account roles, and":"overlay-only를 끄세요. 소스의 전송 지원, 계정 게시 권한, 채팅 입력란, 계정 역할 및 다음 항목을 확인하세요:","Turn off when you're ready to post into real chat.":"실제 채팅에 게시할 준비가 되면 끄세요.","Turn on":"켜기:","Turn on the private chat bot option and use its link with the same session. It's a separate bot, so it doesn't test the Primary bot.":"비공개 챗봇 옵션을 켜고 같은 세션의 링크를 사용하세요. 별도 봇이므로 Primary 봇을 테스트하는 것은 아닙니다.","Twitch Bot Account guide":"Twitch 봇 계정 가이드","Use":"사용:","Use a plain-word trigger, or let that command through your command filter.":"일반 단어를 트리거로 쓰거나 명령 필터에서 해당 명령을 허용하세요.","Use these settings in":"다음에서 설정하세요:","Using more than one?":"둘 이상을 사용하나요?","Usually off, so the bot can skip pointless replies.":"불필요한 답변을 건너뛸 수 있도록 보통 끕니다.","Wait a bit after the voice finishes":"음성이 끝난 뒤 잠시 기다리기","Wait for the first reply and the rate limit. Keep-alive":"첫 답변과 빈도 제한이 끝날 때까지 기다리세요. keep-alive의","What happens":"동작","What it means":"의미","Where replies go":"답변 대상","Why it's quiet":"응답이 없는 이유","Why the bot is quiet":"봇이 조용한 이유","Will respond to Moderators only":"관리자에게만 응답","With Remote API Control on, open":"Remote API Control을 켜고 다음을 여세요:","You need":"필요한 항목:","Your command filter setting may drop that message before the bot sees it. Use a plain word instead.":"봇이 보기 전에 명령 필터가 메시지를 버릴 수 있습니다. 일반 단어를 대신 사용하세요.","and":"그리고","and turn on":"에서 다음을 켜세요:","authentication reference":"인증 참고 문서","back off. Then pick a trigger word and rate limit, and decide if replies should go into real chat.":"를 다시 끄세요. 트리거 단어와 빈도 제한을 정하고 실제 채팅에 답변을 게시할지 결정하세요.","does nothing":"가 아무 동작도 하지 않음","error guide":"오류 가이드","every message, not that it answers every one.":"모든 메시지라는 뜻이지, 전부 답한다는 뜻은 아닙니다.","falls back to a length-based time.":"는 글자 길이에 따른 시간으로 대신 처리합니다.","for now. This keeps replies off your real chat while you test.":"를 우선 사용하세요. 테스트 중 실제 채팅에 답변을 게시하지 않습니다.","for your first test.":"를 첫 테스트에 사용하세요.","in settings. This removes the reply on screen and any waiting ones, but won't stop a voice that's already talking.":"를 설정에서 사용하세요. 화면의 답변과 대기 중인 답변은 지우지만 이미 말하는 음성을 멈추지는 않습니다.","into a support message or diagnostic report.":"지원 메시지나 진단 보고서.","is an OpenAI permission, not something to type into Social Stream.":"는 OpenAI 권한 이름이며 Social Stream에 입력하는 값이 아닙니다.","is blank":"가 비어 있음","is optional.":"는 선택 사항입니다.","link keeps all of these features. A copied or edited local":"링크는 이 기능을 모두 유지합니다. 복사하거나 수정한 로컬","link under":"링크를 다음에서 여세요:","looks at":"검토하는 대상이","makes every reply slow to start.":"이면 매번 답변 시작이 느려집니다.","may be skipped. Say the bot's name to be clear.":"등은 건너뛸 수 있습니다. 봇 이름을 불러 명확하게 하세요.","ms":"ms","only proves the first part.":"로 확인되는 것은 첫 부분뿐입니다.","open with the same session. Also needed for TTS.":"를 같은 세션으로 여세요. TTS에도 필요합니다.","or":"또는","over the API WebSocket.":"를 API WebSocket으로 보내세요.","page.":"페이지.","second account":"두 번째 계정","see below":"아래 참고","short at first, like:":"는 처음에는 짧게 쓰세요. 예:","the AI (writes the reply), the Primary bot (picks which chat messages to answer), and where replies go (overlay, chat, or both). A green":"AI(답변 작성), Primary 봇(답할 채팅 선택), 답변 대상(오버레이, 채팅 또는 둘 다)입니다. 녹색","to test.":"로 테스트하세요.","wins, then":"가 우선이고 그다음은","won't get later fixes unless you update it.":"는 직접 업데이트하지 않으면 이후 수정 사항을 받지 못합니다."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/chatbot-basics-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/chatbot-basics-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/chatbot-basics-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/chatbot-basics-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/chatbot-basics-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/chatbot-basics-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/chatbot-basics-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/chatbot-basics-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/chatbot-basics-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/chatbot-basics-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/chatbot-basics-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/chatbot-basics-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="chatbot-basics-guide.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/chatbot-basics-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/chatbot-basics-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/chatbot-basics-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/chatbot-basics-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/chatbot-basics-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>AI 챗봇 설정</h1>
+            <p>AI가 시청자에게 채팅, 화면 또는 음성으로 답하도록 하세요.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="이 페이지에서">
+                <a href="#setup">설정하기</a>
+                <a href="#provider">AI 선택</a>
+                <a href="#first-test">테스트하기</a>
+                <a href="#replies">답변 대상</a>
+                <a href="#quiet">응답이 없는 이유</a>
+                <a href="#hide">이전 답변 숨기기</a>
+                <a href="#problems">문제 해결</a>
+                <a href="#openai">OpenAI 키 오류</a>
+                <a href="#other-pages">다른 AI 페이지</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="setup">6단계로 설정하기</h2>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>Social Stream 설정에서 다음을 여세요: <strong>Chat Bots and AI services &rarr; Configure LLM Service Provider</strong>.</li>
+                        <li>사용할 AI(<a href="#provider">아래 참고</a>)를 선택하고 표시된 칸을 채우세요.</li>
+                        <li>클릭: <strong>선택한 챗봇 테스트</strong>. 버튼 아래에 실제 텍스트 답변이 나타나야 합니다.</li>
+                        <li>열기 <strong>챗봇 - 기본(Chat Bot - Primary)</strong> 에서 다음을 켜세요: <strong>LLM AI 챗봇 활성화</strong>.</li>
+                        <li>켜기: <strong>봇 답변을 봇 오버레이 페이지로만 보내기</strong> 를 우선 사용하세요. 테스트 중 실제 채팅에 답변을 게시하지 않습니다.</li>
+                        <li>다음을 여세요: <code>bot.html</code> 링크를 다음에서 여세요: <strong>챗봇용 오버레이 페이지 및 음성 읽기</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/guide-llm-provider-connected.png" alt="Ollama가 선택되고 로컬 엔드포인트와 모델 필드가 입력되어 있으며 제공자 테스트에 연결됨이 표시된 Configure LLM 섹션" class="guide-image">
+                        <figcaption>Connected는 AI가 응답했다는 뜻이며 봇을 켜 주지는 않습니다.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>세 부분이 모두 필요합니다:</strong> AI(답변 작성), Primary 봇(답할 채팅 선택), 답변 대상(오버레이, 채팅 또는 둘 다)입니다. 녹색 <strong>연결됨(Connected)</strong> 로 확인되는 것은 첫 부분뿐입니다.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="provider">AI 선택</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>사용하는 것…</th><th>선택할 항목</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="사용 환경">내 컴퓨터의 Ollama</td><td data-label="선택할 항목"><strong>Ollama(전용 로컬 API)</strong>. 일반적인 주소는 <code>http://localhost:11434</code>.</td></tr>
+                        <tr><td data-label="사용 환경">LM Studio, llama.cpp, vLLM 등</td><td data-label="선택할 항목"><strong>사용자 지정 API</strong>. Ollama에는 사용하지 마세요.</td></tr>
+                        <tr><td data-label="사용 환경">OpenAI나 Gemini 같은 유료 서비스</td><td data-label="선택할 항목">해당 서비스를 선택하고 API 키와 모델을 입력하세요. 가격, 제한, 모델 이름은 서비스에서 정합니다.</td></tr>
+                        <tr><td data-label="사용 환경">아직 아무것도 없으며 브라우저에서 실행하고 싶음</td><td data-label="선택할 항목"><strong>Local Gemma</strong> 또는 <strong>Local Qwen</strong>. 모델 다운로드 단계를 따르세요.</td></tr>
+                    </tbody>
+                </table>
+                <p>Ollama가 필요하면 다음에서 받으세요: <a href="https://ollama.com/download" target="_blank" rel="noopener">Ollama 다운로드 페이지</a>. 전체 제공업체 목록: <a href="commands.html#ai-integration">Commands &amp; API의 AI 통합</a>.</p>
+                <details class="guide-extra">
+                    <summary>Ollama keep-alive가 0인가요?</summary>
+                    <p>요청이 끝날 때마다 모델을 메모리에서 내립니다. 봇은 작동하지만 모델을 다시 로드하느라 매번 답변이 느릴 수 있습니다.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="first-test">테스트하기</h2>
+                <p>다음에서 설정하세요: <strong>챗봇 - 기본(Chat Bot - Primary)</strong> 를 첫 테스트에 사용하세요.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>설정</th><th>첫 테스트</th><th>나중에</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="설정">LLM AI 챗봇 활성화</td><td data-label="첫 테스트">켜짐</td><td data-label="나중에">봇이 채팅을 지켜보는 동안 켜 두세요.</td></tr>
+                        <tr><td data-label="설정">봇 이름 맞춤 설정</td><td data-label="첫 테스트"><code>NinjaBot</code></td><td data-label="나중에">시청자가 입력하기 쉬운 짧고 간단한 이름.</td></tr>
+                        <tr><td data-label="설정">봇 답변을 봇 오버레이 페이지로만 보내기</td><td data-label="첫 테스트">켜짐</td><td data-label="나중에">실제 채팅에 게시할 준비가 되면 끄세요.</td></tr>
+                        <tr><td data-label="설정">봇의 답변을 걸러내지 않기</td><td data-label="첫 테스트">켜짐</td><td data-label="나중에">불필요한 답변을 건너뛸 수 있도록 보통 끕니다.</td></tr>
+                        <tr><td data-label="설정">봇을 호출할 단어 목록</td><td data-label="첫 테스트">빈칸</td><td data-label="나중에">모든 메시지를 검토하게 하고 싶지 않으면 단어를 추가하세요.</td></tr>
+                        <tr><td data-label="설정">탭/소스별 응답 빈도 제한</td><td data-label="첫 테스트"><code>5000</code> ms</td><td data-label="나중에">봇이 너무 자주 게시하면 늘리세요. 채팅에 게시할 때만 적용됩니다.</td></tr>
+                        <tr><td data-label="설정">최대 동시 봇 답변 수</td><td data-label="첫 테스트"><code>1</code></td><td data-label="나중에">AI가 더 처리할 수 있는 경우가 아니라면 낮게 유지하세요.</td></tr>
+                        <tr><td data-label="설정">관리자에게만 응답</td><td data-label="첫 테스트">꺼짐</td><td data-label="나중에">원하는 경우에만 사용하세요.</td></tr>
+                    </tbody>
+                </table>
+                <h3>테스트 실행</h3>
+                <ol class="guide-steps">
+                    <li>Social Stream을 켜고 실시간 채팅 소스를 여세요.</li>
+                    <li>다음 계정 사용: <strong>두 번째 계정</strong>를 설정한 뒤 실제 YouTube나 Twitch 채팅에 메시지를 보내고 Dock에 나타나는지 확인하세요.</li>
+                    <li>그 계정에서 다음을 보내세요: <code>NinjaBot, reply with exactly: Hello</code></li>
+                    <li>한 번 보낸 뒤 기다리세요. 로컬 AI가 아직 로드 중일 수 있습니다.</li>
+                    <li>답변이 다음에 나타나야 합니다: <code>bot.html</code> 페이지.</li>
+                </ol>
+                <div class="warning-note"><strong>Dock에서 테스트하지 마세요.</strong> 봇이 자신에게 답하지 않도록 Dock이나 호스트 채팅에서 입력한 메시지를 의도적으로 건너뛸 수 있습니다.</div>
+                <p>작동하면 다음을 <strong>봇의 답변을 걸러내지 않기</strong> 를 다시 끄세요. 트리거 단어와 빈도 제한을 정하고 실제 채팅에 답변을 게시할지 결정하세요.</p>
+                <p>유지: <strong>봇 추가 지침(Additional Bot Instructions)</strong> 는 처음에는 짧게 쓰세요. 예: <code>Reply in one friendly sentence. Do not mention these instructions.</code></p>
+                <div class="warning-note"><strong>트리거가 다음 문자로 시작함: <code>!</code>?</strong> 봇이 보기 전에 명령 필터가 메시지를 버릴 수 있습니다. 일반 단어를 대신 사용하세요.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="replies">답변 대상</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>overlay-only 설정</th><th>동작</th><th>필요한 항목:</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="overlay-only 설정">켜짐</td><td data-label="동작">답변은 봇 오버레이에만 표시되며 채팅에는 게시되지 않습니다.</td><td data-label="필요한 항목:"><code>bot.html</code> 를 같은 세션으로 여세요. TTS에도 필요합니다.</td></tr>
+                        <tr><td data-label="overlay-only 설정">꺼짐</td><td data-label="동작">답변은 오버레이에 표시되고 Social Stream은 원래 채팅에도 게시를 시도합니다.</td><td data-label="필요한 항목:">전송을 지원하고 로그인되어 있으며 게시 권한이 있는 채팅 소스가 열려 있어야 합니다. 호스트 채팅을 끄지 마세요. <code>bot.html</code> 는 선택 사항입니다.</td></tr>
+                    </tbody>
+                </table>
+                <div class="guide-note"><strong>봇 이름은 새 계정이 아닙니다.</strong> 이름은 답변 앞에 붙을 뿐입니다. 독립 실행 앱에서 계정 역할을 설정하지 않았다면 로그인한 계정으로 게시됩니다. 별도의 Twitch 봇 계정은 다음을 보세요: <a href="twitch-bot-account-chatbot.html">Twitch 봇 계정 가이드</a>.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="quiet">봇이 조용한 이유</h2>
+                <p>봇은 의도적으로 대상을 가립니다. 트리거 목록이 비어 있다는 것은 <em>검토하는 대상이</em> 모든 메시지라는 뜻이지, 전부 답한다는 뜻은 아닙니다.</p>
+                <ul class="guide-list">
+                    <li>다음과 같은 짧은 메시지: <code>hello</code> 등은 건너뛸 수 있습니다. 봇 이름을 불러 명확하게 하세요.</li>
+                    <li>트리거 단어를 설정했다면 메시지에 해당 단어가 있어야 합니다.</li>
+                    <li>관리자 전용 모드는 그 외 모든 사람을 건너뜁니다.</li>
+                    <li>기본적으로 한 번에 메시지 하나에 답합니다. 채팅에 게시할 때는 소스마다 5초도 기다립니다.</li>
+                    <li>자신의 메시지, 빈 메시지, 직전 답변과 너무 가까운 메시지는 건너뜁니다.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="hide">이전 답변 숨기기</h2>
+                <p>이 설정은 봇 오버레이(<code>bot.html</code>)에만 적용되며 강조 채팅 오버레이에는 적용되지 않습니다. 일반적인 항목은 설정의 오버레이 옵션에 있습니다.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>원하는 작업…</th><th>링크에 추가</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="원하는 작업">정해진 시간이 지나면 답변 숨기기</td><td data-label="링크에 추가"><code>&amp;showtime=10000</code> (밀리초 단위이므로 10초)</td></tr>
+                        <tr><td data-label="원하는 작업">긴 답변은 오래, 짧은 답변은 짧게 표시</td><td data-label="링크에 추가"><code>&amp;autohide</code> (또는 <code>&amp;autotime</code>)</td></tr>
+                        <tr><td data-label="원하는 작업">자동 숨김의 최소 및 최대 시간 설정</td><td data-label="링크에 추가"><code>&amp;mintime=5000&amp;maxtime=20000</code> (기본값 4000 및 30000)</td></tr>
+                        <tr><td data-label="원하는 작업">음성이 끝나면 숨기기</td><td data-label="링크에 추가"><code>&amp;hideaftertts</code></td></tr>
+                        <tr><td data-label="원하는 작업">음성이 끝난 뒤 잠시 기다리기</td><td data-label="링크에 추가"><code>&amp;hidedelay=1000</code> (기본값 500)</td></tr>
+                        <tr><td data-label="원하는 작업">멈춘 음성을 기다리지 않기</td><td data-label="링크에 추가"><code>&amp;ttstimeout=60000</code> (기본값 120000)</td></tr>
+                    </tbody>
+                </table>
+                <p>둘 이상을 사용하나요? <code>hideaftertts</code> 가 우선이고 그다음은 <code>autohide</code>, 그다음은 <code>showtime</code>. 음성이 시작되지 않으면 <code>hideaftertts</code> 는 글자 길이에 따른 시간으로 대신 처리합니다.</p>
+                <h3>지금 바로 지우기</h3>
+                <p>클릭: <strong>지금 봇 오버레이 지우기</strong> 를 설정에서 사용하세요. 화면의 답변과 대기 중인 답변은 지우지만 이미 말하는 음성을 멈추지는 않습니다.</p>
+                <details class="guide-extra">
+                    <summary>API로 지우기 및 사용자 지정 스타일</summary>
+                    <ul>
+                        <li>Remote API Control을 켜고 다음을 여세요: <code>https://io.socialstream.ninja/SESSION_ID/clearBotOverlay</code>.</li>
+                        <li>또는 다음을 보내세요: <code>{"action":"clearBotOverlay"}</code> 를 API WebSocket으로 보내세요.</li>
+                    </ul>
+                    <p>일반 오버레이에 사용자 지정 CSS 적용: <code>bot.html</code> 링크는 이 기능을 모두 유지합니다. 복사하거나 수정한 로컬 <code>bot.html</code> 는 직접 업데이트하지 않으면 이후 수정 사항을 받지 못합니다.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">문제 해결</h2>
+                <p>마지막으로 작동한 지점을 찾고 다음 행을 확인하세요.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>문제</th><th>시도할 방법</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="문제">테스트 버튼 실패</td><td data-label="시도할 방법">버튼 아래 오류를 읽으세요. 주소, API 키, 모델 이름, 로컬 AI 실행 여부, 방화벽, 제공업체 제한을 확인하세요.</td></tr>
+                        <tr><td data-label="문제">연결되었지만 시청자 메시지가 Dock에 없음</td><td data-label="시도할 방법">채팅이 캡처되지 않습니다. Social Stream이 켜져 있는지, 채팅 창이 열려 있고 로그인되었는지, 올바른 실시간 채팅을 열었는지, 소스 필터를 확인하세요.</td></tr>
+                        <tr><td data-label="문제">메시지는 Dock에 있지만 오버레이에 답변이 없음</td><td data-label="시도할 방법">Dock이 아닌 실제 플랫폼 채팅에서 보내세요. 봇이 켜져 있는지, 트리거 단어, 관리자 전용, 봇 이름, 빈도 제한, 지침을 확인하세요. 다음을 켜세요: <strong>봇의 답변을 걸러내지 않기</strong> 로 테스트하세요.</td></tr>
+                        <tr><td data-label="문제">오버레이에는 답변이 있지만 채팅에는 없음</td><td data-label="시도할 방법">overlay-only를 끄세요. 소스의 전송 지원, 계정 게시 권한, 채팅 입력란, 계정 역할 및 다음 항목을 확인하세요: <strong>호스트 채팅 및 차단 기능 비활성화</strong>.</td></tr>
+                        <tr><td data-label="문제"><code>!bot</code> 가 아무 동작도 하지 않음</td><td data-label="시도할 방법">일반 단어를 트리거로 쓰거나 명령 필터에서 해당 명령을 허용하세요.</td></tr>
+                        <tr><td data-label="문제">첫 테스트에만 답변이 옴</td><td data-label="시도할 방법">첫 답변과 빈도 제한이 끝날 때까지 기다리세요. keep-alive의 <code>0</code> 이면 매번 답변 시작이 느려집니다.</td></tr>
+                        <tr><td data-label="문제">음성 종료 후 답변이 화면에 남음</td><td data-label="시도할 방법">사용: <a href="#hide">TTS 종료 후, 자동 또는 정해진 시간에 숨기기</a>.</td></tr>
+                        <tr><td data-label="문제">다음과 같은 OpenAI 오류: <code>401</code> 또는 <code>429</code></td><td data-label="시도할 방법">참고: <a href="#openai">OpenAI 키 오류</a>.</td></tr>
+                        <tr><td data-label="문제">비공개 <code>chatbot.html</code> 가 비어 있음</td><td data-label="시도할 방법">비공개 챗봇 옵션을 켜고 같은 세션의 링크를 사용하세요. 별도 봇이므로 Primary 봇을 테스트하는 것은 아닙니다.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="openai">OpenAI 키 오류</h2>
+                <ol class="guide-steps">
+                    <li>다음 페이지에서 일반 프로젝트 API 키를 만드세요: <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI API 키 페이지</a>. Admin 키가 아닙니다.</li>
+                    <li>요금을 청구할 프로젝트에 속하고 모델 요청이 허용되어 있는지 확인하세요.</li>
+                    <li>Social Stream에서 다음을 선택하세요: <strong>ChatGPT API</strong>를 선택하고 전체 키를 붙여 넣은 뒤 프로젝트에서 사용할 수 있는 모델을 입력하고 다음을 클릭하세요: <strong>선택한 챗봇 테스트</strong>.</li>
+                </ol>
+                <div class="warning-note"><strong>키를 절대 붙여 넣지 마세요:</strong> 지원 메시지나 진단 보고서.</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>오류</th><th>의미</th><th>시도할 방법</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="오류"><code>401 missing_scope</code> / <code>model.request</code></td><td data-label="의미">키에 모델 요청 권한이 없습니다. <code>model.request</code> 는 OpenAI 권한 이름이며 Social Stream에 입력하는 값이 아닙니다.</td><td data-label="시도할 방법">올바른 프로젝트의 일반 키이며 모델 요청이 허용되어 있는지 확인하세요. 확실하지 않으면 새 키를 만들어 저장된 키를 바꾸세요.</td></tr>
+                        <tr><td data-label="오류"><code>401 invalid_api_key</code></td><td data-label="의미">키가 틀렸거나 삭제되었습니다.</td><td data-label="시도할 방법">빠진 글자나 불필요한 공백을 확인하세요. 키가 삭제되지 않았는지, 올바른 프로젝트에 있는지, Social Stream이 이전에 저장한 키를 쓰고 있지 않은지도 확인하세요.</td></tr>
+                        <tr><td data-label="오류"><code>429</code></td><td data-label="의미">할당량 부족 또는 요청 과다.</td><td data-label="시도할 방법">API 결제와 예산을 확인하세요. ChatGPT 구독과는 별개입니다. 빈도를 줄이거나 기다리세요.</td></tr>
+                    </tbody>
+                </table>
+                <p><strong>잔액을 충전해도 401 오류는 해결되지 않습니다.</strong> 잔액과 권한은 별개입니다. OpenAI의 다음 문서를 보세요: <a href="https://developers.openai.com/api/docs/guides/error-codes" target="_blank" rel="noopener">오류 가이드</a> 그리고 <a href="https://developers.openai.com/api/reference/overview#start-here" target="_blank" rel="noopener">인증 참고 문서</a>.</p>
+                <details class="guide-extra">
+                    <summary>아직 해결되지 않았나요?</summary>
+                    <ul>
+                        <li>브라우저가 OpenAI 사이트를 자동 번역하고 키 설정이 이상하게 동작하면 원래 영어 페이지로 바꿔 보세요. 한 사용자에게 도움이 되었지만 401 오류의 알려진 원인은 아닙니다.</li>
+                        <li>Social Stream에 표시된 상태, 코드, 누락된 권한, Request ID를 복사하세요. 곧바로 앱 내 진단 보고서도 보내세요. API 키와 프롬프트는 제외됩니다.</li>
+                        <li>키와 프로젝트가 올바르면 Request ID와 시간을 OpenAI 지원팀에 알려 주세요.</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="other-pages">다른 AI 봇 페이지</h2>
+                <p>Primary 봇, 비공개 채팅, 검열 봇, AI 공동 진행자는 별도 도구이며 각각 자체 설정과 기록을 가집니다.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-chatbot-pages-reference.png" alt="기본 봇 오버레이, 비공개 챗봇, 검열 봇, AI 공동 진행자를 비교한 참고 표" class="guide-image">
+                    <figcaption>비공개 봇으로 Primary 봇 테스트를 대신할 수 없습니다.</figcaption>
+                </figure>
+                <p>전체 AI 기능은 다음을 보세요: <a href="ai-modes-guide.html">AI 모드 가이드</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,1861 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/guides.html">
+    <meta property="og:title" content="聊天、OBS和直播設定指南 - Social Stream Ninja">
+    <meta property="og:description" content="逐步設定Social Stream Ninja。瀏覽聊天來源、OBS疊加畫面、文字轉語音、AI工具、遊戲和直播自動化指南。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/guides.html">
+    <meta name="twitter:title" content="聊天、OBS和直播設定指南 - Social Stream Ninja">
+    <meta name="twitter:description" content="逐步設定Social Stream Ninja。瀏覽聊天來源、OBS疊加畫面、文字轉語音、AI工具、遊戲和直播自動化指南。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聊天、OBS和直播設定指南 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <meta name="description" content="逐步設定Social Stream Ninja。瀏覽聊天來源、OBS疊加畫面、文字轉語音、AI工具、遊戲和直播自動化指南。">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/guides.html">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/guides.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"\"Capture Stream Events\"":"「擷取直播事件」（Capture Stream Events）","(optional) - allows donors to leave a message":"（選填）- 允許贊助者留言","(required) - without this field, donations will be rejected":"（必填）- 缺少此欄位會拒絕贊助",", any future expiry, any CVC.":"、任意未來到期日期和任意CVC。",", enable":"，啟用",", or":"，或",", while Spanish can use Piper":"，而西班牙語可以使用Piper","- Allows viewers to change OBS scenes (with permission)":"- 允許觀眾切換OBS場景（需要權限）","- Auto-features messages as they appear":"- 自動展示新收到的訊息","- Auto-features messages as they appear (about 2 per 3 seconds)":"- 自動展示新收到的訊息（約每3秒2則）","- Auto-greets viewers":"- 自動問候觀眾","- Auto-hides selected messages after 20 seconds":"- 20秒後自動隱藏所選訊息","- Centers featured messages on screen":"- 將精選訊息放在畫面中央","- Doubles the size/resolution of all elements":"- 將所有元素的大小和解析度加倍","- Enables dark mode for the dashboard":"- 為儀表板啟用深色模式","- Flows the message beside the name while keeping normal spacing":"- 將訊息排在姓名旁邊，同時保留正常間距","- Hides platform icons (YouTube, Twitch, etc.)":"- 隱藏平台圖示（YouTube、Twitch等）","- Makes featured messages fade in instead of popping up":"- 讓精選訊息淡入，而不是突然出現","- Makes featured messages swipe in from the left":"- 讓精選訊息從左側滑入","- Removes spacing between name and message":"- 移除姓名和訊息之間的間距","- Sends a random geeky dad joke":"- 傳送一則隨機的科技冷笑話","- Shows the platform icons next to usernames":"- 在使用者名稱旁顯示平台圖示",". For Kick reward sounds or media, use the":"。Kick獎勵的音效或媒體請使用",". It also explains which sources require the “Capture Stream Events” toggle, login permissions, or additional scopes to receive data.":"。其中也說明哪些來源需要開啟「Capture Stream Events」、登入權限或額外的權限範圍才能接收資料。",". You can also report issues on the":"。您也可以在此回報問題：","1. Installation":"1. 安裝","126 ideas for gaming, music, teaching, making, live sales, and community events.":"126個創意，涵蓋遊戲、音樂、教學、創作、直播銷售和社群活動。","2. Basic Setup":"2. 基本設定","3. Connecting to Different Platforms":"3. 連接不同平台","4. Video Tutorial":"4. 影片教學","A blue debugging bar appears or automated responses don't work when trying to use bot commands or auto-responses.":"使用機器人指令或自動回覆時，出現藍色偵錯列，或自動回覆無法運作。","AI And TTS":"AI與文字轉語音","AI Cohosts, Chat Bots, and Browser Companions":"AI搭檔、聊天機器人和瀏覽器助理","AI chat bot setup":"AI聊天機器人設定","AI overlay builder":"AI疊加畫面建構工具","AI processing:":"AI處理：","API key, voice selection, reading speed, and viewer volume in OBS.":"API金鑰、聲音選擇、朗讀速度，以及OBS中的觀眾音量。","API project and OAuth setup.":"API專案和OAuth設定。","API, commands, Event Flow, webhooks":"API、指令、Event Flow、Webhook","Absolutely! Social Stream Ninja is designed to work perfectly with OBS Studio and other streaming software. Simply add the overlay URL as a browser source in your streaming software. You can customize the appearance using CSS directly in OBS or via URL parameters.":"當然可以！Social Stream Ninja專為OBS Studio及其他直播軟體設計。只要將疊加畫面URL作為瀏覽器來源加入直播軟體中。您可以在OBS中直接使用CSS，或透過URL參數自訂外觀。","Add":"新增","Add CSS directly through the app's menu:":"透過應用程式選單直接加入CSS：","Add CSS directly through the extension menu:":"透過擴充功能選單直接加入CSS：","Add a \"Contains Keyword\" node to detect your command (e.g., \"!social\")":"加入「Contains Keyword」節點來偵測指令（如「!social」）","Add action nodes to respond (Send Chat, Play Audio, Display Overlay)":"加入回應的動作節點（Send Chat、Play Audio、Display Overlay）","Add custom fields to your payment link:":"為付款連結加入自訂欄位：","Add it as a Browser Source in OBS (1920×1080 recommended)":"在OBS中將其加入為瀏覽器來源（建議1920×1080）","Add it to your donation platform's webhook configuration":"將其加入贊助平台的Webhook設定中","Add logic nodes to filter (Contains Keyword, User Role, etc.)":"加入邏輯節點進行篩選（Contains Keyword、User Role等）","Add the Flow Actions URL as a browser source in OBS for audio/overlay actions to work. Find the URL in the app's \"Flow Actions\" section.":"在OBS中將Flow Actions URL加入為瀏覽器來源，讓音訊和疊加畫面動作生效。此URL位於應用程式的「Flow Actions」區段。","Add the app's overlay URL as a Browser Source in OBS":"將應用程式的疊加畫面URL作為瀏覽器來源加入OBS","Add the template URL as a browser source in OBS":"將範本URL作為瀏覽器來源加入OBS","Add your overlay as a Browser Source in OBS":"將疊加畫面作為瀏覽器來源加入OBS","Adjust window transparency for overlay effects":"調整視窗透明度以呈現疊加效果","Advanced Features":"進階功能","Advanced Features (Browser Extension)":"進階功能（瀏覽器擴充功能）","Advanced Features (Standalone App)":"進階功能（獨立應用程式）","Advanced support index":"進階支援索引","All overlay URLs, dock APIs, WebSocket commands, and automation hooks are documented in the":"所有疊加畫面URL、停駐面板API、WebSocket指令和自動化介面皆記錄於","All provider parameters and audio routing notes.":"所有提供者參數和音訊路由說明。","All public platform setup notes.":"所有公開的平台設定說明。","Also disable":"同時停用","Alternative Approaches":"其他方法","Any HTTP POST service":"任何HTTP POST服務","App-Specific Features":"應用程式專屬功能","Apply CSS via OBS custom CSS or URL params like":"透過OBS的自訂CSS或以下URL參數套用CSS：","Arrange windows so they're not minimized; even a small visible portion can prevent throttling.":"調整視窗位置，避免最小化；即使只露出一小部分，也可能防止瀏覽器限制執行頻率。","Authentication Problems":"驗證問題","Auto, Standard, signer, polling, proxy modes.":"自動、標準、簽署器、輪詢和代理模式。","Auto-Update:":"自動更新：","Auto-responder works best with Chromium-based browsers (Chrome, Edge, Brave)":"自動回覆在Chromium瀏覽器（Chrome、Edge、Brave）中效果最佳","Auto-responses work best with Chromium-based browsers. Chat windows must remain visible, and you must have permission to post on the platform.":"自動回覆在Chromium瀏覽器中效果最佳。聊天視窗必須保持可見，而且您必須具有在該平台發言的權限。","Automatically receive the latest features and fixes":"自動取得最新功能和修正","Automation And Integrations":"自動化與整合","Available Actions:":"可用動作：","Avoids browser throttling issues":"避免瀏覽器限制執行頻率的問題","Back up settings, update safely, and recover a session.":"備份設定、安全更新並復原工作階段。","Background Transparency:":"背景透明度：","Before you can use Social Stream Ninja, you'll need to install it first. There are multiple ways to install the browser extension:":"使用Social Stream Ninja前需要先安裝。瀏覽器擴充功能有多種安裝方式：","Better Performance:":"更好的效能：","Bits/Cheers and channel point redemptions":"Bits／Cheer和頻道點數兌換","Blue Bar Appears / Auto-Responder Not Working":"出現藍色列／自動回覆無法運作","Bluesky":"Bluesky","Bot Commands & Auto-Response":"機器人指令與自動回覆","Bot accounts for replies":"用於回覆的機器人帳號","Bring your own fonts to":"將自己的字型用於","Browse our":"瀏覽我們的","Browse the game gallery":"瀏覽遊戲庫","Browser Compatibility":"瀏覽器相容性","Browser Extension":"瀏覽器擴充功能","Browser extension setup":"瀏覽器擴充功能設定","Browser extension troubleshooting":"瀏覽器擴充功能疑難排解","Build custom commands":"建立自訂指令","Build powerful automations with the node-based Event Flow Editor.":"使用節點式Event Flow編輯器建立強大的自動化流程。","Built-in Commands:":"內建指令：","Built-in browser AI, excellent quality:":"瀏覽器內建AI，效果出色 —","Buy Me A Coffee":"Buy Me A Coffee","Buy Me A Coffee:":"Buy Me A Coffee：","CSS Customization":"CSS自訂","Can I send messages back to multiple platforms at once?":"可以同時向多個平台傳送訊息嗎？","Capture non-chat events like new followers, subscriptions, raids, and donations from your streaming platforms.":"從直播平台擷取新追隨、訂閱、揪團和贊助等非聊天事件。","Capture non-chat events like new followers, subscriptions, raids, and donations.":"擷取新追隨、訂閱、揪團和贊助等非聊天事件。","Capture or experimentally relay live chat into an open ChatGPT tab without an API key.":"不需API金鑰，即可擷取即時聊天，或透過實驗性功能將其轉送到已開啟的ChatGPT分頁。","Capture supported chats from a browser or OBS without installing the full app.":"不需安裝完整應用程式，即可從瀏覽器或OBS擷取支援的聊天。","Channel slug, OAuth scopes, official events, and common failures.":"頻道識別字、OAuth權限範圍、官方事件和常見故障。","Chat Stops When Background/Minimized":"背景或最小化時聊天停止","Chat messages are sent as POST requests with JSON payload":"聊天訊息以包含JSON酬載的POST請求傳送","Chat messages stop appearing when browser windows are in the background or minimized. This happens because browsers throttle background tabs to save resources.":"瀏覽器視窗處於背景或最小化時，聊天訊息不再出現。這是因為瀏覽器會限制背景分頁以節省資源。","Chat sources":"聊天來源","ChatGPT browser companion":"ChatGPT瀏覽器助理","ChatGPT browser companion:":"ChatGPT瀏覽器助理：","Check Chat Window Visibility":"檢查聊天視窗是否可見","Check if you need to grant additional permissions to the app":"檢查是否需要授予應用程式額外權限","Check if your antivirus is blocking file writes":"檢查防毒軟體是否阻止檔案寫入","Check the \"Custom CSS\" option":"勾選「Custom CSS」選項","Check your internet connection":"檢查網路連線","Choose a voice cohost, ChatGPT browser companion, chat bot, moderation, RAG, translation, or overlay builder.":"選擇語音搭檔、ChatGPT瀏覽器助理、聊天機器人、內容管理、RAG、翻譯或疊加畫面建構工具。","Choose an AI Setup":"選擇AI設定","Choose browser, popout, app, or source page.":"選擇瀏覽器、彈出視窗、應用程式或來源頁面。","Choose from pre-styled templates that include CSS built-in:":"選擇內建CSS樣式的範本：","Choose the highlight, badge, and beep options that match your overlay.":"選擇適合疊加畫面的醒目提示、徽章和提示音選項。","Choose the local relay, automation API, headless hosting, or media service.":"選擇本機轉送、自動化API、無介面代管或媒體服務。","Chrome Web Store:":"Chrome線上應用程式商店：","Chrome/Edge/Brave:":"Chrome／Edge／Brave：","Clear":"清除","Click \"Activate source\" or \"Select Live Sources\" to connect":"點選「Activate source」或「Select Live Sources」進行連接","Click \"Activate source\" to connect":"點選「Activate source」進行連接","Click \"Auto-find & Activate\" for live streams":"對於直播，點選「Auto-find & Activate」","Click \"Enable Extension\" to turn it on (the icon should turn green)":"點選「Enable Extension」啟用擴充功能（圖示應變為綠色）","Click \"Twitch Username\" in the left sidebar":"點選左側欄中的「Twitch Username」","Click \"YouTube Username\" in the left sidebar":"點選左側欄中的「YouTube Username」","Click the \"Next in Queue\" button to display them one by one":"點選「Next in Queue」按鈕，逐則顯示訊息","Click the \"Pop out chat\" button in the top-right corner":"點選右上角的「Pop out chat」按鈕","Click the Social Stream Ninja extension icon":"點選Social Stream Ninja擴充功能圖示","Click the Social Stream Ninja extension icon in your browser toolbar":"點選瀏覽器工具列中的Social Stream Ninja擴充功能圖示","Click the button corresponding to the platform you want to add in the left sidebar":"點選左側欄中要加入的平台對應的按鈕","Click the gear icon and select \"Pop out chat\"":"點選齒輪圖示並選擇「Pop out chat」","Click the respective platform button":"點選對應的平台按鈕","Collect chat entries, draw a winner, and show the result in OBS.":"收集聊天報名、抽出得獎者，並在OBS中顯示結果。","Collect participants and supporters, configure OBS, and trigger the ending roll.":"收集參與者和支持者、設定OBS，並觸發片尾捲動名單。","Commands & API":"指令與 API","Commands and API":"指令與API","Commerce & monetization overlays":"商務與營利疊加畫面","Common fixes for auth windows closing, missed chat, duplicate chat, and throttling":"驗證視窗關閉、漏收聊天、聊天重複和瀏覽器限制執行頻率的常見修正方法","Community":"社群","Compare the Twitch WebSocket and reply-only source methods.":"比較Twitch WebSocket與僅回覆的來源方式。","Complete AI guide":"完整AI指南","Configure an outbound webhook URL in settings":"在設定中配置傳出Webhook URL","Connect TikTok, choose dock activity, and capture it in SSN.":"連接TikTok、選擇停駐面板活動，並在SSN中擷取。","Connect a \"Send Chat\" action with your response":"連接一個「Send Chat」動作並填寫回覆","Connect action nodes (Send Chat, Play Audio, Display Overlay)":"連接動作節點（Send Chat、Play Audio、Display Overlay）","Connect external donation platforms and services.":"連接外部贊助平台和服務。","Connect external donation platforms to display tips and purchases in your stream overlay.":"連接外部贊助平台，在直播疊加畫面中顯示贊助和購買。","Connect logic nodes to filter messages (Contains Keyword, User Role, etc.)":"連接邏輯節點以篩選訊息（Contains Keyword、User Role等）","Connect the desktop app to a local AI tool or same-machine script.":"將桌面應用程式連接到本機AI工具或同一台電腦上的指令碼。","Connect your MIDI device":"連接MIDI裝置","Connect your MIDI device (Stream Deck, MIDI controller, etc.)":"連接MIDI裝置（Stream Deck、MIDI控制器等）","Connection Issues":"連線問題","Connection modes and common failures.":"連線模式和常見故障。","Consolidates your live social messaging streams and more. Free and open source.":"匯聚你的社群直播訊息等內容。免費且開源。","Contribute":"參與貢獻","Control OBS":"控制OBS","Control Social Stream Ninja directly from Stream Deck, MIDI controllers, or keyboard hotkeys.":"透過Stream Deck、MIDI控制器或鍵盤快速鍵直接控制Social Stream Ninja。","Control the app directly from Stream Deck, MIDI controllers, or keyboard shortcuts.":"透過Stream Deck、MIDI控制器或鍵盤快速鍵直接控制應用程式。","Copy the \"Streaming Chat\" link and add it as a Browser Source in OBS":"複製「Streaming Chat」連結，並在OBS中加入為瀏覽器來源","Copy the Hype Train Top Bar URL from the popup.":"從彈出選單複製Hype Train Top Bar URL。","Copy the dedicated Hype Train Top Bar link from the popup.":"從彈出選單複製專用的Hype Train Top Bar連結。","Create a":"建立一個","Create a flow with source nodes (Message, Timer, Manual Trigger)":"建立包含來源節點的流程（Message、Timer、Manual Trigger）","Create a new flow and add source nodes (e.g., \"Twitch Message\")":"建立新流程並加入來源節點（如「Twitch Message」）","Create a new flow with a Message source":"建立一個使用Message來源的新流程","Create interactive bot commands and automated responses for your chat.":"為聊天建立互動式機器人指令和自動回覆。","Create raffles and games":"建立抽獎和遊戲","Create raffles and giveaways":"建立抽獎和贈獎活動","Create test messages":"建立測試訊息","Creating Custom Commands:":"建立自訂指令：","Creator store setup":"創作者商店設定","Credits roll":"捲動致謝名單","Credits, featured chat, timer, and waitlist buttons in OBS.":"在OBS中使用片尾名單、精選聊天、計時器和候補名單按鈕。","Current Relay Chat actions skip recognized reflections automatically. Use a":"目前的Relay Chat動作會自動略過辨識出的回流訊息。請使用","Custom Webhooks:":"自訂Webhook：","Custom fonts":"自訂字型","Customization":"自訂","Customization (Browser Extension)":"自訂（瀏覽器擴充功能）","Customization (Standalone App)":"自訂（獨立應用程式）","Customization Guide":"自訂指南","Customize alignment, scale, opacity, and background settings.":"自訂對齊、縮放、不透明度和背景設定。","Customize voice settings with parameters like":"使用以下參數自訂語音設定：","Customize your graphical poll":"自訂您的圖形民意調查","Dashboard Parameters:":"儀表板參數：","Debug Bar Issue":"偵錯列問題","Dedicated Twitch hype train overlay.":"專用的Twitch Hype Train疊加畫面。","Dedicated setup help for TikTok, including replies, mode selection, and TikFinity fallback.":"TikTok專用設定說明，包括回覆、模式選擇和TikFinity備用方式。","Design your own overlays":"設計您自己的疊加層","Desktop app setup":"桌面應用程式設定","Desktop app troubleshooting":"桌面應用程式疑難排解","Desktop app walkthrough":"桌面應用程式使用教學","Desktop app will not open":"桌面應用程式無法開啟","Detailed Event Flow guide":"Event Flow詳細指南","Detailed guide sections":"詳細指南章節","Different chat name colors":"不同的聊天姓名顏色","Different colors for chat names":"為聊天姓名設定不同顏色","Disable \"Throttle Javascript timers in background\"":"停用「Throttle Javascript timers in background」","Disable Browser Throttling":"停用瀏覽器執行頻率限制","Disable Performance Throttling:":"停用效能限制：","Disable VPN if it's interfering with connections":"如果VPN干擾連線，請將其停用","Discord":"Discord","Discord StreamKit and TikFinity":"Discord StreamKit與TikFinity","Discord, GitHub issues, contribution paths.":"Discord、GitHub議題和參與貢獻的方式。","Discord, Slack, WhatsApp, etc.":"Discord、Slack、WhatsApp等。","Display Name":"顯示名稱","Do I need an API key or login credentials for each platform?":"每個平台都需要API金鑰或登入憑證嗎？","Do not uninstall":"不要解除安裝","Dock":"停駐面板","Dock controls, moderation, relays, and participation":"停駐面板操作、內容管理、轉送和參與互動","Does it work with OBS and other streaming software?":"可以搭配OBS及其他直播軟體使用嗎？","Donate":"贊助","Donation alerts":"贊助提醒","Donation goals, Hype scoring, memberships, and gifted memberships.":"贊助目標、Hype計分、會員和贈送會員。","Donation-style events (Super Chats, Bits, Tips) forward automatically regardless of this toggle. The toggle is primarily for follower/subscriber alerts.":"贊助類事件（Super Chat、Bits、贊助）會自動轉送，不受此開關影響。此開關主要控制追隨和訂閱提醒。","Donations (Super Chats, Bits, Tips) forward automatically. The toggle is primarily for follower/subscriber alerts.":"贊助（Super Chat、Bits、贊助）會自動轉送。此開關主要控制追隨和訂閱提醒。","Download":"下載","Download and run the installer for Windows 10/11 (x64)":"下載並執行Windows 10／11（x64）安裝程式","Download and run the macOS application":"下載並執行macOS應用程式","Download page":"下載頁面","Earning, balances, sticker redemptions, and points backups.":"獲得點數、餘額、貼圖兌換和點數備份。","ElevenLabs:":"ElevenLabs：","Enable hosted server routes for chat and replies, or use SSApp's advanced local relay.":"啟用代管伺服器的聊天和回覆路由，或使用SSApp的進階本機轉送。","Enable it to start receiving alerts":"啟用後即可開始接收提醒","Enable the commands you want to use":"啟用需要的指令","Ensure the Social Stream Ninja extension is enabled (green icon)":"確認Social Stream Ninja擴充功能已啟用（綠色圖示）","Ensure the app has write permissions in its installation directory":"確認應用程式對安裝目錄具有寫入權限","Ensure you're connected to WiFi or Ethernet (not mobile data)":"確認使用Wi-Fi或乙太網路連線，而不是行動數據","Ensure you're logged into the platform with posting permissions":"確認已登入平台並具有發言權限","Ensure you're using the same login credentials as your browser":"確認使用與瀏覽器相同的登入憑證","Enter your Twitch username":"輸入Twitch使用者名稱","Enter your channel name or Video ID":"輸入頻道名稱或Video ID","Enter your custom CSS in the text box":"在文字方塊中輸入自訂CSS","Enter your custom CSS or JavaScript":"輸入自訂CSS或JavaScript","Enter your username, Video ID, or URL as prompted":"依提示輸入使用者名稱、Video ID或URL","Event Flow Editor":"Event Flow 編輯器","Event Flow Guide":"Event Flow 指南","Event Flow media hosting":"Event Flow媒體代管","Event Flow overview":"Event Flow概覽","Event Flow recipes":"Event Flow實用流程","Event Reference":"事件參考","Event Type":"事件類型","Event reference":"事件參考","Events Captured by Platform:":"各平台可擷取的事件：","Events Captured:":"可擷取的事件：","Events and alerts compatibility":"事件和提醒相容性","Events appear automatically in your dashboard and flows":"事件會自動出現在儀表板和流程中","Example:":"範例：","Execute Event Flow triggers":"執行Event Flow觸發器","Export Settings":"匯出設定","Export Social Stream Ninja and OBS settings for review.":"匯出Social Stream Ninja和OBS設定以供檢查。","Export settings for support":"匯出設定以取得支援","Exporting Chat via Webhook:":"透過Webhook匯出聊天：","Extension and desktop app downloads.":"下載擴充功能和桌面應用程式。","FAQ":"常見問題","Facebook":"Facebook","Facebook, TikTok, Instagram":"Facebook、TikTok、Instagram","Fast, lightweight neural TTS:":"快速、輕量的神經網路文字轉語音 —","Feature, clear, queue, pin, reply, and manage busy chat.":"展示、清除、排隊、置頂、回覆並管理繁忙的聊天。","Featured chat and alerts on stream":"在直播中展示精選聊天和提醒","Features":"功能","Filter":"篩選","Find A Guide":"尋找指南","Find ideas for your stream":"尋找直播創意","Find the":"找到","Find the CSS/JavaScript settings section":"找到CSS／JavaScript設定區段","Find the MIDI settings section":"找到MIDI設定區段","Find your webhook relay URL in the app settings":"在應用程式設定中找到Webhook轉送URL","Firefox has limited support for extension features":"Firefox對擴充功能的支援有限","First, enable these platforms in the extension settings (toggle switch)":"首先，在擴充功能設定中啟用這些平台（切換開關）","First-Time Chatters":"首次發言者","First-time chatters":"首次發言者","Flow Actions Overlay:":"Flow Actions疊加畫面：","Followers and follower count":"追隨者和追隨人數","Followers and gifts (TikTok)":"追隨者和禮物（TikTok）","Followers, gifts, viewer counts":"追隨者、禮物、觀眾人數","For Facebook, TikTok, and Instagram, use the \"Sign in\" button first":"對於Facebook、TikTok和Instagram，請先點選「Sign in」按鈕","For TikTok connection modes, replies, and TikFinity fallback, jump to the":"有關TikTok連線模式、回覆和TikFinity備用方式，請跳至","For a complete list of event payloads and data fields, see the":"有關完整的事件酬載和資料欄位清單，請參閱","For audio, media overlays, and OBS actions to work, you need to add the Flow Actions page as a browser source in OBS:":"若要讓音訊、媒體疊加畫面和OBS動作生效，需要將Flow Actions頁面作為瀏覽器來源加入OBS：","For detailed documentation, see the":"詳細文件請參閱","For detailed installation instructions, please visit the":"詳細安裝說明請造訪","For easier URL management, try our":"若要更輕鬆地管理URL，請試用我們的","For more complex commands, use the Event Flow Editor:":"對於更複雜的指令，請使用Event Flow編輯器：","For other languages, use a provider and voice that supports that language. For example, Portuguese can use Piper":"對於其他語言，請選擇支援該語言的提供者和聲音。例如，葡萄牙語可使用Piper","For some platforms, you may need to keep the main window open alongside the pop-out":"某些平台可能需要同時保持主視窗和彈出視窗開啟","For the best experience, keep chat windows visible (not minimized) when using the browser extension.":"為獲得最佳體驗，使用瀏覽器擴充功能時，請讓聊天視窗保持可見，不要最小化。","For the browser extension:":"瀏覽器擴充功能：","For the most up-to-date version, install manually in developer mode.":"若要使用最新版本，請在開發人員模式中手動安裝。","For the standalone app:":"獨立應用程式：","Fourthwall":"Fourthwall","Free Local TTS Options (no API key):":"免費的本機文字轉語音選項（不需API金鑰）：","Frequently Asked Questions":"常見問題解答","Full TTS reference":"完整文字轉語音參考","Full editor and action-flow reference.":"完整的編輯器和動作流程參考。","Full step-by-step guide body. Collapse this if you only want the directory.":"完整的逐步指南內文。如果只需要目錄，可將其收合。","Getting Started":"入門","Getting Started (Browser Extension)":"入門（瀏覽器擴充功能）","Getting Started (Standalone App)":"入門（獨立應用程式）","Getting Started:":"入門：","GitHub":"GitHub","GitHub Repository":"GitHub 儲存庫","GitHub repository":"GitHub儲存庫","Go to":"前往","Go to settings and find":"進入設定並找到","Google Cloud TTS:":"Google Cloud TTS：","Guides":"指南","Guides by type, downloads, session IDs, local OBS setup, and safe AI prompts.":"依類型、下載、會話 ID、本機 OBS 設定和安全性 AI 提示進行指南。","Has better performance and stability":"效能和穩定性更好","Having trouble connecting to specific platforms in the standalone app.":"在獨立應用程式中連接特定平台時遇到問題。","Headless home server or VPS":"無介面的家用伺服器或VPS","Highlight brand-new chatters, add the optional leaf badge, or use a first-time-only dock beep.":"醒目顯示首次發言者，加入選用的葉子徽章，或只在首次發言時播放停駐面板提示音。","Highlight new viewers in chat.":"在聊天中醒目顯示新觀眾。","Hire":"聘用","Hold ALT while clicking a message in the dashboard":"按住ALT並點選儀表板中的訊息","Hold CTRL (or Cmd on Mac) while clicking messages in the dashboard":"按住CTRL（Mac上為Cmd）並點選儀表板中的訊息","Home":"首頁","Host your .woff2/.ttf/.otf files and load them with":"代管您的.woff2／.ttf／.otf檔案，並透過以下方式載入：","Hosted WebSocket and Local Server modes":"代管WebSocket和本機伺服器模式","How Social Stream Ninja fits together":"Social Stream Ninja各部分如何配合","How do I update Social Stream Ninja?":"如何更新Social Stream Ninja？","How to Enable:":"啟用方法：","How to reply to TikTok chat from SSN":"如何從SSN回覆TikTok聊天","How to send replies to TikTok chat from SSN":"如何從SSN向TikTok聊天傳送回覆","How to use TikFinity OBS Dock as a fallback through Other chat sites":"如何透過Other chat sites使用TikFinity OBS Dock作為備用方式","How to use TikFinity OBS Dock through":"如何透過以下功能使用TikFinity OBS Dock：","Hype Train Top Bar":"Hype Train頂端列","Hype train top bar":"Hype Train頂端列","If you want the desktop app to use your own YouTube API quota, use the dedicated setup guide. It covers Google Cloud setup, exact redirect URLs, API key restrictions, and basic security guidance.":"如果希望桌面應用程式使用您自己的YouTube API配額，請參閱專門的設定指南。其中介紹Google Cloud設定、正確的重新導向URL、API金鑰限制和基本安全建議。","Import a custom chat theme, preview it, and download an OBS overlay.":"匯入自訂聊天主題、預覽並下載OBS疊加畫面。","Import settings if they're lost after an update":"如果更新後設定遺失，請匯入設定","Important:":"重要：","In OBS, you can add custom CSS to the browser source:":"在OBS中，可以為瀏覽器來源加入自訂CSS：","In the popup, find the \"Flow Actions\" section and copy the URL":"在彈出選單中找到「Flow Actions」區段並複製URL","Inspiration":"靈感","Install or update":"安裝或更新","Install the plugin, connect your session, and test a control.":"安裝外掛、連接工作階段並測試一個控制功能。","Install via Chrome Web Store for the easiest setup experience.":"透過Chrome線上應用程式商店安裝，設定最為簡單。","Install, connect a source, open the dock, then add TTS and OBS audio.":"安裝、連接來源、開啟停駐面板，再加入文字轉語音和OBS音訊。","Install, connect chat, add OBS overlays":"安裝、連接聊天、加入OBS疊加畫面","Installation Guide":"安裝指南","Is Social Stream Ninja really free?":"Social Stream Ninja真的免費嗎？","Join Discord Community":"加入 Discord 社群","Join our Discord":"加入我們的 Discord","Join our community Discord server where the developer and other users can help you troubleshoot issues.":"加入我們的社群Discord伺服器，開發者和其他使用者可以協助您排查問題。","Keep Social Stream Ninja enabled":"保持Social Stream Ninja啟用","Keep Windows Visible:":"保持視窗可見：","Keep source, Dock, overlay, read, and reply routing aligned.":"讓來源、停駐面板、疊加畫面、讀取和回覆的路由保持一致。","Keep the app window always on top":"讓應用程式視窗永遠置頂","Keep the local message database enabled.":"保持本機訊息資料庫啟用。","Keep the overlay open (hidden is fine, but don't close it)":"保持疊加畫面開啟（可以隱藏，但不要關閉）","Keep your chat window visible (not minimized) for responses to work":"保持聊天視窗可見，不要最小化，才能讓回覆生效","Keep your session ID private. Anyone with your session ID can send fake donation events to your overlay.":"請勿公開工作階段ID。任何擁有該ID的人都可以向您的疊加畫面傳送虛假的贊助事件。","Kick Channel Points / Rewards guide":"Kick頻道點數／獎勵指南","Kick rewards sounds/media":"Kick獎勵音效／媒體","Kick setup and authentication":"Kick 設定與驗證","Kick:":"Kick：","Kitten TTS:":"Kitten TTS：","Knowledge base":"知識庫","Ko-Fi":"Ko-Fi","Ko-Fi:":"Ko-Fi：","Kokoro TTS:":"Kokoro TTS：","LLM Integration":"LLM整合","Launch the Social Stream Ninja application":"啟動Social Stream Ninja應用程式","Learn how to set up, customize, and get the most out of Social Stream Ninja":"瞭解如何設定、自訂並充分運用Social Stream Ninja","Lightweight language fallback, including Portuguese":"輕量級的語言備用方案，包括葡萄牙語","Linux:":"Linux：","Lite setup":"Lite設定","Live chat, static comments, API/OAuth choices.":"即時聊天、靜態留言、API／OAuth選項。","Local AI TTS":"本機 AI TTS","Local AI TTS Guide":"本機 AI TTS 指南","Local Control API and MCP":"本機控制API和MCP","Local servers and services":"本機伺服器和服務","Loyalty points and rewards":"忠誠度點數和獎勵","MIDI":"MIDI","MIDI & Hotkey Control":"MIDI 與快速鍵控制","MIDI is perfect for hands-free stream control. Use a foot pedal to trigger alerts or a knob to adjust volume levels.":"MIDI非常適合免手操作直播。您可以用腳踏開關觸發提醒，或用旋鈕調整音量。","Main navigation":"主導覽","Managed source windows instead of tabs.":"使用受管理的來源視窗，而不是分頁。","Manual Installation (recommended):":"手動安裝（建議）：","Map MIDI notes to actions":"將MIDI音符對應到動作","Map MIDI notes to specific actions":"將MIDI音符對應到指定動作","Membership upgrades and milestones":"會員升級和里程碑","Memberships, Super Chats, subscriber counts":"會員、Super Chat、訂閱人數","Message":"訊息","Message - Styling":"訊息 - 樣式（Message - Styling）","Message - Visibility":"訊息 - 可見性（Message - Visibility）","Messages appear simultaneously across all connected platforms":"訊息會同時出現在所有已連接的平台","Messages will appear in your overlay in the order they were queued":"訊息將依排隊順序出現在疊加畫面中","Method 1: OBS Browser Source CSS":"方法1：OBS瀏覽器來源CSS","Method 2: App Menu Settings":"方法2：應用程式選單設定","Method 2: Extension Menu Settings":"方法2：擴充功能選單設定","Method 3: Use Custom Templates":"方法3：使用自訂範本","Microphone conversation, live-chat questions, spoken replies, and stage overlay.":"麥克風對話、即時聊天提問、語音回覆和舞台疊加畫面。","Minimized Window Issue":"視窗最小化問題","Missing chat, blank overlays, deeper support docs":"聊天遺漏、疊加畫面空白及深入支援文件","Missing chat, permissions, throttling, toggles.":"聊天遺漏、權限、執行頻率限制和開關。","Mode picker help: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy, and Euler Signing":"模式選擇說明：TikTok WS＋Auto、Standard、Local Signer、Polling、Euler Proxy和Euler Signing","Moderate, feature, and reply":"管理、展示和回覆","Moderation and message filtering":"內容管理和訊息篩選","Multiple channels and separate overlays":"多個頻道和獨立疊加畫面","Name colors need two settings: a general color source under":"姓名顏色需要兩項設定：首先，在以下位置設定通用顏色來源：","Natural-sounding premium voices":"自然的優質聲音","Navigate to your live stream within the app window":"在應用程式視窗中開啟您的直播","Need help with TikTok setup, replies, connection modes, or TikFinity fallback? Use the dedicated TikTok guide.":"需要TikTok設定、回覆、連線模式或TikFinity備用方式的協助？請使用專門的TikTok指南。","Need to use it on multiple computers":"需要在多台電腦上使用","Network Issues":"網路問題","New memberships and membership gifts":"新會員和贈送會員","New subscribers, resubs, and gift subs":"新訂閱、續訂和贈送訂閱","No matching guides found.":"找不到符合的指南。","No signature verification needed (keep your session ID private instead)":"不需簽章驗證（請改為保密工作階段ID）","No! One of the biggest advantages of Social Stream Ninja is that it doesn't require API keys or login credentials for most platforms. It works by capturing the chat data directly from the browser window or app interface. However, you do need to be logged into each platform to see the chat normally.":"不需要！Social Stream Ninja的一大優點是大多數平台不需API金鑰或登入憑證。它直接從瀏覽器視窗或應用程式介面擷取聊天資料。不過，您仍需登入各個平台，才能正常查看聊天。","Note your Session ID from the extension popup":"記下擴充功能彈出選單中的工作階段ID","Note:":"注意：","OBS CSS, AI design prompts, and editing poll.html locally.":"OBS CSS、AI設計提示，以及本地編輯poll.html。","OBS Studio basics":"OBS Studio基礎知識","OBS control dock":"OBS控制停駐面板","OBS overlay":"OBS疊加畫面","OBS quick start":"OBS 快速入門","OBS troubleshooting":"OBS 疑難排解","OBS, TikTok, TTS, API...":"OBS、TikTok、文字轉語音、API……","Offers window pinning and transparency features":"提供視窗置頂和透明度功能","On Windows, use Win+Tab to create two virtual desktops, with chat windows on one and OBS on the other.":"在Windows中，使用Win+Tab建立兩個虛擬桌面，一個放聊天視窗，另一個放OBS。","On-screen chat while gaming":"遊戲時在螢幕上顯示聊天","Once installed, follow these steps to start using Social Stream Ninja:":"安裝後，請依下列步驟開始使用Social Stream Ninja：","Once installed, follow these steps to start using the Social Stream Ninja standalone app:":"安裝後，請依下列步驟開始使用Social Stream Ninja獨立應用程式：","One operator Dock with separate platform and source views.":"一個操作停駐面板，按平台和來源分開查看。","One session ID connects everything: use the same":"一個工作階段ID連接所有部分：請使用相同的","Only for a confirmed OBS and Social Stream privilege mismatch.":"僅適用於已確認OBS與Social Stream權限不一致的情況。","Only one API toggle is needed:":"只需啟用一個API開關：","Open":"開啟","Open Twitch chat for your channel":"開啟您頻道的Twitch聊天","Open YouTube Live chat":"開啟YouTube直播聊天","Open chat, dock, and overlay links.":"開啟聊天、停駐面板和疊加畫面連結。","Open navigation menu":"開啟導覽選單","Open settings and find the MIDI section":"開啟設定並找到MIDI區段","Open the \"Dashboard Link\" provided in the extension popup":"開啟擴充功能彈出選單提供的「Dashboard Link」","Open the \"Overlay Link\" in OBS as a browser source":"在OBS中將「Overlay Link」作為瀏覽器來源開啟","Open the Complete AI Guide":"開啟完整AI指南","Open the Event Flow editor from the app's menu":"從應用程式選單開啟Event Flow編輯器","Open the Event Flow editor from the main dashboard menu":"從主儀表板選單開啟Event Flow編輯器","Open the First-Time Chatters Guide":"開啟首次發言者指南","Open the Hype Train Top Bar Guide":"開啟Hype Train頂端列指南","Open the Social Stream Ninja app":"開啟Social Stream Ninja應用程式","Open the Social Stream Ninja popup":"開啟Social Stream Ninja彈出選單","Open the TikTok Guide":"開啟TikTok指南","Open the YouTube Project Setup Guide":"開啟YouTube專案設定指南","Open the app's settings menu":"開啟應用程式的設定選單","Open the chat name colors guide":"開啟聊天姓名顏色指南","Open the extension popup and find the Bot/Auto-Response section":"開啟擴充功能彈出選單並找到Bot／Auto-Response區段","Open the full TikTok guide":"開啟完整TikTok指南","Open the self-hosted fonts guide":"開啟自行代管字型指南","Open the web versions of these platforms in your browser":"在瀏覽器中開啟這些平台的網頁版","Open your Facebook Live broadcast (as a viewer or publisher)":"開啟您的Facebook直播（以觀眾或發佈者身分）","Open your streaming platform's chat in a browser (or use the pop-out chat feature if available)":"在瀏覽器中開啟直播平台的聊天（如果支援，也可使用彈出聊天功能）","Optionally add User Role filters for mod-only commands":"可加入User Role篩選器，將指令限制為僅管理員可用","Orders, gifts, donations and new subscriptions":"訂單、禮物、贊助和新訂閱","Organize how messages appear in your overlay:":"安排訊息在疊加畫面中的顯示方式：","Other chat sites":"其他聊天網站","Overlay Gallery":"疊加畫面圖庫","Overlay Parameters:":"疊加畫面參數：","Overlays And Customization":"疊加畫面與自訂","Participation lists, eligibility checks, prize draws, persistence, and targeted resets.":"參與者清單、資格檢查、抽獎、持續儲存和指定重設。","Passwords, fresh links, and server read/reply fallback.":"密碼、新連結，以及伺服器讀取／回覆備用方式。","Payload fields for alerts and overlays.":"提醒和疊加畫面的酬載欄位。","Payload names, YouTube Shorts, Instagram Live, generic capture, and replies.":"酬載名稱、YouTube Shorts、Instagram Live、通用擷取和回覆。","Payment events":"付款事件","Permission Issues":"權限問題","Pick a template and add it to OBS.":"選擇範本並加入OBS。","Pinning Messages:":"置頂訊息：","Piper TTS:":"Piper TTS：","Platform":"平台","Platform Connection Issues":"平台連線問題","Platform Guides":"平台指南","Platform setup picker":"平台設定選擇器","Play audio clips":"播放音訊片段","Play audio clips or TTS":"播放音訊片段或文字轉語音","Poll SRT, RTMP, or media-server stats and show bitrate in the Dock.":"輪詢SRT、RTMP或媒體伺服器統計資料，並在停駐面板中顯示位元率。","Polls, giveaways, and waitlists":"投票、贈獎和候補名單","Prefer not to install additional software":"不想安裝額外軟體","Premium Cloud TTS Options:":"優質雲端文字轉語音選項：","Prerequisites:":"必要條件：","Preview six packs; set point prices, cooldowns, custom images, and GIPHY GIF rewards.":"預覽六個素材包；設定點數價格、冷卻時間、自訂圖片和GIPHY GIF獎勵。","Primary and private bots:":"主要機器人和私人機器人：","Primary chat bot:":"主要聊天機器人：","Print names, donations, purchases, receipts, and fixed-size stickers from Event Flow.":"從Event Flow列印姓名、贊助、購買、收據和固定尺寸貼紙。","Privacy Policy":"隱私權政策","Private browser and server voice options.":"注重隱私的瀏覽器和伺服器語音選項。","Private monitor overlay, pinning, transparency, hotkeys, and launch commands.":"私人監看疊加畫面、置頂、透明度、快速鍵和啟動指令。","Processing tools:":"處理工具：","Professional-quality voices (requires Google API key)":"專業級聲音（需要Google API金鑰）","Prompt, preview, and add generated overlays.":"輸入提示、預覽並加入產生的疊加畫面。","Provider choice:":"提供者選擇：","Providers, Primary bot controls, safe testing, and missing replies.":"提供者、主要機器人控制、安全測試和未收到回覆的排查。","Provides automatic updates":"提供自動更新","Public tips, memberships, shop orders and commissions":"公開贊助、會員、商店訂單和委託","Queuing Messages:":"訊息排隊：","Queuing and Pinning Messages":"訊息排隊與置頂","Quick Links":"快速連結","Raids with viewer count":"揪團及觀眾人數","Ready-made overlay layouts.":"現成的疊加畫面版面配置。","Reflection Filter":"回流篩選器（Reflection Filter）","Relay chat":"轉送聊天","Relay chat between platforms":"在平台之間轉送聊天","Reload the dock once if it was already open":"如果停駐面板已經開啟，請重新載入一次","Remote API control enabled while the other API transport toggles remain off":"啟用遠端API控制，同時保持其他API傳輸開關關閉","Remove the grey Dock background":"移除停駐面板的灰色背景","Replace":"替換","Replace saved URLs, refresh cache, and fix blank overlays.":"替換已儲存的URL、重新整理快取並修正空白疊加畫面。","Report an Issue":"回報問題","Required settings, color modes, screenshots, and CSS.":"必要設定、色彩模式、螢幕截圖和CSS。","Requirements:":"需求：","Resources":"資源","Restart your browser":"重新啟動瀏覽器","Reward-triggered action flow setup.":"設定由獎勵觸發的動作流程。","Run Kokoro-FastAPI or openedai-speech locally via Docker:":"透過Docker在本機執行Kokoro-FastAPI或openedai-speech —","Run a vote, draw a winner, or advance a viewer queue.":"發起投票、抽出得獎者或推進觀眾佇列。","Run the app as administrator (Windows) if needed":"如有需要，以系統管理員身分執行應用程式（Windows）","Run the complete desktop app on Linux with Xvfb and remote control.":"透過Xvfb和遠端控制，在Linux上執行完整桌面應用程式。","Running Your Stream":"管理直播","Safe updates and recovery":"安全更新與復原","Save the exported file to a secure location":"將匯出的檔案儲存到安全位置","Scenes, hardware encoders, platform settings, audio mixing, monitoring, and browser sources.":"場景、硬體編碼器、平台設定、音訊混合、監控和瀏覽器來源。","Screenshots and quick previews of every game and chat interaction.":"每款遊戲和聊天互動的螢幕截圖與快速預覽。","Search settings, URL options, defaults, and supported pages.":"搜尋設定、URL選項、預設值和支援的頁面。","Search, or open one category. Start with OBS if you just need chat on screen.":"搜尋或開啟一個類別。如果只是想在螢幕上顯示聊天，請從OBS開始。","Security Note:":"安全提示：","See the":"請參閱","Select a template that matches your stream's style":"選擇符合直播風格的範本","Select event:":"選擇事件：","Select your MIDI device from the dropdown":"從下拉選單中選擇MIDI裝置","Select your device from the dropdown":"從下拉選單中選擇裝置","Self-hosted fonts & styling":"自行代管字型與樣式","Self-hosted fonts and CSS examples.":"自行代管字型和CSS範例。","Self-hosted server:":"自行代管的伺服器：","Send SSN chat into the VDO.Ninja mobile app.":"將SSN聊天傳送到VDO.Ninja行動應用程式。","Send chat messages":"傳送聊天訊息","Send fake chat, donation, membership, raid, reward, and other event payloads.":"傳送模擬的聊天、贊助、會員、揪團、獎勵及其他事件酬載。","Send messages directly from the dashboard":"直接從儀表板傳送訊息","Send predefined chat messages":"傳送預設聊天訊息","Session and routing troubleshooting":"工作階段和路由疑難排解","Session, dock, overlay, browser source.":"工作階段、停駐面板、疊加畫面、瀏覽器來源。","Sessions, passwords, and server fallback":"工作階段、密碼和伺服器備用方式","Set URL to:":"將URL設定為：","Set to \"Disabled\"":"設定為「Disabled」","Set up Social Stream Ninja step by step. Browse guides for chat sources, OBS overlays, text-to-speech, AI tools, games and stream automation.":"逐步設定Social Stream Ninja。瀏覽聊天來源、OBS疊加畫面、文字轉語音、AI工具、遊戲和直播自動化指南。","Setting Up Auto-Response:":"設定自動回覆：","Setting Up MIDI:":"設定MIDI：","Setting Up TTS:":"設定文字轉語音：","Setting Up:":"設定方法：","Settings Issue":"設定問題","Settings Not Saving":"設定未儲存","Settings and URL reference":"設定與URL參考","Setup Guides for Chat, OBS and Streaming - Social Stream Ninja":"聊天、OBS和直播設定指南 - Social Stream Ninja","Setup:":"設定：","Short fixes for common problems.":"常見問題的簡短修正方法。","Should I use the browser extension or standalone app?":"應該使用瀏覽器擴充功能還是獨立應用程式？","Show Twitch Hype Train and Treasure Train progress as a Twitch-style top bar in OBS.":"在OBS中以Twitch風格的頂端列顯示Hype Train和Treasure Train的進度。","Sign server errors, rate limits, Euler API keys.":"簽署伺服器錯誤、速率限制和Euler API金鑰。","Simple OBS-safe voice setup with screenshots.":"適合OBS的簡易語音設定，附帶螢幕截圖。","Simple live setup with screenshots.":"簡單的直播設定，附帶螢幕截圖。","Smallest footprint, CPU-only:":"占用最小，僅需CPU —","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja can read chat messages aloud using Text-to-Speech technology:":"Social Stream Ninja可以使用文字轉語音技術朗讀聊天訊息：","Social Stream Ninja can use AI in several different ways. Choose the workflow before choosing a provider.":"Social Stream Ninja可以用多種方式使用AI。請先選擇工作流程，再選擇提供者。","Social Stream Ninja has an active community on Discord where you can get help directly from the developer and other users. Join at":"Social Stream Ninja在Discord上有活躍的社群，您可以直接取得開發者和其他使用者的協助。加入位址：","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja supports 100+ platforms including YouTube, Twitch, Facebook, Instagram, TikTok, Discord, Zoom, Google Meet, X (Twitter), WhatsApp, Telegram, and many more. For a complete list, see the":"Social Stream Ninja支援100多個平台，包括YouTube、Twitch、Facebook、Instagram、TikTok、Discord、Zoom、Google Meet、X（Twitter）、WhatsApp、Telegram等。完整清單請參閱","Social Stream Ninja works with 100+ platforms. Here's how to connect to the most popular ones:":"Social Stream Ninja支援100多個平台。以下是連接常用平台的方法：","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja。GPLv3.0 授權條款。建立者：","Solutions for common issues with the browser extension":"瀏覽器擴充功能常見問題的解決方法","Solutions for common issues with the standalone application":"獨立應用程式常見問題的解決方法","Sounds, rewards, media, webhooks, OBS actions.":"音效、獎勵、媒體、Webhook、OBS動作。","Source types":"來源類型","Source windows, updates, setup checks.":"來源視窗、更新和設定檢查。","Speechify setup guide":"Speechify設定指南","Speechify:":"Speechify：","Standalone App":"獨立應用程式","Standalone app TikTok mode notes.":"獨立應用程式的TikTok模式說明。","Standalone app modes":"獨立應用程式模式","Standard, WebSocket, TikTok presets, source windows.":"標準模式、WebSocket、TikTok預設和來源視窗。","Start Here":"從這裡開始","Start here: your first chat in SSN":"從這裡開始：在SSN中接收第一則聊天","Steve Seguin":"Steve Seguin","Sticker packs and loyalty rewards":"貼圖包和忠誠度獎勵","Still Need Help?":"仍需協助？","Stream Deck setup":"Stream Deck設定","Stream Events Capture":"直播事件擷取","StreamElements / Streamlabs chat skins":"StreamElements／Streamlabs聊天外觀","Stripe":"Stripe","Stripe Payment Link":"Stripe付款連結","Stripe Setup:":"Stripe設定：","Stripe Webhooks":"Stripe Webhooks","Stripe, Ko-fi, Fourthwall, and more.":"Stripe、Ko-fi、Fourthwall等。","Stripe:":"Stripe：","Subscriber and viewer counts":"訂閱人數和觀眾人數","Subscribers, followers, bits, raids, channel points":"訂閱者、追隨者、Bits、揪團、頻道點數","Subscriptions and tips (Kick)":"訂閱和贊助（Kick）","Subscriptions, tips, follow alerts":"訂閱、贊助和追隨提醒","Super Chat and Super Sticker donations":"Super Chat和Super Sticker贊助","Support":"支援","Support page":"支援頁面","Support workflows and AI agents.":"支援工作流程和AI代理。","Supported Integrations:":"支援的整合：","Supported Platforms":"支援的平台","Supported Platforms:":"支援的平台：","Supported Sites":"支援的網站","Supported sites list":"支援的網站清單","Switch OBS scenes":"切換OBS場景","Switch theme":"切換主題","TTS setup guide":"文字轉語音設定指南","Template quick start":"範本快速入門","Templates":"範本","Templates Gallery":"範本庫","Templates gallery":"範本庫","Templates, style options, fonts, events":"範本、樣式選項、字型和事件","Terms of Service":"服務條款","Test it with the Fake Hype Train button before going live.":"正式直播前，使用Fake Hype Train按鈕進行測試。","Test or persist matching privileges for OBS and Social Stream.":"測試或長期保持OBS與Social Stream的權限一致。","Test with the built-in simulator before going live":"正式直播前，使用內建模擬器進行測試","Test with the simulator before going live":"正式直播前，使用模擬器進行測試","Testing:":"測試：","Text-to-Speech":"文字轉語音","The CSS will be appended to the URL as base64 encoded data":"CSS將作為base64編碼的資料附加到URL","The Event Flow Editor is a powerful node-based automation system for building custom workflows. It's the \"advanced automation\" layer that lets you script your own routing logic.":"Event Flow編輯器是強大的節點式自動化系統，可用於建立自訂工作流程。它提供進階自動化功能，讓您編寫自己的路由邏輯。","The Social Stream Ninja desktop app avoids many browser throttling issues.":"Social Stream Ninja桌面應用程式可避免許多瀏覽器限制執行頻率的問題。","The app will update automatically when you restart it. You can also check for updates manually from the app's menu.":"應用程式會在重新啟動時自動更新。您也可以從應用程式選單手動檢查更新。","The browser extension is better if you:":"如果您有以下需求，瀏覽器擴充功能更合適：","The desktop app supports the same provider-backed AI tools, including:":"桌面應用程式支援相同的AI提供者工具，包括：","The extension or desktop app merges every chat into one session":"擴充功能或桌面應用程式將所有聊天合併到一個工作階段中","The message will stay pinned at the top of the dashboard":"訊息將保持置頂在儀表板頂端","The normalized donation is shared with chat, alerts, Event Flow, and the Tip Jar/Goal Meter.":"標準化後的贊助會共用給聊天、提醒、Event Flow，以及贊助罐／目標進度條。","The standalone app avoids many browser limitations like throttling and provides additional features like window pinning.":"獨立應用程式可避免執行頻率限制等多種瀏覽器限制，並提供視窗置頂等額外功能。","The standalone app has the most TikTok options in SSN, so the guide lives on its own page now.":"獨立應用程式擁有SSN中最多的TikTok選項，因此指南現已獨立成頁。","The standalone app includes additional features not available in the browser extension:":"獨立應用程式包含瀏覽器擴充功能中沒有的額外功能：","The standalone app is recommended for most users as it:":"建議大多數使用者使用獨立應用程式，因為它：","The standalone app provides a simpler installation process compared to the browser extension:":"與瀏覽器擴充功能相比，獨立應用程式的安裝過程更簡單：","The standalone app simplifies connection to various platforms:":"獨立應用程式簡化了各個平台的連接：","The standalone app supports the same CSS customization methods as the extension:":"獨立應用程式支援與擴充功能相同的CSS自訂方法：","The standalone app supports the same URL parameters as the browser extension. You can customize both the dashboard and overlay:":"獨立應用程式支援與瀏覽器擴充功能相同的URL參數。您可以自訂儀表板和疊加畫面：","The standalone app supports two-way chat messaging for supported platforms:":"獨立應用程式在支援的平台上提供雙向聊天訊息功能：","There are several ways to customize the appearance with CSS:":"有多種方式可以使用CSS自訂外觀：","Thermal printers and stream labels":"熱感印表機和直播標籤","TikFinity fallback setup":"TikFinity備用方式設定","TikTok":"TikTok","TikTok (Standalone App)":"TikTok（獨立應用程式）","TikTok Guide":"TikTok 指南","TikTok app modes":"TikTok應用程式模式","TikTok guide":"TikTok指南","TikTok in the desktop app":"桌面應用程式中的TikTok","TikTok quick start":"TikTok快速入門","TikTok signing":"TikTok簽署","TikTok, Kick, & Others":"TikTok、Kick及其他平台","TikTok, YouTube, Twitch, Kick, supported sites":"TikTok、YouTube、Twitch、Kick、支援的網站","TikTok:":"TikTok：","Tip Jar and Goal Meter":"贊助罐和目標進度條","Tip:":"提示：","Tips":"贊助","Tips, memberships, shop orders, commissions and wishlist funding":"贊助、會員、商店訂單、委託和願望清單募款","To unpin, hold ALT and click the pinned message again":"若要取消置頂，請按住ALT並再次點選已置頂訊息","To update the manually installed extension, download the latest version, replace the old files with the new ones, and then reload the extension or restart your browser.":"若要更新手動安裝的擴充功能，請下載最新版本，用新檔案替換舊檔案，然後重新載入擴充功能或重新啟動瀏覽器。","Transparency and hidden-menu settings for MELD and other non-OBS apps.":"用於MELD及其他非OBS應用程式的透明度和隱藏選單設定。","Trigger custom overlays and media":"觸發自訂疊加畫面和媒體","Trigger local MIDI actions from chat.":"從聊天觸發本機MIDI動作。","Trigger overlays and audio":"觸發疊加畫面和音訊","Trigger overlays and media":"觸發疊加畫面和媒體","Troubleshooting":"疑難排解","Troubleshooting (Browser Extension)":"疑難排解（瀏覽器擴充功能）","Troubleshooting (Standalone App)":"疑難排解（獨立應用程式）","Troubleshooting And Support":"疑難排解與支援","Try the Standalone App:":"試用獨立應用程式：","Try using a different DNS provider":"嘗試使用其他DNS提供者","Turn on First-time chatter detection.":"開啟首次發言者偵測。","Twitch":"Twitch","Twitch and YouTube flows, sender accounts, and echo troubleshooting.":"Twitch和YouTube流程、傳送者帳號和訊息回流疑難排解。","Twitch setup and EventSub":"Twitch設定與EventSub","Twitch:":"Twitch：","Two-Way Chat":"雙向聊天","URL Parameter Editor Tool":"URL參數編輯工具","URL Parameters":"URL參數","Ultra-realistic voices with custom voice training":"超逼真聲音，支援自訂聲音訓練","Under":"位於","Understand which SSApp local service matches your goal.":"瞭解哪項SSApp本機服務適合您的目標。","Upload, local files, or larger cloud libraries.":"上傳、本機檔案或更大的雲端素材庫。","Use Stripe's Test Mode with card":"使用Stripe測試模式，卡號為","Use Virtual Desktops:":"使用虛擬桌面：","Use bot commands and automated responses":"使用機器人指令和自動回覆","Use first-time chatter detection to highlight new viewers, show the leaf badge, or trigger first-time-only beeps.":"使用首次發言者偵測來醒目顯示新觀眾、顯示葉子徽章，或僅在首次發言時觸發提示音。","Use the":"使用","Use the \"Sign in\" button to authenticate if needed":"如有需要，使用「Sign in」按鈕進行驗證","Use the AppImage file for most Linux distributions":"大多數Linux發行版可使用AppImage檔案","Use the Fake Hype Train button to test it.":"使用Fake Hype Train按鈕進行測試。","Use the dedicated Hype Train Top Bar link to show Twitch Hype Train and Treasure Train progress in OBS.":"使用專用的Hype Train Top Bar連結，在OBS中顯示Twitch Hype Train和Treasure Train的進度。","Use the export feature to save your settings":"使用匯出功能儲存設定","Use the guide for setup steps, screenshots, and troubleshooting.":"請參閱指南中的設定步驟、螢幕截圖和疑難排解。","Use third-party overlay links as read-only chat sources.":"將第三方疊加畫面連結用作唯讀聊天來源。","Use this to log chats, trigger external automations, or sync with other tools":"使用此功能記錄聊天、觸發外部自動化或與其他工具同步","Use your normal generated dock and overlay links; do not add":"使用正常產生的停駐面板和疊加畫面連結；不要加入","User Memory guide":"使用者記憶指南","Username":"使用者名稱","Users, words, bots, commands, and global versus page filters.":"使用者、詞語、機器人、指令，以及全域與頁面篩選器。","Using the Dock during a stream":"直播期間使用停駐面板","VDO native app + SSN":"VDO原生應用程式＋SSN","Video guide, first source, key features, and help.":"影片指南、第一個來源、主要功能和說明。","Video stats and bitrate":"影片統計與位元率","View Troubleshooting Guide":"查看疑難排解指南","Viewer counts across most platforms":"大多數平台的觀眾人數","Visual guides: products, spot boards, recent sales, gifts and tips.":"圖文指南：商品、名額看板、近期銷售、禮物和贊助。","Voice AI cohost":"語音AI搭檔","Voice cohost:":"語音搭檔：","Voice cohosts, browser companions, bots, local models, TTS":"語音搭檔、瀏覽器助理、機器人、本機模型、文字轉語音","Want the latest updates immediately (manual installation)":"希望立即取得最新更新（手動安裝）","Want to keep it local and private?":"希望在本機執行並保護隱私？","Watch this video for a visual walkthrough of the standalone app:":"觀看以下影片，瞭解獨立應用程式的使用流程：","We maintain a canonical list of every event payload (followers, memberships, raids, viewer counts, donations, and more) in the":"我們在以下文件中維護所有事件酬載的標準清單，包括追隨者、會員、揪團、觀眾人數、贊助等：","WebSocket actions and examples.":"WebSocket動作與範例。","WebSocket source, OAuth, scopes, and event checks.":"WebSocket來源、OAuth、權限範圍和事件檢查。","Webhook URL":"Webhook URL","Webhooks":"Webhooks","Webhooks & Integrations":"Webhook與整合","What You Can Do:":"可以做什麼：","What platforms does Social Stream Ninja support?":"Social Stream Ninja支援哪些平台？","What stream event data, like new followers, is supported?":"支援哪些直播事件資料，例如新追隨者？","What the node editor can do, at a glance.":"快速瞭解節點編輯器的功能。","What to try when TikTok says you are offline, misses messages, duplicates chat, or closes auth windows":"TikTok顯示您離線、漏收訊息、聊天重複或關閉驗證視窗時，可嘗試的方法","When using YouTube or Twitch, make sure the pop-out chat window is open and visible":"使用YouTube或Twitch時，請確認彈出聊天視窗保持開啟且可見","When using the app's overlay URL in OBS:":"在OBS中使用應用程式的疊加畫面URL時：","Where can I find the API and automation documentation?":"在哪裡可以找到API和自動化文件？","Where can I get help if I'm having problems?":"遇到問題時，在哪裡可以取得協助？","Which mode to use: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy, or Euler Signing":"應該選擇哪種模式：TikTok WS＋Auto、Standard、Local Signer、Polling、Euler Proxy或Euler Signing","Window Pinning:":"視窗置頂：","Windows administrator mode":"Windows系統管理員模式","Windows, macOS, and Linux security warnings.":"Windows、macOS和Linux安全警告。","Windows:":"Windows：","Works the same in the Chrome extension, Electron app, and hosted pages.":"在Chrome擴充功能、Electron應用程式和代管頁面中的運作方式相同。","X.com":"X.com","Yes! Social Stream Ninja supports two-way chat functionality for most platforms. When you're logged into a platform and have the appropriate permissions, you can send messages from the dashboard or via API commands that will appear in all connected chats simultaneously.":"可以！Social Stream Ninja在大多數平台上支援雙向聊天。當您登入平台且擁有適當權限時，可以從儀表板或透過API指令傳送訊息，這些訊息會同時出現在所有已連接的聊天中。","Yes, Social Stream Ninja is completely free and open source under the GPLv3.0 License. There are no subscriptions, no hidden fees, and no feature limitations. The project is maintained by Steve Seguin with contributions from the community.":"是的，Social Stream Ninja完全免費，並以GPLv3.0授權條款開放原始碼。沒有訂閱、隱藏費用或功能限制。專案由Steve Seguin維護，社群共同貢獻。","You can also export chat data to external services:":"您也可以將聊天資料匯出到外部服務：","You can customize both the dashboard and overlay by adding parameters to their URL. Some examples:":"透過在URL中加入參數，可以自訂儀表板和疊加畫面。例如：","YouTube":"YouTube","YouTube Custom Project Setup":"YouTube自訂專案設定","YouTube project setup":"YouTube專案設定","YouTube setup guide":"YouTube設定指南","YouTube video player":"YouTube影片播放器","YouTube, Twitch, TikTok, and 100+ more platforms":"YouTube、Twitch、TikTok及另外100多個平台","YouTube, Twitch, and Kick events across alerts, TTS, goals, and Event Flow.":"在提醒、文字轉語音、目標和Event Flow中使用YouTube、Twitch和Kick事件。","YouTube:":"YouTube：","Your configuration or settings aren't being saved between sessions.":"組態或設定未在工作階段之間儲存。","Your first giveaway":"你的第一次抽獎","and Spanish":"以及西班牙語","and create a new endpoint":"並建立新的端點","and the Dock display toggle under":"以及以下位置的停駐面板顯示開關：","answer selected viewers in an overlay, through TTS, or back into supported chats.":"在疊加畫面中、透過文字轉語音或在支援的聊天中回覆選取的觀眾。","based on events or keywords":"根據事件或關鍵字","based on specific events or keywords":"根據指定事件或關鍵字","between platforms with smart filters":"透過智慧篩選在平台之間轉送","capture or experimentally relay chat into an open":"擷取聊天，或透過實驗性功能將聊天轉送到已開啟的","chat relay walkthrough":"聊天轉送教學","combine microphone conversation, live-chat questions, and spoken responses.":"結合麥克風對話、即時聊天提問和語音回覆。","discord.socialstream.ninja":"discord.socialstream.ninja","documentation.":"文件。","eSpeak-NG:":"eSpeak-NG：","for Fourthwall, Ko-fi and Buy Me a Coffee, including receiver status, isolated previews and product import.":"適用於Fourthwall、Ko-fi和Buy Me a Coffee，包括接收狀態、獨立預覽和商品匯入。","for complete event payload documentation.":"，其中包含完整的事件酬載文件。","for donation webhooks":"用於贊助Webhook","for full setup instructions including self-hosted server options and OBS audio capture.":"，其中包含完整設定說明，包括自行代管伺服器選項和OBS音訊擷取。","for screenshots, color choices, troubleshooting, and CSS examples.":"，其中包含螢幕截圖、色彩選擇、疑難排解和CSS範例。","for setup. For detailed documentation, see the":"以完成設定。詳細文件請參閱","for step-by-step hosting and CSS examples.":"，其中包含逐步代管說明和CSS範例。","illustrated setup guide":"圖文設定指南","in the template URL with your session ID":"，將範本URL中的該值替換為您的工作階段ID","local models, self-hosted endpoints, or supported cloud APIs.":"本機模型、自行代管端點或支援的雲端API。","macOS:":"macOS：","moderation, translation, summaries, RAG knowledge search, and AI-built overlays.":"內容管理、翻譯、摘要、RAG知識搜尋和AI建立的疊加畫面。","moderation, translation, summaries, and RAG knowledge search.":"內容管理、翻譯、摘要和RAG知識搜尋。","node to control whether captured echoes appear in the Dock and overlays. See the":"節點來控制擷取的回流訊息是否出現在停駐面板和疊加畫面中。請參閱","or":"或","or eSpeak":"或eSpeak","page.":"頁面。","page. It's the best starting point when you want to script custom behaviors or integrate Social Stream Ninja with other tools.":"頁面。若要編寫自訂行為，或將Social Stream Ninja與其他工具整合，這是最佳起點。","public chat replies or a separate one-on-one helper.":"公開聊天回覆，或獨立的一對一助理。","remote API control lets the background script normalize donation webhooks and deliver them like normal messages. The other API transport toggles can remain off.":"遠端API控制允許背景指令碼標準化贊助Webhook，並像一般訊息一樣傳遞。其他API傳輸開關可以保持關閉。","remote API control of extension":"擴充功能的遠端 API 控制","scenes and sources automatically":"自動控制場景和來源","tab without an API key.":"分頁，不需API金鑰。","talk by microphone while live-chat questions enter the same cohost session.":"透過麥克風交談，同時讓即時聊天提問進入同一個搭檔工作階段。","the extension if you want to keep your settings. If using the Chrome Web Store version, it will update automatically but less frequently.":"擴充功能，以便保留設定。如果使用Chrome線上應用程式商店版本，它會自動更新，但頻率較低。","to your featured.html or dock.html URL":"到featured.html或dock.html的URL","toggle in settings":"設定中的開關","value in your dock and overlay URLs.":"值，用於停駐面板和疊加畫面URL。","with AND/OR/NOT logic gates":"透過AND／OR／NOT邏輯閘","with contributions from the community.":"，社群共同參與貢獻。","with logic gates (AND/OR/NOT)":"透過邏輯閘（AND／OR／NOT）","with queue management":"並管理佇列","with smart filters (e.g., mirror Twitch to Discord but block commands)":"透過智慧篩選（例如將Twitch轉送到Discord，但封鎖指令）","without relying on Google/System fonts.":"而不需依賴Google或系統字型。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/guides.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/guides.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/guides.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/guides.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/guides.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/guides.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/guides.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/guides.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/guides.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/guides.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/guides.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/guides.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/guides.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/guides.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/guides.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/guides.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/guides.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/guides.html">
+<!-- ssn-languages:end --></head>
+<body class="guides-page">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html" aria-current="page">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/guides.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/guides.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/guides.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/guides.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/guides.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/guides.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/guides.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/guides.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="guides.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/guides.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/guides.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/guides.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/guides.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/guides.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/guides.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/guides.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/guides.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>指南</h1>
+            <p>瞭解如何設定、自訂並充分運用Social Stream Ninja</p>
+        </div>
+    </section>
+
+    <section class="guide-flow-section" aria-label="Social Stream Ninja各部分如何配合">
+        <div class="container">
+            <div class="guide-flow">
+                <div class="guide-flow-step">
+                    <div class="guide-flow-icons">
+                        <i class="fab fa-youtube" aria-hidden="true"></i>
+                        <i class="fab fa-twitch" aria-hidden="true"></i>
+                        <i class="fab fa-tiktok" aria-hidden="true"></i>
+                        <i class="fas fa-comment-dots" aria-hidden="true"></i>
+                    </div>
+                    <strong>聊天來源</strong>
+                    <small>YouTube、Twitch、TikTok及另外100多個平台</small>
+                </div>
+                <div class="guide-flow-arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
+                <div class="guide-flow-step">
+                    <div class="guide-flow-icons">
+                        <i class="fas fa-user-ninja" aria-hidden="true"></i>
+                    </div>
+                    <strong>Social Stream Ninja</strong>
+                    <small>擴充功能或桌面應用程式將所有聊天合併到一個工作階段中</small>
+                </div>
+                <div class="guide-flow-arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
+                <div class="guide-flow-outputs">
+                    <div class="guide-flow-step guide-flow-step-mini">
+                        <div class="guide-flow-icons"><i class="fas fa-columns" aria-hidden="true"></i></div>
+                        <strong>停駐面板</strong>
+                        <small>管理、展示和回覆</small>
+                    </div>
+                    <div class="guide-flow-step guide-flow-step-mini">
+                        <div class="guide-flow-icons"><i class="fas fa-tv" aria-hidden="true"></i></div>
+                        <strong>OBS疊加畫面</strong>
+                        <small>在直播中展示精選聊天和提醒</small>
+                    </div>
+                </div>
+            </div>
+            <p class="guide-flow-caption">一個工作階段ID連接所有部分：請使用相同的 <code>?session=</code> 值，用於停駐面板和疊加畫面URL。</p>
+        </div>
+    </section>
+
+	<section id="guide-directory" class="guide-directory">
+		<div class="container">
+			<div class="guide-directory-header">
+				<div>
+					<h2>尋找指南</h2>
+					<p class="section-subtitle">搜尋或開啟一個類別。如果只是想在螢幕上顯示聊天，請從OBS開始。</p>
+				</div>
+				<div class="guide-filter">
+					<label for="guide-filter-input">篩選</label>
+					<input id="guide-filter-input" type="search" placeholder="OBS、TikTok、文字轉語音、API……" autocomplete="off">
+					<button id="guide-filter-clear" type="button">清除</button>
+				</div>
+			</div>
+			<div class="guide-tree">
+				<details class="guide-tree-group" open>
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-rocket" aria-hidden="true"></i> 從這裡開始</span>
+						<small>安裝、連接聊天、加入OBS疊加畫面</small>
+					</summary>
+					<ul>
+						<li><a href="getting-started.html"><i class="fas fa-play-circle" aria-hidden="true"></i><span><strong>從這裡開始：在SSN中接收第一則聊天</strong><small>安裝、連接來源、開啟停駐面板，再加入文字轉語音和OBS音訊。</small></span></a></li>
+						<li><a href="download.html"><i class="fas fa-download" aria-hidden="true"></i><span><strong>安裝或更新</strong><small>下載擴充功能和桌面應用程式。</small></span></a></li>
+						<li><a href="monetization.html"><i class="fas fa-gift" aria-hidden="true"></i><span><strong>商務與營利疊加畫面</strong><small>圖文指南：商品、名額看板、近期銷售、禮物和贊助。</small></span></a></li>
+<li><a href="games-gallery.html"><i class="fas fa-gamepad" aria-hidden="true"></i><span><strong>瀏覽遊戲庫</strong><small>每款遊戲和聊天互動的螢幕截圖與快速預覽。</small></span></a></li>
+<li><a href="inspiration.html"><i class="fas fa-lightbulb" aria-hidden="true"></i><span><strong>尋找直播創意</strong><small>126個創意，涵蓋遊戲、音樂、教學、創作、直播銷售和社群活動。</small></span></a></li>
+						<li><a href="desktop-app-wont-open.html"><i class="fas fa-shield-alt" aria-hidden="true"></i><span><strong>桌面應用程式無法開啟</strong><small>Windows、macOS和Linux安全警告。</small></span></a></li>
+						<li><a href="windows-administrator-mode.html"><i class="fas fa-user-shield" aria-hidden="true"></i><span><strong>Windows系統管理員模式</strong><small>測試或長期保持OBS與Social Stream的權限一致。</small></span></a></li>
+						<li><a href="safe-updates-backups.html"><i class="fas fa-shield-alt" aria-hidden="true"></i><span><strong>安全更新與復原</strong><small>備份設定、安全更新並復原工作階段。</small></span></a></li>
+						<li><a href="obs-quick-start.html"><i class="fas fa-desktop" aria-hidden="true"></i><span><strong>OBS 快速入門</strong><small>工作階段、停駐面板、疊加畫面、瀏覽器來源。</small></span></a></li>
+						<li><a href="sessions-passwords-relay-modes.html"><i class="fas fa-key" aria-hidden="true"></i><span><strong>工作階段、密碼和伺服器備用方式</strong><small>讓來源、停駐面板、疊加畫面、讀取和回覆的路由保持一致。</small></span></a></li>
+						<li><a href="platform-setup-picker.html"><i class="fas fa-map-signs" aria-hidden="true"></i><span><strong>平台設定選擇器</strong><small>選擇瀏覽器、彈出視窗、應用程式或來源頁面。</small></span></a></li>
+						<li><a href="../lite/guide.html"><i class="fas fa-feather" aria-hidden="true"></i><span><strong>Lite設定</strong><small>不需安裝完整應用程式，即可從瀏覽器或OBS擷取支援的聊天。</small></span></a></li>
+						<li><a href="standalone-app-modes.html"><i class="fas fa-window-restore" aria-hidden="true"></i><span><strong>獨立應用程式模式</strong><small>標準模式、WebSocket、TikTok預設和來源視窗。</small></span></a></li>
+						<li><a href="local-services-guide.html"><i class="fas fa-network-wired" aria-hidden="true"></i><span><strong>本機伺服器和服務</strong><small>選擇本機轉送、自動化API、無介面代管或媒體服務。</small></span></a></li>
+						<li><a href="ssapp.html"><i class="fas fa-book-open" aria-hidden="true"></i><span><strong>桌面應用程式使用教學</strong><small>影片指南、第一個來源、主要功能和說明。</small></span></a></li>
+						<li><a href="settings.html"><i class="fas fa-sliders-h" aria-hidden="true"></i><span><strong>設定與URL參考</strong><small>搜尋設定、URL選項、預設值和支援的頁面。</small></span></a></li>
+						<li><a href="vdo-native-social-stream-guide.html"><i class="fas fa-mobile-alt" aria-hidden="true"></i><span><strong>VDO原生應用程式＋SSN</strong><small>將SSN聊天傳送到VDO.Ninja行動應用程式。</small></span></a></li>
+						<li><a href="#extension-getting-started"><i class="fas fa-puzzle-piece" aria-hidden="true"></i><span><strong>瀏覽器擴充功能設定</strong><small>開啟聊天、停駐面板和疊加畫面連結。</small></span></a></li>
+						<li><a href="#standalone-getting-started"><i class="fas fa-window-restore" aria-hidden="true"></i><span><strong>桌面應用程式設定</strong><small>使用受管理的來源視窗，而不是分頁。</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary><span class="guide-tree-title"><i class="fas fa-broadcast-tower" aria-hidden="true"></i> 管理直播</span><small>停駐面板操作、內容管理、轉送和參與互動</small></summary>
+					<ul>
+						<li><a href="dock-live-guide.html"><i class="fas fa-columns" aria-hidden="true"></i><span><strong>直播期間使用停駐面板</strong><small>展示、清除、排隊、置頂、回覆並管理繁忙的聊天。</small></span></a></li>
+						<li><a href="moderation-filtering-guide.html"><i class="fas fa-shield-alt" aria-hidden="true"></i><span><strong>內容管理和訊息篩選</strong><small>使用者、詞語、機器人、指令，以及全域與頁面篩選器。</small></span></a></li>
+						<li><a href="chat-relay-guide.html"><i class="fas fa-exchange-alt" aria-hidden="true"></i><span><strong>在平台之間轉送聊天</strong><small>Twitch和YouTube流程、傳送者帳號和訊息回流疑難排解。</small></span></a></li>
+						<li><a href="polls-giveaways-waitlists-guide.html"><i class="fas fa-vote-yea" aria-hidden="true"></i><span><strong>投票、贈獎和候補名單</strong><small>發起投票、抽出得獎者或推進觀眾佇列。</small></span></a></li>
+						<li><a href="giveaway-guide.html"><i class="fas fa-gift" aria-hidden="true"></i><span><strong>你的第一次抽獎</strong><small>收集聊天報名、抽出得獎者，並在OBS中顯示結果。</small></span></a></li>
+						<li><a href="loyalty-points-guide.html"><i class="fas fa-coins" aria-hidden="true"></i><span><strong>忠誠度點數和獎勵</strong><small>獲得點數、餘額、貼圖兌換和點數備份。</small></span></a></li>
+						<li><a href="multiple-overlays-guide.html"><i class="fas fa-layer-group" aria-hidden="true"></i><span><strong>多個頻道和獨立疊加畫面</strong><small>一個操作停駐面板，按平台和來源分開查看。</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-layer-group" aria-hidden="true"></i> 疊加畫面與自訂</span>
+						<small>範本、樣式選項、字型和事件</small>
+					</summary>
+					<ul>
+						<li><a href="templates.html"><i class="fas fa-th-large" aria-hidden="true"></i><span><strong>範本庫</strong><small>現成的疊加畫面版面配置。</small></span></a></li>
+						<li><a href="streamelements-chat-guide.html"><i class="fas fa-file-import" aria-hidden="true"></i><span><strong>StreamElements／Streamlabs聊天外觀</strong><small>匯入自訂聊天主題、預覽並下載OBS疊加畫面。</small></span></a></li>
+						<li><a href="overlay-template-quick-start.html"><i class="fas fa-images" aria-hidden="true"></i><span><strong>範本快速入門</strong><small>選擇範本並加入OBS。</small></span></a></li>
+						<li><a href="on-screen-chat-overlay.html"><i class="fas fa-gamepad" aria-hidden="true"></i><span><strong>遊戲時在螢幕上顯示聊天</strong><small>私人監看疊加畫面、置頂、透明度、快速鍵和啟動指令。</small></span></a></li>
+						<li><a href="transparent-dock-non-obs.html"><i class="fas fa-adjust" aria-hidden="true"></i><span><strong>移除停駐面板的灰色背景</strong><small>用於MELD及其他非OBS應用程式的透明度和隱藏選單設定。</small></span></a></li>
+						<li><a href="overlay-customization-guide.html"><i class="fas fa-paint-brush" aria-hidden="true"></i><span><strong>設計您自己的疊加層</strong><small>依類型、下載、會話 ID、本機 OBS 設定和安全性 AI 提示進行指南。</small></span></a></li>
+						<li><a href="poll-customization-guide.html"><i class="fas fa-vote-yea" aria-hidden="true"></i><span><strong>自訂您的圖形民意調查</strong><small>OBS CSS、AI設計提示，以及本地編輯poll.html。</small></span></a></li>
+						<li><a href="name-colors.html"><i class="fas fa-palette" aria-hidden="true"></i><span><strong>不同的聊天姓名顏色</strong><small>必要設定、色彩模式、螢幕截圖和CSS。</small></span></a></li>
+						<li><a href="tip-jar-goal-meter.html"><i class="fas fa-donate" aria-hidden="true"></i><span><strong>贊助罐和目標進度條</strong><small>贊助目標、Hype計分、會員和贈送會員。</small></span></a></li>
+						<li><a href="credits-roll-guide.html"><i class="fas fa-film" aria-hidden="true"></i><span><strong>捲動致謝名單</strong><small>收集參與者和支持者、設定OBS，並觸發片尾捲動名單。</small></span></a></li>
+						<li><a href="custom-fonts.html"><i class="fas fa-font" aria-hidden="true"></i><span><strong>自訂字型</strong><small>自行代管字型和CSS範例。</small></span></a></li>
+						<li><a href="events-alerts-compatibility.html"><i class="fas fa-bell" aria-hidden="true"></i><span><strong>事件和提醒相容性</strong><small>在提醒、文字轉語音、目標和Event Flow中使用YouTube、Twitch和Kick事件。</small></span></a></li>
+						<li><a href="event-reference.html"><i class="fas fa-list-alt" aria-hidden="true"></i><span><strong>事件參考</strong><small>提醒和疊加畫面的酬載欄位。</small></span></a></li>
+						<li><a href="#extension-hype-train-top-bar"><i class="fas fa-fire" aria-hidden="true"></i><span><strong>Hype Train頂端列</strong><small>專用的Twitch Hype Train疊加畫面。</small></span></a></li>
+						<li><a href="#extension-first-time-chatters"><i class="fas fa-user-plus" aria-hidden="true"></i><span><strong>首次發言者</strong><small>在聊天中醒目顯示新觀眾。</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-cogs" aria-hidden="true"></i> 自動化與整合</span>
+						<small>API、指令、Event Flow、Webhook</small>
+					</summary>
+					<ul>
+						<li><a href="../streamdeck/index.html"><i class="fas fa-th" aria-hidden="true"></i><span><strong>Stream Deck設定</strong><small>安裝外掛、連接工作階段並測試一個控制功能。</small></span></a></li>
+						<li><a href="thermal-printer-guide.html"><i class="fas fa-print" aria-hidden="true"></i><span><strong>熱感印表機和直播標籤</strong><small>從Event Flow列印姓名、贊助、購買、收據和固定尺寸貼紙。</small></span></a></li>
+						<li><a href="sticker-gallery.html"><i class="fas fa-star" aria-hidden="true"></i><span><strong>貼圖包和忠誠度獎勵</strong><small>預覽六個素材包；設定點數價格、冷卻時間、自訂圖片和GIPHY GIF獎勵。</small></span></a></li>
+						<li><a href="local-services-guide.html"><i class="fas fa-network-wired" aria-hidden="true"></i><span><strong>本機伺服器和服務</strong><small>瞭解哪項SSApp本機服務適合您的目標。</small></span></a></li>
+						<li><a href="local-websocket-server-guide.html"><i class="fas fa-exchange-alt" aria-hidden="true"></i><span><strong>代管WebSocket和本機伺服器模式</strong><small>啟用代管伺服器的聊天和回覆路由，或使用SSApp的進階本機轉送。</small></span></a></li>
+						<li><a href="llm-control-guide.html"><i class="fas fa-robot" aria-hidden="true"></i><span><strong>本機控制API和MCP</strong><small>將桌面應用程式連接到本機AI工具或同一台電腦上的指令碼。</small></span></a></li>
+						<li><a href="headless-server-guide.html"><i class="fas fa-server" aria-hidden="true"></i><span><strong>無介面的家用伺服器或VPS</strong><small>透過Xvfb和遠端控制，在Linux上執行完整桌面應用程式。</small></span></a></li>
+						<li><a href="test-message-guide.html"><i class="fas fa-vial" aria-hidden="true"></i><span><strong>建立測試訊息</strong><small>傳送模擬的聊天、贊助、會員、揪團、獎勵及其他事件酬載。</small></span></a></li>
+						<li><a href="commands.html"><i class="fas fa-terminal" aria-hidden="true"></i><span><strong>指令與API</strong><small>WebSocket動作與範例。</small></span></a></li>
+						<li><a href="obs-control-dock-guide.html"><i class="fas fa-sliders-h" aria-hidden="true"></i><span><strong>OBS控制停駐面板</strong><small>在OBS中使用片尾名單、精選聊天、計時器和候補名單按鈕。</small></span></a></li>
+						<li><a href="event-flow-recipes.html"><i class="fas fa-project-diagram" aria-hidden="true"></i><span><strong>Event Flow實用流程</strong><small>音效、獎勵、媒體、Webhook、OBS動作。</small></span></a></li>
+						<li><a href="media-hosting-event-flow.html"><i class="fas fa-photo-video" aria-hidden="true"></i><span><strong>Event Flow媒體代管</strong><small>上傳、本機檔案或更大的雲端素材庫。</small></span></a></li>
+						<li><a href="video-stats-bitrate.html"><i class="fas fa-tachometer-alt" aria-hidden="true"></i><span><strong>影片統計與位元率</strong><small>輪詢SRT、RTMP或媒體伺服器統計資料，並在停駐面板中顯示位元率。</small></span></a></li>
+						<li><a href="#extension-event-flow"><i class="fas fa-project-diagram" aria-hidden="true"></i><span><strong>Event Flow概覽</strong><small>快速瞭解節點編輯器的功能。</small></span></a></li>
+						<li><a href="../actions/event-flow-guide.html"><i class="fas fa-sitemap" aria-hidden="true"></i><span><strong>Event Flow詳細指南</strong><small>完整的編輯器和動作流程參考。</small></span></a></li>
+						<li><a href="../actions/user-memory-guide.html"><i class="fas fa-users" aria-hidden="true"></i><span><strong>使用者記憶指南</strong><small>參與者清單、資格檢查、抽獎、持續儲存和指定重設。</small></span></a></li>
+						<li><a href="../../docs/index.html?file=kick-channel-points-event-flow.md"><i class="fas fa-gift" aria-hidden="true"></i><span><strong>Kick獎勵音效／媒體</strong><small>設定由獎勵觸發的動作流程。</small></span></a></li>
+						<li><a href="#extension-webhooks"><i class="fas fa-link" aria-hidden="true"></i><span><strong>Webhooks</strong><small>Stripe、Ko-fi、Fourthwall等。</small></span></a></li>
+						<li><a href="#extension-midi"><i class="fas fa-sliders-h" aria-hidden="true"></i><span><strong>MIDI</strong><small>從聊天觸發本機MIDI動作。</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-robot" aria-hidden="true"></i> AI與文字轉語音</span>
+						<small>語音搭檔、瀏覽器助理、機器人、本機模型、文字轉語音</small>
+					</summary>
+					<ul>
+						<li><a href="ai-modes-guide.html"><i class="fas fa-robot" aria-hidden="true"></i><span><strong>完整AI指南</strong><small>選擇語音搭檔、ChatGPT瀏覽器助理、聊天機器人、內容管理、RAG、翻譯或疊加畫面建構工具。</small></span></a></li>
+						<li><a href="ai-modes-guide.html#browser-companion"><i class="fas fa-window-restore" aria-hidden="true"></i><span><strong>ChatGPT瀏覽器助理</strong><small>不需API金鑰，即可擷取即時聊天，或透過實驗性功能將其轉送到已開啟的ChatGPT分頁。</small></span></a></li>
+						<li><a href="tts-setup-guide.html"><i class="fas fa-volume-up" aria-hidden="true"></i><span><strong>文字轉語音設定指南</strong><small>適合OBS的簡易語音設定，附帶螢幕截圖。</small></span></a></li>
+						<li><a href="speechify-setup-guide.html"><i class="fas fa-volume-up" aria-hidden="true"></i><span><strong>Speechify設定指南</strong><small>API金鑰、聲音選擇、朗讀速度，以及OBS中的觀眾音量。</small></span></a></li>
+						<li><a href="tts.html"><i class="fas fa-book" aria-hidden="true"></i><span><strong>完整文字轉語音參考</strong><small>所有提供者參數和音訊路由說明。</small></span></a></li>
+						<li><a href="local-tts.html"><i class="fas fa-microphone-alt" aria-hidden="true"></i><span><strong>本機 AI TTS</strong><small>注重隱私的瀏覽器和伺服器語音選項。</small></span></a></li>
+						<li><a href="chatbot-basics-guide.html"><i class="fas fa-comments" aria-hidden="true"></i><span><strong>AI聊天機器人設定</strong><small>提供者、主要機器人控制、安全測試和未收到回覆的排查。</small></span></a></li>
+						<li><a href="ai-cohost-guide.html"><i class="fas fa-brain" aria-hidden="true"></i><span><strong>語音AI搭檔</strong><small>麥克風對話、即時聊天提問、語音回覆和舞台疊加畫面。</small></span></a></li>
+						<li><a href="ai-overlay-builder-guide.html"><i class="fas fa-magic" aria-hidden="true"></i><span><strong>AI疊加畫面建構工具</strong><small>輸入提示、預覽並加入產生的疊加畫面。</small></span></a></li>
+						<li><a href="twitch-bot-account-chatbot.html"><i class="fas fa-user-astronaut" aria-hidden="true"></i><span><strong>用於回覆的機器人帳號</strong><small>比較Twitch WebSocket與僅回覆的來源方式。</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-broadcast-tower" aria-hidden="true"></i> 平台指南</span>
+						<small>TikTok、YouTube、Twitch、Kick、支援的網站</small>
+					</summary>
+					<ul>
+						<li><a href="source-types-guide.html"><i class="fas fa-tags" aria-hidden="true"></i><span><strong>來源類型</strong><small>酬載名稱、YouTube Shorts、Instagram Live、通用擷取和回覆。</small></span></a></li>
+						<li><a href="external-overlay-sources.html"><i class="fas fa-link" aria-hidden="true"></i><span><strong>Discord StreamKit與TikFinity</strong><small>將第三方疊加畫面連結用作唯讀聊天來源。</small></span></a></li>
+						<li><a href="tiktok-quick-start.html"><i class="fab fa-tiktok" aria-hidden="true"></i><span><strong>TikTok快速入門</strong><small>簡單的直播設定，附帶螢幕截圖。</small></span></a></li>
+						<li><a href="tikfinity-setup.html"><i class="fab fa-tiktok" aria-hidden="true"></i><span><strong>TikFinity備用方式設定</strong><small>連接TikTok、選擇停駐面板活動，並在SSN中擷取。</small></span></a></li>
+						<li><a href="tiktok-guide.html"><i class="fas fa-comment-dots" aria-hidden="true"></i><span><strong>TikTok指南</strong><small>連線模式和常見故障。</small></span></a></li>
+						<li><a href="tiktok-app-modes-guide.html"><i class="fas fa-mobile-alt" aria-hidden="true"></i><span><strong>TikTok應用程式模式</strong><small>自動、標準、簽署器、輪詢和代理模式。</small></span></a></li>
+						<li><a href="tiktok-signing.html"><i class="fas fa-signature" aria-hidden="true"></i><span><strong>TikTok簽署</strong><small>簽署伺服器錯誤、速率限制和Euler API金鑰。</small></span></a></li>
+						<li><a href="standalone-app-modes.html#tiktok-in-the-app"><i class="fas fa-mobile-alt" aria-hidden="true"></i><span><strong>桌面應用程式中的TikTok</strong><small>獨立應用程式的TikTok模式說明。</small></span></a></li>
+						<li><a href="youtube-setup-guide.html"><i class="fab fa-youtube" aria-hidden="true"></i><span><strong>YouTube設定指南</strong><small>即時聊天、靜態留言、API／OAuth選項。</small></span></a></li>
+						<li><a href="youtube-project-setup.html"><i class="fab fa-youtube" aria-hidden="true"></i><span><strong>YouTube專案設定</strong><small>API專案和OAuth設定。</small></span></a></li>
+						<li><a href="twitch-eventsub-setup.html"><i class="fab fa-twitch" aria-hidden="true"></i><span><strong>Twitch設定與EventSub</strong><small>WebSocket來源、OAuth、權限範圍和事件檢查。</small></span></a></li>
+						<li><a href="kick-setup-authentication.html"><i class="fas fa-bolt" aria-hidden="true"></i><span><strong>Kick 設定與驗證</strong><small>頻道識別字、OAuth權限範圍、官方事件和常見故障。</small></span></a></li>
+						<li><a href="supported-sites.html"><i class="fas fa-globe" aria-hidden="true"></i><span><strong>支援的網站清單</strong><small>所有公開的平台設定說明。</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-life-ring" aria-hidden="true"></i> 疑難排解與支援</span>
+						<small>聊天遺漏、疊加畫面空白及深入支援文件</small>
+					</summary>
+					<ul>
+						<li><a href="knowledge-base.html"><i class="fas fa-life-ring" aria-hidden="true"></i><span><strong>知識庫</strong><small>常見問題的簡短修正方法。</small></span></a></li>
+						<li><a href="obs-troubleshooting.html"><i class="fas fa-tools" aria-hidden="true"></i><span><strong>OBS 疑難排解</strong><small>替換已儲存的URL、重新整理快取並修正空白疊加畫面。</small></span></a></li>
+						<li><a href="sessions-passwords-relay-modes.html"><i class="fas fa-key" aria-hidden="true"></i><span><strong>工作階段和路由疑難排解</strong><small>密碼、新連結，以及伺服器讀取／回覆備用方式。</small></span></a></li>
+						<li><a href="windows-administrator-mode.html"><i class="fas fa-user-shield" aria-hidden="true"></i><span><strong>Windows系統管理員模式</strong><small>僅適用於已確認OBS與Social Stream權限不一致的情況。</small></span></a></li>
+						<li><a href="export-settings-for-support.html"><i class="fas fa-file-export" aria-hidden="true"></i><span><strong>匯出設定以取得支援</strong><small>匯出Social Stream Ninja和OBS設定以供檢查。</small></span></a></li>
+						<li><a href="#extension-troubleshooting"><i class="fas fa-tools" aria-hidden="true"></i><span><strong>瀏覽器擴充功能疑難排解</strong><small>聊天遺漏、權限、執行頻率限制和開關。</small></span></a></li>
+						<li><a href="#standalone-troubleshooting"><i class="fas fa-wrench" aria-hidden="true"></i><span><strong>桌面應用程式疑難排解</strong><small>來源視窗、更新和設定檢查。</small></span></a></li>
+						<li><a href="support.html"><i class="fas fa-headset" aria-hidden="true"></i><span><strong>支援頁面</strong><small>Discord、GitHub議題和參與貢獻的方式。</small></span></a></li>
+						<li><a href="../../docs/index.html?file=agents/common-guides.md"><i class="fas fa-book-open" aria-hidden="true"></i><span><strong>進階支援索引</strong><small>支援工作流程和AI代理。</small></span></a></li>
+						<li><a href="obs-studio-guide.html"><i class="fas fa-desktop" aria-hidden="true"></i><span><strong>OBS Studio基礎知識</strong><small>場景、硬體編碼器、平台設定、音訊混合、監控和瀏覽器來源。</small></span></a></li>
+					</ul>
+				</details>
+			</div>
+			<p class="guide-filter-empty" id="guide-filter-empty">找不到符合的指南。</p>
+		</div>
+	</section>
+
+	<details class="guide-details" id="detailed-guides">
+		<summary>
+			<span><i class="fas fa-book" aria-hidden="true"></i> 詳細指南章節</span>
+			<small>完整的逐步指南內文。如果只需要目錄，可將其收合。</small>
+		</summary>
+
+	<section class="navigation" id="guides-nav">
+		<div class="container">
+			<div class="guide-tabs">
+				<button class="tab-btn active" data-tab="extension-guides">瀏覽器擴充功能</button>
+				<button class="tab-btn" data-tab="standalone-guides">獨立應用程式</button>
+			</div>
+			<div class="nav-links" id="extension-nav" data-section="extension">
+				<a href="#extension-getting-started" class="nav-link active">
+					<i class="fas fa-rocket"></i> 入門
+				</a>
+				<a href="#extension-customization" class="nav-link">
+					<i class="fas fa-paint-brush"></i> 自訂
+				</a>
+				<a href="#extension-advanced" class="nav-link">
+					<i class="fas fa-sliders-h"></i> 進階功能
+				</a>
+				<a href="#extension-troubleshooting" class="nav-link">
+					<i class="fas fa-tools"></i> 疑難排解
+				</a>
+				<a href="#faq" class="nav-link">
+					<i class="fas fa-question-circle"></i> 常見問題
+				</a>
+			</div>
+			<div class="nav-links" id="standalone-nav" data-section="standalone" style="display: none;">
+				<a href="#standalone-getting-started" class="nav-link active">
+					<i class="fas fa-rocket"></i> 入門
+				</a>
+				<a href="#standalone-tiktok" class="nav-link">
+					<i class="fas fa-comment-dots"></i> TikTok
+				</a>
+				<a href="#standalone-customization" class="nav-link">
+					<i class="fas fa-paint-brush"></i> 自訂
+				</a>
+				<a href="#standalone-advanced" class="nav-link">
+					<i class="fas fa-sliders-h"></i> 進階功能
+				</a>
+				<a href="#standalone-troubleshooting" class="nav-link">
+					<i class="fas fa-tools"></i> 疑難排解
+				</a>
+				<a href="#faq" class="nav-link">
+					<i class="fas fa-question-circle"></i> 常見問題
+				</a>
+			</div>
+		</div>
+	</section>
+
+	<!-- Extension Guides -->
+	<div id="extension-guides" class="guide-section-wrapper">
+		<section id="extension-getting-started" class="guide-section">
+			<div class="container">
+				<h2>入門（瀏覽器擴充功能）</h2>
+				
+				<div class="guide-card">
+					<h3>1. 安裝</h3>
+					<p>使用Social Stream Ninja前需要先安裝。瀏覽器擴充功能有多種安裝方式：</p>
+					<ul class="guide-list">
+						<li><strong>手動安裝（建議）：</strong> 若要使用最新版本，請在開發人員模式中手動安裝。</li>
+						<li><strong>Chrome線上應用程式商店：</strong> 透過Chrome線上應用程式商店安裝，設定最為簡單。</li>
+					</ul>
+					<p>詳細安裝說明請造訪 <a href="download.html">下載頁面</a>.</p>
+				</div>
+				
+				<div class="guide-card">
+					<h3>2. 基本設定</h3>
+					<p>安裝後，請依下列步驟開始使用Social Stream Ninja：</p>
+					<ol class="guide-steps">
+						<li>在瀏覽器中開啟直播平台的聊天（如果支援，也可使用彈出聊天功能）</li>
+						<li>點選瀏覽器工具列中的Social Stream Ninja擴充功能圖示</li>
+						<li>點選「Enable Extension」啟用擴充功能（圖示應變為綠色）</li>
+						<li>開啟擴充功能彈出選單提供的「Dashboard Link」</li>
+						<li>在OBS中將「Overlay Link」作為瀏覽器來源開啟</li>
+					</ol>
+					<div class="guide-note">
+						<p><strong>注意：</strong> 為獲得最佳體驗，使用瀏覽器擴充功能時，請讓聊天視窗保持可見，不要最小化。</p>
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>3. 連接不同平台</h3>
+					<p>Social Stream Ninja支援100多個平台。以下是連接常用平台的方法：</p>
+					
+					<div class="platform-guide">
+						<h4>YouTube</h4>
+						<ul class="guide-list">
+							<li>開啟YouTube直播聊天</li>
+							<li>點選右上角的「Pop out chat」按鈕</li>
+							<li>確認Social Stream Ninja擴充功能已啟用（綠色圖示）</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Twitch</h4>
+						<ul class="guide-list">
+							<li>開啟您頻道的Twitch聊天</li>
+							<li>點選齒輪圖示並選擇「Pop out chat」</li>
+							<li>確認Social Stream Ninja擴充功能已啟用（綠色圖示）</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Facebook</h4>
+						<ul class="guide-list">
+							<li>開啟您的Facebook直播（以觀眾或發佈者身分）</li>
+							<li>確認使用Wi-Fi或乙太網路連線，而不是行動數據</li>
+							<li>確認Social Stream Ninja擴充功能已啟用（綠色圖示）</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Discord、Slack、WhatsApp等。</h4>
+						<ul class="guide-list">
+							<li>首先，在擴充功能設定中啟用這些平台（切換開關）</li>
+							<li>在瀏覽器中開啟這些平台的網頁版</li>
+							<li>確認Social Stream Ninja擴充功能已啟用（綠色圖示）</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section id="extension-customization" class="guide-section alt">
+			<div class="container">
+				<h2>自訂（瀏覽器擴充功能）</h2>
+				
+				<div class="guide-card">
+					<h3>URL參數</h3>
+					<p>透過在URL中加入參數，可以自訂儀表板和疊加畫面。例如：</p>
+					
+					<h4>儀表板參數：</h4>
+					<div class="code-block">
+						<code>&darkmode</code> - 為儀表板啟用深色模式<br>
+						<code>&scale=2</code> - 將所有元素的大小和解析度加倍<br>
+						<code>&hidesource</code> - 隱藏平台圖示（YouTube、Twitch等）<br>
+						<code>&compact</code> - 移除姓名和訊息之間的間距<br>
+						<code>&inline</code> - 將訊息排在姓名旁邊，同時保留正常間距<br>
+						<code>&autoshow</code> - 自動展示新收到的訊息（約每3秒2則）
+					</div>
+					
+					<h4>疊加畫面參數：</h4>
+					<div class="code-block">
+						<code>&showtime=20000</code> - 20秒後自動隱藏所選訊息<br>
+						<code>&showsource</code> - 在使用者名稱旁顯示平台圖示<br>
+						<code>&fade</code> - 讓精選訊息淡入，而不是突然出現<br>
+						<code>&swipe</code> - 讓精選訊息從左側滑入<br>
+						<code>&center</code> - 將精選訊息放在畫面中央
+					</div>
+					
+					<p>若要更輕鬆地管理URL，請試用我們的 <a href="https://socialstream.ninja/urleditor.html" target="_blank">URL參數編輯工具</a>.</p>
+				</div>
+				
+				<div class="guide-card">
+					<h3>CSS自訂</h3>
+					<p>有多種方式可以使用CSS自訂外觀：</p>
+					
+					<h4>方法1：OBS瀏覽器來源CSS</h4>
+					<p>在OBS中，可以為瀏覽器來源加入自訂CSS：</p>
+					<ol class="guide-steps">
+						<li>將疊加畫面作為瀏覽器來源加入OBS</li>
+						<li>勾選「Custom CSS」選項</li>
+						<li>在文字方塊中輸入自訂CSS</li>
+					</ol>
+					
+					<div class="code-block">
+						<pre>body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
+
+:root {
+    --comment-color: #090;
+    --comment-bg-color: #DDD;
+    --comment-border-radius: 10px;
+    --comment-font-size: 30px;
+    --author-border-radius: 10px;
+    --author-bg-color: #FF0000;
+    --author-avatar-border-color: #FF0000;
+    --author-font-size: 32px;
+    --author-color: blue;
+    --font-family: "Arial", sans-serif;
+}
+
+.hl-name {
+    padding: 2px 10px !important;
+}</pre>
+					</div>
+					
+					<h4>方法2：擴充功能選單設定</h4>
+					<p>透過擴充功能選單直接加入CSS：</p>
+					<ol class="guide-steps">
+						<li>點選Social Stream Ninja擴充功能圖示</li>
+						<li>找到CSS／JavaScript設定區段</li>
+						<li>輸入自訂CSS或JavaScript</li>
+						<li>CSS將作為base64編碼的資料附加到URL</li>
+					</ol>
+					
+					<h4>方法3：使用自訂範本</h4>
+					<p>選擇內建CSS樣式的範本：</p>
+					<ul class="guide-list">
+						<li>瀏覽我們的 <a href="templates.html">範本庫</a></li>
+						<li>選擇符合直播風格的範本</li>
+						<li>替換 <code>YOURSESSIONID</code> ，將範本URL中的該值替換為您的工作階段ID</li>
+						<li>將範本URL作為瀏覽器來源加入OBS</li>
+					</ul>
+					<div class="guide-note">
+						<p><strong>範例：</strong> <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code></p>
+					</div>
+				</div>
+
+				<div class="guide-card">
+					<h3>為聊天姓名設定不同顏色</h3>
+					<p>姓名顏色需要兩項設定：首先，在以下位置設定通用顏色來源： <strong>訊息 - 樣式（Message - Styling）</strong> 以及以下位置的停駐面板顯示開關： <strong>訊息 - 可見性（Message - Visibility）</strong>.</p>
+					<div class="guide-note">
+						<p><a href="name-colors.html">開啟聊天姓名顏色指南</a> ，其中包含螢幕截圖、色彩選擇、疑難排解和CSS範例。</p>
+					</div>
+				</div>
+
+				<div class="guide-card">
+					<h3>自行代管字型與樣式</h3>
+					<p>將自己的字型用於 <code>dock.html</code> 或 <code>featured.html</code> 而不需依賴Google或系統字型。</p>
+					<ul class="guide-list">
+						<li>代管您的.woff2／.ttf／.otf檔案，並透過以下方式載入： <code>@font-face</code>.</li>
+						<li>透過OBS的自訂CSS或以下URL參數套用CSS： <code>&amp;css=</code>, <code>&amp;b64css=</code>, <code>&amp;font=</code>，或 <code>&amp;googlefont=</code>.</li>
+						<li>在Chrome擴充功能、Electron應用程式和代管頁面中的運作方式相同。</li>
+					</ul>
+					<div class="guide-note">
+						<p><a href="custom-fonts.html">開啟自行代管字型指南</a> ，其中包含逐步代管說明和CSS範例。</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section id="extension-advanced" class="guide-section">
+			<div class="container">
+				<h2>進階功能（瀏覽器擴充功能）</h2>
+
+				<div class="guide-card">
+					<h3>文字轉語音</h3>
+					<p>Social Stream Ninja可以使用文字轉語音技術朗讀聊天訊息：</p>
+
+					<h4>設定文字轉語音：</h4>
+					<ol class="guide-steps">
+						<li>新增 <code>&speech=en-US</code> 到featured.html或dock.html的URL</li>
+						<li>對於其他語言，請選擇支援該語言的提供者和聲音。例如，葡萄牙語可使用Piper <code>&pipervoice=pt_BR-faber-medium</code> 或eSpeak <code>&espeakvoice=pt-br</code>，而西班牙語可以使用Piper <code>&pipervoice=es_ES-davefx-medium</code> 或eSpeak <code>&espeakvoice=es</code>.</li>
+						<li>使用以下參數自訂語音設定： <code>&pitch=1&volume=1&rate=1</code></li>
+					</ol>
+
+					<h4>免費的本機文字轉語音選項（不需API金鑰）：</h4>
+					<ul class="guide-list">
+						<li><strong>Kokoro TTS：</strong> 瀏覽器內建AI，效果出色 — <code>&ttsprovider=kokoro</code></li>
+						<li><strong>Piper TTS：</strong> 快速、輕量的神經網路文字轉語音 — <code>&ttsprovider=piper</code></li>
+						<li><strong>eSpeak-NG：</strong> 輕量級的語言備用方案，包括葡萄牙語 <code>&espeakvoice=pt-br</code> 以及西班牙語 <code>&espeakvoice=es</code></li>
+						<li><strong>Kitten TTS：</strong> 占用最小，僅需CPU — <code>&ttsprovider=kitten</code></li>
+						<li><strong>自行代管的伺服器：</strong> 透過Docker在本機執行Kokoro-FastAPI或openedai-speech — <code>&ttsprovider=openai&openaiendpoint=http://localhost:8880/v1/audio/speech</code></li>
+					</ul>
+
+					<h4>優質雲端文字轉語音選項：</h4>
+					<ul class="guide-list">
+						<li><strong>Google Cloud TTS：</strong> 專業級聲音（需要Google API金鑰）</li>
+						<li><strong>ElevenLabs：</strong> 超逼真聲音，支援自訂聲音訓練</li>
+						<li><strong>Speechify：</strong> 自然的優質聲音</li>
+					</ul>
+
+					<div class="guide-note">
+						<p><strong>希望在本機執行並保護隱私？</strong> 請參閱 <a href="local-tts.html"><strong>本機 AI TTS 指南</strong></a> ，其中包含完整設定說明，包括自行代管伺服器選項和OBS音訊擷取。</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-ai">
+					<h3>AI搭檔、聊天機器人和瀏覽器助理</h3>
+					<p>Social Stream Ninja可以用多種方式使用AI。請先選擇工作流程，再選擇提供者。</p>
+					<ul class="guide-list">
+						<li><strong>語音搭檔：</strong> 透過麥克風交談，同時讓即時聊天提問進入同一個搭檔工作階段。</li>
+						<li><strong>ChatGPT瀏覽器助理：</strong> 擷取聊天，或透過實驗性功能將聊天轉送到已開啟的 <code>chatgpt.com</code> 分頁，不需API金鑰。</li>
+						<li><strong>主要聊天機器人：</strong> 在疊加畫面中、透過文字轉語音或在支援的聊天中回覆選取的觀眾。</li>
+						<li><strong>處理工具：</strong> 內容管理、翻譯、摘要、RAG知識搜尋和AI建立的疊加畫面。</li>
+					</ul>
+					<p><a href="ai-modes-guide.html" class="btn btn-primary">選擇AI設定</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h3>訊息排隊與置頂</h3>
+					<p>安排訊息在疊加畫面中的顯示方式：</p>
+
+					<h4>訊息排隊：</h4>
+					<ol class="guide-steps">
+						<li>按住CTRL（Mac上為Cmd）並點選儀表板中的訊息</li>
+						<li>點選「Next in Queue」按鈕，逐則顯示訊息</li>
+						<li>訊息將依排隊順序出現在疊加畫面中</li>
+					</ol>
+
+					<h4>置頂訊息：</h4>
+					<ol class="guide-steps">
+						<li>按住ALT並點選儀表板中的訊息</li>
+						<li>訊息將保持置頂在儀表板頂端</li>
+						<li>若要取消置頂，請按住ALT並再次點選已置頂訊息</li>
+					</ol>
+				</div>
+
+				<div class="guide-card" id="extension-stream-events">
+					<h3>直播事件擷取</h3>
+					<p>從直播平台擷取新追隨、訂閱、揪團和贊助等非聊天事件。</p>
+
+					<h4>啟用方法：</h4>
+					<ol class="guide-steps">
+						<li>點選Social Stream Ninja擴充功能圖示</li>
+						<li>找到 <strong>「擷取直播事件」（Capture Stream Events）</strong> 設定中的開關</li>
+						<li>啟用後即可開始接收提醒</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>注意：</strong> 贊助類事件（Super Chat、Bits、贊助）會自動轉送，不受此開關影響。此開關主要控制追隨和訂閱提醒。</p>
+					</div>
+
+					<h4>各平台可擷取的事件：</h4>
+					<div class="platform-guide">
+						<h4>YouTube</h4>
+						<ul class="guide-list">
+							<li>新會員和贈送會員</li>
+							<li>會員升級和里程碑</li>
+							<li>Super Chat和Super Sticker贊助</li>
+							<li>訂閱人數和觀眾人數</li>
+						</ul>
+					</div>
+
+					<div class="platform-guide">
+						<h4>Twitch</h4>
+						<ul class="guide-list">
+							<li>新訂閱、續訂和贈送訂閱</li>
+							<li>追隨者和追隨人數</li>
+							<li>Bits／Cheer和頻道點數兌換</li>
+							<li>揪團及觀眾人數</li>
+						</ul>
+					</div>
+
+					<div class="platform-guide">
+						<h4>TikTok、Kick及其他平台</h4>
+						<ul class="guide-list">
+							<li>追隨者和禮物（TikTok）</li>
+							<li>訂閱和贊助（Kick）</li>
+							<li>大多數平台的觀眾人數</li>
+						</ul>
+					</div>
+
+					<p>有關完整的事件酬載和資料欄位清單，請參閱 <a href="event-reference.html">事件參考</a> 文件。</p>
+				</div>
+
+				<div class="guide-card" id="extension-hype-train-top-bar">
+					<h3>Hype Train頂端列</h3>
+					<p>在OBS中以Twitch風格的頂端列顯示Hype Train和Treasure Train的進度。</p>
+					<ul class="guide-list">
+						<li>從彈出選單複製專用的Hype Train Top Bar連結。</li>
+						<li>正式直播前，使用Fake Hype Train按鈕進行測試。</li>
+						<li>請參閱指南中的設定步驟、螢幕截圖和疑難排解。</li>
+					</ul>
+					<p><a href="hype-train-top-bar.html" class="btn btn-primary">開啟Hype Train頂端列指南</a></p>
+				</div>
+
+				<div class="guide-card" id="extension-first-time-chatters">
+					<h3>首次發言者</h3>
+					<p>醒目顯示首次發言者，加入選用的葉子徽章，或只在首次發言時播放停駐面板提示音。</p>
+					<ul class="guide-list">
+						<li>保持本機訊息資料庫啟用。</li>
+						<li>開啟首次發言者偵測。</li>
+						<li>選擇適合疊加畫面的醒目提示、徽章和提示音選項。</li>
+					</ul>
+					<p><a href="first-time-chatters.html" class="btn btn-primary">開啟首次發言者指南</a></p>
+				</div>
+
+				<div class="guide-card" id="extension-event-flow">
+					<h3>Event Flow 編輯器</h3>
+					<p>Event Flow編輯器是強大的節點式自動化系統，可用於建立自訂工作流程。它提供進階自動化功能，讓您編寫自己的路由邏輯。</p>
+
+					<h4>可以做什麼：</h4>
+					<ul class="guide-list">
+						<li><strong>在平台之間轉送聊天</strong> 透過智慧篩選（例如將Twitch轉送到Discord，但封鎖指令）</li>
+						<li><strong>建立自訂指令</strong> 透過AND／OR／NOT邏輯閘</li>
+						<li><strong>觸發疊加畫面和音訊</strong> 根據指定事件或關鍵字</li>
+						<li><strong>控制OBS</strong> 自動控制場景和來源</li>
+						<li><strong>建立抽獎和贈獎活動</strong> 並管理佇列</li>
+					</ul>
+
+					<h4>入門：</h4>
+					<ol class="guide-steps">
+						<li>從主儀表板選單開啟Event Flow編輯器</li>
+						<li>建立新流程並加入來源節點（如「Twitch Message」）</li>
+						<li>連接邏輯節點以篩選訊息（Contains Keyword、User Role等）</li>
+						<li>加入回應的動作節點（Send Chat、Play Audio、Display Overlay）</li>
+						<li>正式直播前，使用內建模擬器進行測試</li>
+					</ol>
+
+					<h4>Flow Actions疊加畫面：</h4>
+					<p>若要讓音訊、媒體疊加畫面和OBS動作生效，需要將Flow Actions頁面作為瀏覽器來源加入OBS：</p>
+					<ol class="guide-steps">
+						<li>在彈出選單中找到「Flow Actions」區段並複製URL</li>
+						<li>在OBS中將其加入為瀏覽器來源（建議1920×1080）</li>
+						<li>保持疊加畫面開啟（可以隱藏，但不要關閉）</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>重要：</strong> 目前的Relay Chat動作會自動略過辨識出的回流訊息。請使用 <strong>回流篩選器（Reflection Filter）</strong> 節點來控制擷取的回流訊息是否出現在停駐面板和疊加畫面中。請參閱 <a href="chat-relay-guide.html">聊天轉送教學</a> 以完成設定。詳細文件請參閱 <a href="../actions/event-flow-guide.html">Event Flow 指南</a>。Kick獎勵的音效或媒體請使用 <a href="../../docs/index.html?file=kick-channel-points-event-flow.md">Kick頻道點數／獎勵指南</a>.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-midi">
+					<h3>MIDI 與快速鍵控制</h3>
+					<p>透過Stream Deck、MIDI控制器或鍵盤快速鍵直接控制Social Stream Ninja。</p>
+
+					<h4>設定MIDI：</h4>
+					<ol class="guide-steps">
+						<li>連接MIDI裝置（Stream Deck、MIDI控制器等）</li>
+						<li>開啟Social Stream Ninja彈出選單</li>
+						<li>找到MIDI設定區段</li>
+						<li>從下拉選單中選擇MIDI裝置</li>
+						<li>將MIDI音符對應到指定動作</li>
+					</ol>
+
+					<h4>可用動作：</h4>
+					<ul class="guide-list">
+						<li>觸發自訂疊加畫面和媒體</li>
+						<li>傳送預設聊天訊息</li>
+						<li>切換OBS場景</li>
+						<li>播放音訊片段或文字轉語音</li>
+						<li>執行Event Flow觸發器</li>
+					</ul>
+
+					<div class="guide-note">
+						<p><strong>提示：</strong> MIDI非常適合免手操作直播。您可以用腳踏開關觸發提醒，或用旋鈕調整音量。</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-bot-commands">
+					<h3>機器人指令與自動回覆</h3>
+					<p>為聊天建立互動式機器人指令和自動回覆。</p>
+
+					<h4>內建指令：</h4>
+					<ul class="guide-list">
+						<li><code>!joke</code> - 傳送一則隨機的科技冷笑話</li>
+						<li><code>!hi</code> - 自動問候觀眾</li>
+						<li><code>!cycle</code> - 允許觀眾切換OBS場景（需要權限）</li>
+					</ul>
+
+					<h4>設定自動回覆：</h4>
+					<ol class="guide-steps">
+						<li>開啟擴充功能彈出選單並找到Bot／Auto-Response區段</li>
+						<li>啟用需要的指令</li>
+						<li>保持聊天視窗可見，不要最小化，才能讓回覆生效</li>
+						<li>確認已登入平台並具有發言權限</li>
+					</ol>
+
+					<h4>建立自訂指令：</h4>
+					<p>對於更複雜的指令，請使用Event Flow編輯器：</p>
+					<ol class="guide-steps">
+						<li>建立一個使用Message來源的新流程</li>
+						<li>加入「Contains Keyword」節點來偵測指令（如「!social」）</li>
+						<li>連接一個「Send Chat」動作並填寫回覆</li>
+						<li>可加入User Role篩選器，將指令限制為僅管理員可用</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>需求：</strong> 自動回覆在Chromium瀏覽器中效果最佳。聊天視窗必須保持可見，而且您必須具有在該平台發言的權限。</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-webhooks">
+					<h3>Webhook與整合</h3>
+					<p>連接外部贊助平台，在直播疊加畫面中顯示贊助和購買。</p>
+
+					<h4>必要條件：</h4>
+					<ol class="guide-steps">
+						<li>記下擴充功能彈出選單中的工作階段ID</li>
+						<li>保持Social Stream Ninja啟用</li>
+						<li>位於 <code>Global settings and tools</code> &rarr; <code>Mechanics</code>，啟用 <strong>擴充功能的遠端 API 控制</strong></li>
+						<li>使用正常產生的停駐面板和疊加畫面連結；不要加入 <code>&server</code>, <code>&server2</code>，或 <code>&server3</code> 用於贊助Webhook</li>
+						<li>如果停駐面板已經開啟，請重新載入一次</li>
+					</ol>
+					<div class="guide-note">
+						<strong>只需啟用一個API開關：</strong> 遠端API控制允許背景指令碼標準化贊助Webhook，並像一般訊息一樣傳遞。其他API傳輸開關可以保持關閉。
+						<p>標準化後的贊助會共用給聊天、提醒、Event Flow，以及贊助罐／目標進度條。</p>
+						<figure class="guide-figure">
+							<img src="../../docs/images/api/enable-remote-api-control.png" alt="啟用遠端API控制，同時保持其他API傳輸開關關閉" class="guide-image guide-image-narrow">
+						</figure>
+					</div>
+
+					<h4>支援的平台：</h4>
+					<table class="guide-table">
+						<thead>
+							<tr>
+								<th>平台</th>
+								<th>Webhook URL</th>
+								<th>事件類型</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><strong>Stripe</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/stripe</code></td>
+								<td><code>checkout.session.completed</code></td>
+							</tr>
+							<tr>
+								<td><strong>Ko-Fi</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/kofi</code></td>
+								<td>公開贊助、會員、商店訂單和委託</td>
+							</tr>
+							<tr>
+								<td><strong>Buy Me A Coffee</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/bmac</code></td>
+								<td>贊助、會員、商店訂單、委託和願望清單募款</td>
+							</tr>
+							<tr>
+								<td><strong>Fourthwall</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/fourthwall</code></td>
+								<td>訂單、禮物、贊助和新訂閱</td>
+							</tr>
+						</tbody>
+					</table>
+
+					<h4>Stripe設定：</h4>
+					<ol class="guide-steps">
+						<li>建立一個 <a href="https://dashboard.stripe.com/payment-links" target="_blank">Stripe付款連結</a></li>
+						<li><strong>重要：</strong> 為付款連結加入自訂欄位：
+							<ul>
+								<li><strong>顯示名稱</strong> 或 <strong>使用者名稱</strong> （必填）- 缺少此欄位會拒絕贊助</li>
+								<li><strong>訊息</strong> （選填）- 允許贊助者留言</li>
+							</ul>
+						</li>
+						<li>前往 <a href="https://dashboard.stripe.com/webhooks" target="_blank">Stripe Webhooks</a> 並建立新的端點</li>
+						<li>將URL設定為： <code>https://io.socialstream.ninja/YOUR_SESSION_ID/stripe</code></li>
+						<li>選擇事件： <code>checkout.session.completed</code></li>
+						<li>不需簽章驗證（請改為保密工作階段ID）</li>
+					</ol>
+					<p><strong>測試：</strong> 使用Stripe測試模式，卡號為 <code>4242 4242 4242 4242</code>、任意未來到期日期和任意CVC。</p>
+
+                    <h4>創作者商店設定</h4><p>使用 <a href="creator-store-setup.html">圖文設定指南</a> 適用於Fourthwall、Ko-fi和Buy Me a Coffee，包括接收狀態、獨立預覽和商品匯入。</p>
+					<div class="warning-note">
+						<strong>安全提示：</strong> 請勿公開工作階段ID。任何擁有該ID的人都可以向您的疊加畫面傳送虛假的贊助事件。
+					</div>
+
+					<h4>透過Webhook匯出聊天：</h4>
+					<p>您也可以將聊天資料匯出到外部服務：</p>
+					<ul class="guide-list">
+						<li>在設定中配置傳出Webhook URL</li>
+						<li>聊天訊息以包含JSON酬載的POST請求傳送</li>
+						<li>使用此功能記錄聊天、觸發外部自動化或與其他工具同步</li>
+					</ul>
+				</div>
+			</div>
+		</section>
+		
+
+		<section id="extension-troubleshooting" class="guide-section alt">
+			<div class="container">
+				<h2>疑難排解（瀏覽器擴充功能）</h2>
+				<p class="section-subtitle">瀏覽器擴充功能常見問題的解決方法</p>
+				
+				<div class="troubleshooting-grid">
+					<div class="troubleshooting-card">
+						<div class="issue-header">
+							<div class="issue-icon">
+								<img src="../../icons/minimized.svg" alt="視窗最小化問題">
+							</div>
+							<h3>背景或最小化時聊天停止</h3>
+						</div>
+						<div class="issue-content">
+							<p class="issue-description">瀏覽器視窗處於背景或最小化時，聊天訊息不再出現。這是因為瀏覽器會限制背景分頁以節省資源。</p>
+							
+							<div class="solutions">
+								<div class="solution">
+									<h5>停用瀏覽器執行頻率限制</h5>
+									<ul class="solution-steps">
+										<li>
+											<strong>Chrome／Edge／Brave：</strong> 
+											<ol>
+												<li>開啟 <code>chrome://flags/#enable-throttle-display-none-and-visibility-hidden-cross-origin-iframes</code></li>
+												<li>設定為「Disabled」</li>
+												<li>同時停用 <code>chrome://flags/#calculate-native-win-occlusion</code></li>
+												<li>重新啟動瀏覽器</li>
+											</ol>
+										</li>
+										<li>
+											<strong>停用效能限制：</strong>
+											<ol>
+												<li>前往 <code>chrome://settings/performance</code></li>
+												<li>停用「Throttle Javascript timers in background」</li>
+											</ol>
+										</li>
+									</ul>
+								</div>
+								
+								<div class="solution">
+									<h5>其他方法</h5>
+									<ul class="solution-steps">
+										<li>
+											<strong>保持視窗可見：</strong> 調整視窗位置，避免最小化；即使只露出一小部分，也可能防止瀏覽器限制執行頻率。
+										</li>
+										<li>
+											<strong>使用虛擬桌面：</strong> 在Windows中，使用Win+Tab建立兩個虛擬桌面，一個放聊天視窗，另一個放OBS。
+										</li>
+										<li>
+											<strong>試用獨立應用程式：</strong> Social Stream Ninja桌面應用程式可避免許多瀏覽器限制執行頻率的問題。
+										</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					
+					<div class="troubleshooting-card">
+						<div class="issue-header">
+							<div class="issue-icon">
+								<img src="../../icons/debug.svg" alt="偵錯列問題">
+							</div>
+							<h3>出現藍色列／自動回覆無法運作</h3>
+						</div>
+						<div class="issue-content">
+							<p class="issue-description">使用機器人指令或自動回覆時，出現藍色偵錯列，或自動回覆無法運作。</p>
+							
+							<div class="solutions">
+								<div class="solution">
+									<h5>檢查聊天視窗是否可見</h5>
+									<ul class="solution-steps">
+										<li>使用YouTube或Twitch時，請確認彈出聊天視窗保持開啟且可見</li>
+										<li>某些平台可能需要同時保持主視窗和彈出視窗開啟</li>
+									</ul>
+								</div>
+								
+								<div class="solution">
+									<h5>瀏覽器相容性</h5>
+									<ul class="solution-steps">
+										<li>自動回覆在Chromium瀏覽器（Chrome、Edge、Brave）中效果最佳</li>
+										<li>Firefox對擴充功能的支援有限</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</div>
+
+	<!-- Standalone App Guides -->
+	<div id="standalone-guides" class="guide-section-wrapper" style="display: none;">
+		<section id="standalone-getting-started" class="guide-section">
+			<div class="container">
+				<h2>入門（獨立應用程式）</h2>
+				
+				<div class="guide-card">
+					<h3>1. 安裝</h3>
+					<p>與瀏覽器擴充功能相比，獨立應用程式的安裝過程更簡單：</p>
+					<ul class="guide-list">
+						<li><strong>Windows：</strong> 下載並執行Windows 10／11（x64）安裝程式</li>
+						<li><strong>macOS：</strong> 下載並執行macOS應用程式</li>
+						<li><strong>Linux：</strong> 大多數Linux發行版可使用AppImage檔案</li>
+					</ul>
+					<p>詳細安裝說明請造訪 <a href="download.html#standalone">下載頁面</a>.</p>
+				</div>
+				
+				<div class="guide-card">
+					<h3>2. 基本設定</h3>
+					<p>安裝後，請依下列步驟開始使用Social Stream Ninja獨立應用程式：</p>
+					<ol class="guide-steps">
+						<li>啟動Social Stream Ninja應用程式</li>
+						<li>點選左側欄中要加入的平台對應的按鈕</li>
+						<li>依提示輸入使用者名稱、Video ID或URL</li>
+						<li>點選「Activate source」或「Select Live Sources」進行連接</li>
+						<li>複製「Streaming Chat」連結，並在OBS中加入為瀏覽器來源</li>
+					</ol>
+					<div class="guide-note">
+						<p><strong>注意：</strong> 獨立應用程式可避免執行頻率限制等多種瀏覽器限制，並提供視窗置頂等額外功能。</p>
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>3. 連接不同平台</h3>
+					<p>獨立應用程式簡化了各個平台的連接：</p>
+					
+					<div class="platform-guide">
+						<h4>YouTube</h4>
+						<ul class="guide-list">
+							<li>點選左側欄中的「YouTube Username」</li>
+							<li>輸入頻道名稱或Video ID</li>
+							<li>對於直播，點選「Auto-find &amp; Activate」</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Twitch</h4>
+						<ul class="guide-list">
+							<li>點選左側欄中的「Twitch Username」</li>
+							<li>輸入Twitch使用者名稱</li>
+							<li>點選「Activate source」進行連接</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Facebook、TikTok、Instagram</h4>
+						<ul class="guide-list">
+							<li>點選對應的平台按鈕</li>
+							<li>如有需要，使用「Sign in」按鈕進行驗證</li>
+							<li>在應用程式視窗中開啟您的直播</li>
+							<li>有關TikTok連線模式、回覆和TikFinity備用方式，請跳至 <a href="#standalone-tiktok">TikTok 指南</a></li>
+						</ul>
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>4. 影片教學</h3>
+					<p>觀看以下影片，瞭解獨立應用程式的使用流程：</p>
+					<div class="video-container">
+						<iframe 
+							src="https://www.youtube.com/embed/VpD2pnZVYF0" 
+							title="YouTube影片播放器" 
+							frameborder="0" 
+							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+							allowfullscreen>
+						</iframe>
+					</div>
+				</div>
+
+				<div class="guide-card">
+					<h3>TikTok 指南</h3>
+					<p>需要TikTok設定、回覆、連線模式或TikFinity備用方式的協助？請使用專門的TikTok指南。</p>
+					<ul class="guide-list">
+						<li>應該選擇哪種模式：TikTok WS＋Auto、Standard、Local Signer、Polling、Euler Proxy或Euler Signing</li>
+						<li>如何從SSN回覆TikTok聊天</li>
+						<li>如何透過Other chat sites使用TikFinity OBS Dock作為備用方式</li>
+						<li>TikTok顯示您離線、漏收訊息、聊天重複或關閉驗證視窗時，可嘗試的方法</li>
+					</ul>
+					<p><a href="tiktok-guide.html" class="btn btn-primary">開啟TikTok指南</a></p>
+				</div>
+			</div>
+		</section>
+
+		<section id="standalone-tiktok" class="guide-section alt">
+			<div class="container">
+				<h2>TikTok（獨立應用程式）</h2>
+				<p class="section-subtitle">TikTok專用設定說明，包括回覆、模式選擇和TikFinity備用方式。</p>
+
+				<div class="guide-card">
+					<h3>開啟完整TikTok指南</h3>
+					<p>獨立應用程式擁有SSN中最多的TikTok選項，因此指南現已獨立成頁。</p>
+					<ul class="guide-list">
+						<li>模式選擇說明：TikTok WS＋Auto、Standard、Local Signer、Polling、Euler Proxy和Euler Signing</li>
+						<li>如何從SSN向TikTok聊天傳送回覆</li>
+						<li>如何透過以下功能使用TikFinity OBS Dock： <strong>其他聊天網站</strong></li>
+						<li>驗證視窗關閉、漏收聊天、聊天重複和瀏覽器限制執行頻率的常見修正方法</li>
+					</ul>
+					<p><a href="tiktok-guide.html" class="btn btn-primary">開啟TikTok指南</a></p>
+				</div>
+			</div>
+		</section>
+
+		<section id="standalone-customization" class="guide-section alt">
+			<div class="container">
+				<h2>自訂（獨立應用程式）</h2>
+				
+				<div class="guide-card">
+					<h3>URL參數</h3>
+					<p>獨立應用程式支援與瀏覽器擴充功能相同的URL參數。您可以自訂儀表板和疊加畫面：</p>
+					
+					<h4>儀表板參數：</h4>
+					<div class="code-block">
+						<code>&darkmode</code> - 為儀表板啟用深色模式<br>
+						<code>&scale=2</code> - 將所有元素的大小和解析度加倍<br>
+						<code>&hidesource</code> - 隱藏平台圖示（YouTube、Twitch等）<br>
+						<code>&compact</code> - 移除姓名和訊息之間的間距<br>
+						<code>&inline</code> - 將訊息排在姓名旁邊，同時保留正常間距<br>
+						<code>&autoshow</code> - 自動展示新收到的訊息
+					</div>
+					
+					<h4>疊加畫面參數：</h4>
+					<div class="code-block">
+						<code>&showtime=20000</code> - 20秒後自動隱藏所選訊息<br>
+						<code>&showsource</code> - 在使用者名稱旁顯示平台圖示<br>
+						<code>&fade</code> - 讓精選訊息淡入，而不是突然出現<br>
+						<code>&swipe</code> - 讓精選訊息從左側滑入<br>
+						<code>&center</code> - 將精選訊息放在畫面中央
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>CSS自訂</h3>
+					<p>獨立應用程式支援與擴充功能相同的CSS自訂方法：</p>
+					
+					<h4>方法1：OBS瀏覽器來源CSS</h4>
+					<p>在OBS中使用應用程式的疊加畫面URL時：</p>
+					<ol class="guide-steps">
+						<li>將應用程式的疊加畫面URL作為瀏覽器來源加入OBS</li>
+						<li>勾選「Custom CSS」選項</li>
+						<li>在文字方塊中輸入自訂CSS</li>
+					</ol>
+					
+					<h4>方法2：應用程式選單設定</h4>
+					<p>透過應用程式選單直接加入CSS：</p>
+					<ol class="guide-steps">
+						<li>開啟應用程式的設定選單</li>
+						<li>找到CSS／JavaScript設定區段</li>
+						<li>輸入自訂CSS或JavaScript</li>
+						<li>CSS將作為base64編碼的資料附加到URL</li>
+					</ol>
+					
+					<h4>方法3：使用自訂範本</h4>
+					<p>選擇內建CSS樣式的範本：</p>
+					<ul class="guide-list">
+						<li>瀏覽我們的 <a href="templates.html">範本庫</a></li>
+						<li>選擇符合直播風格的範本</li>
+						<li>替換 <code>YOURSESSIONID</code> ，將範本URL中的該值替換為您的工作階段ID</li>
+						<li>將範本URL作為瀏覽器來源加入OBS</li>
+					</ul>
+					<div class="guide-note">
+						<p><strong>範例：</strong> <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code></p>
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>應用程式專屬功能</h3>
+					<p>獨立應用程式包含瀏覽器擴充功能中沒有的額外功能：</p>
+					<ul class="guide-list">
+						<li><strong>視窗置頂：</strong> 讓應用程式視窗永遠置頂</li>
+						<li><strong>背景透明度：</strong> 調整視窗透明度以呈現疊加效果</li>
+						<li><strong>自動更新：</strong> 自動取得最新功能和修正</li>
+						<li><strong>更好的效能：</strong> 避免瀏覽器限制執行頻率的問題</li>
+					</ul>
+				</div>
+			</div>
+		</section>
+
+		<section id="standalone-advanced" class="guide-section">
+			<div class="container">
+				<h2>進階功能（獨立應用程式）</h2>
+
+				<div class="guide-card">
+					<h3>雙向聊天</h3>
+					<p>獨立應用程式在支援的平台上提供雙向聊天訊息功能：</p>
+					<ul class="guide-list">
+						<li>直接從儀表板傳送訊息</li>
+						<li>訊息會同時出現在所有已連接的平台</li>
+						<li>使用機器人指令和自動回覆</li>
+					</ul>
+				</div>
+
+				<div class="guide-card">
+					<h3>YouTube自訂專案設定</h3>
+					<p>如果希望桌面應用程式使用您自己的YouTube API配額，請參閱專門的設定指南。其中介紹Google Cloud設定、正確的重新導向URL、API金鑰限制和基本安全建議。</p>
+					<p><a href="youtube-project-setup.html" target="_blank" rel="noopener">開啟YouTube專案設定指南</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h3>Hype Train頂端列</h3>
+					<p>使用專用的Hype Train Top Bar連結，在OBS中顯示Twitch Hype Train和Treasure Train的進度。</p>
+					<ul class="guide-list">
+						<li>從彈出選單複製Hype Train Top Bar URL。</li>
+						<li>自訂對齊、縮放、不透明度和背景設定。</li>
+						<li>使用Fake Hype Train按鈕進行測試。</li>
+					</ul>
+					<p><a href="hype-train-top-bar.html" class="btn btn-primary">開啟Hype Train頂端列指南</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h3>首次發言者</h3>
+					<p>使用首次發言者偵測來醒目顯示新觀眾、顯示葉子徽章，或僅在首次發言時觸發提示音。</p>
+					<ul class="guide-list">
+						<li>保持本機訊息資料庫啟用。</li>
+						<li>開啟首次發言者偵測。</li>
+						<li>請參閱指南中的設定步驟、螢幕截圖和疑難排解。</li>
+					</ul>
+					<p><a href="first-time-chatters.html" class="btn btn-primary">開啟首次發言者指南</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h3>LLM整合</h3>
+					<p>桌面應用程式支援相同的AI提供者工具，包括：</p>
+					<ul class="guide-list">
+						<li><strong>語音搭檔：</strong> 結合麥克風對話、即時聊天提問和語音回覆。</li>
+						<li><strong>主要機器人和私人機器人：</strong> 公開聊天回覆，或獨立的一對一助理。</li>
+						<li><strong>AI處理：</strong> 內容管理、翻譯、摘要和RAG知識搜尋。</li>
+						<li><strong>提供者選擇：</strong> 本機模型、自行代管端點或支援的雲端API。</li>
+					</ul>
+					<p><a href="ai-modes-guide.html" class="btn btn-primary">開啟完整AI指南</a></p>
+				</div>
+
+				<div class="guide-card" id="standalone-stream-events">
+					<h3>直播事件擷取</h3>
+					<p>擷取新追隨、訂閱、揪團和贊助等非聊天事件。</p>
+
+					<h4>啟用方法：</h4>
+					<ol class="guide-steps">
+						<li>開啟Social Stream Ninja應用程式</li>
+						<li>進入設定並找到 <strong>「擷取直播事件」（Capture Stream Events）</strong></li>
+						<li>啟用後即可開始接收提醒</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>注意：</strong> 贊助（Super Chat、Bits、贊助）會自動轉送。此開關主要控制追隨和訂閱提醒。</p>
+					</div>
+
+					<h4>可擷取的事件：</h4>
+					<ul class="guide-list">
+						<li><strong>YouTube：</strong> 會員、Super Chat、訂閱人數</li>
+						<li><strong>Twitch：</strong> 訂閱者、追隨者、Bits、揪團、頻道點數</li>
+						<li><strong>TikTok：</strong> 追隨者、禮物、觀眾人數</li>
+						<li><strong>Kick：</strong> 訂閱、贊助和追隨提醒</li>
+					</ul>
+
+					<p>請參閱 <a href="event-reference.html">事件參考</a> ，其中包含完整的事件酬載文件。</p>
+				</div>
+
+				<div class="guide-card" id="standalone-event-flow">
+					<h3>Event Flow 編輯器</h3>
+					<p>使用節點式Event Flow編輯器建立強大的自動化流程。</p>
+
+					<h4>可以做什麼：</h4>
+					<ul class="guide-list">
+						<li><strong>轉送聊天</strong> 透過智慧篩選在平台之間轉送</li>
+						<li><strong>觸發疊加畫面和音訊</strong> 根據事件或關鍵字</li>
+						<li><strong>控制OBS</strong> 自動控制場景和來源</li>
+						<li><strong>建立自訂指令</strong> 透過邏輯閘（AND／OR／NOT）</li>
+						<li><strong>建立抽獎和遊戲</strong> 並管理佇列</li>
+					</ul>
+
+					<h4>入門：</h4>
+					<ol class="guide-steps">
+						<li>從應用程式選單開啟Event Flow編輯器</li>
+						<li>建立包含來源節點的流程（Message、Timer、Manual Trigger）</li>
+						<li>加入邏輯節點進行篩選（Contains Keyword、User Role等）</li>
+						<li>連接動作節點（Send Chat、Play Audio、Display Overlay）</li>
+						<li>正式直播前，使用模擬器進行測試</li>
+					</ol>
+
+					<h4>Flow Actions疊加畫面：</h4>
+					<p>在OBS中將Flow Actions URL加入為瀏覽器來源，讓音訊和疊加畫面動作生效。此URL位於應用程式的「Flow Actions」區段。</p>
+
+					<div class="guide-note">
+						<p>詳細文件請參閱 <a href="../actions/event-flow-guide.html">Event Flow 指南</a>。Kick獎勵的音效或媒體請使用 <a href="../../docs/index.html?file=kick-channel-points-event-flow.md">Kick頻道點數／獎勵指南</a>.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="standalone-midi">
+					<h3>MIDI 與快速鍵控制</h3>
+					<p>透過Stream Deck、MIDI控制器或鍵盤快速鍵直接控制應用程式。</p>
+
+					<h4>設定方法：</h4>
+					<ol class="guide-steps">
+						<li>連接MIDI裝置</li>
+						<li>開啟設定並找到MIDI區段</li>
+						<li>從下拉選單中選擇裝置</li>
+						<li>將MIDI音符對應到動作</li>
+					</ol>
+
+					<h4>可用動作：</h4>
+					<ul class="guide-list">
+						<li>觸發疊加畫面和媒體</li>
+						<li>傳送聊天訊息</li>
+						<li>切換OBS場景</li>
+						<li>播放音訊片段</li>
+						<li>執行Event Flow觸發器</li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="standalone-webhooks">
+					<h3>Webhook與整合</h3>
+					<p>連接外部贊助平台和服務。</p>
+
+					<h4>支援的整合：</h4>
+					<ul class="guide-list">
+						<li><strong>Stripe：</strong> 付款事件</li>
+						<li><strong>Ko-Fi：</strong> 贊助提醒</li>
+						<li><strong>Buy Me A Coffee：</strong> 贊助</li>
+						<li><strong>自訂Webhook：</strong> 任何HTTP POST服務</li>
+					</ul>
+
+					<h4>設定：</h4>
+					<ol class="guide-steps">
+						<li>在應用程式設定中找到Webhook轉送URL</li>
+						<li>將其加入贊助平台的Webhook設定中</li>
+						<li>事件會自動出現在儀表板和流程中</li>
+					</ol>
+				</div>
+			</div>
+		</section>
+
+		<section id="standalone-troubleshooting" class="guide-section alt">
+			<div class="container">
+				<h2>疑難排解（獨立應用程式）</h2>
+				<p class="section-subtitle">獨立應用程式常見問題的解決方法</p>
+				
+				<div class="troubleshooting-grid">
+					<div class="troubleshooting-card">
+						<div class="issue-header">
+							<div class="issue-icon">
+								<img src="../../icons/issues.svg" alt="連線問題">
+							</div>
+							<h3>平台連線問題</h3>
+						</div>
+						<div class="issue-content">
+							<p class="issue-description">在獨立應用程式中連接特定平台時遇到問題。</p>
+							
+							<div class="solutions">
+								<div class="solution">
+									<h5>驗證問題</h5>
+									<ul class="solution-steps">
+										<li>對於Facebook、TikTok和Instagram，請先點選「Sign in」按鈕</li>
+										<li>確認使用與瀏覽器相同的登入憑證</li>
+										<li>檢查是否需要授予應用程式額外權限</li>
+									</ul>
+								</div>
+								
+								<div class="solution">
+									<h5>網路問題</h5>
+									<ul class="solution-steps">
+										<li>檢查網路連線</li>
+										<li>如果VPN干擾連線，請將其停用</li>
+										<li>嘗試使用其他DNS提供者</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="troubleshooting-card">
+						<div class="issue-header">
+							<div class="issue-icon">
+								<img src="../../icons/main_msg_save.png" alt="設定問題">
+							</div>
+							<h3>設定未儲存</h3>
+						</div>
+						<div class="issue-content">
+							<p class="issue-description">組態或設定未在工作階段之間儲存。</p>
+							
+							<div class="solutions">
+								<div class="solution">
+									<h5>權限問題</h5>
+									<ul class="solution-steps">
+										<li>確認應用程式對安裝目錄具有寫入權限</li>
+										<li>如有需要，以系統管理員身分執行應用程式（Windows）</li>
+										<li>檢查防毒軟體是否阻止檔案寫入</li>
+									</ul>
+								</div>
+								
+								<div class="solution">
+									<h5>匯出設定</h5>
+									<ul class="solution-steps">
+										<li>使用匯出功能儲存設定</li>
+										<li>將匯出的檔案儲存到安全位置</li>
+										<li>如果更新後設定遺失，請匯入設定</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</div>
+	
+
+	<!-- FAQ Section (common to both) -->
+	<section id="faq" class="guide-section">
+		<div class="container">
+			<h2>常見問題解答</h2>
+			
+			<div class="accordion">
+				<div class="accordion-item">
+					<button class="accordion-header">
+						Social Stream Ninja支援哪些平台？
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>Social Stream Ninja支援100多個平台，包括YouTube、Twitch、Facebook、Instagram、TikTok、Discord、Zoom、Google Meet、X（Twitter）、WhatsApp、Telegram等。完整清單請參閱 <a href="supported-sites.html">支援的平台</a> 頁面。</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						應該使用瀏覽器擴充功能還是獨立應用程式？
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>建議大多數使用者使用獨立應用程式，因為它：</span>
+						<ul>
+							<li>避免瀏覽器限制執行頻率的問題</li>
+							<li>提供自動更新</li>
+							<li>提供視窗置頂和透明度功能</li>
+							<li>效能和穩定性更好</li>
+						</ul>
+						<span>如果您有以下需求，瀏覽器擴充功能更合適：</span>
+						<ul>
+							<li>需要在多台電腦上使用</li>
+							<li>不想安裝額外軟體</li>
+							<li>希望立即取得最新更新（手動安裝）</li>
+						</ul>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						每個平台都需要API金鑰或登入憑證嗎？
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>不需要！Social Stream Ninja的一大優點是大多數平台不需API金鑰或登入憑證。它直接從瀏覽器視窗或應用程式介面擷取聊天資料。不過，您仍需登入各個平台，才能正常查看聊天。</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						如何更新Social Stream Ninja？
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span><strong>瀏覽器擴充功能：</strong> 若要更新手動安裝的擴充功能，請下載最新版本，用新檔案替換舊檔案，然後重新載入擴充功能或重新啟動瀏覽器。 <strong>不要解除安裝</strong> 擴充功能，以便保留設定。如果使用Chrome線上應用程式商店版本，它會自動更新，但頻率較低。</span>
+						<span><strong>獨立應用程式：</strong> 應用程式會在重新啟動時自動更新。您也可以從應用程式選單手動檢查更新。</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						可以同時向多個平台傳送訊息嗎？
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>可以！Social Stream Ninja在大多數平台上支援雙向聊天。當您登入平台且擁有適當權限時，可以從儀表板或透過API指令傳送訊息，這些訊息會同時出現在所有已連接的聊天中。</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						可以搭配OBS及其他直播軟體使用嗎？
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>當然可以！Social Stream Ninja專為OBS Studio及其他直播軟體設計。只要將疊加畫面URL作為瀏覽器來源加入直播軟體中。您可以在OBS中直接使用CSS，或透過URL參數自訂外觀。</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						Social Stream Ninja真的免費嗎？
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>是的，Social Stream Ninja完全免費，並以GPLv3.0授權條款開放原始碼。沒有訂閱、隱藏費用或功能限制。專案由Steve Seguin維護，社群共同貢獻。</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						支援哪些直播事件資料，例如新追隨者？
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>我們在以下文件中維護所有事件酬載的標準清單，包括追隨者、會員、揪團、觀眾人數、贊助等： <a href="event-reference.html">事件參考</a>。其中也說明哪些來源需要開啟「Capture Stream Events」、登入權限或額外的權限範圍才能接收資料。</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						在哪裡可以找到API和自動化文件？
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>所有疊加畫面URL、停駐面板API、WebSocket指令和自動化介面皆記錄於 <a href="commands.html">指令與 API</a> 頁面。若要編寫自訂行為，或將Social Stream Ninja與其他工具整合，這是最佳起點。</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						遇到問題時，在哪裡可以取得協助？
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>Social Stream Ninja在Discord上有活躍的社群，您可以直接取得開發者和其他使用者的協助。加入位址： <a href="https://discord.socialstream.ninja" target="_blank">discord.socialstream.ninja</a>。您也可以在此回報問題： <a href="https://github.com/steveseguin/social_stream/issues" target="_blank">GitHub儲存庫</a>.</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	</details>
+
+	<section class="get-started">
+		<div class="container">
+			<h2>仍需協助？</h2>
+			<p>加入我們的社群Discord伺服器，開發者和其他使用者可以協助您排查問題。</p>
+			<div class="get-started-cta">
+				<a href="https://discord.socialstream.ninja" target="_blank" class="btn btn-primary">加入 Discord 社群</a>
+				<a href="#extension-troubleshooting" class="btn btn-secondary">查看疑難排解指南</a>
+			</div>
+		</div>
+	</section>
+
+	<footer>
+		<div class="container">
+			<div class="footer-columns">
+				<div class="footer-column">
+					<h3>Social Stream Ninja</h3>
+					<p>匯聚你的社群直播訊息等內容。免費且開源。</p>
+					<div class="social-links">
+						<a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+						<a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+						<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+					</div>
+				</div>
+				<div class="footer-column">
+					<h3>快速連結</h3>
+					<ul>
+						<li><a href="../index.html">首頁</a></li>
+						<li><a href="features.html">功能</a></li>
+						<li><a href="download.html">下載</a></li>
+						<li><a href="guides.html">指南</a></li>
+						<li><a href="commands.html">指令與 API</a></li>
+						<li><a href="supported-sites.html">支援的網站</a></li>
+						<li><a href="templates.html">範本</a></li>
+						<li><a href="support.html">支援</a></li>
+					</ul>
+				</div>
+				<div class="footer-column">
+					<h3>資源</h3>
+					<ul>
+						<li><a href="guides.html#extension-getting-started">安裝指南</a></li>
+						<li><a href="guides.html#extension-customization">自訂指南</a></li>
+						<li><a href="guides.html#faq">常見問題</a></li>
+						<li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">回報問題</a></li>
+						<li><a href="../privacy.html">隱私權政策</a></li>
+						<li><a href="../TOS.html">服務條款</a></li>
+					</ul>
+				</div>
+				<div class="footer-column">
+					<h3>社群</h3>
+					<ul>
+						<li><a href="https://discord.socialstream.ninja" target="_blank">加入我們的 Discord</a></li>
+						<li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub 儲存庫</a></li>
+						<li><a href="support.html#contribute">參與貢獻</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">贊助</a></li>
+					</ul>
+				</div>
+			</div>
+			<div class="footer-bottom">
+				<p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 授權條款。建立者： <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> ，社群共同參與貢獻。</p>
+			</div>
+		</div>
+	</footer>
+
+	<script src="../../docs/js/main.js"></script>
+	<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		const tabButtons = document.querySelectorAll('.tab-btn');
+		const guideSections = document.querySelectorAll('.guide-section-wrapper');
+		const navSections = document.querySelectorAll('.nav-links');
+		const faqSection = document.getElementById('faq');
+		const guideFilterInput = document.getElementById('guide-filter-input');
+		const guideFilterClear = document.getElementById('guide-filter-clear');
+		const guideFilterEmpty = document.getElementById('guide-filter-empty');
+		const guideTreeGroups = document.querySelectorAll('.guide-tree-group');
+		const detailedGuides = document.getElementById('detailed-guides');
+
+		guideTreeGroups.forEach(group => {
+			group.setAttribute('data-default-open', group.open ? 'true' : 'false');
+		});
+
+		function filterGuideDirectory(query) {
+			const term = (query || '').trim().toLowerCase();
+			let visibleCount = 0;
+
+			guideTreeGroups.forEach(group => {
+				const links = group.querySelectorAll('li');
+				let groupHasMatch = false;
+
+				links.forEach(item => {
+					const text = item.textContent.toLowerCase();
+					const isMatch = !term || text.indexOf(term) !== -1;
+					item.classList.toggle('guide-filter-hidden', !isMatch);
+					if (isMatch) {
+						groupHasMatch = true;
+						visibleCount += 1;
+					}
+				});
+
+				group.classList.toggle('guide-filter-hidden', !groupHasMatch);
+				if (term) {
+					group.open = groupHasMatch;
+				} else {
+					group.open = group.getAttribute('data-default-open') === 'true';
+				}
+			});
+
+			if (guideFilterEmpty) {
+				guideFilterEmpty.style.display = visibleCount ? 'none' : 'block';
+			}
+		}
+
+		if (guideFilterInput) {
+			guideFilterInput.addEventListener('input', function() {
+				filterGuideDirectory(this.value);
+			});
+		}
+
+		if (guideFilterClear) {
+			guideFilterClear.addEventListener('click', function() {
+				guideFilterInput.value = '';
+				filterGuideDirectory('');
+				guideFilterInput.focus();
+			});
+		}
+
+		// Anchor alias mapping for generic links (e.g., #getting-started -> #extension-getting-started)
+		const anchorAliases = {
+			'getting-started': 'extension-getting-started',
+			'installation': 'extension-getting-started',
+			'tiktok': 'standalone-tiktok',
+			'customization': 'extension-customization',
+			'advanced': 'extension-advanced',
+			'troubleshooting': 'extension-troubleshooting',
+			'stream-events': 'extension-stream-events',
+			'event-flow': 'extension-event-flow',
+			'midi': 'extension-midi',
+			'bot-commands': 'extension-bot-commands',
+			'webhooks': 'extension-webhooks'
+		};
+
+		function switchTab(tabId, updateHash = false) {
+			// Remove active class from all buttons
+			tabButtons.forEach(btn => btn.classList.remove('active'));
+
+			// Find and activate the correct tab button
+			const targetButton = document.querySelector(`[data-tab="${tabId}"]`);
+			if (targetButton) {
+				targetButton.classList.add('active');
+			}
+
+			// Hide all guide sections
+			guideSections.forEach(section => section.style.display = 'none');
+
+			// Hide all nav sections
+			navSections.forEach(nav => nav.style.display = 'none');
+
+			// Show the selected sections
+			document.getElementById(tabId).style.display = 'block';
+
+			if (tabId === 'extension-guides') {
+				document.getElementById('extension-nav').style.display = 'flex';
+			} else {
+				document.getElementById('standalone-nav').style.display = 'flex';
+			}
+
+			// Make sure FAQ is visible when either tab is active
+			faqSection.style.display = 'block';
+		}
+
+		function scrollToSection(sectionId) {
+			const targetElement = document.getElementById(sectionId);
+			if (targetElement) {
+				const headerHeight = document.querySelector('header').offsetHeight;
+				const navHeight = document.querySelector('.navigation').offsetHeight;
+				const offsetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight - navHeight - 20;
+
+				window.scrollTo({
+					top: offsetPosition,
+					behavior: 'smooth'
+				});
+			}
+		}
+
+		function handleHash(hash, updateUrl = true) {
+			if (!hash) return;
+
+			// Remove the # if present
+			hash = hash.replace(/^#/, '');
+
+			if (detailedGuides) {
+				detailedGuides.open = true;
+			}
+
+			// Check if it's an alias
+			if (anchorAliases[hash]) {
+				hash = anchorAliases[hash];
+			}
+
+			// Determine which tab to show based on the hash
+			let tabToShow = 'extension-guides';
+			if (hash.startsWith('standalone-')) {
+				tabToShow = 'standalone-guides';
+			}
+
+			// Switch to the appropriate tab
+			switchTab(tabToShow);
+
+			// Update URL hash
+			if (updateUrl) {
+				history.replaceState(null, null, '#' + hash);
+			}
+
+			// Scroll to the section after a brief delay for tab switch
+			setTimeout(() => {
+				scrollToSection(hash);
+
+				// Update active nav link
+				const currentNavLinks = tabToShow === 'extension-guides' ?
+					document.querySelectorAll('#extension-nav .nav-link') :
+					document.querySelectorAll('#standalone-nav .nav-link');
+
+				currentNavLinks.forEach(link => {
+					link.classList.remove('active');
+					if (link.getAttribute('href') === '#' + hash) {
+						link.classList.add('active');
+					}
+				});
+			}, 100);
+		}
+
+		document.querySelectorAll('.guide-tree a[href^="#"], .get-started a[href^="#"]').forEach(anchor => {
+			anchor.addEventListener('click', function(e) {
+				e.preventDefault();
+				e.stopImmediatePropagation();
+				handleHash(this.getAttribute('href'), true);
+			}, true);
+		});
+
+		tabButtons.forEach(button => {
+			button.addEventListener('click', () => {
+				if (detailedGuides) {
+					detailedGuides.open = true;
+				}
+				const tabId = button.getAttribute('data-tab');
+				switchTab(tabId);
+
+				// Update URL hash to reflect tab change
+				const defaultSection = tabId === 'extension-guides' ? 'extension-getting-started' : 'standalone-getting-started';
+				history.replaceState(null, null, '#' + defaultSection);
+			});
+		});
+
+		// Smooth scroll for guide navigation
+		document.querySelectorAll('.nav-link').forEach(anchor => {
+			anchor.addEventListener('click', function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+
+				const targetId = this.getAttribute('href').replace(/^#/, '');
+
+				// Check if we need to switch tabs first
+				const isExtensionSection = targetId.includes('extension-');
+				const isStandaloneSection = targetId.includes('standalone-');
+
+				if (isExtensionSection && document.getElementById('extension-guides').style.display === 'none') {
+					switchTab('extension-guides');
+				} else if (isStandaloneSection && document.getElementById('standalone-guides').style.display === 'none') {
+					switchTab('standalone-guides');
+				}
+
+				// Update URL hash
+				history.replaceState(null, null, '#' + targetId);
+
+				// Wait for tab switch to complete if needed
+				setTimeout(() => {
+					scrollToSection(targetId);
+
+					// Update active class on navigation
+					const parentNav = this.closest('.nav-links');
+					parentNav.querySelectorAll('.nav-link').forEach(link => {
+						link.classList.remove('active');
+					});
+					this.classList.add('active');
+				}, isExtensionSection || isStandaloneSection ? 100 : 0);
+			});
+		});
+
+		// Auto-activate menu items based on scroll position
+		function updateActiveNav() {
+			const scrollPosition = window.scrollY;
+			const headerHeight = document.querySelector('header').offsetHeight;
+			const navElement = document.getElementById('guides-nav');
+			const navHeight = navElement ? navElement.offsetHeight : 0;
+			const offset = headerHeight + navHeight + 50;
+
+			// Determine which tab is currently active
+			const isExtensionView = document.getElementById('extension-guides').style.display !== 'none';
+			const currentNavLinks = isExtensionView ?
+				document.querySelectorAll('#extension-nav .nav-link') :
+				document.querySelectorAll('#standalone-nav .nav-link');
+
+			let activeSet = false;
+			let activeSection = null;
+
+			// Loop through each section to find which one is in view
+			document.querySelectorAll('.guide-section').forEach(section => {
+				const sectionTop = section.offsetTop - offset;
+				const sectionBottom = sectionTop + section.offsetHeight;
+				const sectionId = section.getAttribute('id');
+
+				// Check if this section is in view
+				if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+					currentNavLinks.forEach(link => {
+						link.classList.remove('active');
+						if (link.getAttribute('href') === `#${sectionId}`) {
+							link.classList.add('active');
+							activeSet = true;
+							activeSection = sectionId;
+						}
+					});
+				}
+			});
+
+			// If no section is active (user scrolled to top), activate first link
+			if (!activeSet && currentNavLinks.length > 0) {
+				if (scrollPosition < 1000){
+					currentNavLinks[0].classList.add('active');
+				}
+			}
+		}
+
+		// Debounce scroll event for better performance
+		let scrollTimeout;
+		window.addEventListener('scroll', function() {
+			if (scrollTimeout) {
+				window.cancelAnimationFrame(scrollTimeout);
+			}
+			scrollTimeout = window.requestAnimationFrame(function() {
+				updateActiveNav();
+			});
+		});
+
+		// Handle hash changes (browser back/forward)
+		window.addEventListener('hashchange', function() {
+			handleHash(window.location.hash, false);
+		});
+
+		// Sticky navigation on scroll
+		const guideNav = document.getElementById('guides-nav');
+		if (guideNav) {
+			let navOffset = guideNav.offsetTop;
+			function refreshGuideNavOffset() {
+				navOffset = guideNav.offsetTop;
+			}
+
+			if (detailedGuides) {
+				detailedGuides.addEventListener('toggle', function() {
+					setTimeout(refreshGuideNavOffset, 0);
+				});
+			}
+
+			window.addEventListener('scroll', function() {
+				if (window.pageYOffset >= navOffset) {
+					guideNav.classList.add('sticky');
+				} else {
+					guideNav.classList.remove('sticky');
+				}
+			});
+		}
+
+		// Accordion functionality
+		const accordionHeaders = document.querySelectorAll('.accordion-header');
+
+		accordionHeaders.forEach(header => {
+			header.addEventListener('click', () => {
+				const accordionItem = header.parentElement;
+				accordionItem.classList.toggle('active');
+			});
+		});
+
+		// Handle initial hash on page load
+		if (window.location.hash) {
+			handleHash(window.location.hash, false);
+		} else {
+			// Default to extension guides
+			switchTab('extension-guides');
+		}
+
+		// Update active nav on page load
+		updateActiveNav();
+	});
+	</script>
+</body>
+</html>

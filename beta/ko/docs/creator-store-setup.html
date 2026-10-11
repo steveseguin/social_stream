@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+	<head>
+    <meta charset="utf-8" />
+    <meta name="description" content="Social Stream Ninja에서 크리에이터 스토어를 설정하고 상품을 연결하며 방송 커머스 오버레이용 시청자 링크를 구성하세요.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/creator-store-setup.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/creator-store-setup.html">
+    <meta property="og:title" content="크리에이터 스토어 설정 | Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja에서 크리에이터 스토어를 설정하고 상품을 연결하며 방송 커머스 오버레이용 시청자 링크를 구성하세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/creator-store-setup.html">
+    <meta name="twitter:title" content="크리에이터 스토어 설정 | Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja에서 크리에이터 스토어를 설정하고 상품을 연결하며 방송 커머스 오버레이용 시청자 링크를 구성하세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>크리에이터 스토어 설정 | Social Stream Ninja</title>
+		<link rel="icon" href="../../icons/favicon.ico" />
+		<link rel="stylesheet" href="../../docs/css/styles.css" />
+		<link rel="stylesheet" href="../../docs/css/guides.css" />
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem('darkMode');
+				var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+				if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) document.documentElement.classList.add('dark-mode');
+			})();
+		</script>
+	<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/creator-store-setup.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{") are skipped. Refunds don't lower totals.":")는 건너뜁니다. 환불이 합계를 줄이지는 않습니다.",", and click":"를 선택하고 다음을 클릭하세요:",", choose":"에서 다음을 선택하세요:",", pin the first product or rotate them, and turn on":"에서 첫 상품을 고정하거나 순환시키고 다음을 켜세요:",", turn on":"에서 다음을 켜세요:",". Don't use an admin API key.":". 관리자 API 키를 사용하지 마세요.",". Other API switches do different things.":". 다른 API 스위치는 다른 기능입니다.",". Shopify: see":". Shopify는 다음을 보세요:",". Start at 800 × 600. Use one source per view.":". 800 × 600으로 시작하고 보기마다 소스 하나를 사용하세요.",". Use Event Type for purchases or completed gifts. See the":". 구매나 완료된 선물에는 Event Type을 사용하세요. 참고:",": Product showcase only, Support card only, Activity alerts only, or Showcase and alerts.":": Product showcase only, Support card only, Activity alerts only 또는 Showcase and alerts.","A donation.":"기부입니다.","A gift contribution.":"선물 모금 참여입니다.","A gift.":"선물입니다.","A new membership announcement (not a separate charge).":"새 멤버십 안내이며 별도 결제는 아닙니다.","A new membership.":"새 멤버십입니다.","A product card with its public link and QR code. Example product.":"공개 링크와 QR 코드가 있는 상품 카드. 예제 상품입니다.","A purchase.":"구매입니다.","A purchase. It still adds its donation value, to match older setups.":"구매입니다. 기존 설정과 맞추기 위해 기부 값도 더합니다.","Activity alerts work on their own, and never show a QR code from an unrelated product.":"활동 알림은 단독으로 작동하며 관계없는 상품의 QR 코드를 표시하지 않습니다.","Add product or link":"상품 또는 링크 추가","Alerts from Fourthwall, Ko-fi, and Buy Me a Coffee, plus products with QR codes.":"Fourthwall, Ko-fi, Buy Me a Coffee 알림과 QR 코드가 있는 상품을 표시합니다.","Alerts show twice":"알림이 두 번 표시됨","Alerts, multi-alerts, and Event Flow":"알림, multi-alerts, Event Flow","Browser Source":"브라우저 소스","Buy Me a Coffee":"Buy Me a Coffee","Buy Me a Coffee webhook documentation":"Buy Me a Coffee 웹훅 문서","Check session, password, filters, SSN rules, and that the OBS source is visible. Most purchases aren't donations.":"세션, 비밀번호, 필터, SSN 규칙, OBS 소스 표시 여부를 확인하세요. 대부분의 구매는 기부가 아닙니다.","Check the name, image, price, and link. The link must be from the same shop as the token.":"이름, 이미지, 가격, 링크를 확인하세요. 링크는 토큰과 같은 상점의 것이어야 합니다.","Check the product link and Storefront token, and that the product is public and available. You can always type it in by hand.":"상품 링크와 Storefront 토큰, 상품 공개 및 판매 가능 여부를 확인하세요. 직접 입력해도 됩니다.","Check the provider you picked, the URL, and the provider's webhook settings.":"선택한 제공업체, URL, 제공업체의 웹훅 설정을 확인하세요.","Click":"클릭:","Commands & API":"명령 및 API","Connect alerts":"알림 연결","Connect alerts in 5 steps":"5단계로 알림 연결하기","Connect your store. Show your products.":"스토어를 연결하고 상품을 보여주세요.","Copy OBS link":"OBS 링크 복사","Copy public link":"공개 링크 복사","Copy webhook URL":"웹훅 URL 복사","Create a Storefront token":"Storefront 토큰 만들기","Create a webhook and paste the Fourthwall URL from SSN.":"웹훅을 만들고 SSN의 Fourthwall URL을 붙여 넣으세요.","Creator store setup | Social Stream Ninja":"크리에이터 스토어 설정 | Social Stream Ninja","Cropped product showcase displaying a product name, price, readable public link and QR code":"상품 이름, 가격, 읽을 수 있는 공개 링크, QR 코드를 보여주는 잘라낸 상품 쇼케이스 화면","Disconnected":"연결 끊김","Display options":"표시 옵션","Don't send the same payment through both the provider and another service.":"같은 결제를 제공업체와 다른 서비스를 통해 동시에 보내지 마세요.","Don't shrink or crop the overlay too much. To share a link in chat, click":"오버레이를 너무 작게 줄이거나 많이 자르지 마세요. 채팅에 링크를 공유하려면 다음을 클릭하세요:","Download":"다운로드","Event":"이벤트","Event arrived, but no overlay":"이벤트는 도착했지만 오버레이가 없음","Event skipped":"이벤트를 건너뜀","Features":"기능","Fix problems":"문제 해결","Fourthwall":"Fourthwall","Fourthwall event":"Fourthwall 이벤트","Fourthwall import controls and loaded product fields ready for review in SSApp":"SSApp에서 검토할 준비가 된 Fourthwall 가져오기 제어와 불러온 상품 필드","Fourthwall product fields":"Fourthwall 상품 필드","Fourthwall webhook documentation":"Fourthwall 웹훅 문서","Gift-card orders don't add their value twice. Test events are skipped.":"기프트 카드 주문은 금액을 두 번 더하지 않습니다. 테스트 이벤트는 건너뜁니다.","Go back to Monetization and click":"Monetization으로 돌아가 다음을 클릭하세요:","Guides":"가이드","Hidden notes and anonymous supporters stay hidden. Dashboard tests (":"비공개 메모와 익명 후원자는 계속 숨깁니다. 대시보드 테스트(","Hire":"작업 의뢰","Home":"홈","If nothing appears":"아무것도 나타나지 않을 때","If variants or bundles have different prices, the price is left blank.":"옵션이나 묶음의 가격이 다르면 가격을 비워 둡니다.","Import a Fourthwall product":"Fourthwall 상품 가져오기","Import a product":"상품 가져오기","Import failed":"가져오기 실패","Import fills the editor so you can check it before saving.":"가져오기는 편집기를 채우므로 저장 전에 확인할 수 있습니다.","In":"다음 위치에서:","In Event Flow, the Donation trigger still covers rows with":"Event Flow의 Donation 트리거는 계속 다음 값이 있는 행을 처리합니다:","In Fourthwall, go to":"Fourthwall에서 다음으로 이동하세요:","In Fourthwall, open":"Fourthwall에서 다음을 여세요:","In SSN, open":"SSN에서 다음을 여세요:","In your creator dashboard, open":"크리에이터 대시보드에서 다음을 여세요:","Inspiration":"아이디어","Integrations":"통합(Integrations)","Is it working?":"작동하고 있나요?","It loads one public, available product at a time.":"공개되고 판매 가능한 상품을 한 번에 하나씩 불러옵니다.","It's a snapshot. Prices, stock, and images don't update, so import again or edit when they change.":"가져온 시점의 정보입니다. 가격, 재고, 이미지는 자동 갱신되지 않으므로 바뀌면 다시 가져오거나 편집하세요.","It's the only lock on these alerts (no signing secret is checked). Fine for alerts, not proof of payment for shipping orders. Never post it or use it in a QR code.":"이 URL이 알림의 유일한 보호 수단이며 서명 비밀키는 검사하지 않습니다. 알림에는 쓸 수 있지만 상품 발송을 위한 결제 증명으로 쓰지 마세요. 공개하거나 QR 코드에 넣지 마세요.","Keep SSN on and check your internet. This is SSN's connection, not your provider's.":"SSN을 켜 두고 인터넷을 확인하세요. 이는 SSN의 연결 상태이며 제공업체의 상태는 아닙니다.","Keep SSN running.":"SSN을 계속 실행하세요.","Keep Social Stream Ninja running.":"Social Stream Ninja를 계속 실행하세요.","Keep the webhook URL private.":"웹훅 URL을 공개하지 마세요.","Ko-fi":"Ko-fi","Ko-fi Webhooks":"Ko-fi Webhooks","Ko-fi test payments look real and can trigger alerts, totals, and actions. Don't use them while paid rewards are on.":"Ko-fi 테스트 결제는 실제처럼 보이며 알림, 합계, 작업을 실행할 수 있습니다. 유료 보상이 켜져 있을 때 사용하지 마세요.","Ko-fi webhook documentation":"Ko-fi 웹훅 문서","Load product details":"상품 세부 정보 불러오기","Main navigation":"기본 탐색 메뉴","Monetization → Fourthwall, Ko-fi & Buy Me a Coffee alerts":"Monetization → Fourthwall, Ko-fi & Buy Me a Coffee alerts","Multi-alerts and the activity feed work with the same session, with no product list needed. The Monetization activity view needs the product list turned on.":"Multi-alerts와 활동 피드는 상품 목록 없이도 같은 세션에서 작동합니다. Monetization 활동 보기에는 상품 목록을 켜야 합니다.","Name it and paste the Buy Me a Coffee URL from SSN.":"이름을 정하고 SSN의 Buy Me a Coffee URL을 붙여 넣으세요.","New webhook":"새 웹훅(New webhook)","NinjaBacker, Throne, Amazon, and eBay: see the":"NinjaBacker, Throne, Amazon, eBay는 다음을 보세요:","No event received":"이벤트를 받지 못함","OBS overlay for":"대상 OBS 오버레이:","On this page":"이 페이지에서","Open":"열기","Open navigation menu":"탐색 메뉴 열기","Overlay Gallery":"오버레이 갤러리","Overlay link options":"오버레이 링크 옵션","Overlay view":"오버레이 보기","Paste it into your provider's webhook settings (steps below).":"제공업체의 웹훅 설정에 붙여 넣으세요(아래 단계 참고).","Paste the Ko-fi URL from SSN into":"SSN의 Ko-fi URL을 다음에 붙여 넣으세요:","Paste the product's public link and the token. Click":"상품의 공개 링크와 토큰을 붙여 넣고 다음을 클릭하세요:","Pick a purpose: Shop, Gift, Support, or Join.":"용도를 선택하세요: Shop, Gift, Support 또는 Join.","Preview a sample contribution":"샘플 기여 미리보기","Preview a sample purchase":"샘플 구매 미리보기","Preview sample alert":"샘플 알림 미리보기","Preview sample support":"샘플 후원 미리보기","Problem":"문제","Products & support links":"상품 및 후원 링크","Products & support links → Set up products and links → Import a Fourthwall product":"Products & support links → Set up products and links → Import a Fourthwall product","Provider":"제공업체","Public tips, memberships, shop orders, and commissions all use this one link. Private payments are left out. Shop orders and commissions show as purchases and don't add to donation totals. Ko-fi doesn't report cancelled memberships.":"공개 팁, 멤버십, 상점 주문, 의뢰는 이 링크 하나를 사용합니다. 비공개 결제는 제외됩니다. 상점 주문과 의뢰는 구매로 표시되며 기부 합계에 더하지 않습니다. Ko-fi는 취소된 멤버십을 알려 주지 않습니다.","QR code won't scan?":"QR 코드를 스캔할 수 없나요?","Receiver is off":"수신 기능이 꺼져 있음","Receiver setting":"수신기 설정","SSN provider selector, masked webhook URL, receiver setting, setup guide and sample preview controls":"SSN 제공자 선택기, 가려진 웹훅 URL, 수신기 설정, 설정 가이드, 샘플 미리보기 제어","Save and leave delivery on. If something fails, check the delivery history there.":"저장하고 전송을 켜 두세요. 실패하면 해당 화면의 전송 기록을 확인하세요.","Save setup":"설정 저장","Save, and keep SSN running.":"저장하고 SSN을 계속 실행하세요.","Scan the QR code with your phone while looking at your final OBS layout.":"최종 OBS 레이아웃을 보면서 휴대전화로 QR 코드를 스캔하세요.","Set up a creator store in Social Stream Ninja, connect your products and configure viewer links for your stream's commerce overlays.":"Social Stream Ninja에서 크리에이터 스토어를 설정하고 상품을 연결하며 방송 커머스 오버레이용 시청자 링크를 구성하세요.","Settings → For Developers":"Settings → For Developers","Settings → For Developers → Webhooks":"Settings → For Developers → Webhooks","Shopify setup":"Shopify 설정","Show QR code":"QR 코드 표시 (Show QR code)","Show it on stream":"방송에 표시","Show products and QR codes on stream":"상품과 QR 코드를 방송에 표시","Shows up as":"표시 유형","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Storefront token":"Storefront 토큰","Support":"지원","Supported Sites":"지원 사이트","Switch products live or share one viewer link: see":"방송 중 상품을 바꾸거나 시청자 링크 하나를 공유하려면 다음을 보세요:","Switch theme":"테마 전환","Test with SSN's preview.":"SSN 미리보기로 테스트하세요.","Tests, private payments, unsupported events, and bad amounts are left out.":"테스트, 비공개 결제, 미지원 이벤트, 잘못된 금액은 제외합니다.","The provider setup panel. The private URL stays hidden. Click to enlarge.":"제공업체 설정 패널. 비공개 URL은 숨겨져 있습니다. 클릭하면 확대됩니다.","The showcase shows the product image. The smaller support card doesn't.":"쇼케이스는 상품 이미지를 표시하지만 작은 후원 카드는 표시하지 않습니다.","The token decides which shop is searched. It's used once, then cleared. It's never saved or sent to overlays.":"토큰으로 검색할 상점을 정합니다. 한 번 사용한 뒤 지우며 저장하거나 오버레이로 보내지 않습니다.","This is a live alert feed, not an order record. Use your provider's dashboard for payments, refunds, and shipping. Tiltify and Patreon alerts aren't supported yet.":"주문 기록이 아닌 실시간 알림 피드입니다. 결제, 환불, 배송은 제공업체 대시보드를 사용하세요. Tiltify와 Patreon 알림은 아직 지원하지 않습니다.","Tick the events you want (see table).":"원하는 이벤트를 선택하세요(표 참고).","Try this":"시도할 방법","Turn on":"켜기:","Under":"다음 항목 아래에서:","Webhook URL":"웹훅 URL","What the import does":"가져오기 기능의 동작","You can also add any public link by hand (Shopify, Tiltify, Patreon, and so on). That doesn't connect payment alerts.":"Shopify, Tiltify, Patreon 등 공개 링크를 수동으로 추가할 수도 있습니다. 이것만으로 결제 알림이 연결되지는 않습니다.","You can save up to 20 products. Adding the same one again makes a second copy.":"상품은 최대 20개 저장할 수 있습니다. 같은 것을 다시 추가하면 별도 복사본이 생깁니다.","and add it to OBS as a":"를 OBS에 다음 소스로 추가하세요:","and choose":"을 열고 다음을 선택하세요:","and create a":"에서 다음을 만드세요:","and pick an":"에서 다음을 선택하세요:","and pick your":"에서 자신의 항목을 선택하세요:","and save.":"그리고 저장하세요.","and turn on":"에서 다음을 켜세요:","event mapping":"이벤트 매핑","live product controls":"실시간 상품 제어","monetization guide":"수익화 가이드","only shows the look. It doesn't touch totals, Event Flow, or your webhook.":"는 외형만 보여 줍니다. 합계, Event Flow, 웹훅에는 영향을 주지 않습니다.","remote API control of extension":"확장 프로그램 원격 API 제어","“Receiver connected” only means SSN is listening. The last-event line updates when a real event arrives (it resets on restart).":"‘Receiver connected’는 SSN이 수신 대기 중이라는 뜻뿐입니다. 마지막 이벤트 항목은 실제 이벤트가 도착할 때 갱신되고 재시작 시 초기화됩니다."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/creator-store-setup.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/creator-store-setup.html">
+<!-- ssn-languages:end --></head>
+	<body class="visual-guide">
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/creator-store-setup.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/creator-store-setup.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/creator-store-setup.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/creator-store-setup.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/creator-store-setup.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/creator-store-setup.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/creator-store-setup.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/creator-store-setup.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/creator-store-setup.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/creator-store-setup.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/creator-store-setup.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="creator-store-setup.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/creator-store-setup.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/creator-store-setup.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/creator-store-setup.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/creator-store-setup.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/creator-store-setup.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+		<section class="page-hero">
+			<div class="container">
+				<h1>스토어를 연결하고 상품을 보여주세요.</h1>
+				<p>Fourthwall, Ko-fi, Buy Me a Coffee 알림과 QR 코드가 있는 상품을 표시합니다.</p>
+			</div>
+		</section>
+
+	<main>
+		<section class="guide-section">
+			<div class="container">
+				<nav class="guide-jump-links" aria-label="이 페이지에서">
+					<a href="#connect">알림 연결</a>
+					<a href="#fourthwall">Fourthwall</a>
+					<a href="#kofi">Ko-fi</a>
+					<a href="#bmac">Buy Me a Coffee</a>
+					<a href="#import">상품 가져오기</a>
+					<a href="#obs">방송에 표시</a>
+					<a href="#troubleshooting">문제 해결</a>
+				</nav>
+
+				<div class="guide-card" id="connect">
+					<h2 id="read-section-2">5단계로 알림 연결하기</h2>
+					<div class="guide-step-layout">
+						<ol class="guide-steps">
+							<li>열기 <strong>Monetization &rarr; Fourthwall, Ko-fi &amp; Buy Me a Coffee alerts</strong> 에서 자신의 항목을 선택하세요: <strong>제공업체</strong>.</li>
+							<li>클릭: <strong>수신기 설정</strong> 에서 다음을 켜세요: <strong>확장 프로그램 원격 API 제어</strong>.</li>
+							<li>Monetization으로 돌아가 다음을 클릭하세요: <strong>웹훅 URL 복사</strong>.</li>
+							<li>제공업체의 웹훅 설정에 붙여 넣으세요(아래 단계 참고).</li>
+							<li>Social Stream Ninja를 계속 실행하세요.</li>
+						</ol>
+						<figure class="guide-figure">
+							<a href="../../docs/images/monetization/provider-setup.png" target="_blank" rel="noopener"><img class="guide-image" src="../../docs/images/monetization/provider-setup.png" alt="SSN 제공자 선택기, 가려진 웹훅 URL, 수신기 설정, 설정 가이드, 샘플 미리보기 제어" loading="lazy"></a>
+							<figcaption>제공업체 설정 패널. 비공개 URL은 숨겨져 있습니다. 클릭하면 확대됩니다.</figcaption>
+						</figure>
+					</div>
+					<div class="guide-note"><strong>작동하고 있나요?</strong> ‘Receiver connected’는 SSN이 수신 대기 중이라는 뜻뿐입니다. 마지막 이벤트 항목은 실제 이벤트가 도착할 때 갱신되고 재시작 시 초기화됩니다.</div>
+					<div class="warning-note"><strong>웹훅 URL을 공개하지 마세요.</strong> 이 URL이 알림의 유일한 보호 수단이며 서명 비밀키는 검사하지 않습니다. 알림에는 쓸 수 있지만 상품 발송을 위한 결제 증명으로 쓰지 마세요. 공개하거나 QR 코드에 넣지 마세요.</div>
+					<p><strong>샘플 알림 미리보기</strong> 는 외형만 보여 줍니다. 합계, Event Flow, 웹훅에는 영향을 주지 않습니다.</p>
+					<p>NinjaBacker, Throne, Amazon, eBay는 다음을 보세요: <a href="monetization.html">수익화 가이드</a>. Shopify는 다음을 보세요: <a href="shopify-setup.html">Shopify 설정</a>.</p>
+				</div>
+
+				<div class="guide-card" id="fourthwall">
+					<h2 id="read-section-3">Fourthwall</h2>
+					<ol class="guide-steps">
+						<li>Fourthwall에서 다음을 여세요: <strong>Settings &rarr; For Developers &rarr; Webhooks</strong>.</li>
+						<li>웹훅을 만들고 SSN의 Fourthwall URL을 붙여 넣으세요.</li>
+						<li>원하는 이벤트를 선택하세요(표 참고).</li>
+						<li>저장하고 SSN을 계속 실행하세요.</li>
+					</ol>
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>Fourthwall 이벤트</th><th>표시 유형</th></tr></thead>
+						<tbody>
+							<tr><td data-label="Fourthwall 이벤트"><code>ORDER_PLACED</code></td><td data-label="표시 유형">구매입니다. 기존 설정과 맞추기 위해 기부 값도 더합니다.</td></tr>
+							<tr><td data-label="Fourthwall 이벤트"><code>GIFT_PURCHASE</code></td><td data-label="표시 유형">선물입니다.</td></tr>
+							<tr><td data-label="Fourthwall 이벤트"><code>DONATION</code></td><td data-label="표시 유형">기부입니다.</td></tr>
+							<tr><td data-label="Fourthwall 이벤트"><code>SUBSCRIPTION_PURCHASED</code></td><td data-label="표시 유형">새 멤버십입니다.</td></tr>
+						</tbody>
+					</table>
+					<p>기프트 카드 주문은 금액을 두 번 더하지 않습니다. 테스트 이벤트는 건너뜁니다.</p>
+					<p><a href="https://docs.fourthwall.com/webhooks/getting-started">Fourthwall 웹훅 문서</a> &middot; <a href="../../monetization.html?demo&amp;mode=commerce&amp;view=alerts&amp;provider=fourthwall">샘플 구매 미리보기</a></p>
+				</div>
+
+				<div class="guide-card" id="kofi">
+					<h2 id="read-section-4">Ko-fi</h2>
+					<ol class="guide-steps">
+						<li>열기 <a href="https://ko-fi.com/manage/webhooks">Ko-fi Webhooks</a>.</li>
+						<li>SSN의 Ko-fi URL을 다음에 붙여 넣으세요: <strong>웹훅 URL</strong> 그리고 저장하세요.</li>
+						<li>SSN을 계속 실행하세요.</li>
+					</ol>
+					<p>공개 팁, 멤버십, 상점 주문, 의뢰는 이 링크 하나를 사용합니다. 비공개 결제는 제외됩니다. 상점 주문과 의뢰는 구매로 표시되며 기부 합계에 더하지 않습니다. Ko-fi는 취소된 멤버십을 알려 주지 않습니다.</p>
+					<div class="warning-note"><strong>SSN 미리보기로 테스트하세요.</strong> Ko-fi 테스트 결제는 실제처럼 보이며 알림, 합계, 작업을 실행할 수 있습니다. 유료 보상이 켜져 있을 때 사용하지 마세요.</div>
+					<p><a href="https://help.ko-fi.com/hc/en-us/articles/360004162298-Does-Ko-fi-have-an-API-or-webhook">Ko-fi 웹훅 문서</a> &middot; <a href="../../monetization.html?demo&amp;mode=commerce&amp;view=alerts&amp;provider=kofi">샘플 후원 미리보기</a></p>
+				</div>
+
+				<div class="guide-card" id="bmac">
+					<h2 id="read-section-5">Buy Me a Coffee</h2>
+					<ol class="guide-steps">
+						<li>크리에이터 대시보드에서 다음을 여세요: <strong>통합(Integrations)</strong> 을 열고 다음을 선택하세요: <strong>새 웹훅(New webhook)</strong>.</li>
+						<li>이름을 정하고 SSN의 Buy Me a Coffee URL을 붙여 넣으세요.</li>
+						<li>원하는 이벤트를 선택하세요(표 참고).</li>
+						<li>저장하고 전송을 켜 두세요. 실패하면 해당 화면의 전송 기록을 확인하세요.</li>
+					</ol>
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>이벤트</th><th>표시 유형</th></tr></thead>
+						<tbody>
+							<tr><td data-label="이벤트"><code>donation.created</code></td><td data-label="표시 유형">기부입니다.</td></tr>
+							<tr><td data-label="이벤트"><code>extra_purchase.created</code></td><td data-label="표시 유형">구매입니다.</td></tr>
+							<tr><td data-label="이벤트"><code>commission_order.created</code></td><td data-label="표시 유형">구매입니다.</td></tr>
+							<tr><td data-label="이벤트"><code>wishlist_payment.created</code></td><td data-label="표시 유형">선물 모금 참여입니다.</td></tr>
+							<tr><td data-label="이벤트"><code>membership.started</code></td><td data-label="표시 유형">새 멤버십 안내이며 별도 결제는 아닙니다.</td></tr>
+						</tbody>
+					</table>
+					<p>비공개 메모와 익명 후원자는 계속 숨깁니다. 대시보드 테스트(<code>live_mode: false</code>)는 건너뜁니다. 환불이 합계를 줄이지는 않습니다.</p>
+					<p><a href="https://help.buymeacoffee.com/en/articles/15743173-how-to-setup-and-use-buy-me-a-coffee-webhooks">Buy Me a Coffee 웹훅 문서</a> &middot; <a href="../../monetization.html?demo&amp;mode=commerce&amp;view=alerts&amp;provider=bmac">샘플 기여 미리보기</a></p>
+				</div>
+
+				<div class="guide-card" id="import">
+					<h2 id="read-section-6">Fourthwall 상품 가져오기</h2>
+					<div class="guide-step-layout">
+						<ol class="guide-steps">
+							<li>Fourthwall에서 다음으로 이동하세요: <strong>Settings &rarr; For Developers</strong> 에서 다음을 만드세요: <strong>Storefront 토큰</strong>. 관리자 API 키를 사용하지 마세요.</li>
+							<li>SSN에서 다음을 여세요: <strong>Products &amp; support links &rarr; Set up products and links &rarr; Import a Fourthwall product</strong>.</li>
+							<li>상품의 공개 링크와 토큰을 붙여 넣고 다음을 클릭하세요: <strong>상품 세부 정보 불러오기</strong>.</li>
+							<li>이름, 이미지, 가격, 링크를 확인하세요. 링크는 토큰과 같은 상점의 것이어야 합니다.</li>
+							<li>용도를 선택하세요: Shop, Gift, Support 또는 Join.</li>
+							<li>클릭: <strong>상품 또는 링크 추가</strong>에서 다음을 켜세요: <strong>상품 및 후원 링크</strong>를 선택하고 다음을 클릭하세요: <strong>설정 저장</strong>.</li>
+						</ol>
+						<figure class="guide-figure">
+							<a href="../../docs/images/monetization/fourthwall-import.png" target="_blank" rel="noopener"><img class="guide-image" src="../../docs/images/monetization/fourthwall-import.png" alt="SSApp에서 검토할 준비가 된 Fourthwall 가져오기 제어와 불러온 상품 필드" loading="lazy"></a>
+							<figcaption>가져오기는 편집기를 채우므로 저장 전에 확인할 수 있습니다.</figcaption>
+						</figure>
+					</div>
+					<details class="guide-extra">
+						<summary>가져오기 기능의 동작</summary>
+						<ul>
+							<li>공개되고 판매 가능한 상품을 한 번에 하나씩 불러옵니다.</li>
+							<li>토큰으로 검색할 상점을 정합니다. 한 번 사용한 뒤 지우며 저장하거나 오버레이로 보내지 않습니다.</li>
+							<li>옵션이나 묶음의 가격이 다르면 가격을 비워 둡니다.</li>
+							<li>가져온 시점의 정보입니다. 가격, 재고, 이미지는 자동 갱신되지 않으므로 바뀌면 다시 가져오거나 편집하세요.</li>
+							<li>상품은 최대 20개 저장할 수 있습니다. 같은 것을 다시 추가하면 별도 복사본이 생깁니다.</li>
+						</ul>
+						<p><a href="https://docs.fourthwall.com/storefront/getting-started">Storefront 토큰 만들기</a> &middot; <a href="https://docs.fourthwall.com/api-reference/storefront/products/get-product">Fourthwall 상품 필드</a></p>
+					</details>
+				</div>
+
+				<div class="guide-card" id="obs">
+					<h2 id="read-section-7">상품과 QR 코드를 방송에 표시</h2>
+					<p>Shopify, Tiltify, Patreon 등 공개 링크를 수동으로 추가할 수도 있습니다. 이것만으로 결제 알림이 연결되지는 않습니다.</p>
+					<div class="guide-step-layout">
+						<ol class="guide-steps">
+							<li>다음 항목 아래에서: <strong>대상 OBS 오버레이:</strong>에서 다음을 선택하세요: <strong>상품 및 후원 링크</strong>.</li>
+							<li>열기 <strong>오버레이 링크 옵션</strong> 에서 다음을 선택하세요: <strong>오버레이 보기</strong>: Product showcase only, Support card only, Activity alerts only 또는 Showcase and alerts.</li>
+							<li>클릭: <strong>OBS 링크 복사</strong> 를 OBS에 다음 소스로 추가하세요: <strong>브라우저 소스</strong>. 800 × 600으로 시작하고 보기마다 소스 하나를 사용하세요.</li>
+							<li>다음 위치에서: <strong>표시 옵션</strong>에서 첫 상품을 고정하거나 순환시키고 다음을 켜세요: <strong>QR 코드 표시 (Show QR code)</strong>.</li>
+							<li>최종 OBS 레이아웃을 보면서 휴대전화로 QR 코드를 스캔하세요.</li>
+						</ol>
+						<figure class="guide-figure">
+							<a href="../../docs/images/monetization/product-showcase.png" target="_blank" rel="noopener"><img class="guide-image" src="../../docs/images/monetization/product-showcase.png" alt="상품 이름, 가격, 읽을 수 있는 공개 링크, QR 코드를 보여주는 잘라낸 상품 쇼케이스 화면" loading="lazy"></a>
+							<figcaption>공개 링크와 QR 코드가 있는 상품 카드. 예제 상품입니다.</figcaption>
+						</figure>
+					</div>
+					<div class="guide-note"><strong>QR 코드를 스캔할 수 없나요?</strong> 오버레이를 너무 작게 줄이거나 많이 자르지 마세요. 채팅에 링크를 공유하려면 다음을 클릭하세요: <strong>공개 링크 복사</strong>.</div>
+					<details class="guide-extra">
+						<summary>알림, multi-alerts, Event Flow</summary>
+						<ul>
+							<li>쇼케이스는 상품 이미지를 표시하지만 작은 후원 카드는 표시하지 않습니다.</li>
+							<li>활동 알림은 단독으로 작동하며 관계없는 상품의 QR 코드를 표시하지 않습니다.</li>
+							<li>Multi-alerts와 활동 피드는 상품 목록 없이도 같은 세션에서 작동합니다. Monetization 활동 보기에는 상품 목록을 켜야 합니다.</li>
+							<li>Event Flow의 Donation 트리거는 계속 다음 값이 있는 행을 처리합니다: <code>hasDonation</code>. 구매나 완료된 선물에는 Event Type을 사용하세요. 참고: <a href="event-reference.html#creator-commerce-webhooks">이벤트 매핑</a>.</li>
+						</ul>
+					</details>
+					<p>방송 중 상품을 바꾸거나 시청자 링크 하나를 공유하려면 다음을 보세요: <a href="product-controls.html">실시간 상품 제어</a>.</p>
+				</div>
+
+				<div class="guide-card" id="troubleshooting">
+					<h2 id="read-section-8">아무것도 나타나지 않을 때</h2>
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>문제</th><th>시도할 방법</th></tr></thead>
+						<tbody>
+							<tr><td data-label="문제">수신 기능이 꺼져 있음</td><td data-label="시도할 방법">켜기: <strong>확장 프로그램 원격 API 제어</strong>. 다른 API 스위치는 다른 기능입니다.</td></tr>
+							<tr><td data-label="문제">연결 끊김</td><td data-label="시도할 방법">SSN을 켜 두고 인터넷을 확인하세요. 이는 SSN의 연결 상태이며 제공업체의 상태는 아닙니다.</td></tr>
+							<tr><td data-label="문제">이벤트를 받지 못함</td><td data-label="시도할 방법">선택한 제공업체, URL, 제공업체의 웹훅 설정을 확인하세요.</td></tr>
+							<tr><td data-label="문제">이벤트를 건너뜀</td><td data-label="시도할 방법">테스트, 비공개 결제, 미지원 이벤트, 잘못된 금액은 제외합니다.</td></tr>
+							<tr><td data-label="문제">이벤트는 도착했지만 오버레이가 없음</td><td data-label="시도할 방법">세션, 비밀번호, 필터, SSN 규칙, OBS 소스 표시 여부를 확인하세요. 대부분의 구매는 기부가 아닙니다.</td></tr>
+							<tr><td data-label="문제">알림이 두 번 표시됨</td><td data-label="시도할 방법">같은 결제를 제공업체와 다른 서비스를 통해 동시에 보내지 마세요.</td></tr>
+							<tr><td data-label="문제">가져오기 실패</td><td data-label="시도할 방법">상품 링크와 Storefront 토큰, 상품 공개 및 판매 가능 여부를 확인하세요. 직접 입력해도 됩니다.</td></tr>
+						</tbody>
+					</table>
+					<p>주문 기록이 아닌 실시간 알림 피드입니다. 결제, 환불, 배송은 제공업체 대시보드를 사용하세요. Tiltify와 Patreon 알림은 아직 지원하지 않습니다.</p>
+				</div>
+			</div>
+		</section>
+	</main><script data-copy-markdown src="../../docs/js/main.js"></script></body></html>

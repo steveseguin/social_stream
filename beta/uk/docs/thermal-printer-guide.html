@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="uk" data-site-root="../../" data-site-language="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/uk/docs/thermal-printer-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="uk_UA">
+    <meta property="og:url" content="https://socialstream.ninja/beta/uk/docs/thermal-printer-guide.html">
+    <meta property="og:title" content="Термопринтери та етикетки стріму — Social Stream Ninja">
+    <meta property="og:description" content="Налаштуйте USB-термопринтер чеків або етикеток у Social Stream Ninja й друкуйте імена, донати, покупки, квитки та етикетки фіксованого розміру з Event Flow.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Логотип Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/uk/docs/thermal-printer-guide.html">
+    <meta name="twitter:title" content="Термопринтери та етикетки стріму — Social Stream Ninja">
+    <meta name="twitter:description" content="Налаштуйте USB-термопринтер чеків або етикеток у Social Stream Ninja й друкуйте імена, донати, покупки, квитки та етикетки фіксованого розміру з Event Flow.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Логотип Social Stream Ninja">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Термопринтери та етикетки стріму — Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Налаштуйте USB-термопринтер чеків або етикеток у Social Stream Ninja й друкуйте імена, донати, покупки, квитки та етикетки фіксованого розміру з Event Flow.">
+	<style>
+		.printer-gallery { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; margin:24px 0; align-items:start; }
+		.paper-example { display:flex; flex-direction:column; align-items:center; gap:10px; margin:0; }
+		.paper { position:relative; width:min(100%,220px); min-height:260px; padding:25px 19px; color:#151515; background:#fffdf7; border:1px solid #d9d3c5; box-shadow:0 14px 26px rgba(28,25,18,.15); font-family:"Roboto Mono",monospace; text-align:center; }
+		.paper.receipt::after { content:""; position:absolute; inset:auto 0 -7px; height:13px; background:linear-gradient(135deg,transparent 7px,#fffdf7 0) 0 0/14px 14px repeat-x; }
+		.paper.label { min-height:170px; border-radius:6px; outline:8px solid #e9e5dc; }
+		.paper .eyebrow { font-size:11px; letter-spacing:.13em; text-transform:uppercase; }
+		.paper .big { margin:15px 0 6px; font-size:27px; font-weight:800; overflow-wrap:anywhere; }
+		.paper .amount { margin-top:9px; font-size:22px; font-weight:800; }
+		.paper .rule { border-top:2px dashed #777; margin:17px 0; }
+		.paper-caption { max-width:250px; color:var(--text-secondary); text-align:center; font-size:1.35rem; line-height:1.45; }
+		.flow-demo { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:16px; align-items:center; margin:22px 0; max-width:64rem; }
+		.flow-node { padding:16px 18px; border:1px solid var(--border-color); border-radius:12px; background:var(--background-card); }
+		.flow-node strong { display:block; margin-bottom:7px; }
+		.flow-arrow { color:var(--primary-color); font-size:28px; font-weight:700; text-align:center; }
+		.printer-types { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:20px 0; }
+		.printer-type { padding:16px 18px; border:1px solid var(--border-color); border-radius:12px; background:var(--background-card); }
+		.printer-type h3 { margin-top:0; font-size:1.7rem; }
+		.printer-type p { margin:0; font-size:1.45rem; line-height:1.55; }
+		@media (max-width:800px) {
+			.printer-gallery, .printer-types { grid-template-columns:minmax(0,1fr); }
+			.flow-demo { grid-template-columns:minmax(0,1fr); }
+			.flow-arrow { transform:rotate(90deg); }
+		}
+	</style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="uk">
+<script id="ssn-site-language" type="application/json">{"language":"uk","page":"docs/thermal-printer-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Перемкнути на світлу тему","Switch to dark theme":"Перемкнути на темну тему","Light mode":"Світла тема","Dark mode":"Темна тема","Open navigation menu":"Відкрити меню навігації","Close navigation menu":"Закрити меню навігації","Copy this document as Markdown to the clipboard":"Скопіювати цей документ у форматі Markdown до буфера обміну","Copy Markdown":"Скопіювати Markdown","Copying…":"Копіювання…","Markdown copied":"Markdown скопійовано","Copy failed":"Не вдалося скопіювати","Copy comprehensive Markdown for an AI assistant":"Скопіювати повний Markdown для ШІ-асистента","Copy this documentation page as Markdown for an AI assistant":"Скопіювати цю сторінку документації як Markdown для ШІ-асистента"},"strings":{"$25.00 CAD":"$25.00 CAD","(under Integrations) and connect the trigger to it.":"(у розділі інтеграцій) і підключіть до нього тригер.",", a new line, then":", новий рядок, а потім",", add an amount, and run it. This prints a real label.":", додайте суму й запустіть. Буде надруковано справжню етикетку.",", and":", і",", and pick the downloaded file.":"і виберіть завантажений файл.",", click":", натисніть",", filtered to Whatnot. Bids and auction-ending notices don't print. See the":"із фільтром Whatnot. Ставки й сповіщення про завершення аукціону не друкуються. Див.",", or":", або",", plus an error or code when something fails, for later steps. Success means the job was sent to Windows, not that paper came out. Check the Windows print queue before retrying, or you may get duplicate labels.":"а в разі збою — помилку або код для наступних кроків. Успіх означає надсилання завдання до Windows, а не вихід паперу. Перед повтором перевірте чергу друку Windows, інакше можливі дублікати етикеток.",", so it misses most sales.":"тому пропускає більшість продажів.",", use":", використовуйте",". Check both print actions. They use your Printer Control printer and label length.":". Перевірте обидві дії друку. Вони використовують принтер і довжину етикетки з Printer Control.",". Enter a name, turn on":". Уведіть назву й увімкніть",". Filter by provider if needed.":". За потреби відфільтруйте за постачальником.",". If an edge is cut off, raise that side's safe margin and test again.":". Якщо край обрізано, збільште безпечний відступ із цього боку й перевірте знову.",". It prints the buyer in bold, the item name, and an order ID when there is one. If a payment fails, it prints a separate":". Друкує ім'я покупця жирним, назву товару й ID замовлення, якщо він є. У разі збою оплати друкує окрему",". It's usually":". Зазвичай це",". Pick the font size, weight, alignment, and copies.":". Виберіть розмір і товщину шрифту, вирівнювання й кількість копій.",". Pick your printer by the name Windows shows.":". Виберіть принтер за назвою у Windows.",". Quantity may be in":". Кількість може бути в",". Values made by earlier steps in the flow work too.":". Значення, створені попередніми кроками потоку, також працюють.",". Your Printer Control settings will be used.":". Буде використано ваші налаштування Printer Control.","24 pt · bold · centred":"24 пт · жирний · по центру","3 × 1 inch labels (including a Munbyn BT320):":"Етикетки 3 × 1 дюйм (зокрема Munbyn BT320):","58 mm receipt paper. Length grows with the text.":"Чековий папір 58 мм. Довжина зростає разом із текстом.","A 62 × 29 mm label is usually 62 mm wide with a 29 mm fixed length.":"Етикетка 62 × 29 мм зазвичай має ширину 62 мм і фіксовану довжину 29 мм.","A Counter numbers purchases, not unique buyers. Giving the same number to every purchase by one buyer needs a separate buyer-to-number list, reset at the start of each stream. User Memory's reason field is plain text, not a buyer-number counter.":"Лічильник нумерує покупки, а не унікальних покупців. Щоб усі покупки однієї людини отримували однаковий номер, потрібен окремий список покупець–номер зі скиданням на початку кожного ефіру. Поле причини в User Memory — звичайний текст, а не лічильник номерів покупців.","A fixed die-cut label: name plus donation.":"Висічна етикетка фіксованого розміру: ім'я й пожертва.","A merch or pickup label using event details and a counter.":"Етикетка мерчу або видачі з даними події й лічильником.","A running order number":"Послідовний номер замовлення","A sale label doesn't mean it's paid.":"Етикетка продажу не означає оплату.","A shared or networked label station":"Спільна або мережева станція етикеток","A short to-do list for a producer sitting next to you.":"Короткий список завдань для продюсера поруч із вами.","A sturdier receipt printer":"Надійніший чековий принтер","A-037":"A-037","Add":"Додайте","Add a":"Додайте","Add the":"Додайте","An edge is cut off":"Край обрізається","BUYER #12":"ПОКУПЕЦЬ №12","Before you start:":"Перед початком:","Blue Ninja Mug":"Синя чашка Ninja","Bold the buyer, keep the item normal":"Покупця — жирним, товар — звичайним","Brother QL-800":"Brother QL-800","Brother QL-820NWB":"Brother QL-820NWB","Cheap 58 mm receipts":"Недорогі чеки 58 мм","Click":"Натисніть","Commands & API":"Команди й API","Completed gifts":"Завершені подарунки","Continuous sticker roll":"Безперервний рулон наліпок","Counter":"Лічильник (Counter)","Die-cut labels":"Висічені етикетки","Do this":"Що зробити","Don't print private info.":"Не друкуйте особисті дані.","Donation / Tip":"Донат / чайові","Donation trigger connected to a thermal print action":"Тригер донату, підключений до дії термодруку","Download":"Завантажити","Download the Whatnot example flow":"Завантажити приклад потоку Whatnot","Each notice prints as it arrives. The flow doesn't wait for payment, fix an earlier label, or give out buyer numbers. Missing fields print blank. A failure notice with no buyer, item, or order details can't tell you which label it belongs to.":"Кожне сповіщення друкується після отримання. Потік не чекає оплати, не виправляє стару етикетку й не видає номери покупців. Відсутні поля залишаються порожніми. Сповіщення про помилку без покупця, товару чи даних замовлення не дає визначити потрібну етикетку.","Enter the":"Уведіть","Enter this as the label text:":"Уведіть цей текст етикетки:","Epson TM-T20III":"Epson TM-T20III","Event Flow Editor":"Редактор потоків подій","Event Type":"Тип події","Event Type (Advanced) → Custom Event":"Event Type (Advanced) → Custom Event","Example printers":"Приклади принтерів","Examples of thermal receipt and label output":"Приклади друку термочеків і етикеток","Features":"Можливості","Find printers":"Знайти принтери","Fix problems":"Усунення несправностей","Fixed label length":"Фіксована довжина етикетки","Fixed means fixed":"Фіксована довжина не змінюється","For flow builders: print results and buyer numbers":"Для авторів потоків: результати друку й номери покупців","For matching badges and product labels. Set the exact fixed length, and pick the same stock in Windows Printing Preferences.":"Для однакових бейджів і товарних етикеток. Задайте точну фіксовану довжину й виберіть той самий матеріал у налаштуваннях друку Windows.","For purchase slips, queue tickets, and receipts of any length. Leave fixed label length at 0.":"Для квитанцій покупок, талонів черги й чеків будь-якої довжини. Залиште фіксовану довжину етикетки рівною 0.","For sticky name strips of any length. Works like receipt paper, but the printer or driver must do the cutting.":"Для клейких смужок з ім'ям будь-якої довжини. Працює як чековий папір, але різання має виконувати принтер або драйвер.","Generic “POS-58”":"Універсальний «POS-58»","Get fixed-size labels right":"Правильно налаштуйте етикетки фіксованого розміру","Global settings and tools → Mechanics - Connections & Integrations → Printer Control":"Загальні налаштування й інструменти → Механіка — З'єднання та інтеграції → Керування принтером","Good for":"Підходить для","Guides":"Посібники","Has Donation":"Містить донат (Has Donation)","Hire":"Найняти фахівця","Home":"Головна","How the example flow works":"Як працює приклад потоку","I want to print":"Я хочу друкувати","I want to print…":"Я хочу друкувати…","INKY":"INKY","Ideas":"Ідеї","If an earlier step makes":"Якщо попередній крок створює","Import":"Імпортувати","In Social Stream, open":"У Social Stream відкрийте","In the standalone app, set up":"В окремому застосунку налаштуйте","Inky":"Inky","Inspiration":"Натхнення","It says success, but nothing prints":"Повідомляється про успіх, але друку немає","It uses":"Використовує","Keep Use printable area on. Raise the safe margin on that side.":"Залиште використання області друку ввімкненим. Збільште безпечний відступ із цього боку.","Keep your Whatnot source open with stream-event capture on.":"Залиште джерело Whatnot відкритим з увімкненим захопленням подій ефіру.","Label sizes":"Розміри етикеток","Labels already set to All bold or Normal keep their look.":"Етикетки з налаштуванням «Усе жирним» або «Звичайний» зберігають вигляд.","Leave":"Залиште","Leave the action's printer and fixed-length overrides blank or":"Залиште перевизначення принтера й фіксованої довжини в дії порожніми або","Long names, product options, and extra lines need more room or smaller text.":"Довгі імена, варіанти товару й додаткові рядки потребують більше місця або меншого шрифту.","Main navigation":"Основна навігація","Make sure Windows can print a test page. Restart Social Stream and click Find printers again.":"Переконайтеся, що Windows друкує тестову сторінку. Перезапустіть Social Stream і знову натисніть «Знайти принтери».","Match Windows too":"Узгодьте налаштування Windows","Measure in the feed direction":"Вимірюйте в напрямку подавання","Merch, commission, drink, or pickup tags as orders come in.":"Етикетки мерчу, індивідуальних замовлень, напоїв або видачі після надходження замовлень.","Minimum Amount":"Мінімальна сума","Minimum Amount:":"Мінімальна сума:","Ninja Hoodie":"Худі Ninja","No extra feed is added. Text that's too tall may be cut off or spill over, depending on the driver.":"Додаткове протягування не додається. Зависокий текст може обрізатися або перейти на наступну сторінку залежно від драйвера.","No printer shows up":"Принтер не відображається","Notes":"Примітки","On this page":"На цій сторінці","One label prints as two":"Одна етикетка друкується на двох","Only text inside":"Лише текст усередині","Open navigation menu":"Відкрити меню навігації","Open the":"Відкрийте","Open the printer's Windows queue. Look for paused, offline, paper, driver, or port errors.":"Відкрийте чергу принтера у Windows. Перевірте паузу, автономний режим, помилки паперу, драйвера або порту.","Other handy placeholders:":"Інші корисні підстановки:","Overlay Gallery":"Галерея оверлеїв","PAYMENT FAILED":"ОПЛАТА НЕ ВДАЛАСЯ","Paper width (mm)":"Ширина паперу (мм)","Pick a printer override on the Print Thermal Label step. When blank, testing in the editor uses the Windows default printer.":"Виберіть перевизначення принтера в кроці друку термоетикетки. Якщо поле порожнє, тест у редакторі використовує типовий принтер Windows.","Pick your paper":"Виберіть папір","Pickup":"Видача","Plug the printer in by USB, turn it on, and install its Windows driver. Print a Windows test page to be sure it works.":"Підключіть принтер через USB, увімкніть його й установіть драйвер Windows. Надрукуйте тестову сторінку Windows для перевірки.","Print Thermal Label":"Надрукувати термоетикетку (Print Thermal Label)","Print a label when someone donates":"Друкуйте етикетку після пожертви","Print on a donation":"Друк після пожертви","Print sales":"Друк продажів","Print sales, gifts, and order numbers":"Друкуйте продажі, подарунки й номери замовлень","Print test":"Тестовий друк","Printer":"Принтер","Printer Control":"Керування принтером (Printer Control)","Problem":"Проблема","Purchase tag":"Етикетка покупки","Raffle tickets. Add rate limits and eligibility checks before the print step.":"Лотерейні квитки. Перед друком додайте обмеження частоти й перевірки права участі.","Receipt roll":"Рулон чеків","Rule":"Правило","Sales":"Продажі","See the":"Дивіться","Select":"Виберіть","Selected text":"Виділений текст","Set":"Установіть","Set it up":"Налаштуйте","Set it up in 6 steps":"Налаштуйте за 6 кроків","Set the same stock, direction, gap/mark sensing, and cutter in the driver's Printing Preferences.":"У налаштуваннях друку драйвера задайте той самий матеріал, напрямок, розпізнавання проміжку/мітки й різак.","Set up a USB thermal receipt or label printer in Social Stream Ninja and print names, donations, purchases, tickets, and fixed-size labels from Event Flow.":"Налаштуйте USB-термопринтер чеків або етикеток у Social Stream Ninja й друкуйте імена, донати, покупки, квитки та етикетки фіксованого розміру з Event Flow.","Shopify and eBay don't send the buyer's name. Use an order counter or a product-only tag for those.":"Shopify та eBay не передають ім'я покупця. Використовуйте для них лічильник замовлень або етикетку лише з товаром.","Size L":"Розмір L","Skip addresses, emails, payment details, and private messages. Thermal paper also fades with heat, light, and time.":"Не включайте адреси, email, платіжні дані й приватні повідомлення. Термопапір також вицвітає від тепла, світла й з часом.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Логотип Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Ліцензія GPLv3.0.","Social Stream asks for at least 20 mm. The driver may still limit short page sizes.":"Social Stream запитує щонайменше 20 мм. Драйвер усе одно може обмежувати короткі сторінки.","Stickers and name labels":"Наліпки й іменні етикетки","Stream ideas":"Ідеї для ефіру","Support":"Підтримка","Supported Sites":"Підтримувані сайти","Supporter name stickers for a wall, prop, map, or progress board.":"Наліпки з іменами тих, хто підтримав, для стіни, реквізиту, карти або дошки прогресу.","Switch theme":"Перемкнути тему","Test Flow":"Перевірити потік (Test Flow)","Test Flow uses the wrong printer":"Тест потоку використовує не той принтер","Test your longest text":"Перевірте найдовший текст","Thank you":"Дякуємо","The action adds":"Дія додає","The default 2 mm left and right safe margins suit many cheap 58 mm receipt printers. The driver decides the real printable area, so keep":"Безпечні відступи по 2 мм ліворуч і праворуч підходять багатьом недорогим чековим принтерам 58 мм. Реальну область друку визначає драйвер, тож залиште","The test print's side borders show the safe width. Its height follows the test text. It doesn't outline the whole label.":"Бічні межі тестового друку показують безпечну ширину. Висота залежить від тестового тексту. Контур усієї етикетки не малюється.","The text is taller than the label, or Windows has the wrong stock size. Use less text, smaller font, tighter spacing, or smaller margins.":"Текст вищий за етикетку або у Windows задано неправильний розмір матеріалу. Зменште текст, шрифт, інтервали чи поля.","Thermal Printers And Stream Labels":"Термопринтери та етикетки стріму","Thermal Printers And Stream Labels - Social Stream Ninja":"Термопринтери та етикетки стріму — Social Stream Ninja","These are examples, not a tested list. Before buying, check the exact model has a current Windows driver, fits your label size, and shows up as a normal Windows printer.":"Це приклади, а не список перевірених пристроїв. Перед купівлею переконайтеся, що конкретна модель має актуальний драйвер Windows, підтримує розмір етикетки й відображається як звичайний принтер Windows.","Too much blank paper":"Забагато порожнього паперу","Try this":"Що спробувати","Turn purchases, donations, and chat events into physical receipts, stickers, tickets, or pickup tags.":"Перетворюйте покупки, донати й події чату на фізичні чеки, наліпки, квитки або етикетки видачі.","Turn the flow on and save. It imports turned off.":"Увімкніть потік і збережіть. Після імпорту він вимкнений.","Type":"Введіть","USB, Ethernet, Wi-Fi, and Bluetooth.":"USB, Ethernet, Wi-Fi та Bluetooth.","USB. 80 mm paper, or 58 mm with the included adapter.":"USB. Папір 80 мм або 58 мм із комплектним адаптером.","USB. About 25–112 mm media. Direct-thermal and thermal-transfer versions.":"USB. Матеріал приблизно 25–112 мм. Версії прямого термодруку й термотрансферного друку.","USB. Up to 62 mm, die-cut or continuous, with an auto cutter.":"USB. До 62 мм, висічні або суцільні, з автоматичним різаком.","Use":"Використовуйте","Use fixed length 0 for receipts. Lower the bottom margin and extra feed. For labels, set the exact length.":"Для чеків задайте фіксовану довжину 0. Зменште нижнє поле й додаткове протягування. Для етикеток задайте точну довжину.","Use printable area":"Використовувати область друку (Use printable area)","Use single braces. Sales put the product name in":"Використовуйте одинарні фігурні дужки. У продажах назва товару міститься в","Usually USB. Names and drivers vary by seller. A basic POS-58 was used to test Social Stream.":"Зазвичай USB. Назви й драйвери залежать від продавця. Для перевірки Social Stream використовувався базовий POS-58.","VIP badges, team picks, challenge tokens, or milestone labels.":"VIP-бейджі, вибір команд, жетони завдань або етикетки етапів.","Very short labels may not work":"Дуже короткі етикетки можуть не працювати","Weight":"Товщина","Whatnot event fields":"поля подій Whatnot","Whatnot item labels":"Етикетки товарів Whatnot","Whatnot labels":"Етикетки Whatnot","Whatnot: Item Labels + Payment Warnings":"Whatnot: етикетки товарів + попередження про оплату","Why":"Чому","Wider product, shipping, or wristband labels":"Ширші товарні, адресні етикетки або браслети","Zebra ZD220":"Zebra ZD220","and":"і","and make a new flow.":"і створіть новий потік.","and run its test print.":"і виконайте тестовий друк.","at":"на","before the print action.":"перед дією друку.","commerce event fields":"поля торгових подій","for":"для","for receipt paper. For die-cut labels, enter the label's length in mm (the direction the paper feeds).":"для чекового паперу. Для висічних етикеток уведіть довжину в мм за напрямком подавання паперу.","for what each sale includes.":"для складу даних кожного продажу.","if only bigger donations should print.":"якщо друкувати потрібно лише великі пожертви.","instead.":"натомість.","label with whatever details that notice includes.":"етикетку з тими відомостями, які є в сповіщенні.","mm and fixed length to":"мм, а фіксовану довжину на","mm when the 1-inch side feeds first. Pick the same stock and direction in Windows Printing Preferences. Start with 12–14 pt text.":"мм, якщо першою подається сторона 1 дюйм. Виберіть той самий матеріал і напрямок у налаштуваннях друку Windows. Почніть із тексту 12–14 пт.","needs":"потребує","or":"або","selected unless you've tested something else.":"вибраним, якщо ви не перевірили інший варіант.","set width to":"задайте ширину","this needs the Windows standalone app. Your printer must show up as a normal Windows printer. Social Stream prints through the Windows driver. It does not send raw ESC/POS, ZPL, or maker SDK commands.":"потрібен окремий застосунок Windows. Принтер має відображатися як звичайний принтер Windows. Social Stream друкує через драйвер Windows і не надсилає сирі команди ESC/POS, ZPL або SDK виробника.","to":"до","trigger. Set":"тригер. Установіть","turns bold. No HTML or JavaScript needed.":"стає жирним. HTML і JavaScript не потрібні.","with":"з","💰 Donation / Tip":"💰 Донат / чайові","🖨️ Print Thermal Label":"🖨️ Надрукувати термоетикетку"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/thermal-printer-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Основна навігація"><a href="../index.html">Головна</a><a href="features.html">Можливості</a><a href="inspiration.html" class="site-priority-inspiration">Натхнення</a><a href="download.html">Завантажити</a><a href="guides.html">Посібники</a><a href="commands.html">Команди й API</a><a href="supported-sites.html">Підтримувані сайти</a><a href="overlay-gallery.html" class="site-priority-gallery">Галерея оверлеїв</a><a href="services.html" class="site-priority-hire">Найняти фахівця</a><a href="support.html">Підтримка</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Українська"><span aria-hidden="true">🌐 </span><span lang="uk">Українська</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/thermal-printer-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/thermal-printer-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/thermal-printer-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/thermal-printer-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/thermal-printer-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/thermal-printer-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/thermal-printer-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/thermal-printer-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/thermal-printer-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/thermal-printer-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/thermal-printer-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/thermal-printer-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="thermal-printer-guide.html" lang="uk" hreflang="uk" aria-current="true">Українська</a><a class="site-language-link" href="../../ar/docs/thermal-printer-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/thermal-printer-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/thermal-printer-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/thermal-printer-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Перемкнути тему"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Відкрити меню навігації" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero"><div class="container"><h1>Термопринтери та етикетки стріму</h1><p>Перетворюйте покупки, донати й події чату на фізичні чеки, наліпки, квитки або етикетки видачі.</p></div></section>
+
+	<main>
+		<section class="guide-section">
+		<div class="container">
+			<nav class="guide-jump-links" aria-label="На цій сторінці">
+				<a href="#setup">Налаштуйте</a>
+				<a href="#donation-label">Друк після пожертви</a>
+				<a href="#sales">Друк продажів</a>
+				<a href="#whatnot-item-labels">Етикетки Whatnot</a>
+				<a href="#paper">Виберіть папір</a>
+				<a href="#label-size">Розміри етикеток</a>
+				<a href="#ideas">Ідеї</a>
+				<a href="#problems">Усунення несправностей</a>
+			</nav>
+
+			<div class="guide-card">
+				<h2 id="setup">Налаштуйте за 6 кроків</h2>
+				<div class="guide-note"><strong>Перед початком:</strong> потрібен окремий застосунок Windows. Принтер має відображатися як звичайний принтер Windows. Social Stream друкує через драйвер Windows і не надсилає сирі команди ESC/POS, ZPL або SDK виробника.</div>
+				<ol class="guide-steps">
+					<li>Підключіть принтер через USB, увімкніть його й установіть драйвер Windows. Надрукуйте тестову сторінку Windows для перевірки.</li>
+					<li>У Social Stream відкрийте <strong>Загальні налаштування й інструменти → Механіка — З'єднання та інтеграції → Керування принтером</strong>.</li>
+					<li>Натисніть <strong>Знайти принтери</strong>. Виберіть принтер за назвою у Windows.</li>
+					<li>Уведіть <strong>Ширина паперу (мм)</strong>. Зазвичай це <code>58</code>, <code>80</code>, або <code>62</code>.</li>
+					<li>Залиште <strong>Фіксована довжина етикетки</strong> на <code>0</code> для чекового паперу. Для висічних етикеток уведіть довжину в мм за напрямком подавання паперу.</li>
+					<li>Натисніть <strong>Тестовий друк</strong>. Якщо край обрізано, збільште безпечний відступ із цього боку й перевірте знову.</li>
+				</ol>
+				<p>Безпечні відступи по 2 мм ліворуч і праворуч підходять багатьом недорогим чековим принтерам 58 мм. Реальну область друку визначає драйвер, тож залиште <strong>Використовувати область друку (Use printable area)</strong> вибраним, якщо ви не перевірили інший варіант.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="donation-label">Друкуйте етикетку після пожертви</h2>
+				<div class="flow-demo" aria-label="Тригер донату, підключений до дії термодруку"><div class="flow-node"><strong>💰 Донат / чайові</strong>Мінімальна сума: <code>10</code></div><div class="flow-arrow" aria-hidden="true">→</div><div class="flow-node"><strong>🖨️ Надрукувати термоетикетку</strong><code>{username}<br>{donation}</code><br>24 пт · жирний · по центру</div></div>
+				<ol class="guide-steps">
+					<li>Відкрийте <a href="../../actions/">Редактор потоків подій</a> і створіть новий потік.</li>
+					<li>Додайте <strong>Донат / чайові</strong> тригер. Установіть <strong>Мінімальна сума</strong> якщо друкувати потрібно лише великі пожертви.</li>
+					<li>Додайте <strong>Надрукувати термоетикетку (Print Thermal Label)</strong> (у розділі інтеграцій) і підключіть до нього тригер.</li>
+					<li>Введіть <code>{username}</code>, новий рядок, а потім <code>{donation}</code>. Виберіть розмір і товщину шрифту, вирівнювання й кількість копій.</li>
+					<li>Залиште перевизначення принтера й фіксованої довжини в дії порожніми або <code>0</code>. Буде використано ваші налаштування Printer Control.</li>
+					<li>Натисніть <strong>Перевірити потік (Test Flow)</strong>. Уведіть назву й увімкніть <strong>Містить донат (Has Donation)</strong>, додайте суму й запустіть. Буде надруковано справжню етикетку.</li>
+				</ol>
+				<p>Інші корисні підстановки: <code>{message}</code>, <code>{source}</code>, <code>{donationAmount}</code>, і <code>{counterValue}</code>. Значення, створені попередніми кроками потоку, також працюють.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="sales">Друкуйте продажі, подарунки й номери замовлень</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Я хочу друкувати…</th><th>Що зробити</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Я хочу друкувати">Продажі</td><td data-label="Що зробити">Використовуйте <strong>Тип події</strong> з <code>purchase</code>. <strong>Донат / чайові</strong> потребує <code>hasDonation</code>тому пропускає більшість продажів.</td></tr>
+						<tr><td data-label="Я хочу друкувати">Завершені подарунки</td><td data-label="Що зробити">Використовуйте <code>gift</code> або <code>giftfunded</code>. За потреби відфільтруйте за постачальником.</td></tr>
+						<tr><td data-label="Я хочу друкувати">Послідовний номер замовлення</td><td data-label="Що зробити">Додайте <strong>Лічильник (Counter)</strong> перед дією друку.</td></tr>
+					</tbody>
+				</table>
+				<p>Дивіться <a href="event-reference.html#commerce-events">поля торгових подій</a> для складу даних кожного продажу.</p>
+
+				<h3>Покупця — жирним, товар — звичайним</h3>
+				<ol class="guide-steps">
+					<li>Установіть <strong>Товщина</strong> до <strong>Виділений текст</strong>.</li>
+					<li>Уведіть цей текст етикетки:</li>
+				</ol>
+				<pre><code>**{username}**
+{subtitle}</code></pre>
+				<ul>
+					<li>Лише текст усередині <code>**</code> стає жирним. HTML і JavaScript не потрібні.</li>
+					<li>Використовуйте одинарні фігурні дужки. У продажах назва товару міститься в <code>{subtitle}</code>. Кількість може бути в <code>{meta.commerce.quantity}</code>.</li>
+					<li>Якщо попередній крок створює <code>buyer</code>, використовуйте <code>**{buyer}**</code> натомість.</li>
+					<li>Shopify та eBay не передають ім'я покупця. Використовуйте для них лічильник замовлень або етикетку лише з товаром.</li>
+					<li>Етикетки з налаштуванням «Усе жирним» або «Звичайний» зберігають вигляд.</li>
+				</ul>
+
+				<details class="guide-extra">
+					<summary>Для авторів потоків: результати друку й номери покупців</summary>
+					<p>Дія додає <code>meta.thermalPrintResult.success</code>а в разі збою — помилку або код для наступних кроків. Успіх означає надсилання завдання до Windows, а не вихід паперу. Перед повтором перевірте чергу друку Windows, інакше можливі дублікати етикеток.</p>
+					<p>Лічильник нумерує покупки, а не унікальних покупців. Щоб усі покупки однієї людини отримували однаковий номер, потрібен окремий список покупець–номер зі скиданням на початку кожного ефіру. Поле причини в User Memory — звичайний текст, а не лічильник номерів покупців.</p>
+				</details>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="whatnot-item-labels">Етикетки товарів Whatnot</h2>
+				<p><a href="../../actions/examples/whatnot-item-labels.json" download>Завантажити приклад потоку Whatnot</a>. Друкує ім'я покупця жирним, назву товару й ID замовлення, якщо він є. У разі збою оплати друкує окрему <strong>ОПЛАТА НЕ ВДАЛАСЯ</strong> етикетку з тими відомостями, які є в сповіщенні.</p>
+				<ol class="guide-steps">
+					<li>В окремому застосунку налаштуйте <strong>Керування принтером (Printer Control)</strong> і виконайте тестовий друк.</li>
+					<li>Відкрийте <strong>Редактор потоків подій</strong>, натисніть <strong>Імпортувати</strong>і виберіть завантажений файл.</li>
+					<li>Виберіть <strong>Whatnot: етикетки товарів + попередження про оплату</strong>. Перевірте обидві дії друку. Вони використовують принтер і довжину етикетки з Printer Control.</li>
+					<li>Увімкніть потік і збережіть. Після імпорту він вимкнений.</li>
+					<li>Залиште джерело Whatnot відкритим з увімкненим захопленням подій ефіру.</li>
+				</ol>
+				<div class="warning-note"><strong>Етикетка продажу не означає оплату.</strong> Кожне сповіщення друкується після отримання. Потік не чекає оплати, не виправляє стару етикетку й не видає номери покупців. Відсутні поля залишаються порожніми. Сповіщення про помилку без покупця, товару чи даних замовлення не дає визначити потрібну етикетку.</div>
+				<details class="guide-extra">
+					<summary>Як працює приклад потоку</summary>
+					<p>Використовує <strong>Event Type (Advanced) &rarr; Custom Event</strong> для <code>product_sold</code> і <code>payment_failed</code>із фільтром Whatnot. Ставки й сповіщення про завершення аукціону не друкуються. Див. <a href="event-reference.html#whatnot">поля подій Whatnot</a>.</p>
+				</details>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="paper">Виберіть папір</h2>
+				<div class="printer-types">
+					<div class="printer-type"><h3>Рулон чеків</h3><p>Для квитанцій покупок, талонів черги й чеків будь-якої довжини. Залиште фіксовану довжину етикетки рівною 0.</p></div>
+					<div class="printer-type"><h3>Безперервний рулон наліпок</h3><p>Для клейких смужок з ім'ям будь-якої довжини. Працює як чековий папір, але різання має виконувати принтер або драйвер.</p></div>
+					<div class="printer-type"><h3>Висічені етикетки</h3><p>Для однакових бейджів і товарних етикеток. Задайте точну фіксовану довжину й виберіть той самий матеріал у налаштуваннях друку Windows.</p></div>
+				</div>
+				<div class="printer-gallery" aria-label="Приклади друку термочеків і етикеток">
+					<figure class="paper-example"><div class="paper receipt"><div class="eyebrow">Етикетка покупки</div><div class="big">ПОКУПЕЦЬ №12</div><div class="rule"></div><strong>Inky</strong><br>Синя чашка Ninja</div><figcaption class="paper-caption">Чековий папір 58 мм. Довжина зростає разом із текстом.</figcaption></figure>
+					<figure class="paper-example"><div class="paper label"><div class="eyebrow">Дякуємо</div><div class="big">INKY</div><div class="amount">$25.00 CAD</div></div><figcaption class="paper-caption">Висічна етикетка фіксованого розміру: ім'я й пожертва.</figcaption></figure>
+					<figure class="paper-example"><div class="paper label"><div class="eyebrow">Видача</div><div class="big">A-037</div><div class="rule"></div><strong>Худі Ninja</strong><br>Розмір L</div><figcaption class="paper-caption">Етикетка мерчу або видачі з даними події й лічильником.</figcaption></figure>
+				</div>
+
+				<h3>Приклади принтерів</h3>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Принтер</th><th>Підходить для</th><th>Примітки</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Принтер">Універсальний «POS-58»</td><td data-label="Підходить для">Недорогі чеки 58 мм</td><td data-label="Примітки">Зазвичай USB. Назви й драйвери залежать від продавця. Для перевірки Social Stream використовувався базовий POS-58.</td></tr>
+						<tr><td data-label="Принтер"><a href="https://files.support.epson.com/pdf/pos/bulk/tm-t20iii_trg_en_reva.pdf" target="_blank" rel="noopener">Epson TM-T20III</a></td><td data-label="Підходить для">Надійніший чековий принтер</td><td data-label="Примітки">USB. Папір 80 мм або 58 мм із комплектним адаптером.</td></tr>
+						<tr><td data-label="Принтер"><a href="https://www.brother-usa.com/products/ql800" target="_blank" rel="noopener">Brother QL-800</a></td><td data-label="Підходить для">Наліпки й іменні етикетки</td><td data-label="Примітки">USB. До 62 мм, висічні або суцільні, з автоматичним різаком.</td></tr>
+						<tr><td data-label="Принтер"><a href="https://www.brother-usa.com/products/ql820nwb" target="_blank" rel="noopener">Brother QL-820NWB</a></td><td data-label="Підходить для">Спільна або мережева станція етикеток</td><td data-label="Примітки">USB, Ethernet, Wi-Fi та Bluetooth.</td></tr>
+						<tr><td data-label="Принтер"><a href="https://www.zebra.com/gb/en/products/spec-sheets/printers/desktop/zd220.html" target="_blank" rel="noopener">Zebra ZD220</a></td><td data-label="Підходить для">Ширші товарні, адресні етикетки або браслети</td><td data-label="Примітки">USB. Матеріал приблизно 25–112 мм. Версії прямого термодруку й термотрансферного друку.</td></tr>
+					</tbody>
+				</table>
+				<p>Це приклади, а не список перевірених пристроїв. Перед купівлею переконайтеся, що конкретна модель має актуальний драйвер Windows, підтримує розмір етикетки й відображається як звичайний принтер Windows.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="label-size">Правильно налаштуйте етикетки фіксованого розміру</h2>
+				<div class="guide-note"><strong>Етикетки 3 × 1 дюйм (зокрема Munbyn BT320):</strong> задайте ширину <code>76.2</code> мм, а фіксовану довжину на <code>25.4</code> мм, якщо першою подається сторона 1 дюйм. Виберіть той самий матеріал і напрямок у налаштуваннях друку Windows. Почніть із тексту 12–14 пт.</div>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Правило</th><th>Чому</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Правило">Вимірюйте в напрямку подавання</td><td data-label="Чому">Етикетка 62 × 29 мм зазвичай має ширину 62 мм і фіксовану довжину 29 мм.</td></tr>
+						<tr><td data-label="Правило">Узгодьте налаштування Windows</td><td data-label="Чому">У налаштуваннях друку драйвера задайте той самий матеріал, напрямок, розпізнавання проміжку/мітки й різак.</td></tr>
+						<tr><td data-label="Правило">Фіксована довжина не змінюється</td><td data-label="Чому">Додаткове протягування не додається. Зависокий текст може обрізатися або перейти на наступну сторінку залежно від драйвера.</td></tr>
+						<tr><td data-label="Правило">Перевірте найдовший текст</td><td data-label="Чому">Довгі імена, варіанти товару й додаткові рядки потребують більше місця або меншого шрифту.</td></tr>
+						<tr><td data-label="Правило">Дуже короткі етикетки можуть не працювати</td><td data-label="Чому">Social Stream запитує щонайменше 20 мм. Драйвер усе одно може обмежувати короткі сторінки.</td></tr>
+					</tbody>
+				</table>
+				<p>Бічні межі тестового друку показують безпечну ширину. Висота залежить від тестового тексту. Контур усієї етикетки не малюється.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="ideas">Ідеї для ефіру</h2>
+				<ul>
+					<li>Наліпки з іменами тих, хто підтримав, для стіни, реквізиту, карти або дошки прогресу.</li>
+					<li>Етикетки мерчу, індивідуальних замовлень, напоїв або видачі після надходження замовлень.</li>
+					<li>Лотерейні квитки. Перед друком додайте обмеження частоти й перевірки права участі.</li>
+					<li>VIP-бейджі, вибір команд, жетони завдань або етикетки етапів.</li>
+					<li>Короткий список завдань для продюсера поруч із вами.</li>
+				</ul>
+				<div class="warning-note"><strong>Не друкуйте особисті дані.</strong> Не включайте адреси, email, платіжні дані й приватні повідомлення. Термопапір також вицвітає від тепла, світла й з часом.</div>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="problems">Усунення несправностей</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Проблема</th><th>Що спробувати</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Проблема">Принтер не відображається</td><td data-label="Що спробувати">Переконайтеся, що Windows друкує тестову сторінку. Перезапустіть Social Stream і знову натисніть «Знайти принтери».</td></tr>
+						<tr><td data-label="Проблема">Повідомляється про успіх, але друку немає</td><td data-label="Що спробувати">Відкрийте чергу принтера у Windows. Перевірте паузу, автономний режим, помилки паперу, драйвера або порту.</td></tr>
+						<tr><td data-label="Проблема">Край обрізається</td><td data-label="Що спробувати">Залиште використання області друку ввімкненим. Збільште безпечний відступ із цього боку.</td></tr>
+						<tr><td data-label="Проблема">Забагато порожнього паперу</td><td data-label="Що спробувати">Для чеків задайте фіксовану довжину 0. Зменште нижнє поле й додаткове протягування. Для етикеток задайте точну довжину.</td></tr>
+						<tr><td data-label="Проблема">Одна етикетка друкується на двох</td><td data-label="Що спробувати">Текст вищий за етикетку або у Windows задано неправильний розмір матеріалу. Зменште текст, шрифт, інтервали чи поля.</td></tr>
+						<tr><td data-label="Проблема">Тест потоку використовує не той принтер</td><td data-label="Що спробувати">Виберіть перевизначення принтера в кроці друку термоетикетки. Якщо поле порожнє, тест у редакторі використовує типовий принтер Windows.</td></tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		</section>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. Ліцензія GPLv3.0.</p></div></div></footer>
+	<script data-copy-markdown src="../../docs/js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

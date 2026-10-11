@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-tw/docs/name-colors.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/zh-tw/docs/name-colors.html">
+    <meta property="og:title" content="為聊天名稱設定不同顏色 - Social Stream Ninja">
+    <meta property="og:description" content="在 Social Stream Ninja 停駐面板中為聊天名稱設定不同顏色，選擇顏色模式，並透過 CSS 自訂名稱顏色。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-tw/docs/name-colors.html">
+    <meta name="twitter:title" content="為聊天名稱設定不同顏色 - Social Stream Ninja">
+    <meta name="twitter:description" content="在 Social Stream Ninja 停駐面板中為聊天名稱設定不同顏色，選擇顏色模式，並透過 CSS 自訂名稱顏色。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem('darkMode');
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>為聊天名稱設定不同顏色 - Social Stream Ninja</title>
+    <meta name="description" content="在 Social Stream Ninja 停駐面板中為聊天名稱設定不同顏色，選擇顏色模式，並透過 CSS 自訂名稱顏色。">
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <style>
+        .guide-image {
+            display: block;
+            width: 100%;
+            max-width: 900px;
+            margin: 1.25rem auto 0;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .source-example {
+            max-width: 600px;
+        }
+
+        .guide-figure {
+            margin: 1.5rem 0 0;
+        }
+
+        .guide-figure figcaption {
+            max-width: 900px;
+            margin: 0.7rem auto 0;
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        .menu-crop {
+            position: relative;
+            width: 100%;
+            max-width: 748px;
+            height: 0;
+            padding-top: 19.385%;
+            margin: 1.25rem auto 0;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .menu-crop img {
+            position: absolute;
+            top: -157%;
+            left: 0;
+            width: 100%;
+            height: auto;
+        }
+
+        .required-note {
+            margin: 1.25rem 0;
+            padding: 1rem 1.25rem;
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            background: rgba(26, 115, 232, 0.08);
+        }
+
+        .dark-mode .required-note {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .option-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .option-table th,
+        .option-table td {
+            padding: 0.8rem;
+            border: 1px solid var(--border-color);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .option-table th {
+            background: rgba(26, 115, 232, 0.08);
+        }
+
+        @media (max-width: 700px) {
+            .option-table,
+            .option-table tbody,
+            .option-table tr,
+            .option-table th,
+            .option-table td {
+                display: block;
+            }
+
+            .option-table thead {
+                display: none;
+            }
+
+            .option-table tr {
+                margin-bottom: 1rem;
+                border: 1px solid var(--border-color);
+            }
+
+            .option-table td {
+                border: 0;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .option-table td:last-child {
+                border-bottom: 0;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/name-colors.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{", expand":"，展開",", or":"，或",". This keeps colors supplied by the chat platform and fills in missing ones.":"。這會保留聊天平台提供的顏色，並為缺少顏色的名稱補上顏色。","A fully mixed-color chat":"所有名稱都有不同顏色的聊天","Add CSS through the Dock settings, the":"透過停駐面板設定、","Assigns every username a consistent generated color, replacing colors from the platform.":"為每個使用者名稱指派一致的產生顏色，取代平台提供的顏色。","Best for":"適合","CSS can reliably target a platform or role, but the standard Dock does not add a username as a CSS class or attribute. For fixed per-person color rules, use the built-in generated colors or a":"CSS 可以可靠地針對平台或角色設定樣式，但標準停駐面板不會將使用者名稱新增為 CSS 類別或屬性。若要為特定使用者固定顏色規則，請使用內建產生顏色，或使用","Check that the Dock URL contains":"檢查停駐面板 URL 是否包含","Check your custom CSS for a rule that forces every":"檢查自訂 CSS 中是否有規則強制將所有","Choose colors by platform":"依平台選擇顏色","Choose how the Dock should display or generate username colors.":"選擇停駐面板如何顯示或產生使用者名稱顏色。","Choose the color behavior":"選擇顏色行為","Commands & API":"指令與 API","Confirm one option is on under the Dock's":"確認停駐面板的下列區段中已開啟一個選項：","Different Colors for Chat Names - Social Stream Ninja":"為聊天名稱設定不同顏色 - Social Stream Ninja","Displays a color only when the chat platform supplies one.":"僅在聊天平台提供顏色時顯示顏色。","Dock option":"停駐面板選項","Download":"下載","Features":"功能","For platforms without username colors, choose":"對於沒有使用者名稱顏色的平台，請選擇","Generate colors for every name":"為每個名稱產生顏色","Generate colors for uncolored names":"為無顏色的名稱產生顏色","Give Chat Names Different Colors":"讓聊天名稱呈現不同顏色","Guides":"指南","Highlight moderators and VIPs":"突顯管理員與 VIP","Hire":"聘用","Home":"首頁","If the names are still one color":"名稱仍為同一種顏色時","Inspiration":"靈感","Keeps platform-provided name colors and assigns a consistent color when one is missing.":"保留平台提供的名稱顏色，並在缺少顏色時指派一致的顏色。","Main chat overlay & control dock":"主聊天疊加畫面與控制停駐面板","Main navigation":"主導覽","Make chat names different colors in the Social Stream Ninja Dock, choose a color mode, and customize name colors with CSS.":"在 Social Stream Ninja 停駐面板中為聊天名稱設定不同顏色，選擇顏色模式，並透過 CSS 自訂名稱顏色。","More control with CSS":"透過 CSS 取得更多控制","Most users":"大多數使用者","No global setting is required:":"無需全域設定：","Open navigation menu":"開啟導覽選單","Open the Social Stream Ninja extension or desktop app settings.":"開啟 Social Stream Ninja 瀏覽器擴充功能或桌面應用程式設定。","Overlay Customization":"疊加畫面自訂","Overlay Gallery":"疊加畫面圖庫","Platforms such as Twitch that provide username colors":"Twitch 等提供使用者名稱顏色的平台","Quick setup":"快速設定","Real Twitch chat showing source-provided username colors. With the Dock color toggle on, Social Stream Ninja preserves these":"真實的 Twitch 聊天，顯示來源提供的使用者名稱顏色。開啟停駐面板顏色開關後，Social Stream Ninja 會保留這些","Real Twitch chat showing usernames in clearly different colors":"真實的 Twitch 聊天，顯示顏色明顯不同的使用者名稱","Refresh any Dock tab or OBS Browser Source that was already open.":"重新整理已開啟的停駐面板分頁或 OBS 瀏覽器來源。","Resources":"資源","Result":"結果","Settings Reference":"設定參考","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","The generated colors are stable: the Dock hashes the user ID, username, or display name so the same person keeps the same color. The global color settings remain available when colors need to be added to outbound payloads and other surfaces.":"產生的顏色保持穩定：停駐面板對使用者 ID、使用者名稱或顯示名稱計算雜湊，使同一個人始終使用相同顏色。如果需要向送出的承載資料與其他介面新增顏色，仍可使用全域顏色設定。","Turn on":"開啟","URL option, or OBS Browser Source custom CSS. Use":"URL 選項或 OBS 瀏覽器來源自訂 CSS 新增樣式。使用","Under":"位於","Use one color for every name":"所有名稱使用同一種顏色","Use one main color option at a time so the result is predictable.":"每次只使用一個主要顏色選項，以便得到可預期的結果。","Use source-provided username colors":"使用來源提供的使用者名稱顏色","Use the updated Dock link. Existing Dock or OBS browser-source URLs also work if you add":"使用更新後的停駐面板連結。現有停駐面板或 OBS 瀏覽器來源 URL 也可使用，只需新增","Username colors":"使用者名稱顏色","and refresh them.":"並重新整理。","choose one option in the Dock's":"在停駐面板的下列區段選擇一個選項：","custom overlay":"自訂疊加畫面","or":"或","section.":"區段。","that maps usernames to colors in JavaScript.":"，在 JavaScript 中將使用者名稱對應至顏色。","to the same color.":"設為相同顏色。","values.":"值。","when overriding a name color supplied by a platform.":"來覆寫平台提供的名稱顏色。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/name-colors.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/name-colors.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/name-colors.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/name-colors.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/name-colors.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/name-colors.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/name-colors.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/name-colors.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/name-colors.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/name-colors.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/name-colors.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/name-colors.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/name-colors.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/name-colors.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/name-colors.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/name-colors.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/name-colors.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/name-colors.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/name-colors.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/name-colors.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/name-colors.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/name-colors.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/name-colors.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/name-colors.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/name-colors.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/name-colors.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="name-colors.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/name-colors.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/name-colors.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/name-colors.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/name-colors.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/name-colors.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/name-colors.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/name-colors.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/name-colors.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>讓聊天名稱呈現不同顏色</h1>
+            <p>選擇停駐面板如何顯示或產生使用者名稱顏色。</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <h3>快速設定</h3>
+                    <div class="required-note">
+                        <strong>無需全域設定：</strong> 在停駐面板的下列區段選擇一個選項： <strong>使用者名稱顏色</strong> 區段。
+                    </div>
+                    <ol class="guide-steps">
+                        <li>開啟 Social Stream Ninja 瀏覽器擴充功能或桌面應用程式設定。</li>
+                        <li>位於 <strong>主聊天疊加畫面與控制停駐面板</strong>，展開 <strong>使用者名稱顏色</strong>.</li>
+                        <li>開啟 <strong>為無顏色的名稱產生顏色</strong>。這會保留聊天平台提供的顏色，並為缺少顏色的名稱補上顏色。</li>
+                        <li>使用更新後的停駐面板連結。現有停駐面板或 OBS 瀏覽器來源 URL 也可使用，只需新增 <code>&amp;randomcolor</code> 並重新整理。</li>
+                    </ol>
+                </div>
+
+                <div class="guide-card">
+                    <h3>選擇顏色行為</h3>
+                    <p>每次只使用一個主要顏色選項，以便得到可預期的結果。</p>
+                    <table class="option-table">
+                        <thead>
+                            <tr>
+                                <th>停駐面板選項</th>
+                                <th>結果</th>
+                                <th>適合</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>為無顏色的名稱產生顏色</strong></td>
+                                <td>保留平台提供的名稱顏色，並在缺少顏色時指派一致的顏色。</td>
+                                <td>大多數使用者</td>
+                            </tr>
+                            <tr>
+                                <td><strong>為每個名稱產生顏色</strong></td>
+                                <td>為每個使用者名稱指派一致的產生顏色，取代平台提供的顏色。</td>
+                                <td>所有名稱都有不同顏色的聊天</td>
+                            </tr>
+                            <tr>
+                                <td><strong>使用來源提供的使用者名稱顏色</strong></td>
+                                <td>僅在聊天平台提供顏色時顯示顏色。</td>
+                                <td>Twitch 等提供使用者名稱顏色的平台</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>產生的顏色保持穩定：停駐面板對使用者 ID、使用者名稱或顯示名稱計算雜湊，使同一個人始終使用相同顏色。如果需要向送出的承載資料與其他介面新增顏色，仍可使用全域顏色設定。</p>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/twitch-colored-names-source.png" alt="真實的 Twitch 聊天，顯示顏色明顯不同的使用者名稱" class="guide-image source-example">
+                        <figcaption>真實的 Twitch 聊天，顯示來源提供的使用者名稱顏色。開啟停駐面板顏色開關後，Social Stream Ninja 會保留這些 <code>nameColor</code> 值。</figcaption>
+                    </figure>
+                </div>
+
+                <div class="guide-card">
+                    <h3>名稱仍為同一種顏色時</h3>
+                    <ol class="guide-steps">
+                        <li>確認停駐面板的下列區段中已開啟一個選項： <strong>使用者名稱顏色</strong> 區段。</li>
+                        <li>對於沒有使用者名稱顏色的平台，請選擇 <strong>為無顏色的名稱產生顏色</strong>.</li>
+                        <li>檢查停駐面板 URL 是否包含 <code>&amp;color</code>, <code>&amp;randomcolor</code>，或 <code>&amp;randomcolorall</code>.</li>
+                        <li>重新整理已開啟的停駐面板分頁或 OBS 瀏覽器來源。</li>
+                        <li>檢查自訂 CSS 中是否有規則強制將所有 <code>.hl-name</code> 設為相同顏色。</li>
+                    </ol>
+                </div>
+
+                <div class="guide-card">
+                    <h3>透過 CSS 取得更多控制</h3>
+                    <p>透過停駐面板設定、 <code>&amp;css=</code> 或 <code>&amp;b64css=</code> URL 選項或 OBS 瀏覽器來源自訂 CSS 新增樣式。使用 <code>!important</code> 來覆寫平台提供的名稱顏色。</p>
+
+                    <h4>所有名稱使用同一種顏色</h4>
+                    <div class="code-block"><pre>.hl-name {
+  color: #ffd166 !important;
+}</pre></div>
+
+                    <h4>依平台選擇顏色</h4>
+                    <div class="code-block"><pre>.highlight-chat[data-source-type="youtube"] .hl-name {
+  color: #ff5a5f !important;
+}
+
+.highlight-chat[data-source-type="twitch"] .hl-name {
+  color: #b794f4 !important;
+}
+
+.highlight-chat[data-source-type="kick"] .hl-name {
+  color: #53fc18 !important;
+}</pre></div>
+
+                    <h4>突顯管理員與 VIP</h4>
+                    <div class="code-block"><pre>.highlight-chat.mod .hl-name {
+  color: #5eead4 !important;
+}
+
+.highlight-chat.vip .hl-name {
+  color: #f472b6 !important;
+}</pre></div>
+
+                    <p>CSS 可以可靠地針對平台或角色設定樣式，但標準停駐面板不會將使用者名稱新增為 CSS 類別或屬性。若要為特定使用者固定顏色規則，請使用內建產生顏色，或使用 <a href="../../docs/customoverlays.md">自訂疊加畫面</a> ，在 JavaScript 中將使用者名稱對應至顏色。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../../media/logo.png" alt="Social Stream Ninja 標誌">
+                    <span>Social Stream Ninja</span>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>資源</h4>
+                        <ul>
+                            <li><a href="guides.html">指南</a></li>
+                            <li><a href="settings.html">設定參考</a></li>
+                            <li><a href="overlay-customization-guide.html">疊加畫面自訂</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2026</span> Social Stream Ninja。GPLv3.0 授權條款。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

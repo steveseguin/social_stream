@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/th/docs/ai-modes-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/beta/th/docs/ai-modes-guide.html">
+    <meta property="og:title" content="คู่มือ AI ฉบับสมบูรณ์ - Social Stream Ninja">
+    <meta property="og:description" content="เลือกและตั้งค่าฟีเจอร์ AI ของ Social Stream Ninja: ผู้ช่วยดำเนินรายการด้วยเสียง แชตบอตสาธารณะและส่วนตัว โหมดเพื่อนร่วมสนทนา ChatGPT ในเบราว์เซอร์ การดูแลแชต การแปล RAG การสรุป TTS และโอเวอร์เลย์ที่สร้างด้วย AI">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/th/docs/ai-modes-guide.html">
+    <meta name="twitter:title" content="คู่มือ AI ฉบับสมบูรณ์ - Social Stream Ninja">
+    <meta name="twitter:description" content="เลือกและตั้งค่าฟีเจอร์ AI ของ Social Stream Ninja: ผู้ช่วยดำเนินรายการด้วยเสียง แชตบอตสาธารณะและส่วนตัว โหมดเพื่อนร่วมสนทนา ChatGPT ในเบราว์เซอร์ การดูแลแชต การแปล RAG การสรุป TTS และโอเวอร์เลย์ที่สร้างด้วย AI">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คู่มือ AI ฉบับสมบูรณ์ - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="เลือกและตั้งค่าฟีเจอร์ AI ของ Social Stream Ninja: ผู้ช่วยดำเนินรายการด้วยเสียง แชตบอตสาธารณะและส่วนตัว โหมดเพื่อนร่วมสนทนา ChatGPT ในเบราว์เซอร์ การดูแลแชต การแปล RAG การสรุป TTS และโอเวอร์เลย์ที่สร้างด้วย AI">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/ai-modes-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{"(experimental)":"(ทดลอง)",", and":", และ",", and send a new message.":"แล้วส่งข้อความใหม่",", so viewer messages only go to ChatGPT.":"เพื่อให้ข้อความผู้ชมไปยัง ChatGPT เท่านั้น",", then press":" แล้วกด",", then preview and save it. Add":"จากนั้นดูตัวอย่างและบันทึก เพิ่ม",", then reload it.":"แล้วโหลดใหม่",", turn on":"ให้เปิด",". The key stays in Social Stream. The co-host page only gets a short-lived pass, and audio travels over WebRTC.":"คีย์เก็บอยู่ใน Social Stream หน้าผู้ร่วมดำเนินรายการได้รับเพียงสิทธิ์ชั่วคราว และส่งเสียงผ่าน WebRTC",". Turn on TTS if replies should be spoken.":"เปิด TTS หากต้องการให้พูดคำตอบ",". When on, it sends one picture per request, not live video. This adds cost and delay.":"เมื่อเปิด จะส่งหนึ่งภาพต่อคำขอ ไม่ใช่วิดีโอสด ซึ่งเพิ่มค่าใช้จ่ายและความหน่วง","A one-on-one helper, good for testing prompts.":"ผู้ช่วยแบบตัวต่อตัว เหมาะสำหรับทดสอบพรอมต์","AI Integration in Commands & API":"การเชื่อมต่อ AI ในคำสั่งและ API","AI Overlay Builder showing prompt, preview, save controls, and event simulation buttons":"AI Overlay Builder ที่แสดงพรอมป์ต์ ตัวอย่าง ปุ่มบันทึก และปุ่มจำลองอีเวนต์","AI cohost controls showing media devices, AI provider settings, system instructions, and live chat mode":"การควบคุมผู้ช่วยดำเนินรายการ AI ที่แสดงอุปกรณ์สื่อ การตั้งค่าผู้ให้บริการ AI คำสั่งระบบ และโหมดแชตสด","AI in Social Stream Ninja":"AI ใน Social Stream Ninja","API key?":"ต้องใช้คีย์ API หรือไม่","Add":"เพิ่ม","Adding an OpenAI API key doesn't connect Social Stream to a ChatGPT website or voice conversation you already have.":"การเพิ่มคีย์ OpenAI API ไม่ได้เชื่อม Social Stream เข้ากับเว็บไซต์ ChatGPT หรือบทสนทนาเสียงที่คุณเปิดไว้","Already use ChatGPT in Chrome and don't want an API key? Social Stream can pick up new messages from your ChatGPT tab, like any other chat source (type":"ใช้ ChatGPT ใน Chrome อยู่แล้วและไม่อยากใช้คีย์ API ใช่ไหม Social Stream รับข้อความใหม่จากแท็บ ChatGPT ได้เหมือนแหล่งแชตอื่น (ชนิด","Answers everything out loud.":"ตอบทุกอย่างออกเสียง","Answers those out loud by itself.":"ตอบรายการเหล่านั้นออกเสียงเอง","Answers viewer messages on an overlay, out loud with TTS, or back in chat where supported.":"ตอบข้อความผู้ชมบนโอเวอร์เลย์ พูดด้วย TTS หรือส่งกลับเข้าแชตหากรองรับ","Audio Response":"คำตอบเสียง","Auto-answer YouTube, Twitch, Kick, or other chat":"ตอบแชต YouTube, Twitch, Kick หรือแหล่งอื่นอัตโนมัติ","Bot can't post in chat":"บอตโพสต์ในแชตไม่ได้","Bot replies ONLY go to the bot overlay page":"คำตอบบอตส่งไปยังหน้าโอเวอร์เลย์บอตเท่านั้น","Bot skips most messages":"บอตข้ามข้อความส่วนใหญ่","Camera and Screen Share are optional. Default is":"กล้องและการแชร์หน้าจอเป็นตัวเลือก ค่าเริ่มต้นคือ","Capture your ChatGPT tab":"จับข้อความจากแท็บ ChatGPT","Censor bot":"บอตเซ็นเซอร์","Chat Bot - Primary":"แชตบอต - บอตหลัก (Chat Bot - Primary)","Chat Bot - Private Interface":"แชตบอต - อินเทอร์เฟซส่วนตัว","Chat Bots and AI services":"แชตบอตและบริการ AI","Chat bot":"แชตบอต","Chat privately with an AI helper":"คุยส่วนตัวกับผู้ช่วย AI","Chat summaries":"สรุปแชต","Chat tools":"เครื่องมือแชต","ChatGPT":"ChatGPT","ChatGPT API":"ChatGPT API","ChatGPT API provider":"ผู้ให้บริการ ChatGPT API","ChatGPT browser source":"แหล่งเบราว์เซอร์ ChatGPT","ChatGPT tab":"แท็บ ChatGPT","ChatGPT tab (experimental)":"แท็บ ChatGPT (ทดลอง)","ChatGPT tab shows nothing":"แท็บ ChatGPT ไม่แสดงอะไร","Check that platform supports it, you're logged in, the account can post, and rate limits.":"ตรวจสอบว่าแพลตฟอร์มรองรับ คุณเข้าสู่ระบบแล้ว บัญชีโพสต์ได้ และไม่เกินข้อจำกัดอัตรา","Check trigger words, moderators-only, rate limits, and your instructions. It's picky by design.":"ตรวจสอบคำกระตุ้น เฉพาะผู้ดูแล ข้อจำกัดอัตรา และคำสั่งของคุณ ระบบตั้งใจเลือกตอบเฉพาะบางข้อความ","Checks, cleans up, or blocks incoming messages.":"ตรวจสอบ ปรับข้อความ หรือบล็อกข้อความที่เข้ามา","Choices":"ตัวเลือก","Choose and configure Social Stream Ninja AI features: voice cohosts, public and private chat bots, ChatGPT browser companion mode, moderation, translation, RAG, summaries, TTS, and AI-built overlays.":"เลือกและตั้งค่าฟีเจอร์ AI ของ Social Stream Ninja: ผู้ช่วยดำเนินรายการด้วยเสียง แชตบอตสาธารณะและส่วนตัว โหมดเพื่อนร่วมสนทนา ChatGPT ในเบราว์เซอร์ การดูแลแชต การแปล RAG การสรุป TTS และโอเวอร์เลย์ที่สร้างด้วย AI","Claude":"Claude","Click":"คลิก","Cloud":"คลาวด์","Co-host Stream Controls":"การควบคุมสตรีมของผู้ช่วยดำเนินรายการ","Co-host sees chat but stays quiet":"ผู้ร่วมดำเนินรายการเห็นแชตแต่ยังเงียบ","Commands & API":"คำสั่งและ API","Complete AI Guide - Social Stream Ninja":"คู่มือ AI ฉบับสมบูรณ์ - Social Stream Ninja","Configure LLM Service Provider":"ตั้งค่าผู้ให้บริการ LLM","Connect an AI":"เชื่อมต่อ AI","Connect an AI in 5 steps":"เชื่อมต่อ AI ใน 5 ขั้นตอน","Connected isn't the finish line.":"เชื่อมต่อแล้วไม่ได้แปลว่าเสร็จทั้งหมด","Connected, but no replies to chat":"เชื่อมต่อแล้วแต่ไม่ตอบแชต","Context only - answer when asked":"ใช้เป็นบริบทเท่านั้น - ตอบเมื่อถาม","Custom API (OpenAI-compatible)":"Custom API (เข้ากันได้กับ OpenAI)","Depends on the AI":"ขึ้นอยู่กับ AI","Describe an overlay and have AI build it":"อธิบายโอเวอร์เลย์แล้วให้ AI สร้าง","Describe an overlay in":"อธิบายโอเวอร์เลย์ใน","Download":"ดาวน์โหลด","Each service sets its own keys, billing, limits, and model names.":"แต่ละบริการกำหนดคีย์ การคิดค่าบริการ ขีดจำกัด และชื่อโมเดลของตัวเอง","Enable the LLM AI chat bot":"เปิดแชตบอต LLM AI","Every option except the ChatGPT tab needs this first.":"ทุกตัวเลือกยกเว้นแท็บ ChatGPT ต้องทำขั้นตอนนี้ก่อน","Experimental.":"ทดลอง","Experimental. Captures new text messages, not history. Relay can type into its message box.":"ทดลอง จับเฉพาะข้อความใหม่ ไม่ดึงประวัติ การส่งต่อพิมพ์ลงในช่องข้อความได้","Experimental. May be turned off or rate-limited.":"ทดลอง อาจถูกปิดหรือจำกัดอัตรา","Features":"ฟีเจอร์","Fill in its address, model, API key, or download settings.":"กรอกที่อยู่ โมเดล คีย์ API หรือการตั้งค่าดาวน์โหลด","Filter, translate, or summarize chat, or answer from my documents":"กรอง แปล สรุปแชต หรือตอบจากเอกสารของฉัน","Fix problems":"แก้ปัญหา","For a safe first test, turn on":"สำหรับการทดสอบครั้งแรกอย่างปลอดภัย ให้เปิด","For llama.cpp, LM Studio, vLLM, and similar. Ollama should use its own option.":"สำหรับ llama.cpp, LM Studio, vLLM และระบบใกล้เคียง Ollama ควรใช้ตัวเลือกเฉพาะของตัวเอง","For speed: Mini model, Low reasoning, Fast turn-taking. Full quality and higher reasoning are smarter but slower and cost more. Fast can cut in on pauses.":"เน้นความเร็ว: โมเดล Mini การให้เหตุผลต่ำ และผลัดกันพูดแบบเร็ว คุณภาพเต็มและการให้เหตุผลสูงฉลาดกว่าแต่ช้ากว่าและแพงกว่า โหมดเร็วอาจแทรกตอนคุณหยุดพูดชั่วคราว","Free trial":"ทดลองใช้ฟรี","Full AI Chat Bot Guide":"คู่มือแชตบอต AI ฉบับเต็ม","Full AI Co-host Guide":"คู่มือผู้ร่วมดำเนินรายการ AI ฉบับเต็ม","Full AI Overlay Builder Guide":"คู่มือตัวสร้างโอเวอร์เลย์ AI ฉบับเต็ม","Gemini, Copilot, Perplexity, others":"Gemini, Copilot, Perplexity และอื่น ๆ","Good to know":"สิ่งที่ควรรู้","Guides":"คู่มือ","Hire":"จ้างงาน","Home":"หน้าแรก","I want to":"ฉันต้องการ","I want to…":"ฉันต้องการ…","In the Social Stream popup, open":"ในป๊อปอัป Social Stream ให้เปิด","In the popup, turn on the":"ในป๊อปอัป ให้เปิด","Inspiration":"ไอเดียสร้างสรรค์","Install and turn on the Social Stream Ninja Chrome extension.":"ติดตั้งและเปิดส่วนขยาย Social Stream Ninja สำหรับ Chrome","It doesn't take over a conversation in the ChatGPT website or app.":"ไม่ได้เข้าควบคุมบทสนทนาในเว็บไซต์หรือแอป ChatGPT","It only means the AI answered the test. Nothing reads your chat until you turn on a feature.":"หมายความว่า AI ตอบการทดสอบเท่านั้น ยังไม่มีการอ่านแชตจนกว่าคุณจะเปิดฟีเจอร์","It reconnects by itself. A fresh session keeps your instructions and settings, but forgets what was said aloud.":"เชื่อมต่อใหม่เอง เซสชันใหม่เก็บคำสั่งและการตั้งค่าไว้ แต่ลืมสิ่งที่พูดออกเสียงไป","It's separate from the Primary bot. It doesn't share its document knowledge (RAG) or chat history.":"แยกจากบอตหลัก ไม่ใช้ฐานความรู้เอกสาร (RAG) หรือประวัติแชตร่วมกัน","Its own, separate from chatgpt.com.":"เป็นบทสนทนาของตัวเอง แยกจาก chatgpt.com","Keep the tab open. ChatGPT's replies come back as":"เปิดแท็บไว้ คำตอบจาก ChatGPT จะกลับมาเป็น","Kind":"ประเภท","Knowledge base (RAG)":"ฐานความรู้ (RAG)","Lets the Primary bot look things up in files you upload.":"ให้บอตหลักค้นหาข้อมูลในไฟล์ที่คุณอัปโหลด","Live Chat setting":"การตั้งค่าแชตสด","Local AI TTS":"AI TTS ในเครื่อง","Local or cloud AI":"AI ในเครื่องหรือบนคลาวด์","Main navigation":"เมนูหลัก","Make sure the page making the sound is open and OBS captures its audio.":"ตรวจสอบว่าเปิดหน้าที่สร้างเสียงอยู่และ OBS จับเสียงจากหน้านั้น","Management":"การจัดการ","More:":"เพิ่มเติม:","No":"ไม่มี","No Video":"ไม่มีวิดีโอ","No cloud key. Speed depends on your computer.":"ไม่ใช้คีย์คลาวด์ ความเร็วขึ้นอยู่กับคอมพิวเตอร์","No conversation capture. The included Claude script only changes the page style.":"ไม่จับบทสนทนา สคริปต์ Claude ที่ให้มาเปลี่ยนเฉพาะสไตล์หน้า","No website capture. Their APIs may still work if listed as a provider.":"ไม่จับเว็บไซต์ แต่ API อาจใช้ได้หากมีในรายการผู้ให้บริการ","None of these post into platform chat. Keep the speech bubble visible so viewers can read along.":"ไม่มีตัวเลือกใดโพสต์ลงแชตแพลตฟอร์ม ให้แสดงฟองคำพูดไว้เพื่อให้ผู้ชมอ่านตาม","Normal in Context only. Ask it about chat, or pick a mode that speaks replies.":"เป็นปกติในโหมดใช้เป็นบริบทเท่านั้น ถามเกี่ยวกับแชตหรือเลือกโหมดที่พูดตอบ","Ollama, Local Gemma, Local Qwen":"Ollama, Local Gemma, Local Qwen","On this page":"ในหน้านี้","On your computer":"บนคอมพิวเตอร์ของคุณ","Open":"เปิด","Open navigation menu":"เปิดเมนูนำทาง","Open the Dock with the same session.":"เปิด Dock ด้วยเซสชันเดียวกัน","OpenAI Realtime details":"รายละเอียด OpenAI Realtime","OpenAI, Gemini, DeepSeek, xAI, AWS Bedrock, OpenRouter, Groq, OpenCode Zen":"OpenAI, Gemini, DeepSeek, xAI, AWS Bedrock, OpenRouter, Groq, OpenCode Zen","Option":"ตัวเลือก","Other AI websites":"เว็บไซต์ AI อื่น","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Overlay builder":"ตัวสร้างโอเวอร์เลย์","Pick a voice AI, or the AI you set up in the popup.":"เลือก AI เสียง หรือ AI ที่ตั้งค่าในป๊อปอัป","Pick one":"เลือกหนึ่งตัวเลือก","Pick the AI, mic, reply type, instructions, and chat mode.":"เลือก AI ไมค์ รูปแบบคำตอบ คำสั่ง และโหมดแชต","Pick what you want the AI to do, then follow that setup.":"เลือกสิ่งที่อยากให้ AI ทำ แล้วทำตามการตั้งค่านั้น","Pick your microphone and":"เลือกไมโครโฟนและ","Primary chat bot":"แชตบอตหลัก","Private bot":"บอตส่วนตัว","Problem":"ปัญหา","Relay all messages":"ส่งต่อทุกข้อความ","Remembers chat, stays quiet until you ask about it. Works with OpenAI Realtime.":"จำแชตและเงียบจนกว่าคุณจะถามเรื่องแชต ใช้กับ OpenAI Realtime","Replies are capped at 512 output tokens. Diagnostics shows usage and delay.":"คำตอบจำกัดที่ 512 โทเคนขาออก หน้าวินิจฉัยแสดงการใช้งานและความหน่วง","Replies post from your logged-in account. For a separate name, use a YouTube, Twitch, or Kick bot account where supported.":"คำตอบโพสต์จากบัญชีที่คุณเข้าสู่ระบบ หากต้องการชื่อแยก ให้ใช้บัญชีบอต YouTube, Twitch หรือ Kick ในแพลตฟอร์มที่รองรับ","SSN Hosted Trial LLM":"LLM ทดลองที่ SSN โฮสต์ไว้","Send a new ChatGPT message. Both sides should show in the Dock. Older messages are skipped on purpose.":"ส่งข้อความ ChatGPT ใหม่ ควรเห็นทั้งสองฝ่ายใน Dock ข้อความเก่าจะถูกข้ามโดยตั้งใจ","Send your live chat into ChatGPT":"ส่งแชตสดของคุณเข้า ChatGPT","Set":"ตั้งค่า","Set trigger words, moderators-only, rate limits, history, and instructions.":"ตั้งคำกระตุ้น เฉพาะผู้ดูแล ข้อจำกัดอัตรา ประวัติ และคำสั่ง","Show or speak AI answers without posting in chat":"แสดงหรือพูดคำตอบ AI โดยไม่โพสต์ในแชต","Skip to main content":"ข้ามไปยังเนื้อหาหลัก","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja สัญญาอนุญาต GPLv3.0","Social Stream sends prompts to OpenAI with your API key.":"Social Stream ส่งพรอมต์ไปยัง OpenAI ด้วยคีย์ API ของคุณ","Speak a reply to every message":"พูดตอบทุกข้อความ","Speak replies to questions and mentions":"พูดตอบคำถามและการกล่าวถึง","Spotify, OBS scene, and featured-chat tools are off by default. Turn them on in the popup, then in":"เครื่องมือ Spotify ฉาก OBS และแชตที่เลือกแสดง ปิดไว้โดยค่าเริ่มต้น เปิดในป๊อปอัปแล้วเปิดใน","Start Co-host":"เริ่มผู้ช่วยดำเนินรายการ","Start in non-blocking mode and review what it flags.":"เริ่มแบบไม่บล็อกและตรวจดูสิ่งที่ระบบทำเครื่องหมาย","Start safely":"เริ่มอย่างปลอดภัย","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Switch theme":"เปลี่ยนธีม","TTS Setup":"ตั้งค่า TTS","Talk to an AI on stream that also hears chat":"คุยกับ AI บนสตรีมที่ติดตามแชตด้วย","Talk to an AI on stream. It hears your microphone, sees chat you share, and can answer out loud.":"คุยกับ AI บนสตรีม รับเสียงไมโครโฟน เห็นแชตที่คุณแชร์ และตอบออกเสียงได้","Test it with fake chat and alerts before adding it to OBS.":"ทดสอบด้วยแชตและการแจ้งเตือนจำลองก่อนเพิ่มใน OBS","Test on a private or unlisted stream, in a normal text chat.":"ทดสอบบนสตรีมส่วนตัวหรือไม่เป็นสาธารณะ ในแชตข้อความปกติ","Test one language. Avoid block mode until it's reliable.":"ทดสอบหนึ่งภาษา หลีกเลี่ยงโหมดบล็อกจนกว่าจะเชื่อถือได้","Test selected chat bot":"ทดสอบแชตบอตที่เลือก","Text shows but no sound":"มีข้อความแต่ไม่มีเสียง","The ChatGPT site can change. Relaying all chat can flood the conversation. Voice mode may not accept typed-in text. Use filters or a test stream first.":"เว็บไซต์ ChatGPT อาจเปลี่ยนได้ การส่งต่อทุกข้อความอาจทำให้บทสนทนาล้น โหมดเสียงอาจไม่รับข้อความที่พิมพ์เข้ามา ใช้ตัวกรองหรือสตรีมทดสอบก่อน","The extension reads new messages from an open":"ส่วนขยายอ่านข้อความใหม่จากแท็บที่เปิดอยู่ของ","The one in your tab. No API key.":"บทสนทนาในแท็บของคุณ ไม่ใช้คีย์ API","The overlay doesn't get the OpenAI voice. Use the co-host output picker for a virtual cable if supported.":"โอเวอร์เลย์ไม่ได้รับเสียง OpenAI ใช้ตัวเลือกเอาต์พุตของผู้ร่วมดำเนินรายการเพื่อส่งเข้าเคเบิลเสียงเสมือนหากรองรับ","Tool":"เครื่องมือ","Translates incoming chat, and optionally your own messages.":"แปลแชตขาเข้า และเลือกแปลข้อความของคุณเองได้","Translation":"การแปล","Try this":"ลองวิธีนี้","Turn on":"เปิด","Turn on the ChatGPT source, reload":"เปิดแหล่ง ChatGPT แล้วโหลดใหม่ที่","Turn on the Primary bot or the feature you want. Connecting an AI alone does nothing to chat.":"เปิดบอตหลักหรือฟีเจอร์ที่ต้องการ การเชื่อมต่อ AI อย่างเดียวไม่เปลี่ยนการทำงานของแชต","Turn on the feature that should use it, like the Primary bot or translation.":"เปิดฟีเจอร์ที่จะใช้ AI เช่น บอตหลักหรือการแปล","Turn overlay-only off only after you've checked that platform supports posting.":"ปิดโหมดโอเวอร์เลย์เท่านั้นหลังตรวจสอบแล้วว่าแพลตฟอร์มรองรับการโพสต์","Under":"ใน","Use ChatGPT's audio, or Social Stream TTS or an overlay, to put replies on stream.":"ใช้เสียงของ ChatGPT, TTS ของ Social Stream หรือโอเวอร์เลย์เพื่อแสดงคำตอบบนสตรีม","Use my open ChatGPT tab as a companion":"ใช้แท็บ ChatGPT ที่เปิดอยู่เป็นผู้ช่วย","Use this":"ใช้ตัวเลือกนี้","Use up-to-date, focused text or Markdown files.":"ใช้ไฟล์ข้อความหรือ Markdown ที่เป็นปัจจุบันและเน้นข้อมูลที่เกี่ยวข้อง","Uses the OpenAI key saved under":"ใช้คีย์ OpenAI ที่บันทึกไว้ใน","Viewers type":"ผู้ชมพิมพ์","Voice co-host":"ผู้ร่วมดำเนินรายการเสียง","Watch history size, cost, and private content.":"ระวังขนาดประวัติ ค่าใช้จ่าย และเนื้อหาส่วนตัว","Website":"เว็บไซต์","What do you want the AI to do?":"คุณต้องการให้ AI ทำอะไร","What it does":"ทำอะไร","What it is":"คืออะไร","Which conversation":"บทสนทนาใด","With OpenAI Realtime, capture the co-host page audio in OBS.":"เมื่อใช้ OpenAI Realtime ให้จับเสียงหน้าผู้ร่วมดำเนินรายการใน OBS","Your own server":"เซิร์ฟเวอร์ของคุณเอง","adds a second, separate overlay voice.":"เพิ่มเสียงโอเวอร์เลย์อีกเสียงแยกต่างหาก","and pick the AI you use.":"แล้วเลือก AI ที่คุณใช้","and test it.":"แล้วทดสอบ","and turn on":"แล้วเปิด","messages.":"ข้อความ","relay destinations":"ปลายทางส่งต่อ","source.":"แหล่งข้อมูล","tab.":"แท็บ","to":"เป็น","to OBS for the avatar and speech bubble.":"ใน OBS เพื่อแสดงอวาตาร์และฟองคำพูด","to OBS to show it.":"ใน OBS เพื่อแสดง","to get an AI summary.":"เพื่อรับสรุปจาก AI","with overlay-only and TTS":"โดยใช้โหมดโอเวอร์เลย์เท่านั้นและ TTS","with your session.":"ด้วยเซสชันของคุณ","“ChatGPT API” vs. your ChatGPT tab":"“ChatGPT API” กับแท็บ ChatGPT ของคุณ"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/ai-modes-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<a class="skip-link" href="#main-content">ข้ามไปยังเนื้อหาหลัก</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก"><a href="../index.html">หน้าแรก</a><a href="features.html">ฟีเจอร์</a><a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a><a href="download.html">ดาวน์โหลด</a><a href="guides.html">คู่มือ</a><a href="commands.html">คำสั่งและ API</a><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a><a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a><a href="services.html" class="site-priority-hire">จ้างงาน</a><a href="support.html">การสนับสนุน</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/ai-modes-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/ai-modes-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/ai-modes-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/ai-modes-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/ai-modes-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/ai-modes-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/ai-modes-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/ai-modes-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/ai-modes-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/ai-modes-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/ai-modes-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/ai-modes-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/ai-modes-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/ai-modes-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/ai-modes-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/ai-modes-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="ai-modes-guide.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="เปลี่ยนธีม"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>AI ใน Social Stream Ninja</h1>
+            <p>เลือกสิ่งที่อยากให้ AI ทำ แล้วทำตามการตั้งค่านั้น</p>
+        </div>
+    </section>
+
+    <main class="guide-section" id="main-content">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="ในหน้านี้">
+                <a href="#pick">เลือกหนึ่งตัวเลือก</a>
+                <a href="#providers">เชื่อมต่อ AI</a>
+                <a href="#voice-cohost">ผู้ร่วมดำเนินรายการเสียง</a>
+                <a href="#primary-bot">แชตบอต</a>
+                <a href="#private-bot">บอตส่วนตัว</a>
+                <a href="#processing-tools">เครื่องมือแชต</a>
+                <a href="#overlay-builder">ตัวสร้างโอเวอร์เลย์</a>
+                <a href="#browser-companion">แท็บ ChatGPT</a>
+                <a href="#problems">แก้ปัญหา</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="pick">คุณต้องการให้ AI ทำอะไร</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>ฉันต้องการ…</th><th>ใช้ตัวเลือกนี้</th><th>ต้องใช้คีย์ API หรือไม่</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="ฉันต้องการ">คุยกับ AI บนสตรีมที่ติดตามแชตด้วย</td><td data-label="ใช้ตัวเลือกนี้"><a href="#voice-cohost"><strong>ผู้ร่วมดำเนินรายการเสียง</strong></a></td><td data-label="ต้องใช้คีย์ API หรือไม่">ขึ้นอยู่กับ AI</td></tr>
+                        <tr><td data-label="ฉันต้องการ">ตอบแชต YouTube, Twitch, Kick หรือแหล่งอื่นอัตโนมัติ</td><td data-label="ใช้ตัวเลือกนี้"><a href="#primary-bot"><strong>แชตบอตหลัก</strong></a></td><td data-label="ต้องใช้คีย์ API หรือไม่">AI ในเครื่องหรือบนคลาวด์</td></tr>
+                        <tr><td data-label="ฉันต้องการ">แสดงหรือพูดคำตอบ AI โดยไม่โพสต์ในแชต</td><td data-label="ใช้ตัวเลือกนี้"><a href="#primary-bot"><strong>แชตบอตหลัก</strong></a> โดยใช้โหมดโอเวอร์เลย์เท่านั้นและ TTS</td><td data-label="ต้องใช้คีย์ API หรือไม่">AI ในเครื่องหรือบนคลาวด์</td></tr>
+                        <tr><td data-label="ฉันต้องการ">คุยส่วนตัวกับผู้ช่วย AI</td><td data-label="ใช้ตัวเลือกนี้"><a href="#private-bot"><strong>บอตส่วนตัว</strong></a></td><td data-label="ต้องใช้คีย์ API หรือไม่">AI ในเครื่องหรือบนคลาวด์</td></tr>
+                        <tr><td data-label="ฉันต้องการ">กรอง แปล สรุปแชต หรือตอบจากเอกสารของฉัน</td><td data-label="ใช้ตัวเลือกนี้"><a href="#processing-tools"><strong>เครื่องมือแชต</strong></a></td><td data-label="ต้องใช้คีย์ API หรือไม่">AI ในเครื่องหรือบนคลาวด์</td></tr>
+                        <tr><td data-label="ฉันต้องการ">อธิบายโอเวอร์เลย์แล้วให้ AI สร้าง</td><td data-label="ใช้ตัวเลือกนี้"><a href="#overlay-builder"><strong>ตัวสร้างโอเวอร์เลย์</strong></a></td><td data-label="ต้องใช้คีย์ API หรือไม่">AI ในเครื่องหรือบนคลาวด์</td></tr>
+                        <tr><td data-label="ฉันต้องการ">ใช้แท็บ ChatGPT ที่เปิดอยู่เป็นผู้ช่วย</td><td data-label="ใช้ตัวเลือกนี้"><a href="#browser-companion"><strong>แท็บ ChatGPT</strong></a> (ทดลอง)</td><td data-label="ต้องใช้คีย์ API หรือไม่">ไม่มี</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="providers">เชื่อมต่อ AI ใน 5 ขั้นตอน</h2>
+                <p>ทุกตัวเลือกยกเว้นแท็บ ChatGPT ต้องทำขั้นตอนนี้ก่อน</p>
+                <ol class="guide-steps">
+                    <li>ในป๊อปอัป Social Stream ให้เปิด <strong>แชตบอตและบริการ AI</strong>.</li>
+                    <li>เปิด <strong>ตั้งค่าผู้ให้บริการ LLM</strong> แล้วเลือก AI ที่คุณใช้</li>
+                    <li>กรอกที่อยู่ โมเดล คีย์ API หรือการตั้งค่าดาวน์โหลด</li>
+                    <li>คลิก <strong>ทดสอบแชตบอตที่เลือก</strong>.</li>
+                    <li>เปิดฟีเจอร์ที่จะใช้ AI เช่น บอตหลักหรือการแปล</li>
+                </ol>
+                <div class="guide-note"><strong>เชื่อมต่อแล้วไม่ได้แปลว่าเสร็จทั้งหมด</strong> หมายความว่า AI ตอบการทดสอบเท่านั้น ยังไม่มีการอ่านแชตจนกว่าคุณจะเปิดฟีเจอร์</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>ประเภท</th><th>ตัวเลือก</th><th>สิ่งที่ควรรู้</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="ประเภท">บนคอมพิวเตอร์ของคุณ</td><td data-label="ตัวเลือก">Ollama, Local Gemma, Local Qwen</td><td data-label="สิ่งที่ควรรู้">ไม่ใช้คีย์คลาวด์ ความเร็วขึ้นอยู่กับคอมพิวเตอร์</td></tr>
+                        <tr><td data-label="ประเภท">เซิร์ฟเวอร์ของคุณเอง</td><td data-label="ตัวเลือก">Custom API (เข้ากันได้กับ OpenAI)</td><td data-label="สิ่งที่ควรรู้">สำหรับ llama.cpp, LM Studio, vLLM และระบบใกล้เคียง Ollama ควรใช้ตัวเลือกเฉพาะของตัวเอง</td></tr>
+                        <tr><td data-label="ประเภท">คลาวด์</td><td data-label="ตัวเลือก">OpenAI, Gemini, DeepSeek, xAI, AWS Bedrock, OpenRouter, Groq, OpenCode Zen</td><td data-label="สิ่งที่ควรรู้">แต่ละบริการกำหนดคีย์ การคิดค่าบริการ ขีดจำกัด และชื่อโมเดลของตัวเอง</td></tr>
+                        <tr><td data-label="ประเภท">ทดลองใช้ฟรี</td><td data-label="ตัวเลือก">LLM ทดลองที่ SSN โฮสต์ไว้</td><td data-label="สิ่งที่ควรรู้">ทดลอง อาจถูกปิดหรือจำกัดอัตรา</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra">
+                    <summary>“ChatGPT API” กับแท็บ ChatGPT ของคุณ</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>ตัวเลือก</th><th>คืออะไร</th><th>บทสนทนาใด</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="ตัวเลือก">ผู้ให้บริการ ChatGPT API</td><td data-label="คืออะไร">Social Stream ส่งพรอมต์ไปยัง OpenAI ด้วยคีย์ API ของคุณ</td><td data-label="บทสนทนาใด">เป็นบทสนทนาของตัวเอง แยกจาก chatgpt.com</td></tr>
+                            <tr><td data-label="ตัวเลือก">แหล่งเบราว์เซอร์ ChatGPT</td><td data-label="คืออะไร">ส่วนขยายอ่านข้อความใหม่จากแท็บที่เปิดอยู่ของ <code>chatgpt.com</code> แท็บ</td><td data-label="บทสนทนาใด">บทสนทนาในแท็บของคุณ ไม่ใช้คีย์ API</td></tr>
+                        </tbody>
+                    </table>
+                    <p>การเพิ่มคีย์ OpenAI API ไม่ได้เชื่อม Social Stream เข้ากับเว็บไซต์ ChatGPT หรือบทสนทนาเสียงที่คุณเปิดไว้</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-cohost">ผู้ร่วมดำเนินรายการเสียง</h2>
+                <p>คุยกับ AI บนสตรีม รับเสียงไมโครโฟน เห็นแชตที่คุณแชร์ และตอบออกเสียงได้</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>เปิด <code>cohost.html?session=YOUR_SESSION</code>.</li>
+                        <li>เลือก AI เสียง หรือ AI ที่ตั้งค่าในป๊อปอัป</li>
+                        <li>เลือกไมโครโฟนและ <strong>คำตอบเสียง</strong> แล้วกด <strong>เริ่มผู้ช่วยดำเนินรายการ</strong>.</li>
+                        <li>เมื่อใช้ OpenAI Realtime ให้จับเสียงหน้าผู้ร่วมดำเนินรายการใน OBS</li>
+                        <li>เพิ่ม <code>cohost-overlay.html?session=YOUR_SESSION</code> ใน OBS เพื่อแสดงอวาตาร์และฟองคำพูด</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/guide-ai-cohost-controls.png" alt="การควบคุมผู้ช่วยดำเนินรายการ AI ที่แสดงอุปกรณ์สื่อ การตั้งค่าผู้ให้บริการ AI คำสั่งระบบ และโหมดแชตสด" class="guide-image">
+                        <figcaption>เลือก AI ไมค์ รูปแบบคำตอบ คำสั่ง และโหมดแชต</figcaption>
+                    </figure>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>การตั้งค่าแชตสด</th><th>ทำอะไร</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="การตั้งค่าแชตสด">ใช้เป็นบริบทเท่านั้น - ตอบเมื่อถาม</td><td data-label="ทำอะไร">จำแชตและเงียบจนกว่าคุณจะถามเรื่องแชต ใช้กับ OpenAI Realtime</td></tr>
+                        <tr><td data-label="การตั้งค่าแชตสด">พูดตอบคำถามและการกล่าวถึง</td><td data-label="ทำอะไร">ตอบรายการเหล่านั้นออกเสียงเอง</td></tr>
+                        <tr><td data-label="การตั้งค่าแชตสด">พูดตอบทุกข้อความ</td><td data-label="ทำอะไร">ตอบทุกอย่างออกเสียง</td></tr>
+                    </tbody>
+                </table>
+                <p>ไม่มีตัวเลือกใดโพสต์ลงแชตแพลตฟอร์ม ให้แสดงฟองคำพูดไว้เพื่อให้ผู้ชมอ่านตาม</p>
+                <details class="guide-extra">
+                    <summary>รายละเอียด OpenAI Realtime</summary>
+                    <ul>
+                        <li>ใช้คีย์ OpenAI ที่บันทึกไว้ใน <strong>ChatGPT API</strong>คีย์เก็บอยู่ใน Social Stream หน้าผู้ร่วมดำเนินรายการได้รับเพียงสิทธิ์ชั่วคราว และส่งเสียงผ่าน WebRTC</li>
+                        <li>โอเวอร์เลย์ไม่ได้รับเสียง OpenAI ใช้ตัวเลือกเอาต์พุตของผู้ร่วมดำเนินรายการเพื่อส่งเข้าเคเบิลเสียงเสมือนหากรองรับ <code>&amp;forcetts</code> เพิ่มเสียงโอเวอร์เลย์อีกเสียงแยกต่างหาก</li>
+                        <li>เน้นความเร็ว: โมเดล Mini การให้เหตุผลต่ำ และผลัดกันพูดแบบเร็ว คุณภาพเต็มและการให้เหตุผลสูงฉลาดกว่าแต่ช้ากว่าและแพงกว่า โหมดเร็วอาจแทรกตอนคุณหยุดพูดชั่วคราว</li>
+                        <li>กล้องและการแชร์หน้าจอเป็นตัวเลือก ค่าเริ่มต้นคือ <strong>ไม่มีวิดีโอ</strong>เมื่อเปิด จะส่งหนึ่งภาพต่อคำขอ ไม่ใช่วิดีโอสด ซึ่งเพิ่มค่าใช้จ่ายและความหน่วง</li>
+                        <li>เครื่องมือ Spotify ฉาก OBS และแชตที่เลือกแสดง ปิดไว้โดยค่าเริ่มต้น เปิดในป๊อปอัปแล้วเปิดใน <strong>การควบคุมสตรีมของผู้ช่วยดำเนินรายการ</strong>.</li>
+                        <li>คำตอบจำกัดที่ 512 โทเคนขาออก หน้าวินิจฉัยแสดงการใช้งานและความหน่วง</li>
+                        <li>เชื่อมต่อใหม่เอง เซสชันใหม่เก็บคำสั่งและการตั้งค่าไว้ แต่ลืมสิ่งที่พูดออกเสียงไป</li>
+                        <li>ไม่ได้เข้าควบคุมบทสนทนาในเว็บไซต์หรือแอป ChatGPT</li>
+                    </ul>
+                </details>
+                <p><a href="ai-cohost-guide.html" class="btn btn-primary">คู่มือผู้ร่วมดำเนินรายการ AI ฉบับเต็ม</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="primary-bot">แชตบอตหลัก</h2>
+                <p>ตอบข้อความผู้ชมบนโอเวอร์เลย์ พูดด้วย TTS หรือส่งกลับเข้าแชตหากรองรับ</p>
+                <ol class="guide-steps">
+                    <li><a href="#providers">เชื่อมต่อ AI</a> แล้วทดสอบ</li>
+                    <li>เปิด <strong>แชตบอต - บอตหลัก (Chat Bot - Primary)</strong> แล้วเปิด <strong>เปิดแชตบอต LLM AI</strong>.</li>
+                    <li>ตั้งคำกระตุ้น เฉพาะผู้ดูแล ข้อจำกัดอัตรา ประวัติ และคำสั่ง</li>
+                    <li>สำหรับการทดสอบครั้งแรกอย่างปลอดภัย ให้เปิด <strong>คำตอบบอตส่งไปยังหน้าโอเวอร์เลย์บอตเท่านั้น</strong>.</li>
+                    <li>เปิด <code>bot.html?session=YOUR_SESSION</code>เปิด TTS หากต้องการให้พูดคำตอบ</li>
+                    <li>ปิดโหมดโอเวอร์เลย์เท่านั้นหลังตรวจสอบแล้วว่าแพลตฟอร์มรองรับการโพสต์</li>
+                </ol>
+                <p>คำตอบโพสต์จากบัญชีที่คุณเข้าสู่ระบบ หากต้องการชื่อแยก ให้ใช้บัญชีบอต YouTube, Twitch หรือ Kick ในแพลตฟอร์มที่รองรับ</p>
+                <p><a href="chatbot-basics-guide.html" class="btn btn-primary">คู่มือแชตบอต AI ฉบับเต็ม</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="private-bot">บอตส่วนตัว</h2>
+                <p>ผู้ช่วยแบบตัวต่อตัว เหมาะสำหรับทดสอบพรอมต์</p>
+                <ol class="guide-steps">
+                    <li>เปิด <strong>แชตบอต - อินเทอร์เฟซส่วนตัว</strong>.</li>
+                    <li>เปิด <code>chatbot.html</code> ด้วยเซสชันของคุณ</li>
+                </ol>
+                <div class="guide-note">แยกจากบอตหลัก ไม่ใช้ฐานความรู้เอกสาร (RAG) หรือประวัติแชตร่วมกัน</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="processing-tools">เครื่องมือแชต</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>เครื่องมือ</th><th>ทำอะไร</th><th>เริ่มอย่างปลอดภัย</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="เครื่องมือ">บอตเซ็นเซอร์</td><td data-label="ทำอะไร">ตรวจสอบ ปรับข้อความ หรือบล็อกข้อความที่เข้ามา</td><td data-label="เริ่มอย่างปลอดภัย">เริ่มแบบไม่บล็อกและตรวจดูสิ่งที่ระบบทำเครื่องหมาย</td></tr>
+                        <tr><td data-label="เครื่องมือ">การแปล</td><td data-label="ทำอะไร">แปลแชตขาเข้า และเลือกแปลข้อความของคุณเองได้</td><td data-label="เริ่มอย่างปลอดภัย">ทดสอบหนึ่งภาษา หลีกเลี่ยงโหมดบล็อกจนกว่าจะเชื่อถือได้</td></tr>
+                        <tr><td data-label="เครื่องมือ">ฐานความรู้ (RAG)</td><td data-label="ทำอะไร">ให้บอตหลักค้นหาข้อมูลในไฟล์ที่คุณอัปโหลด</td><td data-label="เริ่มอย่างปลอดภัย">ใช้ไฟล์ข้อความหรือ Markdown ที่เป็นปัจจุบันและเน้นข้อมูลที่เกี่ยวข้อง</td></tr>
+                        <tr><td data-label="เครื่องมือ">สรุปแชต</td><td data-label="ทำอะไร">ผู้ชมพิมพ์ <code>!summary</code> เพื่อรับสรุปจาก AI</td><td data-label="เริ่มอย่างปลอดภัย">ระวังขนาดประวัติ ค่าใช้จ่าย และเนื้อหาส่วนตัว</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="overlay-builder">ตัวสร้างโอเวอร์เลย์</h2>
+                <p>อธิบายโอเวอร์เลย์ใน <code>aiprompt.html</code>จากนั้นดูตัวอย่างและบันทึก เพิ่ม <code>aioverlay.html</code> ใน OBS เพื่อแสดง</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-ai-overlay-builder.png" alt="AI Overlay Builder ที่แสดงพรอมป์ต์ ตัวอย่าง ปุ่มบันทึก และปุ่มจำลองอีเวนต์" class="guide-image">
+                    <figcaption>ทดสอบด้วยแชตและการแจ้งเตือนจำลองก่อนเพิ่มใน OBS</figcaption>
+                </figure>
+                <p><a href="ai-overlay-builder-guide.html" class="btn btn-primary">คู่มือตัวสร้างโอเวอร์เลย์ AI ฉบับเต็ม</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="browser-companion">แท็บ ChatGPT (ทดลอง)</h2>
+                <p>ใช้ ChatGPT ใน Chrome อยู่แล้วและไม่อยากใช้คีย์ API ใช่ไหม Social Stream รับข้อความใหม่จากแท็บ ChatGPT ได้เหมือนแหล่งแชตอื่น (ชนิด <code>openai</code>).</p>
+                <h3>จับข้อความจากแท็บ ChatGPT</h3>
+                <ol class="guide-steps">
+                    <li>ติดตั้งและเปิดส่วนขยาย Social Stream Ninja สำหรับ Chrome</li>
+                    <li>ในป๊อปอัป ให้เปิด <strong>ChatGPT</strong> แหล่งข้อมูล</li>
+                    <li>เปิด <code>https://chatgpt.com/</code>แล้วโหลดใหม่</li>
+                    <li>เปิด Dock ด้วยเซสชันเดียวกัน</li>
+                    <li>ส่งข้อความ ChatGPT ใหม่ ควรเห็นทั้งสองฝ่ายใน Dock ข้อความเก่าจะถูกข้ามโดยตั้งใจ</li>
+                </ol>
+                <h3>ส่งแชตสดของคุณเข้า ChatGPT</h3>
+                <ol class="guide-steps">
+                    <li>ทดสอบบนสตรีมส่วนตัวหรือไม่เป็นสาธารณะ ในแชตข้อความปกติ</li>
+                    <li>ใน <strong>การจัดการ</strong>ให้เปิด <strong>ส่งต่อทุกข้อความ</strong>.</li>
+                    <li>ตั้งค่า <strong>ปลายทางส่งต่อ</strong> เป็น <code>openai</code>เพื่อให้ข้อความผู้ชมไปยัง ChatGPT เท่านั้น</li>
+                    <li>เปิดแท็บไว้ คำตอบจาก ChatGPT จะกลับมาเป็น <code>openai</code> ข้อความ</li>
+                    <li>ใช้เสียงของ ChatGPT, TTS ของ Social Stream หรือโอเวอร์เลย์เพื่อแสดงคำตอบบนสตรีม</li>
+                </ol>
+                <div class="warning-note"><strong>ทดลอง</strong> เว็บไซต์ ChatGPT อาจเปลี่ยนได้ การส่งต่อทุกข้อความอาจทำให้บทสนทนาล้น โหมดเสียงอาจไม่รับข้อความที่พิมพ์เข้ามา ใช้ตัวกรองหรือสตรีมทดสอบก่อน</div>
+                <details class="guide-extra">
+                    <summary>เว็บไซต์ AI อื่น</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>เว็บไซต์</th><th>การสนับสนุน</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="เว็บไซต์">ChatGPT</td><td data-label="การสนับสนุน">ทดลอง จับเฉพาะข้อความใหม่ ไม่ดึงประวัติ การส่งต่อพิมพ์ลงในช่องข้อความได้</td></tr>
+                            <tr><td data-label="เว็บไซต์">Claude</td><td data-label="การสนับสนุน">ไม่จับบทสนทนา สคริปต์ Claude ที่ให้มาเปลี่ยนเฉพาะสไตล์หน้า</td></tr>
+                            <tr><td data-label="เว็บไซต์">Gemini, Copilot, Perplexity และอื่น ๆ</td><td data-label="การสนับสนุน">ไม่จับเว็บไซต์ แต่ API อาจใช้ได้หากมีในรายการผู้ให้บริการ</td></tr>
+                        </tbody>
+                    </table>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">แก้ปัญหา</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>ปัญหา</th><th>ลองวิธีนี้</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="ปัญหา">เชื่อมต่อแล้วแต่ไม่ตอบแชต</td><td data-label="ลองวิธีนี้">เปิดบอตหลักหรือฟีเจอร์ที่ต้องการ การเชื่อมต่อ AI อย่างเดียวไม่เปลี่ยนการทำงานของแชต</td></tr>
+                        <tr><td data-label="ปัญหา">ผู้ร่วมดำเนินรายการเห็นแชตแต่ยังเงียบ</td><td data-label="ลองวิธีนี้">เป็นปกติในโหมดใช้เป็นบริบทเท่านั้น ถามเกี่ยวกับแชตหรือเลือกโหมดที่พูดตอบ</td></tr>
+                        <tr><td data-label="ปัญหา">แท็บ ChatGPT ไม่แสดงอะไร</td><td data-label="ลองวิธีนี้">เปิดแหล่ง ChatGPT แล้วโหลดใหม่ที่ <code>chatgpt.com</code>แล้วส่งข้อความใหม่</td></tr>
+                        <tr><td data-label="ปัญหา">บอตข้ามข้อความส่วนใหญ่</td><td data-label="ลองวิธีนี้">ตรวจสอบคำกระตุ้น เฉพาะผู้ดูแล ข้อจำกัดอัตรา และคำสั่งของคุณ ระบบตั้งใจเลือกตอบเฉพาะบางข้อความ</td></tr>
+                        <tr><td data-label="ปัญหา">มีข้อความแต่ไม่มีเสียง</td><td data-label="ลองวิธีนี้">ตรวจสอบว่าเปิดหน้าที่สร้างเสียงอยู่และ OBS จับเสียงจากหน้านั้น</td></tr>
+                        <tr><td data-label="ปัญหา">บอตโพสต์ในแชตไม่ได้</td><td data-label="ลองวิธีนี้">ตรวจสอบว่าแพลตฟอร์มรองรับ คุณเข้าสู่ระบบแล้ว บัญชีโพสต์ได้ และไม่เกินข้อจำกัดอัตรา</td></tr>
+                    </tbody>
+                </table>
+                <p>เพิ่มเติม: <a href="tts-setup-guide.html">ตั้งค่า TTS</a>, <a href="local-tts.html">AI TTS ในเครื่อง</a>, และ <a href="commands.html#ai-integration">การเชื่อมต่อ AI ในคำสั่งและ API</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja สัญญาอนุญาต GPLv3.0</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

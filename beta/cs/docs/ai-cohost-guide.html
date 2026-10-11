@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/docs/ai-cohost-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/docs/ai-cohost-guide.html">
+    <meta property="og:title" content="Průvodce AI spolumoderátorem — Social Stream Ninja">
+    <meta property="og:description" content="Návod k nastavení a používání AI spolumoderátora Social Stream Ninja, ovládání doku a překryvu AI scény.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/docs/ai-cohost-guide.html">
+    <meta name="twitter:title" content="Průvodce AI spolumoderátorem — Social Stream Ninja">
+    <meta name="twitter:description" content="Návod k nastavení a používání AI spolumoderátora Social Stream Ninja, ovládání doku a překryvu AI scény.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Průvodce AI spolumoderátorem — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Návod k nastavení a používání AI spolumoderátora Social Stream Ninja, ovládání doku a překryvu AI scény.">
+    <style>
+        .cohost-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.4rem; margin: 1.4rem 0; }
+        .cohost-picker > div { padding: 1.4rem 1.6rem; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .cohost-picker strong { display: block; margin-bottom: .4rem; font-size: 1.65rem; }
+        .cohost-picker p { margin: 0; font-size: 1.45rem; line-height: 1.5; }
+        .cohost-picker .example { margin-top: .8rem; }
+        .cohost-flow {
+            margin: 18px 0;
+            padding: 18px;
+            border: 1px solid var(--border-color);
+            background: rgba(0, 166, 255, 0.08);
+        }
+        .cohost-code {
+            display: block;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            background: #111827;
+            color: #e5e7eb;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 1.3rem;
+            line-height: 1.45;
+        }
+        @media (max-width: 760px) {
+            .cohost-picker { grid-template-columns: minmax(0, 1fr); }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/ai-cohost-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{", and your words should appear under":", a vaše slova by se měla objevit pod",", browser audio permission, and that OBS captures the co-host page audio. Don't use":", oprávnění zvuku v prohlížeči a zachytávání zvuku stránky spolumoderátora v OBS. Nepoužívejte",", if your setup supports it. Keep the speech bubble visible too, so viewers who can't hear can still follow along.":", pokud to vaše nastavení podporuje. Nechte viditelnou i řečovou bublinu, aby mohli sledovat i diváci, kteří neslyší.",", open":", otevřete",", paste your OpenAI project API key, and click":", vložte klíč API projektu OpenAI a klikněte na",", so payloads stay predictable for overlays and automations.":", aby data zůstala předvídatelná pro překryvy a automatizace.",", so you'll need an OpenAI API key. Other options are":", takže potřebujete klíč API OpenAI. Další možnosti jsou",", the volume slider, the output picker, and":", posuvník hlasitosti, výběr výstupu a",". Add":". Přidejte",". Approval happens in the Dock, off-stream.":". Schválení probíhá v Docku, mimo vysílání.",". Ask “What is chat saying?” any time.":". Kdykoli se zeptejte „Co říká chat?“",". If you pick":". Pokud vyberete",". It should say":". Mělo by se zobrazit",". It talks back and can discuss your chat when you ask.":". Odpovídá vám a na požádání může probírat chat.","A draft.":"Návrh.","A stream control tool is missing":"Chybí nástroj pro ovládání vysílání","AI Co-host":"AI spolumoderátor","AI Co-host Guide - Social Stream Ninja":"Průvodce AI spolumoderátorem — Social Stream Ninja","AI drafts are never spoken until you click":"Návrhy AI se nepřečtou, dokud nekliknete na","AI stage overlay":"Překryv scény AI","Add":"Přidejte","Add the stage overlay to OBS:":"Přidejte překryv scény do OBS:","Add these to the end of your":"Tyto možnosti přidejte na konec svého","Add to the link":"Přidejte do odkazu","Allow the microphone, check your computer's default mic, check internet, and that Chrome speech recognition is available.":"Povolte mikrofon, ověřte výchozí mikrofon počítače, internet a dostupnost rozpoznávání řeči v Chromu.","An AI sidekick you can talk to on stream. It can read your chat too.":"AI parťák, se kterým můžete mluvit během vysílání. Umí také číst chat.","Answer":"Odpovědět (Answer)","Answer / Light Roast:":"Odpovědět / lehce popíchnout (Answer / Light Roast):","Answer or Light Roast is greyed out":"Answer nebo Light Roast je neaktivní","Answer, Light Roast, or SSN Configured LLM times out":"Answer, Light Roast nebo SSN Configured LLM překračuje časový limit","Answers every message out loud.":"Nahlas odpovídá na každou zprávu.","Answers questions and mentions out loud by itself.":"Sám nahlas odpovídá na otázky a zmínky.","Ask it out loud, like “switch to BRB”, “feature that last message”, or “clear the featured chat”.":"Řekněte například „přepni na BRB“, „zvýrazni poslední zprávu“ nebo „vymaž zvýrazněný chat“.","Audio Response":"Zvuková odpověď (Audio Response)","Balanced: about 4 seconds. Patient: about 8.":"Balanced: asi 4 sekundy. Patient: asi 8.","Both show an avatar and speech bubble in OBS using the":"Oba zobrazují avatar a řečovou bublinu v OBS. Používají","Button":"Tlačítko","Change the name shown":"Změnit zobrazené jméno","Chat Bots and AI services → Chat Bot - Private Interface → Enable private chat bot option":"Chatboti a AI služby → Chat Bot - Soukromé rozhraní → Povolit soukromý chatbot","Chat Bots and AI services → Configure LLM Service Provider":"Chatboti a AI služby → Nastavit poskytovatele LLM","ChatGPT API":"ChatGPT API","Check":"Zkontrolujte","Check Social Stream is on, the session matches, Private Chat Bot is on, and your AI provider is reachable.":"Ověřte, že je Social Stream zapnutý, relace se shoduje, soukromý chatbot je zapnutý a poskytovatel AI je dostupný.","Check the mic isn't muted, and let the first download finish.":"Ověřte, že mikrofon není ztlumený, a nechte dokončit první stažení.","Chrome (extension link)":"Chrome (odkaz rozšíření)","Chrome's speech recognition. May need internet.":"Rozpoznávání řeči v Chromu. Může vyžadovat internet.","Click":"Klikněte na","Co-host":"Spolumoderátor (Co-host)","Co-host Stream Controls":"Ovládání vysílání spolumoderátorem","Co-host output":"Výstup spolumoderátora","Co-host page doesn't see chat":"Stránka spolumoderátora nevidí chat","Commands & API":"Příkazy a API","Connect to my Social Stream (required)":"Připojit k mému Social Stream (povinné)","Context only":"Pouze kontext (Context only)","Context only - answer when asked (default)":"Pouze kontext: odpovědět na požádání (výchozí)","Copies the draft without sending it.":"Zkopíruje návrh bez odeslání.","Copy":"Kopírovat","Diagnostics":"Diagnostika","Dock buttons":"Tlačítka Docku","Dock buttons in 5 steps":"Tlačítka Docku v 5 krocích","Download":"Stáhnout","Drafts a short answer for you to approve.":"Připraví krátkou odpověď ke schválení.","Drafts a short, playful, PG roast for you to approve.":"Připraví krátké, hravé a nezávadné rýpnutí ke schválení.","Extra command details go inside":"Další podrobnosti příkazu patří do","Fast: waits about 2 seconds after you stop. May cut in on a pause.":"Fast: čeká asi 2 sekundy po konci řeči. Může vstoupit do pauzy.","Faster and cheaper":"Rychlejší a levnější","Features":"Funkce","Fix problems":"Řešení problémů","For Dock text workflows, the overlay is the picture and optional TTS voice. For the OpenAI voice, capture":"U textových postupů Docku poskytuje překryv obraz a volitelný hlas TTS. Pro hlas OpenAI zachytávejte zvuk z","For OBS, type the exact scene names it may switch to, separated by commas. Keep":"Pro OBS zadejte přesné názvy povolených scén oddělené čárkami. Nechte","Force overlay speech even when the co-host page is talking (adds a second voice)":"Vynutit řeč překryvu, i když mluví stránka spolumoderátora (přidá druhý hlas)","Free AI for testing":"Bezplatná AI k vyzkoušení","Free trial AI stopped answering":"Bezplatná zkušební AI přestala odpovídat","Full quality (costs more)":"Plná kvalita (vyšší cena)","Guides":"Návody","Have the overlay speak (Dock workflow)":"Nechat překryv mluvit (postup přes Dock)","Heard":"Rozpoznáno (Heard)","High or Extra high (costs more)":"High nebo Extra high (vyšší cena)","Hire":"Najmout odborníka","Home":"Domů","How it hears you":"Jak vás slyší","How it uses chat":"Jak používá chat","How it uses your chat":"Jak používá váš chat","How the pages talk (for developers)":"Jak stránky komunikují (pro vývojáře)","I want to":"Chci","I want to…":"Chci…","If you talk over it, it stops and drops the unplayed audio.":"Pokud mu skočíte do řeči, zastaví se a zahodí nepřehraný zvuk.","In OBS, capture the audio from the co-host page or app. The AI's voice only plays there.":"V OBS zachytávejte zvuk stránky nebo aplikace spolumoderátora. Hlas AI se přehrává pouze tam.","In the Social Stream popup, pick":"V nabídce Social Stream vyberte","In the Social Stream popup, turn on only the tools you want.":"V nabídce Social Stream zapněte pouze požadované nástroje.","Inspiration":"Inspirace","It keeps up to 20 recent chat messages for up to 90 seconds, including donations, memberships, moderator, event, and channel info. Then it forgets them.":"Uchovává až 20 nedávných zpráv po dobu až 90 sekund, včetně informací o darech, členství, moderátorech, událostech a kanálech. Pak je zapomene.","It knows chat but stays quiet":"Zná chat, ale mlčí","It may be off or rate-limited. Use your own token, Ollama, or Custom API.":"Může být vypnutá nebo omezená. Použijte vlastní token, Ollama nebo Custom API.","It only appears once the Dock sees the stage overlay on the same session.":"Objeví se až poté, co Dock zjistí překryv scény ve stejné relaci.","It reconnects by itself if the connection drops, and starts a fresh session before OpenAI's 60-minute limit. Your instructions and speed settings carry over, but it forgets what was said aloud.":"Po výpadku se sám připojí a před limitem 60 minut OpenAI spustí novou relaci. Pokyny a rychlost zachová, ale zapomene mluvenou konverzaci.","It's billed to your OpenAI API account. It's separate from chatgpt.com and doesn't join a ChatGPT website or app conversation.":"Účtuje se na váš účet API OpenAI. Je oddělený od chatgpt.com a nepřipojuje se ke konverzaci na webu ani v aplikaci ChatGPT.","It's free while the trial lasts, and may be turned off or rate-limited. For long-term use, add your own token or use a local AI.":"Po dobu zkoušky je zdarma a může být vypnutá nebo omezená. Pro dlouhodobé používání přidejte vlastní token nebo použijte místní AI.","Leave":"Ponechte","Leave it running while it retries. Diagnostics shows what failed.":"Nechte jej běžet během dalších pokusů. Diagnostika ukáže, co selhalo.","Leave the endpoint, token, and model blank.":"Endpoint, token a model ponechte prázdné.","Let it control your stream":"Nechte jej ovládat vysílání","Let it see your screen or camera?":"Povolit pohled na obrazovku nebo kameru?","Light Roast":"Lehce popíchnout (Light Roast)","Link options":"Možnosti odkazu","Listening (Desktop Whisper)":"Poslouchá (Desktop Whisper)","Listening (OpenAI WebRTC)":"Poslouchá (OpenAI WebRTC)","Live Chat":"Živý chat","Live Chat setting":"Nastavení živého chatu","Local Gemma won't download":"Místní Gemma se nestahuje","Main navigation":"Hlavní navigace","Make it bigger or smaller":"Zvětšit nebo zmenšit","Make sure the overlay label matches the Dock's target. The default is":"Ověřte, že popisek překryvu odpovídá cíli Docku. Výchozí je","Message format and design notes":"Formát zpráv a poznámky k návrhu","Mini":"Mini","Minimal or Low":"Minimal nebo Low","Model":"Model","More about OpenAI Realtime":"Další informace o OpenAI Realtime","Move it":"Přesunout","Mute and volume buttons":"Tlačítka ztlumení a hlasitosti","Mute co-host voice":"Ztlumit hlas spolumoderátora (Mute co-host voice)","Mute microphone":"Ztlumit mikrofon (Mute microphone)","Mute shared system audio":"Ztlumit sdílený systémový zvuk (Mute shared system audio)","Needs":"Vyžaduje","No Co-host menu in the Dock":"V Docku chybí nabídka Co-host","No Co-host menu?":"Chybí nabídka Co-host?","No Video":"Bez videa (No Video)","None of these post replies into YouTube, Twitch, or Kick chat.":"Žádná z těchto možností neposílá odpovědi do chatu YouTube, Twitch nebo Kick.","Nothing shows in OBS":"V OBS se nic nezobrazuje","On":"Zapnuto (On)","On this page":"Na této stránce","Only you can trigger tools.":"Nástroje můžete spouštět jen vy.","Open":"Otevřít","Open navigation menu":"Otevřít navigační nabídku","Open the":"Otevřete","Open the Dock:":"Otevřete Dock:","Open the co-host page with the same":"Otevřete stránku spolumoderátora se stejnou hodnotou","OpenAI Realtime":"OpenAI Realtime","OpenAI keeps disconnecting":"OpenAI se stále odpojuje","Optional. Video starts on":"Volitelné. Video začíná v režimu","Other browsers":"Ostatní prohlížeče","Overlay Gallery":"Galerie překryvů","Overlay link options":"Možnosti odkazu na překryv","Pick a virtual cable under":"Vyberte virtuální kabel v","Pick the microphone you talk into. Keep":"Vyberte mikrofon, do kterého mluvíte. Nechte","Point its asset host at your own copy of the Gemma files.":"Nastavte hostitele prostředků na vlastní kopii souborů Gemma.","Press":"Stiskněte","Privacy:":"Soukromí:","Private Chat Bot on, plus an AI provider.":"Zapnutý soukromý chatbot a poskytovatel AI.","Problem":"Problém","Read on Co-host":"Přečíst na spolumoderátorovi (Read on Co-host)","Read on Co-host:":"Přečíst na spolumoderátorovi (Read on Co-host):","Reasoning changes apply even while connected.":"Změny uvažování se projeví i během připojení.","Reasoning effort":"Úsilí při uvažování","Remembers recent messages and stays quiet until you ask about chat.":"Pamatuje si nedávné zprávy a mlčí, dokud se nezeptáte na chat.","Remove":"Odstranit","Replies are capped at 512 output tokens.":"Odpovědi jsou omezené na 512 výstupních tokenů.","Replies are slow":"Odpovědi jsou pomalé","Right-click a Dock message and pick":"Klikněte pravým tlačítkem na zprávu v Docku a vyberte","Right-click a chat message in the Dock. The AI avatar reads it, or drafts an answer or light roast that you approve first.":"Klikněte pravým tlačítkem na zprávu v Docku. Avatar AI ji přečte nebo připraví odpověď či lehké rýpnutí, které nejprve schválíte.","SSN Desktop app":"Desktopová aplikace SSN","SSN Hosted Trial LLM":"SSN Hosted Trial LLM","SSN Hosted Trial LLM (experimental)":"SSN Hosted Trial LLM (experimentální)","Screen Share":"Sdílení obrazovky (Screen Share)","Select":"Vyberte","Sends your approved draft to the overlay.":"Pošle schválený návrh do překryvu.","Set it up":"Nastavení","Set the overlay's label":"Nastavit popisek překryvu","Set up an AI provider in the popup. For a quick test, use":"V nabídce nastavte poskytovatele AI. Pro rychlé vyzkoušení použijte","Setting":"Nastavení","Setup and workflow guide for the Social Stream Ninja AI co-host, dock controls, and AI stage overlay.":"Návod k nastavení a používání AI spolumoderátora Social Stream Ninja, ovládání doku a překryvu AI scény.","Several overlays open":"Je otevřeno více překryvů","Show connection status":"Zobrazit stav připojení","Skip to main content":"Přeskočit na hlavní obsah","Smarter, slower":"Chytřejší, pomalejší","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Speak":"Přednést (Speak)","Speak a reply to every message":"Nahlas odpovídat na každou zprávu","Speak replies to questions and mentions":"Nahlas odpovídat na otázky a zmínky","Speed and cost":"Rychlost a cena","Speed, quality, and cost (OpenAI)":"Rychlost, kvalita a cena (OpenAI)","Stage overlay connected. No AI needed.":"Připojený překryv scény. AI není potřeba.","Start Co-host":"Spustit spolumoderátora (Start Co-host)","Stop speaking":"Přestat mluvit (Stop speaking)","Stream controls":"Ovládání vysílání","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","Talk to the AI out loud on":"Mluvte nahlas s AI na","Test overlay":"Otestovat překryv (Test overlay)","Test selected chat bot":"Otestovat vybraného chatbota (Test selected chat bot)","Text shows but no voice (OpenAI)":"Text se zobrazuje, ale hlas není slyšet (OpenAI)","That's normal in Context only. Ask it what chat is saying, or":"V režimu Pouze kontext je to normální. Zeptejte se, co říká chat, nebo","The Dock and overlay use the normal Social Stream session bridge. Messages are sent as":"Dock a překryv používají běžný můstek relace Social Stream. Zprávy se odesílají jako","The avatar reads the message.":"Avatar přečte zprávu.","The co-host can play Spotify, switch OBS scenes, or feature a chat message. All are off by default. OpenAI Realtime supports all three. SSN Configured LLM supports Spotify only. Other providers don't support these yet.":"Spolumoderátor může přehrávat Spotify, přepínat scény OBS nebo zvýraznit zprávu. Vše je standardně vypnuté. OpenAI Realtime podporuje všechny tři funkce. SSN Configured LLM podporuje jen Spotify. Ostatní poskytovatelé je zatím nepodporují.","The co-host page: microphone, AI provider, instructions, and live chat status.":"Stránka spolumoderátora: mikrofon, poskytovatel AI, pokyny a stav živého chatu.","The right-click menu doesn't work from the keyboard yet. Keyboard users can type or talk on":"Nabídka pravého tlačítka zatím nefunguje z klávesnice. Uživatelé klávesnice mohou psát nebo mluvit na","The stage overlay isn't open on the same session. The Primary chat bot overlay toggle doesn't affect this.":"Překryv scény není otevřený ve stejné relaci. Přepínač Primary chat bot overlay to neovlivňuje.","This uses":"Toto používá","To check it can hear you, open":"Chcete-li ověřit, že vás slyší, otevřete","Try Mini, Low reasoning, and Fast turn-taking. Compare the Latency line in Diagnostics.":"Vyzkoušejte Mini, uvažování Low a střídání Fast. Porovnejte řádek Latency v diagnostice.","Try this":"Vyzkoušejte","Turn it on in both the popup and Co-host Stream Controls. OBS needs at least one scene name.":"Zapněte jej v nabídce i v Co-host Stream Controls. OBS potřebuje alespoň jeden název scény.","Turn on":"Zapněte","Turn on the Private Chat Bot option, and check Social Stream is running.":"Zapněte soukromý chatbot a ověřte, že je Social Stream spuštěný.","Turn-taking speed":"Rychlost střídání v hovoru","Two voices at once":"Dva hlasy současně","Two ways to use it":"Dva způsoby použití","Use my own avatar":"Použít vlastní avatar","Use the same":"Použijte stejné","Viewers can't. It runs one tool per request, and can only pick scenes on your list. Featuring a message needs the Dock open. A “done” reply means the request was sent, not that OBS or the overlay finished it.":"Diváci nemohou. Spustí jeden nástroj na požadavek a vybírá jen scény z vašeho seznamu. Zvýraznění zprávy vyžaduje otevřený Dock. Odpověď „hotovo“ znamená odeslání požadavku, nikoli dokončení v OBS nebo překryvu.","Voice co-host":"Hlasový spolumoderátor","Voice co-host in 8 steps":"Hlasový spolumoderátor v 8 krocích","Voice co-host setup":"Nastavení hlasového spolumoderátora","Voice may not work. Typing, live chat, camera or screen, and AI replies can still work.":"Hlas nemusí fungovat. Psaní, živý chat, kamera či obrazovka a odpovědi AI mohou fungovat dál.","Voice without OpenAI":"Hlas bez OpenAI","Want its own audio track in OBS?":"Chcete samostatnou zvukovou stopu v OBS?","What it does":"Co dělá","When the co-host page is already playing the voice, the overlay skips its own speech so you don't hear it twice.":"Když hlas už přehrává stránka spolumoderátora, překryv vlastní řeč vynechá, aby nebyla slyšet dvakrát.","Where you run it":"Kde jej spouštíte","Whisper, on your own computer. First use downloads about 42 MB. After that it works offline.":"Whisper na vašem počítači. Při prvním použití stáhne asi 42 MB. Poté funguje offline.","Without OpenAI":"Bez OpenAI","You don't need to turn on the Private Chat Bot option for this.":"Kvůli tomu nemusíte zapínat soukromý chatbot.","Your standard key stays in Social Stream. The co-host page only gets a short-lived pass.":"Běžný klíč zůstává v Social Stream. Stránka spolumoderátora dostane jen krátkodobé oprávnění.","and turn on the same tools.":"a zapněte stejné nástroje.","as Social Stream and it can see your live chat. Choose how under":"jako Social Stream, aby viděl živý chat. Způsob vyberte v","as the popup. Set Live Chat to anything but Off.":"jako v nabídce. Live Chat nastavte na cokoli kromě Off.","audio separately. The overlay doesn't replay that WebRTC audio.":"samostatně. Překryv tento zvuk WebRTC nepřehrává.","below":"níže","cohost.html control page showing media devices, AI provider settings, system instructions, and live chat status":"Ovládací stránka cohost.html s mediálními zařízeními, nastavením poskytovatele AI, systémovými pokyny a stavem živého chatu","connected to OBS, or use an OBS Browser Source with Full Permissions.":"připojené k OBS nebo použijte zdroj prohlížeče OBS s úplnými oprávněními.","control what you hear.":"ovládají to, co slyšíte.","for this.":"pro tento účel.","from the overlay link.":"z odkazu překryvu.","if it should speak.":"pokud má mluvit.","instead.":"místo toho.","is separate, and only shows for providers that can use your screen.":"je samostatné a zobrazuje se jen u poskytovatelů, kteří umí použít obrazovku.","link from the popup. Keep that link private.":"z nabídky. Tento odkaz uchovávejte v soukromí.","link.":"odkaz.","on":"na","on the co-host page and check the line appears.":"na stránce spolumoderátora a ověřte zobrazení řádku.","only feeds chat to the AI with OpenAI Realtime. Other providers watch the chat but don't pass it to the AI.":"posílá chat AI pouze s OpenAI Realtime. Ostatní poskytovatelé chat sledují, ale nepředávají jej AI.","or":"nebo","or a camera, OpenAI gets one picture each time you speak or type to it, not a live video. This can add cost and delay.":"nebo kameru, OpenAI dostane jeden snímek pokaždé, když promluvíte nebo napíšete, nikoli živé video. To může zvýšit cenu a zpoždění.","payloads and targeted by label.":"data cílená podle štítku.","pick another mode":"vyberte jiný režim","selected.":"vybrané.","shows how long replies take to start. Network and OpenAI load can still vary.":"ukazuje dobu do začátku odpovědi. Síť a zatížení OpenAI se mohou lišit.","shows total token use and how fast replies start.":"ukazuje celkové využití tokenů a rychlost začátku odpovědí.","stays empty (Chrome)":"zůstává prázdné (Chrome)","stays empty (Desktop)":"zůstává prázdné (desktop)","stops sending your voice to the co-host.":"přestane posílat váš hlas spolumoderátorovi.","the Dock asks the private chat bot in the background, shows the draft in the Dock, and only sends it to the overlay after you click Speak.":"Dock se na pozadí dotáže soukromého chatbota, ukáže návrh v Docku a pošle jej do překryvu až po kliknutí na Speak.","the Dock sends the chosen message straight to":"Dock posílá vybranou zprávu přímo do","to OBS as a Browser Source for the avatar and speech bubble.":"do OBS jako zdroj prohlížeče pro avatar a řečovou bublinu.","turns that off.":"toto chování vypíná.","your microphone, any screen or camera you pick, and the chat messages you share go to OpenAI. Viewers can't use chat to make the co-host run tools. The co-host link expires after 12 hours, only works for your session, and is removed from the address bar once the page loads.":"mikrofon, vybraná obrazovka nebo kamera a sdílené zprávy chatu se odesílají OpenAI. Diváci nemohou pomocí chatu přimět spolumoderátora spouštět nástroje. Odkaz vyprší po 12 hodinách, funguje jen pro vaši relaci a po načtení stránky zmizí z adresního řádku."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/ai-cohost-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<a class="skip-link" href="#main-content">Přeskočit na hlavní obsah</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/ai-cohost-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/ai-cohost-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/ai-cohost-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/ai-cohost-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/ai-cohost-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/ai-cohost-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/ai-cohost-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/ai-cohost-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/ai-cohost-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/ai-cohost-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/ai-cohost-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/ai-cohost-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/ai-cohost-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/ai-cohost-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/ai-cohost-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="ai-cohost-guide.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/ai-cohost-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>AI spolumoderátor</h1>
+            <p>AI parťák, se kterým můžete mluvit během vysílání. Umí také číst chat.</p>
+        </div>
+    </section>
+
+    <main class="guide-section" id="main-content">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Na této stránce">
+                <a href="#two-ways">Dva způsoby použití</a>
+                <a href="#voice-setup">Nastavení hlasového spolumoderátora</a>
+                <a href="#chat-modes">Jak používá chat</a>
+                <a href="#other-voice">Bez OpenAI</a>
+                <a href="#dock-setup">Tlačítka Docku</a>
+                <a href="#speed">Rychlost a cena</a>
+                <a href="#stream-controls">Ovládání vysílání</a>
+                <a href="#problems">Řešení problémů</a>
+                <a href="#link-options">Možnosti odkazu</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="two-ways">Dva způsoby použití</h2>
+                <div class="cohost-picker">
+                    <div><strong>Hlasový spolumoderátor</strong><p>Mluvte nahlas s AI na <code>cohost.html</code>. Odpovídá vám a na požádání může probírat chat.</p><p class="example"><a href="#voice-setup">Nastavení</a></p></div>
+                    <div><strong>Tlačítka Docku</strong><p>Klikněte pravým tlačítkem na zprávu v Docku. Avatar AI ji přečte nebo připraví odpověď či lehké rýpnutí, které nejprve schválíte.</p><p class="example"><a href="#dock-setup">Nastavení</a></p></div>
+                </div>
+                <p>Oba zobrazují avatar a řečovou bublinu v OBS. Používají <strong>Překryv scény AI</strong>, <code>cohost-overlay.html</code>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-setup">Hlasový spolumoderátor v 8 krocích</h2>
+                <p>Toto používá <strong>OpenAI Realtime</strong>, takže potřebujete klíč API OpenAI. Další možnosti jsou <a href="#other-voice">níže</a>.</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>V nabídce Social Stream vyberte <strong>ChatGPT API</strong>, vložte klíč API projektu OpenAI a klikněte na <strong>Otestovat vybraného chatbota (Test selected chat bot)</strong>.</li>
+                        <li>Otevřete <code>cohost.html</code> z nabídky. Tento odkaz uchovávejte v soukromí.</li>
+                        <li>Vyberte <strong>OpenAI Realtime</strong>.</li>
+                        <li>Vyberte mikrofon, do kterého mluvíte. Nechte <strong>Zvuková odpověď (Audio Response)</strong> vybrané.</li>
+                        <li>Stiskněte <strong>Spustit spolumoderátora (Start Co-host)</strong>.</li>
+                        <li>Ponechte <strong>Živý chat</strong> na <strong>Pouze kontext (Context only)</strong>. Kdykoli se zeptejte „Co říká chat?“</li>
+                        <li>V OBS zachytávejte zvuk stránky nebo aplikace spolumoderátora. Hlas AI se přehrává pouze tam.</li>
+                        <li>Přidejte <code>cohost-overlay.html?session=YOUR_SESSION_ID</code> do OBS jako zdroj prohlížeče pro avatar a řečovou bublinu.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/guide-ai-cohost-controls.png" alt="Ovládací stránka cohost.html s mediálními zařízeními, nastavením poskytovatele AI, systémovými pokyny a stavem živého chatu" class="guide-image">
+                        <figcaption>Stránka spolumoderátora: mikrofon, poskytovatel AI, pokyny a stav živého chatu.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>Chcete samostatnou zvukovou stopu v OBS?</strong> Vyberte virtuální kabel v <strong>Výstup spolumoderátora</strong>, pokud to vaše nastavení podporuje. Nechte viditelnou i řečovou bublinu, aby mohli sledovat i diváci, kteří neslyší.</div>
+                <div class="guide-note"><strong>Povolit pohled na obrazovku nebo kameru?</strong> Volitelné. Video začíná v režimu <strong>Bez videa (No Video)</strong>. Pokud vyberete <strong>Sdílení obrazovky (Screen Share)</strong> nebo kameru, OpenAI dostane jeden snímek pokaždé, když promluvíte nebo napíšete, nikoli živé video. To může zvýšit cenu a zpoždění.</div>
+                <div class="warning-note"><strong>Soukromí:</strong> mikrofon, vybraná obrazovka nebo kamera a sdílené zprávy chatu se odesílají OpenAI. Diváci nemohou pomocí chatu přimět spolumoderátora spouštět nástroje. Odkaz vyprší po 12 hodinách, funguje jen pro vaši relaci a po načtení stránky zmizí z adresního řádku.</div>
+                <details class="guide-extra">
+                    <summary>Další informace o OpenAI Realtime</summary>
+                    <ul>
+                        <li>Účtuje se na váš účet API OpenAI. Je oddělený od chatgpt.com a nepřipojuje se ke konverzaci na webu ani v aplikaci ChatGPT.</li>
+                        <li>Běžný klíč zůstává v Social Stream. Stránka spolumoderátora dostane jen krátkodobé oprávnění.</li>
+                        <li>Kvůli tomu nemusíte zapínat soukromý chatbot.</li>
+                        <li>Odpovědi jsou omezené na 512 výstupních tokenů. <strong>Diagnostika</strong> ukazuje celkové využití tokenů a rychlost začátku odpovědí.</li>
+                        <li>Pokud mu skočíte do řeči, zastaví se a zahodí nepřehraný zvuk.</li>
+                        <li>Uchovává až 20 nedávných zpráv po dobu až 90 sekund, včetně informací o darech, členství, moderátorech, událostech a kanálech. Pak je zapomene.</li>
+                        <li>Po výpadku se sám připojí a před limitem 60 minut OpenAI spustí novou relaci. Pokyny a rychlost zachová, ale zapomene mluvenou konverzaci.</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="chat-modes">Jak používá váš chat</h2>
+                <p>Otevřete stránku spolumoderátora se stejnou hodnotou <code>session</code> jako Social Stream, aby viděl živý chat. Způsob vyberte v <strong>Živý chat</strong>.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Nastavení živého chatu</th><th>Co dělá</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Nastavení živého chatu">Pouze kontext: odpovědět na požádání (výchozí)</td><td data-label="Co dělá">Pamatuje si nedávné zprávy a mlčí, dokud se nezeptáte na chat.</td></tr>
+                        <tr><td data-label="Nastavení živého chatu">Nahlas odpovídat na otázky a zmínky</td><td data-label="Co dělá">Sám nahlas odpovídá na otázky a zmínky.</td></tr>
+                        <tr><td data-label="Nastavení živého chatu">Nahlas odpovídat na každou zprávu</td><td data-label="Co dělá">Nahlas odpovídá na každou zprávu.</td></tr>
+                    </tbody>
+                </table>
+                <p>Žádná z těchto možností neposílá odpovědi do chatu YouTube, Twitch nebo Kick. <strong>Pouze kontext (Context only)</strong> posílá chat AI pouze s OpenAI Realtime. Ostatní poskytovatelé chat sledují, ale nepředávají jej AI.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="other-voice">Hlas bez OpenAI</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Kde jej spouštíte</th><th>Jak vás slyší</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Kde jej spouštíte">Desktopová aplikace SSN</td><td data-label="Jak vás slyší">Whisper na vašem počítači. Při prvním použití stáhne asi 42 MB. Poté funguje offline.</td></tr>
+                        <tr><td data-label="Kde jej spouštíte">Chrome (odkaz rozšíření)</td><td data-label="Jak vás slyší">Rozpoznávání řeči v Chromu. Může vyžadovat internet.</td></tr>
+                        <tr><td data-label="Kde jej spouštíte">Ostatní prohlížeče</td><td data-label="Jak vás slyší">Hlas nemusí fungovat. Psaní, živý chat, kamera či obrazovka a odpovědi AI mohou fungovat dál.</td></tr>
+                    </tbody>
+                </table>
+                <p>Chcete-li ověřit, že vás slyší, otevřete <strong>Diagnostika</strong>. Mělo by se zobrazit <strong>Poslouchá (Desktop Whisper)</strong> nebo <strong>Poslouchá (OpenAI WebRTC)</strong>, a vaše slova by se měla objevit pod <strong>Rozpoznáno (Heard)</strong>.</p>
+                <h3>Bezplatná AI k vyzkoušení</h3>
+                <ol class="guide-steps">
+                    <li>Otevřít <strong>Chatboti a AI služby → Nastavit poskytovatele LLM</strong>.</li>
+                    <li>Vyberte <strong>SSN Hosted Trial LLM (experimentální)</strong>.</li>
+                    <li>Endpoint, token a model ponechte prázdné.</li>
+                </ol>
+                <p>Po dobu zkoušky je zdarma a může být vypnutá nebo omezená. Pro dlouhodobé používání přidejte vlastní token nebo použijte místní AI.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="dock-setup">Tlačítka Docku v 5 krocích</h2>
+                <ol class="guide-steps">
+                    <li>Otevřete Dock: <code>dock.html?session=YOUR_SESSION_ID</code>.</li>
+                    <li>Přidejte překryv scény do OBS: <code>cohost-overlay.html?session=YOUR_SESSION_ID</code>. Přidejte <code>&amp;tts</code> pokud má mluvit.</li>
+                    <li>V nabídce nastavte poskytovatele AI. Pro rychlé vyzkoušení použijte <a href="#other-voice">SSN Hosted Trial LLM</a>.</li>
+                    <li>Zapněte <strong>Chatboti a AI služby → Chat Bot - Soukromé rozhraní → Povolit soukromý chatbot</strong>.</li>
+                    <li>Klikněte pravým tlačítkem na zprávu v Docku a vyberte <strong>Spolumoderátor (Co-host)</strong>.</li>
+                </ol>
+                <div class="guide-note"><strong>Chybí nabídka Co-host?</strong> Objeví se až poté, co Dock zjistí překryv scény ve stejné relaci.</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Tlačítko</th><th>Co dělá</th><th>Vyžaduje</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Tlačítko">Přečíst na spolumoderátorovi (Read on Co-host)</td><td data-label="Co dělá">Avatar přečte zprávu.</td><td data-label="Vyžaduje">Připojený překryv scény. AI není potřeba.</td></tr>
+                        <tr><td data-label="Tlačítko">Odpovědět (Answer)</td><td data-label="Co dělá">Připraví krátkou odpověď ke schválení.</td><td data-label="Vyžaduje">Zapnutý soukromý chatbot a poskytovatel AI.</td></tr>
+                        <tr><td data-label="Tlačítko">Lehce popíchnout (Light Roast)</td><td data-label="Co dělá">Připraví krátké, hravé a nezávadné rýpnutí ke schválení.</td><td data-label="Vyžaduje">Zapnutý soukromý chatbot a poskytovatel AI.</td></tr>
+                        <tr><td data-label="Tlačítko">Přednést (Speak)</td><td data-label="Co dělá">Pošle schválený návrh do překryvu.</td><td data-label="Vyžaduje">Návrh.</td></tr>
+                        <tr><td data-label="Tlačítko">Kopírovat</td><td data-label="Co dělá">Zkopíruje návrh bez odeslání.</td><td data-label="Vyžaduje">Návrh.</td></tr>
+                    </tbody>
+                </table>
+                <p>Návrhy AI se nepřečtou, dokud nekliknete na <strong>Přednést (Speak)</strong>. Schválení probíhá v Docku, mimo vysílání.</p>
+                <p>Nabídka pravého tlačítka zatím nefunguje z klávesnice. Uživatelé klávesnice mohou psát nebo mluvit na <code>cohost.html</code> místo toho.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="speed">Rychlost, kvalita a cena (OpenAI)</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Nastavení</th><th>Rychlejší a levnější</th><th>Chytřejší, pomalejší</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Nastavení">Model</td><td data-label="Rychlejší a levnější">Mini</td><td data-label="Chytřejší, pomalejší">Plná kvalita (vyšší cena)</td></tr>
+                        <tr><td data-label="Nastavení">Úsilí při uvažování</td><td data-label="Rychlejší a levnější">Minimal nebo Low</td><td data-label="Chytřejší, pomalejší">High nebo Extra high (vyšší cena)</td></tr>
+                        <tr><td data-label="Nastavení">Rychlost střídání v hovoru</td><td data-label="Rychlejší a levnější">Fast: čeká asi 2 sekundy po konci řeči. Může vstoupit do pauzy.</td><td data-label="Chytřejší, pomalejší">Balanced: asi 4 sekundy. Patient: asi 8.</td></tr>
+                    </tbody>
+                </table>
+                <p>Změny uvažování se projeví i během připojení. <strong>Diagnostika</strong> ukazuje dobu do začátku odpovědi. Síť a zatížení OpenAI se mohou lišit.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="stream-controls">Nechte jej ovládat vysílání</h2>
+                <p>Spolumoderátor může přehrávat Spotify, přepínat scény OBS nebo zvýraznit zprávu. Vše je standardně vypnuté. OpenAI Realtime podporuje všechny tři funkce. SSN Configured LLM podporuje jen Spotify. Ostatní poskytovatelé je zatím nepodporují.</p>
+                <ol class="guide-steps">
+                    <li>V nabídce Social Stream zapněte pouze požadované nástroje.</li>
+                    <li>Pro OBS zadejte přesné názvy povolených scén oddělené čárkami. Nechte <code>actions.html</code> připojené k OBS nebo použijte zdroj prohlížeče OBS s úplnými oprávněními.</li>
+                    <li>Zapnuto (On) <code>cohost.html</code>, otevřete <strong>Ovládání vysílání spolumoderátorem</strong> a zapněte stejné nástroje.</li>
+                    <li>Řekněte například „přepni na BRB“, „zvýrazni poslední zprávu“ nebo „vymaž zvýrazněný chat“.</li>
+                </ol>
+                <div class="warning-note"><strong>Nástroje můžete spouštět jen vy.</strong> Diváci nemohou. Spustí jeden nástroj na požadavek a vybírá jen scény z vašeho seznamu. Zvýraznění zprávy vyžaduje otevřený Dock. Odpověď „hotovo“ znamená odeslání požadavku, nikoli dokončení v OBS nebo překryvu.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">Řešení problémů</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Problém</th><th>Vyzkoušejte</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Problém">V Docku chybí nabídka Co-host</td><td data-label="Vyzkoušejte">Překryv scény není otevřený ve stejné relaci. Přepínač Primary chat bot overlay to neovlivňuje.</td></tr>
+                        <tr><td data-label="Problém">Answer nebo Light Roast je neaktivní</td><td data-label="Vyzkoušejte">Zapněte soukromý chatbot a ověřte, že je Social Stream spuštěný.</td></tr>
+                        <tr><td data-label="Problém">Answer, Light Roast nebo SSN Configured LLM překračuje časový limit</td><td data-label="Vyzkoušejte">Ověřte, že je Social Stream zapnutý, relace se shoduje, soukromý chatbot je zapnutý a poskytovatel AI je dostupný.</td></tr>
+                        <tr><td data-label="Problém">Stránka spolumoderátora nevidí chat</td><td data-label="Vyzkoušejte">Použijte stejné <code>session</code> jako v nabídce. Live Chat nastavte na cokoli kromě Off.</td></tr>
+                        <tr><td data-label="Problém">Zná chat, ale mlčí</td><td data-label="Vyzkoušejte">V režimu Pouze kontext je to normální. Zeptejte se, co říká chat, nebo <a href="#chat-modes">vyberte jiný režim</a>.</td></tr>
+                        <tr><td data-label="Problém">V OBS se nic nezobrazuje</td><td data-label="Vyzkoušejte">Klikněte na <strong>Otestovat překryv (Test overlay)</strong> na stránce spolumoderátora a ověřte zobrazení řádku.</td></tr>
+                        <tr><td data-label="Problém">Text se zobrazuje, ale hlas není slyšet (OpenAI)</td><td data-label="Vyzkoušejte">Zkontrolujte <strong>Zvuková odpověď (Audio Response)</strong>, oprávnění zvuku v prohlížeči a zachytávání zvuku stránky spolumoderátora v OBS. Nepoužívejte <code>&amp;tts</code> pro tento účel.</td></tr>
+                        <tr><td data-label="Problém">Dva hlasy současně</td><td data-label="Vyzkoušejte">Odstranit <code>&amp;forcetts</code> z odkazu překryvu.</td></tr>
+                        <tr><td data-label="Problém"><strong>Rozpoznáno (Heard)</strong> zůstává prázdné (desktop)</td><td data-label="Vyzkoušejte">Ověřte, že mikrofon není ztlumený, a nechte dokončit první stažení.</td></tr>
+                        <tr><td data-label="Problém"><strong>Rozpoznáno (Heard)</strong> zůstává prázdné (Chrome)</td><td data-label="Vyzkoušejte">Povolte mikrofon, ověřte výchozí mikrofon počítače, internet a dostupnost rozpoznávání řeči v Chromu.</td></tr>
+                        <tr><td data-label="Problém">Odpovědi jsou pomalé</td><td data-label="Vyzkoušejte">Vyzkoušejte Mini, uvažování Low a střídání Fast. Porovnejte řádek Latency v diagnostice.</td></tr>
+                        <tr><td data-label="Problém">OpenAI se stále odpojuje</td><td data-label="Vyzkoušejte">Nechte jej běžet během dalších pokusů. Diagnostika ukáže, co selhalo.</td></tr>
+                        <tr><td data-label="Problém">Chybí nástroj pro ovládání vysílání</td><td data-label="Vyzkoušejte">Zapněte jej v nabídce i v Co-host Stream Controls. OBS potřebuje alespoň jeden název scény.</td></tr>
+                        <tr><td data-label="Problém">Bezplatná zkušební AI přestala odpovídat</td><td data-label="Vyzkoušejte">Může být vypnutá nebo omezená. Použijte vlastní token, Ollama nebo Custom API.</td></tr>
+                        <tr><td data-label="Problém">Místní Gemma se nestahuje</td><td data-label="Vyzkoušejte">Nastavte hostitele prostředků na vlastní kopii souborů Gemma.</td></tr>
+                        <tr><td data-label="Problém">Je otevřeno více překryvů</td><td data-label="Vyzkoušejte">Ověřte, že popisek překryvu odpovídá cíli Docku. Výchozí je <code>cohost-overlay</code>.</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra">
+                    <summary>Tlačítka ztlumení a hlasitosti</summary>
+                    <ul>
+                        <li><strong>Ztlumit mikrofon (Mute microphone)</strong> přestane posílat váš hlas spolumoderátorovi.</li>
+                        <li><strong>Ztlumit hlas spolumoderátora (Mute co-host voice)</strong>, posuvník hlasitosti, výběr výstupu a <strong>Přestat mluvit (Stop speaking)</strong> ovládají to, co slyšíte.</li>
+                        <li><strong>Ztlumit sdílený systémový zvuk (Mute shared system audio)</strong> je samostatné a zobrazuje se jen u poskytovatelů, kteří umí použít obrazovku.</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="link-options">Možnosti odkazu na překryv</h2>
+                <p>Tyto možnosti přidejte na konec svého <code>cohost-overlay.html</code> odkaz.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Chci…</th><th>Přidejte do odkazu</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Chci">Připojit k mému Social Stream (povinné)</td><td data-label="Přidejte do odkazu"><code>?session=YOUR_SESSION_ID</code></td></tr>
+                        <tr><td data-label="Chci">Nechat překryv mluvit (postup přes Dock)</td><td data-label="Přidejte do odkazu"><code>&amp;tts</code> nebo <code>&amp;speak=1</code></td></tr>
+                        <tr><td data-label="Chci">Vynutit řeč překryvu, i když mluví stránka spolumoderátora (přidá druhý hlas)</td><td data-label="Přidejte do odkazu"><code>&amp;forcetts</code></td></tr>
+                        <tr><td data-label="Chci">Nastavit popisek překryvu</td><td data-label="Přidejte do odkazu"><code>&amp;label=cohost-overlay</code></td></tr>
+                        <tr><td data-label="Chci">Změnit zobrazené jméno</td><td data-label="Přidejte do odkazu"><code>&amp;name=NinjaBot</code></td></tr>
+                        <tr><td data-label="Chci">Použít vlastní avatar</td><td data-label="Přidejte do odkazu"><code>&amp;avatar=https://&hellip;</code></td></tr>
+                        <tr><td data-label="Chci">Přesunout</td><td data-label="Přidejte do odkazu"><code>&amp;position=bottom-right</code></td></tr>
+                        <tr><td data-label="Chci">Zvětšit nebo zmenšit</td><td data-label="Přidejte do odkazu"><code>&amp;scale=1.2</code></td></tr>
+                        <tr><td data-label="Chci">Zobrazit stav připojení</td><td data-label="Přidejte do odkazu"><code>&amp;status</code></td></tr>
+                    </tbody>
+                </table>
+                <p>Když hlas už přehrává stránka spolumoderátora, překryv vlastní řeč vynechá, aby nebyla slyšet dvakrát. <code>&amp;forcetts</code> toto chování vypíná.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="how-it-works">Jak stránky komunikují (pro vývojáře)</h2>
+                <details class="guide-extra">
+                    <summary>Formát zpráv a poznámky k návrhu</summary>
+                    <p>Dock a překryv používají běžný můstek relace Social Stream. Zprávy se odesílají jako <code>overlayNinja</code> data cílená podle štítku.</p>
+                    <div class="cohost-flow">
+                        <p><strong>Přečíst na spolumoderátorovi (Read on Co-host):</strong> Dock posílá vybranou zprávu přímo do <code>cohost-overlay.html</code>.</p>
+                        <p><strong>Odpovědět / lehce popíchnout (Answer / Light Roast):</strong> Dock se na pozadí dotáže soukromého chatbota, ukáže návrh v Docku a pošle jej do překryvu až po kliknutí na Speak.</p>
+                    </div>
+                    <pre class="cohost-code">{
+  "action": "cohostOverlay",
+  "target": "cohost-overlay",
+  "meta": {
+    "command": "say",
+    "text": "The line the avatar should say",
+    "speak": true,
+    "emotion": "happy"
+  }
+}</pre>
+                    <ul>
+                        <li>U textových postupů Docku poskytuje překryv obraz a volitelný hlas TTS. Pro hlas OpenAI zachytávejte zvuk z <code>cohost.html</code> samostatně. Překryv tento zvuk WebRTC nepřehrává.</li>
+                        <li>Další podrobnosti příkazu patří do <code>meta</code>, aby data zůstala předvídatelná pro překryvy a automatizace.</li>
+                    </ul>
+                </details>
+            </div>
+        </div>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

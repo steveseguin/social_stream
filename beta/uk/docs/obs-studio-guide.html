@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="uk" data-site-root="../../" data-site-language="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:locale" content="uk_UA">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Логотип Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/uk/docs/obs-studio-guide.html">
+    <meta name="twitter:title" content="Посібник для початківців OBS Studio - Social Stream Ninja">
+    <meta name="twitter:description" content="Налаштуйте OBS Studio, створіть сцену, виберіть апаратний кодер і бітрейт платформи, мікшуйте та відстежуйте аудіо та додайте джерела в браузері.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Логотип Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Посібник для початківців OBS Studio - Social Stream Ninja</title>
+    <meta name="description" content="Налаштуйте OBS Studio, створіть сцену, виберіть апаратний кодер і бітрейт платформи, мікшуйте та відстежуйте аудіо та додайте джерела в браузері.">
+    <link rel="canonical" href="https://socialstream.ninja/beta/uk/docs/obs-studio-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:title" content="Посібник для початківців OBS Studio - Social Stream Ninja">
+    <meta property="og:description" content="Налаштуйте OBS Studio, створіть сцену, виберіть апаратний кодер і бітрейт платформи, мікшуйте та відстежуйте аудіо та додайте джерела в браузері.">
+    <meta property="og:url" content="https://socialstream.ninja/beta/uk/docs/obs-studio-guide.html">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="stylesheet" href="../../docs/css/site-shell.css">
+    <script src="../../docs/js/site-shell.js"></script>
+    <style>
+        body.obs-page { padding-top: 76px; background: var(--site-bg); color: var(--site-text); font-family: var(--site-font); }
+        .obs-page .obs-guide, .obs-page .obs-hero { max-width: 1160px; margin: auto; padding: 0 28px; }
+        .obs-page .obs-hero { padding-top: 52px; padding-bottom: 30px; }
+        .obs-page .obs-eyebrow { color: var(--site-muted); font-size: 13px; letter-spacing: .06em; margin-bottom: 20px; }
+        .obs-page .obs-hero h1 { font-size: 52px; line-height: 1.1; letter-spacing: -.045em; max-width: 750px; margin-bottom: 20px; }
+        .obs-page .obs-lead { max-width: 620px; color: var(--site-muted); font-size: 19px; line-height: 1.6; }
+        .obs-page a { color: var(--site-accent); text-underline-offset: 3px; }
+        .obs-guide a, .obs-hero a { text-decoration: underline; }
+        .obs-guide .obs-jumps { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 0 30px; }
+        .obs-guide .obs-jumps a { background: var(--site-surface); border: 1px solid var(--site-line); border-radius: 24px; padding: 8px 16px; color: var(--site-text); text-decoration: none; font-size: 14px; }
+        .obs-guide .obs-jumps a:hover { border-color: var(--site-accent); }
+        .obs-guide .obs-step { padding: 48px 0; border-top: 1px solid var(--site-line); scroll-margin-top: 94px; }
+        .obs-guide .obs-heading { display: flex; align-items: baseline; gap: 14px; margin-bottom: 24px; }
+        .obs-guide .obs-number { color: var(--site-accent); font-size: 14px; font-weight: 700; }
+        .obs-guide h2 { text-align: left; font-size: 28px; line-height: 1.25; letter-spacing: -.025em; margin: 0; padding: 0; }
+        .obs-guide h3 { font-size: 17px; line-height: 1.4; margin: 0 0 10px; color: var(--site-text); }
+        .obs-guide p, .obs-guide li, .obs-guide dd { font-size: 16px; line-height: 1.7; }
+        .obs-guide p { margin: 0 0 18px; }
+        .obs-guide .obs-copy > :last-child { margin-bottom: 0; }
+        .obs-guide .obs-split { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.3fr); gap: 40px; align-items: start; }
+        .obs-guide .obs-split > * { min-width: 0; }
+        .obs-guide .obs-split-small { grid-template-columns: minmax(0, 1.3fr) minmax(0, .85fr); }
+        .obs-guide ol { padding-left: 22px; margin: 0 0 20px; }
+        .obs-guide li { margin-bottom: 12px; padding-left: 3px; }
+        .obs-guide .obs-shot { margin: 0; }
+        .obs-guide .obs-image-link { display: block; overflow: hidden; border: 1px solid var(--site-line); border-radius: 14px; background: #20212b; }
+        .obs-guide .obs-shot img { display: block; width: 100%; height: auto; }
+        .obs-guide .obs-shot figcaption { color: var(--site-muted); font-size: 13px; line-height: 1.6; margin-top: 12px; }
+        .obs-guide .obs-compact .obs-image-link { display: flex; justify-content: center; padding: 24px; background: var(--site-surface); }
+        .obs-guide .obs-compact img { width: auto; max-width: 100%; max-height: 410px; object-fit: contain; }
+        .obs-guide .obs-facts { margin: 20px 0; }
+        .obs-guide .obs-facts > div { display: flex; justify-content: space-between; gap: 20px; padding: 10px 0; border-bottom: 1px solid var(--site-line); }
+        .obs-guide dt { font-size: 15px; font-weight: 650; }
+        .obs-guide dd { margin: 0; text-align: right; font-size: 15px; }
+        .obs-guide .obs-note { padding: 16px 20px; border: 1px solid var(--border-color); background: var(--site-surface); border-radius: 10px; }
+        .obs-guide .obs-muted, .obs-guide .obs-small { color: var(--site-muted); }
+        .obs-guide .obs-small { font-size: 13px; }
+        .obs-guide details { background: var(--site-surface); border: 1px solid var(--site-line); border-radius: 12px; padding: 16px 20px; margin-top: 18px; }
+        .obs-guide summary { cursor: pointer; color: var(--site-text); font-size: 15px; font-weight: 650; }
+        .obs-guide details[open] summary { margin-bottom: 18px; }
+        .obs-guide details > :last-child { margin-bottom: 0; }
+        .obs-guide .obs-platforms, .obs-guide .obs-routing { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 24px 0; align-items: start; }
+        .obs-guide .obs-platforms details { margin: 0; }
+        .obs-guide .obs-platforms summary { font-size: 19px; }
+        .obs-guide .obs-platforms summary span { display: block; padding: 7px 0 0 18px; font-size: 13px; color: var(--site-muted); font-weight: 400; }
+        .obs-guide .obs-platforms p { font-size: 14px; }
+        .obs-guide table { border-collapse: collapse; width: 100%; font-size: 14px; margin-bottom: 18px; }
+        .obs-guide th, .obs-guide td { text-align: left; padding: 10px 0; border-bottom: 1px solid var(--site-line); }
+        .obs-guide th:last-child, .obs-guide td:last-child { text-align: right; }
+        .obs-guide caption { text-align: left; font-size: 13px; color: var(--site-muted); margin-bottom: 6px; }
+        .obs-guide .obs-route { border: 1px solid var(--site-line); border-radius: 12px; background: var(--site-surface); padding: 22px; }
+        .obs-guide .obs-route p { font-size: 14px; margin-bottom: 12px; }
+        .obs-guide .obs-route p:last-child { margin: 0; color: var(--site-muted); }
+        .obs-guide .obs-routing strong { display: inline-block; min-width: 106px; }
+        .obs-guide .obs-route-icon { width: 28px; height: 28px; margin-bottom: 16px; color: var(--site-accent); }
+        .obs-guide .obs-fixes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; }
+        .obs-guide .obs-fixes p { font-size: 15px; }
+        .obs-guide a:focus, .obs-guide summary:focus { outline: 2px solid var(--site-accent); outline-offset: 4px; }
+        .obs-skip { position: absolute; left: 16px; top: -80px; z-index: 3000; padding: 12px; background: var(--site-surface); }
+        .obs-skip:focus { top: 16px; }
+        @media (max-width: 760px) {
+            .obs-page .obs-guide, .obs-page .obs-hero { padding-left: 20px; padding-right: 20px; }
+            .obs-page .obs-hero { padding-top: 36px; }
+            .obs-page .obs-hero h1 { font-size: 38px; }
+            .obs-guide .obs-step { padding: 32px 0; }
+            .obs-guide .obs-split, .obs-guide .obs-split-small, .obs-guide .obs-platforms, .obs-guide .obs-routing, .obs-guide .obs-fixes { grid-template-columns: 1fr; gap: 24px; }
+            .obs-guide .obs-heading { gap: 12px; }
+            .obs-guide h2 { font-size: 25px; }
+            .obs-guide .obs-platforms, .obs-guide .obs-routing { gap: 12px; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="uk">
+<script id="ssn-site-language" type="application/json">{"language":"uk","page":"docs/obs-studio-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Перемкнути на світлу тему","Switch to dark theme":"Перемкнути на темну тему","Light mode":"Світла тема","Dark mode":"Темна тема","Open navigation menu":"Відкрити меню навігації","Close navigation menu":"Закрити меню навігації","Copy this document as Markdown to the clipboard":"Скопіювати цей документ у форматі Markdown до буфера обміну","Copy Markdown":"Скопіювати Markdown","Copying…":"Копіювання…","Markdown copied":"Markdown скопійовано","Copy failed":"Не вдалося скопіювати","Copy comprehensive Markdown for an AI assistant":"Скопіювати повний Markdown для ШІ-асистента","Copy this documentation page as Markdown for an AI assistant":"Скопіювати цю сторінку документації як Markdown для ШІ-асистента"},"strings":{", and":", і",", choose a hardware":", виберіть обладнання",". Check its preview and stream health; some platforms also require":". Перевірте його попередній перегляд і стан трансляції; деякі платформи також вимагають",". On macOS 13+, use OBS’s":". На macOS 13+ використовуйте OBS",". Open your platform below.":". Відкрийте свою платформу нижче.",". Shared source and audio changes can still affect the live output.":". Зміни спільного джерела та аудіо все ще можуть впливати на живий вихід.",". Talk, play sound, and switch scenes.":". Розмовляйте, відтворюйте звук і змінюйте сцени.",". Then open the mixer’s":". Потім відкрийте міксер","/ OBS STUDIO":"/ OBS STUDIO","1080p30":"1080p30","1080p60":"1080p60","1280 × 720 output":"Вихід 1280 × 720","1920 × 1080 canvas":"Полотно 1920 × 1080","2-second keyframes":"2-секундні ключові кадри","30 FPS":"30 FPS","6,000 kbps uses about 6 Mbps, plus audio and overhead. Lower bitrate or resolution if your connection cannot keep up.":"6000 Кбіт/с використовує приблизно 6 Мбіт/с, а також аудіо та додаткові витрати. Знизьте бітрейт або роздільну здатність, якщо ваше з’єднання не встигає.","60 FPS":"60 FPS","720p30":"720p30","720p30 / 60":"720p30/60","720p60 / 1080p30":"720p60 / 1080p30","8,000 max.":"8000 макс.",": try light noise suppression, then a compressor and limiter. Add one at a time and listen.":": спробуйте придушення легкого шуму, потім компресор і лімітер. Додавайте по одному й слухайте.","; avoid hitting 0.":"; уникайте попадання 0.","A":"Подія","A simple start:":"Простий початок:","AAC stereo":"Стерео AAC","AMD":"драм","AMD HW H.264 / AVC":"AMD HW H.264 / AVC","Add Existing":"Додати наявні","Add a chat or alert overlay":"Додайте чат або накладення сповіщень","Advanced Audio Properties":"Розширені властивості звуку (Advanced Audio Properties)","All guides":"Усі посібники","Allow camera, microphone, and screen capture access when your computer asks.":"Надайте доступ до камери, мікрофона та знімків екрана, коли запитує ваш комп’ютер.","App / whole monitor":"Додаток/весь монітор","App audio, macOS, and microphone filters":"Аудіо програми, macOS і фільтри мікрофона","Apple Silicon":"Apple Silicon","Apple VT H264 Hardware":"Обладнання Apple VT H264","Application Audio Capture":"Захоплення звуку програми","Assumes the source is unmuted and on your output track. “Monitor Off” does not mute the stream.":"Припускає, що джерело вимкнуто та на вихідній доріжці. «Monitor Off» не вимикає потік.","Audio":"Аудіо","Audio: 128 kbps, 44.1 kHz stereo. These are recommendations, not minimums.":"Аудіо: 128 кбіт/с, стерео 44,1 kHz. Це рекомендації, а не мінімуми.","Audio: up to 160 kbps.":"Аудіо: до 160 кбіт/с.","Avoid echo:":"Уникайте відлуння:","Bitrate":"Бітрейт","Blank overlay or repeated audio?":"Порожнє накладання чи повторюване аудіо?","Bring your camera, screen, and sound together. Make a test recording, then go live.":"Об’єднайте камеру, екран і звук. Зробіть тестовий запис, а потім виходьте в прямому ефірі.","Browser":"Браузер","Browser Source properties with URL, Width, Height, and Control audio via OBS":"Властивості джерела браузера з URL-адресою, шириною, висотою та керування аудіо через OBS","Build one scene":"Побудуйте одну сцену","CBR":"CBR","Camera / capture card":"Камера/карта захоплення","Canvas":"Полотно","Cap game FPS; simplify the scene.":"Cap game FPS; спростити сцену.","Capture each sound once.":"Захоплюйте кожен звук один раз.","Change Output to stream at a smaller size.":"Змініть вихід на потік із меншим розміром.","Chat or alerts":"Чат або сповіщення","Check hardware support and update your graphics driver. OBS still needs GPU capacity to draw scenes; cap game FPS or lower output FPS if it falls behind.":"Перевірте підтримку апаратного забезпечення та оновіть графічний драйвер. OBS все ще потребує потужності GPU для малювання сцен; обмеження FPS гри або зниження вихідного FPS, якщо він відстає.","Check mute, monitoring mode, and audio track.":"Перевірте вимкнення звуку, режим моніторингу та звукову доріжку.","Check the session matches your chat source. Refresh the Browser Source. Keep only one copy playing TTS.":"Перевірте, чи сеанс відповідає вашому джерелу чату. Оновіть вихідний код браузера. Зберігайте лише одну копію відтворення TTS.","Choose":"Виберіть","Choose a recording folder in":"Виберіть папку для запису","Choose headphones in":"Виберіть навушники","Choose what to capture.":"Виберіть, що знімати.","Choose what you hear":"Виберіть те, що ви чуєте","Choose what you want to do.":"Виберіть, що ви хочете зробити.","Choose your encoder here; use the platform bitrates below.":"Виберіть свій кодер тут; використовуйте бітрейт платформи нижче.","Choose your microphone in":"Виберіть свій мікрофон","Choose your video size":"Виберіть розмір відео","Connect your platform":"Підключіть свою платформу","Control audio via OBS":"Керувати звуком через OBS (Control audio via OBS)","Copy the overlay URL from Social Stream Ninja.":"Скопіюйте накладену URL-адресу з Social Stream Ninja.","Download":"Завантажити","Drag corners to resize. Sources at the top cover those below. Use the eye to hide and the lock to prevent movement.":"Перетягніть кути, щоб змінити розмір. Джерела вгорі покривають ті, що знаходяться нижче. Використовуйте око, щоб сховатися, і замок, щоб запобігти руху.","Encoder compatibility":"Сумісність кодера","Encoders":"Кодери","Encoding lag":"Затримка кодування","Enhanced Broadcasting":"Розширене мовлення","Features":"Можливості","File → Remux Recordings":"Файл → Записи Remux","Filters":"Фільтри","For TTS or alerts, enable":"Увімкніть для TTS або сповіщень","For manual output settings, choose":"Для налаштувань виведення вручну виберіть","For persistent chat, leave automatic shutdown and scene-activation refresh off initially.":"Для постійного чату спочатку вимкніть автоматичне вимкнення та оновлення сцени.","For portrait video, use a 1080 × 1920 canvas and rearrange your sources to fit.":"Для портретного відео використовуйте полотно 1080 × 1920 і переставте джерела відповідно до розміру.","For separate editing tracks, keep a full mix on track 1, then assign mic/game to additional tracks in Advanced Audio Properties and enable them under Recording.":"Для окремого редагування доріжок збережіть повний мікс на доріжці 1, потім призначте мікрофон/гру для додаткових доріжок у Advanced Audio Properties і ввімкніть їх у розділі Recording.","GUIDES":"ПОСІБНИКИ","Game Capture":"Захоплення гри","Game on Windows":"Гра на Windows","Give your CPU a break":"Дайте процесору перерву","Go Live":"Почати трансляцію","Guides":"Посібники","H.264":"H.264","H.264 recommended targets":"Рекомендовані цілі H.264","H.264 · CBR required":"H.264 · Потрібен CBR","Headphones":"Навушники","Home":"Головна","If something looks wrong":"Якщо щось виглядає не так","If your Mac’s hardware encoder cannot provide CBR, use x264.":"Якщо апаратний кодер вашого Mac не може забезпечити CBR, використовуйте x264.","In":"У розділі","In this guide":"У цьому посібнику","Install":"Установіть","Intel":"Intel","Kick":"Kick","Kick settings":"Налаштування удару","Leave upload headroom.":"Залиште запас для завантаження.","Let OBS do the first setup":"Нехай OBS зробить перше налаштування","Listen without sending the source directly to output.":"Прослуховування без надсилання джерела безпосередньо на вихід.","Lower bitrate; try wired Ethernet.":"Нижчий бітрейт; спробуйте дротовий Ethernet.","Lower game, music, and alert sliders until speech is clear.":"Опускайте повзунки гри, музики та сповіщень, доки мова не стане чіткою.","MKV tolerates an interrupted recording. Use":"MKV допускає переривання запису. використання","Main navigation":"Основна навігація","Make your voice easy to hear":"Зробіть свій голос легким для слуху","Meters show signal level; sliders change the mix.":"Лічильники показують рівень сигналу; повзунки змінюють суміш.","Microphone →":"Мікрофон →","Missing encoder or overloaded computer?":"Відсутній кодер чи перевантажений комп’ютер?","Monitor Off":"Монітор вимкнено","Monitor Only (mute output)":"Лише моніторинг (без виходу) — Monitor Only (mute output)","Monitor and Output":"Моніторинг і виведення (Monitor and Output)","NVENC H.264":"NVENC H.264","NVIDIA":"NVIDIA","Network drops":"Зриви мережі","No":"Ні","No hardware option? Use":"Немає апаратного забезпечення? використання","OBS Audio Mixer with separate meters, volume sliders, and mute controls":"Аудіомікшер OBS з окремими вимірювачами, повзунками гучності та елементами керування відключенням звуку","OBS Auto-Configuration Wizard with streaming and recording choices":"OBS Майстер автоматичної конфігурації з параметрами потокового передавання та запису","OBS Controls with Start Streaming, Start Recording, Studio Mode, and Settings buttons":"OBS Елементи керування за допомогою кнопок «Почати трансляцію», «Почати запис», «Студійний режим» і «Налаштування»","OBS Output settings with the hardware NVENC H.264 encoder selected":"OBS Параметри виведення з вибраним апаратним кодувальником NVENC H.264","OBS Studio":"OBS Studio","OBS Studio Beginner Guide - Social Stream Ninja":"Посібник для початківців OBS Studio - Social Stream Ninja","OBS Video settings with Base Canvas Resolution, Output Scaled Resolution, and FPS fields":"OBS Параметри відео з полями «Базова роздільна здатність полотна», «Вихідна масштабована роздільна здатність» і «FPS»","OBS performance help":"Довідка щодо продуктивності OBS","OBS source menu listing Game Capture, Browser, and Video Capture Device":"Меню джерела OBS зі списком ігрового захоплення, браузера та пристрою захоплення відео","October 2026 guidance. Follow your platform’s current requirements. For Facebook or TikTok, first confirm your account offers an external encoder connection.":"Рекомендації від жовтня 2026 р. Дотримуйтеся поточних вимог вашої платформи. Для Facebook або TikTok спочатку переконайтеся, що ваш обліковий запис пропонує підключення зовнішнього кодера.","On macOS, use":"На macOS використовуйте","Open":"Відкрити","Open navigation menu":"Відкрити меню навігації","Output":"Вихід","Output → Advanced → Streaming":"Вивід → Додатково → Потокове передавання","Overlays":"Накладання","Place it above your game or camera. Send a test message; select one in the SSN dock if using the featured-message overlay.":"Розмістіть його над грою або камерою. Надіслати тестове повідомлення; виберіть один у панелі SSN, якщо використовуєте накладення пропонованих повідомлень.","Platform settings":"Налаштування платформи","Press":"Преса","QuickSync / QSV H.264":"QuickSync / QSV H.264","Record a minute. Then go live.":"Запишіть хвилину. Тоді йди в прямому ефірі.","Recording format and separate audio tracks":"Формат запису та окремі звукові доріжки","Recording saves a file; streaming sends to your platform.":"Запис зберігає файл; потокове передавання на вашу платформу.","Rendering lag":"Затримка візуалізації","Replace this default URL and size with your overlay’s settings.":"Замініть URL-адресу та розмір за замовчуванням налаштуваннями накладання.","SSN overlay help":"Довідка по накладенню SSN","SSN overlay setup":"Налаштування накладання SSN","Scene changes normally go straight to output.":"Зміни сцени зазвичай виводяться безпосередньо.","Scene switching and macOS":"Перемикання сцен і macOS","Scenes":"Сцени","Screenshot: OBS Project":"Знімок екрана: проект OBS","Screenshots open at full size when selected. Labels may vary slightly by OBS version.":"Знімки екрана відкриваються в повному розмірі, коли їх вибрано. Мітки можуть дещо відрізнятися залежно від версії OBS.","Select streaming or recording, follow the prompts, and apply the settings.":"Виберіть потокове передавання або запис, дотримуйтесь підказок і застосуйте налаштування.","Set the overlay size; use":"Встановити розмір накладання; використовувати","Set up OBS Studio, build a scene, choose a hardware encoder and platform bitrate, mix and monitor audio, and add browser sources.":"Налаштуйте OBS Studio, створіть сцену, виберіть апаратний кодер і бітрейт платформи, мікшуйте та відстежуйте аудіо та додайте джерела в браузері.","Set your platform’s title and visibility, then":"Тоді встановіть назву та видимість вашої платформи","Settings → Audio":"Налаштування → Аудіо","Settings → Audio → Advanced → Monitoring Device":"Налаштування → Аудіо → Додатково → Пристрій моніторингу","Settings → Output":"Параметри → Вивід","Settings → Stream:":"Налаштування → Потік:","Settings → Video":"Налаштування → Відео","Silent output":"Тихий вихід","Skip to guide":"Перейти до посібника","Smoother fast motion":"Більш плавний швидкий рух","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Логотип Social Stream Ninja","Social Stream Ninja ·":"Social Stream Ninja ·","Sources → + → Browser":"Sources → + → Browser","Speak normally. Aim for peaks around":"Говоріть нормально. Прагніть до вершин навколо","Standard H.264":"Стандарт H.264","Start Recording":"Почати запис (Start Recording)","Start Streaming":"Почати трансляцію (Start Streaming)","Start Streaming can make you publicly live.":"Початок потокового передавання може зробити вас публічним.","Start here":"Почніть тут","Stop and watch the file. Check volume, framing, and lip sync.":"Зупиніть і перегляньте файл. Перевірте гучність, кадрування та синхронізацію губ.","Stream":"Потік","Studio Mode":"Режим студії","Support":"Підтримка","Switch theme":"Перемкнути тему","TTS setup":"Налаштування TTS","Talking / lighter workload":"Розмова/менше навантаження","The lower range is a suggested starting test. Try 160 kbps audio; use stereo at no more than 48 kHz.":"Нижній діапазон є рекомендованим початковим тестом. Спробуйте аудіо 160 Кбіт/с; використовуйте стерео не більше 48 kHz.","The video you send":"Відео, яке ви надсилаєте","Tools → Auto-Configuration Wizard":"Інструменти → Майстер автоналаштування","Transition":"Перехід","Try 720p30":"Спробуйте 720p30","Twitch":"Twitch","Twitch settings":"Налаштування Twitch","Up to 1080p60":"До 1080p60","Use Desktop Audio for the whole output device, or separate application capture. Capturing both can double the sound.":"Використовуйте Desktop Audio для всього пристрою виводу або окреме програмне захоплення. Захоплення обох може подвоїти звук.","Use a private test where available. When finished, stop streaming and confirm the platform event has ended.":"Використовуйте приватний тест, якщо це можливо. Після завершення зупиніть трансляцію та підтвердьте, що подія платформи завершилася.","Use hardware encoding or lower output FPS.":"Використовуйте апаратне кодування або нижчий вихід FPS.","Useful for alerts or TTS you want to hear too.":"Корисно для сповіщень або TTS, які ви також хочете почути.","Usually right for your mic and games you already hear.":"Зазвичай підходить для вашого мікрофона та ігор, які ви вже чуєте.","Video":"Відео","Video Capture Device":"Пристрій захоплення відео","Video bitrate · kbps":"Бітрейт відео · кбіт/с","View → Stats":"Перегляд → Статистика","Window / Display Capture":"Зйомка вікна/дисплею","Windows: use":"Windows: використання","With supported AV1 / HEVC encoding, the corresponding targets are 6,000 / 10,000 / 12,000 kbps.":"З підтримуваним кодуванням AV1 / HEVC відповідні цілі становлять 6000 / 10 000 / 12 000 Кбіт/с.","Yes":"Так","YouTube":"YouTube","YouTube settings":"Налаштування YouTube","Your first OBS setup.":"Ваше перше налаштування OBS.","Your layout’s size":"Розмір вашого макета","and open it.":"і відкрийте його.","and paste it. Keep its session and password options.":"і вставте його. Зберігайте параметри сеансу та пароля.","and start at 720p30.":"і починати з 720p30.","connect your account, or paste the server URL and private stream key from its dashboard.":"підключіть свій обліковий запис або вставте URL-адресу сервера та закритий ключ потоку з його інформаційної панелі.","don’t capture your monitoring device again through Desktop Audio. That can also send “Monitor Only” audio to viewers. Keep the platform’s live player muted.":"більше не знімайте свій пристрій моніторингу через Desktop Audio. Це також може надсилати аудіо «Лише монітор» глядачам. Вимкніть живий програвач платформи.","encoder. Dedicated hardware handles video compression, reducing CPU use.":"кодер. Спеціальне обладнання обробляє стиснення відео, зменшуючи використання ЦП.","for MP4 afterward. Current OBS also offers resilient Hybrid MP4/MOV.":"для MP4 згодом. Поточний OBS також пропонує стійкий гібридний MP4/MOV.","for a full-frame landscape overlay.":"для повнокадрового пейзажного накладання.","for a window or display.":"для вікна або дисплея.","in Scenes, name your layout, then press":"у Сцени, назвіть свій макет, а потім натисніть","in Sources.":"у Джерелах.","is a layout. A":"— макет. А","is something inside it.":"є щось всередині нього.","lets you prepare a scene, then press":"дозволяє підготувати сцену, потім натисніть","macOS Screen Capture":"Знімок екрана macOS","macOS audio/screen capture":"macOS аудіо/зйомка екрана","scene":"сцена","sends multiple qualities and needs a separate bandwidth budget.":"надсилає різні якості та потребує окремого бюджету пропускної здатності.","source":"джерело","to identify the bottleneck.":"для виявлення вузького місця.","to reuse a source in another scene.":", щоб повторно використати джерело в іншій сцені.","x264 → veryfast":"x264 → дуже швидко","−12 to −6 dBFS":"від −12 до −6 dBFS"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/obs-studio-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="obs-page">
+    <a class="obs-skip" href="#obs-guide">Перейти до посібника</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Основна навігація"><a href="../index.html">Головна</a><a href="features.html">Можливості</a><a href="download.html">Завантажити</a><a href="guides.html">Посібники</a><a href="support.html">Підтримка</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Українська"><span aria-hidden="true">🌐 </span><span lang="uk">Українська</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-studio-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-studio-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-studio-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-studio-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-studio-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-studio-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-studio-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-studio-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-studio-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-studio-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-studio-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/obs-studio-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="obs-studio-guide.html" lang="uk" hreflang="uk" aria-current="true">Українська</a><a class="site-language-link" href="../../ar/docs/obs-studio-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/obs-studio-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/obs-studio-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/obs-studio-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Перемкнути тему"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Відкрити меню навігації" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="obs-hero">
+        <p class="obs-eyebrow"><a href="guides.html#guide-directory">ПОСІБНИКИ</a> / OBS STUDIO</p>
+        <h1>Ваше перше налаштування OBS.</h1>
+        <p class="obs-lead">Об’єднайте камеру, екран і звук. Зробіть тестовий запис, а потім виходьте в прямому ефірі.</p>
+    </section>
+
+    <main id="obs-guide" class="obs-guide" tabindex="-1">
+        <div class="obs-jumps" role="navigation" aria-label="У цьому посібнику">
+            <a href="#install">Почніть тут</a><a href="#scenes">Сцени</a><a href="#encoders">Кодери</a><a href="#platforms">Налаштування платформи</a><a href="#mixing">Аудіо</a><a href="#browser-sources">Накладання</a>
+        </div>
+
+        <section class="obs-step" id="install">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">01</span><h2>Нехай OBS зробить перше налаштування</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Установіть <a href="https://obsproject.com/download">OBS Studio</a> і відкрийте його.</li>
+                        <li>Виберіть <strong>Інструменти → Майстер автоналаштування</strong>.</li>
+                        <li>Виберіть потокове передавання або запис, дотримуйтесь підказок і застосуйте налаштування.</li>
+                    </ol>
+                    <p class="obs-note">Надайте доступ до камери, мікрофона та знімків екрана, коли запитує ваш комп’ютер.</p>
+                    <p class="obs-small">Знімки екрана відкриваються в повному розмірі, коли їх вибрано. Мітки можуть дещо відрізнятися залежно від версії OBS.</p>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-auto-config.png"><img src="../../docs/images/guides/obs-studio-auto-config.png" width="1028" height="914" alt="OBS Майстер автоматичної конфігурації з параметрами потокового передавання та запису"></a>
+                    <figcaption>Виберіть, що ви хочете зробити. <a href="https://obsproject.com/kb/quick-start-guide">Знімок екрана: проект OBS</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="scenes">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">02</span><h2>Побудуйте одну сцену</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <p>Подія <strong>сцена</strong> — макет. А <strong>джерело</strong> є щось всередині нього.</p>
+                    <p>Преса <strong>+</strong> у Сцени, назвіть свій макет, а потім натисніть <strong>+</strong> у Джерелах.</p>
+                    <dl class="obs-facts">
+                        <div><dt>Камера/карта захоплення</dt><dd>Пристрій захоплення відео</dd></div>
+                        <div><dt>Гра на Windows</dt><dd>Захоплення гри</dd></div>
+                        <div><dt>Додаток/весь монітор</dt><dd>Зйомка вікна/дисплею</dd></div>
+                        <div><dt>Чат або сповіщення</dt><dd>Браузер</dd></div>
+                    </dl>
+                    <p>Перетягніть кути, щоб змінити розмір. Джерела вгорі покривають ті, що знаходяться нижче. Використовуйте око, щоб сховатися, і замок, щоб запобігти руху.</p>
+                    <details><summary>Перемикання сцен і macOS</summary>
+                        <p>На macOS використовуйте <strong>Знімок екрана macOS</strong> для вікна або дисплея.</p>
+                        <p>Зміни сцени зазвичай виводяться безпосередньо. <strong>Режим студії</strong> дозволяє підготувати сцену, потім натисніть <strong>Перехід</strong>. Зміни спільного джерела та аудіо все ще можуть впливати на живий вихід.</p>
+                        <p>Виберіть <strong>Додати наявні</strong> , щоб повторно використати джерело в іншій сцені.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-sources.png"><img src="../../docs/images/guides/obs-studio-sources.png" width="265" height="580" loading="lazy" alt="Меню джерела OBS зі списком ігрового захоплення, браузера та пристрою захоплення відео"></a>
+                    <figcaption>Виберіть, що знімати. <a href="https://obsproject.com/kb/quick-start-guide">Знімок екрана: проект OBS</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="video">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">03</span><h2>Виберіть розмір відео</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <p>Відкрити <strong>Налаштування → Відео</strong>.</p>
+                    <dl class="obs-facts">
+                        <div><dt>Полотно</dt><dd>Розмір вашого макета</dd></div>
+                        <div><dt>Вихід</dt><dd>Відео, яке ви надсилаєте</dd></div>
+                        <div><dt>30 FPS</dt><dd>Розмова/менше навантаження</dd></div>
+                        <div><dt>60 FPS</dt><dd>Більш плавний швидкий рух</dd></div>
+                    </dl>
+                    <p class="obs-note">Простий початок: <strong>Полотно 1920 × 1080</strong>, <strong>Вихід 1280 × 720</strong>, <strong>30 FPS</strong>.</p>
+                    <p class="obs-small">Для портретного відео використовуйте полотно 1080 × 1920 і переставте джерела відповідно до розміру.</p>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-video.png"><img src="../../docs/images/guides/obs-studio-video.png" width="983" height="758" loading="lazy" alt="OBS Параметри відео з полями «Базова роздільна здатність полотна», «Вихідна масштабована роздільна здатність» і «FPS»"></a>
+                    <figcaption>Змініть вихід на потік із меншим розміром. <a href="https://obsproject.com/kb/obs-studio-overview">Знімок екрана: проект OBS</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="encoders">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">04</span><h2>Дайте процесору перерву</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <p>У розділі <strong>Параметри → Вивід</strong>, виберіть обладнання <strong>H.264</strong> кодер. Спеціальне обладнання обробляє стиснення відео, зменшуючи використання ЦП.</p>
+                    <dl class="obs-facts">
+                        <div><dt>NVIDIA</dt><dd>NVENC H.264</dd></div>
+                        <div><dt>драм</dt><dd>AMD HW H.264 / AVC</dd></div>
+                        <div><dt>Intel</dt><dd>QuickSync / QSV H.264</dd></div>
+                        <div><dt>Apple Silicon</dt><dd>Обладнання Apple VT H264</dd></div>
+                    </dl>
+                    <p>Немає апаратного забезпечення? використання <strong>x264 → дуже швидко</strong> і починати з 720p30.</p>
+                    <details><summary>Відсутній кодер чи перевантажений комп’ютер?</summary>
+                        <p>Перевірте підтримку апаратного забезпечення та оновіть графічний драйвер. OBS все ще потребує потужності GPU для малювання сцен; обмеження FPS гри або зниження вихідного FPS, якщо він відстає.</p>
+                        <p>Якщо апаратний кодер вашого Mac не може забезпечити CBR, використовуйте x264. <a href="https://obsproject.com/kb/hardware-encoding">Сумісність кодера</a>.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-output.png"><img src="../../docs/images/guides/obs-studio-output.png" width="977" height="759" loading="lazy" alt="OBS Параметри виведення з вибраним апаратним кодувальником NVENC H.264"></a>
+                    <figcaption>Виберіть свій кодер тут; використовуйте бітрейт платформи нижче. <a href="https://obsproject.com/kb/standard-recording-output-guide">Знімок екрана: проект OBS</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="platforms">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">05</span><h2>Підключіть свою платформу</h2></div>
+            <p><strong>Налаштування → Потік:</strong> підключіть свій обліковий запис або вставте URL-адресу сервера та закритий ключ потоку з його інформаційної панелі.</p>
+            <p>Для налаштувань виведення вручну виберіть <strong>Вивід → Додатково → Потокове передавання</strong>: <strong>CBR</strong>, <strong>2-секундні ключові кадри</strong>, і <strong>Стерео AAC</strong>. Відкрийте свою платформу нижче.</p>
+            <div class="obs-platforms">
+                <details><summary>Twitch<span>Стандарт H.264</span></summary>
+                    <table><caption>Бітрейт відео · кбіт/с</caption><thead><tr><th scope="col">Відео</th><th scope="col">Бітрейт</th></tr></thead><tbody>
+                        <tr><td>720p30</td><td>3,000</td></tr><tr><td>720p60 / 1080p30</td><td>4,500</td></tr><tr><td>1080p60</td><td>6,000</td></tr>
+                    </tbody></table>
+                    <p>Аудіо: до 160 кбіт/с. <a href="https://help.twitch.tv/s/article/broadcasting-guidelines?language=en_US">Налаштування Twitch</a>.</p>
+                    <p><a href="https://help.twitch.tv/s/article/enhanced-broadcasting?language=en_US">Розширене мовлення</a> надсилає різні якості та потребує окремого бюджету пропускної здатності.</p>
+                </details>
+                <details><summary>YouTube<span>Рекомендовані цілі H.264</span></summary>
+                    <table><caption>Бітрейт відео · кбіт/с</caption><thead><tr><th scope="col">Відео</th><th scope="col">Бітрейт</th></tr></thead><tbody>
+                        <tr><td>720p30/60</td><td>8,000</td></tr><tr><td>1080p30</td><td>14,000</td></tr><tr><td>1080p60</td><td>17,000</td></tr>
+                    </tbody></table>
+                    <p>Аудіо: 128 кбіт/с, стерео 44,1 kHz. Це рекомендації, а не мінімуми. <a href="https://support.google.com/youtube/answer/2853702?hl=en">Налаштування YouTube</a>.</p>
+                    <p>З підтримуваним кодуванням AV1 / HEVC відповідні цілі становлять 6000 / 10 000 / 12 000 Кбіт/с.</p>
+                </details>
+                <details><summary>Kick<span>H.264 · Потрібен CBR</span></summary>
+                    <table><caption>Бітрейт відео · кбіт/с</caption><thead><tr><th scope="col">Відео</th><th scope="col">Бітрейт</th></tr></thead><tbody>
+                        <tr><td>Спробуйте 720p30</td><td>3,000–4,000</td></tr><tr><td>До 1080p60</td><td>8000 макс.</td></tr>
+                    </tbody></table>
+                    <p>Нижній діапазон є рекомендованим початковим тестом. Спробуйте аудіо 160 Кбіт/с; використовуйте стерео не більше 48 kHz. <a href="https://help.kick.com/en/articles/7066931-how-to-stream-on-kick-com">Налаштування удару</a>.</p>
+                </details>
+            </div>
+            <p class="obs-note"><strong>Залиште запас для завантаження.</strong> 6000 Кбіт/с використовує приблизно 6 Мбіт/с, а також аудіо та додаткові витрати. Знизьте бітрейт або роздільну здатність, якщо ваше з’єднання не встигає.</p>
+            <p class="obs-small">Рекомендації від жовтня 2026 р. Дотримуйтеся поточних вимог вашої платформи. Для Facebook або TikTok спочатку переконайтеся, що ваш обліковий запис пропонує підключення зовнішнього кодера.</p>
+        </section>
+
+        <section class="obs-step" id="mixing">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">06</span><h2>Зробіть свій голос легким для слуху</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Виберіть свій мікрофон <strong>Налаштування → Аудіо</strong>.</li>
+                        <li>Говоріть нормально. Прагніть до вершин навколо <strong>від −12 до −6 dBFS</strong>; уникайте попадання 0.</li>
+                        <li>Опускайте повзунки гри, музики та сповіщень, доки мова не стане чіткою.</li>
+                    </ol>
+                    <p><strong>Захоплюйте кожен звук один раз.</strong> Використовуйте Desktop Audio для всього пристрою виводу або окреме програмне захоплення. Захоплення обох може подвоїти звук.</p>
+                    <details><summary>Аудіо програми, macOS і фільтри мікрофона</summary>
+                        <p>Windows: використання <a href="https://obsproject.com/kb/application-audio-capture-guide">Захоплення звуку програми</a>. На macOS 13+ використовуйте OBS <a href="https://obsproject.com/kb/macos-desktop-audio-capture-guide">macOS аудіо/зйомка екрана</a>.</p>
+                        <p>Мікрофон → <strong>Фільтри</strong>: спробуйте придушення легкого шуму, потім компресор і лімітер. Додавайте по одному й слухайте.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-mixer.png"><img src="../../docs/images/guides/obs-studio-mixer.png" width="265" height="378" loading="lazy" alt="Аудіомікшер OBS з окремими вимірювачами, повзунками гучності та елементами керування відключенням звуку"></a>
+                    <figcaption>Лічильники показують рівень сигналу; повзунки змінюють суміш. <a href="https://obsproject.com/kb/quick-start-guide">Знімок екрана: проект OBS</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="monitoring">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">07</span><h2>Виберіть те, що ви чуєте</h2></div>
+            <p>Виберіть навушники <strong>Налаштування → Аудіо → Додатково → Пристрій моніторингу</strong>. Потім відкрийте міксер <strong>Розширені властивості звуку (Advanced Audio Properties)</strong>.</p>
+            <div class="obs-routing">
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 21h8m-4-5v5"/></svg>
+                    <h3>Монітор вимкнено</h3><p><strong>Навушники</strong> Ні<br><strong>Потік</strong> Так</p><p>Зазвичай підходить для вашого мікрофона та ігор, які ви вже чуєте.</p>
+                </div>
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 14V11a8 8 0 0 1 16 0v3"/><rect x="3" y="12" width="4" height="9" rx="2"/><rect x="17" y="12" width="4" height="9" rx="2"/></svg>
+                    <h3>Лише моніторинг (без виходу) — Monitor Only (mute output)</h3><p><strong>Навушники</strong> Так<br><strong>Потік</strong> Ні</p><p>Прослуховування без надсилання джерела безпосередньо на вихід.</p>
+                </div>
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M11 4 5 9H2v6h3l6 5Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg>
+                    <h3>Моніторинг і виведення (Monitor and Output)</h3><p><strong>Навушники</strong> Так<br><strong>Потік</strong> Так</p><p>Корисно для сповіщень або TTS, які ви також хочете почути.</p>
+                </div>
+            </div>
+            <p class="obs-small">Припускає, що джерело вимкнуто та на вихідній доріжці. «Monitor Off» не вимикає потік.</p>
+            <p class="obs-note"><strong>Уникайте відлуння:</strong> більше не знімайте свій пристрій моніторингу через Desktop Audio. Це також може надсилати аудіо «Лише монітор» глядачам. Вимкніть живий програвач платформи.</p>
+        </section>
+
+        <section class="obs-step" id="browser-sources">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">08</span><h2>Додайте чат або накладення сповіщень</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Скопіюйте накладену URL-адресу з Social Stream Ninja.</li>
+                        <li>Виберіть <strong>Sources → + → Browser</strong> і вставте його. Зберігайте параметри сеансу та пароля.</li>
+                        <li>Встановити розмір накладання; використовувати <strong>1920 × 1080</strong> для повнокадрового пейзажного накладання.</li>
+                        <li>Увімкніть для TTS або сповіщень <strong>Керувати звуком через OBS (Control audio via OBS)</strong>.</li>
+                    </ol>
+                    <p>Розмістіть його над грою або камерою. Надіслати тестове повідомлення; виберіть один у панелі SSN, якщо використовуєте накладення пропонованих повідомлень.</p>
+                    <details><summary>Порожнє накладання чи повторюване аудіо?</summary>
+                        <p>Перевірте, чи сеанс відповідає вашому джерелу чату. Оновіть вихідний код браузера. Зберігайте лише одну копію відтворення TTS.</p>
+                        <p>Для постійного чату спочатку вимкніть автоматичне вимкнення та оновлення сцени. <a href="obs-quick-start.html">Налаштування накладання SSN</a> · <a href="tts-setup-guide.html">Налаштування TTS</a>.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-browser-source-properties.png"><img src="../../docs/images/guides/obs-browser-source-properties.png" width="1468" height="1232" loading="lazy" alt="Властивості джерела браузера з URL-адресою, шириною, висотою та керування аудіо через OBS"></a>
+                    <figcaption>Замініть URL-адресу та розмір за замовчуванням налаштуваннями накладання.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="recording">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">09</span><h2>Запишіть хвилину. Тоді йди в прямому ефірі.</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Виберіть папку для запису <strong>Параметри → Вивід</strong>.</li>
+                        <li>Преса <strong>Почати запис (Start Recording)</strong>. Розмовляйте, відтворюйте звук і змінюйте сцени.</li>
+                        <li>Зупиніть і перегляньте файл. Перевірте гучність, кадрування та синхронізацію губ.</li>
+                        <li>Тоді встановіть назву та видимість вашої платформи <strong>Почати трансляцію (Start Streaming)</strong>. Перевірте його попередній перегляд і стан трансляції; деякі платформи також вимагають <strong>Почати трансляцію</strong>.</li>
+                    </ol>
+                    <p><strong>Початок потокового передавання може зробити вас публічним.</strong> Використовуйте приватний тест, якщо це можливо. Після завершення зупиніть трансляцію та підтвердьте, що подія платформи завершилася.</p>
+                    <details><summary>Формат запису та окремі звукові доріжки</summary>
+                        <p>MKV допускає переривання запису. використання <strong>Файл → Записи Remux</strong> для MP4 згодом. Поточний OBS також пропонує стійкий гібридний MP4/MOV.</p>
+                        <p>Для окремого редагування доріжок збережіть повний мікс на доріжці 1, потім призначте мікрофон/гру для додаткових доріжок у Advanced Audio Properties і ввімкніть їх у розділі Recording.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-controls.png"><img src="../../docs/images/guides/obs-studio-controls.png" width="265" height="262" loading="lazy" alt="OBS Елементи керування за допомогою кнопок «Почати трансляцію», «Почати запис», «Студійний режим» і «Налаштування»"></a>
+                    <figcaption>Запис зберігає файл; потокове передавання на вашу платформу. <a href="https://obsproject.com/kb/quick-start-guide">Знімок екрана: проект OBS</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="troubleshooting">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">10</span><h2>Якщо щось виглядає не так</h2></div>
+            <p>Відкрити <strong>Перегляд → Статистика</strong> для виявлення вузького місця.</p>
+            <div class="obs-fixes">
+                <p><strong>Зриви мережі</strong><br>Нижчий бітрейт; спробуйте дротовий Ethernet.</p>
+                <p><strong>Затримка візуалізації</strong><br>Cap game FPS; спростити сцену.</p>
+                <p><strong>Затримка кодування</strong><br>Використовуйте апаратне кодування або нижчий вихід FPS.</p>
+                <p><strong>Тихий вихід</strong><br>Перевірте вимкнення звуку, режим моніторингу та звукову доріжку.</p>
+            </div>
+            <p class="obs-small"><a href="https://obsproject.com/kb/encoding-performance-troubleshooting">Довідка щодо продуктивності OBS</a> · <a href="obs-troubleshooting.html">Довідка по накладенню SSN</a> · <a href="guides.html#guide-directory">Усі посібники</a></p>
+        </section>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja · <a href="guides.html">Посібники</a> · <a href="support.html">Підтримка</a></p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

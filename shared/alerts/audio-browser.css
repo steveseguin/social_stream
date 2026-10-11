@@ -1,0 +1,47 @@
+:root { color-scheme:dark; --bg:#101522; --panel:#1b2333; --text:#edf3ff; --muted:#b5c1d5; --line:#526178; --accent:#99d9ef; --button:#233d53; }
+:root.light { color-scheme:light; --bg:#f5f7fc; --panel:#fff; --text:#162638; --muted:#4e6075; --line:#9baabd; --accent:#155775; --button:#dceff8; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+header,main { max-width:1280px; margin:auto; padding:24px 28px; }
+header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding-bottom:8px; }
+.brand { color:var(--accent); text-decoration:none; font-size:11px; letter-spacing:.14em; font-weight:750; }
+h1 { margin:10px 0 3px; font-size:34px; line-height:1.2; letter-spacing:-.025em; }
+header p { margin:6px 0; color:var(--muted); }
+main { padding-top:12px; padding-bottom:145px; }
+button,input,select { font:inherit; }
+button,select,input[type=search] { border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--text); min-height:38px; }
+button { cursor:pointer; padding:7px 12px; }
+button:hover { border-color:var(--accent); background:var(--button); }
+button:disabled { opacity:.55; cursor:default; }
+button:focus,a:focus,input:focus,select:focus { outline:3px solid var(--accent); outline-offset:3px; }
+label { display:flex; flex-direction:column; gap:5px; color:var(--muted); font-size:12px; font-weight:600; }
+input[type=search] { width:100%; padding:12px 14px; font-size:16px; }
+.filters { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px; margin-top:12px; }
+select { width:100%; padding:5px 8px; }
+.results-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:12px 0; }
+.results-bar p { margin:0; color:var(--muted); }
+.sound-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(245px,1fr)); gap:12px; }
+.sound-card { padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--panel); min-width:0; display:flex; flex-direction:column; }
+.sound-card.is-playing { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+.sound-card.is-selected { border-style:dashed; }
+.card-top { display:flex; gap:12px; align-items:center; }
+.sound-art { flex:none; width:62px; height:62px; border-radius:10px; background-color:#172133; background-image:url('../../media/audio/catalog-art.webp'); background-size:300% 300%; }
+.sound-card h2 { font-size:15px; line-height:1.35; margin:0 0 5px; overflow-wrap:anywhere; }
+.sound-meta { font-size:12px; color:var(--muted); margin:0; }
+.sound-description { font-size:13px; color:var(--muted); margin:12px 0; flex:1; }
+.card-actions { display:flex; align-items:center; }
+.card-actions button+button { margin-left:6px; }
+.card-actions button { font-size:13px; padding:6px 9px; }
+.use-sound { background:var(--button); flex:1; }
+.favorite { font-size:20px !important; min-width:38px; }
+.favorite[aria-pressed=true] { color:var(--accent); }
+#more { display:block; margin:22px auto 0; }
+[hidden],#more[hidden] { display:none !important; }
+.player { position:fixed; bottom:0; left:0; right:0; z-index:2; background:var(--panel); border-top:1px solid var(--line); padding:15px 28px; display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.player strong,.player span { display:block; }
+.player span { font-size:12px; color:var(--muted); }
+.player label { min-width:150px; }
+.player output { font-size:12px; }
+input[type=range] { accent-color:var(--accent); max-width:190px; }
+@media(max-width:850px) { .filters { grid-template-columns:repeat(3,minmax(0,1fr)); } header,main { padding-left:16px; padding-right:16px; } }
+@media(max-width:500px) { h1 { font-size:27px; } .filters { grid-template-columns:repeat(2,minmax(0,1fr)); } .sound-grid { grid-template-columns:1fr; } .player { padding:10px 14px; gap:10px; flex-wrap:wrap; } .player>div { width:100%; } .player label { flex-direction:row; align-items:center; font-size:11px; } input[type=range] { width:90px; } }

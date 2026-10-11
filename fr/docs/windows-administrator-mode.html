@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="fr" data-site-root="../../" data-site-language="fr">
+	<head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:url" content="https://socialstream.ninja/fr/docs/windows-administrator-mode.html">
+    <meta property="og:title" content="OBS et SSN en admin sous Windows - Social Stream Ninja">
+    <meta property="og:description" content="Tester ou activer durablement le mode administrateur Windows pour OBS Studio et l’application Social Stream Ninja, puis le désactiver.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/fr/docs/windows-administrator-mode.html">
+    <meta name="twitter:title" content="OBS et SSN en admin sous Windows - Social Stream Ninja">
+    <meta name="twitter:description" content="Tester ou activer durablement le mode administrateur Windows pour OBS Studio et l’application Social Stream Ninja, puis le désactiver.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem("darkMode");
+				var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+				if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+					document.documentElement.classList.add("dark-mode");
+				}
+			})();
+		</script>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>OBS et SSN en admin sous Windows - Social Stream Ninja</title>
+		<link rel="stylesheet" href="../../docs/css/styles.css" />
+		<link rel="stylesheet" href="../../docs/css/guides.css" />
+		<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon" />
+		<meta name="description" content="Tester ou activer durablement le mode administrateur Windows pour OBS Studio et l’application Social Stream Ninja, puis le désactiver.">
+		<link rel="canonical" href="https://socialstream.ninja/fr/docs/windows-administrator-mode.html">
+		<style>
+			.admin-screenshot {
+				width: min(100%, 43.2rem);
+				margin-left: auto;
+				margin-right: auto;
+			}
+		</style>
+	<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="fr">
+<script id="ssn-site-language" type="application/json">{"language":"fr","page":"docs/windows-administrator-mode.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Passer au thème clair","Switch to dark theme":"Passer au thème sombre","Light mode":"Mode clair","Dark mode":"Mode sombre","Open navigation menu":"Ouvrir le menu de navigation","Close navigation menu":"Fermer le menu de navigation","Copy this document as Markdown to the clipboard":"Copier ce document au format Markdown dans le presse-papiers","Copy Markdown":"Copier le Markdown","Copying…":"Copie en cours…","Markdown copied":"Markdown copié","Copy failed":"Échec de la copie","Copy comprehensive Markdown for an AI assistant":"Copier le Markdown complet pour un assistant IA","Copy this documentation page as Markdown for an AI assistant":"Copier cette page de documentation en Markdown pour un assistant IA"},"strings":{", and approve its prompt too.":", et approuvez aussi son invite.",", not by administrator mode.":", pas avec le mode administrateur.",", then choose":", puis choisissez",". If Windows opens another shortcut, right-click that shortcut and choose":". Si Windows ouvre un autre raccourci, faites un clic droit dessus et choisissez","A blank unified chat, an old Browser Source URL, or a stale OBS cache is usually fixed by":"Un chat unifié vide, une ancienne URL de source Navigateur ou un cache OBS périmé se corrige généralement en","A typical per-user installation is:":"Une installation habituelle par utilisateur se trouve à :","Always Run OBS As Administrator":"Toujours exécuter OBS en tant qu’administrateur","Always Run Social Stream As Administrator":"Toujours exécuter Social Stream en tant qu’administrateur","Apply":"Appliquer","Approve the Windows User Account Control prompt.":"Approuvez l’invite du contrôle de compte d’utilisateur Windows.","Clear":"Effacer","Close OBS Studio and the Social Stream desktop app.":"Fermez OBS Studio et l’application de bureau Social Stream.","Close OBS Studio.":"Fermez OBS Studio.","Close Social Stream.":"Fermez Social Stream.","Close the app.":"Fermez l’application.","Commands & API":"Commandes et API","Compatibility":"Compatibilité","Do not disable User Account Control. For background on elevated applications, see":"Ne désactivez pas le contrôle de compte d’utilisateur. Pour comprendre les applications aux privilèges élevés, consultez","Do the same for the other app so OBS and Social Stream return to the same normal privilege level.":"Faites de même pour l’autre application afin qu’OBS et Social Stream retrouvent le même niveau de privilèges normal.","Download":"Télécharger","Features":"Fonctionnalités","Guides":"Guides","Hire":"Faire appel à nos services","Home":"Accueil","How to test or permanently enable Windows administrator mode for OBS Studio and the Social Stream Ninja desktop app, and how to turn it off again.":"Tester ou activer durablement le mode administrateur Windows pour OBS Studio et l’application Social Stream Ninja, puis le désactiver.","If one app is elevated and the other is not, Windows can limit how they interact. For a permission-mismatch test, close both apps first and run both at the same privilege level.":"Si une application a des privilèges élevés et l’autre non, Windows peut limiter leurs interactions. Pour tester une différence d’autorisations, fermez d’abord les deux applications puis lancez-les au même niveau de privilèges.","If you are testing a mismatch between the two apps, right-click the Social Stream shortcut, choose":"Si vous testez une différence entre les deux applications, faites un clic droit sur le raccourci Social Stream, choisissez","Inspiration":"Inspiration","It confirms whether elevation matters without permanently changing either app.":"Cela vérifie si l’élévation des privilèges joue un rôle sans modifier durablement l’une ou l’autre application.","Main navigation":"Navigation principale","Microsoft's administrator mode explanation":"l’explication Microsoft du mode administrateur","OBS and Social Stream normally should not need administrator access.":"OBS et Social Stream ne devraient normalement pas nécessiter d’accès administrateur.","OK":"OK","On this page":"Sur cette page","One-Time Administrator Test":"Test administrateur ponctuel","Only Use This For A Confirmed Permission Problem":"À utiliser uniquement pour un problème d’autorisation confirmé","Open file location":"Ouvrir l’emplacement du fichier","Open navigation menu":"Ouvrir le menu de navigation","Open the":"Ouvrez :","Open the executable's":"Ouvrez les propriétés de l’exécutable","Overlay Gallery":"Galerie d’incrustations","Prefer this test first.":"Privilégiez d’abord ce test.","Properties":"Propriétés","Properties → Compatibility":"Propriétés → Compatibilité","Repeat the exact workflow that previously failed. When finished, close both apps; the one-time elevation ends when they exit.":"Reproduisez exactement la procédure qui échouait. Ensuite, fermez les deux applications ; l’élévation ponctuelle prend fin lorsqu’elles se ferment.","Right-click":"Faites un clic droit sur","Right-click its shortcut and choose":"Faites un clic droit sur son raccourci et choisissez","Right-click the OBS Studio shortcut and choose":"Faites un clic droit sur le raccourci OBS Studio et choisissez","Run OBS and Social Stream as Administrator":"Exécuter OBS et Social Stream en tant qu'administrateur","Run OBS and Social Stream as Administrator on Windows - Social Stream Ninja":"OBS et SSN en admin sous Windows - Social Stream Ninja","Run as administrator":"Exécuter en tant qu’administrateur","Run this program as an administrator":"Exécuter ce programme en tant qu’administrateur","Select":"Sélectionnez","Select the unchecked administrator checkbox shown for OBS Studio. This screenshot was captured from the current Windows app properties without changing the setting.":"Cochez la case administrateur actuellement vide d’OBS Studio. Cette capture provient des propriétés Windows actuelles de l’application, sans modification du réglage.","Select the unchecked administrator checkbox shown for the Social Stream desktop app. This screenshot was captured from the current Windows app properties without changing the setting.":"Cochez la case administrateur actuellement vide de l’application de bureau Social Stream. Cette capture provient des propriétés Windows actuelles de l’application, sans modification du réglage.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Start both normally unless a Windows privilege mismatch has been confirmed or support has specifically asked you to test this.":"Démarrez les deux normalement, sauf si une différence de privilèges Windows a été confirmée ou si l’assistance vous a explicitement demandé ce test.","Support":"Assistance","Supported Sites":"Sites pris en charge","Switch theme":"Changer de thème","The default 64-bit OBS path is commonly:":"Le chemin habituel d’OBS 64 bits par défaut est :","Turn Administrator Mode Off Again":"Désactiver à nouveau le mode administrateur","Windows Compatibility tab for obs64.exe showing Run this program as an administrator":"Onglet Compatibilité de Windows pour obs64.exe affichant Exécuter ce programme en tant qu’administrateur","Windows Compatibility tab for socialstream.exe showing Run this program as an administrator":"Onglet Compatibilité de Windows pour socialstream.exe affichant Exécuter ce programme en tant qu’administrateur","Windows steps for a one-time test or a persistent setting, with matching examples for both apps.":"Étapes Windows pour un test ponctuel ou un réglage permanent, avec des exemples correspondants pour les deux applications.","Your path may differ for portable or custom installations.":"Le chemin peut différer pour une installation portable ou personnalisée.","Your path may differ if you chose another installation location.":"Le chemin peut différer si vous avez choisi un autre emplacement d’installation.","again.":"à nouveau.","and":"et","and choose":"et choisissez","obs64.exe":"obs64.exe","replacing the URL and refreshing the cache":"remplaçant l’URL et actualisant le cache","socialstream.exe":"socialstream.exe","tab.":"onglet."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/windows-administrator-mode.html">
+<!-- ssn-languages:end --></head>
+	<body class="visual-guide">
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navigation principale"><a href="../index.html">Accueil</a><a href="features.html">Fonctionnalités</a><a href="inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="download.html">Télécharger</a><a href="guides.html">Guides</a><a href="commands.html">Commandes et API</a><a href="supported-sites.html">Sites pris en charge</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie d’incrustations</a><a href="services.html" class="site-priority-hire">Faire appel à nos services</a><a href="support.html">Assistance</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Français"><span aria-hidden="true">🌐 </span><span lang="fr">Français</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/windows-administrator-mode.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/windows-administrator-mode.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/windows-administrator-mode.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/windows-administrator-mode.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="windows-administrator-mode.html" lang="fr" hreflang="fr" aria-current="true">Français</a><a class="site-language-link" href="../../de/docs/windows-administrator-mode.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/windows-administrator-mode.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/windows-administrator-mode.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/windows-administrator-mode.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/windows-administrator-mode.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/windows-administrator-mode.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/windows-administrator-mode.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/windows-administrator-mode.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/windows-administrator-mode.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/windows-administrator-mode.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/windows-administrator-mode.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/windows-administrator-mode.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Changer de thème"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Ouvrir le menu de navigation" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+		<section class="page-hero">
+			<div class="container">
+				<h1>Exécuter OBS et Social Stream en tant qu'administrateur</h1>
+				<p>Étapes Windows pour un test ponctuel ou un réglage permanent, avec des exemples correspondants pour les deux applications.</p>
+			</div>
+		</section>
+
+		<main class="guide-section">
+			<div class="container">
+				<nav class="guide-jump-links" aria-label="Sur cette page"><a href="#read-section-1">À utiliser uniquement pour un problème d’autorisation confirmé</a><a href="#read-section-2">Test administrateur ponctuel</a><a href="#read-section-3">Toujours exécuter Social Stream en tant qu’administrateur</a><a href="#read-section-4">Toujours exécuter OBS en tant qu’administrateur</a><a href="#read-section-5">Désactiver à nouveau le mode administrateur</a></nav>
+<div class="guide-card">
+					<h2 id="read-section-1">À utiliser uniquement pour un problème d’autorisation confirmé</h2>
+					<div class="warning-note">
+						<p><strong>OBS et Social Stream ne devraient normalement pas nécessiter d’accès administrateur.</strong> Démarrez les deux normalement, sauf si une différence de privilèges Windows a été confirmée ou si l’assistance vous a explicitement demandé ce test.</p>
+					</div>
+					<p>Un chat unifié vide, une ancienne URL de source Navigateur ou un cache OBS périmé se corrige généralement en <a href="obs-troubleshooting.html#replace-url-and-cache">remplaçant l’URL et actualisant le cache</a>, pas avec le mode administrateur.</p>
+					<p>Si une application a des privilèges élevés et l’autre non, Windows peut limiter leurs interactions. Pour tester une différence d’autorisations, fermez d’abord les deux applications puis lancez-les au même niveau de privilèges.</p>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="read-section-2">Test administrateur ponctuel</h2>
+					<ol class="guide-steps">
+						<li>Fermez OBS Studio et l’application de bureau Social Stream.</li>
+						<li>Faites un clic droit sur le raccourci OBS Studio et choisissez <strong>Exécuter en tant qu’administrateur</strong>.</li>
+						<li>Approuvez l’invite du contrôle de compte d’utilisateur Windows.</li>
+						<li>Si vous testez une différence entre les deux applications, faites un clic droit sur le raccourci Social Stream, choisissez <strong>Exécuter en tant qu’administrateur</strong>, et approuvez aussi son invite.</li>
+						<li>Reproduisez exactement la procédure qui échouait. Ensuite, fermez les deux applications ; l’élévation ponctuelle prend fin lorsqu’elles se ferment.</li>
+					</ol>
+					<div class="guide-note">
+						<p><strong>Privilégiez d’abord ce test.</strong> Cela vérifie si l’élévation des privilèges joue un rôle sans modifier durablement l’une ou l’autre application.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="persistent-admin">
+					<h2 id="read-section-3">Toujours exécuter Social Stream en tant qu’administrateur</h2>
+					<ol class="guide-steps">
+						<li>Fermez Social Stream.</li>
+						<li>Faites un clic droit sur son raccourci et choisissez <strong>Ouvrir l’emplacement du fichier</strong>. Si Windows ouvre un autre raccourci, faites un clic droit dessus et choisissez <strong>Ouvrir l’emplacement du fichier</strong> à nouveau.</li>
+						<li>Faites un clic droit sur <strong>socialstream.exe</strong> et choisissez <strong>Propriétés</strong>.</li>
+						<li>Ouvrez : <strong>Compatibilité</strong> onglet.</li>
+						<li>Sélectionnez <strong>Exécuter ce programme en tant qu’administrateur</strong>, puis choisissez <strong>Appliquer</strong> et <strong>OK</strong>.</li>
+					</ol>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/windows-admin-ssapp-compatibility.jpg" alt="Onglet Compatibilité de Windows pour socialstream.exe affichant Exécuter ce programme en tant qu’administrateur" class="guide-image admin-screenshot" />
+						<figcaption>Cochez la case administrateur actuellement vide de l’application de bureau Social Stream. Cette capture provient des propriétés Windows actuelles de l’application, sans modification du réglage.</figcaption>
+					</figure>
+					<p>Une installation habituelle par utilisateur se trouve à :</p>
+					<pre><code>%LOCALAPPDATA%\Programs\socialstream\socialstream.exe</code></pre>
+					<p>Le chemin peut différer si vous avez choisi un autre emplacement d’installation.</p>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="read-section-4">Toujours exécuter OBS en tant qu’administrateur</h2>
+					<ol class="guide-steps">
+						<li>Fermez OBS Studio.</li>
+						<li>Faites un clic droit sur le raccourci OBS Studio et choisissez <strong>Ouvrir l’emplacement du fichier</strong>.</li>
+						<li>Faites un clic droit sur <strong>obs64.exe</strong> et choisissez <strong>Propriétés</strong>.</li>
+						<li>Ouvrez : <strong>Compatibilité</strong> onglet.</li>
+						<li>Sélectionnez <strong>Exécuter ce programme en tant qu’administrateur</strong>, puis choisissez <strong>Appliquer</strong> et <strong>OK</strong>.</li>
+					</ol>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/windows-admin-obs-compatibility.jpg" alt="Onglet Compatibilité de Windows pour obs64.exe affichant Exécuter ce programme en tant qu’administrateur" class="guide-image admin-screenshot" />
+						<figcaption>Cochez la case administrateur actuellement vide d’OBS Studio. Cette capture provient des propriétés Windows actuelles de l’application, sans modification du réglage.</figcaption>
+					</figure>
+					<p>Le chemin habituel d’OBS 64 bits par défaut est :</p>
+					<pre><code>%ProgramFiles%\obs-studio\bin\64bit\obs64.exe</code></pre>
+					<p>Le chemin peut différer pour une installation portable ou personnalisée.</p>
+				</div>
+
+				<div class="guide-card">
+					<h2 id="read-section-5">Désactiver à nouveau le mode administrateur</h2>
+					<ol class="guide-steps">
+						<li>Fermez l’application.</li>
+						<li>Ouvrez les propriétés de l’exécutable <strong>Propriétés → Compatibilité</strong> onglet.</li>
+						<li>Effacer <strong>Exécuter ce programme en tant qu’administrateur</strong>, puis choisissez <strong>Appliquer</strong> et <strong>OK</strong>.</li>
+						<li>Faites de même pour l’autre application afin qu’OBS et Social Stream retrouvent le même niveau de privilèges normal.</li>
+					</ol>
+					<p>Ne désactivez pas le contrôle de compte d’utilisateur. Pour comprendre les applications aux privilèges élevés, consultez <a href="https://learn.microsoft.com/en-us/windows/powertoys/administrator">l’explication Microsoft du mode administrateur</a>.</p>
+				</div>
+			</div>
+		</main>
+
+		<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. Licence GPLv3.0.</p></div></div></footer>
+		<script data-copy-markdown src="../../docs/js/main.js"></script>
+		<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+	</body>
+</html>

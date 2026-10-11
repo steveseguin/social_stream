@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+	<head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/cs/docs/source-types-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/cs/docs/source-types-guide.html">
+    <meta property="og:title" content="Typy zdrojů – Social Stream Ninja">
+    <meta property="og:description" content="Jak fungují názvy typů zdrojů Social Stream Ninja v datech zpráv, filtrech, Event Flow, zdrojích desktopové aplikace, vlastním zachytávání a odpovědích.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/cs/docs/source-types-guide.html">
+    <meta name="twitter:title" content="Typy zdrojů – Social Stream Ninja">
+    <meta name="twitter:description" content="Jak fungují názvy typů zdrojů Social Stream Ninja v datech zpráv, filtrech, Event Flow, zdrojích desktopové aplikace, vlastním zachytávání a odpovědích.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem("darkMode");
+				var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+				if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+					document.documentElement.classList.add("dark-mode");
+				}
+			})();
+		</script>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Typy zdrojů – Social Stream Ninja</title>
+		<link rel="stylesheet" href="../../docs/css/styles.css" />
+		<link rel="stylesheet" href="../../docs/css/guides.css" />
+		<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon" />
+		<meta name="description" content="Jak fungují názvy typů zdrojů Social Stream Ninja v datech zpráv, filtrech, Event Flow, zdrojích desktopové aplikace, vlastním zachytávání a odpovědích.">
+	<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/source-types-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{", and":", a",", chooses one or more":", vybere jeden nebo více",", opens a source window, and injects shared capture scripts from this project. A Chrome-runtime compatibility bridge carries captured messages and reply commands between the page and app.":", otevře okno zdroje a vloží společné skripty zachytávání z tohoto projektu. Most kompatibility s Chrome runtime přenáší zachycené zprávy a příkazy odpovědí mezi stránkou a aplikací.",", or":", nebo",", or legacy":", nebo starší",", or that capture mode cannot send chat.":", nebo daný režim zachytávání neumí odesílat do chatu.",", then normally derives a lowercase type from a known platform or the page hostname.":", poté obvykle odvodí typ malými písmeny ze známé platformy nebo názvu hostitele stránky.",", which emits":", který odesílá",", while payloads are normalized.":", zatímco data zpráv se normalizují.",". That usually separates incoming matching, outbound routing, and capture duplication.":". Tím se obvykle oddělí rozpoznávání příchozích zpráv, směrování odchozích zpráv a duplicitní zachytávání.",". Use":". Použijte",". Use the exact lowercase payload value.":". Použijte přesnou hodnotu z dat zprávy psanou malými písmeny.",": canonical fields and platform event names.":": kanonická pole a názvy událostí platforem.",": fallback and external capture.":": náhradní a externí zachytávání.",": platform names and setup requirements.":": názvy platforem a požadavky na nastavení.",": source contracts, injection helpers, manifests, and docs.":": specifikace zdrojů, pomocné funkce vkládání, manifesty a dokumentace.",": source-window and connection-mode behavior.":": chování oken zdrojů a režimů připojení.",": target, script, bridge, and reply-only internals.":": podrobnosti cíle, skriptu, mostu a režimu pouze pro odpovědi.",": triggers, actions, templates, reflection handling, and tests.":": spouštěče, akce, šablony, zpracování odražených zpráv a testy.","A display label, connection mode, or event name.":"Zobrazovaný název, režim připojení nebo název události.","A guarantee that every emitted payload has the same string.":"Zárukou, že všechny odeslané zprávy obsahují stejný řetězec.","A hostname-derived type is convenient, but not a permanent public contract. Confirm the emitted payload before building filters around it.":"Typ odvozený z názvu hostitele je praktický, ale není trvalou veřejnou specifikací. Než na něm založíte filtry, ověřte skutečně odesílaná data.","A platform type.":"Typ platformy.","A source cannot accept automated input, or a reflection is captured again.":"Zdroj nedokáže přijmout automatický vstup nebo se odražená zpráva zachytí znovu.","A source script's":"Hodnota ze skriptu zdroje","A target and script filename need not match the payload type. The":"Cíl ani název souboru skriptu se nemusí shodovat s typem v datech. Cíl","API/WebSocket modes may send through platform APIs instead of typing into the visible page.":"Režimy API/WebSocket mohou odesílat pomocí API platformy namísto psaní do viditelné stránky.","Action":"Akce","Adding a Source":"Přidání zdroje","An optional channel, room, or source display name.":"Volitelný zobrazovaný název kanálu, místnosti nebo zdroje.","Asks open sources whether they support that outbound destination.":"Ptá se otevřených zdrojů, zda podporují daný cíl odchozích zpráv.","Bilibili regional choices":"Regionální varianty Bilibili","Bilibili targets similarly map to shared/regional scripts while emitting":"Cíle Bilibili se podobně mapují na společné či regionální skripty, přičemž odesílají","Bot reply-only (no capture)":"Bot pouze pro odpovědi (bez zachytávání)","Both:":"Obojí:","Broadcasts to routeable sources and excludes the originating":"Rozesílá do zdrojů, kam lze zprávu směrovat, a vylučuje původní","Capture or UI Name":"Název zachytávání nebo v rozhraní","Commands & API":"Příkazy a API","Common Failure":"Běžná chyba","Common and Confusing Types":"Běžné a matoucí typy","Common and confusing names":"Běžné a matoucí názvy","Continue with the":"Pokračujte návodem","DOM, API polling, and WebSocket/streaming describe transport, not separate types.":"DOM, dotazování API a WebSocket/streamování popisují přenos, nikoli samostatné typy.","Desktop App Script Injection":"Vkládání skriptů v desktopové aplikaci","Desktop App Source Windows":"Okna zdrojů v desktopové aplikaci","Desktop app":"Desktopová aplikace","Desktop app script injection":"Vkládání skriptů v desktopové aplikaci","Desktop targets and scripts may say":"Cíle a skripty desktopové aplikace mohou uvádět","Destination":"Cíl","Do Not Confuse It With":"Nezaměňujte s","Do not expect reliable event, moderation, deletion, virtualized-list, or closed shadow-DOM support.":"Neočekávejte spolehlivou podporu událostí, moderování, mazání, virtualizovaných seznamů ani uzavřeného shadow DOM.","Download":"Stáhnout","Each desktop source keeps its own target, URL, connection mode, and capture script.":"Každý zdroj v desktopové aplikaci si uchovává vlastní cíl, URL, režim připojení a skript zachytávání.","Event Flow Guide":"Průvodce Event Flow","Event Flow's":"Funkce Event Flow","Event Reference":"Referenční příručka událostí","Existing filters may intentionally preserve the older name.":"Stávající filtry mohou záměrně zachovávat starší název.","Features":"Funkce","From Source":"Ze zdroje (From Source)","From Source =":"Ze zdroje =","From Source reads the incoming payload type; Relay Chat selects outbound source windows.":"Ze zdroje čte typ příchozích dat; Přeposlat chat vybírá okna zdrojů pro odchozí zprávy.","Generic and Custom Sources":"Obecné a vlastní zdroje","Generic capture can find and focus likely inputs, but that does not guarantee the site will accept an automated send.":"Obecné zachytávání může najít pravděpodobná vstupní pole a zaměřit je, ale nezaručuje, že web přijme automatické odeslání.","Generic, Custom, and Unnamed Sources":"Obecné, vlastní a nepojmenované zdroje","Generic, custom, and unnamed sources":"Obecné, vlastní a nepojmenované zdroje","Guides":"Návody","Hire":"Najmout odborníka","Home":"Domů","How It Chooses":"Jak vybírá","How Social Stream Ninja source type names work in payloads, filters, Event Flow, desktop app sources, custom capture, and replies.":"Jak fungují názvy typů zdrojů Social Stream Ninja v datech zpráv, filtrech, Event Flow, zdrojích desktopové aplikace, vlastním zachytávání a odpovědích.","If a source has no established platform name, choose one stable lowercase":"Pokud zdroj nemá zavedený název platformy, zvolte jednu stálou hodnotu malými písmeny","If no stable identity exists yet,":"Pokud zatím neexistuje stálá identita,","Important:":"Důležité:","In the desktop app,":"V desktopové aplikaci","Incoming identity and outbound capability are related, but they are not the same contract.":"Identita příchozích zpráv a schopnost odesílat spolu souvisejí, ale představují odlišné specifikace.","Incoming matching is exact:":"Porovnávání příchozích zpráv je přesné:","Inspiration":"Inspirace","Instagram Live / InstaFeed live":"Instagram Live / živý přenos InstaFeed","Instagram Live and Instagram comments":"Instagram Live a komentáře Instagramu","Instagram Live vs Instagram Comments":"Instagram Live a komentáře Instagramu","Instagram post and feed comments use":"Komentáře příspěvků a přehledu Instagramu používají","It is distinct for incoming filters and Event Flow relay destinations, while shared YouTube controls still treat both variants as one family where needed.":"Pro příchozí filtry a cíle přeposílání v Event Flow jde o samostatný typ, zatímco společné ovládání YouTube tam, kde je třeba, stále zachází s oběma variantami jako s jednou skupinou.","Live chat flow:":"Tok živého chatu:","Main navigation":"Hlavní navigace","Maintainers can trace setup in the desktop app's":"Správci mohou sledovat nastavení v desktopové aplikaci v","Meaning":"Význam","Name":"Název","No":"Ne","OBS system events":"Systémové události OBS","Older versions grouped both relay destinations, so two actions could send twice to each YouTube window. Update Social Stream Ninja if that happens. A Reflection Filter prevents relay loops, but it does not correct overlapping destination matching in those older versions.":"Starší verze seskupovaly oba cíle přeposílání, takže dvě akce mohly odeslat zprávu dvakrát do každého okna YouTube. Pokud k tomu dochází, aktualizujte Social Stream Ninja. Filtr odražených zpráv brání smyčkám přeposílání, ale neopravuje překrývající se rozpoznávání cílů v těchto starších verzích.","On This Page":"Na této stránce","Once users, overlays, or flows depend on a new type, document it in the":"Jakmile na novém typu závisí uživatelé, překryvy nebo toky, zdokumentujte jej v","Open navigation menu":"Otevřít navigační nabídku","Other YouTube-wide controls may intentionally handle both types as one platform family. This does not change the exact Event Flow matching above.":"Jiné ovládací prvky pro celé YouTube mohou záměrně zpracovávat oba typy jako jednu skupinu platforem. To nemění výše uvedené přesné porovnávání v Event Flow.","Outgoing matching is also exact:":"Porovnávání odchozích zpráv je také přesné:","Overlay Gallery":"Galerie překryvů","Payload Type":"Typ v datech zprávy","Post/comment flow:":"Tok příspěvků a komentářů:","Relay Chat treats them as separate destinations.":"Přeposlat chat s nimi zachází jako se samostatnými cíli.","Relay to a platform":"Přeposlat na platformu","Relay to all except source":"Přeposlat všem kromě zdroje","Reply to source":"Odpovědět zdroji","Replying and Relaying to Sources":"Odpovídání a přeposílání do zdrojů","Replying and relaying to sources":"Odpovídání a přeposílání do zdrojů","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Event Flow editor with connected trigger, filter, and action nodes":"Editor Event Flow v Social Stream Ninja s propojenými uzly spouštěče, filtru a akce","Social Stream Ninja desktop app source entries showing connection modes":"Položky zdrojů desktopové aplikace Social Stream Ninja zobrazující režimy připojení","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Source Types":"Typy zdrojů","Source Types - Social Stream Ninja":"Typy zdrojů – Social Stream Ninja","Source capture changes belong in this repository's":"Změny zachytávání zdrojů patří do souborů tohoto repozitáře","Standalone App Modes":"Režimy samostatné aplikace","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","Test reply support with one source window before building a multi-platform relay.":"Než vytvoříte přeposílání mezi více platformami, otestujte odpovědi v jednom okně zdroje.","The desktop app saves a source":"Desktopová aplikace ukládá pro zdroj","The incoming payload source, such as":"Zdroj příchozích dat, například","The originating tab or desktop source-window ID used for reply and source exclusion.":"ID původní karty nebo okna zdroje desktopové aplikace používané pro odpovědi a vyloučení zdroje.","The platform that produced it.":"Platforma, která jej vytvořila.","The saved category used to choose a URL, mode, and capture script.":"Uložená kategorie používaná k výběru URL, režimu a skriptu zachytávání.","The selected variant has no matching open source window, or the source cannot send chat.":"Vybraná varianta nemá odpovídající otevřené okno zdroje nebo zdroj neumí odesílat do chatu.","The stable value used by a From Source trigger.":"Stálá hodnota používaná spouštěčem Ze zdroje.","The visible Instagram brand is not enough to choose the type; the content context separates the two.":"Viditelná značka Instagram nestačí k určení typu; obě varianty rozlišuje kontext obsahu.","They are not chat sources, but can enter Event Flow with events such as":"Nejde o zdroje chatu, ale do Event Flow mohou vstupovat s událostmi jako","TikFinity":"TikFinity","TikFinity is the connector; the normalized platform remains TikTok.":"TikFinity je konektor; normalizovanou platformou zůstává TikTok.","To reach both, add one action for each destination or relay to all platforms excluding the source.":"Chcete-li oslovit oba cíle, přidejte pro každý samostatnou akci nebo přeposílejte na všechny platformy kromě zdroje.","Troubleshooting Older Versions":"Řešení problémů starších verzí","Use":"Použijte","Use it to prove that an ordinary DOM chat can be captured before writing a dedicated source.":"Než napíšete specializovaný zdroj, ověřte jím, že lze běžný chat v DOM zachytávat.","Use the":"Použijte","Use the payload's exact source name for incoming filters, and understand the destination family before sending chat back out.":"Pro příchozí filtry používejte přesný název zdroje z dat zprávy a před odesíláním zpět do chatu si ověřte, do jaké skupiny cíl patří.","Uses":"Používá","What Is a":"Co je","What a type is":"Co je typ","What happened, such as":"Co se stalo, například","When debugging, inspect one raw payload and record its":"Při ladění zkontrolujte jednu nezpracovanou zprávu a zaznamenejte její","When several scripts are injected, avoid making every helper claim the same outbound destination. Capture identity and reply capability are separate concerns.":"Při vkládání více skriptů se vyhněte tomu, aby si každá pomocná část nárokovala stejný cíl odchozích zpráv. Identita zachytávání a schopnost odpovídat jsou samostatné záležitosti.","Where to Find Exact Details":"Kde najdete přesné podrobnosti","Where to find exact details":"Kde najdete přesné podrobnosti","Why It May Be Surprising":"Co může překvapit","X":"X","YouTube Setup Guide":"Návod k nastavení YouTube","YouTube Shorts and Event Flow":"YouTube Shorts a Event Flow","YouTube Shorts live chat":"Živý chat YouTube Shorts","YouTube live chat":"Živý chat YouTube","and":"a","files are page-context helpers for sockets or page variables. The source wrapper remains responsible for the canonical payload.":"jsou pomocné soubory běžící v kontextu stránky pro sockety či proměnné stránky. Za kanonická data zpráv stále odpovídá obalový skript zdroje.","files. The desktop app consumes them; its packaged fallback copy is not the source of truth.":". Desktopová aplikace je používá; její přibalená záložní kopie není hlavním zdrojem pravdy.","for injection and bridging.":"pro vkládání a propojení mostem.","for live-room chat captured by the Instagram Live or InstaFeed live source. Use":"pro chat živých místností zachycený zdrojem Instagram Live nebo InstaFeed live. Použijte","for non-live feed, post, or static comments.":"pro neživé přehledy, příspěvky nebo statické komentáře.","for public platform setup names.":"pro veřejné názvy nastavení platforem.","for regular YouTube live chat.":"pro běžný živý chat YouTube.","for the field contract and":"pro specifikaci polí a","for the human-facing room or channel label.":"pro zobrazovaný název místnosti nebo kanálu.","from page context.":"z kontextu stránky.","in a From Source trigger for Shorts messages, and":"ve spouštěči Ze zdroje pro zprávy Shorts a","is a broad DOM-capture fallback. It looks for common chat rows, names, messages, avatars, and inputs. It starts with":"je obecný náhradní způsob zachytávání DOM. Hledá běžné řádky chatu, jména, zprávy, avatary a vstupní pole. Začíná s","is safer than changing type per message. External integrations commonly use a deliberate value such as":"je bezpečnější než měnit typ u každé zprávy. Externí integrace běžně používají záměrně zvolenou hodnotu, například","is the canonical source identifier on an incoming Social Stream payload. Overlays, URL filters, APIs, and Event Flow use it to tell platforms and source variants apart.":"je kanonický identifikátor zdroje v příchozích datech Social Stream. Překryvy, URL filtry, API a Event Flow jej používají k rozlišení platforem a variant zdrojů.","keeps a source available for replies/status while suppressing its normal captured messages.":"ponechává zdroj dostupný pro odpovědi a stav, ale potlačuje jeho běžné zachycené zprávy.","or":"nebo","rather than silently renaming it.":"namísto tichého přejmenování.","response is an outbound-routeability signal. Shared YouTube controls may group both variants, while Relay Chat adds exact Shorts URL context for destination matching.":"v odpovědi signalizuje možnost směrování odchozích zpráv. Společné ovládání YouTube může seskupovat obě varianty, zatímco Přeposlat chat přidává pro rozpoznání cíle přesný kontext URL Shorts.","sends only to YouTube Shorts live-chat windows.":"odesílá pouze do oken živého chatu YouTube Shorts.","sends only to regular YouTube live-chat windows.":"odesílá pouze do oken běžného živého chatu YouTube.","source-window creation, then":"vytváření oken zdrojů, poté","target loads":"cíl načítá","to address the exact originating tab/window.":"pro oslovení přesné původní karty nebo okna.","trigger compares its configured value directly with":"spouštěč porovnává svou nastavenou hodnotu přímo s","use":"použijte","use two triggers feeding one shared action, or an Any Source trigger followed by a type-aware filter.":"použijte dva spouštěče vedoucí do jedné společné akce nebo spouštěč Libovolný zdroj následovaný filtrem rozlišujícím typ.","with the Twitter-branding option":"s volbou značky Twitter"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/source-types-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/source-types-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/source-types-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/source-types-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/source-types-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/source-types-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/source-types-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/source-types-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/source-types-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/source-types-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/source-types-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/source-types-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/source-types-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/source-types-guide.html">
+<!-- ssn-languages:end --></head>
+	<body class="visual-guide">
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/source-types-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/source-types-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/source-types-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/source-types-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/source-types-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/source-types-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/source-types-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/source-types-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/source-types-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/source-types-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/source-types-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/source-types-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/source-types-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/source-types-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/source-types-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="source-types-guide.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/source-types-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+		<section class="page-hero">
+			<div class="container">
+				<h1>Typy zdrojů</h1>
+				<p>Pro příchozí filtry používejte přesný název zdroje z dat zprávy a před odesíláním zpět do chatu si ověřte, do jaké skupiny cíl patří.</p>
+			</div>
+		</section>
+		<main class="guide-section">
+			<div class="container">
+				<div class="guide-card">
+					<h2 id="read-section-1">Na této stránce</h2>
+					<ul class="guide-list">
+						<li><a href="#what-is-a-type">Co je typ</a></li>
+						<li><a href="#common-and-confusing-types">Běžné a matoucí názvy</a></li>
+						<li><a href="#youtube-shorts-event-flow">YouTube Shorts a Event Flow</a></li>
+						<li><a href="#instagram-live">Instagram Live a komentáře Instagramu</a></li>
+						<li><a href="#generic-and-unnamed-sources">Obecné, vlastní a nepojmenované zdroje</a></li>
+						<li><a href="#desktop-app-injection">Vkládání skriptů v desktopové aplikaci</a></li>
+						<li><a href="#replying-to-sources">Odpovídání a přeposílání do zdrojů</a></li>
+						<li><a href="#where-to-find-details">Kde najdete přesné podrobnosti</a></li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="what-is-a-type">
+					<h2 id="read-section-2">Co je <code>type</code>?</h2>
+					<p><code>type</code> je kanonický identifikátor zdroje v příchozích datech Social Stream. Překryvy, URL filtry, API a Event Flow jej používají k rozlišení platforem a variant zdrojů.</p>
+					<pre><code>{
+  "type": "youtubeshorts",
+  "chatname": "Ava",
+  "chatmessage": "Hello from Shorts"
+}</code></pre>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>Název</th>
+								<th>Význam</th>
+								<th>Nezaměňujte s</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Název"><code>type</code></td>
+								<td data-label="Význam">Zdroj příchozích dat, například <code>youtube</code> nebo <code>instagramlive</code>.</td>
+								<td data-label="Nezaměňujte s">Zobrazovaný název, režim připojení nebo název události.</td>
+							</tr>
+							<tr>
+								<td data-label="Název"><code>event</code></td>
+								<td data-label="Význam">Co se stalo, například <code>superchat</code>, <code>gift</code>, nebo <code>viewer_update</code>.</td>
+								<td data-label="Nezaměňujte s">Platforma, která jej vytvořila.</td>
+							</tr>
+							<tr>
+								<td data-label="Název"><code>sourceName</code></td>
+								<td data-label="Význam">Volitelný zobrazovaný název kanálu, místnosti nebo zdroje.</td>
+								<td data-label="Nezaměňujte s">Stálá hodnota používaná spouštěčem Ze zdroje.</td>
+							</tr>
+							<tr>
+								<td data-label="Název"><code>tid</code></td>
+								<td data-label="Význam">ID původní karty nebo okna zdroje desktopové aplikace používané pro odpovědi a vyloučení zdroje.</td>
+								<td data-label="Nezaměňujte s">Typ platformy.</td>
+							</tr>
+							<tr>
+								<td data-label="Název">Desktopová aplikace <code>target</code></td>
+								<td data-label="Význam">Uložená kategorie používaná k výběru URL, režimu a skriptu zachytávání.</td>
+								<td data-label="Nezaměňujte s">Zárukou, že všechny odeslané zprávy obsahují stejný řetězec.</td>
+							</tr>
+						</tbody>
+					</table>
+					<p><strong>Důležité:</strong> Funkce Event Flow <em>Ze zdroje (From Source)</em> spouštěč porovnává svou nastavenou hodnotu přímo s <code>message.type</code>. Použijte přesnou hodnotu z dat zprávy psanou malými písmeny.</p>
+				</div>
+
+				<div class="guide-card" id="common-and-confusing-types">
+					<h2 id="read-section-3">Běžné a matoucí typy</h2>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>Název zachytávání nebo v rozhraní</th>
+								<th>Typ v datech zprávy</th>
+								<th>Co může překvapit</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Název zachytávání nebo v rozhraní">Živý chat YouTube</td>
+								<td data-label="Typ v datech zprávy"><code>youtube</code></td>
+								<td data-label="Co může překvapit">DOM, dotazování API a WebSocket/streamování popisují přenos, nikoli samostatné typy.</td>
+							</tr>
+							<tr>
+								<td data-label="Název zachytávání nebo v rozhraní">Živý chat YouTube Shorts</td>
+								<td data-label="Typ v datech zprávy"><code>youtubeshorts</code></td>
+								<td data-label="Co může překvapit">Pro příchozí filtry a cíle přeposílání v Event Flow jde o samostatný typ, zatímco společné ovládání YouTube tam, kde je třeba, stále zachází s oběma variantami jako s jednou skupinou.</td>
+							</tr>
+							<tr>
+								<td data-label="Název zachytávání nebo v rozhraní">Instagram Live / živý přenos InstaFeed</td>
+								<td data-label="Typ v datech zprávy"><code>instagramlive</code></td>
+								<td data-label="Co může překvapit">Komentáře příspěvků a přehledu Instagramu používají <code>instagram</code>.</td>
+							</tr>
+							<tr>
+								<td data-label="Název zachytávání nebo v rozhraní">TikFinity</td>
+								<td data-label="Typ v datech zprávy"><code>tiktok</code></td>
+								<td data-label="Co může překvapit">TikFinity je konektor; normalizovanou platformou zůstává TikTok.</td>
+							</tr>
+							<tr>
+								<td data-label="Název zachytávání nebo v rozhraní">X</td>
+								<td data-label="Typ v datech zprávy"><code>x</code>, nebo starší <code>twitter</code> s volbou značky Twitter</td>
+								<td data-label="Co může překvapit">Stávající filtry mohou záměrně zachovávat starší název.</td>
+							</tr>
+							<tr>
+								<td data-label="Název zachytávání nebo v rozhraní">Regionální varianty Bilibili</td>
+								<td data-label="Typ v datech zprávy"><code>bilibili</code></td>
+								<td data-label="Co může překvapit">Cíle a skripty desktopové aplikace mohou uvádět <code>bilibilicom</code> nebo <code>bilibilitv</code>, zatímco data zpráv se normalizují.</td>
+							</tr>
+							<tr>
+								<td data-label="Název zachytávání nebo v rozhraní">Systémové události OBS</td>
+								<td data-label="Typ v datech zprávy"><code>obs</code></td>
+								<td data-label="Co může překvapit">Nejde o zdroje chatu, ale do Event Flow mohou vstupovat s událostmi jako <code>scene_changed</code>.</td>
+							</tr>
+						</tbody>
+					</table>
+					<p>Použijte <a href="event-reference.html">Referenční příručka událostí</a> pro specifikaci polí a <a href="supported-sites.html">Podporované weby</a> pro veřejné názvy nastavení platforem.</p>
+				</div>
+
+				<div class="guide-card" id="youtube-shorts-event-flow">
+					<h2 id="read-section-4">YouTube Shorts a Event Flow</h2>
+					<p><strong>Porovnávání příchozích zpráv je přesné:</strong> použijte <code>youtubeshorts</code> ve spouštěči Ze zdroje pro zprávy Shorts a <code>youtube</code> pro běžný živý chat YouTube.</p>
+					<p><strong>Porovnávání odchozích zpráv je také přesné:</strong> Přeposlat chat s nimi zachází jako se samostatnými cíli.</p>
+					<ul class="guide-list">
+						<li>Cíl <code>youtube</code> odesílá pouze do oken běžného živého chatu YouTube.</li>
+						<li>Cíl <code>youtubeshorts</code> odesílá pouze do oken živého chatu YouTube Shorts.</li>
+						<li>Chcete-li oslovit oba cíle, přidejte pro každý samostatnou akci nebo přeposílejte na všechny platformy kromě zdroje.</li>
+					</ul>
+					<p>Jiné ovládací prvky pro celé YouTube mohou záměrně zpracovávat oba typy jako jednu skupinu platforem. To nemění výše uvedené přesné porovnávání v Event Flow.</p>
+					<h3>Řešení problémů starších verzí</h3>
+					<p>Starší verze seskupovaly oba cíle přeposílání, takže dvě akce mohly odeslat zprávu dvakrát do každého okna YouTube. Pokud k tomu dochází, aktualizujte Social Stream Ninja. Filtr odražených zpráv brání smyčkám přeposílání, ale neopravuje překrývající se rozpoznávání cílů v těchto starších verzích.</p>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/guide-event-flow-overview.png" alt="Editor Event Flow v Social Stream Ninja s propojenými uzly spouštěče, filtru a akce" class="guide-image" />
+						<figcaption>Ze zdroje čte typ příchozích dat; Přeposlat chat vybírá okna zdrojů pro odchozí zprávy.</figcaption>
+					</figure>
+					<p>Pokračujte návodem <a href="../actions/event-flow-guide.html">Průvodce Event Flow</a> nebo <a href="youtube-setup-guide.html">Návod k nastavení YouTube</a>.</p>
+				</div>
+
+				<div class="guide-card" id="instagram-live">
+					<h2 id="read-section-5">Instagram Live a komentáře Instagramu</h2>
+					<p>Použijte <code>instagramlive</code> pro chat živých místností zachycený zdrojem Instagram Live nebo InstaFeed live. Použijte <code>instagram</code> pro neživé přehledy, příspěvky nebo statické komentáře.</p>
+					<ul class="guide-list">
+						<li><strong>Tok živého chatu:</strong> Ze zdroje = <code>instagramlive</code>.</li>
+						<li><strong>Tok příspěvků a komentářů:</strong> Ze zdroje = <code>instagram</code>.</li>
+						<li><strong>Obojí:</strong> použijte dva spouštěče vedoucí do jedné společné akce nebo spouštěč Libovolný zdroj následovaný filtrem rozlišujícím typ.</li>
+					</ul>
+					<p>Viditelná značka Instagram nestačí k určení typu; obě varianty rozlišuje kontext obsahu.</p>
+				</div>
+
+				<div class="guide-card" id="generic-and-unnamed-sources">
+					<h2 id="read-section-6">Obecné, vlastní a nepojmenované zdroje</h2>
+					<p><code>sources/generic.js</code> je obecný náhradní způsob zachytávání DOM. Hledá běžné řádky chatu, jména, zprávy, avatary a vstupní pole. Začíná s <code>generic</code>, poté obvykle odvodí typ malými písmeny ze známé platformy nebo názvu hostitele stránky.</p>
+					<ul class="guide-list">
+						<li>Než napíšete specializovaný zdroj, ověřte jím, že lze běžný chat v DOM zachytávat.</li>
+						<li>Neočekávejte spolehlivou podporu událostí, moderování, mazání, virtualizovaných seznamů ani uzavřeného shadow DOM.</li>
+						<li>Typ odvozený z názvu hostitele je praktický, ale není trvalou veřejnou specifikací. Než na něm založíte filtry, ověřte skutečně odesílaná data.</li>
+						<li>Pokud zdroj nemá zavedený název platformy, zvolte jednu stálou hodnotu malými písmeny <code>type</code>. Použijte <code>sourceName</code> pro zobrazovaný název místnosti nebo kanálu.</li>
+						<li>Pokud zatím neexistuje stálá identita, <code>generic</code> je bezpečnější než měnit typ u každé zprávy. Externí integrace běžně používají záměrně zvolenou hodnotu, například <code>external</code>.</li>
+					</ul>
+					<p>Jakmile na novém typu závisí uživatelé, překryvy nebo toky, zdokumentujte jej v <a href="event-reference.html">Referenční příručka událostí</a> namísto tichého přejmenování.</p>
+				</div>
+
+				<div class="guide-card" id="desktop-app-injection">
+					<h2 id="read-section-7">Vkládání skriptů v desktopové aplikaci</h2>
+					<p>Desktopová aplikace ukládá pro zdroj <code>target</code>, vybere jeden nebo více <code>sourceFile</code>/<code>sourceFiles</code>, otevře okno zdroje a vloží společné skripty zachytávání z tohoto projektu. Most kompatibility s Chrome runtime přenáší zachycené zprávy a příkazy odpovědí mezi stránkou a aplikací.</p>
+					<ul class="guide-list">
+						<li>Cíl ani název souboru skriptu se nemusí shodovat s typem v datech. Cíl <code>youtubeshorts</code> cíl načítá <code>sources/youtube.js</code>, který odesílá <code>youtube</code> nebo <code>youtubeshorts</code> z kontextu stránky.</li>
+						<li>Cíle Bilibili se podobně mapují na společné či regionální skripty, přičemž odesílají <code>bilibili</code>.</li>
+						<li><code>sources/inject/*.js</code> jsou pomocné soubory běžící v kontextu stránky pro sockety či proměnné stránky. Za kanonická data zpráv stále odpovídá obalový skript zdroje.</li>
+						<li>Při vkládání více skriptů se vyhněte tomu, aby si každá pomocná část nárokovala stejný cíl odchozích zpráv. Identita zachytávání a schopnost odpovídat jsou samostatné záležitosti.</li>
+						<li>Změny zachytávání zdrojů patří do souborů tohoto repozitáře <code>sources/</code> . Desktopová aplikace je používá; její přibalená záložní kopie není hlavním zdrojem pravdy.</li>
+					</ul>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/guide-standalone-source-modes.png" alt="Položky zdrojů desktopové aplikace Social Stream Ninja zobrazující režimy připojení" class="guide-image" />
+						<figcaption>Každý zdroj v desktopové aplikaci si uchovává vlastní cíl, URL, režim připojení a skript zachytávání.</figcaption>
+					</figure>
+					<p>Správci mohou sledovat nastavení v desktopové aplikaci v <code>index.html</code> vytváření oken zdrojů, poté <code>main.js</code> a <code>preload.js</code> pro vkládání a propojení mostem.</p>
+				</div>
+
+				<div class="guide-card" id="replying-to-sources">
+					<h2 id="read-section-8">Odpovídání a přeposílání do zdrojů</h2>
+					<p>Identita příchozích zpráv a schopnost odesílat spolu souvisejí, ale představují odlišné specifikace.</p>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>Akce</th>
+								<th>Jak vybírá</th>
+								<th>Běžná chyba</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Akce">Odpovědět zdroji</td>
+								<td data-label="Jak vybírá">Používá <code>tid</code> pro oslovení přesné původní karty nebo okna.</td>
+								<td data-label="Běžná chyba">Ne <code>tid</code>, nebo daný režim zachytávání neumí odesílat do chatu.</td>
+							</tr>
+							<tr>
+								<td data-label="Akce">Přeposlat na platformu</td>
+								<td data-label="Jak vybírá">Ptá se otevřených zdrojů, zda podporují daný cíl odchozích zpráv.</td>
+								<td data-label="Běžná chyba">Vybraná varianta nemá odpovídající otevřené okno zdroje nebo zdroj neumí odesílat do chatu.</td>
+							</tr>
+							<tr>
+								<td data-label="Akce">Přeposlat všem kromě zdroje</td>
+								<td data-label="Jak vybírá">Rozesílá do zdrojů, kam lze zprávu směrovat, a vylučuje původní <code>tid</code>.</td>
+								<td data-label="Běžná chyba">Zdroj nedokáže přijmout automatický vstup nebo se odražená zpráva zachytí znovu.</td>
+							</tr>
+						</tbody>
+					</table>
+					<ul class="guide-list">
+						<li>Hodnota ze skriptu zdroje <code>getSource</code> v odpovědi signalizuje možnost směrování odchozích zpráv. Společné ovládání YouTube může seskupovat obě varianty, zatímco Přeposlat chat přidává pro rozpoznání cíle přesný kontext URL Shorts.</li>
+						<li>Obecné zachytávání může najít pravděpodobná vstupní pole a zaměřit je, ale nezaručuje, že web přijme automatické odeslání.</li>
+						<li>Režimy API/WebSocket mohou odesílat pomocí API platformy namísto psaní do viditelné stránky.</li>
+						<li>V desktopové aplikaci <em>Bot pouze pro odpovědi (bez zachytávání)</em> ponechává zdroj dostupný pro odpovědi a stav, ale potlačuje jeho běžné zachycené zprávy.</li>
+						<li>Než vytvoříte přeposílání mezi více platformami, otestujte odpovědi v jednom okně zdroje.</li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="where-to-find-details">
+					<h2 id="read-section-9">Kde najdete přesné podrobnosti</h2>
+					<ul class="guide-list">
+						<li><a href="event-reference.html">Referenční příručka událostí</a>: kanonická pole a názvy událostí platforem.</li>
+						<li><a href="../actions/event-flow-guide.html">Průvodce Event Flow</a>: spouštěče, akce, šablony, zpracování odražených zpráv a testy.</li>
+						<li><a href="standalone-app-modes.html">Režimy samostatné aplikace</a>: chování oken zdrojů a režimů připojení.</li>
+						<li><a href="supported-sites.html">Podporované weby</a>: názvy platforem a požadavky na nastavení.</li>
+						<li><a href="../../docs/index.html?file=agents/08-platform-sources/generic-and-custom-sources.md">Obecné a vlastní zdroje</a>: náhradní a externí zachytávání.</li>
+						<li><a href="../../docs/index.html?file=agents/04-standalone-app-source-windows.md">Okna zdrojů v desktopové aplikaci</a>: podrobnosti cíle, skriptu, mostu a režimu pouze pro odpovědi.</li>
+						<li><a href="../../docs/index.html?file=agents/12-development/adding-a-source.md">Přidání zdroje</a>: specifikace zdrojů, pomocné funkce vkládání, manifesty a dokumentace.</li>
+					</ul>
+					<p>Při ladění zkontrolujte jednu nezpracovanou zprávu a zaznamenejte její <code>type</code>, <code>event</code>, <code>sourceName</code>, a <code>tid</code>. Tím se obvykle oddělí rozpoznávání příchozích zpráv, směrování odchozích zpráv a duplicitní zachytávání.</p>
+				</div>
+			</div>
+		</main>
+		<footer>
+			<div class="container">
+				<div class="footer-bottom">
+					<p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0.</p>
+				</div>
+			</div>
+		</footer>
+		<script data-copy-markdown src="../../docs/js/main.js"></script>
+		<script>
+			document.getElementById("current-year").textContent = new Date().getFullYear();
+		</script>
+	</body>
+</html>

@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ko" data-site-root="../../" data-site-language="ko"><head>
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/commerce-boards.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/commerce-boards.html">
+    <meta property="og:title" content="배정 보드 및 최근 판매 | Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja에서 배정 보드, 팀 브레이크, 최근 판매 오버레이를 설정하세요. 운영자 제어와 OBS에 커머스 보드를 표시하는 방법을 안내합니다.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/commerce-boards.html">
+    <meta name="twitter:title" content="배정 보드 및 최근 판매 | Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja에서 배정 보드, 팀 브레이크, 최근 판매 오버레이를 설정하세요. 운영자 제어와 OBS에 커머스 보드를 표시하는 방법을 안내합니다.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>배정 보드 및 최근 판매 | Social Stream Ninja</title><meta name="description" content="Social Stream Ninja에서 배정 보드, 팀 브레이크, 최근 판매 오버레이를 설정하세요. 운영자 제어와 OBS에 커머스 보드를 표시하는 방법을 안내합니다.">
+<script>
+(function() {
+    var savedTheme = localStorage.getItem("darkMode");
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+})();
+</script>
+<link rel="icon" href="../../icons/favicon.ico"><link rel="stylesheet" href="../../docs/css/styles.css"><link rel="stylesheet" href="../../docs/css/guides.css">
+<style>
+.skip { position:absolute; left:16px; top:-100px; z-index:2100; padding:10px; background:var(--background-card); color:var(--text-primary); }
+.skip:focus { top:12px; }
+.tall-shot img { width:auto; max-width:100%; max-height:52rem; margin:0 auto; }
+</style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css"><script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/commerce-boards.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"(also removes its sale)":"(해당 판매도 제거됨)",", or":", 또는",", or an empty string":"또는 빈 문자열",", or recent sales as a list, wall, or strip.":"또는 최근 판매를 목록, 카드 벽, 띠 형태로 표시합니다.",", set":"를 선택하고 다음을 설정하세요:",", then click":"한 다음 클릭합니다:",", use the":"에는 다음을 사용하세요:",", which records both at once.":"로 둘을 한 번에 기록합니다.",". Add it as a Browser Source at 1920 × 1080. Empty space is see-through, so your camera shows behind it.":". 1920 × 1080 Browser Source로 추가하세요. 빈 공간은 투명하여 뒤의 카메라가 보입니다.",". For a 20 × 6 grid, use 120 spots and 20 columns. Click":". 20 × 6 격자에는 120칸과 20열을 사용하세요. 다음을 클릭하세요:",". For sale actions, match a confirmed purchase event. If your flow adds sales by hand, turn off automatic collection so they don't show twice.":". 판매 작업은 구매가 확인된 이벤트에 연결하세요. 흐름에서 수동으로 판매를 추가한다면 자동 수집을 꺼 중복을 막으세요.",". Good for Whatnot, eBay Live, or in-person sales once you've checked payment. These show as":". 결제를 확인한 Whatnot, eBay Live 또는 대면 판매에 적합합니다. 다음으로 표시됩니다:",". Text values accept variables like":". 텍스트 값에는 다음과 같은 변수를 사용할 수 있습니다:",". The confirm button becomes":". 확인 버튼이 다음으로 바뀝니다:",". Use a second OBS source if you want the board and sales at the same time.":". 보드와 판매를 동시에 표시하려면 OBS 소스를 하나 더 추가하세요.",". Whatnot needs the show page with its auction footer showing. eBay Live works from the chat or stream page.":". Whatnot은 경매 바닥글이 표시되는 방송 페이지가 필요합니다. eBay Live는 채팅 또는 방송 페이지에서 작동합니다.",". Works with new purchases from Shopify, eBay seller, Fourthwall, Ko-fi, and Buy Me a Coffee.":". Shopify, eBay 판매자, Fourthwall, Ko-fi, Buy Me a Coffee의 새 구매를 지원합니다.","A 20-column, six-row board with numbered available, claimed and revealed tiles":"이용 가능, 배정 완료, 공개 상태의 번호 타일이 있는 20열 6행 보드","A new board starts fresh. Sales from the old board stay with the old board.":"새 보드는 빈 상태로 시작합니다. 이전 보드의 판매는 이전 보드에 남습니다.","A numbered or ball-style grid can track assigned items. Exact rules vary by show. Whatnot's Surprise Sets assign products after a spot sells. See":"숫자나 공 모양 격자로 배정된 상품을 추적할 수 있습니다. 정확한 규칙은 방송마다 다릅니다. Whatnot Surprise Sets는 칸이 판매된 뒤 상품을 배정합니다. 참고:","A team break splits the opened cards by team, player, or another named spot.":"팀 브레이크는 개봉한 카드를 팀, 선수 또는 이름을 붙인 다른 칸별로 나눕니다.","API":"API","API & Event Flow":"API 및 Event Flow","API commands and Event Flow":"API 명령 및 Event Flow","API. SSN, Stream Deck custom API actions, and the optional OBS dock all read the same":"API입니다. SSN, Stream Deck 사용자 지정 API 작업, 선택적인 OBS 도크는 같은 상태를 읽습니다:","Add reveal text when you're ready to show the item.":"상품을 보여 줄 준비가 되면 공개 텍스트를 추가하세요.","Add to the link":"링크에 추가","Auction item helper":"경매 상품 도우미","Board / sales fields":"보드/판매 필드","Browser Source":"브라우저 소스","Buyer names, addresses, payment details, and unrevealed items are never shown. Demo links use clearly marked made-up data.":"구매자 이름, 주소, 결제 정보, 미공개 상품은 표시되지 않습니다. 데모 링크에는 가상 데이터임을 명확히 표시합니다.","Buyers pay for a share of a card break, like one team's cards. The board tracks who claimed each spot. See":"구매자는 한 팀의 카드처럼 카드 브레이크의 일부에 비용을 냅니다. 보드는 각 칸의 확보 상태를 추적합니다. 참고:","Capture Stream Events":"방송 이벤트 캡처","Check the item and payment on the selling site. Then enter the sale total and currency.":"판매 사이트에서 상품과 결제를 확인하고 판매 총액과 통화를 입력하세요.","Clear sales":"판매 지우기","Click":"클릭:","Click this":"클릭할 항목","Collect connected store purchases":"연결된 스토어 구매 수집","Command":"명령","Commands & API":"명령 및 API","Confirm sale":"판매 확인","Confirm sale & claim spot":"판매 확인 및 칸 배정","Copy OBS link":"OBS 링크 복사","Create board":"보드 만들기","Do this":"할 작업","Download":"다운로드","During a Whatnot or eBay Live show":"Whatnot 또는 eBay Live 방송 중","Enter the item, plus the total and currency if you like. Click":"상품을 입력하고 필요하면 총액과 통화도 입력하세요. 다음을 클릭하세요:","Event Flow":"Event Flow","Features":"기능","Fields":"필드","Fields in":"입력 필드:","Fix a spot I marked by mistake":"잘못 표시한 칸 수정","For a spot, click its tile, then":"칸의 타일을 클릭한 뒤 다음을 선택하세요:","Format":"형식","Guides":"가이드","Hides prices.":"가격을 숨깁니다.","Hire":"작업 의뢰","Hold a spot without logging a sale":"판매를 기록하지 않고 칸 확보","Home":"홈","Host confirmed":"진행자 확인","How to set it up":"설정 방법","I want to":"원하는 작업","I want to…":"원하는 작업…","In":"다음 위치에서:","In SSN, open":"SSN에서 다음을 여세요:","In the board controls, pick a display:":"보드 제어에서 표시 방식을 선택하세요:","Inspiration":"아이디어","Keep SSN running. Your changes show up right away.":"SSN을 계속 실행하세요. 변경 사항은 바로 표시됩니다.","Keep real purchases on screen after the alert is gone. Pick a short list, a six-card wall, or a strip.":"알림이 사라진 뒤에도 실제 구매를 화면에 남기세요. 짧은 목록, 여섯 장 카드 벽 또는 띠 형태를 선택할 수 있습니다.","Keep the session, password, and server settings from the copied link. If the connection is missing or there's nothing to show, the overlay stays see-through. Setup messages never appear to viewers.":"복사한 링크의 세션, 비밀번호, 서버 설정을 유지하세요. 연결되지 않았거나 표시할 항목이 없으면 오버레이는 투명합니다. 설정 메시지는 시청자에게 표시되지 않습니다.","Live capture vs. a store connection":"실시간 캡처와 상점 연결의 차이","Main navigation":"기본 탐색 메뉴","Make available":"이용 가능으로 변경","Mark claimed only":"배정 완료만 표시","Mark each bought spot as claimed. Reveal it when you're ready.":"구매된 칸을 확보됨으로 표시하고 준비되면 공개하세요.","Monetization → Spot boards & recent sales":"Monetization → Spot boards & recent sales","Most people can skip this. It's for Stream Deck buttons, scripts, and automations.":"대부분은 건너뛰어도 됩니다. Stream Deck 버튼, 스크립트, 자동화용입니다.","Nothing is logged until you confirm it.":"확인하기 전에는 아무것도 기록되지 않습니다.","Numbered reveals":"번호별 공개","Numbered tiles":"번호 타일","OBS product control dock":"OBS 상품 제어 도크","On this page":"이 페이지에서","Only shows sales from those sources.":"지정한 소스의 판매만 표시합니다.","Open navigation menu":"탐색 메뉴 열기","Open the live preview":"실시간 미리보기 열기","Open your show in SSN and turn on":"SSN에서 방송을 열고 다음을 켜세요:","Optional link settings":"선택적인 링크 설정","Overlay Gallery":"오버레이 갤러리","Paste your team names, one per line. The list sets how many spots there are.":"팀 이름을 한 줄에 하나씩 붙여 넣으세요. 목록의 개수가 칸 수가 됩니다.","Pick":"선택:","Picks the layout.":"레이아웃을 선택합니다.","Prefer controlling it from OBS? The":"OBS에서 제어하고 싶다면","Prices, history, and privacy":"가격, 기록, 개인정보","Products & Support":"상품 및 후원","Recent sales":"최근 판매","Record sale for this spot":"이 칸의 판매 기록","Refund & reopen":"환불 및 다시 열기","Refund a sale and free its spot":"판매를 환불 처리하고 칸 비우기","Refund a spot and free it up":"칸을 환불 처리하고 다시 비우기","Remove":"제거","Remove only the sales entry":"판매 항목만 제거","Reveal":"공개","Reveal text":"공개 텍스트","SSN keeps the latest 100 sales on this computer, even after a restart. It only collects from when you turn it on. It doesn't import old orders. Repeat deliveries are ignored (it remembers the last 2,000 IDs). Refunds must be removed by hand.":"SSN은 이 컴퓨터에 최근 판매 100건을 저장하며 재시작 후에도 유지합니다. 켠 시점부터 수집하고 이전 주문은 가져오지 않습니다. 최근 ID 2,000개를 기억하여 중복 수신을 무시합니다. 환불 건은 수동으로 제거해야 합니다.","SSN only shows what you assign. It doesn't sell spots or hand out prizes at random.":"SSN은 지정한 내용만 표시합니다. 칸을 판매하거나 무작위로 경품을 배정하지 않습니다.","SSN popup with spot-board setup and tile controls":"배정 보드 설정과 타일 제어가 있는 SSN 팝업","Sales you confirm yourself":"직접 확인한 판매","Sample spot board.":"예제 칸 보드.","Sample team board.":"예제 팀 보드.","Save sales options":"판매 옵션 저장","Seller confirms a captured eBay Live item and claims its linked spot":"판매자가 캡처된 eBay Live 상품을 확인하고 연결된 칸을 배정하는 모습","Seller controls with a made-up sale.":"가상 판매가 있는 판매자 제어 화면.","Set up a spot board in 5 steps":"5단계로 칸 보드 설정하기","Set up spot boards, team breaks and recent-sales overlays in Social Stream Ninja. Learn the operator controls and how to show commerce boards in OBS.":"Social Stream Ninja에서 배정 보드, 팀 브레이크, 최근 판매 오버레이를 설정하세요. 운영자 제어와 OBS에 커머스 보드를 표시하는 방법을 안내합니다.","Sets the sales heading.":"판매 제목을 설정합니다.","Show it in OBS":"OBS에 표시","Show recent sales":"최근 판매 표시","Show sales on screen":"판매를 화면에 표시","Show which spots are taken and keep recent sales on screen. You control it in SSN; viewers see it in OBS.":"확보된 칸과 최근 판매를 화면에 표시하세요. SSN에서 제어하고 시청자는 OBS 화면으로 봅니다.","Shows up to six recent sales (24 max).":"최근 판매를 최대 6건 표시합니다(설정 최대 24건).","Six recent-sale cards, each with a fictional item and manually entered price":"가상 상품과 수동으로 입력한 가격이 있는 최근 판매 카드 여섯 개","Skip to content":"본문으로 건너뛰기","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Spot / team board":"칸/팀 보드","Spot board":"배정 보드","Spot boards & recent sales":"배정 보드 및 최근 판매","Spot boards & recent sales | Social Stream Ninja":"배정 보드 및 최근 판매 | Social Stream Ninja","Store feeds don't always include prices, so automatic rows leave the price blank. To show a price, remove that row and confirm it yourself. For several items, enter the total for the entry, not the price of each. SSN never fills in a listing price, top bid, or donation amount instead.":"상점 데이터에 가격이 항상 포함되지는 않아 자동 항목은 가격을 비워 둡니다. 가격을 표시하려면 해당 행을 제거한 뒤 직접 확인해 등록하세요. 여러 상품은 개별 가격이 아니라 항목 전체 금액을 입력하세요. SSN은 상품 표시 가격, 최고 입찰가, 기부액을 대신 사용하지 않습니다.","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Team breaks":"팀 브레이크","Team spots":"팀 칸","Team tiles":"팀 타일","Team-break overlay showing thirty teams and how many remain available":"30개 팀과 남은 이용 가능 팀 수를 보여주는 팀 브레이크 오버레이","The board controls. Keep this panel off your stream.":"보드 제어 화면입니다. 이 패널은 방송에 내보내지 마세요.","The helper keeps only the last item from the chosen site. It clears after five minutes with no update, and when SSN restarts. Double-check the item if you have several shows open. If the helper is blank, wait for a new auction update after turning it on.":"도우미는 선택한 사이트의 마지막 상품만 유지합니다. 5분간 업데이트가 없거나 SSN이 재시작되면 지웁니다. 여러 방송이 열려 있으면 상품을 다시 확인하세요. 비어 있다면 켠 뒤 새로운 경매 업데이트를 기다리세요.","The helper only fills in a draft. A bid or an auction ending never becomes a sale by itself, and new auction updates won't overwrite your draft.":"도우미는 초안만 채웁니다. 입찰이나 경매 종료가 자동으로 판매가 되지 않으며 새 경매 업데이트가 초안을 덮어쓰지 않습니다.","The wall view with made-up sales. Previews:":"가상 판매를 표시한 카드 벽 보기. 미리보기:","These controls extend the existing":"이 제어는 기존의","These edits don't send purchase events or trigger paid rewards.":"이 편집은 구매 이벤트를 보내거나 유료 보상을 실행하지 않습니다.","To fix mistakes or refunds, click":"실수나 환불을 수정하려면 다음을 클릭하세요:","To show what they got, type it in":"받은 상품을 표시하려면 다음에 입력하세요:","Turn on":"켜기:","Under":"다음 항목 아래에서:","Use auction item":"경매 상품 사용","Use your platform's own selling and assignment tools. The SSN board is just for display. It doesn't replace the platform's rules or checkout.":"판매와 배정은 해당 플랫폼의 도구를 사용하세요. SSN 보드는 표시 전용이며 플랫폼 규칙이나 결제를 대체하지 않습니다.","What are these grids?":"이 격자는 무엇인가요?","What are those grids on live shows?":"라이브 방송에 나오는 격자는 무엇인가요?","What doesn't show up:":"표시되지 않는 항목:","What it does":"역할","What it is":"기능 설명","Whatnot / eBay Live":"Whatnot / eBay Live","Whatnot and eBay Live capture gives you the item, bids, and auction status. The separate":"Whatnot과 eBay Live 캡처는 상품, 입찰, 경매 상태를 제공합니다. 별도의","Whatnot's Surprise Sets guide":"Whatnot Surprise Sets 가이드","Whatnot's breaks guide":"Whatnot 브레이크 가이드","Whatnot: failed auction payments":"Whatnot: 경매 결제 실패","When a spot sells, click its tile. Check the payment, then click":"칸이 팔리면 타일을 클릭하세요. 결제를 확인한 뒤 다음을 클릭하세요:","When an item sells, click":"상품이 팔리면 다음을 클릭하세요:","Where sales come from":"판매 정보의 출처","You mark every claim yourself. SSN doesn't guess a team purchase from chat or from an auction ending.":"각 확보 상태는 직접 표시합니다. SSN은 채팅이나 경매 종료에서 팀 구매를 추측하지 않습니다.","Your online store":"내 온라인 상점","action. Pick a board or sales command and fill in":"작업을 사용하세요. 보드 또는 판매 명령을 선택하고 다음을 채우세요:","and":"그리고","and add it to OBS as a":"를 OBS에 다음 소스로 추가하세요:","and click":"를 선택하고 다음을 클릭하세요:","and confirm the sale.":"로 판매를 확인하세요.","at 1920 × 1080.":"를 1920 × 1080으로 추가하세요.","bids, tips, gifts, and sandbox tests. Claiming a board spot doesn't add a sale either.":"입찰, 팁, 선물, 샌드박스 테스트. 보드의 칸을 확보해도 판매가 추가되지는 않습니다.","eBay seller connection":"eBay 판매자 연결","eBay's breaks guide":"eBay 브레이크 가이드","eBay: check payment status in the seller console":"eBay: 판매자 콘솔에서 결제 상태 확인","gets paid orders for chosen listings and can fill recent sales on its own. Don't also confirm those sales by hand, or they'll show twice. Other automatic sources are Shopify, Fourthwall, Ko-fi, and Buy Me a Coffee.":"는 선택한 상품의 결제된 주문을 받아 최근 판매를 자동으로 채울 수 있습니다. 같은 판매를 수동으로 확인하면 두 번 표시되니 중복 등록하지 마세요. 다른 자동 소스는 Shopify, Fourthwall, Ko-fi, Buy Me a Coffee입니다.","has the same buttons.":"에도 같은 버튼이 있습니다.","id, status, result":"id, status, result","id; optional reopenSpot":"id; 선택적으로 reopenSpot","list":"목록","none":"없음","on that sale.":"를 해당 판매에서 선택하세요.","on that sale. Click":"를 해당 판매에서 선택하세요. 다음을 클릭하면","response.":"응답.","strip":"띠 형태","title, style, columns, count or newline-separated labels":"title, style, columns, count 또는 줄바꿈으로 구분한 labels","title; optional amount, currency, quantity, platform; optional boardId and spotId to claim a spot":"title; 선택적으로 amount, currency, quantity, platform; 칸 확보 시 boardId와 spotId도 선택 가능","to Whatnot or eBay Live. Click":"를 Whatnot 또는 eBay Live로 설정하세요. 다음을 클릭하세요:","to copy its name.":"로 이름을 복사하세요.","to start fresh for a new show.":"로 새 방송을 빈 상태에서 시작하세요.","visible":"visible","visible, automatic; optional auctionSource:":"visible, automatic; 선택적으로 auctionSource:","wall":"카드 벽"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/commerce-boards.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/commerce-boards.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/commerce-boards.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/commerce-boards.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/commerce-boards.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/commerce-boards.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/commerce-boards.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/commerce-boards.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/commerce-boards.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/commerce-boards.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/commerce-boards.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/commerce-boards.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/commerce-boards.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/commerce-boards.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/commerce-boards.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/commerce-boards.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/commerce-boards.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/commerce-boards.html">
+<!-- ssn-languages:end --></head><body class="visual-guide">
+<a class="skip" href="#main">본문으로 건너뛰기</a><header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/commerce-boards.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/commerce-boards.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/commerce-boards.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/commerce-boards.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/commerce-boards.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/commerce-boards.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/commerce-boards.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/commerce-boards.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/commerce-boards.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/commerce-boards.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/commerce-boards.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="commerce-boards.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/commerce-boards.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/commerce-boards.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/commerce-boards.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/commerce-boards.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/commerce-boards.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+<section class="page-hero"><div class="container"><h1>배정 보드 및 최근 판매</h1><p>확보된 칸과 최근 판매를 화면에 표시하세요. SSN에서 제어하고 시청자는 OBS 화면으로 봅니다.</p></div></section>
+<main id="main">
+<section class="guide-section">
+<div class="container">
+<nav class="guide-jump-links" aria-label="이 페이지에서">
+<a href="#spots">배정 보드</a>
+<a href="#teams">팀 브레이크</a>
+<a href="#live-selling">Whatnot / eBay Live</a>
+<a href="#sales">최근 판매</a>
+<a href="#obs">OBS에 표시</a>
+<a href="#formats">이 격자는 무엇인가요?</a>
+<a href="#automation">API</a>
+</nav>
+
+<div class="guide-card" id="spots">
+<h2 id="setup">5단계로 칸 보드 설정하기</h2>
+<div class="guide-step-layout">
+<ol class="guide-steps">
+<li>SSN에서 다음을 여세요: <strong>Monetization &rarr; Spot boards &amp; recent sales</strong>.</li>
+<li>선택: <strong>번호 타일</strong>. 20 × 6 격자에는 120칸과 20열을 사용하세요. 다음을 클릭하세요: <strong>보드 만들기</strong>.</li>
+<li>클릭: <strong>OBS 링크 복사</strong> 를 OBS에 다음 소스로 추가하세요: <strong>브라우저 소스</strong> 를 1920 × 1080으로 추가하세요.</li>
+<li>칸이 팔리면 타일을 클릭하세요. 결제를 확인한 뒤 다음을 클릭하세요: <strong>이 칸의 판매 기록</strong> 로 판매를 확인하세요.</li>
+<li>받은 상품을 표시하려면 다음에 입력하세요: <strong>공개 텍스트</strong> 를 선택하고 다음을 클릭하세요: <strong>공개</strong>.</li>
+</ol>
+<figure class="guide-figure"><a href="../../docs/images/monetization/spot-board.png"><img src="../../docs/images/monetization/spot-board.png" alt="이용 가능, 배정 완료, 공개 상태의 번호 타일이 있는 20열 6행 보드" class="guide-image" loading="lazy"></a><figcaption>예제 칸 보드. <a href="../../commerce-board.html?demo">실시간 미리보기 열기</a>.</figcaption></figure>
+</div>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>원하는 작업…</th><th>클릭할 항목</th></tr></thead>
+<tbody>
+<tr><td data-label="원하는 작업">판매를 기록하지 않고 칸 확보</td><td data-label="클릭할 항목"><strong>배정 완료만 표시</strong></td></tr>
+<tr><td data-label="원하는 작업">잘못 표시한 칸 수정</td><td data-label="클릭할 항목"><strong>이용 가능으로 변경</strong></td></tr>
+<tr><td data-label="원하는 작업">칸을 환불 처리하고 다시 비우기</td><td data-label="클릭할 항목"><strong>환불 및 다시 열기</strong> (해당 판매도 제거됨)</td></tr>
+</tbody>
+</table>
+<div class="guide-note">SSN은 지정한 내용만 표시합니다. 칸을 판매하거나 무작위로 경품을 배정하지 않습니다.</div>
+</div>
+
+<div class="guide-card" id="teams">
+<h2>팀 브레이크</h2>
+<p>팀 브레이크는 개봉한 카드를 팀, 선수 또는 이름을 붙인 다른 칸별로 나눕니다.</p>
+<div class="guide-step-layout">
+<ol class="guide-steps">
+<li>선택: <strong>팀 타일</strong>.</li>
+<li>팀 이름을 한 줄에 하나씩 붙여 넣으세요. 목록의 개수가 칸 수가 됩니다.</li>
+<li>구매된 칸을 확보됨으로 표시하고 준비되면 공개하세요.</li>
+</ol>
+<figure class="guide-figure"><a href="../../docs/images/monetization/team-board.png"><img src="../../docs/images/monetization/team-board.png" alt="30개 팀과 남은 이용 가능 팀 수를 보여주는 팀 브레이크 오버레이" class="guide-image" loading="lazy"></a><figcaption>예제 팀 보드. <a href="../../commerce-board.html?demo&amp;style=teams">실시간 미리보기 열기</a>.</figcaption></figure>
+</div>
+<div class="guide-note">각 확보 상태는 직접 표시합니다. SSN은 채팅이나 경매 종료에서 팀 구매를 추측하지 않습니다.</div>
+</div>
+
+<div class="guide-card" id="live-selling">
+<h2>Whatnot 또는 eBay Live 방송 중</h2>
+<div class="guide-step-layout">
+<ol class="guide-steps">
+<li>SSN에서 방송을 열고 다음을 켜세요: <strong>방송 이벤트 캡처</strong>. Whatnot은 경매 바닥글이 표시되는 방송 페이지가 필요합니다. eBay Live는 채팅 또는 방송 페이지에서 작동합니다.</li>
+<li>다음 항목 아래에서: <strong>최근 판매</strong>를 선택하고 다음을 설정하세요: <strong>경매 상품 도우미</strong> 를 Whatnot 또는 eBay Live로 설정하세요. 다음을 클릭하세요: <strong>판매 옵션 저장</strong>.</li>
+<li>상품이 팔리면 다음을 클릭하세요: <strong>경매 상품 사용</strong> 로 이름을 복사하세요.</li>
+<li>판매 사이트에서 상품과 결제를 확인하고 판매 총액과 통화를 입력하세요.</li>
+<li>칸의 타일을 클릭한 뒤 다음을 선택하세요: <strong>이 칸의 판매 기록</strong>. 확인 버튼이 다음으로 바뀝니다: <strong>판매 확인 및 칸 배정</strong>로 둘을 한 번에 기록합니다.</li>
+<li>상품을 보여 줄 준비가 되면 공개 텍스트를 추가하세요.</li>
+</ol>
+<figure class="guide-figure"><a href="../../docs/images/monetization/live-sale-controls.png"><img src="../../docs/images/monetization/live-sale-controls.png" alt="판매자가 캡처된 eBay Live 상품을 확인하고 연결된 칸을 배정하는 모습" class="guide-image" loading="lazy"></a><figcaption>가상 판매가 있는 판매자 제어 화면.</figcaption></figure>
+</div>
+<div class="warning-note"><strong>확인하기 전에는 아무것도 기록되지 않습니다.</strong> 도우미는 초안만 채웁니다. 입찰이나 경매 종료가 자동으로 판매가 되지 않으며 새 경매 업데이트가 초안을 덮어쓰지 않습니다.</div>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>원하는 작업…</th><th>할 작업</th></tr></thead>
+<tbody>
+<tr><td data-label="원하는 작업">판매를 화면에 표시</td><td data-label="할 작업">켜기: <strong>최근 판매 표시</strong>. 보드와 판매를 동시에 표시하려면 OBS 소스를 하나 더 추가하세요.</td></tr>
+<tr><td data-label="원하는 작업">판매를 환불 처리하고 칸 비우기</td><td data-label="할 작업"><strong>환불 및 다시 열기</strong> 를 해당 판매에서 선택하세요.</td></tr>
+<tr><td data-label="원하는 작업">판매 항목만 제거</td><td data-label="할 작업"><strong>제거</strong></td></tr>
+</tbody>
+</table>
+<p>새 보드는 빈 상태로 시작합니다. 이전 보드의 판매는 이전 보드에 남습니다.</p>
+<details class="guide-extra"><summary>실시간 캡처와 상점 연결의 차이</summary>
+<p>Whatnot과 eBay Live 캡처는 상품, 입찰, 경매 상태를 제공합니다. 별도의 <strong>eBay 판매자 연결</strong> 는 선택한 상품의 결제된 주문을 받아 최근 판매를 자동으로 채울 수 있습니다. 같은 판매를 수동으로 확인하면 두 번 표시되니 중복 등록하지 마세요. 다른 자동 소스는 Shopify, Fourthwall, Ko-fi, Buy Me a Coffee입니다.</p>
+<p>도우미는 선택한 사이트의 마지막 상품만 유지합니다. 5분간 업데이트가 없거나 SSN이 재시작되면 지웁니다. 여러 방송이 열려 있으면 상품을 다시 확인하세요. 비어 있다면 켠 뒤 새로운 경매 업데이트를 기다리세요.</p>
+<p><a href="https://www.ebay.com/help/selling/ebay-live/livestream-selling-ebay-live?id=5762">eBay: 판매자 콘솔에서 결제 상태 확인</a> &middot; <a href="https://help.whatnot.com/hc/en-us/articles/37362462405261-Fix-a-payment-issue-or-declined-payment">Whatnot: 경매 결제 실패</a></p>
+</details>
+</div>
+
+<div class="guide-card" id="sales">
+<h2>최근 판매 표시</h2>
+<p>알림이 사라진 뒤에도 실제 구매를 화면에 남기세요. 짧은 목록, 여섯 장 카드 벽 또는 띠 형태를 선택할 수 있습니다.</p>
+<figure class="guide-figure"><a href="../../docs/images/monetization/sales-wall.png"><img src="../../docs/images/monetization/sales-wall.png" alt="가상 상품과 수동으로 입력한 가격이 있는 최근 판매 카드 여섯 개" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>가상 판매를 표시한 카드 벽 보기. 미리보기: <a href="../../commerce-board.html?demo&amp;view=sales">목록</a> &middot; <a href="../../commerce-board.html?demo&amp;view=wall">카드 벽</a> &middot; <a href="../../commerce-board.html?demo&amp;view=ticker">띠 형태</a></figcaption></figure>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>판매 정보의 출처</th><th>설정 방법</th></tr></thead>
+<tbody>
+<tr><td data-label="판매 정보의 출처">내 온라인 상점</td><td data-label="설정 방법">켜기: <strong>최근 판매 표시</strong> 그리고 <strong>연결된 스토어 구매 수집</strong>한 다음 클릭합니다: <strong>판매 옵션 저장</strong>. Shopify, eBay 판매자, Fourthwall, Ko-fi, Buy Me a Coffee의 새 구매를 지원합니다.</td></tr>
+<tr><td data-label="판매 정보의 출처">직접 확인한 판매</td><td data-label="설정 방법">상품을 입력하고 필요하면 총액과 통화도 입력하세요. 다음을 클릭하세요: <strong>판매 확인</strong>. 결제를 확인한 Whatnot, eBay Live 또는 대면 판매에 적합합니다. 다음으로 표시됩니다: <strong>진행자 확인</strong>.</td></tr>
+</tbody>
+</table>
+<p>실수나 환불을 수정하려면 다음을 클릭하세요: <strong>제거</strong> 를 해당 판매에서 선택하세요. 다음을 클릭하면 <strong>판매 지우기</strong> 로 새 방송을 빈 상태에서 시작하세요.</p>
+<div class="guide-note"><strong>표시되지 않는 항목:</strong> 입찰, 팁, 선물, 샌드박스 테스트. 보드의 칸을 확보해도 판매가 추가되지는 않습니다.</div>
+<details class="guide-extra"><summary>가격, 기록, 개인정보</summary>
+<p>상점 데이터에 가격이 항상 포함되지는 않아 자동 항목은 가격을 비워 둡니다. 가격을 표시하려면 해당 행을 제거한 뒤 직접 확인해 등록하세요. 여러 상품은 개별 가격이 아니라 항목 전체 금액을 입력하세요. SSN은 상품 표시 가격, 최고 입찰가, 기부액을 대신 사용하지 않습니다.</p>
+<p>SSN은 이 컴퓨터에 최근 판매 100건을 저장하며 재시작 후에도 유지합니다. 켠 시점부터 수집하고 이전 주문은 가져오지 않습니다. 최근 ID 2,000개를 기억하여 중복 수신을 무시합니다. 환불 건은 수동으로 제거해야 합니다.</p>
+<p>구매자 이름, 주소, 결제 정보, 미공개 상품은 표시되지 않습니다. 데모 링크에는 가상 데이터임을 명확히 표시합니다.</p>
+</details>
+</div>
+
+<div class="guide-card" id="obs">
+<h2>OBS에 표시</h2>
+<div class="guide-step-layout">
+<ol class="guide-steps">
+<li>보드 제어에서 표시 방식을 선택하세요: <strong>칸/팀 보드</strong>또는 최근 판매를 목록, 카드 벽, 띠 형태로 표시합니다.</li>
+<li>클릭: <strong>OBS 링크 복사</strong>. 1920 × 1080 Browser Source로 추가하세요. 빈 공간은 투명하여 뒤의 카메라가 보입니다.</li>
+<li>SSN을 계속 실행하세요. 변경 사항은 바로 표시됩니다.</li>
+</ol>
+<figure class="guide-figure tall-shot"><a href="../../docs/images/monetization/board-controls.png"><img src="../../docs/images/monetization/board-controls.png" alt="배정 보드 설정과 타일 제어가 있는 SSN 팝업" class="guide-image" loading="lazy"></a><figcaption>보드 제어 화면입니다. 이 패널은 방송에 내보내지 마세요.</figcaption></figure>
+</div>
+<p>OBS에서 제어하고 싶다면 <a href="obs-control-dock-guide.html#commerce">OBS 상품 제어 도크</a> 에도 같은 버튼이 있습니다.</p>
+<details class="guide-extra"><summary>선택적인 링크 설정</summary>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>링크에 추가</th><th>역할</th></tr></thead>
+<tbody>
+<tr><td data-label="링크에 추가"><code>&amp;view=board</code>, <code>sales</code>, <code>wall</code>, 또는 <code>ticker</code></td><td data-label="역할">레이아웃을 선택합니다.</td></tr>
+<tr><td data-label="링크에 추가"><code>&amp;limit=6</code></td><td data-label="역할">최근 판매를 최대 6건 표시합니다(설정 최대 24건).</td></tr>
+<tr><td data-label="링크에 추가"><code>&amp;prices=0</code></td><td data-label="역할">가격을 숨깁니다.</td></tr>
+<tr><td data-label="링크에 추가"><code>&amp;label=Recently%20sold</code></td><td data-label="역할">판매 제목을 설정합니다.</td></tr>
+<tr><td data-label="링크에 추가"><code>&amp;onlytype=shopify,ebay</code></td><td data-label="역할">지정한 소스의 판매만 표시합니다.</td></tr>
+</tbody>
+</table>
+<p>복사한 링크의 세션, 비밀번호, 서버 설정을 유지하세요. 연결되지 않았거나 표시할 항목이 없으면 오버레이는 투명합니다. 설정 메시지는 시청자에게 표시되지 않습니다.</p>
+</details>
+</div>
+
+<div class="guide-card" id="formats">
+<h2>라이브 방송에 나오는 격자는 무엇인가요?</h2>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>형식</th><th>기능 설명</th></tr></thead>
+<tbody>
+<tr><td data-label="형식">팀 칸</td><td data-label="기능 설명">구매자는 한 팀의 카드처럼 카드 브레이크의 일부에 비용을 냅니다. 보드는 각 칸의 확보 상태를 추적합니다. 참고: <a href="https://help.whatnot.com/hc/en-us/articles/26596362677389-Breaks-feature-for-sellers">Whatnot 브레이크 가이드</a> 그리고 <a href="https://pages.ebay.com/breaks/">eBay 브레이크 가이드</a>.</td></tr>
+<tr><td data-label="형식">번호별 공개</td><td data-label="기능 설명">숫자나 공 모양 격자로 배정된 상품을 추적할 수 있습니다. 정확한 규칙은 방송마다 다릅니다. Whatnot Surprise Sets는 칸이 판매된 뒤 상품을 배정합니다. 참고: <a href="https://help.whatnot.com/hc/en-us/articles/34545407302797-Surprise-Set-Feature-for-Sellers">Whatnot Surprise Sets 가이드</a>.</td></tr>
+</tbody>
+</table>
+<div class="guide-note">판매와 배정은 해당 플랫폼의 도구를 사용하세요. SSN 보드는 표시 전용이며 플랫폼 규칙이나 결제를 대체하지 않습니다.</div>
+</div>
+
+<div class="guide-card" id="automation">
+<h2>API 및 Event Flow</h2>
+<p>대부분은 건너뛰어도 됩니다. Stream Deck 버튼, 스크립트, 자동화용입니다.</p>
+<details class="guide-extra"><summary>API 명령 및 Event Flow</summary>
+<p>이 제어는 기존의 <code>commerceControl</code> API입니다. SSN, Stream Deck 사용자 지정 API 작업, 선택적인 OBS 도크는 같은 상태를 읽습니다: <code>getCommerceState</code> 응답.</p>
+<pre><code>{"action":"commerceControl","value":{"command":"boardSpot","data":{"id":"12","status":"claimed"}}}</code></pre>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>명령</th><th>입력 필드: <code>data</code></th></tr></thead>
+<tbody>
+<tr><td data-label="명령"><code>boardSave</code></td><td data-label="필드">title, style, columns, count 또는 줄바꿈으로 구분한 labels</td></tr>
+<tr><td data-label="명령"><code>boardSpot</code></td><td data-label="필드">id, status, result</td></tr>
+<tr><td data-label="명령"><code>boardVisibility</code></td><td data-label="필드">visible</td></tr>
+<tr><td data-label="명령"><code>saleAdd</code></td><td data-label="필드">title; 선택적으로 amount, currency, quantity, platform; 칸 확보 시 boardId와 spotId도 선택 가능</td></tr>
+<tr><td data-label="명령"><code>saleRemove</code></td><td data-label="필드">id; 선택적으로 reopenSpot</td></tr>
+<tr><td data-label="명령"><code>salesClear</code></td><td data-label="필드">없음</td></tr>
+<tr><td data-label="명령"><code>salesSettings</code></td><td data-label="필드">visible, automatic; 선택적으로 auctionSource: <code>whatnot</code>, <code>ebay</code>또는 빈 문자열</td></tr>
+</tbody>
+</table>
+<p>이 편집은 구매 이벤트를 보내거나 유료 보상을 실행하지 않습니다.</p>
+<p>다음 위치에서: <a href="../actions/event-flow-guide.html">Event Flow</a>에는 다음을 사용하세요: <strong>상품 및 후원</strong> 작업을 사용하세요. 보드 또는 판매 명령을 선택하고 다음을 채우세요: <strong>보드/판매 필드</strong>. 텍스트 값에는 다음과 같은 변수를 사용할 수 있습니다: <code>{subtitle}</code>. 판매 작업은 구매가 확인된 이벤트에 연결하세요. 흐름에서 수동으로 판매를 추가한다면 자동 수집을 꺼 중복을 막으세요.</p>
+</details>
+</div>
+</div>
+</section>
+</main></body></html>

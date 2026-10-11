@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="uk" data-site-root="../../" data-site-language="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/uk/docs/obs-troubleshooting.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="uk_UA">
+    <meta property="og:url" content="https://socialstream.ninja/uk/docs/obs-troubleshooting.html">
+    <meta property="og:title" content="Усунення несправностей OBS — Social Stream Ninja">
+    <meta property="og:description" content="Усувайте проблеми порожніх оверлеїв Social Stream Ninja в OBS, неправильних сесій, беззвучного TTS, кешу браузерного джерела та захоплення джерел.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Логотип Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/uk/docs/obs-troubleshooting.html">
+    <meta name="twitter:title" content="Усунення несправностей OBS — Social Stream Ninja">
+    <meta name="twitter:description" content="Усувайте проблеми порожніх оверлеїв Social Stream Ninja в OBS, неправильних сесій, беззвучного TTS, кешу браузерного джерела та захоплення джерел.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Логотип Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Усунення несправностей OBS — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Усувайте проблеми порожніх оверлеїв Social Stream Ninja в OBS, неправильних сесій, беззвучного TTS, кешу браузерного джерела та захоплення джерел.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="uk">
+<script id="ssn-site-language" type="application/json">{"language":"uk","page":"docs/obs-troubleshooting.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Перемкнути на світлу тему","Switch to dark theme":"Перемкнути на темну тему","Light mode":"Світла тема","Dark mode":"Темна тема","Open navigation menu":"Відкрити меню навігації","Close navigation menu":"Закрити меню навігації","Copy this document as Markdown to the clipboard":"Скопіювати цей документ у форматі Markdown до буфера обміну","Copy Markdown":"Скопіювати Markdown","Copying…":"Копіювання…","Markdown copied":"Markdown скопійовано","Copy failed":"Не вдалося скопіювати","Copy comprehensive Markdown for an AI assistant":"Скопіювати повний Markdown для ШІ-асистента","Copy this documentation page as Markdown for an AI assistant":"Скопіювати цю сторінку документації як Markdown для ШІ-асистента"},"strings":{", replace its URL, apply the change, and reopen that dock.":", замініть URL, застосуйте зміну й повторно відкрийте цей док.",", right-click it, and choose":", натисніть його правою кнопкою й виберіть",", then paste the new link over the old one.":", а потім вставте нове посилання замість старого.",", then send one fake test message from Social Stream Ninja.":", а потім надішліть одне вигадане тестове повідомлення із Social Stream Ninja.",". Administrator mode is not a normal fix for a blank Dock.":". Режим адміністратора не є звичайним виправленням порожнього дока.","Audio routing issue.":"Проблема маршрутизації звуку.","Bottom of OBS Browser Source Properties with Refresh cache of current page highlighted":"Нижня частина властивостей браузерного джерела OBS із виділеною кнопкою Refresh cache of current page","Check The Overlay URL":"Перевірте URL оверлею","Check login, live page, popout/source page, app mode, or platform guide.":"Перевірте вхід, сторінку ефіру, окремий чат/сторінку джерела, режим застосунку або посібник платформи.","Check provider vs system TTS and OBS audio capture.":"Перевірте TTS постачальника й системний TTS, а також захоплення звуку OBS.","Click":"Натисніть","Close the old Dock page or window, then click the newly generated":"Закрийте стару сторінку або вікно дока, а потім натисніть щойно згенероване посилання","Commands & API":"Команди й API","Common Fixes":"Поширені рішення","Decision Tree":"Дерево рішень","Detailed help:":"Докладна допомога:","Do these in this order. Refreshing the cache alone does not add a changed session, password, or server-routing option to an old URL.":"Виконуйте ці дії в такому порядку. Саме оновлення кешу не додає змінену сесію, пароль або параметр серверної маршрутизації до старого URL.","Dock":"Док","Dock is empty":"Док порожній","Dock works, browser overlay blank":"Док працює, браузерний оверлей порожній","Dock works, browser overlay works":"Док працює, браузерний оверлей працює","Docks → Custom Browser Docks":"Docks → Custom Browser Docks","Download":"Завантажити","Export your Social Stream Ninja settings and OBS scene collection for support":"Експортуйте налаштування Social Stream Ninja й колекцію сцен OBS для підтримки","Featured overlay preview showing a selected message":"Попередній перегляд оверлею вибраних повідомлень із вибраним повідомленням","Features":"Можливості","Find out whether the source, session, overlay, or OBS browser source is the problem.":"З’ясуйте, де проблема: у джерелі, сесії, оверлеї чи браузерному джерелі OBS.","Guides":"Посібники","Hire":"Найняти фахівця","Home":"Головна","If TTS Is Silent In OBS":"Якщо TTS мовчить в OBS","If it is still stale:":"Якщо вміст досі застарілий:","If messages appear in the dock, Social Stream Ninja is receiving chat.":"Якщо в доку з’являються повідомлення, Social Stream Ninja отримує чат.","If support has confirmed a Windows privilege mismatch, follow":"Якщо підтримка підтвердила невідповідність привілеїв Windows, дотримуйтеся інструкцій у посібнику","Image works, TTS silent":"Зображення працює, TTS мовчить","In OBS, find the Social Stream source in":"В OBS знайдіть джерело Social Stream у розділі","In Social Stream Ninja, copy a freshly generated link for the exact Dock or overlay you use. Copy the whole link instead of editing its parameters by hand.":"У Social Stream Ninja скопіюйте щойно згенероване посилання саме для того дока чи оверлею, який використовуєте. Копіюйте все посилання замість ручного редагування параметрів.","Inspiration":"Натхнення","Local file":"Локальний файл","Main navigation":"Основна навігація","Make sure":"Переконайтеся, що","Make the source visible and check that width/height are not tiny.":"Зробіть джерело видимим і переконайтеся, що ширина/висота не надто малі.","Meaning":"Значення","Next Step":"Наступний крок","OBS Browser Source Properties showing the Local file checkbox and URL field":"Властивості браузерного джерела OBS із прапорцем Local file і полем URL","OBS Troubleshooting":"Усунення несправностей OBS","OBS Troubleshooting - Social Stream Ninja":"Усунення несправностей OBS — Social Stream Ninja","OBS audio capture note explaining system TTS limitations":"Примітка про захоплення звуку OBS із поясненням обмежень системного TTS","OBS browser source is the likely issue.":"Імовірна проблема — браузерне джерело OBS.","OK":"OK","On this page":"На цій сторінці","Open navigation menu":"Відкрити меню навігації","Open the same OBS URL in a normal browser to separate OBS issues from Social Stream Ninja issues.":"Відкрийте той самий URL OBS у звичайному браузері, щоб відокремити проблеми OBS від проблем Social Stream Ninja.","Overlay Gallery":"Галерея оверлеїв","Plain system TTS is the common trap. It may speak through your speakers while OBS Browser Source hears nothing.":"Звичайний системний TTS — поширена пастка. Він може звучати через динаміки, тоді як браузерне джерело OBS нічого не чує.","Properties":"Властивості (Properties)","Refresh OBS source, check URL, dimensions, visibility, cache, and custom CSS.":"Оновіть джерело OBS, перевірте URL, розміри, видимість, кеш і власний CSS.","Refresh cache of current page":"Оновити кеш поточної сторінки (Refresh cache of current page)","Reopen A Dock Link":"Повторно відкрийте посилання дока","Replace The Saved OBS URL And Refresh Its Cache":"Замініть збережений URL OBS і оновіть кеш","Replace the entire URL with the freshly generated Social Stream link. Screenshot from the":"Замініть увесь URL щойно згенерованим посиланням Social Stream. Знімок екрана з","Replace the saved URL, then refresh the Browser Source cache":"Замініть збережений URL, а потім оновіть кеш браузерного джерела","Run OBS and Social Stream as Administrator":"Запуск OBS і Social Stream від імені адміністратора","Scroll to the bottom of the Properties window and click":"Прокрутіть донизу вікна Properties і натисніть","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja dock showing received chat messages":"Док Social Stream Ninja з отриманими повідомленнями чату","Social Stream Ninja logo":"Логотип Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Ліцензія GPLv3.0.","Some overlays only show content after a message is featured or a matching event happens.":"Деякі оверлеї показують вміст лише після вибору повідомлення або відповідної події.","Source/platform capture is not working yet.":"Захоплення джерела/платформи ще не працює.","Sources":"Джерела","Spin and Wheel's OBS setup page":"сторінки налаштування OBS від Spin and Wheel","Start With The Dock":"Почніть із дока","Still stuck?":"Проблема залишається?","Support":"Підтримка","Supported Sites":"Підтримувані сайти","Switch theme":"Перемкнути тему","TTS Setup Guide":"Посібник із налаштування TTS","Temporarily remove custom OBS CSS to rule out hidden text or opacity.":"Тимчасово приберіть власний CSS OBS, щоб виключити прихований текст або прозорість.","Test":"Перевірка","The cache button is near the bottom of Browser Source Properties. UI example cropped from":"Кнопка кешу розташована внизу властивостей браузерного джерела. Приклад інтерфейсу вирізано з","The dock is the fastest test. If the dock is empty, do not debug OBS yet. Fix the platform source first.":"Док — найшвидша перевірка. Якщо він порожній, поки не налагоджуйте OBS. Спочатку виправте джерело платформи.","Troubleshoot blank Social Stream Ninja OBS overlays, wrong sessions, silent TTS, browser source cache, and source capture problems.":"Усувайте проблеми порожніх оверлеїв Social Stream Ninja в OBS, неправильних сесій, беззвучного TTS, кешу браузерного джерела та захоплення джерел.","URL":"URL","Use provider/browser TTS for easier OBS capture, or route system audio separately.":"Використовуйте TTS постачальника/браузера для простішого захоплення в OBS або окремо спрямуйте системний звук.","Use the exact same session ID everywhere. A one-character difference creates a separate room.":"Використовуйте абсолютно однаковий ID сесії всюди. Відмінність в один символ створює окрему кімнату.","Use the same session and pick a page that matches the expected output.":"Використовуйте ту саму сесію й виберіть сторінку, яка відповідає очікуваному результату.","Wrong overlay page, wrong session, or no matching payload.":"Неправильна сторінка оверлею, неправильна сесія або відсутність відповідних даних.","close Properties, open it again, and repeat the test. Removing and recreating the Browser Source with the fresh link is the last resort.":"закрийте Properties, знову відкрийте та повторіть перевірку. Видалення й повторне створення браузерного джерела зі свіжим посиланням — крайній захід.","is not selected. Select everything in":"не вибрано. Виділіть усе в","link in Social Stream Ninja. If it is saved as an OBS Custom Browser Dock, open":"у Social Stream Ninja. Якщо воно збережене як Custom Browser Dock в OBS, відкрийте","official OBS Browser Source guide":"офіційного посібника OBS із браузерного джерела"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/obs-troubleshooting.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Основна навігація"><a href="../index.html">Головна</a><a href="features.html">Можливості</a><a href="inspiration.html" class="site-priority-inspiration">Натхнення</a><a href="download.html">Завантажити</a><a href="guides.html">Посібники</a><a href="commands.html">Команди й API</a><a href="supported-sites.html">Підтримувані сайти</a><a href="overlay-gallery.html" class="site-priority-gallery">Галерея оверлеїв</a><a href="services.html" class="site-priority-hire">Найняти фахівця</a><a href="support.html">Підтримка</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Українська"><span aria-hidden="true">🌐 </span><span lang="uk">Українська</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-troubleshooting.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-troubleshooting.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-troubleshooting.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-troubleshooting.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-troubleshooting.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-troubleshooting.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-troubleshooting.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-troubleshooting.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-troubleshooting.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-troubleshooting.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-troubleshooting.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/obs-troubleshooting.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="obs-troubleshooting.html" lang="uk" hreflang="uk" aria-current="true">Українська</a><a class="site-language-link" href="../../ar/docs/obs-troubleshooting.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/obs-troubleshooting.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/obs-troubleshooting.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/obs-troubleshooting.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Перемкнути тему"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Відкрити меню навігації" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>Усунення несправностей OBS</h1><p>З’ясуйте, де проблема: у джерелі, сесії, оверлеї чи браузерному джерелі OBS.</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="На цій сторінці"><a href="#read-section-1">Почніть із дока</a><a href="#read-section-2">Замініть збережений URL OBS і оновіть кеш</a><a href="#read-section-3">Дерево рішень</a><a href="#read-section-4">Перевірте URL оверлею</a><a href="#read-section-5">Якщо TTS мовчить в OBS</a><a href="#read-section-6">Поширені рішення</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Почніть із дока</h2>
+                <p>Док — найшвидша перевірка. Якщо він порожній, поки не налагоджуйте OBS. Спочатку виправте джерело платформи.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-dock-message-check.png" alt="Док Social Stream Ninja з отриманими повідомленнями чату" class="guide-image">
+                    <figcaption>Якщо в доку з’являються повідомлення, Social Stream Ninja отримує чат.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card" id="replace-url-and-cache">
+                <h2 id="read-section-2">Замініть збережений URL OBS і оновіть кеш</h2>
+                <p>Виконуйте ці дії в такому порядку. Саме оновлення кешу не додає змінену сесію, пароль або параметр серверної маршрутизації до старого URL.</p>
+                <ol class="guide-steps">
+                    <li>У Social Stream Ninja скопіюйте щойно згенероване посилання саме для того дока чи оверлею, який використовуєте. Копіюйте все посилання замість ручного редагування параметрів.</li>
+                    <li>В OBS знайдіть джерело Social Stream у розділі <strong>Джерела</strong>, натисніть його правою кнопкою й виберіть <strong>Властивості (Properties)</strong>.</li>
+                    <li>Переконайтеся, що <strong>Локальний файл</strong> не вибрано. Виділіть усе в <strong>URL</strong>, а потім вставте нове посилання замість старого.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-browser-source-url.png" alt="Властивості браузерного джерела OBS із прапорцем Local file і полем URL" class="guide-image">
+                    <figcaption>Замініть увесь URL щойно згенерованим посиланням Social Stream. Знімок екрана з <a href="https://obsproject.com/kb/browser-source">офіційного посібника OBS із браузерного джерела</a>.</figcaption>
+                </figure>
+                <ol class="guide-steps" start="4">
+                    <li>Прокрутіть донизу вікна Properties і натисніть <strong>Оновити кеш поточної сторінки (Refresh cache of current page)</strong>.</li>
+                    <li>Натисніть <strong>OK</strong>, а потім надішліть одне вигадане тестове повідомлення із Social Stream Ninja.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-browser-source-refresh-cache.png" alt="Нижня частина властивостей браузерного джерела OBS із виділеною кнопкою Refresh cache of current page" class="guide-image guide-image-medium">
+                    <figcaption>Кнопка кешу розташована внизу властивостей браузерного джерела. Приклад інтерфейсу вирізано з <a href="https://spinandwheel.com/obs-setup/">сторінки налаштування OBS від Spin and Wheel</a>.</figcaption>
+                </figure>
+                <div class="guide-note">
+                    <p><strong>Якщо вміст досі застарілий:</strong> закрийте Properties, знову відкрийте та повторіть перевірку. Видалення й повторне створення браузерного джерела зі свіжим посиланням — крайній захід.</p>
+                </div>
+                <h3>Повторно відкрийте посилання дока</h3>
+                <p>Закрийте стару сторінку або вікно дока, а потім натисніть щойно згенероване посилання <strong>Док</strong> у Social Stream Ninja. Якщо воно збережене як Custom Browser Dock в OBS, відкрийте <strong>Docks &rarr; Custom Browser Docks</strong>, замініть URL, застосуйте зміну й повторно відкрийте цей док.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">Дерево рішень</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Перевірка</th><th>Значення</th><th>Наступний крок</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Перевірка">Док порожній</td><td data-label="Значення">Захоплення джерела/платформи ще не працює.</td><td data-label="Наступний крок">Перевірте вхід, сторінку ефіру, окремий чат/сторінку джерела, режим застосунку або посібник платформи.</td></tr>
+                        <tr><td data-label="Перевірка">Док працює, браузерний оверлей працює</td><td data-label="Значення">Імовірна проблема — браузерне джерело OBS.</td><td data-label="Наступний крок">Оновіть джерело OBS, перевірте URL, розміри, видимість, кеш і власний CSS.</td></tr>
+                        <tr><td data-label="Перевірка">Док працює, браузерний оверлей порожній</td><td data-label="Значення">Неправильна сторінка оверлею, неправильна сесія або відсутність відповідних даних.</td><td data-label="Наступний крок">Використовуйте ту саму сесію й виберіть сторінку, яка відповідає очікуваному результату.</td></tr>
+                        <tr><td data-label="Перевірка">Зображення працює, TTS мовчить</td><td data-label="Значення">Проблема маршрутизації звуку.</td><td data-label="Наступний крок">Перевірте TTS постачальника й системний TTS, а також захоплення звуку OBS.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">Перевірте URL оверлею</h2>
+                <p>Використовуйте абсолютно однаковий ID сесії всюди. Відмінність в один символ створює окрему кімнату.</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION</pre>
+                <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION</pre>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-featured-overlay-preview.png" alt="Попередній перегляд оверлею вибраних повідомлень із вибраним повідомленням" class="guide-image">
+                    <figcaption>Деякі оверлеї показують вміст лише після вибору повідомлення або відповідної події.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">Якщо TTS мовчить в OBS</h2>
+                <p>Звичайний системний TTS — поширена пастка. Він може звучати через динаміки, тоді як браузерне джерело OBS нічого не чує.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-tts-obs-audio.png" alt="Примітка про захоплення звуку OBS із поясненням обмежень системного TTS" class="guide-image">
+                    <figcaption>Використовуйте TTS постачальника/браузера для простішого захоплення в OBS або окремо спрямуйте системний звук.</figcaption>
+                </figure>
+                <p>Докладна допомога: <a href="tts-setup-guide.html">Посібник із налаштування TTS</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">Поширені рішення</h2>
+                <ul class="guide-list">
+                    <li><a href="#replace-url-and-cache">Замініть збережений URL, а потім оновіть кеш браузерного джерела</a>.</li>
+                    <li>Зробіть джерело видимим і переконайтеся, що ширина/висота не надто малі.</li>
+                    <li>Тимчасово приберіть власний CSS OBS, щоб виключити прихований текст або прозорість.</li>
+                    <li>Відкрийте той самий URL OBS у звичайному браузері, щоб відокремити проблеми OBS від проблем Social Stream Ninja.</li>
+                </ul>
+                <p>Якщо підтримка підтвердила невідповідність привілеїв Windows, дотримуйтеся інструкцій у посібнику <a href="windows-administrator-mode.html">Запуск OBS і Social Stream від імені адміністратора</a>. Режим адміністратора не є звичайним виправленням порожнього дока.</p>
+                <p>Проблема залишається? <a href="export-settings-for-support.html">Експортуйте налаштування Social Stream Ninja й колекцію сцен OBS для підтримки</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. Ліцензія GPLv3.0.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

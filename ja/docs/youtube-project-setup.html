@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/ja/docs/youtube-project-setup.html">
+    <meta property="og:title" content="YouTubeプロジェクトの設定 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninjaデスクトップアプリで自分のYouTube APIプロジェクトを使うための詳しい設定ガイドです。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ja/docs/youtube-project-setup.html">
+    <meta name="twitter:title" content="YouTubeプロジェクトの設定 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninjaデスクトップアプリで自分のYouTube APIプロジェクトを使うための詳しい設定ガイドです。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTubeプロジェクトの設定 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninjaデスクトップアプリで自分のYouTube APIプロジェクトを使うための詳しい設定ガイドです。">
+    <link rel="canonical" href="https://socialstream.ninja/ja/docs/youtube-project-setup.html">
+    <style>
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .setup-grid .guide-card {
+            margin-bottom: 0;
+        }
+
+        .mini-label {
+            display: inline-block;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .callout-box {
+            background: rgba(26, 115, 232, 0.08);
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 8px 8px 0;
+            padding: 1.6rem;
+            margin: 2rem 0;
+        }
+
+        .callout-box.warning {
+            background: rgba(251, 188, 5, 0.14);
+            border-left-color: #f9ab00;
+        }
+
+        .steps-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        .steps-table th,
+        .steps-table td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .steps-table th {
+            color: var(--primary-color);
+        }
+
+        .steps-table code,
+        .guide-card code,
+        .callout-box code {
+            word-break: break-word;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            margin-top: 2rem;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+        }
+
+        @media (max-width: 700px) {
+            .field-table, .steps-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/youtube-project-setup.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{", and":"、および",", restrict it to":"で、対象を次に制限します：","API Key":"APIキー","API key":"APIキー","API restrictions":"APIの制限","Account validation failed:":"アカウントの検証に失敗：","Add the exact origins and redirect URIs shown below.":"以下に示す正確なオリジンとリダイレクトURIを追加します。","Authorized JavaScript origins":"承認済みのJavaScript生成元","Authorized redirect URIs":"承認済みのリダイレクトURI","Back To Guides":"ガイドへ戻る","Choose":"選ぶ項目：","Click":"クリックする項目：","Commands & API":"コマンドとAPI","Common problems":"よくある問題","Complete the Google login in the external browser window.":"外部ブラウザウィンドウでGoogleログインを完了します。","Create a new project or pick a dedicated existing one.":"新しいプロジェクトを作成するか、専用の既存プロジェクトを選びます。","Create an":"次を作成します：","Create credentials.":"認証情報を作成します。","Create the API key safely":"APIキーを安全に作成する","Create the OAuth client":"OAuthクライアントを作成する","Create the project":"プロジェクトを作成する","Delete temporary projects once you are done testing.":"テストが終わったら、一時的なプロジェクトを削除してください。","Desktop app rule:":"デスクトップアプリでのルール：","Detailed setup guide for using your own YouTube API project with the Social Stream Ninja desktop app.":"Social Stream Ninjaデスクトップアプリで自分のYouTube APIプロジェクトを使うための詳しい設定ガイドです。","Do not confuse these two fields in Google Cloud:":"Google Cloudの次の2つの欄を混同しないでください：","Do not paste them into screenshots, chat logs, or bug reports.":"スクリーンショット、チャットログ、不具合報告に貼り付けないでください。","Do not use HTTP referrer restrictions for the desktop app.":"デスクトップアプリにはHTTPリファラー制限を使用しないでください。","Download":"ダウンロード","Download Desktop App":"デスクトップアプリをダウンロード","Enable":"有効化","Expected result:":"期待する結果：","Features":"機能","Field":"フィールド","Guides":"ガイド","HTTP referrer restrictions are for browser pages, not this local desktop auth flow.":"HTTPリファラー制限はブラウザページ用で、このローカルデスクトップ認証フロー向けではありません。","Hire":"仕事を依頼する","Home":"ホーム","How to create a Google Cloud project for the SSN Standalone desktop app without weakening your key security.":"キーの安全性を損なわずに、SSN単体デスクトップアプリ用のGoogle Cloudプロジェクトを作成する方法を説明します。","If the app is in testing, add your Google account as a test user.":"アプリがテスト中の場合は、自分のGoogleアカウントをテストユーザーとして追加します。","If you accidentally expose them, rotate or delete them.":"誤って公開した場合は、更新または削除してください。","Important:":"重要：","Inspiration":"活用アイデア","Keep the credentials safe":"認証情報を安全に保つ","Main navigation":"メインナビゲーション","OAuth Client ID":"OAuthクライアントID","OAuth Client Secret":"OAuthクライアントシークレット","OAuth client ID":"OAuthクライアントID","Open Google Cloud Console.":"Google Cloud Consoleを開きます。","Open navigation menu":"ナビゲーションメニューを開く","Open that key's restrictions.":"そのキーの制限設定を開きます。","Open the OAuth consent screen settings.":"OAuth同意画面の設定を開きます。","Open the YouTube source page inside the desktop app.":"デスクトップアプリ内のYouTubeソースページを開きます。","Overlay Gallery":"オーバーレイギャラリー","Overview":"概要","Paste the":"次を貼り付けます：","Paste the values into the desktop app":"値をデスクトップアプリに貼り付ける","Save":"保存（Save）","Security":"セキュリティ","Sign in with YouTube":"YouTubeでログイン（Sign in with YouTube）","Sign out if needed.":"必要に応じてログアウトします。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0ライセンス。","Step 1":"手順1","Step 2":"手順2","Step 3":"手順3","Step 4":"手順4","Support":"サポート","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","Treat the Client Secret and API key as sensitive.":"クライアントシークレットとAPIキーは機密情報として扱ってください。","Troubleshooting":"トラブル対処","Under":"次のセクションで：","Use a dedicated test project if you are experimenting.":"試している段階では、専用のテストプロジェクトを使ってください。","Use this only if you want the desktop app to use":"デスクトップアプリに次を使用させたい場合にのみ設定してください：","Use type":"種類を次にします：","Value":"値","Web application":"ウェブアプリケーション","What this setup is for":"この設定の用途","YouTube Data API v3":"YouTube Data API v3","YouTube Project Setup":"YouTubeプロジェクトの設定","YouTube Project Setup - Social Stream Ninja":"YouTubeプロジェクトの設定 - Social Stream Ninja","all three values below must come from the":"以下の3つの値はすべて、次から取得する必要があります：","if everything matches, Google sign-in works and the desktop app uses your saved YouTube project instead of the default shared one.":"すべて一致していればGoogleログインが成功し、デスクトップアプリは標準の共有プロジェクトの代わりに、保存したYouTubeプロジェクトを使用します。","in the same project.":"を同じプロジェクト内で作成します。","instead of Social Stream Ninja's default shared project.":"。Social Stream Ninjaの標準の共有プロジェクトの代わりに使います。","must be just the origin, with no path.":"には、パスを含めずオリジンだけを指定します。","must include the full":"には、完全な次のパスを含める必要があります：","on older builds, this could happen when OAuth and API key came from different projects.":"古いビルドでは、OAuthとAPIキーが別のプロジェクト由来の場合に起こることがありました。","only.":"のみです。","path.":"です。","same Google Cloud project":"同じGoogle Cloudプロジェクト","the Client ID and Client Secret do not match.":"クライアントIDとクライアントシークレットが一致していません。","the redirect URI is not an exact match.":"リダイレクトURIが完全に一致していません。","your API key project is out of YouTube quota.":"APIキーのプロジェクトで、YouTubeの割り当てを使い切っています。","your own YouTube API quota":"自分のYouTube API割り当て"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/youtube-project-setup.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション"><a href="../index.html">ホーム</a><a href="features.html">機能</a><a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a><a href="download.html">ダウンロード</a><a href="guides.html">ガイド</a><a href="commands.html">コマンドとAPI</a><a href="supported-sites.html">対応サイト</a><a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a><a href="services.html" class="site-priority-hire">仕事を依頼する</a><a href="support.html">サポート</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/youtube-project-setup.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/youtube-project-setup.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/youtube-project-setup.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/youtube-project-setup.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/youtube-project-setup.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/youtube-project-setup.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="youtube-project-setup.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/youtube-project-setup.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/youtube-project-setup.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/youtube-project-setup.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/youtube-project-setup.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/youtube-project-setup.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/youtube-project-setup.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/youtube-project-setup.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/youtube-project-setup.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/youtube-project-setup.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/youtube-project-setup.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="テーマを切り替え"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>YouTubeプロジェクトの設定</h1>
+            <p>キーの安全性を損なわずに、SSN単体デスクトップアプリ用のGoogle Cloudプロジェクトを作成する方法を説明します。</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <span class="mini-label">概要</span>
+                    <h3>この設定の用途</h3>
+                    <p>デスクトップアプリに次を使用させたい場合にのみ設定してください： <strong>自分のYouTube API割り当て</strong> 。Social Stream Ninjaの標準の共有プロジェクトの代わりに使います。</p>
+                    <div class="callout-box">
+                        <strong>重要：</strong> 以下の3つの値はすべて、次から取得する必要があります： <strong>同じGoogle Cloudプロジェクト</strong>:
+                        <ul class="guide-list">
+                            <li>OAuthクライアントID</li>
+                            <li>OAuthクライアントシークレット</li>
+                            <li>APIキー</li>
+                        </ul>
+                    </div>
+                    <div class="callout-box warning">
+                        <strong>Google Cloudの次の2つの欄を混同しないでください：</strong>
+                        <ul class="guide-list">
+                            <li><strong>承認済みのJavaScript生成元</strong> には、パスを含めずオリジンだけを指定します。</li>
+                            <li><strong>承認済みのリダイレクトURI</strong> には、完全な次のパスを含める必要があります： <code>/sources/websocket/youtube.html</code> です。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="setup-grid">
+                    <div class="guide-card">
+                        <span class="mini-label">手順1</span>
+                        <h3>プロジェクトを作成する</h3>
+                        <ol class="guide-steps">
+                            <li>Google Cloud Consoleを開きます。</li>
+                            <li>新しいプロジェクトを作成するか、専用の既存プロジェクトを選びます。</li>
+                            <li>有効化 <strong>YouTube Data API v3</strong>.</li>
+                            <li>OAuth同意画面の設定を開きます。</li>
+                            <li>アプリがテスト中の場合は、自分のGoogleアカウントをテストユーザーとして追加します。</li>
+                        </ol>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">手順2</span>
+                        <h3>OAuthクライアントを作成する</h3>
+                        <ol class="guide-steps">
+                            <li>認証情報を作成します。</li>
+                            <li>選ぶ項目： <strong>OAuthクライアントID</strong>.</li>
+                            <li>種類を次にします： <strong>ウェブアプリケーション</strong>.</li>
+                            <li>以下に示す正確なオリジンとリダイレクトURIを追加します。</li>
+                        </ol>
+                        <table class="steps-table">
+                            <thead>
+                                <tr>
+                                    <th>フィールド</th>
+                                    <th>値</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>承認済みのJavaScript生成元</td>
+                                    <td><code>http://localhost:8181</code><br><code>http://localhost:8080</code></td>
+                                </tr>
+                                <tr>
+                                    <td>承認済みのリダイレクトURI</td>
+                                    <td><code>http://localhost:8181/sources/websocket/youtube.html</code><br><code>http://localhost:8080/sources/websocket/youtube.html</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">手順3</span>
+                        <h3>APIキーを安全に作成する</h3>
+                        <ol class="guide-steps">
+                            <li>次を作成します： <strong>APIキー</strong> を同じプロジェクト内で作成します。</li>
+                            <li>そのキーの制限設定を開きます。</li>
+                            <li>次のセクションで： <strong>APIの制限</strong>で、対象を次に制限します： <strong>YouTube Data API v3</strong> のみです。</li>
+                            <li><strong>デスクトップアプリにはHTTPリファラー制限を使用しないでください。</strong></li>
+                        </ol>
+                        <div class="guide-note">
+                            <p><strong>デスクトップアプリでのルール：</strong> HTTPリファラー制限はブラウザページ用で、このローカルデスクトップ認証フロー向けではありません。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">手順4</span>
+                    <h3>値をデスクトップアプリに貼り付ける</h3>
+                    <ol class="guide-steps">
+                        <li>デスクトップアプリ内のYouTubeソースページを開きます。</li>
+                        <li>次を貼り付けます： <strong>OAuthクライアントID</strong>, <strong>OAuthクライアントシークレット</strong>、および <strong>APIキー</strong>.</li>
+                        <li>クリックする項目： <strong>保存（Save）</strong>.</li>
+                        <li>必要に応じてログアウトします。</li>
+                        <li>クリックする項目： <strong>YouTubeでログイン（Sign in with YouTube）</strong>.</li>
+                        <li>外部ブラウザウィンドウでGoogleログインを完了します。</li>
+                    </ol>
+                    <div class="callout-box">
+                        <strong>期待する結果：</strong> すべて一致していればGoogleログインが成功し、デスクトップアプリは標準の共有プロジェクトの代わりに、保存したYouTubeプロジェクトを使用します。
+                    </div>
+                </div>
+
+                <div class="setup-grid">
+                    <div class="guide-card">
+                        <span class="mini-label">セキュリティ</span>
+                        <h3>認証情報を安全に保つ</h3>
+                        <ul class="guide-list">
+                            <li>クライアントシークレットとAPIキーは機密情報として扱ってください。</li>
+                            <li>スクリーンショット、チャットログ、不具合報告に貼り付けないでください。</li>
+                            <li>誤って公開した場合は、更新または削除してください。</li>
+                            <li>試している段階では、専用のテストプロジェクトを使ってください。</li>
+                            <li>テストが終わったら、一時的なプロジェクトを削除してください。</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">トラブル対処</span>
+                        <h3>よくある問題</h3>
+                        <ul class="guide-list">
+                            <li><strong><code>redirect_uri_mismatch</code>:</strong> リダイレクトURIが完全に一致していません。</li>
+                            <li><strong><code>invalid_client</code>:</strong> クライアントIDとクライアントシークレットが一致していません。</li>
+                            <li><strong><code>quotaExceeded</code>:</strong> APIキーのプロジェクトで、YouTubeの割り当てを使い切っています。</li>
+                            <li><strong>アカウントの検証に失敗：</strong> 古いビルドでは、OAuthとAPIキーが別のプロジェクト由来の場合に起こることがありました。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="footer-links">
+                    <a href="guides.html" class="btn btn-secondary">ガイドへ戻る</a>
+                    <a href="download.html" class="btn btn-primary">デスクトップアプリをダウンロード</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0ライセンス。</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

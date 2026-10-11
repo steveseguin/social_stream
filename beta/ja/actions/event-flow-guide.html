@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Event Flowのトリガー、条件、アクションでSocial Stream Ninjaの自動処理を作成します。ライブチャットイベントを音、メディア、報酬、OBS操作へつなげます。">
+    <meta name="robots" content="noindex, follow">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ja/actions/event-flow-guide.html">
+    <meta property="og:title" content="Event Flowガイド - Social Stream Ninja">
+    <meta property="og:description" content="Event Flowのトリガー、条件、アクションでSocial Stream Ninjaの自動処理を作成します。ライブチャットイベントを音、メディア、報酬、OBS操作へつなげます。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ja/actions/event-flow-guide.html">
+    <meta name="twitter:title" content="Event Flowガイド - Social Stream Ninja">
+    <meta name="twitter:description" content="Event Flowのトリガー、条件、アクションでSocial Stream Ninjaの自動処理を作成します。ライブチャットイベントを音、メディア、報酬、OBS操作へつなげます。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Flowガイド - Social Stream Ninja</title>
+    <link rel="canonical" href="https://socialstream.ninja/beta/ja/actions/event-flow-guide.html">
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1f2937 40%, #312e81 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .guide-shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(4, 12, 38, 0.5);
+        }
+        header {
+            background: radial-gradient(circle at top left, rgba(109,40,217,0.15), transparent),
+                        linear-gradient(135deg, #4c1d95, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+        }
+        header p {
+            font-size: 1.2rem;
+            max-width: 640px;
+            opacity: 0.92;
+        }
+        .content {
+            padding: 45px 55px 65px;
+        }
+        section {
+            margin-bottom: 60px;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 18px;
+            color: #312e81;
+        }
+        h3 {
+            font-size: 1.4rem;
+            margin: 25px 0 10px;
+            color: #4338ca;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 25px;
+            margin: 15px 0;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .panel {
+            background: #f7f7fb;
+            border: 1px solid rgba(67,56,202,0.12);
+            border-radius: 12px;
+            padding: 22px 25px;
+            margin: 22px 0;
+        }
+        .panel strong {
+            color: #312e81;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            padding: 22px;
+            border-radius: 14px;
+            margin: 25px 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 22px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+        }
+        .card h4 {
+            margin-bottom: 12px;
+            color: #4c1d95;
+        }
+        code {
+            background: rgba(226,232,240,0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .callout {
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            border-left: 4px solid;
+        }
+        .callout.tip { background: #eef2ff; border-color: #4338ca; }
+        .callout.warn { background: #fef3c7; border-color: #d97706; }
+        .callout.danger { background: #fee2e2; border-color: #b91c1c; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+        .var-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            font-size: 0.95rem;
+        }
+        .var-table th, .var-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .var-table th {
+            background: #f7f7fb;
+            color: #312e81;
+            font-weight: 600;
+        }
+        .var-table tr:hover {
+            background: rgba(99,102,241,0.04);
+        }
+        .var-table code {
+            background: rgba(99,102,241,0.1);
+            color: #4338ca;
+        }
+        /* ── Custom JS section additions ── */
+        .code-js {
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 18px 22px;
+            border-radius: 10px;
+            margin: 16px 0;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.88rem;
+            line-height: 1.65;
+            overflow-x: auto;
+            white-space: pre;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .snippet-block {
+            margin: 28px 0;
+            border: 1px solid rgba(67,56,202,0.15);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .snippet-label {
+            background: rgba(67,56,202,0.07);
+            padding: 10px 18px;
+            font-weight: 600;
+            color: #312e81;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .snippet-desc {
+            padding: 10px 18px 0;
+            font-size: 0.93rem;
+            color: #475569;
+        }
+        .snippet-block .code-js {
+            border-radius: 0;
+            margin: 0;
+            border: none;
+            border-top: 1px solid rgba(0,0,0,0.15);
+        }
+        figure.screenshot {
+            margin: 24px 0;
+            text-align: center;
+        }
+        figure.screenshot img {
+            max-width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(15,23,42,0.12);
+            box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+        }
+        figure.screenshot figcaption {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #64748b;
+            font-style: italic;
+        }
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 24px 0;
+            align-items: start;
+        }
+        .desktop-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #312e81;
+            color: #e0e7ff;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            padding: 3px 10px;
+            border-radius: 999px;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        .snippet-heading {
+            margin: 28px 0 4px;
+            color: #4c1d95;
+        }
+        @media (max-width: 700px) {
+            header, .content { padding: 35px 20px; }
+            h1 { font-size: 2rem; }
+            .diagram { font-size: 0.85rem; }
+            .var-table { font-size: 0.85rem; display: block; max-width: 100%; overflow-x: auto; }
+            .var-table th, .var-table td { padding: 8px 10px; }
+            .panel code { overflow-wrap: anywhere; }
+            .two-col { grid-template-columns: 1fr; }
+            .code-js { font-size: 0.8rem; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"actions/event-flow-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{"\"Desktop only\"":"「デスクトップ専用」","\"chat message contains !raffle\").":"「チャットメッセージに!raffleを含む」など）。","$5.00, 500 bits":"$5.00、500 bits","(Send Test Event) before pushing a flow live.":"（Send Test Event）で確認してから、本番でフローを有効にしてください。","(Twitch Message, Timers, Manual Trigger, etc.) ignore upstream input. They generate their own payload and always emit":"（Twitch Message、Timers、Manual Triggerなど）は上流の入力を無視し、独自のペイロードを作って常に次を出力します：","(action). They are the escape hatch for anything the built-in nodes cannot express.":"（アクション）。組み込みノードで表現できない処理を実現するための手段です。","(counters, toggles, timers) to track context between events.":"（カウンター、スイッチ、タイマー）で、イベント間の文脈を保持します。","(current flow result state),":"（現在のフロー結果の状態）、","(left ports) expect the message context.":"（左のポート）はメッセージの文脈を受け取ります。","(paste into the action's JavaScript Code field):":"（アクションのJavaScript Code欄に貼り付けます）：","(paste into the trigger's JavaScript Code field):":"（トリガーのJavaScript Code欄に貼り付けます）：","(platform, type, chatname, chatmessage, etc.). Attach custom data under":"（platform、type、chatname、chatmessageなど）。独自データは次に付けてください：","(right ports) emit the same context plus any edits.":"（右のポート）は、編集を反映した同じ文脈を出力します。","(see":"（参照：","(the event payload),":"（イベントのペイロード）、","(top-right of the editor) to send a synthetic message through the pipeline without needing a live stream. Set the chatname to a subscriber, add a message like":"（エディターの右上）。ライブ配信なしで、テスト用メッセージを処理経路に送信できます。chatnameをサブスク登録者の名前に設定し、次のようなメッセージを追加します：","(trigger) and":"（トリガー）と","(trigger) or a no-op (action) and logs to the DevTools console. The flow doesn't crash.":"（トリガー）または何もしない動作（アクション）となり、DevToolsコンソールへ記録されます。フローはクラッシュしません。","). Treat imported flow files like executable code. Only import flows from sources you trust.":"）。取り込むフローファイルは実行可能コードとして扱い、信頼する提供元のフローだけを取り込んでください。",", a new line, then":"、改行、次の値を入力します：",", and":"、および",", and confirm the Relay Chat destination receives the reformatted string.":"を送り、Relay Chatの送信先が整形済み文字列を受け取ることを確認します。",", and the OBS controls need a rendering surface. That surface is the Flow Actions overlay page served from":"やOBS操作には、描画用の画面が必要です。その画面は、次で提供するFlow Actionsオーバーレイページです：",", not when it happens:":"を表し、いつ発生するかを表すものではありません：",", or":"、または",", or leave it blank to use the Flow Actions TTS default.":"を指定するか、空欄にしてFlow Actionsの標準TTSを使います。",", plus":"に加え、",", so the output is":"となるため、出力は",", source / filter / mute / text actions will not work until OBS / obs-websocket is upgraded.":"の場合、OBS / obs-websocketを更新するまで、ソース / フィルター / ミュート / テキスト操作は動作しません。",", then return":"を行い、その後、次を返します：",". A flow built only from actions chained together looks valid but is permanently idle, because nothing ever starts the chain. Node names describe what the node":"。アクションだけをつないだフローは、有効に見えても、開始するものがないため常に待機したままです。ノード名は、そのノードが",". Connect that wire into NOT to invert the result.":"。その線をNOTにつなぐと結果を反転できます。",". Drag a wire from the colored output you need (green = true, gray/red = false) to the next node.":"。必要な色の出力（緑 = true、灰色/赤 = false）から次のノードへ線をドラッグします。",". Each flow can subscribe to multiple platforms at once.":"。各フローは同時に複数のプラットフォームを購読できます。",". Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set.":". Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set.",". If you're accepting shared flows from others, audit the JS before activating them.":"。他の人が共有したフローを使う場合は、有効にする前にJavaScriptを確認してください。",". Keep it running in your broadcasting software (OBS/Streamer.bot browser docks/etc.) so Event Flow actions have somewhere to appear.":"。配信ソフト（OBS/Streamer.botのブラウザドックなど）で動かしたままにし、Event Flowのアクションの表示先を用意してください。",". Keep it wired to something meaningful or disable the node so it does not accidentally unblock a flow.":"。意味のある入力へ接続するかノードを無効にし、意図せずフローを通さないようにしてください。",". Open the editor through the":"。次からエディタを開きます：",". Paste it into an OBS Browser Source (1920×1080 suggested) or open it in any overlay browser.":"。OBSブラウザソース（推奨1920×1080）に貼り付けるか、オーバーレイ用のブラウザで開きます。",". Returning the Promise lets Event Flow wait for submission and report errors.":"。Promiseを返すことで、Event Flowが送信を待ち、エラーを報告できます。",". SSApp queues the job silently through the native Windows printer API and uses those saved settings. A flow can override them with options such as":"。SSAppはWindowsのネイティブ印刷APIを通じて、保存済み設定で確認なしにジョブをキューへ送ります。フローでは次のようなオプションで上書きできます：",". Scene switching works here, and recording / streaming / replay buffer actions can fall back to it.":"。ここではシーン切り替えが動作し、録画 / 配信 / リプレイバッファの操作も代替経路として使えます。",". See the":"。参照先：",". The":"。",". The fields below are always available; platform-specific events may include additional ones.":"。以下のフィールドは常に利用でき、プラットフォーム固有イベントでは追加フィールドがある場合があります。",". They can still output an updated payload if you want to keep chaining actions.":"。アクションをつなぎ続けたい場合は、更新済みのペイロードを出力することもできます。",". This controls display on re-ingest, not sending. Follow the":"。これは再取得時の表示を制御するもので、送信を制御するものではありません。次を参照してください：",". Use two relay actions when a message should reach both variants. See":"。両方の種類へ送る場合は、中継アクションを2つ使ってください。参照：","0. Quick Orientation":"0. 全体像をつかむ","1. What Moves Through a Node?":"1. ノードを流れるもの","2. Logic Node Cheatsheet":"2. ロジックノード早見表","3. Example Micro-Flows":"3. 小さなフローの例","4. Preventing Echoes, Loops, and Relay Feedback":"4. 反射、ループ、中継のフィードバックを防ぐ","5. Inputs, Outputs, and Practical Questions":"5. 入力、出力、実用上の質問","6. Template Variables Reference":"6. テンプレート変数のリファレンス","7. Best Practices Checklist":"7. 実用上の確認事項","8. Further Exploration":"8. さらに詳しく","9. Custom JavaScript":"9. カスタムJavaScript",": add a standard Relay Chat node after the action and configure it to point at your Discord (or other) destination. No custom code is needed here. The reformatted":"：アクションの後に標準のRelay Chatノードを置き、Discordなどの送信先を指定してください。ここでは独自コードは不要です。整形済みの",": named triggers, a starter template, workflow discovery, extra data, HTTP/WebSocket/P2P examples, and dial gestures.":"：名前付きトリガー、開始用テンプレート、ワークフローの検出、追加データ、HTTP/WebSocket/P2Pの例、ダイヤル操作。","; see":"— 参照：","; with no trigger on top, nothing starts the chain.":"。先頭にトリガーがなければ、何も開始しません。","= continue,":"= 続行、","= stop). Use":"= 停止）。次を使用してください：","A 50/50 coin flip between two audio clips. The RANDOM gate rolls once per matching message: when it passes, sound A plays; when it fails, the NOT gate flips the result and the AND gate lets sound B play instead.":"2つの音声クリップを半々の確率で選びます。RANDOMゲートは条件に合うメッセージごとに1回抽選し、通ると音Aを再生します。通らなければNOTゲートが結果を反転し、ANDゲートが音Bを通します。","A Custom Code trigger (blue) and Execute Custom Code action (green) placed on the canvas. Wire the trigger's output port to the action's input port to connect them.":"キャンバス上に配置したCustom Codeトリガー（青）とExecute Custom Codeアクション（緑）。トリガーの出力ポートからアクションの入力ポートへ線をつなぎます。","A bare NOT would output":"入力のないNOTは、次を出力します：","A floating NOT node will still output":"接続されていないNOTノードでも、次を出力します：","A recalculated gate bit (logic nodes) or passthrough bit (actions).":"再計算したゲート判定値（ロジックノード）またはそのまま渡す判定値（アクション）。","A reflection is an outgoing message captured again from a destination chat. Current Relay Chat actions skip these recognized reflections; there is no separate No Reflections checkbox. To hide or limit their display in the Dock and overlays, use a":"反射とは、送信したメッセージが送信先チャットから再び取得されることです。現在のRelay Chatは、認識した反射をスキップします。別個のNo Reflectionsチェックボックスはありません。ドックやオーバーレイでの表示を隠したり制限したりするには、次を使います：","A runtime error in your code returns":"コードの実行時エラーでは、次を返します：","A. Auto-reply Unless the Message Is a Command":"A. コマンド以外のメッセージに自動返信","AND":"AND","Action Nodes":"アクションノード","Action code can call":"アクションコードから次を呼び出せます：","Action nodes (green) never run on their own. They only fire when a trigger node (blue) above them evaluates":"アクションノード（緑）は単独では動きません。上流のトリガーノード（青）が次の値を出したときだけ実行されます：","Action panel showing Execute Custom Code under the Integrations group":"Integrationsグループ内のExecute Custom Codeを表示したアクションパネル","Action properties. Return an object to merge changes back into the flow result.":"アクションのプロパティ。オブジェクトを返すと、変更をフロー結果へ統合します。","Action snippets: return":"アクションのコード例 — 返す値：","Actions":"アクション","Add a visual indicator at the end of every message that passes through this action.":"このアクションを通る各メッセージの末尾に、見た目の印を追加します。","Additional context":"追加の文脈","Advanced":"高度な機能","Advanced Access Level":"高度なアクセスレベル","Alias":"別名","Allow All":"すべて許可（Allow All）","Allow First":"最初の1件を許可（Allow First）","An error of type":"コンパイル時の","Any Message":"任意のメッセージ（Any Message）","Any Message trigger connected to Feature Message and Speak Text actions":"Feature MessageとSpeak Textアクションへ接続したAny Messageトリガー","Any Message trigger connected to a Play Audio Clip action":"Play Audio Clipアクションへ接続したAny Messageトリガー","Any node with a green output emits":"緑の出力を持つノードは、次を出力します：","Append a badge or tag to the message":"メッセージにバッジやタグを追加","Arbitrary structured data attached to the event":"イベントに付属する任意の構造化データ","Attach routing metadata for downstream nodes":"後続ノード用の振り分けメタデータを付ける","Attached image URL":"添付画像URL","Available:":"利用可能：","Avoid duplicate relay systems.":"中継システムの重複を避けます。","B. Require Multiple Checks with AND":"B. ANDで複数の確認を必須にする","Block All":"すべてブロック（Block All）","Block message conditionally":"条件に応じてメッセージをブロック","Both nodes receive the full event payload as":"両ノードは完全なイベントペイロードを次として受け取ります：","Break cycles intentionally.":"循環は意図的に断ち切ります。","Browser Source API:":"ブラウザソースAPI：","Build Social Stream Ninja automations with Event Flow triggers, conditions and actions. Connect live chat events to sounds, media, rewards and OBS controls.":"Event Flowのトリガー、条件、アクションでSocial Stream Ninjaの自動処理を作成します。ライブチャットイベントを音、メディア、報酬、OBS操作へつなげます。","Build loyalty-based commands, keyword games, or raffle gating with AND/OR/NOT logic.":"AND/OR/NOTロジックで、ロイヤルティに基づくコマンド、キーワードゲーム、抽選参加条件を作れます。","Build reliable automations for Social Stream Ninja. This guide walks through the basics, logic nodes, signal flow, and the practical tricks that creators ask about most (like avoiding chat echoes and knowing when to stack AND/NOT blocks).":"Social Stream Ninjaで安定した自動処理を作りましょう。このガイドでは、基本、ロジックノード、信号の流れ、チャットの反射回避やAND/NOTの組み合わせなど、クリエイターからよく寄せられる実用的なポイントを説明します。","C. NOT Node to Block Repeat Alerts":"C. NOTノードで重複アラートを防ぐ","Call Webhook JSON:":"Call WebhookのJSON：","Can a node emit a payload even if it returns false?":"falseを返してもペイロードを出力できますか？","Can each Speak Text node use a different voice?":"Speak Textノードごとに別の音声を使えますか？","Canvas showing a Custom Code trigger and Execute Custom Code action side by side":"Custom CodeトリガーとExecute Custom Codeアクションを横に並べたキャンバス","Chat message text":"チャットメッセージの本文","Check the":"次を確認してください：","Choose":"選ぶ項目：","Choose Local File":"ローカルファイルを選択（Choose Local File）","Click":"クリックする項目：","Click this button:":"次のボタンをクリックします：","Closing the Flow Actions page pauses every overlay/audio/OBS action in Event Flow. Hide it or put it on a separate monitor instead of closing it outright.":"Flow Actionsページを閉じると、Event Flowのすべてのオーバーレイ/音声/OBSアクションが止まります。閉じる代わりに隠すか、別のモニターに置いてください。","Combine":"組み合わせるもの：","Combine role check and message content in a single expression that no built-in trigger covers.":"組み込みトリガーだけでは表せない役割の確認と本文条件を、1つの式にまとめます。","Common Q & A":"よくある質問と回答","Complete example: VIP feature request bot":"完全な例 — VIP向け機能追加リクエストボット","Condition, Compare, Regex, and Logic nodes emit two ports.":"Condition、Compare、Regex、Logicノードには2つの出力ポートがあります。","Confirm":"確認する項目：","Continue the flow only when the message contains a specific word or phrase.":"特定の単語やフレーズを含む場合だけ、フローを続行します。","Convert the standard YouTube donation label to EUR, exclude Jewels/Gifts, and select one sound or visual range.":"標準のYouTube寄付ラベルをEURに換算し、Jewels/Giftsを除外して、1つの音声または視覚効果の範囲を選びます。","CoolViewer123":"CoolViewer123","Copy Local Flow Actions URL for OBS":"OBS用のローカルFlow Actions URLをコピー（Copy Local Flow Actions URL for OBS）","Copy any of these into the JavaScript Code textarea of the matching node type.":"対応するノードのJavaScript Code欄へ、いずれかの例をコピーしてください。","Core Variables (backward compatible)":"基本変数（後方互換）","Counter target minus current value, clamped at 0":"カウンターの目標から現在値を引いた値。下限は0","Counter target value":"カウンターの目標値","Currency conversion:":"通貨換算：","Current counter value after a Counter or Check Counter step":"CounterまたはCheck Counter処理後の現在のカウンター値","Custom Code":"カスタムコード（Custom Code）","Custom Code lives under the":"Custom Codeは次にあります：","Custom Code trigger properties panel showing the JavaScript code editor":"JavaScriptコードエディタを表示したCustom Codeトリガーのプロパティパネル","Custom Code: Trigger node":"Custom Code — トリガーノード","Custom JavaScript nodes":"カスタムJavaScriptノード","Custom JavaScript nodes are disabled in the browser extension because Chrome's Manifest V3 Content Security Policy blocks":"ChromeのManifest V3コンテンツセキュリティポリシーが次を禁止するため、ブラウザ拡張機能ではカスタムJavaScriptノードが無効です：","Custom code runs with renderer-process privileges.":"カスタムコードはレンダラープロセスの権限で実行されます。","D. Randomly Play One of Two Sounds":"D. 2つの音からランダムに再生","Data type":"データ型","Default behavior:":"標準の動作：","Description":"説明","Desktop app required.":"デスクトップアプリが必要です。","Disable global Relay all when using equivalent Event Flow routes, and check for other services bridging the same chats. Custom metadata is not guaranteed to survive a trip through a platform chat.":"同等のEvent Flow経路を使う場合は全体のRelay allを無効にし、同じチャットをつなぐ他のサービスも確認してください。独自メタデータがプラットフォームのチャットを経由しても残る保証はありません。","Discord Call Webhook:":"DiscordのCall Webhook：","Display Media Overlay":"メディアオーバーレイを表示（Display Media Overlay）","Display name (alternate field)":"表示名（別フィールド）","Display name of the sender":"送信者の表示名","Display name of the user":"ユーザーの表示名","Do I always need an AND node?":"常にANDノードが必要ですか？","Do I have to use AND for every pair of filters?":"2つのフィルターを組み合わせるたびにANDが必要ですか？","Document meta fields.":"metaフィールドを記録します。","Donation Alert:":"寄付アラート：","Donation above a threshold":"しきい値を超える寄付","Donation/tip display label":"寄付/投げ銭の表示ラベル","Donation: animation + sound + OBS filter":"寄付：アニメーション＋サウンド＋OBSフィルター","Donation: celebration + voice":"寄付：お祝い演出＋音声","Drag":"ドラッグする項目：","Editing code:":"コードの編集：","Effect":"効果","Emits":"送信する値：","Enable audio":"音声を有効にする","Errors are caught.":"エラーは捕捉されます。","Even if you didn't change anything, returning":"何も変更していなくても、次を返すと","Event Flow":"Event Flow","Event Flow Editor Guide":"Event Flowエディターガイド","Event Flow Editor: empty state":"Event Flowエディター — 初期状態","Event Flow Guide - Social Stream Ninja":"Event Flowガイド - Social Stream Ninja","Event Flow System":"Event Flowシステム","Event Flow plays through the":"Event Flowは次を通じて再生します：","Event Payload ─▶ State Check (isAlertMuted) └─false─▶ NOT ─▶ Play Celebration":"イベントペイロード ─▶ 状態チェック（isAlertMuted） └─false─▶ NOT ─▶ お祝い演出を再生","Event Reference":"イベントリファレンス","Event Sources":"イベントソース","Event type identifier":"イベントの種類を示す識別子","Every flow starts with a trigger":"すべてのフローはトリガーから始まります","Every message carries a JSON object. Mandatory keys follow":"すべてのメッセージはJSONオブジェクトを持ちます。必須キーは次に従います：","Every project is saved locally until exported. Use":"各プロジェクトはエクスポートするまでローカルに保存されます。次を使用してください：","Example":"例","Example Templates":"テンプレート例","Example:":"例：","Execute Custom Code":"カスタムコードを実行（Execute Custom Code）","Execute Custom Code action properties panel showing the code editor":"コードエディターを表示した「Execute Custom Code」アクションのプロパティパネル","Execute Custom Code under the":"次のカテゴリにある「Execute Custom Code」：","Execute Custom Code: Action node":"Execute Custom Code — アクションノード","Export your flow whenever you reach a milestone. Imports are the easiest rollback if an experiment goes sideways.":"節目ごとにフローをエクスポートしてください。実験がうまくいかなかった場合、インポートすれば簡単に以前の状態に戻せます。","Extended Variables":"拡張変数","Feature Message":"メッセージを取り上げる","Feeding the trigger into the AND as a second input restricts sound B to matching messages only. The same pattern works for any either/or pair of actions, not just audio.":"トリガーをANDの2つ目の入力に接続すると、条件に一致するメッセージでのみサウンドBが再生されます。このパターンは音声だけでなく、どちらか一方を実行するアクションの組み合わせにも使えます。","Field":"フィールド","Filter as early as possible to avoid extra processing down the line.":"後続の不要な処理を避けるため、できるだけ早い段階でフィルターを適用します。","Fire only when a donation meets or exceeds a minimum amount.":"寄付額が指定した最低額以上の場合にのみ発火します。","Flow Actions":"Flow Actions","Flow Actions Overlay (Action Output)":"Flow Actionsオーバーレイ（アクション出力）","Flow using a RANDOM gate, NOT gate, and AND gate to play one of two audio clips at random":"RANDOMゲート、NOTゲート、ANDゲートを使い、2つの音声クリップのいずれかをランダムに再生するフロー","Flow-added fields also work.":"フローが追加したフィールドも使用できます。","Format a donation announcement":"寄付の告知を整形する","Formatted donation string if present":"存在する場合は、書式設定された寄付の文字列","Gate signal":"ゲート信号","Great for multi-platform triggers: feed Twitch + YouTube message nodes into a single OR, then unify the downstream action.":"複数プラットフォームのトリガーに便利です。TwitchとYouTubeのメッセージノードを1つのORに接続し、その先のアクションをまとめます。","Group logic near the source.":"ソースの近くにロジックをまとめます。","Hello everyone!":"皆さん、こんにちは！","Here the Regex node emits":"この例では、メッセージがコマンドの場合にRegexノードが","Highlight My Message":"自分のメッセージを強調表示","Hook into the":"次に接続します：","How do I match TikTok Team members?":"TikTokのチームメンバーを判定するには？","How do true/false values reach the NOT node?":"true/falseの値はどのようにNOTノードに届きますか？","How to open it (from the popup/dash):":"開き方（ポップアップ／ダッシュボードから）：","If a node outputs false:":"ノードがfalseを出力した場合：","If an earlier action adds a top-level value to the message, later templates can read it directly. This is how":"前のアクションがメッセージのトップレベルに値を追加した場合、後続のテンプレートでその値を直接参照できます。これは次の仕組みです：","If an event does not have a particular field (e.g.,":"イベントに特定のフィールドがない場合（例：","If nothing is connected to the NOT input it evaluates to":"NOTの入力に何も接続されていない場合、評価結果は次になります：","If two branches feed each other, add a logic node that checks a state variable (\"currentlyRelaying\") so the flow exits early when the flag is set.":"2つの分岐が互いに送り合う場合は、状態変数（「currentlyRelaying」）を確認するロジックノードを追加し、そのフラグが立っているときにフローを早期終了させます。","If you do nothing with a":"次に対して何も操作しない場合：","In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose":"In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose","In a Play Audio Clip or Display Media Overlay action, click":"「Play Audio Clip」または「Display Media Overlay」アクションで次をクリックします：","Incoming triggers and outgoing Relay Chat destinations both distinguish between":"受信トリガーと送信するRelay Chatの宛先は、どちらも次の2つを区別します：","Input Expectations":"入力の要件","Inputs":"入力","Inputs: 1 boolean (true/false) derived from the previous node.":"入力：前のノードから得た1つのブール値（true/false）。","Inputs: two or more boolean signals (A, B, ...). You can leave extra ports empty.":"入力：2つ以上のブール信号（A、B、...）。余分なポートは空のままで構いません。","Inside the SSApp, code in Custom JS nodes has full access to the":"SSApp内では、Custom JSノードのコードは次に完全にアクセスできます：","Inspect the content and silently drop the message if a rule matches. This is useful for spam patterns the keyword filter can't express.":"内容を調べ、ルールに一致したメッセージを通知せずに破棄します。キーワードフィルターでは表現できないスパムパターンに便利です。","Integrations":"連携（Integrations）","Keep SSApp running. If a selected file moves, return to the action and click":"SSAppを起動したままにしてください。選択したファイルを移動した場合は、アクションに戻って次をクリックします：","Keep the overlay open.":"オーバーレイを開いたままにします。","Keyword match (case-insensitive)":"キーワード一致（大文字と小文字を区別しない）","Launch + Basics":"起動と基本操作","Let the flow continue only for privileged users.":"権限のあるユーザーの場合にのみフローを続行します。","Logic nodes may emit both the":"ロジックノードは、次の両方を出力する場合があります：","MEMBERSHIP, new_sponsor":"MEMBERSHIP, new_sponsor","Match messages that start with a command from a defined list (e.g.":"定義したリストのコマンドで始まるメッセージに一致します（例：","Media Files for Event Flow guide":"Event Flow用メディアファイルガイド","Member for 3 months":"メンバー歴3か月","Membership state":"メンバーシップ状態","Membership state when applicable":"該当する場合のメンバーシップ状態","Message length gate":"メッセージの長さによるゲート","Minimal safe return:":"最小限の安全な戻り値：","Missing variables become empty strings.":"存在しない変数は空の文字列になります。","Mix multiple platforms inside a single automation (Kick + Twitch + YouTube routed through one flow).":"1つの自動処理で複数のプラットフォームを組み合わせられます（Kick、Twitch、YouTubeを1つのフローに通すなど）。","Most nodes expose one output. Whatever enters (payload + gate) exits unchanged unless the node edits it.":"ほとんどのノードには出力が1つあります。入力されたもの（ペイロード＋ゲート）は、ノードで編集しない限りそのまま出力されます。","Most side effects (like sending chat) do not alter the payload, but points actions can attach status fields such as":"チャット送信など、ほとんどの副作用はペイロードを変更しませんが、ポイントアクションは次のような状態フィールドを追加できます：","Multi-condition: VIP + keyword":"複数条件 — VIP＋キーワード","Must return:":"必須の戻り値：","NOT":"NOT","NOT & empty inputs:":"NOTと空の入力：","Name & color":"名前と色","Need to remember participants, check later eligibility, run a unique-user draw, or clear one named list? Open the":"参加者を記録したり、後から参加資格を確認したり、ユーザーの重複を避けて抽選したり、特定のリストだけを消去したりするには、次を開きます：","No network sandbox.":"ネットワークのサンドボックスはありません。","No. Many nodes already provide all-in-one filters (for example \"Filter User Level\" + \"Contains Text\"). Use AND only when the built-in options do not cover your combination, or when you want a reusable logic junction that other branches can share.":"いいえ。多くのノードには複数条件をまとめたフィルターがあります（例：「Filter User Level」＋「Contains Text」）。組み込みの設定で条件の組み合わせを表せない場合や、ほかの分岐と共有するロジックの接続点を作りたい場合にのみANDを使用してください。","No. Many nodes include multiple checks (for example, the basic Message Filter supports keyword + role). Use AND only for advanced combinations or when merging signals from different nodes.":"いいえ。多くのノードに複数の判定が含まれています（例えば基本のMessage Filterはキーワード＋役割に対応しています）。ANDは高度な条件の組み合わせや、異なるノードからの信号をまとめる場合にのみ使用してください。","Nodes at a Glance":"ノード一覧","Nodes such as":"次のようなノード：","OBS Control Guide":"OBSコントロールガイド","OBS WebSocket:":"OBS WebSocket：","OBS control modes:":"OBS操作モード：","OR":"OR","Old 4.x installs:":"旧4.xの環境：","Once loaded, that overlay can:":"読み込まれたオーバーレイは、次のことができます：","Only process events from specific platforms.":"特定のプラットフォームからのイベントだけを処理します。","Only process messages that have enough content (useful for TTS or relay to avoid single-emoji spam).":"十分な内容を持つメッセージだけを処理します（絵文字1つだけの連投を避けたい読み上げや中継に便利です）。","Open":"開く項目：","Open Code Editor":"コードエディターを開く","Open the Event Flow editor from the main dashboard's menu (desktop or extension).":"メインダッシュボードのメニューからEvent Flowエディターを開きます（デスクトップアプリまたは拡張機能）。","Open the main Social Stream Ninja popup (the window loaded from":"Social Stream Ninjaのメインポップアップを開きます（次から読み込まれるウィンドウ：","Optional context (state variables, timers) that the node asks for explicitly.":"ノードが明示的に要求する追加のコンテキスト（状態変数、タイマー）。","Output Patterns":"出力パターン","Outputs":"出力","Outputs:":"出力：","Outputs: the inverted boolean plus the untouched payload.":"出力：反転したブール値と、変更していないペイロード。","Overlay diagnostics:":"オーバーレイの診断：","Pass the (possibly mutated) message back so downstream nodes receive your changes.":"変更したメッセージを返すことで、後続ノードに変更を渡せます。","Pass-Through vs. Override":"そのまま渡す場合と上書きする場合","Password:":"パスワード：","Payload":"ペイロード","Payload Structure":"ペイロードの構造","Place NOT after \"Contains Keyword\" to trigger an alert when a viewer":"「Contains Keyword」の後にNOTを置くと、次の場合にアラートを発火できます：視聴者が","Platform filter":"プラットフォームフィルター","Platform name (capitalized)":"プラットフォーム名（先頭を大文字にした表記）","Platform name (raw)":"プラットフォーム名（元の値）","Platform user ID":"プラットフォームのユーザーID","Platform-aware message prefix":"プラットフォームに応じたメッセージ接頭辞","Play Audio Clip":"音声クリップを再生（Play Audio Clip）","Play Audio Clip → Browse sounds":"Play Audio Clip → Browse sounds","Play sounds (TTS, audio clips) locally so viewers hear them.":"視聴者に聞こえるよう、音声（読み上げ、音声クリップ）をローカルで再生します。","Playback options":"Playback options","Points & Rewards":"ポイントと報酬","Prepend a platform label when relaying cross-platform so viewers know the source.":"プラットフォームをまたいで中継するときにプラットフォーム名を先頭に付け、視聴者に送信元が分かるようにします。","Printer Control":"プリンター制御（Printer Control）","Properties panel after placing the trigger. Write any expression that returns":"トリガー配置後のプロパティパネル。次を返す式を記述します：","Ready for more depth?":"さらに詳しく知りたいですか？","Recommended diagnostic path:":"推奨する診断手順：","Reflection Filter":"反射フィルター（Reflection Filter）","Regex command detection":"正規表現によるコマンド検出","Relay Chat":"チャット転送（Relay Chat）","Relay Chat skips recognized reflections automatically.":"Relay Chatは、折り返されたと認識したメッセージを自動的にスキップします。","Relay Chat:":"Relay Chat：","Relay chat between services with filters (e.g., mirror Twitch to Discord but block commands).":"フィルターを使ってサービス間でチャットを中継します（例：コマンドを除外してTwitchからDiscordへ転送）。","Relaying chat between surfaces is powerful but can echo infinitely if you listen to your own output. Follow these safeguards:":"複数の画面間でチャットを中継する機能は便利ですが、自分の出力を受信すると無限に反復する場合があります。次の対策を行ってください：","Relink":"再リンク（Relink）","Remember:":"覚えておくこと：","Remove all @username mentions from a message before relaying it to another platform.":"別のプラットフォームに中継する前に、メッセージからすべての@usernameメンションを除去します。","Return a plain object from your action code. Any fields you include are merged into the flow's":"アクションコードからプレーンなオブジェクトを返します。含めたフィールドは、フローの次の部分にマージされます：","Return field":"戻り値のフィールド","Reward name when the source exposes a top-level reward title field":"ソースがトップレベルの報酬タイトルフィールドを提供する場合の報酬名","Rewrite the chatmessage into a consistent announcement string when a donation is present.":"寄付がある場合、chatmessageを統一した告知文に書き換えます。","Run Test":"テストを実行（Run Test）","Run custom workflows from Stream Deck or the API":"Stream DeckまたはAPIからカスタムワークフローを実行する","Run the matching action check there before testing the full Event Flow automation.":"Event Flow全体の自動処理をテストする前に、そこで該当するアクションの確認を実行します。","Running the":"使用中のアプリは","SSApp / Desktop only":"SSApp／デスクトップ版のみ","SSApp desktop app":"SSAppデスクトップアプリ","SSApp desktop app?":"SSAppデスクトップアプリですか？","Save & Close":"保存して閉じる（Save & Close）","Save versions.":"バージョンを保存します。","Scroll to the “Flow Actions” card. Use the":"「Flow Actions」カードまでスクロールします。次を使用します：","Secondary context line":"補足のコンテキスト行","Security considerations":"セキュリティ上の考慮事項","See the dedicated":"専用のガイドを参照してください：","Send Message":"メッセージを送信（Send Message）","Sender has VIP status":"送信者がVIPである","Sender is a moderator":"送信者がモデレーターである","Sender is a subscriber":"送信者がサブスクライバーである","Set":"設定する項目：","Set OBS Text Source:":"OBSテキストソースを設定：","Set Text Source:":"テキストソースを設定（Set Text Source）：","Several action nodes (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) support":"いくつかのアクションノード（Show Text、Set Text Source、Send Message、Relay Chat、TTS Speak、Call Webhook、Print Thermal Label）は、次に対応しています：","Should return:":"推奨される戻り値：","Show GIPHY or direct media URLs, text, and confetti triggered by your flows.":"フローをきっかけにGIPHYや直接指定したメディアURL、テキスト、紙吹雪を表示します。","Show Text:":"テキストを表示（Show Text）：","Signature:":"シグネチャ：","Single Output":"単一の出力","Snippet examples":"スニペット例","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Some nodes (Set Variable, Math, Text Replace) mutate the payload but still forward the":"一部のノード（Set Variable、Math、Text Replace）はペイロードを変更しますが、次はそのまま転送します：","Sound Library":"Sound Library","Source platform (lowercase)":"送信元プラットフォーム（小文字）","Speak Text":"テキストを読み上げる","Start with an alert template:":"アラートのテンプレートから始めます：","State Nodes":"状態ノード","Step 1: Custom Code trigger":"手順1 — Custom Codeトリガー","Step 2: Execute Custom Code action":"手順2 — Execute Custom Codeアクション","Step 3: Relay Chat action":"手順3 — Relay Chatアクション","Stop Audio Clips":"Stop Audio Clips","Store repeats in State nodes.":"繰り返し使う情報は状態ノードに保存します。","Strip @mentions":"@メンションを除去する","Structured event data (JSON)":"構造化されたイベントデータ（JSON）","Subscriber / VIP / mod gate":"サブスクライバー／VIP／モデレーターのゲート","Syntax errors too.":"構文エラーも捕捉されます。","TTS:":"TTS：","Tag the message with a custom field that a later":"後続のアクションが読み取れるよう、メッセージにカスタムフィールドを付けます：","Talk to OBS via the WebSocket settings that live under the Flow Actions section in the popup (scene switching, source toggles, GDI+/FreeType text updates, replay buffer, etc.).":"ポップアップの「Flow Actions」セクションにあるWebSocket設定を使ってOBSを操作します（シーン切り替え、ソースの有効／無効、GDI+／FreeTypeのテキスト更新、リプレイバッファーなど）。","Template variables work in JSON string values at any nested object or array depth. Object keys are not templated, and a custom body without placeholders is sent unchanged.":"テンプレート変数は、オブジェクトや配列のネストの深さに関係なく、JSONの文字列値で使用できます。オブジェクトのキーにはテンプレートを適用しません。プレースホルダーを含まないカスタム本文はそのまま送信します。","Test Flow":"フローをテスト（Test Flow）","Test with the built-in simulator":"内蔵シミュレーターでテストする","Testing the flow.":"フローのテスト。","The AND gate is not optional.":"ANDゲートは必須です。","The AND node ensures only members using the right keyword relay to Discord. Both branches send their boolean result to the AND node; the payload from the":"ANDノードは、正しいキーワードを使ったメンバーだけをDiscordに中継するために使います。両方の分岐がブール値の結果をANDノードに送ります。後続へ進むのは、","The Chrome extension cannot serve disk files by itself. Use Upload or a hosted URL when no desktop companion is available. See the":"Chrome拡張機能だけではディスク上のファイルを配信できません。デスクトップアプリを併用できない場合は、アップロードまたはホストされたURLを使用します。次を参照してください：","The Event Flow Editor. The left panel lists all available nodes; the dotted canvas is where you build flows; the right panel shows properties for the selected node.":"Event Flowエディター。左のパネルには使用できるすべてのノードが並び、点線のキャンバスでフローを作成し、右のパネルには選択したノードのプロパティが表示されます。","The Event Flow editor is the “advanced automation” layer for Social Stream Ninja. It sits above the simple popup switches and lets you script your own routing logic. Use it when you need to:":"Event Flowエディターは、Social Stream Ninjaで高度な自動処理を作るための機能です。ポップアップの簡単なスイッチに加えて、独自の振り分けロジックを記述できます。次のような場合に使用します：","The Event Flow runtime passes two things through every wire:":"Event Flowの実行処理は、すべての接続線を通じて2つのものを渡します：","The Test Flow panel for sending synthetic test events":"模擬イベントを送信するTest Flowパネル","The Test Flow panel. Fill in fields matching your trigger conditions and click":"Test Flowパネル。トリガー条件に合うように各項目を入力し、次をクリックします：","The chat message text (may contain HTML)":"チャットメッセージのテキスト（HTMLを含む場合があります）","The editor's Preview button plays locally; live playback needs the overlay open. If the browser blocks autoplay, click":"エディターのPreviewボタンではローカルで再生されます。ライブ再生にはオーバーレイを開いておく必要があります。ブラウザーが自動再生をブロックした場合は、次のボタンを使います：","The full message payload.":"メッセージの完全なペイロード。","The gate bit (":"ゲートのビット（","The link looks like":"リンクの形式：","The object":"オブジェクト：","The same payload unless the node edits it.":"ノードで編集しない限り、同じペイロード。","Thermal Label:":"感熱ラベル：","Thermal Printer Guide":"感熱プリンターガイド","Thermal printing in SSApp:":"SSAppでの感熱印刷：","These blocks answer the most common \"What does true/false mean?\" questions.":"この説明では、「true/falseは何を意味するのか」というよくある疑問に答えます。","Think of the popup as “quick presets” and Event Flow as the toolkit for bespoke workflows.":"ポップアップは手軽なプリセット、Event Flowは独自のワークフローを作る道具として使えます。","This flow is complete and fires on every message, but the sound plays on the Flow Actions overlay page,":"このフローは完成しており、すべてのメッセージで発火します。ただし、音声が再生されるのはFlow Actionsオーバーレイページです。","This flow listens for":"このフローは次を待ち受けます：","This guide is intentionally standalone. Copy it locally, adapt it for your team, and keep experimenting inside the editor.":"このガイドは単独でも使えるように作成されています。ローカルにコピーしてチーム用に調整し、エディターでさまざまな方法を試してください。","TikTok Team Member":"TikTokチームメンバー","Transform & Logic Nodes":"変換ノードとロジックノード","Trigger custom overlays, audio, OBS scenes, or webhooks based on data you enrich in the flow.":"フロー内で追加した情報に基づき、カスタムオーバーレイ、音声、OBSシーン、Webhookを起動します。","Trigger panel showing Custom Code node under the Advanced group":"「Advanced」グループ内のCustom Codeノードを示すトリガーパネル","Trigger snippets: return":"トリガーのスニペット — 戻り値：","Trigger ──▶ RANDOM (50%) ──▶ Play Sound A │ └──▶ NOT ──▶ AND ──▶ Play Sound B Trigger ──────────────────▲":"トリガー ──▶ RANDOM (50%) ──▶ サウンドAを再生 │ └──▶ NOT ──▶ AND ──▶ サウンドBを再生 トリガー ──────────────────▲","Triggers":"トリガー","True":"True","True/False Outputs":"True／False出力","Twitch Message ──▶ Regex Match \"^!\" ─┐ │ ├─false──▶ Auto Reply (\"Thanks for chatting!\") │ └─true──▶ Do nothing":"Twitchメッセージ ──▶ 正規表現一致「^!」 ─┐ │ ├─false──▶ 自動返信（「チャットしてくれてありがとう！」） │ └─true──▶ 何もしない","Twitch and YouTube relay walkthrough":"TwitchとYouTubeの中継手順","Twitch, YouTube":"Twitch、YouTube","Two action nodes chained together with no trigger node":"トリガーノードがなく、2つのアクションノードだけが接続されている状態","Two nodes in the Event Flow editor let you write arbitrary JavaScript that runs inside the flow pipeline:":"Event Flowエディターでは、2種類のノードで任意のJavaScriptを記述し、フローの処理中に実行できます：","USD donation equivalent when the source provides one; valid zero values are honored. Event Flow falls back to":"ソースが提供する場合の米ドル換算の寄付額。有効なゼロ値も尊重されます。Event Flowは代替として次を使用します：","USD donation equivalent, supplied or estimated; Event Flow derives threshold values from normalized":"提供または推定された米ドル換算の寄付額。Event Flowは、正規化された次の情報からしきい値の判定額を算出します：","Unlock":"ロック解除","Use":"使う項目：","Use AND when multiple conditions must be satisfied simultaneously (\"is subscriber\"":"複数の条件を同時に満たす必要がある場合にANDを使用します（「サブスクライバーである」","Use Debounce or Cooldown nodes":"DebounceまたはCooldownノードを使用する","Use counters, toggles, and timestamps to avoid double alerts.":"カウンター、切り替え状態、タイムスタンプを使ってアラートの重複を防ぎます。","Use random set":"Use random set","Use sound":"Use sound","User Memory guide":"User Memoryガイド","User avatar URL":"ユーザーのアバターURL","User's platform ID":"プラットフォーム上のユーザーID","Using local media in the standalone app:":"スタンドアロンアプリでローカルメディアを使う：","Variable":"変数","Variable matching is case-insensitive.":"変数名の照合では大文字と小文字を区別しません。","Variables + Logic":"変数とロジック","Voice Override":"音声の上書き（Voice Override）","What comes into a node?":"ノードには何が入力されますか？","What is this editor?":"このエディターとは？","What leaves a node?":"ノードから出るものは？","What the action returns":"アクションが返すもの","When to branch?":"分岐はいつ使いますか？","When you add custom":"カスタムの値を追加した場合：","Whenever you want to react differently to":"次に応じて異なる反応をさせたい場合です：","Work inside canvases called":"次の名前のキャンバス内で作業します：","Yes. Enter a provider-supported voice name or ID in":"はい。プロバイダーが対応する音声名またはIDを、次に入力します：","Yes. The payload still travels through the false output; it is up to you to decide where that branch should go.":"はい。ペイロードはfalse出力にも流れます。その分岐をどこへ接続するかは自分で決められます。","YouTube Message ──▶ Contains \"!queue\" ─▶ AND ─▶ Relay to Discord Gifted Membership ─▶ User Role = Member ──▲":"YouTubeメッセージ ──▶ 「!queue」を含む ─▶ AND ─▶ Discordに中継 ギフトメンバーシップ ─▶ ユーザーの役割＝メンバー ──▲","YouTube Shorts and Event Flow":"YouTube ShortsとEvent Flow","YouTube Shorts destination note:":"YouTube Shortsの送信先に関する注意：","YouTube Super Chat or Super Sticker in a EUR range":"ユーロ建ての指定金額範囲にあるYouTube Super ChatまたはSuper Sticker","[copy link]":"[リンクをコピー]","a boolean:":"ブール値 —","action can read from a template variable (":"アクションがテンプレート変数から読み取れる値（","action with":"次を使うアクション：","actions":"アクション","actions.html":"actions.html","all work the same way.":"はいずれも同じように使えます。","also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.":"also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.","an object or Promise merged into":"次にマージされるオブジェクトまたはPromise：","and":"および","and use that generated localhost URL instead of the hosted Flow Actions URL.":"生成されたlocalhostのURLを、ホストされたFlow ActionsのURLの代わりに使用します。","any":"いずれかの","append":"末尾に追加","at compile time is caught the same way. Check DevTools (F12) if a node appears to do nothing.":"も同様に捕捉されます。ノードが何もしていないように見える場合は、DevTools（F12）を確認してください。","available only when":"次の場合にのみ使用できます：","becomes available on the gray/red port.":"は灰色／赤色のポートで利用できます。","below), plus":"を参照）、さらに","bit telling the next node whether to run.":"という、次のノードを実行するかどうかを示すビット。","boolean":"真偽値","browser source; Multi-Alerts plays through its own browser source. Keep sound enabled in only one for the same event to avoid duplicate playback. Tab to a flow node and press Enter or Space to edit its properties.":"ブラウザーソースを通じて再生します。Multi-Alertsは専用のブラウザーソースを通じて再生します。同じイベントが二重に再生されないよう、音声はどちらか一方だけで有効にしてください。Tabキーでフローノードに移動し、EnterまたはSpaceキーを押すとプロパティを編集できます。","button or click the URL inside the card.":"ボタンを使うか、カード内のURLをクリックします。","by default. When a condition fails, it emits":"が既定です。条件を満たさない場合は、次を出力します：","channel and an optional":"チャンネルと、必要に応じて出力する","channel.":"チャンネル。","checks the JavaScript syntax and saves the whole flow;":"はJavaScriptの構文を確認し、フロー全体を保存します。","cheer, raid, new_follower":"cheer, raid, new_follower","choose the printer and calibrate its paper width and safe margins under":"次の設定でプリンターを選び、用紙幅と安全な余白を調整します：","connected input is true.":"接続された入力がtrueである場合です。","continues downstream.":"のペイロードです。","continues through the green port;":"は緑色のポートを通って進みます。","controls overlap, queueing, and the action's cooldown;":"controls overlap, queueing, and the action's cooldown;","conversion of normalized":"による、正規化された値の換算：","docs/event-reference.html":"docs/event-reference.html","does":"何をするか","does not use the keyword.":"キーワードを使っていない場合。","does the same. Cancel leaves the node unchanged.":"も同じ処理を行います。キャンセルした場合、ノードは変更されません。","doesn't match your trigger.":"トリガーに一致しないメッセージ。","downstream nodes stop executing unless they receive input on a separate branch (for example, the":"後続のノードは、別の分岐から入力を受け取らない限り実行を停止します（例：","exposes":"が公開する","false":"false","features a message when the flow reaches it. It does not fire when you feature a message elsewhere.":"は、フローがそのノードに達したときにメッセージを取り上げます。ほかの場所でメッセージを取り上げても発火しません。","fields. Tells downstream nodes the payload has been edited.":"フィールド。ペイロードが編集されたことを後続ノードに伝えます。","fire only when the gate remains":"はゲートが次の状態のときにのみ発火します：","first branch":"最初の分岐","flows":"フロー","flows through automatically.":"は自動的に通過します。","for a complete setup.":"で設定の全手順を確認できます。","for a large editing window.":"をクリックすると、大きな編集ウィンドウが開きます。","for a ready-made animation and synthetic thank-you clip, or the advanced":"を使うと、用意済みのアニメーションと合成音声のお礼クリップを利用できます。または高度な次のテンプレートを使用します：","for alerts that should only fire once every X seconds.":"と、X秒に1回だけ発火するアラートを作れます。","for arbitrary logic that no built-in node covers.":"で、組み込みノードにはない任意のロジックを記述できます。","for detailed payload documentation across all platforms.":"に、すべてのプラットフォームのペイロードが詳しく記載されています。","for downstream logic.":"を後続のロジックで使えます。","for every trigger, action, setup step, and tested recipe.":"に、すべてのトリガー、アクション、設定手順、検証済みのレシピが記載されています。","for printer setup, fixed-size labels, and a complete flow.":"で、プリンター設定、固定サイズのラベル、完成したフローを確認できます。","for the full setup.":"で設定の全手順を確認できます。","for the shared-state model, screenshots, and an importable example.":"で、共有状態の仕組み、スクリーンショット、インポートできる例を確認できます。","from subscribers, VIPs, or mods, reformats it as a feature request, and relays it to a second destination (e.g. Discord).":"をサブスクライバー、VIP、モデレーターから受信し、機能追加リクエストの形式に整えて別の送信先（Discordなど）に中継します。","from the":"の送信元：","group in the":"グループ。場所：","group in the Actions panel.":"グループ（Actionsパネル内）。","group in the Triggers panel.":"グループ（Triggersパネル内）。","https://...":"https://...","if":"条件：","if you are still using obs-websocket 4.x / port":"まだobs-websocket 4.x／次のポートを使用している場合：","if you changed":"次を変更した場合：","if you want a small live OBS connection badge on the overlay while troubleshooting.":"。トラブルシューティング中にオーバーレイ上に小さなOBS接続状態バッジを表示したい場合に使います。","in the User Role node. It recognizes TikTok Fan Club/team levels and badges on the incoming message and does not depend on Main Chat Overlay settings.":"をUser Roleノードで選択します。受信メッセージのTikTokファンクラブ／チームのレベルやバッジを認識し、Main Chat Overlayの設定には依存しません。","is a legacy alias":"は旧形式の別名です","is a node-based editor. Each line carries a message payload plus a boolean state (":"はノードで組み立てるエディターです。各接続線は、メッセージのペイロードとブール値の状態を運びます（","is running inside OBS Browser Source with":"がOBSのブラウザーソース内で実行され、次が設定されている場合：","keeps it flowing to the next node.":"が次のノードへ渡されます。","keys, note them so overlays and remote clients stay consistent.":"キーを追加した場合は、オーバーレイやリモートクライアントとの整合性を保つために記録してください。","labels for threshold comparisons, including 100 unknown named units = $0.01 USD. It does not parse":"の表示からしきい値を比較します。名前付きの未知の単位は100単位＝0.01米ドルとして扱います。次は解析しません：","labels such as value,":"の表示例：値、","logic nodes":"ロジックノード","message API":"メッセージAPI","not in the editor.":"エディター内では再生されません。","number / string":"数値／文字列","object":"オブジェクト","object and any APIs the preload script exposes (e.g.":"オブジェクトと、preloadスクリプトが公開するすべてのAPI（例：","object; fields you omit keep their current values.":"オブジェクト。省略したフィールドは現在の値を維持します。","obs-websocket-test.html":"obs-websocket-test.html","on a regular chat message), the placeholder is replaced with an empty string rather than showing the literal":"が通常のチャットメッセージにない場合など）、プレースホルダーは、そのままの文字列を表示する代わりに空の文字列に置き換えられます。文字列：","on the Flow Actions page to retry the latest blocked clip. Clicking elsewhere on that page also enables playback. An OBS Browser Source normally allows autoplay.":"をFlow Actionsページでクリックし、直前にブロックされたクリップを再試行します。ページのほかの場所をクリックしても再生を有効にできます。OBSのブラウザーソースでは通常、自動再生が許可されています。","only if all connected inputs equal":"となるのは、接続されたすべての入力が次に等しい場合だけです：","optional. Only append":"は任意です。次を追加するのは必要な場合だけです：","or":"または","or the extension icon).":"または拡張機能のアイコン）。","output, the flow simply ends there. That is perfect for filters (\"block everything that fails the check\") but do not forget to connect the":"出力に何も接続しなければ、フローはそこで終了します。これはフィルター（「判定を通らないものはすべてブロック」）には適していますが、必要に応じて次の経路も接続してください：","outputs a value of":"は、アラートがミュートされている場合に","panel onto the canvas. It acts as a gate: the flow continues only when your code returns":"パネルからキャンバスに配置します。ゲートとして働き、コードが次を返した場合にのみフローを続行します：","panel. It can mutate the message, block it, or attach metadata that downstream nodes can read.":"パネル内。メッセージの変更、ブロック、後続ノードが読み取れるメタデータの追加ができます。","path if you need fallbacks.":"の経路を、代替処理が必要な場合に接続します。","popup.html":"popup.html","prose for donation values.":"の文章から寄付額を読み取ることはしません。","read the payload and may rewrite fields, set state, or flip the gate signal to":"はペイロードを読み取り、フィールドの書き換え、状態の設定、ゲート信号の変更を行えます。変更先：","recommended for consistent control. Social Stream Ninja Flow Actions use the OBS WebSocket v5 API from OBS 28+ and expect the modern request set on port":"を、安定した操作のために推奨します。Social Stream NinjaのFlow ActionsはOBS 28以降のOBS WebSocket v5 APIを使用し、次のポートで新しいリクエスト形式を想定しています：","result API":"結果API","select a Custom Code node and click":"Custom Codeノードを選択し、次をクリックします：","socket on a Condition node). That makes it easy to build fallback logic without duplicating whole flows.":"というConditionノードの端子）。これにより、フロー全体を複製せずに代替処理を簡単に作れます。","socket to our reply, so regular chatters get an acknowledgement while commands simply pass through.":"端子を返信につなぎます。通常のチャットには返答し、コマンドはそのまま通過させます。","sources":"ソース","state from their input. Others (NOT, AND, OR) recalculate the boolean themselves.":"状態を入力からそのまま渡します。ほかのノード（NOT、AND、OR）はブール値を自身で再計算します。","stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use":"stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use","string":"文字列","succeed.":"が成功することを確認します。","system so viewers can intentionally trigger flows.":"の仕組みを使うと、視聴者が意図的にフローを起動できます。","template variables":"テンプレート変数","template. New alert templates start disabled so you can configure and test them first. For the OBS template, choose a source and the same normally-off filter in both filter actions.":"テンプレート。新しいアラートテンプレートは、先に設定とテストができるよう無効な状態で追加されます。OBSテンプレートでは、両方のフィルターアクションで同じソースと、通常はオフの同じフィルターを選択します。","text.":"というテキスト。","that get replaced with event data at runtime. Wrap variable names in curly braces like":"は実行時にイベントデータに置き換えられます。変数名は次のように波括弧で囲みます：","the object":"オブジェクト：","to back up or share.":"でバックアップまたは共有します。","to build queue systems, raffles, or scoring engines.":"で、順番待ちシステム、抽選、スコア計算を作れます。","to continue the flow":"でフローを続行します","to convert the formatted donation label into EUR. It returns a number, or":"で、書式設定された寄付表示をユーロに換算します。戻り値は数値、または次の値です：","to enable them. In extension mode the nodes appear greyed-out with the label":"で有効にします。拡張機能モードではノードがグレー表示になり、次のラベルが付きます：","to filter decisions, and":"で条件を判定し、","to inject events,":"でイベントを入力し、","to let the flow continue,":"でフローを続行し、","to make things happen (send chat, control overlays, relay messages, etc.).":"で処理を実行します（チャット送信、オーバーレイ操作、メッセージ中継など）。","to prevent the message from being displayed or relayed.":"でメッセージの表示や中継を防ぎます。","to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing":"to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing","to stop it.":"で停止します。","to the Flow Actions URL if your OBS server is configured to require authentication.":"をFlow ActionsのURLに追加するのは、OBSサーバーで認証を必須に設定している場合だけです。","to the URL for":"を次のページのURLに追加します：","to validate the full pipeline.":"で処理全体を検証します。","trigger (or Message Contains, a regex, a donation event, etc.) starts the chain; both actions then run for each matching message.":"トリガー（またはMessage Contains、正規表現、寄付イベントなど）が処理を開始し、一致するメッセージごとに両方のアクションが実行されます。","true":"true","twitch, youtube":"twitch, youtube","unless the node itself errors.":"ノード自体でエラーが発生した場合を除きます。","updates OBS Text (GDI+) and Text (FreeType 2) inputs directly and supports Event Flow template variables such as":"はOBSのText (GDI+)およびText (FreeType 2)入力を直接更新し、次のようなEvent Flowのテンプレート変数に対応しています：","use":"使用するもの：","value, value + unit, or compact unit/value. Unknown named virtual units use 100 units = $0.01 USD; unpriced TikTok gifts use one coin per gift ($0.01 each).":"値、値＋単位、または短縮された単位／値の形式。名前付きの未知の仮想単位は100単位＝0.01米ドル、価格不明のTikTokギフトは1ギフトにつき1コイン（0.01米ドル）として扱います。","vs":"と","when the alert is muted. By inverting that result, the NOT node makes sure we only play the celebration when the flag is":"を出力します。その結果を反転させることで、NOTノードはフラグが次の場合にのみお祝い演出を再生します：","when the message is a command. We route the":"を出力します。","when the requested target currency is unsupported. The converter uses Social Stream Ninja's approximate internal rates; it does not contact an external exchange service.":"（指定した換算先通貨に対応していない場合）。換算にはSocial Stream Ninja内部の概算レートを使い、外部の為替サービスには接続しません。","whenever the RANDOM gate sits idle, so sound B would play on every chat message that":"をRANDOMゲートが動作していないときにも返すため、サウンドBは次のようなすべてのチャットメッセージで再生されてしまいます：","your code runs as":"コードは次の形式で実行されます：","your nodes so future-you knows which branch is which.":"ノードに名前と色を付けると、後で各分岐を見分けられます。","{\"viewers\":100}":"{\"viewers\":100}","– a":"– 次の値：","– the event or message data object.":"– イベントまたはメッセージのデータオブジェクト。","┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│ Relay Chat │ │ │ │ │ │ (to Discord) │ │ Gate: VIP/sub/mod │ │ Reformat message text │ │ │ │ + starts with │ │ → \"📋 Feature Request │ │ │ │ !feature │ │ from {name}: {text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘":"┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Codeトリガー │────▶│ Execute Custom Codeアクション│────▶│ Relay Chat │ │ │ │ │ │ （Discordへ） │ │ ゲート：VIP／購読者／mod │ │ メッセージを整形 │ │ │ │ ＋次で始まる │ │ → \"📋 機能追加リクエスト │ │ │ │ !feature │ │ {name}より：{text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘","✅ Works. An":"✅ 動作します。","❌ Never runs. Feature Message and Speak Text are both":"❌ 実行されません。Feature MessageとSpeak Textはどちらも"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/actions/event-flow-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="guide-shell">
+        <header>
+            <p class="badge">Event Flowシステム</p>
+            <h1>Event Flowエディターガイド</h1>
+            <p>Social Stream Ninjaで安定した自動処理を作りましょう。このガイドでは、基本、ロジックノード、信号の流れ、チャットの反射回避やAND/NOTの組み合わせなど、クリエイターからよく寄せられる実用的なポイントを説明します。</p>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/event-flow-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/event-flow-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/event-flow-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/event-flow-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/event-flow-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/event-flow-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="event-flow-guide.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/actions/event-flow-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/event-flow-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/event-flow-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/event-flow-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/event-flow-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/event-flow-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/event-flow-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/event-flow-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/event-flow-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/event-flow-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></header>
+        <div class="content">
+            <section>
+                <h2>0. 全体像をつかむ</h2>
+                <div class="panel">
+                    <strong>Event Flow</strong> はノードで組み立てるエディターです。各接続線は、メッセージのペイロードとブール値の状態を運びます（<em>true</em> = 続行、 <em>false</em> = 停止）。次を使用してください： <strong>ソース</strong> でイベントを入力し、 <strong>ロジックノード</strong> で条件を判定し、 <strong>アクション</strong> で処理を実行します（チャット送信、オーバーレイ操作、メッセージ中継など）。
+                </div>
+                <div class="callout">
+                    参加者を記録したり、後から参加資格を確認したり、ユーザーの重複を避けて抽選したり、特定のリストだけを消去したりするには、次を開きます： <a href="user-memory-guide.html">User Memoryガイド</a> で、共有状態の仕組み、スクリーンショット、インポートできる例を確認できます。
+                </div>
+                <h3 id="what-is-event-flow">このエディターとは？</h3>
+                <p>Event Flowエディターは、Social Stream Ninjaで高度な自動処理を作るための機能です。ポップアップの簡単なスイッチに加えて、独自の振り分けロジックを記述できます。次のような場合に使用します：</p>
+                <ul>
+                    <li>フィルターを使ってサービス間でチャットを中継します（例：コマンドを除外してTwitchからDiscordへ転送）。</li>
+                    <li>AND/OR/NOTロジックで、ロイヤルティに基づくコマンド、キーワードゲーム、抽選参加条件を作れます。</li>
+                    <li>フロー内で追加した情報に基づき、カスタムオーバーレイ、音声、OBSシーン、Webhookを起動します。</li>
+                    <li>1つの自動処理で複数のプラットフォームを組み合わせられます（Kick、Twitch、YouTubeを1つのフローに通すなど）。</li>
+                </ul>
+                <p>ポップアップは手軽なプリセット、Event Flowは独自のワークフローを作る道具として使えます。</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>起動と基本操作</h4>
+                        <ul>
+                            <li>メインダッシュボードのメニューからEvent Flowエディターを開きます（デスクトップアプリまたは拡張機能）。</li>
+                            <li>各プロジェクトはエクスポートするまでローカルに保存されます。次を使用してください： <code>Export</code> でバックアップまたは共有します。</li>
+                            <li>次の名前のキャンバス内で作業します： <em>フロー</em>。各フローは同時に複数のプラットフォームを購読できます。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>ノード一覧</h4>
+                        <ul>
+                            <li><strong>入力</strong> （左のポート）はメッセージの文脈を受け取ります。</li>
+                            <li><strong>出力</strong> （右のポート）は、編集を反映した同じ文脈を出力します。</li>
+                            <li>ロジックノードは、次の両方を出力する場合があります： <code>true</code> チャンネルと、必要に応じて出力する <code>false</code> チャンネル。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>ペイロードの構造</h4>
+                        <p>すべてのメッセージはJSONオブジェクトを持ちます。必須キーは次に従います： <a href="../docs/event-reference.html" target="_blank" rel="noopener">docs/event-reference.html</a> （platform、type、chatname、chatmessageなど）。独自データは次に付けてください： <code>meta</code>.</p>
+                    </div>
+                </div>
+                <h3 id="every-flow-needs-a-trigger">すべてのフローはトリガーから始まります</h3>
+                <p>アクションノード（緑）は単独では動きません。上流のトリガーノード（青）が次の値を出したときだけ実行されます： <code>true</code>。アクションだけをつないだフローは、有効に見えても、開始するものがないため常に待機したままです。ノード名は、そのノードが <em>何をするか</em>を表し、いつ発生するかを表すものではありません： <em>メッセージを取り上げる</em> は、フローがそのノードに達したときにメッセージを取り上げます。ほかの場所でメッセージを取り上げても発火しません。</p>
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-missing-trigger.png" alt="トリガーノードがなく、2つのアクションノードだけが接続されている状態">
+                        <figcaption>❌ 実行されません。Feature MessageとSpeak Textはどちらも <em>アクション</em>。先頭にトリガーがなければ、何も開始しません。</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-trigger-first.png" alt="Feature MessageとSpeak Textアクションへ接続したAny Messageトリガー">
+                        <figcaption>✅ 動作します。 <em>任意のメッセージ（Any Message）</em> トリガー（またはMessage Contains、正規表現、寄付イベントなど）が処理を開始し、一致するメッセージごとに両方のアクションが実行されます。</figcaption>
+                    </figure>
+                </div>
+            </section>
+            <section id="flow-actions-overlay">
+                <h2>Flow Actionsオーバーレイ（アクション出力）</h2>
+                <div class="panel">
+                    <strong>アラートのテンプレートから始めます：</strong>
+                    <p>選ぶ項目： <em>寄付：お祝い演出＋音声</em> を使うと、用意済みのアニメーションと合成音声のお礼クリップを利用できます。または高度な次のテンプレートを使用します： <em>寄付：アニメーション＋サウンド＋OBSフィルター</em> テンプレート。新しいアラートテンプレートは、先に設定とテストができるよう無効な状態で追加されます。OBSテンプレートでは、両方のフィルターアクションで同じソースと、通常はオフの同じフィルターを選択します。</p>
+                    <p>選ぶ項目： <em>Play Audio Clip → Browse sounds</em> to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing <em>Use sound</em>。 <a href="../../audio-library.html" target="_blank" rel="noopener">Sound Library</a> also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.</p>
+                    <p>In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose <em>Use random set</em>. Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set. <em>Playback options</em> controls overlap, queueing, and the action's cooldown; <em>Stop Audio Clips</em> stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use <em>テキストを読み上げる</em>.</p>
+                    <p>Event Flowは次を通じて再生します： <strong>Flow Actions</strong> ブラウザーソースを通じて再生します。Multi-Alertsは専用のブラウザーソースを通じて再生します。同じイベントが二重に再生されないよう、音声はどちらか一方だけで有効にしてください。Tabキーでフローノードに移動し、EnterまたはSpaceキーを押すとプロパティを編集できます。</p>
+                </div>
+                <p>次のようなノード： <em>音声クリップを再生（Play Audio Clip）</em>, <em>メディアオーバーレイを表示（Display Media Overlay）</em>やOBS操作には、描画用の画面が必要です。その画面は、次で提供するFlow Actionsオーバーレイページです： <a href="../../actions.html" target="_blank" rel="noopener">actions.html</a>。配信ソフト（OBS/Streamer.botのブラウザドックなど）で動かしたままにし、Event Flowのアクションの表示先を用意してください。</p>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-audio-overlay.png" alt="Play Audio Clipアクションへ接続したAny Messageトリガー">
+                    <figcaption>このフローは完成しており、すべてのメッセージで発火します。ただし、音声が再生されるのはFlow Actionsオーバーレイページです。 <em>エディター内では再生されません。</em> エディターのPreviewボタンではローカルで再生されます。ライブ再生にはオーバーレイを開いておく必要があります。ブラウザーが自動再生をブロックした場合は、次のボタンを使います： <strong>音声を有効にする</strong> をFlow Actionsページでクリックし、直前にブロックされたクリップを再試行します。ページのほかの場所をクリックしても再生を有効にできます。OBSのブラウザーソースでは通常、自動再生が許可されています。</figcaption>
+                </figure>
+                <div class="panel">
+                    <strong>開き方（ポップアップ／ダッシュボードから）：</strong>
+                    <ol>
+                        <li>Social Stream Ninjaのメインポップアップを開きます（次から読み込まれるウィンドウ： <a href="../../popup.html" target="_blank" rel="noopener">popup.html</a> または拡張機能のアイコン）。</li>
+                        <li>「Flow Actions」カードまでスクロールします。次を使用します： <em>[リンクをコピー]</em> ボタンを使うか、カード内のURLをクリックします。</li>
+                        <li>リンクの形式： <code>https://socialstream.ninja/actions.html?session=YOURSESSION</code>。OBSブラウザソース（推奨1920×1080）に貼り付けるか、オーバーレイ用のブラウザで開きます。</li>
+                    </ol>
+                </div>
+                <div class="panel">
+                    <strong>スタンドアロンアプリでローカルメディアを使う：</strong>
+                    <ol>
+                        <li>「Play Audio Clip」または「Display Media Overlay」アクションで次をクリックします： <em>ローカルファイルを選択（Choose Local File）</em>.</li>
+                        <li>クリックする項目： <em>OBS用のローカルFlow Actions URLをコピー（Copy Local Flow Actions URL for OBS）</em> 生成されたlocalhostのURLを、ホストされたFlow ActionsのURLの代わりに使用します。</li>
+                        <li>SSAppを起動したままにしてください。選択したファイルを移動した場合は、アクションに戻って次をクリックします： <em>再リンク（Relink）</em>.</li>
+                    </ol>
+                    <p>Chrome拡張機能だけではディスク上のファイルを配信できません。デスクトップアプリを併用できない場合は、アップロードまたはホストされたURLを使用します。次を参照してください： <a href="../docs/media-hosting-event-flow.html" target="_blank" rel="noopener">Event Flow用メディアファイルガイド</a> で設定の全手順を確認できます。</p>
+                </div>
+                <p>読み込まれたオーバーレイは、次のことができます：</p>
+                <ul>
+                    <li>フローをきっかけにGIPHYや直接指定したメディアURL、テキスト、紙吹雪を表示します。</li>
+                    <li>視聴者に聞こえるよう、音声（読み上げ、音声クリップ）をローカルで再生します。</li>
+                    <li>ポップアップの「Flow Actions」セクションにあるWebSocket設定を使ってOBSを操作します（シーン切り替え、ソースの有効／無効、GDI+／FreeTypeのテキスト更新、リプレイバッファーなど）。</li>
+                </ul>
+                <div class="panel">
+                    <strong>OBS操作モード：</strong>
+                    <ul>
+                        <li><strong>ブラウザソースAPI：</strong> 次の場合にのみ使用できます： <code>actions.html</code> がOBSのブラウザーソース内で実行され、次が設定されている場合： <em>高度なアクセスレベル</em>。ここではシーン切り替えが動作し、録画 / 配信 / リプレイバッファの操作も代替経路として使えます。</li>
+                        <li><strong>OBS WebSocket：</strong> を、安定した操作のために推奨します。Social Stream NinjaのFlow ActionsはOBS 28以降のOBS WebSocket v5 APIを使用し、次のポートで新しいリクエスト形式を想定しています： <code>4455</code>.</li>
+                        <li><strong>パスワード：</strong> は任意です。次を追加するのは必要な場合だけです： <code>&amp;obspw=...</code> をFlow ActionsのURLに追加するのは、OBSサーバーで認証を必須に設定している場合だけです。</li>
+                        <li><strong>オーバーレイの診断：</strong> 末尾に追加 <code>&amp;obsdebug=1</code> を次のページのURLに追加します： <code>actions.html</code> 。トラブルシューティング中にオーバーレイ上に小さなOBS接続状態バッジを表示したい場合に使います。</li>
+                        <li><strong>テキストソースを設定（Set Text Source）：</strong> はOBSのText (GDI+)およびText (FreeType 2)入力を直接更新し、次のようなEvent Flowのテンプレート変数に対応しています： <code>{counterValue}</code> および <code>{counterTarget}</code>.</li>
+                        <li><strong>旧4.xの環境：</strong> まだobs-websocket 4.x／次のポートを使用している場合： <code>4444</code>の場合、OBS / obs-websocketを更新するまで、ソース / フィルター / ミュート / テキスト操作は動作しません。</li>
+                    </ul>
+                    <p>専用のガイドを参照してください： <a href="obs-control-guide.html">OBSコントロールガイド</a> に、すべてのトリガー、アクション、設定手順、検証済みのレシピが記載されています。</p>
+                </div>
+                <div class="panel">
+                    <strong>推奨する診断手順：</strong>
+                    <ol>
+                        <li>開く項目： <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">obs-websocket-test.html</a>.</li>
+                        <li>確認する項目： <code>GetVersion</code>, <code>GetCurrentProgramScene</code>、および <code>GetSceneList</code> が成功することを確認します。</li>
+                        <li>Event Flow全体の自動処理をテストする前に、そこで該当するアクションの確認を実行します。</li>
+                    </ol>
+                </div>
+                <div class="panel warn">
+                    <strong>オーバーレイを開いたままにします。</strong> Flow Actionsページを閉じると、Event Flowのすべてのオーバーレイ/音声/OBSアクションが止まります。閉じる代わりに隠すか、別のモニターに置いてください。
+                </div>
+            </section>
+
+            <section>
+                <h2>1. ノードを流れるもの</h2>
+                <p>Event Flowの実行処理は、すべての接続線を通じて2つのものを渡します：</p>
+                <ol>
+                    <li><strong>ペイロード</strong> – イベントまたはメッセージのデータオブジェクト。</li>
+                    <li><strong>ゲート信号</strong> – 次の値： <em>true</em>/<em>false</em> という、次のノードを実行するかどうかを示すビット。</li>
+                </ol>
+                <div class="panel">
+                    <strong>ノードがfalseを出力した場合：</strong> 後続のノードは、別の分岐から入力を受け取らない限り実行を停止します（例： <code>false</code> というConditionノードの端子）。これにより、フロー全体を複製せずに代替処理を簡単に作れます。
+                </div>
+                <h3>入力の要件</h3>
+                <ul>
+                    <li><strong>イベントソース</strong> （Twitch Message、Timers、Manual Triggerなど）は上流の入力を無視し、独自のペイロードを作って常に次を出力します： <code>true</code> ノード自体でエラーが発生した場合を除きます。</li>
+                    <li><strong>変換ノードとロジックノード</strong> はペイロードを読み取り、フィールドの書き換え、状態の設定、ゲート信号の変更を行えます。変更先： <code>false</code>.</li>
+                    <li><strong>アクションノード</strong> はゲートが次の状態のときにのみ発火します： <code>true</code>。アクションをつなぎ続けたい場合は、更新済みのペイロードを出力することもできます。</li>
+                </ul>
+                <h3>出力パターン</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>単一の出力</h4>
+                        <p>ほとんどのノードには出力が1つあります。入力されたもの（ペイロード＋ゲート）は、ノードで編集しない限りそのまま出力されます。</p>
+                    </div>
+                    <div class="card">
+                        <h4>True／False出力</h4>
+                        <p>Condition、Compare、Regex、Logicノードには2つの出力ポートがあります。 <em>True</em> は緑色のポートを通って進みます。 <em>false</em> は灰色／赤色のポートで利用できます。</p>
+                    </div>
+                    <div class="card">
+                        <h4>そのまま渡す場合と上書きする場合</h4>
+                        <p>一部のノード（Set Variable、Math、Text Replace）はペイロードを変更しますが、次はそのまま転送します： <em>true</em>/<em>false</em> 状態を入力からそのまま渡します。ほかのノード（NOT、AND、OR）はブール値を自身で再計算します。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>2. ロジックノード早見表</h2>
+                <p>この説明では、「true/falseは何を意味するのか」というよくある疑問に答えます。</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>NOT</h4>
+                        <ul>
+                            <li>入力：前のノードから得た1つのブール値（true/false）。</li>
+                            <li>出力：反転したブール値と、変更していないペイロード。</li>
+                            <li><strong>標準の動作：</strong> NOTの入力に何も接続されていない場合、評価結果は次になります： <code>false</code>となるため、出力は <code>true</code>.</li>
+                        </ul>
+                        <div class="panel">
+                            <strong>例：</strong> 「Contains Keyword」の後にNOTを置くと、次の場合にアラートを発火できます：視聴者が <em>キーワードを使っていない場合。</em>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>AND</h4>
+                        <ul>
+                            <li>入力：2つ以上のブール信号（A、B、...）。余分なポートは空のままで構いません。</li>
+                            <li>出力： <code>true</code> となるのは、接続されたすべての入力が次に等しい場合だけです： <code>true</code>.</li>
+                            <li>複数の条件を同時に満たす必要がある場合にANDを使用します（「サブスクライバーである」 <em>および</em> 「チャットメッセージに!raffleを含む」など）。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>OR</h4>
+                        <ul>
+                            <li>送信する値： <code>true</code> 条件： <strong>いずれかの</strong> 接続された入力がtrueである場合です。</li>
+                            <li>複数プラットフォームのトリガーに便利です。TwitchとYouTubeのメッセージノードを1つのORに接続し、その先のアクションをまとめます。</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="callout tip">
+                    <strong>常にANDノードが必要ですか？</strong><br>
+                    いいえ。多くのノードには複数条件をまとめたフィルターがあります（例：「Filter User Level」＋「Contains Text」）。組み込みの設定で条件の組み合わせを表せない場合や、ほかの分岐と共有するロジックの接続点を作りたい場合にのみANDを使用してください。
+                </div>
+                <div class="callout.warn">
+                    <strong>NOTと空の入力：</strong> 接続されていないNOTノードでも、次を出力します： <code>true</code>。意味のある入力へ接続するかノードを無効にし、意図せずフローを通さないようにしてください。
+                </div>
+            </section>
+
+            <section>
+                <h2>3. 小さなフローの例</h2>
+                <h3>A. コマンド以外のメッセージに自動返信</h3>
+                <div class="diagram">
+Twitchメッセージ ──▶ 正規表現一致「^!」 ─┐ │ ├─false──▶ 自動返信（「チャットしてくれてありがとう！」） │ └─true──▶ 何もしない
+                </div>
+                <p>この例では、メッセージがコマンドの場合にRegexノードが <code>true</code> を出力します。 <code>false</code> 端子を返信につなぎます。通常のチャットには返答し、コマンドはそのまま通過させます。</p>
+                <h3>B. ANDで複数の確認を必須にする</h3>
+                <div class="diagram">
+YouTubeメッセージ ──▶ 「!queue」を含む ─▶ AND ─▶ Discordに中継 ギフトメンバーシップ ─▶ ユーザーの役割＝メンバー ──▲
+                </div>
+                <p>ANDノードは、正しいキーワードを使ったメンバーだけをDiscordに中継するために使います。両方の分岐がブール値の結果をANDノードに送ります。後続へ進むのは、 <em>最初の分岐</em> のペイロードです。</p>
+                <h3>C. NOTノードで重複アラートを防ぐ</h3>
+                <div class="diagram">
+イベントペイロード ─▶ 状態チェック（isAlertMuted） └─false─▶ NOT ─▶ お祝い演出を再生
+                </div>
+                <p><code>State Check</code> は、アラートがミュートされている場合に <code>true</code> を出力します。その結果を反転させることで、NOTノードはフラグが次の場合にのみお祝い演出を再生します： <code>false</code>.</p>
+                <h3>D. 2つの音からランダムに再生</h3>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-random-two-sounds.png" alt="RANDOMゲート、NOTゲート、ANDゲートを使い、2つの音声クリップのいずれかをランダムに再生するフロー">
+                    <figcaption>2つの音声クリップを半々の確率で選びます。RANDOMゲートは条件に合うメッセージごとに1回抽選し、通ると音Aを再生します。通らなければNOTゲートが結果を反転し、ANDゲートが音Bを通します。</figcaption>
+                </figure>
+                <div class="diagram">
+トリガー ──▶ RANDOM (50%) ──▶ サウンドAを再生 │ └──▶ NOT ──▶ AND ──▶ サウンドBを再生 トリガー ──────────────────▲
+                </div>
+                <p><strong>ANDゲートは必須です。</strong> 入力のないNOTは、次を出力します： <code>true</code> をRANDOMゲートが動作していないときにも返すため、サウンドBは次のようなすべてのチャットメッセージで再生されてしまいます： <em>トリガーに一致しないメッセージ。</em> トリガーをANDの2つ目の入力に接続すると、条件に一致するメッセージでのみサウンドBが再生されます。このパターンは音声だけでなく、どちらか一方を実行するアクションの組み合わせにも使えます。</p>
+            </section>
+
+            <section>
+                <h2>4. 反射、ループ、中継のフィードバックを防ぐ</h2>
+                <p>複数の画面間でチャットを中継する機能は便利ですが、自分の出力を受信すると無限に反復する場合があります。次の対策を行ってください：</p>
+                <div class="callout tip">
+                    <strong>YouTube Shortsの送信先に関する注意：</strong><br>
+                    受信トリガーと送信するRelay Chatの宛先は、どちらも次の2つを区別します： <code>youtube</code> および <code>youtubeshorts</code>。両方の種類へ送る場合は、中継アクションを2つ使ってください。参照： <a href="../docs/source-types-guide.html#youtube-shorts-event-flow">YouTube ShortsとEvent Flow</a>.
+                </div>
+                <div class="callout.danger">
+                    <strong>Relay Chatは、折り返されたと認識したメッセージを自動的にスキップします。</strong><br>
+                    反射とは、送信したメッセージが送信先チャットから再び取得されることです。現在のRelay Chatは、認識した反射をスキップします。別個のNo Reflectionsチェックボックスはありません。ドックやオーバーレイでの表示を隠したり制限したりするには、次を使います： <strong>反射フィルター（Reflection Filter）</strong> 次を使うアクション： <strong>すべてブロック（Block All）</strong>, <strong>最初の1件を許可（Allow First）</strong>、または <strong>すべて許可（Allow All）</strong>。これは再取得時の表示を制御するもので、送信を制御するものではありません。次を参照してください： <a href="../docs/chat-relay-guide.html">TwitchとYouTubeの中継手順</a> で設定の全手順を確認できます。
+                </div>
+                <ul>
+                    <li><strong>中継システムの重複を避けます。</strong> 同等のEvent Flow経路を使う場合は全体のRelay allを無効にし、同じチャットをつなぐ他のサービスも確認してください。独自メタデータがプラットフォームのチャットを経由しても残る保証はありません。</li>
+                    <li><strong>DebounceまたはCooldownノードを使用する</strong> と、X秒に1回だけ発火するアラートを作れます。</li>
+                    <li><strong>循環は意図的に断ち切ります。</strong> 2つの分岐が互いに送り合う場合は、状態変数（「currentlyRelaying」）を確認するロジックノードを追加し、そのフラグが立っているときにフローを早期終了させます。</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>5. 入力、出力、実用上の質問</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h4>ノードには何が入力されますか？</h4>
+                        <ul>
+                            <li>メッセージの完全なペイロード。</li>
+                            <li>ゲートのビット（<code>true</code>/<code>false</code>).</li>
+                            <li>ノードが明示的に要求する追加のコンテキスト（状態変数、タイマー）。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>ノードから出るものは？</h4>
+                        <ul>
+                            <li>ノードで編集しない限り、同じペイロード。</li>
+                            <li>再計算したゲート判定値（ロジックノード）またはそのまま渡す判定値（アクション）。</li>
+                            <li>チャット送信など、ほとんどの副作用はペイロードを変更しませんが、ポイントアクションは次のような状態フィールドを追加できます： <code>pointsTotal</code> または <code>pointsSpendError</code> を後続のロジックで使えます。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>分岐はいつ使いますか？</h4>
+                        <p>次に応じて異なる反応をさせたい場合です： <code>true</code> と <code>false</code>。必要な色の出力（緑 = true、灰色/赤 = false）から次のノードへ線をドラッグします。</p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <strong>覚えておくこと：</strong> 次に対して何も操作しない場合： <code>false</code> 出力に何も接続しなければ、フローはそこで終了します。これはフィルター（「判定を通らないものはすべてブロック」）には適していますが、必要に応じて次の経路も接続してください： <code>false</code> の経路を、代替処理が必要な場合に接続します。
+                </div>
+                <h3>よくある質問と回答</h3>
+                <ul>
+                    <li><strong>2つのフィルターを組み合わせるたびにANDが必要ですか？</strong> いいえ。多くのノードに複数の判定が含まれています（例えば基本のMessage Filterはキーワード＋役割に対応しています）。ANDは高度な条件の組み合わせや、異なるノードからの信号をまとめる場合にのみ使用してください。</li>
+                    <li><strong>true/falseの値はどのようにNOTノードに届きますか？</strong> 緑の出力を持つノードは、次を出力します： <code>true</code> が既定です。条件を満たさない場合は、次を出力します： <code>false</code>。その線をNOTにつなぐと結果を反転できます。</li>
+                    <li><strong>falseを返してもペイロードを出力できますか？</strong> はい。ペイロードはfalse出力にも流れます。その分岐をどこへ接続するかは自分で決められます。</li>
+					<li><strong>TikTokのチームメンバーを判定するには？</strong> 選ぶ項目： <em>TikTokチームメンバー</em> をUser Roleノードで選択します。受信メッセージのTikTokファンクラブ／チームのレベルやバッジを認識し、Main Chat Overlayの設定には依存しません。</li>
+					<li><strong>Speak Textノードごとに別の音声を使えますか？</strong> はい。プロバイダーが対応する音声名またはIDを、次に入力します： <em>音声の上書き（Voice Override）</em>を指定するか、空欄にしてFlow Actionsの標準TTSを使います。</li>
+                </ul>
+            </section>
+
+            <section id="template-variables">
+                <h2>6. テンプレート変数のリファレンス</h2>
+                <p>いくつかのアクションノード（Show Text、Set Text Source、Send Message、Relay Chat、TTS Speak、Call Webhook、Print Thermal Label）は、次に対応しています： <strong>テンプレート変数</strong> は実行時にイベントデータに置き換えられます。変数名は次のように波括弧で囲みます： <code>{username}</code>.</p>
+
+                <h3>基本変数（後方互換）</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>変数</th><th>別名</th><th>説明</th><th>例</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{username}</code></td><td><code>{chatname}</code></td><td>ユーザーの表示名</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{message}</code></td><td><code>{chatmessage}</code></td><td>チャットメッセージの本文</td><td>皆さん、こんにちは！</td></tr>
+                        <tr><td><code>{source}</code></td><td>-</td><td>プラットフォーム名（先頭を大文字にした表記）</td><td>Twitch、YouTube</td></tr>
+                        <tr><td><code>{type}</code></td><td>-</td><td>プラットフォーム名（元の値）</td><td>twitch, youtube</td></tr>
+                        <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>寄付/投げ銭の表示ラベル</td><td>$5.00、500 bits</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>拡張変数</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>変数</th><th>説明</th><th>例</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{displayname}</code></td><td>表示名（別フィールド）</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{donoValue}</code></td><td>提供または推定された米ドル換算の寄付額。Event Flowは、正規化された次の情報からしきい値の判定額を算出します： <code>hasDonation</code> の表示例：値、 <code>$</code>値、値＋単位、または短縮された単位／値の形式。名前付きの未知の仮想単位は100単位＝0.01米ドル、価格不明のTikTokギフトは1ギフトにつき1コイン（0.01米ドル）として扱います。 <code>{donationAmount}</code> は旧形式の別名です</td><td>5.00</td></tr>
+                        <tr><td><code>{event}</code></td><td>イベントの種類を示す識別子</td><td>cheer, raid, new_follower</td></tr>
+                        <tr><td><code>{membership}</code></td><td>メンバーシップ状態</td><td>MEMBERSHIP, new_sponsor</td></tr>
+                        <tr><td><code>{subtitle}</code></td><td>追加の文脈</td><td>メンバー歴3か月</td></tr>
+                        <tr><td><code>{userid}</code></td><td>プラットフォーム上のユーザーID</td><td>12345678</td></tr>
+                        <tr><td><code>{chatimg}</code></td><td>ユーザーのアバターURL</td><td>https://...</td></tr>
+                        <tr><td><code>{contentimg}</code></td><td>添付画像URL</td><td>https://...</td></tr>
+                        <tr><td><code>{rewardTitle}</code></td><td>ソースがトップレベルの報酬タイトルフィールドを提供する場合の報酬名</td><td>自分のメッセージを強調表示</td></tr>
+                        <tr><td><code>{meta}</code></td><td>構造化されたイベントデータ（JSON）</td><td>{"viewers":100}</td></tr>
+                        <tr><td><code>{counterValue}</code></td><td>CounterまたはCheck Counter処理後の現在のカウンター値</td><td>12</td></tr>
+                        <tr><td><code>{counterTarget}</code></td><td>カウンターの目標値</td><td>30</td></tr>
+                        <tr><td><code>{counterRemaining}</code></td><td>カウンターの目標から現在値を引いた値。下限は0</td><td>18</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>変数名の照合では大文字と小文字を区別しません。</strong> <code>{USERNAME}</code>, <code>{Username}</code>、および <code>{username}</code> はいずれも同じように使えます。
+                </div>
+                <div class="panel">
+                    <strong>フローが追加したフィールドも使用できます。</strong> 前のアクションがメッセージのトップレベルに値を追加した場合、後続のテンプレートでその値を直接参照できます。これは次の仕組みです： <code>Check Counter</code> が公開する <code>{counterValue}</code>, <code>{counterTarget}</code>、および <code>{counterRemaining}</code>.
+                </div>
+                <div class="panel">
+                    <strong>Call WebhookのJSON：</strong> テンプレート変数は、オブジェクトや配列のネストの深さに関係なく、JSONの文字列値で使用できます。オブジェクトのキーにはテンプレートを適用しません。プレースホルダーを含まないカスタム本文はそのまま送信します。
+                </div>
+
+                <h3>テンプレート例</h3>
+                <ul>
+                    <li><strong>テキストを表示（Show Text）：</strong> <code>{username} just cheered {hasDonation}!</code></li>
+                    <li><strong>OBSテキストソースを設定：</strong> <code>{username}: now {counterValue}, need {counterTarget}</code></li>
+                    <li><strong>Relay Chat：</strong> <code>[{source}] {username}: {message}</code></li>
+                    <li><strong>TTS：</strong> <code>{username} says {message}</code></li>
+                    <li><strong>寄付アラート：</strong> <code>{username} donated {donation} - {subtitle}</code></li>
+					<li><strong>感熱ラベル：</strong> <code>{username}</code>、改行、次の値を入力します： <code>{donation}</code>。参照先： <a href="../docs/thermal-printer-guide.html">感熱プリンターガイド</a> で、プリンター設定、固定サイズのラベル、完成したフローを確認できます。</li>
+                    <li><strong>DiscordのCall Webhook：</strong> <code>{&quot;content&quot;:&quot;{message}&quot;,&quot;username&quot;:&quot;{username}&quot;,&quot;avatar_url&quot;:&quot;{chatimg}&quot;}</code></li>
+                </ul>
+
+                <div class="callout tip">
+                    <strong>存在しない変数は空の文字列になります。</strong> イベントに特定のフィールドがない場合（例： <code>{donation}</code> が通常のチャットメッセージにない場合など）、プレースホルダーは、そのままの文字列を表示する代わりに空の文字列に置き換えられます。文字列： <code>{donation}</code> というテキスト。
+                </div>
+            </section>
+
+            <section>
+                <h2>7. 実用上の確認事項</h2>
+                <ul>
+                    <li><strong>名前と色</strong> ノードに名前と色を付けると、後で各分岐を見分けられます。</li>
+                    <li><strong>内蔵シミュレーターでテストする</strong> （Send Test Event）で確認してから、本番でフローを有効にしてください。</li>
+                    <li><strong>ソースの近くにロジックをまとめます。</strong> 後続の不要な処理を避けるため、できるだけ早い段階でフィルターを適用します。</li>
+                    <li><strong>繰り返し使う情報は状態ノードに保存します。</strong> カウンター、切り替え状態、タイムスタンプを使ってアラートの重複を防ぎます。</li>
+                    <li><strong>metaフィールドを記録します。</strong> カスタムの値を追加した場合： <code>meta</code> キーを追加した場合は、オーバーレイやリモートクライアントとの整合性を保つために記録してください。</li>
+                </ul>
+                <div class="callout tip">
+                    <strong>バージョンを保存します。</strong> 節目ごとにフローをエクスポートしてください。実験がうまくいかなかった場合、インポートすれば簡単に以前の状態に戻せます。
+                </div>
+            </section>
+
+            <section>
+                <h2>8. さらに詳しく</h2>
+                <p><a href="../docs/streamdeck-event-flow.html">Stream DeckまたはAPIからカスタムワークフローを実行する</a>：名前付きトリガー、開始用テンプレート、ワークフローの検出、追加データ、HTTP/WebSocket/P2Pの例、ダイヤル操作。</p>
+                <p>さらに詳しく知りたいですか？</p>
+                <ul>
+                    <li>使う項目： <strong>状態ノード</strong> （カウンター、スイッチ、タイマー）で、イベント間の文脈を保持します。</li>
+                    <li>組み合わせるもの： <strong>変数とロジック</strong> で、順番待ちシステム、抽選、スコア計算を作れます。</li>
+                    <li>次に接続します： <strong>ポイントと報酬</strong> の仕組みを使うと、視聴者が意図的にフローを起動できます。</li>
+                    <li>使用中のアプリは <strong>SSAppデスクトップアプリですか？</strong> ロック解除 <a href="#custom-js"><strong>カスタムJavaScriptノード</strong></a> で、組み込みノードにはない任意のロジックを記述できます。</li>
+                    <li>次を確認してください： <a href="../docs/event-reference.html"><strong>イベントリファレンス</strong></a> に、すべてのプラットフォームのペイロードが詳しく記載されています。</li>
+                </ul>
+                <p>このガイドは単独でも使えるように作成されています。ローカルにコピーしてチーム用に調整し、エディターでさまざまな方法を試してください。</p>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 SECTION 9: CUSTOM JAVASCRIPT
+                 Direct link anchors:
+                   #custom-js              → section root
+                   #custom-js-trigger      → Custom Code trigger node
+                   #custom-js-action       → Execute Custom Code action node
+                   #custom-js-message-api  → message object reference table
+                   #custom-js-result-api   → result return object reference
+                   #custom-js-examples     → snippet library
+                   #custom-js-example-flow → complete worked example
+            ══════════════════════════════════════════════════════════════ -->
+            <section id="custom-js">
+                <h2>9. カスタムJavaScript <span class="desktop-badge">SSApp／デスクトップ版のみ</span></h2>
+                <p>Event Flowエディターでは、2種類のノードで任意のJavaScriptを記述し、フローの処理中に実行できます： <strong>カスタムコード（Custom Code）</strong> （トリガー）と <strong>カスタムコードを実行（Execute Custom Code）</strong> （アクション）。組み込みノードで表現できない処理を実現するための手段です。</p>
+
+                <div class="callout warn">
+                    <strong>デスクトップアプリが必要です。</strong> ChromeのManifest V3コンテンツセキュリティポリシーが次を禁止するため、ブラウザ拡張機能ではカスタムJavaScriptノードが無効です： <code>new Function()</code> / <code>eval()</code>。次からエディタを開きます： <strong>SSAppデスクトップアプリ</strong> で有効にします。拡張機能モードではノードがグレー表示になり、次のラベルが付きます： <em>「デスクトップ専用」</em>.
+                </div>
+
+                <div class="panel">
+                    <strong>コードの編集：</strong> Custom Codeノードを選択し、次をクリックします： <strong>コードエディターを開く</strong> をクリックすると、大きな編集ウィンドウが開きます。 <strong>保存して閉じる（Save &amp; Close）</strong> はJavaScriptの構文を確認し、フロー全体を保存します。 <code>Ctrl+S</code> または <code>Cmd+S</code> も同じ処理を行います。キャンセルした場合、ノードは変更されません。
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/editor-overview.png" alt="Event Flowエディター — 初期状態">
+                    <figcaption>Event Flowエディター。左のパネルには使用できるすべてのノードが並び、点線のキャンバスでフローを作成し、右のパネルには選択したノードのプロパティが表示されます。</figcaption>
+                </figure>
+
+                <!-- ─── Trigger ─── -->
+                <h3 id="custom-js-trigger">Custom Code — トリガーノード</h3>
+                <p>ドラッグする項目： <strong>カスタムコード（Custom Code）</strong> の送信元： <em>高度な機能</em> グループ。場所： <strong>トリガー</strong> パネルからキャンバスに配置します。ゲートとして働き、コードが次を返した場合にのみフローを続行します： <code>true</code>.</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/trigger-panel.png" alt="「Advanced」グループ内のCustom Codeノードを示すトリガーパネル">
+                        <figcaption>Custom Codeは次にあります： <em>高度な機能</em> グループ（Triggersパネル内）。</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-trigger-props.png" alt="JavaScriptコードエディタを表示したCustom Codeトリガーのプロパティパネル">
+                        <figcaption>トリガー配置後のプロパティパネル。次を返す式を記述します： <code>true</code> または <code>false</code>.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>シグネチャ：</strong> コードは次の形式で実行されます： <code>function(message) { ... }</code><br>
+                    <strong>必須の戻り値：</strong> ブール値 — <code>true</code> でフローを続行し、 <code>false</code> で停止します。<br>
+                    <strong>利用可能：</strong> オブジェクト： <code>message</code> （参照： <a href="#custom-js-message-api">メッセージAPI</a> を参照）、さらに <code>convertCurrency(value, targetCurrency, source)</code> および <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <!-- ─── Action ─── -->
+                <h3 id="custom-js-action">Execute Custom Code — アクションノード</h3>
+                <p>ドラッグする項目： <strong>カスタムコードを実行（Execute Custom Code）</strong> の送信元： <em>連携（Integrations）</em> グループ。場所： <strong>アクション</strong> パネル内。メッセージの変更、ブロック、後続ノードが読み取れるメタデータの追加ができます。</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/action-panel.png" alt="Integrationsグループ内のExecute Custom Codeを表示したアクションパネル">
+                        <figcaption>次のカテゴリにある「Execute Custom Code」： <em>連携（Integrations）</em> グループ（Actionsパネル内）。</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-action-props.png" alt="コードエディターを表示した「Execute Custom Code」アクションのプロパティパネル">
+                        <figcaption>アクションのプロパティ。オブジェクトを返すと、変更をフロー結果へ統合します。</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>シグネチャ：</strong> コードは次の形式で実行されます： <code>function(message, result) { ... }</code><br>
+                    <strong>推奨される戻り値：</strong> 次にマージされるオブジェクトまたはPromise： <code>result</code>— 参照： <a href="#custom-js-result-api">結果API</a>.<br>
+                    <strong>利用可能：</strong> <code>message</code> （イベントのペイロード）、 <code>result</code> （現在のフロー結果の状態）、 <code>printThermal(html, options)</code>に加え、 <code>convertCurrency(value, targetCurrency, source)</code> および <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <div class="panel">
+                    <strong>SSAppでの感熱印刷：</strong> 次の設定でプリンターを選び、用紙幅と安全な余白を調整します： <em>プリンター制御（Printer Control）</em>を行い、その後、次を返します： <code>printThermal('&lt;strong&gt;' + message.chatname + '&lt;/strong&gt;')</code>。SSAppはWindowsのネイティブ印刷APIを通じて、保存済み設定で確認なしにジョブをキューへ送ります。フローでは次のようなオプションで上書きできます： <code>{ width: '58mm', marginLeft: '3mm', marginRight: '3mm', marginTop: '2mm', marginBottom: '2mm', feed: '3mm', marginType: 'printableArea' }</code>。Promiseを返すことで、Event Flowが送信を待ち、エラーを報告できます。
+                </div>
+
+                <!-- ─── Both nodes on canvas ─── -->
+                <figure class="screenshot">
+                    <img src="../../actions/img/both-nodes-canvas.png" alt="Custom CodeトリガーとExecute Custom Codeアクションを横に並べたキャンバス">
+                    <figcaption>キャンバス上に配置したCustom Codeトリガー（青）とExecute Custom Codeアクション（緑）。トリガーの出力ポートからアクションの入力ポートへ線をつなぎます。</figcaption>
+                </figure>
+
+                <!-- ─── message API ─── -->
+                <h3 id="custom-js-message-api">オブジェクト： <code>message</code></h3>
+                <p>両ノードは完全なイベントペイロードを次として受け取ります： <code>message</code>。以下のフィールドは常に利用でき、プラットフォーム固有イベントでは追加フィールドがある場合があります。</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>フィールド</th><th>データ型</th><th>説明</th><th>例</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>message.chatmessage</code></td><td>文字列</td><td>チャットメッセージのテキスト（HTMLを含む場合があります）</td><td><code>"Hello stream!"</code></td></tr>
+                        <tr><td><code>message.chatname</code></td><td>文字列</td><td>送信者の表示名</td><td><code>"CoolViewer"</code></td></tr>
+                        <tr><td><code>message.userid</code></td><td>文字列</td><td>プラットフォームのユーザーID</td><td><code>"12345678"</code></td></tr>
+                        <tr><td><code>message.type</code></td><td>文字列</td><td>送信元プラットフォーム（小文字）</td><td><code>"twitch"</code>, <code>"youtube"</code>, <code>"kick"</code></td></tr>
+                        <tr><td><code>message.hasDonation</code></td><td>文字列</td><td>存在する場合は、書式設定された寄付の文字列</td><td><code>"$5.00"</code>, <code>"500 bits"</code></td></tr>
+                        <tr><td><code>message.donoValue</code></td><td>数値／文字列</td><td>ソースが提供する場合の米ドル換算の寄付額。有効なゼロ値も尊重されます。Event Flowは代替として次を使用します： <code>currency.js</code> による、正規化された値の換算： <code>hasDonation</code> の表示からしきい値を比較します。名前付きの未知の単位は100単位＝0.01米ドルとして扱います。次は解析しません： <code>chatmessage</code> の文章から寄付額を読み取ることはしません。</td><td><code>5</code></td></tr>
+                        <tr><td><code>message.event</code></td><td>文字列</td><td>イベントの種類を示す識別子</td><td><code>"new_follower"</code>, <code>"cheer"</code>, <code>"raid"</code></td></tr>
+                        <tr><td><code>message.membership</code></td><td>文字列</td><td>該当する場合のメンバーシップ状態</td><td><code>"MEMBERSHIP"</code></td></tr>
+                        <tr><td><code>message.subtitle</code></td><td>文字列</td><td>補足のコンテキスト行</td><td><code>"Member for 3 months"</code></td></tr>
+                        <tr><td><code>message.mod</code></td><td>真偽値</td><td>送信者がモデレーターである</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.subscriber</code></td><td>真偽値</td><td>送信者がサブスクライバーである</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.vip</code></td><td>真偽値</td><td>送信者がVIPである</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.chatimg</code></td><td>文字列</td><td>ユーザーのアバターURL</td><td><code>"https://..."</code></td></tr>
+                        <tr><td><code>message.meta</code></td><td>オブジェクト</td><td>イベントに付属する任意の構造化データ</td><td><code>{ viewers: 120 }</code></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>通貨換算：</strong> 使用するもの： <code>convertCurrency(message.hasDonation, 'EUR', message.type)</code> で、書式設定された寄付表示をユーロに換算します。戻り値は数値、または次の値です： <code>null</code> （指定した換算先通貨に対応していない場合）。換算にはSocial Stream Ninja内部の概算レートを使い、外部の為替サービスには接続しません。
+                </div>
+
+                <!-- ─── result API ─── -->
+                <h3 id="custom-js-result-api">アクションが返すもの</h3>
+                <p>アクションコードからプレーンなオブジェクトを返します。含めたフィールドは、フローの次の部分にマージされます： <code>result</code> オブジェクト。省略したフィールドは現在の値を維持します。</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>戻り値のフィールド</th><th>データ型</th><th>効果</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>modified</code></td><td>真偽値</td><td>設定する項目： <code>true</code> 次を変更した場合： <code>message</code> フィールド。ペイロードが編集されたことを後続ノードに伝えます。</td></tr>
+                        <tr><td><code>message</code></td><td>オブジェクト</td><td>変更したメッセージを返すことで、後続ノードに変更を渡せます。</td></tr>
+                        <tr><td><code>blocked</code></td><td>真偽値</td><td>設定する項目： <code>true</code> でメッセージの表示や中継を防ぎます。</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>最小限の安全な戻り値：</strong> <code>return { modified: false, message };</code><br>
+                    何も変更していなくても、次を返すと <code>message</code> が次のノードへ渡されます。
+                </div>
+
+                <!-- ─── Snippet Examples ─── -->
+                <h3 id="custom-js-examples">スニペット例</h3>
+                <p>対応するノードのJavaScript Code欄へ、いずれかの例をコピーしてください。</p>
+
+                <h4 class="snippet-heading">トリガーのスニペット — 戻り値： <code>true</code> でフローを続行します</h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">キーワード一致（大文字と小文字を区別しない）</div>
+                    <div class="snippet-desc">特定の単語やフレーズを含む場合だけ、フローを続行します。</div>
+                    <div class="code-js">// Matches "!hello" anywhere in the message
+return (message.chatmessage || '').toLowerCase().includes('!hello');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">正規表現によるコマンド検出</div>
+                    <div class="snippet-desc">定義したリストのコマンドで始まるメッセージに一致します（例： <code>!queue</code>, <code>!raffle</code>, <code>!enter</code>).</div>
+                    <div class="code-js">return /^!(queue|raffle|enter)\b/i.test(message.chatmessage || '');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">しきい値を超える寄付</div>
+                    <div class="snippet-desc">寄付額が指定した最低額以上の場合にのみ発火します。</div>
+                    <div class="code-js">const amount = message.donoValue !== undefined && message.donoValue !== null && message.donoValue !== ''
+  ? Number(message.donoValue)
+  : (typeof convertToUSD === 'function' ? convertToUSD(message.hasDonation || '', message.type || '') : Number(String(message.hasDonation || '').replace(/[^0-9.]/g, '') || 0));
+return amount >= 5;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">ユーロ建ての指定金額範囲にあるYouTube Super ChatまたはSuper Sticker</div>
+                    <div class="snippet-desc">標準のYouTube寄付ラベルをEURに換算し、Jewels/Giftsを除外して、1つの音声または視覚効果の範囲を選びます。</div>
+                    <div class="code-js">var eventName = String(message.event || '').toLowerCase();
+if (eventName !== 'superchat' &amp;&amp; eventName !== 'supersticker') return false;
+
+var eurValue = convertCurrency(message.hasDonation || '', 'EUR', message.type || '');
+if (typeof eurValue !== 'number' || !isFinite(eurValue)) return false;
+
+message.eurValue = eurValue;
+return eurValue &gt;= 10 &amp;&amp; eurValue &lt; 25;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">プラットフォームフィルター</div>
+                    <div class="snippet-desc">特定のプラットフォームからのイベントだけを処理します。</div>
+                    <div class="code-js">return ['twitch', 'youtube'].includes(message.type);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">サブスクライバー／VIP／モデレーターのゲート</div>
+                    <div class="snippet-desc">権限のあるユーザーの場合にのみフローを続行します。</div>
+                    <div class="code-js">return !!(message.subscriber || message.vip || message.mod);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">複数条件 — VIP＋キーワード</div>
+                    <div class="snippet-desc">組み込みトリガーだけでは表せない役割の確認と本文条件を、1つの式にまとめます。</div>
+                    <div class="code-js">const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test(message.chatmessage || '');
+return isPrivileged && isCommand;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">メッセージの長さによるゲート</div>
+                    <div class="snippet-desc">十分な内容を持つメッセージだけを処理します（絵文字1つだけの連投を避けたい読み上げや中継に便利です）。</div>
+                    <div class="code-js">return (message.chatmessage || '').replace(/<[^>]+>/g, '').trim().length >= 20;</div>
+                </div>
+
+                <h4 class="snippet-heading" style="margin-top:36px;">アクションのコード例 — 返す値： <code>{ modified, message }</code></h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">メッセージにバッジやタグを追加</div>
+                    <div class="snippet-desc">このアクションを通る各メッセージの末尾に、見た目の印を追加します。</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').trimEnd() + ' ✅';
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">条件に応じてメッセージをブロック</div>
+                    <div class="snippet-desc">内容を調べ、ルールに一致したメッセージを通知せずに破棄します。キーワードフィルターでは表現できないスパムパターンに便利です。</div>
+                    <div class="code-js">const text = (message.chatmessage || '').toLowerCase();
+const spamPatterns = ['buy followers', 'free nitro', 'click here'];
+
+if (spamPatterns.some(p => text.includes(p))) {
+    return { blocked: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">@メンションを除去する</div>
+                    <div class="snippet-desc">別のプラットフォームに中継する前に、メッセージからすべての@usernameメンションを除去します。</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').replace(/@\w+/g, '').trim();
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">寄付の告知を整形する</div>
+                    <div class="snippet-desc">寄付がある場合、chatmessageを統一した告知文に書き換えます。</div>
+                    <div class="code-js">const amount = parseFloat(message.donoValue || 0);
+if (amount > 0) {
+    const note = (message.chatmessage || '').trim();
+    message.chatmessage = `💰 ${message.chatname} donated $${amount.toFixed(2)}!`
+        + (note ? ` "${note}"` : '');
+    return { modified: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">後続ノード用の振り分けメタデータを付ける</div>
+                    <div class="snippet-desc">後続のアクションが読み取れるよう、メッセージにカスタムフィールドを付けます： <em>チャット転送（Relay Chat）</em> または <em>メッセージを送信（Send Message）</em> アクションがテンプレート変数から読み取れる値（<code>{meta}</code>).</div>
+                    <div class="code-js">message.meta = message.meta || {};
+
+// Assign a donation tier so the next node can use {meta} to decide overlay colour
+const amount = parseFloat(message.donoValue || 0);
+message.meta.donationTier = amount >= 20 ? 'gold' : amount >= 5 ? 'silver' : 'bronze';
+
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">プラットフォームに応じたメッセージ接頭辞</div>
+                    <div class="snippet-desc">プラットフォームをまたいで中継するときにプラットフォーム名を先頭に付け、視聴者に送信元が分かるようにします。</div>
+                    <div class="code-js">const labels = {
+    twitch:  '[Twitch]',
+    youtube: '[YouTube]',
+    kick:    '[Kick]',
+    tiktok:  '[TikTok]',
+};
+const label = labels[message.type] || `[${message.type || 'Chat'}]`;
+message.chatmessage = `${label} ${message.chatname}: ${message.chatmessage || ''}`;
+return { modified: true, message };</div>
+                </div>
+
+                <!-- ─── Complete worked example ─── -->
+                <h3 id="custom-js-example-flow">完全な例 — VIP向け機能追加リクエストボット</h3>
+                <p>このフローは次を待ち受けます： <code>!feature &lt;text&gt;</code> をサブスクライバー、VIP、モデレーターから受信し、機能追加リクエストの形式に整えて別の送信先（Discordなど）に中継します。</p>
+
+                <div class="diagram">
+┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Codeトリガー │────▶│ Execute Custom Codeアクション│────▶│ Relay Chat │ │ │ │ │ │ （Discordへ） │ │ ゲート：VIP／購読者／mod │ │ メッセージを整形 │ │ │ │ ＋次で始まる │ │ → "📋 機能追加リクエスト │ │ │ │ !feature │ │ {name}より：{text}" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘</div>
+
+                <p><strong>手順1 — Custom Codeトリガー</strong> （トリガーのJavaScript Code欄に貼り付けます）：</p>
+                <div class="code-js">// Only let VIPs, subscribers, and mods through, and only for !feature commands
+const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test((message.chatmessage || '').trim());
+return isPrivileged && isCommand;</div>
+
+                <p><strong>手順2 — Execute Custom Codeアクション</strong> （アクションのJavaScript Code欄に貼り付けます）：</p>
+                <div class="code-js">// Strip the "!feature" command word and format a clean announcement
+const featureText = (message.chatmessage || '')
+    .replace(/^!feature\s*/i, '')
+    .trim();
+
+if (!featureText) {
+    // No text after the command: block rather than relay an empty request
+    return { blocked: true, message };
+}
+
+message.chatmessage = `📋 Feature request from ${message.chatname}: ${featureText}`;
+return { modified: true, message };</div>
+
+                <p><strong>手順3 — Relay Chatアクション</strong>：アクションの後に標準のRelay Chatノードを置き、Discordなどの送信先を指定してください。ここでは独自コードは不要です。整形済みの <code>message.chatmessage</code> は自動的に通過します。</p>
+
+                <div class="callout tip">
+                    <strong>フローのテスト。</strong> 次のボタンをクリックします： <strong>フローをテスト（Test Flow）</strong> （エディターの右上）。ライブ配信なしで、テスト用メッセージを処理経路に送信できます。chatnameをサブスク登録者の名前に設定し、次のようなメッセージを追加します： <code>!feature dark mode support</code>を送り、Relay Chatの送信先が整形済み文字列を受け取ることを確認します。
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/test-panel.png" alt="模擬イベントを送信するTest Flowパネル">
+                    <figcaption>Test Flowパネル。トリガー条件に合うように各項目を入力し、次をクリックします： <em>テストを実行（Run Test）</em> で処理全体を検証します。</figcaption>
+                </figure>
+
+                <!-- ─── Security note ─── -->
+                <h3 id="custom-js-security">セキュリティ上の考慮事項</h3>
+                <div class="callout warn">
+                    <strong>カスタムコードはレンダラープロセスの権限で実行されます。</strong> SSApp内では、Custom JSノードのコードは次に完全にアクセスできます： <code>window</code> オブジェクトと、preloadスクリプトが公開するすべてのAPI（例： <code>window.ninjafy</code>）。取り込むフローファイルは実行可能コードとして扱い、信頼する提供元のフローだけを取り込んでください。
+                </div>
+                <ul>
+                    <li><strong>ネットワークのサンドボックスはありません。</strong> アクションコードから次を呼び出せます： <code>fetch()</code>。他の人が共有したフローを使う場合は、有効にする前にJavaScriptを確認してください。</li>
+                    <li><strong>エラーは捕捉されます。</strong> コードの実行時エラーでは、次を返します： <code>false</code> （トリガー）または何もしない動作（アクション）となり、DevToolsコンソールへ記録されます。フローはクラッシュしません。</li>
+                    <li><strong>構文エラーも捕捉されます。</strong> コンパイル時の <code>SyntaxError</code> も同様に捕捉されます。ノードが何もしていないように見える場合は、DevTools（F12）を確認してください。</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

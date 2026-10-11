@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="在 Social Stream Ninja Event Flow 中使用狀態節點追蹤數值、套用冷卻時間，並協調傳入聊天事件之間的動作。">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/actions/state-nodes-guide.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/actions/state-nodes-guide.html">
+    <meta property="og:title" content="狀態節點實用指南 - Social Stream Ninja">
+    <meta property="og:description" content="在 Social Stream Ninja Event Flow 中使用狀態節點追蹤數值、套用冷卻時間，並協調傳入聊天事件之間的動作。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/actions/state-nodes-guide.html">
+    <meta name="twitter:title" content="狀態節點實用指南 - Social Stream Ninja">
+    <meta name="twitter:description" content="在 Social Stream Ninja Event Flow 中使用狀態節點追蹤數值、套用冷卻時間，並協調傳入聊天事件之間的動作。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>狀態節點實用指南 - Social Stream Ninja</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: radial-gradient(circle at top, #4338ca 0%, #0f172a 55%, #020617 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 35px 80px rgba(3, 7, 18, 0.55);
+        }
+        header {
+            background: linear-gradient(135deg, #4c1d95, #312e81, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.7rem;
+            margin-bottom: 12px;
+        }
+        header p {
+            font-size: 1.15rem;
+            max-width: 680px;
+            opacity: 0.92;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 11px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.06em;
+            margin-bottom: 18px;
+        }
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        nav a {
+            color: #f8fafc;
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 999px;
+            padding: 6px 16px;
+            transition: background 0.2s;
+        }
+        nav a:hover {
+            background: rgba(15,23,42,0.25);
+        }
+        .content {
+            padding: 50px 55px 70px;
+        }
+        section {
+            margin-bottom: 70px;
+        }
+        h2 {
+            font-size: 2rem;
+            color: #312e81;
+            margin-bottom: 18px;
+        }
+        h3 {
+            font-size: 1.35rem;
+            color: #4338ca;
+            margin: 20px 0 10px;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 24px;
+            margin: 12px 0;
+        }
+        li {
+            margin: 6px 0;
+        }
+        .panel {
+            border-radius: 16px;
+            padding: 22px;
+            margin: 18px 0;
+        }
+        .panel.info {
+            background: #eef2ff;
+            border: 1px solid rgba(67,56,202,0.2);
+        }
+        .panel.warn {
+            background: #fff7ed;
+            border: 1px solid rgba(234,88,12,0.25);
+        }
+        .panel.success {
+            background: #ecfdf5;
+            border: 1px solid rgba(5,150,105,0.2);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 18px;
+            margin: 20px 0;
+        }
+        .card {
+            border-radius: 18px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+            padding: 20px 22px;
+            background: #fff;
+        }
+        .card h4 {
+            margin-bottom: 10px;
+            color: #4c1d95;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono','Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            border-radius: 14px;
+            padding: 18px;
+            margin: 16px 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .recipe {
+            border-left: 4px solid #312e81;
+            padding-left: 18px;
+            margin: 18px 0;
+        }
+        .recipe h4 {
+            margin-bottom: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        table th, table td {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            text-align: left;
+        }
+        table th {
+            background: #f1f5f9;
+            color: #312e81;
+        }
+        code {
+            background: rgba(15,23,42,0.06);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono','Courier New', monospace;
+        }
+        @media (max-width: 720px) {
+            table { display: block; max-width: 100%; overflow-x: auto; }
+            header, .content {
+                padding: 35px 20px;
+            }
+            nav {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"actions/state-nodes-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"!hello ──▶ Switch (ON?) ─▶ Send Reply ─▶ Set Gate: OFF ─▶ Delay 15s ─▶ Set Gate: ON":"!hello ──▶ Switch (ON?) ─▶ Send Reply ─▶ Set Gate: OFF ─▶ Delay 15s ─▶ Set Gate: ON","(OFF) referencing “helloCooldown”.":"（OFF），參照「helloCooldown」。","(ON) for “helloCooldown”.":"（ON），用於「helloCooldown」。","01 · Quick Orientation":"01 · 快速入門","02 · On/Off Switch (Gate)":"02 · 開/關開關（閘控）","03 · Counter":"03 · 計數器","04 · Rate Limiter (Throttle)":"04 · 速率限制器（節流）","05 · User Memory":"05 · 使用者記憶","06 · Problem Kits":"06 · 問題解決方案","07 · Troubleshooting & FAQ":"07 · 疑難排解和常見問題","08 · Next Steps":"08 · 後續步驟",": add or subtract custom amounts.":"— 加上或減去自訂數值。",": flip ON or OFF.":"— 切換 ON 或 OFF。",": jump to a specific number.":"— 跳至指定數字。",": revert to default (usually ON).":"— 還原預設值（通常為 ON）。",": revert to the default start value.":"— 還原預設起始值。","A User Memory operation has no dashed link.":"User Memory 動作沒有虛線連結。","Actions":"操作","Add a":"新增一個","Add a chat message “Cooldown active” on the false output if desired.":"如果需要，在 false 輸出上新增聊天訊息「Cooldown active」。","Add another":"再新增一個","Add the State node first, give it a unique name, then select it from each matching operation. Without the base node, state actions have nothing to update.":"先新增狀態節點，為它取一個唯一名稱，然後在每個相符動作中選擇它。沒有基礎節點，狀態動作就沒有可更新的物件。","Add the switch node first and confirm the dropdown references it.":"先新增開關節點，並確認下拉式選單參照它。","After your action, add":"在您的動作之後，新增","All overlay triggers pass through the switch.":"所有疊加畫面觸發條件都通過該開關。","Any Message ─▶ Counter (name: hype5) ─▶ Condition (value % 5 === 0?) ─▶ Play Celebration":"Any Message ─▶ Counter (name: hype5) ─▶ Condition (value % 5 === 0?) ─▶ Play Celebration","Auto increment:":"自動遞增：","Best for":"適合","Build Steps":"建立步驟","Can live anywhere in the flow. Just pick the matching node name.":"可以位於流程中的任意位置，只需選擇相符的節點名稱。","Choose the named memory in the operation's properties or drag its purple side connector onto the memory.":"在動作屬性中選擇具名記憶，或將紫色側邊連接器拖到記憶上。","Choose the time window (seconds).":"選擇時間區間（秒）。","Combine state nodes with the rest of the Event Flow toolkit:":"將狀態節點與 Event Flow 工具集的其他功能結合：","Command Cooldown":"命令冷卻","Configuration":"設定","Connect your trigger → switch → actions.":"連接觸發條件 → 開關 → 動作。","Cooldowns for chat commands.":"聊天命令的冷卻時間。","Counter":"計數器（Counter）","Counter default 0, target 3.":"計數器預設值為 0，目標為 3。","Counter never increments.":"計數器從不遞增。","Counters track numbers across messages. They increment automatically when a message flows through, and you can adjust values manually with actions.":"計數器跨訊息追蹤數值。訊息通過時會自動遞增，也可以透過動作手動調整数值。","Decide whether to queue or discard overflow.":"決定將超出限制的事件排入佇列還是捨棄。","Delay":"延遲（Delay）","Drop the switch node, name it “helloCooldown”, default ON.":"放置開關節點，命名為「helloCooldown」，預設 ON。","Ensure":"確保","Event Flow Guide":"Event Flow 指南","Event Flow System":"Event Flow 系統","Every Nth chatter triggers a prize.":"每第 N 位聊天者觸發一次獎品。","Every time a payload passes through the Counter node it adds 1 (unless you pause it with the “Only count when gate is true” option).":"每次承載資料通過 Counter 節點時都會加 1（除非使用「Only count when gate is true」選項將其暫停）。","Example Flow Charts":"範例流程圖","Example: 15s Cooldown":"範例：15 秒冷卻","Example: Celebrate Every 5 Messages":"範例：每 5 則訊息慶祝一次","Export working patterns as templates so your team can re-import them later.":"將有效模式匯出為範本，方便團隊稍後重新匯入。","Fix":"解決方法","Gate, Counter, and Rate Limiter can run in the normal event path.":"Gate、Counter 和 Rate Limiter 可以在一般事件路徑中執行。","Gift-based or badge-based eligibility.":"以禮物或徽章為依據的資格。","Great When You Need":"適用需求","Guide buttons don’t open.":"指南按鈕無法開啟。","Heads up:":"注意：","Holds the value (ON/OFF, count, timestamps, or users).":"儲存值（ON/OFF、計數、時間戳記或使用者）。","Increment after each redemption.":"每次兌換後遞增。","Inside the Condition node, compare":"在 Condition 節點內，比較","Keep experimenting! The new":"繼續嘗試！新的","Key Actions":"關鍵動作","Label branches (e.g., “false → cooldown active”) so you can follow the path visually.":"為分支加入標籤（例如「false → cooldown active」），以便直觀地追蹤路徑。","Likely Cause":"可能原因","Limited Freebies":"限量贈品","Lives on the canvas.":"位於畫布上。","Maintenance windows (pause features during BRB scenes).":"維護時段（在 BRB 場景中暫停功能）。","Make sure the trigger wire passes through the counter and the gate output is true.":"確保觸發條件連線通過計數器，且閘控輸出為 true。","Manual toggles (enable/disable overlays).":"手動切換（啟用/停用疊加畫面）。","No matching switch node exists (or the names differ).":"沒有相符的開關節點（或名稱不同）。","No target memory is selected.":"未選擇目標記憶。","On/Off Switch":"開/關開關（On/Off Switch）","Operations":"動作","Overview":"概述","Participation Trigger ──▶ Remember User ······▶ User Memory: Entrants Draw Command ───────────▶ Pick Random User ···▶ User Memory: Entrants Reset Command ──────────▶ Clear All Users ·····▶ User Memory: Entrants":"Participation Trigger ──▶ Remember User ······▶ User Memory: Entrants Draw Command ───────────▶ Pick Random User ···▶ User Memory: Entrants Reset Command ──────────▶ Clear All Users ·····▶ User Memory: Entrants","Pick a scenario and follow the steps.":"選擇一個情境並依步驟操作。","Placed downstream.":"放在下游。","Problem Kits":"問題解決方案","Rate Limiter":"速率限制器","Reads or changes the stored value (set ON, add +1, remember, draw, reset, etc.).":"讀取或變更已儲存值（設為 ON、加 1、記憶、抽獎、重設等）。","Redeem Reward ─▶ Counter ticketsSold ├─value \u003c 50 ─▶ Approve Redemption └─value ≥ 50 ─▶ Deny + Refund points":"Redeem Reward ─▶ Counter ticketsSold ├─value \u003c 50 ─▶ Approve Redemption └─value ≥ 50 ─▶ Deny + Refund points","Relax the limit and drop a Reset State Node action before retesting.":"放寬限制，並在重新測試前放置一個 Reset State Node 動作。","Remember:":"請記住：","Remembering viewers who liked, entered, or participated.":"記住按讚、報名或參加過的觀眾。","Reset state nodes between tests so you are not reading stale data.":"在測試之間重設狀態節點，避免讀取過期資料。","Running inside the extension without web_accessible resources updated.":"在擴充功能內執行，但未更新 web_accessible 資源。","See the dedicated":"請參閱專門的","Separate lists for separate campaigns.":"為不同活動使用獨立清單。","Set Gate OFF → Delay → Set Gate ON.":"Set Gate OFF → Delay → Set Gate ON。","Set Gate State":"設定閘控狀態（Set Gate State）","Set Gate State action won’t save.":"Set Gate State 動作無法儲存。","Set the maximum events allowed.":"設定允許的最大事件數。","Social Stream Ninja logo":"Social Stream Ninja 標誌","Solid teal wires carry events. Dashed purple links show which shared memory an operation uses. Each User Memory has its own count, persistence mode, and reset policy, so clearing one list does not affect another.":"藍綠色實線傳遞事件。紫色虛線表示某個動作使用哪項共用記憶。每個 User Memory 都有自己的計數、持續儲存模式和重設原則，因此清除一個清單不會影響另一個。","State Action":"狀態動作","State Node":"狀態節點","State Nodes Playbook":"狀態節點實用指南","State Nodes Playbook - Social Stream Ninja":"狀態節點實用指南 - Social Stream Ninja","State nodes give Social Stream Ninja memory. Use them to build cooldowns, toggles, counters, throttles, participant lists, and prize draws that keep automations predictable.":"狀態節點為 Social Stream Ninja 提供記憶。使用它們建立冷卻、開關、計數器、節流器、參加者清單和抽獎，讓自動化行為可預測。","State tools have an object that owns the value and operations that read or change it:":"狀態工具包含一個擁有數值的物件，以及讀取或變更該數值的動作：","Store points redeemed via commands.":"儲存透過命令兌換的點數。","Store state-driven metadata under":"將由狀態驅動的中繼資料儲存在","Switch named “overlayToggle”.":"名為「overlayToggle」的開關。","Switch node named “commandCooldown”.":"名為「commandCooldown」的開關節點。","Symptom":"症狀","Temporarily shorten cooldowns (2 seconds) or lower counter targets while verifying.":"驗證時暫時縮短冷卻時間（2 秒）或降低計數器目標。","Testing Checklist":"測試檢查表","The flow bypasses the counter node or the gate is false.":"流程繞過計數器節點，或閘控為 false。","The switch is a boolean guard. When ON, messages pass through; when OFF, the flow halts at this node.":"開關是一個布林守衛。ON 時訊息通過；OFF 時流程在此節點停止。","The throttle remembers timestamps and refuses new events until the rate you specify is respected.":"節流器記住時間戳記，並拒絕新事件，直到符合您指定的速率。","Throttle blocks everything forever.":"節流器一直阻止所有事件。","Throttles do not auto-reset when you edit the flow. Use":"編輯流程時，節流器不會自動重設。使用","Track progress to a community goal.":"追蹤社群目標進度。","Trigger → switch → reply.":"觸發條件 → 開關 → 回覆。","Trigger ─▶ Switch (overlayToggle) ─▶ If ON → Show Overlay └─false─▶ Notify moderator “Overlay disabled”":"Trigger ─▶ Switch (overlayToggle) ─▶ If ON → Show Overlay └─false─▶ Notify moderator “Overlay disabled”","Troubleshooting":"疑難排解","Unique-entry prize draws.":"每人一份資格的抽獎。","Use Cases":"使用情境","Use Reset action at the end of stream.":"在直播結束時使用 Reset 動作。","Use logic gates (AND/OR/NOT) before a switch to decide who can toggle it.":"在開關之前使用邏輯閘（AND/OR/NOT），決定誰可以切換它。","Use state nodes in Social Stream Ninja Event Flow to track values, apply cooldowns and coordinate actions across incoming chat events.":"在 Social Stream Ninja Event Flow 中使用狀態節點追蹤數值、套用冷卻時間，並協調傳入聊天事件之間的動作。","Use the Event Flow “Send Test Event” tool to simulate commands.":"使用 Event Flow 的「Send Test Event」工具模擬命令。","User Memory":"使用者記憶（User Memory）","User Memory guide":"使用者記憶指南","User Memory is a shared hub referenced by other nodes.":"User Memory 是其他節點參照的共用中心。","User Memory owns one named list of unique people. Remember users when they participate, check that list on later messages, remove a person, choose a random winner, or clear only that list.":"User Memory 擁有一個包含不重複人員的具名清單。在使用者參加時記住他們，在後續訊息中檢查該清單、移除某個人、隨機選擇得獎者，或僅清空該清單。","Viewer Toggle":"觀眾開關","When value ≥ 3, branch to “Sorry, all gone”.":"當 value ≥ 3 時，分支至「Sorry, all gone」。","Window too strict or leftover state from testing.":"時間區間過嚴，或測試遺留狀態。","and":"和","command → Set Gate OFF.":"命令 → Set Gate OFF。","command → Set Gate ON.":"命令 → Set Gate ON。","for reviewed screenshots, a downloadable draw flow, TikTok eligibility, participation examples, and reset details.":"查看經核對的螢幕擷取畫面、可下載抽獎流程、TikTok 資格、參加範例和重設詳細資訊。","if you need a clean slate during testing.":"如果測試期間需要清空狀態。","node (15 seconds).":"節點（15 秒）。","or":"或","or simply use the built-in “Trigger when value matches Target” option from the Counter node’s properties.":"或直接使用 Counter 節點屬性中內建的「Trigger when value matches Target」選項。","pairs with this playbook so you can master both logic and state layers.":"與本實用指南搭配，協助您掌握邏輯層和狀態層。","ships via manifest and reload the extension.":"透過 manifest 提供，然後重新載入擴充功能。","so overlays know why a branch fired.":"讓疊加畫面知道分支為何觸發。","“Drop alerts if the overlay is already busy.”":"「如果疊加畫面已經忙碌，則捨棄提醒。」","“One API call per 10 seconds.”":"「每 10 秒呼叫一次 API。」","“Only five raffle entries per minute.”":"「每分鐘只允許五個抽獎項目。」"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/actions/state-nodes-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="shell">
+        <header>
+            <div class="badge">Event Flow 系統<!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/state-nodes-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/state-nodes-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/state-nodes-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/state-nodes-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/state-nodes-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/state-nodes-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/state-nodes-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/state-nodes-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="state-nodes-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/actions/state-nodes-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/state-nodes-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/state-nodes-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/state-nodes-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/state-nodes-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/state-nodes-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/state-nodes-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/state-nodes-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+            <h1>狀態節點實用指南</h1>
+            <p>狀態節點為 Social Stream Ninja 提供記憶。使用它們建立冷卻、開關、計數器、節流器、參加者清單和抽獎，讓自動化行為可預測。</p>
+            <nav>
+                <a href="#overview">概述</a>
+                <a href="#switch">開/關開關（On/Off Switch）</a>
+                <a href="#counter">計數器（Counter）</a>
+                <a href="#throttle">速率限制器</a>
+                <a href="#user-memory">使用者記憶（User Memory）</a>
+                <a href="#recipes">問題解決方案</a>
+                <a href="#troubleshooting">疑難排解</a>
+            </nav>
+        </header>
+        <div class="content">
+            <section id="overview">
+                <h2>01 · 快速入門</h2>
+                <p>狀態工具包含一個擁有數值的物件，以及讀取或變更該數值的動作：</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>狀態節點</h4>
+                        <ul>
+                            <li>位於畫布上。</li>
+                            <li>儲存值（ON/OFF、計數、時間戳記或使用者）。</li>
+                            <li>Gate、Counter 和 Rate Limiter 可以在一般事件路徑中執行。</li>
+                            <li>User Memory 是其他節點參照的共用中心。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>狀態動作</h4>
+                        <ul>
+                            <li>放在下游。</li>
+                            <li>讀取或變更已儲存值（設為 ON、加 1、記憶、抽獎、重設等）。</li>
+                            <li>可以位於流程中的任意位置，只需選擇相符的節點名稱。</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel info">
+                    <strong>請記住：</strong> 先新增狀態節點，為它取一個唯一名稱，然後在每個相符動作中選擇它。沒有基礎節點，狀態動作就沒有可更新的物件。
+                </div>
+            </section>
+
+            <section id="switch">
+                <h2>02 · 開/關開關（閘控）</h2>
+                <p>開關是一個布林守衛。ON 時訊息通過；OFF 時流程在此節點停止。</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>適合</h4>
+                        <ul>
+                            <li>聊天命令的冷卻時間。</li>
+                            <li>手動切換（啟用/停用疊加畫面）。</li>
+                            <li>維護時段（在 BRB 場景中暫停功能）。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>關鍵動作</h4>
+                        <ul>
+                            <li><code>Set Gate State</code>— 切換 ON 或 OFF。</li>
+                            <li><code>Reset State Node</code>— 還原預設值（通常為 ON）。</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>範例：15 秒冷卻</h3>
+                <div class="diagram">
+!hello ──▶ Switch (ON?) ─▶ Send Reply ─▶ Set Gate: OFF ─▶ Delay 15s ─▶ Set Gate: ON
+                </div>
+                <div class="recipe">
+                    <h4>建立步驟</h4>
+                    <ol>
+                        <li>放置開關節點，命名為「helloCooldown」，預設 ON。</li>
+                        <li>連接觸發條件 → 開關 → 動作。</li>
+                        <li>在您的動作之後，新增 <em>設定閘控狀態（Set Gate State）</em> （OFF），參照「helloCooldown」。</li>
+                        <li>新增一個 <em>延遲（Delay）</em> 節點（15 秒）。</li>
+                        <li>再新增一個 <em>設定閘控狀態（Set Gate State）</em> （ON），用於「helloCooldown」。</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section id="counter">
+                <h2>03 · 計數器</h2>
+                <p>計數器跨訊息追蹤數值。訊息通過時會自動遞增，也可以透過動作手動調整数值。</p>
+                <div class="panel success">
+                    <strong>自動遞增：</strong> 每次承載資料通過 Counter 節點時都會加 1（除非使用「Only count when gate is true」選項將其暫停）。
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <h4>使用情境</h4>
+                        <ul>
+                            <li>每第 N 位聊天者觸發一次獎品。</li>
+                            <li>追蹤社群目標進度。</li>
+                            <li>儲存透過命令兌換的點數。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>操作</h4>
+                        <ul>
+                            <li><code>Increment Counter</code>— 加上或減去自訂數值。</li>
+                            <li><code>Set Counter Value</code>— 跳至指定數字。</li>
+                            <li><code>Reset State Node</code>— 還原預設起始值。</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>範例：每 5 則訊息慶祝一次</h3>
+                <div class="diagram">
+Any Message ─▶ Counter (name: hype5) ─▶ Condition (value % 5 === 0?) ─▶ Play Celebration
+                </div>
+                <p>在 Condition 節點內，比較 <code>state.hype5.value</code> 或直接使用 Counter 節點屬性中內建的「Trigger when value matches Target」選項。</p>
+            </section>
+
+            <section id="throttle">
+                <h2>04 · 速率限制器（節流）</h2>
+                <p>節流器記住時間戳記，並拒絕新事件，直到符合您指定的速率。</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>適用需求</h4>
+                        <ul>
+                            <li>「每分鐘只允許五個抽獎項目。」</li>
+                            <li>「每 10 秒呼叫一次 API。」</li>
+                            <li>「如果疊加畫面已經忙碌，則捨棄提醒。」</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>設定</h4>
+                        <ul>
+                            <li>設定允許的最大事件數。</li>
+                            <li>選擇時間區間（秒）。</li>
+                            <li>決定將超出限制的事件排入佇列還是捨棄。</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel warn">
+                    <strong>注意：</strong> 編輯流程時，節流器不會自動重設。使用 <code>Reset State Node</code> 如果測試期間需要清空狀態。
+                </div>
+            </section>
+
+            <section id="user-memory">
+                <h2>05 · 使用者記憶</h2>
+                <p>User Memory 擁有一個包含不重複人員的具名清單。在使用者參加時記住他們，在後續訊息中檢查該清單、移除某個人、隨機選擇得獎者，或僅清空該清單。</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>適合</h4>
+                        <ul>
+                            <li>以禮物或徽章為依據的資格。</li>
+                            <li>記住按讚、報名或參加過的觀眾。</li>
+                            <li>每人一份資格的抽獎。</li>
+                            <li>為不同活動使用獨立清單。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>動作</h4>
+                        <ul>
+                            <li><code>Remember User</code> 和 <code>Forget User</code>.</li>
+                            <li><code>User Is Remembered</code>.</li>
+                            <li><code>Pick Random User</code>.</li>
+                            <li><code>Clear All Users</code> 或 <code>Reset State Node</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="diagram">
+Participation Trigger ──▶ Remember User ······▶ User Memory: Entrants
+Draw Command ───────────▶ Pick Random User ···▶ User Memory: Entrants
+Reset Command ──────────▶ Clear All Users ·····▶ User Memory: Entrants
+                </div>
+                <p>藍綠色實線傳遞事件。紫色虛線表示某個動作使用哪項共用記憶。每個 User Memory 都有自己的計數、持續儲存模式和重設原則，因此清除一個清單不會影響另一個。</p>
+                <div class="panel success">
+                    請參閱專門的 <a href="user-memory-guide.html">使用者記憶指南</a> 查看經核對的螢幕擷取畫面、可下載抽獎流程、TikTok 資格、參加範例和重設詳細資訊。
+                </div>
+            </section>
+
+            <section id="recipes">
+                <h2>06 · 問題解決方案</h2>
+                <p>選擇一個情境並依步驟操作。</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>命令冷卻</h4>
+                        <ol>
+                            <li>名為「commandCooldown」的開關節點。</li>
+                            <li>觸發條件 → 開關 → 回覆。</li>
+                            <li>Set Gate OFF → Delay → Set Gate ON。</li>
+                            <li>如果需要，在 false 輸出上新增聊天訊息「Cooldown active」。</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>限量贈品</h4>
+                        <ol>
+                            <li>計數器預設值為 0，目標為 3。</li>
+                            <li>每次兌換後遞增。</li>
+                            <li>當 value ≥ 3 時，分支至「Sorry, all gone」。</li>
+                            <li>在直播結束時使用 Reset 動作。</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>觀眾開關</h4>
+                        <ol>
+                            <li>名為「overlayToggle」的開關。</li>
+                            <li><code>!overlay on</code> 命令 → Set Gate ON。</li>
+                            <li><code>!overlay off</code> 命令 → Set Gate OFF。</li>
+                            <li>所有疊加畫面觸發條件都通過該開關。</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <h3>範例流程圖</h3>
+                <div class="diagram">
+Trigger ─▶ Switch (overlayToggle) ─▶ If ON → Show Overlay
+           └─false─▶ Notify moderator “Overlay disabled”
+                </div>
+                <div class="diagram">
+Redeem Reward ─▶ Counter ticketsSold
+                      ├─value < 50 ─▶ Approve Redemption
+                      └─value ≥ 50 ─▶ Deny + Refund points
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>07 · 疑難排解和常見問題</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>症狀</th>
+                            <th>可能原因</th>
+                            <th>解決方法</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Set Gate State 動作無法儲存。</td>
+                            <td>沒有相符的開關節點（或名稱不同）。</td>
+                            <td>先新增開關節點，並確認下拉式選單參照它。</td>
+                        </tr>
+                        <tr>
+                            <td>計數器從不遞增。</td>
+                            <td>流程繞過計數器節點，或閘控為 false。</td>
+                            <td>確保觸發條件連線通過計數器，且閘控輸出為 true。</td>
+                        </tr>
+                        <tr>
+                            <td>節流器一直阻止所有事件。</td>
+                            <td>時間區間過嚴，或測試遺留狀態。</td>
+                            <td>放寬限制，並在重新測試前放置一個 Reset State Node 動作。</td>
+                        </tr>
+                        <tr>
+                            <td>User Memory 動作沒有虛線連結。</td>
+                            <td>未選擇目標記憶。</td>
+                            <td>在動作屬性中選擇具名記憶，或將紫色側邊連接器拖到記憶上。</td>
+                        </tr>
+                        <tr>
+                            <td>指南按鈕無法開啟。</td>
+                            <td>在擴充功能內執行，但未更新 web_accessible 資源。</td>
+                            <td>確保 <code>actions/state-nodes-guide.html</code> 透過 manifest 提供，然後重新載入擴充功能。</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3>測試檢查表</h3>
+                <ul>
+                    <li>使用 Event Flow 的「Send Test Event」工具模擬命令。</li>
+                    <li>驗證時暫時縮短冷卻時間（2 秒）或降低計數器目標。</li>
+                    <li>在測試之間重設狀態節點，避免讀取過期資料。</li>
+                    <li>為分支加入標籤（例如「false → cooldown active」），以便直觀地追蹤路徑。</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>08 · 後續步驟</h2>
+                <p>將狀態節點與 Event Flow 工具集的其他功能結合：</p>
+                <ul>
+                    <li>在開關之前使用邏輯閘（AND/OR/NOT），決定誰可以切換它。</li>
+                    <li>將由狀態驅動的中繼資料儲存在 <code>meta</code> 讓疊加畫面知道分支為何觸發。</li>
+                    <li>將有效模式匯出為範本，方便團隊稍後重新匯入。</li>
+                </ul>
+                <div class="panel info">
+                    繼續嘗試！新的 <a href="event-flow-guide.html">Event Flow 指南</a> 與本實用指南搭配，協助您掌握邏輯層和狀態層。
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

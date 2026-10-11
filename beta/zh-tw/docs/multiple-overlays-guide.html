@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/multiple-overlays-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/multiple-overlays-guide.html">
+    <meta property="og:title" content="多個頻道與獨立疊加畫面 - Social Stream Ninja">
+    <meta property="og:description" content="在一個停駐面板中閱讀所有聊天，同時選擇每個觀眾疊加畫面顯示哪些平台。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/multiple-overlays-guide.html">
+    <meta name="twitter:title" content="多個頻道與獨立疊加畫面 - Social Stream Ninja">
+    <meta name="twitter:description" content="在一個停駐面板中閱讀所有聊天，同時選擇每個觀眾疊加畫面顯示哪些平台。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>多個頻道與獨立疊加畫面 - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="在一個停駐面板中閱讀所有聊天，同時選擇每個觀眾疊加畫面顯示哪些平台。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/multiple-overlays-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"(advanced, see below).":"（進階用法，見下文）。","(replace values that are already there). Make the Hype layer taller if your style needs room.":"（替換現有值）。如果樣式需要更多空間，請增加 Hype 圖層的高度。","(see the":"（參見","(works when the source sends a channel name).":"（來源傳送頻道名稱時有效）。",") only works on the Dock.":"）僅適用於 Dock。",") or percent (":"）或百分比（",", and":"，以及",", and remove":"，並移除",", height":"，高度",", left":"，左側位置",", may not work on this page. YouTube Shorts is its own type: add":"等選項可能不適用於此頁面。YouTube Shorts 是獨立類型，請加入",", then":"，然後",", top":"，頂部位置",". Add layers bottom first, and type just the numbers (no commas, no “px”) under each layer's":"。從底層開始加入圖層，在各圖層的以下欄位中只填數字（不要逗號或「px」）：",". Blank width and height fill the browser; blank left and top start at the top-left corner.":"。寬度和高度留空時填滿瀏覽器；左側和頂部位置留空時從左上角開始。",". For a compact look, try":"。想要精簡的外觀，可嘗試",". Keep that Dock unfiltered. It's your own view.":"。保留這個 Dock 的完整檢視，不要加篩選條件，供自己查看。",". Name them clearly, like":"。給它們取清楚的名稱，例如",". Other layers stay fullscreen.":"。其他圖層維持全螢幕。",". Other pages need their own transparent setting. Some outside sites block embedding.":"。其他頁面需要各自開啟透明背景。有些外部網站會阻擋嵌入。",". Other scene sizes need other numbers.":"。場景尺寸不同，需要調整数值。",". Replace any":"。替換所有",". Set width, height, left, and top in pixels (":"。以像素（","1. Live Chat / Dock":"1. 即時聊天／停駐面板","2. Hype counter":"2. Hype 計數器","3. Emoji / Emote Wall":"3. Emoji／表情牆","4. Featured Chat":"4. 精選聊天","5. NinjaBacker (optional)":"5. NinjaBacker（選用）","A full example:":"完整範例：","A layer has a solid background":"圖層背景不透明","A layer is empty":"圖層為空","A see-through layer can still block taps. Turn off":"透明圖層也可能擋住點按。關閉","A view is blank":"畫面空白","Add":"新增","Add a filter to the end of each copy, like":"在各份連結末尾加入篩選條件，例如","Add all your chats to Social Stream Ninja. Check one new message from each shows up in your":"將所有聊天加入 Social Stream Ninja，確認每個來源的新訊息都能出現在","Add each link to OBS as its own":"將各連結分別新增為 OBS 的","Add more overlays":"加入更多疊加層","Add to the Dock link":"加入 Dock 連結","All guides":"所有指南","Allow taps and scrolling":"允許點按與捲動","Allow taps and scrolling on this layer":"允許在此圖層中點按和捲動","An overlay with a different session but no matching capture will just sit empty. An overlay's":"使用其他工作階段卻沒有對應擷取的疊加層會一直空白。疊加層的","Automatic transparency works for":"以下頁面可自動透明：","Browse all guides":"瀏覽所有指南","Browser Source":"瀏覽器來源","Can't tap or scroll chat":"無法點按或捲動聊天","Capture":"擷取","Center Hype in the column.":"將 Hype 在欄內置中。","Chat and alerts in one browser tab":"在一個瀏覽器分頁中顯示聊天和提醒","Chat and alerts in one tab":"在一個分頁中顯示聊天和提醒","Chat layer: width":"聊天圖層：寬度","Check both show in your Dock, and each chat overlay shows only its own platform.":"確認 Dock 中有兩邊的訊息，而各聊天疊加層只顯示自己的平台。","Clear saved setup":"清除已儲存的設定","Combine overlays":"合併疊加畫面","Commands & API":"指令與 API","Copy combined link":"複製組合連結","Copy the new combined link into OBS.":"將新的組合連結複製到 OBS。","Copy them from your existing Browser Sources so session, password, styles, and connection settings come along. Leave":"從現有的瀏覽器來源複製，可一併保留工作階段、密碼、樣式和連線設定。保持勾選","Copy your generated":"複製產生的","Create test messages":"建立測試訊息","Do this":"執行操作","Download":"下載","Each layer is its own area. Set the OBS Browser Source to":"每個圖層都有自己的區域。將 OBS 瀏覽器來源設為","Each overlay gets its own Browser Source.":"每個疊加層使用獨立的瀏覽器來源。","Edit a combined link later":"稍後編輯組合連結","Edits on desktop don't update an older link. Copy or scan the new link after editing. Nothing syncs through your session ID.":"在電腦上修改不會更新舊連結。編輯後請複製或掃描新連結。工作階段 ID 不會同步這些設定。","Event reference":"事件參考","Everything except Discord":"除 Discord 之外的所有來源","Example: one overlay shows only Twitch chat, another shows only YouTube chat. You still read everything in one Dock.":"例如：一個疊加層只顯示 Twitch 聊天，另一個只顯示 YouTube 聊天；你仍可在同一個 Dock 中閱讀全部訊息。","Feature each message, then press clear. Check every featured page after switching platforms.":"分別精選各則訊息，再按清除。切換平台後檢查所有精選聊天頁面。","Featured Chat":"精選聊天","Featured Chat takes one platform per link.":"精選聊天的每條連結只接受一個平台。","Features":"功能","Filter options":"篩選選項","Filter options for chat overlays":"聊天疊加層的篩選選項","Filter the Dock by browser tab":"按瀏覽器分頁篩選 Dock","Find the":"找到","Guides":"指南","Height":"高度","Hire":"聘用","Home":"首頁","How":"方法","I want to":"我想要","I want to show":"我想顯示","I want to show…":"我想顯示…","I want to…":"我想要…","If a layer is blank or covers chat":"圖層空白或蓋住聊天時","Inspiration":"靈感","It is not a platform channel ID.":"這不是平台的頻道 ID。","It takes the numeric ID of the browser tab the message came from. Separate several with commas.":"使用訊息來源瀏覽器分頁的數字 ID。多個 ID 以逗號分隔。","It works on the Dock only, not as a Featured Chat channel filter.":"僅適用於 Dock，不能用作精選聊天的頻道篩選條件。","Keep Featured Chat beside the chat column.":"將精選聊天放在聊天欄旁邊。","Keep combined links and QR codes as private as your overlay links.":"組合連結和 QR code 應像疊加層連結一樣保密。","Keep each overlay in its own OBS Browser Source.":"將每個疊加層保留在自己的 OBS 瀏覽器來源中。","Keep your Dock open to pick messages.":"保持 Dock 開啟，以便選取訊息。","Layer":"圖層","Layer options":"圖層選項","Leave":"將","Left":"左側偏移","Left = 450":"左側位置 = 450","Main navigation":"主導覽","Make a layer fullscreen again":"讓圖層恢復全螢幕","Make a left chat column (1920×1080)":"建立左側聊天欄（1920×1080）","Multi-Stream Alert Box":"多直播提醒框","Multiple channels and separate overlays":"多個頻道和獨立疊加畫面","Multiple channels and separate overlays - Social Stream Ninja":"多個頻道與獨立疊加畫面 - Social Stream Ninja","No CSS needed.":"不需要 CSS。","No sound on the phone":"手機沒有聲音","OBS layout recipe":"OBS 版面配置範例","OBS recipe: left chat column with fullscreen effects":"OBS 版面：左側聊天欄搭配全螢幕特效","OBS views":"OBS 檢視","On the":"在","On this page":"本頁內容","One SSN session":"一個 SSN 工作階段","One feed can power several filtered views.":"一個訊息來源可供多個不同篩選畫面使用。","Open":"開啟","Open its original link on its own first. Alerts stay empty until an event arrives. Combining doesn't capture anything new.":"先單獨開啟原始連結。提醒在事件到來前保持空白。組合頁面不會開始新的擷取。","Open navigation menu":"開啟導覽選單","Options from other overlays, like":"其他疊加層的選項，例如","Overlay Gallery":"疊加畫面圖庫","Paste its viewer overlay link as the top layer, with its right-entry animation setting. The combiner sets its area and order; NinjaBacker sets its own animation. Its background must be transparent and its site must allow embedding. This layer wasn't part of the tested example.":"將其觀眾疊加層連結放在最上層，並設定從右側進入的動畫。組合工具控制區域和順序，NinjaBacker 控制自身動畫。背景必須透明，且網站必須允許嵌入。此圖層未包含在已測試的範例中。","Paste your":"貼上你的","Paste your full overlay links.":"貼上完整的疊加層連結。","Performance:":"效能：","Phones may need a tap before playing sound. Turn on taps for that layer and tap it. Test on the real phone before relying on it.":"手機可能需要點按後才能播放聲音。允許點按該圖層，再點一下。正式使用前，請在實際手機上測試。","Pixel sizes stay fixed when the browser resizes. Percentages follow it. Each overlay keeps its own content and settings.":"瀏覽器改變尺寸時，像素值維持固定，百分比值隨之變化。各疊加層保留自己的內容和設定。","Press":"新聞","Preview":"預覽","Preview at 1920×1080.":"以 1920×1080 預覽。","Problem":"問題","Put NinjaBacker last (optional).":"將 NinjaBacker 放在最後（選用）。","Put a layer in front or behind":"將圖層移到前面或後面","Read all your chats in one Dock while choosing which platforms appear in each audience overlay.":"在一個停駐面板中閱讀所有聊天，同時選擇每個觀眾疊加畫面顯示哪些平台。","Real Chromium test with four SSN overlays and a test feed. The image is transparent; the dark background is added here so you can read it. Click for full size. Your fonts and colors come from your own overlay settings.":"在真實 Chromium 中使用四個 SSN 疊加層和測試訊息來源的範例。圖片本身透明，這裡加深色背景方便閱讀。點按查看原圖。字型和顏色由你自己的疊加層設定決定。","Remove its filter for a moment. If chat comes back, check the exact source type or tab ID.":"暫時移除篩選條件。如果聊天恢復，請核對準確的來源類型或分頁 ID。","Renamed the OBS source but nothing changed":"修改 OBS 來源名稱後沒有變化","Renaming doesn't change the saved link. Edit the URL itself.":"改名不會改變儲存的連結，請直接編輯 URL。","Repeat with a real message from each of your sources. Fake messages don't have real tab IDs.":"再用每個來源的真實訊息重複測試。模擬訊息沒有真實分頁 ID。","Reset to fullscreen":"重設為全螢幕","Run two fully separate shows":"執行兩個完全獨立的節目","SSN capture must still be running, and the phone must reach the same servers as the original links.":"SSN 擷取仍須執行，手機也必須能連線到原始連結所用的伺服器。","Saving, phones, and privacy":"儲存、手機與隱私","See":"參閱","Send a chat message with emojis, feature a message from your Dock, and turn on Hype data in SSN. Normal chat doesn't pick a featured message on its own.":"傳送含表情的聊天，從 Dock 精選一則訊息，並在 SSN 中開啟 Hype 資料。一般聊天不會自動選取精選訊息。","Send a fake Twitch message and a fake YouTube message into a test session. Use":"向測試工作階段傳送一則模擬 Twitch 訊息和一則模擬 YouTube 訊息。使用","Set":"設定","Set that Browser Source to Width 1920, Height 1080. The preview size doesn't set this. Fit it to your scene without cropping. After every layout change, copy the link again; the old link keeps the old layout.":"將該瀏覽器來源的寬度設為 1920、高度設為 1080。預覽尺寸不會設定這些值。完整配合場景，不要裁切。每次修改版面後重新複製連結，舊連結仍保留舊版面。","Show QR code":"顯示 QR 碼","Show which channel each message came from":"顯示每則訊息來自哪個頻道","Size and position":"尺寸與位置","Size or move a layer":"調整圖層大小或位置","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja ·":"Social Stream Ninja ·","Source types":"來源類型","Split Featured Chat (selected messages)":"拆分精選聊天（選取的訊息）","Split chat by platform":"按平台拆分聊天","Split chat by platform in 4 steps":"四步按平台拆分聊天","Start over":"重新開始","Still blank without the filter":"移除篩選條件仍空白","Streaming Chat Dock":"直播聊天停駐面板","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","Tab IDs can change when a source reopens. Sources without a matching tab ID may be hidden.":"重新開啟來源時，分頁 ID 可能改變。沒有相符分頁 ID 的來源可能被隱藏。","Test each view":"測試每個畫面","Test it":"測試","Tested combined output: Hype centered over a narrow left chat column, emojis across the scene, and a featured message along the bottom to the right of chat.":"測試後的組合輸出：Hype 在左側窄聊天欄上方置中，emoji 橫跨場景，精選訊息位於聊天右側的底部。","The combined link and QR code hold the whole layout. Set it up on desktop, scan once, then bookmark it on your phone. Opening it also saves the setup in the phone's browser.":"組合連結和 QR code 包含整個版面。在電腦上設定，掃描一次，再在手機上加入書籤。開啟後，版面也會儲存到手機瀏覽器中。","The combined view has no setup controls. It just shows your overlays.":"組合畫面沒有設定控制項，只顯示疊加層。","The comma list (":"逗號分隔清單（","The filter only decides which picks a page accepts. It doesn't give you separate queues. A rejected pick doesn't clear the screen either. When you switch segments, clear the featured message yourself so an old one isn't left showing.":"篩選條件只決定頁面接受哪些精選訊息，不會建立獨立佇列。拒絕某則訊息也不會清空畫面。切換節目環節時，請手動清除精選訊息，以免舊訊息留在畫面上。","The top 80 pixels hold Hype, with the chat column below. Want chat full height behind Hype? Set Live Chat's height to":"頂部 80 像素放 Hype，下方放聊天欄。想讓聊天在 Hype 後面鋪滿全高？將 Live Chat 高度設為","Top":"頂端偏移","Transparent SSN background":"透明 SSN 背景","Try this":"試試這個","Turn on":"開啟","Twitch + YouTube":"Twitch + YouTube","Twitch and YouTube together":"Twitch 與 YouTube 合併顯示","Twitch chat":"Twitch 聊天","Twitch only":"僅 Twitch","Twitch-only and YouTube-only":"僅 Twitch 與僅 YouTube","Two channels on the same platform":"同一平台的兩個頻道","Two channels, same platform":"兩個頻道，同一平台","Up to eight links.":"最多八條連結。","Use":"使用","Use separate capture instances or profiles, each with its own session, each opening only its own sources.":"使用獨立的擷取執行個體或設定檔，各自使用自己的工作階段，並且只開啟各自的來源。","Use the arrow buttons.":"使用箭頭按鈕。","Use the editable link, or add":"使用可編輯連結，或加入","Very long links may not fit in a QR code. You can still copy the link.":"過長的連結可能無法放入 QR code，但仍可複製連結。","Width":"寬度","Width = 1470":"寬度 = 1470","YouTube chat":"YouTube 聊天","YouTube only":"僅 YouTube","Your Dock sees both":"Dock 可以看到兩邊","Your links and layer options save automatically in this browser, even unfinished ones. Private browsing may not keep them.":"連結和圖層選項會自動儲存在此瀏覽器中，即使尚未完成。私密瀏覽模式可能不會保留它們。","and":"和","and scan it with your phone. Or press":"並用手機掃描。或按","and top to":"，頂端偏移量設為","before the":"，放在以下內容之前：","checked.":"已勾選。","checked. OBS crops, transforms, filters, and Custom CSS are not in the link and won't carry over.":"。OBS 的裁切、變形、濾鏡和自訂 CSS 不在連結中，無法一併轉移。","for chat. Turn it off for alerts, so they don't block chat.":"用於聊天。提醒圖層則關閉，以免阻擋聊天操作。","here.":"在這裡查看。","if your capture reports it. See":"，前提是擷取會回報該值。參見","in a real captured payload. See the":"，在真實擷取的資料中查看。參見","link into the bottom layer.":"連結到最底層。","link into the top layer. Keep the full links, with session, password, and connection options.":"連結到最上層。保留包含工作階段、密碼和連線選項的完整連結。","link twice.":"連結兩份。","link twice. Copying keeps your session, password, version, and server settings.":"連結兩份。複製可保留工作階段、密碼、版本和伺服器設定。","link, use":"連結時，使用","means all of Twitch, not one Twitch channel. Channel names and stream titles can't be used as filter names.":"表示整個 Twitch，而不是某個 Twitch 頻道。頻道名稱和直播標題不能當作篩選名稱。","means the phone itself.":"指的是手機本身。","names the page for routing; it is not a channel filter.":"是路由用的頁面名稱，不是頻道篩選條件。","on layers above chat that don't need it.":"，用於聊天上方且不需要操作的圖層。","one Browser Source still runs every overlay inside it. Fewer OBS sources doesn't guarantee lower CPU or memory. Close the browser preview when done, and compare OBS with the old sources turned off. M1 Mac performance and your own NinjaBacker link are untested. You can keep Live Chat separate and combine only the rest.":"一個瀏覽器來源仍會執行其中的每個疊加層。OBS 來源數量減少不保證 CPU 或記憶體用量降低。完成後關閉瀏覽器預覽，並在關閉舊來源的情況下比較 OBS 表現。M1 Mac 效能和你自己的 NinjaBacker 連結尚未測試。也可將 Live Chat 保持獨立，僅組合其餘疊加層。","or":"或","session and routing troubleshooting":"工作階段與路由疑難排解","stacks your overlay links into one tab or one OBS Browser Source. Handy for reading chat on your phone during an IRL stream.":"將疊加層連結堆疊到一個分頁或一個 OBS 瀏覽器來源中，適合戶外直播時用手機閱讀聊天。","table below":"下表","to":"為","to center short messages in that area. To center across the whole scene, use Left 0, Width 1920, and":"可讓短訊息在該區域置中。若要在整個場景中置中，設為左側 0、寬度 1920，再使用","to one and":"到其中一份，再將","to paste into a Browser Source.":"貼到瀏覽器來源。","to the other.":"加到另一份。","together (450 + 1470 = 1920). Moving a 1920-wide layer right would cut off its edge. Add":"一起設定（450 + 1470 = 1920）。把寬 1920 的圖層右移會裁掉邊緣。加入","works":"適用"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/multiple-overlays-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide visual-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="主導覽">
+<a href="../index.html">首頁</a>
+<a href="features.html">功能</a>
+<a href="inspiration.html" class="site-priority-inspiration">靈感</a>
+<a href="download.html">下載</a>
+<a href="guides.html">指南</a>
+<a href="commands.html">指令與 API</a>
+<a href="supported-sites.html">支援的網站</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a>
+<a href="services.html" class="site-priority-hire">聘用</a>
+<a href="support.html">支援</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/multiple-overlays-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/multiple-overlays-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/multiple-overlays-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/multiple-overlays-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/multiple-overlays-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/multiple-overlays-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/multiple-overlays-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/multiple-overlays-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="multiple-overlays-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/multiple-overlays-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/multiple-overlays-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/multiple-overlays-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/multiple-overlays-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/multiple-overlays-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/multiple-overlays-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/multiple-overlays-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/multiple-overlays-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="切換主題">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>多個頻道和獨立疊加畫面</h1>
+<p>在一個停駐面板中閱讀所有聊天，同時選擇每個觀眾疊加畫面顯示哪些平台。</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="guide-jump-links" aria-label="本頁內容">
+<a href="#setup">按平台拆分聊天</a>
+<a href="#rolling">篩選選項</a>
+<a href="#featured">精選聊天</a>
+<a href="#channels">兩個頻道，同一平台</a>
+<a href="#check">測試</a>
+<a href="#combine">在一個分頁中顯示聊天和提醒</a>
+<a href="#combine-obs">OBS 版面配置範例</a>
+<a href="guides.html">所有指南</a>
+</nav>
+
+<section class="guide-card">
+<h2 id="setup">四步按平台拆分聊天</h2>
+<p>例如：一個疊加層只顯示 Twitch 聊天，另一個只顯示 YouTube 聊天；你仍可在同一個 Dock 中閱讀全部訊息。</p>
+<div class="guide-step-layout">
+<ol class="guide-steps">
+<li>將所有聊天加入 Social Stream Ninja，確認每個來源的新訊息都能出現在 <strong>直播聊天停駐面板</strong>。保留這個 Dock 的完整檢視，不要加篩選條件，供自己查看。</li>
+<li>複製產生的 <code>dock.html</code> 連結兩份。複製可保留工作階段、密碼、版本和伺服器設定。</li>
+<li>在各份連結末尾加入篩選條件，例如 <code>&amp;onlyfrom=twitch&amp;hidemenu</code> （參見 <a href="#rolling">下表</a>).</li>
+<li>將各連結分別新增為 OBS 的 <strong>瀏覽器來源</strong>。給它們取清楚的名稱，例如 <strong>Twitch 聊天</strong> 和 <strong>YouTube 聊天</strong>.</li>
+</ol>
+<figure class="guide-figure"><a href="../../docs/images/guides/obs-studio-sources.png"><img src="../../docs/images/guides/obs-studio-sources.png" width="265" height="580" alt="將每個疊加層保留在自己的 OBS 瀏覽器來源中。" loading="lazy" decoding="async"></a><figcaption>每個疊加層使用獨立的瀏覽器來源。</figcaption></figure>
+</div>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>擷取</strong>
+<span>Twitch + YouTube</span>
+</li>
+<li>
+<strong>一個 SSN 工作階段</strong>
+<span>Dock 可以看到兩邊</span>
+</li>
+<li>
+<strong>OBS 檢視</strong>
+<span>僅 Twitch 與僅 YouTube</span>
+</li>
+</ol>
+<figcaption>一個訊息來源可供多個不同篩選畫面使用。</figcaption>
+</figure>
+</section>
+
+<section class="guide-card">
+<h2 id="rolling">聊天疊加層的篩選選項</h2>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">我想顯示…</th>
+<th scope="col">加入 Dock 連結</th>
+</tr>
+</thead>
+<tbody>
+<tr><td data-label="我想顯示">僅 Twitch</td><td data-label="加入 Dock 連結"><code>&amp;onlyfrom=twitch&amp;hidemenu</code></td></tr>
+<tr><td data-label="我想顯示">僅 YouTube</td><td data-label="加入 Dock 連結"><code>&amp;onlyfrom=youtube&amp;hidemenu</code></td></tr>
+<tr><td data-label="我想顯示">Twitch 與 YouTube 合併顯示</td><td data-label="加入 Dock 連結"><code>&amp;onlyfrom=twitch,youtube&amp;hidemenu</code></td></tr>
+<tr><td data-label="我想顯示">除 Discord 之外的所有來源</td><td data-label="加入 Dock 連結"><code>&amp;hidefrom=discord&amp;hidemenu</code></td></tr>
+</tbody>
+</table>
+<p>完整範例：</p>
+<pre><code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;onlyfrom=twitch&amp;hidemenu</code></pre>
+<div class="guide-note"><strong>使用 <code>onlyfrom</code> 和 <code>hidefrom</code> 在這裡查看。</strong> 其他疊加層的選項，例如 <code>onlytype</code>等選項可能不適用於此頁面。YouTube Shorts 是獨立類型，請加入 <code>youtubeshorts</code> ，前提是擷取會回報該值。參見 <a href="source-types-guide.html">來源類型</a>.</div>
+</section>
+
+<section class="guide-card">
+<h2 id="featured">拆分精選聊天（選取的訊息）</h2>
+<ol class="guide-steps">
+<li>複製產生的 <code>featured.html</code> 連結兩份。</li>
+<li>新增 <code>&amp;onlyfrom=twitch</code> 到其中一份，再將 <code>&amp;onlyfrom=youtube</code> 加到另一份。</li>
+<li>保持 Dock 開啟，以便選取訊息。</li>
+</ol>
+<div class="warning-note"><strong>精選聊天的每條連結只接受一個平台。</strong> 逗號分隔清單（<code>twitch,youtube</code>）僅適用於 Dock。</div>
+<p>篩選條件只決定頁面接受哪些精選訊息，不會建立獨立佇列。拒絕某則訊息也不會清空畫面。切換節目環節時，請手動清除精選訊息，以免舊訊息留在畫面上。</p>
+</section>
+
+<section class="guide-card">
+<h2 id="channels">同一平台的兩個頻道</h2>
+<p><code>onlyfrom=twitch</code> 表示整個 Twitch，而不是某個 Twitch 頻道。頻道名稱和直播標題不能當作篩選名稱。</p>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>我想要…</th><th>執行操作</th></tr></thead>
+<tbody>
+<tr><td data-label="我想要">顯示每則訊息來自哪個頻道</td><td data-label="執行操作">新增 <code>&amp;showchannelname</code> （來源傳送頻道名稱時有效）。</td></tr>
+<tr><td data-label="我想要">執行兩個完全獨立的節目</td><td data-label="執行操作">使用獨立的擷取執行個體或設定檔，各自使用自己的工作階段，並且只開啟各自的來源。</td></tr>
+<tr><td data-label="我想要">按瀏覽器分頁篩選 Dock</td><td data-label="執行操作"><code>&amp;filtertid=123</code> （進階用法，見下文）。</td></tr>
+</tbody>
+</table>
+<div class="guide-note">使用其他工作階段卻沒有對應擷取的疊加層會一直空白。疊加層的 <code>label</code> 是路由用的頁面名稱，不是頻道篩選條件。</div>
+<details class="guide-extra">
+<summary>方法 <code>filtertid</code> 適用</summary>
+<ul>
+<li>使用訊息來源瀏覽器分頁的數字 ID。多個 ID 以逗號分隔。</li>
+<li>找到 <code>tid</code> ，在真實擷取的資料中查看。參見 <a href="event-reference.html">事件參考</a> 和 <a href="commands.html">指令與 API</a>.</li>
+<li>這不是平台的頻道 ID。</li>
+<li>重新開啟來源時，分頁 ID 可能改變。沒有相符分頁 ID 的來源可能被隱藏。</li>
+<li>僅適用於 Dock，不能用作精選聊天的頻道篩選條件。</li>
+</ul>
+</details>
+</section>
+
+<section class="guide-card">
+<h2 id="check">測試每個畫面</h2>
+<ol class="guide-steps">
+<li>向測試工作階段傳送一則模擬 Twitch 訊息和一則模擬 YouTube 訊息。使用 <a href="test-message-guide.html">建立測試訊息</a>.</li>
+<li>確認 Dock 中有兩邊的訊息，而各聊天疊加層只顯示自己的平台。</li>
+<li>分別精選各則訊息，再按清除。切換平台後檢查所有精選聊天頁面。</li>
+<li>再用每個來源的真實訊息重複測試。模擬訊息沒有真實分頁 ID。</li>
+</ol>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>問題</th><th>試試這個</th></tr></thead>
+<tbody>
+<tr><td data-label="問題">畫面空白</td><td data-label="試試這個">暫時移除篩選條件。如果聊天恢復，請核對準確的來源類型或分頁 ID。</td></tr>
+<tr><td data-label="問題">移除篩選條件仍空白</td><td data-label="試試這個">參閱 <a href="sessions-passwords-relay-modes.html">工作階段與路由疑難排解</a>.</td></tr>
+<tr><td data-label="問題">修改 OBS 來源名稱後沒有變化</td><td data-label="試試這個">改名不會改變儲存的連結，請直接編輯 URL。</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="guide-card">
+<h2 id="combine">在一個瀏覽器分頁中顯示聊天和提醒</h2>
+<p><a href="../../combine.html">合併疊加畫面</a> 將疊加層連結堆疊到一個分頁或一個 OBS 瀏覽器來源中，適合戶外直播時用手機閱讀聊天。</p>
+<ol class="guide-steps">
+<li>貼上你的 <strong>直播聊天停駐面板</strong> 連結到最底層。</li>
+<li>貼上你的 <strong>多直播提醒框</strong> 連結到最上層。保留包含工作階段、密碼和連線選項的完整連結。</li>
+<li>將 <strong>透明 SSN 背景</strong> 已勾選。</li>
+<li>開啟 <strong>允許在此圖層中點按和捲動</strong> 用於聊天。提醒圖層則關閉，以免阻擋聊天操作。</li>
+<li>新聞 <strong>預覽</strong>，然後 <strong>顯示 QR 碼</strong> 並用手機掃描。或按 <strong>複製組合連結</strong> 貼到瀏覽器來源。</li>
+</ol>
+<p>組合畫面沒有設定控制項，只顯示疊加層。</p>
+
+<h3>圖層選項</h3>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>我想要…</th><th>執行操作</th></tr></thead>
+<tbody>
+<tr><td data-label="我想要">加入更多疊加層</td><td data-label="執行操作">最多八條連結。</td></tr>
+<tr><td data-label="我想要">將圖層移到前面或後面</td><td data-label="執行操作">使用箭頭按鈕。</td></tr>
+<tr><td data-label="我想要">調整圖層大小或位置</td><td data-label="執行操作">開啟 <strong>尺寸與位置</strong>。以像素（<code>450</code>）或百分比（<code>100%</code>).</td></tr>
+<tr><td data-label="我想要">讓圖層恢復全螢幕</td><td data-label="執行操作"><strong>重設為全螢幕</strong>。寬度和高度留空時填滿瀏覽器；左側和頂部位置留空時從左上角開始。</td></tr>
+<tr><td data-label="我想要">建立左側聊天欄（1920×1080）</td><td data-label="執行操作">聊天圖層：寬度 <code>450</code>，高度 <code>1080</code>，左側位置 <code>0</code>，頂部位置 <code>0</code>。其他圖層維持全螢幕。</td></tr>
+<tr><td data-label="我想要">稍後編輯組合連結</td><td data-label="執行操作">使用可編輯連結，或加入 <code>?edit=1</code> ，放在以下內容之前： <code>#</code>.</td></tr>
+<tr><td data-label="我想要">重新開始</td><td data-label="執行操作"><strong>清除已儲存的設定</strong>.</td></tr>
+</tbody>
+</table>
+<p>瀏覽器改變尺寸時，像素值維持固定，百分比值隨之變化。各疊加層保留自己的內容和設定。</p>
+
+<details class="guide-extra">
+<summary>儲存、手機與隱私</summary>
+<ul>
+<li>連結和圖層選項會自動儲存在此瀏覽器中，即使尚未完成。私密瀏覽模式可能不會保留它們。</li>
+<li>組合連結和 QR code 包含整個版面。在電腦上設定，掃描一次，再在手機上加入書籤。開啟後，版面也會儲存到手機瀏覽器中。</li>
+<li>在電腦上修改不會更新舊連結。編輯後請複製或掃描新連結。工作階段 ID 不會同步這些設定。</li>
+<li>組合連結和 QR code 應像疊加層連結一樣保密。</li>
+<li>SSN 擷取仍須執行，手機也必須能連線到原始連結所用的伺服器。 <code>localhost</code> 或 <code>127.0.0.1</code> 指的是手機本身。</li>
+<li>過長的連結可能無法放入 QR code，但仍可複製連結。</li>
+</ul>
+</details>
+</section>
+
+<section class="guide-card">
+<h2 id="combine-obs">OBS 版面：左側聊天欄搭配全螢幕特效</h2>
+<p><strong>不需要 CSS。</strong> 每個圖層都有自己的區域。將 OBS 瀏覽器來源設為 <strong>1920&times;1080</strong>。從底層開始加入圖層，在各圖層的以下欄位中只填數字（不要逗號或「px」）： <strong>尺寸與位置</strong>.</p>
+<div class="guide-table-scroll">
+<table class="guide-table">
+<thead><tr><th scope="col">圖層</th><th scope="col">寬度</th><th scope="col">高度</th><th scope="col">左側偏移</th><th scope="col">頂端偏移</th></tr></thead>
+<tbody>
+<tr><td data-label="圖層">1. 即時聊天／停駐面板</td><td data-label="寬度">450</td><td data-label="高度">1000</td><td data-label="左側偏移">0</td><td data-label="頂端偏移">80</td></tr>
+<tr><td data-label="圖層">2. Hype 計數器</td><td data-label="寬度">450</td><td data-label="高度">80</td><td data-label="左側偏移">0</td><td data-label="頂端偏移">0</td></tr>
+<tr><td data-label="圖層">3. Emoji／表情牆</td><td data-label="寬度">1920</td><td data-label="高度">1080</td><td data-label="左側偏移">0</td><td data-label="頂端偏移">0</td></tr>
+<tr><td data-label="圖層">4. 精選聊天</td><td data-label="寬度">1470</td><td data-label="高度">1080</td><td data-label="左側偏移">450</td><td data-label="頂端偏移">0</td></tr>
+<tr><td data-label="圖層">5. NinjaBacker（選用）</td><td data-label="寬度">1920</td><td data-label="高度">1080</td><td data-label="左側偏移">0</td><td data-label="頂端偏移">0</td></tr>
+</tbody>
+</table>
+</div>
+<p>頂部 80 像素放 Hype，下方放聊天欄。想讓聊天在 Hype 後面鋪滿全高？將 Live Chat 高度設為 <code>1080</code> ，頂端偏移量設為 <code>0</code>。場景尺寸不同，需要調整数值。</p>
+<ol class="guide-steps">
+<li><strong>貼上完整的疊加層連結。</strong> 從現有的瀏覽器來源複製，可一併保留工作階段、密碼、樣式和連線設定。保持勾選 <strong>透明 SSN 背景</strong> 。OBS 的裁切、變形、濾鏡和自訂 CSS 不在連結中，無法一併轉移。</li>
+<li><strong>將 Hype 在欄內置中。</strong> 在 <code>hype.html</code> 連結時，使用 <code>&amp;align=center</code>。替換所有 <code>align=left</code> 或 <code>align=right</code>，並移除 <code>alignright</code>。想要精簡的外觀，可嘗試 <code>&amp;combineall&amp;hidetitle&amp;style=compact&amp;scale=0.75</code> （替換現有值）。如果樣式需要更多空間，請增加 Hype 圖層的高度。</li>
+<li><strong>將精選聊天放在聊天欄旁邊。</strong> 設定 <strong>左側位置 = 450</strong> 和 <strong>寬度 = 1470</strong> 一起設定（450 + 1470 = 1920）。把寬 1920 的圖層右移會裁掉邊緣。加入 <code>&amp;center</code> 為 <code>featured.html</code> 可讓短訊息在該區域置中。若要在整個場景中置中，設為左側 0、寬度 1920，再使用 <code>&amp;center</code>.</li>
+<li><strong>將 NinjaBacker 放在最後（選用）。</strong> 將其觀眾疊加層連結放在最上層，並設定從右側進入的動畫。組合工具控制區域和順序，NinjaBacker 控制自身動畫。背景必須透明，且網站必須允許嵌入。此圖層未包含在已測試的範例中。</li>
+<li><strong>以 1920×1080 預覽。</strong> 傳送含表情的聊天，從 Dock 精選一則訊息，並在 SSN 中開啟 Hype 資料。一般聊天不會自動選取精選訊息。</li>
+<li><strong>將新的組合連結複製到 OBS。</strong> 將該瀏覽器來源的寬度設為 1920、高度設為 1080。預覽尺寸不會設定這些值。完整配合場景，不要裁切。每次修改版面後重新複製連結，舊連結仍保留舊版面。</li>
+</ol>
+<figure class="guide-figure">
+<a href="../../docs/images/combined-podcast-scene.png" target="_blank" rel="noopener noreferrer"><img class="guide-image" src="../../docs/images/combined-podcast-scene.png" width="1920" height="1080" loading="lazy" style="background:#181b23" alt="測試後的組合輸出：Hype 在左側窄聊天欄上方置中，emoji 橫跨場景，精選訊息位於聊天右側的底部。"></a>
+<figcaption>在真實 Chromium 中使用四個 SSN 疊加層和測試訊息來源的範例。圖片本身透明，這裡加深色背景方便閱讀。點按查看原圖。字型和顏色由你自己的疊加層設定決定。</figcaption>
+</figure>
+<div class="guide-note"><strong>效能：</strong> 一個瀏覽器來源仍會執行其中的每個疊加層。OBS 來源數量減少不保證 CPU 或記憶體用量降低。完成後關閉瀏覽器預覽，並在關閉舊來源的情況下比較 OBS 表現。M1 Mac 效能和你自己的 NinjaBacker 連結尚未測試。也可將 Live Chat 保持獨立，僅組合其餘疊加層。</div>
+
+<h3>圖層空白或蓋住聊天時</h3>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>問題</th><th>試試這個</th></tr></thead>
+<tbody>
+<tr><td data-label="問題">圖層為空</td><td data-label="試試這個">先單獨開啟原始連結。提醒在事件到來前保持空白。組合頁面不會開始新的擷取。</td></tr>
+<tr><td data-label="問題">圖層背景不透明</td><td data-label="試試這個">以下頁面可自動透明： <code>dock.html</code>, <code>featured.html</code>, <code>multi-alerts.html</code>，以及 <code>minecraft.html</code>。其他頁面需要各自開啟透明背景。有些外部網站會阻擋嵌入。</td></tr>
+<tr><td data-label="問題">無法點按或捲動聊天</td><td data-label="試試這個">透明圖層也可能擋住點按。關閉 <strong>允許點按與捲動</strong> ，用於聊天上方且不需要操作的圖層。</td></tr>
+<tr><td data-label="問題">手機沒有聲音</td><td data-label="試試這個">手機可能需要點按後才能播放聲音。允許點按該圖層，再點一下。正式使用前，請在實際手機上測試。</td></tr>
+</tbody>
+</table>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">瀏覽所有指南</a>
+</p>
+</div>
+</div>
+</footer>
+<script data-copy-markdown src="../../docs/js/main.js">
+</script>
+</body>
+</html>

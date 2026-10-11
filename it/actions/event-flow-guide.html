@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="it" data-site-root="../../" data-site-language="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Crea automazioni Social Stream Ninja con trigger, condizioni e azioni Event Flow. Collega gli eventi della chat live a suoni, contenuti multimediali, ricompense e controlli OBS.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="it_IT">
+    <meta property="og:url" content="https://socialstream.ninja/it/actions/event-flow-guide.html">
+    <meta property="og:title" content="Guida a Event Flow - Social Stream Ninja">
+    <meta property="og:description" content="Crea automazioni Social Stream Ninja con trigger, condizioni e azioni Event Flow. Collega gli eventi della chat live a suoni, contenuti multimediali, ricompense e controlli OBS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo di Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/it/actions/event-flow-guide.html">
+    <meta name="twitter:title" content="Guida a Event Flow - Social Stream Ninja">
+    <meta name="twitter:description" content="Crea automazioni Social Stream Ninja con trigger, condizioni e azioni Event Flow. Collega gli eventi della chat live a suoni, contenuti multimediali, ricompense e controlli OBS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo di Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guida a Event Flow - Social Stream Ninja</title>
+    <link rel="canonical" href="https://socialstream.ninja/it/actions/event-flow-guide.html">
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1f2937 40%, #312e81 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .guide-shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(4, 12, 38, 0.5);
+        }
+        header {
+            background: radial-gradient(circle at top left, rgba(109,40,217,0.15), transparent),
+                        linear-gradient(135deg, #4c1d95, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+        }
+        header p {
+            font-size: 1.2rem;
+            max-width: 640px;
+            opacity: 0.92;
+        }
+        .content {
+            padding: 45px 55px 65px;
+        }
+        section {
+            margin-bottom: 60px;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 18px;
+            color: #312e81;
+        }
+        h3 {
+            font-size: 1.4rem;
+            margin: 25px 0 10px;
+            color: #4338ca;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 25px;
+            margin: 15px 0;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .panel {
+            background: #f7f7fb;
+            border: 1px solid rgba(67,56,202,0.12);
+            border-radius: 12px;
+            padding: 22px 25px;
+            margin: 22px 0;
+        }
+        .panel strong {
+            color: #312e81;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            padding: 22px;
+            border-radius: 14px;
+            margin: 25px 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 22px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+        }
+        .card h4 {
+            margin-bottom: 12px;
+            color: #4c1d95;
+        }
+        code {
+            background: rgba(226,232,240,0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .callout {
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            border-left: 4px solid;
+        }
+        .callout.tip { background: #eef2ff; border-color: #4338ca; }
+        .callout.warn { background: #fef3c7; border-color: #d97706; }
+        .callout.danger { background: #fee2e2; border-color: #b91c1c; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+        .var-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            font-size: 0.95rem;
+        }
+        .var-table th, .var-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .var-table th {
+            background: #f7f7fb;
+            color: #312e81;
+            font-weight: 600;
+        }
+        .var-table tr:hover {
+            background: rgba(99,102,241,0.04);
+        }
+        .var-table code {
+            background: rgba(99,102,241,0.1);
+            color: #4338ca;
+        }
+        /* ── Custom JS section additions ── */
+        .code-js {
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 18px 22px;
+            border-radius: 10px;
+            margin: 16px 0;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.88rem;
+            line-height: 1.65;
+            overflow-x: auto;
+            white-space: pre;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .snippet-block {
+            margin: 28px 0;
+            border: 1px solid rgba(67,56,202,0.15);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .snippet-label {
+            background: rgba(67,56,202,0.07);
+            padding: 10px 18px;
+            font-weight: 600;
+            color: #312e81;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .snippet-desc {
+            padding: 10px 18px 0;
+            font-size: 0.93rem;
+            color: #475569;
+        }
+        .snippet-block .code-js {
+            border-radius: 0;
+            margin: 0;
+            border: none;
+            border-top: 1px solid rgba(0,0,0,0.15);
+        }
+        figure.screenshot {
+            margin: 24px 0;
+            text-align: center;
+        }
+        figure.screenshot img {
+            max-width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(15,23,42,0.12);
+            box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+        }
+        figure.screenshot figcaption {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #64748b;
+            font-style: italic;
+        }
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 24px 0;
+            align-items: start;
+        }
+        .desktop-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #312e81;
+            color: #e0e7ff;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            padding: 3px 10px;
+            border-radius: 999px;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        .snippet-heading {
+            margin: 28px 0 4px;
+            color: #4c1d95;
+        }
+        @media (max-width: 700px) {
+            header, .content { padding: 35px 20px; }
+            h1 { font-size: 2rem; }
+            .diagram { font-size: 0.85rem; }
+            .var-table { font-size: 0.85rem; display: block; max-width: 100%; overflow-x: auto; }
+            .var-table th, .var-table td { padding: 8px 10px; }
+            .panel code { overflow-wrap: anywhere; }
+            .two-col { grid-template-columns: 1fr; }
+            .code-js { font-size: 0.8rem; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="it">
+<script id="ssn-site-language" type="application/json">{"language":"it","page":"actions/event-flow-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Passa al tema chiaro","Switch to dark theme":"Passa al tema scuro","Light mode":"Modalità chiara","Dark mode":"Modalità scura","Open navigation menu":"Apri il menu di navigazione","Close navigation menu":"Chiudi il menu di navigazione","Copy this document as Markdown to the clipboard":"Copia questo documento in formato Markdown negli appunti","Copy Markdown":"Copia Markdown","Copying…":"Copia in corso…","Markdown copied":"Markdown copiato","Copy failed":"Copia non riuscita","Copy comprehensive Markdown for an AI assistant":"Copia il Markdown completo per un assistente IA","Copy this documentation page as Markdown for an AI assistant":"Copia questa pagina di documentazione in Markdown per un assistente IA"},"strings":{"\"Desktop only\"":"\"Solo desktop\"","\"chat message contains !raffle\").":"\"il messaggio chat contiene !raffle\").","$5.00, 500 bits":"$5.00, 500 bits","(Send Test Event) before pushing a flow live.":"(Send Test Event) prima di usare un flusso in diretta.","(Twitch Message, Timers, Manual Trigger, etc.) ignore upstream input. They generate their own payload and always emit":"(messaggio Twitch, timer, trigger manuale ecc.) ignorano l'ingresso a monte: generano il proprio payload ed emettono sempre","(action). They are the escape hatch for anything the built-in nodes cannot express.":"(azione). Sono la soluzione per tutto ciò che i nodi integrati non possono esprimere.","(counters, toggles, timers) to track context between events.":"(contatori, interruttori, timer) per tenere traccia del contesto tra gli eventi.","(current flow result state),":"(stato del risultato del flusso corrente),","(left ports) expect the message context.":"(porte a sinistra) si aspettano il contesto del messaggio.","(paste into the action's JavaScript Code field):":"(incolla nel campo JavaScript Code dell'azione):","(paste into the trigger's JavaScript Code field):":"(incolla nel campo JavaScript Code del trigger):","(platform, type, chatname, chatmessage, etc.). Attach custom data under":"(platform, type, chatname, chatmessage ecc.). Inserisci i dati personalizzati sotto","(right ports) emit the same context plus any edits.":"(porte a destra) emettono lo stesso contesto con le eventuali modifiche.","(see":"(vedi","(the event payload),":"(il payload dell'evento),","(top-right of the editor) to send a synthetic message through the pipeline without needing a live stream. Set the chatname to a subscriber, add a message like":"(in alto a destra nell’editor) per inviare un messaggio sintetico attraverso la sequenza senza bisogno di una diretta. Imposta chatname su un abbonato, aggiungi un messaggio come","(trigger) and":"(trigger) e","(trigger) or a no-op (action) and logs to the DevTools console. The flow doesn't crash.":"(trigger) oppure un'operazione nulla (azione) e scrive nella console DevTools: il flusso non si arresta in modo anomalo.","). Treat imported flow files like executable code. Only import flows from sources you trust.":"). Tratta i file dei flussi importati come codice eseguibile: importa solo flussi da fonti di cui ti fidi.",", a new line, then":", una nuova riga, poi",", and":", e",", and confirm the Relay Chat destination receives the reformatted string.":", e verifica che la destinazione Relay Chat riceva la stringa riformattata.",", and the OBS controls need a rendering surface. That surface is the Flow Actions overlay page served from":", e i controlli OBS hanno bisogno di una superficie di visualizzazione. Questa superficie è la pagina overlay Flow Actions servita da",", not when it happens:":", non quando avviene:",", or":", oppure",", or leave it blank to use the Flow Actions TTS default.":", oppure lascialo vuoto per usare la voce TTS predefinita di Flow Actions.",", plus":", più",", so the output is":", quindi l'uscita è",", source / filter / mute / text actions will not work until OBS / obs-websocket is upgraded.":", le azioni di sorgente / filtro / muto / testo non funzioneranno finché OBS / obs-websocket non saranno aggiornati.",", then return":", poi restituisci",". A flow built only from actions chained together looks valid but is permanently idle, because nothing ever starts the chain. Node names describe what the node":". Un flusso composto solo da azioni concatenate sembra valido, ma resta sempre inattivo perché nulla avvia la catena. I nomi dei nodi descrivono cosa il nodo",". Connect that wire into NOT to invert the result.":". Collega quel filo a NOT per invertire il risultato.",". Drag a wire from the colored output you need (green = true, gray/red = false) to the next node.":". Trascina un filo dall'uscita colorata necessaria (verde = true, grigio/rosso = false) al nodo successivo.",". Each flow can subscribe to multiple platforms at once.":". Ogni flusso può sottoscrivere più piattaforme contemporaneamente.",". Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set.":". Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set.",". If you're accepting shared flows from others, audit the JS before activating them.":". Se accetti flussi condivisi da altri, esamina il JavaScript prima di attivarli.",". Keep it running in your broadcasting software (OBS/Streamer.bot browser docks/etc.) so Event Flow actions have somewhere to appear.":". Mantienila in esecuzione nel software di trasmissione (dock browser OBS/Streamer.bot/ecc.) affinché le azioni Event Flow abbiano un posto dove apparire.",". Keep it wired to something meaningful or disable the node so it does not accidentally unblock a flow.":". Mantienilo collegato a qualcosa di significativo oppure disattiva il nodo affinché non sblocchi accidentalmente un flusso.",". Open the editor through the":". Apri l’editor tramite questa applicazione:",". Paste it into an OBS Browser Source (1920×1080 suggested) or open it in any overlay browser.":". Incollalo in una sorgente browser OBS (consigliati 1920×1080) oppure aprilo in un qualsiasi browser per overlay.",". Returning the Promise lets Event Flow wait for submission and report errors.":". Restituire la Promise consente a Event Flow di attendere l'invio e segnalare errori.",". SSApp queues the job silently through the native Windows printer API and uses those saved settings. A flow can override them with options such as":". SSApp accoda il lavoro senza finestre di dialogo tramite l'API di stampa nativa Windows e usa le impostazioni salvate. Un flusso può sostituirle con opzioni come",". Scene switching works here, and recording / streaming / replay buffer actions can fall back to it.":". Qui funziona il cambio di scena e le azioni di registrazione / diretta / buffer replay possono usarla come ripiego.",". See the":". Vedi la",". The":". La",". The fields below are always available; platform-specific events may include additional ones.":". I campi qui sotto sono sempre disponibili; gli eventi specifici delle piattaforme possono includerne altri.",". They can still output an updated payload if you want to keep chaining actions.":". Possono comunque emettere un payload aggiornato se vuoi continuare a concatenare azioni.",". This controls display on re-ingest, not sending. Follow the":". Controlla la visualizzazione alla riacquisizione, non l'invio. Segui la",". Use two relay actions when a message should reach both variants. See":". Usa due azioni di inoltro quando un messaggio deve raggiungere entrambe le varianti. Consulta","0. Quick Orientation":"0. Orientamento rapido","1. What Moves Through a Node?":"1. Cosa passa attraverso un nodo?","2. Logic Node Cheatsheet":"2. Riepilogo dei nodi logici","3. Example Micro-Flows":"3. Esempi di microflussi","4. Preventing Echoes, Loops, and Relay Feedback":"4. Prevenire echi, cicli e ritorni nell'inoltro","5. Inputs, Outputs, and Practical Questions":"5. Ingressi, uscite e domande pratiche","6. Template Variables Reference":"6. Riferimento delle variabili di modello","7. Best Practices Checklist":"7. Elenco delle buone pratiche","8. Further Exploration":"8. Ulteriori approfondimenti","9. Custom JavaScript":"9. JavaScript personalizzato",": add a standard Relay Chat node after the action and configure it to point at your Discord (or other) destination. No custom code is needed here. The reformatted":": aggiungi un normale nodo Relay Chat dopo l'azione e configuralo per la destinazione Discord (o un'altra). Qui non serve codice personalizzato: il campo riformattato",": named triggers, a starter template, workflow discovery, extra data, HTTP/WebSocket/P2P examples, and dial gestures.":": trigger con nome, modello iniziale, rilevamento dei flussi, dati aggiuntivi, esempi HTTP/WebSocket/P2P e gesti delle manopole.","; see":"— consulta","; with no trigger on top, nothing starts the chain.":"; senza un trigger all'inizio, nulla avvia la catena.","= continue,":"= continua,","= stop). Use":"= ferma). Usa","A 50/50 coin flip between two audio clips. The RANDOM gate rolls once per matching message: when it passes, sound A plays; when it fails, the NOT gate flips the result and the AND gate lets sound B play instead.":"Un lancio di moneta 50/50 tra due clip audio. La porta RANDOM decide una volta per ogni messaggio corrispondente: se passa, viene riprodotto il suono A; se fallisce, la porta NOT inverte il risultato e la porta AND lascia riprodurre il suono B.","A Custom Code trigger (blue) and Execute Custom Code action (green) placed on the canvas. Wire the trigger's output port to the action's input port to connect them.":"Un trigger Custom Code (blu) e un'azione Execute Custom Code (verde) nell'area di lavoro. Collega la porta di uscita del trigger alla porta di ingresso dell'azione.","A bare NOT would output":"Un NOT isolato emetterebbe","A floating NOT node will still output":"Un nodo NOT scollegato emetterà comunque","A recalculated gate bit (logic nodes) or passthrough bit (actions).":"Un bit di porta ricalcolato (nodi logici) oppure un bit passato invariato (azioni).","A reflection is an outgoing message captured again from a destination chat. Current Relay Chat actions skip these recognized reflections; there is no separate No Reflections checkbox. To hide or limit their display in the Dock and overlays, use a":"Una riflessione è un messaggio in uscita acquisito di nuovo da una chat di destinazione. Le attuali azioni Relay Chat ignorano queste riflessioni riconosciute; non c'è una casella No Reflections separata. Per nasconderne o limitarne la visualizzazione nel dock e negli overlay, usa un","A runtime error in your code returns":"Un errore di esecuzione nel codice restituisce","A. Auto-reply Unless the Message Is a Command":"A. Rispondi automaticamente, salvo quando il messaggio è un comando","AND":"AND","Action Nodes":"Nodi azione","Action code can call":"Il codice di un'azione può chiamare","Action nodes (green) never run on their own. They only fire when a trigger node (blue) above them evaluates":"I nodi azione (verdi) non vengono mai eseguiti da soli: si attivano solo quando un nodo trigger (blu) sopra di loro restituisce","Action panel showing Execute Custom Code under the Integrations group":"Pannello delle azioni con Execute Custom Code nel gruppo Integrations","Action properties. Return an object to merge changes back into the flow result.":"Proprietà dell'azione. Restituisci un oggetto per unire le modifiche al risultato del flusso.","Action snippets: return":"Frammenti di azione — restituisci","Actions":"Azioni","Add a visual indicator at the end of every message that passes through this action.":"Aggiungi un indicatore visivo alla fine di ogni messaggio che passa attraverso questa azione.","Additional context":"Contesto aggiuntivo","Advanced":"Avanzate","Advanced Access Level":"Livello di accesso avanzato (Advanced Access Level)","Alias":"Alias","Allow All":"Consenti tutti (Allow All)","Allow First":"Consenti il primo (Allow First)","An error of type":"Un errore di tipo","Any Message":"Qualsiasi messaggio (Any Message)","Any Message trigger connected to Feature Message and Speak Text actions":"Trigger Any Message collegato alle azioni Feature Message e Speak Text","Any Message trigger connected to a Play Audio Clip action":"Trigger Any Message collegato a un'azione Play Audio Clip","Any node with a green output emits":"Ogni nodo con un'uscita verde emette","Append a badge or tag to the message":"Aggiungi un badge o un'etichetta al messaggio","Arbitrary structured data attached to the event":"Dati strutturati arbitrari allegati all'evento","Attach routing metadata for downstream nodes":"Aggiungi metadati di instradamento per i nodi successivi","Attached image URL":"URL dell'immagine allegata","Available:":"Disponibile:","Avoid duplicate relay systems.":"Evita sistemi di inoltro duplicati.","B. Require Multiple Checks with AND":"B. Richiedi più verifiche con AND","Block All":"Blocca tutti (Block All)","Block message conditionally":"Blocca un messaggio in base a una condizione","Both nodes receive the full event payload as":"Entrambi i nodi ricevono il payload completo dell'evento come","Break cycles intentionally.":"Interrompi i cicli intenzionalmente.","Browser Source API:":"API Browser Source:","Build Social Stream Ninja automations with Event Flow triggers, conditions and actions. Connect live chat events to sounds, media, rewards and OBS controls.":"Crea automazioni Social Stream Ninja con trigger, condizioni e azioni Event Flow. Collega gli eventi della chat live a suoni, contenuti multimediali, ricompense e controlli OBS.","Build loyalty-based commands, keyword games, or raffle gating with AND/OR/NOT logic.":"Crea comandi basati sulla fedeltà, giochi con parole chiave o condizioni di accesso alle estrazioni con logica AND/OR/NOT.","Build reliable automations for Social Stream Ninja. This guide walks through the basics, logic nodes, signal flow, and the practical tricks that creators ask about most (like avoiding chat echoes and knowing when to stack AND/NOT blocks).":"Crea automazioni affidabili per Social Stream Ninja. Questa guida illustra le basi, i nodi logici, il flusso dei segnali e gli accorgimenti pratici più richiesti dai creator, come evitare echi nella chat e capire quando combinare blocchi AND/NOT.","C. NOT Node to Block Repeat Alerts":"C. Nodo NOT per bloccare avvisi ripetuti","Call Webhook JSON:":"JSON di Call Webhook:","Can a node emit a payload even if it returns false?":"Un nodo può emettere un payload anche se restituisce false?","Can each Speak Text node use a different voice?":"Ogni nodo Speak Text può usare una voce diversa?","Canvas showing a Custom Code trigger and Execute Custom Code action side by side":"Area di lavoro con un trigger Custom Code e un'azione Execute Custom Code affiancati","Chat message text":"Testo del messaggio chat","Check the":"Controlla il","Choose":"Scegli","Choose Local File":"Scegli file locale","Click":"Fai clic su","Click this button:":"Fai clic su questo pulsante:","Closing the Flow Actions page pauses every overlay/audio/OBS action in Event Flow. Hide it or put it on a separate monitor instead of closing it outright.":"Chiudere la pagina Flow Actions sospende ogni azione overlay/audio/OBS in Event Flow. Nascondila o spostala su un monitor separato anziché chiuderla.","Combine":"Combina","Combine role check and message content in a single expression that no built-in trigger covers.":"Combina controllo del ruolo e contenuto del messaggio in una sola espressione non coperta da un trigger integrato.","Common Q & A":"Domande e risposte comuni","Complete example: VIP feature request bot":"Esempio completo — bot di richieste di funzionalità per VIP","Condition, Compare, Regex, and Logic nodes emit two ports.":"I nodi Condition, Compare, Regex e Logic hanno due porte di uscita.","Confirm":"Verifica che","Continue the flow only when the message contains a specific word or phrase.":"Continua il flusso solo quando il messaggio contiene una parola o frase specifica.","Convert the standard YouTube donation label to EUR, exclude Jewels/Gifts, and select one sound or visual range.":"Converti in EUR l'etichetta standard delle donazioni YouTube, escludi Jewels/Gifts e seleziona un intervallo sonoro o visivo.","CoolViewer123":"CoolViewer123","Copy Local Flow Actions URL for OBS":"Copia URL Flow Actions locale per OBS","Copy any of these into the JavaScript Code textarea of the matching node type.":"Copia uno di questi esempi nel campo JavaScript Code del tipo di nodo corrispondente.","Core Variables (backward compatible)":"Variabili di base (compatibili con le versioni precedenti)","Counter target minus current value, clamped at 0":"Obiettivo del contatore meno valore corrente, limitato a un minimo di 0","Counter target value":"Valore obiettivo del contatore","Currency conversion:":"Conversione valuta:","Current counter value after a Counter or Check Counter step":"Valore corrente del contatore dopo un passaggio Counter o Check Counter","Custom Code":"Codice personalizzato (Custom Code)","Custom Code lives under the":"Custom Code si trova nel gruppo","Custom Code trigger properties panel showing the JavaScript code editor":"Pannello delle proprietà del trigger Custom Code con editor JavaScript","Custom Code: Trigger node":"Custom Code — Nodo trigger","Custom JavaScript nodes":"Nodi JavaScript personalizzati","Custom JavaScript nodes are disabled in the browser extension because Chrome's Manifest V3 Content Security Policy blocks":"I nodi JavaScript personalizzati sono disattivati nell'estensione browser perché la Content Security Policy di Chrome Manifest V3 blocca","Custom code runs with renderer-process privileges.":"Il codice personalizzato viene eseguito con i privilegi del processo renderer.","D. Randomly Play One of Two Sounds":"D. Riproduci casualmente uno di due suoni","Data type":"Tipo di dati","Default behavior:":"Comportamento predefinito:","Description":"Descrizione","Desktop app required.":"È richiesta l'app desktop.","Disable global Relay all when using equivalent Event Flow routes, and check for other services bridging the same chats. Custom metadata is not guaranteed to survive a trip through a platform chat.":"Disattiva Relay all globale quando usi percorsi Event Flow equivalenti e controlla se altri servizi collegano le stesse chat. Non è garantito che i metadati personalizzati sopravvivano al passaggio attraverso la chat di una piattaforma.","Discord Call Webhook:":"Call Webhook Discord:","Display Media Overlay":"Mostra overlay multimediale","Display name (alternate field)":"Nome visualizzato (campo alternativo)","Display name of the sender":"Nome visualizzato del mittente","Display name of the user":"Nome visualizzato dell'utente","Do I always need an AND node?":"Mi serve sempre un nodo AND?","Do I have to use AND for every pair of filters?":"Devo usare AND per ogni coppia di filtri?","Document meta fields.":"Documenta i campi meta.","Donation Alert:":"Avviso di donazione:","Donation above a threshold":"Donazione sopra una soglia","Donation/tip display label":"Etichetta visualizzata di donazione/mancia","Donation: animation + sound + OBS filter":"Donazione: animazione + suono + filtro OBS","Donation: celebration + voice":"Donazione: festeggiamento + voce","Drag":"Trascina","Editing code:":"Modifica del codice:","Effect":"Effetto","Emits":"Emette","Enable audio":"Attiva audio","Errors are caught.":"Gli errori vengono intercettati.","Even if you didn't change anything, returning":"Anche se non hai modificato nulla, restituire","Event Flow":"Event Flow","Event Flow Editor Guide":"Guida all'editor Event Flow","Event Flow Editor: empty state":"Editor Event Flow — stato vuoto","Event Flow Guide - Social Stream Ninja":"Guida a Event Flow - Social Stream Ninja","Event Flow System":"Sistema Event Flow","Event Flow plays through the":"Event Flow riproduce tramite la sorgente browser","Event Payload ─▶ State Check (isAlertMuted) └─false─▶ NOT ─▶ Play Celebration":"Payload evento ─▶ Controllo stato (isAlertMuted)\n└─false─▶ NOT ─▶ Riproduci festeggiamento","Event Reference":"Riferimento degli eventi","Event Sources":"Sorgenti degli eventi","Event type identifier":"Identificatore del tipo di evento","Every flow starts with a trigger":"Ogni flusso inizia con un trigger","Every message carries a JSON object. Mandatory keys follow":"Ogni messaggio trasporta un oggetto JSON. Le chiavi obbligatorie seguono","Every project is saved locally until exported. Use":"Ogni progetto viene salvato localmente fino all'esportazione. Usa","Example":"Esempio","Example Templates":"Modelli di esempio","Example:":"Esempio:","Execute Custom Code":"Esegui codice personalizzato (Execute Custom Code)","Execute Custom Code action properties panel showing the code editor":"Pannello delle proprietà dell'azione Execute Custom Code con editor del codice","Execute Custom Code under the":"Execute Custom Code nel gruppo","Execute Custom Code: Action node":"Execute Custom Code — Nodo azione","Export your flow whenever you reach a milestone. Imports are the easiest rollback if an experiment goes sideways.":"Esporta il flusso a ogni traguardo raggiunto. Le importazioni sono il modo più semplice per tornare indietro se un esperimento va storto.","Extended Variables":"Variabili estese","Feature Message":"Metti messaggio in evidenza (Feature Message)","Feeding the trigger into the AND as a second input restricts sound B to matching messages only. The same pattern works for any either/or pair of actions, not just audio.":"Collegare il trigger ad AND come secondo ingresso limita il suono B ai soli messaggi corrispondenti. Lo stesso schema funziona con qualsiasi coppia alternativa di azioni, non solo con l’audio.","Field":"Campo","Filter as early as possible to avoid extra processing down the line.":"Filtra il prima possibile per evitare elaborazioni aggiuntive più avanti.","Fire only when a donation meets or exceeds a minimum amount.":"Attiva solo quando una donazione raggiunge o supera un importo minimo.","Flow Actions":"Flow Actions","Flow Actions Overlay (Action Output)":"Overlay Flow Actions (uscita delle azioni)","Flow using a RANDOM gate, NOT gate, and AND gate to play one of two audio clips at random":"Flusso con porta RANDOM, porta NOT e porta AND per riprodurre casualmente una di due clip audio","Flow-added fields also work.":"Funzionano anche i campi aggiunti dal flusso.","Format a donation announcement":"Formatta un annuncio di donazione","Formatted donation string if present":"Stringa della donazione formattata, se presente","Gate signal":"Segnale della porta","Great for multi-platform triggers: feed Twitch + YouTube message nodes into a single OR, then unify the downstream action.":"Ideale per trigger multipiattaforma: collega i nodi dei messaggi Twitch + YouTube a un solo OR, poi unifica l'azione a valle.","Group logic near the source.":"Raggruppa la logica vicino alla sorgente.","Hello everyone!":"Ciao a tutti!","Here the Regex node emits":"Qui il nodo Regex emette","Highlight My Message":"Metti in evidenza il mio messaggio","Hook into the":"Collegati al sistema","How do I match TikTok Team members?":"Come riconosco i membri del team TikTok?","How do true/false values reach the NOT node?":"Come arrivano i valori true/false al nodo NOT?","How to open it (from the popup/dash):":"Come aprirlo (dal popup/dashboard):","If a node outputs false:":"Se un nodo emette false:","If an earlier action adds a top-level value to the message, later templates can read it directly. This is how":"Se un'azione precedente aggiunge un valore al primo livello del messaggio, i modelli successivi possono leggerlo direttamente. È così che","If an event does not have a particular field (e.g.,":"Se un evento non ha un determinato campo (ad esempio","If nothing is connected to the NOT input it evaluates to":"Se all'ingresso di NOT non è collegato nulla, il risultato è","If two branches feed each other, add a logic node that checks a state variable (\"currentlyRelaying\") so the flow exits early when the flag is set.":"Se due rami si alimentano a vicenda, aggiungi un nodo logico che controlli una variabile di stato (\"currentlyRelaying\"), così il flusso esce subito quando il flag è impostato.","If you do nothing with a":"Se non fai nulla con un risultato","In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose":"In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose","In a Play Audio Clip or Display Media Overlay action, click":"In un'azione Play Audio Clip o Display Media Overlay, fai clic su","Incoming triggers and outgoing Relay Chat destinations both distinguish between":"Sia i trigger in ingresso sia le destinazioni in uscita di Relay Chat distinguono tra","Input Expectations":"Requisiti degli ingressi","Inputs":"Ingressi","Inputs: 1 boolean (true/false) derived from the previous node.":"Ingressi: 1 booleano (true/false) derivato dal nodo precedente.","Inputs: two or more boolean signals (A, B, ...). You can leave extra ports empty.":"Ingressi: due o più segnali booleani (A, B, ...). Puoi lasciare vuote le porte extra.","Inside the SSApp, code in Custom JS nodes has full access to the":"Dentro SSApp, il codice dei nodi Custom JS ha accesso completo all’oggetto","Inspect the content and silently drop the message if a rule matches. This is useful for spam patterns the keyword filter can't express.":"Esamina il contenuto e scarta il messaggio senza avvisi se una regola corrisponde: utile per schemi di spam che il filtro per parole chiave non può esprimere.","Integrations":"Integrazioni","Keep SSApp running. If a selected file moves, return to the action and click":"Mantieni SSApp in esecuzione. Se un file selezionato viene spostato, torna all'azione e fai clic su","Keep the overlay open.":"Mantieni aperto l'overlay.","Keyword match (case-insensitive)":"Corrispondenza di parole chiave (senza distinzione tra maiuscole e minuscole)","Launch + Basics":"Avvio e basi","Let the flow continue only for privileged users.":"Lascia proseguire il flusso solo per gli utenti con privilegi.","Logic nodes may emit both the":"I nodi logici possono emettere il canale","MEMBERSHIP, new_sponsor":"MEMBERSHIP, new_sponsor","Match messages that start with a command from a defined list (e.g.":"Riconosci i messaggi che iniziano con un comando di un elenco definito (ad esempio","Media Files for Event Flow guide":"guida ai file multimediali per Event Flow","Member for 3 months":"Membro da 3 mesi","Membership state":"Stato dell'abbonamento","Membership state when applicable":"Stato dell'abbonamento, quando applicabile","Message length gate":"Controllo della lunghezza del messaggio","Minimal safe return:":"Valore restituito minimo e sicuro:","Missing variables become empty strings.":"Le variabili mancanti diventano stringhe vuote.","Mix multiple platforms inside a single automation (Kick + Twitch + YouTube routed through one flow).":"Combina più piattaforme in una singola automazione (Kick + Twitch + YouTube instradati attraverso un solo flusso).","Most nodes expose one output. Whatever enters (payload + gate) exits unchanged unless the node edits it.":"La maggior parte dei nodi espone una sola uscita. Ciò che entra (payload + porta) esce invariato, a meno che il nodo non lo modifichi.","Most side effects (like sending chat) do not alter the payload, but points actions can attach status fields such as":"La maggior parte degli effetti (come inviare chat) non altera il payload, ma le azioni sui punti possono aggiungere campi di stato come","Multi-condition: VIP + keyword":"Condizione multipla — VIP + parola chiave","Must return:":"Deve restituire:","NOT":"NOT","NOT & empty inputs:":"NOT e ingressi vuoti:","Name & color":"Dai un nome e un colore ai","Need to remember participants, check later eligibility, run a unique-user draw, or clear one named list? Open the":"Devi ricordare i partecipanti, verificare l'idoneità in seguito, estrarre un utente unico o svuotare un elenco con nome? Apri la","No network sandbox.":"Nessuna sandbox di rete.","No. Many nodes already provide all-in-one filters (for example \"Filter User Level\" + \"Contains Text\"). Use AND only when the built-in options do not cover your combination, or when you want a reusable logic junction that other branches can share.":"No. Molti nodi offrono già filtri completi (ad esempio \"Filter User Level\" + \"Contains Text\"). Usa AND solo quando le opzioni integrate non coprono la tua combinazione oppure quando vuoi una giunzione logica riutilizzabile e condivisibile con altri rami.","No. Many nodes include multiple checks (for example, the basic Message Filter supports keyword + role). Use AND only for advanced combinations or when merging signals from different nodes.":"No. Molti nodi includono più controlli (ad esempio il filtro messaggi di base supporta parola chiave + ruolo). Usa AND solo per combinazioni avanzate o quando unisci segnali da nodi diversi.","Nodes at a Glance":"Panoramica dei nodi","Nodes such as":"Nodi come","OBS Control Guide":"Guida al controllo OBS","OBS WebSocket:":"OBS WebSocket:","OBS control modes:":"Modalità di controllo OBS:","OR":"OR","Old 4.x installs:":"Vecchie installazioni 4.x:","Once loaded, that overlay can:":"Una volta caricato, quell'overlay può:","Only process events from specific platforms.":"Elabora solo eventi di piattaforme specifiche.","Only process messages that have enough content (useful for TTS or relay to avoid single-emoji spam).":"Elabora solo messaggi con abbastanza contenuto (utile per TTS o inoltro per evitare spam di singole emoji).","Open":"Apri","Open Code Editor":"Apri editor del codice","Open the Event Flow editor from the main dashboard's menu (desktop or extension).":"Apri l'editor Event Flow dal menu della dashboard principale (desktop o estensione).","Open the main Social Stream Ninja popup (the window loaded from":"Apri il popup principale Social Stream Ninja (la finestra caricata da","Optional context (state variables, timers) that the node asks for explicitly.":"Contesto facoltativo (variabili di stato, timer) richiesto esplicitamente dal nodo.","Output Patterns":"Schemi di uscita","Outputs":"Uscite","Outputs:":"Uscite:","Outputs: the inverted boolean plus the untouched payload.":"Uscite: il booleano invertito più il payload intatto.","Overlay diagnostics:":"Diagnostica overlay:","Pass the (possibly mutated) message back so downstream nodes receive your changes.":"Restituisci il messaggio (eventualmente modificato) affinché i nodi successivi ricevano le tue modifiche.","Pass-Through vs. Override":"Passaggio invariato e sostituzione","Password:":"Password:","Payload":"Payload","Payload Structure":"Struttura del payload","Place NOT after \"Contains Keyword\" to trigger an alert when a viewer":"Inserisci NOT dopo “Contains Keyword” per attivare un avviso quando uno spettatore","Platform filter":"Filtro piattaforma","Platform name (capitalized)":"Nome della piattaforma (con iniziale maiuscola)","Platform name (raw)":"Nome della piattaforma (grezzo)","Platform user ID":"ID utente della piattaforma","Platform-aware message prefix":"Prefisso del messaggio in base alla piattaforma","Play Audio Clip":"Riproduci clip audio","Play Audio Clip → Browse sounds":"Play Audio Clip → Browse sounds","Play sounds (TTS, audio clips) locally so viewers hear them.":"Riprodurre suoni (TTS, clip audio) localmente affinché gli spettatori li sentano.","Playback options":"Playback options","Points & Rewards":"Punti e ricompense","Prepend a platform label when relaying cross-platform so viewers know the source.":"Aggiungi un'etichetta della piattaforma all'inizio del messaggio quando lo inoltri tra piattaforme, così gli spettatori ne conoscono l'origine.","Printer Control":"Controllo stampante (Printer Control)","Properties panel after placing the trigger. Write any expression that returns":"Pannello delle proprietà dopo il posizionamento del trigger. Scrivi un'espressione che restituisca","Ready for more depth?":"Vuoi approfondire?","Recommended diagnostic path:":"Percorso diagnostico consigliato:","Reflection Filter":"Filtro dei messaggi di ritorno (Reflection Filter)","Regex command detection":"Rilevamento dei comandi tramite regex","Relay Chat":"Inoltra chat (Relay Chat)","Relay Chat skips recognized reflections automatically.":"Relay Chat ignora automaticamente le riflessioni riconosciute.","Relay Chat:":"Relay Chat:","Relay chat between services with filters (e.g., mirror Twitch to Discord but block commands).":"Inoltra la chat tra servizi con filtri (ad esempio replica Twitch su Discord ma blocca i comandi).","Relaying chat between surfaces is powerful but can echo infinitely if you listen to your own output. Follow these safeguards:":"Inoltrare la chat tra interfacce è potente, ma può generare echi infiniti se ascolti il tuo stesso output. Segui queste precauzioni:","Relink":"Ricollega","Remember:":"Ricorda:","Remove all @username mentions from a message before relaying it to another platform.":"Rimuovi tutte le menzioni @username da un messaggio prima di inoltrarlo a un'altra piattaforma.","Return a plain object from your action code. Any fields you include are merged into the flow's":"Restituisci un oggetto semplice dal codice dell'azione. Tutti i campi inclusi vengono uniti all’oggetto","Return field":"Campo restituito","Reward name when the source exposes a top-level reward title field":"Nome della ricompensa quando la sorgente espone un campo del titolo della ricompensa al primo livello","Rewrite the chatmessage into a consistent announcement string when a donation is present.":"Riscrivi chatmessage come stringa di annuncio uniforme quando è presente una donazione.","Run Test":"Esegui test","Run custom workflows from Stream Deck or the API":"Esegui flussi personalizzati da Stream Deck o dall'API","Run the matching action check there before testing the full Event Flow automation.":"Esegui lì il controllo dell'azione corrispondente prima di provare l'intera automazione Event Flow.","Running the":"Usi","SSApp / Desktop only":"Solo SSApp / desktop","SSApp desktop app":"App desktop SSApp","SSApp desktop app?":"l’app desktop SSApp?","Save & Close":"Salva e chiudi","Save versions.":"Salva le versioni.","Scroll to the “Flow Actions” card. Use the":"Scorri fino alla scheda “Flow Actions”. Usa il pulsante","Secondary context line":"Riga di contesto secondaria","Security considerations":"Considerazioni sulla sicurezza","See the dedicated":"Consulta la guida dedicata","Send Message":"Invia messaggio (Send Message)","Sender has VIP status":"Il mittente ha lo stato VIP","Sender is a moderator":"Il mittente è moderatore","Sender is a subscriber":"Il mittente è abbonato","Set":"Imposta","Set OBS Text Source:":"Imposta sorgente di testo OBS:","Set Text Source:":"Set Text Source:","Several action nodes (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) support":"Diversi nodi azione (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) supportano","Should return:":"Dovrebbe restituire:","Show GIPHY or direct media URLs, text, and confetti triggered by your flows.":"Mostrare URL GIPHY o multimediali diretti, testo e coriandoli attivati dai flussi.","Show Text:":"Show Text:","Signature:":"Firma:","Single Output":"Uscita singola","Snippet examples":"Frammenti di esempio","Social Stream Ninja logo":"Logo di Social Stream Ninja","Some nodes (Set Variable, Math, Text Replace) mutate the payload but still forward the":"Alcuni nodi (Set Variable, Math, Text Replace) modificano il payload, ma inoltrano comunque lo stato","Sound Library":"Sound Library","Source platform (lowercase)":"Piattaforma sorgente (minuscolo)","Speak Text":"Leggi testo (Speak Text)","Start with an alert template:":"Inizia con un modello di avviso:","State Nodes":"Nodi di stato","Step 1: Custom Code trigger":"Passaggio 1 — Trigger Custom Code","Step 2: Execute Custom Code action":"Passaggio 2 — Azione Execute Custom Code","Step 3: Relay Chat action":"Passaggio 3 — Azione Relay Chat","Stop Audio Clips":"Stop Audio Clips","Store repeats in State nodes.":"Memorizza le ripetizioni nei nodi di stato.","Strip @mentions":"Rimuovi @menzioni","Structured event data (JSON)":"Dati strutturati dell'evento (JSON)","Subscriber / VIP / mod gate":"Controllo abbonato / VIP / moderatore","Syntax errors too.":"Anche gli errori di sintassi.","TTS:":"TTS:","Tag the message with a custom field that a later":"Contrassegna il messaggio con un campo personalizzato che un successivo nodo","Talk to OBS via the WebSocket settings that live under the Flow Actions section in the popup (scene switching, source toggles, GDI+/FreeType text updates, replay buffer, etc.).":"Comunica con OBS tramite le impostazioni WebSocket nella sezione Flow Actions del popup (cambio di scena, visibilità delle sorgenti, aggiornamenti di testo GDI+/FreeType, buffer replay ecc.).","Template variables work in JSON string values at any nested object or array depth. Object keys are not templated, and a custom body without placeholders is sent unchanged.":"Le variabili di modello funzionano nei valori stringa JSON a qualsiasi profondità di oggetti o array annidati. Le chiavi degli oggetti non vengono elaborate come modelli e un corpo personalizzato senza segnaposto viene inviato invariato.","Test Flow":"Prova flusso (Test Flow)","Test with the built-in simulator":"Prova con il simulatore integrato","Testing the flow.":"Provare il flusso.","The AND gate is not optional.":"La porta AND non è facoltativa.","The AND node ensures only members using the right keyword relay to Discord. Both branches send their boolean result to the AND node; the payload from the":"Il nodo AND assicura che solo i membri che usano la parola chiave corretta vengano inoltrati a Discord. Entrambi i rami inviano il risultato booleano al nodo AND; il payload del","The Chrome extension cannot serve disk files by itself. Use Upload or a hosted URL when no desktop companion is available. See the":"L'estensione Chrome non può servire da sola i file su disco. Usa Upload o un URL ospitato quando non è disponibile un'app desktop di supporto. Consulta la","The Event Flow Editor. The left panel lists all available nodes; the dotted canvas is where you build flows; the right panel shows properties for the selected node.":"L'editor Event Flow. Il pannello sinistro elenca tutti i nodi disponibili; l'area punteggiata serve a creare i flussi; il pannello destro mostra le proprietà del nodo selezionato.","The Event Flow editor is the “advanced automation” layer for Social Stream Ninja. It sits above the simple popup switches and lets you script your own routing logic. Use it when you need to:":"L'editor Event Flow è il livello di “automazione avanzata” di Social Stream Ninja. Si colloca sopra i semplici interruttori del popup e consente di programmare una propria logica di instradamento. Usalo quando devi:","The Event Flow runtime passes two things through every wire:":"Il runtime Event Flow passa due elementi attraverso ogni filo:","The Test Flow panel for sending synthetic test events":"Pannello Test Flow per inviare eventi sintetici di prova","The Test Flow panel. Fill in fields matching your trigger conditions and click":"Il pannello Test Flow. Compila i campi in modo che corrispondano alle condizioni del trigger e fai clic su","The chat message text (may contain HTML)":"Il testo del messaggio chat (può contenere HTML)","The editor's Preview button plays locally; live playback needs the overlay open. If the browser blocks autoplay, click":"Il pulsante Anteprima dell’editor riproduce localmente; la riproduzione in diretta richiede che l’overlay sia aperto. Se il browser blocca la riproduzione automatica, fai clic su","The full message payload.":"Il payload completo del messaggio.","The gate bit (":"Il bit della porta (","The link looks like":"Il link ha questo aspetto:","The object":"L’oggetto","The same payload unless the node edits it.":"Lo stesso payload, a meno che il nodo non lo modifichi.","Thermal Label:":"Etichetta termica:","Thermal Printer Guide":"Guida alle stampanti termiche","Thermal printing in SSApp:":"Stampa termica in SSApp:","These blocks answer the most common \"What does true/false mean?\" questions.":"Questi blocchi rispondono alle domande più comuni su cosa significhino true/false.","Think of the popup as “quick presets” and Event Flow as the toolkit for bespoke workflows.":"Considera il popup come una raccolta di preset rapidi ed Event Flow come l'insieme di strumenti per flussi personalizzati.","This flow is complete and fires on every message, but the sound plays on the Flow Actions overlay page,":"Questo flusso è completo e si attiva a ogni messaggio, ma il suono viene riprodotto sulla pagina overlay Flow Actions,","This flow listens for":"Questo flusso ascolta","This guide is intentionally standalone. Copy it locally, adapt it for your team, and keep experimenting inside the editor.":"Questa guida è volutamente autonoma: copiala in locale, adattala al tuo team e continua a sperimentare nell'editor.","TikTok Team Member":"Membro del team TikTok (TikTok Team Member)","Transform & Logic Nodes":"Nodi di trasformazione e logica","Trigger custom overlays, audio, OBS scenes, or webhooks based on data you enrich in the flow.":"Attiva overlay personalizzati, audio, scene OBS o webhook in base ai dati che arricchisci nel flusso.","Trigger panel showing Custom Code node under the Advanced group":"Pannello dei trigger con il nodo Custom Code nel gruppo Advanced","Trigger snippets: return":"Frammenti di trigger — restituisci","Trigger ──▶ RANDOM (50%) ──▶ Play Sound A │ └──▶ NOT ──▶ AND ──▶ Play Sound B Trigger ──────────────────▲":"Trigger ──▶ RANDOM (50%) ──▶ Riproduci suono A\n│            └──▶ NOT ──▶ AND ──▶ Riproduci suono B\nTrigger ──────────────────▲","Triggers":"Trigger","True":"True","True/False Outputs":"Uscite True/False","Twitch Message ──▶ Regex Match \"^!\" ─┐ │ ├─false──▶ Auto Reply (\"Thanks for chatting!\") │ └─true──▶ Do nothing":"Messaggio Twitch ──▶ Corrispondenza regex \"^!\" ─┐\n│                                              ├─false──▶ Risposta automatica (\"Grazie per aver scritto in chat!\")\n│                                              └─true──▶ Non fare nulla","Twitch and YouTube relay walkthrough":"Guida passo passo all'inoltro Twitch e YouTube","Twitch, YouTube":"Twitch, YouTube","Two action nodes chained together with no trigger node":"Due nodi azione concatenati senza un nodo trigger","Two nodes in the Event Flow editor let you write arbitrary JavaScript that runs inside the flow pipeline:":"Due nodi nell'editor Event Flow consentono di scrivere JavaScript arbitrario eseguito nella sequenza del flusso:","USD donation equivalent when the source provides one; valid zero values are honored. Event Flow falls back to":"Equivalente in USD della donazione quando fornito dalla sorgente; vengono rispettati i valori zero validi. In mancanza, Event Flow usa","USD donation equivalent, supplied or estimated; Event Flow derives threshold values from normalized":"Equivalente in USD della donazione, fornito o stimato; Event Flow ricava i valori di soglia dal campo normalizzato","Unlock":"Sblocca","Use":"Usa","Use AND when multiple conditions must be satisfied simultaneously (\"is subscriber\"":"Usa AND quando devono essere soddisfatte più condizioni contemporaneamente (\"è abbonato\"","Use Debounce or Cooldown nodes":"Usa nodi Debounce o Cooldown","Use counters, toggles, and timestamps to avoid double alerts.":"Usa contatori, interruttori e timestamp per evitare avvisi duplicati.","Use random set":"Use random set","Use sound":"Use sound","User Memory guide":"Guida a User Memory","User avatar URL":"URL avatar dell'utente","User's platform ID":"ID dell'utente sulla piattaforma","Using local media in the standalone app:":"Usare contenuti multimediali locali nell'app autonoma:","Variable":"Variabile","Variable matching is case-insensitive.":"La corrispondenza delle variabili non distingue maiuscole e minuscole.","Variables + Logic":"Variabili e logica","Voice Override":"Sostituzione voce (Voice Override)","What comes into a node?":"Cosa entra in un nodo?","What is this editor?":"Cos'è questo editor?","What leaves a node?":"Cosa esce da un nodo?","What the action returns":"Cosa restituisce l'azione","When to branch?":"Quando creare un ramo?","When you add custom":"Quando aggiungi chiavi","Whenever you want to react differently to":"Ogni volta che vuoi reagire diversamente a","Work inside canvases called":"Lavora in aree chiamate","Yes. Enter a provider-supported voice name or ID in":"Sì. Inserisci un nome o ID voce supportato dal provider in","Yes. The payload still travels through the false output; it is up to you to decide where that branch should go.":"Sì. Il payload passa comunque attraverso l'uscita false; spetta a te decidere dove deve andare quel ramo.","YouTube Message ──▶ Contains \"!queue\" ─▶ AND ─▶ Relay to Discord Gifted Membership ─▶ User Role = Member ──▲":"Messaggio YouTube ──▶ Contiene \"!queue\" ─▶ AND ─▶ Inoltra a Discord\nAbbonamento regalo ─▶ Ruolo utente = Membro ──▲","YouTube Shorts and Event Flow":"YouTube Shorts ed Event Flow","YouTube Shorts destination note:":"Nota sulla destinazione YouTube Shorts:","YouTube Super Chat or Super Sticker in a EUR range":"Super Chat o Super Sticker YouTube in un intervallo EUR","[copy link]":"[copia link]","a boolean:":"un booleano —","action can read from a template variable (":"può leggere da una variabile di modello (","action with":"con","actions":"azioni","actions.html":"actions.html","all work the same way.":"funzionano tutti allo stesso modo.","also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.":"also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.","an object or Promise merged into":"un oggetto o una Promise uniti a","and":"e","and use that generated localhost URL instead of the hosted Flow Actions URL.":"e usa quell'URL localhost generato al posto dell'URL Flow Actions ospitato.","any":"qualunque","append":"aggiungi","at compile time is caught the same way. Check DevTools (F12) if a node appears to do nothing.":"in fase di compilazione viene intercettato allo stesso modo. Controlla DevTools (F12) se un nodo sembra non fare nulla.","available only when":"disponibile solo quando","becomes available on the gray/red port.":"diventa disponibile sulla porta grigia/rossa.","below), plus":"sotto), più","bit telling the next node whether to run.":"che indica al nodo successivo se deve essere eseguito.","boolean":"booleano","browser source; Multi-Alerts plays through its own browser source. Keep sound enabled in only one for the same event to avoid duplicate playback. Tab to a flow node and press Enter or Space to edit its properties.":"; Multi-Alerts riproduce tramite la propria sorgente browser. Mantieni il suono attivo in una sola delle due per lo stesso evento, per evitare riproduzioni duplicate. Raggiungi un nodo del flusso con Tab e premi Invio o Spazio per modificarne le proprietà.","button or click the URL inside the card.":"oppure fai clic sull'URL nella scheda.","by default. When a condition fails, it emits":"per impostazione predefinita. Quando una condizione fallisce, emette","channel and an optional":"e un canale facoltativo","channel.":".","checks the JavaScript syntax and saves the whole flow;":"verifica la sintassi JavaScript e salva l'intero flusso;","cheer, raid, new_follower":"cheer, raid, new_follower","choose the printer and calibrate its paper width and safe margins under":"scegli la stampante e calibra larghezza della carta e margini di sicurezza in","connected input is true.":"ingresso collegato è true.","continues downstream.":"prosegue a valle.","continues through the green port;":"prosegue dalla porta verde;","controls overlap, queueing, and the action's cooldown;":"controls overlap, queueing, and the action's cooldown;","conversion of normalized":"per convertire le etichette normalizzate di","docs/event-reference.html":"docs/event-reference.html","does":"fa","does not use the keyword.":"non usa la parola chiave.","does the same. Cancel leaves the node unchanged.":"fa lo stesso. Annulla lascia invariato il nodo.","doesn't match your trigger.":"non corrisponde al trigger.","downstream nodes stop executing unless they receive input on a separate branch (for example, the":"i nodi a valle smettono di essere eseguiti, a meno che non ricevano un ingresso da un ramo separato (ad esempio la porta","exposes":"espone","false":"false","features a message when the flow reaches it. It does not fire when you feature a message elsewhere.":"mette in evidenza un messaggio quando il flusso lo raggiunge; non si attiva quando metti un messaggio in evidenza altrove.","fields. Tells downstream nodes the payload has been edited.":". Indica ai nodi successivi che il payload è stato modificato.","fire only when the gate remains":"si attivano solo quando la porta resta","first branch":"primo ramo","flows":"flussi","flows through automatically.":"passa automaticamente.","for a complete setup.":"per una configurazione completa.","for a large editing window.":"per una finestra di modifica più grande.","for a ready-made animation and synthetic thank-you clip, or the advanced":"per un'animazione pronta e una clip sintetica di ringraziamento, oppure il modello avanzato","for alerts that should only fire once every X seconds.":"per avvisi che devono attivarsi solo una volta ogni X secondi.","for arbitrary logic that no built-in node covers.":"per logiche arbitrarie non coperte da nodi integrati.","for detailed payload documentation across all platforms.":"per una documentazione dettagliata dei payload di tutte le piattaforme.","for downstream logic.":"per la logica a valle.","for every trigger, action, setup step, and tested recipe.":"per ogni trigger, azione, passaggio di configurazione e ricetta verificata.","for printer setup, fixed-size labels, and a complete flow.":"per configurare la stampante, le etichette di dimensioni fisse e un flusso completo.","for the full setup.":"per la configurazione completa.","for the shared-state model, screenshots, and an importable example.":"per il modello di stato condiviso, gli screenshot e un esempio importabile.","from subscribers, VIPs, or mods, reformats it as a feature request, and relays it to a second destination (e.g. Discord).":"da abbonati, VIP o moderatori, lo riformatta come richiesta di funzionalità e lo inoltra a una seconda destinazione (ad esempio Discord).","from the":"dal gruppo","group in the":"nel pannello","group in the Actions panel.":"nel pannello Actions.","group in the Triggers panel.":"nel pannello Triggers.","https://...":"https://...","if":"se","if you are still using obs-websocket 4.x / port":"se usi ancora obs-websocket 4.x / porta","if you changed":"se hai modificato campi di","if you want a small live OBS connection badge on the overlay while troubleshooting.":"se vuoi un piccolo badge live della connessione OBS sull'overlay durante la risoluzione dei problemi.","in the User Role node. It recognizes TikTok Fan Club/team levels and badges on the incoming message and does not depend on Main Chat Overlay settings.":"nel nodo User Role. Riconosce livelli e badge TikTok Fan Club/team nel messaggio in arrivo e non dipende dalle impostazioni del Main Chat Overlay.","is a legacy alias":"è un alias precedente","is a node-based editor. Each line carries a message payload plus a boolean state (":"è un editor basato su nodi. Ogni linea trasporta un payload del messaggio più uno stato booleano (","is running inside OBS Browser Source with":"è in esecuzione nella sorgente browser OBS con","keeps it flowing to the next node.":"lo fa proseguire verso il nodo successivo.","keys, note them so overlays and remote clients stay consistent.":"personalizzate, documentale affinché overlay e client remoti restino coerenti.","labels for threshold comparisons, including 100 unknown named units = $0.01 USD. It does not parse":"per i confronti di soglia, incluso 100 unità con nome sconosciuto = $0.01 USD. Non analizza il testo discorsivo di","labels such as value,":"come valore,","logic nodes":"nodi logici","message API":"API dei messaggi","not in the editor.":"non nell’editor.","number / string":"numero / stringa","object":"oggetto","object and any APIs the preload script exposes (e.g.":"e a tutte le API esposte dallo script preload (ad esempio","object; fields you omit keep their current values.":"; i campi omessi conservano i valori attuali.","obs-websocket-test.html":"obs-websocket-test.html","on a regular chat message), the placeholder is replaced with an empty string rather than showing the literal":"in un normale messaggio chat), il segnaposto viene sostituito con una stringa vuota anziché mostrare il testo letterale","on the Flow Actions page to retry the latest blocked clip. Clicking elsewhere on that page also enables playback. An OBS Browser Source normally allows autoplay.":"nella pagina Flow Actions per riprovare l'ultima clip bloccata. Anche un clic altrove sulla pagina abilita la riproduzione. Una sorgente browser OBS normalmente consente la riproduzione automatica.","only if all connected inputs equal":"solo se tutti gli ingressi collegati sono uguali a","optional. Only append":"facoltativa. Aggiungi","or":"oppure","or the extension icon).":"o dall'icona dell'estensione).","output, the flow simply ends there. That is perfect for filters (\"block everything that fails the check\") but do not forget to connect the":"in uscita, il flusso termina semplicemente lì. È perfetto per i filtri (\"blocca tutto ciò che non supera il controllo\"), ma non dimenticare di collegare il percorso","outputs a value of":"restituisce il valore","panel onto the canvas. It acts as a gate: the flow continues only when your code returns":"nell'area di lavoro. Funziona da porta: il flusso prosegue solo quando il codice restituisce","panel. It can mutate the message, block it, or attach metadata that downstream nodes can read.":". Può modificare il messaggio, bloccarlo o aggiungere metadati leggibili dai nodi successivi.","path if you need fallbacks.":"se ti servono alternative.","popup.html":"popup.html","prose for donation values.":"per i valori delle donazioni.","read the payload and may rewrite fields, set state, or flip the gate signal to":"leggono il payload e possono riscrivere campi, impostare lo stato o cambiare il segnale della porta in","recommended for consistent control. Social Stream Ninja Flow Actions use the OBS WebSocket v5 API from OBS 28+ and expect the modern request set on port":"consigliato per un controllo uniforme. Social Stream Ninja Flow Actions usa l'API OBS WebSocket v5 di OBS 28+ e si aspetta il set moderno di richieste sulla porta","result API":"API dei risultati","select a Custom Code node and click":"seleziona un nodo Custom Code e fai clic su","socket on a Condition node). That makes it easy to build fallback logic without duplicating whole flows.":"su un nodo Condition). Questo rende semplice creare una logica alternativa senza duplicare interi flussi.","socket to our reply, so regular chatters get an acknowledgement while commands simply pass through.":"alla nostra risposta, così chi scrive normalmente riceve un riscontro mentre i comandi passano semplicemente oltre.","sources":"sorgenti","state from their input. Others (NOT, AND, OR) recalculate the boolean themselves.":"del loro ingresso. Altri (NOT, AND, OR) ricalcolano il booleano autonomamente.","stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use":"stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use","string":"stringa","succeed.":"hanno esito positivo.","system so viewers can intentionally trigger flows.":"affinché gli spettatori possano attivare intenzionalmente i flussi.","template variables":"variabili di modello","template. New alert templates start disabled so you can configure and test them first. For the OBS template, choose a source and the same normally-off filter in both filter actions.":". I nuovi modelli di avviso partono disattivati, così puoi configurarli e provarli prima. Per il modello OBS, scegli una sorgente e lo stesso filtro normalmente disattivato in entrambe le azioni di filtro.","text.":".","that get replaced with event data at runtime. Wrap variable names in curly braces like":"che vengono sostituite con i dati dell'evento durante l'esecuzione. Racchiudi i nomi delle variabili tra parentesi graffe, come","the object":"l’oggetto","to back up or share.":"per eseguire un backup o condividere.","to build queue systems, raffles, or scoring engines.":"per creare sistemi di coda, estrazioni o motori di punteggio.","to continue the flow":"per continuare il flusso","to convert the formatted donation label into EUR. It returns a number, or":"per convertire in EUR l'etichetta formattata della donazione. Restituisce un numero, oppure","to enable them. In extension mode the nodes appear greyed-out with the label":"per attivarli. In modalità estensione, i nodi appaiono in grigio con l'etichetta","to filter decisions, and":"per filtrare le decisioni e","to inject events,":"per inserire eventi,","to let the flow continue,":"per lasciar proseguire il flusso,","to make things happen (send chat, control overlays, relay messages, etc.).":"per eseguire operazioni (inviare chat, controllare overlay, inoltrare messaggi ecc.).","to prevent the message from being displayed or relayed.":"per impedire che il messaggio venga mostrato o inoltrato.","to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing":"to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing","to stop it.":"per fermarlo.","to the Flow Actions URL if your OBS server is configured to require authentication.":"all'URL Flow Actions se il server OBS è configurato per richiedere autenticazione.","to the URL for":"all’URL di","to validate the full pipeline.":"per verificare l'intera sequenza.","trigger (or Message Contains, a regex, a donation event, etc.) starts the chain; both actions then run for each matching message.":"(oppure Message Contains, una regex, un evento di donazione ecc.) avvia la catena; entrambe le azioni vengono poi eseguite per ogni messaggio corrispondente.","true":"true","twitch, youtube":"twitch, youtube","unless the node itself errors.":"a meno che il nodo stesso non produca un errore.","updates OBS Text (GDI+) and Text (FreeType 2) inputs directly and supports Event Flow template variables such as":"aggiorna direttamente gli ingressi OBS Testo (GDI+) e Testo (FreeType 2) e supporta variabili di modello Event Flow come","use":"usa","value, value + unit, or compact unit/value. Unknown named virtual units use 100 units = $0.01 USD; unpriced TikTok gifts use one coin per gift ($0.01 each).":"valore, valore + unità oppure unità/valore compatti. Le unità virtuali con nome sconosciuto usano 100 unità = $0.01 USD; i regali TikTok senza prezzo usano una moneta per regalo ($0.01 ciascuno).","vs":"rispetto a","when the alert is muted. By inverting that result, the NOT node makes sure we only play the celebration when the flag is":"quando l'avviso è silenziato. Invertendo quel risultato, il nodo NOT assicura che il festeggiamento venga riprodotto solo quando il flag è","when the message is a command. We route the":"quando il messaggio è un comando. Instradiamo l’uscita","when the requested target currency is unsupported. The converter uses Social Stream Ninja's approximate internal rates; it does not contact an external exchange service.":"quando la valuta di destinazione richiesta non è supportata. Il convertitore usa i tassi interni approssimativi di Social Stream Ninja; non contatta un servizio di cambio esterno.","whenever the RANDOM gate sits idle, so sound B would play on every chat message that":"ogni volta che la porta RANDOM è inattiva, quindi il suono B verrebbe riprodotto per ogni messaggio chat che","your code runs as":"il codice viene eseguito come","your nodes so future-you knows which branch is which.":"nodi, così in futuro saprai riconoscere ogni ramo.","{\"viewers\":100}":"{\"viewers\":100}","– a":"– un bit","– the event or message data object.":"– l'oggetto dati dell'evento o del messaggio.","┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│ Relay Chat │ │ │ │ │ │ (to Discord) │ │ Gate: VIP/sub/mod │ │ Reformat message text │ │ │ │ + starts with │ │ → \"📋 Feature Request │ │ │ │ !feature │ │ from {name}: {text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘":"┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│ Relay Chat │ │ │ │ │ │ (a Discord) │ │ Condizione: VIP/abbonato/mod │ │ Riformatta il messaggio │ │ │ │ + inizia con │ │ → \"📋 Richiesta di funzionalità │ │ │ │ !feature │ │ da {name}: {text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘","✅ Works. An":"✅ Funziona. Un trigger","❌ Never runs. Feature Message and Speak Text are both":"❌ Non viene mai eseguito. Feature Message e Speak Text sono entrambe"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/actions/event-flow-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="guide-shell">
+        <header>
+            <p class="badge">Sistema Event Flow</p>
+            <h1>Guida all'editor Event Flow</h1>
+            <p>Crea automazioni affidabili per Social Stream Ninja. Questa guida illustra le basi, i nodi logici, il flusso dei segnali e gli accorgimenti pratici più richiesti dai creator, come evitare echi nella chat e capire quando combinare blocchi AND/NOT.</p>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Italiano"><span aria-hidden="true">🌐 </span><span lang="it">Italiano</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/event-flow-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/event-flow-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/event-flow-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/event-flow-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/event-flow-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/event-flow-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/event-flow-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/event-flow-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/event-flow-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="event-flow-guide.html" lang="it" hreflang="it" aria-current="true">Italiano</a><a class="site-language-link" href="../../pl/actions/event-flow-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/event-flow-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/event-flow-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/event-flow-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/event-flow-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/event-flow-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/event-flow-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></header>
+        <div class="content">
+            <section>
+                <h2>0. Orientamento rapido</h2>
+                <div class="panel">
+                    <strong>Event Flow</strong> è un editor basato su nodi. Ogni linea trasporta un payload del messaggio più uno stato booleano (<em>true</em> = continua, <em>false</em> = ferma). Usa <strong>sorgenti</strong> per inserire eventi, <strong>nodi logici</strong> per filtrare le decisioni e <strong>azioni</strong> per eseguire operazioni (inviare chat, controllare overlay, inoltrare messaggi ecc.).
+                </div>
+                <div class="callout">
+                    Devi ricordare i partecipanti, verificare l'idoneità in seguito, estrarre un utente unico o svuotare un elenco con nome? Apri la <a href="user-memory-guide.html">Guida a User Memory</a> per il modello di stato condiviso, gli screenshot e un esempio importabile.
+                </div>
+                <h3 id="what-is-event-flow">Cos'è questo editor?</h3>
+                <p>L'editor Event Flow è il livello di “automazione avanzata” di Social Stream Ninja. Si colloca sopra i semplici interruttori del popup e consente di programmare una propria logica di instradamento. Usalo quando devi:</p>
+                <ul>
+                    <li>Inoltra la chat tra servizi con filtri (ad esempio replica Twitch su Discord ma blocca i comandi).</li>
+                    <li>Crea comandi basati sulla fedeltà, giochi con parole chiave o condizioni di accesso alle estrazioni con logica AND/OR/NOT.</li>
+                    <li>Attiva overlay personalizzati, audio, scene OBS o webhook in base ai dati che arricchisci nel flusso.</li>
+                    <li>Combina più piattaforme in una singola automazione (Kick + Twitch + YouTube instradati attraverso un solo flusso).</li>
+                </ul>
+                <p>Considera il popup come una raccolta di preset rapidi ed Event Flow come l'insieme di strumenti per flussi personalizzati.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Avvio e basi</h4>
+                        <ul>
+                            <li>Apri l'editor Event Flow dal menu della dashboard principale (desktop o estensione).</li>
+                            <li>Ogni progetto viene salvato localmente fino all'esportazione. Usa <code>Export</code> per eseguire un backup o condividere.</li>
+                            <li>Lavora in aree chiamate <em>flussi</em>. Ogni flusso può sottoscrivere più piattaforme contemporaneamente.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Panoramica dei nodi</h4>
+                        <ul>
+                            <li><strong>Ingressi</strong> (porte a sinistra) si aspettano il contesto del messaggio.</li>
+                            <li><strong>Uscite</strong> (porte a destra) emettono lo stesso contesto con le eventuali modifiche.</li>
+                            <li>I nodi logici possono emettere il canale <code>true</code> e un canale facoltativo <code>false</code> .</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Struttura del payload</h4>
+                        <p>Ogni messaggio trasporta un oggetto JSON. Le chiavi obbligatorie seguono <a href="../docs/event-reference.html" target="_blank" rel="noopener">docs/event-reference.html</a> (platform, type, chatname, chatmessage ecc.). Inserisci i dati personalizzati sotto <code>meta</code>.</p>
+                    </div>
+                </div>
+                <h3 id="every-flow-needs-a-trigger">Ogni flusso inizia con un trigger</h3>
+                <p>I nodi azione (verdi) non vengono mai eseguiti da soli: si attivano solo quando un nodo trigger (blu) sopra di loro restituisce <code>true</code>. Un flusso composto solo da azioni concatenate sembra valido, ma resta sempre inattivo perché nulla avvia la catena. I nomi dei nodi descrivono cosa il nodo <em>fa</em>, non quando avviene: <em>Metti messaggio in evidenza (Feature Message)</em> mette in evidenza un messaggio quando il flusso lo raggiunge; non si attiva quando metti un messaggio in evidenza altrove.</p>
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-missing-trigger.png" alt="Due nodi azione concatenati senza un nodo trigger">
+                        <figcaption>❌ Non viene mai eseguito. Feature Message e Speak Text sono entrambe <em>azioni</em>; senza un trigger all'inizio, nulla avvia la catena.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-trigger-first.png" alt="Trigger Any Message collegato alle azioni Feature Message e Speak Text">
+                        <figcaption>✅ Funziona. Un trigger <em>Qualsiasi messaggio (Any Message)</em> (oppure Message Contains, una regex, un evento di donazione ecc.) avvia la catena; entrambe le azioni vengono poi eseguite per ogni messaggio corrispondente.</figcaption>
+                    </figure>
+                </div>
+            </section>
+            <section id="flow-actions-overlay">
+                <h2>Overlay Flow Actions (uscita delle azioni)</h2>
+                <div class="panel">
+                    <strong>Inizia con un modello di avviso:</strong>
+                    <p>Scegli <em>Donazione: festeggiamento + voce</em> per un'animazione pronta e una clip sintetica di ringraziamento, oppure il modello avanzato <em>Donazione: animazione + suono + filtro OBS</em> . I nuovi modelli di avviso partono disattivati, così puoi configurarli e provarli prima. Per il modello OBS, scegli una sorgente e lo stesso filtro normalmente disattivato in entrambe le azioni di filtro.</p>
+                    <p>Scegli <em>Play Audio Clip → Browse sounds</em> to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing <em>Use sound</em>. La <a href="../../audio-library.html" target="_blank" rel="noopener">Sound Library</a> also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.</p>
+                    <p>In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose <em>Use random set</em>. Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set. <em>Playback options</em> controls overlap, queueing, and the action's cooldown; <em>Stop Audio Clips</em> stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use <em>Leggi testo (Speak Text)</em>.</p>
+                    <p>Event Flow riproduce tramite la sorgente browser <strong>Flow Actions</strong> ; Multi-Alerts riproduce tramite la propria sorgente browser. Mantieni il suono attivo in una sola delle due per lo stesso evento, per evitare riproduzioni duplicate. Raggiungi un nodo del flusso con Tab e premi Invio o Spazio per modificarne le proprietà.</p>
+                </div>
+                <p>Nodi come <em>Riproduci clip audio</em>, <em>Mostra overlay multimediale</em>, e i controlli OBS hanno bisogno di una superficie di visualizzazione. Questa superficie è la pagina overlay Flow Actions servita da <a href="../../actions.html" target="_blank" rel="noopener">actions.html</a>. Mantienila in esecuzione nel software di trasmissione (dock browser OBS/Streamer.bot/ecc.) affinché le azioni Event Flow abbiano un posto dove apparire.</p>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-audio-overlay.png" alt="Trigger Any Message collegato a un&#x27;azione Play Audio Clip">
+                    <figcaption>Questo flusso è completo e si attiva a ogni messaggio, ma il suono viene riprodotto sulla pagina overlay Flow Actions, <em>non nell’editor.</em> Il pulsante Anteprima dell’editor riproduce localmente; la riproduzione in diretta richiede che l’overlay sia aperto. Se il browser blocca la riproduzione automatica, fai clic su <strong>Attiva audio</strong> nella pagina Flow Actions per riprovare l'ultima clip bloccata. Anche un clic altrove sulla pagina abilita la riproduzione. Una sorgente browser OBS normalmente consente la riproduzione automatica.</figcaption>
+                </figure>
+                <div class="panel">
+                    <strong>Come aprirlo (dal popup/dashboard):</strong>
+                    <ol>
+                        <li>Apri il popup principale Social Stream Ninja (la finestra caricata da <a href="../../popup.html" target="_blank" rel="noopener">popup.html</a> o dall'icona dell'estensione).</li>
+                        <li>Scorri fino alla scheda “Flow Actions”. Usa il pulsante <em>[copia link]</em> oppure fai clic sull'URL nella scheda.</li>
+                        <li>Il link ha questo aspetto: <code>https://socialstream.ninja/actions.html?session=YOURSESSION</code>. Incollalo in una sorgente browser OBS (consigliati 1920×1080) oppure aprilo in un qualsiasi browser per overlay.</li>
+                    </ol>
+                </div>
+                <div class="panel">
+                    <strong>Usare contenuti multimediali locali nell'app autonoma:</strong>
+                    <ol>
+                        <li>In un'azione Play Audio Clip o Display Media Overlay, fai clic su <em>Scegli file locale</em>.</li>
+                        <li>Fai clic su <em>Copia URL Flow Actions locale per OBS</em> e usa quell'URL localhost generato al posto dell'URL Flow Actions ospitato.</li>
+                        <li>Mantieni SSApp in esecuzione. Se un file selezionato viene spostato, torna all'azione e fai clic su <em>Ricollega</em>.</li>
+                    </ol>
+                    <p>L'estensione Chrome non può servire da sola i file su disco. Usa Upload o un URL ospitato quando non è disponibile un'app desktop di supporto. Consulta la <a href="../docs/media-hosting-event-flow.html" target="_blank" rel="noopener">guida ai file multimediali per Event Flow</a> per la configurazione completa.</p>
+                </div>
+                <p>Una volta caricato, quell'overlay può:</p>
+                <ul>
+                    <li>Mostrare URL GIPHY o multimediali diretti, testo e coriandoli attivati dai flussi.</li>
+                    <li>Riprodurre suoni (TTS, clip audio) localmente affinché gli spettatori li sentano.</li>
+                    <li>Comunica con OBS tramite le impostazioni WebSocket nella sezione Flow Actions del popup (cambio di scena, visibilità delle sorgenti, aggiornamenti di testo GDI+/FreeType, buffer replay ecc.).</li>
+                </ul>
+                <div class="panel">
+                    <strong>Modalità di controllo OBS:</strong>
+                    <ul>
+                        <li><strong>API Browser Source:</strong> disponibile solo quando <code>actions.html</code> è in esecuzione nella sorgente browser OBS con <em>Livello di accesso avanzato (Advanced Access Level)</em>. Qui funziona il cambio di scena e le azioni di registrazione / diretta / buffer replay possono usarla come ripiego.</li>
+                        <li><strong>OBS WebSocket:</strong> consigliato per un controllo uniforme. Social Stream Ninja Flow Actions usa l'API OBS WebSocket v5 di OBS 28+ e si aspetta il set moderno di richieste sulla porta <code>4455</code>.</li>
+                        <li><strong>Password:</strong> facoltativa. Aggiungi <code>&amp;obspw=...</code> all'URL Flow Actions se il server OBS è configurato per richiedere autenticazione.</li>
+                        <li><strong>Diagnostica overlay:</strong> aggiungi <code>&amp;obsdebug=1</code> all’URL di <code>actions.html</code> se vuoi un piccolo badge live della connessione OBS sull'overlay durante la risoluzione dei problemi.</li>
+                        <li><strong>Set Text Source:</strong> aggiorna direttamente gli ingressi OBS Testo (GDI+) e Testo (FreeType 2) e supporta variabili di modello Event Flow come <code>{counterValue}</code> e <code>{counterTarget}</code>.</li>
+                        <li><strong>Vecchie installazioni 4.x:</strong> se usi ancora obs-websocket 4.x / porta <code>4444</code>, le azioni di sorgente / filtro / muto / testo non funzioneranno finché OBS / obs-websocket non saranno aggiornati.</li>
+                    </ul>
+                    <p>Consulta la guida dedicata <a href="obs-control-guide.html">Guida al controllo OBS</a> per ogni trigger, azione, passaggio di configurazione e ricetta verificata.</p>
+                </div>
+                <div class="panel">
+                    <strong>Percorso diagnostico consigliato:</strong>
+                    <ol>
+                        <li>Apri <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">obs-websocket-test.html</a>.</li>
+                        <li>Verifica che <code>GetVersion</code>, <code>GetCurrentProgramScene</code>, e <code>GetSceneList</code> hanno esito positivo.</li>
+                        <li>Esegui lì il controllo dell'azione corrispondente prima di provare l'intera automazione Event Flow.</li>
+                    </ol>
+                </div>
+                <div class="panel warn">
+                    <strong>Mantieni aperto l'overlay.</strong> Chiudere la pagina Flow Actions sospende ogni azione overlay/audio/OBS in Event Flow. Nascondila o spostala su un monitor separato anziché chiuderla.
+                </div>
+            </section>
+
+            <section>
+                <h2>1. Cosa passa attraverso un nodo?</h2>
+                <p>Il runtime Event Flow passa due elementi attraverso ogni filo:</p>
+                <ol>
+                    <li><strong>Payload</strong> – l'oggetto dati dell'evento o del messaggio.</li>
+                    <li><strong>Segnale della porta</strong> – un bit <em>true</em>/<em>false</em> che indica al nodo successivo se deve essere eseguito.</li>
+                </ol>
+                <div class="panel">
+                    <strong>Se un nodo emette false:</strong> i nodi a valle smettono di essere eseguiti, a meno che non ricevano un ingresso da un ramo separato (ad esempio la porta <code>false</code> su un nodo Condition). Questo rende semplice creare una logica alternativa senza duplicare interi flussi.
+                </div>
+                <h3>Requisiti degli ingressi</h3>
+                <ul>
+                    <li><strong>Sorgenti degli eventi</strong> (messaggio Twitch, timer, trigger manuale ecc.) ignorano l'ingresso a monte: generano il proprio payload ed emettono sempre <code>true</code> a meno che il nodo stesso non produca un errore.</li>
+                    <li><strong>Nodi di trasformazione e logica</strong> leggono il payload e possono riscrivere campi, impostare lo stato o cambiare il segnale della porta in <code>false</code>.</li>
+                    <li><strong>Nodi azione</strong> si attivano solo quando la porta resta <code>true</code>. Possono comunque emettere un payload aggiornato se vuoi continuare a concatenare azioni.</li>
+                </ul>
+                <h3>Schemi di uscita</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Uscita singola</h4>
+                        <p>La maggior parte dei nodi espone una sola uscita. Ciò che entra (payload + porta) esce invariato, a meno che il nodo non lo modifichi.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Uscite True/False</h4>
+                        <p>I nodi Condition, Compare, Regex e Logic hanno due porte di uscita. <em>True</em> prosegue dalla porta verde; <em>false</em> diventa disponibile sulla porta grigia/rossa.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Passaggio invariato e sostituzione</h4>
+                        <p>Alcuni nodi (Set Variable, Math, Text Replace) modificano il payload, ma inoltrano comunque lo stato <em>true</em>/<em>false</em> del loro ingresso. Altri (NOT, AND, OR) ricalcolano il booleano autonomamente.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>2. Riepilogo dei nodi logici</h2>
+                <p>Questi blocchi rispondono alle domande più comuni su cosa significhino true/false.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>NOT</h4>
+                        <ul>
+                            <li>Ingressi: 1 booleano (true/false) derivato dal nodo precedente.</li>
+                            <li>Uscite: il booleano invertito più il payload intatto.</li>
+                            <li><strong>Comportamento predefinito:</strong> Se all'ingresso di NOT non è collegato nulla, il risultato è <code>false</code>, quindi l'uscita è <code>true</code>.</li>
+                        </ul>
+                        <div class="panel">
+                            <strong>Esempio:</strong> Inserisci NOT dopo “Contains Keyword” per attivare un avviso quando uno spettatore <em>non usa la parola chiave.</em>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>AND</h4>
+                        <ul>
+                            <li>Ingressi: due o più segnali booleani (A, B, ...). Puoi lasciare vuote le porte extra.</li>
+                            <li>Uscite: <code>true</code> solo se tutti gli ingressi collegati sono uguali a <code>true</code>.</li>
+                            <li>Usa AND quando devono essere soddisfatte più condizioni contemporaneamente ("è abbonato" <em>e</em> "il messaggio chat contiene !raffle").</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>OR</h4>
+                        <ul>
+                            <li>Emette <code>true</code> se <strong>qualunque</strong> ingresso collegato è true.</li>
+                            <li>Ideale per trigger multipiattaforma: collega i nodi dei messaggi Twitch + YouTube a un solo OR, poi unifica l'azione a valle.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="callout tip">
+                    <strong>Mi serve sempre un nodo AND?</strong><br>
+                    No. Molti nodi offrono già filtri completi (ad esempio "Filter User Level" + "Contains Text"). Usa AND solo quando le opzioni integrate non coprono la tua combinazione oppure quando vuoi una giunzione logica riutilizzabile e condivisibile con altri rami.
+                </div>
+                <div class="callout.warn">
+                    <strong>NOT e ingressi vuoti:</strong> Un nodo NOT scollegato emetterà comunque <code>true</code>. Mantienilo collegato a qualcosa di significativo oppure disattiva il nodo affinché non sblocchi accidentalmente un flusso.
+                </div>
+            </section>
+
+            <section>
+                <h2>3. Esempi di microflussi</h2>
+                <h3>A. Rispondi automaticamente, salvo quando il messaggio è un comando</h3>
+                <div class="diagram">
+Messaggio Twitch ──▶ Corrispondenza regex "^!" ─┐
+│                                              ├─false──▶ Risposta automatica ("Grazie per aver scritto in chat!")
+│                                              └─true──▶ Non fare nulla
+                </div>
+                <p>Qui il nodo Regex emette <code>true</code> quando il messaggio è un comando. Instradiamo l’uscita <code>false</code> alla nostra risposta, così chi scrive normalmente riceve un riscontro mentre i comandi passano semplicemente oltre.</p>
+                <h3>B. Richiedi più verifiche con AND</h3>
+                <div class="diagram">
+Messaggio YouTube ──▶ Contiene "!queue" ─▶ AND ─▶ Inoltra a Discord
+Abbonamento regalo ─▶ Ruolo utente = Membro ──▲
+                </div>
+                <p>Il nodo AND assicura che solo i membri che usano la parola chiave corretta vengano inoltrati a Discord. Entrambi i rami inviano il risultato booleano al nodo AND; il payload del <em>primo ramo</em> prosegue a valle.</p>
+                <h3>C. Nodo NOT per bloccare avvisi ripetuti</h3>
+                <div class="diagram">
+Payload evento ─▶ Controllo stato (isAlertMuted)
+└─false─▶ NOT ─▶ Riproduci festeggiamento
+                </div>
+                <p><code>State Check</code> restituisce il valore <code>true</code> quando l'avviso è silenziato. Invertendo quel risultato, il nodo NOT assicura che il festeggiamento venga riprodotto solo quando il flag è <code>false</code>.</p>
+                <h3>D. Riproduci casualmente uno di due suoni</h3>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-random-two-sounds.png" alt="Flusso con porta RANDOM, porta NOT e porta AND per riprodurre casualmente una di due clip audio">
+                    <figcaption>Un lancio di moneta 50/50 tra due clip audio. La porta RANDOM decide una volta per ogni messaggio corrispondente: se passa, viene riprodotto il suono A; se fallisce, la porta NOT inverte il risultato e la porta AND lascia riprodurre il suono B.</figcaption>
+                </figure>
+                <div class="diagram">
+Trigger ──▶ RANDOM (50%) ──▶ Riproduci suono A
+│            └──▶ NOT ──▶ AND ──▶ Riproduci suono B
+Trigger ──────────────────▲
+                </div>
+                <p><strong>La porta AND non è facoltativa.</strong> Un NOT isolato emetterebbe <code>true</code> ogni volta che la porta RANDOM è inattiva, quindi il suono B verrebbe riprodotto per ogni messaggio chat che <em>non corrisponde al trigger.</em> Collegare il trigger ad AND come secondo ingresso limita il suono B ai soli messaggi corrispondenti. Lo stesso schema funziona con qualsiasi coppia alternativa di azioni, non solo con l’audio.</p>
+            </section>
+
+            <section>
+                <h2>4. Prevenire echi, cicli e ritorni nell'inoltro</h2>
+                <p>Inoltrare la chat tra interfacce è potente, ma può generare echi infiniti se ascolti il tuo stesso output. Segui queste precauzioni:</p>
+                <div class="callout tip">
+                    <strong>Nota sulla destinazione YouTube Shorts:</strong><br>
+                    Sia i trigger in ingresso sia le destinazioni in uscita di Relay Chat distinguono tra <code>youtube</code> e <code>youtubeshorts</code>. Usa due azioni di inoltro quando un messaggio deve raggiungere entrambe le varianti. Consulta <a href="../docs/source-types-guide.html#youtube-shorts-event-flow">YouTube Shorts ed Event Flow</a>.
+                </div>
+                <div class="callout.danger">
+                    <strong>Relay Chat ignora automaticamente le riflessioni riconosciute.</strong><br>
+                    Una riflessione è un messaggio in uscita acquisito di nuovo da una chat di destinazione. Le attuali azioni Relay Chat ignorano queste riflessioni riconosciute; non c'è una casella No Reflections separata. Per nasconderne o limitarne la visualizzazione nel dock e negli overlay, usa un <strong>Filtro dei messaggi di ritorno (Reflection Filter)</strong> con <strong>Blocca tutti (Block All)</strong>, <strong>Consenti il primo (Allow First)</strong>, oppure <strong>Consenti tutti (Allow All)</strong>. Controlla la visualizzazione alla riacquisizione, non l'invio. Segui la <a href="../docs/chat-relay-guide.html">Guida passo passo all'inoltro Twitch e YouTube</a> per una configurazione completa.
+                </div>
+                <ul>
+                    <li><strong>Evita sistemi di inoltro duplicati.</strong> Disattiva Relay all globale quando usi percorsi Event Flow equivalenti e controlla se altri servizi collegano le stesse chat. Non è garantito che i metadati personalizzati sopravvivano al passaggio attraverso la chat di una piattaforma.</li>
+                    <li><strong>Usa nodi Debounce o Cooldown</strong> per avvisi che devono attivarsi solo una volta ogni X secondi.</li>
+                    <li><strong>Interrompi i cicli intenzionalmente.</strong> Se due rami si alimentano a vicenda, aggiungi un nodo logico che controlli una variabile di stato ("currentlyRelaying"), così il flusso esce subito quando il flag è impostato.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>5. Ingressi, uscite e domande pratiche</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Cosa entra in un nodo?</h4>
+                        <ul>
+                            <li>Il payload completo del messaggio.</li>
+                            <li>Il bit della porta (<code>true</code>/<code>false</code>).</li>
+                            <li>Contesto facoltativo (variabili di stato, timer) richiesto esplicitamente dal nodo.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Cosa esce da un nodo?</h4>
+                        <ul>
+                            <li>Lo stesso payload, a meno che il nodo non lo modifichi.</li>
+                            <li>Un bit di porta ricalcolato (nodi logici) oppure un bit passato invariato (azioni).</li>
+                            <li>La maggior parte degli effetti (come inviare chat) non altera il payload, ma le azioni sui punti possono aggiungere campi di stato come <code>pointsTotal</code> oppure <code>pointsSpendError</code> per la logica a valle.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Quando creare un ramo?</h4>
+                        <p>Ogni volta che vuoi reagire diversamente a <code>true</code> rispetto a <code>false</code>. Trascina un filo dall'uscita colorata necessaria (verde = true, grigio/rosso = false) al nodo successivo.</p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <strong>Ricorda:</strong> Se non fai nulla con un risultato <code>false</code> in uscita, il flusso termina semplicemente lì. È perfetto per i filtri ("blocca tutto ciò che non supera il controllo"), ma non dimenticare di collegare il percorso <code>false</code> se ti servono alternative.
+                </div>
+                <h3>Domande e risposte comuni</h3>
+                <ul>
+                    <li><strong>Devo usare AND per ogni coppia di filtri?</strong> No. Molti nodi includono più controlli (ad esempio il filtro messaggi di base supporta parola chiave + ruolo). Usa AND solo per combinazioni avanzate o quando unisci segnali da nodi diversi.</li>
+                    <li><strong>Come arrivano i valori true/false al nodo NOT?</strong> Ogni nodo con un'uscita verde emette <code>true</code> per impostazione predefinita. Quando una condizione fallisce, emette <code>false</code>. Collega quel filo a NOT per invertire il risultato.</li>
+                    <li><strong>Un nodo può emettere un payload anche se restituisce false?</strong> Sì. Il payload passa comunque attraverso l'uscita false; spetta a te decidere dove deve andare quel ramo.</li>
+					<li><strong>Come riconosco i membri del team TikTok?</strong> Scegli <em>Membro del team TikTok (TikTok Team Member)</em> nel nodo User Role. Riconosce livelli e badge TikTok Fan Club/team nel messaggio in arrivo e non dipende dalle impostazioni del Main Chat Overlay.</li>
+					<li><strong>Ogni nodo Speak Text può usare una voce diversa?</strong> Sì. Inserisci un nome o ID voce supportato dal provider in <em>Sostituzione voce (Voice Override)</em>, oppure lascialo vuoto per usare la voce TTS predefinita di Flow Actions.</li>
+                </ul>
+            </section>
+
+            <section id="template-variables">
+                <h2>6. Riferimento delle variabili di modello</h2>
+                <p>Diversi nodi azione (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) supportano <strong>variabili di modello</strong> che vengono sostituite con i dati dell'evento durante l'esecuzione. Racchiudi i nomi delle variabili tra parentesi graffe, come <code>{username}</code>.</p>
+
+                <h3>Variabili di base (compatibili con le versioni precedenti)</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>Variabile</th><th>Alias</th><th>Descrizione</th><th>Esempio</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{username}</code></td><td><code>{chatname}</code></td><td>Nome visualizzato dell'utente</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{message}</code></td><td><code>{chatmessage}</code></td><td>Testo del messaggio chat</td><td>Ciao a tutti!</td></tr>
+                        <tr><td><code>{source}</code></td><td>-</td><td>Nome della piattaforma (con iniziale maiuscola)</td><td>Twitch, YouTube</td></tr>
+                        <tr><td><code>{type}</code></td><td>-</td><td>Nome della piattaforma (grezzo)</td><td>twitch, youtube</td></tr>
+                        <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>Etichetta visualizzata di donazione/mancia</td><td>$5.00, 500 bits</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Variabili estese</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>Variabile</th><th>Descrizione</th><th>Esempio</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{displayname}</code></td><td>Nome visualizzato (campo alternativo)</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{donoValue}</code></td><td>Equivalente in USD della donazione, fornito o stimato; Event Flow ricava i valori di soglia dal campo normalizzato <code>hasDonation</code> come valore, <code>$</code>valore, valore + unità oppure unità/valore compatti. Le unità virtuali con nome sconosciuto usano 100 unità = $0.01 USD; i regali TikTok senza prezzo usano una moneta per regalo ($0.01 ciascuno). <code>{donationAmount}</code> è un alias precedente</td><td>5.00</td></tr>
+                        <tr><td><code>{event}</code></td><td>Identificatore del tipo di evento</td><td>cheer, raid, new_follower</td></tr>
+                        <tr><td><code>{membership}</code></td><td>Stato dell'abbonamento</td><td>MEMBERSHIP, new_sponsor</td></tr>
+                        <tr><td><code>{subtitle}</code></td><td>Contesto aggiuntivo</td><td>Membro da 3 mesi</td></tr>
+                        <tr><td><code>{userid}</code></td><td>ID dell'utente sulla piattaforma</td><td>12345678</td></tr>
+                        <tr><td><code>{chatimg}</code></td><td>URL avatar dell'utente</td><td>https://...</td></tr>
+                        <tr><td><code>{contentimg}</code></td><td>URL dell'immagine allegata</td><td>https://...</td></tr>
+                        <tr><td><code>{rewardTitle}</code></td><td>Nome della ricompensa quando la sorgente espone un campo del titolo della ricompensa al primo livello</td><td>Metti in evidenza il mio messaggio</td></tr>
+                        <tr><td><code>{meta}</code></td><td>Dati strutturati dell'evento (JSON)</td><td>{"viewers":100}</td></tr>
+                        <tr><td><code>{counterValue}</code></td><td>Valore corrente del contatore dopo un passaggio Counter o Check Counter</td><td>12</td></tr>
+                        <tr><td><code>{counterTarget}</code></td><td>Valore obiettivo del contatore</td><td>30</td></tr>
+                        <tr><td><code>{counterRemaining}</code></td><td>Obiettivo del contatore meno valore corrente, limitato a un minimo di 0</td><td>18</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>La corrispondenza delle variabili non distingue maiuscole e minuscole.</strong> <code>{USERNAME}</code>, <code>{Username}</code>, e <code>{username}</code> funzionano tutti allo stesso modo.
+                </div>
+                <div class="panel">
+                    <strong>Funzionano anche i campi aggiunti dal flusso.</strong> Se un'azione precedente aggiunge un valore al primo livello del messaggio, i modelli successivi possono leggerlo direttamente. È così che <code>Check Counter</code> espone <code>{counterValue}</code>, <code>{counterTarget}</code>, e <code>{counterRemaining}</code>.
+                </div>
+                <div class="panel">
+                    <strong>JSON di Call Webhook:</strong> Le variabili di modello funzionano nei valori stringa JSON a qualsiasi profondità di oggetti o array annidati. Le chiavi degli oggetti non vengono elaborate come modelli e un corpo personalizzato senza segnaposto viene inviato invariato.
+                </div>
+
+                <h3>Modelli di esempio</h3>
+                <ul>
+                    <li><strong>Show Text:</strong> <code>{username} just cheered {hasDonation}!</code></li>
+                    <li><strong>Imposta sorgente di testo OBS:</strong> <code>{username}: now {counterValue}, need {counterTarget}</code></li>
+                    <li><strong>Relay Chat:</strong> <code>[{source}] {username}: {message}</code></li>
+                    <li><strong>TTS:</strong> <code>{username} says {message}</code></li>
+                    <li><strong>Avviso di donazione:</strong> <code>{username} donated {donation} - {subtitle}</code></li>
+					<li><strong>Etichetta termica:</strong> <code>{username}</code>, una nuova riga, poi <code>{donation}</code>. Vedi la <a href="../docs/thermal-printer-guide.html">Guida alle stampanti termiche</a> per configurare la stampante, le etichette di dimensioni fisse e un flusso completo.</li>
+                    <li><strong>Call Webhook Discord:</strong> <code>{&quot;content&quot;:&quot;{message}&quot;,&quot;username&quot;:&quot;{username}&quot;,&quot;avatar_url&quot;:&quot;{chatimg}&quot;}</code></li>
+                </ul>
+
+                <div class="callout tip">
+                    <strong>Le variabili mancanti diventano stringhe vuote.</strong> Se un evento non ha un determinato campo (ad esempio <code>{donation}</code> in un normale messaggio chat), il segnaposto viene sostituito con una stringa vuota anziché mostrare il testo letterale <code>{donation}</code> .
+                </div>
+            </section>
+
+            <section>
+                <h2>7. Elenco delle buone pratiche</h2>
+                <ul>
+                    <li><strong>Dai un nome e un colore ai</strong> nodi, così in futuro saprai riconoscere ogni ramo.</li>
+                    <li><strong>Prova con il simulatore integrato</strong> (Send Test Event) prima di usare un flusso in diretta.</li>
+                    <li><strong>Raggruppa la logica vicino alla sorgente.</strong> Filtra il prima possibile per evitare elaborazioni aggiuntive più avanti.</li>
+                    <li><strong>Memorizza le ripetizioni nei nodi di stato.</strong> Usa contatori, interruttori e timestamp per evitare avvisi duplicati.</li>
+                    <li><strong>Documenta i campi meta.</strong> Quando aggiungi chiavi <code>meta</code> personalizzate, documentale affinché overlay e client remoti restino coerenti.</li>
+                </ul>
+                <div class="callout tip">
+                    <strong>Salva le versioni.</strong> Esporta il flusso a ogni traguardo raggiunto. Le importazioni sono il modo più semplice per tornare indietro se un esperimento va storto.
+                </div>
+            </section>
+
+            <section>
+                <h2>8. Ulteriori approfondimenti</h2>
+                <p><a href="../docs/streamdeck-event-flow.html">Esegui flussi personalizzati da Stream Deck o dall'API</a>: trigger con nome, modello iniziale, rilevamento dei flussi, dati aggiuntivi, esempi HTTP/WebSocket/P2P e gesti delle manopole.</p>
+                <p>Vuoi approfondire?</p>
+                <ul>
+                    <li>Usa <strong>Nodi di stato</strong> (contatori, interruttori, timer) per tenere traccia del contesto tra gli eventi.</li>
+                    <li>Combina <strong>Variabili e logica</strong> per creare sistemi di coda, estrazioni o motori di punteggio.</li>
+                    <li>Collegati al sistema <strong>Punti e ricompense</strong> affinché gli spettatori possano attivare intenzionalmente i flussi.</li>
+                    <li>Usi <strong>l’app desktop SSApp?</strong> Sblocca <a href="#custom-js"><strong>Nodi JavaScript personalizzati</strong></a> per logiche arbitrarie non coperte da nodi integrati.</li>
+                    <li>Controlla il <a href="../docs/event-reference.html"><strong>Riferimento degli eventi</strong></a> per una documentazione dettagliata dei payload di tutte le piattaforme.</li>
+                </ul>
+                <p>Questa guida è volutamente autonoma: copiala in locale, adattala al tuo team e continua a sperimentare nell'editor.</p>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 SECTION 9: CUSTOM JAVASCRIPT
+                 Direct link anchors:
+                   #custom-js              → section root
+                   #custom-js-trigger      → Custom Code trigger node
+                   #custom-js-action       → Execute Custom Code action node
+                   #custom-js-message-api  → message object reference table
+                   #custom-js-result-api   → result return object reference
+                   #custom-js-examples     → snippet library
+                   #custom-js-example-flow → complete worked example
+            ══════════════════════════════════════════════════════════════ -->
+            <section id="custom-js">
+                <h2>9. JavaScript personalizzato <span class="desktop-badge">Solo SSApp / desktop</span></h2>
+                <p>Due nodi nell'editor Event Flow consentono di scrivere JavaScript arbitrario eseguito nella sequenza del flusso: <strong>Codice personalizzato (Custom Code)</strong> (trigger) e <strong>Esegui codice personalizzato (Execute Custom Code)</strong> (azione). Sono la soluzione per tutto ciò che i nodi integrati non possono esprimere.</p>
+
+                <div class="callout warn">
+                    <strong>È richiesta l'app desktop.</strong> I nodi JavaScript personalizzati sono disattivati nell'estensione browser perché la Content Security Policy di Chrome Manifest V3 blocca <code>new Function()</code> / <code>eval()</code>. Apri l’editor tramite questa applicazione: <strong>App desktop SSApp</strong> per attivarli. In modalità estensione, i nodi appaiono in grigio con l'etichetta <em>"Solo desktop"</em>.
+                </div>
+
+                <div class="panel">
+                    <strong>Modifica del codice:</strong> seleziona un nodo Custom Code e fai clic su <strong>Apri editor del codice</strong> per una finestra di modifica più grande. <strong>Salva e chiudi</strong> verifica la sintassi JavaScript e salva l'intero flusso; <code>Ctrl+S</code> oppure <code>Cmd+S</code> fa lo stesso. Annulla lascia invariato il nodo.
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/editor-overview.png" alt="Editor Event Flow — stato vuoto">
+                    <figcaption>L'editor Event Flow. Il pannello sinistro elenca tutti i nodi disponibili; l'area punteggiata serve a creare i flussi; il pannello destro mostra le proprietà del nodo selezionato.</figcaption>
+                </figure>
+
+                <!-- ─── Trigger ─── -->
+                <h3 id="custom-js-trigger">Custom Code — Nodo trigger</h3>
+                <p>Trascina <strong>Codice personalizzato (Custom Code)</strong> dal gruppo <em>Avanzate</em> nel pannello <strong>Trigger</strong> nell'area di lavoro. Funziona da porta: il flusso prosegue solo quando il codice restituisce <code>true</code>.</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/trigger-panel.png" alt="Pannello dei trigger con il nodo Custom Code nel gruppo Advanced">
+                        <figcaption>Custom Code si trova nel gruppo <em>Avanzate</em> nel pannello Triggers.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-trigger-props.png" alt="Pannello delle proprietà del trigger Custom Code con editor JavaScript">
+                        <figcaption>Pannello delle proprietà dopo il posizionamento del trigger. Scrivi un'espressione che restituisca <code>true</code> oppure <code>false</code>.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>Firma:</strong> il codice viene eseguito come <code>function(message) { ... }</code><br>
+                    <strong>Deve restituire:</strong> un booleano — <code>true</code> per lasciar proseguire il flusso, <code>false</code> per fermarlo.<br>
+                    <strong>Disponibile:</strong> l’oggetto <code>message</code> (vedi <a href="#custom-js-message-api">API dei messaggi</a> sotto), più <code>convertCurrency(value, targetCurrency, source)</code> e <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <!-- ─── Action ─── -->
+                <h3 id="custom-js-action">Execute Custom Code — Nodo azione</h3>
+                <p>Trascina <strong>Esegui codice personalizzato (Execute Custom Code)</strong> dal gruppo <em>Integrazioni</em> nel pannello <strong>Azioni</strong> . Può modificare il messaggio, bloccarlo o aggiungere metadati leggibili dai nodi successivi.</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/action-panel.png" alt="Pannello delle azioni con Execute Custom Code nel gruppo Integrations">
+                        <figcaption>Execute Custom Code nel gruppo <em>Integrazioni</em> nel pannello Actions.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-action-props.png" alt="Pannello delle proprietà dell&#x27;azione Execute Custom Code con editor del codice">
+                        <figcaption>Proprietà dell'azione. Restituisci un oggetto per unire le modifiche al risultato del flusso.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>Firma:</strong> il codice viene eseguito come <code>function(message, result) { ... }</code><br>
+                    <strong>Dovrebbe restituire:</strong> un oggetto o una Promise uniti a <code>result</code>— consulta <a href="#custom-js-result-api">API dei risultati</a>.<br>
+                    <strong>Disponibile:</strong> <code>message</code> (il payload dell'evento), <code>result</code> (stato del risultato del flusso corrente), <code>printThermal(html, options)</code>, più <code>convertCurrency(value, targetCurrency, source)</code> e <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <div class="panel">
+                    <strong>Stampa termica in SSApp:</strong> scegli la stampante e calibra larghezza della carta e margini di sicurezza in <em>Controllo stampante (Printer Control)</em>, poi restituisci <code>printThermal('&lt;strong&gt;' + message.chatname + '&lt;/strong&gt;')</code>. SSApp accoda il lavoro senza finestre di dialogo tramite l'API di stampa nativa Windows e usa le impostazioni salvate. Un flusso può sostituirle con opzioni come <code>{ width: '58mm', marginLeft: '3mm', marginRight: '3mm', marginTop: '2mm', marginBottom: '2mm', feed: '3mm', marginType: 'printableArea' }</code>. Restituire la Promise consente a Event Flow di attendere l'invio e segnalare errori.
+                </div>
+
+                <!-- ─── Both nodes on canvas ─── -->
+                <figure class="screenshot">
+                    <img src="../../actions/img/both-nodes-canvas.png" alt="Area di lavoro con un trigger Custom Code e un&#x27;azione Execute Custom Code affiancati">
+                    <figcaption>Un trigger Custom Code (blu) e un'azione Execute Custom Code (verde) nell'area di lavoro. Collega la porta di uscita del trigger alla porta di ingresso dell'azione.</figcaption>
+                </figure>
+
+                <!-- ─── message API ─── -->
+                <h3 id="custom-js-message-api">L’oggetto <code>message</code></h3>
+                <p>Entrambi i nodi ricevono il payload completo dell'evento come <code>message</code>. I campi qui sotto sono sempre disponibili; gli eventi specifici delle piattaforme possono includerne altri.</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>Campo</th><th>Tipo di dati</th><th>Descrizione</th><th>Esempio</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>message.chatmessage</code></td><td>stringa</td><td>Il testo del messaggio chat (può contenere HTML)</td><td><code>"Hello stream!"</code></td></tr>
+                        <tr><td><code>message.chatname</code></td><td>stringa</td><td>Nome visualizzato del mittente</td><td><code>"CoolViewer"</code></td></tr>
+                        <tr><td><code>message.userid</code></td><td>stringa</td><td>ID utente della piattaforma</td><td><code>"12345678"</code></td></tr>
+                        <tr><td><code>message.type</code></td><td>stringa</td><td>Piattaforma sorgente (minuscolo)</td><td><code>"twitch"</code>, <code>"youtube"</code>, <code>"kick"</code></td></tr>
+                        <tr><td><code>message.hasDonation</code></td><td>stringa</td><td>Stringa della donazione formattata, se presente</td><td><code>"$5.00"</code>, <code>"500 bits"</code></td></tr>
+                        <tr><td><code>message.donoValue</code></td><td>numero / stringa</td><td>Equivalente in USD della donazione quando fornito dalla sorgente; vengono rispettati i valori zero validi. In mancanza, Event Flow usa <code>currency.js</code> per convertire le etichette normalizzate di <code>hasDonation</code> per i confronti di soglia, incluso 100 unità con nome sconosciuto = $0.01 USD. Non analizza il testo discorsivo di <code>chatmessage</code> per i valori delle donazioni.</td><td><code>5</code></td></tr>
+                        <tr><td><code>message.event</code></td><td>stringa</td><td>Identificatore del tipo di evento</td><td><code>"new_follower"</code>, <code>"cheer"</code>, <code>"raid"</code></td></tr>
+                        <tr><td><code>message.membership</code></td><td>stringa</td><td>Stato dell'abbonamento, quando applicabile</td><td><code>"MEMBERSHIP"</code></td></tr>
+                        <tr><td><code>message.subtitle</code></td><td>stringa</td><td>Riga di contesto secondaria</td><td><code>"Member for 3 months"</code></td></tr>
+                        <tr><td><code>message.mod</code></td><td>booleano</td><td>Il mittente è moderatore</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.subscriber</code></td><td>booleano</td><td>Il mittente è abbonato</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.vip</code></td><td>booleano</td><td>Il mittente ha lo stato VIP</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.chatimg</code></td><td>stringa</td><td>URL avatar dell'utente</td><td><code>"https://..."</code></td></tr>
+                        <tr><td><code>message.meta</code></td><td>oggetto</td><td>Dati strutturati arbitrari allegati all'evento</td><td><code>{ viewers: 120 }</code></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>Conversione valuta:</strong> usa <code>convertCurrency(message.hasDonation, 'EUR', message.type)</code> per convertire in EUR l'etichetta formattata della donazione. Restituisce un numero, oppure <code>null</code> quando la valuta di destinazione richiesta non è supportata. Il convertitore usa i tassi interni approssimativi di Social Stream Ninja; non contatta un servizio di cambio esterno.
+                </div>
+
+                <!-- ─── result API ─── -->
+                <h3 id="custom-js-result-api">Cosa restituisce l'azione</h3>
+                <p>Restituisci un oggetto semplice dal codice dell'azione. Tutti i campi inclusi vengono uniti all’oggetto <code>result</code> ; i campi omessi conservano i valori attuali.</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>Campo restituito</th><th>Tipo di dati</th><th>Effetto</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>modified</code></td><td>booleano</td><td>Imposta <code>true</code> se hai modificato campi di <code>message</code> . Indica ai nodi successivi che il payload è stato modificato.</td></tr>
+                        <tr><td><code>message</code></td><td>oggetto</td><td>Restituisci il messaggio (eventualmente modificato) affinché i nodi successivi ricevano le tue modifiche.</td></tr>
+                        <tr><td><code>blocked</code></td><td>booleano</td><td>Imposta <code>true</code> per impedire che il messaggio venga mostrato o inoltrato.</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>Valore restituito minimo e sicuro:</strong> <code>return { modified: false, message };</code><br>
+                    Anche se non hai modificato nulla, restituire <code>message</code> lo fa proseguire verso il nodo successivo.
+                </div>
+
+                <!-- ─── Snippet Examples ─── -->
+                <h3 id="custom-js-examples">Frammenti di esempio</h3>
+                <p>Copia uno di questi esempi nel campo JavaScript Code del tipo di nodo corrispondente.</p>
+
+                <h4 class="snippet-heading">Frammenti di trigger — restituisci <code>true</code> per continuare il flusso</h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Corrispondenza di parole chiave (senza distinzione tra maiuscole e minuscole)</div>
+                    <div class="snippet-desc">Continua il flusso solo quando il messaggio contiene una parola o frase specifica.</div>
+                    <div class="code-js">// Matches "!hello" anywhere in the message
+return (message.chatmessage || '').toLowerCase().includes('!hello');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Rilevamento dei comandi tramite regex</div>
+                    <div class="snippet-desc">Riconosci i messaggi che iniziano con un comando di un elenco definito (ad esempio <code>!queue</code>, <code>!raffle</code>, <code>!enter</code>).</div>
+                    <div class="code-js">return /^!(queue|raffle|enter)\b/i.test(message.chatmessage || '');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Donazione sopra una soglia</div>
+                    <div class="snippet-desc">Attiva solo quando una donazione raggiunge o supera un importo minimo.</div>
+                    <div class="code-js">const amount = message.donoValue !== undefined && message.donoValue !== null && message.donoValue !== ''
+  ? Number(message.donoValue)
+  : (typeof convertToUSD === 'function' ? convertToUSD(message.hasDonation || '', message.type || '') : Number(String(message.hasDonation || '').replace(/[^0-9.]/g, '') || 0));
+return amount >= 5;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Super Chat o Super Sticker YouTube in un intervallo EUR</div>
+                    <div class="snippet-desc">Converti in EUR l'etichetta standard delle donazioni YouTube, escludi Jewels/Gifts e seleziona un intervallo sonoro o visivo.</div>
+                    <div class="code-js">var eventName = String(message.event || '').toLowerCase();
+if (eventName !== 'superchat' &amp;&amp; eventName !== 'supersticker') return false;
+
+var eurValue = convertCurrency(message.hasDonation || '', 'EUR', message.type || '');
+if (typeof eurValue !== 'number' || !isFinite(eurValue)) return false;
+
+message.eurValue = eurValue;
+return eurValue &gt;= 10 &amp;&amp; eurValue &lt; 25;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Filtro piattaforma</div>
+                    <div class="snippet-desc">Elabora solo eventi di piattaforme specifiche.</div>
+                    <div class="code-js">return ['twitch', 'youtube'].includes(message.type);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Controllo abbonato / VIP / moderatore</div>
+                    <div class="snippet-desc">Lascia proseguire il flusso solo per gli utenti con privilegi.</div>
+                    <div class="code-js">return !!(message.subscriber || message.vip || message.mod);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Condizione multipla — VIP + parola chiave</div>
+                    <div class="snippet-desc">Combina controllo del ruolo e contenuto del messaggio in una sola espressione non coperta da un trigger integrato.</div>
+                    <div class="code-js">const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test(message.chatmessage || '');
+return isPrivileged && isCommand;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Controllo della lunghezza del messaggio</div>
+                    <div class="snippet-desc">Elabora solo messaggi con abbastanza contenuto (utile per TTS o inoltro per evitare spam di singole emoji).</div>
+                    <div class="code-js">return (message.chatmessage || '').replace(/<[^>]+>/g, '').trim().length >= 20;</div>
+                </div>
+
+                <h4 class="snippet-heading" style="margin-top:36px;">Frammenti di azione — restituisci <code>{ modified, message }</code></h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Aggiungi un badge o un'etichetta al messaggio</div>
+                    <div class="snippet-desc">Aggiungi un indicatore visivo alla fine di ogni messaggio che passa attraverso questa azione.</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').trimEnd() + ' ✅';
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Blocca un messaggio in base a una condizione</div>
+                    <div class="snippet-desc">Esamina il contenuto e scarta il messaggio senza avvisi se una regola corrisponde: utile per schemi di spam che il filtro per parole chiave non può esprimere.</div>
+                    <div class="code-js">const text = (message.chatmessage || '').toLowerCase();
+const spamPatterns = ['buy followers', 'free nitro', 'click here'];
+
+if (spamPatterns.some(p => text.includes(p))) {
+    return { blocked: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Rimuovi @menzioni</div>
+                    <div class="snippet-desc">Rimuovi tutte le menzioni @username da un messaggio prima di inoltrarlo a un'altra piattaforma.</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').replace(/@\w+/g, '').trim();
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Formatta un annuncio di donazione</div>
+                    <div class="snippet-desc">Riscrivi chatmessage come stringa di annuncio uniforme quando è presente una donazione.</div>
+                    <div class="code-js">const amount = parseFloat(message.donoValue || 0);
+if (amount > 0) {
+    const note = (message.chatmessage || '').trim();
+    message.chatmessage = `💰 ${message.chatname} donated $${amount.toFixed(2)}!`
+        + (note ? ` "${note}"` : '');
+    return { modified: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Aggiungi metadati di instradamento per i nodi successivi</div>
+                    <div class="snippet-desc">Contrassegna il messaggio con un campo personalizzato che un successivo nodo <em>Inoltra chat (Relay Chat)</em> oppure <em>Invia messaggio (Send Message)</em> può leggere da una variabile di modello (<code>{meta}</code>).</div>
+                    <div class="code-js">message.meta = message.meta || {};
+
+// Assign a donation tier so the next node can use {meta} to decide overlay colour
+const amount = parseFloat(message.donoValue || 0);
+message.meta.donationTier = amount >= 20 ? 'gold' : amount >= 5 ? 'silver' : 'bronze';
+
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Prefisso del messaggio in base alla piattaforma</div>
+                    <div class="snippet-desc">Aggiungi un'etichetta della piattaforma all'inizio del messaggio quando lo inoltri tra piattaforme, così gli spettatori ne conoscono l'origine.</div>
+                    <div class="code-js">const labels = {
+    twitch:  '[Twitch]',
+    youtube: '[YouTube]',
+    kick:    '[Kick]',
+    tiktok:  '[TikTok]',
+};
+const label = labels[message.type] || `[${message.type || 'Chat'}]`;
+message.chatmessage = `${label} ${message.chatname}: ${message.chatmessage || ''}`;
+return { modified: true, message };</div>
+                </div>
+
+                <!-- ─── Complete worked example ─── -->
+                <h3 id="custom-js-example-flow">Esempio completo — bot di richieste di funzionalità per VIP</h3>
+                <p>Questo flusso ascolta <code>!feature &lt;text&gt;</code> da abbonati, VIP o moderatori, lo riformatta come richiesta di funzionalità e lo inoltra a una seconda destinazione (ad esempio Discord).</p>
+
+                <div class="diagram">
+┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│ Relay Chat │ │ │ │ │ │ (a Discord) │ │ Condizione: VIP/abbonato/mod │ │ Riformatta il messaggio │ │ │ │ + inizia con │ │ → "📋 Richiesta di funzionalità │ │ │ │ !feature │ │ da {name}: {text}" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘</div>
+
+                <p><strong>Passaggio 1 — Trigger Custom Code</strong> (incolla nel campo JavaScript Code del trigger):</p>
+                <div class="code-js">// Only let VIPs, subscribers, and mods through, and only for !feature commands
+const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test((message.chatmessage || '').trim());
+return isPrivileged && isCommand;</div>
+
+                <p><strong>Passaggio 2 — Azione Execute Custom Code</strong> (incolla nel campo JavaScript Code dell'azione):</p>
+                <div class="code-js">// Strip the "!feature" command word and format a clean announcement
+const featureText = (message.chatmessage || '')
+    .replace(/^!feature\s*/i, '')
+    .trim();
+
+if (!featureText) {
+    // No text after the command: block rather than relay an empty request
+    return { blocked: true, message };
+}
+
+message.chatmessage = `📋 Feature request from ${message.chatname}: ${featureText}`;
+return { modified: true, message };</div>
+
+                <p><strong>Passaggio 3 — Azione Relay Chat</strong>: aggiungi un normale nodo Relay Chat dopo l'azione e configuralo per la destinazione Discord (o un'altra). Qui non serve codice personalizzato: il campo riformattato <code>message.chatmessage</code> passa automaticamente.</p>
+
+                <div class="callout tip">
+                    <strong>Provare il flusso.</strong> Fai clic su questo pulsante: <strong>Prova flusso (Test Flow)</strong> (in alto a destra nell’editor) per inviare un messaggio sintetico attraverso la sequenza senza bisogno di una diretta. Imposta chatname su un abbonato, aggiungi un messaggio come <code>!feature dark mode support</code>, e verifica che la destinazione Relay Chat riceva la stringa riformattata.
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/test-panel.png" alt="Pannello Test Flow per inviare eventi sintetici di prova">
+                    <figcaption>Il pannello Test Flow. Compila i campi in modo che corrispondano alle condizioni del trigger e fai clic su <em>Esegui test</em> per verificare l'intera sequenza.</figcaption>
+                </figure>
+
+                <!-- ─── Security note ─── -->
+                <h3 id="custom-js-security">Considerazioni sulla sicurezza</h3>
+                <div class="callout warn">
+                    <strong>Il codice personalizzato viene eseguito con i privilegi del processo renderer.</strong> Dentro SSApp, il codice dei nodi Custom JS ha accesso completo all’oggetto <code>window</code> e a tutte le API esposte dallo script preload (ad esempio <code>window.ninjafy</code>). Tratta i file dei flussi importati come codice eseguibile: importa solo flussi da fonti di cui ti fidi.
+                </div>
+                <ul>
+                    <li><strong>Nessuna sandbox di rete.</strong> Il codice di un'azione può chiamare <code>fetch()</code>. Se accetti flussi condivisi da altri, esamina il JavaScript prima di attivarli.</li>
+                    <li><strong>Gli errori vengono intercettati.</strong> Un errore di esecuzione nel codice restituisce <code>false</code> (trigger) oppure un'operazione nulla (azione) e scrive nella console DevTools: il flusso non si arresta in modo anomalo.</li>
+                    <li><strong>Anche gli errori di sintassi.</strong> Un errore di tipo <code>SyntaxError</code> in fase di compilazione viene intercettato allo stesso modo. Controlla DevTools (F12) se un nodo sembra non fare nulla.</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

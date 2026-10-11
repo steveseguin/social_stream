@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/docs/hype-train-top-bar.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/docs/hype-train-top-bar.html">
+    <meta property="og:title" content="Průvodce horní lištou Hype Train – Social Stream Ninja">
+    <meta property="og:description" content="Jak přidat překryv horní lišty Twitch Hype Train ze Social Stream Ninja do OBS a otestovat jej před vysíláním.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/docs/hype-train-top-bar.html">
+    <meta name="twitter:title" content="Průvodce horní lištou Hype Train – Social Stream Ninja">
+    <meta name="twitter:description" content="Jak přidat překryv horní lišty Twitch Hype Train ze Social Stream Ninja do OBS a otestovat jej před vysíláním.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Průvodce horní lištou Hype Train – Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Jak přidat překryv horní lišty Twitch Hype Train ze Social Stream Ninja do OBS a otestovat jej před vysíláním.">
+    <style>
+        .guide-image {
+            display: block;
+            width: 100%;
+            max-width: 1100px;
+            margin: 1.5rem auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .quick-note {
+            background: rgba(26, 115, 232, 0.08);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 1.4rem 1.6rem;
+            margin: 1.5rem 0;
+        }
+
+        .dark-mode .quick-note {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .warning-note {
+            background: rgba(251, 188, 5, 0.14);
+        }
+
+        .dark-mode .warning-note {
+            background: rgba(251, 188, 5, 0.2);
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/hype-train-top-bar.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{", which makes the overlay focus on Hype Train and Treasure Train events.":", díky čemuž se překryv zaměřuje na události Hype Train a Treasure Train.","A Hype Train will not appear in the normal chat overlay. Use the Hype Train Top Bar, the Meta Data Bar, or":"Hype Train se v běžném překryvu chatu nezobrazí. Použijte Hype Train Top Bar, Meta Data Bar nebo","Add a Twitch-style Hype Train progress bar to OBS, test it before going live, and know what to check if it does not appear.":"Přidejte do OBS ukazatel průběhu Hype Train ve stylu Twitch, otestujte jej před vysíláním a zjistěte, co zkontrolovat, pokud se nezobrazí.","Add that link to OBS as a Browser Source.":"Přidejte tento odkaz do OBS jako zdroj Prohlížeč.","Add the Hype Train Top Bar as a browser source, not as a normal chat overlay.":"Přidejte Hype Train Top Bar jako zdroj Prohlížeč, nikoli jako běžný překryv chatu.","Align overlay to the center:":"Zarovnat překryv na střed:","Align overlay to the right-side:":"Zarovnat překryv doprava:","Before you start":"Než začnete","Commands & API":"Příkazy a API","Confirm the URL includes":"Ověřte, že URL obsahuje","Confirm the copied overlay URL has the same session ID as the Social Stream Ninja popup.":"Ověřte, že zkopírovaná URL překryvu má stejné ID relace jako vyskakovací okno Social Stream Ninja.","Confirm your Twitch account was re-authorized after Hype Train support was added.":"Ověřte, že jste po přidání podpory Hype Train znovu autorizovali účet Twitch.","Copy the":"Zkopírujte","Custom page background color:":"Vlastní barva pozadí stránky:","Customize the bar":"Přizpůsobte lištu","Disable text outlining:":"Vypnout obrys textu:","Download":"Stáhnout","Event Reference":"Referenční příručka událostí","Fake Hype Train":"Falešný Hype Train (Fake Hype Train)","Features":"Funkce","Find":"Najděte","Guides":"Návody","Hire":"Najmout odborníka","Home":"Domů","How to add the Social Stream Ninja Twitch Hype Train top bar overlay to OBS and test it before going live.":"Jak přidat překryv horní lišty Twitch Hype Train ze Social Stream Ninja do OBS a otestovat jej před vysíláním.","Hype Meter and Viewer Count":"Ukazatel nadšení a počet diváků","Hype Train Top Bar":"Horní lišta Hype Train","Hype Train Top Bar Guide":"Průvodce horní lištou Hype Train","Hype Train Top Bar Guide - Social Stream Ninja":"Průvodce horní lištou Hype Train – Social Stream Ninja","Hype Train Top Bar preview showing progress, level, timer, and contributors":"Náhled Hype Train Top Bar s postupem, úrovní, časovačem a přispěvateli","If it does not show":"Pokud se nezobrazuje","If prompted, re-authorize Twitch so Social Stream Ninja can request the":"Pokud budete vyzváni, znovu autorizujte Twitch, aby Social Stream Ninja mohlo požádat o rozsah oprávnění","Important:":"Důležité:","Inspiration":"Inspirace","It does not show normal chat messages. Hype Train data is metadata-only, so the bar updates when Twitch sends a Hype Train event.":"Nezobrazuje běžné zprávy chatu. Data Hype Train obsahují pouze metadata, takže se lišta aktualizuje, když Twitch odešle událost Hype Train.","Main navigation":"Hlavní navigace","Open":"Otevřít","Open navigation menu":"Otevřít navigační nabídku","Open the Social Stream Ninja popup.":"Otevřete vyskakovací okno Social Stream Ninja.","Overlay Gallery":"Galerie překryvů","Panel opacity:":"Krytí panelu:","Resources":"Zdroje informací","Scale multiplier:":"Násobek měřítka:","Set it up from the popup":"Nastavení z vyskakovacího okna","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja popup showing Hype Train Top Bar link and layout options":"Vyskakovací okno Social Stream Ninja s odkazem Hype Train Top Bar a možnostmi rozvržení","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","Test with the":"Otestujte pomocí","Testing options":"Možnosti testování","The Hype Train Top Bar is a dedicated overlay for Twitch Hype Train and Treasure Train events. It shows the current level, progress, total, timer, and top contributors in a top-bar style layout.":"Hype Train Top Bar je vyhrazený překryv pro události Twitch Hype Train a Treasure Train. Ukazuje aktuální úroveň, postup, součet, časovač a největší přispěvatele v rozvržení horní lišty.","The Hype Train Top Bar options work like the other overlay options in the popup. Toggle an option, then copy the updated link again.":"Možnosti Hype Train Top Bar fungují stejně jako ostatní možnosti překryvů ve vyskakovacím okně. Přepněte možnost a poté znovu zkopírujte aktualizovaný odkaz.","The copied URL includes":"Zkopírovaná URL obsahuje","Tip:":"Tip:","Transparent bar background:":"Průhledné pozadí lišty:","Use":"Použijte","Use Twitch WebSocket mode for Twitch event capture.":"Pro zachytávání událostí Twitch použijte režim Twitch WebSocket.","Use the":"Použijte","What this overlay does":"Co tento překryv dělá","adjusts the whole bar opacity.":"upravuje krytí celé lišty.","and select a Hype Train preset if you want to test through the API route.":"a vyberte předvolbu Hype Train, pokud chcete testovat cestou API.","button to confirm the bar appears.":"tlačítka a ověřte zobrazení lišty.","button.":"tlačítko.","centers the bar horizontally.":"zarovná lištu vodorovně na střed.","if you want to confirm the raw Twitch Hype Train event is being received.":"pokud chcete ověřit příjem nezpracované události Twitch Hype Train.","in the popup for the quickest test.":"ve vyskakovacím okně pro nejrychlejší test.","link.":"odkaz.","makes the bar smaller or larger.":"zmenší nebo zvětší lištu.","places the bar against the right edge.":"umístí lištu k pravému okraji.","removes the black text shadow.":"odstraní černý stín textu.","removes the filled background behind the bar.":"odstraní vyplněné pozadí za lištou.","scope.":".","to see it.":"pro její zobrazení.","useful when testing outside OBS or when you want a non-transparent page background.":"hodí se při testování mimo OBS nebo pokud chcete neprůhledné pozadí stránky.","with the same session to verify Hype Train metadata is arriving.":"se stejnou relací pro ověření příchodu metadat Hype Train.","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja. Všechna práva vyhrazena."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/hype-train-top-bar.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/hype-train-top-bar.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/hype-train-top-bar.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/hype-train-top-bar.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/hype-train-top-bar.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/hype-train-top-bar.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/hype-train-top-bar.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/hype-train-top-bar.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/hype-train-top-bar.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/hype-train-top-bar.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/hype-train-top-bar.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/hype-train-top-bar.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/hype-train-top-bar.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/hype-train-top-bar.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/hype-train-top-bar.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/hype-train-top-bar.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="hype-train-top-bar.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/hype-train-top-bar.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Průvodce horní lištou Hype Train</h1>
+            <p>Přidejte do OBS ukazatel průběhu Hype Train ve stylu Twitch, otestujte jej před vysíláním a zjistěte, co zkontrolovat, pokud se nezobrazí.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <h3>Co tento překryv dělá</h3>
+                    <p>Hype Train Top Bar je vyhrazený překryv pro události Twitch Hype Train a Treasure Train. Ukazuje aktuální úroveň, postup, součet, časovač a největší přispěvatele v rozvržení horní lišty.</p>
+                    <p>Nezobrazuje běžné zprávy chatu. Data Hype Train obsahují pouze metadata, takže se lišta aktualizuje, když Twitch odešle událost Hype Train.</p>
+                    <img src="../../docs/images/hype-train-top-bar-preview.png" alt="Náhled Hype Train Top Bar s postupem, úrovní, časovačem a přispěvateli" class="guide-image">
+                </div>
+
+                <div class="guide-card">
+                    <h3>Než začnete</h3>
+                    <ul class="guide-list">
+                        <li>Pro zachytávání událostí Twitch použijte režim Twitch WebSocket.</li>
+                        <li>Pokud budete vyzváni, znovu autorizujte Twitch, aby Social Stream Ninja mohlo požádat o rozsah oprávnění <code>channel:read:hype_train</code> .</li>
+                        <li>Přidejte Hype Train Top Bar jako zdroj Prohlížeč, nikoli jako běžný překryv chatu.</li>
+                    </ul>
+                    <div class="quick-note warning-note">
+                        <strong>Důležité:</strong> Hype Train se v běžném překryvu chatu nezobrazí. Použijte Hype Train Top Bar, Meta Data Bar nebo <code>events.html</code> pro její zobrazení.
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Nastavení z vyskakovacího okna</h3>
+                    <ol class="guide-steps">
+                        <li>Otevřete vyskakovací okno Social Stream Ninja.</li>
+                        <li>Najděte <strong>Ukazatel nadšení a počet diváků</strong>.</li>
+                        <li>Zkopírujte <strong>Horní lišta Hype Train</strong> odkaz.</li>
+                        <li>Přidejte tento odkaz do OBS jako zdroj Prohlížeč.</li>
+                        <li>Použijte <strong>Falešný Hype Train (Fake Hype Train)</strong> tlačítka a ověřte zobrazení lišty.</li>
+                    </ol>
+                    <img src="../../docs/images/hype-train-popup-options.png" alt="Vyskakovací okno Social Stream Ninja s odkazem Hype Train Top Bar a možnostmi rozvržení" class="guide-image">
+                    <div class="quick-note">
+                        <strong>Tip:</strong> Zkopírovaná URL obsahuje <code>&amp;hype</code>, díky čemuž se překryv zaměřuje na události Hype Train a Treasure Train.
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Přizpůsobte lištu</h3>
+                    <p>Možnosti Hype Train Top Bar fungují stejně jako ostatní možnosti překryvů ve vyskakovacím okně. Přepněte možnost a poté znovu zkopírujte aktualizovaný odkaz.</p>
+                    <ul class="guide-list">
+                        <li><strong>Zarovnat překryv doprava:</strong> umístí lištu k pravému okraji.</li>
+                        <li><strong>Zarovnat překryv na střed:</strong> zarovná lištu vodorovně na střed.</li>
+                        <li><strong>Násobek měřítka:</strong> zmenší nebo zvětší lištu.</li>
+                        <li><strong>Krytí panelu:</strong> upravuje krytí celé lišty.</li>
+                        <li><strong>Průhledné pozadí lišty:</strong> odstraní vyplněné pozadí za lištou.</li>
+                        <li><strong>Vypnout obrys textu:</strong> odstraní černý stín textu.</li>
+                        <li><strong>Vlastní barva pozadí stránky:</strong> hodí se při testování mimo OBS nebo pokud chcete neprůhledné pozadí stránky.</li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Možnosti testování</h3>
+                    <ul class="guide-list">
+                        <li>Použijte <strong>Falešný Hype Train (Fake Hype Train)</strong> ve vyskakovacím okně pro nejrychlejší test.</li>
+                        <li>Použijte <code>sampleapi.html</code> a vyberte předvolbu Hype Train, pokud chcete testovat cestou API.</li>
+                        <li>Použijte <code>events.html</code> pokud chcete ověřit příjem nezpracované události Twitch Hype Train.</li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Pokud se nezobrazuje</h3>
+                    <ol class="guide-steps">
+                        <li>Ověřte, že jste po přidání podpory Hype Train znovu autorizovali účet Twitch.</li>
+                        <li>Ověřte, že zkopírovaná URL překryvu má stejné ID relace jako vyskakovací okno Social Stream Ninja.</li>
+                        <li>Ověřte, že URL obsahuje <code>&amp;hype</code>.</li>
+                        <li>Otestujte pomocí <strong>Falešný Hype Train (Fake Hype Train)</strong> tlačítko.</li>
+                        <li>Otevřít <code>events.html</code> se stejnou relací pro ověření příchodu metadat Hype Train.</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../../media/logo.png" alt="Logo Social Stream Ninja">
+                    <span>Social Stream Ninja</span>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>Zdroje informací</h4>
+                        <ul>
+                            <li><a href="guides.html">Návody</a></li>
+                            <li><a href="event-reference.html">Referenční příručka událostí</a></li>
+                            <li><a href="support.html">Podpora</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Social Stream Ninja. Všechna práva vyhrazena.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/twitch-eventsub-setup.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/twitch-eventsub-setup.html">
+    <meta property="og:title" content="Twitch 설정과 EventSub - Social Stream Ninja">
+    <meta property="og:description" content="일반 페이지 캡처 또는 더 많은 기능을 제공하는 EventSub WebSocket 소스로 Twitch 채팅을 Social Stream Ninja에 연결하세요. OAuth, 권한 범위, 이벤트, 문제 해결 안내를 제공합니다.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/twitch-eventsub-setup.html">
+    <meta name="twitter:title" content="Twitch 설정과 EventSub - Social Stream Ninja">
+    <meta name="twitter:description" content="일반 페이지 캡처 또는 더 많은 기능을 제공하는 EventSub WebSocket 소스로 Twitch 채팅을 Social Stream Ninja에 연결하세요. OAuth, 권한 범위, 이벤트, 문제 해결 안내를 제공합니다.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch 설정과 EventSub - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="일반 페이지 캡처 또는 더 많은 기능을 제공하는 EventSub WebSocket 소스로 Twitch 채팅을 Social Stream Ninja에 연결하세요. OAuth, 권한 범위, 이벤트, 문제 해결 안내를 제공합니다.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/twitch-eventsub-setup.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"## Verified maintainer context Current Twitch OAuth scopes requested by `sources/websocket/twitch.js`: `chat:read`, `chat:edit`, `user:write:chat`, `bits:read`, `moderator:read:followers`, `moderator:read:chatters`, `channel:read:subscriptions`, `channel:read:hype_train`, `channel:moderate`, `moderator:manage:banned_users`, `moderator:manage:chat_messages`, `channel:manage:broadcast`, `channel:read:ads`, `channel:manage:ads`, `channel:read:redemptions`. Current EventSub subscription attempts, gated by role/scope/channel eligibility: `channel.follow` v2; `channel.subscribe`; `channel.subscription.gift`; `channel.subscription.message`; `channel.cheer`; `channel.ban`; `channel.channel_points_custom_reward_redemption.add`; `channel.raid`; `stream.online`; `stream.offline`; `channel.ad_break.begin`; and `channel.hype_train.begin`, `.progress`, `.end` v2. The current transport endpoint is Twitch EventSub WebSocket. Twitch requires a user access token when creating WebSocket subscriptions. The Twitch chat-client subscription-gift normalization regression test passed during this documentation review.":"## 관리자가 확인한 내용\n\n현재 `sources/websocket/twitch.js`가 요청하는 Twitch OAuth 범위:\n\n`chat:read`, `chat:edit`, `user:write:chat`, `bits:read`, `moderator:read:followers`, `moderator:read:chatters`, `channel:read:subscriptions`, `channel:read:hype_train`, `channel:moderate`, `moderator:manage:banned_users`, `moderator:manage:chat_messages`, `channel:manage:broadcast`, `channel:read:ads`, `channel:manage:ads`, `channel:read:redemptions`.\n\n현재 역할/범위/채널 자격에 따라 시도하는 EventSub 구독:\n\n`channel.follow` v2; `channel.subscribe`; `channel.subscription.gift`; `channel.subscription.message`; `channel.cheer`; `channel.ban`; `channel.channel_points_custom_reward_redemption.add`; `channel.raid`; `stream.online`; `stream.offline`; `channel.ad_break.begin`; `channel.hype_train.begin`, `.progress`, `.end` v2.\n\n현재 전송 엔드포인트는 Twitch EventSub WebSocket입니다. Twitch는 WebSocket 구독을 만들 때 사용자 액세스 토큰을 요구합니다. 이번 문서 검토 중 Twitch 채팅 클라이언트의 선물 구독 정규화 회귀 테스트를 통과했습니다.",", and":", 그리고",", enter":"의 경우 입력할 값:",", then":", 그다음은","Activate source":"소스 활성화(Activate source)","Add source → Twitch":"소스 추가 → Twitch","Authorize the requested permissions and keep the Twitch source window open.":"요청된 권한을 승인하고 Twitch 소스 창을 열어 두세요.","Basic public chat capture from a Twitch chat or popout page.":"Twitch 채팅 또는 팝아웃 페이지에서 기본 공개 채팅을 캡처합니다.","Best For":"적합한 용도","Bits, rewards, and Hype Trains":"Bits, 보상, Hype Train","Bits:":"Bits:","Browser Extension EventSub Setup":"브라우저 확장 프로그램 EventSub 설정","Channel":"채널 (Channel)","Channel Points:":"채널 포인트:","Channel management":"채널 관리","Chat":"채팅","Check that the dock and alert overlay use the same Social Stream session ID.":"도크와 알림 오버레이가 같은 Social Stream 세션 ID를 사용하는지 확인하세요.","Cheers, custom Channel Points redemptions, and Hype Train status.":"Cheer, 사용자 지정 채널 포인트 보상 사용, Hype Train 상태.","Choose A Twitch Source Mode":"Twitch 소스 모드 선택","Commands & API":"명령 및 API","Confirm the source page says the correct":"소스 페이지에서 올바른 값인지 확인하세요:","Connect Twitch chat to Social Stream Ninja using normal page capture or the richer EventSub WebSocket source, with OAuth, scope, event, and troubleshooting notes.":"일반 페이지 캡처 또는 더 많은 기능을 제공하는 EventSub WebSocket 소스로 Twitch 채팅을 Social Stream Ninja에 연결하세요. OAuth, 권한 범위, 이벤트, 문제 해결 안내를 제공합니다.","Desktop App Setup":"데스크톱 앱 설정","Download":"다운로드","Enter the Twitch channel login used in its URL. For":"URL에 사용되는 Twitch 채널 로그인 이름을 입력하세요. 예를 들어","Event Reference":"이벤트 참고 문서","EventSub can deliver a notification more than once.":"EventSub는 알림을 두 번 이상 전달할 수 있습니다.","EventSub overview":"EventSub 개요","EventSub subscription types":"EventSub 구독 유형","Events The Current Source Handles":"현재 소스가 처리하는 이벤트","Events and Alerts Compatibility guide":"이벤트 및 알림 호환성 가이드","Features":"기능","First Checks When An Event Is Missing":"이벤트 누락 시 먼저 확인할 사항","Follow events, subscriber events, gifted subscriptions, and resub messages.":"팔로우 이벤트, 구독자 이벤트, 선물 구독, 재구독 메시지.","Followers and subscribers":"팔로워와 구독자","Follows, subscriptions, bits, rewards, raids, stream status, Hype Trains, moderation sync, sending chat, and channel details.":"팔로우, 구독, Bits, 보상, 레이드, 방송 상태, Hype Train, 관리 동기화, 채팅 전송, 채널 정보.","Follows:":"팔로우:","For basic Standard capture instead, open the normal Twitch chat or popout chat page and keep chat visible.":"기본 Standard 캡처를 사용하려면 일반 Twitch 채팅이나 팝아웃 채팅 페이지를 열고 채팅이 보이도록 유지하세요.","For downstream alert names and payload fields, use the":"후속 처리에 사용되는 알림 이름과 페이로드 필드:","Guides":"가이드","Hire":"작업 의뢰","Home":"홈","Hype Train:":"Hype Train:","If chat works but follows/subs/rewards do not, sign out and authorize again so the current scopes are granted.":"채팅은 작동하지만 팔로우/구독/보상이 작동하지 않는다면 로그아웃 후 다시 승인하여 최신 권한 범위를 부여하세요.","Important Difference":"중요한 차이","Inspiration":"아이디어","Install and enable the current Social Stream Ninja extension.":"최신 Social Stream Ninja 확장 프로그램을 설치하고 활성화하세요.","Keep that page open. Confirm that its User and Channel fields are correct before testing alerts.":"해당 페이지를 열어 두세요. 알림을 테스트하기 전에 User와 Channel 입력란이 올바른지 확인하세요.","Keep the source page/window open and confirm its chat connection is active.":"소스 페이지/창을 열어 두고 채팅 연결이 활성화되어 있는지 확인하세요.","Leave":"유지:","Main navigation":"기본 탐색 메뉴","Message deletion, bans/timeouts, and block synchronization when the account may moderate the channel.":"계정에 채널 관리 권한이 있는 경우 메시지 삭제, 차단/임시 채팅 금지, 차단 동기화.","Mode":"모드","Moderation":"관리","Moderation:":"관리:","On this page":"이 페이지에서","Open navigation menu":"탐색 메뉴 열기","Open the":"다음을 여세요:","Overlay Gallery":"오버레이 갤러리","Permission Group":"권한 그룹","Raids:":"레이드:","Read chat, send chat, and list chatters.":"채팅 읽기, 채팅 전송, 채팅 참여자 목록 조회.","Read/update title and category, read/manage ads, and display channel metrics.":"제목과 카테고리 조회/수정, 광고 조회/관리, 채널 지표 표시.","Reads what the page exposes. It is simple, but does not provide the full EventSub event set.":"페이지에 표시되는 내용을 읽습니다. 간단하지만 전체 EventSub 이벤트를 제공하지는 않습니다.","Replace":"바꿀 값:","Requires Twitch OAuth. Events are enabled only when the signed-in account, channel role, channel eligibility, and granted scope allow them.":"Twitch OAuth가 필요합니다. 로그인한 계정, 채널 역할, 채널 자격, 부여된 권한 범위가 허용할 때만 이벤트가 활성화됩니다.","See Twitch's official":"Twitch 공식 문서:","Select":"선택:","Sign in to Twitch":"Twitch에 로그인","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Social Stream asks for a user token with permissions needed by the controls and subscriptions it supports. Granting a scope does not make an account a broadcaster or moderator; Twitch still checks the account's role for the selected channel.":"Social Stream은 지원하는 컨트롤과 구독에 필요한 권한을 가진 사용자 토큰을 요청합니다. 범위를 허용해도 계정이 방송 진행자나 관리자가 되는 것은 아닙니다. Twitch는 선택한 채널에서 계정의 역할을 확인합니다.","Standard":"표준 (Standard)","Stream and ad status:":"방송 및 광고 상태:","Subscriptions:":"구독:","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","The desktop source offers an external-browser OAuth flow and a local-app flow. External browser is usually the easiest when Twitch already works in your normal browser.":"데스크톱 소스는 외부 브라우저 OAuth 방식과 로컬 앱 방식을 제공합니다. 일반 브라우저에서 Twitch가 이미 작동한다면 외부 브라우저 방식이 대체로 가장 쉽습니다.","Twitch EventSub source page":"Twitch EventSub 소스 페이지","Twitch Setup and EventSub":"Twitch 설정과 EventSub","Twitch Setup and EventSub - Social Stream Ninja":"Twitch 설정과 EventSub - Social Stream Ninja","Twitch documents at-least-once delivery. Social Stream includes duplicate protection, but custom API consumers should still deduplicate by event/message identity where possible. See the official":"Twitch는 최소 한 번 전달 방식을 명시합니다. Social Stream에는 중복 방지 기능이 있지만 사용자 지정 API 소비자도 가능한 경우 이벤트/메시지 식별자로 중복을 제거해야 합니다. 공식 문서:","Twitch source sign-in screen with External browser and Local app sign-in methods":"외부 브라우저와 로컬 앱 로그인 방식을 제공하는 Twitch 소스 로그인 화면","Twitch subscriber events require an eligible Affiliate/Partner channel and broadcaster access. Follow and moderation subscriptions require the signed-in user to be the broadcaster or an authorized moderator, depending on the event.":"Twitch 구독자 이벤트에는 자격을 갖춘 제휴/파트너 채널과 방송 진행자 권한이 필요합니다. 팔로우와 관리 구독은 이벤트에 따라 로그인한 사용자가 방송 진행자이거나 권한이 부여된 관리자여야 합니다.","Use normal page capture for simple chat, or EventSub/WebSocket mode for follows, subs, bits, rewards, raids, Hype Trains, and channel controls.":"간단한 채팅은 일반 페이지 캡처를, 팔로우, 구독, Bits, 보상, 레이드, Hype Train, 채널 제어는 EventSub/WebSocket 모드를 사용하세요.","Use the popup's fake test message or Multi Alerts preview to separate capture problems from overlay problems.":"팝업의 가짜 테스트 메시지나 Multi Alerts 미리보기를 사용하여 캡처 문제와 오버레이 문제를 구분하세요.","Used For":"용도","User":"사용자","Verify that the signed-in account is the broadcaster or a permitted moderator for that channel.":"로그인한 계정이 해당 채널의 방송 진행자 또는 권한이 있는 관리자인지 확인하세요.","WebSocket":"WebSocket","WebSocket / EventSub":"WebSocket / EventSub","What Twitch Requests":"Twitch가 요청하는 권한","and":"그리고","and approve the requested access.":"을 선택하고 요청된 접근 권한을 승인하세요.","ban and message-deletion updates when permitted.":"권한이 허용되는 경우 차단과 메시지 삭제 업데이트.","begin, progress, and end updates.":"시작, 진행, 종료 업데이트.","in the URL with the channel login you want to monitor.":"을 URL에서 모니터링할 채널의 로그인 이름으로 바꾸세요.","scope reference":"권한 범위 참조","selected for the richer EventSub source. Twitch currently defaults to this mode in the app.":"을 선택하면 더 많은 기능의 EventSub 소스를 사용합니다. 현재 앱에서 Twitch의 기본 모드입니다.","with a donation value.":"후원 값 포함."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/twitch-eventsub-setup.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/twitch-eventsub-setup.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/twitch-eventsub-setup.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/twitch-eventsub-setup.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/twitch-eventsub-setup.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/twitch-eventsub-setup.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/twitch-eventsub-setup.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/twitch-eventsub-setup.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/twitch-eventsub-setup.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/twitch-eventsub-setup.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/twitch-eventsub-setup.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/twitch-eventsub-setup.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="twitch-eventsub-setup.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/twitch-eventsub-setup.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/twitch-eventsub-setup.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/twitch-eventsub-setup.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/twitch-eventsub-setup.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/twitch-eventsub-setup.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Twitch 설정과 EventSub</h1>
+            <p>간단한 채팅은 일반 페이지 캡처를, 팔로우, 구독, Bits, 보상, 레이드, Hype Train, 채널 제어는 EventSub/WebSocket 모드를 사용하세요.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="이 페이지에서"><a href="#read-section-1">Twitch 소스 모드 선택</a><a href="#read-section-2">데스크톱 앱 설정</a><a href="#read-section-3">브라우저 확장 프로그램 EventSub 설정</a><a href="#read-section-4">Twitch가 요청하는 권한</a><a href="#read-section-5">현재 소스가 처리하는 이벤트</a><a href="#read-section-6">이벤트 누락 시 먼저 확인할 사항</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Twitch 소스 모드 선택</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>모드</th><th>적합한 용도</th><th>중요한 차이</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="모드">표준 (Standard)</td>
+                            <td data-label="적합한 용도">Twitch 채팅 또는 팝아웃 페이지에서 기본 공개 채팅을 캡처합니다.</td>
+                            <td data-label="중요한 차이">페이지에 표시되는 내용을 읽습니다. 간단하지만 전체 EventSub 이벤트를 제공하지는 않습니다.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="모드">WebSocket / EventSub</td>
+                            <td data-label="적합한 용도">팔로우, 구독, Bits, 보상, 레이드, 방송 상태, Hype Train, 관리 동기화, 채팅 전송, 채널 정보.</td>
+                            <td data-label="중요한 차이">Twitch OAuth가 필요합니다. 로그인한 계정, 채널 역할, 채널 자격, 부여된 권한 범위가 허용할 때만 이벤트가 활성화됩니다.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">데스크톱 앱 설정</h2>
+                <ol class="guide-steps">
+                    <li>선택: <strong>소스 추가 → Twitch</strong>.</li>
+                    <li>URL에 사용되는 Twitch 채널 로그인 이름을 입력하세요. 예를 들어 <code>twitch.tv/examplechannel</code>의 경우 입력할 값: <code>examplechannel</code>.</li>
+                    <li>유지: <strong>WebSocket</strong> 을 선택하면 더 많은 기능의 EventSub 소스를 사용합니다. 현재 앱에서 Twitch의 기본 모드입니다.</li>
+                    <li>선택: <strong>소스 활성화(Activate source)</strong>, 그다음은 <strong>Twitch에 로그인</strong>.</li>
+                    <li>요청된 권한을 승인하고 Twitch 소스 창을 열어 두세요.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/twitch-eventsub-sign-in.png" alt="외부 브라우저와 로컬 앱 로그인 방식을 제공하는 Twitch 소스 로그인 화면" class="guide-image guide-image-narrow">
+                    <figcaption>데스크톱 소스는 외부 브라우저 OAuth 방식과 로컬 앱 방식을 제공합니다. 일반 브라우저에서 Twitch가 이미 작동한다면 외부 브라우저 방식이 대체로 가장 쉽습니다.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">브라우저 확장 프로그램 EventSub 설정</h2>
+                <ol class="guide-steps">
+                    <li>최신 Social Stream Ninja 확장 프로그램을 설치하고 활성화하세요.</li>
+                    <li>다음을 여세요: <a href="https://socialstream.ninja/sources/websocket/twitch.html?channel=examplechannel" target="_blank" rel="noopener">Twitch EventSub 소스 페이지</a>.</li>
+                    <li>바꿀 값: <code>examplechannel</code> 을 URL에서 모니터링할 채널의 로그인 이름으로 바꾸세요.</li>
+                    <li>선택: <strong>Twitch에 로그인</strong> 을 선택하고 요청된 접근 권한을 승인하세요.</li>
+                    <li>해당 페이지를 열어 두세요. 알림을 테스트하기 전에 User와 Channel 입력란이 올바른지 확인하세요.</li>
+                </ol>
+                <pre><code>https://socialstream.ninja/sources/websocket/twitch.html?channel=CHANNEL_LOGIN</code></pre>
+                <p>기본 Standard 캡처를 사용하려면 일반 Twitch 채팅이나 팝아웃 채팅 페이지를 열고 채팅이 보이도록 유지하세요.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">Twitch가 요청하는 권한</h2>
+                <p>Social Stream은 지원하는 컨트롤과 구독에 필요한 권한을 가진 사용자 토큰을 요청합니다. 범위를 허용해도 계정이 방송 진행자나 관리자가 되는 것은 아닙니다. Twitch는 선택한 채널에서 계정의 역할을 확인합니다.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>권한 그룹</th><th>용도</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="권한 그룹">채팅</td><td data-label="용도">채팅 읽기, 채팅 전송, 채팅 참여자 목록 조회.</td></tr>
+                        <tr><td data-label="권한 그룹">팔로워와 구독자</td><td data-label="용도">팔로우 이벤트, 구독자 이벤트, 선물 구독, 재구독 메시지.</td></tr>
+                        <tr><td data-label="권한 그룹">Bits, 보상, Hype Train</td><td data-label="용도">Cheer, 사용자 지정 채널 포인트 보상 사용, Hype Train 상태.</td></tr>
+                        <tr><td data-label="권한 그룹">관리</td><td data-label="용도">계정에 채널 관리 권한이 있는 경우 메시지 삭제, 차단/임시 채팅 금지, 차단 동기화.</td></tr>
+                        <tr><td data-label="권한 그룹">채널 관리</td><td data-label="용도">제목과 카테고리 조회/수정, 광고 조회/관리, 채널 지표 표시.</td></tr>
+                    </tbody>
+                </table>
+                <p>Twitch 공식 문서: <a href="https://dev.twitch.tv/docs/authentication/scopes/" target="_blank" rel="noopener">권한 범위 참조</a> 그리고 <a href="https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/" target="_blank" rel="noopener">EventSub 구독 유형</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">현재 소스가 처리하는 이벤트</h2>
+                <ul class="guide-list">
+                    <li><strong>팔로우:</strong> <code>new_follower</code>.</li>
+                    <li><strong>구독:</strong> <code>new_subscriber</code>, <code>resub</code>, 그리고 <code>subscription_gift</code>.</li>
+                    <li><strong>Bits:</strong> <code>cheer</code> 후원 값 포함.</li>
+                    <li><strong>채널 포인트:</strong> <code>reward</code>.</li>
+                    <li><strong>레이드:</strong> <code>raid</code>.</li>
+                    <li><strong>방송 및 광고 상태:</strong> <code>stream_online</code>, <code>stream_offline</code>, 그리고 <code>ad_break</code>.</li>
+                    <li><strong>Hype Train:</strong> <code>hype_train</code> 시작, 진행, 종료 업데이트.</li>
+                    <li><strong>관리:</strong> 권한이 허용되는 경우 차단과 메시지 삭제 업데이트.</li>
+                </ul>
+                <p>Twitch 구독자 이벤트에는 자격을 갖춘 제휴/파트너 채널과 방송 진행자 권한이 필요합니다. 팔로우와 관리 구독은 이벤트에 따라 로그인한 사용자가 방송 진행자이거나 권한이 부여된 관리자여야 합니다.</p>
+                <p>후속 처리에 사용되는 알림 이름과 페이로드 필드: <a href="events-alerts-compatibility.html">이벤트 및 알림 호환성 가이드</a> 그리고 <a href="event-reference.html">이벤트 참고 문서</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">이벤트 누락 시 먼저 확인할 사항</h2>
+                <ol class="guide-steps">
+                    <li>소스 페이지에서 올바른 값인지 확인하세요: <strong>사용자</strong> 그리고 <strong>채널 (Channel)</strong>.</li>
+                    <li>소스 페이지/창을 열어 두고 채팅 연결이 활성화되어 있는지 확인하세요.</li>
+                    <li>채팅은 작동하지만 팔로우/구독/보상이 작동하지 않는다면 로그아웃 후 다시 승인하여 최신 권한 범위를 부여하세요.</li>
+                    <li>로그인한 계정이 해당 채널의 방송 진행자 또는 권한이 있는 관리자인지 확인하세요.</li>
+                    <li>도크와 알림 오버레이가 같은 Social Stream 세션 ID를 사용하는지 확인하세요.</li>
+                    <li>팝업의 가짜 테스트 메시지나 Multi Alerts 미리보기를 사용하여 캡처 문제와 오버레이 문제를 구분하세요.</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>EventSub는 알림을 두 번 이상 전달할 수 있습니다.</strong> Twitch는 최소 한 번 전달 방식을 명시합니다. Social Stream에는 중복 방지 기능이 있지만 사용자 지정 API 소비자도 가능한 경우 이벤트/메시지 식별자로 중복을 제거해야 합니다. 공식 문서: <a href="https://dev.twitch.tv/docs/eventsub/" target="_blank" rel="noopener">EventSub 개요</a>.</p>
+                </div>
+            </div>
+
+            <template data-copy-markdown-extra>
+## 관리자가 확인한 내용
+
+현재 `sources/websocket/twitch.js`가 요청하는 Twitch OAuth 범위:
+
+`chat:read`, `chat:edit`, `user:write:chat`, `bits:read`, `moderator:read:followers`, `moderator:read:chatters`, `channel:read:subscriptions`, `channel:read:hype_train`, `channel:moderate`, `moderator:manage:banned_users`, `moderator:manage:chat_messages`, `channel:manage:broadcast`, `channel:read:ads`, `channel:manage:ads`, `channel:read:redemptions`.
+
+현재 역할/범위/채널 자격에 따라 시도하는 EventSub 구독:
+
+`channel.follow` v2; `channel.subscribe`; `channel.subscription.gift`; `channel.subscription.message`; `channel.cheer`; `channel.ban`; `channel.channel_points_custom_reward_redemption.add`; `channel.raid`; `stream.online`; `stream.offline`; `channel.ad_break.begin`; `channel.hype_train.begin`, `.progress`, `.end` v2.
+
+현재 전송 엔드포인트는 Twitch EventSub WebSocket입니다. Twitch는 WebSocket 구독을 만들 때 사용자 액세스 토큰을 요구합니다. 이번 문서 검토 중 Twitch 채팅 클라이언트의 선물 구독 정규화 회귀 테스트를 통과했습니다.
+            </template>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 라이선스.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

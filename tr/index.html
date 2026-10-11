@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../" data-site-language="tr">
+<head>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Social Stream Ninja",
+      "alternateName": "SSN",
+      "url": "https://socialstream.ninja/"
+    }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <script>
+        if (window.location.search.includes('session=') || window.location.search.includes('id=') || window.location.search.includes('s=')) {
+            window.location.href = (document.documentElement.getAttribute('data-site-root') || './') + 'featured.html' + window.location.search;
+        }
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream Ninja | Her platform için tek canlı sohbet</title>
+    <meta name="description" content="YouTube, Twitch, TikTok, Kick ve diğerlerini tek bir canlı sohbet kontrol panelinde birleştirin. Yayıncılar için ücretsiz OBS katmanları, metinden konuşma, otomasyon ve yapay zekâ araçları.">
+    <meta name="keywords" content="social stream, canlı sohbet, OBS katmanı, yapay zekâ yardımcı sunucusu, sohbet botu, metinden konuşma, sohbet aktarımı, çoklu platform sohbeti, içerik üreticileri, canlı yayın araçları, youtube sohbeti, twitch sohbeti, facebook live">
+    <meta name="author" content="Social Stream Ninja">
+    <link rel="canonical" href="https://socialstream.ninja/tr/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://socialstream.ninja/tr/">
+    <meta property="og:title" content="Social Stream Ninja | Her platform için tek canlı sohbet">
+    <meta property="og:description" content="YouTube, Twitch, TikTok, Kick ve diğerlerini tek bir canlı sohbet kontrol panelinde birleştirin. Yayıncılar için ücretsiz OBS katmanları, metinden konuşma, otomasyon ve yapay zekâ araçları.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/tr/">
+    <meta name="twitter:title" content="Social Stream Ninja | Her platform için tek canlı sohbet">
+    <meta name="twitter:description" content="YouTube, Twitch, TikTok, Kick ve diğerlerini tek bir canlı sohbet kontrol panelinde birleştirin. Yayıncılar için ücretsiz OBS katmanları, metinden konuşma, otomasyon ve yapay zekâ araçları.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../docs/css/styles.css">
+	<style>
+	.header-controls {
+		width: auto;
+	}
+	.hero .hero-buttons {
+		justify-content: flex-start;
+	}
+	.hero-proof {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem;
+		margin-top: 2.8rem;
+	}
+	.hero-proof span {
+		padding: .65rem 1.1rem;
+		border: 1px solid var(--border-color);
+		border-radius: 999px;
+		background: var(--card-background);
+		color: var(--text-secondary);
+		font-size: 1.4rem;
+		font-weight: 600;
+	}
+	.ai-showcase {
+		padding: 8rem 0;
+		background: var(--background-dark);
+	}
+	.ai-showcase-header {
+		max-width: 84rem;
+		margin: 0 auto 4rem;
+		text-align: center;
+	}
+	.ai-showcase-header p {
+		color: var(--text-secondary);
+		font-size: 1.9rem;
+	}
+	.ai-options-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 2rem;
+		margin-bottom: 3.5rem;
+	}
+	.ai-option {
+		padding: 2.8rem;
+		border: 1px solid var(--border-color);
+		border-radius: var(--radius-lg);
+		background: var(--card-background);
+		box-shadow: var(--shadow-sm);
+	}
+	.ai-option-label {
+		display: inline-block;
+		margin-bottom: 1.6rem;
+		padding: .45rem .9rem;
+		border-radius: 999px;
+		background: var(--accent-soft);
+		color: var(--primary-color);
+		font-size: 1.3rem;
+		font-weight: 700;
+		letter-spacing: .04em;
+		text-transform: uppercase;
+	}
+	.ai-option p {
+		color: var(--text-secondary);
+	}
+	.ai-showcase-actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 1.5rem;
+	}
+	@media (max-width: 900px) {
+		.ai-options-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+	@media (max-width: 768px) {
+		.hero .hero-buttons {
+			justify-content: center;
+		}
+		.hero-proof {
+			justify-content: center;
+		}
+	}
+
+	</style>
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js"></script>
+<meta name="ssn-language-alternate" content="../index.html" data-label="English" data-lang="en">
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"index.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{"\"I never thought I'd be able to manage chat across 5 different platforms without going crazy. Social Stream Ninja makes it possible, and it's completely free. Incredible tool!\"":"\"Beş farklı platformdaki sohbeti aklımı kaçırmadan yönetebileceğimi hiç düşünmemiştim. Social Stream Ninja bunu mümkün kılıyor, hem de tamamen ücretsiz. İnanılmaz bir araç!\"","\"Since rediscovering SSN it has opened up a world of opportunities with extreme customization abilities & broad range of interconnectivity with many platforms, Steve & the team have something truly amazing going on 👍\"":"\"SSN'yi yeniden keşfettiğimden beri, kapsamlı özelleştirme olanakları ve birçok platformla sunduğu bağlantılar sayesinde önümde yepyeni fırsatlar açıldı. Steve ve ekibi gerçekten harika bir iş çıkarıyor 👍\"","\"Social Stream Ninja completely changed how I interact with my audience. Being able to see and respond to comments from multiple platforms in one place has made my streams so much more engaging.\"":"\"Social Stream Ninja, izleyicilerimle etkileşim kurma biçimimi tamamen değiştirdi. Birden fazla platformdan gelen yorumları tek bir yerde görüp yanıtlayabilmek, yayınlarımı çok daha etkileşimli hâle getirdi.\"","\"Social Stream enabled us to expand into multi-platform streaming without the headache of fractured community engagement. It effortlessly merges chat feeds from every platform into a single easy to manage and customize interface. The ability to feature messages and donors on-screen greatly increases the production value as well as viewer engagement. The fact that Social Stream is entirely free, and so superbly supported has made this a tool a lifeline for us\"":"\"Social Stream, topluluk etkileşiminin parçalanmasıyla uğraşmadan birden fazla platformda yayın yapmamızı sağladı. Her platformun sohbet akışını, yönetmesi ve özelleştirmesi kolay tek bir arayüzde zahmetsizce birleştiriyor. Mesajları ve bağışçıları ekranda öne çıkarabilmek, hem yayın kalitesini hem de izleyici etkileşimini büyük ölçüde artırıyor. Social Stream'in tamamen ücretsiz olması ve harika destek sunması, onu bizim için vazgeçilmez bir araç hâline getirdi.\"","\"The featured chat overlay is a game changer. My viewers love seeing their comments highlighted on screen, and the customization options let me match it perfectly with my stream's aesthetic.\"":"\"Öne çıkan sohbet katmanı her şeyi değiştirdi. İzleyicilerim, yorumlarının ekranda vurgulanmasını çok seviyor. Özelleştirme seçenekleri sayesinde görünümünü yayınımın tarzına tam olarak uydurabiliyorum.\"","100+ sources":"100'den fazla kaynak","AI Cohosts & Chat Bots":"Yapay zekâ yardımcı sunucuları ve sohbet botları","AI Icon":"Yapay zekâ simgesi","Apollo and Frens":"Apollo and Frens","Automate responses and create custom commands with scriptable plugins.":"Betik yazılabilir eklentilerle yanıtları otomatikleştirin ve özel komutlar oluşturun.","Automatically send messages from one platform to others with cross-platform chat.":"Platformlar arası sohbet ile mesajları bir platformdan diğerlerine otomatik olarak gönderin.","Automation":"Otomasyon","Battle Royal mini-game and viewer engagement tools to keep your chat entertained.":"Sohbetinizi eğlendirmek için Battle Royal mini oyunu ve izleyici etkileşim araçları.","Bilibili":"Bilibili","BitChute":"BitChute","Bluesky":"Bluesky","Bot Commands":"Bot komutları","Bot Icon":"Bot simgesi","Bots & Processing":"Botlar ve işleme","Bring messages from YouTube, Twitch, TikTok, Facebook, Kick, and more into one dashboard. Then display, speak, relay, moderate, or answer them with AI.":"YouTube, Twitch, TikTok, Facebook, Kick ve diğer platformların mesajlarını tek bir kontrol panelinde toplayın; ardından bunları görüntüleyin, seslendirin, aktarın, denetleyin veya yapay zekâyla yanıtlayın.","Browse Overlay Gallery":"Katman galerisine göz atın","Chat Icon":"Sohbet simgesi","ChatGPT":"ChatGPT","ChatGPT Browser Source":"ChatGPT Tarayıcı Kaynağı","Chrome & desktop":"Chrome ve masaüstü","Combine YouTube, Twitch, TikTok, Kick and more in one live chat dashboard. Free OBS overlays, text-to-speech, automation and AI tools for streamers.":"YouTube, Twitch, TikTok, Kick ve diğerlerini tek bir canlı sohbet kontrol panelinde birleştirin. Yayıncılar için ücretsiz OBS katmanları, metinden konuşma, otomasyon ve yapay zekâ araçları.","Commands & API":"Komutlar ve API","Community":"Topluluk","Connect with Facebook, Youtube, Twitch, Zoom, Instagram, TikTok and more - all from one dashboard.":"Facebook, Youtube, Twitch, Zoom, Instagram, TikTok ve diğer platformlara tek bir kontrol panelinden bağlanın.","Connect with audiences across all your favorite platforms":"Sevdiğiniz tüm platformlardaki izleyicilerle bağlantı kurun","Consolidates your live social messaging streams and more. Free and open source.":"Canlı sosyal mesaj akışlarınızı ve daha fazlasını birleştirir. Ücretsiz ve açık kaynaklıdır.","Contribute":"Katkıda bulunun","Convert chat messages to speech with free and premium TTS services.":"Ücretsiz ve ücretli TTS hizmetleriyle sohbet mesajlarını seslendirin.","Create interactive polls, votes, and host giveaways, all with customizable themes.":"Özelleştirilebilir temalarla etkileşimli anketler ve oylamalar oluşturun, çekilişler düzenleyin.","Customization Guide":"Özelleştirme kılavuzu","Discord":"Discord","Display selected messages on stream with customizable themes and animations.":"Seçili mesajları özelleştirilebilir temalar ve animasyonlarla yayında gösterin.","Donate":"Bağış yapın","Download":"İndir","Download Now":"Şimdi indir","Elena Patel":"Elena Patel","Explore All Features":"Tüm özellikleri keşfedin","Explore Every AI Option":"Tüm yapay zekâ seçeneklerini keşfedin","FAQ":"SSS","Facebook":"Facebook","Featured Chat Overlay":"Öne çıkan sohbet katmanı","Features":"Özellikler","Free & open source":"Ücretsiz ve açık kaynaklı","Games Icon":"Oyun simgesi","Gaming Streamer":"Oyun yayıncısı","Generate chat replies, moderate or censor messages, translate, summarize, use RAG context, and build overlays with AI.":"Sohbet yanıtları üretin, mesajları denetleyin veya sansürleyin, çeviri ve özetleme yapın, RAG bağlamını kullanın ve yapay zekâyla katmanlar oluşturun.","Get Social Stream Ninja":"Social Stream Ninja'yı edinin","Get instant support from our friendly community and the developer":"Yardımsever topluluğumuzdan ve geliştiriciden anında destek alın","Get the app or extension, connect your sources, and add your overlay.":"Uygulamayı veya uzantıyı edinin, kaynaklarınızı bağlayın ve katmanınızı ekleyin.","GitHub":"GitHub","GitHub Repository":"GitHub deposu","Guides":"Kılavuzlar","Hire":"Hizmet alın","Home":"Ana sayfa","Inspiration":"İlham","Instagram":"Instagram","Installation Guide":"Kurulum kılavuzu","Interactive Games":"Etkileşimli oyunlar","Join Discord Community":"Discord topluluğuna katılın","Join our Discord":"Discord sunucumuza katılın","Kick":"Kick","LFG":"LFG","LinkedIn":"LinkedIn","Live companion":"Canlı yayın yardımcısı","Livestream":"Livestream","Main navigation":"Ana gezinme","Maseiy":"Maseiy","Meghan Riley":"Meghan Riley","Message Relaying":"Mesaj aktarımı","Microsoft Teams":"Microsoft Teams","Mike Tanner":"Mike Tanner","Mixcloud":"Mixcloud","Multi-Platform Support":"Çoklu platform desteği","Multi-platform Creator":"Çoklu platform içerik üreticisi","Multi-platform Streamer":"Çoklu platform yayıncısı","Need Help? Join Our Discord!":"Yardıma mı ihtiyacınız var? Discord'a katılın!","No API key":"API anahtarı gerekmez","Odysee":"Odysee","One live chat. Every platform. Your stream, your way.":"Tek canlı sohbet. Tüm platformlar. Sizin yayınınız, sizin tarzınız.","Open a normal ChatGPT conversation in Chrome and capture new user and completed ChatGPT turns in Social Stream Ninja.":"Chrome'da normal bir ChatGPT sohbeti açın ve yeni kullanıcı mesajları ile tamamlanan ChatGPT yanıtlarını Social Stream Ninja'da yakalayın.","Open navigation menu":"Gezinme menüsünü aç","Over 100 platforms supported!":"100'den fazla platform destekleniyor!","Overlay Gallery":"Katman galerisi","Overlay Icon":"Katman simgesi","Poll Icon":"Anket simgesi","Polls and Giveaways":"Anketler ve çekilişler","Privacy Policy":"Gizlilik politikası","Product highlights":"Öne çıkan özellikler","Quick Links":"Hızlı bağlantılar","Ready to bring your chat together?":"Sohbetlerinizi bir araya getirmeye hazır mısınız?","Relay Icon":"Aktarma simgesi","Report an Issue":"Sorun bildirin","Resources":"Kaynaklar","Restream":"Restream","Rumble":"Rumble","See the full list →":"Tam listeyi görün →","Set Up a Voice Cohost":"Sesli yardımcı sunucu kurun","Share your microphone and selected live-chat messages with the same cohost session, then broadcast its spoken responses.":"Mikrofonunuzu ve seçili canlı sohbet mesajlarını aynı yardımcı sunucu oturumuyla paylaşın, ardından onun sesli yanıtlarını yayınlayın.","Slack":"Slack","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja | One Live Chat for Every Platform":"Social Stream Ninja | Her platform için tek canlı sohbet","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. GPLv3.0 Lisansı. Geliştiren:","Steve Seguin":"Steve Seguin","Substack":"Substack","Support":"Destek","Supported Platforms":"Desteklenen platformlar","Supported Sites":"Desteklenen siteler","Switch theme":"Temayı değiştir","TTS Icon":"TTS simgesi","Talk with a voice cohost, run a separate chat bot, or capture a ChatGPT browser conversation as another source. Each mode is optional.":"Sesli bir yardımcı sunucuyla konuşun, ayrı bir sohbet botu çalıştırın veya bir ChatGPT tarayıcı sohbetini başka bir kaynak olarak yakalayın. Her mod isteğe bağlıdır.","Telegram":"Telegram","Terms of Service":"Hizmet koşulları","Testimonial Author":"Kullanıcı görüşünün yazarı","Text-to-Speech":"Metinden konuşma","Threads":"Threads","TikTok":"TikTok","Twitch":"Twitch","Twitch & YouTube Creator":"Twitch ve YouTube içerik üreticisi","Use AI the way your stream needs it":"Yapay zekâyı yayınınızın ihtiyaçlarına göre kullanın","Use local or cloud AI for a voice cohost, chat replies, moderation, translation, summaries, and more.":"Sesli yardımcı sunucu, sohbet yanıtları, moderasyon, çeviri, özetler ve daha fazlası için yerel veya bulut yapay zekâsı kullanın.","View Installation Guide":"Kurulum kılavuzunu görüntüleyin","Vimeo":"Vimeo","Voice AI Cohost":"Sesli yapay zekâ yardımcı sunucusu","Webex":"Webex","What Streamers Are Saying":"Yayıncılar ne diyor?","WhatsApp":"WhatsApp","Why Choose Social Stream Ninja?":"Neden Social Stream Ninja?","X":"X","X.com":"X.com","YouNow":"YouNow","YouTube":"YouTube","YouTube Creator":"YouTube içerik üreticisi","Zoom":"Zoom","social stream, live chat, OBS overlay, AI cohost, chat bot, text to speech, chat relay, multi-platform chat, content creators, live streaming tools, youtube chat, twitch chat, facebook live":"social stream, canlı sohbet, OBS katmanı, yapay zekâ yardımcı sunucusu, sohbet botu, metinden konuşma, sohbet aktarımı, çoklu platform sohbeti, içerik üreticileri, canlı yayın araçları, youtube sohbeti, twitch sohbeti, facebook live","with contributions from the community.":"topluluğun katkılarıyla."}}</script>
+<script src="../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../docs/css/site-language.css">
+<script src="../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="index.html" aria-current="page">Ana sayfa</a><a href="docs/features.html">Özellikler</a><a href="docs/inspiration.html" class="site-priority-inspiration">İlham</a><a href="docs/download.html">İndir</a><a href="docs/guides.html">Kılavuzlar</a><a href="docs/commands.html">Komutlar ve API</a><a href="docs/supported-sites.html">Desteklenen siteler</a><a href="docs/overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a><a href="docs/services.html" class="site-priority-hire">Hizmet alın</a><a href="docs/support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../index.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../es/index.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../pt-br/index.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../ru/index.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../fr/index.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../de/index.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../ja/index.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../zh-cn/index.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../zh-tw/index.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../it/index.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../pl/index.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../ko/index.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../uk/index.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../ar/index.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="index.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../cs/index.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../th/index.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Tek canlı sohbet. Tüm platformlar. Sizin yayınınız, sizin tarzınız.</h1>
+                <p>YouTube, Twitch, TikTok, Facebook, Kick ve diğer platformların mesajlarını tek bir kontrol panelinde toplayın; ardından bunları görüntüleyin, seslendirin, aktarın, denetleyin veya yapay zekâyla yanıtlayın.</p>
+                <div class="hero-buttons">
+                    <a href="docs/download.html" class="btn btn-primary">Social Stream Ninja'yı edinin</a>
+                    <a href="docs/overlay-gallery.html" class="btn btn-secondary">Katman galerisine göz atın</a>
+                </div>
+                <div class="hero-proof" aria-label="Öne çıkan özellikler">
+                    <span>100'den fazla kaynak</span>
+                    <span>Ücretsiz ve açık kaynaklı</span>
+                    <span>Chrome ve masaüstü</span>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="../media/logo.png" alt="Social Stream Ninja logosu">
+            </div>
+        </div>
+    </section>
+
+    <section class="features-preview">
+        <div class="container">
+            <h2>Neden Social Stream Ninja?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="../icons/chat.png" alt="Sohbet simgesi">
+                    </div>
+                    <h3>Çoklu platform desteği</h3>
+                    <p>Facebook, Youtube, Twitch, Zoom, Instagram, TikTok ve diğer platformlara tek bir kontrol panelinden bağlanın.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="../icons/featured-chat-overlay.png" alt="Katman simgesi">
+                    </div>
+                    <h3>Öne çıkan sohbet katmanı</h3>
+                    <p>Seçili mesajları özelleştirilebilir temalar ve animasyonlarla yayında gösterin.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="../icons/bot-commands.png" alt="Bot simgesi">
+                    </div>
+                    <h3>Bot komutları</h3>
+                    <p>Betik yazılabilir eklentilerle yanıtları otomatikleştirin ve özel komutlar oluşturun.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="../icons/llm-support.png" alt="Yapay zekâ simgesi">
+                    </div>
+                    <h3>Yapay zekâ yardımcı sunucuları ve sohbet botları</h3>
+                    <p>Sesli yardımcı sunucu, sohbet yanıtları, moderasyon, çeviri, özetler ve daha fazlası için yerel veya bulut yapay zekâsı kullanın.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="../icons/text-to-speech.png" alt="TTS simgesi">
+                    </div>
+                    <h3>Metinden konuşma</h3>
+                    <p>Ücretsiz ve ücretli TTS hizmetleriyle sohbet mesajlarını seslendirin.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="../icons/message-relaying.png" alt="Aktarma simgesi">
+                    </div>
+                    <h3>Mesaj aktarımı</h3>
+                    <p>Platformlar arası sohbet ile mesajları bir platformdan diğerlerine otomatik olarak gönderin.</p>
+                </div>
+				
+				<div class="feature-card">
+					<div class="feature-icon">
+						<img src="../icons/game.png" alt="Oyun simgesi">
+					</div>
+					<h3>Etkileşimli oyunlar</h3>
+					<p>Sohbetinizi eğlendirmek için Battle Royal mini oyunu ve izleyici etkileşim araçları.</p>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon">
+						<img src="../icons/polls.png" alt="Anket simgesi">
+					</div>
+					<h3>Anketler ve çekilişler</h3>
+					<p>Özelleştirilebilir temalarla etkileşimli anketler ve oylamalar oluşturun, çekilişler düzenleyin.</p>
+				</div>
+				
+            </div>
+            <div class="features-cta">
+                <a href="docs/features.html" class="btn btn-secondary">Tüm özellikleri keşfedin</a>
+            </div>
+        </div>
+    </section>
+
+	<section class="ai-showcase" id="ai">
+		<div class="container">
+			<div class="ai-showcase-header">
+				<h2>Yapay zekâyı yayınınızın ihtiyaçlarına göre kullanın</h2>
+				<p>Sesli bir yardımcı sunucuyla konuşun, ayrı bir sohbet botu çalıştırın veya bir ChatGPT tarayıcı sohbetini başka bir kaynak olarak yakalayın. Her mod isteğe bağlıdır.</p>
+			</div>
+			<div class="ai-options-grid">
+				<article class="ai-option">
+					<span class="ai-option-label">Canlı yayın yardımcısı</span>
+					<h3>Sesli yapay zekâ yardımcı sunucusu</h3>
+					<p>Mikrofonunuzu ve seçili canlı sohbet mesajlarını aynı yardımcı sunucu oturumuyla paylaşın, ardından onun sesli yanıtlarını yayınlayın.</p>
+				</article>
+				<article class="ai-option">
+					<span class="ai-option-label">API anahtarı gerekmez</span>
+					<h3>ChatGPT Tarayıcı Kaynağı</h3>
+					<p>Chrome'da normal bir ChatGPT sohbeti açın ve yeni kullanıcı mesajları ile tamamlanan ChatGPT yanıtlarını Social Stream Ninja'da yakalayın.</p>
+				</article>
+				<article class="ai-option">
+					<span class="ai-option-label">Otomasyon</span>
+					<h3>Botlar ve işleme</h3>
+					<p>Sohbet yanıtları üretin, mesajları denetleyin veya sansürleyin, çeviri ve özetleme yapın, RAG bağlamını kullanın ve yapay zekâyla katmanlar oluşturun.</p>
+				</article>
+			</div>
+			<div class="ai-showcase-actions">
+				<a href="docs/ai-modes-guide.html" class="btn btn-primary">Tüm yapay zekâ seçeneklerini keşfedin</a>
+				<a href="docs/ai-cohost-guide.html" class="btn btn-secondary">Sesli yardımcı sunucu kurun</a>
+			</div>
+		</div>
+	</section>
+
+<section class="platforms">
+    <div class="container">
+        <h2>Desteklenen platformlar</h2>
+        <p class="section-subtitle">Sevdiğiniz tüm platformlardaki izleyicilerle bağlantı kurun</p>
+        <div class="platform-logos">
+            <img src="../sources/images/youtube.png" alt="YouTube">
+            <img src="../sources/images/twitch.png" alt="Twitch">
+            <img src="../sources/images/facebook.png" alt="Facebook">
+            <img src="../sources/images/tiktok.png" alt="TikTok">
+            <img src="../sources/images/instagram.png" alt="Instagram">
+            <img src="../sources/images/zoom.png" alt="Zoom">
+            <img src="../sources/images/discord.png" alt="Discord">
+            <img src="../sources/images/kick.png" alt="Kick">
+            <img src="../sources/images/rumble.png" alt="Rumble">
+			<img src="../sources/images/x.png" alt="X">
+			<img src="../sources/images/openai.png" alt="ChatGPT">
+            
+            <!-- Added 25 more popular platforms -->
+            <img src="../sources/images/linkedin.png" alt="LinkedIn">
+            <img src="../sources/images/telegram.png" alt="Telegram">
+            <img src="../sources/images/whatsapp.png" alt="WhatsApp">
+            <img src="../sources/images/teams.png" alt="Microsoft Teams">
+            <img src="../sources/images/webex.png" alt="Webex">
+            <img src="../sources/images/slack.png" alt="Slack">
+            <img src="../sources/images/vimeo.png" alt="Vimeo">
+            <img src="../sources/images/odysee.png" alt="Odysee">
+            <img src="../sources/images/bilibili.png" alt="Bilibili">
+            <img src="../sources/images/threads.png" alt="Threads">
+			<img src="../sources/images/lfg.png" alt="LFG">
+            
+            <img src="../sources/images/bitchute.png" alt="BitChute">
+            <img src="../sources/images/younow.png" alt="YouNow">
+            <img src="../sources/images/livestream.png" alt="Livestream">
+            <img src="../sources/images/mixcloud.png" alt="Mixcloud">
+            <img src="../sources/images/restream.png" alt="Restream">
+            <img src="../sources/images/substack.png" alt="Substack">
+        </div>
+        <p class="platforms-more">100'den fazla platform destekleniyor!</p>
+        <a href="docs/supported-sites.html" class="btn btn-text">Tam listeyi görün →</a>
+    </div>
+</section>
+
+	<section class="discord-banner">
+		<div class="container">
+			<div>
+				<h3>Yardıma mı ihtiyacınız var? Discord'a katılın!</h3>
+				<p>Yardımsever topluluğumuzdan ve geliştiriciden anında destek alın</p>
+			</div>
+			<a href="https://discord.socialstream.ninja" target="_blank" class="btn btn-primary">
+				<img src="../icons/discord.svg" alt="Discord">
+				Discord topluluğuna katılın
+			</a>
+		</div>
+	</section>
+
+    <section class="testimonials">
+        <div class="container">
+            <h2>Yayıncılar ne diyor?</h2>
+            <div class="testimonials-slider">
+                <div class="testimonial">
+                    <div class="testimonial-content">
+                        <p>"Social Stream Ninja, izleyicilerimle etkileşim kurma biçimimi tamamen değiştirdi. Birden fazla platformdan gelen yorumları tek bir yerde görüp yanıtlayabilmek, yayınlarımı çok daha etkileşimli hâle getirdi."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="../media/user1.jpg" alt="Kullanıcı görüşünün yazarı">
+                        <div>
+                            <h4>Meghan Riley</h4>
+                            <span>Twitch ve YouTube içerik üreticisi</span>
+                        </div>
+                    </div>
+                </div>
+				<div class="testimonial">
+                    <div class="testimonial-content">
+                        <p>"SSN'yi yeniden keşfettiğimden beri, kapsamlı özelleştirme olanakları ve birçok platformla sunduğu bağlantılar sayesinde önümde yepyeni fırsatlar açıldı. Steve ve ekibi gerçekten harika bir iş çıkarıyor 👍"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="../media/user4.png" alt="Kullanıcı görüşünün yazarı">
+                        <div>
+                            <h4>Maseiy</h4>
+                            <span>Çoklu platform yayıncısı</span>
+                        </div>
+                    </div>
+                </div>
+				<div class="testimonial">
+                    <div class="testimonial-content">
+                        <p>"Social Stream, topluluk etkileşiminin parçalanmasıyla uğraşmadan birden fazla platformda yayın yapmamızı sağladı. Her platformun sohbet akışını, yönetmesi ve özelleştirmesi kolay tek bir arayüzde zahmetsizce birleştiriyor. Mesajları ve bağışçıları ekranda öne çıkarabilmek, hem yayın kalitesini hem de izleyici etkileşimini büyük ölçüde artırıyor. Social Stream'in tamamen ücretsiz olması ve harika destek sunması, onu bizim için vazgeçilmez bir araç hâline getirdi."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="../media/user5.jpg" alt="Kullanıcı görüşünün yazarı">
+                        <div>
+                            <h4>Apollo and Frens</h4>
+                            <span>YouTube içerik üreticisi</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial">
+                    <div class="testimonial-content">
+                        <p>"Öne çıkan sohbet katmanı her şeyi değiştirdi. İzleyicilerim, yorumlarının ekranda vurgulanmasını çok seviyor. Özelleştirme seçenekleri sayesinde görünümünü yayınımın tarzına tam olarak uydurabiliyorum."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="../media/user2.jpg" alt="Kullanıcı görüşünün yazarı">
+                        <div>
+                            <h4>Mike Tanner</h4>
+                            <span>Oyun yayıncısı</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial">
+                    <div class="testimonial-content">
+                        <p>"Beş farklı platformdaki sohbeti aklımı kaçırmadan yönetebileceğimi hiç düşünmemiştim. Social Stream Ninja bunu mümkün kılıyor, hem de tamamen ücretsiz. İnanılmaz bir araç!"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="../media/user3.jpg" alt="Kullanıcı görüşünün yazarı">
+                        <div>
+                            <h4>Elena Patel</h4>
+                            <span>Çoklu platform içerik üreticisi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-dots">
+                <span class="dot active"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+				<span class="dot"></span>
+            </div>
+        </div>
+    </section>
+	
+    <section class="get-started">
+        <div class="container">
+            <h2>Sohbetlerinizi bir araya getirmeye hazır mısınız?</h2>
+            <p>Uygulamayı veya uzantıyı edinin, kaynaklarınızı bağlayın ve katmanınızı ekleyin.</p>
+            <div class="get-started-cta">
+                <a href="docs/download.html" class="btn btn-primary">Şimdi indir</a>
+                <a href="docs/guides.html" class="btn btn-secondary">Kurulum kılavuzunu görüntüleyin</a>
+            </div>
+        </div>
+    </section>
+
+        <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Canlı sosyal mesaj akışlarınızı ve daha fazlasını birleştirir. Ücretsiz ve açık kaynaklıdır.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../icons/x.svg" alt="X.com"></a>
+						<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Hızlı bağlantılar</h3>
+                    <ul>
+                        <li><a href="index.html">Ana sayfa</a></li>
+                        <li><a href="docs/features.html">Özellikler</a></li>
+                        <li><a href="docs/download.html">İndir</a></li>
+                        <li><a href="docs/guides.html">Kılavuzlar</a></li>
+                        <li><a href="docs/commands.html">Komutlar ve API</a></li>
+						<li><a href="docs/supported-sites.html">Desteklenen siteler</a></li>
+                        <li><a href="docs/overlay-gallery.html">Katman galerisi</a></li>
+                        <li><a href="docs/services.html">Hizmet alın</a></li>
+                        <li><a href="docs/support.html">Destek</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Kaynaklar</h3>
+                    <ul>
+                        <li><a href="docs/guides.html#installation">Kurulum kılavuzu</a></li>
+                        <li><a href="docs/guides.html#customization">Özelleştirme kılavuzu</a></li>
+                        <li><a href="docs/guides.html#faq">SSS</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Sorun bildirin</a></li>
+                        <li><a href="privacy.html">Gizlilik politikası</a></li>
+                        <li><a href="TOS.html">Hizmet koşulları</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Topluluk</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Discord sunucumuza katılın</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub deposu</a></li>
+                        <li><a href="docs/support.html#contribute">Katkıda bulunun</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">Bağış yapın</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 Lisansı. Geliştiren: <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> topluluğun katkılarıyla.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="text/javascript" src="../docs/js/main.js"></script>
+    <script>
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

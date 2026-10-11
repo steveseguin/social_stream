@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/overlay-customization-guide.html">
+    <meta name="twitter:title" content="나만의 소셜 스트림 오버레이 디자인 - Social Stream Ninja">
+    <meta name="twitter:description" content="각 오버레이 제품군에 대한 가이드와 함께 OBS에서 로컬 오버레이 디자인을 다운로드, 사용자 정의, 연결 및 테스트합니다.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나만의 소셜 스트림 오버레이 디자인 - Social Stream Ninja</title>
+<meta name="description" content="각 오버레이 제품군에 대한 가이드와 함께 OBS에서 로컬 오버레이 디자인을 다운로드, 사용자 정의, 연결 및 테스트합니다.">
+<meta name="robots" content="noindex, follow">
+<link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/overlay-customization-guide.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Social Stream Ninja">
+<meta property="og:title" content="나만의 소셜 스트림 오버레이 디자인 - Social Stream Ninja">
+<meta property="og:description" content="각 오버레이 제품군에 대한 가이드와 함께 OBS에서 로컬 오버레이 디자인을 다운로드, 사용자 정의, 연결 및 테스트합니다.">
+<meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/overlay-customization-guide.html">
+<meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+<meta name="twitter:card" content="summary">
+<script>
+(function() {
+    var savedTheme = localStorage.getItem("darkMode");
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+})();
+</script>
+<link rel="stylesheet" href="../../docs/css/styles.css">
+<link rel="stylesheet" href="../../docs/css/guides.css">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/overlay-customization-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", for example, reads neither. Check the page's code first.":"같은 페이지는 둘 다 읽지 않습니다. 먼저 페이지 코드를 확인하세요.",", including zero.":"0을 포함합니다.",", keep the copy in the same folder.":"이면 복사본을 같은 폴더에 두세요.",", links":", 링크",", local endpoints, labels, and version values differ by page. Don't add a server flag just because another overlay uses it.":", 로컬 엔드포인트, 라벨, 버전 값은 페이지마다 다릅니다. 다른 오버레이가 사용한다는 이유만으로 서버 플래그를 추가하지 마세요.",", not":"그렇지 않다",", on Linux usually":", Linux에서는 보통",", then false. One should show the tags as text; the other should show bold text.":"로 설정한 뒤 false로 바꾸세요. 한쪽은 태그를 글자로, 다른 쪽은 굵은 글자로 표시해야 합니다.",", unzip it, and copy that overlay's HTML file.":"을 내려받아 압축을 풀고 해당 오버레이의 HTML 파일을 복사하세요.",", which browsers can block when opening from disk. For a simple map restyle, use its hosted link with OBS Custom CSS. For an edited copy, ask your AI to put the map data inside the page so it opens from disk. Hosting is an advanced option for pages that really need it, not a normal step.":"을 사용하며, 디스크에서 열면 브라우저가 차단할 수 있습니다. 지도 스타일만 바꾸려면 호스팅 링크와 OBS 사용자 지정 CSS를 사용하세요. 파일을 편집하려면 디스크에서 열 수 있도록 지도 데이터를 페이지에 넣어 달라고 AI에 요청하세요. 호스팅은 꼭 필요한 페이지의 고급 옵션이며 일반적인 단계가 아닙니다.",". Bringing a StreamElements or Streamlabs chat skin? Follow the":". StreamElements나 Streamlabs 채팅 스킨을 가져오려면 다음을 따르세요:",". Copying from the browser handles spaces and slashes for you.":". 브라우저에서 복사하면 공백과 슬래시를 자동으로 처리합니다.",". Don't edit inside the ZIP. You don't need to reinstall SSN.":". ZIP 안에서 편집하지 마세요. SSN을 다시 설치할 필요는 없습니다.",". For a theme such as":". 다음과 같은 테마의 경우:",". In the browser or OBS URL box, use a plain":". 브라우저나 OBS URL 입력란에서는 일반",". It forwards to your overlay with the settings and":"을 사용하세요. 설정과 다음 값을 붙여 오버레이로 이동합니다:",". It must not run, set the marker, or leave event attributes behind. Test a script-scheme link too.":". 실행되거나, 표식을 설정하거나, 이벤트 속성을 남겨서는 안 됩니다. 스크립트 스킴 링크도 테스트하세요.",". Leave":". 다음은 그대로 두세요:",". Or open the":". 또는 다음을 여세요:",". Picking the file with Local file doesn't add those settings.":". 로컬 파일로 선택하는 것만으로는 이 설정이 추가되지 않습니다.",". That export comes with its own setup steps.":". 해당 내보내기에는 별도 설정 절차가 있습니다.",". The brackets should show as text.":". 꺾쇠괄호가 글자로 보여야 합니다.","A design that only works with hard-coded sample messages isn't done. Keep the original file and compare both with the same test inputs.":"고정된 샘플 메시지로만 작동하는 디자인은 완성된 것이 아닙니다. 원본 파일을 보관하고 같은 입력으로 둘을 비교하세요.","A passing probe only covers the paths you tested. Focus on the renderers and fields your design changed.":"통과한 테스트는 시도한 경로만 확인합니다. 디자인을 바꾼 렌더러와 필드에 집중하세요.","A path like":"다음과 같은 경로:","AI prompt":"AI 프롬프트","Add your styles after the existing ones, or link a local stylesheet after them.":"기존 스타일 뒤에 스타일을 추가하거나, 그 뒤에 로컬 스타일시트를 연결하세요.","Alerts and event feeds":"경고 및 이벤트 피드","All guides":"모든 가이드","Blank or “waiting” display":"빈 화면 또는 '대기 중' 표시","Browser Source":"브라우저 소스","Browser Source reference":"브라우저 소스 참조","Change the HTML layout":"HTML 레이아웃 변경","Change the design":"디자인 변경","Change the design, or ask AI to":"디자인을 변경하거나 AI에 다음을 요청하세요:","Chat and Dock":"채팅 및 도킹","Check a real message or event reaches both the original and your copy. A fake event only proves the display works.":"실제 메시지나 이벤트가 원본과 복사본 모두에 도착하는지 확인하세요. 가짜 이벤트는 표시 기능만 확인합니다.","Check a supported emote and an image-only message still work.":"지원되는 이모트와 이미지만 있는 메시지도 여전히 작동하는지 확인하세요.","Check refresh/unload settings, duplicate copies of the overlay or controls, and the page's own duplicate and state handling.":"새로 고침/종료 설정, 중복 오버레이나 컨트롤, 페이지의 중복 처리와 상태 관리를 확인하세요.","Check the final size, transparency, animations, audio, fonts, and layering. Try show/hide, clear/reset, and a refresh. OBS and your browser don't share logins or saved storage.":"최종 크기, 투명도, 애니메이션, 오디오, 글꼴, 겹침 순서를 확인하세요. 표시/숨기기, 지우기/초기화, 새로 고침도 해 보세요. OBS와 브라우저는 로그인이나 저장 데이터를 공유하지 않습니다.","Check the session, password, full":"세션, 비밀번호, 전체","Check width/height, old Custom CSS, fonts, cache, and browser storage. Refresh after saving.":"너비/높이, 이전 사용자 지정 CSS, 글꼴, 캐시, 브라우저 저장소를 확인하세요. 저장 후 새로 고침하세요.","Choose a working overlay before changing its appearance.":"모양을 변경하기 전에 작업 오버레이를 선택하세요.","Cleaned HTML still isn't safe to run as JavaScript or to use as an AI instruction.":"정리된 HTML도 JavaScript로 실행하거나 AI 지시로 사용하면 안전하지 않습니다.","Click":"클릭:","Code → Download ZIP":"코드 → ZIP 다운로드","Collected participants and credits controls":"수집된 참가자 및 크레딧 제어","Commands & API":"명령 및 API","Configured support/count/Hype metric":"구성된 지원/수/과대평가 지표","Configured ticker content":"티커 내용 구성","Copy it and point your page at the copy, so only your design changes.":"복사한 뒤 페이지가 복사본을 참조하게 해서 본인의 디자인만 바뀌도록 하세요.","Copy them, don't retype. Inside an HTML attribute write":"다시 입력하지 말고 복사하세요. HTML 속성 안에서는 다음처럼 쓰세요:","Counters and rankings":"카운터 및 순위","Counts, metadata, activity, or point snapshots":"개수, 메타데이터, 활동 또는 포인트 스냅샷","Create Test Message":"테스트 메시지 만들기 (Create Test Message)","Credits":"크레딧","Custom CSS":"사용자 지정 CSS","Custom receivers and connection examples.":"맞춤 수신기와 연결 예시.","Data resets or actions happen twice":"데이터가 초기화되거나 동작이 두 번 실행됨","Design guide":"디자인 가이드","Design your own Social Stream overlays":"나만의 소셜 스트림 오버레이 디자인","Design your own Social Stream overlays - Social Stream Ninja":"나만의 소셜 스트림 오버레이 디자인 - Social Stream Ninja","Details":"세부 사항","Do this":"할 작업","Don't accept a fake.":"겉모양만 되는 결과를 받아들이지 마세요.","Don't paste raw names into attribute strings or raw colors into style markup. Check style values before setting them one property at a time.":"원시 이름을 속성 문자열에, 원시 색상 값을 스타일 마크업에 붙이지 마세요. 스타일 값을 검증하고 속성별로 설정하세요.","Double-click the launcher to test it. In OBS, check":"실행 페이지를 더블 클릭해 테스트하세요. OBS에서는 다음을 선택하세요:","Download":"다운로드","Download the beta source ZIP":"베타 소스 ZIP 다운로드","Download the files":"파일 다운로드","Download the source ZIP":"소스 ZIP 다운로드","Download, customize, connect, and test local overlay designs in OBS, with guides for each overlay family.":"각 오버레이 제품군에 대한 가이드와 함께 OBS에서 로컬 오버레이 디자인을 다운로드, 사용자 정의, 연결 및 테스트합니다.","Drag the HTML into your browser again and copy its address. Check the name ends in .html, not .html.txt.":"HTML을 다시 브라우저에 끌어 놓고 주소를 복사하세요. 파일 이름이 .html.txt가 아닌 .html로 끝나는지 확인하세요.","Drag your HTML copy into Chrome or Edge. Copy its address. It starts with":"HTML 복사본을 Chrome이나 Edge에 끌어 놓고 주소를 복사하세요. 주소는 다음으로 시작합니다:","Each overlay type listens for different things. A chat page, a featured-message page, and a poll don't use the same input. Open the design guide for the one you use:":"오버레이 종류마다 받는 입력이 다릅니다. 채팅, 선택한 메시지, 투표 페이지는 같은 입력을 쓰지 않습니다. 사용하는 종류의 디자인 가이드를 여세요:","Edit a shared stylesheet or script":"공유 스타일시트나 스크립트 편집","Edit the copy":"복사본 편집","Event Flow":"Event Flow","Events and Alerts Compatibility":"이벤트 및 알림 호환성","Every captured chat message":"캡처된 모든 채팅 메시지","Example: this SSN link…":"예: 이 SSN 링크가…","Existing badge and image handling.":"기존 배지와 이미지 처리.","Existing connection support, when your page loads them.":"페이지가 불러오는 경우 기존 연결 지원.","Feature a Dock message for a featured card, vote in a poll, pick a giveaway winner, change ticker text, or start a timer. Plain chat doesn't test everything.":"Dock 메시지를 선택해 카드에 표시하고, 투표하고, 추첨 당첨자를 고르고, 티커 문구를 바꾸거나 타이머를 시작해 보세요. 일반 채팅만으로 모든 기능을 시험할 수는 없습니다.","Featured messages":"강조 메시지","Features":"기능","Field":"필드","File":"파일","File not found":"파일을 찾을 수 없습니다","Files for AI":"AI용 파일","Files to give your AI":"AI에 전달할 파일","Find your overlay's file (see the table above). Make a copy next to the original, like":"위 표에서 오버레이 파일을 찾아 원본 옆에 복사본을 만드세요. 예:","Fix problems":"문제 해결","Fix the smallest confirmed problem first. A restyle shouldn't need changes to capture scripts or new event fields. If you share a public fork, include its assets and leave private launchers out.":"확인된 가장 작은 문제부터 고치세요. 스타일 변경에 캡처 스크립트 수정이나 새 이벤트 필드가 필요하지는 않습니다. 공개 포크를 공유할 때는 필요한 리소스를 포함하고 비공개 실행 페이지는 제외하세요.","For a theme in a subfolder, put the launcher next to that theme copy. Keep the launcher private, since it holds your connection link. A self-contained export that already includes its settings follows its own instructions instead.":"하위 폴더의 테마는 해당 복사본 옆에 실행 페이지를 두세요. 연결 링크를 포함하므로 실행 페이지는 비공개로 보관하세요. 설정까지 포함한 독립형 내보내기는 자체 지침을 따릅니다.","For files in subfolders, fix the script paths.":"하위 폴더의 파일은 스크립트 경로를 수정하세요.","From your working SSN overlay link, copy everything from":"작동하는 SSN 오버레이 링크에서 다음 위치부터 전부 복사하세요:","Game-specific chat, gifts, and commands":"게임별 채팅, 선물, 명령","Games and rewards":"게임과 보상","Generated AI overlays":"생성된 AI 오버레이","Give the AI the overlay's own file and the CSS/JS it loads, plus these. The event reference alone doesn't explain a poll's controls or each overlay's layout code.":"오버레이 자체 파일과 불러오는 CSS/JS, 그리고 아래 파일들을 AI에 주세요. 이벤트 참조 문서만으로는 투표 조작이나 각 오버레이의 레이아웃 코드를 알 수 없습니다.","Giveaway displays":"경품 전시","Good to know":"알아 두면 좋은 내용","Graphical polls":"그래픽 여론 조사","Guides":"가이드","HTML file":"HTML 파일","Have the AI test a harmless probe like":"AI에 다음과 같은 무해한 입력을 시험하게 하세요:","Have your logo, font files, brand colors, canvas size, and a visual reference ready. A web page generally can't load fonts or images from another computer's disk.":"로고, 글꼴 파일, 브랜드 색상, 캔버스 크기, 참고 이미지를 준비하세요. 웹페이지는 보통 다른 컴퓨터의 디스크에서 글꼴이나 이미지를 불러올 수 없습니다.","Hire":"작업 의뢰","Home":"홈","Host queue and winner state":"호스트 대기열 및 승자 상태","How":"방법","How to show it":"표시 방법","How to test the renderer safely":"렌더러를 안전하게 테스트하는 방법","I want to":"원하는 작업","I want to…":"원하는 작업…","If the page already has a sanitizer, keep it. Don't add a second one.":"이미 새니타이저가 있으면 유지하고 두 번째를 추가하지 마세요.","If your copy stays blank, check the original link first. Some pages ask for missing settings; others stay hidden or redirect. Putting the right session in the link avoids guessing.":"복사본이 비어 있으면 원본 링크부터 확인하세요. 일부 페이지는 빠진 설정을 묻지만, 다른 페이지는 숨겨져 있거나 이동합니다. 올바른 세션을 링크에 넣으면 추측할 필요가 없습니다.","In OBS, add a":"OBS에서 다음을 추가하세요:","Inspiration":"아이디어","It can matter. AI Event Overlay, for example, uses a private":"영향을 줄 수 있습니다. 예를 들어 AI Event Overlay는 비공개","Just want new colors or fonts?":"색상이나 글꼴만 바꾸고 싶다면","Keep":"유지:","Keep IDs and classes that scripts use. If a script rebuilds an element on every update, put permanent artwork outside it, or add it to the renderer.":"스크립트에서 사용하는 ID와 클래스를 유지하세요. 업데이트마다 요소를 다시 만드는 스크립트라면 고정 장식을 그 밖에 두거나 렌더러에 추가하세요.","Keep SSN on and use":"SSN을 켜 두고 다음을 사용하세요:","Keep chat safe":"채팅을 안전하게 표시하기","Keep everything after":"다음 이후를 모두 유지하세요:","Keep incoming chat from becoming code":"수신한 채팅이 코드가 되지 않게 하기","Keep the hosted link and use OBS's":"호스팅 링크를 유지하고 OBS의 다음 기능을 사용하세요:","Keep the server settings":"서버 설정 유지","Keep the unzipped folder as it is, with your copy next to the original. Check your added artwork and fonts are where the page expects.":"압축을 푼 폴더 구조를 그대로 유지하고 복사본을 원본 옆에 두세요. 추가한 그림과 글꼴이 페이지가 기대하는 위치에 있는지 확인하세요.","Keep the whole unzipped folder.":"압축을 푼 폴더 전체를 보관하세요.","Keep your real session, password, and private tokens out of screenshots, repos, and AI prompts.":"실제 세션, 비밀번호, 비공개 토큰은 스크린샷, 저장소, AI 프롬프트에 넣지 마세요.","Keep your session link":"세션 링크 유지","Layout":"레이아웃","Local file":"로컬 파일","Logo disappears on update":"업데이트하면 로고가 사라짐","Looks different in OBS than the browser":"OBS와 브라우저에서 모양이 다름","Main navigation":"기본 탐색 메뉴","Make your own overlay in 5 steps":"5단계로 나만의 오버레이 만들기","Managed giveaway state or legacy entry feed":"관리형 경품 상태 또는 레거시 참가 피드","Matching events / paid chat rows":"매칭 이벤트 / 유료 채팅 행","Matching words or location entries":"일치하는 단어 또는 위치 항목","May hold emotes and allowed formatting. Use the packaged sanitizer.":"이모트와 허용된 서식을 포함할 수 있습니다. 동봉된 새니타이저를 사용하세요.","Missing script, font, or image":"스크립트, 글꼴 또는 이미지 누락","More background:":"더 알아보기:","Music and AI displays":"음악 및 AI 디스플레이","Names, amounts, titles, other plain fields":"이름, 금액, 제목 등 일반 텍스트 필드","Names, messages, titles, amounts, and links come from viewers and outside services. Treat them as text, never as code. Clean them where your renderer puts them on the page.":"이름, 메시지, 제목, 금액, 링크는 시청자와 외부 서비스에서 옵니다. 코드가 아닌 텍스트로 취급하고 렌더러가 페이지에 넣는 지점에서 정리하세요.","Now-playing or bot/cohost updates":"지금 재생 중 또는 봇/공동 호스트 업데이트","OBS":"OBS","OBS URL":"OBS URL","OBS explains file/URL modes, sizes, Custom CSS, and refresh in its":"OBS의 파일/URL 모드, 크기, 사용자 지정 CSS, 새로 고침 설명은 다음 문서에 있습니다:","OBS saves the address. Keep the folder where it is, and keep SSN and your chat source running.":"OBS는 주소를 저장합니다. 폴더를 옮기지 말고 SSN과 채팅 소스를 계속 실행하세요.","OBS's file picker picks a file but can't add your settings. A small launcher page can open your edited page with the settings attached:":"OBS의 파일 선택기는 파일만 고르며 설정을 추가하지 못합니다. 작은 실행 페이지를 사용하면 설정을 붙여 편집한 페이지를 열 수 있습니다:","OWASP's guide to safe sinks and HTML sanitization":"안전한 출력 지점과 HTML 정리에 관한 OWASP 가이드","Official fields, named events, metadata, media, and donation values.":"공식 필드, 이름 있는 이벤트, 메타데이터, 미디어, 후원 금액.","On macOS it starts with":"macOS에서는 다음으로 시작합니다:","On this page":"이 페이지에서","One HTML file can load scripts, styles, fonts, images, audio, or data from nearby folders. Moving the page breaks those links. GitHub's page view or a browser's “Save page” won't get everything.":"HTML 파일 하나가 주변 폴더의 스크립트, 스타일, 글꼴, 이미지, 오디오, 데이터를 불러올 수 있습니다. 페이지를 옮기면 연결이 끊어집니다. GitHub 페이지 보기나 브라우저의 '페이지 저장'으로는 전부 받을 수 없습니다.","Only change CSS":"CSS만 변경","Only some pages support it.":"일부 페이지만 지원합니다.","Open in OBS":"OBS에서 열기","Open navigation menu":"탐색 메뉴 열기","Open that combined address in your browser to test it.":"합친 주소를 브라우저에서 열어 테스트하세요.","Open the copy in a text or code editor. Save it as":"복사본을 텍스트 또는 코드 편집기에서 열고 다음 이름으로 저장하세요:","Open the edited file straight from your computer. No server needed.":"편집한 파일을 컴퓨터에서 바로 여세요. 서버는 필요 없습니다.","Open your copy in OBS":"OBS에서 복사본 열기","Open your file in OBS":"OBS에서 파일 열기","Optional: use the Local file checkbox with a launcher":"선택 사항: 실행기와 함께 로컬 파일 확인란을 사용합니다.","Overlay Gallery":"오버레이 갤러리","Overlay design guides":"오버레이 디자인 가이드","Pick an overlay":"오버레이 선택","Pick the overlay":"대상 오버레이 선택","Pick the overlay to change":"변경할 오버레이 선택","Plain text (":"일반 텍스트(","Problem":"문제","Products and boards":"제품 및 보드","Quick start":"빠른 시작","Reactions and media effects":"반응과 미디어 효과","Real capture":"실제 캡처","Refresh cache of current page":"현재 페이지의 캐시 새로고침 (Refresh cache of current page)","Refreshing can lose data.":"새로 고침하면 데이터가 사라질 수 있습니다.","Replace the placeholder link with your full copied SSN link. Change":"예시 링크를 복사한 전체 SSN 링크로 바꾸세요. 다음도 바꾸세요:","Restyle my edited HTML copy":"편집한 HTML 복사본의 스타일 변경","Reuse existing controls when the design needs a trigger.":"디자인에 트리거가 필요하면 기존 컨트롤을 재사용하세요.","Rule":"규칙","Run these in a private local preview, not in public chat.":"공개 채팅이 아닌 비공개 로컬 미리 보기에서 실행하세요.","SSN delivery":"SSN 전달","Sample payloads and delivery modes.":"페이로드 예시와 전달 모드.","Save the code below as":"아래 코드를 다음 이름으로 저장하세요:","Saved a change?":"변경 내용을 저장했다면","Saved designs and their configured event route":"저장된 디자인 및 구성된 이벤트 경로","Selected messages and clear commands":"선택한 메시지 및 지우기 명령","Send":"보내기","Session link":"세션 링크","Shared commerce state":"공유커머스 상태","Skip the download. Keep the normal hosted link and paste CSS into the OBS Browser Source's":"다운로드하지 말고 일반 호스팅 링크를 유지한 채 OBS 브라우저 소스의 다음 항목에 CSS를 붙이세요:","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja ·":"Social Stream Ninja ·","Some pages keep data in memory. Check the type guide before turning on auto-refresh or shutdown-when-hidden. Remove":"일부 페이지는 데이터를 메모리에 보관합니다. 자동 새로 고침이나 숨김 시 종료를 켜기 전에 종류별 가이드를 확인하세요. 제거할 항목:","Special case: pages that read separate data files":"특별한 경우: 별도의 데이터 파일을 읽는 페이지","Start SSN, connect a source, and check the original overlay works. Then copy the":"SSN을 시작하고 소스를 연결한 뒤 원본 오버레이가 작동하는지 확인하세요. 그런 다음 다음을 복사하세요:","Start from an overlay that already works.":"이미 작동하는 오버레이에서 시작하세요.","Starting files":"파일 시작","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Templates Gallery":"템플릿 갤러리","Test":"테스트","Test it":"테스트하기","Test it, one piece at a time":"하나씩 테스트하기","Test-message guide":"테스트 메시지 안내","The URL box lets you add":"URL 입력란에서는 다음을 추가할 수 있습니다:","The map loads local JSON files with":"지도는 다음을 사용해 로컬 JSON 파일을 불러옵니다:","The packaged display sanitizer.":"동봉된 표시용 새니타이저.","The page's specific media/event/action trigger":"페이지의 특정 미디어/이벤트/액션 트리거","The real trigger":"실제 트리거","The script may be rebuilding its container. Put permanent decoration outside it, or update the rendering template.":"스크립트가 컨테이너를 다시 만들 수 있습니다. 고정 장식을 밖에 두거나 렌더링 템플릿을 수정하세요.","The value after":"다음 뒤의 값:","Tickers":"티커","Timer state and controls":"타이머 상태 및 제어","Timers":"타이머","Tip jars and goals":"팁병과 목표","Try this":"시도할 방법","URL":"URL","URLs, not HTML. Check them with the page's existing media/link rules, then set DOM properties.":"HTML이 아닌 URL입니다. 페이지의 기존 미디어/링크 규칙으로 확인한 뒤 DOM 속성을 설정하세요.","Unzip it into a folder you'll keep, like":"계속 보관할 폴더에 압축을 푸세요. 예:","Use":"사용:","Use a name like":"다음과 같은 이름을 사용하세요:","Use placeholders when sharing":"공유할 때는 예시 값 사용","Use the page's preview/demo mode if it has one, or made-up local samples. Try long names and messages, missing avatars, empty data, and the expected number of rows.":"페이지에 미리 보기/데모 모드가 있으면 사용하고, 없으면 가상의 로컬 샘플을 쓰세요. 긴 이름과 메시지, 없는 아바타, 빈 데이터, 예상 행 수를 시험하세요.","Use the type-specific prompt in each design guide, or start with this one. Give the AI your copied file and the styles and scripts it loads.":"각 디자인 가이드의 종류별 프롬프트를 쓰거나 이것으로 시작하세요. 복사한 파일과 불러오는 스타일 및 스크립트를 AI에 주세요.","Votes plus host poll settings":"투표 및 호스트 폴링 설정","Waitlists and queue draws":"대기자 명단 및 대기열 추첨","Want something ready-made? Try the":"완성된 것을 원하면 다음을 사용해 보세요:","What drives it":"무엇이 그것을 주도하는가","What it's for":"용도","What the folder looks like, and how paths work":"폴더 구조와 경로 작동 방식","Which events and fields each source sends.":"각 소스가 보내는 이벤트와 필드.","Why":"이유","Why leave Local file unchecked?":"로컬 파일을 선택하지 않은 상태로 두는 이유는 무엇입니까?","Word clouds and maps":"단어 구름과 지도","You can change an overlay's colors, fonts, layout, artwork, and motion. The":"오버레이의 색상, 글꼴, 레이아웃, 그림, 움직임을 바꿀 수 있습니다.","You only set this up once":"한 번만 설정하면 됩니다","and":"그리고","and choose":"을 열고 다음을 선택하세요:","and pick the":"을 선택하고 다음을 고르세요:","and set the width and height.":"을 선택하고 너비와 높이를 설정하세요.","beta repository":"베타 저장소","box.":"입력란.","box. It only affects that OBS source, not a normal browser.":"입력란에 붙이세요. 해당 OBS 소스에만 적용되고 일반 브라우저에는 적용되지 않습니다.","characters.":"문자입니다.","for display, and use a valid numeric USD":"을 표시용으로 쓰고 유효한 숫자 USD 값을 다음에 사용하세요:","from the SSN tool for that overlay.":"을 해당 오버레이의 SSN 도구에서 복사하세요.","from the link before expecting live data.":"을 링크에서 제거한 뒤 실시간 데이터를 확인하세요.","full link":"전체 링크","import guide":"가져오기 가이드","in the source properties.":"소스 속성에서.","is relative to the page that loads it. Move that page to the root and the path breaks. Copy your own artwork and fonts into the folder too, and use relative paths. Your edited copy won't get future SSN fixes automatically.":"은 불러오는 페이지 기준의 상대 경로입니다. 페이지를 루트로 옮기면 경로가 끊어집니다. 본인의 그림과 글꼴도 폴더에 복사하고 상대 경로를 쓰세요. 편집한 복사본은 향후 SSN 수정 사항을 자동으로 받지 못합니다.","is the page. The":"이 페이지입니다.","is your SSN session. It's not your YouTube channel, Twitch name, file name, or poll title. SSN and your page must use the same session and password. Keep SSN running: overlays only receive data. They don't capture chat themselves.":"이 SSN 세션입니다. YouTube 채널, Twitch 이름, 파일명, 투표 제목이 아닙니다. SSN과 페이지는 같은 세션과 비밀번호를 사용해야 합니다. 오버레이는 데이터만 받고 직접 채팅을 캡처하지 않으므로 SSN을 계속 실행하세요.","joins the rest":"으로 나머지를 연결합니다","launcher":"런처","next to":"옆에","onward. Paste it on the end of the file address. This keeps your session, password, settings, and any":"부터 끝까지 복사해 파일 주소 끝에 붙이세요. 세션, 비밀번호, 설정과 다음 값을 유지합니다:","or":"또는","otherwise":"그렇지 않으면","part.":"부분.","parts, that SSN is running, the feature is on, and the right input is arriving. Compare with the original SSN link.":"부분, SSN 실행 여부, 기능 활성화 여부, 올바른 입력 도착 여부를 확인하세요. 원본 SSN 링크와 비교하세요.","points to it and adds your session and display settings.":"은 해당 파일을 가리키고 세션과 표시 설정을 추가합니다.","remote API control of extension":"확장 프로그램 원격 API 제어","starts the settings,":"부터 설정이 시작되고,","to your file name. Keep the link in quotes, with plain":"을 본인의 파일명으로 바꾸세요. 링크를 따옴표 안에 두고 일반","token.":"토큰.","true":"true","turned on. Use a test setup: test messages can set off your automations.":"을 켜세요. 테스트 메시지가 자동화를 실행할 수 있으므로 테스트 환경을 사용하세요.","unchecked. Paste the full address into":"을 해제하세요. 전체 주소를 다음에 붙여 넣으세요:","with":"포함:","with the overlay's real trigger.":"을 오버레이의 실제 트리거로 확인하세요.","with the same session. The usual Extension API mode needs":"을 같은 세션으로 사용하세요. 일반적인 Extension API 모드에는 다음이 필요합니다:","with your SSN session settings added to its address.":"의 주소에 SSN 세션 설정을 붙이세요.","you want to change.":"중 변경할 항목.","yourself, or ask an AI tool to.":"을 직접 하거나 AI 도구에 요청하세요.","…becomes this for a downloaded poll copy on Windows:":"…Windows에 내려받은 투표 복사본에서는 이렇게 됩니다:"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/overlay-customization-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/overlay-customization-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide visual-guide">
+<header class="site-header"><div class="site-bar">
+<a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴">
+<a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a>
+</nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/overlay-customization-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/overlay-customization-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/overlay-customization-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/overlay-customization-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/overlay-customization-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/overlay-customization-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/overlay-customization-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/overlay-customization-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/overlay-customization-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/overlay-customization-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/overlay-customization-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="overlay-customization-guide.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/overlay-customization-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/overlay-customization-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/overlay-customization-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/overlay-customization-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/overlay-customization-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button>
+<button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button>
+</div></div></header>
+<section class="page-hero"><div class="container"><h1>나만의 소셜 스트림 오버레이 디자인</h1><p>각 오버레이 제품군에 대한 가이드와 함께 OBS에서 로컬 오버레이 디자인을 다운로드, 사용자 정의, 연결 및 테스트합니다.</p></div></section>
+<main class="guide-section"><div class="container">
+<nav class="guide-jump-links" aria-label="이 페이지에서"><a href="#quick-start">빠른 시작</a><a href="#choose">오버레이 선택</a><a href="#download">다운로드</a><a href="#session">세션 링크</a><a href="#local-file">OBS에서 열기</a><a href="#design">디자인 변경</a><a href="#safe-input">채팅을 안전하게 표시하기</a><a href="#test">테스트하기</a><a href="#references">AI용 파일</a><a href="#troubleshooting">문제 해결</a></nav>
+
+<section class="guide-card" id="quick-start"><h2>5단계로 나만의 오버레이 만들기</h2>
+<div class="guide-flow-visual"><strong>파일 다운로드</strong><span aria-hidden="true">→</span><strong>디자인 변경</strong><span aria-hidden="true">→</span><strong>OBS에서 열기</strong></div>
+<ol class="guide-steps">
+<li><a href="#choose">대상 오버레이 선택</a> 중 변경할 항목.</li>
+<li><a href="#download">소스 ZIP 다운로드</a>을 내려받아 압축을 풀고 해당 오버레이의 HTML 파일을 복사하세요.</li>
+<li><a href="#design">복사본 편집</a> 을 직접 하거나 AI 도구에 요청하세요.</li>
+<li><a href="#local-file">OBS에서 복사본 열기</a> 의 주소에 SSN 세션 설정을 붙이세요.</li>
+<li><a href="#test">테스트하기</a> 을 오버레이의 실제 트리거로 확인하세요.</li>
+</ol>
+<div class="guide-note"><strong>색상이나 글꼴만 바꾸고 싶다면</strong> 다운로드하지 말고 일반 호스팅 링크를 유지한 채 OBS 브라우저 소스의 다음 항목에 CSS를 붙이세요: <strong>사용자 지정 CSS</strong> 입력란.</div>
+</section>
+
+<section class="guide-card" id="choose"><h2>변경할 오버레이 선택</h2>
+<p>오버레이의 색상, 글꼴, 레이아웃, 그림, 움직임을 바꿀 수 있습니다. <strong>HTML 파일</strong> 이 페이지입니다. <strong>OBS URL</strong> 은 해당 파일을 가리키고 세션과 표시 설정을 추가합니다.</p>
+<figure class="guide-shot"><a href="../../docs/images/guides/custom-chat-preview.png"><img src="../../docs/images/guides/custom-chat-preview.png" width="960" height="520" alt="모양을 변경하기 전에 작업 오버레이를 선택하세요." loading="lazy" decoding="async"></a><figcaption>이미 작동하는 오버레이에서 시작하세요.</figcaption></figure>
+<p>오버레이 종류마다 받는 입력이 다릅니다. 채팅, 선택한 메시지, 투표 페이지는 같은 입력을 쓰지 않습니다. 사용하는 종류의 디자인 가이드를 여세요:</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">디자인 가이드</th><th scope="col">파일 시작</th><th scope="col">무엇이 그것을 주도하는가</th></tr></thead><tbody>
+<tr><td data-label="디자인 가이드"><a href="chat-customization-guide.html">채팅 및 도킹</a></td><td data-label="파일 시작"><code>sampleoverlay.html, dock.html, themes/*</code></td><td data-label="무엇이 그것을 주도하는가">캡처된 모든 채팅 메시지</td></tr>
+<tr><td data-label="디자인 가이드"><a href="featured-customization-guide.html">강조 메시지</a></td><td data-label="파일 시작"><code>featured.html, samplefeatured.html, themes/featured-styles/*</code></td><td data-label="무엇이 그것을 주도하는가">선택한 메시지 및 지우기 명령</td></tr>
+<tr><td data-label="디자인 가이드"><a href="alerts-customization-guide.html">경고 및 이벤트 피드</a></td><td data-label="파일 시작"><code>multi-alerts.html, events.html, themes/events/index.html</code></td><td data-label="무엇이 그것을 주도하는가">매칭 이벤트 / 유료 채팅 행</td></tr>
+<tr><td data-label="디자인 가이드"><a href="poll-customization-guide.html">그래픽 여론 조사</a></td><td data-label="파일 시작"><code>poll.html</code></td><td data-label="무엇이 그것을 주도하는가">투표 및 호스트 폴링 설정</td></tr>
+<tr><td data-label="디자인 가이드"><a href="goals-customization-guide.html">팁병과 목표</a></td><td data-label="파일 시작"><code>tipjar.html</code></td><td data-label="무엇이 그것을 주도하는가">구성된 지원/수/과대평가 지표</td></tr>
+<tr><td data-label="디자인 가이드"><a href="stats-customization-guide.html">카운터 및 순위</a></td><td data-label="파일 시작"><code>hype.html, meta.html, leaderboard.html, scoreboard.html</code></td><td data-label="무엇이 그것을 주도하는가">개수, 메타데이터, 활동 또는 포인트 스냅샷</td></tr>
+<tr><td data-label="디자인 가이드"><a href="waitlist-customization-guide.html">대기자 명단 및 대기열 추첨</a></td><td data-label="파일 시작"><code>waitlist.html</code></td><td data-label="무엇이 그것을 주도하는가">호스트 대기열 및 승자 상태</td></tr>
+<tr><td data-label="디자인 가이드"><a href="giveaway-customization-guide.html">경품 전시</a></td><td data-label="파일 시작"><code>giveaway.html, giveaway-obs-entries.html</code></td><td data-label="무엇이 그것을 주도하는가">관리형 경품 상태 또는 레거시 참가 피드</td></tr>
+<tr><td data-label="디자인 가이드"><a href="timer-customization-guide.html">타이머</a></td><td data-label="파일 시작"><code>timer.html</code></td><td data-label="무엇이 그것을 주도하는가">타이머 상태 및 제어</td></tr>
+<tr><td data-label="디자인 가이드"><a href="ticker-customization-guide.html">티커</a></td><td data-label="파일 시작"><code>ticker.html</code></td><td data-label="무엇이 그것을 주도하는가">티커 내용 구성</td></tr>
+<tr><td data-label="디자인 가이드"><a href="community-customization-guide.html">단어 구름과 지도</a></td><td data-label="파일 시작"><code>wordcloud.html, map.html</code></td><td data-label="무엇이 그것을 주도하는가">일치하는 단어 또는 위치 항목</td></tr>
+<tr><td data-label="디자인 가이드"><a href="effects-customization-guide.html">반응과 미디어 효과</a></td><td data-label="파일 시작"><code>reactions.html, emotes.html, content.html, gif.html, confetti.html, stickers.html, actions.html</code></td><td data-label="무엇이 그것을 주도하는가">페이지의 특정 미디어/이벤트/액션 트리거</td></tr>
+<tr><td data-label="디자인 가이드"><a href="credits-customization-guide.html">크레딧</a></td><td data-label="파일 시작"><code>credits.html</code></td><td data-label="무엇이 그것을 주도하는가">수집된 참가자 및 크레딧 제어</td></tr>
+<tr><td data-label="디자인 가이드"><a href="media-customization-guide.html">음악 및 AI 디스플레이</a></td><td data-label="파일 시작"><code>spotify-overlay.html, cohost-overlay.html, bot.html, chatbot.html</code></td><td data-label="무엇이 그것을 주도하는가">지금 재생 중 또는 봇/공동 호스트 업데이트</td></tr>
+<tr><td data-label="디자인 가이드"><a href="commerce-customization-guide.html">제품 및 보드</a></td><td data-label="파일 시작"><code>monetization.html, commerce-board.html, shop_the_stream.html</code></td><td data-label="무엇이 그것을 주도하는가">공유커머스 상태</td></tr>
+<tr><td data-label="디자인 가이드"><a href="making-games.html#custom-design">게임과 보상</a></td><td data-label="파일 시작"><code>games/*, games/templates/*, games.html, battle.html</code></td><td data-label="무엇이 그것을 주도하는가">게임별 채팅, 선물, 명령</td></tr>
+<tr><td data-label="디자인 가이드"><a href="ai-overlay-builder-guide.html">생성된 AI 오버레이</a></td><td data-label="파일 시작"><code>aioverlay.html, aievent-overlay.html</code></td><td data-label="무엇이 그것을 주도하는가">저장된 디자인 및 구성된 이벤트 경로</td></tr>
+</tbody></table>
+<p>완성된 것을 원하면 다음을 사용해 보세요: <a href="overlay-gallery.html">오버레이 갤러리</a> 또는 <a href="templates.html">템플릿 갤러리</a>. StreamElements나 Streamlabs 채팅 스킨을 가져오려면 다음을 따르세요: <a href="streamelements-chat-guide.html">가져오기 가이드</a>. 해당 내보내기에는 별도 설정 절차가 있습니다.</p>
+</section>
+
+<section class="guide-card" id="download"><h2>파일 다운로드</h2>
+<ol class="guide-steps"><li><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">베타 소스 ZIP 다운로드</a>. 또는 다음을 여세요: <a href="https://github.com/steveseguin/social_stream/tree/beta">베타 저장소</a> 을 열고 다음을 선택하세요: <strong>코드 → ZIP 다운로드</strong>.</li>
+<li>계속 보관할 폴더에 압축을 푸세요. 예: <code>C:\SSN\social_stream-beta\</code>. ZIP 안에서 편집하지 마세요. SSN을 다시 설치할 필요는 없습니다.</li>
+<li>위 표에서 오버레이 파일을 찾아 원본 옆에 복사본을 만드세요. 예: <code>poll.html</code> &rarr; <code>my-poll.html</code>. 다음과 같은 테마의 경우: <code>themes/featured-styles/featured-modern.html</code>이면 복사본을 같은 폴더에 두세요.</li>
+<li>복사본을 텍스트 또는 코드 편집기에서 열고 다음 이름으로 저장하세요: <code>.html</code>그렇지 않다 <code>.html.txt</code>.</li></ol>
+<div class="warning-note"><strong>압축을 푼 폴더 전체를 보관하세요.</strong> HTML 파일 하나가 주변 폴더의 스크립트, 스타일, 글꼴, 이미지, 오디오, 데이터를 불러올 수 있습니다. 페이지를 옮기면 연결이 끊어집니다. GitHub 페이지 보기나 브라우저의 '페이지 저장'으로는 전부 받을 수 없습니다.</div>
+<details class="guide-extra"><summary>폴더 구조와 경로 작동 방식</summary>
+<pre><code>social_stream-beta/
+    poll.html
+    my-poll.html
+    currency.js
+    js/
+    libs/
+    shared/
+    thirdparty/
+    media/
+    sources/images/
+    themes/
+        featured-styles/
+            featured-modern.html
+            my-featured.html
+    docs/
+        event-reference.html</code></pre>
+<p>다음과 같은 경로: <code>../../shared/utils/chatHtml.js</code> 은 불러오는 페이지 기준의 상대 경로입니다. 페이지를 루트로 옮기면 경로가 끊어집니다. 본인의 그림과 글꼴도 폴더에 복사하고 상대 경로를 쓰세요. 편집한 복사본은 향후 SSN 수정 사항을 자동으로 받지 못합니다.</p>
+</details>
+</section>
+
+<section class="guide-card" id="session"><h2>세션 링크 유지</h2>
+<p>SSN을 시작하고 소스를 연결한 뒤 원본 오버레이가 작동하는지 확인하세요. 그런 다음 다음을 복사하세요: <strong>전체 링크</strong> 을 해당 오버레이의 SSN 도구에서 복사하세요.</p>
+<pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>다음 뒤의 값: <code>session=</code> 이 SSN 세션입니다. YouTube 채널, Twitch 이름, 파일명, 투표 제목이 아닙니다. SSN과 페이지는 같은 세션과 비밀번호를 사용해야 합니다. 오버레이는 데이터만 받고 직접 채팅을 캡처하지 않으므로 SSN을 계속 실행하세요.</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">규칙</th><th scope="col">이유</th></tr></thead><tbody>
+<tr><td data-label="규칙"><code>?</code> 부터 설정이 시작되고, <code>&amp;</code> 으로 나머지를 연결합니다</td><td data-label="이유">다시 입력하지 말고 복사하세요. HTML 속성 안에서는 다음처럼 쓰세요: <code>&amp;amp;</code>. 브라우저나 OBS URL 입력란에서는 일반 <code>&amp;</code>.</td></tr>
+<tr><td data-label="규칙">서버 설정 유지</td><td data-label="이유"><code>server</code>, <code>server2</code>, <code>server3</code>, 로컬 엔드포인트, 라벨, 버전 값은 페이지마다 다릅니다. 다른 오버레이가 사용한다는 이유만으로 서버 플래그를 추가하지 마세요.</td></tr>
+<tr><td data-label="규칙">다음 이후를 모두 유지하세요: <code>#</code></td><td data-label="이유">영향을 줄 수 있습니다. 예를 들어 AI Event Overlay는 비공개 <code>#aieventauth=...</code> 토큰.</td></tr>
+<tr><td data-label="규칙">공유할 때는 예시 값 사용</td><td data-label="이유">실제 세션, 비밀번호, 비공개 토큰은 스크린샷, 저장소, AI 프롬프트에 넣지 마세요.</td></tr>
+</tbody></table>
+<p>복사본이 비어 있으면 원본 링크부터 확인하세요. 일부 페이지는 빠진 설정을 묻지만, 다른 페이지는 숨겨져 있거나 이동합니다. 올바른 세션을 링크에 넣으면 추측할 필요가 없습니다.</p>
+</section>
+
+<section class="guide-card" id="local-file"><h2>OBS에서 파일 열기</h2>
+<p>편집한 파일을 컴퓨터에서 바로 여세요. 서버는 필요 없습니다.</p>
+<ol class="guide-steps"><li>HTML 복사본을 Chrome이나 Edge에 끌어 놓고 주소를 복사하세요. 주소는 다음으로 시작합니다: <code>file:///</code>.</li>
+<li>작동하는 SSN 오버레이 링크에서 다음 위치부터 전부 복사하세요: <code>?</code> 부터 끝까지 복사해 파일 주소 끝에 붙이세요. 세션, 비밀번호, 설정과 다음 값을 유지합니다: <code>#</code> 부분.</li>
+<li>합친 주소를 브라우저에서 열어 테스트하세요.</li>
+<li>OBS에서 다음을 추가하세요: <strong>브라우저 소스</strong>. 다음은 그대로 두세요: <strong>로컬 파일</strong> 을 해제하세요. 전체 주소를 다음에 붙여 넣으세요: <strong>URL</strong> 을 선택하고 너비와 높이를 설정하세요.</li></ol>
+<p>예: 이 SSN 링크가…</p>
+<pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>…Windows에 내려받은 투표 복사본에서는 이렇게 됩니다:</p>
+<pre><code>file:///C:/SSN/social_stream-beta/my-poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>macOS에서는 다음으로 시작합니다: <code>file:///Users/...</code>, Linux에서는 보통 <code>file:///home/...</code>. 브라우저에서 복사하면 공백과 슬래시를 자동으로 처리합니다.</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">알아 두면 좋은 내용</th><th scope="col">세부 사항</th></tr></thead><tbody>
+<tr><td data-label="알아 두면 좋은 내용">한 번만 설정하면 됩니다</td><td data-label="세부 사항">OBS는 주소를 저장합니다. 폴더를 옮기지 말고 SSN과 채팅 소스를 계속 실행하세요.</td></tr>
+<tr><td data-label="알아 두면 좋은 내용">변경 내용을 저장했다면</td><td data-label="세부 사항">클릭: <strong>현재 페이지의 캐시 새로고침 (Refresh cache of current page)</strong> 소스 속성에서.</td></tr>
+<tr><td data-label="알아 두면 좋은 내용">로컬 파일을 선택하지 않은 상태로 두는 이유는 무엇입니까?</td><td data-label="세부 사항">URL 입력란에서는 다음을 추가할 수 있습니다: <code>?session=...</code>. 로컬 파일로 선택하는 것만으로는 이 설정이 추가되지 않습니다.</td></tr>
+</tbody></table>
+<details class="guide-extra"><summary>선택 사항: 실행기와 함께 로컬 파일 확인란을 사용합니다.</summary>
+<p>OBS의 파일 선택기는 파일만 고르며 설정을 추가하지 못합니다. 작은 실행 페이지를 사용하면 설정을 붙여 편집한 페이지를 열 수 있습니다:</p>
+<ol class="guide-steps"><li>아래 코드를 다음 이름으로 저장하세요: <code>launch-my-poll.html</code> 옆에 <code>my-poll.html</code>.</li>
+<li>예시 링크를 복사한 전체 SSN 링크로 바꾸세요. 다음도 바꾸세요: <code>./my-poll.html</code> 을 본인의 파일명으로 바꾸세요. 링크를 따옴표 안에 두고 일반 <code>&amp;</code> 문자입니다.</li>
+<li>실행 페이지를 더블 클릭해 테스트하세요. OBS에서는 다음을 선택하세요: <strong>로컬 파일</strong> 을 선택하고 다음을 고르세요: <strong>런처</strong>을 사용하세요. 설정과 다음 값을 붙여 오버레이로 이동합니다: <code>#</code> 부분.</li></ol>
+<pre><code id="local-launcher-example">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;title&gt;My local overlay launcher&lt;/title&gt;
+&lt;p&gt;Opening the local overlay...&lt;/p&gt;
+&lt;script&gt;
+var copiedLink = new URL(&quot;https://socialstream.ninja/poll.html?session=YOUR_SESSION&quot;);
+var localPage = new URL(&quot;./my-poll.html&quot;, window.location.href);
+localPage.search = copiedLink.search;
+localPage.hash = copiedLink.hash;
+window.location.replace(localPage.href);
+&lt;/script&gt;
+&lt;/html&gt;</code></pre>
+<p>하위 폴더의 테마는 해당 복사본 옆에 실행 페이지를 두세요. 연결 링크를 포함하므로 실행 페이지는 비공개로 보관하세요. 설정까지 포함한 독립형 내보내기는 자체 지침을 따릅니다.</p>
+</details>
+<p>OBS의 파일/URL 모드, 크기, 사용자 지정 CSS, 새로 고침 설명은 다음 문서에 있습니다: <a href="https://obsproject.com/kb/browser-source">브라우저 소스 참조</a>.</p>
+</section>
+
+<section class="guide-card" id="design"><h2>디자인을 변경하거나 AI에 다음을 요청하세요:</h2>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">원하는 작업…</th><th scope="col">할 작업</th></tr></thead><tbody>
+<tr><td data-label="원하는 작업">CSS만 변경</td><td data-label="할 작업">호스팅 링크를 유지하고 OBS의 다음 기능을 사용하세요: <strong>사용자 지정 CSS</strong> 입력란에 붙이세요. 해당 OBS 소스에만 적용되고 일반 브라우저에는 적용되지 않습니다.</td></tr>
+<tr><td data-label="원하는 작업">편집한 HTML 복사본의 스타일 변경</td><td data-label="할 작업">기존 스타일 뒤에 스타일을 추가하거나, 그 뒤에 로컬 스타일시트를 연결하세요.</td></tr>
+<tr><td data-label="원하는 작업">사용: <code>&amp;css=</code> 또는 <code>&amp;b64css=</code></td><td data-label="할 작업">일부 페이지만 지원합니다. <code>poll.html</code>같은 페이지는 둘 다 읽지 않습니다. 먼저 페이지 코드를 확인하세요.</td></tr>
+<tr><td data-label="원하는 작업">HTML 레이아웃 변경</td><td data-label="할 작업">스크립트에서 사용하는 ID와 클래스를 유지하세요. 업데이트마다 요소를 다시 만드는 스크립트라면 고정 장식을 그 밖에 두거나 렌더러에 추가하세요.</td></tr>
+<tr><td data-label="원하는 작업">공유 스타일시트나 스크립트 편집</td><td data-label="할 작업">복사한 뒤 페이지가 복사본을 참조하게 해서 본인의 디자인만 바뀌도록 하세요.</td></tr>
+</tbody></table>
+<p>로고, 글꼴 파일, 브랜드 색상, 캔버스 크기, 참고 이미지를 준비하세요. 웹페이지는 보통 다른 컴퓨터의 디스크에서 글꼴이나 이미지를 불러올 수 없습니다.</p>
+<h3>AI 프롬프트</h3>
+<p>각 디자인 가이드의 종류별 프롬프트를 쓰거나 이것으로 시작하세요. 복사한 파일과 불러오는 스타일 및 스크립트를 AI에 주세요.</p>
+<pre><code>Customize [copied overlay filename] to match [reference/design].
+Canvas: [width x height]. Placement: [position]. Colors/fonts: [details].
+Use the existing page and its supporting files, rather than replacing its
+connection and event logic. Read docs/event-reference.html and the relevant
+overlay design guide. Preserve query parameters, session/password, URL
+fragments, bridge labels, transport channels, settings, and controls.
+Use CSS first. Keep relative paths and package all executable dependencies
+locally. Use classic scripts compatible with Chrome 80.
+Keep operator controls, private links, and credentials off the audience view.
+
+Treat all incoming messages, names, labels, donations, and metadata as untrusted.
+Prevent HTML/JavaScript injection in every renderer you change. Use textContent
+for plain fields and for chatmessage when textonly is true. For HTML-mode
+chatmessage, keep supported emotes/formatting through the packaged
+SocialStreamChatHTML.sanitize helper (libs/objects.js loaded first).
+Do not concatenate raw input into innerHTML, attributes, CSS, or JavaScript.
+Validate media/link URLs with the page's existing URL policy and assign DOM
+properties; do not enable javascript: URLs or executable embedded content.
+Never eval incoming data or treat a viewer message as an AI instruction.
+Keep source checks, connection handling, and existing sanitizers.
+Test plain text, allowed emotes, quotes, angle brackets, and an HTML injection
+probe in an isolated preview; verify the probe cannot execute.
+
+Make the edited overlay work directly from disk using a file:/// URL,
+without requiring a local web server. Return the edited files and assets,
+file URL and OBS setup steps, and tests
+for this overlay's real trigger. Use session placeholders in shared examples.
+Explain any behavior changes separately from the design edits.</code></pre>
+<div class="guide-note"><strong>겉모양만 되는 결과를 받아들이지 마세요.</strong> 고정된 샘플 메시지로만 작동하는 디자인은 완성된 것이 아닙니다. 원본 파일을 보관하고 같은 입력으로 둘을 비교하세요.</div>
+</section>
+
+<section class="guide-card" id="safe-input"><h2>수신한 채팅이 코드가 되지 않게 하기</h2>
+<p>이름, 메시지, 제목, 금액, 링크는 시청자와 외부 서비스에서 옵니다. 코드가 아닌 텍스트로 취급하고 렌더러가 페이지에 넣는 지점에서 정리하세요.</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">필드</th><th scope="col">표시 방법</th></tr></thead><tbody>
+<tr><td data-label="필드"><code>chatmessage</code> 포함: <code>textonly</code> true</td><td data-label="표시 방법">일반 텍스트(<code>textContent</code>).</td></tr>
+<tr><td data-label="필드"><code>chatmessage</code> 그렇지 않으면</td><td data-label="표시 방법">이모트와 허용된 서식을 포함할 수 있습니다. 동봉된 새니타이저를 사용하세요.</td></tr>
+<tr><td data-label="필드">이름, 금액, 제목 등 일반 텍스트 필드</td><td data-label="표시 방법">일반 텍스트(<code>textContent</code>).</td></tr>
+<tr><td data-label="필드"><code>chatimg</code>, <code>contentimg</code>, 링크</td><td data-label="표시 방법">HTML이 아닌 URL입니다. 페이지의 기존 미디어/링크 규칙으로 확인한 뒤 DOM 속성을 설정하세요.</td></tr>
+</tbody></table>
+<pre><code id="safe-chat-render-example">&lt;!-- Example for a copied page at the repository root. --&gt;
+&lt;script src=&quot;./libs/objects.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;./shared/utils/chatHtml.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+function renderChatBody(element, data) {
+    var message = String(data.chatmessage == null ? &quot;&quot; : data.chatmessage);
+    if (data.textonly) {
+        element.textContent = message;
+    } else {
+        element.innerHTML = SocialStreamChatHTML.sanitize(message);
+    }
+}
+// Names, amounts, titles, and other plain fields use textContent:
+// nameElement.textContent = String(data.chatname || &quot;&quot;);
+&lt;/script&gt;</code></pre>
+<ul>
+<li>이미 새니타이저가 있으면 유지하고 두 번째를 추가하지 마세요.</li>
+<li>하위 폴더의 파일은 스크립트 경로를 수정하세요.</li>
+<li>원시 이름을 속성 문자열에, 원시 색상 값을 스타일 마크업에 붙이지 마세요. 스타일 값을 검증하고 속성별로 설정하세요.</li>
+<li>정리된 HTML도 JavaScript로 실행하거나 AI 지시로 사용하면 안전하지 않습니다.</li>
+</ul>
+<p>더 알아보기: <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html">안전한 출력 지점과 HTML 정리에 관한 OWASP 가이드</a>.</p>
+<details class="guide-extra"><summary>렌더러를 안전하게 테스트하는 방법</summary>
+<p>공개 채팅이 아닌 비공개 로컬 미리 보기에서 실행하세요.</p>
+<ul><li>다음과 같은 이름을 사용하세요: <code>Guest &lt;b&gt;One&lt;/b&gt;</code>. 꺾쇠괄호가 글자로 보여야 합니다.</li>
+<li>보내기 <code>chatmessage: "&lt;b&gt;Hello&lt;/b&gt;"</code> 포함: <code>textonly: true</code>로 설정한 뒤 false로 바꾸세요. 한쪽은 태그를 글자로, 다른 쪽은 굵은 글자로 표시해야 합니다.</li>
+<li>지원되는 이모트와 이미지만 있는 메시지도 여전히 작동하는지 확인하세요.</li>
+<li>AI에 다음과 같은 무해한 입력을 시험하게 하세요: <code>&lt;img src=x onerror="window.__ssnInjectionProbe=1"&gt;</code>. 실행되거나, 표식을 설정하거나, 이벤트 속성을 남겨서는 안 됩니다. 스크립트 스킴 링크도 테스트하세요.</li></ul>
+<p>통과한 테스트는 시도한 경로만 확인합니다. 디자인을 바꾼 렌더러와 필드에 집중하세요.</p>
+</details>
+</section>
+
+<section class="guide-card" id="test"><h2>하나씩 테스트하기</h2>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">테스트</th><th scope="col">방법</th></tr></thead><tbody>
+<tr><td data-label="테스트">레이아웃</td><td data-label="방법">페이지에 미리 보기/데모 모드가 있으면 사용하고, 없으면 가상의 로컬 샘플을 쓰세요. 긴 이름과 메시지, 없는 아바타, 빈 데이터, 예상 행 수를 시험하세요.</td></tr>
+<tr><td data-label="테스트">SSN 전달</td><td data-label="방법">SSN을 켜 두고 다음을 사용하세요: <a href="test-message-guide.html">테스트 메시지 만들기 (Create Test Message)</a> 을 같은 세션으로 사용하세요. 일반적인 Extension API 모드에는 다음이 필요합니다: <strong>확장 프로그램 원격 API 제어</strong> 을 켜세요. 테스트 메시지가 자동화를 실행할 수 있으므로 테스트 환경을 사용하세요.</td></tr>
+<tr><td data-label="테스트">실제 트리거</td><td data-label="방법">Dock 메시지를 선택해 카드에 표시하고, 투표하고, 추첨 당첨자를 고르고, 티커 문구를 바꾸거나 타이머를 시작해 보세요. 일반 채팅만으로 모든 기능을 시험할 수는 없습니다.</td></tr>
+<tr><td data-label="테스트">실제 캡처</td><td data-label="방법">실제 메시지나 이벤트가 원본과 복사본 모두에 도착하는지 확인하세요. 가짜 이벤트는 표시 기능만 확인합니다.</td></tr>
+<tr><td data-label="테스트">OBS</td><td data-label="방법">최종 크기, 투명도, 애니메이션, 오디오, 글꼴, 겹침 순서를 확인하세요. 표시/숨기기, 지우기/초기화, 새로 고침도 해 보세요. OBS와 브라우저는 로그인이나 저장 데이터를 공유하지 않습니다.</td></tr>
+</tbody></table>
+<div class="warning-note"><strong>새로 고침하면 데이터가 사라질 수 있습니다.</strong> 일부 페이지는 데이터를 메모리에 보관합니다. 자동 새로 고침이나 숨김 시 종료를 켜기 전에 종류별 가이드를 확인하세요. 제거할 항목: <code>demo</code> 또는 <code>preview</code> 을 링크에서 제거한 뒤 실시간 데이터를 확인하세요.</div>
+</section>
+
+<section class="guide-card" id="references"><h2>AI에 전달할 파일</h2>
+<p>오버레이 자체 파일과 불러오는 CSS/JS, 그리고 아래 파일들을 AI에 주세요. 이벤트 참조 문서만으로는 투표 조작이나 각 오버레이의 레이아웃 코드를 알 수 없습니다.</p>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">파일</th><th scope="col">용도</th></tr></thead><tbody>
+<tr><td data-label="파일"><a href="event-reference.html"><code>docs/event-reference.html</code></a></td><td data-label="용도">공식 필드, 이름 있는 이벤트, 메타데이터, 미디어, 후원 금액.</td></tr>
+<tr><td data-label="파일"><a href="../../docs/index.html?file=customoverlays.md"><code>docs/customoverlays.md</code></a></td><td data-label="용도">맞춤 수신기와 연결 예시.</td></tr>
+<tr><td data-label="파일"><a href="events-alerts-compatibility.html">이벤트 및 알림 호환성</a></td><td data-label="용도">각 소스가 보내는 이벤트와 필드.</td></tr>
+<tr><td data-label="파일"><a href="test-message-guide.html">테스트 메시지 안내</a> 그리고 <a href="../../createtestmessage.html"><code>createtestmessage.html</code></a></td><td data-label="용도">페이로드 예시와 전달 모드.</td></tr>
+<tr><td data-label="파일"><a href="../../libs/objects.js"><code>libs/objects.js</code></a> 그리고 <a href="../../shared/utils/chatHtml.js"><code>shared/utils/chatHtml.js</code></a></td><td data-label="용도">동봉된 표시용 새니타이저.</td></tr>
+<tr><td data-label="파일"><a href="../../shared/utils/chatBadges.js"><code>shared/utils/chatBadges.js</code></a> 그리고 <a href="../../shared/utils/contentImage.js"><code>shared/utils/contentImage.js</code></a></td><td data-label="용도">기존 배지와 이미지 처리.</td></tr>
+<tr><td data-label="파일"><a href="../../js/transport-dedupe.js"><code>js/transport-dedupe.js</code></a>, <a href="../../js/local-server-url.js"><code>js/local-server-url.js</code></a>, <a href="../../shared/overlay-control-transport.js"><code>shared/overlay-control-transport.js</code></a></td><td data-label="용도">페이지가 불러오는 경우 기존 연결 지원.</td></tr>
+<tr><td data-label="파일"><a href="../../currency.js"><code>currency.js</code></a></td><td data-label="용도">유지: <code>hasDonation</code> 을 표시용으로 쓰고 유효한 숫자 USD 값을 다음에 사용하세요: <code>donoValue</code>0을 포함합니다.</td></tr>
+<tr><td data-label="파일"><a href="../actions/event-flow-guide.html">Event Flow</a> 그리고 <a href="commands.html">명령 및 API</a></td><td data-label="용도">디자인에 트리거가 필요하면 기존 컨트롤을 재사용하세요.</td></tr>
+</tbody></table>
+</section>
+
+<section class="guide-card" id="troubleshooting"><h2>문제 해결</h2>
+<table class="guide-table guide-table-stack"><thead><tr><th scope="col">문제</th><th scope="col">시도할 방법</th></tr></thead><tbody>
+<tr><td data-label="문제">파일을 찾을 수 없습니다</td><td data-label="시도할 방법">HTML을 다시 브라우저에 끌어 놓고 주소를 복사하세요. 파일 이름이 .html.txt가 아닌 .html로 끝나는지 확인하세요.</td></tr>
+<tr><td data-label="문제">스크립트, 글꼴 또는 이미지 누락</td><td data-label="시도할 방법">압축을 푼 폴더 구조를 그대로 유지하고 복사본을 원본 옆에 두세요. 추가한 그림과 글꼴이 페이지가 기대하는 위치에 있는지 확인하세요.</td></tr>
+<tr><td data-label="문제">빈 화면 또는 '대기 중' 표시</td><td data-label="시도할 방법">세션, 비밀번호, 전체 <code>?</code> 그리고 <code>#</code> 부분, SSN 실행 여부, 기능 활성화 여부, 올바른 입력 도착 여부를 확인하세요. 원본 SSN 링크와 비교하세요.</td></tr>
+<tr><td data-label="문제">OBS와 브라우저에서 모양이 다름</td><td data-label="시도할 방법">너비/높이, 이전 사용자 지정 CSS, 글꼴, 캐시, 브라우저 저장소를 확인하세요. 저장 후 새로 고침하세요.</td></tr>
+<tr><td data-label="문제">업데이트하면 로고가 사라짐</td><td data-label="시도할 방법">스크립트가 컨테이너를 다시 만들 수 있습니다. 고정 장식을 밖에 두거나 렌더링 템플릿을 수정하세요.</td></tr>
+<tr><td data-label="문제">데이터가 초기화되거나 동작이 두 번 실행됨</td><td data-label="시도할 방법">새로 고침/종료 설정, 중복 오버레이나 컨트롤, 페이지의 중복 처리와 상태 관리를 확인하세요.</td></tr>
+</tbody></table>
+<details class="guide-extra" id="local-http"><summary>특별한 경우: 별도의 데이터 파일을 읽는 페이지</summary>
+<p>지도는 다음을 사용해 로컬 JSON 파일을 불러옵니다: <code>fetch()</code>을 사용하며, 디스크에서 열면 브라우저가 차단할 수 있습니다. 지도 스타일만 바꾸려면 호스팅 링크와 OBS 사용자 지정 CSS를 사용하세요. 파일을 편집하려면 디스크에서 열 수 있도록 지도 데이터를 페이지에 넣어 달라고 AI에 요청하세요. 호스팅은 꼭 필요한 페이지의 고급 옵션이며 일반적인 단계가 아닙니다.</p>
+</details>
+<p>확인된 가장 작은 문제부터 고치세요. 스타일 변경에 캡처 스크립트 수정이나 새 이벤트 필드가 필요하지는 않습니다. 공개 포크를 공유할 때는 필요한 리소스를 포함하고 비공개 실행 페이지는 제외하세요.</p>
+</section>
+</div></main>
+<footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja &middot; <a href="overlay-customization-guide.html">오버레이 디자인 가이드</a> &middot; <a href="guides.html">모든 가이드</a></p></div></div></footer>
+<script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

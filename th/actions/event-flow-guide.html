@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="สร้างระบบอัตโนมัติ Social Stream Ninja ด้วยทริกเกอร์ เงื่อนไข และแอ็กชัน Event Flow เชื่อมเหตุการณ์แชตสดกับเสียง สื่อ รางวัล และตัวควบคุม OBS">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/th/actions/event-flow-guide.html">
+    <meta property="og:title" content="คู่มือ Event Flow - Social Stream Ninja">
+    <meta property="og:description" content="สร้างระบบอัตโนมัติ Social Stream Ninja ด้วยทริกเกอร์ เงื่อนไข และแอ็กชัน Event Flow เชื่อมเหตุการณ์แชตสดกับเสียง สื่อ รางวัล และตัวควบคุม OBS">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/th/actions/event-flow-guide.html">
+    <meta name="twitter:title" content="คู่มือ Event Flow - Social Stream Ninja">
+    <meta name="twitter:description" content="สร้างระบบอัตโนมัติ Social Stream Ninja ด้วยทริกเกอร์ เงื่อนไข และแอ็กชัน Event Flow เชื่อมเหตุการณ์แชตสดกับเสียง สื่อ รางวัล และตัวควบคุม OBS">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คู่มือ Event Flow - Social Stream Ninja</title>
+    <link rel="canonical" href="https://socialstream.ninja/th/actions/event-flow-guide.html">
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1f2937 40%, #312e81 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .guide-shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(4, 12, 38, 0.5);
+        }
+        header {
+            background: radial-gradient(circle at top left, rgba(109,40,217,0.15), transparent),
+                        linear-gradient(135deg, #4c1d95, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+        }
+        header p {
+            font-size: 1.2rem;
+            max-width: 640px;
+            opacity: 0.92;
+        }
+        .content {
+            padding: 45px 55px 65px;
+        }
+        section {
+            margin-bottom: 60px;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 18px;
+            color: #312e81;
+        }
+        h3 {
+            font-size: 1.4rem;
+            margin: 25px 0 10px;
+            color: #4338ca;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 25px;
+            margin: 15px 0;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .panel {
+            background: #f7f7fb;
+            border: 1px solid rgba(67,56,202,0.12);
+            border-radius: 12px;
+            padding: 22px 25px;
+            margin: 22px 0;
+        }
+        .panel strong {
+            color: #312e81;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            padding: 22px;
+            border-radius: 14px;
+            margin: 25px 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 22px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+        }
+        .card h4 {
+            margin-bottom: 12px;
+            color: #4c1d95;
+        }
+        code {
+            background: rgba(226,232,240,0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .callout {
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            border-left: 4px solid;
+        }
+        .callout.tip { background: #eef2ff; border-color: #4338ca; }
+        .callout.warn { background: #fef3c7; border-color: #d97706; }
+        .callout.danger { background: #fee2e2; border-color: #b91c1c; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+        .var-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            font-size: 0.95rem;
+        }
+        .var-table th, .var-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .var-table th {
+            background: #f7f7fb;
+            color: #312e81;
+            font-weight: 600;
+        }
+        .var-table tr:hover {
+            background: rgba(99,102,241,0.04);
+        }
+        .var-table code {
+            background: rgba(99,102,241,0.1);
+            color: #4338ca;
+        }
+        /* ── Custom JS section additions ── */
+        .code-js {
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 18px 22px;
+            border-radius: 10px;
+            margin: 16px 0;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.88rem;
+            line-height: 1.65;
+            overflow-x: auto;
+            white-space: pre;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .snippet-block {
+            margin: 28px 0;
+            border: 1px solid rgba(67,56,202,0.15);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .snippet-label {
+            background: rgba(67,56,202,0.07);
+            padding: 10px 18px;
+            font-weight: 600;
+            color: #312e81;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .snippet-desc {
+            padding: 10px 18px 0;
+            font-size: 0.93rem;
+            color: #475569;
+        }
+        .snippet-block .code-js {
+            border-radius: 0;
+            margin: 0;
+            border: none;
+            border-top: 1px solid rgba(0,0,0,0.15);
+        }
+        figure.screenshot {
+            margin: 24px 0;
+            text-align: center;
+        }
+        figure.screenshot img {
+            max-width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(15,23,42,0.12);
+            box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+        }
+        figure.screenshot figcaption {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #64748b;
+            font-style: italic;
+        }
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 24px 0;
+            align-items: start;
+        }
+        .desktop-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #312e81;
+            color: #e0e7ff;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            padding: 3px 10px;
+            border-radius: 999px;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        .snippet-heading {
+            margin: 28px 0 4px;
+            color: #4c1d95;
+        }
+        @media (max-width: 700px) {
+            header, .content { padding: 35px 20px; }
+            h1 { font-size: 2rem; }
+            .diagram { font-size: 0.85rem; }
+            .var-table { font-size: 0.85rem; display: block; max-width: 100%; overflow-x: auto; }
+            .var-table th, .var-table td { padding: 8px 10px; }
+            .panel code { overflow-wrap: anywhere; }
+            .two-col { grid-template-columns: 1fr; }
+            .code-js { font-size: 0.8rem; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"actions/event-flow-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{"\"Desktop only\"":"\"เฉพาะเดสก์ท็อป\"","\"chat message contains !raffle\").":"\"ข้อความแชตมี !raffle\")","$5.00, 500 bits":"$5.00, 500 bits","(Send Test Event) before pushing a flow live.":"(Send Test Event) ก่อนเปิดใช้โฟลว์จริง","(Twitch Message, Timers, Manual Trigger, etc.) ignore upstream input. They generate their own payload and always emit":"(Twitch Message, Timers, Manual Trigger ฯลฯ) ไม่สนใจอินพุตจากโหนดก่อนหน้า โดยสร้างเพย์โหลดเองและส่งค่าเสมอเป็น","(action). They are the escape hatch for anything the built-in nodes cannot express.":"(แอ็กชัน) ใช้สำหรับสิ่งที่โหนดในตัวไม่สามารถทำได้","(counters, toggles, timers) to track context between events.":"(ตัวนับ สวิตช์ ตัวจับเวลา) เพื่อติดตามบริบทระหว่างเหตุการณ์","(current flow result state),":"(สถานะผลลัพธ์โฟลว์ปัจจุบัน)","(left ports) expect the message context.":"(พอร์ตซ้าย) รับบริบทข้อความ","(paste into the action's JavaScript Code field):":"(วางในช่อง JavaScript Code ของแอ็กชัน):","(paste into the trigger's JavaScript Code field):":"(วางในช่อง JavaScript Code ของทริกเกอร์):","(platform, type, chatname, chatmessage, etc.). Attach custom data under":"(platform, type, chatname, chatmessage ฯลฯ) แนบข้อมูลกำหนดเองไว้ใต้","(right ports) emit the same context plus any edits.":"(พอร์ตขวา) ส่งบริบทเดิมพร้อมการแก้ไข","(see":"(ดู","(the event payload),":"(เพย์โหลดเหตุการณ์)","(top-right of the editor) to send a synthetic message through the pipeline without needing a live stream. Set the chatname to a subscriber, add a message like":"(มุมขวาบนของตัวแก้ไข) เพื่อส่งข้อความจำลองผ่านขั้นตอนการทำงานโดยไม่ต้องไลฟ์ ตั้ง chatname เป็นชื่อผู้สมัครสมาชิก แล้วเพิ่มข้อความ เช่น","(trigger) and":"(ทริกเกอร์) และ","(trigger) or a no-op (action) and logs to the DevTools console. The flow doesn't crash.":"(ทริกเกอร์) หรือไม่ทำอะไร (แอ็กชัน) และบันทึกลงคอนโซล DevTools โดยโฟลว์ไม่ล่ม","). Treat imported flow files like executable code. Only import flows from sources you trust.":") ปฏิบัติต่อไฟล์โฟลว์ที่นำเข้าเหมือนโค้ดที่รันได้ นำเข้าเฉพาะโฟลว์จากแหล่งที่เชื่อถือ",", a new line, then":" ขึ้นบรรทัดใหม่ แล้วตามด้วย",", and":", และ",", and confirm the Relay Chat destination receives the reformatted string.":" แล้วตรวจสอบว่าปลายทาง Relay Chat ได้รับข้อความที่จัดรูปแบบใหม่",", and the OBS controls need a rendering surface. That surface is the Flow Actions overlay page served from":" และตัวควบคุม OBS ต้องมีพื้นที่แสดงผล พื้นที่นั้นคือหน้าโอเวอร์เลย์ Flow Actions ที่ให้บริการจาก",", not when it happens:":" ไม่ใช่เวลาที่มันเกิดขึ้น:",", or":", หรือ",", or leave it blank to use the Flow Actions TTS default.":" หรือเว้นว่างเพื่อใช้ค่า TTS เริ่มต้นของ Flow Actions",", plus":" พร้อมกับ",", so the output is":" ดังนั้นเอาต์พุตจึงเป็น",", source / filter / mute / text actions will not work until OBS / obs-websocket is upgraded.":" แอ็กชันแหล่งข้อมูล / ฟิลเตอร์ / ปิดเสียง / ข้อความจะไม่ทำงานจนกว่าจะอัปเกรด OBS / obs-websocket",", then return":" แล้วคืนค่า",". A flow built only from actions chained together looks valid but is permanently idle, because nothing ever starts the chain. Node names describe what the node":" โฟลว์ที่มีแต่แอ็กชันต่อกันดูเหมือนถูกต้อง แต่จะไม่ทำงานเลย เพราะไม่มีสิ่งเริ่มสายงาน ชื่อโหนดอธิบายว่าโหนดนั้น",". Connect that wire into NOT to invert the result.":" เชื่อมเส้นนั้นเข้า NOT เพื่อกลับผลลัพธ์",". Drag a wire from the colored output you need (green = true, gray/red = false) to the next node.":" ลากเส้นจากเอาต์พุตสีที่ต้องการ (เขียว = true, เทา/แดง = false) ไปยังโหนดถัดไป",". Each flow can subscribe to multiple platforms at once.":" แต่ละโฟลว์รับเหตุการณ์จากหลายแพลตฟอร์มพร้อมกันได้",". Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set.":". Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set.",". If you're accepting shared flows from others, audit the JS before activating them.":" หากรับโฟลว์ที่ผู้อื่นแชร์มา ให้ตรวจสอบ JS ก่อนเปิดใช้",". Keep it running in your broadcasting software (OBS/Streamer.bot browser docks/etc.) so Event Flow actions have somewhere to appear.":" เปิดหน้านี้ให้ทำงานในซอฟต์แวร์ถ่ายทอดสดของคุณ (แผงเบราว์เซอร์ OBS/Streamer.bot ฯลฯ) เพื่อให้แอ็กชัน Event Flow มีที่แสดงผล",". Keep it wired to something meaningful or disable the node so it does not accidentally unblock a flow.":" เชื่อมต่อกับสิ่งที่มีความหมาย หรือปิดโหนด เพื่อไม่ให้ปลดบล็อกโฟลว์โดยไม่ตั้งใจ",". Open the editor through the":" เปิดตัวแก้ไขผ่าน",". Paste it into an OBS Browser Source (1920×1080 suggested) or open it in any overlay browser.":" วางในแหล่งเบราว์เซอร์ OBS (แนะนำ 1920×1080) หรือเปิดในเบราว์เซอร์โอเวอร์เลย์ใดก็ได้",". Returning the Promise lets Event Flow wait for submission and report errors.":" การคืน Promise ทำให้ Event Flow รอการส่งงานและรายงานข้อผิดพลาดได้",". SSApp queues the job silently through the native Windows printer API and uses those saved settings. A flow can override them with options such as":" SSApp เข้าคิวงานแบบเงียบผ่าน API เครื่องพิมพ์ของ Windows และใช้การตั้งค่าที่บันทึกไว้ โฟลว์แทนที่ค่าเหล่านั้นได้ด้วยตัวเลือก เช่น",". Scene switching works here, and recording / streaming / replay buffer actions can fall back to it.":" การเปลี่ยนฉากใช้ได้ที่นี่ และแอ็กชันบันทึก / สตรีม / รีเพลย์บัฟเฟอร์ใช้วิธีนี้สำรองได้",". See the":" ดู",". The":"โดย",". The fields below are always available; platform-specific events may include additional ones.":" ฟิลด์ด้านล่างใช้ได้เสมอ เหตุการณ์เฉพาะแพลตฟอร์มอาจมีฟิลด์เพิ่มเติม",". They can still output an updated payload if you want to keep chaining actions.":" โหนดยังส่งเพย์โหลดที่อัปเดตแล้วได้ หากคุณต้องการต่อแอ็กชันถัดไป",". This controls display on re-ingest, not sending. Follow the":" ค่านี้ควบคุมการแสดงผลเมื่อรับกลับเข้ามา ไม่ใช่การส่ง ทำตาม",". Use two relay actions when a message should reach both variants. See":" ใช้แอ็กชันส่งต่อสองรายการเมื่อข้อความควรไปถึงทั้งสองแบบ ดู","0. Quick Orientation":"0. ภาพรวมเริ่มต้น","1. What Moves Through a Node?":"1. สิ่งที่ผ่านแต่ละโหนดคืออะไร?","2. Logic Node Cheatsheet":"2. สรุปโหนดตรรกะ","3. Example Micro-Flows":"3. ตัวอย่างโฟลว์ขนาดเล็ก","4. Preventing Echoes, Loops, and Relay Feedback":"4. ป้องกันข้อความสะท้อน วนซ้ำ และการส่งต่อวนกลับ","5. Inputs, Outputs, and Practical Questions":"5. อินพุต เอาต์พุต และคำถามในการใช้งานจริง","6. Template Variables Reference":"6. เอกสารอ้างอิงตัวแปรเทมเพลต","7. Best Practices Checklist":"7. รายการแนวปฏิบัติที่แนะนำ","8. Further Exploration":"8. เรียนรู้เพิ่มเติม","9. Custom JavaScript":"9. JavaScript กำหนดเอง",": add a standard Relay Chat node after the action and configure it to point at your Discord (or other) destination. No custom code is needed here. The reformatted":": เพิ่มโหนด Relay Chat มาตรฐานหลังแอ็กชัน แล้วตั้งให้ไปยังปลายทาง Discord (หรือปลายทางอื่น) ของคุณ ไม่ต้องใช้โค้ดกำหนดเองตรงนี้ โดยข้อความที่จัดรูปแบบใหม่ใน",": named triggers, a starter template, workflow discovery, extra data, HTTP/WebSocket/P2P examples, and dial gestures.":": ทริกเกอร์ที่มีชื่อ เทมเพลตเริ่มต้น การค้นหาเวิร์กโฟลว์ ข้อมูลเพิ่มเติม ตัวอย่าง HTTP/WebSocket/P2P และท่าทางบนปุ่มหมุน","; see":"— ดู","; with no trigger on top, nothing starts the chain.":" หากไม่มีทริกเกอร์ด้านบน ก็ไม่มีสิ่งเริ่มสายงาน","= continue,":"= ทำต่อ","= stop). Use":"= หยุด) ใช้","A 50/50 coin flip between two audio clips. The RANDOM gate rolls once per matching message: when it passes, sound A plays; when it fails, the NOT gate flips the result and the AND gate lets sound B play instead.":"สุ่มแบบ 50/50 ระหว่างคลิปเสียงสองคลิป เกต RANDOM สุ่มหนึ่งครั้งต่อข้อความที่ตรงเงื่อนไข เมื่อผ่านจะเล่นเสียง A เมื่อไม่ผ่าน เกต NOT กลับผลลัพธ์และเกต AND ให้เล่นเสียง B แทน","A Custom Code trigger (blue) and Execute Custom Code action (green) placed on the canvas. Wire the trigger's output port to the action's input port to connect them.":"ทริกเกอร์ Custom Code (สีน้ำเงิน) และแอ็กชัน Execute Custom Code (สีเขียว) บนแคนวาส ลากเส้นจากพอร์ตเอาต์พุตของทริกเกอร์ไปยังพอร์ตอินพุตของแอ็กชันเพื่อเชื่อมกัน","A bare NOT would output":"NOT ที่ไม่ได้เชื่อมอะไรจะส่งค่า","A floating NOT node will still output":"โหนด NOT ที่ลอยอยู่ยังคงส่งค่า","A recalculated gate bit (logic nodes) or passthrough bit (actions).":"บิตเกตที่คำนวณใหม่ (โหนดตรรกะ) หรือบิตที่ส่งผ่าน (แอ็กชัน)","A reflection is an outgoing message captured again from a destination chat. Current Relay Chat actions skip these recognized reflections; there is no separate No Reflections checkbox. To hide or limit their display in the Dock and overlays, use a":"ข้อความสะท้อนคือข้อความขาออกที่ถูกเก็บกลับมาจากแชตปลายทาง แอ็กชัน Relay Chat ปัจจุบันข้ามข้อความสะท้อนที่ตรวจพบเหล่านี้ โดยไม่มีช่อง No Reflections แยก หากต้องการซ่อนหรือจำกัดการแสดงในแผงด็อกและโอเวอร์เลย์ ให้ใช้","A runtime error in your code returns":"ข้อผิดพลาดขณะรันในโค้ดของคุณจะคืนค่า","A. Auto-reply Unless the Message Is a Command":"A. ตอบกลับอัตโนมัติ เว้นแต่ข้อความเป็นคำสั่ง","AND":"AND","Action Nodes":"โหนดแอ็กชัน","Action code can call":"โค้ดแอ็กชันเรียกใช้","Action nodes (green) never run on their own. They only fire when a trigger node (blue) above them evaluates":"โหนดแอ็กชัน (สีเขียว) ไม่ทำงานเอง แต่จะทำงานเมื่อโหนดทริกเกอร์ (สีน้ำเงิน) ที่อยู่ก่อนหน้าประเมินเป็น","Action panel showing Execute Custom Code under the Integrations group":"แผงแอ็กชันที่แสดง Execute Custom Code ในกลุ่ม Integrations","Action properties. Return an object to merge changes back into the flow result.":"คุณสมบัติแอ็กชัน คืนออบเจ็กต์เพื่อรวมการเปลี่ยนแปลงกลับเข้าในผลลัพธ์โฟลว์","Action snippets: return":"ตัวอย่างโค้ดแอ็กชัน — คืนค่า","Actions":"แอ็กชัน","Add a visual indicator at the end of every message that passes through this action.":"เพิ่มเครื่องหมายที่มองเห็นได้ท้ายทุกข้อความที่ผ่านแอ็กชันนี้","Additional context":"บริบทเพิ่มเติม","Advanced":"ขั้นสูง","Advanced Access Level":"ระดับสิทธิ์ขั้นสูง (Advanced Access Level)","Alias":"นามแฝง","Allow All":"อนุญาตทั้งหมด (Allow All)","Allow First":"อนุญาตรายการแรก (Allow First)","An error of type":"ข้อผิดพลาดชนิด","Any Message":"ข้อความใดก็ได้ (Any Message)","Any Message trigger connected to Feature Message and Speak Text actions":"ทริกเกอร์ Any Message เชื่อมกับแอ็กชัน Feature Message และ Speak Text","Any Message trigger connected to a Play Audio Clip action":"ทริกเกอร์ Any Message เชื่อมกับแอ็กชัน Play Audio Clip","Any node with a green output emits":"โหนดใดก็ตามที่มีเอาต์พุตสีเขียวจะส่งค่า","Append a badge or tag to the message":"เพิ่มป้ายหรือแท็กท้ายข้อความ","Arbitrary structured data attached to the event":"ข้อมูลมีโครงสร้างแบบใดก็ได้ที่แนบกับเหตุการณ์","Attach routing metadata for downstream nodes":"แนบเมทาดาทาการกำหนดเส้นทางสำหรับโหนดถัดไป","Attached image URL":"URL รูปภาพที่แนบ","Available:":"มีให้ใช้:","Avoid duplicate relay systems.":"หลีกเลี่ยงระบบส่งต่อซ้ำซ้อน","B. Require Multiple Checks with AND":"B. กำหนดให้ผ่านหลายเงื่อนไขด้วย AND","Block All":"บล็อกทั้งหมด (Block All)","Block message conditionally":"บล็อกข้อความตามเงื่อนไข","Both nodes receive the full event payload as":"ทั้งสองโหนดได้รับเพย์โหลดเหตุการณ์ทั้งหมดในรูป","Break cycles intentionally.":"ตัดวงจรอย่างตั้งใจ","Browser Source API:":"Browser Source API:","Build Social Stream Ninja automations with Event Flow triggers, conditions and actions. Connect live chat events to sounds, media, rewards and OBS controls.":"สร้างระบบอัตโนมัติ Social Stream Ninja ด้วยทริกเกอร์ เงื่อนไข และแอ็กชัน Event Flow เชื่อมเหตุการณ์แชตสดกับเสียง สื่อ รางวัล และตัวควบคุม OBS","Build loyalty-based commands, keyword games, or raffle gating with AND/OR/NOT logic.":"สร้างคำสั่งตามความภักดี เกมคีย์เวิร์ด หรือเงื่อนไขเข้าร่วมจับรางวัลด้วยตรรกะ AND/OR/NOT","Build reliable automations for Social Stream Ninja. This guide walks through the basics, logic nodes, signal flow, and the practical tricks that creators ask about most (like avoiding chat echoes and knowing when to stack AND/NOT blocks).":"สร้างระบบอัตโนมัติที่เชื่อถือได้สำหรับ Social Stream Ninja คู่มือนี้อธิบายพื้นฐาน โหนดตรรกะ การไหลของสัญญาณ และเทคนิคใช้งานจริงที่ผู้สร้างถามบ่อยที่สุด เช่น การหลีกเลี่ยงข้อความแชตสะท้อนและการเลือกเวลาที่ควรต่อบล็อก AND/NOT","C. NOT Node to Block Repeat Alerts":"C. ใช้โหนด NOT บล็อกการแจ้งเตือนซ้ำ","Call Webhook JSON:":"JSON สำหรับ Call Webhook:","Can a node emit a payload even if it returns false?":"โหนดส่งเพย์โหลดได้หรือไม่แม้คืนค่า false?","Can each Speak Text node use a different voice?":"แต่ละโหนด Speak Text ใช้เสียงต่างกันได้หรือไม่?","Canvas showing a Custom Code trigger and Execute Custom Code action side by side":"แคนวาสที่แสดงทริกเกอร์ Custom Code และแอ็กชัน Execute Custom Code วางข้างกัน","Chat message text":"ข้อความแชต","Check the":"ตรวจสอบ","Choose":"เลือก","Choose Local File":"เลือกไฟล์ภายในเครื่อง (Choose Local File)","Click":"คลิก","Click this button:":"คลิกปุ่มนี้:","Closing the Flow Actions page pauses every overlay/audio/OBS action in Event Flow. Hide it or put it on a separate monitor instead of closing it outright.":"การปิดหน้า Flow Actions จะหยุดแอ็กชันโอเวอร์เลย์/เสียง/OBS ทั้งหมดใน Event Flow ชั่วคราว ให้ซ่อนหรือย้ายไปจออื่นแทนการปิด","Combine":"รวม","Combine role check and message content in a single expression that no built-in trigger covers.":"รวมการตรวจสอบบทบาทและเนื้อหาข้อความไว้ในนิพจน์เดียวที่ไม่มีทริกเกอร์ในตัวรองรับ","Common Q & A":"คำถามและคำตอบที่พบบ่อย","Complete example: VIP feature request bot":"ตัวอย่างครบชุด — บอตรับคำขอเพิ่มฟีเจอร์จาก VIP","Condition, Compare, Regex, and Logic nodes emit two ports.":"โหนด Condition, Compare, Regex และ Logic มีเอาต์พุตสองพอร์ต","Confirm":"ยืนยันว่า","Continue the flow only when the message contains a specific word or phrase.":"ให้โฟลว์ทำต่อเฉพาะเมื่อข้อความมีคำหรือวลีที่ระบุ","Convert the standard YouTube donation label to EUR, exclude Jewels/Gifts, and select one sound or visual range.":"แปลงป้ายบริจาค YouTube มาตรฐานเป็น EUR ยกเว้น Jewels/Gifts แล้วเลือกช่วงเสียงหรือภาพหนึ่งช่วง","CoolViewer123":"CoolViewer123","Copy Local Flow Actions URL for OBS":"คัดลอก URL ของ Local Flow Actions สำหรับ OBS (Copy Local Flow Actions URL for OBS)","Copy any of these into the JavaScript Code textarea of the matching node type.":"คัดลอกตัวอย่างใดก็ได้ลงในช่อง JavaScript Code ของโหนดประเภทที่ตรงกัน","Core Variables (backward compatible)":"ตัวแปรหลัก (เข้ากันได้กับรุ่นก่อน)","Counter target minus current value, clamped at 0":"ค่าเป้าหมายตัวนับลบค่าปัจจุบัน โดยค่าต่ำสุดคือ 0","Counter target value":"ค่าเป้าหมายตัวนับ","Currency conversion:":"การแปลงสกุลเงิน:","Current counter value after a Counter or Check Counter step":"ค่าตัวนับปัจจุบันหลังขั้นตอน Counter หรือ Check Counter","Custom Code":"โค้ดกำหนดเอง (Custom Code)","Custom Code lives under the":"Custom Code อยู่ภายใต้","Custom Code trigger properties panel showing the JavaScript code editor":"แผงคุณสมบัติทริกเกอร์ Custom Code ที่แสดงตัวแก้ไข JavaScript","Custom Code: Trigger node":"Custom Code — โหนดทริกเกอร์","Custom JavaScript nodes":"โหนด JavaScript กำหนดเอง","Custom JavaScript nodes are disabled in the browser extension because Chrome's Manifest V3 Content Security Policy blocks":"โหนด JavaScript กำหนดเองถูกปิดในส่วนขยายเบราว์เซอร์ เพราะ Content Security Policy ของ Chrome Manifest V3 บล็อก","Custom code runs with renderer-process privileges.":"โค้ดกำหนดเองรันด้วยสิทธิ์ของโปรเซสแสดงผล","D. Randomly Play One of Two Sounds":"D. สุ่มเล่นเสียงหนึ่งในสองเสียง","Data type":"ชนิดข้อมูล","Default behavior:":"พฤติกรรมเริ่มต้น:","Description":"คำอธิบาย","Desktop app required.":"ต้องใช้แอปเดสก์ท็อป","Disable global Relay all when using equivalent Event Flow routes, and check for other services bridging the same chats. Custom metadata is not guaranteed to survive a trip through a platform chat.":"ปิด Relay all ส่วนกลางเมื่อใช้เส้นทาง Event Flow ที่ทำงานเทียบเท่ากัน และตรวจสอบบริการอื่นที่เชื่อมแชตเดียวกัน เมทาดาทากำหนดเองไม่รับประกันว่าจะคงอยู่หลังส่งผ่านแชตของแพลตฟอร์ม","Discord Call Webhook:":"Discord Call Webhook:","Display Media Overlay":"แสดงโอเวอร์เลย์สื่อ (Display Media Overlay)","Display name (alternate field)":"ชื่อที่แสดง (ฟิลด์ทางเลือก)","Display name of the sender":"ชื่อที่แสดงของผู้ส่ง","Display name of the user":"ชื่อที่แสดงของผู้ใช้","Do I always need an AND node?":"ต้องใช้โหนด AND เสมอหรือไม่?","Do I have to use AND for every pair of filters?":"ต้องใช้ AND สำหรับตัวกรองทุกคู่หรือไม่?","Document meta fields.":"บันทึกคำอธิบายฟิลด์ meta","Donation Alert:":"การแจ้งเตือนบริจาค:","Donation above a threshold":"การบริจาคเกินเกณฑ์","Donation/tip display label":"ป้ายแสดงการบริจาค/ทิป","Donation: animation + sound + OBS filter":"บริจาค: แอนิเมชัน + เสียง + ฟิลเตอร์ OBS","Donation: celebration + voice":"บริจาค: ฉลอง + เสียงพูด","Drag":"ลาก","Editing code:":"การแก้ไขโค้ด:","Effect":"ผล","Emits":"ส่ง","Enable audio":"เปิดเสียง","Errors are caught.":"มีการดักจับข้อผิดพลาด","Even if you didn't change anything, returning":"แม้ไม่ได้เปลี่ยนอะไร การคืนค่า","Event Flow":"Event Flow","Event Flow Editor Guide":"คู่มือตัวแก้ไข Event Flow","Event Flow Editor: empty state":"ตัวแก้ไข Event Flow — สถานะว่าง","Event Flow Guide - Social Stream Ninja":"คู่มือ Event Flow - Social Stream Ninja","Event Flow System":"ระบบ Event Flow","Event Flow plays through the":"Event Flow เล่นผ่าน","Event Payload ─▶ State Check (isAlertMuted) └─false─▶ NOT ─▶ Play Celebration":"เพย์โหลดเหตุการณ์ ─▶ ตรวจสอบสถานะ (isAlertMuted) └─false─▶ NOT ─▶ เล่นการฉลอง","Event Reference":"เอกสารอ้างอิงอีเวนต์","Event Sources":"แหล่งเหตุการณ์","Event type identifier":"ตัวระบุประเภทเหตุการณ์","Every flow starts with a trigger":"ทุกโฟลว์เริ่มด้วยทริกเกอร์","Every message carries a JSON object. Mandatory keys follow":"ทุกข้อความมีออบเจ็กต์ JSON คีย์ที่จำเป็นเป็นไปตาม","Every project is saved locally until exported. Use":"ทุกโปรเจ็กต์เก็บในเครื่องจนกว่าจะส่งออก ใช้","Example":"ตัวอย่าง","Example Templates":"เทมเพลตตัวอย่าง","Example:":"ตัวอย่าง:","Execute Custom Code":"เรียกโค้ดกำหนดเอง (Execute Custom Code)","Execute Custom Code action properties panel showing the code editor":"แผงคุณสมบัติแอ็กชัน Execute Custom Code ที่แสดงตัวแก้ไขโค้ด","Execute Custom Code under the":"Execute Custom Code อยู่ภายใต้","Execute Custom Code: Action node":"Execute Custom Code — โหนดแอ็กชัน","Export your flow whenever you reach a milestone. Imports are the easiest rollback if an experiment goes sideways.":"ส่งออกโฟลว์เมื่อทำสำเร็จถึงจุดสำคัญ การนำเข้าเป็นวิธีย้อนกลับที่ง่ายที่สุดหากการทดลองผิดพลาด","Extended Variables":"ตัวแปรเพิ่มเติม","Feature Message":"แสดงข้อความเด่น (Feature Message)","Feeding the trigger into the AND as a second input restricts sound B to matching messages only. The same pattern works for any either/or pair of actions, not just audio.":"การต่อทริกเกอร์เป็นอินพุตที่สองของ AND ทำให้เสียง B เล่นเฉพาะข้อความที่ตรงเงื่อนไข รูปแบบเดียวกันใช้กับคู่แอ็กชันที่เลือกทำอย่างใดอย่างหนึ่งได้ ไม่จำกัดเฉพาะเสียง","Field":"ช่องข้อมูล","Filter as early as possible to avoid extra processing down the line.":"กรองให้เร็วที่สุดเพื่อลดการประมวลผลที่ไม่จำเป็นในขั้นถัดไป","Fire only when a donation meets or exceeds a minimum amount.":"ทำงานเฉพาะเมื่อยอดบริจาคเท่ากับหรือเกินขั้นต่ำ","Flow Actions":"Flow Actions","Flow Actions Overlay (Action Output)":"โอเวอร์เลย์ Flow Actions (เอาต์พุตแอ็กชัน)","Flow using a RANDOM gate, NOT gate, and AND gate to play one of two audio clips at random":"โฟลว์ที่ใช้เกต RANDOM, NOT และ AND เพื่อสุ่มเล่นหนึ่งในสองคลิปเสียง","Flow-added fields also work.":"ฟิลด์ที่โฟลว์เพิ่มก็ใช้ได้","Format a donation announcement":"จัดรูปแบบประกาศบริจาค","Formatted donation string if present":"ข้อความบริจาคที่จัดรูปแบบแล้ว หากมี","Gate signal":"สัญญาณเกต","Great for multi-platform triggers: feed Twitch + YouTube message nodes into a single OR, then unify the downstream action.":"เหมาะกับทริกเกอร์หลายแพลตฟอร์ม: ต่อโหนดข้อความ Twitch + YouTube เข้า OR เดียว แล้วใช้แอ็กชันถัดไปร่วมกัน","Group logic near the source.":"จัดกลุ่มตรรกะไว้ใกล้ต้นทาง","Hello everyone!":"สวัสดีทุกคน!","Here the Regex node emits":"ในที่นี้ โหนด Regex ส่งค่า","Highlight My Message":"ไฮไลต์ข้อความของฉัน","Hook into the":"เชื่อมต่อกับ","How do I match TikTok Team members?":"จะจับคู่สมาชิก TikTok Team ได้อย่างไร?","How do true/false values reach the NOT node?":"ค่า true/false ไปถึงโหนด NOT อย่างไร?","How to open it (from the popup/dash):":"วิธีเปิด (จากป๊อปอัป/แดชบอร์ด):","If a node outputs false:":"หากโหนดส่งค่า false:","If an earlier action adds a top-level value to the message, later templates can read it directly. This is how":"หากแอ็กชันก่อนหน้าเพิ่มค่าระดับบนสุดให้ข้อความ เทมเพลตภายหลังจะอ่านค่านั้นได้โดยตรง นี่คือวิธีที่","If an event does not have a particular field (e.g.,":"หากเหตุการณ์ไม่มีฟิลด์ใดฟิลด์หนึ่ง (เช่น","If nothing is connected to the NOT input it evaluates to":"หากไม่มีอะไรเชื่อมกับอินพุต NOT จะประเมินเป็น","If two branches feed each other, add a logic node that checks a state variable (\"currentlyRelaying\") so the flow exits early when the flag is set.":"หากสองสาขาป้อนกลับเข้าหากัน ให้เพิ่มโหนดตรรกะที่ตรวจตัวแปรสถานะ (\"currentlyRelaying\") เพื่อให้โฟลว์ออกตั้งแต่ต้นเมื่อมีการตั้งค่าสถานะนั้น","If you do nothing with a":"หากคุณไม่ทำอะไรกับค่า","In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose":"In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose","In a Play Audio Clip or Display Media Overlay action, click":"ในแอ็กชัน Play Audio Clip หรือ Display Media Overlay ให้คลิก","Incoming triggers and outgoing Relay Chat destinations both distinguish between":"ทั้งทริกเกอร์ขาเข้าและปลายทาง Relay Chat ขาออกแยกความแตกต่างระหว่าง","Input Expectations":"สิ่งที่อินพุตคาดหวัง","Inputs":"อินพุต","Inputs: 1 boolean (true/false) derived from the previous node.":"อินพุต: บูลีน 1 ค่า (true/false) จากโหนดก่อนหน้า","Inputs: two or more boolean signals (A, B, ...). You can leave extra ports empty.":"อินพุต: สัญญาณบูลีนสองค่าขึ้นไป (A, B, ...) เว้นพอร์ตส่วนเกินว่างได้","Inside the SSApp, code in Custom JS nodes has full access to the":"ภายใน SSApp โค้ดในโหนด Custom JS เข้าถึง","Inspect the content and silently drop the message if a rule matches. This is useful for spam patterns the keyword filter can't express.":"ตรวจเนื้อหาและทิ้งข้อความเงียบ ๆ หากตรงกฎ เหมาะกับรูปแบบสแปมที่ตัวกรองคีย์เวิร์ดระบุไม่ได้","Integrations":"การเชื่อมต่อ (Integrations)","Keep SSApp running. If a selected file moves, return to the action and click":"เปิด SSApp ให้ทำงานต่อ หากไฟล์ที่เลือกถูกย้าย ให้กลับไปที่แอ็กชันและคลิก","Keep the overlay open.":"เปิดโอเวอร์เลย์ค้างไว้","Keyword match (case-insensitive)":"จับคู่คีย์เวิร์ด (ไม่แยกตัวพิมพ์เล็กใหญ่)","Launch + Basics":"เริ่มต้นและพื้นฐาน","Let the flow continue only for privileged users.":"ให้โฟลว์ทำต่อเฉพาะผู้ใช้ที่มีสิทธิ์","Logic nodes may emit both the":"โหนดตรรกะอาจส่งทั้ง","MEMBERSHIP, new_sponsor":"MEMBERSHIP, new_sponsor","Match messages that start with a command from a defined list (e.g.":"จับคู่ข้อความที่เริ่มด้วยคำสั่งจากรายการที่กำหนด (เช่น","Media Files for Event Flow guide":"คู่มือไฟล์สื่อสำหรับ Event Flow","Member for 3 months":"เป็นสมาชิกมา 3 เดือน","Membership state":"สถานะสมาชิก","Membership state when applicable":"สถานะสมาชิกเมื่อเกี่ยวข้อง","Message length gate":"เกตความยาวข้อความ","Minimal safe return:":"ค่าคืนขั้นต่ำที่ปลอดภัย:","Missing variables become empty strings.":"ตัวแปรที่ไม่มีจะกลายเป็นข้อความว่าง","Mix multiple platforms inside a single automation (Kick + Twitch + YouTube routed through one flow).":"รวมหลายแพลตฟอร์มในระบบอัตโนมัติเดียว (Kick + Twitch + YouTube ผ่านโฟลว์เดียว)","Most nodes expose one output. Whatever enters (payload + gate) exits unchanged unless the node edits it.":"โหนดส่วนใหญ่มีเอาต์พุตเดียว สิ่งที่เข้า (เพย์โหลด + เกต) จะออกไปโดยไม่เปลี่ยน เว้นแต่โหนดจะแก้ไข","Most side effects (like sending chat) do not alter the payload, but points actions can attach status fields such as":"ผลข้างเคียงส่วนใหญ่ (เช่น ส่งแชต) ไม่เปลี่ยนเพย์โหลด แต่แอ็กชันคะแนนอาจแนบฟิลด์สถานะ เช่น","Multi-condition: VIP + keyword":"หลายเงื่อนไข — VIP + คีย์เวิร์ด","Must return:":"ต้องคืนค่า:","NOT":"NOT","NOT & empty inputs:":"NOT และอินพุตว่าง:","Name & color":"ตั้งชื่อและกำหนดสีให้","Need to remember participants, check later eligibility, run a unique-user draw, or clear one named list? Open the":"ต้องการจดจำผู้เข้าร่วม ตรวจสิทธิ์ภายหลัง สุ่มจากผู้ใช้ไม่ซ้ำ หรือล้างรายการที่มีชื่อเพียงรายการเดียวหรือไม่? เปิด","No network sandbox.":"ไม่มีแซนด์บ็อกซ์เครือข่าย","No. Many nodes already provide all-in-one filters (for example \"Filter User Level\" + \"Contains Text\"). Use AND only when the built-in options do not cover your combination, or when you want a reusable logic junction that other branches can share.":"ไม่จำเป็น หลายโหนดมีตัวกรองรวมในตัวอยู่แล้ว (เช่น \"Filter User Level\" + \"Contains Text\") ใช้ AND เฉพาะเมื่อตัวเลือกในตัวไม่ครอบคลุมเงื่อนไขที่ต้องการ หรือเมื่อต้องการจุดรวมตรรกะที่สาขาอื่นใช้ร่วมได้","No. Many nodes include multiple checks (for example, the basic Message Filter supports keyword + role). Use AND only for advanced combinations or when merging signals from different nodes.":"ไม่จำเป็น หลายโหนดตรวจสอบหลายอย่างได้ (เช่น Message Filter พื้นฐานรองรับคีย์เวิร์ด + บทบาท) ใช้ AND เฉพาะเงื่อนไขผสมขั้นสูง หรือเมื่อรวมสัญญาณจากคนละโหนด","Nodes at a Glance":"ภาพรวมโหนด","Nodes such as":"โหนดอย่าง","OBS Control Guide":"คู่มือควบคุม OBS","OBS WebSocket:":"OBS WebSocket:","OBS control modes:":"โหมดควบคุม OBS:","OR":"OR","Old 4.x installs:":"การติดตั้ง 4.x รุ่นเก่า:","Once loaded, that overlay can:":"เมื่อโหลดแล้ว โอเวอร์เลย์นั้นทำสิ่งต่อไปนี้ได้:","Only process events from specific platforms.":"ประมวลผลเฉพาะเหตุการณ์จากแพลตฟอร์มที่ระบุ","Only process messages that have enough content (useful for TTS or relay to avoid single-emoji spam).":"ประมวลผลเฉพาะข้อความที่มีเนื้อหามากพอ (เหมาะกับ TTS หรือการส่งต่อ เพื่อหลีกเลี่ยงสแปมอีโมจิตัวเดียว)","Open":"เปิด","Open Code Editor":"เปิดตัวแก้ไขโค้ด (Open Code Editor)","Open the Event Flow editor from the main dashboard's menu (desktop or extension).":"เปิดตัวแก้ไข Event Flow จากเมนูแดชบอร์ดหลัก (เดสก์ท็อปหรือส่วนขยาย)","Open the main Social Stream Ninja popup (the window loaded from":"เปิดป๊อปอัปหลักของ Social Stream Ninja (หน้าต่างที่โหลดจาก","Optional context (state variables, timers) that the node asks for explicitly.":"บริบทเสริม (ตัวแปรสถานะ ตัวจับเวลา) ที่โหนดร้องขออย่างชัดเจน","Output Patterns":"รูปแบบเอาต์พุต","Outputs":"เอาต์พุต","Outputs:":"เอาต์พุต:","Outputs: the inverted boolean plus the untouched payload.":"เอาต์พุต: บูลีนที่กลับค่าแล้วพร้อมเพย์โหลดที่ไม่เปลี่ยน","Overlay diagnostics:":"การวินิจฉัยโอเวอร์เลย์:","Pass the (possibly mutated) message back so downstream nodes receive your changes.":"ส่งข้อความกลับ (ซึ่งอาจถูกแก้ไขแล้ว) เพื่อให้โหนดถัดไปได้รับการเปลี่ยนแปลง","Pass-Through vs. Override":"ส่งผ่านเทียบกับแทนที่","Password:":"รหัสผ่าน:","Payload":"เพย์โหลด","Payload Structure":"โครงสร้างเพย์โหลด","Place NOT after \"Contains Keyword\" to trigger an alert when a viewer":"วาง NOT หลัง \"Contains Keyword\" เพื่อเรียกการแจ้งเตือนเมื่อผู้ชม","Platform filter":"ตัวกรองแพลตฟอร์ม","Platform name (capitalized)":"ชื่อแพลตฟอร์ม (ขึ้นต้นตัวพิมพ์ใหญ่)","Platform name (raw)":"ชื่อแพลตฟอร์ม (ค่าดิบ)","Platform user ID":"รหัสผู้ใช้บนแพลตฟอร์ม","Platform-aware message prefix":"คำนำหน้าข้อความที่ระบุแพลตฟอร์ม","Play Audio Clip":"เล่นคลิปเสียง (Play Audio Clip)","Play Audio Clip → Browse sounds":"Play Audio Clip → Browse sounds","Play sounds (TTS, audio clips) locally so viewers hear them.":"เล่นเสียง (TTS คลิปเสียง) ในเครื่องเพื่อให้ผู้ชมได้ยิน","Playback options":"Playback options","Points & Rewards":"คะแนนและรางวัล","Prepend a platform label when relaying cross-platform so viewers know the source.":"เพิ่มป้ายแพลตฟอร์มหน้าข้อความเมื่อส่งต่อข้ามแพลตฟอร์ม เพื่อให้ผู้ชมทราบต้นทาง","Printer Control":"ควบคุมเครื่องพิมพ์ (Printer Control)","Properties panel after placing the trigger. Write any expression that returns":"แผงคุณสมบัติหลังวางทริกเกอร์ เขียนนิพจน์ใดก็ได้ที่คืนค่า","Ready for more depth?":"พร้อมเรียนรู้ลึกขึ้นหรือยัง?","Recommended diagnostic path:":"แนวทางวินิจฉัยที่แนะนำ:","Reflection Filter":"ตัวกรองข้อความสะท้อนกลับ (Reflection Filter)","Regex command detection":"ตรวจจับคำสั่งด้วย Regex","Relay Chat":"ส่งต่อแชต (Relay Chat)","Relay Chat skips recognized reflections automatically.":"Relay Chat ข้ามข้อความสะท้อนที่ตรวจพบโดยอัตโนมัติ","Relay Chat:":"Relay Chat:","Relay chat between services with filters (e.g., mirror Twitch to Discord but block commands).":"ส่งต่อแชตระหว่างบริการพร้อมตัวกรอง (เช่น ส่ง Twitch ไป Discord แต่บล็อกคำสั่ง)","Relaying chat between surfaces is powerful but can echo infinitely if you listen to your own output. Follow these safeguards:":"การส่งต่อแชตระหว่างส่วนต่าง ๆ มีประโยชน์มาก แต่อาจสะท้อนวนไม่สิ้นสุดหากคุณรับเอาต์พุตของตัวเองกลับมา ทำตามวิธีป้องกันต่อไปนี้:","Relink":"เชื่อมไฟล์ใหม่ (Relink)","Remember:":"จำไว้:","Remove all @username mentions from a message before relaying it to another platform.":"ลบการกล่าวถึง @username ทั้งหมดจากข้อความก่อนส่งต่อไปอีกแพลตฟอร์ม","Return a plain object from your action code. Any fields you include are merged into the flow's":"คืนออบเจ็กต์ธรรมดาจากโค้ดแอ็กชัน ฟิลด์ที่ใส่มาจะรวมเข้าใน","Return field":"ฟิลด์ที่คืนค่า","Reward name when the source exposes a top-level reward title field":"ชื่อรางวัลเมื่อแหล่งข้อมูลมีฟิลด์ชื่อรางวัลระดับบนสุด","Rewrite the chatmessage into a consistent announcement string when a donation is present.":"เขียน chatmessage ใหม่เป็นประกาศในรูปแบบคงที่เมื่อมีการบริจาค","Run Test":"ทดสอบ (Run Test)","Run custom workflows from Stream Deck or the API":"เรียกเวิร์กโฟลว์กำหนดเองจาก Stream Deck หรือ API","Run the matching action check there before testing the full Event Flow automation.":"ตรวจสอบแอ็กชันที่ตรงกันที่นั่นก่อนทดสอบระบบอัตโนมัติ Event Flow ทั้งหมด","Running the":"กำลังใช้งาน","SSApp / Desktop only":"เฉพาะ SSApp / เดสก์ท็อป","SSApp desktop app":"แอปเดสก์ท็อป SSApp","SSApp desktop app?":"แอปเดสก์ท็อป SSApp หรือไม่?","Save & Close":"บันทึกและปิด (Save & Close)","Save versions.":"บันทึกเป็นรุ่น","Scroll to the “Flow Actions” card. Use the":"เลื่อนไปที่การ์ด “Flow Actions” ใช้","Secondary context line":"บรรทัดบริบทรอง","Security considerations":"ข้อควรพิจารณาด้านความปลอดภัย","See the dedicated":"ดูคู่มือเฉพาะเรื่อง","Send Message":"ส่งข้อความ (Send Message)","Sender has VIP status":"ผู้ส่งมีสถานะ VIP","Sender is a moderator":"ผู้ส่งเป็นผู้ดูแลแชต","Sender is a subscriber":"ผู้ส่งเป็นสมาชิก","Set":"ตั้งค่า","Set OBS Text Source:":"ตั้งแหล่งข้อความ OBS:","Set Text Source:":"Set Text Source:","Several action nodes (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) support":"โหนดแอ็กชันหลายรายการ (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) รองรับ","Should return:":"ควรคืนค่า:","Show GIPHY or direct media URLs, text, and confetti triggered by your flows.":"แสดง GIPHY หรือ URL สื่อโดยตรง ข้อความ และคอนเฟตตีที่โฟลว์ของคุณกระตุ้น","Show Text:":"Show Text:","Signature:":"รูปแบบฟังก์ชัน:","Single Output":"เอาต์พุตเดียว","Snippet examples":"ตัวอย่างโค้ดสั้น","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Some nodes (Set Variable, Math, Text Replace) mutate the payload but still forward the":"บางโหนด (Set Variable, Math, Text Replace) เปลี่ยนเพย์โหลด แต่ยังส่งต่อ","Sound Library":"Sound Library","Source platform (lowercase)":"แพลตฟอร์มต้นทาง (ตัวพิมพ์เล็ก)","Speak Text":"อ่านข้อความ (Speak Text)","Start with an alert template:":"เริ่มจากเทมเพลตแจ้งเตือน:","State Nodes":"โหนดสถานะ","Step 1: Custom Code trigger":"ขั้นตอนที่ 1 — ทริกเกอร์ Custom Code","Step 2: Execute Custom Code action":"ขั้นตอนที่ 2 — แอ็กชัน Execute Custom Code","Step 3: Relay Chat action":"ขั้นตอนที่ 3 — แอ็กชัน Relay Chat","Stop Audio Clips":"Stop Audio Clips","Store repeats in State nodes.":"เก็บข้อมูลการเกิดซ้ำไว้ในโหนดสถานะ","Strip @mentions":"ลบ @mentions","Structured event data (JSON)":"ข้อมูลเหตุการณ์แบบมีโครงสร้าง (JSON)","Subscriber / VIP / mod gate":"เกตสมาชิก / VIP / ผู้ดูแลแชต","Syntax errors too.":"รวมถึงข้อผิดพลาดทางไวยากรณ์ด้วย","TTS:":"TTS:","Tag the message with a custom field that a later":"เพิ่มฟิลด์กำหนดเองให้ข้อความ เพื่อให้แอ็กชันภายหลัง","Talk to OBS via the WebSocket settings that live under the Flow Actions section in the popup (scene switching, source toggles, GDI+/FreeType text updates, replay buffer, etc.).":"สื่อสารกับ OBS ผ่านการตั้งค่า WebSocket ในส่วน Flow Actions ของป๊อปอัป (เปลี่ยนฉาก สลับแหล่งข้อมูล อัปเดตข้อความ GDI+/FreeType รีเพลย์บัฟเฟอร์ ฯลฯ)","Template variables work in JSON string values at any nested object or array depth. Object keys are not templated, and a custom body without placeholders is sent unchanged.":"ตัวแปรเทมเพลตใช้ได้ในค่าข้อความ JSON ไม่ว่าออบเจ็กต์หรืออาร์เรย์จะซ้อนลึกเท่าใด คีย์ออบเจ็กต์ไม่ผ่านการแทนค่า และเนื้อหากำหนดเองที่ไม่มีตัวแทนค่าจะส่งโดยไม่เปลี่ยน","Test Flow":"ทดสอบโฟลว์ (Test Flow)","Test with the built-in simulator":"ทดสอบด้วยเครื่องมือจำลองในตัว","Testing the flow.":"การทดสอบโฟลว์","The AND gate is not optional.":"เกต AND จำเป็นต้องมี","The AND node ensures only members using the right keyword relay to Discord. Both branches send their boolean result to the AND node; the payload from the":"โหนด AND ทำให้ส่งต่อไป Discord เฉพาะสมาชิกที่ใช้คีย์เวิร์ดถูกต้อง ทั้งสองสาขาส่งผลบูลีนไปยัง AND โดยเพย์โหลดจาก","The Chrome extension cannot serve disk files by itself. Use Upload or a hosted URL when no desktop companion is available. See the":"ส่วนขยาย Chrome ไม่สามารถให้บริการไฟล์จากดิสก์ได้เอง ใช้ Upload หรือ URL บนเซิร์ฟเวอร์หากไม่มีแอปเดสก์ท็อปร่วม ดู","The Event Flow Editor. The left panel lists all available nodes; the dotted canvas is where you build flows; the right panel shows properties for the selected node.":"ตัวแก้ไข Event Flow แผงซ้ายแสดงโหนดทั้งหมดที่ใช้ได้ แคนวาสจุดเป็นพื้นที่สร้างโฟลว์ แผงขวาแสดงคุณสมบัติของโหนดที่เลือก","The Event Flow editor is the “advanced automation” layer for Social Stream Ninja. It sits above the simple popup switches and lets you script your own routing logic. Use it when you need to:":"ตัวแก้ไข Event Flow เป็นส่วน “ระบบอัตโนมัติขั้นสูง” ของ Social Stream Ninja อยู่เหนือสวิตช์ป๊อปอัปแบบง่าย และให้คุณกำหนดตรรกะการส่งต่อเอง ใช้เมื่อต้องการ:","The Event Flow runtime passes two things through every wire:":"ระบบรัน Event Flow ส่งสองสิ่งผ่านทุกเส้น:","The Test Flow panel for sending synthetic test events":"แผง Test Flow สำหรับส่งเหตุการณ์ทดสอบจำลอง","The Test Flow panel. Fill in fields matching your trigger conditions and click":"แผง Test Flow กรอกฟิลด์ให้ตรงเงื่อนไขทริกเกอร์แล้วคลิก","The chat message text (may contain HTML)":"ข้อความแชต (อาจมี HTML)","The editor's Preview button plays locally; live playback needs the overlay open. If the browser blocks autoplay, click":"ปุ่ม Preview ในตัวแก้ไขเล่นเสียงในเครื่อง การเล่นจริงต้องเปิดโอเวอร์เลย์ไว้ หากเบราว์เซอร์บล็อกการเล่นอัตโนมัติ ให้คลิก","The full message payload.":"เพย์โหลดข้อความทั้งหมด","The gate bit (":"บิตเกต (","The link looks like":"ลิงก์มีลักษณะเช่น","The object":"ออบเจ็กต์","The same payload unless the node edits it.":"เพย์โหลดเดิม เว้นแต่โหนดจะแก้ไข","Thermal Label:":"ฉลากความร้อน:","Thermal Printer Guide":"คู่มือเครื่องพิมพ์ความร้อน","Thermal printing in SSApp:":"การพิมพ์ความร้อนใน SSApp:","These blocks answer the most common \"What does true/false mean?\" questions.":"บล็อกเหล่านี้ตอบคำถาม “true/false หมายถึงอะไร?” ที่พบบ่อย","Think of the popup as “quick presets” and Event Flow as the toolkit for bespoke workflows.":"ใช้ป๊อปอัปเป็น “ค่าตั้งล่วงหน้าแบบเร็ว” และ Event Flow เป็นชุดเครื่องมือสร้างเวิร์กโฟลว์เฉพาะ","This flow is complete and fires on every message, but the sound plays on the Flow Actions overlay page,":"โฟลว์นี้ครบถ้วนและทำงานกับทุกข้อความ แต่เสียงจะเล่นบนหน้าโอเวอร์เลย์ Flow Actions","This flow listens for":"โฟลว์นี้รอรับ","This guide is intentionally standalone. Copy it locally, adapt it for your team, and keep experimenting inside the editor.":"คู่มือนี้ตั้งใจให้ใช้งานแยกได้ คัดลอกเก็บในเครื่อง ปรับใช้กับทีม และทดลองต่อในตัวแก้ไขได้","TikTok Team Member":"สมาชิก TikTok Team","Transform & Logic Nodes":"โหนดแปลงข้อมูลและตรรกะ","Trigger custom overlays, audio, OBS scenes, or webhooks based on data you enrich in the flow.":"กระตุ้นโอเวอร์เลย์กำหนดเอง เสียง ฉาก OBS หรือเว็บฮุกตามข้อมูลที่คุณเพิ่มในโฟลว์","Trigger panel showing Custom Code node under the Advanced group":"แผงทริกเกอร์ที่แสดงโหนด Custom Code ในกลุ่ม Advanced","Trigger snippets: return":"ตัวอย่างโค้ดทริกเกอร์ — คืนค่า","Trigger ──▶ RANDOM (50%) ──▶ Play Sound A │ └──▶ NOT ──▶ AND ──▶ Play Sound B Trigger ──────────────────▲":"ทริกเกอร์ ──▶ RANDOM (50%) ──▶ เล่นเสียง A │ └──▶ NOT ──▶ AND ──▶ เล่นเสียง B ทริกเกอร์ ──────────────────▲","Triggers":"ทริกเกอร์","True":"จริง","True/False Outputs":"เอาต์พุต True/False","Twitch Message ──▶ Regex Match \"^!\" ─┐ │ ├─false──▶ Auto Reply (\"Thanks for chatting!\") │ └─true──▶ Do nothing":"ข้อความ Twitch ──▶ Regex Match \"^!\" ─┐ │ ├─false──▶ ตอบกลับอัตโนมัติ (\"ขอบคุณที่แชต!\") │ └─true──▶ ไม่ทำอะไร","Twitch and YouTube relay walkthrough":"ขั้นตอนส่งต่อ Twitch และ YouTube","Twitch, YouTube":"Twitch, YouTube","Two action nodes chained together with no trigger node":"โหนดแอ็กชันสองโหนดต่อกันโดยไม่มีทริกเกอร์","Two nodes in the Event Flow editor let you write arbitrary JavaScript that runs inside the flow pipeline:":"สองโหนดในตัวแก้ไข Event Flow ให้คุณเขียน JavaScript ได้อิสระเพื่อรันในสายประมวลผลโฟลว์:","USD donation equivalent when the source provides one; valid zero values are honored. Event Flow falls back to":"มูลค่าบริจาคเทียบเท่า USD เมื่อแหล่งข้อมูลให้มา โดยยอมรับค่า 0 ที่ถูกต้อง Event Flow ใช้ค่าทดแทนจาก","USD donation equivalent, supplied or estimated; Event Flow derives threshold values from normalized":"มูลค่าบริจาคเทียบเท่า USD ที่ให้มาหรือประมาณไว้ Event Flow คำนวณค่าเกณฑ์จากค่าที่ปรับรูปแบบแล้วใน","Unlock":"ปลดล็อก","Use":"ใช้","Use AND when multiple conditions must be satisfied simultaneously (\"is subscriber\"":"ใช้ AND เมื่อต้องผ่านหลายเงื่อนไขพร้อมกัน (\"เป็นสมาชิก\"","Use Debounce or Cooldown nodes":"ใช้โหนด Debounce หรือ Cooldown","Use counters, toggles, and timestamps to avoid double alerts.":"ใช้ตัวนับ สวิตช์ และเวลาเพื่อป้องกันการแจ้งเตือนซ้ำ","Use random set":"Use random set","Use sound":"Use sound","User Memory guide":"คู่มือ User Memory","User avatar URL":"URL อวาตาร์ผู้ใช้","User's platform ID":"รหัสผู้ใช้บนแพลตฟอร์ม","Using local media in the standalone app:":"การใช้สื่อในเครื่องในแอปแบบแยก:","Variable":"ตัวแปร","Variable matching is case-insensitive.":"การจับคู่ตัวแปรไม่แยกตัวพิมพ์เล็กใหญ่","Variables + Logic":"ตัวแปร + ตรรกะ","Voice Override":"กำหนดเสียงแทน (Voice Override)","What comes into a node?":"โหนดรับข้อมูลอะไรเข้ามา?","What is this editor?":"ตัวแก้ไขนี้คืออะไร?","What leaves a node?":"สิ่งใดออกจากโหนด?","What the action returns":"สิ่งที่แอ็กชันคืนค่า","When to branch?":"ควรแยกสาขาเมื่อใด?","When you add custom":"เมื่อคุณเพิ่มฟิลด์กำหนดเองใน","Whenever you want to react differently to":"เมื่อใดก็ตามที่ต้องการตอบสนองต่างกันต่อ","Work inside canvases called":"ทำงานในแคนวาสที่เรียกว่า","Yes. Enter a provider-supported voice name or ID in":"ได้ ป้อนชื่อหรือรหัสเสียงที่ผู้ให้บริการรองรับใน","Yes. The payload still travels through the false output; it is up to you to decide where that branch should go.":"ได้ เพย์โหลดยังผ่านเอาต์พุต false คุณเป็นผู้ตัดสินใจว่าสาขานั้นควรไปที่ใด","YouTube Message ──▶ Contains \"!queue\" ─▶ AND ─▶ Relay to Discord Gifted Membership ─▶ User Role = Member ──▲":"ข้อความ YouTube ──▶ Contains \"!queue\" ─▶ AND ─▶ ส่งต่อไป Discord สมาชิกที่ได้รับเป็นของขวัญ ─▶ User Role = Member ──▲","YouTube Shorts and Event Flow":"YouTube Shorts และ Event Flow","YouTube Shorts destination note:":"หมายเหตุปลายทาง YouTube Shorts:","YouTube Super Chat or Super Sticker in a EUR range":"YouTube Super Chat หรือ Super Sticker ในช่วง EUR ที่กำหนด","[copy link]":"[คัดลอกลิงก์]","a boolean:":"บูลีน —","action can read from a template variable (":"อ่านได้จากตัวแปรเทมเพลต (","action with":"แอ็กชันที่มี","actions":"แอ็กชัน","actions.html":"actions.html","all work the same way.":"ทั้งหมดทำงานแบบเดียวกัน","also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.":"also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.","an object or Promise merged into":"ออบเจ็กต์หรือ Promise ที่รวมเข้าใน","and":"และ","and use that generated localhost URL instead of the hosted Flow Actions URL.":"และใช้ URL localhost ที่สร้างนั้นแทน URL Flow Actions บนเซิร์ฟเวอร์","any":"อินพุตใดอินพุตหนึ่ง","append":"เพิ่มต่อท้าย","at compile time is caught the same way. Check DevTools (F12) if a node appears to do nothing.":"ในขั้นคอมไพล์ก็ถูกดักจับแบบเดียวกัน ตรวจ DevTools (F12) หากโหนดดูเหมือนไม่ทำอะไร","available only when":"ใช้ได้เฉพาะเมื่อ","becomes available on the gray/red port.":"จะอยู่ที่พอร์ตสีเทา/แดง","below), plus":"ด้านล่าง) พร้อมกับ","bit telling the next node whether to run.":"บิตที่บอกโหนดถัดไปว่าควรทำงานหรือไม่","boolean":"บูลีน","browser source; Multi-Alerts plays through its own browser source. Keep sound enabled in only one for the same event to avoid duplicate playback. Tab to a flow node and press Enter or Space to edit its properties.":"แหล่งเบราว์เซอร์ ส่วน Multi-Alerts เล่นผ่านแหล่งเบราว์เซอร์ของตัวเอง เปิดเสียงเพียงแห่งเดียวสำหรับเหตุการณ์เดียวกันเพื่อไม่ให้เล่นซ้ำ ใช้ Tab ไปยังโหนดโฟลว์แล้วกด Enter หรือ Space เพื่อแก้คุณสมบัติ","button or click the URL inside the card.":"หรือคลิก URL ในการ์ด","by default. When a condition fails, it emits":"เป็นค่าเริ่มต้น เมื่อเงื่อนไขไม่ผ่าน จะส่งค่า","channel and an optional":"ช่อง และตัวเลือกเสริม","channel.":"ช่อง","checks the JavaScript syntax and saves the whole flow;":"ตรวจไวยากรณ์ JavaScript และบันทึกทั้งโฟลว์","cheer, raid, new_follower":"cheer, raid, new_follower","choose the printer and calibrate its paper width and safe margins under":"เลือกเครื่องพิมพ์และปรับความกว้างกระดาษกับขอบปลอดภัยใน","connected input is true.":"ที่เชื่อมอยู่เป็น true","continues downstream.":"จะส่งต่อไปยังโหนดถัดไป","continues through the green port;":"จะผ่านพอร์ตสีเขียวต่อไป","controls overlap, queueing, and the action's cooldown;":"controls overlap, queueing, and the action's cooldown;","conversion of normalized":"การแปลงค่าที่ปรับรูปแบบแล้วใน","docs/event-reference.html":"docs/event-reference.html","does":"ทำ","does not use the keyword.":"ไม่ได้ใช้คีย์เวิร์ด","does the same. Cancel leaves the node unchanged.":"ทำเช่นเดียวกัน ส่วน Cancel ไม่เปลี่ยนโหนด","doesn't match your trigger.":"ไม่ตรงกับทริกเกอร์ของคุณ","downstream nodes stop executing unless they receive input on a separate branch (for example, the":"โหนดถัดไปหยุดทำงาน เว้นแต่จะรับอินพุตจากสาขาอื่น (เช่น","exposes":"มีให้ใช้","false":"false","features a message when the flow reaches it. It does not fire when you feature a message elsewhere.":"แสดงข้อความเด่นเมื่อโฟลว์มาถึงโหนดนี้ ไม่ได้ทำงานเมื่อคุณแสดงข้อความเด่นจากที่อื่น","fields. Tells downstream nodes the payload has been edited.":"ฟิลด์ เพื่อบอกโหนดถัดไปว่าเพย์โหลดถูกแก้ไขแล้ว","fire only when the gate remains":"ทำงานเฉพาะเมื่อเกตยังเป็น","first branch":"สาขาแรก","flows":"โฟลว์","flows through automatically.":"จะไหลผ่านโดยอัตโนมัติ","for a complete setup.":"สำหรับการตั้งค่าครบถ้วน","for a large editing window.":"เพื่อเปิดหน้าต่างแก้ไขขนาดใหญ่","for a ready-made animation and synthetic thank-you clip, or the advanced":"เพื่อใช้แอนิเมชันสำเร็จรูปและคลิปเสียงขอบคุณสังเคราะห์ หรือเทมเพลตขั้นสูง","for alerts that should only fire once every X seconds.":"สำหรับการแจ้งเตือนที่ควรทำงานเพียงครั้งเดียวทุก X วินาที","for arbitrary logic that no built-in node covers.":"สำหรับตรรกะใด ๆ ที่โหนดในตัวไม่รองรับ","for detailed payload documentation across all platforms.":"สำหรับเอกสารเพย์โหลดโดยละเอียดของทุกแพลตฟอร์ม","for downstream logic.":"สำหรับตรรกะในขั้นถัดไป","for every trigger, action, setup step, and tested recipe.":"สำหรับทริกเกอร์ แอ็กชัน ขั้นตอนตั้งค่า และตัวอย่างที่ทดสอบแล้วทั้งหมด","for printer setup, fixed-size labels, and a complete flow.":"สำหรับการตั้งค่าเครื่องพิมพ์ ฉลากขนาดคงที่ และโฟลว์ครบชุด","for the full setup.":"สำหรับการตั้งค่าทั้งหมด","for the shared-state model, screenshots, and an importable example.":"สำหรับรูปแบบสถานะร่วม ภาพหน้าจอ และตัวอย่างที่นำเข้าได้","from subscribers, VIPs, or mods, reformats it as a feature request, and relays it to a second destination (e.g. Discord).":"จากสมาชิก VIP หรือผู้ดูแลแชต จัดรูปแบบเป็นคำขอเพิ่มฟีเจอร์ แล้วส่งต่อไปยังปลายทางที่สอง (เช่น Discord)","from the":"จาก","group in the":"กลุ่มใน","group in the Actions panel.":"กลุ่มในแผง Actions","group in the Triggers panel.":"กลุ่มในแผง Triggers","https://...":"https://...","if":"หาก","if you are still using obs-websocket 4.x / port":"หากคุณยังใช้ obs-websocket 4.x / พอร์ต","if you changed":"หากคุณเปลี่ยน","if you want a small live OBS connection badge on the overlay while troubleshooting.":"หากต้องการป้ายเล็ก ๆ แสดงการเชื่อมต่อ OBS แบบสดบนโอเวอร์เลย์ระหว่างแก้ปัญหา","in the User Role node. It recognizes TikTok Fan Club/team levels and badges on the incoming message and does not depend on Main Chat Overlay settings.":"ในโหนด User Role โดยตรวจจับระดับและป้าย TikTok Fan Club/ทีมจากข้อความขาเข้า ไม่ขึ้นกับการตั้งค่า Main Chat Overlay","is a legacy alias":"เป็นนามแฝงแบบเดิม","is a node-based editor. Each line carries a message payload plus a boolean state (":"เป็นตัวแก้ไขแบบโหนด แต่ละเส้นส่งเพย์โหลดข้อความพร้อมสถานะบูลีน (","is running inside OBS Browser Source with":"กำลังทำงานในแหล่งเบราว์เซอร์ OBS พร้อม","keeps it flowing to the next node.":"ให้ข้อมูลไหลต่อไปยังโหนดถัดไป","keys, note them so overlays and remote clients stay consistent.":"ให้บันทึกคำอธิบายไว้ เพื่อให้โอเวอร์เลย์และไคลเอนต์ระยะไกลใช้ตรงกัน","labels for threshold comparisons, including 100 unknown named units = $0.01 USD. It does not parse":"เพื่อเปรียบเทียบเกณฑ์ รวมถึงหน่วยเสมือนที่มีชื่อแต่ไม่รู้จัก 100 หน่วย = $0.01 USD โดยไม่แยกวิเคราะห์","labels such as value,":"ป้าย เช่น ค่า","logic nodes":"โหนดตรรกะ","message API":"API ข้อความ","not in the editor.":"ไม่ใช่ในตัวแก้ไข","number / string":"ตัวเลข / ข้อความ","object":"ออบเจ็กต์","object and any APIs the preload script exposes (e.g.":"ออบเจ็กต์และ API ที่สคริปต์ preload เปิดให้ใช้ (เช่น","object; fields you omit keep their current values.":"ออบเจ็กต์ ฟิลด์ที่ไม่ใส่มาจะคงค่าปัจจุบัน","obs-websocket-test.html":"obs-websocket-test.html","on a regular chat message), the placeholder is replaced with an empty string rather than showing the literal":"ในข้อความแชตทั่วไป) ตัวแทนค่าจะถูกแทนด้วยข้อความว่าง แทนที่จะแสดงข้อความตรงตัวเป็น","on the Flow Actions page to retry the latest blocked clip. Clicking elsewhere on that page also enables playback. An OBS Browser Source normally allows autoplay.":"บนหน้า Flow Actions เพื่อลองคลิปล่าสุดที่ถูกบล็อกอีกครั้ง การคลิกที่อื่นในหน้านั้นก็เปิดการเล่นได้เช่นกัน แหล่งเบราว์เซอร์ OBS ปกติอนุญาตการเล่นอัตโนมัติ","only if all connected inputs equal":"เฉพาะเมื่ออินพุตที่เชื่อมทั้งหมดเท่ากับ","optional. Only append":"เป็นตัวเลือกเสริม เพิ่มเฉพาะ","or":"หรือ","or the extension icon).":"หรือไอคอนส่วนขยาย)","output, the flow simply ends there. That is perfect for filters (\"block everything that fails the check\") but do not forget to connect the":"เอาต์พุต โฟลว์จะจบตรงนั้น ซึ่งเหมาะกับตัวกรอง (\"บล็อกทุกอย่างที่ไม่ผ่านการตรวจสอบ\") แต่อย่าลืมเชื่อมเส้นทาง","outputs a value of":"ส่งค่าเป็น","panel onto the canvas. It acts as a gate: the flow continues only when your code returns":"ลงบนแคนวาส โดยทำหน้าที่เป็นเกต โฟลว์จะทำต่อเฉพาะเมื่อโค้ดคืนค่า","panel. It can mutate the message, block it, or attach metadata that downstream nodes can read.":" โดยแก้ข้อความ บล็อกข้อความ หรือแนบเมทาดาทาที่โหนดถัดไปอ่านได้","path if you need fallbacks.":"หากต้องการทางสำรอง","popup.html":"popup.html","prose for donation values.":"ข้อความบรรยายเพื่อหายอดบริจาค","read the payload and may rewrite fields, set state, or flip the gate signal to":"อ่านเพย์โหลดและอาจเขียนฟิลด์ใหม่ ตั้งสถานะ หรือเปลี่ยนสัญญาณเกตเป็น","recommended for consistent control. Social Stream Ninja Flow Actions use the OBS WebSocket v5 API from OBS 28+ and expect the modern request set on port":"แนะนำเพื่อให้ควบคุมได้สม่ำเสมอ Social Stream Ninja Flow Actions ใช้ OBS WebSocket v5 API จาก OBS 28 ขึ้นไป และต้องใช้ชุดคำขอรุ่นใหม่ที่พอร์ต","result API":"API ผลลัพธ์","select a Custom Code node and click":"เลือกโหนด Custom Code แล้วคลิก","socket on a Condition node). That makes it easy to build fallback logic without duplicating whole flows.":"ของโหนด Condition) จึงสร้างตรรกะสำรองได้ง่ายโดยไม่ต้องทำโฟลว์ทั้งหมดซ้ำ","socket to our reply, so regular chatters get an acknowledgement while commands simply pass through.":"ไปยังการตอบกลับ เพื่อให้ผู้แชตทั่วไปได้รับคำตอบรับ ขณะที่คำสั่งเพียงผ่านไป","sources":"แหล่งข้อมูล","state from their input. Others (NOT, AND, OR) recalculate the boolean themselves.":"สถานะจากอินพุต ส่วนโหนดอื่น (NOT, AND, OR) คำนวณบูลีนใหม่เอง","stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use":"stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use","string":"สตริง","succeed.":"ผ่าน","system so viewers can intentionally trigger flows.":"เพื่อให้ผู้ชมตั้งใจกระตุ้นโฟลว์ได้","template variables":"ตัวแปรเทมเพลต","template. New alert templates start disabled so you can configure and test them first. For the OBS template, choose a source and the same normally-off filter in both filter actions.":" เทมเพลตแจ้งเตือนใหม่เริ่มในสถานะปิด เพื่อให้คุณตั้งค่าและทดสอบก่อน สำหรับเทมเพลต OBS ให้เลือกแหล่งข้อมูลและฟิลเตอร์เดียวกันที่ปกติปิดอยู่ในแอ็กชันฟิลเตอร์ทั้งสอง","text.":"ข้อความ","that get replaced with event data at runtime. Wrap variable names in curly braces like":"ซึ่งจะแทนด้วยข้อมูลเหตุการณ์ขณะทำงาน ใส่ชื่อตัวแปรในวงเล็บปีกกา เช่น","the object":"ออบเจ็กต์","to back up or share.":"เพื่อสำรองหรือแชร์","to build queue systems, raffles, or scoring engines.":"เพื่อสร้างระบบคิว การจับรางวัล หรือระบบคะแนน","to continue the flow":"เพื่อให้โฟลว์ทำต่อ","to convert the formatted donation label into EUR. It returns a number, or":"เพื่อแปลงป้ายยอดบริจาคที่จัดรูปแบบแล้วเป็น EUR โดยคืนตัวเลข หรือ","to enable them. In extension mode the nodes appear greyed-out with the label":"เพื่อเปิดใช้ ในโหมดส่วนขยาย โหนดจะเป็นสีเทาพร้อมป้าย","to filter decisions, and":"เพื่อกรองการตัดสินใจ และ","to inject events,":"เพื่อป้อนเหตุการณ์","to let the flow continue,":"เพื่อให้โฟลว์ทำต่อ","to make things happen (send chat, control overlays, relay messages, etc.).":"เพื่อดำเนินการต่าง ๆ (ส่งแชต ควบคุมโอเวอร์เลย์ ส่งต่อข้อความ ฯลฯ)","to prevent the message from being displayed or relayed.":"เพื่อป้องกันไม่ให้ข้อความแสดงหรือส่งต่อ","to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing":"to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing","to stop it.":"เพื่อหยุด","to the Flow Actions URL if your OBS server is configured to require authentication.":"ใน URL ของ Flow Actions หากเซิร์ฟเวอร์ OBS ของคุณกำหนดให้ยืนยันตัวตน","to the URL for":"ใน URL ของ","to validate the full pipeline.":"เพื่อตรวจสอบสายประมวลผลทั้งหมด","trigger (or Message Contains, a regex, a donation event, etc.) starts the chain; both actions then run for each matching message.":"เป็นทริกเกอร์ (หรือ Message Contains, regex, เหตุการณ์บริจาค ฯลฯ) ที่เริ่มสายงาน จากนั้นแอ็กชันทั้งสองทำงานสำหรับทุกข้อความที่ตรงเงื่อนไข","true":"true","twitch, youtube":"twitch, youtube","unless the node itself errors.":"เว้นแต่ตัวโหนดเองเกิดข้อผิดพลาด","updates OBS Text (GDI+) and Text (FreeType 2) inputs directly and supports Event Flow template variables such as":"อัปเดตอินพุต OBS Text (GDI+) และ Text (FreeType 2) โดยตรง และรองรับตัวแปรเทมเพลต Event Flow เช่น","use":"ใช้","value, value + unit, or compact unit/value. Unknown named virtual units use 100 units = $0.01 USD; unpriced TikTok gifts use one coin per gift ($0.01 each).":"ค่า ค่า + หน่วย หรือรูปย่อหน่วย/ค่า หน่วยเสมือนที่มีชื่อแต่ไม่รู้จักใช้ 100 หน่วย = $0.01 USD ส่วนของขวัญ TikTok ที่ไม่มีราคาใช้หนึ่งเหรียญต่อของขวัญ ($0.01 ต่อชิ้น)","vs":"เทียบกับ","when the alert is muted. By inverting that result, the NOT node makes sure we only play the celebration when the flag is":"เมื่อปิดเสียงการแจ้งเตือน การกลับผลลัพธ์นั้นด้วย NOT ทำให้แน่ใจว่าเล่นการฉลองเฉพาะเมื่อค่าสถานะเป็น","when the message is a command. We route the":"เมื่อข้อความเป็นคำสั่ง เราเชื่อมซ็อกเก็ต","when the requested target currency is unsupported. The converter uses Social Stream Ninja's approximate internal rates; it does not contact an external exchange service.":"เมื่อไม่รองรับสกุลเงินปลายทางที่ขอ ตัวแปลงใช้อัตราประมาณภายในของ Social Stream Ninja ไม่ได้ติดต่อบริการแลกเปลี่ยนเงินภายนอก","whenever the RANDOM gate sits idle, so sound B would play on every chat message that":"เมื่อใดก็ตามที่เกต RANDOM ไม่ทำงาน ทำให้เสียง B เล่นกับทุกข้อความแชตที่","your code runs as":"โค้ดของคุณทำงานในรูป","your nodes so future-you knows which branch is which.":"โหนดของคุณ เพื่อให้ในอนาคตยังรู้ว่าสาขาใดเป็นอะไร","{\"viewers\":100}":"{\"viewers\":100}","– a":"– หนึ่ง","– the event or message data object.":"– ออบเจ็กต์ข้อมูลเหตุการณ์หรือข้อความ","┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│ Relay Chat │ │ │ │ │ │ (to Discord) │ │ Gate: VIP/sub/mod │ │ Reformat message text │ │ │ │ + starts with │ │ → \"📋 Feature Request │ │ │ │ !feature │ │ from {name}: {text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘":"┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ ทริกเกอร์ Custom Code │────▶│ แอ็กชัน Execute Custom Code │────▶│ Relay Chat │ │ │ │ │ │ (ไป Discord) │ │ เกต: VIP/สมาชิก/ผู้ดูแลแชต │ │ จัดรูปแบบข้อความใหม่ │ │ │ │ + เริ่มด้วย │ │ → \"📋 คำขอเพิ่มฟีเจอร์ │ │ │ │ !feature │ │ จาก {name}: {text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘","✅ Works. An":"✅ ใช้ได้ ทริกเกอร์","❌ Never runs. Feature Message and Speak Text are both":"❌ ไม่ทำงานเลย ทั้ง Feature Message และ Speak Text เป็น"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/actions/event-flow-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="guide-shell">
+        <header>
+            <p class="badge">ระบบ Event Flow</p>
+            <h1>คู่มือตัวแก้ไข Event Flow</h1>
+            <p>สร้างระบบอัตโนมัติที่เชื่อถือได้สำหรับ Social Stream Ninja คู่มือนี้อธิบายพื้นฐาน โหนดตรรกะ การไหลของสัญญาณ และเทคนิคใช้งานจริงที่ผู้สร้างถามบ่อยที่สุด เช่น การหลีกเลี่ยงข้อความแชตสะท้อนและการเลือกเวลาที่ควรต่อบล็อก AND/NOT</p>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/event-flow-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/event-flow-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/event-flow-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/event-flow-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/event-flow-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/event-flow-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/event-flow-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/event-flow-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/event-flow-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/event-flow-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/event-flow-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/event-flow-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/event-flow-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/event-flow-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/event-flow-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/event-flow-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="event-flow-guide.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --></header>
+        <div class="content">
+            <section>
+                <h2>0. ภาพรวมเริ่มต้น</h2>
+                <div class="panel">
+                    <strong>Event Flow</strong> เป็นตัวแก้ไขแบบโหนด แต่ละเส้นส่งเพย์โหลดข้อความพร้อมสถานะบูลีน (<em>true</em> = ทำต่อ <em>false</em> = หยุด) ใช้ <strong>แหล่งข้อมูล</strong> เพื่อป้อนเหตุการณ์ <strong>โหนดตรรกะ</strong> เพื่อกรองการตัดสินใจ และ <strong>แอ็กชัน</strong> เพื่อดำเนินการต่าง ๆ (ส่งแชต ควบคุมโอเวอร์เลย์ ส่งต่อข้อความ ฯลฯ)
+                </div>
+                <div class="callout">
+                    ต้องการจดจำผู้เข้าร่วม ตรวจสิทธิ์ภายหลัง สุ่มจากผู้ใช้ไม่ซ้ำ หรือล้างรายการที่มีชื่อเพียงรายการเดียวหรือไม่? เปิด <a href="user-memory-guide.html">คู่มือ User Memory</a> สำหรับรูปแบบสถานะร่วม ภาพหน้าจอ และตัวอย่างที่นำเข้าได้
+                </div>
+                <h3 id="what-is-event-flow">ตัวแก้ไขนี้คืออะไร?</h3>
+                <p>ตัวแก้ไข Event Flow เป็นส่วน “ระบบอัตโนมัติขั้นสูง” ของ Social Stream Ninja อยู่เหนือสวิตช์ป๊อปอัปแบบง่าย และให้คุณกำหนดตรรกะการส่งต่อเอง ใช้เมื่อต้องการ:</p>
+                <ul>
+                    <li>ส่งต่อแชตระหว่างบริการพร้อมตัวกรอง (เช่น ส่ง Twitch ไป Discord แต่บล็อกคำสั่ง)</li>
+                    <li>สร้างคำสั่งตามความภักดี เกมคีย์เวิร์ด หรือเงื่อนไขเข้าร่วมจับรางวัลด้วยตรรกะ AND/OR/NOT</li>
+                    <li>กระตุ้นโอเวอร์เลย์กำหนดเอง เสียง ฉาก OBS หรือเว็บฮุกตามข้อมูลที่คุณเพิ่มในโฟลว์</li>
+                    <li>รวมหลายแพลตฟอร์มในระบบอัตโนมัติเดียว (Kick + Twitch + YouTube ผ่านโฟลว์เดียว)</li>
+                </ul>
+                <p>ใช้ป๊อปอัปเป็น “ค่าตั้งล่วงหน้าแบบเร็ว” และ Event Flow เป็นชุดเครื่องมือสร้างเวิร์กโฟลว์เฉพาะ</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>เริ่มต้นและพื้นฐาน</h4>
+                        <ul>
+                            <li>เปิดตัวแก้ไข Event Flow จากเมนูแดชบอร์ดหลัก (เดสก์ท็อปหรือส่วนขยาย)</li>
+                            <li>ทุกโปรเจ็กต์เก็บในเครื่องจนกว่าจะส่งออก ใช้ <code>Export</code> เพื่อสำรองหรือแชร์</li>
+                            <li>ทำงานในแคนวาสที่เรียกว่า <em>โฟลว์</em> แต่ละโฟลว์รับเหตุการณ์จากหลายแพลตฟอร์มพร้อมกันได้</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>ภาพรวมโหนด</h4>
+                        <ul>
+                            <li><strong>อินพุต</strong> (พอร์ตซ้าย) รับบริบทข้อความ</li>
+                            <li><strong>เอาต์พุต</strong> (พอร์ตขวา) ส่งบริบทเดิมพร้อมการแก้ไข</li>
+                            <li>โหนดตรรกะอาจส่งทั้ง <code>true</code> ช่อง และตัวเลือกเสริม <code>false</code> ช่อง</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>โครงสร้างเพย์โหลด</h4>
+                        <p>ทุกข้อความมีออบเจ็กต์ JSON คีย์ที่จำเป็นเป็นไปตาม <a href="../docs/event-reference.html" target="_blank" rel="noopener">docs/event-reference.html</a> (platform, type, chatname, chatmessage ฯลฯ) แนบข้อมูลกำหนดเองไว้ใต้ <code>meta</code>.</p>
+                    </div>
+                </div>
+                <h3 id="every-flow-needs-a-trigger">ทุกโฟลว์เริ่มด้วยทริกเกอร์</h3>
+                <p>โหนดแอ็กชัน (สีเขียว) ไม่ทำงานเอง แต่จะทำงานเมื่อโหนดทริกเกอร์ (สีน้ำเงิน) ที่อยู่ก่อนหน้าประเมินเป็น <code>true</code> โฟลว์ที่มีแต่แอ็กชันต่อกันดูเหมือนถูกต้อง แต่จะไม่ทำงานเลย เพราะไม่มีสิ่งเริ่มสายงาน ชื่อโหนดอธิบายว่าโหนดนั้น <em>ทำ</em> ไม่ใช่เวลาที่มันเกิดขึ้น: <em>แสดงข้อความเด่น (Feature Message)</em> แสดงข้อความเด่นเมื่อโฟลว์มาถึงโหนดนี้ ไม่ได้ทำงานเมื่อคุณแสดงข้อความเด่นจากที่อื่น</p>
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-missing-trigger.png" alt="โหนดแอ็กชันสองโหนดต่อกันโดยไม่มีทริกเกอร์">
+                        <figcaption>❌ ไม่ทำงานเลย ทั้ง Feature Message และ Speak Text เป็น <em>แอ็กชัน</em> หากไม่มีทริกเกอร์ด้านบน ก็ไม่มีสิ่งเริ่มสายงาน</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-trigger-first.png" alt="ทริกเกอร์ Any Message เชื่อมกับแอ็กชัน Feature Message และ Speak Text">
+                        <figcaption>✅ ใช้ได้ ทริกเกอร์ <em>ข้อความใดก็ได้ (Any Message)</em> เป็นทริกเกอร์ (หรือ Message Contains, regex, เหตุการณ์บริจาค ฯลฯ) ที่เริ่มสายงาน จากนั้นแอ็กชันทั้งสองทำงานสำหรับทุกข้อความที่ตรงเงื่อนไข</figcaption>
+                    </figure>
+                </div>
+            </section>
+            <section id="flow-actions-overlay">
+                <h2>โอเวอร์เลย์ Flow Actions (เอาต์พุตแอ็กชัน)</h2>
+                <div class="panel">
+                    <strong>เริ่มจากเทมเพลตแจ้งเตือน:</strong>
+                    <p>เลือก <em>บริจาค: ฉลอง + เสียงพูด</em> เพื่อใช้แอนิเมชันสำเร็จรูปและคลิปเสียงขอบคุณสังเคราะห์ หรือเทมเพลตขั้นสูง <em>บริจาค: แอนิเมชัน + เสียง + ฟิลเตอร์ OBS</em>  เทมเพลตแจ้งเตือนใหม่เริ่มในสถานะปิด เพื่อให้คุณตั้งค่าและทดสอบก่อน สำหรับเทมเพลต OBS ให้เลือกแหล่งข้อมูลและฟิลเตอร์เดียวกันที่ปกติปิดอยู่ในแอ็กชันฟิลเตอร์ทั้งสอง</p>
+                    <p>เลือก <em>Play Audio Clip → Browse sounds</em> to search original effects and prerecorded synthetic phrases in English, Spanish, and Brazilian Portuguese. Filter by category, event, language, delivery, or duration; save favorites and preview locally before choosing <em>Use sound</em>โดย <a href="../../audio-library.html" target="_blank" rel="noopener">Sound Library</a> also opens on its own and provides sound URLs for custom overlays. Multi-Alerts uses the same browser.</p>
+                    <p>In Event Flow, use the plus buttons to build a random set of two to twenty sounds, then choose <em>Use random set</em>. Each trigger plays one selected sound. Choosing a single sound or entering another audio URL replaces the set. <em>Playback options</em> controls overlap, queueing, and the action's cooldown; <em>Stop Audio Clips</em> stops Flow Actions clips and clears its queue. Place a Rate Limiter before any Spend Points action when limiting paid commands. Audio playback does not automatically refund a separate points charge. You can still upload a recording or choose an app-local file. For changing names or messages, use <em>อ่านข้อความ (Speak Text)</em>.</p>
+                    <p>Event Flow เล่นผ่าน <strong>Flow Actions</strong> แหล่งเบราว์เซอร์ ส่วน Multi-Alerts เล่นผ่านแหล่งเบราว์เซอร์ของตัวเอง เปิดเสียงเพียงแห่งเดียวสำหรับเหตุการณ์เดียวกันเพื่อไม่ให้เล่นซ้ำ ใช้ Tab ไปยังโหนดโฟลว์แล้วกด Enter หรือ Space เพื่อแก้คุณสมบัติ</p>
+                </div>
+                <p>โหนดอย่าง <em>เล่นคลิปเสียง (Play Audio Clip)</em>, <em>แสดงโอเวอร์เลย์สื่อ (Display Media Overlay)</em> และตัวควบคุม OBS ต้องมีพื้นที่แสดงผล พื้นที่นั้นคือหน้าโอเวอร์เลย์ Flow Actions ที่ให้บริการจาก <a href="../../actions.html" target="_blank" rel="noopener">actions.html</a> เปิดหน้านี้ให้ทำงานในซอฟต์แวร์ถ่ายทอดสดของคุณ (แผงเบราว์เซอร์ OBS/Streamer.bot ฯลฯ) เพื่อให้แอ็กชัน Event Flow มีที่แสดงผล</p>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-audio-overlay.png" alt="ทริกเกอร์ Any Message เชื่อมกับแอ็กชัน Play Audio Clip">
+                    <figcaption>โฟลว์นี้ครบถ้วนและทำงานกับทุกข้อความ แต่เสียงจะเล่นบนหน้าโอเวอร์เลย์ Flow Actions <em>ไม่ใช่ในตัวแก้ไข</em> ปุ่ม Preview ในตัวแก้ไขเล่นเสียงในเครื่อง การเล่นจริงต้องเปิดโอเวอร์เลย์ไว้ หากเบราว์เซอร์บล็อกการเล่นอัตโนมัติ ให้คลิก <strong>เปิดเสียง</strong> บนหน้า Flow Actions เพื่อลองคลิปล่าสุดที่ถูกบล็อกอีกครั้ง การคลิกที่อื่นในหน้านั้นก็เปิดการเล่นได้เช่นกัน แหล่งเบราว์เซอร์ OBS ปกติอนุญาตการเล่นอัตโนมัติ</figcaption>
+                </figure>
+                <div class="panel">
+                    <strong>วิธีเปิด (จากป๊อปอัป/แดชบอร์ด):</strong>
+                    <ol>
+                        <li>เปิดป๊อปอัปหลักของ Social Stream Ninja (หน้าต่างที่โหลดจาก <a href="../../popup.html" target="_blank" rel="noopener">popup.html</a> หรือไอคอนส่วนขยาย)</li>
+                        <li>เลื่อนไปที่การ์ด “Flow Actions” ใช้ <em>[คัดลอกลิงก์]</em> หรือคลิก URL ในการ์ด</li>
+                        <li>ลิงก์มีลักษณะเช่น <code>https://socialstream.ninja/actions.html?session=YOURSESSION</code> วางในแหล่งเบราว์เซอร์ OBS (แนะนำ 1920×1080) หรือเปิดในเบราว์เซอร์โอเวอร์เลย์ใดก็ได้</li>
+                    </ol>
+                </div>
+                <div class="panel">
+                    <strong>การใช้สื่อในเครื่องในแอปแบบแยก:</strong>
+                    <ol>
+                        <li>ในแอ็กชัน Play Audio Clip หรือ Display Media Overlay ให้คลิก <em>เลือกไฟล์ภายในเครื่อง (Choose Local File)</em>.</li>
+                        <li>คลิก <em>คัดลอก URL ของ Local Flow Actions สำหรับ OBS (Copy Local Flow Actions URL for OBS)</em> และใช้ URL localhost ที่สร้างนั้นแทน URL Flow Actions บนเซิร์ฟเวอร์</li>
+                        <li>เปิด SSApp ให้ทำงานต่อ หากไฟล์ที่เลือกถูกย้าย ให้กลับไปที่แอ็กชันและคลิก <em>เชื่อมไฟล์ใหม่ (Relink)</em>.</li>
+                    </ol>
+                    <p>ส่วนขยาย Chrome ไม่สามารถให้บริการไฟล์จากดิสก์ได้เอง ใช้ Upload หรือ URL บนเซิร์ฟเวอร์หากไม่มีแอปเดสก์ท็อปร่วม ดู <a href="../docs/media-hosting-event-flow.html" target="_blank" rel="noopener">คู่มือไฟล์สื่อสำหรับ Event Flow</a> สำหรับการตั้งค่าทั้งหมด</p>
+                </div>
+                <p>เมื่อโหลดแล้ว โอเวอร์เลย์นั้นทำสิ่งต่อไปนี้ได้:</p>
+                <ul>
+                    <li>แสดง GIPHY หรือ URL สื่อโดยตรง ข้อความ และคอนเฟตตีที่โฟลว์ของคุณกระตุ้น</li>
+                    <li>เล่นเสียง (TTS คลิปเสียง) ในเครื่องเพื่อให้ผู้ชมได้ยิน</li>
+                    <li>สื่อสารกับ OBS ผ่านการตั้งค่า WebSocket ในส่วน Flow Actions ของป๊อปอัป (เปลี่ยนฉาก สลับแหล่งข้อมูล อัปเดตข้อความ GDI+/FreeType รีเพลย์บัฟเฟอร์ ฯลฯ)</li>
+                </ul>
+                <div class="panel">
+                    <strong>โหมดควบคุม OBS:</strong>
+                    <ul>
+                        <li><strong>Browser Source API:</strong> ใช้ได้เฉพาะเมื่อ <code>actions.html</code> กำลังทำงานในแหล่งเบราว์เซอร์ OBS พร้อม <em>ระดับสิทธิ์ขั้นสูง (Advanced Access Level)</em> การเปลี่ยนฉากใช้ได้ที่นี่ และแอ็กชันบันทึก / สตรีม / รีเพลย์บัฟเฟอร์ใช้วิธีนี้สำรองได้</li>
+                        <li><strong>OBS WebSocket:</strong> แนะนำเพื่อให้ควบคุมได้สม่ำเสมอ Social Stream Ninja Flow Actions ใช้ OBS WebSocket v5 API จาก OBS 28 ขึ้นไป และต้องใช้ชุดคำขอรุ่นใหม่ที่พอร์ต <code>4455</code>.</li>
+                        <li><strong>รหัสผ่าน:</strong> เป็นตัวเลือกเสริม เพิ่มเฉพาะ <code>&amp;obspw=...</code> ใน URL ของ Flow Actions หากเซิร์ฟเวอร์ OBS ของคุณกำหนดให้ยืนยันตัวตน</li>
+                        <li><strong>การวินิจฉัยโอเวอร์เลย์:</strong> เพิ่มต่อท้าย <code>&amp;obsdebug=1</code> ใน URL ของ <code>actions.html</code> หากต้องการป้ายเล็ก ๆ แสดงการเชื่อมต่อ OBS แบบสดบนโอเวอร์เลย์ระหว่างแก้ปัญหา</li>
+                        <li><strong>Set Text Source:</strong> อัปเดตอินพุต OBS Text (GDI+) และ Text (FreeType 2) โดยตรง และรองรับตัวแปรเทมเพลต Event Flow เช่น <code>{counterValue}</code> และ <code>{counterTarget}</code>.</li>
+                        <li><strong>การติดตั้ง 4.x รุ่นเก่า:</strong> หากคุณยังใช้ obs-websocket 4.x / พอร์ต <code>4444</code> แอ็กชันแหล่งข้อมูล / ฟิลเตอร์ / ปิดเสียง / ข้อความจะไม่ทำงานจนกว่าจะอัปเกรด OBS / obs-websocket</li>
+                    </ul>
+                    <p>ดูคู่มือเฉพาะเรื่อง <a href="obs-control-guide.html">คู่มือควบคุม OBS</a> สำหรับทริกเกอร์ แอ็กชัน ขั้นตอนตั้งค่า และตัวอย่างที่ทดสอบแล้วทั้งหมด</p>
+                </div>
+                <div class="panel">
+                    <strong>แนวทางวินิจฉัยที่แนะนำ:</strong>
+                    <ol>
+                        <li>เปิด <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">obs-websocket-test.html</a>.</li>
+                        <li>ยืนยันว่า <code>GetVersion</code>, <code>GetCurrentProgramScene</code>, และ <code>GetSceneList</code> ผ่าน</li>
+                        <li>ตรวจสอบแอ็กชันที่ตรงกันที่นั่นก่อนทดสอบระบบอัตโนมัติ Event Flow ทั้งหมด</li>
+                    </ol>
+                </div>
+                <div class="panel warn">
+                    <strong>เปิดโอเวอร์เลย์ค้างไว้</strong> การปิดหน้า Flow Actions จะหยุดแอ็กชันโอเวอร์เลย์/เสียง/OBS ทั้งหมดใน Event Flow ชั่วคราว ให้ซ่อนหรือย้ายไปจออื่นแทนการปิด
+                </div>
+            </section>
+
+            <section>
+                <h2>1. สิ่งที่ผ่านแต่ละโหนดคืออะไร?</h2>
+                <p>ระบบรัน Event Flow ส่งสองสิ่งผ่านทุกเส้น:</p>
+                <ol>
+                    <li><strong>เพย์โหลด</strong> – ออบเจ็กต์ข้อมูลเหตุการณ์หรือข้อความ</li>
+                    <li><strong>สัญญาณเกต</strong> – หนึ่ง <em>true</em>/<em>false</em> บิตที่บอกโหนดถัดไปว่าควรทำงานหรือไม่</li>
+                </ol>
+                <div class="panel">
+                    <strong>หากโหนดส่งค่า false:</strong> โหนดถัดไปหยุดทำงาน เว้นแต่จะรับอินพุตจากสาขาอื่น (เช่น <code>false</code> ของโหนด Condition) จึงสร้างตรรกะสำรองได้ง่ายโดยไม่ต้องทำโฟลว์ทั้งหมดซ้ำ
+                </div>
+                <h3>สิ่งที่อินพุตคาดหวัง</h3>
+                <ul>
+                    <li><strong>แหล่งเหตุการณ์</strong> (Twitch Message, Timers, Manual Trigger ฯลฯ) ไม่สนใจอินพุตจากโหนดก่อนหน้า โดยสร้างเพย์โหลดเองและส่งค่าเสมอเป็น <code>true</code> เว้นแต่ตัวโหนดเองเกิดข้อผิดพลาด</li>
+                    <li><strong>โหนดแปลงข้อมูลและตรรกะ</strong> อ่านเพย์โหลดและอาจเขียนฟิลด์ใหม่ ตั้งสถานะ หรือเปลี่ยนสัญญาณเกตเป็น <code>false</code>.</li>
+                    <li><strong>โหนดแอ็กชัน</strong> ทำงานเฉพาะเมื่อเกตยังเป็น <code>true</code> โหนดยังส่งเพย์โหลดที่อัปเดตแล้วได้ หากคุณต้องการต่อแอ็กชันถัดไป</li>
+                </ul>
+                <h3>รูปแบบเอาต์พุต</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>เอาต์พุตเดียว</h4>
+                        <p>โหนดส่วนใหญ่มีเอาต์พุตเดียว สิ่งที่เข้า (เพย์โหลด + เกต) จะออกไปโดยไม่เปลี่ยน เว้นแต่โหนดจะแก้ไข</p>
+                    </div>
+                    <div class="card">
+                        <h4>เอาต์พุต True/False</h4>
+                        <p>โหนด Condition, Compare, Regex และ Logic มีเอาต์พุตสองพอร์ต <em>จริง</em> จะผ่านพอร์ตสีเขียวต่อไป <em>false</em> จะอยู่ที่พอร์ตสีเทา/แดง</p>
+                    </div>
+                    <div class="card">
+                        <h4>ส่งผ่านเทียบกับแทนที่</h4>
+                        <p>บางโหนด (Set Variable, Math, Text Replace) เปลี่ยนเพย์โหลด แต่ยังส่งต่อ <em>true</em>/<em>false</em> สถานะจากอินพุต ส่วนโหนดอื่น (NOT, AND, OR) คำนวณบูลีนใหม่เอง</p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>2. สรุปโหนดตรรกะ</h2>
+                <p>บล็อกเหล่านี้ตอบคำถาม “true/false หมายถึงอะไร?” ที่พบบ่อย</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>NOT</h4>
+                        <ul>
+                            <li>อินพุต: บูลีน 1 ค่า (true/false) จากโหนดก่อนหน้า</li>
+                            <li>เอาต์พุต: บูลีนที่กลับค่าแล้วพร้อมเพย์โหลดที่ไม่เปลี่ยน</li>
+                            <li><strong>พฤติกรรมเริ่มต้น:</strong> หากไม่มีอะไรเชื่อมกับอินพุต NOT จะประเมินเป็น <code>false</code> ดังนั้นเอาต์พุตจึงเป็น <code>true</code>.</li>
+                        </ul>
+                        <div class="panel">
+                            <strong>ตัวอย่าง:</strong> วาง NOT หลัง "Contains Keyword" เพื่อเรียกการแจ้งเตือนเมื่อผู้ชม <em>ไม่ได้ใช้คีย์เวิร์ด</em>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>AND</h4>
+                        <ul>
+                            <li>อินพุต: สัญญาณบูลีนสองค่าขึ้นไป (A, B, ...) เว้นพอร์ตส่วนเกินว่างได้</li>
+                            <li>เอาต์พุต: <code>true</code> เฉพาะเมื่ออินพุตที่เชื่อมทั้งหมดเท่ากับ <code>true</code>.</li>
+                            <li>ใช้ AND เมื่อต้องผ่านหลายเงื่อนไขพร้อมกัน ("เป็นสมาชิก" <em>และ</em> "ข้อความแชตมี !raffle")</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>OR</h4>
+                        <ul>
+                            <li>ส่ง <code>true</code> หาก <strong>อินพุตใดอินพุตหนึ่ง</strong> ที่เชื่อมอยู่เป็น true</li>
+                            <li>เหมาะกับทริกเกอร์หลายแพลตฟอร์ม: ต่อโหนดข้อความ Twitch + YouTube เข้า OR เดียว แล้วใช้แอ็กชันถัดไปร่วมกัน</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="callout tip">
+                    <strong>ต้องใช้โหนด AND เสมอหรือไม่?</strong><br>
+                    ไม่จำเป็น หลายโหนดมีตัวกรองรวมในตัวอยู่แล้ว (เช่น "Filter User Level" + "Contains Text") ใช้ AND เฉพาะเมื่อตัวเลือกในตัวไม่ครอบคลุมเงื่อนไขที่ต้องการ หรือเมื่อต้องการจุดรวมตรรกะที่สาขาอื่นใช้ร่วมได้
+                </div>
+                <div class="callout.warn">
+                    <strong>NOT และอินพุตว่าง:</strong> โหนด NOT ที่ลอยอยู่ยังคงส่งค่า <code>true</code> เชื่อมต่อกับสิ่งที่มีความหมาย หรือปิดโหนด เพื่อไม่ให้ปลดบล็อกโฟลว์โดยไม่ตั้งใจ
+                </div>
+            </section>
+
+            <section>
+                <h2>3. ตัวอย่างโฟลว์ขนาดเล็ก</h2>
+                <h3>A. ตอบกลับอัตโนมัติ เว้นแต่ข้อความเป็นคำสั่ง</h3>
+                <div class="diagram">
+ข้อความ Twitch ──▶ Regex Match "^!" ─┐ │ ├─false──▶ ตอบกลับอัตโนมัติ ("ขอบคุณที่แชต!") │ └─true──▶ ไม่ทำอะไร
+                </div>
+                <p>ในที่นี้ โหนด Regex ส่งค่า <code>true</code> เมื่อข้อความเป็นคำสั่ง เราเชื่อมซ็อกเก็ต <code>false</code> ไปยังการตอบกลับ เพื่อให้ผู้แชตทั่วไปได้รับคำตอบรับ ขณะที่คำสั่งเพียงผ่านไป</p>
+                <h3>B. กำหนดให้ผ่านหลายเงื่อนไขด้วย AND</h3>
+                <div class="diagram">
+ข้อความ YouTube ──▶ Contains "!queue" ─▶ AND ─▶ ส่งต่อไป Discord สมาชิกที่ได้รับเป็นของขวัญ ─▶ User Role = Member ──▲
+                </div>
+                <p>โหนด AND ทำให้ส่งต่อไป Discord เฉพาะสมาชิกที่ใช้คีย์เวิร์ดถูกต้อง ทั้งสองสาขาส่งผลบูลีนไปยัง AND โดยเพย์โหลดจาก <em>สาขาแรก</em> จะส่งต่อไปยังโหนดถัดไป</p>
+                <h3>C. ใช้โหนด NOT บล็อกการแจ้งเตือนซ้ำ</h3>
+                <div class="diagram">
+เพย์โหลดเหตุการณ์ ─▶ ตรวจสอบสถานะ (isAlertMuted) └─false─▶ NOT ─▶ เล่นการฉลอง
+                </div>
+                <p><code>State Check</code> ส่งค่าเป็น <code>true</code> เมื่อปิดเสียงการแจ้งเตือน การกลับผลลัพธ์นั้นด้วย NOT ทำให้แน่ใจว่าเล่นการฉลองเฉพาะเมื่อค่าสถานะเป็น <code>false</code>.</p>
+                <h3>D. สุ่มเล่นเสียงหนึ่งในสองเสียง</h3>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-random-two-sounds.png" alt="โฟลว์ที่ใช้เกต RANDOM, NOT และ AND เพื่อสุ่มเล่นหนึ่งในสองคลิปเสียง">
+                    <figcaption>สุ่มแบบ 50/50 ระหว่างคลิปเสียงสองคลิป เกต RANDOM สุ่มหนึ่งครั้งต่อข้อความที่ตรงเงื่อนไข เมื่อผ่านจะเล่นเสียง A เมื่อไม่ผ่าน เกต NOT กลับผลลัพธ์และเกต AND ให้เล่นเสียง B แทน</figcaption>
+                </figure>
+                <div class="diagram">
+ทริกเกอร์ ──▶ RANDOM (50%) ──▶ เล่นเสียง A │ └──▶ NOT ──▶ AND ──▶ เล่นเสียง B ทริกเกอร์ ──────────────────▲
+                </div>
+                <p><strong>เกต AND จำเป็นต้องมี</strong> NOT ที่ไม่ได้เชื่อมอะไรจะส่งค่า <code>true</code> เมื่อใดก็ตามที่เกต RANDOM ไม่ทำงาน ทำให้เสียง B เล่นกับทุกข้อความแชตที่ <em>ไม่ตรงกับทริกเกอร์ของคุณ</em> การต่อทริกเกอร์เป็นอินพุตที่สองของ AND ทำให้เสียง B เล่นเฉพาะข้อความที่ตรงเงื่อนไข รูปแบบเดียวกันใช้กับคู่แอ็กชันที่เลือกทำอย่างใดอย่างหนึ่งได้ ไม่จำกัดเฉพาะเสียง</p>
+            </section>
+
+            <section>
+                <h2>4. ป้องกันข้อความสะท้อน วนซ้ำ และการส่งต่อวนกลับ</h2>
+                <p>การส่งต่อแชตระหว่างส่วนต่าง ๆ มีประโยชน์มาก แต่อาจสะท้อนวนไม่สิ้นสุดหากคุณรับเอาต์พุตของตัวเองกลับมา ทำตามวิธีป้องกันต่อไปนี้:</p>
+                <div class="callout tip">
+                    <strong>หมายเหตุปลายทาง YouTube Shorts:</strong><br>
+                    ทั้งทริกเกอร์ขาเข้าและปลายทาง Relay Chat ขาออกแยกความแตกต่างระหว่าง <code>youtube</code> และ <code>youtubeshorts</code> ใช้แอ็กชันส่งต่อสองรายการเมื่อข้อความควรไปถึงทั้งสองแบบ ดู <a href="../docs/source-types-guide.html#youtube-shorts-event-flow">YouTube Shorts และ Event Flow</a>.
+                </div>
+                <div class="callout.danger">
+                    <strong>Relay Chat ข้ามข้อความสะท้อนที่ตรวจพบโดยอัตโนมัติ</strong><br>
+                    ข้อความสะท้อนคือข้อความขาออกที่ถูกเก็บกลับมาจากแชตปลายทาง แอ็กชัน Relay Chat ปัจจุบันข้ามข้อความสะท้อนที่ตรวจพบเหล่านี้ โดยไม่มีช่อง No Reflections แยก หากต้องการซ่อนหรือจำกัดการแสดงในแผงด็อกและโอเวอร์เลย์ ให้ใช้ <strong>ตัวกรองข้อความสะท้อนกลับ (Reflection Filter)</strong> แอ็กชันที่มี <strong>บล็อกทั้งหมด (Block All)</strong>, <strong>อนุญาตรายการแรก (Allow First)</strong>, หรือ <strong>อนุญาตทั้งหมด (Allow All)</strong> ค่านี้ควบคุมการแสดงผลเมื่อรับกลับเข้ามา ไม่ใช่การส่ง ทำตาม <a href="../docs/chat-relay-guide.html">ขั้นตอนส่งต่อ Twitch และ YouTube</a> สำหรับการตั้งค่าครบถ้วน
+                </div>
+                <ul>
+                    <li><strong>หลีกเลี่ยงระบบส่งต่อซ้ำซ้อน</strong> ปิด Relay all ส่วนกลางเมื่อใช้เส้นทาง Event Flow ที่ทำงานเทียบเท่ากัน และตรวจสอบบริการอื่นที่เชื่อมแชตเดียวกัน เมทาดาทากำหนดเองไม่รับประกันว่าจะคงอยู่หลังส่งผ่านแชตของแพลตฟอร์ม</li>
+                    <li><strong>ใช้โหนด Debounce หรือ Cooldown</strong> สำหรับการแจ้งเตือนที่ควรทำงานเพียงครั้งเดียวทุก X วินาที</li>
+                    <li><strong>ตัดวงจรอย่างตั้งใจ</strong> หากสองสาขาป้อนกลับเข้าหากัน ให้เพิ่มโหนดตรรกะที่ตรวจตัวแปรสถานะ ("currentlyRelaying") เพื่อให้โฟลว์ออกตั้งแต่ต้นเมื่อมีการตั้งค่าสถานะนั้น</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>5. อินพุต เอาต์พุต และคำถามในการใช้งานจริง</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h4>โหนดรับข้อมูลอะไรเข้ามา?</h4>
+                        <ul>
+                            <li>เพย์โหลดข้อความทั้งหมด</li>
+                            <li>บิตเกต (<code>true</code>/<code>false</code>).</li>
+                            <li>บริบทเสริม (ตัวแปรสถานะ ตัวจับเวลา) ที่โหนดร้องขออย่างชัดเจน</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>สิ่งใดออกจากโหนด?</h4>
+                        <ul>
+                            <li>เพย์โหลดเดิม เว้นแต่โหนดจะแก้ไข</li>
+                            <li>บิตเกตที่คำนวณใหม่ (โหนดตรรกะ) หรือบิตที่ส่งผ่าน (แอ็กชัน)</li>
+                            <li>ผลข้างเคียงส่วนใหญ่ (เช่น ส่งแชต) ไม่เปลี่ยนเพย์โหลด แต่แอ็กชันคะแนนอาจแนบฟิลด์สถานะ เช่น <code>pointsTotal</code> หรือ <code>pointsSpendError</code> สำหรับตรรกะในขั้นถัดไป</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>ควรแยกสาขาเมื่อใด?</h4>
+                        <p>เมื่อใดก็ตามที่ต้องการตอบสนองต่างกันต่อ <code>true</code> เทียบกับ <code>false</code> ลากเส้นจากเอาต์พุตสีที่ต้องการ (เขียว = true, เทา/แดง = false) ไปยังโหนดถัดไป</p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <strong>จำไว้:</strong> หากคุณไม่ทำอะไรกับค่า <code>false</code> เอาต์พุต โฟลว์จะจบตรงนั้น ซึ่งเหมาะกับตัวกรอง ("บล็อกทุกอย่างที่ไม่ผ่านการตรวจสอบ") แต่อย่าลืมเชื่อมเส้นทาง <code>false</code> หากต้องการทางสำรอง
+                </div>
+                <h3>คำถามและคำตอบที่พบบ่อย</h3>
+                <ul>
+                    <li><strong>ต้องใช้ AND สำหรับตัวกรองทุกคู่หรือไม่?</strong> ไม่จำเป็น หลายโหนดตรวจสอบหลายอย่างได้ (เช่น Message Filter พื้นฐานรองรับคีย์เวิร์ด + บทบาท) ใช้ AND เฉพาะเงื่อนไขผสมขั้นสูง หรือเมื่อรวมสัญญาณจากคนละโหนด</li>
+                    <li><strong>ค่า true/false ไปถึงโหนด NOT อย่างไร?</strong> โหนดใดก็ตามที่มีเอาต์พุตสีเขียวจะส่งค่า <code>true</code> เป็นค่าเริ่มต้น เมื่อเงื่อนไขไม่ผ่าน จะส่งค่า <code>false</code> เชื่อมเส้นนั้นเข้า NOT เพื่อกลับผลลัพธ์</li>
+                    <li><strong>โหนดส่งเพย์โหลดได้หรือไม่แม้คืนค่า false?</strong> ได้ เพย์โหลดยังผ่านเอาต์พุต false คุณเป็นผู้ตัดสินใจว่าสาขานั้นควรไปที่ใด</li>
+					<li><strong>จะจับคู่สมาชิก TikTok Team ได้อย่างไร?</strong> เลือก <em>สมาชิก TikTok Team</em> ในโหนด User Role โดยตรวจจับระดับและป้าย TikTok Fan Club/ทีมจากข้อความขาเข้า ไม่ขึ้นกับการตั้งค่า Main Chat Overlay</li>
+					<li><strong>แต่ละโหนด Speak Text ใช้เสียงต่างกันได้หรือไม่?</strong> ได้ ป้อนชื่อหรือรหัสเสียงที่ผู้ให้บริการรองรับใน <em>กำหนดเสียงแทน (Voice Override)</em> หรือเว้นว่างเพื่อใช้ค่า TTS เริ่มต้นของ Flow Actions</li>
+                </ul>
+            </section>
+
+            <section id="template-variables">
+                <h2>6. เอกสารอ้างอิงตัวแปรเทมเพลต</h2>
+                <p>โหนดแอ็กชันหลายรายการ (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) รองรับ <strong>ตัวแปรเทมเพลต</strong> ซึ่งจะแทนด้วยข้อมูลเหตุการณ์ขณะทำงาน ใส่ชื่อตัวแปรในวงเล็บปีกกา เช่น <code>{username}</code>.</p>
+
+                <h3>ตัวแปรหลัก (เข้ากันได้กับรุ่นก่อน)</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>ตัวแปร</th><th>นามแฝง</th><th>คำอธิบาย</th><th>ตัวอย่าง</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{username}</code></td><td><code>{chatname}</code></td><td>ชื่อที่แสดงของผู้ใช้</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{message}</code></td><td><code>{chatmessage}</code></td><td>ข้อความแชต</td><td>สวัสดีทุกคน!</td></tr>
+                        <tr><td><code>{source}</code></td><td>-</td><td>ชื่อแพลตฟอร์ม (ขึ้นต้นตัวพิมพ์ใหญ่)</td><td>Twitch, YouTube</td></tr>
+                        <tr><td><code>{type}</code></td><td>-</td><td>ชื่อแพลตฟอร์ม (ค่าดิบ)</td><td>twitch, youtube</td></tr>
+                        <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>ป้ายแสดงการบริจาค/ทิป</td><td>$5.00, 500 bits</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>ตัวแปรเพิ่มเติม</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>ตัวแปร</th><th>คำอธิบาย</th><th>ตัวอย่าง</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{displayname}</code></td><td>ชื่อที่แสดง (ฟิลด์ทางเลือก)</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{donoValue}</code></td><td>มูลค่าบริจาคเทียบเท่า USD ที่ให้มาหรือประมาณไว้ Event Flow คำนวณค่าเกณฑ์จากค่าที่ปรับรูปแบบแล้วใน <code>hasDonation</code> ป้าย เช่น ค่า <code>$</code>ค่า ค่า + หน่วย หรือรูปย่อหน่วย/ค่า หน่วยเสมือนที่มีชื่อแต่ไม่รู้จักใช้ 100 หน่วย = $0.01 USD ส่วนของขวัญ TikTok ที่ไม่มีราคาใช้หนึ่งเหรียญต่อของขวัญ ($0.01 ต่อชิ้น) <code>{donationAmount}</code> เป็นนามแฝงแบบเดิม</td><td>5.00</td></tr>
+                        <tr><td><code>{event}</code></td><td>ตัวระบุประเภทเหตุการณ์</td><td>cheer, raid, new_follower</td></tr>
+                        <tr><td><code>{membership}</code></td><td>สถานะสมาชิก</td><td>MEMBERSHIP, new_sponsor</td></tr>
+                        <tr><td><code>{subtitle}</code></td><td>บริบทเพิ่มเติม</td><td>เป็นสมาชิกมา 3 เดือน</td></tr>
+                        <tr><td><code>{userid}</code></td><td>รหัสผู้ใช้บนแพลตฟอร์ม</td><td>12345678</td></tr>
+                        <tr><td><code>{chatimg}</code></td><td>URL อวาตาร์ผู้ใช้</td><td>https://...</td></tr>
+                        <tr><td><code>{contentimg}</code></td><td>URL รูปภาพที่แนบ</td><td>https://...</td></tr>
+                        <tr><td><code>{rewardTitle}</code></td><td>ชื่อรางวัลเมื่อแหล่งข้อมูลมีฟิลด์ชื่อรางวัลระดับบนสุด</td><td>ไฮไลต์ข้อความของฉัน</td></tr>
+                        <tr><td><code>{meta}</code></td><td>ข้อมูลเหตุการณ์แบบมีโครงสร้าง (JSON)</td><td>{"viewers":100}</td></tr>
+                        <tr><td><code>{counterValue}</code></td><td>ค่าตัวนับปัจจุบันหลังขั้นตอน Counter หรือ Check Counter</td><td>12</td></tr>
+                        <tr><td><code>{counterTarget}</code></td><td>ค่าเป้าหมายตัวนับ</td><td>30</td></tr>
+                        <tr><td><code>{counterRemaining}</code></td><td>ค่าเป้าหมายตัวนับลบค่าปัจจุบัน โดยค่าต่ำสุดคือ 0</td><td>18</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>การจับคู่ตัวแปรไม่แยกตัวพิมพ์เล็กใหญ่</strong> <code>{USERNAME}</code>, <code>{Username}</code>, และ <code>{username}</code> ทั้งหมดทำงานแบบเดียวกัน
+                </div>
+                <div class="panel">
+                    <strong>ฟิลด์ที่โฟลว์เพิ่มก็ใช้ได้</strong> หากแอ็กชันก่อนหน้าเพิ่มค่าระดับบนสุดให้ข้อความ เทมเพลตภายหลังจะอ่านค่านั้นได้โดยตรง นี่คือวิธีที่ <code>Check Counter</code> มีให้ใช้ <code>{counterValue}</code>, <code>{counterTarget}</code>, และ <code>{counterRemaining}</code>.
+                </div>
+                <div class="panel">
+                    <strong>JSON สำหรับ Call Webhook:</strong> ตัวแปรเทมเพลตใช้ได้ในค่าข้อความ JSON ไม่ว่าออบเจ็กต์หรืออาร์เรย์จะซ้อนลึกเท่าใด คีย์ออบเจ็กต์ไม่ผ่านการแทนค่า และเนื้อหากำหนดเองที่ไม่มีตัวแทนค่าจะส่งโดยไม่เปลี่ยน
+                </div>
+
+                <h3>เทมเพลตตัวอย่าง</h3>
+                <ul>
+                    <li><strong>Show Text:</strong> <code>{username} just cheered {hasDonation}!</code></li>
+                    <li><strong>ตั้งแหล่งข้อความ OBS:</strong> <code>{username}: now {counterValue}, need {counterTarget}</code></li>
+                    <li><strong>Relay Chat:</strong> <code>[{source}] {username}: {message}</code></li>
+                    <li><strong>TTS:</strong> <code>{username} says {message}</code></li>
+                    <li><strong>การแจ้งเตือนบริจาค:</strong> <code>{username} donated {donation} - {subtitle}</code></li>
+					<li><strong>ฉลากความร้อน:</strong> <code>{username}</code> ขึ้นบรรทัดใหม่ แล้วตามด้วย <code>{donation}</code> ดู <a href="../docs/thermal-printer-guide.html">คู่มือเครื่องพิมพ์ความร้อน</a> สำหรับการตั้งค่าเครื่องพิมพ์ ฉลากขนาดคงที่ และโฟลว์ครบชุด</li>
+                    <li><strong>Discord Call Webhook:</strong> <code>{&quot;content&quot;:&quot;{message}&quot;,&quot;username&quot;:&quot;{username}&quot;,&quot;avatar_url&quot;:&quot;{chatimg}&quot;}</code></li>
+                </ul>
+
+                <div class="callout tip">
+                    <strong>ตัวแปรที่ไม่มีจะกลายเป็นข้อความว่าง</strong> หากเหตุการณ์ไม่มีฟิลด์ใดฟิลด์หนึ่ง (เช่น <code>{donation}</code> ในข้อความแชตทั่วไป) ตัวแทนค่าจะถูกแทนด้วยข้อความว่าง แทนที่จะแสดงข้อความตรงตัวเป็น <code>{donation}</code> ข้อความ
+                </div>
+            </section>
+
+            <section>
+                <h2>7. รายการแนวปฏิบัติที่แนะนำ</h2>
+                <ul>
+                    <li><strong>ตั้งชื่อและกำหนดสีให้</strong> โหนดของคุณ เพื่อให้ในอนาคตยังรู้ว่าสาขาใดเป็นอะไร</li>
+                    <li><strong>ทดสอบด้วยเครื่องมือจำลองในตัว</strong> (Send Test Event) ก่อนเปิดใช้โฟลว์จริง</li>
+                    <li><strong>จัดกลุ่มตรรกะไว้ใกล้ต้นทาง</strong> กรองให้เร็วที่สุดเพื่อลดการประมวลผลที่ไม่จำเป็นในขั้นถัดไป</li>
+                    <li><strong>เก็บข้อมูลการเกิดซ้ำไว้ในโหนดสถานะ</strong> ใช้ตัวนับ สวิตช์ และเวลาเพื่อป้องกันการแจ้งเตือนซ้ำ</li>
+                    <li><strong>บันทึกคำอธิบายฟิลด์ meta</strong> เมื่อคุณเพิ่มฟิลด์กำหนดเองใน <code>meta</code> ให้บันทึกคำอธิบายไว้ เพื่อให้โอเวอร์เลย์และไคลเอนต์ระยะไกลใช้ตรงกัน</li>
+                </ul>
+                <div class="callout tip">
+                    <strong>บันทึกเป็นรุ่น</strong> ส่งออกโฟลว์เมื่อทำสำเร็จถึงจุดสำคัญ การนำเข้าเป็นวิธีย้อนกลับที่ง่ายที่สุดหากการทดลองผิดพลาด
+                </div>
+            </section>
+
+            <section>
+                <h2>8. เรียนรู้เพิ่มเติม</h2>
+                <p><a href="../docs/streamdeck-event-flow.html">เรียกเวิร์กโฟลว์กำหนดเองจาก Stream Deck หรือ API</a>: ทริกเกอร์ที่มีชื่อ เทมเพลตเริ่มต้น การค้นหาเวิร์กโฟลว์ ข้อมูลเพิ่มเติม ตัวอย่าง HTTP/WebSocket/P2P และท่าทางบนปุ่มหมุน</p>
+                <p>พร้อมเรียนรู้ลึกขึ้นหรือยัง?</p>
+                <ul>
+                    <li>ใช้ <strong>โหนดสถานะ</strong> (ตัวนับ สวิตช์ ตัวจับเวลา) เพื่อติดตามบริบทระหว่างเหตุการณ์</li>
+                    <li>รวม <strong>ตัวแปร + ตรรกะ</strong> เพื่อสร้างระบบคิว การจับรางวัล หรือระบบคะแนน</li>
+                    <li>เชื่อมต่อกับ <strong>คะแนนและรางวัล</strong> เพื่อให้ผู้ชมตั้งใจกระตุ้นโฟลว์ได้</li>
+                    <li>กำลังใช้งาน <strong>แอปเดสก์ท็อป SSApp หรือไม่?</strong> ปลดล็อก <a href="#custom-js"><strong>โหนด JavaScript กำหนดเอง</strong></a> สำหรับตรรกะใด ๆ ที่โหนดในตัวไม่รองรับ</li>
+                    <li>ตรวจสอบ <a href="../docs/event-reference.html"><strong>เอกสารอ้างอิงอีเวนต์</strong></a> สำหรับเอกสารเพย์โหลดโดยละเอียดของทุกแพลตฟอร์ม</li>
+                </ul>
+                <p>คู่มือนี้ตั้งใจให้ใช้งานแยกได้ คัดลอกเก็บในเครื่อง ปรับใช้กับทีม และทดลองต่อในตัวแก้ไขได้</p>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 SECTION 9: CUSTOM JAVASCRIPT
+                 Direct link anchors:
+                   #custom-js              → section root
+                   #custom-js-trigger      → Custom Code trigger node
+                   #custom-js-action       → Execute Custom Code action node
+                   #custom-js-message-api  → message object reference table
+                   #custom-js-result-api   → result return object reference
+                   #custom-js-examples     → snippet library
+                   #custom-js-example-flow → complete worked example
+            ══════════════════════════════════════════════════════════════ -->
+            <section id="custom-js">
+                <h2>9. JavaScript กำหนดเอง <span class="desktop-badge">เฉพาะ SSApp / เดสก์ท็อป</span></h2>
+                <p>สองโหนดในตัวแก้ไข Event Flow ให้คุณเขียน JavaScript ได้อิสระเพื่อรันในสายประมวลผลโฟลว์: <strong>โค้ดกำหนดเอง (Custom Code)</strong> (ทริกเกอร์) และ <strong>เรียกโค้ดกำหนดเอง (Execute Custom Code)</strong> (แอ็กชัน) ใช้สำหรับสิ่งที่โหนดในตัวไม่สามารถทำได้</p>
+
+                <div class="callout warn">
+                    <strong>ต้องใช้แอปเดสก์ท็อป</strong> โหนด JavaScript กำหนดเองถูกปิดในส่วนขยายเบราว์เซอร์ เพราะ Content Security Policy ของ Chrome Manifest V3 บล็อก <code>new Function()</code> / <code>eval()</code> เปิดตัวแก้ไขผ่าน <strong>แอปเดสก์ท็อป SSApp</strong> เพื่อเปิดใช้ ในโหมดส่วนขยาย โหนดจะเป็นสีเทาพร้อมป้าย <em>"เฉพาะเดสก์ท็อป"</em>.
+                </div>
+
+                <div class="panel">
+                    <strong>การแก้ไขโค้ด:</strong> เลือกโหนด Custom Code แล้วคลิก <strong>เปิดตัวแก้ไขโค้ด (Open Code Editor)</strong> เพื่อเปิดหน้าต่างแก้ไขขนาดใหญ่ <strong>บันทึกและปิด (Save &amp; Close)</strong> ตรวจไวยากรณ์ JavaScript และบันทึกทั้งโฟลว์ <code>Ctrl+S</code> หรือ <code>Cmd+S</code> ทำเช่นเดียวกัน ส่วน Cancel ไม่เปลี่ยนโหนด
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/editor-overview.png" alt="ตัวแก้ไข Event Flow — สถานะว่าง">
+                    <figcaption>ตัวแก้ไข Event Flow แผงซ้ายแสดงโหนดทั้งหมดที่ใช้ได้ แคนวาสจุดเป็นพื้นที่สร้างโฟลว์ แผงขวาแสดงคุณสมบัติของโหนดที่เลือก</figcaption>
+                </figure>
+
+                <!-- ─── Trigger ─── -->
+                <h3 id="custom-js-trigger">Custom Code — โหนดทริกเกอร์</h3>
+                <p>ลาก <strong>โค้ดกำหนดเอง (Custom Code)</strong> จาก <em>ขั้นสูง</em> กลุ่มใน <strong>ทริกเกอร์</strong> ลงบนแคนวาส โดยทำหน้าที่เป็นเกต โฟลว์จะทำต่อเฉพาะเมื่อโค้ดคืนค่า <code>true</code>.</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/trigger-panel.png" alt="แผงทริกเกอร์ที่แสดงโหนด Custom Code ในกลุ่ม Advanced">
+                        <figcaption>Custom Code อยู่ภายใต้ <em>ขั้นสูง</em> กลุ่มในแผง Triggers</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-trigger-props.png" alt="แผงคุณสมบัติทริกเกอร์ Custom Code ที่แสดงตัวแก้ไข JavaScript">
+                        <figcaption>แผงคุณสมบัติหลังวางทริกเกอร์ เขียนนิพจน์ใดก็ได้ที่คืนค่า <code>true</code> หรือ <code>false</code>.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>รูปแบบฟังก์ชัน:</strong> โค้ดของคุณทำงานในรูป <code>function(message) { ... }</code><br>
+                    <strong>ต้องคืนค่า:</strong> บูลีน — <code>true</code> เพื่อให้โฟลว์ทำต่อ <code>false</code> เพื่อหยุด<br>
+                    <strong>มีให้ใช้:</strong> ออบเจ็กต์ <code>message</code> (ดู <a href="#custom-js-message-api">API ข้อความ</a> ด้านล่าง) พร้อมกับ <code>convertCurrency(value, targetCurrency, source)</code> และ <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <!-- ─── Action ─── -->
+                <h3 id="custom-js-action">Execute Custom Code — โหนดแอ็กชัน</h3>
+                <p>ลาก <strong>เรียกโค้ดกำหนดเอง (Execute Custom Code)</strong> จาก <em>การเชื่อมต่อ (Integrations)</em> กลุ่มใน <strong>แอ็กชัน</strong>  โดยแก้ข้อความ บล็อกข้อความ หรือแนบเมทาดาทาที่โหนดถัดไปอ่านได้</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/action-panel.png" alt="แผงแอ็กชันที่แสดง Execute Custom Code ในกลุ่ม Integrations">
+                        <figcaption>Execute Custom Code อยู่ภายใต้ <em>การเชื่อมต่อ (Integrations)</em> กลุ่มในแผง Actions</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-action-props.png" alt="แผงคุณสมบัติแอ็กชัน Execute Custom Code ที่แสดงตัวแก้ไขโค้ด">
+                        <figcaption>คุณสมบัติแอ็กชัน คืนออบเจ็กต์เพื่อรวมการเปลี่ยนแปลงกลับเข้าในผลลัพธ์โฟลว์</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>รูปแบบฟังก์ชัน:</strong> โค้ดของคุณทำงานในรูป <code>function(message, result) { ... }</code><br>
+                    <strong>ควรคืนค่า:</strong> ออบเจ็กต์หรือ Promise ที่รวมเข้าใน <code>result</code>— ดู <a href="#custom-js-result-api">API ผลลัพธ์</a>.<br>
+                    <strong>มีให้ใช้:</strong> <code>message</code> (เพย์โหลดเหตุการณ์) <code>result</code> (สถานะผลลัพธ์โฟลว์ปัจจุบัน) <code>printThermal(html, options)</code> พร้อมกับ <code>convertCurrency(value, targetCurrency, source)</code> และ <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <div class="panel">
+                    <strong>การพิมพ์ความร้อนใน SSApp:</strong> เลือกเครื่องพิมพ์และปรับความกว้างกระดาษกับขอบปลอดภัยใน <em>ควบคุมเครื่องพิมพ์ (Printer Control)</em> แล้วคืนค่า <code>printThermal('&lt;strong&gt;' + message.chatname + '&lt;/strong&gt;')</code> SSApp เข้าคิวงานแบบเงียบผ่าน API เครื่องพิมพ์ของ Windows และใช้การตั้งค่าที่บันทึกไว้ โฟลว์แทนที่ค่าเหล่านั้นได้ด้วยตัวเลือก เช่น <code>{ width: '58mm', marginLeft: '3mm', marginRight: '3mm', marginTop: '2mm', marginBottom: '2mm', feed: '3mm', marginType: 'printableArea' }</code> การคืน Promise ทำให้ Event Flow รอการส่งงานและรายงานข้อผิดพลาดได้
+                </div>
+
+                <!-- ─── Both nodes on canvas ─── -->
+                <figure class="screenshot">
+                    <img src="../../actions/img/both-nodes-canvas.png" alt="แคนวาสที่แสดงทริกเกอร์ Custom Code และแอ็กชัน Execute Custom Code วางข้างกัน">
+                    <figcaption>ทริกเกอร์ Custom Code (สีน้ำเงิน) และแอ็กชัน Execute Custom Code (สีเขียว) บนแคนวาส ลากเส้นจากพอร์ตเอาต์พุตของทริกเกอร์ไปยังพอร์ตอินพุตของแอ็กชันเพื่อเชื่อมกัน</figcaption>
+                </figure>
+
+                <!-- ─── message API ─── -->
+                <h3 id="custom-js-message-api">ออบเจ็กต์ <code>message</code></h3>
+                <p>ทั้งสองโหนดได้รับเพย์โหลดเหตุการณ์ทั้งหมดในรูป <code>message</code> ฟิลด์ด้านล่างใช้ได้เสมอ เหตุการณ์เฉพาะแพลตฟอร์มอาจมีฟิลด์เพิ่มเติม</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>ช่องข้อมูล</th><th>ชนิดข้อมูล</th><th>คำอธิบาย</th><th>ตัวอย่าง</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>message.chatmessage</code></td><td>สตริง</td><td>ข้อความแชต (อาจมี HTML)</td><td><code>"Hello stream!"</code></td></tr>
+                        <tr><td><code>message.chatname</code></td><td>สตริง</td><td>ชื่อที่แสดงของผู้ส่ง</td><td><code>"CoolViewer"</code></td></tr>
+                        <tr><td><code>message.userid</code></td><td>สตริง</td><td>รหัสผู้ใช้บนแพลตฟอร์ม</td><td><code>"12345678"</code></td></tr>
+                        <tr><td><code>message.type</code></td><td>สตริง</td><td>แพลตฟอร์มต้นทาง (ตัวพิมพ์เล็ก)</td><td><code>"twitch"</code>, <code>"youtube"</code>, <code>"kick"</code></td></tr>
+                        <tr><td><code>message.hasDonation</code></td><td>สตริง</td><td>ข้อความบริจาคที่จัดรูปแบบแล้ว หากมี</td><td><code>"$5.00"</code>, <code>"500 bits"</code></td></tr>
+                        <tr><td><code>message.donoValue</code></td><td>ตัวเลข / ข้อความ</td><td>มูลค่าบริจาคเทียบเท่า USD เมื่อแหล่งข้อมูลให้มา โดยยอมรับค่า 0 ที่ถูกต้อง Event Flow ใช้ค่าทดแทนจาก <code>currency.js</code> การแปลงค่าที่ปรับรูปแบบแล้วใน <code>hasDonation</code> เพื่อเปรียบเทียบเกณฑ์ รวมถึงหน่วยเสมือนที่มีชื่อแต่ไม่รู้จัก 100 หน่วย = $0.01 USD โดยไม่แยกวิเคราะห์ <code>chatmessage</code> ข้อความบรรยายเพื่อหายอดบริจาค</td><td><code>5</code></td></tr>
+                        <tr><td><code>message.event</code></td><td>สตริง</td><td>ตัวระบุประเภทเหตุการณ์</td><td><code>"new_follower"</code>, <code>"cheer"</code>, <code>"raid"</code></td></tr>
+                        <tr><td><code>message.membership</code></td><td>สตริง</td><td>สถานะสมาชิกเมื่อเกี่ยวข้อง</td><td><code>"MEMBERSHIP"</code></td></tr>
+                        <tr><td><code>message.subtitle</code></td><td>สตริง</td><td>บรรทัดบริบทรอง</td><td><code>"Member for 3 months"</code></td></tr>
+                        <tr><td><code>message.mod</code></td><td>บูลีน</td><td>ผู้ส่งเป็นผู้ดูแลแชต</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.subscriber</code></td><td>บูลีน</td><td>ผู้ส่งเป็นสมาชิก</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.vip</code></td><td>บูลีน</td><td>ผู้ส่งมีสถานะ VIP</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.chatimg</code></td><td>สตริง</td><td>URL อวาตาร์ผู้ใช้</td><td><code>"https://..."</code></td></tr>
+                        <tr><td><code>message.meta</code></td><td>ออบเจ็กต์</td><td>ข้อมูลมีโครงสร้างแบบใดก็ได้ที่แนบกับเหตุการณ์</td><td><code>{ viewers: 120 }</code></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>การแปลงสกุลเงิน:</strong> ใช้ <code>convertCurrency(message.hasDonation, 'EUR', message.type)</code> เพื่อแปลงป้ายยอดบริจาคที่จัดรูปแบบแล้วเป็น EUR โดยคืนตัวเลข หรือ <code>null</code> เมื่อไม่รองรับสกุลเงินปลายทางที่ขอ ตัวแปลงใช้อัตราประมาณภายในของ Social Stream Ninja ไม่ได้ติดต่อบริการแลกเปลี่ยนเงินภายนอก
+                </div>
+
+                <!-- ─── result API ─── -->
+                <h3 id="custom-js-result-api">สิ่งที่แอ็กชันคืนค่า</h3>
+                <p>คืนออบเจ็กต์ธรรมดาจากโค้ดแอ็กชัน ฟิลด์ที่ใส่มาจะรวมเข้าใน <code>result</code> ออบเจ็กต์ ฟิลด์ที่ไม่ใส่มาจะคงค่าปัจจุบัน</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>ฟิลด์ที่คืนค่า</th><th>ชนิดข้อมูล</th><th>ผล</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>modified</code></td><td>บูลีน</td><td>ตั้งค่า <code>true</code> หากคุณเปลี่ยน <code>message</code> ฟิลด์ เพื่อบอกโหนดถัดไปว่าเพย์โหลดถูกแก้ไขแล้ว</td></tr>
+                        <tr><td><code>message</code></td><td>ออบเจ็กต์</td><td>ส่งข้อความกลับ (ซึ่งอาจถูกแก้ไขแล้ว) เพื่อให้โหนดถัดไปได้รับการเปลี่ยนแปลง</td></tr>
+                        <tr><td><code>blocked</code></td><td>บูลีน</td><td>ตั้งค่า <code>true</code> เพื่อป้องกันไม่ให้ข้อความแสดงหรือส่งต่อ</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>ค่าคืนขั้นต่ำที่ปลอดภัย:</strong> <code>return { modified: false, message };</code><br>
+                    แม้ไม่ได้เปลี่ยนอะไร การคืนค่า <code>message</code> ให้ข้อมูลไหลต่อไปยังโหนดถัดไป
+                </div>
+
+                <!-- ─── Snippet Examples ─── -->
+                <h3 id="custom-js-examples">ตัวอย่างโค้ดสั้น</h3>
+                <p>คัดลอกตัวอย่างใดก็ได้ลงในช่อง JavaScript Code ของโหนดประเภทที่ตรงกัน</p>
+
+                <h4 class="snippet-heading">ตัวอย่างโค้ดทริกเกอร์ — คืนค่า <code>true</code> เพื่อให้โฟลว์ทำต่อ</h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">จับคู่คีย์เวิร์ด (ไม่แยกตัวพิมพ์เล็กใหญ่)</div>
+                    <div class="snippet-desc">ให้โฟลว์ทำต่อเฉพาะเมื่อข้อความมีคำหรือวลีที่ระบุ</div>
+                    <div class="code-js">// Matches "!hello" anywhere in the message
+return (message.chatmessage || '').toLowerCase().includes('!hello');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">ตรวจจับคำสั่งด้วย Regex</div>
+                    <div class="snippet-desc">จับคู่ข้อความที่เริ่มด้วยคำสั่งจากรายการที่กำหนด (เช่น <code>!queue</code>, <code>!raffle</code>, <code>!enter</code>).</div>
+                    <div class="code-js">return /^!(queue|raffle|enter)\b/i.test(message.chatmessage || '');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">การบริจาคเกินเกณฑ์</div>
+                    <div class="snippet-desc">ทำงานเฉพาะเมื่อยอดบริจาคเท่ากับหรือเกินขั้นต่ำ</div>
+                    <div class="code-js">const amount = message.donoValue !== undefined && message.donoValue !== null && message.donoValue !== ''
+  ? Number(message.donoValue)
+  : (typeof convertToUSD === 'function' ? convertToUSD(message.hasDonation || '', message.type || '') : Number(String(message.hasDonation || '').replace(/[^0-9.]/g, '') || 0));
+return amount >= 5;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">YouTube Super Chat หรือ Super Sticker ในช่วง EUR ที่กำหนด</div>
+                    <div class="snippet-desc">แปลงป้ายบริจาค YouTube มาตรฐานเป็น EUR ยกเว้น Jewels/Gifts แล้วเลือกช่วงเสียงหรือภาพหนึ่งช่วง</div>
+                    <div class="code-js">var eventName = String(message.event || '').toLowerCase();
+if (eventName !== 'superchat' &amp;&amp; eventName !== 'supersticker') return false;
+
+var eurValue = convertCurrency(message.hasDonation || '', 'EUR', message.type || '');
+if (typeof eurValue !== 'number' || !isFinite(eurValue)) return false;
+
+message.eurValue = eurValue;
+return eurValue &gt;= 10 &amp;&amp; eurValue &lt; 25;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">ตัวกรองแพลตฟอร์ม</div>
+                    <div class="snippet-desc">ประมวลผลเฉพาะเหตุการณ์จากแพลตฟอร์มที่ระบุ</div>
+                    <div class="code-js">return ['twitch', 'youtube'].includes(message.type);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">เกตสมาชิก / VIP / ผู้ดูแลแชต</div>
+                    <div class="snippet-desc">ให้โฟลว์ทำต่อเฉพาะผู้ใช้ที่มีสิทธิ์</div>
+                    <div class="code-js">return !!(message.subscriber || message.vip || message.mod);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">หลายเงื่อนไข — VIP + คีย์เวิร์ด</div>
+                    <div class="snippet-desc">รวมการตรวจสอบบทบาทและเนื้อหาข้อความไว้ในนิพจน์เดียวที่ไม่มีทริกเกอร์ในตัวรองรับ</div>
+                    <div class="code-js">const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test(message.chatmessage || '');
+return isPrivileged && isCommand;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">เกตความยาวข้อความ</div>
+                    <div class="snippet-desc">ประมวลผลเฉพาะข้อความที่มีเนื้อหามากพอ (เหมาะกับ TTS หรือการส่งต่อ เพื่อหลีกเลี่ยงสแปมอีโมจิตัวเดียว)</div>
+                    <div class="code-js">return (message.chatmessage || '').replace(/<[^>]+>/g, '').trim().length >= 20;</div>
+                </div>
+
+                <h4 class="snippet-heading" style="margin-top:36px;">ตัวอย่างโค้ดแอ็กชัน — คืนค่า <code>{ modified, message }</code></h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">เพิ่มป้ายหรือแท็กท้ายข้อความ</div>
+                    <div class="snippet-desc">เพิ่มเครื่องหมายที่มองเห็นได้ท้ายทุกข้อความที่ผ่านแอ็กชันนี้</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').trimEnd() + ' ✅';
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">บล็อกข้อความตามเงื่อนไข</div>
+                    <div class="snippet-desc">ตรวจเนื้อหาและทิ้งข้อความเงียบ ๆ หากตรงกฎ เหมาะกับรูปแบบสแปมที่ตัวกรองคีย์เวิร์ดระบุไม่ได้</div>
+                    <div class="code-js">const text = (message.chatmessage || '').toLowerCase();
+const spamPatterns = ['buy followers', 'free nitro', 'click here'];
+
+if (spamPatterns.some(p => text.includes(p))) {
+    return { blocked: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">ลบ @mentions</div>
+                    <div class="snippet-desc">ลบการกล่าวถึง @username ทั้งหมดจากข้อความก่อนส่งต่อไปอีกแพลตฟอร์ม</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').replace(/@\w+/g, '').trim();
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">จัดรูปแบบประกาศบริจาค</div>
+                    <div class="snippet-desc">เขียน chatmessage ใหม่เป็นประกาศในรูปแบบคงที่เมื่อมีการบริจาค</div>
+                    <div class="code-js">const amount = parseFloat(message.donoValue || 0);
+if (amount > 0) {
+    const note = (message.chatmessage || '').trim();
+    message.chatmessage = `💰 ${message.chatname} donated $${amount.toFixed(2)}!`
+        + (note ? ` "${note}"` : '');
+    return { modified: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">แนบเมทาดาทาการกำหนดเส้นทางสำหรับโหนดถัดไป</div>
+                    <div class="snippet-desc">เพิ่มฟิลด์กำหนดเองให้ข้อความ เพื่อให้แอ็กชันภายหลัง <em>ส่งต่อแชต (Relay Chat)</em> หรือ <em>ส่งข้อความ (Send Message)</em> อ่านได้จากตัวแปรเทมเพลต (<code>{meta}</code>).</div>
+                    <div class="code-js">message.meta = message.meta || {};
+
+// Assign a donation tier so the next node can use {meta} to decide overlay colour
+const amount = parseFloat(message.donoValue || 0);
+message.meta.donationTier = amount >= 20 ? 'gold' : amount >= 5 ? 'silver' : 'bronze';
+
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">คำนำหน้าข้อความที่ระบุแพลตฟอร์ม</div>
+                    <div class="snippet-desc">เพิ่มป้ายแพลตฟอร์มหน้าข้อความเมื่อส่งต่อข้ามแพลตฟอร์ม เพื่อให้ผู้ชมทราบต้นทาง</div>
+                    <div class="code-js">const labels = {
+    twitch:  '[Twitch]',
+    youtube: '[YouTube]',
+    kick:    '[Kick]',
+    tiktok:  '[TikTok]',
+};
+const label = labels[message.type] || `[${message.type || 'Chat'}]`;
+message.chatmessage = `${label} ${message.chatname}: ${message.chatmessage || ''}`;
+return { modified: true, message };</div>
+                </div>
+
+                <!-- ─── Complete worked example ─── -->
+                <h3 id="custom-js-example-flow">ตัวอย่างครบชุด — บอตรับคำขอเพิ่มฟีเจอร์จาก VIP</h3>
+                <p>โฟลว์นี้รอรับ <code>!feature &lt;text&gt;</code> จากสมาชิก VIP หรือผู้ดูแลแชต จัดรูปแบบเป็นคำขอเพิ่มฟีเจอร์ แล้วส่งต่อไปยังปลายทางที่สอง (เช่น Discord)</p>
+
+                <div class="diagram">
+┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ ทริกเกอร์ Custom Code │────▶│ แอ็กชัน Execute Custom Code │────▶│ Relay Chat │ │ │ │ │ │ (ไป Discord) │ │ เกต: VIP/สมาชิก/ผู้ดูแลแชต │ │ จัดรูปแบบข้อความใหม่ │ │ │ │ + เริ่มด้วย │ │ → "📋 คำขอเพิ่มฟีเจอร์ │ │ │ │ !feature │ │ จาก {name}: {text}" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘</div>
+
+                <p><strong>ขั้นตอนที่ 1 — ทริกเกอร์ Custom Code</strong> (วางในช่อง JavaScript Code ของทริกเกอร์):</p>
+                <div class="code-js">// Only let VIPs, subscribers, and mods through, and only for !feature commands
+const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test((message.chatmessage || '').trim());
+return isPrivileged && isCommand;</div>
+
+                <p><strong>ขั้นตอนที่ 2 — แอ็กชัน Execute Custom Code</strong> (วางในช่อง JavaScript Code ของแอ็กชัน):</p>
+                <div class="code-js">// Strip the "!feature" command word and format a clean announcement
+const featureText = (message.chatmessage || '')
+    .replace(/^!feature\s*/i, '')
+    .trim();
+
+if (!featureText) {
+    // No text after the command: block rather than relay an empty request
+    return { blocked: true, message };
+}
+
+message.chatmessage = `📋 Feature request from ${message.chatname}: ${featureText}`;
+return { modified: true, message };</div>
+
+                <p><strong>ขั้นตอนที่ 3 — แอ็กชัน Relay Chat</strong>: เพิ่มโหนด Relay Chat มาตรฐานหลังแอ็กชัน แล้วตั้งให้ไปยังปลายทาง Discord (หรือปลายทางอื่น) ของคุณ ไม่ต้องใช้โค้ดกำหนดเองตรงนี้ โดยข้อความที่จัดรูปแบบใหม่ใน <code>message.chatmessage</code> จะไหลผ่านโดยอัตโนมัติ</p>
+
+                <div class="callout tip">
+                    <strong>การทดสอบโฟลว์</strong> คลิกปุ่มนี้: <strong>ทดสอบโฟลว์ (Test Flow)</strong> (มุมขวาบนของตัวแก้ไข) เพื่อส่งข้อความจำลองผ่านขั้นตอนการทำงานโดยไม่ต้องไลฟ์ ตั้ง chatname เป็นชื่อผู้สมัครสมาชิก แล้วเพิ่มข้อความ เช่น <code>!feature dark mode support</code> แล้วตรวจสอบว่าปลายทาง Relay Chat ได้รับข้อความที่จัดรูปแบบใหม่
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/test-panel.png" alt="แผง Test Flow สำหรับส่งเหตุการณ์ทดสอบจำลอง">
+                    <figcaption>แผง Test Flow กรอกฟิลด์ให้ตรงเงื่อนไขทริกเกอร์แล้วคลิก <em>ทดสอบ (Run Test)</em> เพื่อตรวจสอบสายประมวลผลทั้งหมด</figcaption>
+                </figure>
+
+                <!-- ─── Security note ─── -->
+                <h3 id="custom-js-security">ข้อควรพิจารณาด้านความปลอดภัย</h3>
+                <div class="callout warn">
+                    <strong>โค้ดกำหนดเองรันด้วยสิทธิ์ของโปรเซสแสดงผล</strong> ภายใน SSApp โค้ดในโหนด Custom JS เข้าถึง <code>window</code> ออบเจ็กต์และ API ที่สคริปต์ preload เปิดให้ใช้ (เช่น <code>window.ninjafy</code>) ปฏิบัติต่อไฟล์โฟลว์ที่นำเข้าเหมือนโค้ดที่รันได้ นำเข้าเฉพาะโฟลว์จากแหล่งที่เชื่อถือ
+                </div>
+                <ul>
+                    <li><strong>ไม่มีแซนด์บ็อกซ์เครือข่าย</strong> โค้ดแอ็กชันเรียกใช้ <code>fetch()</code> หากรับโฟลว์ที่ผู้อื่นแชร์มา ให้ตรวจสอบ JS ก่อนเปิดใช้</li>
+                    <li><strong>มีการดักจับข้อผิดพลาด</strong> ข้อผิดพลาดขณะรันในโค้ดของคุณจะคืนค่า <code>false</code> (ทริกเกอร์) หรือไม่ทำอะไร (แอ็กชัน) และบันทึกลงคอนโซล DevTools โดยโฟลว์ไม่ล่ม</li>
+                    <li><strong>รวมถึงข้อผิดพลาดทางไวยากรณ์ด้วย</strong> ข้อผิดพลาดชนิด <code>SyntaxError</code> ในขั้นคอมไพล์ก็ถูกดักจับแบบเดียวกัน ตรวจ DevTools (F12) หากโหนดดูเหมือนไม่ทำอะไร</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

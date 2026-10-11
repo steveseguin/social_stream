@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Social Stream Ninja의 Event Flow 사용자 기억으로 시청자별 값을 저장하고 이전 상호 작용에 반응하는 자동화를 만드세요.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ko/actions/user-memory-guide.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/ko/actions/user-memory-guide.html">
+    <meta property="og:title" content="사용자 기억 가이드 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja의 Event Flow 사용자 기억으로 시청자별 값을 저장하고 이전 상호 작용에 반응하는 자동화를 만드세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ko/actions/user-memory-guide.html">
+    <meta name="twitter:title" content="사용자 기억 가이드 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja의 Event Flow 사용자 기억으로 시청자별 값을 저장하고 이전 상호 작용에 반응하는 자동화를 만드세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용자 기억 가이드 - Social Stream Ninja</title>
+    <style>
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #e5e7eb;
+            background: #090c13;
+            line-height: 1.65;
+        }
+        a { color: #5eead4; }
+        code {
+            padding: 2px 6px;
+            border-radius: 5px;
+            color: #f5d0fe;
+            background: rgba(192, 132, 252, 0.14);
+        }
+        .shell { max-width: 1120px; margin: 0 auto; }
+        header {
+            padding: 64px 32px 48px;
+            background:
+                radial-gradient(circle at 78% 15%, rgba(192,132,252,0.28), transparent 32%),
+                linear-gradient(145deg, #111827, #172554 62%, #312e81);
+            border-bottom: 1px solid rgba(192,132,252,0.3);
+        }
+        header .eyebrow {
+            color: #c4b5fd;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        h1 { margin: 8px 0 14px; font-size: clamp(2.2rem, 6vw, 4rem); line-height: 1.08; }
+        header p { max-width: 760px; margin: 0; color: #cbd5e1; font-size: 1.12rem; }
+        nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+        nav a, .button {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 999px;
+            color: #f8fafc;
+            text-decoration: none;
+            background: rgba(15,23,42,0.34);
+        }
+        main { padding: 44px 32px 72px; }
+        section { margin: 0 0 68px; scroll-margin-top: 20px; }
+        h2 { margin: 0 0 16px; color: #ddd6fe; font-size: 2rem; }
+        h3 { margin: 28px 0 10px; color: #c4b5fd; }
+        p { margin: 10px 0; color: #cbd5e1; }
+        ul, ol { color: #cbd5e1; }
+        li { margin: 7px 0; }
+        .lead, .callout, .card {
+            border: 1px solid rgba(148,163,184,0.2);
+            border-radius: 14px;
+            background: #111827;
+        }
+        .lead, .callout { padding: 18px 20px; }
+        .callout { margin: 20px 0; border-color: rgba(94,234,212,0.25); }
+        .warning { border-color: rgba(251,191,36,0.35); background: rgba(120,53,15,0.18); }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+            gap: 16px;
+            margin: 22px 0;
+        }
+        .card { padding: 18px; }
+        .card h3, .card h4 { margin-top: 0; }
+        .wire-key { display: flex; flex-wrap: wrap; gap: 18px; margin: 18px 0; color: #cbd5e1; }
+        .wire { display: inline-flex; align-items: center; gap: 9px; }
+        .wire::before { content: ""; width: 46px; border-top: 3px solid #2dd4bf; }
+        .wire.state::before { border-top: 3px dashed #c084fc; }
+        figure {
+            margin: 24px 0;
+            border: 1px solid rgba(148,163,184,0.22);
+            border-radius: 14px;
+            overflow: hidden;
+            background: #15171d;
+        }
+        figure img { display: block; width: 100%; height: auto; }
+        figcaption { padding: 12px 16px; color: #94a3b8; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #111827; }
+        th, td { padding: 12px 14px; border: 1px solid #293244; text-align: left; vertical-align: top; }
+        th { color: #ddd6fe; background: #172033; }
+        table:focus { outline: 2px solid #c4b5fd; outline-offset: 2px; }
+        .flow {
+            padding: 16px 18px;
+            margin: 14px 0;
+            border-radius: 12px;
+            color: #e2e8f0;
+            background: #070b12;
+            border: 1px solid #253047;
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+            white-space: pre-wrap;
+        }
+        .recipe { padding-left: 18px; border-left: 4px solid #8b5cf6; margin: 28px 0; }
+        .recipe h3 { margin-top: 0; }
+        .two-col { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 22px; align-items: start; }
+        footer { padding: 24px 32px 42px; color: #94a3b8; border-top: 1px solid #1f2937; }
+        @media (max-width: 760px) {
+            header, main, footer { padding-left: 18px; padding-right: 18px; }
+            .two-col { grid-template-columns: 1fr; }
+            table { font-size: 0.9rem; display: block; max-width: 100%; overflow-x: auto; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"actions/user-memory-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", or":", 또는",", selecting the exact memory.":"에서 정확한 기억 목록을 선택하세요.",", so other platforms speak for everyone while TikTok stays restricted.":"으로 시작해야 합니다. 다른 플랫폼에서는 모두의 메시지를 읽고 TikTok에서만 제한합니다.",". Confirm the captured row in Test Flow/Event Reference and match the cleanest field your source provides.":"를 사용할 수 있습니다. Test Flow/Event Reference에서 캡처된 행을 확인하고 소스가 제공하는 가장 명확한 필드에 맞추세요.",". It reads the incoming TikTok badge/level data directly; the Main Chat Overlay’s “treat as members” display setting is not required.":"을 선택하세요. 수신된 TikTok 배지/레벨 데이터를 직접 읽으므로 메인 채팅 오버레이의 ‘멤버로 취급’ 표시 설정은 필요하지 않습니다.","? command + TikTok source + (TikTok Team Member OR User Is Remembered) → AND → Speak Text ? command + NOT TikTok source → AND ────────────────────────────────→ Speak Text":"? 명령 + TikTok 소스 + (TikTok 팀 멤버 OR 기억된 사용자) → AND → 텍스트 읽기 ? 명령 + NOT TikTok 소스 → AND ────────────────────────────────→ 텍스트 읽기","A":"다음 항목:","A like did not add anyone":"좋아요로 아무도 추가되지 않음","A real SSApp flow with two remembered entrants. The event path stays teal; shared-state references are dashed purple.":"참가자 두 명을 기억하는 실제 SSApp 흐름. 이벤트 경로는 청록색이며 공유 상태 참조는 보라색 점선입니다.","A saved memory came back":"저장한 기억 목록이 다시 나타남","A trigger/check that returns true when the current message belongs to someone in the selected memory.":"현재 메시지가 선택한 기억 목록의 사용자에게서 온 경우 true를 반환하는 트리거/검사.","Across restarts":"재시작 간 유지","Actual Test Flow output: Alice was selected and the memory count fell to one because “remove selected” was enabled.":"실제 Test Flow 결과: Alice가 선택되었으며 ‘선택한 사용자 제거’가 켜져 있어 기억된 사용자 수가 한 명으로 줄었습니다.","Add User Role: moderator/admin (or an exact host-user check) into an AND gate before the action.":"작업 앞의 AND 게이트에 User Role: moderator/admin 또는 정확한 호스트 사용자 검사를 추가하세요.","Add the checks and actions you need, then link each one to the named memory using its side diamond or dropdown.":"필요한 검사와 작업을 추가한 뒤 측면 마름모나 드롭다운으로 각각 이름 있는 기억 목록에 연결하세요.","Adds the current event’s user once. Repeated participation increases that user’s participation count without adding duplicate draw entries.":"현재 이벤트의 사용자를 한 번만 추가합니다. 반복 참여는 중복 추첨 항목을 만들지 않고 해당 사용자의 참여 횟수를 늘립니다.","Also clears a User Memory when that memory is the selected reset target.":"초기화 대상으로 해당 기억 노드를 선택하면 User Memory도 비웁니다.","Anyone can run the draw/reset command":"누구나 추첨/초기화 명령을 실행할 수 있음","Automatic":"자동","Available operations":"사용 가능한 작업","Both branches still require the leading":"두 분기 모두 앞의","Check whether the events came from different platforms. Platform + user ID intentionally creates separate identities.":"이벤트가 서로 다른 플랫폼에서 왔는지 확인하세요. 플랫폼 + 사용자 ID는 의도적으로 별개 신원을 만듭니다.","Choose":"선택:","Clear All Users":"모든 사용자 삭제 (Clear All Users)","Clear All Users Now":"지금 모든 사용자 삭제 (Clear All Users Now)","Clear after inactivity, on stream start, or on stream stop. A value of 0 disables inactivity reset.":"비활동 후, 방송 시작 시 또는 방송 종료 시 삭제합니다. 비활동 초기화 값을 0으로 설정하면 해당 초기화를 끕니다.","Connect the normal event path with teal wires and use":"청록색 선으로 일반 이벤트 경로를 연결하고 다음을 사용하세요:","Dashed purple: this node uses that memory":"보라색 점선: 이 노드가 해당 기억 목록을 사용함","Download the participation + draw example flow":"참여 + 추첨 예시 흐름 다운로드","Drag":"드래그할 항목:","Drag the small purple side diamond onto a User Memory node, or choose the memory by name in the node properties. Internally the operation stores the state node’s ID. Selecting the memory highlights every linked operation, and deleting it warns before those links are broken.":"작은 보라색 측면 마름모를 User Memory 노드로 끌거나 노드 속성에서 기억 목록을 이름으로 선택하세요. 내부적으로 작업은 상태 노드의 ID를 저장합니다. 기억 노드를 선택하면 연결된 모든 작업이 강조되며, 삭제하면 연결이 끊기기 전에 경고합니다.","Draw outputs":"추첨 출력","Empties only the selected User Memory object.":"선택한 User Memory 객체만 비웁니다.","Enable":"활성화","Event Flow Guide":"Event Flow 가이드","Event Flow canvas showing Remember User and User Is Remembered linked to the Prize Draw Entrants memory with dashed purple lines":"Remember User와 User Is Remembered가 보라색 점선으로 Prize Draw Entrants 기억 목록에 연결된 Event Flow 캔버스","Event Flow shared state":"Event Flow 공유 상태","Event Type → Other: gift":"Event Type → Other: gift","Event Type → Other: liked → Remember User ···→ [Liked Stream]":"Event Type → Other: liked → Remember User ···→ [Liked Stream]","Every reset option belongs to this one named memory. Other User Memory nodes are not touched.":"모든 초기화 옵션은 이 이름의 기억 목록 하나에만 적용됩니다. 다른 User Memory 노드는 변경되지 않습니다.","Field":"필드","For TikTok Team/Fan status, choose":"TikTok 팀/팬 상태를 확인하려면 선택하세요:","Forget User":"사용자 잊기 (Forget User)","From a flow":"흐름에서","Gift payloads differ by capture mode. A common setup is":"선물 페이로드는 캡처 모드에 따라 다릅니다. 일반적인 설정:","Heart Me Eligible":"Heart Me 참가 자격","How it works":"작동 방식","How many times that person has participated.":"해당 사용자가 참여한 횟수.","Identity rule:":"신원 규칙:","Liked Stream":"방송 좋아요 참여자","Manual":"수동","Meaning":"의미","Memory actions add fields to the message so downstream Show Text, Send Message, webhook, or custom actions can use them.":"기억 작업은 메시지에 필드를 추가하여 후속 Show Text, Send Message, 웹훅 또는 사용자 지정 작업에서 사용할 수 있게 합니다.","Message Contains: Heart Me":"Message Contains: Heart Me","Message Starts With !enter → Remember User ···→ [Prize Draw Entrants] Moderator + Message Starts With !draw → AND → Pick Random User ···→ [Prize Draw Entrants] Moderator + Message Starts With !resetdraw → AND → Clear All Users ···→ [Prize Draw Entrants]":"메시지가 !enter로 시작 → 사용자 기억 ···→ [경품 추첨 참가자] 관리자 + 메시지가 !draw로 시작 → AND → 무작위 사용자 선택 ···→ [경품 추첨 참가자] 관리자 + 메시지가 !resetdraw로 시작 → AND → 모든 사용자 삭제 ···→ [경품 추첨 참가자]","Name it for the list it owns, such as":"관리하는 목록에 맞는 이름을 지정하세요. 예:","Node":"노드","One named memory, many tools":"기억 목록 하나, 여러 도구","Pick Random User":"무작위 사용자 선택 (Pick Random User)","Practical recipes":"실용적인 예시","Prize Draw Entrants":"경품 추첨 참가자","Recipes":"레시피","Remember User":"사용자 기억하기 (Remember User)","Remember people who liked or participated":"좋아요를 누르거나 참여한 사람 기억","Remember unique participants, check them on later messages, draw a random winner, and reset exactly the list you intended without turning a platform role into permanent global state.":"중복 없이 참가자를 기억하고 이후 메시지에서 확인하며 무작위 당첨자를 뽑고 원하는 목록만 초기화하세요. 플랫폼 역할을 영구적인 전역 상태로 바꿀 필요가 없습니다.","Remove selected user":"선택한 사용자 제거","Removes only the current event’s user.":"현재 이벤트의 사용자만 제거합니다.","Reset State Node":"상태 노드 초기화 (Reset State Node)","Reset and persistence":"초기화 및 저장","Save across restarts":"재시작 후에도 저장 (Save across restarts)","Select the operation and choose a User Memory target, or drag its purple side diamond to the memory hub.":"작업을 선택하고 대상 User Memory를 고르거나 보라색 측면 마름모를 기억 허브로 끌어 놓으세요.","Selects one unique remembered user. It can optionally remove the winner so they cannot win again.":"기억된 고유 사용자 한 명을 선택합니다. 원하면 당첨자를 제거하여 다시 당첨되지 않게 할 수 있습니다.","Session memories start empty with the app. Saved memories reload until that specific memory is cleared.":"세션 기억은 앱이 시작될 때 비어 있습니다. 저장된 기억은 해당 기억을 직접 비우기 전까지 다시 로드됩니다.","Set it up":"설정하기","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja ·":"Social Stream Ninja ·","Solid teal: this event runs next":"청록색 실선: 다음에 실행되는 이벤트","State Nodes Guide":"상태 노드 가이드","State Nodes → User Memory":"상태 노드 → 사용자 기억","TTS":"음성 읽기","Test Flow":"흐름 테스트 (Test Flow)","Test Flow result showing a selected prize draw user and one remaining entrant":"선택된 경품 당첨자와 남은 참가자 한 명이 표시된 Test Flow 결과","The dashed line is missing":"점선이 표시되지 않음","The drawn user’s display name.":"추첨된 사용자의 표시 이름.","The drawn user’s stable ID and platform.":"추첨된 사용자의 고정 ID와 플랫폼.","The event probably had no user identity. Inspect the event payload; aggregate counts cannot become named entrants.":"이벤트에 사용자 식별 정보가 없었을 가능성이 큽니다. 이벤트 페이로드를 확인하세요. 집계 수치는 이름이 있는 참가자로 변환할 수 없습니다.","The hub reports its current unique-user count and owns persistence/reset settings.":"허브는 현재 고유 사용자 수를 표시하고 저장/초기화 설정을 관리합니다.","The latest reason template saved by Remember User.":"Remember User가 저장한 가장 최근의 사유 템플릿.","The same person appears twice":"같은 사람이 두 번 표시됨","The selected memory’s name.":"선택한 기억 목록의 이름.","The winner’s recorded participation count.":"당첨자의 기록된 참여 횟수.","This app session":"현재 앱 세션","This works when the captured like/participation event names a user. Aggregate like-count updates do not identify a person and therefore cannot be remembered. Use a separate memory for each kind of participation if you want independent checks or draws.":"캡처한 좋아요/참여 이벤트에 사용자가 명시되어 있을 때 작동합니다. 전체 좋아요 수 업데이트는 개인을 식별하지 않으므로 기억할 수 없습니다. 별도의 검사나 추첨이 필요하면 참여 유형마다 다른 기억 목록을 사용하세요.","TikTok Heart Me or Team Member →":"TikTok Heart Me 또는 팀 멤버 →","TikTok gift event + “Heart Me” match → AND → Remember User ···→ [Heart Me Eligible]":"TikTok 선물 이벤트 + ‘Heart Me’ 일치 → AND → 사용자 기억 ···→ [Heart Me 참가 자격]","Troubleshooting":"문제 해결","True only when Remember User added a new unique person.":"Remember User가 새로운 고유 사용자를 추가한 경우에만 true.","Unique users currently remembered.":"현재 기억된 고유 사용자 수.","Unique-entry prize draw":"중복 응모 없는 경품 추첨","Use":"사용:","Use Clear All Users on that memory. Changing a flow or clearing a different memory does not erase it.":"해당 기억 목록에서 Clear All Users를 사용하세요. 흐름을 바꾸거나 다른 기억 목록을 비워도 지워지지 않습니다.","Use Event Flow user memory in Social Stream Ninja to store viewer-specific values and build automations that respond to previous interactions.":"Social Stream Ninja의 Event Flow 사용자 기억으로 시청자별 값을 저장하고 이전 상호 작용에 반응하는 자동화를 만드세요.","Use draw and participation outputs":"추첨 및 참여 출력 사용","Use the gift event to remember the sender; do not try to turn the one gift row into a permanent “member” role.":"선물 이벤트로 보낸 사람을 기억하세요. 선물 행 하나를 영구적인 ‘멤버’ 역할로 바꾸려 하지 마세요.","User Is Remembered":"기억된 사용자인지 확인 (User Is Remembered)","User Memory":"사용자 기억 (User Memory)","User Memory Guide - Social Stream Ninja":"사용자 기억 가이드 - Social Stream Ninja","User Memory node properties showing two current users and Save across restarts":"현재 사용자 두 명과 재시작 후에도 저장 설정이 표시된 User Memory 노드 속성","User Memory reset properties including inactivity, stream start, stream stop, and Clear All Users Now":"비활동, 방송 시작, 방송 종료, 지금 모든 사용자 삭제 옵션이 포함된 User Memory 초기화 속성","User Role → TikTok Team Member":"사용자 역할 → TikTok 팀 멤버","What it does":"역할","Whether the draw removed the selected winner.":"추첨에서 선택된 당첨자를 제거했는지 여부.","in the memory properties while building/testing.":"을 구성/테스트 중 기억 속성에서 사용하세요.","it means all users inside the selected memory, not all Event Flow state, not every draw, and not every memory in Social Stream Ninja.":"선택한 기억 목록 안의 모든 사용자를 뜻합니다. 모든 Event Flow 상태, 모든 추첨, Social Stream Ninja의 모든 기억을 뜻하지는 않습니다.","onto the canvas.":"를 캔버스에 놓으세요.","or":"또는","or the generic":"또는 일반적인","plus":"추가:","state node owns one isolated set of people. Every Remember, Forget, Check, Draw, or Clear node selects that state node. Create another User Memory node when you need a separate list, for example, one for “liked the stream” and another for “entered the giveaway.”":"상태 노드는 서로 격리된 사용자 집합 하나를 관리합니다. 각 Remember, Forget, Check, Draw, Clear 노드는 해당 상태 노드를 선택합니다. ‘방송 좋아요 참여자’와 ‘추첨 응모자’처럼 별도 목록이 필요하면 다른 User Memory 노드를 만드세요.","users are keyed by platform plus user ID. The displayed username is used only as a fallback. An anonymous or aggregate event with no user identity is safely ignored.":"사용자는 플랫폼과 사용자 ID를 조합하여 구분합니다. 표시 사용자 이름은 대체 수단으로만 사용합니다. 사용자 식별 정보가 없는 익명 이벤트나 집계 이벤트는 안전하게 무시합니다.","when winners should not be drawn twice. In a public stream, protect draw/reset commands with a moderator, admin, or exact-user check.":"를 사용하면 같은 당첨자가 다시 뽑히지 않습니다. 공개 방송에서는 추첨/초기화 명령에 관리자, 운영자 또는 정확한 사용자 검사를 적용하세요.","with two different usernames before going live.":"로 방송 전에 서로 다른 사용자 이름 두 개를 테스트하세요.","“Clear all” is scoped:":"‘모두 삭제’의 적용 범위:"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/actions/user-memory-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header>
+        <div class="shell">
+            <div class="eyebrow">Event Flow 공유 상태</div>
+            <h1>사용자 기억 (User Memory)</h1>
+            <p>중복 없이 참가자를 기억하고 이후 메시지에서 확인하며 무작위 당첨자를 뽑고 원하는 목록만 초기화하세요. 플랫폼 역할을 영구적인 전역 상태로 바꿀 필요가 없습니다.</p>
+            <nav>
+                <a href="#model">작동 방식</a>
+                <a href="#setup">설정하기</a>
+                <a href="#recipes">레시피</a>
+                <a href="#reset">초기화 및 저장</a>
+                <a href="#outputs">추첨 출력</a>
+            </nav>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/user-memory-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/user-memory-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/user-memory-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/user-memory-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/user-memory-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/user-memory-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/user-memory-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/user-memory-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/user-memory-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/user-memory-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/user-memory-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="user-memory-guide.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/actions/user-memory-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/user-memory-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/user-memory-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/user-memory-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/user-memory-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+    </header>
+
+    <main class="shell">
+        <section id="model">
+            <h2>기억 목록 하나, 여러 도구</h2>
+            <div class="lead">
+                다음 항목: <strong>사용자 기억 (User Memory)</strong> 상태 노드는 서로 격리된 사용자 집합 하나를 관리합니다. 각 Remember, Forget, Check, Draw, Clear 노드는 해당 상태 노드를 선택합니다. ‘방송 좋아요 참여자’와 ‘추첨 응모자’처럼 별도 목록이 필요하면 다른 User Memory 노드를 만드세요.
+            </div>
+            <div class="wire-key">
+                <span class="wire">청록색 실선: 다음에 실행되는 이벤트</span>
+                <span class="wire state">보라색 점선: 이 노드가 해당 기억 목록을 사용함</span>
+            </div>
+            <p>작은 보라색 측면 마름모를 User Memory 노드로 끌거나 노드 속성에서 기억 목록을 이름으로 선택하세요. 내부적으로 작업은 상태 노드의 ID를 저장합니다. 기억 노드를 선택하면 연결된 모든 작업이 강조되며, 삭제하면 연결이 끊기기 전에 경고합니다.</p>
+            <figure>
+                <img src="../../actions/img/user-memory-shared-state.png" alt="Remember User와 User Is Remembered가 보라색 점선으로 Prize Draw Entrants 기억 목록에 연결된 Event Flow 캔버스">
+                <figcaption>참가자 두 명을 기억하는 실제 SSApp 흐름. 이벤트 경로는 청록색이며 공유 상태 참조는 보라색 점선입니다.</figcaption>
+            </figure>
+        </section>
+
+        <section id="setup">
+            <h2>설정하기</h2>
+            <ol>
+                <li>드래그할 항목: <strong>상태 노드 → 사용자 기억</strong> 를 캔버스에 놓으세요.</li>
+                <li>관리하는 목록에 맞는 이름을 지정하세요. 예: <em>Heart Me 참가 자격</em>, <em>방송 좋아요 참여자</em>, 또는 <em>경품 추첨 참가자</em>.</li>
+                <li>선택: <strong>현재 앱 세션</strong> 또는 <strong>재시작 후에도 저장 (Save across restarts)</strong>.</li>
+                <li>필요한 검사와 작업을 추가한 뒤 측면 마름모나 드롭다운으로 각각 이름 있는 기억 목록에 연결하세요.</li>
+                <li>청록색 선으로 일반 이벤트 경로를 연결하고 다음을 사용하세요: <strong>흐름 테스트 (Test Flow)</strong> 로 방송 전에 서로 다른 사용자 이름 두 개를 테스트하세요.</li>
+            </ol>
+            <div class="two-col">
+                <div>
+                    <h3>사용 가능한 작업</h3>
+                    <table tabindex="0">
+                        <thead><tr><th>노드</th><th>역할</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>사용자 기억하기 (Remember User)</strong></td><td>현재 이벤트의 사용자를 한 번만 추가합니다. 반복 참여는 중복 추첨 항목을 만들지 않고 해당 사용자의 참여 횟수를 늘립니다.</td></tr>
+                            <tr><td><strong>기억된 사용자인지 확인 (User Is Remembered)</strong></td><td>현재 메시지가 선택한 기억 목록의 사용자에게서 온 경우 true를 반환하는 트리거/검사.</td></tr>
+                            <tr><td><strong>사용자 잊기 (Forget User)</strong></td><td>현재 이벤트의 사용자만 제거합니다.</td></tr>
+                            <tr><td><strong>무작위 사용자 선택 (Pick Random User)</strong></td><td>기억된 고유 사용자 한 명을 선택합니다. 원하면 당첨자를 제거하여 다시 당첨되지 않게 할 수 있습니다.</td></tr>
+                            <tr><td><strong>모든 사용자 삭제 (Clear All Users)</strong></td><td>선택한 User Memory 객체만 비웁니다.</td></tr>
+                            <tr><td><strong>상태 노드 초기화 (Reset State Node)</strong></td><td>초기화 대상으로 해당 기억 노드를 선택하면 User Memory도 비웁니다.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <figure>
+                    <img src="../../actions/img/user-memory-settings.png" alt="현재 사용자 두 명과 재시작 후에도 저장 설정이 표시된 User Memory 노드 속성">
+                    <figcaption>허브는 현재 고유 사용자 수를 표시하고 저장/초기화 설정을 관리합니다.</figcaption>
+                </figure>
+            </div>
+            <div class="callout">
+                <strong>신원 규칙:</strong> 사용자는 플랫폼과 사용자 ID를 조합하여 구분합니다. 표시 사용자 이름은 대체 수단으로만 사용합니다. 사용자 식별 정보가 없는 익명 이벤트나 집계 이벤트는 안전하게 무시합니다.
+            </div>
+        </section>
+
+        <section id="recipes">
+            <h2>실용적인 예시</h2>
+
+            <div class="recipe">
+                <h3>TikTok Heart Me 또는 팀 멤버 → <code>?</code> 음성 읽기</h3>
+                <p>선물 이벤트로 보낸 사람을 기억하세요. 선물 행 하나를 영구적인 ‘멤버’ 역할로 바꾸려 하지 마세요.</p>
+                <div class="flow">TikTok 선물 이벤트 + ‘Heart Me’ 일치 → AND → 사용자 기억 ···→ [Heart Me 참가 자격]</div>
+                <div class="flow">? 명령 + TikTok 소스 + (TikTok 팀 멤버 OR 기억된 사용자) → AND → 텍스트 읽기 ? 명령 + NOT TikTok 소스 → AND ────────────────────────────────→ 텍스트 읽기</div>
+                <ul>
+                    <li>TikTok 팀/팬 상태를 확인하려면 선택하세요: <strong>사용자 역할 → TikTok 팀 멤버</strong>을 선택하세요. 수신된 TikTok 배지/레벨 데이터를 직접 읽으므로 메인 채팅 오버레이의 ‘멤버로 취급’ 표시 설정은 필요하지 않습니다.</li>
+                    <li>선물 페이로드는 캡처 모드에 따라 다릅니다. 일반적인 설정: <strong>Event Type → Other: gift</strong> 추가: <strong>Message Contains: Heart Me</strong>를 사용할 수 있습니다. Test Flow/Event Reference에서 캡처된 행을 확인하고 소스가 제공하는 가장 명확한 필드에 맞추세요.</li>
+                    <li>두 분기 모두 앞의 <code>?</code>으로 시작해야 합니다. 다른 플랫폼에서는 모두의 메시지를 읽고 TikTok에서만 제한합니다.</li>
+                </ul>
+            </div>
+
+            <div class="recipe">
+                <h3>좋아요를 누르거나 참여한 사람 기억</h3>
+                <div class="flow">Event Type → Other: liked → Remember User ···→ [Liked Stream]</div>
+                <p>캡처한 좋아요/참여 이벤트에 사용자가 명시되어 있을 때 작동합니다. 전체 좋아요 수 업데이트는 개인을 식별하지 않으므로 기억할 수 없습니다. 별도의 검사나 추첨이 필요하면 참여 유형마다 다른 기억 목록을 사용하세요.</p>
+            </div>
+
+            <div class="recipe">
+                <h3>중복 응모 없는 경품 추첨</h3>
+                <div class="flow">메시지가 !enter로 시작 → 사용자 기억 ···→ [경품 추첨 참가자] 관리자 + 메시지가 !draw로 시작 → AND → 무작위 사용자 선택 ···→ [경품 추첨 참가자] 관리자 + 메시지가 !resetdraw로 시작 → AND → 모든 사용자 삭제 ···→ [경품 추첨 참가자]</div>
+                <p>활성화 <strong>선택한 사용자 제거</strong> 를 사용하면 같은 당첨자가 다시 뽑히지 않습니다. 공개 방송에서는 추첨/초기화 명령에 관리자, 운영자 또는 정확한 사용자 검사를 적용하세요.</p>
+                <p><a class="button" href="../../actions/examples/user-memory-participation-draw.json" download>참여 + 추첨 예시 흐름 다운로드</a></p>
+            </div>
+        </section>
+
+        <section id="reset">
+            <h2>초기화 및 저장</h2>
+            <div class="grid">
+                <div class="card"><h3>수동</h3><p>사용: <strong>지금 모든 사용자 삭제 (Clear All Users Now)</strong> 을 구성/테스트 중 기억 속성에서 사용하세요.</p></div>
+                <div class="card"><h3>흐름에서</h3><p>사용: <strong>모든 사용자 삭제 (Clear All Users)</strong> 또는 일반적인 <strong>상태 노드 초기화 (Reset State Node)</strong>에서 정확한 기억 목록을 선택하세요.</p></div>
+                <div class="card"><h3>자동</h3><p>비활동 후, 방송 시작 시 또는 방송 종료 시 삭제합니다. 비활동 초기화 값을 0으로 설정하면 해당 초기화를 끕니다.</p></div>
+                <div class="card"><h3>재시작 간 유지</h3><p>세션 기억은 앱이 시작될 때 비어 있습니다. 저장된 기억은 해당 기억을 직접 비우기 전까지 다시 로드됩니다.</p></div>
+            </div>
+            <figure>
+                <img src="../../actions/img/user-memory-reset-controls.png" alt="비활동, 방송 시작, 방송 종료, 지금 모든 사용자 삭제 옵션이 포함된 User Memory 초기화 속성">
+                <figcaption>모든 초기화 옵션은 이 이름의 기억 목록 하나에만 적용됩니다. 다른 User Memory 노드는 변경되지 않습니다.</figcaption>
+            </figure>
+            <div class="callout warning">
+                <strong>‘모두 삭제’의 적용 범위:</strong> 선택한 기억 목록 안의 모든 사용자를 뜻합니다. 모든 Event Flow 상태, 모든 추첨, Social Stream Ninja의 모든 기억을 뜻하지는 않습니다.
+            </div>
+        </section>
+
+        <section id="outputs">
+            <h2>추첨 및 참여 출력 사용</h2>
+            <p>기억 작업은 메시지에 필드를 추가하여 후속 Show Text, Send Message, 웹훅 또는 사용자 지정 작업에서 사용할 수 있게 합니다.</p>
+            <table tabindex="0">
+                <thead><tr><th>필드</th><th>의미</th></tr></thead>
+                <tbody>
+                    <tr><td><code>userMemoryName</code></td><td>선택한 기억 목록의 이름.</td></tr>
+                    <tr><td><code>userMemoryCount</code></td><td>현재 기억된 고유 사용자 수.</td></tr>
+                    <tr><td><code>userMemoryAdded</code></td><td>Remember User가 새로운 고유 사용자를 추가한 경우에만 true.</td></tr>
+                    <tr><td><code>userMemoryEntryCount</code></td><td>해당 사용자가 참여한 횟수.</td></tr>
+                    <tr><td><code>selectedUser</code></td><td>추첨된 사용자의 표시 이름.</td></tr>
+                    <tr><td><code>selectedUserId</code>, <code>selectedUserSource</code></td><td>추첨된 사용자의 고정 ID와 플랫폼.</td></tr>
+                    <tr><td><code>selectedUserParticipationCount</code></td><td>당첨자의 기록된 참여 횟수.</td></tr>
+                    <tr><td><code>selectedUserReason</code></td><td>Remember User가 저장한 가장 최근의 사유 템플릿.</td></tr>
+                    <tr><td><code>selectedUserRemoved</code></td><td>추첨에서 선택된 당첨자를 제거했는지 여부.</td></tr>
+                </tbody>
+            </table>
+            <figure>
+                <img src="../../actions/img/user-memory-draw-result.png" alt="선택된 경품 당첨자와 남은 참가자 한 명이 표시된 Test Flow 결과">
+                <figcaption>실제 Test Flow 결과: Alice가 선택되었으며 ‘선택한 사용자 제거’가 켜져 있어 기억된 사용자 수가 한 명으로 줄었습니다.</figcaption>
+            </figure>
+        </section>
+
+        <section>
+            <h2>문제 해결</h2>
+            <table tabindex="0">
+                <tbody>
+                    <tr><th>점선이 표시되지 않음</th><td>작업을 선택하고 대상 User Memory를 고르거나 보라색 측면 마름모를 기억 허브로 끌어 놓으세요.</td></tr>
+                    <tr><th>같은 사람이 두 번 표시됨</th><td>이벤트가 서로 다른 플랫폼에서 왔는지 확인하세요. 플랫폼 + 사용자 ID는 의도적으로 별개 신원을 만듭니다.</td></tr>
+                    <tr><th>좋아요로 아무도 추가되지 않음</th><td>이벤트에 사용자 식별 정보가 없었을 가능성이 큽니다. 이벤트 페이로드를 확인하세요. 집계 수치는 이름이 있는 참가자로 변환할 수 없습니다.</td></tr>
+                    <tr><th>저장한 기억 목록이 다시 나타남</th><td>해당 기억 목록에서 Clear All Users를 사용하세요. 흐름을 바꾸거나 다른 기억 목록을 비워도 지워지지 않습니다.</td></tr>
+                    <tr><th>누구나 추첨/초기화 명령을 실행할 수 있음</th><td>작업 앞의 AND 게이트에 User Role: moderator/admin 또는 정확한 호스트 사용자 검사를 추가하세요.</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer><div class="shell">Social Stream Ninja · <a href="event-flow-guide.html">Event Flow 가이드</a> · <a href="state-nodes-guide.html">상태 노드 가이드</a></div></footer>
+</body>
+</html>

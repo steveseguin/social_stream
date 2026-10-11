@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/docs/tip-jar-goal-meter.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/docs/tip-jar-goal-meter.html">
+    <meta property="og:title" content="Průvodce Tip Jar a Goal Meter - Social Stream Ninja">
+    <meta property="og:description" content="Nastavte Tip Jar a Goal Meter v Social Stream Ninja a vyřešte chybějící dary, členství a darovaná členství.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/docs/tip-jar-goal-meter.html">
+    <meta name="twitter:title" content="Průvodce Tip Jar a Goal Meter - Social Stream Ninja">
+    <meta name="twitter:description" content="Nastavte Tip Jar a Goal Meter v Social Stream Ninja a vyřešte chybějící dary, členství a darovaná členství.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Průvodce Tip Jar a Goal Meter - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Nastavte Tip Jar a Goal Meter v Social Stream Ninja a vyřešte chybějící dary, členství a darovaná členství.">
+    <style>
+        .style-group { margin: 2.4rem 0 1rem; font-size: 1.6rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; }
+        .visual-guide .guide-card > .style-grid { max-width: none; list-style: none; padding: 0; margin: 0; }
+        .style-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: 1.4rem; margin: 0; padding: 0; list-style: none; }
+        .visual-guide main .style-grid li { margin: 0; padding: 0; }
+        .style-grid li::before { content: none !important; display: none !important; }
+        .style-tile { height: 100%; overflow: hidden; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .style-tile img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; }
+        .style-tile div { padding: .9rem 1.2rem 1.1rem; }
+        .style-tile strong { display: block; font-size: 1.55rem; color: var(--text-primary); }
+        .style-tile span { display: block; margin-top: .2rem; font-size: 1.35rem; line-height: 1.45; color: var(--text-secondary); }
+        .style-tile code { font-size: 1.2rem; }
+        .setup-screenshots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem; align-items: start; }
+        .setup-screenshots > .guide-figure { min-width: 0; margin: 1rem 0; }
+        .count-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4rem; margin: 1.4rem 0; }
+        .count-picker > div { padding: 1.4rem 1.6rem; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .count-picker strong { display: block; margin-bottom: .4rem; font-size: 1.65rem; }
+        .count-picker p { margin: 0; font-size: 1.45rem; line-height: 1.5; }
+        .count-picker .example { margin-top: .8rem; color: var(--text-secondary); }
+        @media (max-width: 760px) {
+            .setup-screenshots { grid-template-columns: minmax(0, 1fr); }
+            .count-picker { grid-template-columns: minmax(0, 1fr); }
+            .style-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
+            .style-tile span { display: none; }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/tip-jar-goal-meter.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"(0 to 1).":"(0 až 1).","(12 to 96 pixels).":"(12 až 96 pixelů).","(hex colours, with":"(hexadecimální barvy, s",". An animated GIF keeps playing, but this setting does not switch images as progress changes or add artwork beside a bar.":". Animovaný GIF se dál přehrává, ale toto nastavení nemění obrázky podle postupu ani nepřidává obrázek vedle ukazatele.",". Its previews use sample data and do not change your live totals.":". Náhledy používají ukázková data a nemění skutečné součty.",". Leave a box blank to keep the style's default. Bar text size and “bar only” apply to Fluid Goal Bar only.":". Prázdné pole zachová výchozí nastavení stylu. Velikost textu a „pouze ukazatel“ platí jen pro Fluid Goal Bar.",". The styles below include built-in animations.":". Níže uvedené styly obsahují vestavěné animace.",". These do not apply to every style; check the preview. The four panels below also support":". Neplatí pro všechny styly; zkontrolujte náhled. Čtyři panely níže také podporují",". Use the fill colours above for Fluid Goal Bar.":". Pro Fluid Goal Bar použijte výše uvedené barvy výplně.","340 / 1000 points":"340 / 1000 bodů","3D Rotating Jar":"3D rotující nádoba","7 / 20 Super Chats":"7 z 20 Super Chatů","A $1 and a $100 Super Chat each add one. To count Super Stickers too, change the paid event filter.":"Super Chat za 1 $ i za 100 $ přidají po jednom. Chcete-li započítat i Super Stickery, změňte filtr placených událostí.","A money goal in the Goal Meter style.":"Peněžní cíl ve stylu Goal Meter.","A slowly turning glass.":"Pomalu se otáčející sklenice.","A sweeping needle.":"Pohybující se ručička.","Add to the link":"Přidejte do odkazu","All donations":"Všechny dary (All donations)","An old total comes back":"Vrací se starý součet","Animated artwork":"Animovaná grafika","Bar plus recent supporters.":"Ukazatel s nedávnými podporovateli.","Bars":"Ukazatele","Battery":"Baterie","Beer Mug":"Korbel na pivo","Big total, slim bar.":"Velký součet, tenký ukazatel.","Bigger total:":"Větší součet:","Carry extra points":"Přenést zbývající body (Carry extra points)","Change artwork as the goal fills":"Změna grafiky podle postupu k cíli","Change the Fluid Goal Bar fill colours":"Změnit barvy výplně Fluid Goal Bar","Change the Glass Tip Jar label":"Změnit popisek Glass Tip Jar","Change the celebration effect":"Změnit oslavný efekt","Change what falls into the jar":"Změnit předměty padající do sklenice","Charges red to green.":"Nabíjí se od červené k zelené.","Check the source is on, the session IDs match, and your filters allow that event.":"Ověřte, že je zdroj zapnutý, ID relací se shodují a filtry událost povolují.","Choose a Display Style, such as Fluid Goal Bar.":"V nabídce Display Style vyberte styl zobrazení, například Fluid Goal Bar.","Chunky RPG bar.":"Výrazný ukazatel ve stylu RPG.","Circle with a percentage.":"Kruh s procenty.","Classic Jar":"Klasická sklenice (Classic Jar)","Classic fundraiser look.":"Klasický vzhled sbírky.","Click [copy link] beside Tip Jar and Goal Meter and add the link to OBS as a Browser Source.":"Klikněte na [copy link] vedle Tip Jar and Goal Meter a přidejte zkopírovaný odkaz do OBS jako zdroj prohlížeče.","Click either screenshot to enlarge.":"Kliknutím na kterýkoli snímek jej zvětšíte.","Coffee Mug":"Hrnek na kávu","Commands & API":"Příkazy a API","Compact Bar":"Kompaktní ukazatel (Compact Bar)","Count Super Chats instead of money":"Počítání Super Chatů místo peněz","Count individual gift recipients too":"Započítat i jednotlivé příjemce dárků","Count subs and memberships too":"Započítat také předplatná a členství","Count unit label":"Označení jednotky počtu","Custom jar image":"Vlastní obrázek sklenice","Default for Hype goals. The completion delay sets how long it stays full.":"Výchozí pro cíle Hype. Prodleva po dokončení určuje, jak dlouho zůstane plný.","Default for money and count goals.":"Výchozí pro peněžní a početní cíle.","Default, Neon, or Gold.":"Výchozí, Neon nebo Zlato.","Dial":"Vytáčení","Donation points per USD":"Body za darovaný USD","Donation type filter":"Filtr typu daru","Donations":"Dary","Download":"Stáhnout","Event Reference":"Referenční příručka událostí","Every donation adds one, whatever the amount.":"Každý dar přidá jeden bez ohledu na částku.","Every style tracks the same goal. Only the appearance changes. Compare sample layouts in the":"Všechny styly sledují stejný cíl. Mění se jen vzhled. Ukázková rozvržení porovnejte v","Extra options for Goal Card, Progress Ring, Lower Third, and Segmented Bar":"Další možnosti pro Goal Card, Progress Ring, Lower Third a Segmented Bar","Features":"Funkce","Fill colours you set yourself win over":"Vlastní barvy výplně mají přednost před","Five checkpoints light up.":"Rozsvítí se pět milníků.","Fix problems":"Řešení problémů","Fluid Goal Bar":"Plynulý ukazatel cíle (Fluid Goal Bar)","Foam and bubbles.":"Pěna a bubliny.","Follow the step-by-step GIF tutorial":"Postupujte podle podrobného návodu pro GIF","For a bar that fills with donations, choose":"Pro ukazatel, který se plní dary, vyberte","Game-style level bar.":"Ukazatel úrovně ve stylu her.","Gifted memberships":"Darovaná členství","Gifted memberships add too little":"Darovaná členství přidávají příliš málo","Gifted memberships count twice":"Darovaná členství se počítají dvakrát","Gifted memberships shouldn't count":"Darovaná členství se nemají započítávat","Gifted sub/member points":"Body za darované předplatné nebo členství","Glass Tip Jar":"Skleněná zavařovací sklenice","Glowing and bubbling.":"Září a bublá.","Glowing, flickering tube.":"Zářící, blikající trubice.","Go up in levels (100, 200, 300…)":"Postupovat po úrovních (100, 200, 300…)","Goal Card":"Karta cíle (Goal Card)","Goal Meter":"Ukazatel cíle (Goal Meter)","Goal Settings with Goal target set to 500 and Custom Title set to Community Fundraiser.":"Nastavení cíle s cílovou hodnotou (Goal target) 500 a vlastním názvem (Custom Title) Community Fundraiser.","Goal and title fields, further down in the same section.":"Pole pro cílovou hodnotu a název níže ve stejné části.","Goal measures":"Cíl měří","Goal meter bar showing $63.50 of a $100 goal with recent supporters":"Ukazatel cíle zobrazující 63,50 $ ze 100 $ a nedávné podporovatele","Guides":"Návody","Health Bar":"Health Bar","Hide the dollar signs (":"Skrýt znaky dolaru (","Hide the title or percentage on newer jars and meters":"Skrýt název nebo procenta u novějších sklenic a měřidel","Hire":"Najmout odborníka","Home":"Domů","How YouTube gifts are counted":"Jak se počítají dárky z YouTube","How it counts":"Jak se započítává","Hype Cup Scoring":"Bodování Hype Cup (Hype Cup Scoring)","Hype goals restart by default. Use Keep total and advance target.":"Cíle Hype se ve výchozím stavu restartují. Použijte Zachovat součet a zvýšit cíl.","Hype only: number of gifts × gift points. YouTube doesn't send the price, so the cash value is unknown.":"Pouze Hype: počet dárků × body za dárek. YouTube neposílá cenu, takže peněžní hodnota není známa.","Hype points":"Body Hype","I want the goal to":"Chci, aby cíl","I want the goal to…":"Chci, aby cíl…","I want to":"Chci","I want to…":"Chci…","Ignored by default, so gifts aren't counted twice.":"Ve výchozím stavu se ignorují, aby se dárky nepočítaly dvakrát.","In the menu, find Tip Jar and Goal Meter and open Style, Goal, and Filters.":"V nabídce najděte Tip Jar and Goal Meter a otevřete část Style, Goal, and Filters.","Inspiration":"Inspirace","Its value for a money goal, one for a donation-count goal, or your configured donation points in Hype mode. The event must pass your filters.":"Jeho hodnota u peněžního cíle, jeden u počtu darů nebo nastavené body za dar v režimu Hype. Událost musí projít filtry.","Jars and objects":"Sklenice a předměty","Jewels / virtual gifts":"Jewels / virtuální dárky","Just big numbers.":"Pouze velká čísla.","Keep amount between sessions":"Uchovat částku mezi relacemi","Keep amount between sessions is on. Reset the amount.":"Je zapnuto uchování částky mezi relacemi. Částku vynulujte.","Keep counting and raise the target":"Pokračovat v počítání a zvyšovat cíl","Keep leftover points when it starts over":"Zachovat přebytečné body při restartu","Keep total and advance target":"Ponechat součet a zvýšit cíl","Leave":"Ponechte","Lid opens as it fills.":"Víko se při plnění otevírá.","Low and wide.":"Nízký a široký.","Lower Third":"Spodní pruh (Lower Third)","Main navigation":"Hlavní navigace","Memberships or subs don't count":"Členství nebo předplatná se nepočítají","Milestone Track":"Milníková dráha","Minimal":"Minimální","Money":"Peníze","Most of these are settings in the Tip Jar options. You can also add the code to the end of your overlay link.":"Většinu najdete v nastavení Tip Jar. Kód můžete také přidat na konec odkazu překryvu.","Neon Tube":"Neonová trubice","Nothing showing up?":"Nic se nezobrazuje?","Nothing updates":"Nic se neaktualizuje","Number of donations":"Počet darů","Number of qualifying donations":"Počet vyhovujících darů","Old-school loading bar.":"Retro ukazatel načítání.","On this page":"Na této stránce","One GIF inside the Classic Jar?":"Jeden GIF uvnitř Classic Jar?","One line of text.":"Jeden řádek textu.","Only turn on":"Zapněte pouze","Open navigation menu":"Otevřít navigační nabídku","Overlay Gallery":"Galerie překryvů","Paid event filter":"Filtr placených událostí","Panels and text":"Panely a text","Pick a look":"Vyberte vzhled","Pick one. Changing the look (jar, bar, etc.) never changes what counts.":"Vyberte jednu možnost. Změna vzhledu (sklenice, ukazatel atd.) nikdy nemění to, co se počítá.","Piggy Bank":"Prasátko","Pixel Bar":"Pixel Bar","Point unit label":"Popisek jednotky bodů","Points for each dollar donated.":"Body za každý darovaný dolar.","Points for each new sub or renewal.":"Body za nové předplatné nebo obnovení.","Points per gift. 5 gifts = 5 × this number.":"Body za dárek. 5 dárků = 5 × toto číslo.","Potion Flask":"Lektvarová baňka","Problem":"Problém","Progress Ring":"Kruh průběhu (Progress Ring)","Put a donation goal on stream that fills up every time someone supports you.":"Zobrazte ve vysílání cíl darů, který se plní pokaždé, když vás někdo podpoří.","Quick tweaks":"Rychlé úpravy","Recurring goal increment":"Přírůstek opakujícího se cíle","Remember the total after a restart":"Zapamatovat součet po restartu","Resources":"Zdroje informací","Retro block meter.":"Retro blokový ukazatel.","Reusing OBS for a new goal?":"Používáte OBS pro nový cíl?","Saved totals are stored in that browser or OBS profile, not per session. Reset the amount first.":"Uložené součty patří danému prohlížeči nebo profilu OBS, nikoli relaci. Nejprve částku vynulujte.","See-through panel:":"Průhledný panel:","Segmented Bar":"Segmentovaný ukazatel (Segmented Bar)","Set":"Nastavte","Set Paid event filter to Super Chats only.":"Nastavte Paid event filter na Super Chats only.","Set an accent on newer panels, jars, or meters":"Nastavit zvýrazňovací barvu u novějších panelů, sklenic nebo měřidel","Set how many points each thing is worth (below).":"Nastavte, kolik bodů má každá položka (níže).","Set it up":"Nastavení","Set it up in 5 steps":"Nastavení v 5 krocích","Set the goal, for example":"Nastavte cíl, například","Set up the Social Stream Ninja Tip Jar and Goal Meter and troubleshoot missing donations, memberships, and gifted memberships.":"Nastavte Tip Jar a Goal Meter v Social Stream Ninja a vyřešte chybějící dary, členství a darovaná členství.","Setting":"Nastavení","Small, for a corner.":"Malý, do rohu.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Someone receiving a gift":"Příjemce dárku","Source filter":"Filtr zdroje","Start over after it fills":"Začít znovu po naplnění","Stay full until I reset it":"Zůstat plný, dokud jej nevynuluji","Stop the 3D jar spinning":"Zastavit otáčení 3D sklenice","Style selector and copy-link button.":"Výběr stylu a tlačítko pro kopírování odkazu.","Sub/member points":"Body za předplatné nebo členství","Super Chat / Super Sticker":"Super Chat / Super Sticker","Super Chat count includes Super Stickers":"Počet Super Chatů zahrnuje Super Stickery","Super Chats only":"Pouze Super Chaty (Super Chats only)","Super Chats, Bits, tips, and other donations add their value.":"Super Chaty, Bits, příspěvky a další dary přičítají svou hodnotu.","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","Tall, for a side column.":"Vysoký, do postranního sloupce.","Terminal":"Terminál","Text Only":"Pouze text (Text Only)","The original, with falling items.":"Původní, s padajícími předměty.","The overlay link and Social Stream must use the same session ID. Keep that link private.":"Odkaz překryvu a Social Stream musí používat stejné ID relace. Odkaz uchovávejte v soukromí.","The test buttons only send donations. To test memberships or gifts, watch the Dock or Events Dashboard on the same session and check the event arrives.":"Testovací tlačítka posílají pouze dary. Pro ověření členství nebo dárků sledujte Dock či přehled událostí ve stejné relaci a ověřte přijetí události.","The word or symbol shown, like":"Zobrazené slovo nebo symbol, například","Theme:":"Motiv:","Thermometer":"Teploměr","They use your gift points setting, not a price. Raise the points.":"Používají nastavené body za dárek, nikoli cenu. Zvyšte počet bodů.","Tip Jar and Goal Meter":"Nádoba na spropitné a Ukazatel cíle","Tip Jar and Goal Meter Guide - Social Stream Ninja":"Průvodce Tip Jar a Goal Meter - Social Stream Ninja","Tip Jar and Goal Meter menu with Style, Goal, and Filters expanded and Fluid Goal Bar selected.":"Nabídka Tip Jar and Goal Meter s rozbalenou částí Style, Goal, and Filters a vybraným stylem Fluid Goal Bar.","Tips drop through the lid.":"Příspěvky propadají víkem.","To show your own GIF at 0%, 25%, 50%, 75%, and 100%, customize a copy of the overlay. There is no milestone-GIF picker in the built-in options. Keep the artwork and bar in the same custom overlay so they use the same total.":"Chcete-li zobrazovat vlastní GIFy při 0 %, 25 %, 50 %, 75 % a 100 %, upravte kopii překryvu. Vestavěné možnosti neobsahují výběr GIFů pro milníky. Grafiku a ukazatel ponechte ve stejném vlastním překryvu, aby používaly stejný součet.","Total drops to zero at the goal":"Součet po dosažení cíle klesne na nulu","Treasure Chest":"Truhla s pokladem","Try this":"Vyzkoušejte","Turn off Count individual gift recipients.":"Vypněte započítávání jednotlivých příjemců dárků.","Turn on":"Zapněte","Turn on Exclude YouTube gifted memberships.":"Zapněte vyloučení darovaných členství YouTube.","Turn on Hype Cup Scoring and set Donation type filter to All donations.":"Zapněte Hype Cup Scoring a filtr typu daru nastavte na Všechny dary.","Turn on your YouTube, Twitch, or other chat source in Social Stream Ninja.":"V Social Stream Ninja zapněte zdroj chatu z YouTube, Twitche nebo jiné platformy.","Twenty easy-to-read blocks.":"Dvacet přehledných bloků.","Under Goal Settings, set Goal target to 500 and enter a Custom Title.":"V části Goal Settings nastavte cílovou hodnotu Goal target na 500 a do pole Custom Title zadejte vlastní název.","Use":"Použijte","Use a solid or gradient fill":"Použít jednobarevnou výplň nebo přechod","Use my own jar picture (Classic Jar only)":"Použít vlastní obrázek sklenice (jen Classic Jar)","Use the matching donation type filter.":"Použijte odpovídající filtr typu daru.","Use the newer look on older styles":"Použít nový vzhled u starších stylů","Use this":"Použijte","Vertical Bar":"Svislý ukazatel (Vertical Bar)","What counts":"Co se počítá","What counts toward the goal":"Co se započítává do cíle","What it does":"Co dělá","When the goal fills":"Po naplnění cíle","When the goal fills up":"Když se cíl naplní","Wide animated bar.":"Široký animovaný ukazatel.","With drifting steam.":"Se stoupající párou.","Wobbles on each tip.":"Při každém příspěvku se zavlní.","XP Bar":"Lišta XP","YouTube":"YouTube","YouTube event":"Událost YouTube","changes the word shown.":"mění zobrazené slovo.","for a $500 example, artwork filenames, an AI customization prompt, and preview checks.":"s příkladem cíle 500 $, názvy souborů grafiky, zadáním pro úpravu pomocí AI a kontrolami náhledu.","if you want to add points on top of the gift itself.":"pokud chcete přidat body navíc k samotnému dárku.","instead of":"místo","off.":"vypnuté.","on":"na","or":"nebo","plus":"a také","style preview gallery":"galerii náhledů stylů","subs, memberships, and gifted subs.":"předplatná, členství a darovaná předplatná.","to":"na","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja. Všechna práva vyhrazena.","· also":"· také"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tip-jar-goal-meter.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tip-jar-goal-meter.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tip-jar-goal-meter.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tip-jar-goal-meter.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tip-jar-goal-meter.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tip-jar-goal-meter.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tip-jar-goal-meter.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tip-jar-goal-meter.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tip-jar-goal-meter.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tip-jar-goal-meter.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tip-jar-goal-meter.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tip-jar-goal-meter.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tip-jar-goal-meter.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tip-jar-goal-meter.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tip-jar-goal-meter.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tip-jar-goal-meter.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="tip-jar-goal-meter.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/tip-jar-goal-meter.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Nádoba na spropitné a Ukazatel cíle</h1>
+            <p>Zobrazte ve vysílání cíl darů, který se plní pokaždé, když vás někdo podpoří.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <nav class="guide-jump-links" aria-label="Na této stránce">
+                    <a href="#setup">Nastavení</a>
+                    <a href="#artwork">Animovaná grafika</a>
+                    <a href="#styles">Vyberte vzhled</a>
+                    <a href="#tweaks">Rychlé úpravy</a>
+                    <a href="#what-counts">Co se počítá</a>
+                    <a href="#goal-reached">Po naplnění cíle</a>
+                    <a href="#problems">Řešení problémů</a>
+                </nav>
+
+                <div class="guide-card">
+                    <h2 id="setup">Nastavení v 5 krocích</h2>
+                    <ol class="guide-steps">
+                        <li>V Social Stream Ninja zapněte zdroj chatu z YouTube, Twitche nebo jiné platformy.</li>
+                        <li>V nabídce najděte Tip Jar and Goal Meter a otevřete část Style, Goal, and Filters.</li>
+                        <li>V nabídce Display Style vyberte styl zobrazení, například Fluid Goal Bar.</li>
+                        <li>V části Goal Settings nastavte cílovou hodnotu Goal target na 500 a do pole Custom Title zadejte vlastní název.</li>
+                        <li>Klikněte na [copy link] vedle Tip Jar and Goal Meter a přidejte zkopírovaný odkaz do OBS jako zdroj prohlížeče.</li>
+                    </ol>
+                    <p>Kliknutím na kterýkoli snímek jej zvětšíte.</p>
+                    <div class="setup-screenshots">
+                        <figure class="guide-figure">
+                            <a href="../../docs/images/guides/tip-jar-popup-style.png"><img src="../../docs/images/guides/tip-jar-popup-style.png" alt="Nabídka Tip Jar and Goal Meter s rozbalenou částí Style, Goal, and Filters a vybraným stylem Fluid Goal Bar." class="guide-image" width="1040" height="730" loading="lazy"></a>
+                            <figcaption>Výběr stylu a tlačítko pro kopírování odkazu.</figcaption>
+                        </figure>
+                        <figure class="guide-figure">
+                            <a href="../../docs/images/guides/tip-jar-popup-goal.png"><img src="../../docs/images/guides/tip-jar-popup-goal.png" alt="Nastavení cíle s cílovou hodnotou (Goal target) 500 a vlastním názvem (Custom Title) Community Fundraiser." class="guide-image" width="988" height="660" loading="lazy"></a>
+                            <figcaption>Pole pro cílovou hodnotu a název níže ve stejné části.</figcaption>
+                        </figure>
+                    </div>
+                    <div class="guide-note"><strong>Nic se nezobrazuje?</strong> Odkaz překryvu a Social Stream musí používat stejné ID relace. Odkaz uchovávejte v soukromí.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="artwork">Změna grafiky podle postupu k cíli</h2>
+                    <p>Pro ukazatel, který se plní dary, vyberte <strong>Plynulý ukazatel cíle (Fluid Goal Bar)</strong> nebo <strong>Ukazatel cíle (Goal Meter)</strong>. Níže uvedené styly obsahují vestavěné animace.</p>
+                    <p>Chcete-li zobrazovat vlastní GIFy při 0 %, 25 %, 50 %, 75 % a 100 %, upravte kopii překryvu. Vestavěné možnosti neobsahují výběr GIFů pro milníky. Grafiku a ukazatel ponechte ve stejném vlastním překryvu, aby používaly stejný součet.</p>
+                    <p><a href="goals-customization-guide.html#milestone-artwork">Postupujte podle podrobného návodu pro GIF</a> s příkladem cíle 500 $, názvy souborů grafiky, zadáním pro úpravu pomocí AI a kontrolami náhledu.</p>
+                    <div class="guide-note"><strong>Jeden GIF uvnitř Classic Jar?</strong> Použijte <strong>Vlastní obrázek sklenice</strong> nebo <code>&amp;jarimage=https://&hellip;</code>. Animovaný GIF se dál přehrává, ale toto nastavení nemění obrázky podle postupu ani nepřidává obrázek vedle ukazatele.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="styles">Vyberte vzhled</h2>
+                    <p>Všechny styly sledují stejný cíl. Mění se jen vzhled. Ukázková rozvržení porovnejte v <a href="../../tipjar-preview.html">galerii náhledů stylů</a>. Náhledy používají ukázková data a nemění skutečné součty.</p>
+
+                    <h3 class="style-group">Ukazatele</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/bar.jpg" alt="Plynulý ukazatel cíle (Fluid Goal Bar)" loading="lazy" width="480" height="320"><div><strong>Plynulý ukazatel cíle (Fluid Goal Bar)</strong><span>Široký animovaný ukazatel.</span><code>style=bar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/meter.jpg" alt="Ukazatel cíle (Goal Meter)" loading="lazy" width="480" height="320"><div><strong>Ukazatel cíle (Goal Meter)</strong><span>Ukazatel s nedávnými podporovateli.</span><code>style=meter</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/compact.jpg" alt="Kompaktní ukazatel (Compact Bar)" loading="lazy" width="480" height="320"><div><strong>Kompaktní ukazatel (Compact Bar)</strong><span>Malý, do rohu.</span><code>style=compact</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/vertical.jpg" alt="Svislý ukazatel (Vertical Bar)" loading="lazy" width="480" height="320"><div><strong>Svislý ukazatel (Vertical Bar)</strong><span>Vysoký, do postranního sloupce.</span><code>style=vertical</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/segmented.jpg" alt="Segmentovaný ukazatel (Segmented Bar)" loading="lazy" width="480" height="320"><div><strong>Segmentovaný ukazatel (Segmented Bar)</strong><span>Dvacet přehledných bloků.</span><code>style=segmented</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/milestones.jpg" alt="Milníková dráha" loading="lazy" width="480" height="320"><div><strong>Milníková dráha</strong><span>Rozsvítí se pět milníků.</span><code>style=milestones</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/xpbar.jpg" alt="Lišta XP" loading="lazy" width="480" height="320"><div><strong>Lišta XP</strong><span>Ukazatel úrovně ve stylu her.</span><code>style=xpbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/healthbar.jpg" alt="Health Bar" loading="lazy" width="480" height="320"><div><strong>Health Bar</strong><span>Výrazný ukazatel ve stylu RPG.</span><code>style=healthbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/battery.jpg" alt="Baterie" loading="lazy" width="480" height="320"><div><strong>Baterie</strong><span>Nabíjí se od červené k zelené.</span><code>style=battery</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/pixelbar.jpg" alt="Pixel Bar" loading="lazy" width="480" height="320"><div><strong>Pixel Bar</strong><span>Retro blokový ukazatel.</span><code>style=pixelbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/neonbar.jpg" alt="Neonová trubice" loading="lazy" width="480" height="320"><div><strong>Neonová trubice</strong><span>Zářící, blikající trubice.</span><code>style=neonbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/terminal.jpg" alt="Terminál" loading="lazy" width="480" height="320"><div><strong>Terminál</strong><span>Retro ukazatel načítání.</span><code>style=terminal</code></div></div></li>
+                    </ul>
+
+                    <h3 class="style-group">Sklenice a předměty</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/jar.jpg" alt="Klasická sklenice (Classic Jar)" loading="lazy" width="480" height="320"><div><strong>Klasická sklenice (Classic Jar)</strong><span>Původní, s padajícími předměty.</span><code>style=jar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/glassjar.jpg" alt="Skleněná zavařovací sklenice" loading="lazy" width="480" height="320"><div><strong>Skleněná zavařovací sklenice</strong><span>Příspěvky propadají víkem.</span><code>style=glassjar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/jar3d.jpg" alt="3D rotující nádoba" loading="lazy" width="480" height="320"><div><strong>3D rotující nádoba</strong><span>Pomalu se otáčející sklenice.</span><code>style=jar3d</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/beermug.jpg" alt="Korbel na pivo" loading="lazy" width="480" height="320"><div><strong>Korbel na pivo</strong><span>Pěna a bubliny.</span><code>style=beermug</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/coffeemug.jpg" alt="Hrnek na kávu" loading="lazy" width="480" height="320"><div><strong>Hrnek na kávu</strong><span>Se stoupající párou.</span><code>style=coffeemug</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/potion.jpg" alt="Lektvarová baňka" loading="lazy" width="480" height="320"><div><strong>Lektvarová baňka</strong><span>Září a bublá.</span><code>style=potion</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/piggybank.jpg" alt="Prasátko" loading="lazy" width="480" height="320"><div><strong>Prasátko</strong><span>Při každém příspěvku se zavlní.</span><code>style=piggybank</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/chest.jpg" alt="Truhla s pokladem" loading="lazy" width="480" height="320"><div><strong>Truhla s pokladem</strong><span>Víko se při plnění otevírá.</span><code>style=chest</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/thermometer.jpg" alt="Teploměr" loading="lazy" width="480" height="320"><div><strong>Teploměr</strong><span>Klasický vzhled sbírky.</span><code>style=thermometer</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/gauge.jpg" alt="Vytáčení" loading="lazy" width="480" height="320"><div><strong>Vytáčení</strong><span>Pohybující se ručička.</span><code>style=gauge</code></div></div></li>
+                    </ul>
+
+                    <h3 class="style-group">Panely a text</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/card.jpg" alt="Karta cíle (Goal Card)" loading="lazy" width="480" height="320"><div><strong>Karta cíle (Goal Card)</strong><span>Velký součet, tenký ukazatel.</span><code>style=card</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/ring.jpg" alt="Kruh průběhu (Progress Ring)" loading="lazy" width="480" height="320"><div><strong>Kruh průběhu (Progress Ring)</strong><span>Kruh s procenty.</span><code>style=ring</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/lowerthird.jpg" alt="Spodní pruh (Lower Third)" loading="lazy" width="480" height="320"><div><strong>Spodní pruh (Lower Third)</strong><span>Nízký a široký.</span><code>style=lowerthird</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/minimal.jpg" alt="Minimální" loading="lazy" width="480" height="320"><div><strong>Minimální</strong><span>Pouze velká čísla.</span><code>style=minimal</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/text.jpg" alt="Pouze text (Text Only)" loading="lazy" width="480" height="320"><div><strong>Pouze text (Text Only)</strong><span>Jeden řádek textu.</span><code>style=text</code></div></div></li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="tweaks">Rychlé úpravy</h2>
+                    <p>Většinu najdete v nastavení Tip Jar. Kód můžete také přidat na konec odkazu překryvu.</p>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Chci…</th><th>Přidejte do odkazu</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Chci">Skrýt znaky dolaru (<code>0 / 500</code>)</td><td data-label="Přidejte do odkazu"><code>&amp;hidecurrency</code></td></tr>
+                            <tr><td data-label="Chci">Změnit předměty padající do sklenice</td><td data-label="Přidejte do odkazu"><code>&amp;dropitem=coins</code> · také <code>gems</code>, <code>stars</code>, <code>bills</code>, <code>hearts</code></td></tr>
+                            <tr><td data-label="Chci">Změnit oslavný efekt</td><td data-label="Přidejte do odkazu"><code>&amp;celebration=confetti</code> · také <code>hearts</code>, <code>fireworks</code>, <code>none</code></td></tr>
+                            <tr><td data-label="Chci">Změnit barvy výplně Fluid Goal Bar</td><td data-label="Přidejte do odkazu"><code>&amp;fillstart=%2366d9b2&amp;fillend=%23ffcc88</code> (hexadecimální barvy, s <code>%23</code> místo <code>#</code>)</td></tr>
+                            <tr><td data-label="Chci">Nastavit zvýrazňovací barvu u novějších panelů, sklenic nebo měřidel</td><td data-label="Přidejte do odkazu"><code>&amp;accent=%23ffcc88</code>. Pro Fluid Goal Bar použijte výše uvedené barvy výplně.</td></tr>
+                            <tr><td data-label="Chci">Skrýt název nebo procenta u novějších sklenic a měřidel</td><td data-label="Přidejte do odkazu"><code>&amp;hidetitle</code> &middot; <code>&amp;hidepercent</code>. Neplatí pro všechny styly; zkontrolujte náhled. Čtyři panely níže také podporují <code>hidepercent</code>.</td></tr>
+                            <tr><td data-label="Chci">Změnit popisek Glass Tip Jar</td><td data-label="Přidejte do odkazu"><code>&amp;jarlabel=TIPS</code></td></tr>
+                            <tr><td data-label="Chci">Zastavit otáčení 3D sklenice</td><td data-label="Přidejte do odkazu"><code>&amp;nospin</code></td></tr>
+                            <tr><td data-label="Chci">Použít vlastní obrázek sklenice (jen Classic Jar)</td><td data-label="Přidejte do odkazu"><code>&amp;jarimage=https://&hellip;</code></td></tr>
+                            <tr><td data-label="Chci">Použít jednobarevnou výplň nebo přechod</td><td data-label="Přidejte do odkazu"><code>&amp;fillmode=solid</code> &middot; <code>&amp;fillmode=gradient</code></td></tr>
+                            <tr><td data-label="Chci">Použít nový vzhled u starších stylů</td><td data-label="Přidejte do odkazu"><code>&amp;refresh</code></td></tr>
+                        </tbody>
+                    </table>
+
+                    <details class="guide-extra">
+                        <summary>Další možnosti pro Goal Card, Progress Ring, Lower Third a Segmented Bar</summary>
+                        <ul>
+                            <li><strong>Motiv:</strong> Výchozí, Neon nebo Zlato.</li>
+                            <li><strong>Průhledný panel:</strong> <code>&amp;panelopacity=0.5</code> (0 až 1).</li>
+                            <li><strong>Větší součet:</strong> <code>&amp;amountsize=32</code> (12 až 96 pixelů).</li>
+                        </ul>
+                        <p>Vlastní barvy výplně mají přednost před <code>accent</code>. Prázdné pole zachová výchozí nastavení stylu. Velikost textu a „pouze ukazatel“ platí jen pro Fluid Goal Bar.</p>
+                    </details>
+
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="what-counts">Co se započítává do cíle</h2>
+                    <p>Vyberte jednu možnost. Změna vzhledu (sklenice, ukazatel atd.) nikdy nemění to, co se počítá.</p>
+                    <div class="count-picker">
+                        <div><strong>Peníze</strong><p>Super Chaty, Bits, příspěvky a další dary přičítají svou hodnotu.</p><p class="example">$63.50 / $100</p></div>
+                        <div><strong>Počet darů</strong><p>Každý dar přidá jeden bez ohledu na částku.</p><p class="example">7 z 20 Super Chatů</p></div>
+                        <div><strong>Body Hype</strong><p>Dary <em>a také</em> předplatná, členství a darovaná předplatná.</p><p class="example">340 / 1000 bodů</p></div>
+                    </div>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/goal-meter-bar-demo.png" alt="Ukazatel cíle zobrazující 63,50 $ ze 100 $ a nedávné podporovatele" class="guide-image guide-image-medium" loading="lazy">
+                        <figcaption>Peněžní cíl ve stylu Goal Meter.</figcaption>
+                    </figure>
+
+                    <h3>Počítání Super Chatů místo peněz</h3>
+                    <ol class="guide-steps">
+                        <li>Ponechte <strong>Bodování Hype Cup (Hype Cup Scoring)</strong> vypnuté.</li>
+                        <li>Nastavte <strong>Cíl měří</strong> na <strong>Počet vyhovujících darů</strong>.</li>
+                        <li>Nastavte <strong>Filtr zdroje</strong> na <strong>YouTube</strong>.</li>
+                        <li>Nastavte <strong>Filtr placených událostí</strong> na <strong>Pouze Super Chaty (Super Chats only)</strong>.</li>
+                        <li>Nastavte cíl, například <code>20</code>.</li>
+                    </ol>
+                    <p>Super Chat za 1 $ i za 100 $ přidají po jednom. Chcete-li započítat i Super Stickery, změňte filtr placených událostí. <strong>Označení jednotky počtu</strong> mění zobrazené slovo.</p>
+
+                    <h3>Započítat také předplatná a členství</h3>
+                    <ol class="guide-steps">
+                        <li>Zapněte <strong>Bodování Hype Cup (Hype Cup Scoring)</strong>.</li>
+                        <li>Ponechte <strong>Filtr typu daru</strong> na <strong>Všechny dary (All donations)</strong>.</li>
+                        <li>Nastavte, kolik bodů má každá položka (níže).</li>
+                    </ol>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Nastavení</th><th>Co dělá</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Nastavení">Body za předplatné nebo členství</td><td data-label="Co dělá">Body za nové předplatné nebo obnovení.</td></tr>
+                            <tr><td data-label="Nastavení">Body za darované předplatné nebo členství</td><td data-label="Co dělá">Body za dárek. 5 dárků = 5 × toto číslo.</td></tr>
+                            <tr><td data-label="Nastavení">Body za darovaný USD</td><td data-label="Co dělá">Body za každý darovaný dolar.</td></tr>
+                            <tr><td data-label="Nastavení">Popisek jednotky bodů</td><td data-label="Co dělá">Zobrazené slovo nebo symbol, například <code>pts</code>.</td></tr>
+                        </tbody>
+                    </table>
+
+                    <details class="guide-extra">
+                        <summary>Jak se počítají dárky z YouTube</summary>
+                        <table class="guide-table guide-table-stack">
+                            <thead><tr><th>Událost YouTube</th><th>Jak se započítává</th></tr></thead>
+                            <tbody>
+                                <tr><td data-label="Událost YouTube">Super Chat / Super Sticker</td><td data-label="Jak se započítává">Jeho hodnota u peněžního cíle, jeden u počtu darů nebo nastavené body za dar v režimu Hype. Událost musí projít filtry.</td></tr>
+                                <tr><td data-label="Událost YouTube">Darovaná členství</td><td data-label="Jak se započítává">Pouze Hype: počet dárků × body za dárek. YouTube neposílá cenu, takže peněžní hodnota není známa.</td></tr>
+                                <tr><td data-label="Událost YouTube">Příjemce dárku</td><td data-label="Jak se započítává">Ve výchozím stavu se ignorují, aby se dárky nepočítaly dvakrát.</td></tr>
+                                <tr><td data-label="Událost YouTube">Jewels / virtuální dárky</td><td data-label="Jak se započítává">Použijte odpovídající filtr typu daru.</td></tr>
+                            </tbody>
+                        </table>
+                        <p>Zapněte pouze <strong>Započítat i jednotlivé příjemce dárků</strong> pokud chcete přidat body navíc k samotnému dárku.</p>
+                    </details>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="goal-reached">Když se cíl naplní</h2>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Chci, aby cíl…</th><th>Použijte</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Chci, aby cíl">Zůstat plný, dokud jej nevynuluji</td><td data-label="Použijte">Výchozí pro peněžní a početní cíle.</td></tr>
+                            <tr><td data-label="Chci, aby cíl">Začít znovu po naplnění</td><td data-label="Použijte">Výchozí pro cíle Hype. Prodleva po dokončení určuje, jak dlouho zůstane plný.</td></tr>
+                            <tr><td data-label="Chci, aby cíl">Zachovat přebytečné body při restartu</td><td data-label="Použijte"><strong>Přenést zbývající body (Carry extra points)</strong></td></tr>
+                            <tr><td data-label="Chci, aby cíl">Pokračovat v počítání a zvyšovat cíl</td><td data-label="Použijte"><strong>Ponechat součet a zvýšit cíl</strong></td></tr>
+                            <tr><td data-label="Chci, aby cíl">Postupovat po úrovních (100, 200, 300…)</td><td data-label="Použijte"><strong>Přírůstek opakujícího se cíle</strong></td></tr>
+                            <tr><td data-label="Chci, aby cíl">Zapamatovat součet po restartu</td><td data-label="Použijte"><strong>Uchovat částku mezi relacemi</strong></td></tr>
+                        </tbody>
+                    </table>
+                    <div class="warning-note"><strong>Používáte OBS pro nový cíl?</strong> Uložené součty patří danému prohlížeči nebo profilu OBS, nikoli relaci. Nejprve částku vynulujte.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="problems">Řešení problémů</h2>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Problém</th><th>Vyzkoušejte</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Problém">Nic se neaktualizuje</td><td data-label="Vyzkoušejte">Ověřte, že je zdroj zapnutý, ID relací se shodují a filtry událost povolují.</td></tr>
+                            <tr><td data-label="Problém">Členství nebo předplatná se nepočítají</td><td data-label="Vyzkoušejte">Zapněte Hype Cup Scoring a filtr typu daru nastavte na Všechny dary.</td></tr>
+                            <tr><td data-label="Problém">Darovaná členství přidávají příliš málo</td><td data-label="Vyzkoušejte">Používají nastavené body za dárek, nikoli cenu. Zvyšte počet bodů.</td></tr>
+                            <tr><td data-label="Problém">Darovaná členství se počítají dvakrát</td><td data-label="Vyzkoušejte">Vypněte započítávání jednotlivých příjemců dárků.</td></tr>
+                            <tr><td data-label="Problém">Darovaná členství se nemají započítávat</td><td data-label="Vyzkoušejte">Zapněte vyloučení darovaných členství YouTube.</td></tr>
+                            <tr><td data-label="Problém">Součet po dosažení cíle klesne na nulu</td><td data-label="Vyzkoušejte">Cíle Hype se ve výchozím stavu restartují. Použijte Zachovat součet a zvýšit cíl.</td></tr>
+                            <tr><td data-label="Problém">Vrací se starý součet</td><td data-label="Vyzkoušejte">Je zapnuto uchování částky mezi relacemi. Částku vynulujte.</td></tr>
+                            <tr><td data-label="Problém">Počet Super Chatů zahrnuje Super Stickery</td><td data-label="Vyzkoušejte">Nastavte Paid event filter na Super Chats only.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>Testovací tlačítka posílají pouze dary. Pro ověření členství nebo dárků sledujte Dock či přehled událostí ve stejné relaci a ověřte přijetí události.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo"><img src="../../media/logo.png" alt="Logo Social Stream Ninja"><span>Social Stream Ninja</span></div>
+                <div class="footer-links"><div class="footer-section"><h4>Zdroje informací</h4><ul><li><a href="guides.html">Návody</a></li><li><a href="event-reference.html">Referenční příručka událostí</a></li><li><a href="support.html">Podpora</a></li></ul></div></div>
+            </div>
+            <div class="footer-bottom"><p>© 2026 Social Stream Ninja. Všechna práva vyhrazena.</p></div>
+        </div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

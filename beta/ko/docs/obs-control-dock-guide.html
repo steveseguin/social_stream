@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/obs-control-dock-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/obs-control-dock-guide.html">
+    <meta property="og:title" content="OBS 제어 도크 가이드 - Social Stream Ninja">
+    <meta property="og:description" content="OBS에 Social Stream Ninja 제어 도크를 추가하여 크레딧을 원격으로 시작하고 강조 채팅을 제어하며 타이머와 대기 목록을 관리하세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/obs-control-dock-guide.html">
+    <meta name="twitter:title" content="OBS 제어 도크 가이드 - Social Stream Ninja">
+    <meta name="twitter:description" content="OBS에 Social Stream Ninja 제어 도크를 추가하여 크레딧을 원격으로 시작하고 강조 채팅을 제어하며 타이머와 대기 목록을 관리하세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>OBS 제어 도크 가이드 - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="OBS에 Social Stream Ninja 제어 도크를 추가하여 크레딧을 원격으로 시작하고 강조 채팅을 제어하며 타이머와 대기 목록을 관리하세요.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/obs-control-dock-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", close the settings window, and place the new dock where you want it in OBS.":"를 선택하고 설정 창을 닫은 뒤 새 도크를 OBS의 원하는 위치에 놓으세요.",", use the generated Dock link after enabling its server setting, or add":". 서버 설정을 활성화한 뒤 생성된 도크 링크를 사용하거나 다음을 추가하세요:",". Copy that private control URL into OBS's Custom Browser Docks. For a products-only dock, use":"을 선택하세요. 이 비공개 제어 URL을 OBS의 사용자 지정 브라우저 도크에 복사하세요. 상품 전용 도크에는 다음을 사용하세요:",". If the URL did not include a session, enter it in the dock and select":". URL에 세션이 없다면 도크에 입력하고 다음을 선택하세요:",". Keep Social Stream Ninja active during the stream.":"를 활성화하세요. 방송 중 Social Stream Ninja를 켜 두세요.",". This lets the app collect chatters, members, and donors while the Credits Browser Source is closed.":"으로 설정하세요. 크레딧 브라우저 소스가 닫혀 있어도 앱이 채팅 참여자, 회원, 후원자를 수집할 수 있습니다.","Add the Social Stream Ninja control dock to OBS and remotely start Credits, control featured chat, run timers, and manage a waitlist.":"OBS에 Social Stream Ninja 제어 도크를 추가하여 크레딧을 원격으로 시작하고 강조 채팅을 제어하며 타이머와 대기 목록을 관리하세요.","Add the generated Credits URL to the OBS ending scene using the same Session ID.":"생성된 크레딧 URL을 같은 세션 ID로 OBS 마무리 장면에 추가하세요.","Apply":"적용 (Apply)","At the end of the stream, switch to the ending scene first so the Credits Browser Source is loaded and connected.":"방송 마지막에 먼저 마무리 장면으로 전환하여 크레딧 브라우저 소스를 로드하고 연결하세요.","Background collection":"백그라운드 수집","Before the stream, set Credits":"방송 전에 크레딧의","Button":"버튼","Clears the saved Background collection for the active Social Stream session.":"현재 Social Stream 세션의 저장된 백그라운드 수집 내역을 지웁니다.","Commands & API":"명령 및 API","Confirm the dock says":"도크에 다음이 표시되는지 확인하세요:","Connected":"연결됨(Connected)","Copy the Session ID shown in Social Stream Ninja.":"Social Stream Ninja에 표시된 세션 ID를 복사하세요.","Credits Roll Guide":"크레딧 롤 가이드","Credits says no source accepted the command:":"크레딧에서 명령을 수락한 소스가 없다고 표시됨:","Custom Browser Docks":"사용자 지정 브라우저 도크 (Custom Browser Docks)","Direct API examples":"직접 API 예제","Disconnected:":"연결 끊김:","Displays built-in participant, member, and donor examples. It does not prove that real names were collected.":"내장 참여자, 회원, 후원자 예시를 표시합니다. 실제 이름이 수집되었다는 뜻은 아닙니다.","Dock sends its commands to Extension via server":"도크가 서버를 통해 확장 프로그램에 명령 전송 (Dock sends its commands to Extension via server)","Docks":"도크 (Docks)","Download":"다운로드","Duration:":"지속 시간:","Enable":"활성화","Enable Dock to use and publish via API server":"도크의 API 서버 사용 및 게시 활성화 (Enable Dock to use and publish via API server)","Featured Chat button has no visible effect:":"강조 채팅 버튼을 눌러도 변화가 보이지 않음:","Featured Chat:":"강조 채팅:","Features":"기능","For this control dock":"이 제어 도크의 요구 사항","Global settings and tools":"전체 설정 및 도구","Guides":"가이드","Hide products:":"상품 숨기기:","Hire":"작업 의뢰","Home":"홈","If you intentionally use direct API transport for":"직접 API 전송을 다음에 의도적으로 사용하는 경우:","In OBS, open":"OBS에서 다음을 여세요:","In Social Stream Ninja, open":"Social Stream Ninja에서 다음을 여세요:","In Social Stream, open Monetization, save and enable your products, then choose":"Social Stream에서 Monetization을 열고 상품을 저장하고 활성화한 뒤 다음을 선택하세요:","Inspiration":"아이디어","Keep Social Stream on and enable":"Social Stream을 켜 두고 다음을 활성화하세요:","Keep common Social Stream controls inside OBS, including Credits Start, Preview, Test, and Reset.":"크레딧 시작, 미리 보기, 테스트, 초기화를 포함한 자주 쓰는 Social Stream 제어를 OBS 안에 두세요.","Lets the control dock send commands to the Social Stream app or extension on channel 1.":"제어 도크가 채널 1로 Social Stream 앱 또는 확장 프로그램에 명령을 보내게 합니다.","Load before Start:":"시작 전에 로드:","Main navigation":"기본 탐색 메뉴","Mechanics":"동작 (Mechanics)","Name the dock":"도크 이름을 다음으로 지정하세요:","Next:":"다음:","Not required":"필요 없음","OBS Control Dock Guide":"OBS 제어 도크 가이드","OBS Control Dock Guide - Social Stream Ninja":"OBS 제어 도크 가이드 - Social Stream Ninja","OBS product controls with a saved product selector, duration, Show, Next, Hide products, Resume schedule, and selected product state":"저장된 상품 선택기, 지속 시간, 표시, 다음, 상품 숨기기, 일정 재개, 선택된 상품 상태를 보여 주는 OBS 상품 제어","On this page":"이 페이지에서","Open OBS control dock":"OBS 제어 도크 열기 (Open OBS control dock)","Open navigation menu":"탐색 메뉴 열기","Open the Control Dock":"제어 도크 열기","Optional direct server transport for the Streaming Chat Dock.":"스트리밍 채팅 도크용 선택적 직접 서버 전송입니다.","Other controls and their required pages":"기타 제어 및 필요한 페이지","Overlay Gallery":"오버레이 갤러리","Preview":"미리보기","Product controls":"상품 제어","Products & support links":"상품 및 후원 링크","Purpose":"목적","Quick setup":"빠른 설정","Replace":"바꿀 값:","Required":"필수","Reset Saved Credits":"저장된 크레딧 초기화 (Reset Saved Credits)","Result":"결과","Resume schedule:":"일정 재개:","Runs the real collected list.":"실제로 수집한 목록을 실행합니다.","Runs the real list without consuming page-collected entries.":"페이지에서 수집한 항목을 소모하지 않고 실제 목록을 실행합니다.","Save & connect":"저장 및 연결 (Save & connect)","See the":"다음을 참조하세요:","Select":"선택:","Send chat messages to API server":"API 서버로 채팅 메시지 전송 (Send chat messages to API server)","Session needed:":"세션 필요:","Setting":"설정","Show, Next, and Hide return to the saved schedule after this many seconds. Use 0 to keep the override until changed.":"표시, 다음, 숨기기는 이 시간(초)이 지난 뒤 저장된 일정으로 돌아갑니다. 변경할 때까지 수동 상태를 유지하려면 0을 사용하세요.","Show:":"표시:","Social Stream Controls":"Social Stream 제어","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Start Credits":"크레딧 시작","State:":"상태:","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Test Credits":"크레딧 테스트 (Test Credits)","Test uses built-in names. Select Background collection before the stream and confirm normal chat sources are capturing.":"테스트는 내장 이름을 사용합니다. 방송 전에 백그라운드 수집을 선택하고 일반 채팅 소스가 캡처 중인지 확인하세요.","Test works but Start is empty:":"테스트는 되지만 시작하면 비어 있음:","The control dock already opens its own WebSocket control connection. OBS's":"제어 도크는 이미 자체 WebSocket 제어 연결을 엽니다. OBS의","The dock reconnects automatically if the API connection drops. A green":"API 연결이 끊기면 도크가 자동으로 다시 연결합니다. 녹색","The dock, popup, Stream Deck, and Event Flow share the same controls. Edit and save the catalog in Social Stream. See":"도크, 팝업, Stream Deck, 이벤트 흐름은 같은 제어를 공유합니다. Social Stream에서 카탈로그를 편집하고 저장하세요. 참고:","The same buttons can be scripted with HTTP GET requests:":"같은 버튼을 HTTP GET 요청으로 스크립트화할 수 있습니다:","Timer:":"타이머:","Trigger Mode":"트리거 모드","Troubleshooting":"문제 해결","Used when an external program needs to receive captured chat on channel 4.":"외부 프로그램이 채널 4에서 캡처된 채팅을 받아야 할 때 사용합니다.","Used when the Streaming Chat Dock itself must send commands back through the server.":"스트리밍 채팅 도크 자체가 서버를 통해 명령을 돌려보내야 할 때 사용합니다.","Using it with end-of-stream Credits":"방송 마무리 크레딧과 함께 사용","Waitlist & Giveaway:":"대기 목록 및 경품 추첨:","WebSocket Server Settings":"WebSocket 서버 설정 (WebSocket Server Settings)","What each Credits button does":"각 크레딧 버튼의 역할","Which server settings are required?":"어떤 서버 설정이 필요한가요?","advance from the current product.":"현재 상품에서 다음으로 이동합니다.","and use this URL:":". 사용할 URL:","are unrelated and can remain off.":"은 관련이 없으며 꺼 두어도 됩니다.","as described above. Add the separate monetization overlay URL as an OBS Browser Source for viewers. The control dock is for you; never share its session URL with viewers.":"를 위 설명대로 활성화하세요. 별도의 수익화 오버레이 URL을 시청자용 OBS 브라우저 소스로 추가하세요. 제어 도크는 운영자용입니다. 세션 URL을 시청자와 공유하지 마세요.","background collection can work while the Credits page is closed, but Start, Preview, and Test need a connected Credits Browser Source to display anything.":"백그라운드 수집은 크레딧 페이지가 닫혀 있어도 작동하지만, 시작, 미리 보기, 테스트로 표시하려면 연결된 크레딧 브라우저 소스가 필요합니다.","configure the waitlist in Social Stream first; Reset clears the current entries.":"먼저 Social Stream에서 대기 목록을 설정하세요. 초기화는 현재 항목을 지웁니다.","confirm the Streaming Chat Dock and featured overlay use the same session and are loaded.":"스트리밍 채팅 도크와 강조 오버레이가 같은 세션을 사용하며 로드되어 있는지 확인하세요.","enable remote API control, confirm Social Stream is active, and reopen the dock after changing its URL.":"원격 API 제어를 활성화하고 Social Stream이 켜져 있는지 확인한 뒤 URL을 바꾸면 도크를 다시 여세요.","for collection modes, filters, and troubleshooting missing names.":"에서 수집 모드, 필터, 이름 누락 문제 해결을 확인하세요.","for more actions.":"에서 더 많은 동작을 확인하세요.","for setup and automation.":"에서 설정 및 자동화를 확인하세요.","full API sandbox":"전체 API 샌드박스","hide promotional cards; activity alerts continue.":"홍보 카드를 숨깁니다. 활동 알림은 계속됩니다.","in the OBS control dock.":"을 OBS 제어 도크에서 선택하세요.","is not required on the control-dock or Credits URLs.":"는 제어 도크 또는 크레딧 URL에 필요하지 않습니다.","keep the Timer page connected on the same session if it needs to display the timer.":"타이머를 표시해야 한다면 타이머 페이지를 같은 세션에 연결해 두세요.","keep the normal Streaming Chat Dock and featured overlay connected on the same session.":"일반 스트리밍 채팅 도크와 강조 오버레이를 같은 세션에 연결해 두세요.","or the":"또는","refreshes every five seconds while this section is open. It reports Social Stream's selection, not whether an OBS scene is visible. Lost or unconfirmed connections disable product buttons until state is available again.":"는 이 섹션이 열려 있는 동안 5초마다 새로고침됩니다. OBS 장면이 보이는지가 아닌 Social Stream의 선택 상태를 보고합니다. 연결이 끊기거나 확인되지 않으면 상태를 다시 받을 때까지 상품 버튼이 비활성화됩니다.","remote API control of extension":"확장 프로그램 원격 API 제어","return to your saved first-product or rotation setting.":"저장된 첫 상품 또는 순환 설정으로 돌아갑니다.","reveal the ending scene, wait for its Browser Source to load, then retry.":"마무리 장면을 표시하고 브라우저 소스가 로드될 때까지 기다린 뒤 다시 시도하세요.","select a saved product and pin it.":"저장된 상품을 선택하고 고정합니다.","status only confirms the control connection; the target page still needs to be open when a command displays something.":"상태는 제어 연결만 확인합니다. 명령으로 무언가를 표시하려면 대상 페이지가 열려 있어야 합니다.","to":"대상:","to that Dock URL. This is optional and does not change how Credits commands work.":"를 해당 도크 URL에 추가하세요. 이는 선택 사항이며 크레딧 명령의 작동 방식을 바꾸지 않습니다.","use the exact Session ID from Social Stream, without the word":"Social Stream의 정확한 세션 ID를 사용하세요. 제외할 문자열:","with the active Social Stream session. See":"를 현재 Social Stream 세션으로 바꾸세요. 참고:"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/obs-control-dock-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-control-dock-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-control-dock-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-control-dock-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-control-dock-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-control-dock-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-control-dock-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-control-dock-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-control-dock-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-control-dock-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-control-dock-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-control-dock-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="obs-control-dock-guide.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/obs-control-dock-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/obs-control-dock-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/obs-control-dock-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/obs-control-dock-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/obs-control-dock-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>OBS 제어 도크 가이드</h1>
+			<p>크레딧 시작, 미리 보기, 테스트, 초기화를 포함한 자주 쓰는 Social Stream 제어를 OBS 안에 두세요.</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+			<nav class="guide-jump-links" aria-label="이 페이지에서"><a href="#read-section-1">빠른 설정</a><a href="#read-section-2">어떤 서버 설정이 필요한가요?</a><a href="#read-section-3">방송 마무리 크레딧과 함께 사용</a><a href="#read-section-4">각 크레딧 버튼의 역할</a><a href="#read-section-5">상품 및 후원 링크</a><a href="#read-section-6">기타 제어 및 필요한 페이지</a><a href="#read-section-7">직접 API 예제</a><a href="#read-section-8">문제 해결</a></nav>
+<div class="guide-card">
+				<h2 id="read-section-1">빠른 설정</h2>
+				<ol class="guide-steps">
+					<li>Social Stream Ninja에서 다음을 여세요: <strong>전체 설정 및 도구</strong> &rarr; <strong>동작 (Mechanics)</strong>.</li>
+					<li>활성화 <strong>확장 프로그램 원격 API 제어</strong>를 활성화하세요. 방송 중 Social Stream Ninja를 켜 두세요.</li>
+					<li>Social Stream Ninja에 표시된 세션 ID를 복사하세요.</li>
+					<li>OBS에서 다음을 여세요: <strong>도크 (Docks)</strong> &rarr; <strong>사용자 지정 브라우저 도크 (Custom Browser Docks)</strong>.</li>
+					<li>도크 이름을 다음으로 지정하세요: <strong>Social Stream 제어</strong> . 사용할 URL:</li>
+				</ol>
+				<pre><code>https://socialstream.ninja/obs-control-dock.html?session=YOUR_SESSION_ID</code></pre>
+				<ol class="guide-steps" start="6">
+					<li>선택: <strong>적용 (Apply)</strong>를 선택하고 설정 창을 닫은 뒤 새 도크를 OBS의 원하는 위치에 놓으세요.</li>
+					<li>도크에 다음이 표시되는지 확인하세요: <strong>연결됨(Connected)</strong>. URL에 세션이 없다면 도크에 입력하고 다음을 선택하세요: <strong>저장 및 연결 (Save &amp; connect)</strong>.</li>
+				</ol>
+				<p><a href="../../obs-control-dock.html" class="btn btn-primary">제어 도크 열기</a></p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="read-section-2">어떤 서버 설정이 필요한가요?</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>설정</th><th>이 제어 도크의 요구 사항</th><th>목적</th></tr></thead>
+					<tbody>
+						<tr><td data-label="설정">확장 프로그램 원격 API 제어</td><td data-label="이 제어 도크의 요구 사항"><strong>필수</strong></td><td data-label="목적">제어 도크가 채널 1로 Social Stream 앱 또는 확장 프로그램에 명령을 보내게 합니다.</td></tr>
+						<tr><td data-label="설정">도크의 API 서버 사용 및 게시 활성화 (Enable Dock to use and publish via API server)</td><td data-label="이 제어 도크의 요구 사항">필요 없음</td><td data-label="목적">스트리밍 채팅 도크용 선택적 직접 서버 전송입니다.</td></tr>
+						<tr><td data-label="설정">API 서버로 채팅 메시지 전송 (Send chat messages to API server)</td><td data-label="이 제어 도크의 요구 사항">필요 없음</td><td data-label="목적">외부 프로그램이 채널 4에서 캡처된 채팅을 받아야 할 때 사용합니다.</td></tr>
+						<tr><td data-label="설정">도크가 서버를 통해 확장 프로그램에 명령 전송 (Dock sends its commands to Extension via server)</td><td data-label="이 제어 도크의 요구 사항">필요 없음</td><td data-label="목적">스트리밍 채팅 도크 자체가 서버를 통해 명령을 돌려보내야 할 때 사용합니다.</td></tr>
+					</tbody>
+				</table>
+				<div class="guide-note"><strong><code>&amp;server</code> 는 제어 도크 또는 크레딧 URL에 필요하지 않습니다.</strong> 제어 도크는 이미 자체 WebSocket 제어 연결을 엽니다. OBS의 <strong>WebSocket 서버 설정 (WebSocket Server Settings)</strong> 은 관련이 없으며 꺼 두어도 됩니다.</div>
+				<p>직접 API 전송을 다음에 의도적으로 사용하는 경우: <code>dock.html</code>. 서버 설정을 활성화한 뒤 생성된 도크 링크를 사용하거나 다음을 추가하세요: <code>&amp;server</code> 를 해당 도크 URL에 추가하세요. 이는 선택 사항이며 크레딧 명령의 작동 방식을 바꾸지 않습니다.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="read-section-3">방송 마무리 크레딧과 함께 사용</h2>
+				<ol class="guide-steps">
+					<li>방송 전에 크레딧의 <strong>트리거 모드</strong> 대상: <strong>백그라운드 수집</strong>으로 설정하세요. 크레딧 브라우저 소스가 닫혀 있어도 앱이 채팅 참여자, 회원, 후원자를 수집할 수 있습니다.</li>
+					<li>생성된 크레딧 URL을 같은 세션 ID로 OBS 마무리 장면에 추가하세요.</li>
+					<li>방송 마지막에 먼저 마무리 장면으로 전환하여 크레딧 브라우저 소스를 로드하고 연결하세요.</li>
+					<li>선택: <strong>크레딧 시작</strong> 을 OBS 제어 도크에서 선택하세요.</li>
+				</ol>
+				<div class="warning-note"><strong>시작 전에 로드:</strong> 백그라운드 수집은 크레딧 페이지가 닫혀 있어도 작동하지만, 시작, 미리 보기, 테스트로 표시하려면 연결된 크레딧 브라우저 소스가 필요합니다.</div>
+				<p>다음을 참조하세요: <a href="credits-roll-guide.html">크레딧 롤 가이드</a> 에서 수집 모드, 필터, 이름 누락 문제 해결을 확인하세요.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="read-section-4">각 크레딧 버튼의 역할</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>버튼</th><th>결과</th></tr></thead>
+					<tbody>
+						<tr><td data-label="버튼">크레딧 시작</td><td data-label="결과">실제로 수집한 목록을 실행합니다.</td></tr>
+						<tr><td data-label="버튼">미리보기</td><td data-label="결과">페이지에서 수집한 항목을 소모하지 않고 실제 목록을 실행합니다.</td></tr>
+						<tr><td data-label="버튼">크레딧 테스트 (Test Credits)</td><td data-label="결과">내장 참여자, 회원, 후원자 예시를 표시합니다. 실제 이름이 수집되었다는 뜻은 아닙니다.</td></tr>
+						<tr><td data-label="버튼">저장된 크레딧 초기화 (Reset Saved Credits)</td><td data-label="결과">현재 Social Stream 세션의 저장된 백그라운드 수집 내역을 지웁니다.</td></tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card" id="commerce">
+				<h2 id="read-section-5">상품 및 후원 링크</h2>
+				<p>Social Stream에서 Monetization을 열고 상품을 저장하고 활성화한 뒤 다음을 선택하세요: <strong>OBS 제어 도크 열기 (Open OBS control dock)</strong>을 선택하세요. 이 비공개 제어 URL을 OBS의 사용자 지정 브라우저 도크에 복사하세요. 상품 전용 도크에는 다음을 사용하세요: <code>obs-control-dock.html?session=YOUR_SESSION_ID&amp;commerce</code>.</p>
+				<p>Social Stream을 켜 두고 다음을 활성화하세요: <strong>확장 프로그램 원격 API 제어</strong> 를 위 설명대로 활성화하세요. 별도의 수익화 오버레이 URL을 시청자용 OBS 브라우저 소스로 추가하세요. 제어 도크는 운영자용입니다. 세션 URL을 시청자와 공유하지 마세요.</p>
+				<a href="../../docs/images/monetization/obs-native-product-controls.png"><img src="../../docs/images/monetization/obs-native-product-controls.png" alt="저장된 상품 선택기, 지속 시간, 표시, 다음, 상품 숨기기, 일정 재개, 선택된 상품 상태를 보여 주는 OBS 상품 제어" style="display:block;width:100%;max-width:390px;height:auto;margin:16px auto;"></a>
+				<ul class="guide-list">
+					<li><strong>표시:</strong> 저장된 상품을 선택하고 고정합니다. <strong>다음:</strong> 현재 상품에서 다음으로 이동합니다.</li>
+					<li><strong>상품 숨기기:</strong> 홍보 카드를 숨깁니다. 활동 알림은 계속됩니다. <strong>일정 재개:</strong> 저장된 첫 상품 또는 순환 설정으로 돌아갑니다.</li>
+					<li><strong>지속 시간:</strong> 표시, 다음, 숨기기는 이 시간(초)이 지난 뒤 저장된 일정으로 돌아갑니다. 변경할 때까지 수동 상태를 유지하려면 0을 사용하세요.</li>
+					<li><strong>상태:</strong> 는 이 섹션이 열려 있는 동안 5초마다 새로고침됩니다. OBS 장면이 보이는지가 아닌 Social Stream의 선택 상태를 보고합니다. 연결이 끊기거나 확인되지 않으면 상태를 다시 받을 때까지 상품 버튼이 비활성화됩니다.</li>
+				</ul>
+				<p>도크, 팝업, Stream Deck, 이벤트 흐름은 같은 제어를 공유합니다. Social Stream에서 카탈로그를 편집하고 저장하세요. 참고: <a href="product-controls.html">상품 제어</a> 에서 설정 및 자동화를 확인하세요.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="read-section-6">기타 제어 및 필요한 페이지</h2>
+				<ul class="guide-list">
+					<li><strong>강조 채팅:</strong> 일반 스트리밍 채팅 도크와 강조 오버레이를 같은 세션에 연결해 두세요.</li>
+					<li><strong>타이머:</strong> 타이머를 표시해야 한다면 타이머 페이지를 같은 세션에 연결해 두세요.</li>
+					<li><strong>대기 목록 및 경품 추첨:</strong> 먼저 Social Stream에서 대기 목록을 설정하세요. 초기화는 현재 항목을 지웁니다.</li>
+				</ul>
+				<p>API 연결이 끊기면 도크가 자동으로 다시 연결합니다. 녹색 <strong>연결됨(Connected)</strong> 상태는 제어 연결만 확인합니다. 명령으로 무언가를 표시하려면 대상 페이지가 열려 있어야 합니다.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="read-section-7">직접 API 예제</h2>
+				<p>같은 버튼을 HTTP GET 요청으로 스크립트화할 수 있습니다:</p>
+				<pre><code>https://io.socialstream.ninja/SESSION_ID/creditsStart
+https://io.socialstream.ninja/SESSION_ID/creditsPreview
+https://io.socialstream.ninja/SESSION_ID/creditsTest
+https://io.socialstream.ninja/SESSION_ID/creditsReset</code></pre>
+				<p>바꿀 값: <code>SESSION_ID</code> 를 현재 Social Stream 세션으로 바꾸세요. 참고: <a href="commands.html">명령 및 API</a> 또는 <a href="../../sampleapi.html">전체 API 샌드박스</a> 에서 더 많은 동작을 확인하세요.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="read-section-8">문제 해결</h2>
+				<ul class="guide-list">
+					<li><strong>세션 필요:</strong> Social Stream의 정확한 세션 ID를 사용하세요. 제외할 문자열: <code>session=</code>.</li>
+					<li><strong>연결 끊김:</strong> 원격 API 제어를 활성화하고 Social Stream이 켜져 있는지 확인한 뒤 URL을 바꾸면 도크를 다시 여세요.</li>
+					<li><strong>크레딧에서 명령을 수락한 소스가 없다고 표시됨:</strong> 마무리 장면을 표시하고 브라우저 소스가 로드될 때까지 기다린 뒤 다시 시도하세요.</li>
+					<li><strong>테스트는 되지만 시작하면 비어 있음:</strong> 테스트는 내장 이름을 사용합니다. 방송 전에 백그라운드 수집을 선택하고 일반 채팅 소스가 캡처 중인지 확인하세요.</li>
+					<li><strong>강조 채팅 버튼을 눌러도 변화가 보이지 않음:</strong> 스트리밍 채팅 도크와 강조 오버레이가 같은 세션을 사용하며 로드되어 있는지 확인하세요.</li>
+				</ul>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 라이선스.</p></div></div></footer>
+	<script data-copy-markdown src="../../docs/js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

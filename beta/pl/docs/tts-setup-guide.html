@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pl" data-site-root="../../" data-site-language="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/pl/docs/tts-setup-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="pl_PL">
+    <meta property="og:url" content="https://socialstream.ninja/beta/pl/docs/tts-setup-guide.html">
+    <meta property="og:title" content="Poradnik konfiguracji TTS — Social Stream Ninja">
+    <meta property="og:description" content="Prosty poradnik konfiguracji syntezy mowy Social Stream Ninja, dźwięku OBS, głosów przeglądarkowych i lokalnych oraz trybów serwera TTS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/pl/docs/tts-setup-guide.html">
+    <meta name="twitter:title" content="Poradnik konfiguracji TTS — Social Stream Ninja">
+    <meta name="twitter:description" content="Prosty poradnik konfiguracji syntezy mowy Social Stream Ninja, dźwięku OBS, głosów przeglądarkowych i lokalnych oraz trybów serwera TTS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poradnik konfiguracji TTS — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <style>
+        .tts-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+        .tts-preview { border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.6rem; min-width: 0; }
+        .tts-preview h3 { margin-top: 0; }
+        .tts-preview audio { width: 100%; margin: .8rem 0; }
+        .tts-preview code { overflow-wrap: anywhere; }
+        .guide-card [id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 52rem; }
+        @media (max-width: 700px) { .tts-preview-grid { grid-template-columns: 1fr; } }
+    </style>
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Prosty poradnik konfiguracji syntezy mowy Social Stream Ninja, dźwięku OBS, głosów przeglądarkowych i lokalnych oraz trybów serwera TTS.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="pl">
+<script id="ssn-site-language" type="application/json">{"language":"pl","page":"docs/tts-setup-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Przełącz na jasny motyw","Switch to dark theme":"Przełącz na ciemny motyw","Light mode":"Tryb jasny","Dark mode":"Tryb ciemny","Open navigation menu":"Otwórz menu nawigacji","Close navigation menu":"Zamknij menu nawigacji","Copy this document as Markdown to the clipboard":"Skopiuj ten dokument w formacie Markdown do schowka","Copy Markdown":"Kopiuj Markdown","Copying…":"Kopiowanie…","Markdown copied":"Skopiowano Markdown","Copy failed":"Nie udało się skopiować","Copy comprehensive Markdown for an AI assistant":"Skopiuj pełny Markdown dla asystenta AI","Copy this documentation page as Markdown for an AI assistant":"Skopiuj tę stronę dokumentacji jako Markdown dla asystenta AI"},"strings":{"(Node.js required). Run it on the OBS computer.":"(wymaga Node.js). Uruchom na komputerze z OBS.","(or":"(lub","), optional":"), opcjonalnie",", expand":", rozwiń",", optional":", opcjonalne",", or":" lub",", set that source to":", ustaw to źródło na",", then a voice.":", a następnie głos.",". Bigger download, more memory.":". Większe pobieranie, więcej pamięci.",". Copy the voice's model ID, not its name or page link. Leave it blank for the default voice.":". Skopiuj ID modelu głosu, nie nazwę ani link strony. Dla głosu domyślnego zostaw puste.",". Fish Audio decides what's free and its fair-use terms. Paid models need account credit. SSN never switches to a paid model if a free request fails. Speed goes from 0.5 to 2. Fish Audio detects the language. Your chat text is sent to Fish Audio.":". Fish Audio ustala ofertę bezpłatną i zasady uczciwego użycia. Płatne modele wymagają środków na koncie. SSN nigdy nie przełącza na płatny model po błędzie bezpłatnego żądania. Szybkość wynosi od 0,5 do 2. Fish Audio wykrywa język. Tekst czatu jest wysyłany do Fish Audio.",". Leave it running.":". Pozostaw uruchomione.",". Leave out":". Pomiń",". Pick":". Wybierz",". Piper has Spain, Mexico, Brazil and Portugal voices. Kokoro has three Spanish and three Brazilian Portuguese voices.":". Piper ma głosy dla Hiszpanii, Meksyku, Brazylii i Portugalii. Kokoro ma trzy hiszpańskie i trzy brazylijskie portugalskie głosy.",". Plays each part as it's ready. Slow PCs may pause between parts.":". Odtwarza każdą część, gdy jest gotowa. Wolne komputery mogą robić przerwy między częściami.",". Streaming or FP32 turns on background generation automatically.":". Strumieniowanie lub FP32 automatycznie włącza generowanie w tle.",". These options make speech in the background so the page stays smooth.":". Te opcje generują mowę w tle, by strona działała płynnie.",". Waits for the whole message first.":". Najpierw czeka na całą wiadomość.","A ChatGPT subscription doesn't include API credit.":"Subskrypcja ChatGPT nie obejmuje środków API.","A quick link to try:":"Szybki link do wypróbowania:","API Key":"Klucz API","API billing":"Rozliczenia API","API charges may apply":"Mogą obowiązywać opłaty API","API terms apply":"Obowiązują warunki API","Account limits and network delay.":"Limity konta i opóźnienie sieci.","Actual SSN Custom / Local TTS provider settings":"Rzeczywiste ustawienia dostawcy Custom / Local TTS w SSN","Actual SSN ElevenLabs provider settings":"Rzeczywiste ustawienia dostawcy ElevenLabs w SSN","Actual SSN Gemini provider settings":"Rzeczywiste ustawienia dostawcy Gemini w SSN","Actual SSN Google Cloud provider settings":"Rzeczywiste ustawienia dostawcy Google Cloud w SSN","Actual SSN Kitten provider settings":"Rzeczywiste ustawienia dostawcy Kitten w SSN","Actual SSN Kokoro provider settings":"Rzeczywiste ustawienia dostawcy Kokoro w SSN","Actual SSN OpenAI provider settings":"Rzeczywiste ustawienia dostawcy OpenAI w SSN","Actual SSN Piper provider settings":"Rzeczywiste ustawienia dostawcy Piper w SSN","Actual SSN Speechify provider settings":"Rzeczywiste ustawienia dostawcy Speechify w SSN","Actual SSN System TTS provider settings":"Rzeczywiste ustawienia dostawcy System TTS w SSN","Actual SSN eSpeak provider settings":"Rzeczywiste ustawienia dostawcy eSpeak w SSN","Actual popup: Message: Text to Speech, with Enable TTS in dock switched on":"Rzeczywisty panel: Message — Text to Speech, z włączonym Enable TTS in dock","Actual popup: Piper TTS selected, with English US Female HFC Medium voice":"Rzeczywisty panel: wybrany Piper TTS z głosem English US Female HFC Medium","Adam (American Male):":"Adam (amerykański męski) —","Add a":"Dodaj","Advanced Audio Properties":"Zaawansowane właściwości dźwięku (Advanced Audio Properties)","Alex (Brazilian Portuguese):":"Alex (portugalski brazylijski):","Alex (Spanish):":"Alex (hiszpański):","Alice (British Female):":"Alice (brytyjski żeński) —","All four are free and run on your computer. Press play to compare.":"Wszystkie cztery są bezpłatne i działają na Twoim komputerze. Naciśnij odtwarzanie, aby porównać.","Alloy (American Female):":"Alloy (amerykański żeński) —","An OBS Custom Browser Dock is a control panel, not a scene source. For Featured Chat, turn on TTS in that overlay's own options and copy its link.":"Niestandardowy dok przeglądarki OBS jest panelem sterowania, nie źródłem sceny. Dla Featured Chat włącz TTS w opcjach tej nakładki i skopiuj jej link.","Aoede (American Female):":"Aoede (amerykański żeński) —","Automatic":"Automatyczne","Avoid gaps":"Unikaj przerw","Background generation":"Generowanie w tle","Background processor":"Procesor w tle","Bella (American Female):":"Bella (amerykański żeński) —","Bella, US English, female. Most natural, but slower on CPU.":"Bella, angielski amerykański, kobiecy. Najbardziej naturalny, ale wolniejszy na CPU.","Best Kokoro quality":"Najlepsza jakość Kokoro","Billing and quotas apply":"Obowiązują rozliczenia i limity","Blue switch = chat reading is on.":"Niebieski przełącznik = odczytywanie czatu jest włączone.","Brazilian Portuguese (Edresson) - Low:":"Portugalski brazylijski (Edresson) — niska jakość —","Brazilian Portuguese (Faber) - Medium:":"Portugalski brazylijski (Faber) — średnia jakość —","Bridge URL":"URL mostka","Browser Source":"Źródło przeglądarki","CPU":"CPU","Check mute and the recording tracks in OBS. Don't capture the monitoring output a second time. See the":"Sprawdź wyciszenie i ścieżki nagrania w OBS. Nie przechwytuj ponownie wyjścia odsłuchowego. Zobacz","Check the dock shows chat. Then check the TTS switch, provider and filters. Use a freshly copied link. Let the first voice download finish.":"Sprawdź, czy Dock pokazuje czat. Potem sprawdź przełącznik TTS, dostawcę i filtry. Użyj świeżo skopiowanego linku. Poczekaj na pierwsze pobranie głosu.","Check your Gemini limits":"Sprawdź limity Gemini","Click":"Kliknij","Commands & API":"Polecenia i API","Control audio via OBS":"Steruj dźwiękiem przez OBS (Control audio via OBS)","Cost":"Koszt","Custom / Local":"Własny / lokalny","Custom / Local TTS":"Własny / lokalny TTS","Daniel (British Male):":"Daniel (brytyjski męski) —","DaveFX":"DaveFX","Do this":"Zrób to","Does my chat platform support TTS?":"Czy moja platforma czatu obsługuje TTS?","Dora":"Dora","Dora (Brazilian Portuguese):":"Dora (portugalski brazylijski):","Dora (Spanish):":"Dora (hiszpański):","Download":"Pobierz","Download Kitten sample":"Pobierz próbkę Kitten","Download Kokoro sample":"Pobierz próbkę Kokoro","Download Piper sample":"Pobierz próbkę Piper","Download eSpeak sample":"Pobierz próbkę eSpeak","Download sample":"Pobierz próbkę","Download sizes and OBS test notes":"Rozmiary pobierania i uwagi z testów OBS","Echo (American Male):":"Echo (amerykański męski) —","Edit my TTS link by hand, or see every option":"Edytuj link TTS ręcznie lub zobacz wszystkie opcje","Eight English voices: male and female versions of voices 2, 3, 4 and 5. The sample uses Voice 4 (Female).":"Osiem angielskich głosów: męskie i żeńskie wersje głosów 2, 3, 4 i 5. Próbka używa głosu 4 (żeńskiego).","ElevenLabs":"ElevenLabs","ElevenLabs reference":"Dokumentacja ElevenLabs","Emma (British Female):":"Emma (brytyjski żeński) —","English US Female (HFC) - Medium:":"Angielski USA, żeński (HFC) — średnia jakość —","English only. Bundled model is about 24 MB.":"Tylko angielski. Dołączony model ma około 24 MB.","English. Robotic, but tiny and fast.":"Angielski. Robotyczny, ale mały i szybki.","English:":"Angielski —","Enter a Google Cloud TTS API key, the exact voice name, and its matching language.":"Wpisz klucz API Google Cloud TTS, dokładną nazwę głosu i pasujący język.","Enter the API key and voice ID from your Speechify API account.":"Wpisz klucz API i identyfikator głosu ze swojego konta API Speechify.","Enter your API key. Then click":"Wpisz klucz API. Potem kliknij","Eric (American Male):":"Eric (amerykański męski) —","Every message is read twice":"Każda wiadomość jest czytana dwa razy","Faber":"Faber","Fable (British Male):":"Fable (brytyjski męski) —","Faster Kokoro and Kitten":"Szybsze Kokoro i Kitten","Features":"Funkcje","Fenrir (American Male):":"Fenrir (amerykański męski) —","First time?":"Pierwszy raz?","Fish Audio":"Fish Audio","Fish Audio API key":"Klucz API Fish Audio","Fish Audio API reference":"Dokumentacja API Fish Audio","Fish Audio blocks direct requests from web pages, so OBS needs SSN's":"Fish Audio blokuje bezpośrednie żądania ze stron internetowych, więc OBS potrzebuje narzędzia SSN:","Fix GPU problems (Kokoro)":"Napraw problemy GPU (Kokoro)","Fix problems":"Rozwiązywanie problemów","For OBS: run the local bridge":"Dla OBS: uruchom lokalny mostek","Free":"Bezpłatne","Free model announcement and terms":"Ogłoszenie bezpłatnego modelu i warunki","Free model with your own key; voice IDs.":"Bezpłatny model z własnym kluczem; ID głosów.","Free tier set by Fish Audio":"Bezpłatny poziom ustalany przez Fish Audio","Free, no key":"Bezpłatne, bez klucza","Full quality":"Pełna jakość","Gemini":"Gemini","Generation and playback":"Generowanie i odtwarzanie","George (British Male):":"George (brytyjski męski) —","Go further":"Dalsze kroki","Go here":"Przejdź tutaj","Good for":"Dobre do","Google Cloud":"Google Cloud","Guides":"Poradniki","Have your chat read aloud on stream. Free, with no account or API key.":"Odczytuj czat na głos podczas transmisji. Bezpłatnie, bez konta i klucza API.","Hear speech sooner":"Usłysz mowę szybciej","Hear the free voices":"Posłuchaj bezpłatnych głosów","Hear the voices":"Posłuchaj głosów","Hearing every message twice?":"Słyszysz każdą wiadomość dwa razy?","Heart (American Female):":"Heart (amerykański żeński) —","Heavier on the CPU. First speech can be slow. Faster with a supported GPU.":"Większe obciążenie CPU. Pierwsza mowa może być powolna. Szybciej na obsługiwanym GPU.","Hire":"Zleć pracę","Home":"Strona główna","How these samples were made":"Jak powstały te próbki","I want an OBS dock or Featured Chat to speak instead":"Chcę, aby mówił dok OBS lub Featured Chat","I want to":"Chcę","I want to…":"Chcę…","In OBS":"W OBS","In its properties, turn on":"We właściwościach włącz","In the Fish Audio panel, set":"W panelu Fish Audio ustaw","In the SSN folder, run":"W folderze SSN uruchom","Inspiration":"Inspiracje","Isabella (British Female):":"Isabella (brytyjski żeński) —","Jessica (American Female):":"Jessica (amerykański żeński) —","Keep in mind":"Pamiętaj","Kitten":"Kitten","Kitten 0.8":"Kitten 0.8","Kitten 0.8 runs on the CPU, English only. Each model downloads on first use. Each browser or OBS keeps its own copy. NeuroSync gets the complete audio file either way. Old links keep working as before unless you change these options.":"Kitten 0.8 działa na CPU, tylko po angielsku. Każdy model pobiera się przy pierwszym użyciu. Każda przeglądarka i OBS mają własną kopię. NeuroSync w obu przypadkach otrzymuje cały plik audio. Stare linki działają jak wcześniej, dopóki nie zmienisz tych opcji.","Kitten voice sample":"Próbka głosu Kitten","Kitten:":"Kitten:","Kokoro":"Kokoro","Kokoro - Portuguese (Brazil)":"Kokoro — portugalski (Brazylia)","Kokoro - Portuguese (Brazil) sample":"Próbka Kokoro — portugalski (Brazylia)","Kokoro - Spanish":"Kokoro — hiszpański","Kokoro - Spanish sample":"Próbka Kokoro — hiszpański","Kokoro voice sample":"Próbka głosu Kokoro","Kokoro:":"Kokoro:","Kore (American Female):":"Kore (amerykański żeński) —","Lewis (British Male):":"Lewis (brytyjski męski) —","Liam (American Male):":"Liam (amerykański męski) —","Lily (British Female):":"Lily (brytyjski żeński) —","Link settings for Fish Audio":"Ustawienia linku Fish Audio","List My Available Voices":"Pokaż moje dostępne głosy","Local AI TTS guide":"Poradnik lokalnej AI TTS","Main chat overlay & control dock":"Główna nakładka czatu i dok sterowania","Main navigation":"Nawigacja główna","Make a short test recording and play it back.":"Zrób krótkie nagranie testowe i odtwórz je.","Message – Text to Speech":"Wiadomość – zamiana tekstu na mowę","Meter moves, but the recording is silent":"Wskaźnik się porusza, ale nagranie jest nieme","Michael (American Male):":"Michael (amerykański męski) —","Monitor and Output":"Monitorowanie i wyjście","More detail and link settings":"Więcej szczegółów i ustawienia linku","More fixes:":"Więcej rozwiązań:","More than one page is speaking. Keep TTS on in one place only.":"Mówi więcej niż jedna strona. Pozostaw TTS włączone tylko w jednym miejscu.","Most setup. See the":"Najwięcej konfiguracji. Zobacz","Name reading was off. The clips skip loading time.":"Odczytywanie nazw było wyłączone. Klipy pomijają czas ładowania.","Named voices, model and format controls.":"Nazwane głosy, ustawienia modelu i formatu.","Named voices; language, rate and pitch.":"Nazwane głosy; język, tempo i wysokość.","Natural voices; English, Spanish, Portuguese.":"Naturalne głosy; angielski, hiszpański, portugalski.","Nicole (American Female):":"Nicole (amerykański żeński) —","No chat connected yet?":"Czat nie jest jeszcze połączony?","No speech at all":"Brak mowy","Not every voice supports every control. Cloud TTS API must be enabled.":"Nie każdy głos obsługuje każdą opcję. API Cloud TTS musi być włączone.","Nova (American Female):":"Nova (amerykański żeński) —","OBS audio guide":"Poradnik dźwięku OBS","OBS has its own browser and voice list. System TTS often fails there. Switch to Piper, Kokoro, Kitten or eSpeak. A virtual audio cable can't fix missing speech.":"OBS ma własną przeglądarkę i listę głosów. Systemowy TTS często tam nie działa. Przełącz na Piper, Kokoro, Kitten lub eSpeak. Wirtualny kabel audio nie naprawi braku mowy.","OBS needs SSN's local bridge.":"OBS wymaga lokalnego mostka SSN.","Often silent in OBS. Some voices need internet.":"Często nieme w OBS. Niektóre głosy wymagają internetu.","On that PC, System TTS listed five voices but made no sound in the OBS recording. Your PC may differ, so always test your own link. Cloud voices weren't tested (no paid accounts).":"Na tym komputerze systemowy TTS pokazywał pięć głosów, ale nagranie OBS było bez dźwięku. Twój komputer może działać inaczej, więc zawsze testuj własny link. Głosów chmurowych nie testowano (brak płatnych kont).","On this page":"Na tej stronie","Only one page should read chat. Turn TTS off everywhere else.":"Tylko jedna strona powinna czytać czat. Wyłącz TTS wszędzie indziej.","Onyx (American Male):":"Onyx (amerykański męski) —","Open navigation menu":"Otwórz menu nawigacji","Open the":"Otwórz","OpenAI":"OpenAI","Optional: paste a":"Opcjonalnie: wklej","Overlay Gallery":"Galeria nakładek","Paste the bridge token shown in the terminal into the":"Wklej token mostka pokazany w terminalu do","Paste your":"Wklej swój","Pick":"Wybierz","Pick a":"Wybierz","Pick a TTS model and voice. Style instructions change how it's read. This uses the Gemini API, not Google Cloud TTS.":"Wybierz model TTS i głos. Instrukcje stylu zmieniają sposób czytania. To używa API Gemini, nie Google Cloud TTS.","Pick a language above the voice list in SSN, then press":"W SSN wybierz język nad listą głosów i naciśnij","Pick a language voice. You can change the speaking rate. It sounds robotic by design.":"Wybierz głos języka. Możesz zmienić tempo mowy. Celowo brzmi robotycznie.","Pick a provider":"Wybierz dostawcę","Pick a voice and model, and enter an API key. A ChatGPT subscription doesn't give you API credit. Keep the default endpoint.":"Wybierz głos i model oraz wpisz klucz API. Subskrypcja ChatGPT nie daje środków API. Zachowaj domyślny adres usługi.","Pick a voice that matches your language. Changing the language alone doesn't change the voice. The sample uses HFC medium.":"Wybierz głos pasujący do języka. Sama zmiana języka nie zmienia głosu. Próbka używa HFC medium.","Pick a voice. Use the language filter to find one, and":"Wybierz głos. Znajdź go filtrem języka i","Pick voices by ID; stability and style controls.":"Wybór głosów według ID; stabilność i styl.","Piper":"Piper","Piper - Portuguese (Brazil)":"Piper — portugalski (Brazylia)","Piper - Portuguese (Brazil) sample":"Próbka Piper — portugalski (Brazylia)","Piper - Spanish (Spain)":"Piper — hiszpański (Hiszpania)","Piper - Spanish (Spain) sample":"Próbka Piper — hiszpański (Hiszpania)","Piper TTS":"Piper TTS","Piper downloads its voice on first use. Give it a moment.":"Piper pobiera głos przy pierwszym użyciu. Poczekaj chwilę.","Piper is free. No account or API key.":"Piper jest bezpłatny. Bez konta i klucza API.","Piper is the lighter choice. If Kokoro falls behind the chat, switch to Piper.":"Piper jest lżejszym wyborem. Jeśli Kokoro nie nadąża za czatem, przełącz na Piper.","Piper voice sample":"Próbka głosu Piper","Piper, Kokoro, Kitten and eSpeak passed OBS Browser Source recording tests. Cloud and custom voices also play through the page, but weren't tested with live accounts. Test System TTS on its own, even if it lists voices.":"Piper, Kokoro, Kitten i eSpeak przeszły testy nagrania źródła przeglądarkowego OBS. Głosy chmurowe i własne też grają przez stronę, ale nie testowano ich z aktywnymi kontami. Systemowy TTS przetestuj osobno, nawet gdy pokazuje głosy.","Plain-English setup guide for Social Stream Ninja text-to-speech, OBS audio, browser voices, local voices, and TTS server modes.":"Prosty poradnik konfiguracji syntezy mowy Social Stream Ninja, dźwięku OBS, głosów przeglądarkowych i lokalnych oraz trybów serwera TTS.","Play complete message":"Odtwórz całą wiadomość","Play it in OBS":"Odtwórz w OBS","Portuguese Brazil:":"Portugalski brazylijski —","Portuguese Portugal (Tugao) - Medium:":"Portugalski z Portugalii (Tugao) — średnia jakość —","Portuguese Portugal:":"Portugalski z Portugalii —","Press":"Naciśnij","Preview models and quotas can change.":"Modele podglądowe i limity mogą się zmieniać.","Problem":"Problem","Processing":"Przetwarzanie","Provider":"Dostawca","Provider settings":"Ustawienia dostawcy","Puck (American Male):":"Puck (amerykański męski) —","Quality varies by voice. HFC medium is about 63 MB.":"Jakość zależy od głosu. HFC medium ma około 63 MB.","Real screenshots from the desktop app, with a fresh profile (key fields left empty). Open a provider to see its settings. Click a screenshot to enlarge it.":"Prawdziwe zrzuty z aplikacji komputerowej ze świeżym profilem (pola kluczy puste). Otwórz dostawcę, aby zobaczyć ustawienia. Kliknij zrzut, aby powiększyć.","River (American Female):":"River (amerykański żeński) —","Run my own voice server, or clone a voice":"Uruchom własny serwer głosowy lub sklonuj głos","SSN extension popup":"panel rozszerzenia SSN","Santa (American Male):":"Santa (amerykański męski) —","Santa (Brazilian Portuguese):":"Santa (portugalski brazylijski):","Santa (Spanish):":"Santa (hiszpański):","Sarah (American Female):":"Sarah (amerykański żeński) —","Scroll to":"Przewiń do","Send a chat message. The source's audio meter should move.":"Wyślij wiadomość na czacie. Wskaźnik audio źródła powinien się poruszyć.","Set":"Ustaw","Set it up":"Skonfiguruj","Set it up in 5 steps":"Skonfiguruj w 5 krokach","Set the":"Ustaw","Set up Speechify":"Skonfiguruj Speechify","Settings and voices":"Ustawienia i głosy","Sizes are model files only, not memory use. Free voices run on the computer playing the dock or overlay. First use is slower. OBS keeps its own download cache, separate from Chrome.":"Rozmiary dotyczą tylko plików modeli, nie zużycia pamięci. Bezpłatne głosy działają na komputerze odtwarzającym Dock lub nakładkę. Pierwsze użycie jest wolniejsze. OBS ma własną pamięć pobrań, oddzielną od Chrome.","Sky (American Female):":"Sky (amerykański żeński) —","Small English model, eight voices.":"Mały model angielski, osiem głosów.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licencja GPLv3.0.","Sounds robotic on purpose.":"Celowo brzmi robotycznie.","Sources and Settings":"„Źródła i ustawienia”","Spanish Mexico (Ald) - Medium:":"Hiszpański meksykański (Ald) — średnia jakość —","Spanish Spain (DaveFX) - Medium:":"Hiszpański z Hiszpanii (DaveFX) — średnia jakość —","Spanish and Portuguese samples":"Próbki hiszpańskie i portugalskie","Spanish:":"Hiszpański —","Speak Text":"Odczytaj tekst (Speak Text)","Speech falls behind chat":"Mowa nie nadąża za czatem","Speechify":"Speechify","Speechify guide":"Poradnik Speechify","Speechify setup":"Konfiguracja Speechify","Start as speech arrives":"Zacznij, gdy mowa napływa","Start here":"Zacznij tutaj","Start with Piper.":"Zacznij od Piper.","Step-by-step Speechify guide":"Poradnik Speechify krok po kroku","Support":"Pomoc","Supported Sites":"Obsługiwane witryny","Switch from Kokoro to Piper, or try eSpeak.":"Przełącz z Kokoro na Piper lub wypróbuj eSpeak.","Switch theme":"Zmień motyw","System TTS":"Systemowy TTS","TTS Setup Guide":"Przewodnik konfiguracji TTS","TTS Setup Guide - Social Stream Ninja":"Poradnik konfiguracji TTS — Social Stream Ninja","TTS reference":"Dokumentacja TTS","TTS reference: provider options":"Dokumentacja TTS: opcje dostawców","Test":"Test","Test TTS":"Przetestuj TTS","Test the voice, then add the overlay link to OBS. Turn on":"Przetestuj głos, potem dodaj link nakładki do OBS. Włącz","Tested September 7, 2026 in OBS 32.2.2 on Windows 11. A real chat message reached the dock, spoke, moved the Browser Source meter, and showed up in a recording. Kokoro took noticeably longer to start on CPU.":"Testowano 7 września 2026 r. w OBS 32.2.2 na Windows 11. Prawdziwa wiadomość dotarła do Docka, została odczytana, poruszyła wskaźnik źródła przeglądarkowego i trafiła do nagrania. Kokoro na CPU zaczynało zauważalnie później.","Text-to-Speech Service Provider":"Dostawca usługi syntezy mowy","Text-to-speech incoming messages":"Czytaj przychodzące wiadomości","The English samples read:":"Próbki angielskie czytają:","The default model is":"Domyślny model to","The most natural free voices; English, Spanish, Brazilian Portuguese.":"Najbardziej naturalne bezpłatne głosy; angielski, hiszpański, portugalski brazylijski.","The token changes each time the bridge restarts.":"Token zmienia się przy każdym restarcie mostka.","The voice list depends on your browser or app and the voices installed. There's no fixed SSN list. This fresh profile showed an empty language list.":"Lista głosów zależy od przeglądarki lub aplikacji i zainstalowanych głosów. Nie ma stałej listy SSN. Ten nowy profil pokazał pustą listę języków.","This reuses the OpenAI settings, so the heading still says OpenAI. Enter your server's address and a voice and model it supports. Whether you need a key depends on your server. See the":"Używa ustawień OpenAI, więc nagłówek nadal brzmi OpenAI. Wpisz adres serwera oraz obsługiwany głos i model. Potrzeba klucza zależy od serwera. Zobacz","To keep it the same, set":"Aby pozostał taki sam, ustaw","Try Kokoro if you like its sound better. Free voices run on your computer. Cloud voices need an account and API key, and your chat text is sent to that company.":"Wypróbuj Kokoro, jeśli bardziej podoba Ci się jego brzmienie. Bezpłatne głosy działają na Twoim komputerze. Chmurowe wymagają konta i klucza API, a tekst czatu trafia do tej firmy.","Try this":"Spróbuj tego","Turn it on for Kitten":"Włącz dla Kitten","Turn it on for Kokoro":"Włącz dla Kokoro","Turn on":"Włącz","US English, female. Light and quick.":"Angielski amerykański, kobiecy. Lekki i szybki.","Under":"W sekcji","Under Kokoro or Kitten, open":"W sekcji Kokoro lub Kitten otwórz","Use Spanish or Portuguese voices in a link":"Użyj hiszpańskich lub portugalskich głosów w linku","Very light, many languages, starts fast.":"Bardzo lekki, wiele języków, szybki start.","Voice 2 (Female):":"Głos 2 (żeński) —","Voice 2 (Male):":"Głos 2 (męski) —","Voice 3 (Female):":"Głos 3 (żeński) —","Voice 3 (Male):":"Głos 3 (męski) —","Voice 4 (Female):":"Głos 4 (żeński) —","Voice 4 (Male):":"Głos 4 (męski) —","Voice 4, female. Small English model.":"Głos 4, żeński. Mały model angielski.","Voice 5 (Female):":"Głos 5 (żeński) —","Voice 5 (Male):":"Głos 5 (męski) —","Voice ID":"Identyfikator głosu","Voice ID with speed, language and model.":"ID głosu z szybkością, językiem i modelem.","Voice examples and requirements":"Przykłady głosów i wymagania","Voice names and link values":"Nazwy głosów i wartości linku","Voice names and supported controls":"Nazwy głosów i obsługiwane ustawienia","Voice styles and written delivery instructions.":"Style głosów i pisemne instrukcje sposobu mówienia.","Voices already on your browser or PC.":"Głosy już dostępne w przeglądarce lub komputerze.","Voices depend on your account.":"Głosy zależą od konta.","Want to hear it yourself?":"Chcesz słyszeć dźwięk u siebie?","Welcome to the stream! Thanks for joining us. Which game should we play next?":"Witaj na transmisji! Dzięki za dołączenie. W jaką grę zagramy następnie?","With the bridge, add":"Z mostem dodaj","Works in Chrome or Edge, not in OBS":"Działa w Chrome lub Edge, nie w OBS","Works in the chat dock, featured overlay, TTS page and Flow Actions.":"Działa w Docku czatu, nakładce wyróżnionych wiadomości, stronie TTS i Flow Actions.","Yes, if SSN gets the chat as text. YouTube, Twitch, TikTok and the rest all work the same way. The platform doesn't need its own TTS.":"Tak, jeśli SSN odbiera czat jako tekst. YouTube, Twitch, TikTok i pozostałe działają tak samo. Platforma nie potrzebuje własnego TTS.","Your hardware or hosting":"Twój sprzęt lub hosting","Your own voice server.":"Twój własny serwer głosowy.","and paste the link you copied.":"i wklej skopiowany link.","as the TTS provider.":"jako dostawcę TTS.","beside":"obok","copy link":"kopiuj link","eSpeak":"eSpeak","eSpeak voice sample":"Próbka głosu eSpeak","environment variable to your Fish API key.":"na swój klucz API Fish w zmiennej środowiskowej.","field.":".","first.":"w pierwszej kolejności.","from":"z","if the bridge holds your key. Event Flow's":"jeśli mostek przechowuje klucz. Opcja Event Flow","in the desktop app.":"w aplikacji komputerowej.","local bridge":"lokalny mostek","local server guide":"poradnik serwera lokalnego","local server problems":"problemy lokalnego serwera","model: Nano (smallest), Micro or Mini.":"model: Nano (najmniejszy), Micro lub Mini.","or":"lub","to":"na","to a long random secret. Keep links with a token or key private.":"na długi losowy sekret. Zachowaj linki z tokenem lub kluczem prywatnie.","to find a voice ID your account can use.":"aby znaleźć ID głosu dostępnego na koncie.","to hear it. The model loads on the page that speaks. Voices: US and UK English, Spanish, Brazilian Portuguese. Too slow? Try Piper.":"aby posłuchać. Model ładuje się na stronie, która mówi. Głosy: angielski amerykański i brytyjski, hiszpański, portugalski brazylijski. Za wolno? Wypróbuj Piper.","uses a supported GPU if there is one, otherwise the CPU. Automatic quality picks FP16 on compatible GPUs, full precision on other supported GPUs, and the compact model on CPU. If you force GPU and none is available, you'll get an error.":"używa obsługiwanego GPU, jeśli jest dostępne, w przeciwnym razie CPU. Automatyczna jakość wybiera FP16 na zgodnych GPU, pełną precyzję na innych obsługiwanych GPU i kompaktowy model na CPU. Wymuszenie GPU, gdy go nie ma, powoduje błąd.","voice override accepts a Fish voice ID when the receiving page uses Fish Audio.":"nadpisania głosu przyjmuje ID głosu Fish, gdy odbierająca strona używa Fish Audio."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tts-setup-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Nawigacja główna"><a href="../index.html">Strona główna</a><a href="features.html">Funkcje</a><a href="inspiration.html" class="site-priority-inspiration">Inspiracje</a><a href="download.html">Pobierz</a><a href="guides.html">Poradniki</a><a href="commands.html">Polecenia i API</a><a href="supported-sites.html">Obsługiwane witryny</a><a href="overlay-gallery.html" class="site-priority-gallery">Galeria nakładek</a><a href="services.html" class="site-priority-hire">Zleć pracę</a><a href="support.html">Pomoc</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Polski"><span aria-hidden="true">🌐 </span><span lang="pl">Polski</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tts-setup-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tts-setup-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tts-setup-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tts-setup-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tts-setup-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tts-setup-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tts-setup-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tts-setup-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tts-setup-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tts-setup-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="tts-setup-guide.html" lang="pl" hreflang="pl" aria-current="true">Polski</a><a class="site-language-link" href="../../ko/docs/tts-setup-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tts-setup-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tts-setup-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tts-setup-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tts-setup-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tts-setup-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Zmień motyw"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otwórz menu nawigacji" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Przewodnik konfiguracji TTS</h1>
+            <p>Odczytuj czat na głos podczas transmisji. Bezpłatnie, bez konta i klucza API.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Na tej stronie">
+                <a href="#setup">Skonfiguruj</a>
+                <a href="#obs-voices">Odtwórz w OBS</a>
+                <a href="#voice-samples">Posłuchaj głosów</a>
+                <a href="#voice-chooser">Wybierz dostawcę</a>
+                <a href="#problems">Rozwiązywanie problemów</a>
+                <a href="#provider-settings">Ustawienia dostawcy</a>
+                <a href="#more">Dalsze kroki</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="setup">Skonfiguruj w 5 krokach</h2>
+                <p><strong>Czat nie jest jeszcze połączony?</strong> <a href="getting-started.html">Zacznij tutaj</a> w pierwszej kolejności.</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>Otwórz <strong>panel rozszerzenia SSN</strong> lub <strong>„Źródła i ustawienia”</strong> w aplikacji komputerowej.</li>
+                        <li>W sekcji <strong>Główna nakładka czatu i dok sterowania</strong>, rozwiń <strong>Wiadomość – zamiana tekstu na mowę</strong>.</li>
+                        <li>Włącz <strong>Czytaj przychodzące wiadomości</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <a href="../../docs/images/guides/tts-enable-dock-popup.png"><img src="../../docs/images/guides/tts-enable-dock-popup.png" alt="Rzeczywisty panel: Message — Text to Speech, z włączonym Enable TTS in dock" class="guide-image"></a>
+                        <figcaption>Niebieski przełącznik = odczytywanie czatu jest włączone.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps" start="4">
+                        <li>Przewiń do <strong>Dostawca usługi syntezy mowy</strong>. Wybierz <strong>Piper TTS</strong>, a następnie głos.</li>
+                        <li>Kliknij <strong>kopiuj link</strong> obok <strong>Główna nakładka czatu i dok sterowania</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <a href="../../docs/images/guides/tts-select-provider-popup.png"><img src="../../docs/images/guides/tts-select-provider-popup.png" alt="Rzeczywisty panel: wybrany Piper TTS z głosem English US Female HFC Medium" class="guide-image" loading="lazy"></a>
+                        <figcaption>Piper jest bezpłatny. Bez konta i klucza API.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>Pierwszy raz?</strong> Piper pobiera głos przy pierwszym użyciu. Poczekaj chwilę.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="obs-voices">Odtwórz w OBS</h2>
+                <ol class="guide-steps">
+                    <li>Dodaj <strong>Źródło przeglądarki</strong> i wklej skopiowany link.</li>
+                    <li>We właściwościach włącz <strong>Steruj dźwiękiem przez OBS (Control audio via OBS)</strong>.</li>
+                    <li>Wyślij wiadomość na czacie. Wskaźnik audio źródła powinien się poruszyć.</li>
+                    <li>Zrób krótkie nagranie testowe i odtwórz je.</li>
+                </ol>
+                <div class="guide-note"><strong>Chcesz słyszeć dźwięk u siebie?</strong> W OBS <strong>Zaawansowane właściwości dźwięku (Advanced Audio Properties)</strong>, ustaw to źródło na <strong>Monitorowanie i wyjście</strong>.</div>
+                <div class="warning-note"><strong>Słyszysz każdą wiadomość dwa razy?</strong> Tylko jedna strona powinna czytać czat. Wyłącz TTS wszędzie indziej.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-samples">Posłuchaj bezpłatnych głosów</h2>
+                <p>Wszystkie cztery są bezpłatne i działają na Twoim komputerze. Naciśnij odtwarzanie, aby porównać.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper</h3><p>Angielski amerykański, kobiecy. Lekki i szybki.<br><code>en_US-hfc_female-medium</code></p><audio controls preload="none" aria-label="Próbka głosu Piper"><source src="../../docs/audio/tts/piper-hfc.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-hfc.mp3">Pobierz próbkę Piper</a></audio><p><a href="#settings-piper">Ustawienia i głosy</a></p></div>
+<div class="tts-preview"><h3>Kokoro</h3><p>Bella, angielski amerykański, kobiecy. Najbardziej naturalny, ale wolniejszy na CPU.<br><code>af_bella</code></p><audio controls preload="none" aria-label="Próbka głosu Kokoro"><source src="../../docs/audio/tts/kokoro-bella.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-bella.mp3">Pobierz próbkę Kokoro</a></audio><p><a href="#settings-kokoro">Ustawienia i głosy</a></p></div>
+<div class="tts-preview"><h3>Kitten</h3><p>Głos 4, żeński. Mały model angielski.<br><code>expr-voice-4-f</code></p><audio controls preload="none" aria-label="Próbka głosu Kitten"><source src="../../docs/audio/tts/kitten-4f.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kitten-4f.mp3">Pobierz próbkę Kitten</a></audio><p><a href="#settings-kitten">Ustawienia i głosy</a></p></div>
+<div class="tts-preview"><h3>eSpeak</h3><p>Angielski. Robotyczny, ale mały i szybki.<br><code>en</code></p><audio controls preload="none" aria-label="Próbka głosu eSpeak"><source src="../../docs/audio/tts/espeak-en.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/espeak-en.mp3">Pobierz próbkę eSpeak</a></audio><p><a href="#settings-espeak">Ustawienia i głosy</a></p></div>
+                </div>
+                <details class="guide-extra"><summary>Próbki hiszpańskie i portugalskie</summary>
+                <p>W SSN wybierz język nad listą głosów i naciśnij <strong>Test</strong>. Piper ma głosy dla Hiszpanii, Meksyku, Brazylii i Portugalii. Kokoro ma trzy hiszpańskie i trzy brazylijskie portugalskie głosy.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper — hiszpański (Hiszpania)</h3><p>DaveFX</p><audio controls preload="none" aria-label="Próbka Piper — hiszpański (Hiszpania)"><source src="../../docs/audio/tts/piper-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-spanish.mp3">Pobierz próbkę</a></audio></div>
+<div class="tts-preview"><h3>Kokoro — hiszpański</h3><p>Dora</p><audio controls preload="none" aria-label="Próbka Kokoro — hiszpański"><source src="../../docs/audio/tts/kokoro-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-spanish.mp3">Pobierz próbkę</a></audio></div>
+<div class="tts-preview"><h3>Piper — portugalski (Brazylia)</h3><p>Faber</p><audio controls preload="none" aria-label="Próbka Piper — portugalski (Brazylia)"><source src="../../docs/audio/tts/piper-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-portuguese.mp3">Pobierz próbkę</a></audio></div>
+<div class="tts-preview"><h3>Kokoro — portugalski (Brazylia)</h3><p>Dora</p><audio controls preload="none" aria-label="Próbka Kokoro — portugalski (Brazylia)"><source src="../../docs/audio/tts/kokoro-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-portuguese.mp3">Pobierz próbkę</a></audio></div>
+                </div>
+                <p>Piper jest lżejszym wyborem. Jeśli Kokoro nie nadąża za czatem, przełącz na Piper.</p>
+                </details>
+                <details class="guide-extra"><summary>Jak powstały te próbki</summary>
+                <p>Próbki angielskie czytają: <em>Witaj na transmisji! Dzięki za dołączenie. W jaką grę zagramy następnie?</em> Odczytywanie nazw było wyłączone. Klipy pomijają czas ładowania.</p>
+                <p>Testowano 7 września 2026 r. w OBS 32.2.2 na Windows 11. Prawdziwa wiadomość dotarła do Docka, została odczytana, poruszyła wskaźnik źródła przeglądarkowego i trafiła do nagrania. Kokoro na CPU zaczynało zauważalnie później.</p>
+                <p>Na tym komputerze systemowy TTS pokazywał pięć głosów, ale nagranie OBS było bez dźwięku. Twój komputer może działać inaczej, więc zawsze testuj własny link. Głosów chmurowych nie testowano (brak płatnych kont).</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-chooser">Wybierz dostawcę</h2>
+                <p><strong>Zacznij od Piper.</strong> Wypróbuj Kokoro, jeśli bardziej podoba Ci się jego brzmienie. Bezpłatne głosy działają na Twoim komputerze. Chmurowe wymagają konta i klucza API, a tekst czatu trafia do tej firmy.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Dostawca</th><th>Dobre do</th><th>Pamiętaj</th><th>Koszt</th></tr></thead><tbody>
+<tr><td data-label="Dostawca"><a href="#settings-piper">Piper</a></td><td data-label="Dobre do">Naturalne głosy; angielski, hiszpański, portugalski.</td><td data-label="Pamiętaj">Jakość zależy od głosu. HFC medium ma około 63 MB.</td><td data-label="Koszt">Bezpłatne, bez klucza</td></tr>
+<tr><td data-label="Dostawca"><a href="#settings-kokoro">Kokoro</a></td><td data-label="Dobre do">Najbardziej naturalne bezpłatne głosy; angielski, hiszpański, portugalski brazylijski.</td><td data-label="Pamiętaj">Większe obciążenie CPU. Pierwsza mowa może być powolna. Szybciej na obsługiwanym GPU.</td><td data-label="Koszt">Bezpłatne, bez klucza</td></tr>
+<tr><td data-label="Dostawca"><a href="#settings-kitten">Kitten</a></td><td data-label="Dobre do">Mały model angielski, osiem głosów.</td><td data-label="Pamiętaj">Tylko angielski. Dołączony model ma około 24 MB.</td><td data-label="Koszt">Bezpłatne, bez klucza</td></tr>
+<tr><td data-label="Dostawca"><a href="#settings-espeak">eSpeak</a></td><td data-label="Dobre do">Bardzo lekki, wiele języków, szybki start.</td><td data-label="Pamiętaj">Celowo brzmi robotycznie.</td><td data-label="Koszt">Bezpłatne, bez klucza</td></tr>
+<tr><td data-label="Dostawca"><a href="#settings-system">Systemowy TTS</a></td><td data-label="Dobre do">Głosy już dostępne w przeglądarce lub komputerze.</td><td data-label="Pamiętaj">Często nieme w OBS. Niektóre głosy wymagają internetu.</td><td data-label="Koszt">Bezpłatne</td></tr>
+<tr><td data-label="Dostawca"><a href="#settings-elevenlabs">ElevenLabs</a></td><td data-label="Dobre do">Wybór głosów według ID; stabilność i styl.</td><td data-label="Pamiętaj">Limity konta i opóźnienie sieci.</td><td data-label="Koszt">Mogą obowiązywać opłaty API</td></tr>
+<tr><td data-label="Dostawca"><a href="#settings-google">Google Cloud</a></td><td data-label="Dobre do">Nazwane głosy; język, tempo i wysokość.</td><td data-label="Pamiętaj">Nie każdy głos obsługuje każdą opcję. API Cloud TTS musi być włączone.</td><td data-label="Koszt">Obowiązują rozliczenia i limity</td></tr>
+<tr><td data-label="Dostawca"><a href="#settings-gemini">Gemini</a></td><td data-label="Dobre do">Style głosów i pisemne instrukcje sposobu mówienia.</td><td data-label="Pamiętaj">Modele podglądowe i limity mogą się zmieniać.</td><td data-label="Koszt">Sprawdź limity Gemini</td></tr>
+<tr><td data-label="Dostawca"><a href="#settings-fish">Fish Audio</a></td><td data-label="Dobre do">Bezpłatny model z własnym kluczem; ID głosów.</td><td data-label="Pamiętaj">OBS wymaga lokalnego mostka SSN.</td><td data-label="Koszt">Bezpłatny poziom ustalany przez Fish Audio</td></tr>
+<tr><td data-label="Dostawca"><a href="#settings-speechify">Speechify</a></td><td data-label="Dobre do">ID głosu z szybkością, językiem i modelem.</td><td data-label="Pamiętaj">Głosy zależą od konta.</td><td data-label="Koszt">Obowiązują warunki API</td></tr>
+<tr><td data-label="Dostawca"><a href="#settings-openai">OpenAI</a></td><td data-label="Dobre do">Nazwane głosy, ustawienia modelu i formatu.</td><td data-label="Pamiętaj">Subskrypcja ChatGPT nie obejmuje środków API.</td><td data-label="Koszt">Rozliczenia API</td></tr>
+<tr><td data-label="Dostawca"><a href="#settings-customtts">Własny / lokalny</a></td><td data-label="Dobre do">Twój własny serwer głosowy.</td><td data-label="Pamiętaj">Najwięcej konfiguracji. Zobacz <a href="local-tts.html">poradnik serwera lokalnego</a>.</td><td data-label="Koszt">Twój sprzęt lub hosting</td></tr>
+</tbody></table>
+                <details class="guide-extra"><summary>Rozmiary pobierania i uwagi z testów OBS</summary>
+                <p>Rozmiary dotyczą tylko plików modeli, nie zużycia pamięci. Bezpłatne głosy działają na komputerze odtwarzającym Dock lub nakładkę. Pierwsze użycie jest wolniejsze. OBS ma własną pamięć pobrań, oddzielną od Chrome.</p>
+                <p>Piper, Kokoro, Kitten i eSpeak przeszły testy nagrania źródła przeglądarkowego OBS. Głosy chmurowe i własne też grają przez stronę, ale nie testowano ich z aktywnymi kontami. Systemowy TTS przetestuj osobno, nawet gdy pokazuje głosy.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">Rozwiązywanie problemów</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Problem</th><th>Spróbuj tego</th></tr></thead>
+                    <tbody>
+                        <tr id="chat-platforms"><td data-label="Problem">Czy moja platforma czatu obsługuje TTS?</td><td data-label="Spróbuj tego">Tak, jeśli SSN odbiera czat jako tekst. YouTube, Twitch, TikTok i pozostałe działają tak samo. Platforma nie potrzebuje własnego TTS.</td></tr>
+                        <tr><td data-label="Problem">Brak mowy</td><td data-label="Spróbuj tego">Sprawdź, czy Dock pokazuje czat. Potem sprawdź przełącznik TTS, dostawcę i filtry. Użyj świeżo skopiowanego linku. Poczekaj na pierwsze pobranie głosu.</td></tr>
+                        <tr><td data-label="Problem">Działa w Chrome lub Edge, nie w OBS</td><td data-label="Spróbuj tego">OBS ma własną przeglądarkę i listę głosów. Systemowy TTS często tam nie działa. Przełącz na Piper, Kokoro, Kitten lub eSpeak. Wirtualny kabel audio nie naprawi braku mowy.</td></tr>
+                        <tr><td data-label="Problem">Wskaźnik się porusza, ale nagranie jest nieme</td><td data-label="Spróbuj tego">Sprawdź wyciszenie i ścieżki nagrania w OBS. Nie przechwytuj ponownie wyjścia odsłuchowego. Zobacz <a href="https://obsproject.com/kb/audio-mixer-guide">Poradnik dźwięku OBS</a>.</td></tr>
+                        <tr><td data-label="Problem">Mowa nie nadąża za czatem</td><td data-label="Spróbuj tego">Przełącz z Kokoro na Piper lub wypróbuj eSpeak.</td></tr>
+                        <tr><td data-label="Problem">Każda wiadomość jest czytana dwa razy</td><td data-label="Spróbuj tego">Mówi więcej niż jedna strona. Pozostaw TTS włączone tylko w jednym miejscu.</td></tr>
+                        <tr><td data-label="Problem">Chcę, aby mówił dok OBS lub Featured Chat</td><td data-label="Spróbuj tego">Niestandardowy dok przeglądarki OBS jest panelem sterowania, nie źródłem sceny. Dla Featured Chat włącz TTS w opcjach tej nakładki i skopiuj jej link.</td></tr>
+                    </tbody>
+                </table>
+                <p>Więcej rozwiązań: <a href="tts.html#troubleshooting">Dokumentacja TTS</a> &middot; <a href="local-tts.html#troubleshooting">problemy lokalnego serwera</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="provider-settings">Ustawienia dostawcy</h2>
+                <p>Prawdziwe zrzuty z aplikacji komputerowej ze świeżym profilem (pola kluczy puste). Otwórz dostawcę, aby zobaczyć ustawienia. Kliknij zrzut, aby powiększyć.</p>
+<details class="guide-extra" id="settings-system"><summary>Systemowy TTS</summary><p>Lista głosów zależy od przeglądarki lub aplikacji i zainstalowanych głosów. Nie ma stałej listy SSN. Ten nowy profil pokazał pustą listę języków.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-system.png"><img src="../../docs/images/guides/tts-settings-system.png" alt="Rzeczywiste ustawienia dostawcy System TTS w SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-kokoro"><summary>Kokoro</summary><p>Wybierz głos. Znajdź go filtrem języka i <strong>Test</strong> aby posłuchać. Model ładuje się na stronie, która mówi. Głosy: angielski amerykański i brytyjski, hiszpański, portugalski brazylijski. Za wolno? Wypróbuj Piper.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kokoro.png"><img src="../../docs/images/guides/tts-settings-kokoro.png" alt="Rzeczywiste ustawienia dostawcy Kokoro w SSN" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Nazwy głosów i wartości linku</summary><ul class="guide-list">
+<li>Heart (amerykański żeński) — <code>af_heart</code></li>
+<li>Alloy (amerykański żeński) — <code>af_alloy</code></li>
+<li>Aoede (amerykański żeński) — <code>af_aoede</code></li>
+<li>Bella (amerykański żeński) — <code>af_bella</code></li>
+<li>Jessica (amerykański żeński) — <code>af_jessica</code></li>
+<li>Kore (amerykański żeński) — <code>af_kore</code></li>
+<li>Nicole (amerykański żeński) — <code>af_nicole</code></li>
+<li>Nova (amerykański żeński) — <code>af_nova</code></li>
+<li>River (amerykański żeński) — <code>af_river</code></li>
+<li>Sarah (amerykański żeński) — <code>af_sarah</code></li>
+<li>Sky (amerykański żeński) — <code>af_sky</code></li>
+<li>Adam (amerykański męski) — <code>am_adam</code></li>
+<li>Echo (amerykański męski) — <code>am_echo</code></li>
+<li>Eric (amerykański męski) — <code>am_eric</code></li>
+<li>Fenrir (amerykański męski) — <code>am_fenrir</code></li>
+<li>Liam (amerykański męski) — <code>am_liam</code></li>
+<li>Michael (amerykański męski) — <code>am_michael</code></li>
+<li>Onyx (amerykański męski) — <code>am_onyx</code></li>
+<li>Puck (amerykański męski) — <code>am_puck</code></li>
+<li>Santa (amerykański męski) — <code>am_santa</code></li>
+<li>Emma (brytyjski żeński) — <code>bf_emma</code></li>
+<li>Isabella (brytyjski żeński) — <code>bf_isabella</code></li>
+<li>George (brytyjski męski) — <code>bm_george</code></li>
+<li>Lewis (brytyjski męski) — <code>bm_lewis</code></li>
+<li>Alice (brytyjski żeński) — <code>bf_alice</code></li>
+<li>Lily (brytyjski żeński) — <code>bf_lily</code></li>
+<li>Daniel (brytyjski męski) — <code>bm_daniel</code></li>
+<li>Fable (brytyjski męski) — <code>bm_fable</code></li>
+<li>Dora (hiszpański): <code>ef_dora</code></li>
+<li>Alex (hiszpański): <code>em_alex</code></li>
+<li>Santa (hiszpański): <code>em_santa</code></li>
+<li>Dora (portugalski brazylijski): <code>pf_dora</code></li>
+<li>Alex (portugalski brazylijski): <code>pm_alex</code></li>
+<li>Santa (portugalski brazylijski): <code>pm_santa</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-kitten"><summary>Kitten</summary><p>Osiem angielskich głosów: męskie i żeńskie wersje głosów 2, 3, 4 i 5. Próbka używa głosu 4 (żeńskiego).</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kitten.png"><img src="../../docs/images/guides/tts-settings-kitten.png" alt="Rzeczywiste ustawienia dostawcy Kitten w SSN" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Nazwy głosów i wartości linku</summary><ul class="guide-list">
+<li>Głos 2 (męski) — <code>expr-voice-2-m</code></li>
+<li>Głos 2 (żeński) — <code>expr-voice-2-f</code></li>
+<li>Głos 3 (męski) — <code>expr-voice-3-m</code></li>
+<li>Głos 3 (żeński) — <code>expr-voice-3-f</code></li>
+<li>Głos 4 (męski) — <code>expr-voice-4-m</code></li>
+<li>Głos 4 (żeński) — <code>expr-voice-4-f</code></li>
+<li>Głos 5 (męski) — <code>expr-voice-5-m</code></li>
+<li>Głos 5 (żeński) — <code>expr-voice-5-f</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-piper"><summary>Piper</summary><p>Wybierz głos pasujący do języka. Sama zmiana języka nie zmienia głosu. Próbka używa HFC medium.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-piper.png"><img src="../../docs/images/guides/tts-settings-piper.png" alt="Rzeczywiste ustawienia dostawcy Piper w SSN" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Nazwy głosów i wartości linku</summary><ul class="guide-list">
+<li>Angielski USA, żeński (HFC) — średnia jakość — <code>en_US-hfc_female-medium</code></li>
+<li>Hiszpański z Hiszpanii (DaveFX) — średnia jakość — <code>es_ES-davefx-medium</code></li>
+<li>Hiszpański meksykański (Ald) — średnia jakość — <code>es_MX-ald-medium</code></li>
+<li>Portugalski brazylijski (Faber) — średnia jakość — <code>pt_BR-faber-medium</code></li>
+<li>Portugalski brazylijski (Edresson) — niska jakość — <code>pt_BR-edresson-low</code></li>
+<li>Portugalski z Portugalii (Tugao) — średnia jakość — <code>pt_PT-tug&atilde;o-medium</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-espeak"><summary>eSpeak</summary><p>Wybierz głos języka. Możesz zmienić tempo mowy. Celowo brzmi robotycznie.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-espeak.png"><img src="../../docs/images/guides/tts-settings-espeak.png" alt="Rzeczywiste ustawienia dostawcy eSpeak w SSN" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Nazwy głosów i wartości linku</summary><ul class="guide-list">
+<li>Angielski — <code>en</code></li>
+<li>Hiszpański — <code>es</code></li>
+<li>Portugalski brazylijski — <code>pt-br</code></li>
+<li>Portugalski z Portugalii — <code>pt-pt</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-elevenlabs"><summary>ElevenLabs</summary><p>Wpisz klucz API. Potem kliknij <strong>Pokaż moje dostępne głosy</strong> aby znaleźć ID głosu dostępnego na koncie. <a href="https://elevenlabs.io/docs/api-reference/text-to-speech/convert">Dokumentacja ElevenLabs</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-elevenlabs.png"><img src="../../docs/images/guides/tts-settings-elevenlabs.png" alt="Rzeczywiste ustawienia dostawcy ElevenLabs w SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-google"><summary>Google Cloud</summary><p>Wpisz klucz API Google Cloud TTS, dokładną nazwę głosu i pasujący język. <a href="https://cloud.google.com/text-to-speech/docs/voices">Nazwy głosów i obsługiwane ustawienia</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-google.png"><img src="../../docs/images/guides/tts-settings-google.png" alt="Rzeczywiste ustawienia dostawcy Google Cloud w SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-gemini"><summary>Gemini</summary><p>Wybierz model TTS i głos. Instrukcje stylu zmieniają sposób czytania. To używa API Gemini, nie Google Cloud TTS. <a href="https://ai.google.dev/gemini-api/docs/speech-generation">Przykłady głosów i wymagania</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-gemini.png"><img src="../../docs/images/guides/tts-settings-gemini.png" alt="Rzeczywiste ustawienia dostawcy Gemini w SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-fish"><summary>Fish Audio</summary>
+<p>Działa w Docku czatu, nakładce wyróżnionych wiadomości, stronie TTS i Flow Actions.</p>
+<ol class="guide-steps">
+<li>Wybierz <strong>Fish Audio</strong> jako dostawcę TTS.</li>
+<li>Wklej swój <a href="https://fish.audio/app/api-keys">Klucz API Fish Audio</a>.</li>
+<li>Opcjonalnie: wklej <strong>Identyfikator głosu</strong> z <a href="https://fish.audio/">Fish Audio</a>. Skopiuj ID modelu głosu, nie nazwę ani link strony. Dla głosu domyślnego zostaw puste.</li>
+<li>Naciśnij <strong>Przetestuj TTS</strong>.</li>
+</ol>
+<p>Domyślny model to <code>s2.1-pro-free</code>. Fish Audio ustala ofertę bezpłatną i zasady uczciwego użycia. Płatne modele wymagają środków na koncie. SSN nigdy nie przełącza na płatny model po błędzie bezpłatnego żądania. Szybkość wynosi od 0,5 do 2. Fish Audio wykrywa język. Tekst czatu jest wysyłany do Fish Audio.</p>
+<h4>Dla OBS: uruchom lokalny mostek</h4>
+<p>Fish Audio blokuje bezpośrednie żądania ze stron internetowych, więc OBS potrzebuje narzędzia SSN: <a href="../../local-tts-bridge/README.md#fish-audio-for-obs">lokalny mostek</a> (wymaga Node.js). Uruchom na komputerze z OBS.</p>
+<ol class="guide-steps">
+<li>Ustaw <code>SSN_TTS_TARGET_BEARER</code> na swój klucz API Fish w zmiennej środowiskowej.</li>
+<li>W folderze SSN uruchom <code>node scripts/local-tts-bridge.cjs --mode fish</code>. Pozostaw uruchomione.</li>
+<li>W panelu Fish Audio ustaw <strong>URL mostka</strong> na <code>http://127.0.0.1:8124/v1/audio/speech</code>.</li>
+<li>Wklej token mostka pokazany w terminalu do <strong>Klucz API</strong> .</li>
+<li>Przetestuj głos, potem dodaj link nakładki do OBS. Włącz <strong>Steruj dźwiękiem przez OBS (Control audio via OBS)</strong>.</li>
+</ol>
+<div class="warning-note"><strong>Token zmienia się przy każdym restarcie mostka.</strong> Aby pozostał taki sam, ustaw <code>SSN_TTS_BRIDGE_TOKEN</code> na długi losowy sekret. Zachowaj linki z tokenem lub kluczem prywatnie.</div>
+<details class="guide-extra"><summary>Ustawienia linku Fish Audio</summary>
+<pre>&amp;ttsprovider=fish&amp;fishkey=YOUR_KEY&amp;voicefish=VOICE_ID&amp;fishmodel=s2.1-pro-free&amp;fishspeed=1</pre>
+<p>Z mostem dodaj <code>&amp;fishendpoint=http%3A%2F%2F127.0.0.1%3A8124%2Fv1%2Faudio%2Fspeech</code>. Pomiń <code>fishkey</code> jeśli mostek przechowuje klucz. Opcja Event Flow <strong>Odczytaj tekst (Speak Text)</strong> nadpisania głosu przyjmuje ID głosu Fish, gdy odbierająca strona używa Fish Audio.</p>
+<p><a href="https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech">Dokumentacja API Fish Audio</a> &middot; <a href="https://fish.audio/blog/s2-1-pro-free-api/">Ogłoszenie bezpłatnego modelu i warunki</a></p>
+</details>
+</details>
+<details class="guide-extra" id="settings-speechify"><summary>Speechify</summary><p>Wpisz klucz API i identyfikator głosu ze swojego konta API Speechify. <a href="speechify-setup-guide.html"><strong>Poradnik Speechify krok po kroku</strong></a> &middot; <a href="https://docs.speechify.ai/docs/get-started/overview">Konfiguracja Speechify</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-speechify.png"><img src="../../docs/images/guides/tts-settings-speechify.png" alt="Rzeczywiste ustawienia dostawcy Speechify w SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-openai"><summary>OpenAI</summary><p>Wybierz głos i model oraz wpisz klucz API. Subskrypcja ChatGPT nie daje środków API. Zachowaj domyślny adres usługi.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-openai.png"><img src="../../docs/images/guides/tts-settings-openai.png" alt="Rzeczywiste ustawienia dostawcy OpenAI w SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-customtts"><summary>Własny / lokalny TTS</summary><p>Używa ustawień OpenAI, więc nagłówek nadal brzmi OpenAI. Wpisz adres serwera oraz obsługiwany głos i model. Potrzeba klucza zależy od serwera. Zobacz <a href="local-tts.html">poradnik serwera lokalnego</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-customtts.png"><img src="../../docs/images/guides/tts-settings-customtts.png" alt="Rzeczywiste ustawienia dostawcy Custom / Local TTS w SSN" class="guide-image" loading="lazy"></a></figure>
+</details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="background-speech">Szybsze Kokoro i Kitten</h2>
+                <p>W sekcji Kokoro lub Kitten otwórz <strong>Generowanie i odtwarzanie</strong>. Te opcje generują mowę w tle, by strona działała płynnie.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Chcę…</th><th>Zrób to</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Chcę">Włącz dla Kokoro</td><td data-label="Zrób to">Ustaw <strong>Przetwarzanie</strong> na <strong>Generowanie w tle</strong>.</td></tr>
+                        <tr><td data-label="Chcę">Włącz dla Kitten</td><td data-label="Zrób to">Wybierz <strong>Kitten 0.8</strong> model: Nano (najmniejszy), Micro lub Mini.</td></tr>
+                        <tr><td data-label="Chcę">Usłysz mowę szybciej</td><td data-label="Zrób to"><strong>Zacznij, gdy mowa napływa</strong>. Odtwarza każdą część, gdy jest gotowa. Wolne komputery mogą robić przerwy między częściami.</td></tr>
+                        <tr><td data-label="Chcę">Unikaj przerw</td><td data-label="Zrób to"><strong>Odtwórz całą wiadomość</strong>. Najpierw czeka na całą wiadomość.</td></tr>
+                        <tr><td data-label="Chcę">Napraw problemy GPU (Kokoro)</td><td data-label="Zrób to">Ustaw <strong>Procesor w tle</strong> na <strong>CPU</strong>.</td></tr>
+                        <tr><td data-label="Chcę">Najlepsza jakość Kokoro</td><td data-label="Zrób to"><strong>Pełna jakość</strong>. Większe pobieranie, więcej pamięci.</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra"><summary>Więcej szczegółów i ustawienia linku</summary>
+                <p><strong>Automatyczne</strong> używa obsługiwanego GPU, jeśli jest dostępne, w przeciwnym razie CPU. Automatyczna jakość wybiera FP16 na zgodnych GPU, pełną precyzję na innych obsługiwanych GPU i kompaktowy model na CPU. Wymuszenie GPU, gdy go nie ma, powoduje błąd.</p>
+                <p>Kitten 0.8 działa na CPU, tylko po angielsku. Każdy model pobiera się przy pierwszym użyciu. Każda przeglądarka i OBS mają własną kopię. NeuroSync w obu przypadkach otrzymuje cały plik audio. Stare linki działają jak wcześniej, dopóki nie zmienisz tych opcji.</p>
+                <p>Kokoro: <code>&amp;kokororuntime=worker</code>, opcjonalne <code>&amp;kokoroplayback=stream</code>, <code>&amp;kokorodevice=wasm</code> lub <code>webgpu</code>, <code>&amp;kokorodtype=q8</code>, <code>fp16</code> lub <code>fp32</code>. Strumieniowanie lub FP32 automatycznie włącza generowanie w tle.</p>
+                <p>Kitten: <code>&amp;kittenmodel=nano</code> (lub <code>micro</code>, <code>mini</code>), opcjonalnie <code>&amp;kittenplayback=stream</code>.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="more">Dalsze kroki</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Chcę…</th><th>Przejdź tutaj</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Chcę">Edytuj link TTS ręcznie lub zobacz wszystkie opcje</td><td data-label="Przejdź tutaj"><a href="tts.html">Dokumentacja TTS</a></td></tr>
+                        <tr><td data-label="Chcę">Użyj hiszpańskich lub portugalskich głosów w linku</td><td data-label="Przejdź tutaj"><a href="tts.html#premium-options">Dokumentacja TTS: opcje dostawców</a></td></tr>
+                        <tr id="local-server"><td data-label="Chcę">Uruchom własny serwer głosowy lub sklonuj głos</td><td data-label="Przejdź tutaj"><a href="local-tts.html">Poradnik lokalnej AI TTS</a></td></tr>
+                        <tr><td data-label="Chcę">Skonfiguruj Speechify</td><td data-label="Przejdź tutaj"><a href="speechify-setup-guide.html">Poradnik Speechify</a></td></tr>
+                    </tbody>
+                </table>
+                <p>Szybki link do wypróbowania: <code>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=piper</code></p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licencja GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function revealGuideSection() {
+            var target;
+            try { target = document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { return; }
+            if (!target) return;
+            for (var node = target; node; node = node.parentElement) {
+                if (node.tagName === "DETAILS") node.open = true;
+            }
+            target.scrollIntoView();
+        }
+        window.addEventListener("hashchange", revealGuideSection);
+        revealGuideSection();
+    </script>
+</body>
+</html>

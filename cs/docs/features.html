@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/cs/docs/features.html">
+    <meta property="og:title" content="Živý chat, překryvy OBS a automatizace – Social Stream Ninja">
+    <meta property="og:description" content="Prozkoumejte funkce Social Stream Ninja: společný živý chat, překryvy OBS, převod textu na řeč, AI spolumoderátory, chatové hry, moderování a automatizaci vysílání.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/cs/docs/features.html">
+    <meta name="twitter:title" content="Živý chat, překryvy OBS a automatizace – Social Stream Ninja">
+    <meta name="twitter:description" content="Prozkoumejte funkce Social Stream Ninja: společný živý chat, překryvy OBS, převod textu na řeč, AI spolumoderátory, chatové hry, moderování a automatizaci vysílání.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Živý chat, překryvy OBS a automatizace – Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/featured.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Prozkoumejte funkce Social Stream Ninja: společný živý chat, překryvy OBS, převod textu na řeč, AI spolumoderátory, chatové hry, moderování a automatizaci vysílání.">
+    <link rel="canonical" href="https://socialstream.ninja/cs/docs/features.html">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/features.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"$10-50/month subscription":"Předplatné $10–50/měsíc",", Stripe, Ko-Fi, Buy Me A Coffee)":", Stripe, Ko-Fi, Buy Me A Coffee)","1-5 platforms":"1–5 platforem","100+ platforms":"Více než 100 platforem","AI & LLM Integration":"Integrace AI a LLM","AI Co-Host":"AI spolumoderátor","AI Integration":"Integrace AI","API Integration":"Integrace API","API Keys Required":"Vyžadované klíče API","Active Discord community":"Aktivní komunita na Discordu","Advanced Streaming Tools":"Pokročilé nástroje pro vysílání","Advanced Tools":"Pokročilé nástroje","Alternative Streaming":"Alternativní vysílání","Amazon Chime":"Amazon Chime","Amazon Live":"Amazon Live","Animation options including fade and swipe effects":"Možnosti animací včetně prolínání a vysouvání","Auto or manual message selection":"Automatický nebo ruční výběr zpráv","Automated greetings and responses":"Automatické pozdravy a odpovědi","Automatic message relaying between platforms":"Automatické přeposílání zpráv mezi platformami","Bilibili.com":"Bilibili.com","Bilibili.tv":"Bilibili.tv","Bluesky":"Bluesky","Bot Commands":"Příkazy botů","Bot Commands & Auto-Response":"Příkazy bota a automatické odpovědi","Bring chat messages to life with text-to-speech capabilities, making your stream more engaging and accessible.":"Oživte zprávy chatu převodem textu na řeč a udělejte své vysílání poutavější a přístupnější.","Bring your chats together, put your audience on screen, and make each stream your own.":"Spojte své chaty, ukažte diváky na obrazovce a přizpůsobte každé vysílání svému stylu.","Built-in commands for common interactions":"Vestavěné příkazy pro běžné interakce","Built-in mini-games":"Vestavěné minihry","CSS styling for complete visual control":"Stylování CSS pro úplnou kontrolu nad vzhledem","Castyr":"Castyr","Chat history database with search":"Databáze historie chatu s vyhledáváním","Choose a voice cohost, chat bot, browser companion, or focused AI processing tools without locking the rest of your stream into one provider.":"Vyberte si hlasového spolumoderátora, chatovacího bota, pomocníka v prohlížeči nebo cílené nástroje zpracování AI, aniž byste zbytek vysílání vázali na jediného poskytovatele.","Chzzk.naver.com":"Chzzk.naver.com","Closed ecosystem":"Uzavřený ekosystém","Commands & API":"Příkazy a API","Community":"Komunita","Community Support":"Komunitní podpora","Compare every AI option →":"Porovnat všechny možnosti AI →","Competitors":"Konkurence","Connect with viewers across all your streaming platforms simultaneously. Social Stream Ninja consolidates chat messages from dozens of platforms into a single, easy-to-manage dashboard.":"Spojte se s diváky na všech svých vysílacích platformách současně. Social Stream Ninja slučuje zprávy chatu z desítek platforem do jednoho snadno ovladatelného panelu.","Consolidates your live social messaging streams and more. Free and open source.":"Spojuje vaše živé konverzace ze sociálních sítí a nabízí ještě víc. Zdarma a s otevřeným zdrojovým kódem.","Contribute":"Přispět k projektu","Cost":"Cena","Cozy.tv":"Cozy.tv","Create automated interactions with your audience through custom commands and responses.":"Vytvářejte automatické interakce s diváky pomocí vlastních příkazů a odpovědí.","Credits roll and tip jar displays":"Závěrečné titulky a zobrazení nádoby na spropitné","Crowdcast.io":"Crowdcast.io","Custom JavaScript support":"Podpora vlastního JavaScriptu","Custom command logic with a scriptable plugin file":"Vlastní logika příkazů pomocí skriptovatelného souboru pluginu","Customizable voice, pitch, and speaking rate":"Nastavitelný hlas, výška a rychlost řeči","Customizable with CSS for perfect integration with your stream's aesthetic":"Přizpůsobení pomocí CSS pro dokonalé sladění se vzhledem vysílání","Customization":"Přizpůsobení","Customization Guide":"Průvodce přizpůsobením","Deep Customization":"Rozsáhlé přizpůsobení","Discord":"Discord","Don't see your platform?":"Nenašli jste svou platformu?","Donate":"Přispět finančně","Donation integration (":"Integrace darů (","Download":"Stáhnout","Download Now":"Stáhnout nyní","Explore 126 stream ideas":"Prohlédnout 126 nápadů pro vysílání","Explore Social Stream Ninja features: combined live chat, OBS overlays, text-to-speech, AI cohosts, chat games, moderation and stream automation.":"Prozkoumejte funkce Social Stream Ninja: společný živý chat, překryvy OBS, převod textu na řeč, AI spolumoderátory, chatové hry, moderování a automatizaci vysílání.","Extend Social Stream Ninja's capabilities with robust API integration options.":"Rozšiřte možnosti Social Stream Ninja pomocí širokých možností integrace API.","Extensions":"Rozšíření","FAQ":"Časté dotazy","Facebook Live":"Facebook Live","Feature":"Vybrat k zobrazení","Featured Chat Overlay":"Překryv vybraných zpráv","Features":"Funkce","Free & Open Source":"Zdarma a s otevřeným zdrojovým kódem","Free system TTS support":"Bezplatná podpora systémového TTS","GitHub":"GitHub","GitHub Repository":"Repozitář GitHub","Giveaway system with queue management":"Systém soutěží se správou fronty","Google Meet":"Google Meet","Graphical polling system":"Grafický systém anket","Guides":"Návody","Highlight the best messages from your audience directly on your stream with beautiful, customizable overlays.":"Zobrazte nejlepší zprávy svých diváků přímo ve vysílání pomocí pěkných, přizpůsobitelných překryvů.","Hire":"Najmout odborníka","Home":"Domů","IRC (Multiple networks)":"IRC (více sítí)","Inspiration":"Inspirace","Instagram Live":"Instagram Live","Installation Guide":"Průvodce instalací","Interactive Games":"Interaktivní hry","Interactive mini-games including Battle Royal":"Interaktivní minihry včetně Battle Royal","International Platforms":"Mezinárodní platformy","Join our Discord":"Připojte se k našemu Discordu","Kick.com":"Kick.com","Limited or extra cost":"Omezené nebo za příplatek","Limited or nonexistent":"Omezené nebo žádné","Limited templates":"Omezené šablony","LinkedIn Events":"LinkedIn Events","Live Chat, OBS Overlays and Automation - Social Stream Ninja":"Živý chat, překryvy OBS a automatizace – Social Stream Ninja","Live two-way chat messaging with Facebook, YouTube, Twitch, Zoom, and more":"Živá obousměrná komunikace v chatu s Facebookem, YouTube, Twitch, Zoom a dalšími","Livestorm.io":"Livestorm.io","Local models or cloud providers, including OpenAI, Gemini, xAI, Bedrock, OpenRouter, Groq, and custom compatible APIs":"Místní modely nebo cloudoví poskytovatelé včetně OpenAI, Gemini, xAI, Bedrock, OpenRouter, Groq a vlastních kompatibilních API","Local models, voice cohost, cloud providers, and custom APIs":"Místní modely, hlasový spolumoderátor, cloudoví poskytovatelé a vlastní API","Locals.com":"Locals.com","MIDI/Streamdeck control":"Ovládání MIDI/Streamdeck","Main navigation":"Hlavní navigace","Major Streaming Platforms":"Hlavní vysílací platformy","Make Social Stream Ninja truly yours with extensive customization options for both functionality and appearance.":"Přizpůsobte si Social Stream Ninja pomocí rozsáhlých možností úprav funkcí i vzhledu.","Message filtering and moderation":"Filtrování a moderování zpráv","Message queuing for organized highlighting":"Fronta zpráv pro uspořádaný výběr k zobrazení","Messaging Platforms":"Platformy pro zasílání zpráv","Microsoft Teams":"Microsoft Teams","Moderation, translation, summaries, RAG context, and overlay building":"Moderování, překlad, souhrny, kontext RAG a tvorba překryvů","Multi-Platform Chat Integration":"Integrace chatu napříč platformami","Multi-Platform Support":"Podpora více platforem","Multi-channel source icons to differentiate between platforms":"Ikony vícekanálových zdrojů pro rozlišení platforem","Multi-language support":"Podpora více jazyků","Multimodal AI assistant":"Multimodální asistent AI","Multimodal AI co-host capabilities":"Možnosti multimodálního AI spolumoderátora","Nimo.TV":"Nimo.TV","NinjaBacker: free, 0% platform commission":"NinjaBacker: zdarma, 0% provize platformy","No login or API keys needed for most platforms":"Pro většinu platforem není nutné přihlášení ani klíče API","NonOLive":"NonOLive","None for most platforms":"Pro většinu platforem žádné","Not available":"Není dostupné","OBS audio capture support":"Podpora zachytávání zvuku OBS","OBS remote scene support":"Podpora vzdálených scén OBS","Odysee.com":"Odysee.com","Open for contributions":"Otevřené příspěvkům","Open navigation menu":"Otevřít navigační nabídku","Optional ChatGPT browser capture with no API key":"Volitelné zachytávání ChatGPT v prohlížeči bez klíče API","Overlay Gallery":"Galerie překryvů","Owncast":"Owncast","Picarto.tv":"Picarto.tv","Piczel.tv":"Piczel.tv","Platform Support":"Podpora platforem","Powerful API":"Výkonné API","Pre-styled templates and themes":"Předem stylované šablony a motivy","Premium TTS services integration (Google Cloud, ElevenLabs, Speechify)":"Integrace prémiových služeb TTS (Google Cloud, ElevenLabs, Speechify)","Preview sticker rewards":"Náhled nálepkových odměn","Primary and private chat bots with custom instructions and trigger rules":"Hlavní a soukromí chatovací boti s vlastními pokyny a pravidly spouštění","Privacy Policy":"Zásady ochrany soukromí","Private AI chat bot interface":"Soukromé rozhraní chatovacího bota AI","Quick Links":"Rychlé odkazy","Ready to Transform Your Multi-Platform Streaming?":"Chcete změnit své vysílání na více platformách?","Report an Issue":"Nahlásit problém","Required for most platforms":"Vyžadované pro většinu platforem","Resources":"Zdroje informací","Restream.io Chat":"Restream.io Chat","Rumble.com":"Rumble.com","SOOP Live":"SOOP Live","Seal Team Sloth":"Seal Team Sloth","See the full supported-platform list":"Zobrazit úplný seznam podporovaných platforem","Select messages via the dockable dashboard":"Vybírejte zprávy pomocí dokovatelného ovládacího panelu","Server API for remote control":"Serverové API pro dálkové ovládání","Sessions.us":"Sessions.us","SharePlay.tv":"SharePlay.tv","Slack":"Slack","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja works with 100+ platforms and services - here's a sample":"Social Stream Ninja funguje s více než 100 platformami a službami – zde je výběr","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. Licence GPLv3.0. Autor:","Source filtering and branding options":"Filtrování zdrojů a možnosti označení značkou","Specialized Platforms":"Specializované platformy","Start using Social Stream Ninja today and take your audience engagement to the next level.":"Začněte používat Social Stream Ninja ještě dnes a více zapojte své diváky.","Steve Seguin":"Steve Seguin","Support":"Podpora","Supported Platforms":"Podporované platformy","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","Take your streams to the next level with our suite of professional tools designed for engagement and interaction.":"Rozšiřte své vysílání sadou profesionálních nástrojů navržených pro zapojení diváků a interakci.","Telegram":"Telegram","Templates":"Šablony","Terms of Service":"Podmínky používání","Text-to-Speech":"Převod textu na řeč","TikTok Live":"TikTok Live","Twitch.tv":"Twitch.tv","Two-way Chat":"Obousměrný chat","URL parameters for easy configuration":"Parametry URL pro snadné nastavení","Unlimited with CSS/JS":"Neomezené pomocí CSS/JS","VKPlay.ru":"VKPlay.ru","VPZone.tv":"VPZone.tv","Varies by provider":"Liší se podle poskytovatele","Video Conferencing":"Videokonference","View Installation Guide":"Zobrazit průvodce instalací","Voice cohost that can hear you and receive selected live-chat messages":"Hlasový spolumoderátor, který vás slyší a může přijímat vybrané zprávy živého chatu","Webex":"Webex","Webhook support for third-party integrations":"Podpora webhooků pro integrace třetích stran","WhatsApp Web":"WhatsApp Web","Why Choose Social Stream Ninja?":"Proč si vybrat Social Stream Ninja?","Word cloud and custom GIF commands":"Mrak slov a vlastní příkazy GIF","X (Twitter) Live":"X (Twitter) Live","X.com":"X.com","Yes, on most platforms":"Ano, na většině platforem","YouTube Live":"YouTube Live","Zoom.us":"Zoom.us","learn how to add it yourself":"zjistěte, jak ji přidat sami","to request a new integration or":"a požádejte o novou integraci nebo","with contributions from the community.":"s příspěvky komunity."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/features.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/features.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/features.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/features.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/features.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/features.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/features.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/features.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/features.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/features.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/features.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/features.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/features.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/features.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/features.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/features.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/features.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/features.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html" aria-current="page">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/features.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/features.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/features.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/features.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/features.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/features.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/features.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/features.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/features.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/features.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/features.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/features.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/features.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/features.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/features.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="features.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/features.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Funkce</h1>
+            <p>Spojte své chaty, ukažte diváky na obrazovce a přizpůsobte každé vysílání svému stylu.</p>
+            <p><a href="inspiration.html">Prohlédnout 126 nápadů pro vysílání</a> · <a href="sticker-gallery.html">Náhled nálepkových odměn</a></p>
+        </div>
+    </section>
+
+    <section class="features-section">
+        <div class="container">
+            <div class="feature-item">
+                <div class="feature-image">
+                    <img src="../../media/multi.png" alt="Podpora více platforem">
+                </div>
+                <div class="feature-details">
+                    <h2>Integrace chatu napříč platformami</h2>
+                    <p>Spojte se s diváky na všech svých vysílacích platformách současně. Social Stream Ninja slučuje zprávy chatu z desítek platforem do jednoho snadno ovladatelného panelu.</p>
+                    <ul class="feature-list">
+                        <li>Živá obousměrná komunikace v chatu s Facebookem, YouTube, Twitch, Zoom a dalšími</li>
+                        <li>Pro většinu platforem není nutné přihlášení ani klíče API</li>
+                        <li>Ikony vícekanálových zdrojů pro rozlišení platforem</li>
+                        <li>Automatické přeposílání zpráv mezi platformami</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-item reverse">
+                <div class="feature-image">
+                    <img src="../../media/featured-chat-overlay.png" alt="Překryv vybraných zpráv">
+                </div>
+                <div class="feature-details">
+                    <h2>Překryv vybraných zpráv</h2>
+                    <p>Zobrazte nejlepší zprávy svých diváků přímo ve vysílání pomocí pěkných, přizpůsobitelných překryvů.</p>
+                    <ul class="feature-list">
+                        <li>Vybírejte zprávy pomocí dokovatelného ovládacího panelu</li>
+                        <li>Automatický nebo ruční výběr zpráv</li>
+                        <li>Přizpůsobení pomocí CSS pro dokonalé sladění se vzhledem vysílání</li>
+                        <li>Možnosti animací včetně prolínání a vysouvání</li>
+                        <li>Fronta zpráv pro uspořádaný výběr k zobrazení</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-image">
+                    <img src="../../media/bot-commands.png" alt="Příkazy botů">
+                </div>
+                <div class="feature-details">
+                    <h2>Příkazy bota a automatické odpovědi</h2>
+                    <p>Vytvářejte automatické interakce s diváky pomocí vlastních příkazů a odpovědí.</p>
+                    <ul class="feature-list">
+                        <li>Vestavěné příkazy pro běžné interakce</li>
+                        <li>Vlastní logika příkazů pomocí skriptovatelného souboru pluginu</li>
+                        <li>Automatické pozdravy a odpovědi</li>
+                        <li>Filtrování a moderování zpráv</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-item reverse">
+                <div class="feature-image">
+                    <img src="../../media/llm-support.png" alt="Integrace AI a LLM">
+                </div>
+                <div class="feature-details">
+                    <h2>Integrace AI a LLM</h2>
+                    <p>Vyberte si hlasového spolumoderátora, chatovacího bota, pomocníka v prohlížeči nebo cílené nástroje zpracování AI, aniž byste zbytek vysílání vázali na jediného poskytovatele.</p>
+                    <ul class="feature-list">
+                        <li>Hlasový spolumoderátor, který vás slyší a může přijímat vybrané zprávy živého chatu</li>
+                        <li>Hlavní a soukromí chatovací boti s vlastními pokyny a pravidly spouštění</li>
+                        <li>Místní modely nebo cloudoví poskytovatelé včetně OpenAI, Gemini, xAI, Bedrock, OpenRouter, Groq a vlastních kompatibilních API</li>
+                        <li>Moderování, překlad, souhrny, kontext RAG a tvorba překryvů</li>
+                        <li>Volitelné zachytávání ChatGPT v prohlížeči bez klíče API</li>
+                    </ul>
+                    <a href="ai-modes-guide.html" class="btn btn-text">Porovnat všechny možnosti AI →</a>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-image">
+                    <img src="../../media/text-to-speech.png" alt="Převod textu na řeč">
+                </div>
+                <div class="feature-details">
+                    <h2>Převod textu na řeč</h2>
+                    <p>Oživte zprávy chatu převodem textu na řeč a udělejte své vysílání poutavější a přístupnější.</p>
+                    <ul class="feature-list">
+                        <li>Bezplatná podpora systémového TTS</li>
+                        <li>Integrace prémiových služeb TTS (Google Cloud, ElevenLabs, Speechify)</li>
+                        <li>Podpora více jazyků</li>
+                        <li>Nastavitelný hlas, výška a rychlost řeči</li>
+                        <li>Podpora zachytávání zvuku OBS</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                
+                <div class="feature-details">
+                    <h2>Výkonné API</h2>
+                    <p>Rozšiřte možnosti Social Stream Ninja pomocí širokých možností integrace API.</p>
+                    <ul class="feature-list">
+                        <li>Podpora webhooků pro integrace třetích stran</li>
+                        <li>Serverové API pro dálkové ovládání</li>
+                        <li>Integrace darů (<a href="monetization.html#ninjabacker">NinjaBacker: zdarma, 0% provize platformy</a>, Stripe, Ko-Fi, Buy Me A Coffee)</li>
+                        <li>Ovládání MIDI/Streamdeck</li>
+                        <li>Podpora vzdálených scén OBS</li>
+                    </ul>
+                </div>
+				<div class="feature-image">
+                    <img src="../../media/powerful-api.png" alt="Integrace API">
+                </div>
+            </div>
+			
+			<div class="feature-item reverse">
+                
+                <div class="feature-details">
+                    <h2>Rozsáhlé přizpůsobení</h2>
+                    <p>Přizpůsobte si Social Stream Ninja pomocí rozsáhlých možností úprav funkcí i vzhledu.</p>
+                    <ul class="feature-list">
+                        <li>Stylování CSS pro úplnou kontrolu nad vzhledem</li>
+                        <li>Předem stylované šablony a motivy</li>
+                        <li>Podpora vlastního JavaScriptu</li>
+                        <li>Parametry URL pro snadné nastavení</li>
+                        <li>Filtrování zdrojů a možnosti označení značkou</li>
+                    </ul>
+                </div>
+				<div class="feature-image">
+                    <img src="../../media/deep-customization.png" alt="Přizpůsobení">
+                </div>
+            </div>
+			
+			<div class="feature-item">
+				<div class="feature-details">
+					<h2>Pokročilé nástroje pro vysílání</h2>
+					<p>Rozšiřte své vysílání sadou profesionálních nástrojů navržených pro zapojení diváků a interakci.</p>
+					<ul class="feature-list">
+						<li>Interaktivní minihry včetně Battle Royal</li>
+						<li>Systém soutěží se správou fronty</li>
+						<li>Závěrečné titulky a zobrazení nádoby na spropitné</li>
+						<li>Mrak slov a vlastní příkazy GIF</li>
+						<li>Grafický systém anket</li>
+						<li>Databáze historie chatu s vyhledáváním</li>
+						<li>Soukromé rozhraní chatovacího bota AI</li>
+						<li>Možnosti multimodálního AI spolumoderátora</li>
+					</ul>
+				</div>
+				<div class="feature-image">
+					<img src="../../media/advanced-streaming.png" alt="Pokročilé nástroje">
+				</div>
+			</div>
+        </div>
+    </section>
+
+    <section id="supported-platforms" class="supported-platforms">
+        <div class="container">
+            <h2>Podporované platformy</h2>
+            <p class="section-subtitle">Social Stream Ninja funguje s více než 100 platformami a službami – zde je výběr</p>
+            
+            <div class="platforms-grid">
+                <div class="platform-category">
+                    <h3>Hlavní vysílací platformy</h3>
+                    <ul>
+                        <li>YouTube Live</li>
+                        <li>Twitch.tv</li>
+                        <li>Facebook Live</li>
+                        <li>Instagram Live</li>
+                        <li>TikTok Live</li>
+                        <li>X (Twitter) Live</li>
+                        <li>LinkedIn Events</li>
+                        <li>Amazon Live</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>Videokonference</h3>
+                    <ul>
+                        <li>Zoom.us</li>
+                        <li>Google Meet</li>
+                        <li>Microsoft Teams</li>
+                        <li>Webex</li>
+                        <li>Sessions.us</li>
+                        <li>Amazon Chime</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>Platformy pro zasílání zpráv</h3>
+                    <ul>
+                        <li>Discord</li>
+                        <li>Slack</li>
+                        <li>Telegram</li>
+                        <li>WhatsApp Web</li>
+                        <li>IRC (více sítí)</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>Alternativní vysílání</h3>
+                    <ul>
+                        <li>Kick.com</li>
+                        <li>VPZone.tv</li>
+                        <li>Rumble.com</li>
+                        <li>Odysee.com</li>
+                        <li>Picarto.tv</li>
+                        <li>Chzzk.naver.com</li>
+                        <li>Cozy.tv</li>
+						<li>SharePlay.tv</li>
+						<li>Seal Team Sloth</li>
+						<li>Castyr</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>Mezinárodní platformy</h3>
+                    <ul>
+                        <li>Bilibili.tv</li>
+                        <li>Bilibili.com</li>
+                        <li>VKPlay.ru</li>
+                        <li>SOOP Live</li>
+                        <li>Nimo.TV</li>
+                        <li>NonOLive</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>Specializované platformy</h3>
+                    <ul>
+                        <li>Owncast</li>
+                        <li>Restream.io Chat</li>
+                        <li>Piczel.tv</li>
+                        <li>Locals.com</li>
+                        <li>Crowdcast.io</li>
+                        <li>Livestorm.io</li>
+						<li><a href="supported-sites.html">Zobrazit úplný seznam podporovaných platforem</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+			<div class="platform-note">
+				<p>Nenašli jste svou platformu? <a href="https://discord.socialstream.ninja" target="_blank">Připojte se k našemu Discordu</a> a požádejte o novou integraci nebo <a href="source-types-guide.html#generic-and-unnamed-sources">zjistěte, jak ji přidat sami</a>.</p>
+			</div>
+        </div>
+    </section>
+
+    <section class="comparison">
+        <div class="container">
+            <h2>Proč si vybrat Social Stream Ninja?</h2>
+            <div class="comparison-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vybrat k zobrazení</th>
+                            <th>Social Stream Ninja</th>
+                            <th>Konkurence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Cena</td>
+                            <td><span class="highlight">Zdarma a s otevřeným zdrojovým kódem</span></td>
+                            <td>Předplatné $10–50/měsíc</td>
+                        </tr>
+                        <tr>
+                            <td>Podpora platforem</td>
+                            <td><span class="highlight">Více než 100 platforem</span></td>
+                            <td>1–5 platforem</td>
+                        </tr>
+                        <tr>
+                            <td>Vyžadované klíče API</td>
+                            <td><span class="highlight">Pro většinu platforem žádné</span></td>
+                            <td>Vyžadované pro většinu platforem</td>
+                        </tr>
+                        <tr>
+                            <td>Přizpůsobení</td>
+                            <td><span class="highlight">Neomezené pomocí CSS/JS</span></td>
+                            <td>Omezené šablony</td>
+                        </tr>
+                        <tr>
+                            <td>Obousměrný chat</td>
+                            <td><span class="highlight">Ano, na většině platforem</span></td>
+                            <td>Omezené nebo za příplatek</td>
+                        </tr>
+	                        <tr>
+	                            <td>Integrace AI</td>
+	                            <td><span class="highlight">Místní modely, hlasový spolumoderátor, cloudoví poskytovatelé a vlastní API</span></td>
+	                            <td>Omezené nebo žádné</td>
+	                        </tr>
+                        <tr>
+                            <td>Komunitní podpora</td>
+                            <td><span class="highlight">Aktivní komunita na Discordu</span></td>
+                            <td>Liší se podle poskytovatele</td>
+                        </tr>
+                        <tr>
+                            <td>Rozšíření</td>
+                            <td><span class="highlight">Otevřené příspěvkům</span></td>
+                            <td>Uzavřený ekosystém</td>
+                        </tr>
+						<tr>
+							<td>Interaktivní hry</td>
+							<td><span class="highlight">Vestavěné minihry</span></td>
+							<td>Není dostupné</td>
+						</tr>
+						<tr>
+							<td>AI spolumoderátor</td>
+							<td><span class="highlight">Multimodální asistent AI</span></td>
+							<td>Není dostupné</td>
+						</tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+	
+    <section class="get-started">
+        <div class="container">
+            <h2>Chcete změnit své vysílání na více platformách?</h2>
+            <p>Začněte používat Social Stream Ninja ještě dnes a více zapojte své diváky.</p>
+            <div class="get-started-cta">
+                <a href="download.html" class="btn btn-primary">Stáhnout nyní</a>
+                <a href="guides.html" class="btn btn-secondary">Zobrazit průvodce instalací</a>
+            </div>
+        </div>
+    </section>
+
+        <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Spojuje vaše živé konverzace ze sociálních sítí a nabízí ještě víc. Zdarma a s otevřeným zdrojovým kódem.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+					<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Rychlé odkazy</h3>
+                    <ul>
+                        <li><a href="../index.html">Domů</a></li>
+                        <li><a href="features.html">Funkce</a></li>
+                        <li><a href="download.html">Stáhnout</a></li>
+                        <li><a href="guides.html">Návody</a></li>
+                        <li><a href="commands.html">Příkazy a API</a></li>
+                        <li><a href="supported-sites.html">Podporované weby</a></li>
+                        <li><a href="templates.html">Šablony</a></li>
+                        <li><a href="support.html">Podpora</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Zdroje informací</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">Průvodce instalací</a></li>
+                        <li><a href="guides.html#extension-customization">Průvodce přizpůsobením</a></li>
+                        <li><a href="guides.html#faq">Časté dotazy</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Nahlásit problém</a></li>
+                        <li><a href="../privacy.html">Zásady ochrany soukromí</a></li>
+                        <li><a href="../TOS.html">Podmínky používání</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Komunita</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Připojte se k našemu Discordu</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">Repozitář GitHub</a></li>
+                        <li><a href="support.html#contribute">Přispět k projektu</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">Přispět finančně</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0. Autor: <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> s příspěvky komunity.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../../docs/js/main.js"></script>
+    <script>
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-site-root="../../" data-site-language="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/pt-br/docs/chatbot-basics-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/pt-br/docs/chatbot-basics-guide.html">
+    <meta property="og:title" content="Configuração e uso do bot de chat com IA - Social Stream Ninja">
+    <meta property="og:description" content="Configure e use o bot de chat com IA do Social Stream Ninja, conecte um provedor de IA, teste com segurança, controle respostas ao vivo e resolva problemas de respostas ausentes.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logotipo do Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/pt-br/docs/chatbot-basics-guide.html">
+    <meta name="twitter:title" content="Configuração e uso do bot de chat com IA - Social Stream Ninja">
+    <meta name="twitter:description" content="Configure e use o bot de chat com IA do Social Stream Ninja, conecte um provedor de IA, teste com segurança, controle respostas ao vivo e resolva problemas de respostas ausentes.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logotipo do Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuração e uso do bot de chat com IA - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Configure e use o bot de chat com IA do Social Stream Ninja, conecte um provedor de IA, teste com segurança, controle respostas ao vivo e resolva problemas de respostas ausentes.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="pt-br">
+<script id="ssn-site-language" type="application/json">{"language":"pt-br","page":"docs/chatbot-basics-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Mudar para o tema claro","Switch to dark theme":"Mudar para o tema escuro","Light mode":"Modo claro","Dark mode":"Modo escuro","Open navigation menu":"Abrir menu de navegação","Close navigation menu":"Fechar menu de navegação","Copy this document as Markdown to the clipboard":"Copiar este documento em Markdown para a área de transferência","Copy Markdown":"Copiar Markdown","Copying…":"Copiando…","Markdown copied":"Markdown copiado","Copy failed":"Falha ao copiar","Copy comprehensive Markdown for an AI assistant":"Copiar Markdown completo para um assistente de IA","Copy this documentation page as Markdown for an AI assistant":"Copiar esta página de documentação como Markdown para um assistente de IA"},"strings":{"(default 120000)":"(padrão: 120000)","(default 500)":"(padrão: 500)","(defaults 4000 and 30000)":"(padrões: 4000 e 30000)","(milliseconds, so 10 seconds)":"(milissegundos, ou seja, 10 segundos)","(or":"(ou",") and fill in the boxes it shows.":") e preencha os campos exibidos.","), not the featured chat overlay. The overlay options in settings cover the common ones.":"), não a sobreposição de chat em destaque. As opções de sobreposição nas configurações cobrem as mais comuns.",", paste the whole key, enter a model your project can use, and click":", cole a chave inteira, digite um modelo permitido no projeto e clique em",", then":", depois",", type a message in the real YouTube or Twitch chat. Check it shows up in the Dock.":", digite uma mensagem no chat real do YouTube ou Twitch. Confira se aparece no Dock.",". A real text reply should appear under the button.":". Uma resposta de texto real deve aparecer abaixo do botão.",". Don't use this for Ollama.":". Não use isto para Ollama.",". Follow its model download steps.":". Siga as etapas de download do modelo.",". Full provider list:":". Lista completa de provedores:",". If the voice never starts,":". Se a voz nunca começar,",". Not an Admin key.":". Não uma chave de administrador.",". The usual address is":". O endereço usual é","A chat source that supports sending, logged in and allowed to post, still open, with host chat not disabled.":"Uma fonte de chat com envio compatível, aberta, conectada, autorizada a postar e com chat do anfitrião ativado.","A paid service, like OpenAI or Gemini":"Um serviço pago, como OpenAI ou Gemini","A short, plain name viewers can type.":"Um nome curto e simples que os espectadores possam digitar.","AI Chat Bot Setup and Use - Social Stream Ninja":"Configuração e uso do bot de chat com IA - Social Stream Ninja","AI Integration in Commands & API":"Integração de IA em Comandos e API","AI Modes Guide":"Guia de modos de IA","Add a word if the bot shouldn't consider every message.":"Adicione uma palavra se o bot não deve considerar todas as mensagens.","Add to the link":"Adicione ao link","Adding credit won't fix a 401.":"Adicionar crédito não resolve um erro 401.","Additional Bot Instructions":"Instruções adicionais do bot","Blank":"Em branco","Bot replies ONLY go to the bot overlay page":"As respostas do bot vão SOMENTE para a página de sobreposição do bot","Chat Bot - Primary":"Bot de chat - Principal","Chat Bots and AI services → Configure LLM Service Provider":"Chat Bots e serviços de IA → Configurar provedor de LLM","Chat isn't being captured. Check Social Stream is on, the chat window is open and logged in, the right live chat is open, and your source filters.":"O chat não está sendo capturado. Confira se o Social Stream está ligado, se a janela está aberta e conectada, se é o chat ao vivo correto e os filtros de fontes.","ChatGPT API":"ChatGPT API","Check API billing and budget (separate from a ChatGPT subscription). Slow down or wait.":"Confira cobrança e orçamento da API (separados da assinatura ChatGPT). Reduza a frequência ou espere.","Check it's a normal key in the right project with model requests allowed. If unsure, make a new key and replace the saved one.":"Confira se é uma chave normal do projeto correto com solicitações a modelos permitidas. Na dúvida, crie outra e substitua a salva.","Clear bot overlay now":"Limpar sobreposição do bot agora","Clear it from the API, and custom styling":"Limpar pela API e personalizar o estilo","Clear it right now":"Limpe agora","Click":"Clique em","Commands & API":"Comandos e API","Configure LLM section with Ollama selected, local endpoint and model fields filled in, and the provider test showing Connected":"Seção Configurar LLM com Ollama selecionado, campos de endpoint local e modelo preenchidos e teste do provedor mostrando Conectado","Connected":"Conectado","Connected means the AI answered. It doesn't turn the bot on.":"Conectado significa que a IA respondeu. Não liga o bot.","Connected, but the viewer's message isn't in the Dock":"Conectado, mas a mensagem do espectador não aparece no Dock","Copy the status, code, missing scope, and Request ID shown in Social Stream. Then send the in-app diagnostic report soon after. It leaves out API keys and prompts.":"Copie o estado, código, permissão ausente e Request ID mostrados no Social Stream. Depois envie logo o relatório de diagnóstico pelo aplicativo. Ele exclui chaves de API e prompts.","Credit and permissions are separate. See OpenAI's":"Crédito e permissões são separados. Consulte o","Custom API":"API personalizada","Custom CSS on the normal":"O CSS personalizado do link normal","Customize bot name":"Personalizar nome do bot","Disable the host chat and block functions":"Desativar o chat do anfitrião e as funções de bloqueio","Do not screen out any of the bot's replies":"Não filtrar nenhuma resposta do bot","Don't test from the Dock.":"Não teste pelo Dock.","Download":"Baixar","Enable the LLM AI chat bot":"Ativar o bot de chat com IA LLM","Error":"Erro","Features":"Recursos","Find the last thing that worked, then check the next row.":"Encontre a última coisa que funcionou e confira a linha seguinte.","First test":"Primeiro teste","Fix problems":"Resolver problemas","From a":"De uma","From that account, send:":"Dessa conta, envie:","Give up waiting for a stuck voice":"Parar de esperar uma voz travada","Guides":"Guias","Hide after TTS, autohide, or a fixed time":"Ocultar após TTS, automaticamente ou após um tempo fixo","Hide each reply after a set time":"Ocultar cada resposta após um tempo","Hide it when the voice finishes":"Ocultar quando a voz terminar","Hide longer replies later, shorter ones sooner":"Ocultar respostas longas mais tarde e curtas mais cedo","Hide old replies":"Ocultar respostas antigas","Hire":"Contratar","Home":"Início","I use":"Uso","I use…":"Uso…","I want to":"Quero","I want to…":"Quero…","If you set a trigger word, the message must contain it.":"Se definir uma palavra de ativação, a mensagem deve contê-la.","If your browser auto-translates the OpenAI site and the key settings act strangely, switch to the original English page. This helped one user, but isn't a known cause of 401 errors.":"Se o navegador traduz automaticamente o site OpenAI e os ajustes de chave se comportam de forma estranha, volte à página original em inglês. Isso ajudou um usuário, mas não é uma causa conhecida de erros 401.","If your key and project look right, give OpenAI support the Request ID and time.":"Se a chave e o projeto parecem corretos, envie ao suporte OpenAI o Request ID e o horário.","In Social Stream settings, open":"Nas configurações do Social Stream, abra","In Social Stream, pick":"No Social Stream, escolha","Inspiration":"Inspiração","It answers one message at a time by default. When posting into chat, it also waits 5 seconds per source.":"Por padrão responde a uma mensagem por vez. Ao postar no chat, também espera 5 segundos por fonte.","It skips its own messages, empty messages, and messages too close to its last reply.":"Ignora suas próprias mensagens, mensagens vazias e as que chegam perto demais da última resposta.","It's just added to the start of the reply. Replies post from the account you're logged in with, unless you set up account roles in the standalone app. For a separate Twitch bot account, see the":"Só é adicionado ao início da resposta. As respostas saem da conta conectada, a menos que você configure funções de conta no aplicativo independente. Para uma conta separada de bot Twitch, consulte o","Keep":"Mantenha","Keep low unless your AI can handle more.":"Mantenha baixo, a menos que sua IA suporte mais.","Keep on while the bot should watch chat.":"Mantenha ativo enquanto o bot deve acompanhar o chat.","LM Studio, llama.cpp, vLLM, or similar":"LM Studio, llama.cpp, vLLM ou similares","Later":"Depois","Let an AI answer your viewers in chat, on screen, or out loud.":"Deixe uma IA responder aos espectadores no chat, na tela ou em voz alta.","List of words to trigger bot":"Lista de palavras para acionar o bot","Local Gemma":"Gemma local","Local Qwen":"Qwen local","Look for a missing character or extra space. Check it wasn't deleted, it's in the right project, and Social Stream isn't using an old saved key.":"Procure um caractere faltando ou espaço extra. Confira se a chave não foi apagada, se está no projeto correto e se o Social Stream não usa uma chave antiga salva.","Main navigation":"Navegação principal","Make a normal project API key on the":"Crie uma chave normal de API de projeto na","Make sure it's in the project you want billed, and it's allowed to make model requests.":"Confira se pertence ao projeto que será cobrado e se permite solicitações a modelos.","Max parallel bot replies":"Máximo de respostas paralelas do bot","Message is in the Dock, but no reply on the overlay":"A mensagem está no Dock, mas não há resposta na sobreposição","Messages typed in the Dock or host chat can be skipped on purpose, so the bot doesn't reply to itself.":"Mensagens digitadas no Dock ou chat do anfitrião podem ser ignoradas de propósito para o bot não responder a si mesmo.","Moderators-only mode skips everyone else.":"O modo só moderadores ignora os demais.","Need Ollama? Get it from the":"Precisa do Ollama? Baixe na","Never paste your key":"Nunca cole sua chave","Nothing yet, and want it to run in the browser":"Nada ainda, e quero executar no navegador","Off":"Desligado","Ollama (Native Local API)":"Ollama (API local nativa)","Ollama download page":"página de download do Ollama","Ollama keep-alive set to 0?":"Keep-alive do Ollama em 0?","Ollama on my computer":"Ollama no meu computador","On":"Ligado","On this page":"Nesta página","Once it works, turn":"Quando funcionar, desative novamente","Only if you want that.":"Só se quiser assim.","Only the first test gets a reply":"Só o primeiro teste recebe resposta","Open":"Abrir","Open navigation menu":"Abrir menu de navegação","Open the":"Abra:","OpenAI API keys page":"página de chaves de API OpenAI","OpenAI error like":"Erro OpenAI como","OpenAI key errors":"Erros de chave OpenAI","Or send":"Ou envie","Other AI bot pages":"Outras páginas de bots de IA","Other AI pages":"Outras páginas de IA","Out of quota, or too many requests.":"Cota esgotada ou solicitações demais.","Overlay Gallery":"Galeria de overlays","Overlay Page and TTS for Chat Bot":"Página de sobreposição e síntese de voz do bot de chat","Overlay-only setting":"Configuração Somente sobreposição","Pick an AI":"Escolha uma IA","Pick this":"Escolha isto","Pick your AI (":"Escolha sua IA (","Private":"Privado","Problem":"Problema","Raise it if the bot posts too often. Only matters when posting into chat.":"Aumente se o bot postar demais. Só importa ao postar no chat.","Rate limit for responses per tab / source":"Limite de frequência de respostas por aba ou fonte","Read the error under the button. Check the address, API key, model name, that your local AI is running, firewall, and your provider's limits.":"Leia o erro abaixo do botão. Confira endereço, chave de API, nome do modelo, se a IA local está rodando, firewall e limites do provedor.","Reference table comparing the Primary bot overlay, private chatbot, censor bot, and AI cohost":"Tabela de referência comparando sobreposição do bot principal, chatbot privado, bot de censura e coapresentador de IA","Replies show on the bot overlay only. Nothing is posted to chat.":"As respostas aparecem apenas na sobreposição do bot. Nada é postado no chat.","Replies still go to the overlay, and Social Stream also tries to post them in the chat they came from.":"As respostas continuam na sobreposição e o Social Stream também tenta postá-las no chat de origem.","Reply shows on the overlay, but not in chat":"A resposta aparece na sobreposição, mas não no chat","Reply stays on screen after the voice":"A resposta fica na tela depois da voz","Run the test":"Execute o teste","See":"Veja","See all AI features in the":"Veja todas as funções de IA no","Send it from the real platform chat, not the Dock. Then check the bot is on, the trigger word, moderators-only, the bot name, the rate limit, and your instructions. Turn on":"Envie pelo chat real da plataforma, não pelo Dock. Confira bot ativo, palavra de ativação, só moderadores, nome, limite e instruções. Ative","Send it once, then wait. A local AI may still be loading.":"Envie uma vez e espere. A IA local pode estar carregando.","Set Up the AI Chat Bot":"Configure o chatbot com IA","Set it up":"Configure","Set it up in 6 steps":"Configure em 6 etapas","Set the shortest and longest time for autohide":"Definir os tempos mínimo e máximo para ocultar automaticamente","Set up and use the Social Stream Ninja AI chat bot, connect an AI provider, test safely, control live replies, and troubleshoot missing responses.":"Configure e use o bot de chat com IA do Social Stream Ninja, conecte um provedor de IA, teste com segurança, controle respostas ao vivo e resolva problemas de respostas ausentes.","Setting":"Configuração","Short messages like":"Mensagens curtas como","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logotipo do Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licença GPLv3.0.","Still stuck?":"Ainda precisa de ajuda?","Support":"Suporte","Supported Sites":"Sites compatíveis","Switch theme":"Alternar tema","Test button fails":"O botão de teste falha","Test it":"Teste","Test selected chat bot":"Testar bot de chat selecionado","That service. Enter its API key and model. They set the prices, limits, and model names.":"Esse serviço. Informe chave de API e modelo. O provedor define preços, limites e nomes de modelos.","That unloads the model after each request. The bot still works, but every reply may be slow while the model loads again.":"Isso remove o modelo da memória após cada solicitação. O bot funciona, mas cada resposta pode demorar enquanto o modelo carrega novamente.","The Primary bot, private chat, censor bot, and AI co-host are separate tools. Each has its own settings and history.":"O bot principal, chat privado, bot censor e coapresentador IA são ferramentas separadas. Cada uma tem configurações e histórico próprios.","The bot is picky by design. An empty trigger list means it":"O bot é seletivo de propósito. Uma lista vazia de ativadores significa que ele","The bot name is not a new account.":"O nome do bot não é uma conta nova.","The key is wrong or gone.":"A chave está errada ou não existe mais.","The key isn't allowed to make model requests.":"A chave não permite solicitações a modelos.","The private bot can't stand in for testing the Primary bot.":"O bot privado não substitui o teste do bot principal.","The reply should appear on the":"A resposta deve aparecer em","These only affect the bot overlay (":"Estas opções só afetam a sobreposição do bot (","Three parts, all needed:":"Três partes, todas necessárias:","Trigger starts with":"O ativador começa com","Try this":"Tente isto","Turn Social Stream on and open your live chat source.":"Ative o Social Stream e abra sua fonte de chat ao vivo.","Turn off overlay-only. Check that source can send, the account can post, the chat box is available, account roles, and":"Desative Somente sobreposição. Confira envio da fonte, permissão da conta para postar, campo de chat disponível, funções de contas e","Turn off when you're ready to post into real chat.":"Desative quando quiser postar no chat real.","Turn on":"Ative","Turn on the private chat bot option and use its link with the same session. It's a separate bot, so it doesn't test the Primary bot.":"Ative o chatbot privado e use o link com a mesma sessão. É um bot separado, então não testa o bot principal.","Twitch Bot Account guide":"guia de conta de bot do Twitch","Use":"Use","Use a plain-word trigger, or let that command through your command filter.":"Use uma palavra comum como ativador ou permita esse comando no filtro.","Use these settings in":"Use estas configurações em","Using more than one?":"Usa mais de uma opção?","Usually off, so the bot can skip pointless replies.":"Normalmente desativado, para pular respostas desnecessárias.","Wait a bit after the voice finishes":"Esperar um pouco após a voz terminar","Wait for the first reply and the rate limit. Keep-alive":"Espere a primeira resposta e o limite de frequência. Keep-alive","What happens":"O que acontece","What it means":"O que significa","Where replies go":"Para onde vão as respostas","Why it's quiet":"Por que fica quieto","Why the bot is quiet":"Por que o bot fica quieto","Will respond to Moderators only":"Responder somente a moderadores","With Remote API Control on, open":"Com o controle remoto por API ativado, abra","You need":"Você precisa","Your command filter setting may drop that message before the bot sees it. Use a plain word instead.":"O filtro de comandos pode descartar essa mensagem antes de o bot vê-la. Use uma palavra comum.","and":"e","and turn on":"e ative","authentication reference":"referência de autenticação","back off. Then pick a trigger word and rate limit, and decide if replies should go into real chat.":". Depois escolha uma palavra de ativação e um limite de frequência e decida se as respostas devem ir ao chat real.","does nothing":"não faz nada","error guide":"guia de erros da OpenAI","every message, not that it answers every one.":"todas as mensagens, não que responda a todas.","falls back to a length-based time.":"usa um tempo baseado no comprimento.","for now. This keeps replies off your real chat while you test.":"por enquanto. Isso mantém as respostas fora do chat real durante o teste.","for your first test.":"para o primeiro teste.","in settings. This removes the reply on screen and any waiting ones, but won't stop a voice that's already talking.":"nas configurações. Isso remove a resposta na tela e as pendentes, mas não para uma voz que já fala.","into a support message or diagnostic report.":"em uma mensagem de suporte ou relatório de diagnóstico.","is an OpenAI permission, not something to type into Social Stream.":"é uma permissão OpenAI, não algo para digitar no Social Stream.","is blank":"está vazio","is optional.":"é opcional.","link keeps all of these features. A copied or edited local":"mantém todas essas funções. Uma cópia local ou editada de","link under":"em","looks at":"considera","makes every reply slow to start.":"faz cada resposta demorar para começar.","may be skipped. Say the bot's name to be clear.":"podem ser ignoradas. Diga o nome do bot para deixar claro.","ms":"ms","only proves the first part.":"só comprova a primeira parte.","open with the same session. Also needed for TTS.":"aberto com a mesma sessão. Também é necessário para TTS.","or":"ou","over the API WebSocket.":"pelo WebSocket da API.","page.":"página.","second account":"segunda conta","see below":"veja abaixo","short at first, like:":"curtas no início, como:","the AI (writes the reply), the Primary bot (picks which chat messages to answer), and where replies go (overlay, chat, or both). A green":"a IA (escreve a resposta), o bot principal (escolhe as mensagens a responder) e o destino das respostas (sobreposição, chat ou ambos). Um indicador verde","to test.":"para testar.","wins, then":"tem prioridade, depois","won't get later fixes unless you update it.":"não recebe correções posteriores a menos que você atualize."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/chatbot-basics-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navegação principal"><a href="../index.html">Início</a><a href="features.html">Recursos</a><a href="inspiration.html" class="site-priority-inspiration">Inspiração</a><a href="download.html">Baixar</a><a href="guides.html">Guias</a><a href="commands.html">Comandos e API</a><a href="supported-sites.html">Sites compatíveis</a><a href="overlay-gallery.html" class="site-priority-gallery">Galeria de overlays</a><a href="services.html" class="site-priority-hire">Contratar</a><a href="support.html">Suporte</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Português (Brasil)"><span aria-hidden="true">🌐 </span><span lang="pt-br">Português (Brasil)</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/chatbot-basics-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/chatbot-basics-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="chatbot-basics-guide.html" lang="pt-br" hreflang="pt-br" aria-current="true">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/chatbot-basics-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/chatbot-basics-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/chatbot-basics-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/chatbot-basics-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/chatbot-basics-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/chatbot-basics-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/chatbot-basics-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/chatbot-basics-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/chatbot-basics-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/chatbot-basics-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/chatbot-basics-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/chatbot-basics-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/chatbot-basics-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/chatbot-basics-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Alternar tema"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Configure o chatbot com IA</h1>
+            <p>Deixe uma IA responder aos espectadores no chat, na tela ou em voz alta.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Nesta página">
+                <a href="#setup">Configure</a>
+                <a href="#provider">Escolha uma IA</a>
+                <a href="#first-test">Teste</a>
+                <a href="#replies">Para onde vão as respostas</a>
+                <a href="#quiet">Por que fica quieto</a>
+                <a href="#hide">Ocultar respostas antigas</a>
+                <a href="#problems">Resolver problemas</a>
+                <a href="#openai">Erros de chave OpenAI</a>
+                <a href="#other-pages">Outras páginas de IA</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="setup">Configure em 6 etapas</h2>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>Nas configurações do Social Stream, abra <strong>Chat Bots e serviços de IA → Configurar provedor de LLM</strong>.</li>
+                        <li>Escolha sua IA (<a href="#provider">veja abaixo</a>) e preencha os campos exibidos.</li>
+                        <li>Clique em <strong>Testar bot de chat selecionado</strong>. Uma resposta de texto real deve aparecer abaixo do botão.</li>
+                        <li>Abrir <strong>Bot de chat - Principal</strong> e ative <strong>Ativar o bot de chat com IA LLM</strong>.</li>
+                        <li>Ative <strong>As respostas do bot vão SOMENTE para a página de sobreposição do bot</strong> por enquanto. Isso mantém as respostas fora do chat real durante o teste.</li>
+                        <li>Abra: <code>bot.html</code> em <strong>Página de sobreposição e síntese de voz do bot de chat</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/guide-llm-provider-connected.png" alt="Seção Configurar LLM com Ollama selecionado, campos de endpoint local e modelo preenchidos e teste do provedor mostrando Conectado" class="guide-image">
+                        <figcaption>Conectado significa que a IA respondeu. Não liga o bot.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>Três partes, todas necessárias:</strong> a IA (escreve a resposta), o bot principal (escolhe as mensagens a responder) e o destino das respostas (sobreposição, chat ou ambos). Um indicador verde <strong>Conectado</strong> só comprova a primeira parte.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="provider">Escolha uma IA</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Uso…</th><th>Escolha isto</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Uso">Ollama no meu computador</td><td data-label="Escolha isto"><strong>Ollama (API local nativa)</strong>. O endereço usual é <code>http://localhost:11434</code>.</td></tr>
+                        <tr><td data-label="Uso">LM Studio, llama.cpp, vLLM ou similares</td><td data-label="Escolha isto"><strong>API personalizada</strong>. Não use isto para Ollama.</td></tr>
+                        <tr><td data-label="Uso">Um serviço pago, como OpenAI ou Gemini</td><td data-label="Escolha isto">Esse serviço. Informe chave de API e modelo. O provedor define preços, limites e nomes de modelos.</td></tr>
+                        <tr><td data-label="Uso">Nada ainda, e quero executar no navegador</td><td data-label="Escolha isto"><strong>Gemma local</strong> ou <strong>Qwen local</strong>. Siga as etapas de download do modelo.</td></tr>
+                    </tbody>
+                </table>
+                <p>Precisa do Ollama? Baixe na <a href="https://ollama.com/download" target="_blank" rel="noopener">página de download do Ollama</a>. Lista completa de provedores: <a href="commands.html#ai-integration">Integração de IA em Comandos e API</a>.</p>
+                <details class="guide-extra">
+                    <summary>Keep-alive do Ollama em 0?</summary>
+                    <p>Isso remove o modelo da memória após cada solicitação. O bot funciona, mas cada resposta pode demorar enquanto o modelo carrega novamente.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="first-test">Teste</h2>
+                <p>Use estas configurações em <strong>Bot de chat - Principal</strong> para o primeiro teste.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Configuração</th><th>Primeiro teste</th><th>Depois</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Configuração">Ativar o bot de chat com IA LLM</td><td data-label="Primeiro teste">Ligado</td><td data-label="Depois">Mantenha ativo enquanto o bot deve acompanhar o chat.</td></tr>
+                        <tr><td data-label="Configuração">Personalizar nome do bot</td><td data-label="Primeiro teste"><code>NinjaBot</code></td><td data-label="Depois">Um nome curto e simples que os espectadores possam digitar.</td></tr>
+                        <tr><td data-label="Configuração">As respostas do bot vão SOMENTE para a página de sobreposição do bot</td><td data-label="Primeiro teste">Ligado</td><td data-label="Depois">Desative quando quiser postar no chat real.</td></tr>
+                        <tr><td data-label="Configuração">Não filtrar nenhuma resposta do bot</td><td data-label="Primeiro teste">Ligado</td><td data-label="Depois">Normalmente desativado, para pular respostas desnecessárias.</td></tr>
+                        <tr><td data-label="Configuração">Lista de palavras para acionar o bot</td><td data-label="Primeiro teste">Em branco</td><td data-label="Depois">Adicione uma palavra se o bot não deve considerar todas as mensagens.</td></tr>
+                        <tr><td data-label="Configuração">Limite de frequência de respostas por aba ou fonte</td><td data-label="Primeiro teste"><code>5000</code> ms</td><td data-label="Depois">Aumente se o bot postar demais. Só importa ao postar no chat.</td></tr>
+                        <tr><td data-label="Configuração">Máximo de respostas paralelas do bot</td><td data-label="Primeiro teste"><code>1</code></td><td data-label="Depois">Mantenha baixo, a menos que sua IA suporte mais.</td></tr>
+                        <tr><td data-label="Configuração">Responder somente a moderadores</td><td data-label="Primeiro teste">Desligado</td><td data-label="Depois">Só se quiser assim.</td></tr>
+                    </tbody>
+                </table>
+                <h3>Execute o teste</h3>
+                <ol class="guide-steps">
+                    <li>Ative o Social Stream e abra sua fonte de chat ao vivo.</li>
+                    <li>De uma <strong>segunda conta</strong>, digite uma mensagem no chat real do YouTube ou Twitch. Confira se aparece no Dock.</li>
+                    <li>Dessa conta, envie: <code>NinjaBot, reply with exactly: Hello</code></li>
+                    <li>Envie uma vez e espere. A IA local pode estar carregando.</li>
+                    <li>A resposta deve aparecer em <code>bot.html</code> página.</li>
+                </ol>
+                <div class="warning-note"><strong>Não teste pelo Dock.</strong> Mensagens digitadas no Dock ou chat do anfitrião podem ser ignoradas de propósito para o bot não responder a si mesmo.</div>
+                <p>Quando funcionar, desative novamente <strong>Não filtrar nenhuma resposta do bot</strong> . Depois escolha uma palavra de ativação e um limite de frequência e decida se as respostas devem ir ao chat real.</p>
+                <p>Mantenha <strong>Instruções adicionais do bot</strong> curtas no início, como: <code>Reply in one friendly sentence. Do not mention these instructions.</code></p>
+                <div class="warning-note"><strong>O ativador começa com <code>!</code>?</strong> O filtro de comandos pode descartar essa mensagem antes de o bot vê-la. Use uma palavra comum.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="replies">Para onde vão as respostas</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Configuração Somente sobreposição</th><th>O que acontece</th><th>Você precisa</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Configuração Somente sobreposição">Ligado</td><td data-label="O que acontece">As respostas aparecem apenas na sobreposição do bot. Nada é postado no chat.</td><td data-label="Você precisa"><code>bot.html</code> aberto com a mesma sessão. Também é necessário para TTS.</td></tr>
+                        <tr><td data-label="Configuração Somente sobreposição">Desligado</td><td data-label="O que acontece">As respostas continuam na sobreposição e o Social Stream também tenta postá-las no chat de origem.</td><td data-label="Você precisa">Uma fonte de chat com envio compatível, aberta, conectada, autorizada a postar e com chat do anfitrião ativado. <code>bot.html</code> é opcional.</td></tr>
+                    </tbody>
+                </table>
+                <div class="guide-note"><strong>O nome do bot não é uma conta nova.</strong> Só é adicionado ao início da resposta. As respostas saem da conta conectada, a menos que você configure funções de conta no aplicativo independente. Para uma conta separada de bot Twitch, consulte o <a href="twitch-bot-account-chatbot.html">guia de conta de bot do Twitch</a>.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="quiet">Por que o bot fica quieto</h2>
+                <p>O bot é seletivo de propósito. Uma lista vazia de ativadores significa que ele <em>considera</em> todas as mensagens, não que responda a todas.</p>
+                <ul class="guide-list">
+                    <li>Mensagens curtas como <code>hello</code> podem ser ignoradas. Diga o nome do bot para deixar claro.</li>
+                    <li>Se definir uma palavra de ativação, a mensagem deve contê-la.</li>
+                    <li>O modo só moderadores ignora os demais.</li>
+                    <li>Por padrão responde a uma mensagem por vez. Ao postar no chat, também espera 5 segundos por fonte.</li>
+                    <li>Ignora suas próprias mensagens, mensagens vazias e as que chegam perto demais da última resposta.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="hide">Ocultar respostas antigas</h2>
+                <p>Estas opções só afetam a sobreposição do bot (<code>bot.html</code>), não a sobreposição de chat em destaque. As opções de sobreposição nas configurações cobrem as mais comuns.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Quero…</th><th>Adicione ao link</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Quero">Ocultar cada resposta após um tempo</td><td data-label="Adicione ao link"><code>&amp;showtime=10000</code> (milissegundos, ou seja, 10 segundos)</td></tr>
+                        <tr><td data-label="Quero">Ocultar respostas longas mais tarde e curtas mais cedo</td><td data-label="Adicione ao link"><code>&amp;autohide</code> (ou <code>&amp;autotime</code>)</td></tr>
+                        <tr><td data-label="Quero">Definir os tempos mínimo e máximo para ocultar automaticamente</td><td data-label="Adicione ao link"><code>&amp;mintime=5000&amp;maxtime=20000</code> (padrões: 4000 e 30000)</td></tr>
+                        <tr><td data-label="Quero">Ocultar quando a voz terminar</td><td data-label="Adicione ao link"><code>&amp;hideaftertts</code></td></tr>
+                        <tr><td data-label="Quero">Esperar um pouco após a voz terminar</td><td data-label="Adicione ao link"><code>&amp;hidedelay=1000</code> (padrão: 500)</td></tr>
+                        <tr><td data-label="Quero">Parar de esperar uma voz travada</td><td data-label="Adicione ao link"><code>&amp;ttstimeout=60000</code> (padrão: 120000)</td></tr>
+                    </tbody>
+                </table>
+                <p>Usa mais de uma opção? <code>hideaftertts</code> tem prioridade, depois <code>autohide</code>, depois <code>showtime</code>. Se a voz nunca começar, <code>hideaftertts</code> usa um tempo baseado no comprimento.</p>
+                <h3>Limpe agora</h3>
+                <p>Clique em <strong>Limpar sobreposição do bot agora</strong> nas configurações. Isso remove a resposta na tela e as pendentes, mas não para uma voz que já fala.</p>
+                <details class="guide-extra">
+                    <summary>Limpar pela API e personalizar o estilo</summary>
+                    <ul>
+                        <li>Com o controle remoto por API ativado, abra <code>https://io.socialstream.ninja/SESSION_ID/clearBotOverlay</code>.</li>
+                        <li>Ou envie <code>{"action":"clearBotOverlay"}</code> pelo WebSocket da API.</li>
+                    </ul>
+                    <p>O CSS personalizado do link normal <code>bot.html</code> mantém todas essas funções. Uma cópia local ou editada de <code>bot.html</code> não recebe correções posteriores a menos que você atualize.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">Resolver problemas</h2>
+                <p>Encontre a última coisa que funcionou e confira a linha seguinte.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Problema</th><th>Tente isto</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Problema">O botão de teste falha</td><td data-label="Tente isto">Leia o erro abaixo do botão. Confira endereço, chave de API, nome do modelo, se a IA local está rodando, firewall e limites do provedor.</td></tr>
+                        <tr><td data-label="Problema">Conectado, mas a mensagem do espectador não aparece no Dock</td><td data-label="Tente isto">O chat não está sendo capturado. Confira se o Social Stream está ligado, se a janela está aberta e conectada, se é o chat ao vivo correto e os filtros de fontes.</td></tr>
+                        <tr><td data-label="Problema">A mensagem está no Dock, mas não há resposta na sobreposição</td><td data-label="Tente isto">Envie pelo chat real da plataforma, não pelo Dock. Confira bot ativo, palavra de ativação, só moderadores, nome, limite e instruções. Ative <strong>Não filtrar nenhuma resposta do bot</strong> para testar.</td></tr>
+                        <tr><td data-label="Problema">A resposta aparece na sobreposição, mas não no chat</td><td data-label="Tente isto">Desative Somente sobreposição. Confira envio da fonte, permissão da conta para postar, campo de chat disponível, funções de contas e <strong>Desativar o chat do anfitrião e as funções de bloqueio</strong>.</td></tr>
+                        <tr><td data-label="Problema"><code>!bot</code> não faz nada</td><td data-label="Tente isto">Use uma palavra comum como ativador ou permita esse comando no filtro.</td></tr>
+                        <tr><td data-label="Problema">Só o primeiro teste recebe resposta</td><td data-label="Tente isto">Espere a primeira resposta e o limite de frequência. Keep-alive <code>0</code> faz cada resposta demorar para começar.</td></tr>
+                        <tr><td data-label="Problema">A resposta fica na tela depois da voz</td><td data-label="Tente isto">Use <a href="#hide">Ocultar após TTS, automaticamente ou após um tempo fixo</a>.</td></tr>
+                        <tr><td data-label="Problema">Erro OpenAI como <code>401</code> ou <code>429</code></td><td data-label="Tente isto">Veja <a href="#openai">Erros de chave OpenAI</a>.</td></tr>
+                        <tr><td data-label="Problema">Privado <code>chatbot.html</code> está vazio</td><td data-label="Tente isto">Ative o chatbot privado e use o link com a mesma sessão. É um bot separado, então não testa o bot principal.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="openai">Erros de chave OpenAI</h2>
+                <ol class="guide-steps">
+                    <li>Crie uma chave normal de API de projeto na <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">página de chaves de API OpenAI</a>. Não uma chave de administrador.</li>
+                    <li>Confira se pertence ao projeto que será cobrado e se permite solicitações a modelos.</li>
+                    <li>No Social Stream, escolha <strong>ChatGPT API</strong>, cole a chave inteira, digite um modelo permitido no projeto e clique em <strong>Testar bot de chat selecionado</strong>.</li>
+                </ol>
+                <div class="warning-note"><strong>Nunca cole sua chave</strong> em uma mensagem de suporte ou relatório de diagnóstico.</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Erro</th><th>O que significa</th><th>Tente isto</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Erro"><code>401 missing_scope</code> / <code>model.request</code></td><td data-label="O que significa">A chave não permite solicitações a modelos. <code>model.request</code> é uma permissão OpenAI, não algo para digitar no Social Stream.</td><td data-label="Tente isto">Confira se é uma chave normal do projeto correto com solicitações a modelos permitidas. Na dúvida, crie outra e substitua a salva.</td></tr>
+                        <tr><td data-label="Erro"><code>401 invalid_api_key</code></td><td data-label="O que significa">A chave está errada ou não existe mais.</td><td data-label="Tente isto">Procure um caractere faltando ou espaço extra. Confira se a chave não foi apagada, se está no projeto correto e se o Social Stream não usa uma chave antiga salva.</td></tr>
+                        <tr><td data-label="Erro"><code>429</code></td><td data-label="O que significa">Cota esgotada ou solicitações demais.</td><td data-label="Tente isto">Confira cobrança e orçamento da API (separados da assinatura ChatGPT). Reduza a frequência ou espere.</td></tr>
+                    </tbody>
+                </table>
+                <p><strong>Adicionar crédito não resolve um erro 401.</strong> Crédito e permissões são separados. Consulte o <a href="https://developers.openai.com/api/docs/guides/error-codes" target="_blank" rel="noopener">guia de erros da OpenAI</a> e <a href="https://developers.openai.com/api/reference/overview#start-here" target="_blank" rel="noopener">referência de autenticação</a>.</p>
+                <details class="guide-extra">
+                    <summary>Ainda precisa de ajuda?</summary>
+                    <ul>
+                        <li>Se o navegador traduz automaticamente o site OpenAI e os ajustes de chave se comportam de forma estranha, volte à página original em inglês. Isso ajudou um usuário, mas não é uma causa conhecida de erros 401.</li>
+                        <li>Copie o estado, código, permissão ausente e Request ID mostrados no Social Stream. Depois envie logo o relatório de diagnóstico pelo aplicativo. Ele exclui chaves de API e prompts.</li>
+                        <li>Se a chave e o projeto parecem corretos, envie ao suporte OpenAI o Request ID e o horário.</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="other-pages">Outras páginas de bots de IA</h2>
+                <p>O bot principal, chat privado, bot censor e coapresentador IA são ferramentas separadas. Cada uma tem configurações e histórico próprios.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-chatbot-pages-reference.png" alt="Tabela de referência comparando sobreposição do bot principal, chatbot privado, bot de censura e coapresentador de IA" class="guide-image">
+                    <figcaption>O bot privado não substitui o teste do bot principal.</figcaption>
+                </figure>
+                <p>Veja todas as funções de IA no <a href="ai-modes-guide.html">Guia de modos de IA</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licença GPLv3.0.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

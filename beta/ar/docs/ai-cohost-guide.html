@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ar" data-site-root="../../" data-site-language="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ar/docs/ai-cohost-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ar_AR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ar/docs/ai-cohost-guide.html">
+    <meta property="og:title" content="دليل المقدّم المشارك بالذكاء الاصطناعي — Social Stream Ninja">
+    <meta property="og:description" content="دليل إعداد وسير عمل المقدّم المشارك بالذكاء الاصطناعي وعناصر تحكم لوحة الإرساء وتراكب منصة الذكاء الاصطناعي في Social Stream Ninja.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="شعار Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ar/docs/ai-cohost-guide.html">
+    <meta name="twitter:title" content="دليل المقدّم المشارك بالذكاء الاصطناعي — Social Stream Ninja">
+    <meta name="twitter:description" content="دليل إعداد وسير عمل المقدّم المشارك بالذكاء الاصطناعي وعناصر تحكم لوحة الإرساء وتراكب منصة الذكاء الاصطناعي في Social Stream Ninja.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="شعار Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل المقدّم المشارك بالذكاء الاصطناعي — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="دليل إعداد وسير عمل المقدّم المشارك بالذكاء الاصطناعي وعناصر تحكم لوحة الإرساء وتراكب منصة الذكاء الاصطناعي في Social Stream Ninja.">
+    <style>
+        .cohost-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.4rem; margin: 1.4rem 0; }
+        .cohost-picker > div { padding: 1.4rem 1.6rem; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .cohost-picker strong { display: block; margin-bottom: .4rem; font-size: 1.65rem; }
+        .cohost-picker p { margin: 0; font-size: 1.45rem; line-height: 1.5; }
+        .cohost-picker .example { margin-top: .8rem; }
+        .cohost-flow {
+            margin: 18px 0;
+            padding: 18px;
+            border: 1px solid var(--border-color);
+            background: rgba(0, 166, 255, 0.08);
+        }
+        .cohost-code {
+            display: block;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            background: #111827;
+            color: #e5e7eb;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 1.3rem;
+            line-height: 1.45;
+        }
+        @media (max-width: 760px) {
+            .cohost-picker { grid-template-columns: minmax(0, 1fr); }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ar">
+<script id="ssn-site-language" type="application/json">{"language":"ar","page":"docs/ai-cohost-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"التبديل إلى السمة الفاتحة","Switch to dark theme":"التبديل إلى السمة الداكنة","Light mode":"الوضع الفاتح","Dark mode":"الوضع الداكن","Open navigation menu":"فتح قائمة التنقل","Close navigation menu":"إغلاق قائمة التنقل","Copy this document as Markdown to the clipboard":"نسخ هذا المستند بصيغة Markdown إلى الحافظة","Copy Markdown":"نسخ Markdown","Copying…":"جارٍ النسخ…","Markdown copied":"تم نسخ Markdown","Copy failed":"تعذّر النسخ","Copy comprehensive Markdown for an AI assistant":"نسخ Markdown شامل لمساعد ذكاء اصطناعي","Copy this documentation page as Markdown for an AI assistant":"نسخ صفحة التوثيق هذه بصيغة Markdown لمساعد ذكاء اصطناعي"},"strings":{", and your words should appear under":"، وينبغي أن تظهر كلماتك تحت",", browser audio permission, and that OBS captures the co-host page audio. Don't use":"، وإذن الصوت في المتصفح، والتقاط OBS لصوت صفحة المضيف المشارك. لا تستخدم",", if your setup supports it. Keep the speech bubble visible too, so viewers who can't hear can still follow along.":"، إذا كان إعدادك يدعمه. أبقِ فقاعة الكلام ظاهرة أيضاً ليتمكن من لا يسمعون من المتابعة.",", open":"، وافتح",", paste your OpenAI project API key, and click":"، والصق مفتاح API لمشروع OpenAI، ثم انقر",", so payloads stay predictable for overlays and automations.":"، كي تبقى البيانات متوقعة للتراكبات والأتمتة.",", so you'll need an OpenAI API key. Other options are":"، لذا ستحتاج إلى مفتاح OpenAI API. الخيارات الأخرى هي",", the volume slider, the output picker, and":"، وشريط مستوى الصوت، ومحدد الإخراج، و",". Add":". أضف",". Approval happens in the Dock, off-stream.":". تتم الموافقة في لوحة Dock بعيداً عن البث.",". Ask “What is chat saying?” any time.":". اسأل «ماذا تقول الدردشة؟» في أي وقت.",". If you pick":". إذا اخترت",". It should say":". ينبغي أن يعرض",". It talks back and can discuss your chat when you ask.":". يرد عليك ويمكنه مناقشة الدردشة عندما تطلب ذلك.","A draft.":"مسودة.","A stream control tool is missing":"أداة تحكم بالبث مفقودة","AI Co-host":"المضيف المشارك بالذكاء الاصطناعي","AI Co-host Guide - Social Stream Ninja":"دليل المقدّم المشارك بالذكاء الاصطناعي — Social Stream Ninja","AI drafts are never spoken until you click":"لا تُنطق مسودات الذكاء الاصطناعي حتى تنقر","AI stage overlay":"تراكب مسرح الذكاء الاصطناعي","Add":"أضف","Add the stage overlay to OBS:":"أضف تراكب المسرح إلى OBS:","Add these to the end of your":"أضف هذه الخيارات إلى نهاية","Add to the link":"أضف إلى الرابط","Allow the microphone, check your computer's default mic, check internet, and that Chrome speech recognition is available.":"اسمح بالميكروفون، وتحقق من الميكروفون الافتراضي والإنترنت وتوفر التعرف على الكلام في Chrome.","An AI sidekick you can talk to on stream. It can read your chat too.":"مرافق بالذكاء الاصطناعي تتحدث إليه على البث. ويمكنه قراءة الدردشة أيضاً.","Answer":"إجابة (Answer)","Answer / Light Roast:":"إجابة / مزاح خفيف (Answer / Light Roast):","Answer or Light Roast is greyed out":"زر الإجابة أو المزاح الخفيف معطّل","Answer, Light Roast, or SSN Configured LLM times out":"تنتهي مهلة الإجابة أو المزاح الخفيف أو النموذج المعدّ في SSN","Answers every message out loud.":"يجيب عن كل رسالة صوتياً.","Answers questions and mentions out loud by itself.":"يجيب عن الأسئلة والإشارات صوتياً من تلقاء نفسه.","Ask it out loud, like “switch to BRB”, “feature that last message”, or “clear the featured chat”.":"اطلب منه صوتياً، مثل «انتقل إلى BRB» أو «أبرز الرسالة الأخيرة» أو «امسح الدردشة المميزة».","Audio Response":"الاستجابة الصوتية (Audio Response)","Balanced: about 4 seconds. Patient: about 8.":"متوازن: نحو 4 ثوانٍ. متأنٍ: نحو 8 ثوانٍ.","Both show an avatar and speech bubble in OBS using the":"يعرض كلاهما صورة رمزية وفقاعة كلام في OBS باستخدام","Button":"الزر","Change the name shown":"تغيير الاسم المعروض","Chat Bots and AI services → Chat Bot - Private Interface → Enable private chat bot option":"بوتات الدردشة وخدمات الذكاء الاصطناعي ← بوت الدردشة - الواجهة الخاصة ← تفعيل خيار بوت الدردشة الخاص","Chat Bots and AI services → Configure LLM Service Provider":"بوتات الدردشة وخدمات الذكاء الاصطناعي ← إعداد مزود خدمة النموذج اللغوي","ChatGPT API":"ChatGPT API","Check":"تحقق من","Check Social Stream is on, the session matches, Private Chat Bot is on, and your AI provider is reachable.":"تحقق من تشغيل Social Stream وتطابق الجلسة وتفعيل بوت الدردشة الخاص وإمكانية الوصول إلى مزود الذكاء الاصطناعي.","Check the mic isn't muted, and let the first download finish.":"تحقّق من عدم كتم الميكروفون وانتظر اكتمال التنزيل الأول.","Chrome (extension link)":"Chrome (رابط الإضافة)","Chrome's speech recognition. May need internet.":"التعرف على الكلام في Chrome. قد يحتاج إلى الإنترنت.","Click":"انقر على","Co-host":"المقدّم المشارك (Co-host)","Co-host Stream Controls":"عناصر تحكم المقدّم المشارك في البث","Co-host output":"مخرجات المقدّم المشارك","Co-host page doesn't see chat":"لا ترى صفحة المضيف المشارك الدردشة","Commands & API":"الأوامر وAPI","Connect to my Social Stream (required)":"الاتصال بـ Social Stream الخاص بي (مطلوب)","Context only":"السياق فقط (Context only)","Context only - answer when asked (default)":"السياق فقط - الإجابة عند الطلب (افتراضي)","Copies the draft without sending it.":"ينسخ المسودة دون إرسالها.","Copy":"نسخ","Diagnostics":"التشخيصات","Dock buttons":"أزرار Dock","Dock buttons in 5 steps":"أزرار Dock في 5 خطوات","Download":"تنزيل","Drafts a short answer for you to approve.":"يكتب إجابة قصيرة لموافقتك.","Drafts a short, playful, PG roast for you to approve.":"يكتب مزاحاً خفيفاً وقصيراً مناسباً للعائلة لموافقتك.","Extra command details go inside":"توضع تفاصيل الأوامر الإضافية داخل","Fast: waits about 2 seconds after you stop. May cut in on a pause.":"سريع: ينتظر نحو ثانيتين بعد توقفك. قد يقاطعك عند توقف قصير.","Faster and cheaper":"أسرع وأقل تكلفة","Features":"الميزات","Fix problems":"حل المشكلات","For Dock text workflows, the overlay is the picture and optional TTS voice. For the OpenAI voice, capture":"في مسارات النص عبر Dock، يوفّر التراكب الصورة وصوت تحويل النص إلى كلام اختيارياً. لصوت OpenAI، التقط","For OBS, type the exact scene names it may switch to, separated by commas. Keep":"لـ OBS، اكتب أسماء المشاهد المسموح له بالانتقال إليها تماماً، وافصلها بفواصل. أبقِ","Force overlay speech even when the co-host page is talking (adds a second voice)":"إجبار التراكب على الكلام حتى أثناء كلام صفحة المضيف المشارك (يضيف صوتاً ثانياً)","Free AI for testing":"ذكاء اصطناعي مجاني للاختبار","Free trial AI stopped answering":"توقف الذكاء الاصطناعي التجريبي المجاني عن الرد","Full quality (costs more)":"جودة كاملة (تكلفة أعلى)","Guides":"الأدلة","Have the overlay speak (Dock workflow)":"جعل التراكب ينطق (مسار Dock)","Heard":"ما تم سماعه (Heard)","High or Extra high (costs more)":"عالٍ أو عالٍ جداً (تكلفة أعلى)","Hire":"الاستعانة بخدمات المطوّر","Home":"الرئيسية","How it hears you":"كيف يسمعك","How it uses chat":"كيف يستخدم الدردشة","How it uses your chat":"كيف يستخدم دردشتك","How the pages talk (for developers)":"كيف تتواصل الصفحات (للمطورين)","I want to":"أريد أن","I want to…":"أريد أن…","If you talk over it, it stops and drops the unplayed audio.":"إذا تحدثت أثناء كلامه، يتوقف ويتخلص من الصوت الذي لم يُشغّل بعد.","In OBS, capture the audio from the co-host page or app. The AI's voice only plays there.":"في OBS، التقط الصوت من صفحة المضيف المشارك أو التطبيق. صوت الذكاء الاصطناعي يُشغّل هناك فقط.","In the Social Stream popup, pick":"في نافذة Social Stream المنبثقة، اختر","In the Social Stream popup, turn on only the tools you want.":"في نافذة Social Stream المنبثقة، فعّل الأدوات التي تريدها فقط.","Inspiration":"أفكار ملهمة","It keeps up to 20 recent chat messages for up to 90 seconds, including donations, memberships, moderator, event, and channel info. Then it forgets them.":"يحتفظ بما يصل إلى 20 رسالة حديثة لمدة أقصاها 90 ثانية، بما فيها معلومات التبرعات والعضويات والمشرفين والأحداث والقنوات، ثم ينساها.","It knows chat but stays quiet":"يعرف الدردشة لكنه يبقى صامتاً","It may be off or rate-limited. Use your own token, Ollama, or Custom API.":"قد تكون الخدمة معطلة أو محدودة المعدل. استخدم رمزك الخاص أو Ollama أو واجهة API مخصصة.","It only appears once the Dock sees the stage overlay on the same session.":"لا يظهر إلا عندما ترى لوحة Dock تراكب المسرح في الجلسة نفسها.","It reconnects by itself if the connection drops, and starts a fresh session before OpenAI's 60-minute limit. Your instructions and speed settings carry over, but it forgets what was said aloud.":"يعيد الاتصال تلقائياً عند الانقطاع ويبدأ جلسة جديدة قبل حد OpenAI البالغ 60 دقيقة. تنتقل التعليمات وإعدادات السرعة، لكنه ينسى ما قيل صوتياً.","It's billed to your OpenAI API account. It's separate from chatgpt.com and doesn't join a ChatGPT website or app conversation.":"تُحتسب التكلفة على حساب OpenAI API الخاص بك. وهو منفصل عن chatgpt.com ولا ينضم إلى محادثة في موقع ChatGPT أو تطبيقه.","It's free while the trial lasts, and may be turned off or rate-limited. For long-term use, add your own token or use a local AI.":"هو مجاني طوال مدة التجربة وقد يُعطّل أو يُقيّد معدله. للاستخدام الطويل، أضف رمزك الخاص أو استخدم ذكاء اصطناعياً محلياً.","Leave":"اترك","Leave it running while it retries. Diagnostics shows what failed.":"اتركه يعمل أثناء إعادة المحاولة. توضّح التشخيصات ما فشل.","Leave the endpoint, token, and model blank.":"اترك عنوان الخدمة والرمز والنموذج فارغة.","Let it control your stream":"السماح له بالتحكم في البث","Let it see your screen or camera?":"السماح له برؤية الشاشة أو الكاميرا؟","Light Roast":"مزاح خفيف (Light Roast)","Link options":"خيارات الرابط","Listening (Desktop Whisper)":"جارٍ الاستماع (Desktop Whisper)","Listening (OpenAI WebRTC)":"جارٍ الاستماع (OpenAI WebRTC)","Live Chat":"الدردشة المباشرة","Live Chat setting":"إعداد الدردشة المباشرة","Local Gemma won't download":"لا يُنزّل Local Gemma","Main navigation":"التنقل الرئيسي","Make it bigger or smaller":"تكبيره أو تصغيره","Make sure the overlay label matches the Dock's target. The default is":"تأكد من تطابق تسمية التراكب مع هدف Dock. الافتراضي هو","Message format and design notes":"تنسيق الرسائل وملاحظات التصميم","Mini":"مصغّر","Minimal or Low":"أدنى أو منخفض","Model":"النموذج","More about OpenAI Realtime":"المزيد عن OpenAI Realtime","Move it":"تحريكه","Mute and volume buttons":"أزرار الكتم ومستوى الصوت","Mute co-host voice":"كتم صوت المقدّم المشارك (Mute co-host voice)","Mute microphone":"كتم الميكروفون (Mute microphone)","Mute shared system audio":"كتم صوت النظام المشترك (Mute shared system audio)","Needs":"يتطلب","No Co-host menu in the Dock":"لا توجد قائمة المضيف المشارك في Dock","No Co-host menu?":"لا توجد قائمة المضيف المشارك؟","No Video":"دون فيديو (No Video)","None of these post replies into YouTube, Twitch, or Kick chat.":"لا ينشر أي منها ردوداً في دردشة YouTube أو Twitch أو Kick.","Nothing shows in OBS":"لا يظهر شيء في OBS","On":"مفعّل (On)","On this page":"في هذه الصفحة","Only you can trigger tools.":"أنت وحدك من يستطيع تشغيل الأدوات.","Open":"افتح","Open navigation menu":"فتح قائمة التنقل","Open the":"افتح","Open the Dock:":"افتح لوحة Dock:","Open the co-host page with the same":"افتح صفحة المضيف المشارك باستخدام","OpenAI Realtime":"OpenAI Realtime","OpenAI keeps disconnecting":"يستمر OpenAI في قطع الاتصال","Optional. Video starts on":"اختياري. يبدأ الفيديو على","Other browsers":"متصفحات أخرى","Overlay Gallery":"معرض التراكبات","Overlay link options":"خيارات رابط التراكب","Pick a virtual cable under":"اختر كابل صوت افتراضياً ضمن","Pick the microphone you talk into. Keep":"اختر الميكروفون الذي تتحدث فيه. أبقِ","Point its asset host at your own copy of the Gemma files.":"وجّه مضيف ملفاته إلى نسختك الخاصة من ملفات Gemma.","Press":"اضغط","Privacy:":"الخصوصية:","Private Chat Bot on, plus an AI provider.":"بوت الدردشة الخاص مفعّل، مع مزود ذكاء اصطناعي.","Problem":"المشكلة","Read on Co-host":"القراءة عبر المقدّم المشارك (Read on Co-host)","Read on Co-host:":"القراءة عبر المقدّم المشارك (Read on Co-host):","Reasoning changes apply even while connected.":"تسري تغييرات الاستدلال حتى أثناء الاتصال.","Reasoning effort":"جهد الاستدلال","Remembers recent messages and stays quiet until you ask about chat.":"يتذكر الرسائل الحديثة ويبقى صامتاً حتى تسأله عن الدردشة.","Remove":"إزالة (Remove)","Replies are capped at 512 output tokens.":"الحد الأقصى للردود هو 512 رمزاً للإخراج.","Replies are slow":"الردود بطيئة","Right-click a Dock message and pick":"انقر بزر الفأرة الأيمن على رسالة في Dock واختر","Right-click a chat message in the Dock. The AI avatar reads it, or drafts an answer or light roast that you approve first.":"انقر بزر الفأرة الأيمن على رسالة دردشة في Dock. تقرؤها الصورة الرمزية، أو تصوغ إجابة أو مزاحاً خفيفاً توافق عليه أولاً.","SSN Desktop app":"تطبيق SSN لسطح المكتب","SSN Hosted Trial LLM":"SSN Hosted Trial LLM","SSN Hosted Trial LLM (experimental)":"SSN Hosted Trial LLM (تجريبي)","Screen Share":"مشاركة الشاشة (Screen Share)","Select":"اختر","Sends your approved draft to the overlay.":"يرسل المسودة التي وافقت عليها إلى التراكب.","Set it up":"إعداده","Set the overlay's label":"تعيين تسمية التراكب","Set up an AI provider in the popup. For a quick test, use":"أعدّ مزود ذكاء اصطناعي في النافذة المنبثقة. لاختبار سريع، استخدم","Setting":"الإعداد","Setup and workflow guide for the Social Stream Ninja AI co-host, dock controls, and AI stage overlay.":"دليل إعداد وسير عمل المقدّم المشارك بالذكاء الاصطناعي وعناصر تحكم لوحة الإرساء وتراكب منصة الذكاء الاصطناعي في Social Stream Ninja.","Several overlays open":"عدة تراكبات مفتوحة","Show connection status":"عرض حالة الاتصال","Skip to main content":"انتقل إلى المحتوى الرئيسي","Smarter, slower":"أكثر قدرة، أبطأ","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"شعار Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. ترخيص GPLv3.0.","Speak":"نطق (Speak)","Speak a reply to every message":"نطق رد على كل رسالة","Speak replies to questions and mentions":"نطق الردود على الأسئلة والإشارات","Speed and cost":"السرعة والتكلفة","Speed, quality, and cost (OpenAI)":"السرعة والجودة والتكلفة (OpenAI)","Stage overlay connected. No AI needed.":"تراكب المسرح متصل. لا يلزم ذكاء اصطناعي.","Start Co-host":"بدء المقدّم المشارك (Start Co-host)","Stop speaking":"إيقاف الكلام (Stop speaking)","Stream controls":"أدوات التحكم بالبث","Support":"الدعم","Supported Sites":"المواقع المدعومة","Switch theme":"تبديل السمة","Talk to the AI out loud on":"تحدث إلى الذكاء الاصطناعي بصوت مسموع على","Test overlay":"اختبار التراكب (Test overlay)","Test selected chat bot":"اختبار روبوت الدردشة المحدد (Test selected chat bot)","Text shows but no voice (OpenAI)":"يظهر النص دون صوت (OpenAI)","That's normal in Context only. Ask it what chat is saying, or":"هذا طبيعي في وضع السياق فقط. اسأله ماذا تقول الدردشة، أو","The Dock and overlay use the normal Social Stream session bridge. Messages are sent as":"تستخدم لوحة Dock والتراكب جسر جلسة Social Stream العادي. تُرسل الرسائل بصيغة","The avatar reads the message.":"تقرأ الصورة الرمزية الرسالة.","The co-host can play Spotify, switch OBS scenes, or feature a chat message. All are off by default. OpenAI Realtime supports all three. SSN Configured LLM supports Spotify only. Other providers don't support these yet.":"يمكن للمضيف المشارك تشغيل Spotify أو تبديل مشاهد OBS أو إبراز رسالة دردشة. كلها معطّلة افتراضياً. يدعم OpenAI Realtime الثلاثة. يدعم النموذج المعدّ في SSN أداة Spotify فقط. ولا يدعمها المزودون الآخرون بعد.","The co-host page: microphone, AI provider, instructions, and live chat status.":"صفحة المضيف المشارك: الميكروفون ومزود الذكاء الاصطناعي والتعليمات وحالة الدردشة المباشرة.","The right-click menu doesn't work from the keyboard yet. Keyboard users can type or talk on":"لا تعمل قائمة زر الفأرة الأيمن من لوحة المفاتيح حتى الآن. يمكن لمستخدمي لوحة المفاتيح الكتابة أو التحدث على","The stage overlay isn't open on the same session. The Primary chat bot overlay toggle doesn't affect this.":"تراكب المسرح غير مفتوح في الجلسة نفسها. لا يؤثر مفتاح تراكب بوت الدردشة الأساسي في ذلك.","This uses":"يستخدم هذا","To check it can hear you, open":"للتحقق من أنه يسمعك، افتح","Try Mini, Low reasoning, and Fast turn-taking. Compare the Latency line in Diagnostics.":"جرّب النموذج المصغّر والاستدلال المنخفض وتبادل الأدوار السريع. قارن سطر زمن الاستجابة في التشخيصات.","Try this":"جرّب هذا","Turn it on in both the popup and Co-host Stream Controls. OBS needs at least one scene name.":"فعّله في النافذة المنبثقة وفي أدوات تحكم بث المضيف المشارك. يحتاج OBS إلى اسم مشهد واحد على الأقل.","Turn on":"فعّل","Turn on the Private Chat Bot option, and check Social Stream is running.":"فعّل خيار بوت الدردشة الخاص، وتأكد من تشغيل Social Stream.","Turn-taking speed":"سرعة تبادل الأدوار","Two voices at once":"صوتان في الوقت نفسه","Two ways to use it":"طريقتان للاستخدام","Use my own avatar":"استخدام صورتي الرمزية الخاصة","Use the same":"استخدم نفس قيمة","Viewers can't. It runs one tool per request, and can only pick scenes on your list. Featuring a message needs the Dock open. A “done” reply means the request was sent, not that OBS or the overlay finished it.":"لا يستطيع المشاهدون ذلك. ينفّذ أداة واحدة لكل طلب، ويختار المشاهد من قائمتك فقط. يتطلب إبراز رسالة فتح Dock. تعني إجابة «تم» إرسال الطلب، وليس أن OBS أو التراكب أكمل تنفيذه.","Voice co-host":"مضيف مشارك صوتي","Voice co-host in 8 steps":"المضيف المشارك الصوتي في 8 خطوات","Voice co-host setup":"إعداد المضيف المشارك الصوتي","Voice may not work. Typing, live chat, camera or screen, and AI replies can still work.":"قد لا يعمل الصوت. قد تظل الكتابة والدردشة المباشرة والكاميرا أو الشاشة وردود الذكاء الاصطناعي تعمل.","Voice without OpenAI":"الصوت دون OpenAI","Want its own audio track in OBS?":"تريد مساراً صوتياً مستقلاً له في OBS؟","What it does":"ما الذي يفعله","When the co-host page is already playing the voice, the overlay skips its own speech so you don't hear it twice.":"عندما تُشغّل صفحة المضيف المشارك الصوت بالفعل، يتجاوز التراكب نطقه الخاص كي لا تسمعه مرتين.","Where you run it":"أين تشغّله","Whisper, on your own computer. First use downloads about 42 MB. After that it works offline.":"Whisper على جهازك. ينزّل نحو 42 ميغابايت عند الاستخدام الأول، ثم يعمل دون اتصال.","Without OpenAI":"دون OpenAI","You don't need to turn on the Private Chat Bot option for this.":"لا تحتاج إلى تفعيل خيار بوت الدردشة الخاص لهذا.","Your standard key stays in Social Stream. The co-host page only gets a short-lived pass.":"يبقى مفتاحك القياسي في Social Stream. تحصل صفحة المضيف المشارك على تصريح قصير العمر فقط.","and turn on the same tools.":"وفعّل الأدوات نفسها.","as Social Stream and it can see your live chat. Choose how under":"مثل Social Stream، ليتمكن من رؤية دردشتك المباشرة. اختر الطريقة ضمن","as the popup. Set Live Chat to anything but Off.":"كما في النافذة المنبثقة. اضبط الدردشة المباشرة على أي خيار غير إيقاف.","audio separately. The overlay doesn't replay that WebRTC audio.":"بصورة منفصلة. لا يعيد التراكب تشغيل صوت WebRTC هذا.","below":"أدناه","cohost.html control page showing media devices, AI provider settings, system instructions, and live chat status":"صفحة تحكم cohost.html تعرض أجهزة الوسائط وإعدادات مزوّد الذكاء الاصطناعي وتعليمات النظام وحالة الدردشة المباشرة","connected to OBS, or use an OBS Browser Source with Full Permissions.":"متصلاً بـ OBS، أو استخدم مصدر متصفح OBS بصلاحيات كاملة.","control what you hear.":"تتحكم فيما تسمعه.","for this.":"لهذا.","from the overlay link.":"من رابط التراكب.","if it should speak.":"إذا أردت أن ينطق.","instead.":"بدلاً من ذلك.","is separate, and only shows for providers that can use your screen.":"منفصل، ويظهر فقط للمزودين القادرين على استخدام شاشتك.","link from the popup. Keep that link private.":"من النافذة المنبثقة. حافظ على خصوصية الرابط.","link.":".","on":"على","on the co-host page and check the line appears.":"على صفحة المضيف المشارك وتحقق من ظهور السطر.","only feeds chat to the AI with OpenAI Realtime. Other providers watch the chat but don't pass it to the AI.":"يمرّر الدردشة إلى الذكاء الاصطناعي مع OpenAI Realtime فقط. يراقب المزودون الآخرون الدردشة لكن لا يمررونها إلى الذكاء الاصطناعي.","or":"أو","or a camera, OpenAI gets one picture each time you speak or type to it, not a live video. This can add cost and delay.":"أو كاميرا، يحصل OpenAI على صورة واحدة كلما تحدثت أو كتبت إليه، لا على فيديو مباشر. قد يزيد ذلك التكلفة والتأخير.","payloads and targeted by label.":"وتُوجّه باستخدام التسمية.","pick another mode":"اختر وضعاً آخر","selected.":"محدداً.","shows how long replies take to start. Network and OpenAI load can still vary.":"يوضح المدة حتى بدء الردود. قد يظل ذلك متغيراً بحسب الشبكة وحِمل OpenAI.","shows total token use and how fast replies start.":"يوضح إجمالي استخدام الرموز وسرعة بدء الردود.","stays empty (Chrome)":"يبقى فارغاً (Chrome)","stays empty (Desktop)":"يبقى فارغاً (سطح المكتب)","stops sending your voice to the co-host.":"يوقف إرسال صوتك إلى المضيف المشارك.","the Dock asks the private chat bot in the background, shows the draft in the Dock, and only sends it to the overlay after you click Speak.":"تسأل لوحة Dock بوت الدردشة الخاص في الخلفية، وتعرض المسودة فيها، ولا ترسلها إلى التراكب حتى تنقر نطق.","the Dock sends the chosen message straight to":"ترسل لوحة Dock الرسالة المختارة مباشرة إلى","to OBS as a Browser Source for the avatar and speech bubble.":"إلى OBS كمصدر متصفح لعرض الصورة الرمزية وفقاعة الكلام.","turns that off.":"يعطّل ذلك.","your microphone, any screen or camera you pick, and the chat messages you share go to OpenAI. Viewers can't use chat to make the co-host run tools. The co-host link expires after 12 hours, only works for your session, and is removed from the address bar once the page loads.":"يُرسل الميكروفون وأي شاشة أو كاميرا تختارها ورسائل الدردشة التي تشاركها إلى OpenAI. لا يستطيع المشاهدون تشغيل أدوات المضيف المشارك عبر الدردشة. تنتهي صلاحية الرابط بعد 12 ساعة، ويعمل لجلستك فقط، ويُزال من شريط العنوان بعد تحميل الصفحة."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/ai-cohost-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<a class="skip-link" href="#main-content">انتقل إلى المحتوى الرئيسي</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="التنقل الرئيسي"><a href="../index.html">الرئيسية</a><a href="features.html">الميزات</a><a href="inspiration.html" class="site-priority-inspiration">أفكار ملهمة</a><a href="download.html">تنزيل</a><a href="guides.html">الأدلة</a><a href="commands.html">الأوامر وAPI</a><a href="supported-sites.html">المواقع المدعومة</a><a href="overlay-gallery.html" class="site-priority-gallery">معرض التراكبات</a><a href="services.html" class="site-priority-hire">الاستعانة بخدمات المطوّر</a><a href="support.html">الدعم</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="العربية"><span aria-hidden="true">🌐 </span><span lang="ar">العربية</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/ai-cohost-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/ai-cohost-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/ai-cohost-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/ai-cohost-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/ai-cohost-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/ai-cohost-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/ai-cohost-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/ai-cohost-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/ai-cohost-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/ai-cohost-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/ai-cohost-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/ai-cohost-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/ai-cohost-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="ai-cohost-guide.html" lang="ar" hreflang="ar" aria-current="true">العربية</a><a class="site-language-link" href="../../tr/docs/ai-cohost-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/ai-cohost-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/ai-cohost-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="تبديل السمة"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="فتح قائمة التنقل" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>المضيف المشارك بالذكاء الاصطناعي</h1>
+            <p>مرافق بالذكاء الاصطناعي تتحدث إليه على البث. ويمكنه قراءة الدردشة أيضاً.</p>
+        </div>
+    </section>
+
+    <main class="guide-section" id="main-content">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="في هذه الصفحة">
+                <a href="#two-ways">طريقتان للاستخدام</a>
+                <a href="#voice-setup">إعداد المضيف المشارك الصوتي</a>
+                <a href="#chat-modes">كيف يستخدم الدردشة</a>
+                <a href="#other-voice">دون OpenAI</a>
+                <a href="#dock-setup">أزرار Dock</a>
+                <a href="#speed">السرعة والتكلفة</a>
+                <a href="#stream-controls">أدوات التحكم بالبث</a>
+                <a href="#problems">حل المشكلات</a>
+                <a href="#link-options">خيارات الرابط</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="two-ways">طريقتان للاستخدام</h2>
+                <div class="cohost-picker">
+                    <div><strong>مضيف مشارك صوتي</strong><p>تحدث إلى الذكاء الاصطناعي بصوت مسموع على <code>cohost.html</code>. يرد عليك ويمكنه مناقشة الدردشة عندما تطلب ذلك.</p><p class="example"><a href="#voice-setup">إعداده</a></p></div>
+                    <div><strong>أزرار Dock</strong><p>انقر بزر الفأرة الأيمن على رسالة دردشة في Dock. تقرؤها الصورة الرمزية، أو تصوغ إجابة أو مزاحاً خفيفاً توافق عليه أولاً.</p><p class="example"><a href="#dock-setup">إعداده</a></p></div>
+                </div>
+                <p>يعرض كلاهما صورة رمزية وفقاعة كلام في OBS باستخدام <strong>تراكب مسرح الذكاء الاصطناعي</strong>, <code>cohost-overlay.html</code>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-setup">المضيف المشارك الصوتي في 8 خطوات</h2>
+                <p>يستخدم هذا <strong>OpenAI Realtime</strong>، لذا ستحتاج إلى مفتاح OpenAI API. الخيارات الأخرى هي <a href="#other-voice">أدناه</a>.</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>في نافذة Social Stream المنبثقة، اختر <strong>ChatGPT API</strong>، والصق مفتاح API لمشروع OpenAI، ثم انقر <strong>اختبار روبوت الدردشة المحدد (Test selected chat bot)</strong>.</li>
+                        <li>افتح <code>cohost.html</code> من النافذة المنبثقة. حافظ على خصوصية الرابط.</li>
+                        <li>اختر <strong>OpenAI Realtime</strong>.</li>
+                        <li>اختر الميكروفون الذي تتحدث فيه. أبقِ <strong>الاستجابة الصوتية (Audio Response)</strong> محدداً.</li>
+                        <li>اضغط <strong>بدء المقدّم المشارك (Start Co-host)</strong>.</li>
+                        <li>اترك <strong>الدردشة المباشرة</strong> على <strong>السياق فقط (Context only)</strong>. اسأل «ماذا تقول الدردشة؟» في أي وقت.</li>
+                        <li>في OBS، التقط الصوت من صفحة المضيف المشارك أو التطبيق. صوت الذكاء الاصطناعي يُشغّل هناك فقط.</li>
+                        <li>أضف <code>cohost-overlay.html?session=YOUR_SESSION_ID</code> إلى OBS كمصدر متصفح لعرض الصورة الرمزية وفقاعة الكلام.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/guide-ai-cohost-controls.png" alt="صفحة تحكم cohost.html تعرض أجهزة الوسائط وإعدادات مزوّد الذكاء الاصطناعي وتعليمات النظام وحالة الدردشة المباشرة" class="guide-image">
+                        <figcaption>صفحة المضيف المشارك: الميكروفون ومزود الذكاء الاصطناعي والتعليمات وحالة الدردشة المباشرة.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>تريد مساراً صوتياً مستقلاً له في OBS؟</strong> اختر كابل صوت افتراضياً ضمن <strong>مخرجات المقدّم المشارك</strong>، إذا كان إعدادك يدعمه. أبقِ فقاعة الكلام ظاهرة أيضاً ليتمكن من لا يسمعون من المتابعة.</div>
+                <div class="guide-note"><strong>السماح له برؤية الشاشة أو الكاميرا؟</strong> اختياري. يبدأ الفيديو على <strong>دون فيديو (No Video)</strong>. إذا اخترت <strong>مشاركة الشاشة (Screen Share)</strong> أو كاميرا، يحصل OpenAI على صورة واحدة كلما تحدثت أو كتبت إليه، لا على فيديو مباشر. قد يزيد ذلك التكلفة والتأخير.</div>
+                <div class="warning-note"><strong>الخصوصية:</strong> يُرسل الميكروفون وأي شاشة أو كاميرا تختارها ورسائل الدردشة التي تشاركها إلى OpenAI. لا يستطيع المشاهدون تشغيل أدوات المضيف المشارك عبر الدردشة. تنتهي صلاحية الرابط بعد 12 ساعة، ويعمل لجلستك فقط، ويُزال من شريط العنوان بعد تحميل الصفحة.</div>
+                <details class="guide-extra">
+                    <summary>المزيد عن OpenAI Realtime</summary>
+                    <ul>
+                        <li>تُحتسب التكلفة على حساب OpenAI API الخاص بك. وهو منفصل عن chatgpt.com ولا ينضم إلى محادثة في موقع ChatGPT أو تطبيقه.</li>
+                        <li>يبقى مفتاحك القياسي في Social Stream. تحصل صفحة المضيف المشارك على تصريح قصير العمر فقط.</li>
+                        <li>لا تحتاج إلى تفعيل خيار بوت الدردشة الخاص لهذا.</li>
+                        <li>الحد الأقصى للردود هو 512 رمزاً للإخراج. <strong>التشخيصات</strong> يوضح إجمالي استخدام الرموز وسرعة بدء الردود.</li>
+                        <li>إذا تحدثت أثناء كلامه، يتوقف ويتخلص من الصوت الذي لم يُشغّل بعد.</li>
+                        <li>يحتفظ بما يصل إلى 20 رسالة حديثة لمدة أقصاها 90 ثانية، بما فيها معلومات التبرعات والعضويات والمشرفين والأحداث والقنوات، ثم ينساها.</li>
+                        <li>يعيد الاتصال تلقائياً عند الانقطاع ويبدأ جلسة جديدة قبل حد OpenAI البالغ 60 دقيقة. تنتقل التعليمات وإعدادات السرعة، لكنه ينسى ما قيل صوتياً.</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="chat-modes">كيف يستخدم دردشتك</h2>
+                <p>افتح صفحة المضيف المشارك باستخدام <code>session</code> مثل Social Stream، ليتمكن من رؤية دردشتك المباشرة. اختر الطريقة ضمن <strong>الدردشة المباشرة</strong>.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>إعداد الدردشة المباشرة</th><th>ما الذي يفعله</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="إعداد الدردشة المباشرة">السياق فقط - الإجابة عند الطلب (افتراضي)</td><td data-label="ما الذي يفعله">يتذكر الرسائل الحديثة ويبقى صامتاً حتى تسأله عن الدردشة.</td></tr>
+                        <tr><td data-label="إعداد الدردشة المباشرة">نطق الردود على الأسئلة والإشارات</td><td data-label="ما الذي يفعله">يجيب عن الأسئلة والإشارات صوتياً من تلقاء نفسه.</td></tr>
+                        <tr><td data-label="إعداد الدردشة المباشرة">نطق رد على كل رسالة</td><td data-label="ما الذي يفعله">يجيب عن كل رسالة صوتياً.</td></tr>
+                    </tbody>
+                </table>
+                <p>لا ينشر أي منها ردوداً في دردشة YouTube أو Twitch أو Kick. <strong>السياق فقط (Context only)</strong> يمرّر الدردشة إلى الذكاء الاصطناعي مع OpenAI Realtime فقط. يراقب المزودون الآخرون الدردشة لكن لا يمررونها إلى الذكاء الاصطناعي.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="other-voice">الصوت دون OpenAI</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>أين تشغّله</th><th>كيف يسمعك</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="أين تشغّله">تطبيق SSN لسطح المكتب</td><td data-label="كيف يسمعك">Whisper على جهازك. ينزّل نحو 42 ميغابايت عند الاستخدام الأول، ثم يعمل دون اتصال.</td></tr>
+                        <tr><td data-label="أين تشغّله">Chrome (رابط الإضافة)</td><td data-label="كيف يسمعك">التعرف على الكلام في Chrome. قد يحتاج إلى الإنترنت.</td></tr>
+                        <tr><td data-label="أين تشغّله">متصفحات أخرى</td><td data-label="كيف يسمعك">قد لا يعمل الصوت. قد تظل الكتابة والدردشة المباشرة والكاميرا أو الشاشة وردود الذكاء الاصطناعي تعمل.</td></tr>
+                    </tbody>
+                </table>
+                <p>للتحقق من أنه يسمعك، افتح <strong>التشخيصات</strong>. ينبغي أن يعرض <strong>جارٍ الاستماع (Desktop Whisper)</strong> أو <strong>جارٍ الاستماع (OpenAI WebRTC)</strong>، وينبغي أن تظهر كلماتك تحت <strong>ما تم سماعه (Heard)</strong>.</p>
+                <h3>ذكاء اصطناعي مجاني للاختبار</h3>
+                <ol class="guide-steps">
+                    <li>افتح <strong>بوتات الدردشة وخدمات الذكاء الاصطناعي ← إعداد مزود خدمة النموذج اللغوي</strong>.</li>
+                    <li>اختر <strong>SSN Hosted Trial LLM (تجريبي)</strong>.</li>
+                    <li>اترك عنوان الخدمة والرمز والنموذج فارغة.</li>
+                </ol>
+                <p>هو مجاني طوال مدة التجربة وقد يُعطّل أو يُقيّد معدله. للاستخدام الطويل، أضف رمزك الخاص أو استخدم ذكاء اصطناعياً محلياً.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="dock-setup">أزرار Dock في 5 خطوات</h2>
+                <ol class="guide-steps">
+                    <li>افتح لوحة Dock: <code>dock.html?session=YOUR_SESSION_ID</code>.</li>
+                    <li>أضف تراكب المسرح إلى OBS: <code>cohost-overlay.html?session=YOUR_SESSION_ID</code>. أضف <code>&amp;tts</code> إذا أردت أن ينطق.</li>
+                    <li>أعدّ مزود ذكاء اصطناعي في النافذة المنبثقة. لاختبار سريع، استخدم <a href="#other-voice">SSN Hosted Trial LLM</a>.</li>
+                    <li>فعّل <strong>بوتات الدردشة وخدمات الذكاء الاصطناعي ← بوت الدردشة - الواجهة الخاصة ← تفعيل خيار بوت الدردشة الخاص</strong>.</li>
+                    <li>انقر بزر الفأرة الأيمن على رسالة في Dock واختر <strong>المقدّم المشارك (Co-host)</strong>.</li>
+                </ol>
+                <div class="guide-note"><strong>لا توجد قائمة المضيف المشارك؟</strong> لا يظهر إلا عندما ترى لوحة Dock تراكب المسرح في الجلسة نفسها.</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>الزر</th><th>ما الذي يفعله</th><th>يتطلب</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="الزر">القراءة عبر المقدّم المشارك (Read on Co-host)</td><td data-label="ما الذي يفعله">تقرأ الصورة الرمزية الرسالة.</td><td data-label="يتطلب">تراكب المسرح متصل. لا يلزم ذكاء اصطناعي.</td></tr>
+                        <tr><td data-label="الزر">إجابة (Answer)</td><td data-label="ما الذي يفعله">يكتب إجابة قصيرة لموافقتك.</td><td data-label="يتطلب">بوت الدردشة الخاص مفعّل، مع مزود ذكاء اصطناعي.</td></tr>
+                        <tr><td data-label="الزر">مزاح خفيف (Light Roast)</td><td data-label="ما الذي يفعله">يكتب مزاحاً خفيفاً وقصيراً مناسباً للعائلة لموافقتك.</td><td data-label="يتطلب">بوت الدردشة الخاص مفعّل، مع مزود ذكاء اصطناعي.</td></tr>
+                        <tr><td data-label="الزر">نطق (Speak)</td><td data-label="ما الذي يفعله">يرسل المسودة التي وافقت عليها إلى التراكب.</td><td data-label="يتطلب">مسودة.</td></tr>
+                        <tr><td data-label="الزر">نسخ</td><td data-label="ما الذي يفعله">ينسخ المسودة دون إرسالها.</td><td data-label="يتطلب">مسودة.</td></tr>
+                    </tbody>
+                </table>
+                <p>لا تُنطق مسودات الذكاء الاصطناعي حتى تنقر <strong>نطق (Speak)</strong>. تتم الموافقة في لوحة Dock بعيداً عن البث.</p>
+                <p>لا تعمل قائمة زر الفأرة الأيمن من لوحة المفاتيح حتى الآن. يمكن لمستخدمي لوحة المفاتيح الكتابة أو التحدث على <code>cohost.html</code> بدلاً من ذلك.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="speed">السرعة والجودة والتكلفة (OpenAI)</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>الإعداد</th><th>أسرع وأقل تكلفة</th><th>أكثر قدرة، أبطأ</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="الإعداد">النموذج</td><td data-label="أسرع وأقل تكلفة">مصغّر</td><td data-label="أكثر قدرة، أبطأ">جودة كاملة (تكلفة أعلى)</td></tr>
+                        <tr><td data-label="الإعداد">جهد الاستدلال</td><td data-label="أسرع وأقل تكلفة">أدنى أو منخفض</td><td data-label="أكثر قدرة، أبطأ">عالٍ أو عالٍ جداً (تكلفة أعلى)</td></tr>
+                        <tr><td data-label="الإعداد">سرعة تبادل الأدوار</td><td data-label="أسرع وأقل تكلفة">سريع: ينتظر نحو ثانيتين بعد توقفك. قد يقاطعك عند توقف قصير.</td><td data-label="أكثر قدرة، أبطأ">متوازن: نحو 4 ثوانٍ. متأنٍ: نحو 8 ثوانٍ.</td></tr>
+                    </tbody>
+                </table>
+                <p>تسري تغييرات الاستدلال حتى أثناء الاتصال. <strong>التشخيصات</strong> يوضح المدة حتى بدء الردود. قد يظل ذلك متغيراً بحسب الشبكة وحِمل OpenAI.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="stream-controls">السماح له بالتحكم في البث</h2>
+                <p>يمكن للمضيف المشارك تشغيل Spotify أو تبديل مشاهد OBS أو إبراز رسالة دردشة. كلها معطّلة افتراضياً. يدعم OpenAI Realtime الثلاثة. يدعم النموذج المعدّ في SSN أداة Spotify فقط. ولا يدعمها المزودون الآخرون بعد.</p>
+                <ol class="guide-steps">
+                    <li>في نافذة Social Stream المنبثقة، فعّل الأدوات التي تريدها فقط.</li>
+                    <li>لـ OBS، اكتب أسماء المشاهد المسموح له بالانتقال إليها تماماً، وافصلها بفواصل. أبقِ <code>actions.html</code> متصلاً بـ OBS، أو استخدم مصدر متصفح OBS بصلاحيات كاملة.</li>
+                    <li>مفعّل (On) <code>cohost.html</code>، وافتح <strong>عناصر تحكم المقدّم المشارك في البث</strong> وفعّل الأدوات نفسها.</li>
+                    <li>اطلب منه صوتياً، مثل «انتقل إلى BRB» أو «أبرز الرسالة الأخيرة» أو «امسح الدردشة المميزة».</li>
+                </ol>
+                <div class="warning-note"><strong>أنت وحدك من يستطيع تشغيل الأدوات.</strong> لا يستطيع المشاهدون ذلك. ينفّذ أداة واحدة لكل طلب، ويختار المشاهد من قائمتك فقط. يتطلب إبراز رسالة فتح Dock. تعني إجابة «تم» إرسال الطلب، وليس أن OBS أو التراكب أكمل تنفيذه.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">حل المشكلات</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>المشكلة</th><th>جرّب هذا</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="المشكلة">لا توجد قائمة المضيف المشارك في Dock</td><td data-label="جرّب هذا">تراكب المسرح غير مفتوح في الجلسة نفسها. لا يؤثر مفتاح تراكب بوت الدردشة الأساسي في ذلك.</td></tr>
+                        <tr><td data-label="المشكلة">زر الإجابة أو المزاح الخفيف معطّل</td><td data-label="جرّب هذا">فعّل خيار بوت الدردشة الخاص، وتأكد من تشغيل Social Stream.</td></tr>
+                        <tr><td data-label="المشكلة">تنتهي مهلة الإجابة أو المزاح الخفيف أو النموذج المعدّ في SSN</td><td data-label="جرّب هذا">تحقق من تشغيل Social Stream وتطابق الجلسة وتفعيل بوت الدردشة الخاص وإمكانية الوصول إلى مزود الذكاء الاصطناعي.</td></tr>
+                        <tr><td data-label="المشكلة">لا ترى صفحة المضيف المشارك الدردشة</td><td data-label="جرّب هذا">استخدم نفس قيمة <code>session</code> كما في النافذة المنبثقة. اضبط الدردشة المباشرة على أي خيار غير إيقاف.</td></tr>
+                        <tr><td data-label="المشكلة">يعرف الدردشة لكنه يبقى صامتاً</td><td data-label="جرّب هذا">هذا طبيعي في وضع السياق فقط. اسأله ماذا تقول الدردشة، أو <a href="#chat-modes">اختر وضعاً آخر</a>.</td></tr>
+                        <tr><td data-label="المشكلة">لا يظهر شيء في OBS</td><td data-label="جرّب هذا">انقر على <strong>اختبار التراكب (Test overlay)</strong> على صفحة المضيف المشارك وتحقق من ظهور السطر.</td></tr>
+                        <tr><td data-label="المشكلة">يظهر النص دون صوت (OpenAI)</td><td data-label="جرّب هذا">تحقق من <strong>الاستجابة الصوتية (Audio Response)</strong>، وإذن الصوت في المتصفح، والتقاط OBS لصوت صفحة المضيف المشارك. لا تستخدم <code>&amp;tts</code> لهذا.</td></tr>
+                        <tr><td data-label="المشكلة">صوتان في الوقت نفسه</td><td data-label="جرّب هذا">إزالة (Remove) <code>&amp;forcetts</code> من رابط التراكب.</td></tr>
+                        <tr><td data-label="المشكلة"><strong>ما تم سماعه (Heard)</strong> يبقى فارغاً (سطح المكتب)</td><td data-label="جرّب هذا">تحقّق من عدم كتم الميكروفون وانتظر اكتمال التنزيل الأول.</td></tr>
+                        <tr><td data-label="المشكلة"><strong>ما تم سماعه (Heard)</strong> يبقى فارغاً (Chrome)</td><td data-label="جرّب هذا">اسمح بالميكروفون، وتحقق من الميكروفون الافتراضي والإنترنت وتوفر التعرف على الكلام في Chrome.</td></tr>
+                        <tr><td data-label="المشكلة">الردود بطيئة</td><td data-label="جرّب هذا">جرّب النموذج المصغّر والاستدلال المنخفض وتبادل الأدوار السريع. قارن سطر زمن الاستجابة في التشخيصات.</td></tr>
+                        <tr><td data-label="المشكلة">يستمر OpenAI في قطع الاتصال</td><td data-label="جرّب هذا">اتركه يعمل أثناء إعادة المحاولة. توضّح التشخيصات ما فشل.</td></tr>
+                        <tr><td data-label="المشكلة">أداة تحكم بالبث مفقودة</td><td data-label="جرّب هذا">فعّله في النافذة المنبثقة وفي أدوات تحكم بث المضيف المشارك. يحتاج OBS إلى اسم مشهد واحد على الأقل.</td></tr>
+                        <tr><td data-label="المشكلة">توقف الذكاء الاصطناعي التجريبي المجاني عن الرد</td><td data-label="جرّب هذا">قد تكون الخدمة معطلة أو محدودة المعدل. استخدم رمزك الخاص أو Ollama أو واجهة API مخصصة.</td></tr>
+                        <tr><td data-label="المشكلة">لا يُنزّل Local Gemma</td><td data-label="جرّب هذا">وجّه مضيف ملفاته إلى نسختك الخاصة من ملفات Gemma.</td></tr>
+                        <tr><td data-label="المشكلة">عدة تراكبات مفتوحة</td><td data-label="جرّب هذا">تأكد من تطابق تسمية التراكب مع هدف Dock. الافتراضي هو <code>cohost-overlay</code>.</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra">
+                    <summary>أزرار الكتم ومستوى الصوت</summary>
+                    <ul>
+                        <li><strong>كتم الميكروفون (Mute microphone)</strong> يوقف إرسال صوتك إلى المضيف المشارك.</li>
+                        <li><strong>كتم صوت المقدّم المشارك (Mute co-host voice)</strong>، وشريط مستوى الصوت، ومحدد الإخراج، و <strong>إيقاف الكلام (Stop speaking)</strong> تتحكم فيما تسمعه.</li>
+                        <li><strong>كتم صوت النظام المشترك (Mute shared system audio)</strong> منفصل، ويظهر فقط للمزودين القادرين على استخدام شاشتك.</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="link-options">خيارات رابط التراكب</h2>
+                <p>أضف هذه الخيارات إلى نهاية <code>cohost-overlay.html</code> .</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>أريد أن…</th><th>أضف إلى الرابط</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="أريد أن">الاتصال بـ Social Stream الخاص بي (مطلوب)</td><td data-label="أضف إلى الرابط"><code>?session=YOUR_SESSION_ID</code></td></tr>
+                        <tr><td data-label="أريد أن">جعل التراكب ينطق (مسار Dock)</td><td data-label="أضف إلى الرابط"><code>&amp;tts</code> أو <code>&amp;speak=1</code></td></tr>
+                        <tr><td data-label="أريد أن">إجبار التراكب على الكلام حتى أثناء كلام صفحة المضيف المشارك (يضيف صوتاً ثانياً)</td><td data-label="أضف إلى الرابط"><code>&amp;forcetts</code></td></tr>
+                        <tr><td data-label="أريد أن">تعيين تسمية التراكب</td><td data-label="أضف إلى الرابط"><code>&amp;label=cohost-overlay</code></td></tr>
+                        <tr><td data-label="أريد أن">تغيير الاسم المعروض</td><td data-label="أضف إلى الرابط"><code>&amp;name=NinjaBot</code></td></tr>
+                        <tr><td data-label="أريد أن">استخدام صورتي الرمزية الخاصة</td><td data-label="أضف إلى الرابط"><code>&amp;avatar=https://&hellip;</code></td></tr>
+                        <tr><td data-label="أريد أن">تحريكه</td><td data-label="أضف إلى الرابط"><code>&amp;position=bottom-right</code></td></tr>
+                        <tr><td data-label="أريد أن">تكبيره أو تصغيره</td><td data-label="أضف إلى الرابط"><code>&amp;scale=1.2</code></td></tr>
+                        <tr><td data-label="أريد أن">عرض حالة الاتصال</td><td data-label="أضف إلى الرابط"><code>&amp;status</code></td></tr>
+                    </tbody>
+                </table>
+                <p>عندما تُشغّل صفحة المضيف المشارك الصوت بالفعل، يتجاوز التراكب نطقه الخاص كي لا تسمعه مرتين. <code>&amp;forcetts</code> يعطّل ذلك.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="how-it-works">كيف تتواصل الصفحات (للمطورين)</h2>
+                <details class="guide-extra">
+                    <summary>تنسيق الرسائل وملاحظات التصميم</summary>
+                    <p>تستخدم لوحة Dock والتراكب جسر جلسة Social Stream العادي. تُرسل الرسائل بصيغة <code>overlayNinja</code> وتُوجّه باستخدام التسمية.</p>
+                    <div class="cohost-flow">
+                        <p><strong>القراءة عبر المقدّم المشارك (Read on Co-host):</strong> ترسل لوحة Dock الرسالة المختارة مباشرة إلى <code>cohost-overlay.html</code>.</p>
+                        <p><strong>إجابة / مزاح خفيف (Answer / Light Roast):</strong> تسأل لوحة Dock بوت الدردشة الخاص في الخلفية، وتعرض المسودة فيها، ولا ترسلها إلى التراكب حتى تنقر نطق.</p>
+                    </div>
+                    <pre class="cohost-code">{
+  "action": "cohostOverlay",
+  "target": "cohost-overlay",
+  "meta": {
+    "command": "say",
+    "text": "The line the avatar should say",
+    "speak": true,
+    "emotion": "happy"
+  }
+}</pre>
+                    <ul>
+                        <li>في مسارات النص عبر Dock، يوفّر التراكب الصورة وصوت تحويل النص إلى كلام اختيارياً. لصوت OpenAI، التقط <code>cohost.html</code> بصورة منفصلة. لا يعيد التراكب تشغيل صوت WebRTC هذا.</li>
+                        <li>توضع تفاصيل الأوامر الإضافية داخل <code>meta</code>، كي تبقى البيانات متوقعة للتراكبات والأتمتة.</li>
+                    </ul>
+                </details>
+            </div>
+        </div>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. ترخيص GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

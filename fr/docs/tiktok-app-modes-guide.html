@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr" data-site-root="../../" data-site-language="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/fr/docs/tiktok-app-modes-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:url" content="https://socialstream.ninja/fr/docs/tiktok-app-modes-guide.html">
+    <meta property="og:title" content="Modes TikTok dans l’application - Social Stream Ninja">
+    <meta property="og:description" content="Guide pratique des modes de connexion TikTok dans l’application de bureau Social Stream Ninja : Auto, Standard, Local Signer, Compatibilité (WebSocket) et signature par proxy.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/fr/docs/tiktok-app-modes-guide.html">
+    <meta name="twitter:title" content="Modes TikTok dans l’application - Social Stream Ninja">
+    <meta name="twitter:description" content="Guide pratique des modes de connexion TikTok dans l’application de bureau Social Stream Ninja : Auto, Standard, Local Signer, Compatibilité (WebSocket) et signature par proxy.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modes TikTok dans l’application - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Guide pratique des modes de connexion TikTok dans l’application de bureau Social Stream Ninja : Auto, Standard, Local Signer, Compatibilité (WebSocket) et signature par proxy.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="fr">
+<script id="ssn-site-language" type="application/json">{"language":"fr","page":"docs/tiktok-app-modes-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Passer au thème clair","Switch to dark theme":"Passer au thème sombre","Light mode":"Mode clair","Dark mode":"Mode sombre","Open navigation menu":"Ouvrir le menu de navigation","Close navigation menu":"Fermer le menu de navigation","Copy this document as Markdown to the clipboard":"Copier ce document au format Markdown dans le presse-papiers","Copy Markdown":"Copier le Markdown","Copying…":"Copie en cours…","Markdown copied":"Markdown copié","Copy failed":"Échec de la copie","Copy comprehensive Markdown for an AI assistant":"Copier le Markdown complet pour un assistant IA","Copy this documentation page as Markdown for an AI assistant":"Copier cette page de documentation en Markdown pour un assistant IA"},"strings":{"Add TikTok in the desktop app and leave the preset on Auto unless you are troubleshooting a specific failure.":"Ajoutez TikTok dans l’application de bureau et laissez le préréglage sur Auto, sauf pour diagnostiquer un échec précis.","Advanced setup with provider/API key requirements.":"Configuration avancée nécessitant un fournisseur/une clé API.","Auto":"Automatique","Auto fails:":"Auto échoue :","Commands & API":"Commandes et API","Common Fixes":"Solutions courantes","Compatibility (WebSocket)":"Compatibilité (WebSocket)","Desktop app mode troubleshooting starts after the basic TikTok source path is understood.":"Le dépannage des modes de l’application de bureau commence après avoir compris le fonctionnement de base de la source TikTok.","Desktop app version and whether beta mode is enabled.":"Version de l’application de bureau et activation éventuelle du mode bêta.","Download":"Télécharger","Duplicate or missing messages:":"Messages en double ou absents :","Exact app status text or error message.":"Texte d’état ou message d’erreur exact de l’application.","Features":"Fonctionnalités","For basic browser-extension TikTok setup, use the public TikTok setup note first.":"Pour la configuration de base de TikTok dans l’extension de navigateur, commencez par la note publique de configuration TikTok.","Guides":"Guides","Hire":"Faire appel à nos services","Home":"Accueil","Inspiration":"Inspiration","Local Signer":"Signataire local (Local Signer)","Main navigation":"Navigation principale","Mode":"Mode","Mode Picker":"Sélecteur de mode","Normal first setup.":"Première configuration normale.","On this page":"Sur cette page","Open navigation menu":"Ouvrir le menu de navigation","Overlay Gallery":"Galerie d’incrustations","Practical guide to TikTok connection modes in the Social Stream Ninja desktop app: Auto, Standard, Local Signer, Compatibility (WebSocket), and proxy signing.":"Guide pratique des modes de connexion TikTok dans l’application de bureau Social Stream Ninja : Auto, Standard, Local Signer, Compatibilité (WebSocket) et signature par proxy.","Previously called Polling. Still requires signing in the current app; no replies. See the":"Anciennement Polling. Nécessite toujours une signature dans l’application actuelle ; aucune réponse possible. Consultez le","Provider limits, room ID, signing errors, and rate limits.":"Limites du fournisseur, identifiant du salon, erreurs de signature et limites de requêtes.","Proxy/custom signing":"Proxy/signature personnalisée","Redirects, CAPTCHA, hidden chat, or wrong live URL.":"Redirections, CAPTCHA, chat masqué ou mauvaise URL de direct.","Related:":"À consulter aussi :","Replies fail:":"Les réponses échouent :","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Standalone app modes":"Modes de l'application autonome","Standalone app source entries showing Standard, WebSocket, and TikTok connection preset controls":"Sources de l’application autonome affichant les contrôles Standard, WebSocket et les préréglages de connexion TikTok","Standard":"Standard","Standard redirects:":"Standard redirige :","Start Simple":"Commencer simplement","Support":"Assistance","Supported Sites":"Sites pris en charge","Supported Sites Check":"Vérification des sites pris en charge","Switch theme":"Changer de thème","The TikTok preset selector exists because TikTok has several app-specific paths.":"Le sélecteur de préréglage TikTok existe parce que TikTok dispose de plusieurs chemins propres à l’application.","The app may move through fallback states.":"L’application peut passer par plusieurs états de repli.","TikTok App Modes":"Modes TikTok dans l’application","TikTok App Modes - Social Stream Ninja":"Modes TikTok dans l’application - Social Stream Ninja","TikTok Live setup modal showing live page setup guidance":"Fenêtre de configuration TikTok Live affichant les instructions pour la page en direct","TikTok app session/cookies must be valid.":"La session et les cookies TikTok de l’application doivent être valides.","TikTok guide":"Guide TikTok","TikTok preset/mode currently selected.":"Préréglage/mode TikTok actuellement sélectionné.","Trying the compatibility connector settings.":"Pour essayer les paramètres du connecteur de compatibilité.","Use Auto first, then switch modes only when the status text points you there.":"Commencez par Auto, puis changez de mode uniquement lorsque le texte d’état vous y invite.","Use When":"À utiliser quand","Watch For":"Points à surveiller","What To Collect When It Fails":"Informations à recueillir en cas d’échec","Whether chat is visible on the live page in Standard mode.":"Visibilité du chat sur la page en direct en mode Standard.","Whether the account is signed into TikTok inside the app.":"Connexion du compte à TikTok dans l’application.","Whether the dock receives anything before OBS is tested.":"Réception éventuelle de messages par le dock avant le test dans OBS.","You need app-native reading or reply-support paths.":"Vous avez besoin de la lecture native de l’application ou des chemins prenant en charge les réponses.","You need visible page capture or manual login/verification.":"Vous avez besoin de la capture de page visible ou d’une connexion/vérification manuelle.","and":"et","check TikTok session/cookies and whether the current mode supports send-back.":"vérifiez la session/les cookies TikTok et la prise en charge du renvoi de messages par le mode actuel.","close duplicate TikTok source windows/tabs and test one mode at a time.":"fermez les fenêtres/onglets sources TikTok en double et testez un mode à la fois.","reveal the capture page, check the username/live URL, and complete TikTok verification if prompted.":"affichez la page de capture, vérifiez le nom d’utilisateur/l’URL du direct et effectuez la vérification TikTok si elle est demandée.","signing guide":"guide de signature","try Standard to confirm the visible page and login work.":"essayez Standard pour confirmer que la page visible et la connexion fonctionnent."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/tiktok-app-modes-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/tiktok-app-modes-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navigation principale"><a href="../index.html">Accueil</a><a href="features.html">Fonctionnalités</a><a href="inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="download.html">Télécharger</a><a href="guides.html">Guides</a><a href="commands.html">Commandes et API</a><a href="supported-sites.html">Sites pris en charge</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie d’incrustations</a><a href="services.html" class="site-priority-hire">Faire appel à nos services</a><a href="support.html">Assistance</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Français"><span aria-hidden="true">🌐 </span><span lang="fr">Français</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tiktok-app-modes-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tiktok-app-modes-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tiktok-app-modes-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tiktok-app-modes-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="tiktok-app-modes-guide.html" lang="fr" hreflang="fr" aria-current="true">Français</a><a class="site-language-link" href="../../de/docs/tiktok-app-modes-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tiktok-app-modes-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tiktok-app-modes-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tiktok-app-modes-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tiktok-app-modes-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tiktok-app-modes-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tiktok-app-modes-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tiktok-app-modes-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tiktok-app-modes-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tiktok-app-modes-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tiktok-app-modes-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tiktok-app-modes-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Changer de thème"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Ouvrir le menu de navigation" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>Modes TikTok dans l’application</h1><p>Commencez par Auto, puis changez de mode uniquement lorsque le texte d’état vous y invite.</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Sur cette page"><a href="#read-section-1">Commencer simplement</a><a href="#read-section-2">Sélecteur de mode</a><a href="#read-section-3">Informations à recueillir en cas d’échec</a><a href="#read-section-4">Vérification des sites pris en charge</a><a href="#read-section-5">Solutions courantes</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Commencer simplement</h2>
+                <p>Ajoutez TikTok dans l’application de bureau et laissez le préréglage sur Auto, sauf pour diagnostiquer un échec précis.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-standalone-source-modes.png" alt="Sources de l’application autonome affichant les contrôles Standard, WebSocket et les préréglages de connexion TikTok" class="guide-image">
+                    <figcaption>Le sélecteur de préréglage TikTok existe parce que TikTok dispose de plusieurs chemins propres à l’application.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">Sélecteur de mode</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Mode</th><th>À utiliser quand</th><th>Points à surveiller</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Mode">Automatique</td><td data-label="À utiliser quand">Première configuration normale.</td><td data-label="Points à surveiller">L’application peut passer par plusieurs états de repli.</td></tr>
+                        <tr><td data-label="Mode">Standard</td><td data-label="À utiliser quand">Vous avez besoin de la capture de page visible ou d’une connexion/vérification manuelle.</td><td data-label="Points à surveiller">Redirections, CAPTCHA, chat masqué ou mauvaise URL de direct.</td></tr>
+                        <tr><td data-label="Mode">Signataire local (Local Signer)</td><td data-label="À utiliser quand">Vous avez besoin de la lecture native de l’application ou des chemins prenant en charge les réponses.</td><td data-label="Points à surveiller">La session et les cookies TikTok de l’application doivent être valides.</td></tr>
+                        <tr><td data-label="Mode">Compatibilité (WebSocket)</td><td data-label="À utiliser quand">Pour essayer les paramètres du connecteur de compatibilité.</td><td data-label="Points à surveiller">Anciennement Polling. Nécessite toujours une signature dans l’application actuelle ; aucune réponse possible. Consultez le <a href="tiktok-signing.html">guide de signature</a>.</td></tr>
+                        <tr><td data-label="Mode">Proxy/signature personnalisée</td><td data-label="À utiliser quand">Configuration avancée nécessitant un fournisseur/une clé API.</td><td data-label="Points à surveiller">Limites du fournisseur, identifiant du salon, erreurs de signature et limites de requêtes.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">Informations à recueillir en cas d’échec</h2>
+                <ul class="guide-list">
+                    <li>Version de l’application de bureau et activation éventuelle du mode bêta.</li>
+                    <li>Préréglage/mode TikTok actuellement sélectionné.</li>
+                    <li>Texte d’état ou message d’erreur exact de l’application.</li>
+                    <li>Connexion du compte à TikTok dans l’application.</li>
+                    <li>Visibilité du chat sur la page en direct en mode Standard.</li>
+                    <li>Réception éventuelle de messages par le dock avant le test dans OBS.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">Vérification des sites pris en charge</h2>
+                <p>Pour la configuration de base de TikTok dans l’extension de navigateur, commencez par la note publique de configuration TikTok.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/tiktok-live-setup-modal.png" alt="Fenêtre de configuration TikTok Live affichant les instructions pour la page en direct" class="guide-image">
+                    <figcaption>Le dépannage des modes de l’application de bureau commence après avoir compris le fonctionnement de base de la source TikTok.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">Solutions courantes</h2>
+                <ul class="guide-list">
+                    <li><strong>Auto échoue :</strong> essayez Standard pour confirmer que la page visible et la connexion fonctionnent.</li>
+                    <li><strong>Standard redirige :</strong> affichez la page de capture, vérifiez le nom d’utilisateur/l’URL du direct et effectuez la vérification TikTok si elle est demandée.</li>
+                    <li><strong>Les réponses échouent :</strong> vérifiez la session/les cookies TikTok et la prise en charge du renvoi de messages par le mode actuel.</li>
+                    <li><strong>Messages en double ou absents :</strong> fermez les fenêtres/onglets sources TikTok en double et testez un mode à la fois.</li>
+                </ul>
+                <p>À consulter aussi : <a href="tiktok-guide.html">Guide TikTok</a> et <a href="standalone-app-modes.html">Modes de l'application autonome</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

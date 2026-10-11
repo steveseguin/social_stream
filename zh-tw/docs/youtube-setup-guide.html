@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-tw/docs/youtube-setup-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/zh-tw/docs/youtube-setup-guide.html">
+    <meta property="og:title" content="YouTube 設定指南 - Social Stream Ninja">
+    <meta property="og:description" content="選擇正確的 YouTube Social Stream Ninja 設定方式：即時聊天、靜態留言、Standard 擷取、WebSocket/API 模式及 OAuth 專案設定。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-tw/docs/youtube-setup-guide.html">
+    <meta name="twitter:title" content="YouTube 設定指南 - Social Stream Ninja">
+    <meta name="twitter:description" content="選擇正確的 YouTube Social Stream Ninja 設定方式：即時聊天、靜態留言、Standard 擷取、WebSocket/API 模式及 OAuth 專案設定。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube 設定指南 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="選擇正確的 YouTube Social Stream Ninja 設定方式：即時聊天、靜態留言、Standard 擷取、WebSocket/API 模式及 OAuth 專案設定。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/youtube-setup-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"API And OAuth Notes":"API 與 OAuth 注意事項","API mode can expose different event families than visible page capture.":"API 模式可能提供與可見頁面擷取不同的事件類別。","API mode fails:":"API 模式失敗：","Browser extension / Standard capture":"瀏覽器擴充功能 / Standard 擷取","Choose The Mode":"選擇模式","Choose live chat, comments, Standard capture, or API mode deliberately.":"明確選擇即時聊天、留言、Standard 擷取或 API 模式。","Choose the right YouTube Social Stream Ninja setup path: live chat, static comments, Standard capture, WebSocket/API mode, and OAuth project setup.":"選擇正確的 YouTube Social Stream Ninja 設定方式：即時聊天、靜態留言、Standard 擷取、WebSocket/API 模式及 OAuth 專案設定。","Chrome works but app does not:":"Chrome 可用但應用程式不可用：","Commands & API":"指令與 API","Common Fixes":"常見解決方式","Confirm the dock receives messages before opening OBS.":"開啟 OBS 前，確認停駐面板能接收訊息。","Custom YouTube project":"自訂 YouTube 專案","Download":"下載","Features":"功能","Full setup:":"完整設定：","Guides":"指南","Hire":"聘用","Home":"首頁","If YouTube asks for sign-in or permissions, complete that step in the same browser/app context that is doing the capture.":"若 YouTube 要求登入或授權，請在實際執行擷取的同一瀏覽器/應用程式環境中完成。","Inspiration":"靈感","Live Chat Setup":"即時聊天設定","Main navigation":"主導覽","Make sure the stream is actually live or that live chat is available.":"確認直播確實正在進行，或即時聊天可用。","Need background reliability or richer API events":"需要可靠的背景執行或更豐富的 API 事件","Need your own API quota":"需要自己的 API 配額","No chat:":"沒有聊天：","Normal live chat in Chrome":"Chrome 中的一般即時聊天","Notes":"說明","OAuth scopes, account permissions, and API limits matter.":"OAuth 範圍、帳號權限及 API 限制都會影響結果。","OBS blank:":"OBS 畫面空白：","On this page":"本頁內容","Open navigation menu":"開啟導覽選單","Open the YouTube live chat page or the mode-specific source page.":"開啟 YouTube 即時聊天頁面或對應模式的來源頁面。","Open the live chat where the extension can read it.":"在擴充功能能讀取的位置開啟即時聊天。","Overlay Gallery":"疊加畫面圖庫","Search for YouTube first. Social Stream separates live chat from static comments because they are different workflows.":"先搜尋 YouTube。Social Stream 將即時聊天與靜態留言分開，因為它們是不同的工作流程。","Situation":"情況","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Start From Supported Sites":"從支援的網站清單開始","Static video comments":"靜態影片留言","Subscriber data can be delayed by YouTube and may only include public subscriptions.":"YouTube 可能延遲提供訂閱者資料，且可能僅包含公開訂閱。","Support":"支援","Supported Sites":"支援的網站","Supported Sites page filtered to YouTube Live and YouTube Static Comments":"已篩選出 YouTube Live 與 YouTube Static Comments 的支援網站頁面","Switch theme":"切換主題","The desktop app does not automatically share normal Chrome cookies.":"桌面應用程式不會自動共用一般 Chrome 的 Cookie。","This is not live chat.":"這不是即時聊天。","Try First":"先嘗試","Use YouTube Live for live stream chat. Use YouTube Static Comments for normal video comments.":"直播聊天使用 YouTube Live。一般影片留言使用 YouTube Static Comments。","Use the YouTube Project Setup guide.":"使用 YouTube Project Setup 指南。","Use the same session ID in the dock and overlay.":"停駐面板與疊加畫面使用相同的工作階段 ID。","WebSocket/API source mode":"WebSocket/API 來源模式","Write actions need stronger scopes than read-only chat capture.":"寫入操作需要比唯讀聊天擷取更高的權限範圍。","YouTube Project Setup":"YouTube 專案設定","YouTube Setup Guide":"YouTube 設定指南","YouTube Setup Guide - Social Stream Ninja":"YouTube 設定指南 - Social Stream Ninja","YouTube Static Comments":"YouTube 靜態留言（YouTube Static Comments）","check OAuth, scopes, project credentials, and quota.":"檢查 OAuth、範圍、專案憑證及配額。","confirm the stream is live and chat is visible.":"確認直播正在進行，且聊天可見。","sign into YouTube inside the app or use the extension path.":"在應用程式內登入 YouTube，或使用擴充功能方式。","test the dock first, then the overlay URL in a normal browser.":"先測試停駐面板，再在一般瀏覽器中測試疊加畫面 URL。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/youtube-setup-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/youtube-setup-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/youtube-setup-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/youtube-setup-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/youtube-setup-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/youtube-setup-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/youtube-setup-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/youtube-setup-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/youtube-setup-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="youtube-setup-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/youtube-setup-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/youtube-setup-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/youtube-setup-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/youtube-setup-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/youtube-setup-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/youtube-setup-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/youtube-setup-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/youtube-setup-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>YouTube 設定指南</h1><p>明確選擇即時聊天、留言、Standard 擷取或 API 模式。</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="本頁內容"><a href="#read-section-1">從支援的網站清單開始</a><a href="#read-section-2">選擇模式</a><a href="#read-section-3">即時聊天設定</a><a href="#read-section-4">API 與 OAuth 注意事項</a><a href="#read-section-5">常見解決方式</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">從支援的網站清單開始</h2>
+                <p>先搜尋 YouTube。Social Stream 將即時聊天與靜態留言分開，因為它們是不同的工作流程。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-youtube-supported-sites.png" alt="已篩選出 YouTube Live 與 YouTube Static Comments 的支援網站頁面" class="guide-image">
+                    <figcaption>直播聊天使用 YouTube Live。一般影片留言使用 YouTube Static Comments。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">選擇模式</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>情況</th><th>先嘗試</th><th>說明</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="情況">Chrome 中的一般即時聊天</td><td data-label="先嘗試">瀏覽器擴充功能 / Standard 擷取</td><td data-label="說明">在擴充功能能讀取的位置開啟即時聊天。</td></tr>
+                        <tr><td data-label="情況">需要可靠的背景執行或更豐富的 API 事件</td><td data-label="先嘗試">WebSocket/API 來源模式</td><td data-label="說明">OAuth 範圍、帳號權限及 API 限制都會影響結果。</td></tr>
+                        <tr><td data-label="情況">需要自己的 API 配額</td><td data-label="先嘗試">自訂 YouTube 專案</td><td data-label="說明">使用 YouTube Project Setup 指南。</td></tr>
+                        <tr><td data-label="情況">靜態影片留言</td><td data-label="先嘗試">YouTube 靜態留言（YouTube Static Comments）</td><td data-label="說明">這不是即時聊天。</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">即時聊天設定</h2>
+                <ol class="guide-steps">
+                    <li>確認直播確實正在進行，或即時聊天可用。</li>
+                    <li>開啟 YouTube 即時聊天頁面或對應模式的來源頁面。</li>
+                    <li>開啟 OBS 前，確認停駐面板能接收訊息。</li>
+                    <li>停駐面板與疊加畫面使用相同的工作階段 ID。</li>
+                </ol>
+                <p>若 YouTube 要求登入或授權，請在實際執行擷取的同一瀏覽器/應用程式環境中完成。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">API 與 OAuth 注意事項</h2>
+                <ul class="guide-list">
+                    <li>API 模式可能提供與可見頁面擷取不同的事件類別。</li>
+                    <li>YouTube 可能延遲提供訂閱者資料，且可能僅包含公開訂閱。</li>
+                    <li>寫入操作需要比唯讀聊天擷取更高的權限範圍。</li>
+                    <li>桌面應用程式不會自動共用一般 Chrome 的 Cookie。</li>
+                </ul>
+                <p>完整設定： <a href="youtube-project-setup.html">YouTube 專案設定</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">常見解決方式</h2>
+                <ul class="guide-list">
+                    <li><strong>沒有聊天：</strong> 確認直播正在進行，且聊天可見。</li>
+                    <li><strong>Chrome 可用但應用程式不可用：</strong> 在應用程式內登入 YouTube，或使用擴充功能方式。</li>
+                    <li><strong>API 模式失敗：</strong> 檢查 OAuth、範圍、專案憑證及配額。</li>
+                    <li><strong>OBS 畫面空白：</strong> 先測試停駐面板，再在一般瀏覽器中測試疊加畫面 URL。</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 授權條款。</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

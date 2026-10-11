@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-tw/docs/twitch-bot-account-chatbot.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/zh-tw/docs/twitch-bot-account-chatbot.html">
+    <meta property="og:title" content="用於自動回覆的機器人帳號 - Social Stream Ninja">
+    <meta property="og:description" content="使用 Twitch WebSocket 機器人帳號或獨立的僅回覆來源，讓 Social Stream Ninja 從另一個帳號傳送自動回覆。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-tw/docs/twitch-bot-account-chatbot.html">
+    <meta name="twitter:title" content="用於自動回覆的機器人帳號 - Social Stream Ninja">
+    <meta name="twitter:description" content="使用 Twitch WebSocket 機器人帳號或獨立的僅回覆來源，讓 Social Stream Ninja 從另一個帳號傳送自動回覆。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用於自動回覆的機器人帳號 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="使用 Twitch WebSocket 機器人帳號或獨立的僅回覆來源，讓 Social Stream Ninja 從另一個帳號傳送自動回覆。">
+    <style>
+        .bot-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin: 22px 0;
+        }
+        .bot-guide-card {
+            background: var(--card-bg, #fff);
+            border: 1px solid rgba(127, 127, 127, 0.22);
+            border-radius: 8px;
+            padding: 18px;
+        }
+        .bot-guide-card h3 {
+            margin-top: 0;
+        }
+        .bot-guide-shot {
+            display: block;
+            width: auto;
+            max-width: 100%;
+            border: 1px solid rgba(127, 127, 127, 0.28);
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            margin: 16px auto 8px;
+        }
+        .bot-guide-caption {
+            color: var(--text-secondary);
+            font-size: 1.4rem;
+            margin-bottom: 22px;
+        }
+        .dark-mode .bot-guide-card {
+            background: #161b22;
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/twitch-bot-account-chatbot.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{", and its separate session at the top.":"，頂端顯示其獨立工作階段。",", click":"，點選",", the separate bot source takes priority. SSN will not also send the same reply through the attached Twitch WebSocket bot account.":"，則獨立機器人來源優先。SSN 不會同時透過附加的 Twitch WebSocket 機器人帳號傳送相同回覆。","A separate SSApp Twitch source configured as Reply only with Role Bot and a bot-account browser session":"獨立的 SSApp Twitch 來源，設為 Reply only、Role Bot，並使用機器人帳號瀏覽器工作階段","Account role":"帳號角色","Account roles can support more advanced routing setups.":"帳號角色可支援更進階的路由設定。","Activate the bot source and leave it running whenever it needs to send replies.":"啟用機器人來源，並在需要傳送回覆時保持執行。","Add the same channel or source again. If SSApp asks whether to make it a reply-only bot source, choose":"再次加入相同頻道或來源。若 SSApp 詢問是否建立僅回覆的機器人來源，請選擇","Add your normal source for capturing chat.":"加入用於擷取聊天的一般來源。","Automatic reply account: @BotName":"自動回覆帳號：@BotName","Automatic reply account: Main account":"自動回覆帳號：主帳號","Best for":"適合","Bot":"機器人（Bot）","Bot Accounts for Automatic Replies":"用於自動回覆的機器人帳號","Bot Accounts for Automatic Replies - Social Stream Ninja":"用於自動回覆的機器人帳號 - Social Stream Ninja","Bot reply-only (no capture)":"機器人僅回覆（不擷取）","Both methods make automatic replies appear under a bot account instead of your main account. They do it in different ways.":"兩種方式都會讓自動回覆以機器人帳號而非主帳號的身分出現，但實現方式不同。","Browser Session Settings":"瀏覽器工作階段設定","Can work with other platforms that support outgoing replies.":"可用於支援傳送回覆的其他平台。","Chatbot and scheduled automatic replies use the bot account.":"聊天機器人及定時自動回覆使用機器人帳號。","Choose the simple Twitch WebSocket option or the existing separate reply-only source method.":"選擇簡單的 Twitch WebSocket 選項，或既有的獨立僅回覆來源方式。","Click":"點選","Click the source's":"點選來源的","Commands & API":"指令與 API","Connect bot account":"連接機器人帳號","Cons":"缺點","Download":"下載","Enter this value:":"輸入此值：","Extra source?":"需要額外來源？","Features":"功能","Guides":"指南","Hire":"聘用","Home":"首頁","If Both Methods Are Configured":"若同時設定兩種方式","If reply-only is disabled, the second source can capture duplicate messages.":"若停用 Reply only，第二個來源可能擷取重複訊息。","In SSApp, find your Twitch source and make sure":"在 SSApp 中找到 Twitch 來源，並確認","In Twitch Shared Chat, bot replies stay in this source's channel.":"在 Twitch Shared Chat 中，機器人回覆會留在此來源的頻道內。","In the settings panel on the right, switch to full mode and search for":"在右側設定面板中切換至完整模式，並搜尋","Inspiration":"靈感","It does not create another source or permanent browser session.":"這不會建立另一個來源或永久瀏覽器工作階段。","It is not available for Twitch Standard mode, other platforms, or the browser extension.":"此功能不適用於 Twitch Standard 模式、其他平台或瀏覽器擴充功能。","Main navigation":"主導覽","Manual sends still use the main Twitch account.":"手動傳送仍使用主 Twitch 帳號。","Method":"方法","Method 1: Twitch WebSocket Bot Account":"方法 1：Twitch WebSocket 機器人帳號","Method 2: Separate Reply-Only Bot Source":"方法 2：獨立的僅回覆機器人來源","More settings must be kept in sync.":"需要保持更多設定同步。","No":"否","No second source to create or keep running.":"無須建立或執行第二個來源。","On the second source, open":"在第二個來源上，開啟","On this page":"本頁內容","Open its gear menu. Enable":"開啟其齒輪選單。啟用","Open navigation menu":"開啟導覽選單","Overlay Gallery":"疊加畫面圖庫","Pros":"優點","Replies still use the main account:":"回覆仍使用主帳號：","Reply only":"僅回覆（Reply only）","Requires a second source and a separate session.":"需要第二個來源和獨立工作階段。","Review the explanation, then click":"閱讀說明，然後點選","Role: Bot":"角色：機器人（Role: Bot）","SSApp Automatic reply account dialog with the Connect bot account button":"帶有 Connect bot account 按鈕的 SSApp 自動回覆帳號對話方塊","SSApp Twitch WebSocket source with its gear menu open and Automatic reply account set to Main account":"SSApp Twitch WebSocket 來源已開啟齒輪選單，Automatic reply account 設為 Main account","SSApp opens a separate Twitch sign-in window. Sign in with the account that should send bot replies.":"SSApp 會開啟獨立的 Twitch 登入視窗。使用應傳送機器人回覆的帳號登入。","SSN setting Send bot replies through these SSApp account roles filled with bot":"SSN 設定 Send bot replies through these SSApp account roles 填為 bot","Send bot replies through these SSApp account roles":"透過這些 SSApp 帳號角色傳送機器人回覆","Separate reply-only bot source":"獨立的僅回覆機器人來源","Set":"設定","Sign in":"登入（Sign in）","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","The attached Twitch bot cannot send:":"附加的 Twitch 機器人無法傳送：","The bot must be a moderator, or the channel owner may need to reconnect once to approve Twitch bot access.":"機器人必須是管理員，否則頻道擁有者可能需要重新連接一次，以核准 Twitch 機器人存取權限。","The bot source has its own browser session and source controls.":"機器人來源擁有自己的瀏覽器工作階段與來源控制項。","The bot source must be active to send.":"機器人來源必須處於啟用狀態才能傳送。","The easiest Twitch-only setup":"最簡單的 Twitch 專用設定","The finished second source shows":"完成後的第二個來源顯示","The new attached-account method is only for Twitch WebSocket sources in the SSApp desktop app.":"新的附加帳號方式僅適用於 SSApp 桌面應用程式中的 Twitch WebSocket 來源。","The new option is missing:":"找不到新選項：","The screenshots below use Twitch, but this method is not Twitch-only. It can also be used with other SSApp sources that support signing in and sending replies.":"下方截圖使用 Twitch，但此方式不限於 Twitch。也可用於支援登入與傳送回覆的其他 SSApp 來源。","The separate sign-in window prevents your normal browser's Twitch login from silently choosing the wrong account.":"獨立登入視窗可防止一般瀏覽器中的 Twitch 登入狀態自動選擇錯誤帳號。","The separate source captures duplicate chat:":"獨立來源擷取重複聊天：","The separate source sends nothing:":"獨立來源沒有傳送任何內容：","The wrong Twitch account was selected:":"選擇了錯誤的 Twitch 帳號：","This attaches a second Twitch login to your existing WebSocket source.":"這會將第二個 Twitch 登入關聯到現有的 WebSocket 來源。","This is the original SSApp method and it is still supported. It creates a second source, gives that source its own browser session, and routes automatic replies through sources with the":"這是最初的 SSApp 方式，仍受支援。它建立第二個來源，為其指派獨立瀏覽器工作階段，並透過具有以下角色的來源路由自動回覆：","This section appears only when that Twitch source is using WebSocket mode.":"僅在該 Twitch 來源使用 WebSocket 模式時，才顯示此區段。","Tip: Click or tap any screenshot to open it at full size.":"提示：點選或輕觸任意截圖可查看原始尺寸。","Troubleshooting":"疑難排解","Twitch Standard mode or another platform that can send replies":"Twitch Standard 模式或其他可傳送回覆的平台","Twitch WebSocket bot account":"Twitch WebSocket 機器人帳號","Twitch WebSocket sending":"Twitch WebSocket 傳送","Twitch only.":"僅限 Twitch。","Under":"位於","Use a Twitch WebSocket bot account or a separate reply-only source to send Social Stream Ninja automatic replies from another account.":"使用 Twitch WebSocket 機器人帳號或獨立的僅回覆來源，讓 Social Stream Ninja 從另一個帳號傳送自動回覆。","Use one method for a given reply path. If":"每條回覆路徑使用一種方式。若","Very little setup after the WebSocket source is connected.":"WebSocket 來源連接後，只需少量設定。","WebSocket":"WebSocket","WebSocket mode only.":"僅限 WebSocket 模式。","When the sign-in finishes, the source menu changes to":"登入完成後，來源選單變為","Which Method Should I Use?":"應該使用哪種方式？","Works with Twitch Standard mode.":"適用於 Twitch Standard 模式。","Yes":"是","activate it, confirm it is signed in as the bot, and verify the routing field contains exactly":"啟用它，確認已用機器人帳號登入，並檢查路由欄位恰好包含","and cycle":"並切換","and use a separate session such as":"並使用獨立工作階段，例如","bot replies":"bot replies","choose the account again and sign into the separate SSApp Twitch window with the bot account.":"重新選擇帳號，並在獨立的 SSApp Twitch 視窗中使用機器人帳號登入。","confirm this is the SSApp desktop app and the Twitch source is set to WebSocket mode.":"確認使用的是 SSApp 桌面應用程式，且 Twitch 來源設為 WebSocket 模式。","enable":"啟用","gear button":"齒輪按鈕","in this field. The two relay-role fields above it are separate settings and can stay blank.":"至此欄位。上方兩個轉送角色欄位屬於獨立設定，可以留空。","is configured as":"設為","is selected.":"已選取。","make the bot a moderator. If it is not a moderator, reconnect the main Twitch account once using the channel owner and approve the requested permission.":"將機器人設為管理員。若不是管理員，請用頻道擁有者身分重新連接主 Twitch 帳號一次，並核准所要求的權限。","on that second source and sign in with the bot account.":"在第二個來源上，並使用機器人帳號登入。","role.":"角色。","to":"為","until it says":"直到顯示","verify the attached account is shown by username, or verify the separate source says":"檢查附加帳號是否顯示使用者名稱，或檢查獨立來源是否顯示"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/twitch-bot-account-chatbot.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/twitch-bot-account-chatbot.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/twitch-bot-account-chatbot.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/twitch-bot-account-chatbot.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/twitch-bot-account-chatbot.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/twitch-bot-account-chatbot.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/twitch-bot-account-chatbot.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/twitch-bot-account-chatbot.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/twitch-bot-account-chatbot.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="twitch-bot-account-chatbot.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/twitch-bot-account-chatbot.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/twitch-bot-account-chatbot.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/twitch-bot-account-chatbot.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/twitch-bot-account-chatbot.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/twitch-bot-account-chatbot.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/twitch-bot-account-chatbot.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/twitch-bot-account-chatbot.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/twitch-bot-account-chatbot.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>用於自動回覆的機器人帳號</h1>
+            <p>選擇簡單的 Twitch WebSocket 選項，或既有的獨立僅回覆來源方式。</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="本頁內容"><a href="#read-section-1">應該使用哪種方式？</a><a href="#read-section-2">方法 1：Twitch WebSocket 機器人帳號</a><a href="#read-section-3">方法 2：獨立的僅回覆機器人來源</a><a href="#read-section-4">若同時設定兩種方式</a><a href="#read-section-5">疑難排解</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">應該使用哪種方式？</h2>
+                <p>兩種方式都會讓自動回覆以機器人帳號而非主帳號的身分出現，但實現方式不同。</p>
+                <div class="guide-note">
+                    <p><strong>新的附加帳號方式僅適用於 SSApp 桌面應用程式中的 Twitch WebSocket 來源。</strong> 此功能不適用於 Twitch Standard 模式、其他平台或瀏覽器擴充功能。</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr>
+                            <th>方法</th>
+                            <th>適合</th>
+                            <th>需要額外來源？</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="方法"><strong>Twitch WebSocket 機器人帳號</strong></td>
+                            <td data-label="適合">最簡單的 Twitch 專用設定</td>
+                            <td data-label="需要額外來源？">否</td>
+                        </tr>
+                        <tr>
+                            <td data-label="方法"><strong>獨立的僅回覆機器人來源</strong></td>
+                            <td data-label="適合">Twitch Standard 模式或其他可傳送回覆的平台</td>
+                            <td data-label="需要額外來源？">是</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">方法 1：Twitch WebSocket 機器人帳號</h2>
+                <p>這會將第二個 Twitch 登入關聯到現有的 WebSocket 來源。 <strong>這不會建立另一個來源或永久瀏覽器工作階段。</strong></p>
+                <p><small>提示：點選或輕觸任意截圖可查看原始尺寸。</small></p>
+                <ol class="guide-steps">
+                    <li>在 SSApp 中找到 Twitch 來源，並確認 <strong>WebSocket</strong> 已選取。</li>
+                    <li>點選來源的 <strong>齒輪按鈕</strong>.</li>
+                    <li>位於 <strong>Twitch WebSocket 傳送</strong>，點選 <strong>自動回覆帳號：主帳號</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-websocket-bot-menu.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-websocket-bot-menu.png" alt="SSApp Twitch WebSocket 來源已開啟齒輪選單，Automatic reply account 設為 Main account">
+                </a>
+                <p class="bot-guide-caption">僅在該 Twitch 來源使用 WebSocket 模式時，才顯示此區段。</p>
+
+                <ol class="guide-steps" start="4">
+                    <li>閱讀說明，然後點選 <strong>連接機器人帳號</strong>.</li>
+                    <li>SSApp 會開啟獨立的 Twitch 登入視窗。使用應傳送機器人回覆的帳號登入。</li>
+                    <li>登入完成後，來源選單變為 <strong>自動回覆帳號：@BotName</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-bot-account-dialog.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-bot-account-dialog.png" alt="帶有 Connect bot account 按鈕的 SSApp 自動回覆帳號對話方塊">
+                </a>
+                <p class="bot-guide-caption">獨立登入視窗可防止一般瀏覽器中的 Twitch 登入狀態自動選擇錯誤帳號。</p>
+
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>優點</h3>
+                        <ul class="guide-list">
+                            <li>無須建立或執行第二個來源。</li>
+                            <li>WebSocket 來源連接後，只需少量設定。</li>
+                            <li>聊天機器人及定時自動回覆使用機器人帳號。</li>
+                            <li>在 Twitch Shared Chat 中，機器人回覆會留在此來源的頻道內。</li>
+                        </ul>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>缺點</h3>
+                        <ul class="guide-list">
+                            <li>僅限 Twitch。</li>
+                            <li>僅限 WebSocket 模式。</li>
+                            <li>手動傳送仍使用主 Twitch 帳號。</li>
+                            <li>機器人必須是管理員，否則頻道擁有者可能需要重新連接一次，以核准 Twitch 機器人存取權限。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">方法 2：獨立的僅回覆機器人來源</h2>
+                <p>這是最初的 SSApp 方式，仍受支援。它建立第二個來源，為其指派獨立瀏覽器工作階段，並透過具有以下角色的來源路由自動回覆： <code>bot</code> 角色。</p>
+                <p>下方截圖使用 Twitch，但此方式不限於 Twitch。也可用於支援登入與傳送回覆的其他 SSApp 來源。</p>
+                <ol class="guide-steps">
+                    <li>加入用於擷取聊天的一般來源。</li>
+                    <li>再次加入相同頻道或來源。若 SSApp 詢問是否建立僅回覆的機器人來源，請選擇 <strong>是</strong>.</li>
+                    <li>在第二個來源上，開啟 <strong>瀏覽器工作階段設定</strong> 並使用獨立工作階段，例如 <code>bot-account</code>.</li>
+                    <li>點選 <strong>登入（Sign in）</strong> 在第二個來源上，並使用機器人帳號登入。</li>
+                    <li>開啟其齒輪選單。啟用 <strong>機器人僅回覆（不擷取）</strong> 並切換 <strong>帳號角色</strong> 直到顯示 <strong>機器人（Bot）</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-separate-reply-only-bot-source.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-separate-reply-only-bot-source.png" alt="獨立的 SSApp Twitch 來源，設為 Reply only、Role Bot，並使用機器人帳號瀏覽器工作階段">
+                </a>
+                <p class="bot-guide-caption">完成後的第二個來源顯示 <strong>僅回覆（Reply only）</strong>, <strong>角色：機器人（Role: Bot）</strong>，頂端顯示其獨立工作階段。</p>
+
+                <ol class="guide-steps" start="6">
+                    <li>在右側設定面板中切換至完整模式，並搜尋 <strong>bot replies</strong>.</li>
+                    <li>設定 <strong>透過這些 SSApp 帳號角色傳送機器人回覆</strong> 為 <code>bot</code>.</li>
+                    <li>啟用機器人來源，並在需要傳送回覆時保持執行。</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssn-bot-reply-role-routing.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssn-bot-reply-role-routing.png" alt="SSN 設定 Send bot replies through these SSApp account roles 填為 bot">
+                </a>
+                <p class="bot-guide-caption">輸入此值： <code>bot</code> 至此欄位。上方兩個轉送角色欄位屬於獨立設定，可以留空。</p>
+
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>優點</h3>
+                        <ul class="guide-list">
+                            <li>適用於 Twitch Standard 模式。</li>
+                            <li>可用於支援傳送回覆的其他平台。</li>
+                            <li>機器人來源擁有自己的瀏覽器工作階段與來源控制項。</li>
+                            <li>帳號角色可支援更進階的路由設定。</li>
+                        </ul>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>缺點</h3>
+                        <ul class="guide-list">
+                            <li>需要第二個來源和獨立工作階段。</li>
+                            <li>機器人來源必須處於啟用狀態才能傳送。</li>
+                            <li>需要保持更多設定同步。</li>
+                            <li>若停用 Reply only，第二個來源可能擷取重複訊息。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">若同時設定兩種方式</h2>
+                <p>每條回覆路徑使用一種方式。若 <strong>透過這些 SSApp 帳號角色傳送機器人回覆</strong> 設為 <code>bot</code>，則獨立機器人來源優先。SSN 不會同時透過附加的 Twitch WebSocket 機器人帳號傳送相同回覆。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">疑難排解</h2>
+                <ul class="guide-list">
+                    <li><strong>找不到新選項：</strong> 確認使用的是 SSApp 桌面應用程式，且 Twitch 來源設為 WebSocket 模式。</li>
+                    <li><strong>附加的 Twitch 機器人無法傳送：</strong> 將機器人設為管理員。若不是管理員，請用頻道擁有者身分重新連接主 Twitch 帳號一次，並核准所要求的權限。</li>
+                    <li><strong>選擇了錯誤的 Twitch 帳號：</strong> 重新選擇帳號，並在獨立的 SSApp Twitch 視窗中使用機器人帳號登入。</li>
+                    <li><strong>獨立來源沒有傳送任何內容：</strong> 啟用它，確認已用機器人帳號登入，並檢查路由欄位恰好包含 <code>bot</code>.</li>
+                    <li><strong>獨立來源擷取重複聊天：</strong> 啟用 <strong>機器人僅回覆（不擷取）</strong>.</li>
+                    <li><strong>回覆仍使用主帳號：</strong> 檢查附加帳號是否顯示使用者名稱，或檢查獨立來源是否顯示 <strong>角色：機器人（Role: Bot）</strong>.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 授權條款。</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

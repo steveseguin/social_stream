@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/docs/obs-studio-guide.html">
+    <meta name="twitter:title" content="Průvodce pro začátečníky OBS Studio – Social Stream Ninja">
+    <meta name="twitter:description" content="Nastavte OBS Studio, vytvořte scénu, vyberte hardwarový kodér a datový tok platformy, mixujte a monitorujte zvuk a přidejte zdroje prohlížeče.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Průvodce pro začátečníky OBS Studio – Social Stream Ninja</title>
+    <meta name="description" content="Nastavte OBS Studio, vytvořte scénu, vyberte hardwarový kodér a datový tok platformy, mixujte a monitorujte zvuk a přidejte zdroje prohlížeče.">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/docs/obs-studio-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:title" content="Průvodce pro začátečníky OBS Studio – Social Stream Ninja">
+    <meta property="og:description" content="Nastavte OBS Studio, vytvořte scénu, vyberte hardwarový kodér a datový tok platformy, mixujte a monitorujte zvuk a přidejte zdroje prohlížeče.">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/docs/obs-studio-guide.html">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="stylesheet" href="../../docs/css/site-shell.css">
+    <script src="../../docs/js/site-shell.js"></script>
+    <style>
+        body.obs-page { padding-top: 76px; background: var(--site-bg); color: var(--site-text); font-family: var(--site-font); }
+        .obs-page .obs-guide, .obs-page .obs-hero { max-width: 1160px; margin: auto; padding: 0 28px; }
+        .obs-page .obs-hero { padding-top: 52px; padding-bottom: 30px; }
+        .obs-page .obs-eyebrow { color: var(--site-muted); font-size: 13px; letter-spacing: .06em; margin-bottom: 20px; }
+        .obs-page .obs-hero h1 { font-size: 52px; line-height: 1.1; letter-spacing: -.045em; max-width: 750px; margin-bottom: 20px; }
+        .obs-page .obs-lead { max-width: 620px; color: var(--site-muted); font-size: 19px; line-height: 1.6; }
+        .obs-page a { color: var(--site-accent); text-underline-offset: 3px; }
+        .obs-guide a, .obs-hero a { text-decoration: underline; }
+        .obs-guide .obs-jumps { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 0 30px; }
+        .obs-guide .obs-jumps a { background: var(--site-surface); border: 1px solid var(--site-line); border-radius: 24px; padding: 8px 16px; color: var(--site-text); text-decoration: none; font-size: 14px; }
+        .obs-guide .obs-jumps a:hover { border-color: var(--site-accent); }
+        .obs-guide .obs-step { padding: 48px 0; border-top: 1px solid var(--site-line); scroll-margin-top: 94px; }
+        .obs-guide .obs-heading { display: flex; align-items: baseline; gap: 14px; margin-bottom: 24px; }
+        .obs-guide .obs-number { color: var(--site-accent); font-size: 14px; font-weight: 700; }
+        .obs-guide h2 { text-align: left; font-size: 28px; line-height: 1.25; letter-spacing: -.025em; margin: 0; padding: 0; }
+        .obs-guide h3 { font-size: 17px; line-height: 1.4; margin: 0 0 10px; color: var(--site-text); }
+        .obs-guide p, .obs-guide li, .obs-guide dd { font-size: 16px; line-height: 1.7; }
+        .obs-guide p { margin: 0 0 18px; }
+        .obs-guide .obs-copy > :last-child { margin-bottom: 0; }
+        .obs-guide .obs-split { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.3fr); gap: 40px; align-items: start; }
+        .obs-guide .obs-split > * { min-width: 0; }
+        .obs-guide .obs-split-small { grid-template-columns: minmax(0, 1.3fr) minmax(0, .85fr); }
+        .obs-guide ol { padding-left: 22px; margin: 0 0 20px; }
+        .obs-guide li { margin-bottom: 12px; padding-left: 3px; }
+        .obs-guide .obs-shot { margin: 0; }
+        .obs-guide .obs-image-link { display: block; overflow: hidden; border: 1px solid var(--site-line); border-radius: 14px; background: #20212b; }
+        .obs-guide .obs-shot img { display: block; width: 100%; height: auto; }
+        .obs-guide .obs-shot figcaption { color: var(--site-muted); font-size: 13px; line-height: 1.6; margin-top: 12px; }
+        .obs-guide .obs-compact .obs-image-link { display: flex; justify-content: center; padding: 24px; background: var(--site-surface); }
+        .obs-guide .obs-compact img { width: auto; max-width: 100%; max-height: 410px; object-fit: contain; }
+        .obs-guide .obs-facts { margin: 20px 0; }
+        .obs-guide .obs-facts > div { display: flex; justify-content: space-between; gap: 20px; padding: 10px 0; border-bottom: 1px solid var(--site-line); }
+        .obs-guide dt { font-size: 15px; font-weight: 650; }
+        .obs-guide dd { margin: 0; text-align: right; font-size: 15px; }
+        .obs-guide .obs-note { padding: 16px 20px; border: 1px solid var(--border-color); background: var(--site-surface); border-radius: 10px; }
+        .obs-guide .obs-muted, .obs-guide .obs-small { color: var(--site-muted); }
+        .obs-guide .obs-small { font-size: 13px; }
+        .obs-guide details { background: var(--site-surface); border: 1px solid var(--site-line); border-radius: 12px; padding: 16px 20px; margin-top: 18px; }
+        .obs-guide summary { cursor: pointer; color: var(--site-text); font-size: 15px; font-weight: 650; }
+        .obs-guide details[open] summary { margin-bottom: 18px; }
+        .obs-guide details > :last-child { margin-bottom: 0; }
+        .obs-guide .obs-platforms, .obs-guide .obs-routing { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 24px 0; align-items: start; }
+        .obs-guide .obs-platforms details { margin: 0; }
+        .obs-guide .obs-platforms summary { font-size: 19px; }
+        .obs-guide .obs-platforms summary span { display: block; padding: 7px 0 0 18px; font-size: 13px; color: var(--site-muted); font-weight: 400; }
+        .obs-guide .obs-platforms p { font-size: 14px; }
+        .obs-guide table { border-collapse: collapse; width: 100%; font-size: 14px; margin-bottom: 18px; }
+        .obs-guide th, .obs-guide td { text-align: left; padding: 10px 0; border-bottom: 1px solid var(--site-line); }
+        .obs-guide th:last-child, .obs-guide td:last-child { text-align: right; }
+        .obs-guide caption { text-align: left; font-size: 13px; color: var(--site-muted); margin-bottom: 6px; }
+        .obs-guide .obs-route { border: 1px solid var(--site-line); border-radius: 12px; background: var(--site-surface); padding: 22px; }
+        .obs-guide .obs-route p { font-size: 14px; margin-bottom: 12px; }
+        .obs-guide .obs-route p:last-child { margin: 0; color: var(--site-muted); }
+        .obs-guide .obs-routing strong { display: inline-block; min-width: 106px; }
+        .obs-guide .obs-route-icon { width: 28px; height: 28px; margin-bottom: 16px; color: var(--site-accent); }
+        .obs-guide .obs-fixes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; }
+        .obs-guide .obs-fixes p { font-size: 15px; }
+        .obs-guide a:focus, .obs-guide summary:focus { outline: 2px solid var(--site-accent); outline-offset: 4px; }
+        .obs-skip { position: absolute; left: 16px; top: -80px; z-index: 3000; padding: 12px; background: var(--site-surface); }
+        .obs-skip:focus { top: 16px; }
+        @media (max-width: 760px) {
+            .obs-page .obs-guide, .obs-page .obs-hero { padding-left: 20px; padding-right: 20px; }
+            .obs-page .obs-hero { padding-top: 36px; }
+            .obs-page .obs-hero h1 { font-size: 38px; }
+            .obs-guide .obs-step { padding: 32px 0; }
+            .obs-guide .obs-split, .obs-guide .obs-split-small, .obs-guide .obs-platforms, .obs-guide .obs-routing, .obs-guide .obs-fixes { grid-template-columns: 1fr; gap: 24px; }
+            .obs-guide .obs-heading { gap: 12px; }
+            .obs-guide h2 { font-size: 25px; }
+            .obs-guide .obs-platforms, .obs-guide .obs-routing { gap: 12px; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/obs-studio-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{", and":", a",", choose a hardware":", vyberte hardware",". Check its preview and stream health; some platforms also require":". Zkontrolujte jeho náhled a stav streamu; některé platformy také vyžadují",". On macOS 13+, use OBS’s":". Na macOS 13+ použijte OBS",". Open your platform below.":". Níže otevřete svou platformu.",". Shared source and audio changes can still affect the live output.":". Sdílený zdroj a změny zvuku mohou stále ovlivnit živý výstup.",". Talk, play sound, and switch scenes.":". Mluvte, přehrávejte zvuk a přepínejte scény.",". Then open the mixer’s":". Poté otevřete mixér","/ OBS STUDIO":"/ STUDIO OBS","1080p30":"1080p30","1080p60":"1080p60","1280 × 720 output":"Výstup 1280 × 720","1920 × 1080 canvas":"Plátno 1920 × 1080","2-second keyframes":"2sekundové klíčové snímky","30 FPS":"30 snímků za sekundu","6,000 kbps uses about 6 Mbps, plus audio and overhead. Lower bitrate or resolution if your connection cannot keep up.":"6 000 kb/s využívá přibližně 6 Mb/s plus zvuk a režii. Snižte datový tok nebo rozlišení, pokud vaše připojení nestíhá.","60 FPS":"60 snímků za sekundu","720p30":"720p30","720p30 / 60":"720p30/60","720p60 / 1080p30":"720p60 / 1080p30","8,000 max.":"Maximálně 8 000",": try light noise suppression, then a compressor and limiter. Add one at a time and listen.":": zkuste potlačení lehkého šumu, pak kompresor a omezovač. Přidejte jeden po druhém a poslouchejte.","; avoid hitting 0.":"; vyvarujte se zásahu 0.","A":"Událost","A simple start:":"Jednoduchý začátek:","AAC stereo":"Stereo AAC","AMD":"AMD","AMD HW H.264 / AVC":"AMD HW H.264 / AVC","Add Existing":"Přidat existující","Add a chat or alert overlay":"Přidejte překryvný chat nebo upozornění","Advanced Audio Properties":"Pokročilé vlastnosti zvuku","All guides":"Všechny návody","Allow camera, microphone, and screen capture access when your computer asks.":"Povolte přístup ke kameře, mikrofonu a snímání obrazovky, když vás počítač požádá.","App / whole monitor":"Aplikace / celý monitor","App audio, macOS, and microphone filters":"Zvuk aplikací, macOS a filtry mikrofonu","Apple Silicon":"Apple Silicon","Apple VT H264 Hardware":"Hardware Apple VT H264","Application Audio Capture":"Aplikace Audio Capture","Assumes the source is unmuted and on your output track. “Monitor Off” does not mute the stream.":"Předpokládá, že zdroj není ztlumený a je na vaší výstupní stopě. „Monitor Off“ neztlumí stream.","Audio":"Zvuk","Audio: 128 kbps, 44.1 kHz stereo. These are recommendations, not minimums.":"Zvuk: 128 kbps, 44.1 kHz stereo. Toto jsou doporučení, nikoli minima.","Audio: up to 160 kbps.":"Zvuk: až 160 kbps.","Avoid echo:":"Vyhněte se echo:","Bitrate":"Přenosová rychlost","Blank overlay or repeated audio?":"Prázdné překrytí nebo opakovaný zvuk?","Bring your camera, screen, and sound together. Make a test recording, then go live.":"Spojte fotoaparát, obrazovku a zvuk. Udělejte zkušební nahrávku a poté pusťte živě.","Browser":"Prohlížeč","Browser Source properties with URL, Width, Height, and Control audio via OBS":"Vlastnosti zdroje prohlížeče s adresou URL, šířkou, výškou a ovládáním zvuku přes OBS","Build one scene":"Vytvořte jednu scénu","CBR":"CBR","Camera / capture card":"Fotoaparát / snímací karta","Canvas":"Plátno","Cap game FPS; simplify the scene.":"Cap game FPS; zjednodušit scénu.","Capture each sound once.":"Zachyťte každý zvuk jednou.","Change Output to stream at a smaller size.":"Změňte výstup na streamování v menší velikosti.","Chat or alerts":"Chat nebo upozornění","Check hardware support and update your graphics driver. OBS still needs GPU capacity to draw scenes; cap game FPS or lower output FPS if it falls behind.":"Zkontrolujte hardwarovou podporu a aktualizujte grafický ovladač. OBS stále potřebuje kapacitu GPU pro kreslení scén; limit FPS hry nebo nižší výstupní FPS, pokud zaostává.","Check mute, monitoring mode, and audio track.":"Zkontrolujte ztlumení, režim sledování a zvukovou stopu.","Check the session matches your chat source. Refresh the Browser Source. Keep only one copy playing TTS.":"Zkontrolujte, zda relace odpovídá vašemu zdroji chatu. Obnovte zdroj prohlížeče. Ponechte pouze jednu kopii přehrávání TTS.","Choose":"Vyberte","Choose a recording folder in":"Vyberte složku pro nahrávání","Choose headphones in":"Vyberte sluchátka","Choose what to capture.":"Vyberte, co chcete zachytit.","Choose what you hear":"Vyberte si, co slyšíte","Choose what you want to do.":"Vyberte si, co chcete dělat.","Choose your encoder here; use the platform bitrates below.":"Zde vyberte svůj kodér; použijte níže uvedené datové toky platformy.","Choose your microphone in":"Vyberte si mikrofon","Choose your video size":"Vyberte velikost videa","Connect your platform":"Připojte svou platformu","Control audio via OBS":"Ovládat zvuk přes OBS (Control audio via OBS)","Copy the overlay URL from Social Stream Ninja.":"Zkopírujte překryvnou adresu URL ze Social Stream Ninja.","Download":"Stáhnout","Drag corners to resize. Sources at the top cover those below. Use the eye to hide and the lock to prevent movement.":"Přetažením rohů změníte velikost. Zdroje nahoře pokrývají ty níže. Použijte oko ke skrytí a zámek k zamezení pohybu.","Encoder compatibility":"Kompatibilita s kodérem","Encoders":"Kodéry","Encoding lag":"Zpoždění kódování","Enhanced Broadcasting":"Rozšířené vysílání","Features":"Funkce","File → Remux Recordings":"Soubor → Nahrávky Remux","Filters":"Filtry","For TTS or alerts, enable":"U TTS nebo výstrah povolte","For manual output settings, choose":"Pro ruční nastavení výstupu zvolte","For persistent chat, leave automatic shutdown and scene-activation refresh off initially.":"V případě trvalého chatu ponechte zpočátku automatické vypínání a obnovení aktivace scény vypnuté.","For portrait video, use a 1080 × 1920 canvas and rearrange your sources to fit.":"Pro video na výšku použijte plátno 1080 × 1920 a změňte uspořádání zdrojů tak, aby se vešly.","For separate editing tracks, keep a full mix on track 1, then assign mic/game to additional tracks in Advanced Audio Properties and enable them under Recording.":"Pro samostatné úpravy stop ponechte úplný mix na stopě 1, poté přiřaďte mikrofon/hru k dalším stopám v Advanced Audio Properties a povolte je v Recording.","GUIDES":"PRŮVODCE","Game Capture":"Zachytávání hry","Game on Windows":"Hra pro Windows","Give your CPU a break":"Dejte svému CPU pauzu","Go Live":"Pusťte se do živého vysílání","Guides":"Návody","H.264":"H.264","H.264 recommended targets":"H.264 doporučené cíle","H.264 · CBR required":"Požadováno H.264 · CBR","Headphones":"Sluchátka","Home":"Domů","If something looks wrong":"Pokud něco vypadá špatně","If your Mac’s hardware encoder cannot provide CBR, use x264.":"Pokud hardwarový kodér vašeho Macu nemůže poskytnout CBR, použijte x264.","In":"V části","In this guide":"V tomto návodu","Install":"Nainstalujte","Intel":"Intel","Kick":"Kick","Kick settings":"Nastavení kopu","Leave upload headroom.":"Ponechte prostor pro nahrávání.","Let OBS do the first setup":"Nechte OBS provést první nastavení","Listen without sending the source directly to output.":"Poslouchejte bez odesílání zdroje přímo na výstup.","Lower bitrate; try wired Ethernet.":"Nižší datový tok; zkuste kabelový Ethernet.","Lower game, music, and alert sliders until speech is clear.":"Snižte posuvníky hry, hudby a upozornění, dokud nebude řeč čistá.","MKV tolerates an interrupted recording. Use":"MKV toleruje přerušený záznam. Použijte","Main navigation":"Hlavní navigace","Make your voice easy to hear":"Nechte svůj hlas dobře slyšet","Meters show signal level; sliders change the mix.":"Měřidla ukazují úroveň signálu; posuvníky mění mix.","Microphone →":"Mikrofon →","Missing encoder or overloaded computer?":"Chybí kodér nebo přetížený počítač?","Monitor Off":"Monitor vypnut","Monitor Only (mute output)":"Pouze monitorování (ztlumit výstup)","Monitor and Output":"Monitorovat a odesílat (Monitor and Output)","NVENC H.264":"NVENC H.264","NVIDIA":"NVIDIA","Network drops":"Výpadky sítě","No":"Ne","No hardware option? Use":"Žádná hardwarová možnost? Použijte","OBS Audio Mixer with separate meters, volume sliders, and mute controls":"OBS Audio Mixer se samostatnými měřiči, posuvníky hlasitosti a ovládacími prvky ztlumení","OBS Auto-Configuration Wizard with streaming and recording choices":"Průvodce automatickou konfigurací OBS s možnostmi streamování a nahrávání","OBS Controls with Start Streaming, Start Recording, Studio Mode, and Settings buttons":"Ovládací prvky OBS s tlačítky Start Streaming, Start Recording, Studio Mode a Settings","OBS Output settings with the hardware NVENC H.264 encoder selected":"OBS Nastavení výstupu s vybraným hardwarovým kodérem NVENC H.264","OBS Studio":"OBS Studio","OBS Studio Beginner Guide - Social Stream Ninja":"Průvodce pro začátečníky OBS Studio – Social Stream Ninja","OBS Video settings with Base Canvas Resolution, Output Scaled Resolution, and FPS fields":"Nastavení videa OBS s polem Base Canvas Resolution, Output Scaled Resolution a FPS","OBS performance help":"Nápověda k výkonu OBS","OBS source menu listing Game Capture, Browser, and Video Capture Device":"Zdrojová nabídka OBS se seznamem zařízení pro zachycení her, prohlížeče a zařízení pro zachycení videa","October 2026 guidance. Follow your platform’s current requirements. For Facebook or TikTok, first confirm your account offers an external encoder connection.":"Pokyny z října 2026. Postupujte podle aktuálních požadavků vaší platformy. Pro Facebook nebo TikTok nejprve potvrďte, že váš účet nabízí připojení externího kodéru.","On macOS, use":"Na macOS použijte","Open":"Otevřít","Open navigation menu":"Otevřít navigační nabídku","Output":"Výstup","Output → Advanced → Streaming":"Výstup → Upřesnit → Streamování","Overlays":"Překryvy","Place it above your game or camera. Send a test message; select one in the SSN dock if using the featured-message overlay.":"Umístěte jej nad svou hru nebo kameru. Odeslat zkušební zprávu; vyberte jednu v doku SSN, pokud používáte překryvnou vrstvu s doporučenou zprávou.","Platform settings":"Nastavení platformy","Press":"Stiskněte","QuickSync / QSV H.264":"QuickSync / QSV H.264","Record a minute. Then go live.":"Nahrajte minutu. Pak jděte žít.","Recording format and separate audio tracks":"Formát záznamu a samostatné zvukové stopy","Recording saves a file; streaming sends to your platform.":"Záznam uloží soubor; streamování odesílá na vaši platformu.","Rendering lag":"Zpoždění vykreslování","Replace this default URL and size with your overlay’s settings.":"Nahraďte tuto výchozí adresu URL a velikost nastavením překryvné vrstvy.","SSN overlay help":"Nápověda k překrytí SSN","SSN overlay setup":"Nastavení překrytí SSN","Scene changes normally go straight to output.":"Změny scény se normálně projeví přímo na výstupu.","Scene switching and macOS":"Přepínání scén a macOS","Scenes":"Scény","Screenshot: OBS Project":"Snímek obrazovky: OBS Project","Screenshots open at full size when selected. Labels may vary slightly by OBS version.":"Po výběru se snímky obrazovky otevřou v plné velikosti. Štítky se mohou mírně lišit podle verze OBS.","Select streaming or recording, follow the prompts, and apply the settings.":"Vyberte streamování nebo nahrávání, postupujte podle pokynů a použijte nastavení.","Set the overlay size; use":"Nastavte velikost překrytí; použití","Set up OBS Studio, build a scene, choose a hardware encoder and platform bitrate, mix and monitor audio, and add browser sources.":"Nastavte OBS Studio, vytvořte scénu, vyberte hardwarový kodér a datový tok platformy, mixujte a monitorujte zvuk a přidejte zdroje prohlížeče.","Set your platform’s title and visibility, then":"Poté nastavte název a viditelnost své platformy","Settings → Audio":"Nastavení → Zvuk","Settings → Audio → Advanced → Monitoring Device":"Nastavení → Zvuk → Upřesnit → Monitorovací zařízení","Settings → Output":"Nastavení → Výstup","Settings → Stream:":"Nastavení → Stream:","Settings → Video":"Nastavení → Video","Silent output":"Tichý výstup","Skip to guide":"Přejít na průvodce","Smoother fast motion":"Plynulejší rychlý pohyb","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja ·":"Social Stream Ninja ·","Sources → + → Browser":"Zdroje → + → Prohlížeč","Speak normally. Aim for peaks around":"Mluv normálně. Mířit na vrcholy v okolí","Standard H.264":"Standard H.264","Start Recording":"Spustit nahrávání (Start Recording)","Start Streaming":"Spustit vysílání (Start Streaming)","Start Streaming can make you publicly live.":"Začněte streamovat, abyste mohli veřejně žít.","Start here":"Začněte zde","Stop and watch the file. Check volume, framing, and lip sync.":"Zastavte se a sledujte soubor. Zkontrolujte hlasitost, orámování a synchronizaci rtů.","Stream":"Stream","Studio Mode":"Režim Studio","Support":"Podpora","Switch theme":"Přepnout vzhled","TTS setup":"Nastavení TTS","Talking / lighter workload":"Mluvení / lehčí pracovní zátěž","The lower range is a suggested starting test. Try 160 kbps audio; use stereo at no more than 48 kHz.":"Spodní rozsah je doporučený startovací test. Vyzkoušejte zvuk 160 kb/s; použijte stereo na ne více než 48 kHz.","The video you send":"Video, které odešlete","Tools → Auto-Configuration Wizard":"Nástroje → Průvodce automatickou konfigurací","Transition":"Přechod","Try 720p30":"Zkuste 720p30","Twitch":"Twitch","Twitch settings":"Nastavení Twitch","Up to 1080p60":"Až 1080p60","Use Desktop Audio for the whole output device, or separate application capture. Capturing both can double the sound.":"Použijte Desktop Audio pro celé výstupní zařízení, nebo samostatné snímání aplikací. Zachycení obou může zdvojnásobit zvuk.","Use a private test where available. When finished, stop streaming and confirm the platform event has ended.":"Pokud je to možné, použijte soukromý test. Po dokončení zastavte streamování a potvrďte, že událost platformy skončila.","Use hardware encoding or lower output FPS.":"Použijte hardwarové kódování nebo nižší výstupní FPS.","Useful for alerts or TTS you want to hear too.":"Užitečné pro upozornění nebo TTS, které chcete také slyšet.","Usually right for your mic and games you already hear.":"Obvykle vhodné pro váš mikrofon a hry, které již slyšíte.","Video":"Video","Video Capture Device":"Zařízení pro záznam videa","Video bitrate · kbps":"Přenosová rychlost videa · kbps","View → Stats":"Zobrazit → Statistiky","Window / Display Capture":"Zachycení okna / displeje","Windows: use":"Windows: použijte","With supported AV1 / HEVC encoding, the corresponding targets are 6,000 / 10,000 / 12,000 kbps.":"S podporovaným kódováním AV1 / HEVC jsou odpovídající cíle 6 000 / 10 000 / 12 000 kbps.","Yes":"Ano","YouTube":"YouTube","YouTube settings":"Nastavení YouTube","Your first OBS setup.":"Vaše první nastavení OBS.","Your layout’s size":"Velikost vašeho rozvržení","and open it.":"a otevřete jej.","and paste it. Keep its session and password options.":"a vložte jej. Ponechte si jeho možnosti relace a hesla.","and start at 720p30.":"a začněte na 720p30.","connect your account, or paste the server URL and private stream key from its dashboard.":"připojte svůj účet nebo vložte adresu URL serveru a klíč soukromého streamu z jeho řídicího panelu.","don’t capture your monitoring device again through Desktop Audio. That can also send “Monitor Only” audio to viewers. Keep the platform’s live player muted.":"nezachycujte znovu své monitorovací zařízení prostřednictvím Desktop Audio. To také může divákům poslat zvuk „Pouze monitor“. Udržujte živý přehrávač platformy ztlumený.","encoder. Dedicated hardware handles video compression, reducing CPU use.":"kodér. Vyhrazený hardware zvládá kompresi videa a snižuje spotřebu procesoru.","for MP4 afterward. Current OBS also offers resilient Hybrid MP4/MOV.":"pro MP4 později. Aktuální OBS nabízí také odolné hybridní MP4/MOV.","for a full-frame landscape overlay.":"pro celoobrazovkový překryv na šířku.","for a window or display.":"pro okno nebo displej.","in Scenes, name your layout, then press":"ve Scenes pojmenujte rozvržení a stiskněte","in Sources.":"v Zdrojích.","is a layout. A":"je rozložení. A","is something inside it.":"je něco uvnitř.","lets you prepare a scene, then press":"vám umožní připravit scénu a poté stisknout","macOS Screen Capture":"Snímání obrazovky macOS","macOS audio/screen capture":"Snímání zvuku/obrazovky macOS","scene":"scéna","sends multiple qualities and needs a separate bandwidth budget.":"odesílá různé kvality a potřebuje samostatný rozpočet na šířku pásma.","source":"zdroj","to identify the bottleneck.":"k identifikaci úzkého místa.","to reuse a source in another scene.":"pro opětovné použití zdroje v jiné scéně.","x264 → veryfast":"x264 → velmi rychlý","−12 to −6 dBFS":"−12 až −6 dBFS"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/obs-studio-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="obs-page">
+    <a class="obs-skip" href="#obs-guide">Přejít na průvodce</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-studio-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-studio-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-studio-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-studio-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-studio-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-studio-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-studio-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-studio-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-studio-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-studio-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-studio-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/obs-studio-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/obs-studio-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/obs-studio-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/obs-studio-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="obs-studio-guide.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/obs-studio-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="obs-hero">
+        <p class="obs-eyebrow"><a href="guides.html#guide-directory">PRŮVODCE</a> / STUDIO OBS</p>
+        <h1>Vaše první nastavení OBS.</h1>
+        <p class="obs-lead">Spojte fotoaparát, obrazovku a zvuk. Udělejte zkušební nahrávku a poté pusťte živě.</p>
+    </section>
+
+    <main id="obs-guide" class="obs-guide" tabindex="-1">
+        <div class="obs-jumps" role="navigation" aria-label="V tomto návodu">
+            <a href="#install">Začněte zde</a><a href="#scenes">Scény</a><a href="#encoders">Kodéry</a><a href="#platforms">Nastavení platformy</a><a href="#mixing">Zvuk</a><a href="#browser-sources">Překryvy</a>
+        </div>
+
+        <section class="obs-step" id="install">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">01</span><h2>Nechte OBS provést první nastavení</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Nainstalujte <a href="https://obsproject.com/download">OBS Studio</a> a otevřete jej.</li>
+                        <li>Vyberte <strong>Nástroje → Průvodce automatickou konfigurací</strong>.</li>
+                        <li>Vyberte streamování nebo nahrávání, postupujte podle pokynů a použijte nastavení.</li>
+                    </ol>
+                    <p class="obs-note">Povolte přístup ke kameře, mikrofonu a snímání obrazovky, když vás počítač požádá.</p>
+                    <p class="obs-small">Po výběru se snímky obrazovky otevřou v plné velikosti. Štítky se mohou mírně lišit podle verze OBS.</p>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-auto-config.png"><img src="../../docs/images/guides/obs-studio-auto-config.png" width="1028" height="914" alt="Průvodce automatickou konfigurací OBS s možnostmi streamování a nahrávání"></a>
+                    <figcaption>Vyberte si, co chcete dělat. <a href="https://obsproject.com/kb/quick-start-guide">Snímek obrazovky: OBS Project</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="scenes">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">02</span><h2>Vytvořte jednu scénu</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <p>Událost <strong>scéna</strong> je rozložení. A <strong>zdroj</strong> je něco uvnitř.</p>
+                    <p>Stiskněte <strong>+</strong> ve Scenes pojmenujte rozvržení a stiskněte <strong>+</strong> v Zdrojích.</p>
+                    <dl class="obs-facts">
+                        <div><dt>Fotoaparát / snímací karta</dt><dd>Zařízení pro záznam videa</dd></div>
+                        <div><dt>Hra pro Windows</dt><dd>Zachytávání hry</dd></div>
+                        <div><dt>Aplikace / celý monitor</dt><dd>Zachycení okna / displeje</dd></div>
+                        <div><dt>Chat nebo upozornění</dt><dd>Prohlížeč</dd></div>
+                    </dl>
+                    <p>Přetažením rohů změníte velikost. Zdroje nahoře pokrývají ty níže. Použijte oko ke skrytí a zámek k zamezení pohybu.</p>
+                    <details><summary>Přepínání scén a macOS</summary>
+                        <p>Na macOS použijte <strong>Snímání obrazovky macOS</strong> pro okno nebo displej.</p>
+                        <p>Změny scény se normálně projeví přímo na výstupu. <strong>Režim Studio</strong> vám umožní připravit scénu a poté stisknout <strong>Přechod</strong>. Sdílený zdroj a změny zvuku mohou stále ovlivnit živý výstup.</p>
+                        <p>Vyberte <strong>Přidat existující</strong> pro opětovné použití zdroje v jiné scéně.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-sources.png"><img src="../../docs/images/guides/obs-studio-sources.png" width="265" height="580" loading="lazy" alt="Zdrojová nabídka OBS se seznamem zařízení pro zachycení her, prohlížeče a zařízení pro zachycení videa"></a>
+                    <figcaption>Vyberte, co chcete zachytit. <a href="https://obsproject.com/kb/quick-start-guide">Snímek obrazovky: OBS Project</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="video">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">03</span><h2>Vyberte velikost videa</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <p>Otevřít <strong>Nastavení → Video</strong>.</p>
+                    <dl class="obs-facts">
+                        <div><dt>Plátno</dt><dd>Velikost vašeho rozvržení</dd></div>
+                        <div><dt>Výstup</dt><dd>Video, které odešlete</dd></div>
+                        <div><dt>30 snímků za sekundu</dt><dd>Mluvení / lehčí pracovní zátěž</dd></div>
+                        <div><dt>60 snímků za sekundu</dt><dd>Plynulejší rychlý pohyb</dd></div>
+                    </dl>
+                    <p class="obs-note">Jednoduchý začátek: <strong>Plátno 1920 × 1080</strong>, <strong>Výstup 1280 × 720</strong>, <strong>30 snímků za sekundu</strong>.</p>
+                    <p class="obs-small">Pro video na výšku použijte plátno 1080 × 1920 a změňte uspořádání zdrojů tak, aby se vešly.</p>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-video.png"><img src="../../docs/images/guides/obs-studio-video.png" width="983" height="758" loading="lazy" alt="Nastavení videa OBS s polem Base Canvas Resolution, Output Scaled Resolution a FPS"></a>
+                    <figcaption>Změňte výstup na streamování v menší velikosti. <a href="https://obsproject.com/kb/obs-studio-overview">Snímek obrazovky: OBS Project</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="encoders">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">04</span><h2>Dejte svému CPU pauzu</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <p>V části <strong>Nastavení → Výstup</strong>, vyberte hardware <strong>H.264</strong> kodér. Vyhrazený hardware zvládá kompresi videa a snižuje spotřebu procesoru.</p>
+                    <dl class="obs-facts">
+                        <div><dt>NVIDIA</dt><dd>NVENC H.264</dd></div>
+                        <div><dt>AMD</dt><dd>AMD HW H.264 / AVC</dd></div>
+                        <div><dt>Intel</dt><dd>QuickSync / QSV H.264</dd></div>
+                        <div><dt>Apple Silicon</dt><dd>Hardware Apple VT H264</dd></div>
+                    </dl>
+                    <p>Žádná hardwarová možnost? Použijte <strong>x264 → velmi rychlý</strong> a začněte na 720p30.</p>
+                    <details><summary>Chybí kodér nebo přetížený počítač?</summary>
+                        <p>Zkontrolujte hardwarovou podporu a aktualizujte grafický ovladač. OBS stále potřebuje kapacitu GPU pro kreslení scén; limit FPS hry nebo nižší výstupní FPS, pokud zaostává.</p>
+                        <p>Pokud hardwarový kodér vašeho Macu nemůže poskytnout CBR, použijte x264. <a href="https://obsproject.com/kb/hardware-encoding">Kompatibilita s kodérem</a>.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-output.png"><img src="../../docs/images/guides/obs-studio-output.png" width="977" height="759" loading="lazy" alt="OBS Nastavení výstupu s vybraným hardwarovým kodérem NVENC H.264"></a>
+                    <figcaption>Zde vyberte svůj kodér; použijte níže uvedené datové toky platformy. <a href="https://obsproject.com/kb/standard-recording-output-guide">Snímek obrazovky: OBS Project</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="platforms">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">05</span><h2>Připojte svou platformu</h2></div>
+            <p><strong>Nastavení → Stream:</strong> připojte svůj účet nebo vložte adresu URL serveru a klíč soukromého streamu z jeho řídicího panelu.</p>
+            <p>Pro ruční nastavení výstupu zvolte <strong>Výstup → Upřesnit → Streamování</strong>: <strong>CBR</strong>, <strong>2sekundové klíčové snímky</strong>, a <strong>Stereo AAC</strong>. Níže otevřete svou platformu.</p>
+            <div class="obs-platforms">
+                <details><summary>Twitch<span>Standard H.264</span></summary>
+                    <table><caption>Přenosová rychlost videa · kbps</caption><thead><tr><th scope="col">Video</th><th scope="col">Přenosová rychlost</th></tr></thead><tbody>
+                        <tr><td>720p30</td><td>3,000</td></tr><tr><td>720p60 / 1080p30</td><td>4,500</td></tr><tr><td>1080p60</td><td>6,000</td></tr>
+                    </tbody></table>
+                    <p>Zvuk: až 160 kbps. <a href="https://help.twitch.tv/s/article/broadcasting-guidelines?language=en_US">Nastavení Twitch</a>.</p>
+                    <p><a href="https://help.twitch.tv/s/article/enhanced-broadcasting?language=en_US">Rozšířené vysílání</a> odesílá různé kvality a potřebuje samostatný rozpočet na šířku pásma.</p>
+                </details>
+                <details><summary>YouTube<span>H.264 doporučené cíle</span></summary>
+                    <table><caption>Přenosová rychlost videa · kbps</caption><thead><tr><th scope="col">Video</th><th scope="col">Přenosová rychlost</th></tr></thead><tbody>
+                        <tr><td>720p30/60</td><td>8,000</td></tr><tr><td>1080p30</td><td>14,000</td></tr><tr><td>1080p60</td><td>17,000</td></tr>
+                    </tbody></table>
+                    <p>Zvuk: 128 kbps, 44.1 kHz stereo. Toto jsou doporučení, nikoli minima. <a href="https://support.google.com/youtube/answer/2853702?hl=en">Nastavení YouTube</a>.</p>
+                    <p>S podporovaným kódováním AV1 / HEVC jsou odpovídající cíle 6 000 / 10 000 / 12 000 kbps.</p>
+                </details>
+                <details><summary>Kick<span>Požadováno H.264 · CBR</span></summary>
+                    <table><caption>Přenosová rychlost videa · kbps</caption><thead><tr><th scope="col">Video</th><th scope="col">Přenosová rychlost</th></tr></thead><tbody>
+                        <tr><td>Zkuste 720p30</td><td>3,000–4,000</td></tr><tr><td>Až 1080p60</td><td>Maximálně 8 000</td></tr>
+                    </tbody></table>
+                    <p>Spodní rozsah je doporučený startovací test. Vyzkoušejte zvuk 160 kb/s; použijte stereo na ne více než 48 kHz. <a href="https://help.kick.com/en/articles/7066931-how-to-stream-on-kick-com">Nastavení kopu</a>.</p>
+                </details>
+            </div>
+            <p class="obs-note"><strong>Ponechte prostor pro nahrávání.</strong> 6 000 kb/s využívá přibližně 6 Mb/s plus zvuk a režii. Snižte datový tok nebo rozlišení, pokud vaše připojení nestíhá.</p>
+            <p class="obs-small">Pokyny z října 2026. Postupujte podle aktuálních požadavků vaší platformy. Pro Facebook nebo TikTok nejprve potvrďte, že váš účet nabízí připojení externího kodéru.</p>
+        </section>
+
+        <section class="obs-step" id="mixing">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">06</span><h2>Nechte svůj hlas dobře slyšet</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Vyberte si mikrofon <strong>Nastavení → Zvuk</strong>.</li>
+                        <li>Mluv normálně. Mířit na vrcholy v okolí <strong>−12 až −6 dBFS</strong>; vyvarujte se zásahu 0.</li>
+                        <li>Snižte posuvníky hry, hudby a upozornění, dokud nebude řeč čistá.</li>
+                    </ol>
+                    <p><strong>Zachyťte každý zvuk jednou.</strong> Použijte Desktop Audio pro celé výstupní zařízení, nebo samostatné snímání aplikací. Zachycení obou může zdvojnásobit zvuk.</p>
+                    <details><summary>Zvuk aplikací, macOS a filtry mikrofonu</summary>
+                        <p>Windows: použijte <a href="https://obsproject.com/kb/application-audio-capture-guide">Aplikace Audio Capture</a>. Na macOS 13+ použijte OBS <a href="https://obsproject.com/kb/macos-desktop-audio-capture-guide">Snímání zvuku/obrazovky macOS</a>.</p>
+                        <p>Mikrofon → <strong>Filtry</strong>: zkuste potlačení lehkého šumu, pak kompresor a omezovač. Přidejte jeden po druhém a poslouchejte.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-mixer.png"><img src="../../docs/images/guides/obs-studio-mixer.png" width="265" height="378" loading="lazy" alt="OBS Audio Mixer se samostatnými měřiči, posuvníky hlasitosti a ovládacími prvky ztlumení"></a>
+                    <figcaption>Měřidla ukazují úroveň signálu; posuvníky mění mix. <a href="https://obsproject.com/kb/quick-start-guide">Snímek obrazovky: OBS Project</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="monitoring">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">07</span><h2>Vyberte si, co slyšíte</h2></div>
+            <p>Vyberte sluchátka <strong>Nastavení → Zvuk → Upřesnit → Monitorovací zařízení</strong>. Poté otevřete mixér <strong>Pokročilé vlastnosti zvuku</strong>.</p>
+            <div class="obs-routing">
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 21h8m-4-5v5"/></svg>
+                    <h3>Monitor vypnut</h3><p><strong>Sluchátka</strong> Ne<br><strong>Stream</strong> Ano</p><p>Obvykle vhodné pro váš mikrofon a hry, které již slyšíte.</p>
+                </div>
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 14V11a8 8 0 0 1 16 0v3"/><rect x="3" y="12" width="4" height="9" rx="2"/><rect x="17" y="12" width="4" height="9" rx="2"/></svg>
+                    <h3>Pouze monitorování (ztlumit výstup)</h3><p><strong>Sluchátka</strong> Ano<br><strong>Stream</strong> Ne</p><p>Poslouchejte bez odesílání zdroje přímo na výstup.</p>
+                </div>
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M11 4 5 9H2v6h3l6 5Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg>
+                    <h3>Monitorovat a odesílat (Monitor and Output)</h3><p><strong>Sluchátka</strong> Ano<br><strong>Stream</strong> Ano</p><p>Užitečné pro upozornění nebo TTS, které chcete také slyšet.</p>
+                </div>
+            </div>
+            <p class="obs-small">Předpokládá, že zdroj není ztlumený a je na vaší výstupní stopě. „Monitor Off“ neztlumí stream.</p>
+            <p class="obs-note"><strong>Vyhněte se echo:</strong> nezachycujte znovu své monitorovací zařízení prostřednictvím Desktop Audio. To také může divákům poslat zvuk „Pouze monitor“. Udržujte živý přehrávač platformy ztlumený.</p>
+        </section>
+
+        <section class="obs-step" id="browser-sources">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">08</span><h2>Přidejte překryvný chat nebo upozornění</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Zkopírujte překryvnou adresu URL ze Social Stream Ninja.</li>
+                        <li>Vyberte <strong>Zdroje → + → Prohlížeč</strong> a vložte jej. Ponechte si jeho možnosti relace a hesla.</li>
+                        <li>Nastavte velikost překrytí; použití <strong>1920 × 1080</strong> pro celoobrazovkový překryv na šířku.</li>
+                        <li>U TTS nebo výstrah povolte <strong>Ovládat zvuk přes OBS (Control audio via OBS)</strong>.</li>
+                    </ol>
+                    <p>Umístěte jej nad svou hru nebo kameru. Odeslat zkušební zprávu; vyberte jednu v doku SSN, pokud používáte překryvnou vrstvu s doporučenou zprávou.</p>
+                    <details><summary>Prázdné překrytí nebo opakovaný zvuk?</summary>
+                        <p>Zkontrolujte, zda relace odpovídá vašemu zdroji chatu. Obnovte zdroj prohlížeče. Ponechte pouze jednu kopii přehrávání TTS.</p>
+                        <p>V případě trvalého chatu ponechte zpočátku automatické vypínání a obnovení aktivace scény vypnuté. <a href="obs-quick-start.html">Nastavení překrytí SSN</a> · <a href="tts-setup-guide.html">Nastavení TTS</a>.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-browser-source-properties.png"><img src="../../docs/images/guides/obs-browser-source-properties.png" width="1468" height="1232" loading="lazy" alt="Vlastnosti zdroje prohlížeče s adresou URL, šířkou, výškou a ovládáním zvuku přes OBS"></a>
+                    <figcaption>Nahraďte tuto výchozí adresu URL a velikost nastavením překryvné vrstvy.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="recording">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">09</span><h2>Nahrajte minutu. Pak jděte žít.</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Vyberte složku pro nahrávání <strong>Nastavení → Výstup</strong>.</li>
+                        <li>Stiskněte <strong>Spustit nahrávání (Start Recording)</strong>. Mluvte, přehrávejte zvuk a přepínejte scény.</li>
+                        <li>Zastavte se a sledujte soubor. Zkontrolujte hlasitost, orámování a synchronizaci rtů.</li>
+                        <li>Poté nastavte název a viditelnost své platformy <strong>Spustit vysílání (Start Streaming)</strong>. Zkontrolujte jeho náhled a stav streamu; některé platformy také vyžadují <strong>Pusťte se do živého vysílání</strong>.</li>
+                    </ol>
+                    <p><strong>Začněte streamovat, abyste mohli veřejně žít.</strong> Pokud je to možné, použijte soukromý test. Po dokončení zastavte streamování a potvrďte, že událost platformy skončila.</p>
+                    <details><summary>Formát záznamu a samostatné zvukové stopy</summary>
+                        <p>MKV toleruje přerušený záznam. Použijte <strong>Soubor → Nahrávky Remux</strong> pro MP4 později. Aktuální OBS nabízí také odolné hybridní MP4/MOV.</p>
+                        <p>Pro samostatné úpravy stop ponechte úplný mix na stopě 1, poté přiřaďte mikrofon/hru k dalším stopám v Advanced Audio Properties a povolte je v Recording.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-controls.png"><img src="../../docs/images/guides/obs-studio-controls.png" width="265" height="262" loading="lazy" alt="Ovládací prvky OBS s tlačítky Start Streaming, Start Recording, Studio Mode a Settings"></a>
+                    <figcaption>Záznam uloží soubor; streamování odesílá na vaši platformu. <a href="https://obsproject.com/kb/quick-start-guide">Snímek obrazovky: OBS Project</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="troubleshooting">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">10</span><h2>Pokud něco vypadá špatně</h2></div>
+            <p>Otevřít <strong>Zobrazit → Statistiky</strong> k identifikaci úzkého místa.</p>
+            <div class="obs-fixes">
+                <p><strong>Výpadky sítě</strong><br>Nižší datový tok; zkuste kabelový Ethernet.</p>
+                <p><strong>Zpoždění vykreslování</strong><br>Cap game FPS; zjednodušit scénu.</p>
+                <p><strong>Zpoždění kódování</strong><br>Použijte hardwarové kódování nebo nižší výstupní FPS.</p>
+                <p><strong>Tichý výstup</strong><br>Zkontrolujte ztlumení, režim sledování a zvukovou stopu.</p>
+            </div>
+            <p class="obs-small"><a href="https://obsproject.com/kb/encoding-performance-troubleshooting">Nápověda k výkonu OBS</a> · <a href="obs-troubleshooting.html">Nápověda k překrytí SSN</a> · <a href="guides.html#guide-directory">Všechny návody</a></p>
+        </section>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja · <a href="guides.html">Návody</a> · <a href="support.html">Podpora</a></p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

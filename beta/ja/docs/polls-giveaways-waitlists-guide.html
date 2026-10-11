@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ja/docs/polls-giveaways-waitlists-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ja/docs/polls-giveaways-waitlists-guide.html">
+    <meta property="og:title" content="投票、抽選、待機リスト - Social Stream Ninja">
+    <meta property="og:description" content="チャット投票を行い、当選者を抽選し、次に参加する視聴者を順番に管理します。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ja/docs/polls-giveaways-waitlists-guide.html">
+    <meta name="twitter:title" content="投票、抽選、待機リスト - Social Stream Ninja">
+    <meta name="twitter:description" content="チャット投票を行い、当選者を抽選し、次に参加する視聴者を順番に管理します。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>投票、抽選、待機リスト - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="チャット投票を行い、当選者を抽選し、次に参加する視聴者を順番に管理します。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+<style>.api-actions td:first-child code { white-space: nowrap; }</style>
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/polls-giveaways-waitlists-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{"(or the option name).":"（または選択肢の名前）を送ります。",", and keep Social Stream Ninja and your chat sources running. Don't edit out the session or password.":"として追加し、Social Stream Ninjaとチャットソースを動かし続けます。セッションやパスワードを削除しないでください。",", and one of six styles.":"と6種類のスタイルのいずれかを設定します。",", and the options with commas, like":"を入力し、選択肢はカンマで区切ります。例：",", it keeps the round's rules (or popup settings for a new round).":"がなければ、そのラウンドのルール（新規ラウンドではポップアップ設定）を維持します。",", like":"、たとえば",", or":"、または",", then":"、次に",", then copy the link into OBS as a Browser Source.":"を設定してから、リンクをOBSのブラウザーソースにコピーします。",", winner-draw mode off":"、当選者抽選モードはオフ",", winner-draw mode on":"、当選者抽選モードはオン",". Copy the updated link into OBS.":"。更新したリンクをOBSにコピーしてください。",". Set":"。次を設定します：",". Turn on":"。次の項目をオンにします：",". Viewers join with your command.":"。視聴者は指定したコマンドで参加します。",". When you're ready, click":"。準備ができたら次をクリックします：",". Without":"。次がなければ：","A count shows but no list":"人数は出るが一覧がない","Action":"操作","All guides":"すべてのガイド","All of them:":"すべて共通：","Allow multiple votes per user":"ユーザーごとの複数投票を許可（Allow multiple votes per user）","Allow removed users to rejoin":"削除したユーザーの再参加を許可する","Allow repeat winners":"複数回の当選を許可（Allow repeat winners）","Before going live, send a few":"配信前に、いくつかの","Browse all guides":"すべてのガイドを見る","Browser Source":"ブラウザソース","Button":"ボタン","Chat commands for mods":"モデレーター用チャットコマンド","Check Enable Poll is on, the poll isn't ended, the vote matches exactly, and they haven't voted already.":"Enable Pollがオンで、投票が終了しておらず、入力が完全一致し、その人がまだ投票していないことを確認します。","Check the trigger is on, the command is exact, entries aren't stopped, and members-only isn't blocking them.":"トリガーがオンで、コマンドが完全一致し、受付が停止しておらず、メンバー限定で除外されていないことを確認します。","Clear for next time":"次回用にクリアする","Click":"クリックする項目：","Close entries and pick a winner. Errors if nobody entered.":"受付を締め切って当選者を選びます。参加者がいなければエラーになります。","Close entries. Keeps the pool.":"受付を締め切ります。参加者は保持します。","Close the pool":"応募を締め切る","Close the queue to new people.":"新しい参加者の受付を終了します。","Commands & API":"コマンドとAPI","Community wheel":"コミュニティホイール（Community wheel）","Configure as winner-draw mode instead of queue":"キューではなく当選者抽選モードにする（Configure as winner-draw mode instead of queue）","Control it from the API, Stream Deck, or Event Flow":"API、Stream Deck、Event Flowから操作する","Copy the poll link into OBS. Viewers send just":"投票リンクをOBSにコピーします。視聴者は次だけを送ります：","Custom colours or fonts:":"独自の色やフォント：","Customize your graphical poll":"グラフィカル投票をカスタマイズする","Displays with the same Giveaway ID show the same pool and winner.":"同じGiveaway IDの画面には同じ参加者と当選者が表示されます。","Download":"ダウンロード","Download list":"一覧をダウンロード（Download list）","Download list / Reset queue":"一覧をダウンロード／キューをリセット（Download list / Reset queue）","Draw a winner with a big reveal":"演出付きで当選者を抽選する","Draw winner":"当選者を抽選（Draw winner）","Drawing closes entries for you.":"抽選すると受付は自動的に締め切られます。","Each viewer gets one vote. Turn on":"1人1票です。次をオンにします：","Enable Poll":"投票を有効化（Enable Poll）","Enable waitlist control commands":"待機列の操作コマンドを有効にする","End Poll":"投票を終了（End Poll）","Entry keyword":"応募キーワード（Entry keyword）","Every entry has the same chance. Donating doesn't help.":"すべての応募の当選確率は同じです。寄付しても有利になりません。","Exact vote only":"投票の完全一致のみ（Exact vote only）","Features":"機能","First time?":"初めての場合","Free-form":"自由形式","Get the entry count, open or closed, rules, and recent winners.":"応募数、受付状態、ルール、最近の当選者を取得します。","Giveaway / Tickets":"抽選／チケット（Giveaway / Tickets）","Giveaway Tool → Giveaway Options":"Giveaway Tool → Giveaway Options","Giveaways, tickets and point prizes":"抽選、チケット、ポイント賞品","Good to know":"知っておくと便利なこと","Graphical Poll → Poll Options":"Graphical Poll → Poll Options","Graphical poll with Adventure and Puzzle options and fictional sample votes":"AdventureとPuzzleの選択肢、および架空のサンプル票を表示したグラフィカル投票","Guides":"ガイド","Hashtag anywhere":"ハッシュタグの位置は任意（Hashtag anywhere）","Highlight top entry":"先頭の項目を強調表示（Highlight top entry）","Hire":"仕事を依頼する","Home":"ホーム","I want to":"したいこと","I want to…":"したいこと…","Inspiration":"活用アイデア","Let chat vote":"チャットで投票してもらう","Let chat vote, pick a random winner, or line viewers up for their turn.":"チャットで投票、ランダム抽選、視聴者の順番待ちができます。","Main navigation":"メインナビゲーション","More details: odds, saving, and limits":"詳しい説明：確率、保存、上限","Move on after their turn.":"順番が終わったら次へ進みます。","Multiple Choice":"選択式（Multiple Choice）","Name reel":"名前のリール（Name reel）","New empty, closed round. Old winners go to history. Refund paid tickets first.":"空で受付停止中の新しいラウンドを作ります。以前の当選者は履歴へ移ります。有料チケットは先に返金してください。","New round":"新しいラウンド（New round）","No one gets in":"誰も参加できない","No votes count":"投票が集計されない","OBS control dock":"OBS操作ドック","OBS shows something different":"OBSに違う内容が表示される","Old, replayed, private, bot, and event-only messages are ignored.":"古いメッセージ、リプレイ、非公開、ボット、イベントだけのメッセージは無視されます。","On this page":"このページの内容","One entry per person per platform. The same person on two platforms counts twice.":"1プラットフォームにつき1人1応募です。同じ人が2つのプラットフォームから参加すると2応募になります。","Only members can enter":"メンバーだけが応募可能（Only members can enter）","Open":"開く項目：","Open entries":"応募を開始（Open entries）","Open navigation menu":"ナビゲーションメニューを開く","Open or resume entries. Optional value:":"受付を開始または再開します。任意の値：","Open this in the popup":"ポップアップで開く場所","Overlay Gallery":"オーバーレイギャラリー","Paid tickets weight the odds by ticket count.":"有料チケットでは、チケット数に応じて当選確率が変わります。","Paid tickets, point prizes, or games?":"有料チケット、ポイント賞品、ゲームを使いたい場合","Paste the link into OBS again and check the session and password. Don't run two differently set-up poll pages.":"リンクをOBSに貼り直し、セッションとパスワードを確認します。設定が違う投票ページを2つ同時に動かさないでください。","Physical buttons: see":"物理ボタンを使う場合：","Pick a":"次を選びます：","Pick a random name from a simple list":"簡単な一覧から名前をランダムに選ぶ","Pick someone at random instead of in order.":"順番ではなくランダムに選びます。","Poll Type":"投票の種類（Poll Type）","Polls, giveaways, and waitlists":"投票、抽選、待機リスト","Polls, giveaways, and waitlists - Social Stream Ninja":"投票、抽選、待機リスト - Social Stream Ninja","Preview display":"表示をプレビュー（Preview display）","Problem":"問題","Quick winner draw":"簡単な当選者抽選","Quick winner draw from the waitlist":"待機列から簡単に当選者を抽選する","Remove top entry":"先頭の項目を削除（Remove top entry）","Reset Poll":"投票をリセット（Reset Poll）","Reset draw":"抽選をリセット（Reset draw）","Rounds are saved per session in this browser or app profile. A restart closes open rounds for review. Nothing is erased.":"ラウンドはこのブラウザーまたはアプリのプロファイルで、セッションごとに保存されます。再起動すると確認のため受付中のラウンドが閉じます。データは削除されません。","Run a chat vote, draw a winner, or organize the next viewers to participate.":"チャット投票を行い、当選者を抽選し、次に参加する視聴者を順番に管理します。","Run a giveaway":"抽選を実施する","Run a poll":"投票を行う","Run a poll in 5 steps":"5手順で投票を行う","Run a viewer queue":"視聴者の待機列を運用する","Same setup as the winner draw, but with winner-draw mode":"当選者抽選と同じ設定ですが、当選者抽選モードを","Save Current Poll":"現在の投票を保存（Save Current Poll）","Save a copy (TSV file), then clear it when you're done.":"コピーをTSVファイルとして保存し、終わったらクリアします。","See":"参照：","Select a name":"名前を選ぶ","Select winner":"当選者を選択（Select winner）","Set":"設定する項目：","Set the":"次を設定します：","Show the pick":"選んだ結果を表示する","Show who's next.":"次の人を表示します。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja ·":"Social Stream Ninja ·","Some take a number, like":"数値を指定するものもあります。例：","Stop entries":"参加受付を停止（Stop entries）","Stop entries before you draw. Download the list before you reset.":"抽選前に受付を止め、リセット前に一覧をダウンロードしてください。","Stream Deck (protocol 2) uses the same names. Its reply is about the giveaway, not whether OBS shows it.":"Stream Deck（プロトコル2）も同じ名前を使います。応答が示すのは抽選の状態であり、OBSに表示されたかどうかではありません。","Stream Deck setup":"Stream Deckの設定","Style and title live in the link. Entry rules come from the popup when entries open.":"スタイルとタイトルはリンクに保存されます。参加ルールは受付開始時のポップアップ設定から取得します。","Support":"サポート","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","Take viewers in order":"視聴者を順番に案内する","Tell viewers the command.":"視聴者にコマンドを伝えます。","Test and fix":"テストと修正","Test first, then fix problems":"先にテストし、問題を直す","That's winner-draw mode. It shows a pool and winners, not a queue.":"当選者抽選モードになっています。待機列ではなく、参加者と当選者が表示されます。","The old standalone community wheel (no":"旧版の独立したコミュニティ抽選ホイール（リンクに","The poll with sample votes.":"サンプル投票を表示した画面。","The popup, the HTTP/WebSocket API, and Stream Deck share these actions. No display has to be open. In Event Flow, use":"ポップアップ、HTTP/WebSocket API、Stream Deckはこれらの操作を共有します。表示ページを開く必要はありません。Event Flowでは次を使います：","The preview uses made-up names and never joins your session. The OBS display has no controls.":"プレビューは架空の名前を使い、セッションには接続しません。OBSの表示画面には操作部はありません。","Try this":"試すこと","Turn on":"オンにする項目：","Type a question, like":"質問を入力します。例：","Unless":"次を有効にしない限り：","Up to 10,000 entries. The wheel shows up to 120 names but picks from everyone.":"最大10,000応募。ホイールに表示されるのは最大120名ですが、抽選は全員が対象です。","Use it to":"用途：","Viewer queue":"視聴者の待機列","Viewers type !join":"視聴者が!joinを入力","Vote Matching":"投票の照合（Vote Matching）","Wait List / Winner Draw":"待機リスト／当選者抽選（Wait List / Winner Draw）","What it does":"動作","What should we play next?":"次は何をプレイしますか？","When entries are done, click":"受付が終わったら次をクリックします：","Which tool do I need?":"どのツールを使う？","Which tool?":"使うツール","Winner card":"当選者カード（Winner card）","Your first giveaway":"初めてのプレゼント抽選","and expand its settings. Turn on the trigger and set a command, like":"の設定を展開します。トリガーを有効にしてコマンドを設定します。例：","and the":"および","copy the tool's link into OBS as a":"ツールのリンクをOBSの次のソースにコピーします：","counts a hashtag inside a longer message.":"で、長いメッセージに含まれるハッシュタグも集計します。","decides if people can get back in line.":"で、再び列に並べるかどうかを決めます。","details":"詳細","empties the pool and keeps past winners in history. Entries start closed.":"で参加者を空にし、以前の当選者は履歴に残します。受付は閉じた状態から始まります。","for the next one.":"で次の回へ進みます。","from different made-up users, and check OBS shows the result.":"を異なる架空ユーザーから送り、OBSに結果が表示されることを確認します。","in the link) keeps its own pool and ignores these actions.":"がないもの）は独自の参加者一覧を持ち、これらの操作を受け付けません。","is on, a winner can't win again in the same round.":"を有効にしない限り、同じラウンドで当選者が再び当選することはありません。","needs a platform that sends membership info.":"にはメンバーシップ情報を送るプラットフォームが必要です。","off":"オフ","or":"または","polls use hashtag votes, like":"の投票はハッシュタグを使います。例：","saves the setup, not the results.":"で保存されるのは設定で、結果ではありません。","so mods, the host, and admins can run the queue from chat.":"を有効にすると、モデレーター、配信者、管理者がチャットから待機列を操作できます。","test messages":"テストメッセージ","to":"→","to change that.":"で変更します。","to clear them.":"でクリアします。","to keep the entries, then":"で参加者を保持し、その後","to stop voting. Note the result, then click":"で投票を終了します。結果を記録してから次をクリックします：","walks through it with screenshots.":"に画像付きの手順があります。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/polls-giveaways-waitlists-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/polls-giveaways-waitlists-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide visual-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション">
+<a href="../index.html">ホーム</a>
+<a href="features.html">機能</a>
+<a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a>
+<a href="download.html">ダウンロード</a>
+<a href="guides.html">ガイド</a>
+<a href="commands.html">コマンドとAPI</a>
+<a href="supported-sites.html">対応サイト</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a>
+<a href="services.html" class="site-priority-hire">仕事を依頼する</a>
+<a href="support.html">サポート</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/polls-giveaways-waitlists-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/polls-giveaways-waitlists-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/polls-giveaways-waitlists-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/polls-giveaways-waitlists-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/polls-giveaways-waitlists-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/polls-giveaways-waitlists-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="polls-giveaways-waitlists-guide.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/polls-giveaways-waitlists-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/polls-giveaways-waitlists-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/polls-giveaways-waitlists-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/polls-giveaways-waitlists-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/polls-giveaways-waitlists-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/polls-giveaways-waitlists-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/polls-giveaways-waitlists-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/polls-giveaways-waitlists-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/polls-giveaways-waitlists-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/polls-giveaways-waitlists-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="テーマを切り替え">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>投票、抽選、待機リスト</h1>
+<p>チャットで投票、ランダム抽選、視聴者の順番待ちができます。</p>
+</div>
+</section>
+<main>
+<section class="guide-section">
+<div class="container">
+<nav class="guide-jump-links" aria-label="このページの内容">
+<a href="guides.html">すべてのガイド</a>
+<a href="#choose">使うツール</a>
+<a href="#poll">投票を行う</a>
+<a href="#giveaway">抽選を実施する</a>
+<a href="#draw">簡単な当選者抽選</a>
+<a href="#queue">視聴者の待機列</a>
+<a href="#check">テストと修正</a>
+</nav>
+
+<div class="guide-card">
+<h2 id="choose">どのツールを使う？</h2>
+<table class="guide-table guide-table-stack">
+<thead><tr><th scope="col">したいこと…</th><th scope="col">ポップアップで開く場所</th></tr></thead>
+<tbody>
+<tr><td data-label="したいこと">チャットで投票してもらう</td><td data-label="ポップアップで開く場所"><strong>Graphical Poll &rarr; Poll Options</strong></td></tr>
+<tr><td data-label="したいこと">演出付きで当選者を抽選する</td><td data-label="ポップアップで開く場所"><strong>Giveaway Tool &rarr; Giveaway Options</strong></td></tr>
+<tr><td data-label="したいこと">簡単な一覧から名前をランダムに選ぶ</td><td data-label="ポップアップで開く場所"><strong>待機リスト／当選者抽選（Wait List / Winner Draw）</strong>、当選者抽選モードはオン</td></tr>
+<tr><td data-label="したいこと">視聴者を順番に案内する</td><td data-label="ポップアップで開く場所"><strong>待機リスト／当選者抽選（Wait List / Winner Draw）</strong>、当選者抽選モードはオフ</td></tr>
+</tbody>
+</table>
+<div class="guide-note"><strong>すべて共通：</strong> ツールのリンクをOBSの次のソースにコピーします： <strong>ブラウザソース</strong>として追加し、Social Stream Ninjaとチャットソースを動かし続けます。セッションやパスワードを削除しないでください。</div>
+</div>
+
+<div class="guide-card">
+<h2 id="poll">5手順で投票を行う</h2>
+<div class="guide-step-layout">
+<ol class="guide-steps">
+<li>開く項目： <strong>Graphical Poll &rarr; Poll Options</strong>。次を設定します： <strong>投票の種類（Poll Type）</strong> → <strong>選択式（Multiple Choice）</strong>.</li>
+<li>質問を入力します。例： <em>次は何をプレイしますか？</em>を入力し、選択肢はカンマで区切ります。例： <code>Adventure, Puzzle</code>.</li>
+<li>設定する項目： <strong>投票の照合（Vote Matching）</strong> → <strong>投票の完全一致のみ（Exact vote only）</strong>。次の項目をオンにします： <strong>投票を有効化（Enable Poll）</strong>.</li>
+<li>投票リンクをOBSにコピーします。視聴者は次だけを送ります： <code>1</code> または <code>2</code> （または選択肢の名前）を送ります。</li>
+<li>クリックする項目： <strong>投票を終了（End Poll）</strong> で投票を終了します。結果を記録してから次をクリックします： <strong>投票をリセット（Reset Poll）</strong> で次の回へ進みます。</li>
+</ol>
+<figure class="guide-figure">
+<a href="../../docs/images/guides/poll-guide-preview.png"><img class="guide-image" src="../../docs/images/guides/poll-guide-preview.png" alt="AdventureとPuzzleの選択肢、および架空のサンプル票を表示したグラフィカル投票" loading="lazy"></a>
+<figcaption>サンプル投票を表示した画面。</figcaption>
+</figure>
+</div>
+<h3>知っておくと便利なこと</h3>
+<ul>
+<li>1人1票です。次をオンにします： <strong>ユーザーごとの複数投票を許可（Allow multiple votes per user）</strong> で変更します。</li>
+<li><strong>自由形式</strong> の投票はハッシュタグを使います。例： <code>#yes</code>. <strong>ハッシュタグの位置は任意（Hashtag anywhere）</strong> で、長いメッセージに含まれるハッシュタグも集計します。</li>
+<li><strong>現在の投票を保存（Save Current Poll）</strong> で保存されるのは設定で、結果ではありません。</li>
+</ul>
+<p>独自の色やフォント： <a href="poll-customization-guide.html">グラフィカル投票をカスタマイズする</a>.</p>
+</div>
+
+<div class="guide-card">
+<h2 id="giveaway">抽選を実施する</h2>
+<p>初めての場合 <a href="giveaway-guide.html">初めてのプレゼント抽選</a> に画像付きの手順があります。</p>
+<ol class="guide-steps">
+<li>開く項目： <strong>Giveaway Tool &rarr; Giveaway Options</strong>.</li>
+<li>次を設定します： <strong>応募キーワード（Entry keyword）</strong>、たとえば <code>!enter</code>.</li>
+<li>次を選びます： <strong>当選者カード（Winner card）</strong>, <strong>名前のリール（Name reel）</strong>、または <strong>コミュニティホイール（Community wheel）</strong>と6種類のスタイルのいずれかを設定します。</li>
+<li>クリックする項目： <strong>表示をプレビュー（Preview display）</strong>を設定してから、リンクをOBSのブラウザーソースにコピーします。</li>
+<li>クリックする項目： <strong>応募を開始（Open entries）</strong>。準備ができたら次をクリックします： <strong>当選者を抽選（Draw winner）</strong>.</li>
+</ol>
+<ul>
+<li>抽選すると受付は自動的に締め切られます。</li>
+<li><strong>新しいラウンド（New round）</strong> で参加者を空にし、以前の当選者は履歴に残します。受付は閉じた状態から始まります。</li>
+<li>すべての応募の当選確率は同じです。寄付しても有利になりません。</li>
+<li>次を有効にしない限り： <strong>複数回の当選を許可（Allow repeat winners）</strong> を有効にしない限り、同じラウンドで当選者が再び当選することはありません。</li>
+<li><strong>メンバーだけが応募可能（Only members can enter）</strong> にはメンバーシップ情報を送るプラットフォームが必要です。</li>
+</ul>
+<div class="guide-note"><strong>有料チケット、ポイント賞品、ゲームを使いたい場合</strong> 参照： <a href="giveaway-points-guide.html">抽選、チケット、ポイント賞品</a>.</div>
+<details class="guide-extra">
+<summary>詳しい説明：確率、保存、上限</summary>
+<ul>
+<li>プレビューは架空の名前を使い、セッションには接続しません。OBSの表示画面には操作部はありません。</li>
+<li>スタイルとタイトルはリンクに保存されます。参加ルールは受付開始時のポップアップ設定から取得します。</li>
+<li>同じGiveaway IDの画面には同じ参加者と当選者が表示されます。</li>
+<li>有料チケットでは、チケット数に応じて当選確率が変わります。</li>
+<li>1プラットフォームにつき1人1応募です。同じ人が2つのプラットフォームから参加すると2応募になります。</li>
+<li>最大10,000応募。ホイールに表示されるのは最大120名ですが、抽選は全員が対象です。</li>
+<li>古いメッセージ、リプレイ、非公開、ボット、イベントだけのメッセージは無視されます。</li>
+<li>ラウンドはこのブラウザーまたはアプリのプロファイルで、セッションごとに保存されます。再起動すると確認のため受付中のラウンドが閉じます。データは削除されません。</li>
+</ul>
+</details>
+<details class="guide-extra">
+<summary>API、Stream Deck、Event Flowから操作する</summary>
+<p>ポップアップ、HTTP/WebSocket API、Stream Deckはこれらの操作を共有します。表示ページを開く必要はありません。Event Flowでは次を使います： <strong>抽選／チケット（Giveaway / Tickets）</strong> (<a href="giveaway-points-guide.html#automation">詳細</a>).</p>
+<table class="guide-table guide-table-stack api-actions">
+<thead><tr><th>操作</th><th>動作</th></tr></thead>
+<tbody>
+<tr><td data-label="操作"><code>startgiveaway</code></td><td data-label="動作">受付を開始または再開します。任意の値： <code>{"giveawayId":"default","config":{"keyword":"!enter","match":"exact","membersOnly":false,"removeWinner":true}}</code>。次がなければ： <code>config</code>がなければ、そのラウンドのルール（新規ラウンドではポップアップ設定）を維持します。</td></tr>
+<tr><td data-label="操作"><code>closegiveaway</code></td><td data-label="動作">受付を締め切ります。参加者は保持します。</td></tr>
+<tr><td data-label="操作"><code>drawgiveaway</code></td><td data-label="動作">受付を締め切って当選者を選びます。参加者がいなければエラーになります。</td></tr>
+<tr><td data-label="操作"><code>resetgiveaway</code></td><td data-label="動作">空で受付停止中の新しいラウンドを作ります。以前の当選者は履歴へ移ります。有料チケットは先に返金してください。</td></tr>
+<tr><td data-label="操作"><code>getgiveawaystate</code></td><td data-label="動作">応募数、受付状態、ルール、最近の当選者を取得します。</td></tr>
+</tbody>
+</table>
+<pre>{"action":"drawgiveaway","get":"draw-1"}</pre>
+<p>Stream Deck（プロトコル2）も同じ名前を使います。応答が示すのは抽選の状態であり、OBSに表示されたかどうかではありません。</p>
+<p>旧版の独立したコミュニティ抽選ホイール（リンクに <code>managed</code> がないもの）は独自の参加者一覧を持ち、これらの操作を受け付けません。</p>
+</details>
+</div>
+
+<div class="guide-card">
+<h2 id="draw">待機列から簡単に当選者を抽選する</h2>
+<ol class="guide-steps">
+<li>開く項目： <strong>待機リスト／当選者抽選（Wait List / Winner Draw）</strong> の設定を展開します。トリガーを有効にしてコマンドを設定します。例： <code>!join</code>.</li>
+<li>オンにする項目： <strong>キューではなく当選者抽選モードにする（Configure as winner-draw mode instead of queue）</strong>。更新したリンクをOBSにコピーしてください。</li>
+<li>視聴者にコマンドを伝えます。</li>
+<li>受付が終わったら次をクリックします： <strong>参加受付を停止（Stop entries）</strong>、次に <strong>当選者を選択（Select winner）</strong>.</li>
+<li>クリックする項目： <strong>一覧をダウンロード（Download list）</strong> で参加者を保持し、その後 <strong>抽選をリセット（Reset draw）</strong> でクリアします。</li>
+</ol>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li><strong>応募を開始（Open entries）</strong><span>視聴者が!joinを入力</span></li>
+<li><strong>参加受付を停止（Stop entries）</strong><span>応募を締め切る</span></li>
+<li><strong>当選者を選択（Select winner）</strong><span>選んだ結果を表示する</span></li>
+<li><strong>抽選をリセット（Reset draw）</strong><span>次回用にクリアする</span></li>
+</ol>
+<figcaption>抽選前に受付を止め、リセット前に一覧をダウンロードしてください。</figcaption>
+</figure>
+</div>
+
+<div class="guide-card">
+<h2 id="queue">視聴者の待機列を運用する</h2>
+<p>当選者抽選と同じ設定ですが、当選者抽選モードを <strong>オフ</strong>。視聴者は指定したコマンドで参加します。</p>
+<table class="guide-table guide-table-stack">
+<thead><tr><th scope="col">ボタン</th><th scope="col">用途：</th></tr></thead>
+<tbody>
+<tr><td data-label="ボタン">先頭の項目を強調表示（Highlight top entry）</td><td data-label="用途：">次の人を表示します。</td></tr>
+<tr><td data-label="ボタン">先頭の項目を削除（Remove top entry）</td><td data-label="用途：">順番が終わったら次へ進みます。</td></tr>
+<tr><td data-label="ボタン">名前を選ぶ</td><td data-label="用途：">順番ではなくランダムに選びます。</td></tr>
+<tr><td data-label="ボタン">参加受付を停止（Stop entries）</td><td data-label="用途：">新しい参加者の受付を終了します。</td></tr>
+<tr><td data-label="ボタン">一覧をダウンロード／キューをリセット（Download list / Reset queue）</td><td data-label="用途：">コピーをTSVファイルとして保存し、終わったらクリアします。</td></tr>
+</tbody>
+</table>
+<p><strong>削除したユーザーの再参加を許可する</strong> で、再び列に並べるかどうかを決めます。</p>
+<details class="guide-extra">
+<summary>モデレーター用チャットコマンド</summary>
+<p>オンにする項目： <strong>待機列の操作コマンドを有効にする</strong> を有効にすると、モデレーター、配信者、管理者がチャットから待機列を操作できます。</p>
+<p><code>!wlstop</code> &middot; <code>!wlremove</code> &middot; <code>!wlreset</code> &middot; <code>!wlpick</code> &middot; <code>!wlhighlight</code></p>
+<p>数値を指定するものもあります。例： <code>!wlpick 3</code> または <code>!wlremove 2</code>.</p>
+</details>
+</div>
+
+<div class="guide-card">
+<h2 id="check">先にテストし、問題を直す</h2>
+<p>配信前に、いくつかの <a href="test-message-guide.html">テストメッセージ</a> を異なる架空ユーザーから送り、OBSに結果が表示されることを確認します。</p>
+<table class="guide-table guide-table-stack">
+<thead><tr><th scope="col">問題</th><th scope="col">試すこと</th></tr></thead>
+<tbody>
+<tr><td data-label="問題">投票が集計されない</td><td data-label="試すこと">Enable Pollがオンで、投票が終了しておらず、入力が完全一致し、その人がまだ投票していないことを確認します。</td></tr>
+<tr><td data-label="問題">誰も参加できない</td><td data-label="試すこと">トリガーがオンで、コマンドが完全一致し、受付が停止しておらず、メンバー限定で除外されていないことを確認します。</td></tr>
+<tr><td data-label="問題">人数は出るが一覧がない</td><td data-label="試すこと">当選者抽選モードになっています。待機列ではなく、参加者と当選者が表示されます。</td></tr>
+<tr><td data-label="問題">OBSに違う内容が表示される</td><td data-label="試すこと">リンクをOBSに貼り直し、セッションとパスワードを確認します。設定が違う投票ページを2つ同時に動かさないでください。</td></tr>
+</tbody>
+</table>
+<p>物理ボタンを使う場合： <a href="../streamdeck/index.html">Stream Deckの設定</a> および <a href="obs-control-dock-guide.html">OBS操作ドック</a>.</p>
+</div>
+</div>
+</section>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">すべてのガイドを見る</a>
+</p>
+</div>
+</div>
+</footer>
+<script data-copy-markdown src="../../docs/js/main.js">
+</script>
+</body>
+</html>

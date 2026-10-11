@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/th/docs/custom-fonts.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/beta/th/docs/custom-fonts.html">
+    <meta property="og:title" content="ฟอนต์ที่โฮสต์เองและการตกแต่ง - Social Stream Ninja">
+    <meta property="og:description" content="เรียนรู้การโฮสต์ฟอนต์เองและปรับโอเวอร์เลย์ Social Stream Ninja เช่น dock.html และ featured.html ด้วย CSS กำหนดเอง">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/th/docs/custom-fonts.html">
+    <meta name="twitter:title" content="ฟอนต์ที่โฮสต์เองและการตกแต่ง - Social Stream Ninja">
+    <meta name="twitter:description" content="เรียนรู้การโฮสต์ฟอนต์เองและปรับโอเวอร์เลย์ Social Stream Ninja เช่น dock.html และ featured.html ด้วย CSS กำหนดเอง">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ฟอนต์ที่โฮสต์เองและการตกแต่ง - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="เรียนรู้การโฮสต์ฟอนต์เองและปรับโอเวอร์เลย์ Social Stream Ninja เช่น dock.html และ featured.html ด้วย CSS กำหนดเอง">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/custom-fonts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{"(both pages support these).":"(ทั้งสองหน้ารองรับตัวเลือกเหล่านี้)",", and":", และ",", and row colors (":", และสีแถว (",", or":", หรือ",", plus the":", พร้อม",". The browser will fall back automatically if a glyph is missing.":" เบราว์เซอร์จะใช้ฟอนต์สำรองอัตโนมัติหากไม่มีอักขระที่ต้องการ","1) Host your font files":"1) โฮสต์ไฟล์ฟอนต์","2) Build the CSS":"2) สร้าง CSS","3) Apply it to dock.html or featured.html":"3) ใช้กับ dock.html หรือ featured.html","4) Tune the overlay text":"4) ปรับข้อความโอเวอร์เลย์","5) Troubleshooting":"5) การแก้ปัญหา","; mismatches are the most common issue.":"; ชื่อไม่ตรงกันเป็นปัญหาที่พบบ่อยที่สุด","API Reference":"เอกสารอ้างอิง API","About":"เกี่ยวกับ","Commands & API":"คำสั่งและ API","Community":"ชุมชน","Contribute":"ร่วมพัฒนา","Core typography variables used by both pages:":"ตัวแปรตัวอักษรหลักที่ทั้งสองหน้าใช้:","Custom Overlays":"โอเวอร์เลย์กำหนดเอง","Customization Guide":"คู่มือการปรับแต่ง","Define the font with":"ประกาศฟอนต์ด้วย","Discord":"Discord","Dock-only extras:":"ตัวเลือกเพิ่มเฉพาะแผงด็อก:","Donate":"บริจาค","Download":"ดาวน์โหลด","Durable options:":"ตัวเลือกสำหรับใช้งานระยะยาว:","Featured layout tweaks:":"การปรับเลย์เอาต์ Featured:","Features":"ฟีเจอร์","For quick tests you can pass CSS directly with":"สำหรับทดสอบเร็ว ๆ คุณส่ง CSS โดยตรงด้วย","GitHub":"GitHub","GitHub Pages, Cloudflare Pages, Netlify, your own web server.":"GitHub Pages, Cloudflare Pages, Netlify หรือเว็บเซิร์ฟเวอร์ของคุณเอง","GitHub Repository":"ที่เก็บโค้ด GitHub","Guides":"คู่มือ","Hire":"จ้างงาน","Home":"หน้าแรก","How to host .ttf, .otf, or .woff2 files yourself (no Google or system font required).":"วิธีโฮสต์ไฟล์ .ttf, .otf หรือ .woff2 ด้วยตัวเอง (ไม่ต้องใช้ฟอนต์ Google หรือฟอนต์ระบบ)","How to load those fonts in":"วิธีโหลดฟอนต์เหล่านั้นใน","If the font does not appear, open the font URL directly in a browser to confirm it downloads and is served with HTTPS.":"หากฟอนต์ไม่ปรากฏ ให้เปิด URL ฟอนต์ในเบราว์เซอร์โดยตรงเพื่อยืนยันว่าดาวน์โหลดได้และให้บริการผ่าน HTTPS","Inline URL param:":"พารามิเตอร์ URL แบบใส่ในลิงก์:","Inspiration":"ไอเดียสร้างสรรค์","Join our Discord":"เข้าร่วม Discord ของเรา","Keep font-family names consistent between the":"ใช้ชื่อ font-family ให้ตรงกันระหว่าง","Learn how to self-host fonts and customize Social Stream Ninja overlays like dock.html and featured.html with custom CSS.":"เรียนรู้การโฮสต์ฟอนต์เองและปรับโอเวอร์เลย์ Social Stream Ninja เช่น dock.html และ featured.html ด้วย CSS กำหนดเอง","Main navigation":"เมนูหลัก","Need multiple fonts (for Armenian + Russian + Latin)? Declare each font-face and list them in":"ต้องการหลายฟอนต์ (สำหรับอาร์เมเนีย + รัสเซีย + ละติน) หรือไม่? ประกาศ font-face ของแต่ละฟอนต์และระบุใน","OBS Browser Source:":"แหล่งเบราว์เซอร์ OBS:","Only host fonts you are licensed to redistribute. WOFF2 files are smaller and load faster than TTF/OTF when available.":"โฮสต์เฉพาะฟอนต์ที่คุณมีสิทธิ์เผยแพร่ต่อ หากมีไฟล์ WOFF2 จะเล็กกว่าและโหลดเร็วกว่า TTF/OTF","Open navigation menu":"เปิดเมนูนำทาง","Open your dock/featured URL in OBS > Browser Source > Custom CSS and paste the CSS block above.":"เปิด URL dock/featured ใน OBS > Browser Source > Custom CSS แล้ววางบล็อก CSS ด้านบน","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Pair CSS changes with existing URL options like":"ใช้การเปลี่ยน CSS ร่วมกับตัวเลือก URL ที่มีอยู่ เช่น","Privacy Policy":"นโยบายความเป็นส่วนตัว","Product":"ผลิตภัณฑ์","Quick fallbacks if you want to keep using Google Fonts or installed system fonts.":"ตัวเลือกสำรองแบบเร็วหากต้องการใช้ Google Fonts หรือฟอนต์ระบบที่ติดตั้งไว้ต่อไป","Quick font switches:":"เปลี่ยนฟอนต์อย่างรวดเร็ว:","Quick options:":"ตัวเลือกด่วน:","Reload the OBS Browser Source or refresh the dock/featured tab after changing CSS so cached fonts are re-requested.":"โหลดแหล่งเบราว์เซอร์ OBS ใหม่หรือรีเฟรชแท็บ dock/featured หลังเปลี่ยน CSS เพื่อให้ร้องขอฟอนต์ในแคชใหม่","Report an Issue":"รายงานปัญหา","Resources":"แหล่งข้อมูลอ้างอิง","Self-Hosted Fonts & Overlay Styling":"ฟอนต์ที่โฮสต์เองและการตกแต่งโอเวอร์เลย์","Self-Hosted Fonts & Styling - Social Stream Ninja":"ฟอนต์ที่โฮสต์เองและการตกแต่ง - Social Stream Ninja","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja lets you capture, mix, and display chat from over 100 platforms in real time. Built by Steve Seguin.":"Social Stream Ninja ช่วยจับ รวม และแสดงแชตจากกว่า 100 แพลตฟอร์มแบบเรียลไทม์ สร้างโดย Steve Seguin","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja สัญญาอนุญาต GPLv3.0 สร้างโดย","Some hosts block hotlinking; switch to a host that allows direct file access or set the proper CORS headers.":"บางโฮสต์บล็อก hotlink ให้เปลี่ยนไปใช้โฮสต์ที่อนุญาตการเข้าถึงไฟล์โดยตรง หรือตั้งส่วนหัว CORS ให้ถูกต้อง","Steve Seguin":"Steve Seguin","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Switch theme":"เปลี่ยนธีม","Templates":"เทมเพลต","Terms of Service":"ข้อกำหนดการให้บริการ","The same":"ตัวเดียวกัน","These options work the same in the Chrome extension, Electron app, and the hosted site because they all load the same":"ตัวเลือกเหล่านี้ทำงานเหมือนกันในส่วนขยาย Chrome แอป Electron และเว็บไซต์ที่โฮสต์ไว้ เพราะทั้งหมดโหลดไฟล์เดียวกัน","URL parameter (hosted CSS):":"พารามิเตอร์ URL (CSS ที่โฮสต์ไว้):","Upload the CSS to the same host as your fonts, then append":"อัปโหลด CSS ไปยังโฮสต์เดียวกับฟอนต์ แล้วต่อท้าย","Use":"ใช้","Use your own fonts with dock.html and featured.html, whether you load them in OBS Browser Source, the Chrome extension, or the desktop app.":"ใช้ฟอนต์ของคุณเองกับ dock.html และ featured.html ไม่ว่าจะโหลดในแหล่งเบราว์เซอร์ OBS ส่วนขยาย Chrome หรือแอปเดสก์ท็อป","What this guide covers":"คู่มือนี้ครอบคลุมอะไร","Which CSS variables adjust text sizing and layout on both pages.":"ตัวแปร CSS ใดใช้ปรับขนาดตัวอักษรและเลย์เอาต์ของทั้งสองหน้า","X":"X","You need a direct HTTPS link to the font file. Pick a host that allows hotlinking/CORS so the browser inside OBS or the app can fetch it.":"ต้องใช้ลิงก์ HTTPS โดยตรงไปยังไฟล์ฟอนต์ เลือกโฮสต์ที่อนุญาต hotlink/CORS เพื่อให้เบราว์เซอร์ใน OBS หรือแอปดึงไฟล์ได้","adjust":"ปรับ","and point it at your hosted file, then set the overlay to use it via":"และชี้ไปยังไฟล์ที่โฮสต์ไว้ แล้วตั้งโอเวอร์เลย์ให้ใช้ผ่าน","applied. Self-hosted fonts work the same way via":"ถูกนำมาใช้ — ฟอนต์ที่โฮสต์เองทำงานแบบเดียวกันผ่าน","blocks and":"บล็อกและ","catbox.moe, 0x0.st, file.io (short-lived).":"catbox.moe, 0x0.st, file.io (เก็บชั่วคราว)","featured.html overlay message rendered in the Pacifico font with an avatar and name tag":"ข้อความโอเวอร์เลย์ featured.html ที่แสดงด้วยฟอนต์ Pacifico พร้อมอวาตาร์และป้ายชื่อ","files.":"ไฟล์","like":"เช่น","loads Google Fonts if you prefer not to self-host.":"โหลด Google Fonts หากไม่ต้องการโฮสต์เอง","or":"หรือ","or base64 encode it with":"หรือเข้ารหัส base64 ด้วย","overlay with":"โอเวอร์เลย์พร้อม","to confirm a system font is visible when testing":"เพื่อยืนยันว่ามองเห็นฟอนต์ระบบขณะทดสอบ","to reposition the lower-third block without editing the HTML.":"เพื่อย้ายตำแหน่งบล็อกแถบด้านล่างโดยไม่แก้ HTML","to the page URL:":"ลงใน URL หน้า:","uses a system font name, while":"ใช้ชื่อฟอนต์ระบบ ส่วน","using URL parameters or OBS custom CSS.":"โดยใช้พารามิเตอร์ URL หรือ CSS กำหนดเองของ OBS","variants).":"รูปแบบต่าง ๆ)","when you need layout adjustments in the dock.":"เมื่อต้องปรับเลย์เอาต์ในแผงด็อก","with contributions from the community.":"ร่วมพัฒนาโดยชุมชน"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/custom-fonts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/custom-fonts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/custom-fonts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/custom-fonts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/custom-fonts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/custom-fonts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/custom-fonts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/custom-fonts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/custom-fonts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/custom-fonts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/custom-fonts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/custom-fonts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/custom-fonts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/custom-fonts.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก"><a href="../index.html">หน้าแรก</a><a href="features.html">ฟีเจอร์</a><a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a><a href="download.html">ดาวน์โหลด</a><a href="guides.html">คู่มือ</a><a href="commands.html">คำสั่งและ API</a><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a><a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a><a href="services.html" class="site-priority-hire">จ้างงาน</a><a href="support.html">การสนับสนุน</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/custom-fonts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/custom-fonts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/custom-fonts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/custom-fonts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/custom-fonts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/custom-fonts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/custom-fonts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/custom-fonts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/custom-fonts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/custom-fonts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/custom-fonts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/custom-fonts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/custom-fonts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/custom-fonts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/custom-fonts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/custom-fonts.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="custom-fonts.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="เปลี่ยนธีม"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>ฟอนต์ที่โฮสต์เองและการตกแต่งโอเวอร์เลย์</h1>
+            <p>ใช้ฟอนต์ของคุณเองกับ dock.html และ featured.html ไม่ว่าจะโหลดในแหล่งเบราว์เซอร์ OBS ส่วนขยาย Chrome หรือแอปเดสก์ท็อป</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>คู่มือนี้ครอบคลุมอะไร</h3>
+                <ul class="guide-list">
+                    <li>วิธีโฮสต์ไฟล์ .ttf, .otf หรือ .woff2 ด้วยตัวเอง (ไม่ต้องใช้ฟอนต์ Google หรือฟอนต์ระบบ)</li>
+                    <li>วิธีโหลดฟอนต์เหล่านั้นใน <code>dock.html</code> หรือ <code>featured.html</code> โดยใช้พารามิเตอร์ URL หรือ CSS กำหนดเองของ OBS</li>
+                    <li>ตัวแปร CSS ใดใช้ปรับขนาดตัวอักษรและเลย์เอาต์ของทั้งสองหน้า</li>
+                    <li>ตัวเลือกสำรองแบบเร็วหากต้องการใช้ Google Fonts หรือฟอนต์ระบบที่ติดตั้งไว้ต่อไป</li>
+                </ul>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/custom-font-featured-demo.png" alt="ข้อความโอเวอร์เลย์ featured.html ที่แสดงด้วยฟอนต์ Pacifico พร้อมอวาตาร์และป้ายชื่อ" class="guide-image">
+                    <figcaption>ตัวเดียวกัน <code>featured.html</code> โอเวอร์เลย์พร้อม <code>&amp;googlefont=Pacifico</code> ถูกนำมาใช้ — ฟอนต์ที่โฮสต์เองทำงานแบบเดียวกันผ่าน <code>@font-face</code>.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>1) โฮสต์ไฟล์ฟอนต์</h3>
+                <p>ต้องใช้ลิงก์ HTTPS โดยตรงไปยังไฟล์ฟอนต์ เลือกโฮสต์ที่อนุญาต hotlink/CORS เพื่อให้เบราว์เซอร์ใน OBS หรือแอปดึงไฟล์ได้</p>
+                <ul class="guide-list">
+                    <li><strong>ตัวเลือกด่วน:</strong> catbox.moe, 0x0.st, file.io (เก็บชั่วคราว)</li>
+                    <li><strong>ตัวเลือกสำหรับใช้งานระยะยาว:</strong> GitHub Pages, Cloudflare Pages, Netlify หรือเว็บเซิร์ฟเวอร์ของคุณเอง</li>
+                    <li>โฮสต์เฉพาะฟอนต์ที่คุณมีสิทธิ์เผยแพร่ต่อ หากมีไฟล์ WOFF2 จะเล็กกว่าและโหลดเร็วกว่า TTF/OTF</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h3>2) สร้าง CSS</h3>
+                <p>ประกาศฟอนต์ด้วย <code>@font-face</code> และชี้ไปยังไฟล์ที่โฮสต์ไว้ แล้วตั้งโอเวอร์เลย์ให้ใช้ผ่าน <code>--font-family</code>.</p>
+                <div class="code-block">
+<pre>@font-face {
+  font-family: 'MyDockFont';
+  src: url('https://your-site.example/fonts/MyDockFont.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* Optional second weight */
+@font-face {
+  font-family: 'MyDockFont';
+  src: url('https://your-site.example/fonts/MyDockFont-Bold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+}
+
+:root {
+  --font-family: 'MyDockFont', 'Segoe UI', 'Arial Unicode MS', sans-serif;
+  --comment-font-size: 28px;
+  --author-font-size: 24px;
+  --message-line-height: 32px;
+}</pre>
+                </div>
+                <div class="guide-note">
+                    <p>ต้องการหลายฟอนต์ (สำหรับอาร์เมเนีย + รัสเซีย + ละติน) หรือไม่? ประกาศ font-face ของแต่ละฟอนต์และระบุใน <code>--font-family</code> เช่น <code>'FontA', 'FontB', 'FontC', sans-serif</code> เบราว์เซอร์จะใช้ฟอนต์สำรองอัตโนมัติหากไม่มีอักขระที่ต้องการ</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h3>3) ใช้กับ dock.html หรือ featured.html</h3>
+                <ul class="guide-list">
+                    <li><strong>แหล่งเบราว์เซอร์ OBS:</strong> เปิด URL dock/featured ใน OBS &gt; Browser Source &gt; Custom CSS แล้ววางบล็อก CSS ด้านบน</li>
+                    <li><strong>พารามิเตอร์ URL (CSS ที่โฮสต์ไว้):</strong> อัปโหลด CSS ไปยังโฮสต์เดียวกับฟอนต์ แล้วต่อท้าย <code>&css=https://your-site.example/my-font.css</code> ลงใน URL หน้า:
+                        <div class="code-block"><pre>https://socialstream.ninja/dock.html?session=YOURSESSION&css=https://your-site.example/my-font.css
+https://socialstream.ninja/featured.html?session=YOURSESSION&css=https://your-site.example/my-font.css</pre></div>
+                    </li>
+                    <li><strong>พารามิเตอร์ URL แบบใส่ในลิงก์:</strong> สำหรับทดสอบเร็ว ๆ คุณส่ง CSS โดยตรงด้วย <code>&css=</code> หรือเข้ารหัส base64 ด้วย <code>&b64css=</code> (ทั้งสองหน้ารองรับตัวเลือกเหล่านี้)</li>
+                    <li><strong>เปลี่ยนฟอนต์อย่างรวดเร็ว:</strong> <code>&font=YourInstalledFont</code> ใช้ชื่อฟอนต์ระบบ ส่วน <code>&googlefont=Noto+Sans+Armenian,Noto+Sans</code> โหลด Google Fonts หากไม่ต้องการโฮสต์เอง</li>
+                </ul>
+                <div class="guide-note">
+                    <p>ตัวเลือกเหล่านี้ทำงานเหมือนกันในส่วนขยาย Chrome แอป Electron และเว็บไซต์ที่โฮสต์ไว้ เพราะทั้งหมดโหลดไฟล์เดียวกัน <code>dock.html</code>/<code>featured.html</code> ไฟล์</p>
+                </div>
+			</div>
+
+			<div class="guide-card">
+				<h3>4) ปรับข้อความโอเวอร์เลย์</h3>
+				<p>ตัวแปรตัวอักษรหลักที่ทั้งสองหน้าใช้:</p>
+				<div class="code-block">
+<pre>:root {
+  --font-family: 'MyDockFont', 'FontB', sans-serif;
+  --comment-font-size: 28px;  /* message text size */
+  --author-font-size: 24px;   /* name text size */
+  --comment-font-weight: 600; /* featured.html */
+  --author-font-weight: 700;  /* featured.html */
+  --message-font-weight: 500; /* dock.html */
+  --name-font-weight: 700;    /* dock.html */
+  --comment-color: #ffffff;
+  --author-color: #ffe08a;
+  --comment-bg-color: #161616;
+  --author-bg-color: #202020;
+}</pre>
+				</div>
+				<p><strong>ตัวเลือกเพิ่มเฉพาะแผงด็อก:</strong> <code>--stylized-emoji</code>, <code>--stylized-img</code>, <code>--text-stroke-width</code>, <code>--text-shadow</code>, และสีแถว (<code>--highlight-base</code>, <code>--highlight-base2</code>, พร้อม <code>compact</code> รูปแบบต่าง ๆ)</p>
+				<p><strong>การปรับเลย์เอาต์ Featured:</strong> ปรับ <code>--comment-width</code>, <code>--comment-padding</code>, <code>--comment-area-bottom</code>, และ <code>--comment-area-height</code> เพื่อย้ายตำแหน่งบล็อกแถบด้านล่างโดยไม่แก้ HTML</p>
+				<p>ใช้การเปลี่ยน CSS ร่วมกับตัวเลือก URL ที่มีอยู่ เช่น <code>&scale</code>, <code>&compact</code>, หรือ <code>&hidesource</code> เมื่อต้องปรับเลย์เอาต์ในแผงด็อก</p>
+			</div>
+
+            <div class="guide-card">
+                <h3>5) การแก้ปัญหา</h3>
+                <ul class="guide-list">
+                    <li>หากฟอนต์ไม่ปรากฏ ให้เปิด URL ฟอนต์ในเบราว์เซอร์โดยตรงเพื่อยืนยันว่าดาวน์โหลดได้และให้บริการผ่าน HTTPS</li>
+                    <li>บางโฮสต์บล็อก hotlink ให้เปลี่ยนไปใช้โฮสต์ที่อนุญาตการเข้าถึงไฟล์โดยตรง หรือตั้งส่วนหัว CORS ให้ถูกต้อง</li>
+                    <li>โหลดแหล่งเบราว์เซอร์ OBS ใหม่หรือรีเฟรชแท็บ dock/featured หลังเปลี่ยน CSS เพื่อให้ร้องขอฟอนต์ในแคชใหม่</li>
+                    <li>ใช้ <code>https://socialstream.ninja/fonts.html</code> เพื่อยืนยันว่ามองเห็นฟอนต์ระบบขณะทดสอบ <code>&font=</code>.</li>
+                    <li>ใช้ชื่อ font-family ให้ตรงกันระหว่าง <code>@font-face</code> บล็อกและ <code>--font-family</code>; ชื่อไม่ตรงกันเป็นปัญหาที่พบบ่อยที่สุด</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>เกี่ยวกับ</h3>
+                    <p>Social Stream Ninja ช่วยจับ รวม และแสดงแชตจากกว่า 100 แพลตฟอร์มแบบเรียลไทม์ สร้างโดย Steve Seguin</p>
+                    <div class="social-links">
+                        <a href="https://discord.socialstream.ninja" target="_blank" aria-label="Discord">
+                            <img src="../../icons/discord.svg" alt="Discord">
+                        </a>
+                        <a href="https://x.com/ninjafytools" target="_blank" aria-label="X">
+                            <img src="../../icons/x.svg" alt="X">
+                        </a>
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank" aria-label="GitHub">
+                            <img src="../../icons/github.svg" alt="GitHub">
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>ผลิตภัณฑ์</h3>
+                    <ul>
+                        <li><a href="../index.html">หน้าแรก</a></li>
+                        <li><a href="features.html">ฟีเจอร์</a></li>
+                        <li><a href="download.html">ดาวน์โหลด</a></li>
+                        <li><a href="guides.html">คู่มือ</a></li>
+                        <li><a href="commands.html">คำสั่งและ API</a></li>
+                        <li><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a></li>
+                        <li><a href="templates.html">เทมเพลต</a></li>
+                        <li><a href="support.html">การสนับสนุน</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>แหล่งข้อมูลอ้างอิง</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-customization">คู่มือการปรับแต่ง</a></li>
+                        <li><a href="../../docs/customoverlays.md">โอเวอร์เลย์กำหนดเอง</a></li>
+                        <li><a href="../../api.md">เอกสารอ้างอิง API</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">รายงานปัญหา</a></li>
+                        <li><a href="../privacy.html">นโยบายความเป็นส่วนตัว</a></li>
+                        <li><a href="../TOS.html">ข้อกำหนดการให้บริการ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>ชุมชน</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">เข้าร่วม Discord ของเรา</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">ที่เก็บโค้ด GitHub</a></li>
+                        <li><a href="support.html#contribute">ร่วมพัฒนา</a></li>
+                        <li><a href="https://github.com/sponsors/steveseguin" target="_blank">บริจาค</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja สัญญาอนุญาต GPLv3.0 สร้างโดย <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> ร่วมพัฒนาโดยชุมชน</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

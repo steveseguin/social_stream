@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-cn/docs/obs-studio-guide.html">
+    <meta name="twitter:title" content="OBS Studio入门指南-Social Stream Ninja">
+    <meta name="twitter:description" content="设置 OBS Studio、构建场景、选择硬件编码器和平台比特率、混合和监控音频以及添加浏览器源。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Studio入门指南-Social Stream Ninja</title>
+    <meta name="description" content="设置 OBS Studio、构建场景、选择硬件编码器和平台比特率、混合和监控音频以及添加浏览器源。">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-cn/docs/obs-studio-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:title" content="OBS Studio入门指南-Social Stream Ninja">
+    <meta property="og:description" content="设置 OBS Studio、构建场景、选择硬件编码器和平台比特率、混合和监控音频以及添加浏览器源。">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-cn/docs/obs-studio-guide.html">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="stylesheet" href="../../docs/css/site-shell.css">
+    <script src="../../docs/js/site-shell.js"></script>
+    <style>
+        body.obs-page { padding-top: 76px; background: var(--site-bg); color: var(--site-text); font-family: var(--site-font); }
+        .obs-page .obs-guide, .obs-page .obs-hero { max-width: 1160px; margin: auto; padding: 0 28px; }
+        .obs-page .obs-hero { padding-top: 52px; padding-bottom: 30px; }
+        .obs-page .obs-eyebrow { color: var(--site-muted); font-size: 13px; letter-spacing: .06em; margin-bottom: 20px; }
+        .obs-page .obs-hero h1 { font-size: 52px; line-height: 1.1; letter-spacing: -.045em; max-width: 750px; margin-bottom: 20px; }
+        .obs-page .obs-lead { max-width: 620px; color: var(--site-muted); font-size: 19px; line-height: 1.6; }
+        .obs-page a { color: var(--site-accent); text-underline-offset: 3px; }
+        .obs-guide a, .obs-hero a { text-decoration: underline; }
+        .obs-guide .obs-jumps { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 0 30px; }
+        .obs-guide .obs-jumps a { background: var(--site-surface); border: 1px solid var(--site-line); border-radius: 24px; padding: 8px 16px; color: var(--site-text); text-decoration: none; font-size: 14px; }
+        .obs-guide .obs-jumps a:hover { border-color: var(--site-accent); }
+        .obs-guide .obs-step { padding: 48px 0; border-top: 1px solid var(--site-line); scroll-margin-top: 94px; }
+        .obs-guide .obs-heading { display: flex; align-items: baseline; gap: 14px; margin-bottom: 24px; }
+        .obs-guide .obs-number { color: var(--site-accent); font-size: 14px; font-weight: 700; }
+        .obs-guide h2 { text-align: left; font-size: 28px; line-height: 1.25; letter-spacing: -.025em; margin: 0; padding: 0; }
+        .obs-guide h3 { font-size: 17px; line-height: 1.4; margin: 0 0 10px; color: var(--site-text); }
+        .obs-guide p, .obs-guide li, .obs-guide dd { font-size: 16px; line-height: 1.7; }
+        .obs-guide p { margin: 0 0 18px; }
+        .obs-guide .obs-copy > :last-child { margin-bottom: 0; }
+        .obs-guide .obs-split { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.3fr); gap: 40px; align-items: start; }
+        .obs-guide .obs-split > * { min-width: 0; }
+        .obs-guide .obs-split-small { grid-template-columns: minmax(0, 1.3fr) minmax(0, .85fr); }
+        .obs-guide ol { padding-left: 22px; margin: 0 0 20px; }
+        .obs-guide li { margin-bottom: 12px; padding-left: 3px; }
+        .obs-guide .obs-shot { margin: 0; }
+        .obs-guide .obs-image-link { display: block; overflow: hidden; border: 1px solid var(--site-line); border-radius: 14px; background: #20212b; }
+        .obs-guide .obs-shot img { display: block; width: 100%; height: auto; }
+        .obs-guide .obs-shot figcaption { color: var(--site-muted); font-size: 13px; line-height: 1.6; margin-top: 12px; }
+        .obs-guide .obs-compact .obs-image-link { display: flex; justify-content: center; padding: 24px; background: var(--site-surface); }
+        .obs-guide .obs-compact img { width: auto; max-width: 100%; max-height: 410px; object-fit: contain; }
+        .obs-guide .obs-facts { margin: 20px 0; }
+        .obs-guide .obs-facts > div { display: flex; justify-content: space-between; gap: 20px; padding: 10px 0; border-bottom: 1px solid var(--site-line); }
+        .obs-guide dt { font-size: 15px; font-weight: 650; }
+        .obs-guide dd { margin: 0; text-align: right; font-size: 15px; }
+        .obs-guide .obs-note { padding: 16px 20px; border: 1px solid var(--border-color); background: var(--site-surface); border-radius: 10px; }
+        .obs-guide .obs-muted, .obs-guide .obs-small { color: var(--site-muted); }
+        .obs-guide .obs-small { font-size: 13px; }
+        .obs-guide details { background: var(--site-surface); border: 1px solid var(--site-line); border-radius: 12px; padding: 16px 20px; margin-top: 18px; }
+        .obs-guide summary { cursor: pointer; color: var(--site-text); font-size: 15px; font-weight: 650; }
+        .obs-guide details[open] summary { margin-bottom: 18px; }
+        .obs-guide details > :last-child { margin-bottom: 0; }
+        .obs-guide .obs-platforms, .obs-guide .obs-routing { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 24px 0; align-items: start; }
+        .obs-guide .obs-platforms details { margin: 0; }
+        .obs-guide .obs-platforms summary { font-size: 19px; }
+        .obs-guide .obs-platforms summary span { display: block; padding: 7px 0 0 18px; font-size: 13px; color: var(--site-muted); font-weight: 400; }
+        .obs-guide .obs-platforms p { font-size: 14px; }
+        .obs-guide table { border-collapse: collapse; width: 100%; font-size: 14px; margin-bottom: 18px; }
+        .obs-guide th, .obs-guide td { text-align: left; padding: 10px 0; border-bottom: 1px solid var(--site-line); }
+        .obs-guide th:last-child, .obs-guide td:last-child { text-align: right; }
+        .obs-guide caption { text-align: left; font-size: 13px; color: var(--site-muted); margin-bottom: 6px; }
+        .obs-guide .obs-route { border: 1px solid var(--site-line); border-radius: 12px; background: var(--site-surface); padding: 22px; }
+        .obs-guide .obs-route p { font-size: 14px; margin-bottom: 12px; }
+        .obs-guide .obs-route p:last-child { margin: 0; color: var(--site-muted); }
+        .obs-guide .obs-routing strong { display: inline-block; min-width: 106px; }
+        .obs-guide .obs-route-icon { width: 28px; height: 28px; margin-bottom: 16px; color: var(--site-accent); }
+        .obs-guide .obs-fixes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; }
+        .obs-guide .obs-fixes p { font-size: 15px; }
+        .obs-guide a:focus, .obs-guide summary:focus { outline: 2px solid var(--site-accent); outline-offset: 4px; }
+        .obs-skip { position: absolute; left: 16px; top: -80px; z-index: 3000; padding: 12px; background: var(--site-surface); }
+        .obs-skip:focus { top: 16px; }
+        @media (max-width: 760px) {
+            .obs-page .obs-guide, .obs-page .obs-hero { padding-left: 20px; padding-right: 20px; }
+            .obs-page .obs-hero { padding-top: 36px; }
+            .obs-page .obs-hero h1 { font-size: 38px; }
+            .obs-guide .obs-step { padding: 32px 0; }
+            .obs-guide .obs-split, .obs-guide .obs-split-small, .obs-guide .obs-platforms, .obs-guide .obs-routing, .obs-guide .obs-fixes { grid-template-columns: 1fr; gap: 24px; }
+            .obs-guide .obs-heading { gap: 12px; }
+            .obs-guide h2 { font-size: 25px; }
+            .obs-guide .obs-platforms, .obs-guide .obs-routing { gap: 12px; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/obs-studio-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{", and":"，以及",", choose a hardware":"、选择硬件",". Check its preview and stream health; some platforms also require":"。检查其预览和流健康状况；有些平台还需要",". On macOS 13+, use OBS’s":".在 macOS 13+ 上，使用 OBS 的",". Open your platform below.":".在下面打开您的平台。",". Shared source and audio changes can still affect the live output.":"。共享源和音频更改仍然会影响实时输出。",". Talk, play sound, and switch scenes.":"。说话、播放声音和切换场景。",". Then open the mixer’s":".然后打开搅拌机","/ OBS STUDIO":"/OBS工作室","1080p30":"1080p30","1080p60":"1080p60","1280 × 720 output":"1280×720输出","1920 × 1080 canvas":"1920×1080画布","2-second keyframes":"2 秒关键帧","30 FPS":"30 帧/秒","6,000 kbps uses about 6 Mbps, plus audio and overhead. Lower bitrate or resolution if your connection cannot keep up.":"6,000 kbps 使用大约 6 Mbps，加上音频和开销。如果您的连接无法跟上，请降低比特率或分辨率。","60 FPS":"60 帧/秒","720p30":"720p30","720p30 / 60":"720p30 / 60","720p60 / 1080p30":"720p60 / 1080p30","8,000 max.":"最多 8,000",": try light noise suppression, then a compressor and limiter. Add one at a time and listen.":"：尝试轻噪声抑制，然后是压缩器和限制器。一次添加一个并聆听。","; avoid hitting 0.":"；避免达到 0。","A":"一个","A simple start:":"一个简单的开始：","AAC stereo":"AAC立体声","AMD":"AMD","AMD HW H.264 / AVC":"AMD 硬件 H.264/AVC","Add Existing":"添加现有的","Add a chat or alert overlay":"添加聊天或提醒叠加","Advanced Audio Properties":"高级音频属性","All guides":"所有指南","Allow camera, microphone, and screen capture access when your computer asks.":"当您的计算机请求时允许访问摄像头、麦克风和屏幕捕获。","App / whole monitor":"应用程序/整个显示器","App audio, macOS, and microphone filters":"应用程序音频、macOS 和麦克风过滤器","Apple Silicon":"苹果硅","Apple VT H264 Hardware":"苹果 VT H264 硬件","Application Audio Capture":"应用程序音频捕获","Assumes the source is unmuted and on your output track. “Monitor Off” does not mute the stream.":"假设源未静音并且位于输出轨道上。 “监视器关闭”不会使流静音。","Audio":"音频","Audio: 128 kbps, 44.1 kHz stereo. These are recommendations, not minimums.":"音频：128 kbps、44.1 kHz 立体声。这些是建议，而不是最低要求。","Audio: up to 160 kbps.":"音频：高达 160 kbps。","Avoid echo:":"避免回声：","Bitrate":"比特率","Blank overlay or repeated audio?":"空白叠加或重复音频？","Bring your camera, screen, and sound together. Make a test recording, then go live.":"将相机、屏幕和声音结合在一起。进行测试录制，然后上线。","Browser":"浏览器","Browser Source properties with URL, Width, Height, and Control audio via OBS":"浏览器源属性，包括 URL、宽度、高度，并通过 OBS 控制音频","Build one scene":"构建一个场景","CBR":"社区研究","Camera / capture card":"相机/采集卡","Canvas":"画布","Cap game FPS; simplify the scene.":"游戏FPS上限；简化场景。","Capture each sound once.":"每个声音捕捉一次。","Change Output to stream at a smaller size.":"将输出更改为较小尺寸的流。","Chat or alerts":"聊天或提醒","Check hardware support and update your graphics driver. OBS still needs GPU capacity to draw scenes; cap game FPS or lower output FPS if it falls behind.":"检查硬件支持并更新您的图形驱动程序。 OBS 仍然需要 GPU 能力来绘制场景；如果落后，则限制游戏 FPS 或降低输出 FPS。","Check mute, monitoring mode, and audio track.":"检查静音、监听模式、音轨。","Check the session matches your chat source. Refresh the Browser Source. Keep only one copy playing TTS.":"检查会话是否与您的聊天来源匹配。刷新浏览器源。仅保留一份播放 TTS 的副本。","Choose":"选择","Choose a recording folder in":"选择录音文件夹","Choose headphones in":"选择耳机","Choose what to capture.":"选择要捕捉的内容。","Choose what you hear":"选择你听到的内容","Choose what you want to do.":"选择你想做的事情。","Choose your encoder here; use the platform bitrates below.":"在这里选择你的编码器；使用下面的平台比特率。","Choose your microphone in":"选择您的麦克风","Choose your video size":"选择您的视频尺寸","Connect your platform":"连接您的平台","Control audio via OBS":"通过 OBS 控制音频","Copy the overlay URL from Social Stream Ninja.":"从 Social Stream Ninja 复制覆盖 URL。","Download":"下载","Drag corners to resize. Sources at the top cover those below. Use the eye to hide and the lock to prevent movement.":"拖动角点来调整大小。顶部的来源涵盖了下面的来源。用眼睛来隐藏，用锁来防止移动。","Encoder compatibility":"编码器兼容性","Encoders":"编码器","Encoding lag":"编码滞后","Enhanced Broadcasting":"增强广播","Features":"功能","File → Remux Recordings":"文件 → Remux 录音","Filters":"滤镜","For TTS or alerts, enable":"对于 TTS 或警报，启用","For manual output settings, choose":"对于手动输出设置，选择","For persistent chat, leave automatic shutdown and scene-activation refresh off initially.":"对于持续聊天，请首先关闭自动关闭和场景激活刷新。","For portrait video, use a 1080 × 1920 canvas and rearrange your sources to fit.":"对于纵向视频，请使用 1080 × 1920 画布并重新排列源以适应。","For separate editing tracks, keep a full mix on track 1, then assign mic/game to additional tracks in Advanced Audio Properties and enable them under Recording.":"对于单独的编辑轨道，请在轨道 1 上保留完整的混音，然后将麦克风/游戏分配给高级音频属性中的其他轨道，并在“录制”下启用它们。","GUIDES":"指南","Game Capture":"游戏捕获","Game on Windows":"Windows 上的游戏","Give your CPU a break":"让你的CPU休息一下","Go Live":"上线","Guides":"指南","H.264":"H.264","H.264 recommended targets":"H.264推荐目标","H.264 · CBR required":"H.264 · 需要 CBR","Headphones":"耳机","Home":"首页","If something looks wrong":"如果看起来有问题","If your Mac’s hardware encoder cannot provide CBR, use x264.":"如果您的 Mac 硬件编码器无法提供 CBR，请使用 x264。","In":"在","In this guide":"在本指南中","Install":"安装","Intel":"英特尔","Kick":"Kick","Kick settings":"底鼓设置","Leave upload headroom.":"留出上传空间。","Let OBS do the first setup":"让 OBS 进行第一次设置","Listen without sending the source directly to output.":"监听而不将源直接发送到输出。","Lower bitrate; try wired Ethernet.":"较低的比特率；尝试有线以太网。","Lower game, music, and alert sliders until speech is clear.":"降低游戏、音乐和警报滑块，直到语音清晰为止。","MKV tolerates an interrupted recording. Use":"MKV 可以容忍中断的录制。使用","Main navigation":"主导航","Make your voice easy to hear":"让你的声音更容易被听到","Meters show signal level; sliders change the mix.":"仪表显示信号电平；滑块改变混音。","Microphone →":"麦克风 →","Missing encoder or overloaded computer?":"缺少编码器或计算机过载？","Monitor Off":"监视器关闭","Monitor Only (mute output)":"仅监听（输出静音）","Monitor and Output":"监听并输出","NVENC H.264":"NVENC H.264","NVIDIA":"英伟达","Network drops":"网络滴","No":"否","No hardware option? Use":"没有硬件选项？使用","OBS Audio Mixer with separate meters, volume sliders, and mute controls":"OBS 音频混合器，带有独立的仪表、音量滑块和静音控件","OBS Auto-Configuration Wizard with streaming and recording choices":"OBS 自动配置向导，提供流媒体和录制选项","OBS Controls with Start Streaming, Start Recording, Studio Mode, and Settings buttons":"OBS 带有开始串流、开始录制、工作室模式和设置按钮的控件","OBS Output settings with the hardware NVENC H.264 encoder selected":"OBS 选择硬件 NVENC H.264 编码器的输出设置","OBS Studio":"OBS Studio","OBS Studio Beginner Guide - Social Stream Ninja":"OBS Studio入门指南-Social Stream Ninja","OBS Video settings with Base Canvas Resolution, Output Scaled Resolution, and FPS fields":"OBS 具有基本画布分辨率、输出缩放分辨率和 FPS 字段的视频设置","OBS performance help":"OBS性能帮助","OBS source menu listing Game Capture, Browser, and Video Capture Device":"OBS 源菜单列出游戏捕获、浏览器和视频捕获设备","October 2026 guidance. Follow your platform’s current requirements. For Facebook or TikTok, first confirm your account offers an external encoder connection.":"2026 年 10 月指导。遵循您平台的当前要求。对于 Facebook 或 TikTok，首先确认您的帐户提供外部编码器连接。","On macOS, use":"在 macOS 上，使用","Open":"打开","Open navigation menu":"打开导航菜单","Output":"输出","Output → Advanced → Streaming":"输出 → 高级 → 流媒体","Overlays":"覆盖层","Place it above your game or camera. Send a test message; select one in the SSN dock if using the featured-message overlay.":"将其放在游戏或相机上方。发送测试消息；如果使用特色消息覆盖，请在 SSN 底座中选择一个。","Platform settings":"平台设置","Press":"新闻","QuickSync / QSV H.264":"快速同步/QSV H.264","Record a minute. Then go live.":"记录一分钟。然后去直播吧。","Recording format and separate audio tracks":"录音格式和独立音轨","Recording saves a file; streaming sends to your platform.":"录音保存文件；流式发送到您的平台。","Rendering lag":"渲染延迟","Replace this default URL and size with your overlay’s settings.":"将此默认 URL 和大小替换为叠加层的设置。","SSN overlay help":"SSN 叠加帮助","SSN overlay setup":"SSN 叠加设置","Scene changes normally go straight to output.":"场景更改通常直接输出。","Scene switching and macOS":"场景切换和macOS","Scenes":"场景","Screenshot: OBS Project":"截图：OBS 项目","Screenshots open at full size when selected. Labels may vary slightly by OBS version.":"选择后，屏幕截图会以全尺寸打开。标签可能因 OBS 版本而略有不同。","Select streaming or recording, follow the prompts, and apply the settings.":"选择流式传输或录制，按照提示操作，然后应用设置。","Set the overlay size; use":"设置叠加大小；使用","Set up OBS Studio, build a scene, choose a hardware encoder and platform bitrate, mix and monitor audio, and add browser sources.":"设置 OBS Studio、构建场景、选择硬件编码器和平台比特率、混合和监控音频以及添加浏览器源。","Set your platform’s title and visibility, then":"设置平台的标题和可见性，然后","Settings → Audio":"设置 → 音频","Settings → Audio → Advanced → Monitoring Device":"设置 → 音频 → 高级 → 监控设备","Settings → Output":"设置 → 输出","Settings → Stream:":"设置 → 码流：","Settings → Video":"设置 → 视频","Silent output":"静音输出","Skip to guide":"跳至指南","Smoother fast motion":"更流畅的快速运动","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja ·":"Social Stream Ninja ·","Sources → + → Browser":"来源 → + → 浏览器","Speak normally. Aim for peaks around":"正常说话。瞄准周围的山峰","Standard H.264":"标准H.264","Start Recording":"开始录制（Start Recording）","Start Streaming":"开始直播（Start Streaming）","Start Streaming can make you publicly live.":"开始直播可以让您公开直播。","Start here":"从这里开始","Stop and watch the file. Check volume, framing, and lip sync.":"停下来观看文件。检查音量、取景和口型同步。","Stream":"串流","Studio Mode":"工作室模式","Support":"支持","Switch theme":"切换主题","TTS setup":"TTS 设置","Talking / lighter workload":"说话/减轻工作量","The lower range is a suggested starting test. Try 160 kbps audio; use stereo at no more than 48 kHz.":"较低范围是建议的起始测试。尝试 160 kbps 音频；使用不超过 48 kHz 的立体声。","The video you send":"您发送的视频","Tools → Auto-Configuration Wizard":"工具 → 自动配置向导","Transition":"过渡","Try 720p30":"尝试 720p30","Twitch":"Twitch","Twitch settings":"Twitch设置","Up to 1080p60":"高达 1080p60","Use Desktop Audio for the whole output device, or separate application capture. Capturing both can double the sound.":"对整个输出设备使用桌面音频，或单独的应用程序捕获。捕获两者可以使声音加倍。","Use a private test where available. When finished, stop streaming and confirm the platform event has ended.":"如果可以的话，使用私人测试。完成后，停止直播并确认平台活动已结束。","Use hardware encoding or lower output FPS.":"使用硬件编码或较低的输出 FPS。","Useful for alerts or TTS you want to hear too.":"对于您也想听到的警报或 TTS 很有用。","Usually right for your mic and games you already hear.":"通常适合您的麦克风和您已经听过的游戏。","Video":"视频","Video Capture Device":"视频采集设备","Video bitrate · kbps":"视频码率·kbps","View → Stats":"查看 → 统计","Window / Display Capture":"窗口/显示捕获","Windows: use":"Windows：使用","With supported AV1 / HEVC encoding, the corresponding targets are 6,000 / 10,000 / 12,000 kbps.":"对于支持的 AV1 / HEVC 编码，相应的目标为 6,000 / 10,000 / 12,000 kbps。","Yes":"是","YouTube":"YouTube","YouTube settings":"YouTube设置","Your first OBS setup.":"您的第一个 OBS 设置。","Your layout’s size":"您的布局尺寸","and open it.":"并打开它。","and paste it. Keep its session and password options.":"并粘贴它。保留其会话和密码选项。","and start at 720p30.":"并从 720p30 开始。","connect your account, or paste the server URL and private stream key from its dashboard.":"连接您的帐户，或从其仪表板粘贴服务器 URL 和私有流密钥。","don’t capture your monitoring device again through Desktop Audio. That can also send “Monitor Only” audio to viewers. Keep the platform’s live player muted.":"不要通过桌面音频再次捕获您的监听设备。它还可以向观众发送“仅限监视器”音频。保持平台现场玩家静音。","encoder. Dedicated hardware handles video compression, reducing CPU use.":"编码器。专用硬件处理视频压缩，减少 CPU 使用。","for MP4 afterward. Current OBS also offers resilient Hybrid MP4/MOV.":"随后为 MP4。当前的 OBS 还提供弹性混合 MP4/MOV。","for a full-frame landscape overlay.":"用于全画幅风景叠加。","for a window or display.":"用于窗口或显示器。","in Scenes, name your layout, then press":"在场景中，为您的布局命名，然后按","in Sources.":"来源。","is a layout. A":"是一个布局。一个","is something inside it.":"是里面的东西。","lets you prepare a scene, then press":"让您准备一个场景，然后按","macOS Screen Capture":"macOS 屏幕截图","macOS audio/screen capture":"macOS 音频/屏幕截图","scene":"场景","sends multiple qualities and needs a separate bandwidth budget.":"发送多种质量并且需要单独的带宽预算。","source":"来源","to identify the bottleneck.":"识别瓶颈。","to reuse a source in another scene.":"在另一个场景中重用源。","x264 → veryfast":"x264 → 非常快","−12 to −6 dBFS":"−12 至 −6 dBFS"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/obs-studio-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="obs-page">
+    <a class="obs-skip" href="#obs-guide">跳至指南</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-studio-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-studio-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-studio-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-studio-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-studio-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-studio-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-studio-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="obs-studio-guide.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-studio-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-studio-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-studio-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/obs-studio-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/obs-studio-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/obs-studio-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/obs-studio-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/obs-studio-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/obs-studio-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="obs-hero">
+        <p class="obs-eyebrow"><a href="guides.html#guide-directory">指南</a> /OBS工作室</p>
+        <h1>您的第一个 OBS 设置。</h1>
+        <p class="obs-lead">将相机、屏幕和声音结合在一起。进行测试录制，然后上线。</p>
+    </section>
+
+    <main id="obs-guide" class="obs-guide" tabindex="-1">
+        <div class="obs-jumps" role="navigation" aria-label="在本指南中">
+            <a href="#install">从这里开始</a><a href="#scenes">场景</a><a href="#encoders">编码器</a><a href="#platforms">平台设置</a><a href="#mixing">音频</a><a href="#browser-sources">覆盖层</a>
+        </div>
+
+        <section class="obs-step" id="install">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">01</span><h2>让 OBS 进行第一次设置</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <ol>
+                        <li>安装 <a href="https://obsproject.com/download">OBS Studio</a> 并打开它。</li>
+                        <li>选择 <strong>工具 → 自动配置向导</strong>.</li>
+                        <li>选择流式传输或录制，按照提示操作，然后应用设置。</li>
+                    </ol>
+                    <p class="obs-note">当您的计算机请求时允许访问摄像头、麦克风和屏幕捕获。</p>
+                    <p class="obs-small">选择后，屏幕截图会以全尺寸打开。标签可能因 OBS 版本而略有不同。</p>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-auto-config.png"><img src="../../docs/images/guides/obs-studio-auto-config.png" width="1028" height="914" alt="OBS 自动配置向导，提供流媒体和录制选项"></a>
+                    <figcaption>选择你想做的事情。 <a href="https://obsproject.com/kb/quick-start-guide">截图：OBS 项目</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="scenes">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">02</span><h2>构建一个场景</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <p>一个 <strong>场景</strong> 是一个布局。一个 <strong>来源</strong> 是里面的东西。</p>
+                    <p>新闻 <strong>+</strong> 在场景中，为您的布局命名，然后按 <strong>+</strong> 来源。</p>
+                    <dl class="obs-facts">
+                        <div><dt>相机/采集卡</dt><dd>视频采集设备</dd></div>
+                        <div><dt>Windows 上的游戏</dt><dd>游戏捕获</dd></div>
+                        <div><dt>应用程序/整个显示器</dt><dd>窗口/显示捕获</dd></div>
+                        <div><dt>聊天或提醒</dt><dd>浏览器</dd></div>
+                    </dl>
+                    <p>拖动角点来调整大小。顶部的来源涵盖了下面的来源。用眼睛来隐藏，用锁来防止移动。</p>
+                    <details><summary>场景切换和macOS</summary>
+                        <p>在 macOS 上，使用 <strong>macOS 屏幕截图</strong> 用于窗口或显示器。</p>
+                        <p>场景更改通常直接输出。 <strong>工作室模式</strong> 让您准备一个场景，然后按 <strong>过渡</strong>。共享源和音频更改仍然会影响实时输出。</p>
+                        <p>选择 <strong>添加现有的</strong> 在另一个场景中重用源。</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-sources.png"><img src="../../docs/images/guides/obs-studio-sources.png" width="265" height="580" loading="lazy" alt="OBS 源菜单列出游戏捕获、浏览器和视频捕获设备"></a>
+                    <figcaption>选择要捕捉的内容。 <a href="https://obsproject.com/kb/quick-start-guide">截图：OBS 项目</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="video">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">03</span><h2>选择您的视频尺寸</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <p>打开 <strong>设置 → 视频</strong>.</p>
+                    <dl class="obs-facts">
+                        <div><dt>画布</dt><dd>您的布局尺寸</dd></div>
+                        <div><dt>输出</dt><dd>您发送的视频</dd></div>
+                        <div><dt>30 帧/秒</dt><dd>说话/减轻工作量</dd></div>
+                        <div><dt>60 帧/秒</dt><dd>更流畅的快速运动</dd></div>
+                    </dl>
+                    <p class="obs-note">一个简单的开始： <strong>1920×1080画布</strong>, <strong>1280×720输出</strong>, <strong>30 帧/秒</strong>.</p>
+                    <p class="obs-small">对于纵向视频，请使用 1080 × 1920 画布并重新排列源以适应。</p>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-video.png"><img src="../../docs/images/guides/obs-studio-video.png" width="983" height="758" loading="lazy" alt="OBS 具有基本画布分辨率、输出缩放分辨率和 FPS 字段的视频设置"></a>
+                    <figcaption>将输出更改为较小尺寸的流。 <a href="https://obsproject.com/kb/obs-studio-overview">截图：OBS 项目</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="encoders">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">04</span><h2>让你的CPU休息一下</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <p>在 <strong>设置 → 输出</strong>、选择硬件 <strong>H.264</strong> 编码器。专用硬件处理视频压缩，减少 CPU 使用。</p>
+                    <dl class="obs-facts">
+                        <div><dt>英伟达</dt><dd>NVENC H.264</dd></div>
+                        <div><dt>AMD</dt><dd>AMD 硬件 H.264/AVC</dd></div>
+                        <div><dt>英特尔</dt><dd>快速同步/QSV H.264</dd></div>
+                        <div><dt>苹果硅</dt><dd>苹果 VT H264 硬件</dd></div>
+                    </dl>
+                    <p>没有硬件选项？使用 <strong>x264 → 非常快</strong> 并从 720p30 开始。</p>
+                    <details><summary>缺少编码器或计算机过载？</summary>
+                        <p>检查硬件支持并更新您的图形驱动程序。 OBS 仍然需要 GPU 能力来绘制场景；如果落后，则限制游戏 FPS 或降低输出 FPS。</p>
+                        <p>如果您的 Mac 硬件编码器无法提供 CBR，请使用 x264。 <a href="https://obsproject.com/kb/hardware-encoding">编码器兼容性</a>.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-output.png"><img src="../../docs/images/guides/obs-studio-output.png" width="977" height="759" loading="lazy" alt="OBS 选择硬件 NVENC H.264 编码器的输出设置"></a>
+                    <figcaption>在这里选择你的编码器；使用下面的平台比特率。 <a href="https://obsproject.com/kb/standard-recording-output-guide">截图：OBS 项目</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="platforms">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">05</span><h2>连接您的平台</h2></div>
+            <p><strong>设置 → 码流：</strong> 连接您的帐户，或从其仪表板粘贴服务器 URL 和私有流密钥。</p>
+            <p>对于手动输出设置，选择 <strong>输出 → 高级 → 流媒体</strong>: <strong>社区研究</strong>, <strong>2 秒关键帧</strong>，以及 <strong>AAC立体声</strong>.在下面打开您的平台。</p>
+            <div class="obs-platforms">
+                <details><summary>Twitch<span>标准H.264</span></summary>
+                    <table><caption>视频码率·kbps</caption><thead><tr><th scope="col">视频</th><th scope="col">比特率</th></tr></thead><tbody>
+                        <tr><td>720p30</td><td>3,000</td></tr><tr><td>720p60 / 1080p30</td><td>4,500</td></tr><tr><td>1080p60</td><td>6,000</td></tr>
+                    </tbody></table>
+                    <p>音频：高达 160 kbps。 <a href="https://help.twitch.tv/s/article/broadcasting-guidelines?language=en_US">Twitch设置</a>.</p>
+                    <p><a href="https://help.twitch.tv/s/article/enhanced-broadcasting?language=en_US">增强广播</a> 发送多种质量并且需要单独的带宽预算。</p>
+                </details>
+                <details><summary>YouTube<span>H.264推荐目标</span></summary>
+                    <table><caption>视频码率·kbps</caption><thead><tr><th scope="col">视频</th><th scope="col">比特率</th></tr></thead><tbody>
+                        <tr><td>720p30 / 60</td><td>8,000</td></tr><tr><td>1080p30</td><td>14,000</td></tr><tr><td>1080p60</td><td>17,000</td></tr>
+                    </tbody></table>
+                    <p>音频：128 kbps、44.1 kHz 立体声。这些是建议，而不是最低要求。 <a href="https://support.google.com/youtube/answer/2853702?hl=en">YouTube设置</a>.</p>
+                    <p>对于支持的 AV1 / HEVC 编码，相应的目标为 6,000 / 10,000 / 12,000 kbps。</p>
+                </details>
+                <details><summary>Kick<span>H.264 · 需要 CBR</span></summary>
+                    <table><caption>视频码率·kbps</caption><thead><tr><th scope="col">视频</th><th scope="col">比特率</th></tr></thead><tbody>
+                        <tr><td>尝试 720p30</td><td>3,000–4,000</td></tr><tr><td>高达 1080p60</td><td>最多 8,000</td></tr>
+                    </tbody></table>
+                    <p>较低范围是建议的起始测试。尝试 160 kbps 音频；使用不超过 48 kHz 的立体声。 <a href="https://help.kick.com/en/articles/7066931-how-to-stream-on-kick-com">底鼓设置</a>.</p>
+                </details>
+            </div>
+            <p class="obs-note"><strong>留出上传空间。</strong> 6,000 kbps 使用大约 6 Mbps，加上音频和开销。如果您的连接无法跟上，请降低比特率或分辨率。</p>
+            <p class="obs-small">2026 年 10 月指导。遵循您平台的当前要求。对于 Facebook 或 TikTok，首先确认您的帐户提供外部编码器连接。</p>
+        </section>
+
+        <section class="obs-step" id="mixing">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">06</span><h2>让你的声音更容易被听到</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <ol>
+                        <li>选择您的麦克风 <strong>设置 → 音频</strong>.</li>
+                        <li>正常说话。瞄准周围的山峰 <strong>−12 至 −6 dBFS</strong>；避免达到 0。</li>
+                        <li>降低游戏、音乐和警报滑块，直到语音清晰为止。</li>
+                    </ol>
+                    <p><strong>每个声音捕捉一次。</strong> 对整个输出设备使用桌面音频，或单独的应用程序捕获。捕获两者可以使声音加倍。</p>
+                    <details><summary>应用程序音频、macOS 和麦克风过滤器</summary>
+                        <p>Windows：使用 <a href="https://obsproject.com/kb/application-audio-capture-guide">应用程序音频捕获</a>.在 macOS 13+ 上，使用 OBS 的 <a href="https://obsproject.com/kb/macos-desktop-audio-capture-guide">macOS 音频/屏幕截图</a>.</p>
+                        <p>麦克风 → <strong>滤镜</strong>：尝试轻噪声抑制，然后是压缩器和限制器。一次添加一个并聆听。</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-mixer.png"><img src="../../docs/images/guides/obs-studio-mixer.png" width="265" height="378" loading="lazy" alt="OBS 音频混合器，带有独立的仪表、音量滑块和静音控件"></a>
+                    <figcaption>仪表显示信号电平；滑块改变混音。 <a href="https://obsproject.com/kb/quick-start-guide">截图：OBS 项目</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="monitoring">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">07</span><h2>选择你听到的内容</h2></div>
+            <p>选择耳机 <strong>设置 → 音频 → 高级 → 监控设备</strong>.然后打开搅拌机 <strong>高级音频属性</strong>.</p>
+            <div class="obs-routing">
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 21h8m-4-5v5"/></svg>
+                    <h3>监视器关闭</h3><p><strong>耳机</strong> 否<br><strong>串流</strong> 是</p><p>通常适合您的麦克风和您已经听过的游戏。</p>
+                </div>
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 14V11a8 8 0 0 1 16 0v3"/><rect x="3" y="12" width="4" height="9" rx="2"/><rect x="17" y="12" width="4" height="9" rx="2"/></svg>
+                    <h3>仅监听（输出静音）</h3><p><strong>耳机</strong> 是<br><strong>串流</strong> 否</p><p>监听而不将源直接发送到输出。</p>
+                </div>
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M11 4 5 9H2v6h3l6 5Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg>
+                    <h3>监听并输出</h3><p><strong>耳机</strong> 是<br><strong>串流</strong> 是</p><p>对于您也想听到的警报或 TTS 很有用。</p>
+                </div>
+            </div>
+            <p class="obs-small">假设源未静音并且位于输出轨道上。 “监视器关闭”不会使流静音。</p>
+            <p class="obs-note"><strong>避免回声：</strong> 不要通过桌面音频再次捕获您的监听设备。它还可以向观众发送“仅限监视器”音频。保持平台现场玩家静音。</p>
+        </section>
+
+        <section class="obs-step" id="browser-sources">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">08</span><h2>添加聊天或提醒叠加</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <ol>
+                        <li>从 Social Stream Ninja 复制覆盖 URL。</li>
+                        <li>选择 <strong>来源 → + → 浏览器</strong> 并粘贴它。保留其会话和密码选项。</li>
+                        <li>设置叠加大小；使用 <strong>1920 × 1080</strong> 用于全画幅风景叠加。</li>
+                        <li>对于 TTS 或警报，启用 <strong>通过 OBS 控制音频</strong>.</li>
+                    </ol>
+                    <p>将其放在游戏或相机上方。发送测试消息；如果使用特色消息覆盖，请在 SSN 底座中选择一个。</p>
+                    <details><summary>空白叠加或重复音频？</summary>
+                        <p>检查会话是否与您的聊天来源匹配。刷新浏览器源。仅保留一份播放 TTS 的副本。</p>
+                        <p>对于持续聊天，请首先关闭自动关闭和场景激活刷新。 <a href="obs-quick-start.html">SSN 叠加设置</a> · <a href="tts-setup-guide.html">TTS 设置</a>.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-browser-source-properties.png"><img src="../../docs/images/guides/obs-browser-source-properties.png" width="1468" height="1232" loading="lazy" alt="浏览器源属性，包括 URL、宽度、高度，并通过 OBS 控制音频"></a>
+                    <figcaption>将此默认 URL 和大小替换为叠加层的设置。</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="recording">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">09</span><h2>记录一分钟。然后去直播吧。</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <ol>
+                        <li>选择录音文件夹 <strong>设置 → 输出</strong>.</li>
+                        <li>新闻 <strong>开始录制（Start Recording）</strong>。说话、播放声音和切换场景。</li>
+                        <li>停下来观看文件。检查音量、取景和口型同步。</li>
+                        <li>设置平台的标题和可见性，然后 <strong>开始直播（Start Streaming）</strong>。检查其预览和流健康状况；有些平台还需要 <strong>上线</strong>.</li>
+                    </ol>
+                    <p><strong>开始直播可以让您公开直播。</strong> 如果可以的话，使用私人测试。完成后，停止直播并确认平台活动已结束。</p>
+                    <details><summary>录音格式和独立音轨</summary>
+                        <p>MKV 可以容忍中断的录制。使用 <strong>文件 → Remux 录音</strong> 随后为 MP4。当前的 OBS 还提供弹性混合 MP4/MOV。</p>
+                        <p>对于单独的编辑轨道，请在轨道 1 上保留完整的混音，然后将麦克风/游戏分配给高级音频属性中的其他轨道，并在“录制”下启用它们。</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-controls.png"><img src="../../docs/images/guides/obs-studio-controls.png" width="265" height="262" loading="lazy" alt="OBS 带有开始串流、开始录制、工作室模式和设置按钮的控件"></a>
+                    <figcaption>录音保存文件；流式发送到您的平台。 <a href="https://obsproject.com/kb/quick-start-guide">截图：OBS 项目</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="troubleshooting">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">10</span><h2>如果看起来有问题</h2></div>
+            <p>打开 <strong>查看 → 统计</strong> 识别瓶颈。</p>
+            <div class="obs-fixes">
+                <p><strong>网络滴</strong><br>较低的比特率；尝试有线以太网。</p>
+                <p><strong>渲染延迟</strong><br>游戏FPS上限；简化场景。</p>
+                <p><strong>编码滞后</strong><br>使用硬件编码或较低的输出 FPS。</p>
+                <p><strong>静音输出</strong><br>检查静音、监听模式、音轨。</p>
+            </div>
+            <p class="obs-small"><a href="https://obsproject.com/kb/encoding-performance-troubleshooting">OBS性能帮助</a> · <a href="obs-troubleshooting.html">SSN 叠加帮助</a> · <a href="guides.html#guide-directory">所有指南</a></p>
+        </section>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja · <a href="guides.html">指南</a> · <a href="support.html">支持</a></p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr" data-site-root="../../" data-site-language="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/fr/docs/poll-customization-guide.html">
+    <meta name="twitter:title" content="Personnalisez votre sondage graphique - Social Stream Ninja">
+    <meta name="twitter:description" content="Donnez à votre sondage Social Stream Ninja une conception personnalisée avec le CSS OBS ou un fichier poll.html modifié, comprenant des invites AI et des instructions de configuration locale.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personnalisez votre sondage graphique - Social Stream Ninja</title>
+    <meta name="description" content="Donnez à votre sondage Social Stream Ninja une conception personnalisée avec le CSS OBS ou un fichier poll.html modifié, comprenant des invites AI et des instructions de configuration locale.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/fr/docs/poll-customization-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:url" content="https://socialstream.ninja/beta/fr/docs/poll-customization-guide.html">
+    <meta property="og:title" content="Personnalisez votre sondage graphique - Social Stream Ninja">
+    <meta property="og:description" content="Donnez à votre sondage Social Stream Ninja une conception personnalisée avec le CSS OBS ou un fichier poll.html modifié, comprenant des invites AI et des instructions de configuration locale.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="stylesheet" href="../../docs/css/site-shell.css">
+    <link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="fr">
+<script id="ssn-site-language" type="application/json">{"language":"fr","page":"docs/poll-customization-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Passer au thème clair","Switch to dark theme":"Passer au thème sombre","Light mode":"Mode clair","Dark mode":"Mode sombre","Open navigation menu":"Ouvrir le menu de navigation","Close navigation menu":"Fermer le menu de navigation","Copy this document as Markdown to the clipboard":"Copier ce document au format Markdown dans le presse-papiers","Copy Markdown":"Copier le Markdown","Copying…":"Copie en cours…","Markdown copied":"Markdown copié","Copy failed":"Échec de la copie","Copy comprehensive Markdown for an AI assistant":"Copier le Markdown complet pour un assistant IA","Copy this documentation page as Markdown for an AI assistant":"Copier cette page de documentation en Markdown pour un assistant IA"},"strings":{"\"Return only CSS for OBS Custom CSS, using the existing poll selectors and the Default theme; do not include HTML or script tags.\"":"\"Renvoyer uniquement le CSS pour le CSS personnalisé OBS, en utilisant les sélecteurs de sondage existants et le thème par défaut ; n'incluez pas de balises HTML ou de script.\"",", and":", et",", enable the poll, set":", activez le sondage, définissez",", enter a question, and choose":", saisissez une question et choisissez",", leave":", laissez",", then click":", puis cliquez sur",", which build the answer rows.":", qui construisent les lignes de réponses.",". A layout change may also need matching edits in both":". Un changement de mise en page peut également nécessiter des modifications correspondantes dans les deux",". Check":". Vérifier",". Choose":". Choisissez",". Copy your browser's actual address so the path and any spaces are handled for you.":". Copiez l'adresse réelle de votre navigateur afin que le chemin et les espaces soient gérés pour vous.",". Keep it beside the original, at the top level of the folder.":". Conservez-le à côté de l'original, au niveau supérieur du dossier.",". Keep the full generated Graphical Poll link for the connection step below.":". Conservez le lien du sondage graphique entièrement généré pour l’étape de connexion ci-dessous.",". Paste the CSS below into":". Collez le CSS ci-dessous dans",". Save any CSS already there if you want to reuse it.":". Enregistrez tout CSS déjà présent si vous souhaitez le réutiliser.",". Selecting the HTML file alone does not. The":". La sélection seule du fichier HTML ne suffit pas. Le",". The example above works there too. Save the file with the":". L'exemple ci-dessus fonctionne là aussi. Enregistrez le fichier avec le",". Use OBS Custom CSS or edit the file for this overlay.":". Utilisez OBS Custom CSS ou modifiez le fichier pour cette superposition.",". With multiple votes disabled, repeating a vote from the same user will not add another vote.":". Lorsque les votes multiples sont désactivés, répéter un vote du même utilisateur n'ajoutera pas un autre vote.","1. Style it in OBS":"1. Stylisez-le dans OBS","1. Style the hosted poll in OBS":"1. Stylisez le sondage hébergé dans OBS","2. Edit the HTML file":"2. Modifiez le fichier HTML","2. Make an editable copy of the poll":"2. Faire une copie modifiable du sondage","3. Ask AI for a design":"3. Demandez à l'IA un design","3. Give AI the existing file and a specific brief":"3. Donnez à AI le dossier existant et un brief spécifique","4. Open your edited poll in OBS":"4. Ouvrez votre sondage modifié dans OBS","4. Run your edited poll":"4. Exécutez votre sondage modifié","5. Test and troubleshoot":"5. Test et dépannage","5. Test the design with a real poll":"5. Testez le design avec un vrai sondage","; that element is rebuilt on updates.":"; cet élément est reconstruit lors des mises à jour.","Actual poll with the example navy and gold CSS and fictional coffee and tea votes":"Sondage réel avec l'exemple CSS marine et or et votes fictifs sur le café et le thé","All guides":"Tous les guides","Attach":"Joindre","Blank overlay:":"Superposition vierge :","Browse all guides":"Parcourir tous les guides","Browser Source":"Source navigateur","Change the color values and sizes to suit your design. These selectors target the existing poll elements. Keep the bar widths controlled by the poll code, and keep the":"Modifiez les valeurs de couleur et les tailles en fonction de votre conception. Ces sélecteurs ciblent les éléments de sondage existants. Gardez les largeurs de barres contrôlées par le code de sondage et conservez le","Check the bars and totals in OBS. Try a long question, a long answer, and the":"Vérifiez les barres et les totaux dans OBS. Essayez une longue question, une longue réponse, et le","Commands & API":"Commandes et API","Copy everything from":"Copiez tout depuis","Copy the Graphical Poll link. In OBS, add or open its":"Copiez le lien Sondage graphique. Dans OBS, ajoutez ou ouvrez son","Custom CSS":"CSS personnalisé","Customize your graphical poll":"Personnalisez votre sondage graphique","Customize your graphical poll - Social Stream Ninja":"Personnalisez votre sondage graphique - Social Stream Ninja","Default":"Par défaut","Do I edit the OBS link or the HTML file?":"Dois-je modifier le lien OBS ou le fichier HTML ?","Download":"Télécharger","Download the":"Téléchargez le","Drag":"Faites glisser","Enable Poll":"Activer le sondage (Enable Poll)","End Poll":"Terminer le sondage (End Poll)","Exact vote only":"Vote exact uniquement","Features":"Fonctionnalités","First get a regular poll working using":"Commencez par faire fonctionner un sondage régulier en utilisant","For a CSS-only edit, place your rules at the end of the existing":"Pour une modification CSS uniquement, placez vos règles à la fin du texte existant.","For colors, fonts, spacing, and bar styling, you can keep the hosted URL and add":"Pour les couleurs, les polices, l'espacement et le style des barres, vous pouvez conserver l'URL hébergée et ajouter","For direct disk loading, OBS Local file launchers, safe rendering examples, and supporting references, see the":"Pour le chargement direct du disque, les lanceurs de fichiers locaux OBS, les exemples de rendu sécurisé et les références à l'appui, consultez le","For example, this copied link:":"Par exemple, ce lien copié :","For manual edits, the main styling hooks are":"Pour les modifications manuelles, les principaux crochets de style sont","For the OBS CSS route, change the last instruction to:":"Pour la route CSS OBS, remplacez la dernière instruction par :","Free-form":"Forme libre","Give your Social Stream Ninja poll a custom design with OBS CSS or an edited poll.html file, including AI prompts and local setup instructions.":"Donnez à votre sondage Social Stream Ninja une conception personnalisée avec le CSS OBS ou un fichier poll.html modifié, comprenant des invites AI et des instructions de configuration locale.","Graphical Poll → Poll Options":"Sondage graphique → Options du sondage (Graphical Poll → Poll Options)","Guides":"Guides","Hashtag anywhere":"Hashtag n'importe où","Hire":"Faire appel à nos services","Home":"Accueil","In SSN, open":"Dans SSN, ouvrez","In the extracted folder, duplicate":"Dans le dossier extrait, dupliquez","Inspiration":"Inspiration","It contains the poll's layout, styles, and voting code. The URL you copy into OBS points to that file and adds connection settings, such as your session ID, after the":"Il contient la mise en page, les styles et le code de vote du sondage. L'URL que vous copiez dans OBS pointe vers ce fichier et ajoute des paramètres de connexion, tels que votre ID de session, après le","Keep SSN and a captured chat source running. In":"Gardez SSN et une source de discussion capturée en cours d'exécution. Dans","Keep the supporting files.":"Conservez les fichiers justificatifs.","Local file":"Fichier local","Local page does not open:":"La page locale ne s'ouvre pas :","Logo disappears after a vote:":"Le logo disparaît après un vote :","Looks different in OBS:":"L'apparence est différente dans OBS :","Main navigation":"Navigation principale","Match your show's colors, fonts, and layout with OBS CSS or your own copy of the poll page.":"Faites correspondre les couleurs, les polices et la mise en page de votre émission avec le CSS OBS ou votre propre copie de la page de sondage.","OBS Custom CSS affects that Browser Source only; opening the same URL in a normal browser will show the original styling. See":"Le CSS personnalisé OBS affecte uniquement la source du navigateur ; l'ouverture de la même URL dans un navigateur normal affichera le style d'origine. Voir","OBS saves the address. Keep the downloaded folder in the same place and keep SSN and your chat source running when using the poll. After saving an edit, use":"OBS enregistre l'adresse. Conservez le dossier téléchargé au même endroit et laissez SSN et votre source de discussion en cours d'exécution lorsque vous utilisez le sondage. Après avoir enregistré une modification, utilisez","OBS's Browser Source reference":"Référence source du navigateur OBS","OK":"OK","On this page":"Sur cette page","Open":"Ouvrir","Open navigation menu":"Ouvrir le menu de navigation","Open that combined address in your browser to check it. Then paste it into the OBS Browser Source's":"Ouvrez cette adresse combinée dans votre navigateur pour la vérifier. Collez-le ensuite dans la source du navigateur OBS.","Overlay Gallery":"Galerie d’incrustations","Poll Options":"Options de sondage","Poll Style/Theme":"Style/thème du sondage","Poll-specific limitation:":"Limitation spécifique au sondage :","Refresh cache of current page":"Actualiser le cache de la page actuelle","Reset Poll":"Réinitialiser le sondage (Reset Poll)","Send":"Envoyer","Set the Browser Source size to your canvas size, for example":"Définissez la taille de la source du navigateur sur la taille de votre toile, par exemple","Set this up once.":"Configurez ceci une fois.","Show number of votes instead of percent":"Afficher le nombre de votes au lieu du pourcentage","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja source ZIP (beta)":"ZIP source Social Stream Ninja (bêta)","Social Stream Ninja ·":"Social Stream Ninja ·","Stuck at \"Loading poll\":":"Coincé au « Chargement du sondage » :","Support":"Assistance","Supported Sites":"Sites pris en charge","Switch theme":"Changer de thème","Test":"Test","The current poll loads these scripts relative to its own location; copying only the HTML to a new folder is not enough:":"Le sondage actuel charge ces scripts par rapport à son propre emplacement ; copier uniquement le HTML dans un nouveau dossier ne suffit pas :","The example CSS applied to poll.html with fictional votes.":"L'exemple CSS appliqué à poll.html avec des votes fictifs.","The file address above is a Windows example. On macOS it starts with":"L'adresse du fichier ci-dessus est un exemple Windows. Sur macOS, cela commence par","The file and the URL":"Le fichier et l'URL","The font and favicon are referenced assets; the four JavaScript files support voting and connections. Leaving the extracted folder intact keeps these paths available. Add any logo or font files your design uses there as well.":"La police et le favicon sont des actifs référencés ; les quatre fichiers JavaScript prennent en charge le vote et les connexions. Laisser le dossier extrait intact maintient ces chemins disponibles. Ajoutez-y également tout logo ou fichier de police que votre conception utilise.","The overlay file is":"Le fichier de superposition est","These are placeholders: use your actual copied link, including only the options it already has. Keep using SSN's":"Ce sont des espaces réservés : utilisez votre lien réellement copié, en incluant uniquement les options dont il dispose déjà. Continuez à utiliser les SSN","URL":"URL","Using the URL field includes the session settings after":"L'utilisation du champ URL inclut les paramètres de session après","Votes do not count:":"Les votes ne comptent pas :","Why leave Local file unchecked?":"Pourquoi laisser la case Fichier local décochée ?","Your edited copy is maintained separately from SSN's hosted poll. Keep a backup of the design, and compare it with newer":"Votre copie modifiée est conservée séparément du sondage hébergé par SSN. Conservez une sauvegarde de la conception et comparez-la avec une version plus récente.","also covers an optional launcher for the file picker.":"couvre également un lanceur facultatif pour le sélecteur de fichiers.","and":"et","and extract it. You can inspect":"et extrayez-le. Vous pouvez inspecter","and point OBS at your copy. A custom copy does not automatically appear in SSN's theme dropdown.":"et pointez OBS vers votre copie. Une copie personnalisée n'apparaît pas automatiquement dans la liste déroulante des thèmes de SSN.","and your design reference, or open the extracted folder in your coding tool. Replace the bracketed details in this prompt:":"et votre référence de conception, ou ouvrez le dossier extrait dans votre outil de codage. Remplacez les détails entre crochets dans cette invite :","as":"comme","as the starting point for this example, and turn on":"comme point de départ de cet exemple, et activez","becomes:":"devient :","behavior so Enable Poll can show and hide the graphic.":"afin que l'option Enable Poll puisse afficher et masquer le graphique.","block, just before":"bloc, juste avant","check Enable Poll and the copied session settings. A free-form poll has no answer rows until votes arrive.":"cochez Activer le sondage et les paramètres de session copiés. Un sondage de forme libre ne comporte aucune ligne de réponse jusqu'à l'arrivée des votes.","check the Browser Source dimensions, any older Custom CSS overriding the file's design, and whether a refresh is needed.":"vérifiez les dimensions de la source du navigateur, tout ancien CSS personnalisé remplaçant la conception du fichier et si une actualisation est nécessaire.","check the supporting scripts and their folder paths, SSN's running state, and the complete query string from the working hosted poll.":"Vérifiez les scripts de prise en charge et leurs chemins de dossier, l'état d'exécution de SSN et la chaîne de requête complète du sondage hébergé fonctionnel.","confirm voting is open, the message matches the selected voting mode, and the test user has not already voted.":"confirmez que le vote est ouvert, que le message correspond au mode de vote sélectionné et que l'utilisateur test n'a pas déjà voté.","custom overlays guide":"guide des superpositions personnalisées","directly from your computer. There is no server to install or start.":"directement depuis votre ordinateur. Il n'y a aucun serveur à installer ou à démarrer.","does not read":"ne lit pas","drag the file into your browser again and copy its current address. Check the filename is not accidentally":"faites glisser à nouveau le fichier dans votre navigateur et copiez son adresse actuelle. Vérifiez que le nom du fichier n'est pas accidentel","extension.":".","field with":"champ avec\nchamp","for the source properties.":"pour les propriétés source.","from different chat users, or use distinct fictional users with the":"de différents utilisateurs de chat, ou utiliser des utilisateurs fictifs distincts avec le","in OBS. For a design with new artwork, a logo, or a different layout, edit a copy of":"dans OBS. Pour un design avec une nouvelle illustration, un logo ou une mise en page différente, modifiez une copie de","in a text/code editor, or give that file to ChatGPT or Codex along with a reference image, brand colors, fonts, and your intended OBS canvas size.":"dans un éditeur de texte/code, ou donnez ce fichier à ChatGPT ou Codex avec une image de référence, les couleurs de la marque, les polices et la taille de toile OBS prévue.","in the source properties.":"dans les propriétés source.","into Chrome or Edge. Copy the address from the address bar; it starts with":"dans Chrome ou Edge. Copiez l'adresse de la barre d'adresse ; ça commence par","onward in your working Graphical Poll link from SSN. Add it to the end of the file address. This keeps your session, password, and other settings.":"à partir de votre lien de sondage graphique de travail à partir de SSN. Ajoutez-le à la fin de l'adresse du fichier. Cela conserve votre session, votre mot de passe et d’autres paramètres.","option to check text fits.":"option pour vérifier l'ajustement du texte.","or":"ou","put permanent artwork outside":"placer des œuvres d'art permanentes à l'extérieur","shared guide":"guide partagé","shared overlay design guide":"guide de conception de superposition partagée","so the custom design handles closed, empty, and hidden states.":"afin que la conception personnalisée gère les états fermés, vides et cachés.","test-message tools":"outils de messages de test","the current":"le courant","the poll setup guide":"le guide de configuration du sondage","the poll.html source on GitHub":"la source poll.html sur GitHub","to set the question, vote matching, and poll controls.":"pour définir la question, la correspondance des votes et les contrôles du sondage.","unchecked, and paste the link into":"décoché et collez le lien dans","unchecked. Set the intended width and height.":"décoché. Définissez la largeur et la hauteur souhaitées.","under":"sous","versions when you need upstream fixes. For building a different overlay from scratch, see the":"versions lorsque vous avez besoin de correctifs en amont. Pour créer une superposition différente à partir de zéro, consultez le","with a longer message such as":"avec un message plus long tel que"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/poll-customization-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide visual-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="Navigation principale">
+<a href="../index.html">Accueil</a>
+<a href="features.html">Fonctionnalités</a>
+<a href="inspiration.html" class="site-priority-inspiration">Inspiration</a>
+<a href="download.html">Télécharger</a>
+<a href="guides.html">Guides</a>
+<a href="commands.html">Commandes et API</a>
+<a href="supported-sites.html">Sites pris en charge</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">Galerie d’incrustations</a>
+<a href="services.html" class="site-priority-hire">Faire appel à nos services</a>
+<a href="support.html">Assistance</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Français"><span aria-hidden="true">🌐 </span><span lang="fr">Français</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/poll-customization-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/poll-customization-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/poll-customization-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/poll-customization-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="poll-customization-guide.html" lang="fr" hreflang="fr" aria-current="true">Français</a><a class="site-language-link" href="../../de/docs/poll-customization-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/poll-customization-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/poll-customization-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/poll-customization-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/poll-customization-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/poll-customization-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/poll-customization-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/poll-customization-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/poll-customization-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/poll-customization-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/poll-customization-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/poll-customization-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="Changer de thème"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button>
+<button class="site-menu" type="button" aria-label="Ouvrir le menu de navigation" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>Personnalisez votre sondage graphique</h1>
+<p>Faites correspondre les couleurs, les polices et la mise en page de votre émission avec le CSS OBS ou votre propre copie de la page de sondage.</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="Sur cette page">
+<a href="guides.html">Tous les guides</a>
+<a href="#file-or-url">Le fichier et l'URL</a>
+<a href="#obs-css">1. Stylisez-le dans OBS</a>
+<a href="#edit-file">2. Modifiez le fichier HTML</a>
+<a href="#ai-prompt">3. Demandez à l'IA un design</a>
+<a href="#local-setup">4. Exécutez votre sondage modifié</a>
+<a href="#check">5. Test et dépannage</a>
+</nav>
+
+<section class="guide-card" id="file-or-url">
+<h2 id="read-section-1">Dois-je modifier le lien OBS ou le fichier HTML ?</h2>
+<p><strong>Le fichier de superposition est <code>poll.html</code>.</strong> Il contient la mise en page, les styles et le code de vote du sondage. L'URL que vous copiez dans OBS pointe vers ce fichier et ajoute des paramètres de connexion, tels que votre ID de session, après le <code>?</code>.</p>
+<pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION</code></pre>
+<p>Pour les couleurs, les polices, l'espacement et le style des barres, vous pouvez conserver l'URL hébergée et ajouter <strong>CSS personnalisé</strong> dans OBS. Pour un design avec une nouvelle illustration, un logo ou une mise en page différente, modifiez une copie de <code>poll.html</code> et pointez OBS vers votre copie. Une copie personnalisée n'apparaît pas automatiquement dans la liste déroulante des thèmes de SSN.</p>
+<p>Pour le chargement direct du disque, les lanceurs de fichiers locaux OBS, les exemples de rendu sécurisé et les références à l'appui, consultez le <a href="overlay-customization-guide.html">guide de conception de superposition partagée</a>.</p>
+<p>Commencez par faire fonctionner un sondage régulier en utilisant <a href="polls-giveaways-waitlists-guide.html#poll">le guide de configuration du sondage</a>. Conservez le lien du sondage graphique entièrement généré pour l’étape de connexion ci-dessous.</p>
+</section>
+
+<section class="guide-card" id="obs-css">
+<h2 id="read-section-2">1. Stylisez le sondage hébergé dans OBS</h2>
+<ol class="guide-steps">
+<li>Dans SSN, ouvrez <strong>Sondage graphique → Options du sondage (Graphical Poll → Poll Options)</strong>. Choisissez <strong>Par défaut</strong> sous <strong>Style/thème du sondage</strong> comme point de départ de cet exemple, et activez <strong>Activer le sondage (Enable Poll)</strong>.</li>
+<li>Copiez le lien Sondage graphique. Dans OBS, ajoutez ou ouvrez son <strong>Source navigateur</strong>, laissez <strong>Fichier local</strong> décoché et collez le lien dans <strong>URL</strong>.</li>
+<li>Définissez la taille de la source du navigateur sur la taille de votre toile, par exemple <strong>1920 &times; 1080</strong>. Collez le CSS ci-dessous dans <strong>CSS personnalisé</strong>, puis cliquez sur <strong>OK</strong>. Enregistrez tout CSS déjà présent si vous souhaitez le réutiliser.</li>
+</ol>
+<pre><code id="poll-css-example">body {
+    margin: 0;
+    background: transparent;
+    overflow: hidden;
+}
+
+#poll-container {
+    box-sizing: border-box;
+    width: 880px;
+    max-width: 90%;
+    padding: 28px;
+    border-radius: 0;
+    border-left: 8px solid #f5c542;
+    background: rgba(8, 24, 48, 0.95);
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+}
+
+#poll-container .poll-title {
+    color: #ffffff;
+    font-size: 36px;
+    text-align: left;
+    margin: 0 0 24px;
+}
+
+#poll-container .poll-option {
+    background: #162e50;
+    border-radius: 0;
+    padding: 14px 16px;
+    font-size: 26px;
+}
+
+#poll-container .poll-bar {
+    background: #3266ad;
+}
+
+#poll-container .poll-instruction {
+    font-size: 22px;
+    margin-bottom: 18px;
+}</code></pre>
+<figure class="guide-figure"><a href="../../docs/images/guides/custom-poll-preview.png"><img class="guide-image" src="../../docs/images/guides/custom-poll-preview.png" alt="Sondage réel avec l&#x27;exemple CSS marine et or et votes fictifs sur le café et le thé" loading="lazy"></a><figcaption>L'exemple CSS appliqué à poll.html avec des votes fictifs.</figcaption></figure>
+<p>Modifiez les valeurs de couleur et les tailles en fonction de votre conception. Ces sélecteurs ciblent les éléments de sondage existants. Gardez les largeurs de barres contrôlées par le code de sondage et conservez le <code>.hidden</code> afin que l'option Enable Poll puisse afficher et masquer le graphique.</p>
+<p>Le CSS personnalisé OBS affecte uniquement la source du navigateur ; l'ouverture de la même URL dans un navigateur normal affichera le style d'origine. Voir <a href="https://obsproject.com/kb/browser-source">Référence source du navigateur OBS</a> pour les propriétés source.</p>
+<p><strong>Limitation spécifique au sondage :</strong> le courant <code>poll.html</code> ne lit pas <code>&amp;css=</code> ou <code>&amp;b64css=</code>. Utilisez OBS Custom CSS ou modifiez le fichier pour cette superposition.</p>
+</section>
+
+<section class="guide-card" id="edit-file">
+<h2 id="read-section-3">2. Faire une copie modifiable du sondage</h2>
+<ol class="guide-steps">
+<li>Téléchargez le <a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">ZIP source Social Stream Ninja (bêta)</a> et extrayez-le. Vous pouvez inspecter <a href="https://github.com/steveseguin/social_stream/blob/beta/poll.html">la source poll.html sur GitHub</a>.</li>
+<li>Dans le dossier extrait, dupliquez <code>poll.html</code> comme <code>my-poll.html</code>. Conservez-le à côté de l'original, au niveau supérieur du dossier.</li>
+<li>Ouvrir <code>my-poll.html</code> dans un éditeur de texte/code, ou donnez ce fichier à ChatGPT ou Codex avec une image de référence, les couleurs de la marque, les polices et la taille de toile OBS prévue.</li>
+<li>Pour une modification CSS uniquement, placez vos règles à la fin du texte existant. <code>&lt;style&gt;</code> bloc, juste avant <code>&lt;/style&gt;</code>. L'exemple ci-dessus fonctionne là aussi. Enregistrez le fichier avec le <code>.html</code> .</li>
+</ol>
+<p><strong>Conservez les fichiers justificatifs.</strong> Le sondage actuel charge ces scripts par rapport à son propre emplacement ; copier uniquement le HTML dans un nouveau dossier ne suffit pas :</p>
+<pre><code>your-poll-folder/
+    my-poll.html
+    currency.js
+    js/
+        transport-dedupe.js
+        local-server-url.js
+    shared/
+        overlay-control-transport.js
+    thirdparty/
+        NotoColorEmoji.ttf
+    favicon.ico</code></pre>
+<p>La police et le favicon sont des actifs référencés ; les quatre fichiers JavaScript prennent en charge le vote et les connexions. Laisser le dossier extrait intact maintient ces chemins disponibles. Ajoutez-y également tout logo ou fichier de police que votre conception utilise.</p>
+</section>
+
+<section class="guide-card" id="ai-prompt">
+<h2 id="read-section-4">3. Donnez à AI le dossier existant et un brief spécifique</h2>
+<p>Joindre <code>my-poll.html</code> et votre référence de conception, ou ouvrez le dossier extrait dans votre outil de codage. Remplacez les détails entre crochets dans cette invite :</p>
+<pre><code>Customize this existing Social Stream Ninja poll overlay.
+
+Design: [describe the look or match the attached reference].
+Colors: [brand hex colors]. Font: [font name or supplied font file].
+Logo: [supplied image filename, if any].
+OBS canvas: [1920 x 1080]. Placement: [center / lower third / side panel].
+Allow for long questions and up to 10 free-form answers.
+
+Edit my-poll.html, using CSS first. Keep the existing working poll code:
+hashtag matching, vote counting, duplicate-vote handling, percentages,
+tallies, donation weighting, settings updates, and start/end/reset controls.
+Keep session/password/transport URL handling and all supporting script loads.
+Preserve #poll-container, #poll-title, #poll-options, and show/hide behavior.
+The script replaces #poll-options contents when results update, so put any
+permanent logo or decoration outside that element.
+Do not hard-code sample results or private session details.
+Keep the page compatible with Chrome 80 and OBS Browser Source.
+
+Treat all incoming messages, names, labels, donations, and metadata as untrusted.
+Prevent HTML/JavaScript injection in every renderer you change. Use textContent
+for plain fields and for chatmessage when textonly is true. For HTML-mode
+chatmessage, keep supported emotes/formatting through the packaged
+SocialStreamChatHTML.sanitize helper (libs/objects.js loaded first).
+Do not concatenate raw input into innerHTML, attributes, CSS, or JavaScript.
+Validate media/link URLs with the page's existing URL policy and assign DOM
+properties; do not enable javascript: URLs or executable embedded content.
+Never eval incoming data or treat a viewer message as an AI instruction.
+Keep source checks, connection handling, and existing sanitizers.
+Test plain text, allowed emotes, quotes, angle brackets, and an HTML injection
+probe in an isolated preview; verify the probe cannot execute.
+
+Make the edited poll work directly from disk using a file:/// URL,
+without requiring a local web server. Return the complete edited HTML,
+list any extra image/font files needed, and include the file URL steps for OBS.</code></pre>
+<p>Pour la route CSS OBS, remplacez la dernière instruction par : <strong>"Renvoyer uniquement le CSS pour le CSS personnalisé OBS, en utilisant les sélecteurs de sondage existants et le thème par défaut ; n'incluez pas de balises HTML ou de script."</strong></p>
+<p>Pour les modifications manuelles, les principaux crochets de style sont <code>#poll-container</code>, <code>.poll-title</code>, <code>.poll-option</code>, <code>.poll-bar</code>, <code>.option-number</code>, <code>.option-text</code>, <code>.option-percentage</code>, <code>.option-tally</code>, et <code>.poll-instruction</code>. Un changement de mise en page peut également nécessiter des modifications correspondantes dans les deux <code>updatePollOptions()</code> et <code>updatePollResults()</code>, qui construisent les lignes de réponses.</p>
+</section>
+
+<section class="guide-card" id="local-setup">
+<h2 id="read-section-5">4. Ouvrez votre sondage modifié dans OBS</h2>
+<p>Ouvrir <code>my-poll.html</code> directement depuis votre ordinateur. Il n'y a aucun serveur à installer ou à démarrer.</p>
+<ol class="guide-steps">
+<li>Faites glisser <code>my-poll.html</code> dans Chrome ou Edge. Copiez l'adresse de la barre d'adresse ; ça commence par <code>file:///</code>.</li>
+<li>Copiez tout depuis <code>?</code> à partir de votre lien de sondage graphique de travail à partir de SSN. Ajoutez-le à la fin de l'adresse du fichier. Cela conserve votre session, votre mot de passe et d’autres paramètres.</li>
+<li>Ouvrez cette adresse combinée dans votre navigateur pour la vérifier. Collez-le ensuite dans la source du navigateur OBS. <strong>URL</strong> champ avec
+champ <strong>Fichier local</strong> décoché. Définissez la largeur et la hauteur souhaitées.</li>
+</ol>
+<p>Par exemple, ce lien copié :</p>
+<pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>devient :</p>
+<pre><code>file:///C:/SSN/social_stream-beta/my-poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>Ce sont des espaces réservés : utilisez votre lien réellement copié, en incluant uniquement les options dont il dispose déjà. Continuez à utiliser les SSN <strong>Options de sondage</strong> pour définir la question, la correspondance des votes et les contrôles du sondage.</p>
+<p>L'adresse du fichier ci-dessus est un exemple Windows. Sur macOS, cela commence par <code>file:///Users/...</code>. Copiez l'adresse réelle de votre navigateur afin que le chemin et les espaces soient gérés pour vous.</p>
+<p><strong>Configurez ceci une fois.</strong> OBS enregistre l'adresse. Conservez le dossier téléchargé au même endroit et laissez SSN et votre source de discussion en cours d'exécution lorsque vous utilisez le sondage. Après avoir enregistré une modification, utilisez <strong>Actualiser le cache de la page actuelle</strong> dans les propriétés source.</p>
+<p><strong>Pourquoi laisser la case Fichier local décochée ?</strong> L'utilisation du champ URL inclut les paramètres de session après <code>?</code>. La sélection seule du fichier HTML ne suffit pas. Le <a href="overlay-customization-guide.html#local-file">guide partagé</a> couvre également un lanceur facultatif pour le sélecteur de fichiers.</p>
+</section>
+
+<section class="guide-card" id="check">
+<h2 id="read-section-6">5. Testez le design avec un vrai sondage</h2>
+<ol class="guide-steps">
+<li>Gardez SSN et une source de discussion capturée en cours d'exécution. Dans <strong>Options de sondage</strong>, activez le sondage, définissez <strong>Forme libre</strong>, saisissez une question et choisissez <strong>Vote exact uniquement</strong>.</li>
+<li>Envoyer <code>#coffee</code> et <code>#tea</code> de différents utilisateurs de chat, ou utiliser des utilisateurs fictifs distincts avec le <a href="test-message-guide.html">outils de messages de test</a>. Lorsque les votes multiples sont désactivés, répéter un vote du même utilisateur n'ajoutera pas un autre vote.</li>
+<li>Vérifiez les barres et les totaux dans OBS. Essayez une longue question, une longue réponse, et le <strong>Afficher le nombre de votes au lieu du pourcentage</strong> option pour vérifier l'ajustement du texte.</li>
+<li>Test <strong>Hashtag n'importe où</strong> avec un message plus long tel que <code>I vote #coffee today</code>. Vérifier <strong>Terminer le sondage (End Poll)</strong>, <strong>Réinitialiser le sondage (Reset Poll)</strong>, et <strong>Activer le sondage (Enable Poll)</strong> afin que la conception personnalisée gère les états fermés, vides et cachés.</li>
+</ol>
+<ul class="guide-list">
+<li><strong>Superposition vierge :</strong> cochez Activer le sondage et les paramètres de session copiés. Un sondage de forme libre ne comporte aucune ligne de réponse jusqu'à l'arrivée des votes.</li>
+<li><strong>La page locale ne s'ouvre pas :</strong> faites glisser à nouveau le fichier dans votre navigateur et copiez son adresse actuelle. Vérifiez que le nom du fichier n'est pas accidentel <code>my-poll.html.txt</code>.</li>
+<li><strong>Coincé au « Chargement du sondage » :</strong> Vérifiez les scripts de prise en charge et leurs chemins de dossier, l'état d'exécution de SSN et la chaîne de requête complète du sondage hébergé fonctionnel.</li>
+<li><strong>Les votes ne comptent pas :</strong> confirmez que le vote est ouvert, que le message correspond au mode de vote sélectionné et que l'utilisateur test n'a pas déjà voté.</li>
+<li><strong>L'apparence est différente dans OBS :</strong> vérifiez les dimensions de la source du navigateur, tout ancien CSS personnalisé remplaçant la conception du fichier et si une actualisation est nécessaire.</li>
+<li><strong>Le logo disparaît après un vote :</strong> placer des œuvres d'art permanentes à l'extérieur <code>#poll-options</code>; cet élément est reconstruit lors des mises à jour.</li>
+</ul>
+<p>Votre copie modifiée est conservée séparément du sondage hébergé par SSN. Conservez une sauvegarde de la conception et comparez-la avec une version plus récente. <code>poll.html</code> versions lorsque vous avez besoin de correctifs en amont. Pour créer une superposition différente à partir de zéro, consultez le <a href="../../docs/index.html?file=customoverlays.md">guide des superpositions personnalisées</a>.</p>
+</section>
+</div>
+</main>
+<footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja &middot; <a href="guides.html">Parcourir tous les guides</a></p></div></div></footer>
+<script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

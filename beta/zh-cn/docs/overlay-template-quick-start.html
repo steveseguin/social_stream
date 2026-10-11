@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-cn/docs/overlay-template-quick-start.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-cn/docs/overlay-template-quick-start.html">
+    <meta property="og:title" content="叠加层模板快速入门 - Social Stream Ninja">
+    <meta property="og:description" content="将 Social Stream Ninja 叠加层模板添加到 OBS 的快速设置指南。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-cn/docs/overlay-template-quick-start.html">
+    <meta name="twitter:title" content="叠加层模板快速入门 - Social Stream Ninja">
+    <meta name="twitter:description" content="将 Social Stream Ninja 叠加层模板添加到 OBS 的快速设置指南。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>叠加层模板快速入门 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <meta name="description" content="将 Social Stream Ninja 叠加层模板添加到 OBS 的快速设置指南。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/overlay-template-quick-start.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{"1. Open The Template Gallery":"1. 打开模板库","2. Add Your Session ID":"2. 添加会话 ID","3. Preview The Look":"3. 预览外观","4. Add It To OBS":"4. 添加到 OBS","5. Confirm Chat Is Arriving":"5. 确认聊天正在到达","Click OK, then send a test message.":"点击确定，然后发送测试消息。","Commands & API":"命令与 API","Dock page with chat messages received from multiple sources":"停靠面板页面，显示从多个来源收到的聊天消息","Download":"下载","Every overlay URL needs your session ID. Replace the placeholder with the same session used by your chat source and dock.":"每个叠加层 URL 都需要您的会话 ID。将占位符替换为聊天来源和停靠面板使用的相同会话。","Features":"功能","Guides":"指南","Hire":"雇用","Home":"首页","If the dock is empty too, fix the chat source first. The template is waiting for messages.":"如果停靠面板也为空，请先修复聊天来源。模板正在等待消息。","If the overlay is blank, test the dock before changing template settings.":"如果叠加层为空白，请先测试停靠面板，再更改模板设置。","In OBS, add a new Browser Source.":"在 OBS 中添加新的浏览器来源。","Inspiration":"灵感","Keep the chat source page or desktop source window open.":"保持聊天来源页面或桌面来源窗口打开。","Main navigation":"主导航","More details:":"更多详情：","OBS Quick Start":"OBS 快速入门","Open navigation menu":"打开导航菜单","Open the template URL in a browser first. If it looks right there, it should be easier to debug in OBS.":"先在浏览器中打开模板 URL。如果在那里显示正常，在 OBS 中排查问题会更容易。","Overlay Gallery":"叠加层图库","Overlay Template Quick Start":"叠加层模板快速入门","Overlay Template Quick Start - Social Stream Ninja":"叠加层模板快速入门 - Social Stream Ninja","Paste the template URL with your session ID.":"粘贴包含会话 ID 的模板 URL。","Pick a high-contrast template if text is hard to read.":"如果文字难以阅读，请选择高对比度模板。","Pick a layout, add your session ID, and paste it into OBS.":"选择布局，添加会话 ID，并粘贴到 OBS。","Quick setup guide for adding Social Stream Ninja overlay templates to OBS.":"将 Social Stream Ninja 叠加层模板添加到 OBS 的快速设置指南。","Refresh the OBS browser source after changing the URL.":"更改 URL 后刷新 OBS 浏览器来源。","Sample overlay preview with a chat message, name, platform icon, and donation badge":"叠加层示例预览，包含聊天消息、名称、平台图标和打赏徽章","Search or use the filter buttons, then pick a layout that is easy to read on your stream.":"搜索或使用筛选按钮，然后选择在直播中易于阅读的布局。","Set the width and height. A common start is 1920 by 1080.":"设置宽度和高度。常用起始尺寸为 1920 × 1080。","Simple Fixes":"简单修复","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Support":"支持","Supported Sites":"支持的网站","Switch theme":"切换主题","Template Gallery showing search, filters, and template cards":"模板库，显示搜索、筛选器和模板卡片","Templates Gallery":"模板库","This is the kind of overlay preview you should expect before adding it to OBS.":"添加到 OBS 之前，您应看到这样的叠加层预览。","Use the":"使用","Use the same session ID in the source, dock, and OBS.":"在来源、停靠面板和 OBS 中使用相同的会话 ID。","when you want a ready-made chat look instead of building CSS from scratch.":"，适用于希望使用现成聊天外观，而非从头编写 CSS 的情况。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/overlay-template-quick-start.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/overlay-template-quick-start.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/overlay-template-quick-start.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/overlay-template-quick-start.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/overlay-template-quick-start.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/overlay-template-quick-start.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/overlay-template-quick-start.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/overlay-template-quick-start.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/overlay-template-quick-start.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="overlay-template-quick-start.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/overlay-template-quick-start.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/overlay-template-quick-start.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/overlay-template-quick-start.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/overlay-template-quick-start.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/overlay-template-quick-start.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/overlay-template-quick-start.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/overlay-template-quick-start.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/overlay-template-quick-start.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/overlay-template-quick-start.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>叠加层模板快速入门</h1>
+            <p>选择布局，添加会话 ID，并粘贴到 OBS。</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>1. 打开模板库</h3>
+                <p>使用 <a href="templates.html">模板库</a> ，适用于希望使用现成聊天外观，而非从头编写 CSS 的情况。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/template-gallery-browse.png" alt="模板库，显示搜索、筛选器和模板卡片" class="guide-image">
+                    <figcaption>搜索或使用筛选按钮，然后选择在直播中易于阅读的布局。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>2. 添加会话 ID</h3>
+                <p>每个叠加层 URL 都需要您的会话 ID。将占位符替换为聊天来源和停靠面板使用的相同会话。</p>
+                <pre>https://socialstream.ninja/sampleoverlay.html?session=YOUR_SESSION_ID</pre>
+            </div>
+
+            <div class="guide-card">
+                <h3>3. 预览外观</h3>
+                <p>先在浏览器中打开模板 URL。如果在那里显示正常，在 OBS 中排查问题会更容易。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/template-sample-overlay-preview.png" alt="叠加层示例预览，包含聊天消息、名称、平台图标和打赏徽章" class="guide-image">
+                    <figcaption>添加到 OBS 之前，您应看到这样的叠加层预览。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>4. 添加到 OBS</h3>
+                <ol class="guide-steps">
+                    <li>在 OBS 中添加新的浏览器来源。</li>
+                    <li>粘贴包含会话 ID 的模板 URL。</li>
+                    <li>设置宽度和高度。常用起始尺寸为 1920 × 1080。</li>
+                    <li>点击确定，然后发送测试消息。</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h3>5. 确认聊天正在到达</h3>
+                <p>如果叠加层为空白，请先测试停靠面板，再更改模板设置。</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID</pre>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-dock-message-check.png" alt="停靠面板页面，显示从多个来源收到的聊天消息" class="guide-image">
+                    <figcaption>如果停靠面板也为空，请先修复聊天来源。模板正在等待消息。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>简单修复</h3>
+                <ul class="guide-list">
+                    <li>在来源、停靠面板和 OBS 中使用相同的会话 ID。</li>
+                    <li>更改 URL 后刷新 OBS 浏览器来源。</li>
+                    <li>保持聊天来源页面或桌面来源窗口打开。</li>
+                    <li>如果文字难以阅读，请选择高对比度模板。</li>
+                </ul>
+                <p>更多详情： <a href="obs-quick-start.html">OBS 快速入门</a>.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 许可证。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

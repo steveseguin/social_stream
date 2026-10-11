@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/tr/docs/tts-setup-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/tr/docs/tts-setup-guide.html">
+    <meta property="og:title" content="TTS Kurulum Rehberi - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja metinden konuşma, OBS sesi, tarayıcı sesleri, yerel sesler ve TTS sunucu modları için sade dille kurulum rehberi.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/tr/docs/tts-setup-guide.html">
+    <meta name="twitter:title" content="TTS Kurulum Rehberi - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja metinden konuşma, OBS sesi, tarayıcı sesleri, yerel sesler ve TTS sunucu modları için sade dille kurulum rehberi.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS Kurulum Rehberi - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <style>
+        .tts-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+        .tts-preview { border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.6rem; min-width: 0; }
+        .tts-preview h3 { margin-top: 0; }
+        .tts-preview audio { width: 100%; margin: .8rem 0; }
+        .tts-preview code { overflow-wrap: anywhere; }
+        .guide-card [id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 52rem; }
+        @media (max-width: 700px) { .tts-preview-grid { grid-template-columns: 1fr; } }
+    </style>
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja metinden konuşma, OBS sesi, tarayıcı sesleri, yerel sesler ve TTS sunucu modları için sade dille kurulum rehberi.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/tts-setup-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{"(Node.js required). Run it on the OBS computer.":"(Node.js gerekir). OBS bilgisayarında çalıştırın.","(or":"(veya","), optional":"), isteğe bağlı",", expand":", şunu genişletin:",", optional":", isteğe bağlı",", or":", veya",", set that source to":", bu kaynağı şuna ayarlayın:",", then a voice.":", ardından bir ses.",". Bigger download, more memory.":". Daha büyük indirme, daha fazla bellek.",". Copy the voice's model ID, not its name or page link. Leave it blank for the default voice.":". Sesin adını veya sayfa bağlantısını değil model ID'sini kopyalayın. Varsayılan ses için boş bırakın.",". Fish Audio decides what's free and its fair-use terms. Paid models need account credit. SSN never switches to a paid model if a free request fails. Speed goes from 0.5 to 2. Fish Audio detects the language. Your chat text is sent to Fish Audio.":". Ücretsiz seçenekleri ve adil kullanım koşullarını Fish Audio belirler. Ücretli modeller kredi gerektirir. Ücretsiz istek başarısız olursa SSN ücretli modele geçmez. Hız 0,5 ile 2 arasındadır. Dili Fish Audio algılar. Sohbet metniniz Fish Audio'ya gönderilir.",". Leave it running.":". Çalışır durumda bırakın.",". Leave out":". Şunu eklemeyin:",". Pick":". Şunu seçin:",". Piper has Spain, Mexico, Brazil and Portugal voices. Kokoro has three Spanish and three Brazilian Portuguese voices.":". Piper, İspanya, Meksika, Brezilya ve Portekiz sesleri sunar. Kokoro'da üç İspanyolca ve üç Brezilya Portekizcesi ses bulunur.",". Plays each part as it's ready. Slow PCs may pause between parts.":". Her bölüm hazır olduğunda çalınır. Yavaş bilgisayarlarda bölümler arasında duraklama olabilir.",". Streaming or FP32 turns on background generation automatically.":". Akış veya FP32 seçildiğinde arka planda üretim otomatik açılır.",". These options make speech in the background so the page stays smooth.":". Bu seçenekler konuşmayı arka planda üretir ve sayfanın akıcı çalışmasını sağlar.",". Waits for the whole message first.":". Önce mesajın tamamının hazır olmasını bekler.","A ChatGPT subscription doesn't include API credit.":"ChatGPT aboneliğine API kredisi dahil değildir.","A quick link to try:":"Deneyebileceğiniz kısa bir bağlantı:","API Key":"API Anahtarı","API billing":"API faturalandırması","API charges may apply":"API ücretleri uygulanabilir","API terms apply":"API koşulları geçerlidir","Account limits and network delay.":"Hesap sınırları ve ağ gecikmesi.","Actual SSN Custom / Local TTS provider settings":"Gerçek SSN Özel / Yerel TTS sağlayıcı ayarları","Actual SSN ElevenLabs provider settings":"Gerçek SSN ElevenLabs sağlayıcı ayarları","Actual SSN Gemini provider settings":"Gerçek SSN Gemini sağlayıcı ayarları","Actual SSN Google Cloud provider settings":"Gerçek SSN Google Cloud sağlayıcı ayarları","Actual SSN Kitten provider settings":"Gerçek SSN Kitten sağlayıcı ayarları","Actual SSN Kokoro provider settings":"Gerçek SSN Kokoro sağlayıcı ayarları","Actual SSN OpenAI provider settings":"Gerçek SSN OpenAI sağlayıcı ayarları","Actual SSN Piper provider settings":"Gerçek SSN Piper sağlayıcı ayarları","Actual SSN Speechify provider settings":"Gerçek SSN Speechify sağlayıcı ayarları","Actual SSN System TTS provider settings":"Gerçek SSN Sistem TTS sağlayıcı ayarları","Actual SSN eSpeak provider settings":"Gerçek SSN eSpeak sağlayıcı ayarları","Actual popup: Message: Text to Speech, with Enable TTS in dock switched on":"Gerçek açılır pencere: Mesaj — Metinden Konuşma; Panelde TTS'yi etkinleştir açık","Actual popup: Piper TTS selected, with English US Female HFC Medium voice":"Gerçek açılır pencere: İngilizce ABD Kadın HFC Orta sesiyle Piper TTS seçili","Adam (American Male):":"Adam (Amerikalı Erkek) —","Add a":"Şunu ekleyin:","Advanced Audio Properties":"Gelişmiş Ses Özellikleri","Alex (Brazilian Portuguese):":"Alex (Brezilya Portekizcesi):","Alex (Spanish):":"Alex (İspanyolca):","Alice (British Female):":"Alice (Britanyalı Kadın) —","All four are free and run on your computer. Press play to compare.":"Dördü de ücretsizdir ve bilgisayarınızda çalışır. Karşılaştırmak için oynat düğmesine basın.","Alloy (American Female):":"Alloy (Amerikalı Kadın) —","An OBS Custom Browser Dock is a control panel, not a scene source. For Featured Chat, turn on TTS in that overlay's own options and copy its link.":"OBS Özel Tarayıcı Paneli bir kontrol panelidir; sahne kaynağı değildir. Öne Çıkan Sohbet için TTS'yi o kaplamanın kendi seçeneklerinden açıp bağlantısını kopyalayın.","Aoede (American Female):":"Aoede (Amerikalı Kadın) —","Automatic":"Otomatik","Avoid gaps":"Boşlukları önleyin","Background generation":"Arka planda üretim","Background processor":"Arka plan işlemcisi","Bella (American Female):":"Bella (Amerikalı Kadın) —","Bella, US English, female. Most natural, but slower on CPU.":"Bella, ABD İngilizcesi, kadın. En doğal seçenek, ancak CPU'da daha yavaş.","Best Kokoro quality":"En iyi Kokoro kalitesi","Billing and quotas apply":"Ücretlendirme ve kotalar geçerlidir","Blue switch = chat reading is on.":"Mavi anahtar = sohbet okuma açık.","Brazilian Portuguese (Edresson) - Low:":"Brezilya Portekizcesi (Edresson) - Düşük —","Brazilian Portuguese (Faber) - Medium:":"Brezilya Portekizcesi (Faber) - Orta —","Bridge URL":"Köprü URL'si","Browser Source":"Tarayıcı Kaynağı","CPU":"CPU","Check mute and the recording tracks in OBS. Don't capture the monitoring output a second time. See the":"OBS'de sessiz durumunu ve kayıt ses izlerini kontrol edin. İzleme çıkışını ikinci kez yakalamayın. Şuna bakın:","Check the dock shows chat. Then check the TTS switch, provider and filters. Use a freshly copied link. Let the first voice download finish.":"Panelde sohbetin göründüğünü doğrulayın. Ardından TTS anahtarını, sağlayıcıyı ve filtreleri kontrol edin. Yeni kopyalanmış bir bağlantı kullanın. İlk sesin indirilmesinin bitmesini bekleyin.","Check your Gemini limits":"Gemini sınırlarınızı kontrol edin","Click":"Tıklayın:","Commands & API":"Komutlar ve API","Control audio via OBS":"Sesi OBS üzerinden denetle","Cost":"Maliyet","Custom / Local":"Özel / Yerel","Custom / Local TTS":"Özel / Yerel TTS","Daniel (British Male):":"Daniel (Britanyalı Erkek) —","DaveFX":"DaveFX","Do this":"Yapılacak işlem","Does my chat platform support TTS?":"Sohbet platformum TTS destekliyor mu?","Dora":"Dora","Dora (Brazilian Portuguese):":"Dora (Brezilya Portekizcesi):","Dora (Spanish):":"Dora (İspanyolca):","Download":"İndir","Download Kitten sample":"Kitten örneğini indir","Download Kokoro sample":"Kokoro örneğini indir","Download Piper sample":"Piper örneğini indir","Download eSpeak sample":"eSpeak örneğini indir","Download sample":"Örneği indir","Download sizes and OBS test notes":"İndirme boyutları ve OBS test notları","Echo (American Male):":"Echo (Amerikalı Erkek) —","Edit my TTS link by hand, or see every option":"TTS bağlantımı elle düzenlemek veya tüm seçenekleri görmek istiyorum","Eight English voices: male and female versions of voices 2, 3, 4 and 5. The sample uses Voice 4 (Female).":"Sekiz İngilizce ses: 2, 3, 4 ve 5 numaralı seslerin erkek ve kadın sürümleri. Örnekte Ses 4 (Kadın) kullanılır.","ElevenLabs":"ElevenLabs","ElevenLabs reference":"ElevenLabs başvuru kılavuzu","Emma (British Female):":"Emma (Britanyalı Kadın) —","English US Female (HFC) - Medium:":"İngilizce ABD Kadın (HFC) - Orta —","English only. Bundled model is about 24 MB.":"Yalnızca İngilizce. Dahil edilen model yaklaşık 24 MB'tır.","English. Robotic, but tiny and fast.":"İngilizce. Robotik, ancak çok küçük ve hızlı.","English:":"İngilizce —","Enter a Google Cloud TTS API key, the exact voice name, and its matching language.":"Google Cloud TTS API anahtarını, tam ses adını ve onunla eşleşen dili girin.","Enter the API key and voice ID from your Speechify API account.":"Speechify API hesabınızdan API anahtarını ve ses kimliğini girin.","Enter your API key. Then click":"API anahtarınızı girin. Ardından şuna tıklayın:","Eric (American Male):":"Eric (Amerikalı Erkek) —","Every message is read twice":"Her mesaj iki kez okunuyor","Faber":"Faber","Fable (British Male):":"Fable (Britanyalı Erkek) —","Faster Kokoro and Kitten":"Daha hızlı Kokoro ve Kitten","Features":"Özellikler","Fenrir (American Male):":"Fenrir (Amerikalı Erkek) —","First time?":"İlk kez mi?","Fish Audio":"Fish Audio","Fish Audio API key":"Fish Audio API anahtarı","Fish Audio API reference":"Fish Audio API başvuru kaynağı","Fish Audio blocks direct requests from web pages, so OBS needs SSN's":"Fish Audio, web sayfalarından doğrudan istekleri engeller. Bu nedenle OBS için SSN'nin şu bileşeni gerekir:","Fix GPU problems (Kokoro)":"GPU sorunlarını giderin (Kokoro)","Fix problems":"Sorunları giderme","For OBS: run the local bridge":"OBS için: yerel köprüyü çalıştırın","Free":"Ücretsiz","Free model announcement and terms":"Ücretsiz model duyurusu ve koşulları","Free model with your own key; voice IDs.":"Kendi anahtarınızla ücretsiz model; ses kimlikleri.","Free tier set by Fish Audio":"Ücretsiz kullanım sınırlarını Fish Audio belirler","Free, no key":"Ücretsiz, anahtar gerekmez","Full quality":"Tam kalite","Gemini":"Gemini","Generation and playback":"Üretim ve oynatma","George (British Male):":"George (Britanyalı Erkek) —","Go further":"Daha fazlası","Go here":"Buraya gidin","Good for":"Uygun olduğu durumlar","Google Cloud":"Google Cloud","Guides":"Kılavuzlar","Have your chat read aloud on stream. Free, with no account or API key.":"Sohbetiniz yayında sesli okunsun. Ücretsiz; hesap veya API anahtarı gerekmez.","Hear speech sooner":"Konuşmayı daha erken duyun","Hear the free voices":"Ücretsiz sesleri dinleyin","Hear the voices":"Sesleri dinleyin","Hearing every message twice?":"Her mesajı iki kez mi duyuyorsunuz?","Heart (American Female):":"Heart (Amerikalı Kadın) —","Heavier on the CPU. First speech can be slow. Faster with a supported GPU.":"CPU'ya daha fazla yük bindirir. İlk konuşma yavaş başlayabilir. Desteklenen GPU ile daha hızlıdır.","Hire":"Hizmet alın","Home":"Ana sayfa","How these samples were made":"Bu örnekler nasıl oluşturuldu","I want an OBS dock or Featured Chat to speak instead":"Bunun yerine bir OBS panelinin veya Öne Çıkan Sohbet'in konuşmasını istiyorum","I want to":"Şunu yapmak istiyorum","I want to…":"Şunu yapmak istiyorum…","In OBS":"OBS'de","In its properties, turn on":"Özelliklerinde şunu açın:","In the Fish Audio panel, set":"Fish Audio panelinde şunu ayarlayın:","In the SSN folder, run":"SSN klasöründe şunu çalıştırın:","Inspiration":"İlham","Isabella (British Female):":"Isabella (Britanyalı Kadın) —","Jessica (American Female):":"Jessica (Amerikalı Kadın) —","Keep in mind":"Aklınızda bulunsun","Kitten":"Kitten","Kitten 0.8":"Kitten 0.8","Kitten 0.8 runs on the CPU, English only. Each model downloads on first use. Each browser or OBS keeps its own copy. NeuroSync gets the complete audio file either way. Old links keep working as before unless you change these options.":"Kitten 0.8 CPU'da çalışır ve yalnızca İngilizceyi destekler. Her model ilk kullanımda indirilir. Her tarayıcı veya OBS kendi kopyasını tutar. Her iki durumda da NeuroSync tam ses dosyasını alır. Bu seçenekleri değiştirmediğiniz sürece eski bağlantılar eskisi gibi çalışır.","Kitten voice sample":"Kitten ses örneği","Kitten:":"Kitten:","Kokoro":"Kokoro","Kokoro - Portuguese (Brazil)":"Kokoro - Portekizce (Brezilya)","Kokoro - Portuguese (Brazil) sample":"Kokoro - Portekizce (Brezilya) örneği","Kokoro - Spanish":"Kokoro - İspanyolca","Kokoro - Spanish sample":"Kokoro - İspanyolca örneği","Kokoro voice sample":"Kokoro ses örneği","Kokoro:":"Kokoro:","Kore (American Female):":"Kore (Amerikalı Kadın) —","Lewis (British Male):":"Lewis (Britanyalı Erkek) —","Liam (American Male):":"Liam (Amerikalı Erkek) —","Lily (British Female):":"Lily (Britanyalı Kadın) —","Link settings for Fish Audio":"Fish Audio bağlantı ayarları","List My Available Voices":"Kullanabileceğim Sesleri Listele","Local AI TTS guide":"Yerel yapay zekâ TTS kılavuzu","Main chat overlay & control dock":"Ana sohbet katmanı ve kontrol paneli","Main navigation":"Ana gezinme","Make a short test recording and play it back.":"Kısa bir test kaydı yapıp dinleyin.","Message – Text to Speech":"Mesaj – Metinden Konuşmaya","Meter moves, but the recording is silent":"Seviye göstergesi hareket ediyor ama kayıtta ses yok","Michael (American Male):":"Michael (Amerikalı Erkek) —","Monitor and Output":"İzle ve Çıkış Ver","More detail and link settings":"Ayrıntılar ve bağlantı ayarları","More fixes:":"Diğer çözümler:","More than one page is speaking. Keep TTS on in one place only.":"Birden fazla sayfa konuşuyor. TTS'yi yalnızca tek bir yerde açık bırakın.","Most setup. See the":"En fazla kurulum gerektiren seçenek. Şuna bakın:","Name reading was off. The clips skip loading time.":"İsim okuma kapalıydı. Klipler yükleme süresini içermez.","Named voices, model and format controls.":"Adlandırılmış sesler, model ve biçim kontrolleri.","Named voices; language, rate and pitch.":"Adlandırılmış sesler; dil, hız ve perde.","Natural voices; English, Spanish, Portuguese.":"Doğal sesler; İngilizce, İspanyolca, Portekizce.","Nicole (American Female):":"Nicole (Amerikalı Kadın) —","No chat connected yet?":"Henüz sohbet bağlanmadı mı?","No speech at all":"Hiç konuşma yok","Not every voice supports every control. Cloud TTS API must be enabled.":"Her ses tüm kontrolleri desteklemez. Cloud TTS API etkinleştirilmiş olmalıdır.","Nova (American Female):":"Nova (Amerikalı Kadın) —","OBS audio guide":"OBS ses rehberi","OBS has its own browser and voice list. System TTS often fails there. Switch to Piper, Kokoro, Kitten or eSpeak. A virtual audio cable can't fix missing speech.":"OBS'nin kendi tarayıcısı ve ses listesi vardır. Sistem TTS'si burada sıklıkla çalışmaz. Piper, Kokoro, Kitten veya eSpeak'e geçin. Sanal ses kablosu üretilmeyen konuşmayı düzeltemez.","OBS needs SSN's local bridge.":"OBS için SSN'nin yerel köprüsü gerekir.","Often silent in OBS. Some voices need internet.":"OBS'de çoğunlukla sessiz kalır. Bazı sesler internet gerektirir.","On that PC, System TTS listed five voices but made no sound in the OBS recording. Your PC may differ, so always test your own link. Cloud voices weren't tested (no paid accounts).":"O bilgisayarda Sistem TTS'si beş ses listeliyor, ancak OBS kaydında ses üretmiyordu. Bilgisayarınız farklı olabilir; bu yüzden kendi bağlantınızı mutlaka test edin. Bulut sesleri test edilmedi (ücretli hesap yoktu).","On this page":"Bu sayfada","Only one page should read chat. Turn TTS off everywhere else.":"Sohbeti yalnızca bir sayfa okumalıdır. Diğer tüm yerlerde TTS'yi kapatın.","Onyx (American Male):":"Onyx (Amerikalı Erkek) —","Open navigation menu":"Gezinme menüsünü aç","Open the":"Şunu açın:","OpenAI":"OpenAI","Optional: paste a":"İsteğe bağlı: şunu yapıştırın:","Overlay Gallery":"Katman galerisi","Paste the bridge token shown in the terminal into the":"Terminalde gösterilen köprü belirtecini şu alana yapıştırın:","Paste your":"Şunu yapıştırın:","Pick":"Seçin:","Pick a":"Şunu seçin:","Pick a TTS model and voice. Style instructions change how it's read. This uses the Gemini API, not Google Cloud TTS.":"Bir TTS modeli ve ses seçin. Üslup talimatları metnin nasıl okunacağını değiştirir. Bu seçenek Google Cloud TTS'yi değil, Gemini API'sini kullanır.","Pick a language above the voice list in SSN, then press":"SSN'de ses listesinin üstünden bir dil seçin, ardından şuna basın:","Pick a language voice. You can change the speaking rate. It sounds robotic by design.":"Bir dil sesi seçin. Konuşma hızını değiştirebilirsiniz. Tasarımı gereği robotik ses çıkarır.","Pick a provider":"Sağlayıcı seçin","Pick a voice and model, and enter an API key. A ChatGPT subscription doesn't give you API credit. Keep the default endpoint.":"Bir ses ve model seçip API anahtarı girin. ChatGPT aboneliği API kredisi sağlamaz. Varsayılan uç noktayı koruyun.","Pick a voice that matches your language. Changing the language alone doesn't change the voice. The sample uses HFC medium.":"Dilinizle eşleşen bir ses seçin. Yalnızca dili değiştirmek sesi değiştirmez. Örnekte HFC medium kullanılır.","Pick a voice. Use the language filter to find one, and":"Bir ses seçin. Bulmak için dil filtresini kullanın ve","Pick voices by ID; stability and style controls.":"Sesleri kimliğe göre seçin; kararlılık ve üslup kontrolleri.","Piper":"Piper","Piper - Portuguese (Brazil)":"Piper - Portekizce (Brezilya)","Piper - Portuguese (Brazil) sample":"Piper - Portekizce (Brezilya) örneği","Piper - Spanish (Spain)":"Piper - İspanyolca (İspanya)","Piper - Spanish (Spain) sample":"Piper - İspanyolca (İspanya) örneği","Piper TTS":"Piper TTS","Piper downloads its voice on first use. Give it a moment.":"Piper sesi ilk kullanımda indirir. Biraz bekleyin.","Piper is free. No account or API key.":"Piper ücretsizdir. Hesap veya API anahtarı gerekmez.","Piper is the lighter choice. If Kokoro falls behind the chat, switch to Piper.":"Piper daha hafif seçenektir. Kokoro sohbetin gerisinde kalırsa Piper'a geçin.","Piper voice sample":"Piper ses örneği","Piper, Kokoro, Kitten and eSpeak passed OBS Browser Source recording tests. Cloud and custom voices also play through the page, but weren't tested with live accounts. Test System TTS on its own, even if it lists voices.":"Piper, Kokoro, Kitten ve eSpeak, OBS Tarayıcı Kaynağı kayıt testlerini geçti. Bulut ve özel sesler de sayfa üzerinden çalınır, ancak canlı hesaplarla test edilmedi. Sesleri listelese bile Sistem TTS'sini ayrıca test edin.","Plain-English setup guide for Social Stream Ninja text-to-speech, OBS audio, browser voices, local voices, and TTS server modes.":"Social Stream Ninja metinden konuşma, OBS sesi, tarayıcı sesleri, yerel sesler ve TTS sunucu modları için sade dille kurulum rehberi.","Play complete message":"Mesajın tamamını çal","Play it in OBS":"OBS'de çalın","Portuguese Brazil:":"Brezilya Portekizcesi —","Portuguese Portugal (Tugao) - Medium:":"Portekiz Portekizcesi (Tugao) - Orta —","Portuguese Portugal:":"Portekiz Portekizcesi —","Press":"Basın","Preview models and quotas can change.":"Önizleme modelleri ve kotalar değişebilir.","Problem":"Sorun","Processing":"İşleme","Provider":"Sağlayıcı","Provider settings":"Sağlayıcı ayarları","Puck (American Male):":"Puck (Amerikalı Erkek) —","Quality varies by voice. HFC medium is about 63 MB.":"Kalite sese göre değişir. HFC medium yaklaşık 63 MB'tır.","Real screenshots from the desktop app, with a fresh profile (key fields left empty). Open a provider to see its settings. Click a screenshot to enlarge it.":"Yeni profille masaüstü uygulamasından alınmış gerçek ekran görüntüleri (anahtar alanları boş bırakılmıştır). Ayarlarını görmek için bir sağlayıcıyı açın. Büyütmek için ekran görüntüsüne tıklayın.","River (American Female):":"River (Amerikalı Kadın) —","Run my own voice server, or clone a voice":"Kendi ses sunucumu çalıştırmak veya ses klonlamak istiyorum","SSN extension popup":"SSN uzantısı açılır penceresi","Santa (American Male):":"Santa (Amerikalı Erkek) —","Santa (Brazilian Portuguese):":"Santa (Brezilya Portekizcesi):","Santa (Spanish):":"Santa (İspanyolca):","Sarah (American Female):":"Sarah (Amerikalı Kadın) —","Scroll to":"Şuraya kaydırın:","Send a chat message. The source's audio meter should move.":"Bir sohbet mesajı gönderin. Kaynağın ses seviye göstergesi hareket etmelidir.","Set":"Şunu ayarlayın:","Set it up":"Kurulum","Set it up in 5 steps":"5 adımda kurun","Set the":"Şunu ayarlayın:","Set up Speechify":"Speechify'ı kurun","Settings and voices":"Ayarlar ve sesler","Sizes are model files only, not memory use. Free voices run on the computer playing the dock or overlay. First use is slower. OBS keeps its own download cache, separate from Chrome.":"Boyutlar yalnızca model dosyalarına aittir; bellek kullanımını göstermez. Ücretsiz sesler paneli veya kaplamayı oynatan bilgisayarda çalışır. İlk kullanım daha yavaştır. OBS, Chrome'dan ayrı olarak kendi indirme önbelleğini tutar.","Sky (American Female):":"Sky (Amerikalı Kadın) —","Small English model, eight voices.":"Küçük İngilizce model, sekiz ses.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 Lisansı.","Sounds robotic on purpose.":"Bilerek robotik ses çıkarır.","Sources and Settings":"Kaynaklar ve ayarlar","Spanish Mexico (Ald) - Medium:":"Meksika İspanyolcası (Ald) - Orta —","Spanish Spain (DaveFX) - Medium:":"İspanya İspanyolcası (DaveFX) - Orta —","Spanish and Portuguese samples":"İspanyolca ve Portekizce örnekler","Spanish:":"İspanyolca —","Speak Text":"Metni Seslendir","Speech falls behind chat":"Konuşma sohbetin gerisinde kalıyor","Speechify":"Speechify","Speechify guide":"Speechify kılavuzu","Speechify setup":"Speechify kurulumu","Start as speech arrives":"Konuşma geldikçe başlat","Start here":"Buradan başlayın","Start with Piper.":"Piper ile başlayın.","Step-by-step Speechify guide":"Adım adım Speechify kılavuzu","Support":"Destek","Supported Sites":"Desteklenen siteler","Switch from Kokoro to Piper, or try eSpeak.":"Kokoro'dan Piper'a geçin veya eSpeak'i deneyin.","Switch theme":"Temayı değiştir","System TTS":"Sistem TTS","TTS Setup Guide":"TTS kurulum kılavuzu","TTS Setup Guide - Social Stream Ninja":"TTS Kurulum Rehberi - Social Stream Ninja","TTS reference":"TTS başvuru rehberi","TTS reference: provider options":"TTS başvuru kılavuzu: sağlayıcı seçenekleri","Test":"Test","Test TTS":"TTS'yi Test Et","Test the voice, then add the overlay link to OBS. Turn on":"Sesi test edin, ardından kaplama bağlantısını OBS'ye ekleyin. Şunu açın:","Tested September 7, 2026 in OBS 32.2.2 on Windows 11. A real chat message reached the dock, spoke, moved the Browser Source meter, and showed up in a recording. Kokoro took noticeably longer to start on CPU.":"7 Eylül 2026'da Windows 11 üzerinde OBS 32.2.2 ile test edildi. Gerçek bir sohbet mesajı panele ulaştı, sesli okundu, Tarayıcı Kaynağı göstergesini hareket ettirdi ve kayda girdi. Kokoro'nun CPU'da başlaması belirgin biçimde daha uzun sürdü.","Text-to-Speech Service Provider":"Metinden Konuşmaya Hizmet Sağlayıcısı","Text-to-speech incoming messages":"Gelen mesajları sesli oku","The English samples read:":"İngilizce örneklerde şu metin okunur:","The default model is":"Varsayılan model:","The most natural free voices; English, Spanish, Brazilian Portuguese.":"En doğal ücretsiz sesler; İngilizce, İspanyolca, Brezilya Portekizcesi.","The token changes each time the bridge restarts.":"Köprü her yeniden başlatıldığında belirteç değişir.","The voice list depends on your browser or app and the voices installed. There's no fixed SSN list. This fresh profile showed an empty language list.":"Ses listesi tarayıcınıza veya uygulamanıza ve kurulu seslere bağlıdır. Sabit bir SSN listesi yoktur. Bu yeni profilde dil listesi boş görünüyordu.","This reuses the OpenAI settings, so the heading still says OpenAI. Enter your server's address and a voice and model it supports. Whether you need a key depends on your server. See the":"Bu seçenek OpenAI ayarlarını yeniden kullanır; bu yüzden başlık hâlâ OpenAI'dır. Sunucunuzun adresini ve desteklediği bir ses ile modeli girin. Anahtar gerekip gerekmediği sunucunuza bağlıdır. Şuna bakın:","To keep it the same, set":"Aynı kalmasını sağlamak için şunu ayarlayın:","Try Kokoro if you like its sound better. Free voices run on your computer. Cloud voices need an account and API key, and your chat text is sent to that company.":"Sesini daha çok beğeniyorsanız Kokoro'yu deneyin. Ücretsiz sesler bilgisayarınızda çalışır. Bulut sesleri hesap ve API anahtarı gerektirir; sohbet metniniz ilgili şirkete gönderilir.","Try this":"Şunu deneyin","Turn it on for Kitten":"Kitten için açın","Turn it on for Kokoro":"Kokoro için açın","Turn on":"Açın:","US English, female. Light and quick.":"ABD İngilizcesi, kadın. Hafif ve hızlı.","Under":"Şu bölümde:","Under Kokoro or Kitten, open":"Kokoro veya Kitten altında şunu açın:","Use Spanish or Portuguese voices in a link":"Bağlantıda İspanyolca veya Portekizce sesler kullanın","Very light, many languages, starts fast.":"Çok hafif, birçok dili destekler, hızlı başlar.","Voice 2 (Female):":"Ses 2 (Kadın) —","Voice 2 (Male):":"Ses 2 (Erkek) —","Voice 3 (Female):":"Ses 3 (Kadın) —","Voice 3 (Male):":"Ses 3 (Erkek) —","Voice 4 (Female):":"Ses 4 (Kadın) —","Voice 4 (Male):":"Ses 4 (Erkek) —","Voice 4, female. Small English model.":"Ses 4, kadın. Küçük İngilizce model.","Voice 5 (Female):":"Ses 5 (Kadın) —","Voice 5 (Male):":"Ses 5 (Erkek) —","Voice ID":"Ses Kimliği","Voice ID with speed, language and model.":"Hız, dil ve model ile ses kimliği.","Voice examples and requirements":"Ses örnekleri ve gereksinimleri","Voice names and link values":"Ses adları ve bağlantı değerleri","Voice names and supported controls":"Ses adları ve desteklenen kontroller","Voice styles and written delivery instructions.":"Ses stilleri ve yazılı söyleyiş yönergeleri.","Voices already on your browser or PC.":"Tarayıcınızda veya bilgisayarınızda zaten bulunan sesler.","Voices depend on your account.":"Sesler hesabınıza bağlıdır.","Want to hear it yourself?":"Kendiniz duymak ister misiniz?","Welcome to the stream! Thanks for joining us. Which game should we play next?":"Yayına hoş geldiniz! Bize katıldığınız için teşekkürler. Sırada hangi oyunu oynayalım?","With the bridge, add":"Köprüyle birlikte şunu ekleyin:","Works in Chrome or Edge, not in OBS":"Chrome veya Edge'de çalışıyor, OBS'de çalışmıyor","Works in the chat dock, featured overlay, TTS page and Flow Actions.":"Sohbet panelinde, öne çıkan sohbet kaplamasında, TTS sayfasında ve Flow Actions içinde çalışır.","Yes, if SSN gets the chat as text. YouTube, Twitch, TikTok and the rest all work the same way. The platform doesn't need its own TTS.":"Evet, SSN sohbeti metin olarak alıyorsa. YouTube, Twitch, TikTok ve diğerleri aynı şekilde çalışır. Platformun kendi TTS özelliğine sahip olması gerekmez.","Your hardware or hosting":"Kendi donanımınız veya barındırma hizmetiniz","Your own voice server.":"Kendi ses sunucunuz.","and paste the link you copied.":"ve kopyaladığınız bağlantıyı yapıştırın.","as the TTS provider.":"seçeneğini TTS sağlayıcısı olarak seçin.","beside":"şunun yanındaki:","copy link":"bağlantıyı kopyala","eSpeak":"eSpeak","eSpeak voice sample":"eSpeak ses örneği","environment variable to your Fish API key.":"ortam değişkenini Fish API anahtarınıza ayarlayın.","field.":"alanı.","first.":"öncelikle.","from":"şuradan:","if the bridge holds your key. Event Flow's":"köprü anahtarınızı saklıyorsa. Event Flow'un","in the desktop app.":"masaüstü uygulamasında.","local bridge":"yerel köprü","local server guide":"yerel sunucu rehberi","local server problems":"yerel sunucu sorunları","model: Nano (smallest), Micro or Mini.":"model: Nano (en küçük), Micro veya Mini.","or":"veya","to":"şu değere:","to a long random secret. Keep links with a token or key private.":"değerini uzun ve rastgele bir gizli anahtara ayarlayın. Belirteç veya anahtar içeren bağlantıları gizli tutun.","to find a voice ID your account can use.":"ile hesabınızın kullanabileceği bir ses kimliği bulun.","to hear it. The model loads on the page that speaks. Voices: US and UK English, Spanish, Brazilian Portuguese. Too slow? Try Piper.":"ile dinleyin. Model konuşmayı üreten sayfada yüklenir. Sesler: ABD ve Birleşik Krallık İngilizcesi, İspanyolca, Brezilya Portekizcesi. Çok mu yavaş? Piper'ı deneyin.","uses a supported GPU if there is one, otherwise the CPU. Automatic quality picks FP16 on compatible GPUs, full precision on other supported GPUs, and the compact model on CPU. If you force GPU and none is available, you'll get an error.":"varsa desteklenen GPU'yu, yoksa CPU'yu kullanır. Otomatik kalite, uyumlu GPU'larda FP16'yı, desteklenen diğer GPU'larda tam hassasiyeti, CPU'da ise küçük modeli seçer. GPU kullanımını zorlayıp kullanılabilir GPU yoksa hata alırsınız.","voice override accepts a Fish voice ID when the receiving page uses Fish Audio.":"ses geçersiz kılma ayarı, alıcı sayfa Fish Audio kullanıyorsa Fish ses kimliğini kabul eder."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tts-setup-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="../index.html">Ana sayfa</a><a href="features.html">Özellikler</a><a href="inspiration.html" class="site-priority-inspiration">İlham</a><a href="download.html">İndir</a><a href="guides.html">Kılavuzlar</a><a href="commands.html">Komutlar ve API</a><a href="supported-sites.html">Desteklenen siteler</a><a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a><a href="services.html" class="site-priority-hire">Hizmet alın</a><a href="support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tts-setup-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tts-setup-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tts-setup-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tts-setup-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tts-setup-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tts-setup-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tts-setup-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tts-setup-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tts-setup-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tts-setup-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tts-setup-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tts-setup-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tts-setup-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tts-setup-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="tts-setup-guide.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/tts-setup-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tts-setup-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>TTS kurulum kılavuzu</h1>
+            <p>Sohbetiniz yayında sesli okunsun. Ücretsiz; hesap veya API anahtarı gerekmez.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Bu sayfada">
+                <a href="#setup">Kurulum</a>
+                <a href="#obs-voices">OBS'de çalın</a>
+                <a href="#voice-samples">Sesleri dinleyin</a>
+                <a href="#voice-chooser">Sağlayıcı seçin</a>
+                <a href="#problems">Sorunları giderme</a>
+                <a href="#provider-settings">Sağlayıcı ayarları</a>
+                <a href="#more">Daha fazlası</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="setup">5 adımda kurun</h2>
+                <p><strong>Henüz sohbet bağlanmadı mı?</strong> <a href="getting-started.html">Buradan başlayın</a> öncelikle.</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>Şunu açın: <strong>SSN uzantısı açılır penceresi</strong>, veya <strong>Kaynaklar ve ayarlar</strong> masaüstü uygulamasında.</li>
+                        <li>Şu bölümde: <strong>Ana sohbet katmanı ve kontrol paneli</strong>, şunu genişletin: <strong>Mesaj – Metinden Konuşmaya</strong>.</li>
+                        <li>Açın: <strong>Gelen mesajları sesli oku</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <a href="../../docs/images/guides/tts-enable-dock-popup.png"><img src="../../docs/images/guides/tts-enable-dock-popup.png" alt="Gerçek açılır pencere: Mesaj — Metinden Konuşma; Panelde TTS&#x27;yi etkinleştir açık" class="guide-image"></a>
+                        <figcaption>Mavi anahtar = sohbet okuma açık.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps" start="4">
+                        <li>Şuraya kaydırın: <strong>Metinden Konuşmaya Hizmet Sağlayıcısı</strong>. Şunu seçin: <strong>Piper TTS</strong>, ardından bir ses.</li>
+                        <li>Tıklayın: <strong>bağlantıyı kopyala</strong> şunun yanındaki: <strong>Ana sohbet katmanı ve kontrol paneli</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <a href="../../docs/images/guides/tts-select-provider-popup.png"><img src="../../docs/images/guides/tts-select-provider-popup.png" alt="Gerçek açılır pencere: İngilizce ABD Kadın HFC Orta sesiyle Piper TTS seçili" class="guide-image" loading="lazy"></a>
+                        <figcaption>Piper ücretsizdir. Hesap veya API anahtarı gerekmez.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>İlk kez mi?</strong> Piper sesi ilk kullanımda indirir. Biraz bekleyin.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="obs-voices">OBS'de çalın</h2>
+                <ol class="guide-steps">
+                    <li>Şunu ekleyin: <strong>Tarayıcı Kaynağı</strong> ve kopyaladığınız bağlantıyı yapıştırın.</li>
+                    <li>Özelliklerinde şunu açın: <strong>Sesi OBS üzerinden denetle</strong>.</li>
+                    <li>Bir sohbet mesajı gönderin. Kaynağın ses seviye göstergesi hareket etmelidir.</li>
+                    <li>Kısa bir test kaydı yapıp dinleyin.</li>
+                </ol>
+                <div class="guide-note"><strong>Kendiniz duymak ister misiniz?</strong> OBS'de <strong>Gelişmiş Ses Özellikleri</strong>, bu kaynağı şuna ayarlayın: <strong>İzle ve Çıkış Ver</strong>.</div>
+                <div class="warning-note"><strong>Her mesajı iki kez mi duyuyorsunuz?</strong> Sohbeti yalnızca bir sayfa okumalıdır. Diğer tüm yerlerde TTS'yi kapatın.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-samples">Ücretsiz sesleri dinleyin</h2>
+                <p>Dördü de ücretsizdir ve bilgisayarınızda çalışır. Karşılaştırmak için oynat düğmesine basın.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper</h3><p>ABD İngilizcesi, kadın. Hafif ve hızlı.<br><code>en_US-hfc_female-medium</code></p><audio controls preload="none" aria-label="Piper ses örneği"><source src="../../docs/audio/tts/piper-hfc.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-hfc.mp3">Piper örneğini indir</a></audio><p><a href="#settings-piper">Ayarlar ve sesler</a></p></div>
+<div class="tts-preview"><h3>Kokoro</h3><p>Bella, ABD İngilizcesi, kadın. En doğal seçenek, ancak CPU'da daha yavaş.<br><code>af_bella</code></p><audio controls preload="none" aria-label="Kokoro ses örneği"><source src="../../docs/audio/tts/kokoro-bella.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-bella.mp3">Kokoro örneğini indir</a></audio><p><a href="#settings-kokoro">Ayarlar ve sesler</a></p></div>
+<div class="tts-preview"><h3>Kitten</h3><p>Ses 4, kadın. Küçük İngilizce model.<br><code>expr-voice-4-f</code></p><audio controls preload="none" aria-label="Kitten ses örneği"><source src="../../docs/audio/tts/kitten-4f.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kitten-4f.mp3">Kitten örneğini indir</a></audio><p><a href="#settings-kitten">Ayarlar ve sesler</a></p></div>
+<div class="tts-preview"><h3>eSpeak</h3><p>İngilizce. Robotik, ancak çok küçük ve hızlı.<br><code>en</code></p><audio controls preload="none" aria-label="eSpeak ses örneği"><source src="../../docs/audio/tts/espeak-en.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/espeak-en.mp3">eSpeak örneğini indir</a></audio><p><a href="#settings-espeak">Ayarlar ve sesler</a></p></div>
+                </div>
+                <details class="guide-extra"><summary>İspanyolca ve Portekizce örnekler</summary>
+                <p>SSN'de ses listesinin üstünden bir dil seçin, ardından şuna basın: <strong>Test</strong>. Piper, İspanya, Meksika, Brezilya ve Portekiz sesleri sunar. Kokoro'da üç İspanyolca ve üç Brezilya Portekizcesi ses bulunur.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper - İspanyolca (İspanya)</h3><p>DaveFX</p><audio controls preload="none" aria-label="Piper - İspanyolca (İspanya) örneği"><source src="../../docs/audio/tts/piper-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-spanish.mp3">Örneği indir</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - İspanyolca</h3><p>Dora</p><audio controls preload="none" aria-label="Kokoro - İspanyolca örneği"><source src="../../docs/audio/tts/kokoro-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-spanish.mp3">Örneği indir</a></audio></div>
+<div class="tts-preview"><h3>Piper - Portekizce (Brezilya)</h3><p>Faber</p><audio controls preload="none" aria-label="Piper - Portekizce (Brezilya) örneği"><source src="../../docs/audio/tts/piper-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-portuguese.mp3">Örneği indir</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - Portekizce (Brezilya)</h3><p>Dora</p><audio controls preload="none" aria-label="Kokoro - Portekizce (Brezilya) örneği"><source src="../../docs/audio/tts/kokoro-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-portuguese.mp3">Örneği indir</a></audio></div>
+                </div>
+                <p>Piper daha hafif seçenektir. Kokoro sohbetin gerisinde kalırsa Piper'a geçin.</p>
+                </details>
+                <details class="guide-extra"><summary>Bu örnekler nasıl oluşturuldu</summary>
+                <p>İngilizce örneklerde şu metin okunur: <em>Yayına hoş geldiniz! Bize katıldığınız için teşekkürler. Sırada hangi oyunu oynayalım?</em> İsim okuma kapalıydı. Klipler yükleme süresini içermez.</p>
+                <p>7 Eylül 2026'da Windows 11 üzerinde OBS 32.2.2 ile test edildi. Gerçek bir sohbet mesajı panele ulaştı, sesli okundu, Tarayıcı Kaynağı göstergesini hareket ettirdi ve kayda girdi. Kokoro'nun CPU'da başlaması belirgin biçimde daha uzun sürdü.</p>
+                <p>O bilgisayarda Sistem TTS'si beş ses listeliyor, ancak OBS kaydında ses üretmiyordu. Bilgisayarınız farklı olabilir; bu yüzden kendi bağlantınızı mutlaka test edin. Bulut sesleri test edilmedi (ücretli hesap yoktu).</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-chooser">Sağlayıcı seçin</h2>
+                <p><strong>Piper ile başlayın.</strong> Sesini daha çok beğeniyorsanız Kokoro'yu deneyin. Ücretsiz sesler bilgisayarınızda çalışır. Bulut sesleri hesap ve API anahtarı gerektirir; sohbet metniniz ilgili şirkete gönderilir.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Sağlayıcı</th><th>Uygun olduğu durumlar</th><th>Aklınızda bulunsun</th><th>Maliyet</th></tr></thead><tbody>
+<tr><td data-label="Sağlayıcı"><a href="#settings-piper">Piper</a></td><td data-label="Uygun olduğu durumlar">Doğal sesler; İngilizce, İspanyolca, Portekizce.</td><td data-label="Aklınızda bulunsun">Kalite sese göre değişir. HFC medium yaklaşık 63 MB'tır.</td><td data-label="Maliyet">Ücretsiz, anahtar gerekmez</td></tr>
+<tr><td data-label="Sağlayıcı"><a href="#settings-kokoro">Kokoro</a></td><td data-label="Uygun olduğu durumlar">En doğal ücretsiz sesler; İngilizce, İspanyolca, Brezilya Portekizcesi.</td><td data-label="Aklınızda bulunsun">CPU'ya daha fazla yük bindirir. İlk konuşma yavaş başlayabilir. Desteklenen GPU ile daha hızlıdır.</td><td data-label="Maliyet">Ücretsiz, anahtar gerekmez</td></tr>
+<tr><td data-label="Sağlayıcı"><a href="#settings-kitten">Kitten</a></td><td data-label="Uygun olduğu durumlar">Küçük İngilizce model, sekiz ses.</td><td data-label="Aklınızda bulunsun">Yalnızca İngilizce. Dahil edilen model yaklaşık 24 MB'tır.</td><td data-label="Maliyet">Ücretsiz, anahtar gerekmez</td></tr>
+<tr><td data-label="Sağlayıcı"><a href="#settings-espeak">eSpeak</a></td><td data-label="Uygun olduğu durumlar">Çok hafif, birçok dili destekler, hızlı başlar.</td><td data-label="Aklınızda bulunsun">Bilerek robotik ses çıkarır.</td><td data-label="Maliyet">Ücretsiz, anahtar gerekmez</td></tr>
+<tr><td data-label="Sağlayıcı"><a href="#settings-system">Sistem TTS</a></td><td data-label="Uygun olduğu durumlar">Tarayıcınızda veya bilgisayarınızda zaten bulunan sesler.</td><td data-label="Aklınızda bulunsun">OBS'de çoğunlukla sessiz kalır. Bazı sesler internet gerektirir.</td><td data-label="Maliyet">Ücretsiz</td></tr>
+<tr><td data-label="Sağlayıcı"><a href="#settings-elevenlabs">ElevenLabs</a></td><td data-label="Uygun olduğu durumlar">Sesleri kimliğe göre seçin; kararlılık ve üslup kontrolleri.</td><td data-label="Aklınızda bulunsun">Hesap sınırları ve ağ gecikmesi.</td><td data-label="Maliyet">API ücretleri uygulanabilir</td></tr>
+<tr><td data-label="Sağlayıcı"><a href="#settings-google">Google Cloud</a></td><td data-label="Uygun olduğu durumlar">Adlandırılmış sesler; dil, hız ve perde.</td><td data-label="Aklınızda bulunsun">Her ses tüm kontrolleri desteklemez. Cloud TTS API etkinleştirilmiş olmalıdır.</td><td data-label="Maliyet">Ücretlendirme ve kotalar geçerlidir</td></tr>
+<tr><td data-label="Sağlayıcı"><a href="#settings-gemini">Gemini</a></td><td data-label="Uygun olduğu durumlar">Ses stilleri ve yazılı söyleyiş yönergeleri.</td><td data-label="Aklınızda bulunsun">Önizleme modelleri ve kotalar değişebilir.</td><td data-label="Maliyet">Gemini sınırlarınızı kontrol edin</td></tr>
+<tr><td data-label="Sağlayıcı"><a href="#settings-fish">Fish Audio</a></td><td data-label="Uygun olduğu durumlar">Kendi anahtarınızla ücretsiz model; ses kimlikleri.</td><td data-label="Aklınızda bulunsun">OBS için SSN'nin yerel köprüsü gerekir.</td><td data-label="Maliyet">Ücretsiz kullanım sınırlarını Fish Audio belirler</td></tr>
+<tr><td data-label="Sağlayıcı"><a href="#settings-speechify">Speechify</a></td><td data-label="Uygun olduğu durumlar">Hız, dil ve model ile ses kimliği.</td><td data-label="Aklınızda bulunsun">Sesler hesabınıza bağlıdır.</td><td data-label="Maliyet">API koşulları geçerlidir</td></tr>
+<tr><td data-label="Sağlayıcı"><a href="#settings-openai">OpenAI</a></td><td data-label="Uygun olduğu durumlar">Adlandırılmış sesler, model ve biçim kontrolleri.</td><td data-label="Aklınızda bulunsun">ChatGPT aboneliğine API kredisi dahil değildir.</td><td data-label="Maliyet">API faturalandırması</td></tr>
+<tr><td data-label="Sağlayıcı"><a href="#settings-customtts">Özel / Yerel</a></td><td data-label="Uygun olduğu durumlar">Kendi ses sunucunuz.</td><td data-label="Aklınızda bulunsun">En fazla kurulum gerektiren seçenek. Şuna bakın: <a href="local-tts.html">yerel sunucu rehberi</a>.</td><td data-label="Maliyet">Kendi donanımınız veya barındırma hizmetiniz</td></tr>
+</tbody></table>
+                <details class="guide-extra"><summary>İndirme boyutları ve OBS test notları</summary>
+                <p>Boyutlar yalnızca model dosyalarına aittir; bellek kullanımını göstermez. Ücretsiz sesler paneli veya kaplamayı oynatan bilgisayarda çalışır. İlk kullanım daha yavaştır. OBS, Chrome'dan ayrı olarak kendi indirme önbelleğini tutar.</p>
+                <p>Piper, Kokoro, Kitten ve eSpeak, OBS Tarayıcı Kaynağı kayıt testlerini geçti. Bulut ve özel sesler de sayfa üzerinden çalınır, ancak canlı hesaplarla test edilmedi. Sesleri listelese bile Sistem TTS'sini ayrıca test edin.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">Sorunları giderme</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Sorun</th><th>Şunu deneyin</th></tr></thead>
+                    <tbody>
+                        <tr id="chat-platforms"><td data-label="Sorun">Sohbet platformum TTS destekliyor mu?</td><td data-label="Şunu deneyin">Evet, SSN sohbeti metin olarak alıyorsa. YouTube, Twitch, TikTok ve diğerleri aynı şekilde çalışır. Platformun kendi TTS özelliğine sahip olması gerekmez.</td></tr>
+                        <tr><td data-label="Sorun">Hiç konuşma yok</td><td data-label="Şunu deneyin">Panelde sohbetin göründüğünü doğrulayın. Ardından TTS anahtarını, sağlayıcıyı ve filtreleri kontrol edin. Yeni kopyalanmış bir bağlantı kullanın. İlk sesin indirilmesinin bitmesini bekleyin.</td></tr>
+                        <tr><td data-label="Sorun">Chrome veya Edge'de çalışıyor, OBS'de çalışmıyor</td><td data-label="Şunu deneyin">OBS'nin kendi tarayıcısı ve ses listesi vardır. Sistem TTS'si burada sıklıkla çalışmaz. Piper, Kokoro, Kitten veya eSpeak'e geçin. Sanal ses kablosu üretilmeyen konuşmayı düzeltemez.</td></tr>
+                        <tr><td data-label="Sorun">Seviye göstergesi hareket ediyor ama kayıtta ses yok</td><td data-label="Şunu deneyin">OBS'de sessiz durumunu ve kayıt ses izlerini kontrol edin. İzleme çıkışını ikinci kez yakalamayın. Şuna bakın: <a href="https://obsproject.com/kb/audio-mixer-guide">OBS ses rehberi</a>.</td></tr>
+                        <tr><td data-label="Sorun">Konuşma sohbetin gerisinde kalıyor</td><td data-label="Şunu deneyin">Kokoro'dan Piper'a geçin veya eSpeak'i deneyin.</td></tr>
+                        <tr><td data-label="Sorun">Her mesaj iki kez okunuyor</td><td data-label="Şunu deneyin">Birden fazla sayfa konuşuyor. TTS'yi yalnızca tek bir yerde açık bırakın.</td></tr>
+                        <tr><td data-label="Sorun">Bunun yerine bir OBS panelinin veya Öne Çıkan Sohbet'in konuşmasını istiyorum</td><td data-label="Şunu deneyin">OBS Özel Tarayıcı Paneli bir kontrol panelidir; sahne kaynağı değildir. Öne Çıkan Sohbet için TTS'yi o kaplamanın kendi seçeneklerinden açıp bağlantısını kopyalayın.</td></tr>
+                    </tbody>
+                </table>
+                <p>Diğer çözümler: <a href="tts.html#troubleshooting">TTS başvuru rehberi</a> &middot; <a href="local-tts.html#troubleshooting">yerel sunucu sorunları</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="provider-settings">Sağlayıcı ayarları</h2>
+                <p>Yeni profille masaüstü uygulamasından alınmış gerçek ekran görüntüleri (anahtar alanları boş bırakılmıştır). Ayarlarını görmek için bir sağlayıcıyı açın. Büyütmek için ekran görüntüsüne tıklayın.</p>
+<details class="guide-extra" id="settings-system"><summary>Sistem TTS</summary><p>Ses listesi tarayıcınıza veya uygulamanıza ve kurulu seslere bağlıdır. Sabit bir SSN listesi yoktur. Bu yeni profilde dil listesi boş görünüyordu.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-system.png"><img src="../../docs/images/guides/tts-settings-system.png" alt="Gerçek SSN Sistem TTS sağlayıcı ayarları" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-kokoro"><summary>Kokoro</summary><p>Bir ses seçin. Bulmak için dil filtresini kullanın ve <strong>Test</strong> ile dinleyin. Model konuşmayı üreten sayfada yüklenir. Sesler: ABD ve Birleşik Krallık İngilizcesi, İspanyolca, Brezilya Portekizcesi. Çok mu yavaş? Piper'ı deneyin.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kokoro.png"><img src="../../docs/images/guides/tts-settings-kokoro.png" alt="Gerçek SSN Kokoro sağlayıcı ayarları" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Ses adları ve bağlantı değerleri</summary><ul class="guide-list">
+<li>Heart (Amerikalı Kadın) — <code>af_heart</code></li>
+<li>Alloy (Amerikalı Kadın) — <code>af_alloy</code></li>
+<li>Aoede (Amerikalı Kadın) — <code>af_aoede</code></li>
+<li>Bella (Amerikalı Kadın) — <code>af_bella</code></li>
+<li>Jessica (Amerikalı Kadın) — <code>af_jessica</code></li>
+<li>Kore (Amerikalı Kadın) — <code>af_kore</code></li>
+<li>Nicole (Amerikalı Kadın) — <code>af_nicole</code></li>
+<li>Nova (Amerikalı Kadın) — <code>af_nova</code></li>
+<li>River (Amerikalı Kadın) — <code>af_river</code></li>
+<li>Sarah (Amerikalı Kadın) — <code>af_sarah</code></li>
+<li>Sky (Amerikalı Kadın) — <code>af_sky</code></li>
+<li>Adam (Amerikalı Erkek) — <code>am_adam</code></li>
+<li>Echo (Amerikalı Erkek) — <code>am_echo</code></li>
+<li>Eric (Amerikalı Erkek) — <code>am_eric</code></li>
+<li>Fenrir (Amerikalı Erkek) — <code>am_fenrir</code></li>
+<li>Liam (Amerikalı Erkek) — <code>am_liam</code></li>
+<li>Michael (Amerikalı Erkek) — <code>am_michael</code></li>
+<li>Onyx (Amerikalı Erkek) — <code>am_onyx</code></li>
+<li>Puck (Amerikalı Erkek) — <code>am_puck</code></li>
+<li>Santa (Amerikalı Erkek) — <code>am_santa</code></li>
+<li>Emma (Britanyalı Kadın) — <code>bf_emma</code></li>
+<li>Isabella (Britanyalı Kadın) — <code>bf_isabella</code></li>
+<li>George (Britanyalı Erkek) — <code>bm_george</code></li>
+<li>Lewis (Britanyalı Erkek) — <code>bm_lewis</code></li>
+<li>Alice (Britanyalı Kadın) — <code>bf_alice</code></li>
+<li>Lily (Britanyalı Kadın) — <code>bf_lily</code></li>
+<li>Daniel (Britanyalı Erkek) — <code>bm_daniel</code></li>
+<li>Fable (Britanyalı Erkek) — <code>bm_fable</code></li>
+<li>Dora (İspanyolca): <code>ef_dora</code></li>
+<li>Alex (İspanyolca): <code>em_alex</code></li>
+<li>Santa (İspanyolca): <code>em_santa</code></li>
+<li>Dora (Brezilya Portekizcesi): <code>pf_dora</code></li>
+<li>Alex (Brezilya Portekizcesi): <code>pm_alex</code></li>
+<li>Santa (Brezilya Portekizcesi): <code>pm_santa</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-kitten"><summary>Kitten</summary><p>Sekiz İngilizce ses: 2, 3, 4 ve 5 numaralı seslerin erkek ve kadın sürümleri. Örnekte Ses 4 (Kadın) kullanılır.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kitten.png"><img src="../../docs/images/guides/tts-settings-kitten.png" alt="Gerçek SSN Kitten sağlayıcı ayarları" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Ses adları ve bağlantı değerleri</summary><ul class="guide-list">
+<li>Ses 2 (Erkek) — <code>expr-voice-2-m</code></li>
+<li>Ses 2 (Kadın) — <code>expr-voice-2-f</code></li>
+<li>Ses 3 (Erkek) — <code>expr-voice-3-m</code></li>
+<li>Ses 3 (Kadın) — <code>expr-voice-3-f</code></li>
+<li>Ses 4 (Erkek) — <code>expr-voice-4-m</code></li>
+<li>Ses 4 (Kadın) — <code>expr-voice-4-f</code></li>
+<li>Ses 5 (Erkek) — <code>expr-voice-5-m</code></li>
+<li>Ses 5 (Kadın) — <code>expr-voice-5-f</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-piper"><summary>Piper</summary><p>Dilinizle eşleşen bir ses seçin. Yalnızca dili değiştirmek sesi değiştirmez. Örnekte HFC medium kullanılır.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-piper.png"><img src="../../docs/images/guides/tts-settings-piper.png" alt="Gerçek SSN Piper sağlayıcı ayarları" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Ses adları ve bağlantı değerleri</summary><ul class="guide-list">
+<li>İngilizce ABD Kadın (HFC) - Orta — <code>en_US-hfc_female-medium</code></li>
+<li>İspanya İspanyolcası (DaveFX) - Orta — <code>es_ES-davefx-medium</code></li>
+<li>Meksika İspanyolcası (Ald) - Orta — <code>es_MX-ald-medium</code></li>
+<li>Brezilya Portekizcesi (Faber) - Orta — <code>pt_BR-faber-medium</code></li>
+<li>Brezilya Portekizcesi (Edresson) - Düşük — <code>pt_BR-edresson-low</code></li>
+<li>Portekiz Portekizcesi (Tugao) - Orta — <code>pt_PT-tug&atilde;o-medium</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-espeak"><summary>eSpeak</summary><p>Bir dil sesi seçin. Konuşma hızını değiştirebilirsiniz. Tasarımı gereği robotik ses çıkarır.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-espeak.png"><img src="../../docs/images/guides/tts-settings-espeak.png" alt="Gerçek SSN eSpeak sağlayıcı ayarları" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Ses adları ve bağlantı değerleri</summary><ul class="guide-list">
+<li>İngilizce — <code>en</code></li>
+<li>İspanyolca — <code>es</code></li>
+<li>Brezilya Portekizcesi — <code>pt-br</code></li>
+<li>Portekiz Portekizcesi — <code>pt-pt</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-elevenlabs"><summary>ElevenLabs</summary><p>API anahtarınızı girin. Ardından şuna tıklayın: <strong>Kullanabileceğim Sesleri Listele</strong> ile hesabınızın kullanabileceği bir ses kimliği bulun. <a href="https://elevenlabs.io/docs/api-reference/text-to-speech/convert">ElevenLabs başvuru kılavuzu</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-elevenlabs.png"><img src="../../docs/images/guides/tts-settings-elevenlabs.png" alt="Gerçek SSN ElevenLabs sağlayıcı ayarları" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-google"><summary>Google Cloud</summary><p>Google Cloud TTS API anahtarını, tam ses adını ve onunla eşleşen dili girin. <a href="https://cloud.google.com/text-to-speech/docs/voices">Ses adları ve desteklenen kontroller</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-google.png"><img src="../../docs/images/guides/tts-settings-google.png" alt="Gerçek SSN Google Cloud sağlayıcı ayarları" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-gemini"><summary>Gemini</summary><p>Bir TTS modeli ve ses seçin. Üslup talimatları metnin nasıl okunacağını değiştirir. Bu seçenek Google Cloud TTS'yi değil, Gemini API'sini kullanır. <a href="https://ai.google.dev/gemini-api/docs/speech-generation">Ses örnekleri ve gereksinimleri</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-gemini.png"><img src="../../docs/images/guides/tts-settings-gemini.png" alt="Gerçek SSN Gemini sağlayıcı ayarları" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-fish"><summary>Fish Audio</summary>
+<p>Sohbet panelinde, öne çıkan sohbet kaplamasında, TTS sayfasında ve Flow Actions içinde çalışır.</p>
+<ol class="guide-steps">
+<li>Seçin: <strong>Fish Audio</strong> seçeneğini TTS sağlayıcısı olarak seçin.</li>
+<li>Şunu yapıştırın: <a href="https://fish.audio/app/api-keys">Fish Audio API anahtarı</a>.</li>
+<li>İsteğe bağlı: şunu yapıştırın: <strong>Ses Kimliği</strong> şuradan: <a href="https://fish.audio/">Fish Audio</a>. Sesin adını veya sayfa bağlantısını değil model ID'sini kopyalayın. Varsayılan ses için boş bırakın.</li>
+<li>Basın <strong>TTS'yi Test Et</strong>.</li>
+</ol>
+<p>Varsayılan model: <code>s2.1-pro-free</code>. Ücretsiz seçenekleri ve adil kullanım koşullarını Fish Audio belirler. Ücretli modeller kredi gerektirir. Ücretsiz istek başarısız olursa SSN ücretli modele geçmez. Hız 0,5 ile 2 arasındadır. Dili Fish Audio algılar. Sohbet metniniz Fish Audio'ya gönderilir.</p>
+<h4>OBS için: yerel köprüyü çalıştırın</h4>
+<p>Fish Audio, web sayfalarından doğrudan istekleri engeller. Bu nedenle OBS için SSN'nin şu bileşeni gerekir: <a href="../../local-tts-bridge/README.md#fish-audio-for-obs">yerel köprü</a> (Node.js gerekir). OBS bilgisayarında çalıştırın.</p>
+<ol class="guide-steps">
+<li>Şunu ayarlayın: <code>SSN_TTS_TARGET_BEARER</code> ortam değişkenini Fish API anahtarınıza ayarlayın.</li>
+<li>SSN klasöründe şunu çalıştırın: <code>node scripts/local-tts-bridge.cjs --mode fish</code>. Çalışır durumda bırakın.</li>
+<li>Fish Audio panelinde şunu ayarlayın: <strong>Köprü URL'si</strong> şu değere: <code>http://127.0.0.1:8124/v1/audio/speech</code>.</li>
+<li>Terminalde gösterilen köprü belirtecini şu alana yapıştırın: <strong>API Anahtarı</strong> alanı.</li>
+<li>Sesi test edin, ardından kaplama bağlantısını OBS'ye ekleyin. Şunu açın: <strong>Sesi OBS üzerinden denetle</strong>.</li>
+</ol>
+<div class="warning-note"><strong>Köprü her yeniden başlatıldığında belirteç değişir.</strong> Aynı kalmasını sağlamak için şunu ayarlayın: <code>SSN_TTS_BRIDGE_TOKEN</code> değerini uzun ve rastgele bir gizli anahtara ayarlayın. Belirteç veya anahtar içeren bağlantıları gizli tutun.</div>
+<details class="guide-extra"><summary>Fish Audio bağlantı ayarları</summary>
+<pre>&amp;ttsprovider=fish&amp;fishkey=YOUR_KEY&amp;voicefish=VOICE_ID&amp;fishmodel=s2.1-pro-free&amp;fishspeed=1</pre>
+<p>Köprüyle birlikte şunu ekleyin: <code>&amp;fishendpoint=http%3A%2F%2F127.0.0.1%3A8124%2Fv1%2Faudio%2Fspeech</code>. Şunu eklemeyin: <code>fishkey</code> köprü anahtarınızı saklıyorsa. Event Flow'un <strong>Metni Seslendir</strong> ses geçersiz kılma ayarı, alıcı sayfa Fish Audio kullanıyorsa Fish ses kimliğini kabul eder.</p>
+<p><a href="https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech">Fish Audio API başvuru kaynağı</a> &middot; <a href="https://fish.audio/blog/s2-1-pro-free-api/">Ücretsiz model duyurusu ve koşulları</a></p>
+</details>
+</details>
+<details class="guide-extra" id="settings-speechify"><summary>Speechify</summary><p>Speechify API hesabınızdan API anahtarını ve ses kimliğini girin. <a href="speechify-setup-guide.html"><strong>Adım adım Speechify kılavuzu</strong></a> &middot; <a href="https://docs.speechify.ai/docs/get-started/overview">Speechify kurulumu</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-speechify.png"><img src="../../docs/images/guides/tts-settings-speechify.png" alt="Gerçek SSN Speechify sağlayıcı ayarları" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-openai"><summary>OpenAI</summary><p>Bir ses ve model seçip API anahtarı girin. ChatGPT aboneliği API kredisi sağlamaz. Varsayılan uç noktayı koruyun.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-openai.png"><img src="../../docs/images/guides/tts-settings-openai.png" alt="Gerçek SSN OpenAI sağlayıcı ayarları" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-customtts"><summary>Özel / Yerel TTS</summary><p>Bu seçenek OpenAI ayarlarını yeniden kullanır; bu yüzden başlık hâlâ OpenAI'dır. Sunucunuzun adresini ve desteklediği bir ses ile modeli girin. Anahtar gerekip gerekmediği sunucunuza bağlıdır. Şuna bakın: <a href="local-tts.html">yerel sunucu rehberi</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-customtts.png"><img src="../../docs/images/guides/tts-settings-customtts.png" alt="Gerçek SSN Özel / Yerel TTS sağlayıcı ayarları" class="guide-image" loading="lazy"></a></figure>
+</details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="background-speech">Daha hızlı Kokoro ve Kitten</h2>
+                <p>Kokoro veya Kitten altında şunu açın: <strong>Üretim ve oynatma</strong>. Bu seçenekler konuşmayı arka planda üretir ve sayfanın akıcı çalışmasını sağlar.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Şunu yapmak istiyorum…</th><th>Yapılacak işlem</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Şunu yapmak istiyorum">Kokoro için açın</td><td data-label="Yapılacak işlem">Şunu ayarlayın: <strong>İşleme</strong> şu değere: <strong>Arka planda üretim</strong>.</td></tr>
+                        <tr><td data-label="Şunu yapmak istiyorum">Kitten için açın</td><td data-label="Yapılacak işlem">Şunu seçin: <strong>Kitten 0.8</strong> model: Nano (en küçük), Micro veya Mini.</td></tr>
+                        <tr><td data-label="Şunu yapmak istiyorum">Konuşmayı daha erken duyun</td><td data-label="Yapılacak işlem"><strong>Konuşma geldikçe başlat</strong>. Her bölüm hazır olduğunda çalınır. Yavaş bilgisayarlarda bölümler arasında duraklama olabilir.</td></tr>
+                        <tr><td data-label="Şunu yapmak istiyorum">Boşlukları önleyin</td><td data-label="Yapılacak işlem"><strong>Mesajın tamamını çal</strong>. Önce mesajın tamamının hazır olmasını bekler.</td></tr>
+                        <tr><td data-label="Şunu yapmak istiyorum">GPU sorunlarını giderin (Kokoro)</td><td data-label="Yapılacak işlem">Şunu ayarlayın: <strong>Arka plan işlemcisi</strong> şu değere: <strong>CPU</strong>.</td></tr>
+                        <tr><td data-label="Şunu yapmak istiyorum">En iyi Kokoro kalitesi</td><td data-label="Yapılacak işlem"><strong>Tam kalite</strong>. Daha büyük indirme, daha fazla bellek.</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra"><summary>Ayrıntılar ve bağlantı ayarları</summary>
+                <p><strong>Otomatik</strong> varsa desteklenen GPU'yu, yoksa CPU'yu kullanır. Otomatik kalite, uyumlu GPU'larda FP16'yı, desteklenen diğer GPU'larda tam hassasiyeti, CPU'da ise küçük modeli seçer. GPU kullanımını zorlayıp kullanılabilir GPU yoksa hata alırsınız.</p>
+                <p>Kitten 0.8 CPU'da çalışır ve yalnızca İngilizceyi destekler. Her model ilk kullanımda indirilir. Her tarayıcı veya OBS kendi kopyasını tutar. Her iki durumda da NeuroSync tam ses dosyasını alır. Bu seçenekleri değiştirmediğiniz sürece eski bağlantılar eskisi gibi çalışır.</p>
+                <p>Kokoro: <code>&amp;kokororuntime=worker</code>, isteğe bağlı <code>&amp;kokoroplayback=stream</code>, <code>&amp;kokorodevice=wasm</code> veya <code>webgpu</code>, <code>&amp;kokorodtype=q8</code>, <code>fp16</code> veya <code>fp32</code>. Akış veya FP32 seçildiğinde arka planda üretim otomatik açılır.</p>
+                <p>Kitten: <code>&amp;kittenmodel=nano</code> (veya <code>micro</code>, <code>mini</code>), isteğe bağlı <code>&amp;kittenplayback=stream</code>.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="more">Daha fazlası</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Şunu yapmak istiyorum…</th><th>Buraya gidin</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Şunu yapmak istiyorum">TTS bağlantımı elle düzenlemek veya tüm seçenekleri görmek istiyorum</td><td data-label="Buraya gidin"><a href="tts.html">TTS başvuru rehberi</a></td></tr>
+                        <tr><td data-label="Şunu yapmak istiyorum">Bağlantıda İspanyolca veya Portekizce sesler kullanın</td><td data-label="Buraya gidin"><a href="tts.html#premium-options">TTS başvuru kılavuzu: sağlayıcı seçenekleri</a></td></tr>
+                        <tr id="local-server"><td data-label="Şunu yapmak istiyorum">Kendi ses sunucumu çalıştırmak veya ses klonlamak istiyorum</td><td data-label="Buraya gidin"><a href="local-tts.html">Yerel yapay zekâ TTS kılavuzu</a></td></tr>
+                        <tr><td data-label="Şunu yapmak istiyorum">Speechify'ı kurun</td><td data-label="Buraya gidin"><a href="speechify-setup-guide.html">Speechify kılavuzu</a></td></tr>
+                    </tbody>
+                </table>
+                <p>Deneyebileceğiniz kısa bir bağlantı: <code>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=piper</code></p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 Lisansı.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function revealGuideSection() {
+            var target;
+            try { target = document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { return; }
+            if (!target) return;
+            for (var node = target; node; node = node.parentElement) {
+                if (node.tagName === "DETAILS") node.open = true;
+            }
+            target.scrollIntoView();
+        }
+        window.addEventListener("hashchange", revealGuideSection);
+        revealGuideSection();
+    </script>
+</body>
+</html>

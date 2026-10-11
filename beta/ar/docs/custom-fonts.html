@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ar" data-site-root="../../" data-site-language="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ar/docs/custom-fonts.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ar_AR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ar/docs/custom-fonts.html">
+    <meta property="og:title" content="الخطوط المستضافة ذاتياً والتنسيق — Social Stream Ninja">
+    <meta property="og:description" content="تعرّف على كيفية استضافة الخطوط ذاتياً وتخصيص تراكبات Social Stream Ninja مثل dock.html وfeatured.html باستخدام CSS مخصص.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="شعار Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ar/docs/custom-fonts.html">
+    <meta name="twitter:title" content="الخطوط المستضافة ذاتياً والتنسيق — Social Stream Ninja">
+    <meta name="twitter:description" content="تعرّف على كيفية استضافة الخطوط ذاتياً وتخصيص تراكبات Social Stream Ninja مثل dock.html وfeatured.html باستخدام CSS مخصص.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="شعار Social Stream Ninja">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الخطوط المستضافة ذاتياً والتنسيق — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="تعرّف على كيفية استضافة الخطوط ذاتياً وتخصيص تراكبات Social Stream Ninja مثل dock.html وfeatured.html باستخدام CSS مخصص.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ar">
+<script id="ssn-site-language" type="application/json">{"language":"ar","page":"docs/custom-fonts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"التبديل إلى السمة الفاتحة","Switch to dark theme":"التبديل إلى السمة الداكنة","Light mode":"الوضع الفاتح","Dark mode":"الوضع الداكن","Open navigation menu":"فتح قائمة التنقل","Close navigation menu":"إغلاق قائمة التنقل","Copy this document as Markdown to the clipboard":"نسخ هذا المستند بصيغة Markdown إلى الحافظة","Copy Markdown":"نسخ Markdown","Copying…":"جارٍ النسخ…","Markdown copied":"تم نسخ Markdown","Copy failed":"تعذّر النسخ","Copy comprehensive Markdown for an AI assistant":"نسخ Markdown شامل لمساعد ذكاء اصطناعي","Copy this documentation page as Markdown for an AI assistant":"نسخ صفحة التوثيق هذه بصيغة Markdown لمساعد ذكاء اصطناعي"},"strings":{"(both pages support these).":"(تدعم الصفحتان هذه الخيارات).",", and":"، و",", and row colors (":"، وألوان الصفوف (",", or":"، أو",", plus the":"، إضافةً إلى",". The browser will fall back automatically if a glyph is missing.":". سيستخدم المتصفح الخط البديل تلقائياً عند غياب رمز.","1) Host your font files":"1) استضافة ملفات خطوطك","2) Build the CSS":"2) إعداد CSS","3) Apply it to dock.html or featured.html":"3) تطبيقه على dock.html أو featured.html","4) Tune the overlay text":"4) ضبط نص التراكب","5) Troubleshooting":"5) استكشاف المشكلات وإصلاحها","; mismatches are the most common issue.":"؛ فعدم التطابق هو المشكلة الأكثر شيوعاً.","API Reference":"مرجع API","About":"حول","Commands & API":"الأوامر وAPI","Community":"المجتمع","Contribute":"المساهمة","Core typography variables used by both pages:":"متغيرات تنسيق النص الأساسية التي تستخدمها الصفحتان:","Custom Overlays":"تراكبات مخصصة","Customization Guide":"دليل التخصيص","Define the font with":"عرّف الخط باستخدام","Discord":"Discord","Dock-only extras:":"إضافات خاصة بلوحة الإرساء:","Donate":"تبرّع","Download":"تنزيل","Durable options:":"خيارات دائمة:","Featured layout tweaks:":"تعديلات تخطيط الرسائل المميزة:","Features":"الميزات","For quick tests you can pass CSS directly with":"للاختبارات السريعة، يمكنك تمرير CSS مباشرةً باستخدام","GitHub":"GitHub","GitHub Pages, Cloudflare Pages, Netlify, your own web server.":"GitHub Pages أو Cloudflare Pages أو Netlify أو خادم الويب الخاص بك.","GitHub Repository":"مستودع GitHub","Guides":"الأدلة","Hire":"الاستعانة بخدمات المطوّر","Home":"الرئيسية","How to host .ttf, .otf, or .woff2 files yourself (no Google or system font required).":"كيفية استضافة ملفات .ttf أو .otf أو .woff2 بنفسك (دون الحاجة إلى خطوط Google أو النظام).","How to load those fonts in":"كيفية تحميل هذه الخطوط في","If the font does not appear, open the font URL directly in a browser to confirm it downloads and is served with HTTPS.":"إذا لم يظهر الخط، فافتح رابطه مباشرةً في المتصفح للتأكد من تنزيله وتقديمه عبر HTTPS.","Inline URL param:":"معامل URL مضمن:","Inspiration":"أفكار ملهمة","Join our Discord":"انضم إلى خادمنا على Discord","Keep font-family names consistent between the":"حافظ على تطابق أسماء font-family بين كتل","Learn how to self-host fonts and customize Social Stream Ninja overlays like dock.html and featured.html with custom CSS.":"تعرّف على كيفية استضافة الخطوط ذاتياً وتخصيص تراكبات Social Stream Ninja مثل dock.html وfeatured.html باستخدام CSS مخصص.","Main navigation":"التنقل الرئيسي","Need multiple fonts (for Armenian + Russian + Latin)? Declare each font-face and list them in":"تحتاج إلى عدة خطوط (للأرمنية والروسية واللاتينية)؟ عرّف كل font-face وأدرجها في","OBS Browser Source:":"مصدر متصفح OBS:","Only host fonts you are licensed to redistribute. WOFF2 files are smaller and load faster than TTF/OTF when available.":"استضف فقط الخطوط التي تملك ترخيص إعادة توزيعها. تكون ملفات WOFF2، عند توفرها، أصغر وأسرع تحميلاً من TTF/OTF.","Open navigation menu":"فتح قائمة التنقل","Open your dock/featured URL in OBS > Browser Source > Custom CSS and paste the CSS block above.":"افتح رابط dock/featured في OBS > مصدر المتصفح (Browser Source) > CSS مخصص (Custom CSS)، والصق كتلة CSS أعلاه.","Overlay Gallery":"معرض التراكبات","Pair CSS changes with existing URL options like":"اجمع تغييرات CSS مع خيارات URL الموجودة مثل","Privacy Policy":"سياسة الخصوصية","Product":"المنتج","Quick fallbacks if you want to keep using Google Fonts or installed system fonts.":"بدائل سريعة إذا أردت الاستمرار في استخدام Google Fonts أو خطوط النظام المثبتة.","Quick font switches:":"تبديل سريع للخطوط:","Quick options:":"خيارات سريعة:","Reload the OBS Browser Source or refresh the dock/featured tab after changing CSS so cached fonts are re-requested.":"أعد تحميل مصدر متصفح OBS أو حدّث علامة تبويب dock/featured بعد تغيير CSS لإعادة طلب الخطوط المخزنة مؤقتاً.","Report an Issue":"الإبلاغ عن مشكلة","Resources":"الموارد","Self-Hosted Fonts & Overlay Styling":"الخطوط المستضافة ذاتياً وتنسيق التراكبات","Self-Hosted Fonts & Styling - Social Stream Ninja":"الخطوط المستضافة ذاتياً والتنسيق — Social Stream Ninja","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja lets you capture, mix, and display chat from over 100 platforms in real time. Built by Steve Seguin.":"يتيح Social Stream Ninja التقاط الدردشة ودمجها وعرضها من أكثر من 100 منصة في الوقت الفعلي. من تطوير Steve Seguin.","Social Stream Ninja logo":"شعار Social Stream Ninja","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. ترخيص GPLv3.0. من إنشاء","Some hosts block hotlinking; switch to a host that allows direct file access or set the proper CORS headers.":"تمنع بعض الاستضافات الربط المباشر؛ انتقل إلى استضافة تسمح بالوصول المباشر إلى الملفات أو اضبط ترويسات CORS المناسبة.","Steve Seguin":"Steve Seguin","Support":"الدعم","Supported Sites":"المواقع المدعومة","Switch theme":"تبديل السمة","Templates":"القوالب","Terms of Service":"شروط الخدمة","The same":"التراكب نفسه","These options work the same in the Chrome extension, Electron app, and the hosted site because they all load the same":"تعمل هذه الخيارات بالطريقة نفسها في إضافة Chrome وتطبيق Electron والموقع المستضاف، لأنها جميعاً تحمّل ملفات","URL parameter (hosted CSS):":"معامل URL ‏(CSS مستضاف):","Upload the CSS to the same host as your fonts, then append":"ارفع CSS إلى الاستضافة نفسها لخطوطك، ثم أضف","Use":"استخدم","Use your own fonts with dock.html and featured.html, whether you load them in OBS Browser Source, the Chrome extension, or the desktop app.":"استخدم خطوطك الخاصة مع dock.html وfeatured.html، سواء حمّلتهما في مصدر متصفح OBS أو إضافة Chrome أو تطبيق سطح المكتب.","What this guide covers":"ما يغطيه هذا الدليل","Which CSS variables adjust text sizing and layout on both pages.":"متغيرات CSS التي تضبط حجم النص وتخطيطه في الصفحتين.","X":"X","You need a direct HTTPS link to the font file. Pick a host that allows hotlinking/CORS so the browser inside OBS or the app can fetch it.":"تحتاج إلى رابط HTTPS مباشر لملف الخط. اختر استضافة تسمح بالربط المباشر وCORS كي يستطيع المتصفح داخل OBS أو التطبيق جلبه.","adjust":"اضبط","and point it at your hosted file, then set the overlay to use it via":"ووجّهه إلى ملفك المستضاف، ثم اضبط التراكب لاستخدامه عبر","applied. Self-hosted fonts work the same way via":"مطبّقاً — تعمل الخطوط المستضافة ذاتياً بالطريقة نفسها عبر","blocks and":"و","catbox.moe, 0x0.st, file.io (short-lived).":"catbox.moe أو 0x0.st أو file.io (قصير الأجل).","featured.html overlay message rendered in the Pacifico font with an avatar and name tag":"رسالة في تراكب featured.html معروضة بخط Pacifico مع صورة رمزية ووسم اسم","files.":"نفسها.","like":"مثل","loads Google Fonts if you prefer not to self-host.":"يحمّل Google Fonts إذا كنت تفضل عدم الاستضافة الذاتية.","or":"أو","or base64 encode it with":"أو رمّزه بصيغة base64 باستخدام","overlay with":"مع","to confirm a system font is visible when testing":"للتأكد من ظهور خط نظام عند اختبار","to reposition the lower-third block without editing the HTML.":"لتغيير موضع كتلة الثلث السفلي دون تعديل HTML.","to the page URL:":"إلى رابط الصفحة:","uses a system font name, while":"يستخدم اسم خط نظام، بينما","using URL parameters or OBS custom CSS.":"باستخدام معاملات URL أو CSS المخصص في OBS.","variants).":"ومشتقاتها).","when you need layout adjustments in the dock.":"عندما تحتاج إلى تعديل تخطيط لوحة الإرساء.","with contributions from the community.":"بمساهمات من المجتمع."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/custom-fonts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/custom-fonts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/custom-fonts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/custom-fonts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/custom-fonts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/custom-fonts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/custom-fonts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/custom-fonts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/custom-fonts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/custom-fonts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/custom-fonts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/custom-fonts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/custom-fonts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/custom-fonts.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="التنقل الرئيسي"><a href="../index.html">الرئيسية</a><a href="features.html">الميزات</a><a href="inspiration.html" class="site-priority-inspiration">أفكار ملهمة</a><a href="download.html">تنزيل</a><a href="guides.html">الأدلة</a><a href="commands.html">الأوامر وAPI</a><a href="supported-sites.html">المواقع المدعومة</a><a href="overlay-gallery.html" class="site-priority-gallery">معرض التراكبات</a><a href="services.html" class="site-priority-hire">الاستعانة بخدمات المطوّر</a><a href="support.html">الدعم</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="العربية"><span aria-hidden="true">🌐 </span><span lang="ar">العربية</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/custom-fonts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/custom-fonts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/custom-fonts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/custom-fonts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/custom-fonts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/custom-fonts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/custom-fonts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/custom-fonts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/custom-fonts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/custom-fonts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/custom-fonts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/custom-fonts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/custom-fonts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="custom-fonts.html" lang="ar" hreflang="ar" aria-current="true">العربية</a><a class="site-language-link" href="../../tr/docs/custom-fonts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/custom-fonts.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/custom-fonts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="تبديل السمة"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="فتح قائمة التنقل" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>الخطوط المستضافة ذاتياً وتنسيق التراكبات</h1>
+            <p>استخدم خطوطك الخاصة مع dock.html وfeatured.html، سواء حمّلتهما في مصدر متصفح OBS أو إضافة Chrome أو تطبيق سطح المكتب.</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>ما يغطيه هذا الدليل</h3>
+                <ul class="guide-list">
+                    <li>كيفية استضافة ملفات .ttf أو .otf أو .woff2 بنفسك (دون الحاجة إلى خطوط Google أو النظام).</li>
+                    <li>كيفية تحميل هذه الخطوط في <code>dock.html</code> أو <code>featured.html</code> باستخدام معاملات URL أو CSS المخصص في OBS.</li>
+                    <li>متغيرات CSS التي تضبط حجم النص وتخطيطه في الصفحتين.</li>
+                    <li>بدائل سريعة إذا أردت الاستمرار في استخدام Google Fonts أو خطوط النظام المثبتة.</li>
+                </ul>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/custom-font-featured-demo.png" alt="رسالة في تراكب featured.html معروضة بخط Pacifico مع صورة رمزية ووسم اسم" class="guide-image">
+                    <figcaption>التراكب نفسه <code>featured.html</code> مع <code>&amp;googlefont=Pacifico</code> مطبّقاً — تعمل الخطوط المستضافة ذاتياً بالطريقة نفسها عبر <code>@font-face</code>.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>1) استضافة ملفات خطوطك</h3>
+                <p>تحتاج إلى رابط HTTPS مباشر لملف الخط. اختر استضافة تسمح بالربط المباشر وCORS كي يستطيع المتصفح داخل OBS أو التطبيق جلبه.</p>
+                <ul class="guide-list">
+                    <li><strong>خيارات سريعة:</strong> catbox.moe أو 0x0.st أو file.io (قصير الأجل).</li>
+                    <li><strong>خيارات دائمة:</strong> GitHub Pages أو Cloudflare Pages أو Netlify أو خادم الويب الخاص بك.</li>
+                    <li>استضف فقط الخطوط التي تملك ترخيص إعادة توزيعها. تكون ملفات WOFF2، عند توفرها، أصغر وأسرع تحميلاً من TTF/OTF.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h3>2) إعداد CSS</h3>
+                <p>عرّف الخط باستخدام <code>@font-face</code> ووجّهه إلى ملفك المستضاف، ثم اضبط التراكب لاستخدامه عبر <code>--font-family</code>.</p>
+                <div class="code-block">
+<pre>@font-face {
+  font-family: 'MyDockFont';
+  src: url('https://your-site.example/fonts/MyDockFont.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* Optional second weight */
+@font-face {
+  font-family: 'MyDockFont';
+  src: url('https://your-site.example/fonts/MyDockFont-Bold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+}
+
+:root {
+  --font-family: 'MyDockFont', 'Segoe UI', 'Arial Unicode MS', sans-serif;
+  --comment-font-size: 28px;
+  --author-font-size: 24px;
+  --message-line-height: 32px;
+}</pre>
+                </div>
+                <div class="guide-note">
+                    <p>تحتاج إلى عدة خطوط (للأرمنية والروسية واللاتينية)؟ عرّف كل font-face وأدرجها في <code>--font-family</code> مثل <code>'FontA', 'FontB', 'FontC', sans-serif</code>. سيستخدم المتصفح الخط البديل تلقائياً عند غياب رمز.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h3>3) تطبيقه على dock.html أو featured.html</h3>
+                <ul class="guide-list">
+                    <li><strong>مصدر متصفح OBS:</strong> افتح رابط dock/featured في OBS &gt; مصدر المتصفح (Browser Source) &gt; CSS مخصص (Custom CSS)، والصق كتلة CSS أعلاه.</li>
+                    <li><strong>معامل URL ‏(CSS مستضاف):</strong> ارفع CSS إلى الاستضافة نفسها لخطوطك، ثم أضف <code>&css=https://your-site.example/my-font.css</code> إلى رابط الصفحة:
+                        <div class="code-block"><pre>https://socialstream.ninja/dock.html?session=YOURSESSION&css=https://your-site.example/my-font.css
+https://socialstream.ninja/featured.html?session=YOURSESSION&css=https://your-site.example/my-font.css</pre></div>
+                    </li>
+                    <li><strong>معامل URL مضمن:</strong> للاختبارات السريعة، يمكنك تمرير CSS مباشرةً باستخدام <code>&css=</code> أو رمّزه بصيغة base64 باستخدام <code>&b64css=</code> (تدعم الصفحتان هذه الخيارات).</li>
+                    <li><strong>تبديل سريع للخطوط:</strong> <code>&font=YourInstalledFont</code> يستخدم اسم خط نظام، بينما <code>&googlefont=Noto+Sans+Armenian,Noto+Sans</code> يحمّل Google Fonts إذا كنت تفضل عدم الاستضافة الذاتية.</li>
+                </ul>
+                <div class="guide-note">
+                    <p>تعمل هذه الخيارات بالطريقة نفسها في إضافة Chrome وتطبيق Electron والموقع المستضاف، لأنها جميعاً تحمّل ملفات <code>dock.html</code>/<code>featured.html</code> نفسها.</p>
+                </div>
+			</div>
+
+			<div class="guide-card">
+				<h3>4) ضبط نص التراكب</h3>
+				<p>متغيرات تنسيق النص الأساسية التي تستخدمها الصفحتان:</p>
+				<div class="code-block">
+<pre>:root {
+  --font-family: 'MyDockFont', 'FontB', sans-serif;
+  --comment-font-size: 28px;  /* message text size */
+  --author-font-size: 24px;   /* name text size */
+  --comment-font-weight: 600; /* featured.html */
+  --author-font-weight: 700;  /* featured.html */
+  --message-font-weight: 500; /* dock.html */
+  --name-font-weight: 700;    /* dock.html */
+  --comment-color: #ffffff;
+  --author-color: #ffe08a;
+  --comment-bg-color: #161616;
+  --author-bg-color: #202020;
+}</pre>
+				</div>
+				<p><strong>إضافات خاصة بلوحة الإرساء:</strong> <code>--stylized-emoji</code>, <code>--stylized-img</code>, <code>--text-stroke-width</code>, <code>--text-shadow</code>، وألوان الصفوف (<code>--highlight-base</code>, <code>--highlight-base2</code>، إضافةً إلى <code>compact</code> ومشتقاتها).</p>
+				<p><strong>تعديلات تخطيط الرسائل المميزة:</strong> اضبط <code>--comment-width</code>, <code>--comment-padding</code>, <code>--comment-area-bottom</code>، و <code>--comment-area-height</code> لتغيير موضع كتلة الثلث السفلي دون تعديل HTML.</p>
+				<p>اجمع تغييرات CSS مع خيارات URL الموجودة مثل <code>&scale</code>, <code>&compact</code>، أو <code>&hidesource</code> عندما تحتاج إلى تعديل تخطيط لوحة الإرساء.</p>
+			</div>
+
+            <div class="guide-card">
+                <h3>5) استكشاف المشكلات وإصلاحها</h3>
+                <ul class="guide-list">
+                    <li>إذا لم يظهر الخط، فافتح رابطه مباشرةً في المتصفح للتأكد من تنزيله وتقديمه عبر HTTPS.</li>
+                    <li>تمنع بعض الاستضافات الربط المباشر؛ انتقل إلى استضافة تسمح بالوصول المباشر إلى الملفات أو اضبط ترويسات CORS المناسبة.</li>
+                    <li>أعد تحميل مصدر متصفح OBS أو حدّث علامة تبويب dock/featured بعد تغيير CSS لإعادة طلب الخطوط المخزنة مؤقتاً.</li>
+                    <li>استخدم <code>https://socialstream.ninja/fonts.html</code> للتأكد من ظهور خط نظام عند اختبار <code>&font=</code>.</li>
+                    <li>حافظ على تطابق أسماء font-family بين كتل <code>@font-face</code> و <code>--font-family</code>؛ فعدم التطابق هو المشكلة الأكثر شيوعاً.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>حول</h3>
+                    <p>يتيح Social Stream Ninja التقاط الدردشة ودمجها وعرضها من أكثر من 100 منصة في الوقت الفعلي. من تطوير Steve Seguin.</p>
+                    <div class="social-links">
+                        <a href="https://discord.socialstream.ninja" target="_blank" aria-label="Discord">
+                            <img src="../../icons/discord.svg" alt="Discord">
+                        </a>
+                        <a href="https://x.com/ninjafytools" target="_blank" aria-label="X">
+                            <img src="../../icons/x.svg" alt="X">
+                        </a>
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank" aria-label="GitHub">
+                            <img src="../../icons/github.svg" alt="GitHub">
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>المنتج</h3>
+                    <ul>
+                        <li><a href="../index.html">الرئيسية</a></li>
+                        <li><a href="features.html">الميزات</a></li>
+                        <li><a href="download.html">تنزيل</a></li>
+                        <li><a href="guides.html">الأدلة</a></li>
+                        <li><a href="commands.html">الأوامر وAPI</a></li>
+                        <li><a href="supported-sites.html">المواقع المدعومة</a></li>
+                        <li><a href="templates.html">القوالب</a></li>
+                        <li><a href="support.html">الدعم</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>الموارد</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-customization">دليل التخصيص</a></li>
+                        <li><a href="../../docs/customoverlays.md">تراكبات مخصصة</a></li>
+                        <li><a href="../../api.md">مرجع API</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">الإبلاغ عن مشكلة</a></li>
+                        <li><a href="../privacy.html">سياسة الخصوصية</a></li>
+                        <li><a href="../TOS.html">شروط الخدمة</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>المجتمع</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">انضم إلى خادمنا على Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">مستودع GitHub</a></li>
+                        <li><a href="support.html#contribute">المساهمة</a></li>
+                        <li><a href="https://github.com/sponsors/steveseguin" target="_blank">تبرّع</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. ترخيص GPLv3.0. من إنشاء <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> بمساهمات من المجتمع.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

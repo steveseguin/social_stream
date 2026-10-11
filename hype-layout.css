@@ -1,0 +1,128 @@
+/* Optional viewer-count designs. Legacy styles keep their original rules. */
+.viewer-design {
+  --viewer-accent: #79d9ff;
+  --viewer-gap: 6px;
+  --viewer-panel: #101722e8;
+  --viewer-border: #ffffff30;
+}
+.viewer-design.viewer-light {
+  --viewer-panel: #fffffff0;
+  --viewer-accent: #176888;
+  --viewer-border: #00000030;
+  --font-color: #111;
+  --font-color-title: #111;
+  color: var(--font-color);
+  text-shadow: none;
+}
+.viewer-design.style-glass { --viewer-panel: #bbcce026; }
+.viewer-design.viewer-light.style-glass { --viewer-panel: #ffffffc0; }
+.viewer-design.has-custom-viewerbarbg { --viewer-panel: var(--topbar-background); }
+.viewer-design #hype { font-size: 18px; }
+.viewer-design .sourceStatHolder {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 0;
+  height: auto;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 8px;
+  background: var(--viewer-panel);
+  gap: 0;
+}
+.viewer-design .sourceStatHolder > * + * { margin-left: 8px; }
+.viewer-design .sourceStatHolder img {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+.viewer-design [data-viewers], .viewer-design [data-chatters] {
+  font-size: 18px;
+  line-height: 1.25;
+  min-width: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 0;
+  color: inherit;
+  order: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.viewer-design [data-viewers]::before { content: "\1f441\fe0e "; }
+.viewer-design [data-chatters]::before { content: "\1f4ac "; }
+.viewer-design #hypetitle { font-size: 12px; padding: 6px; }
+.viewer-design.style-micro .sourceStatHolder { padding: 3px 5px; border: 0; border-radius: 3px; }
+.viewer-design.style-micro .sourceStatHolder img { width: 14px; height: 14px; }
+.viewer-design.style-micro .sourceStatHolder > * + * { margin-left: 3px; }
+.viewer-design.style-micro [data-viewers], .viewer-design.style-micro [data-chatters] { font-size: 12px; }
+.viewer-design.style-pills .sourceStatHolder { border-radius: 50px; border-color: var(--viewer-accent); }
+.viewer-design.style-glass .sourceStatHolder {
+  background: var(--viewer-panel);
+  border-color: var(--viewer-border);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 #ffffff30;
+}
+.viewer-design.style-neon .sourceStatHolder {
+  border-color: var(--viewer-accent);
+  box-shadow: inset 0 0 12px -6px var(--viewer-accent);
+  text-shadow: 0 0 5px var(--viewer-accent);
+}
+.viewer-design.style-outline .sourceStatHolder { background: transparent; border: 2px solid var(--viewer-accent); border-radius: 0; }
+.viewer-design.style-broadcast .sourceStatHolder { border: 0; border-left: 5px solid var(--viewer-accent); border-radius: 0; padding: 8px 16px; }
+.viewer-design.style-broadcast [data-viewers], .viewer-design.style-broadcast [data-chatters] { font-size: 24px; }
+.viewer-design.style-cards .sourceStatHolder { flex-direction: column; padding: 16px 20px; border-top: 3px solid var(--viewer-accent); }
+.viewer-design.style-cards .sourceStatHolder > * + * { margin: 8px 0 0; }
+.viewer-design.style-cards .sourceStatHolder img { width: 36px; height: 36px; }
+.viewer-design.style-cards [data-viewers], .viewer-design.style-cards [data-chatters] { font-size: 26px; }
+.viewer-design.style-scoreboard .sourceStatHolder { border-radius: 0; border: 0; border-bottom: 3px solid var(--viewer-accent); }
+.viewer-design.style-scoreboard [data-viewers], .viewer-design.style-scoreboard [data-chatters] { font: bold 28px/1.2 monospace; }
+.viewer-design.style-vertical .sourceStatHolder { justify-content: flex-start; border-radius: 0; border: 0; border-bottom: 1px solid #ffffff40; }
+.viewer-design.style-vertical .sourceStatHolder > span:last-child { margin-left: auto; padding-left: 16px; }
+.viewer-design.style-grid .sourceStatHolder { border-radius: 4px; border-left: 3px solid var(--viewer-accent); }
+.viewer-design.style-autofit .sourceStatHolder, .viewer-design.style-ticker .sourceStatHolder { border: 0; border-radius: 4px; padding: 6px 10px; }
+.viewer-design.style-rotate .sourceStatHolder { border-left: 4px solid var(--viewer-accent); padding: 12px 20px; }
+
+/* Layout changes are enabled only by a new style or an explicit layout option. */
+#parentHolder.viewer-layout-active {
+  position: absolute !important;
+  top: 0;
+  left: 0 !important;
+  right: auto !important;
+  width: 100% !important;
+  max-width: 100%;
+  margin: 0;
+  transform: none !important;
+  box-sizing: border-box;
+}
+.viewer-layout-active .viewer-viewport { position: relative; width: 100%; overflow: hidden; }
+.viewer-layout-active .viewer-title-viewport { overflow: hidden; }
+.viewer-layout-active .viewer-title-viewport #hypetitle { transform-origin: top center; }
+.viewer-layout-active #hype {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  transform-origin: 0 0;
+  gap: 0;
+}
+.viewer-layout-active #hype > .sourceStatHolder { flex-shrink: 0; }
+.viewer-layout-active #hype > .sourceStatHolder + .sourceStatHolder { margin-left: var(--viewer-gap, 2px); }
+.viewer-layout-active #hypetitle { box-sizing: border-box; max-width: 100%; overflow-wrap: anywhere; }
+.viewer-layout-active #hype.viewer-grid { display: grid; align-items: stretch; gap: var(--viewer-gap, 2px); }
+.viewer-layout-active #hype.viewer-grid > .sourceStatHolder { margin: 0; }
+.viewer-layout-active #hype.viewer-wrap { display: flex; flex-wrap: wrap; }
+.viewer-layout-active #hype.viewer-wrap > .sourceStatHolder { margin: 0 var(--viewer-gap, 2px) var(--viewer-gap, 2px) 0; }
+.viewer-layout-active #hype.viewer-column { display: inline-flex; flex-direction: column; align-items: stretch; }
+.viewer-layout-active #hype.viewer-column > .sourceStatHolder { margin: 0 0 var(--viewer-gap, 2px); }
+.viewer-layout-active #hype.viewer-rotating > .sourceStatHolder { display: none; margin: 0; }
+.viewer-layout-active #hype.viewer-rotating > .sourceStatHolder[data-viewer-active] { display: flex; }

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Použijte paměť uživatelů Event Flow v Social Stream Ninja k ukládání hodnot jednotlivých diváků a tvorbě automatizací reagujících na předchozí interakce.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/actions/user-memory-guide.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/actions/user-memory-guide.html">
+    <meta property="og:title" content="Návod k paměti uživatelů – Social Stream Ninja">
+    <meta property="og:description" content="Použijte paměť uživatelů Event Flow v Social Stream Ninja k ukládání hodnot jednotlivých diváků a tvorbě automatizací reagujících na předchozí interakce.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/actions/user-memory-guide.html">
+    <meta name="twitter:title" content="Návod k paměti uživatelů – Social Stream Ninja">
+    <meta name="twitter:description" content="Použijte paměť uživatelů Event Flow v Social Stream Ninja k ukládání hodnot jednotlivých diváků a tvorbě automatizací reagujících na předchozí interakce.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Návod k paměti uživatelů – Social Stream Ninja</title>
+    <style>
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #e5e7eb;
+            background: #090c13;
+            line-height: 1.65;
+        }
+        a { color: #5eead4; }
+        code {
+            padding: 2px 6px;
+            border-radius: 5px;
+            color: #f5d0fe;
+            background: rgba(192, 132, 252, 0.14);
+        }
+        .shell { max-width: 1120px; margin: 0 auto; }
+        header {
+            padding: 64px 32px 48px;
+            background:
+                radial-gradient(circle at 78% 15%, rgba(192,132,252,0.28), transparent 32%),
+                linear-gradient(145deg, #111827, #172554 62%, #312e81);
+            border-bottom: 1px solid rgba(192,132,252,0.3);
+        }
+        header .eyebrow {
+            color: #c4b5fd;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        h1 { margin: 8px 0 14px; font-size: clamp(2.2rem, 6vw, 4rem); line-height: 1.08; }
+        header p { max-width: 760px; margin: 0; color: #cbd5e1; font-size: 1.12rem; }
+        nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+        nav a, .button {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 999px;
+            color: #f8fafc;
+            text-decoration: none;
+            background: rgba(15,23,42,0.34);
+        }
+        main { padding: 44px 32px 72px; }
+        section { margin: 0 0 68px; scroll-margin-top: 20px; }
+        h2 { margin: 0 0 16px; color: #ddd6fe; font-size: 2rem; }
+        h3 { margin: 28px 0 10px; color: #c4b5fd; }
+        p { margin: 10px 0; color: #cbd5e1; }
+        ul, ol { color: #cbd5e1; }
+        li { margin: 7px 0; }
+        .lead, .callout, .card {
+            border: 1px solid rgba(148,163,184,0.2);
+            border-radius: 14px;
+            background: #111827;
+        }
+        .lead, .callout { padding: 18px 20px; }
+        .callout { margin: 20px 0; border-color: rgba(94,234,212,0.25); }
+        .warning { border-color: rgba(251,191,36,0.35); background: rgba(120,53,15,0.18); }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+            gap: 16px;
+            margin: 22px 0;
+        }
+        .card { padding: 18px; }
+        .card h3, .card h4 { margin-top: 0; }
+        .wire-key { display: flex; flex-wrap: wrap; gap: 18px; margin: 18px 0; color: #cbd5e1; }
+        .wire { display: inline-flex; align-items: center; gap: 9px; }
+        .wire::before { content: ""; width: 46px; border-top: 3px solid #2dd4bf; }
+        .wire.state::before { border-top: 3px dashed #c084fc; }
+        figure {
+            margin: 24px 0;
+            border: 1px solid rgba(148,163,184,0.22);
+            border-radius: 14px;
+            overflow: hidden;
+            background: #15171d;
+        }
+        figure img { display: block; width: 100%; height: auto; }
+        figcaption { padding: 12px 16px; color: #94a3b8; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #111827; }
+        th, td { padding: 12px 14px; border: 1px solid #293244; text-align: left; vertical-align: top; }
+        th { color: #ddd6fe; background: #172033; }
+        table:focus { outline: 2px solid #c4b5fd; outline-offset: 2px; }
+        .flow {
+            padding: 16px 18px;
+            margin: 14px 0;
+            border-radius: 12px;
+            color: #e2e8f0;
+            background: #070b12;
+            border: 1px solid #253047;
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+            white-space: pre-wrap;
+        }
+        .recipe { padding-left: 18px; border-left: 4px solid #8b5cf6; margin: 28px 0; }
+        .recipe h3 { margin-top: 0; }
+        .two-col { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 22px; align-items: start; }
+        footer { padding: 24px 32px 42px; color: #94a3b8; border-top: 1px solid #1f2937; }
+        @media (max-width: 760px) {
+            header, main, footer { padding-left: 18px; padding-right: 18px; }
+            .two-col { grid-template-columns: 1fr; }
+            table { font-size: 0.9rem; display: block; max-width: 100%; overflow-x: auto; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"actions/user-memory-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{", or":", nebo",", selecting the exact memory.":", s výběrem přesné paměti.",", so other platforms speak for everyone while TikTok stays restricted.":", takže ostatní platformy čtou všem, zatímco TikTok zůstává omezený.",". Confirm the captured row in Test Flow/Event Reference and match the cleanest field your source provides.":". Ověřte zachycený řádek v Testu toku / Přehledu událostí a porovnávejte nejvhodnější pole poskytované vaším zdrojem.",". It reads the incoming TikTok badge/level data directly; the Main Chat Overlay’s “treat as members” display setting is not required.":". Čte přímo příchozí údaje odznaků a úrovní TikToku; zobrazovací nastavení „považovat za členy“ v hlavním překryvu chatu není potřeba.","? command + TikTok source + (TikTok Team Member OR User Is Remembered) → AND → Speak Text ? command + NOT TikTok source → AND ────────────────────────────────→ Speak Text":"? command + TikTok source + (TikTok Team Member OR User Is Remembered) → AND → Speak Text ? command + NOT TikTok source → AND ────────────────────────────────→ Speak Text","A":"Událost","A like did not add anyone":"To se mi líbí nikoho nepřidalo","A real SSApp flow with two remembered entrants. The event path stays teal; shared-state references are dashed purple.":"Skutečný tok SSApp se dvěma zapamatovanými účastníky. Cesta událostí zůstává tyrkysová; odkazy na sdílený stav jsou fialové přerušované čáry.","A saved memory came back":"Uložená paměť se vrátila","A trigger/check that returns true when the current message belongs to someone in the selected memory.":"Spouštěč či kontrola, která vrací pravdu, když aktuální zpráva patří někomu z vybrané paměti.","Across restarts":"Napříč restarty","Actual Test Flow output: Alice was selected and the memory count fell to one because “remove selected” was enabled.":"Skutečný výstup Testu toku: byla vybrána Alice a počet v paměti klesl na jednoho, protože bylo zapnuto odebrání vybraného uživatele.","Add User Role: moderator/admin (or an exact host-user check) into an AND gate before the action.":"Před akci přidejte do brány AND roli uživatele moderátor/správce (nebo přesnou kontrolu uživatele moderátora vysílání).","Add the checks and actions you need, then link each one to the named memory using its side diamond or dropdown.":"Přidejte potřebné kontroly a akce a každou propojte s pojmenovanou pamětí pomocí postranního kosočtverce nebo rozbalovací nabídky.","Adds the current event’s user once. Repeated participation increases that user’s participation count without adding duplicate draw entries.":"Přidá uživatele aktuální události pouze jednou. Opakovaná účast zvyšuje počet účastí daného uživatele, aniž by přidávala duplicitní losy.","Also clears a User Memory when that memory is the selected reset target.":"Také vymaže paměť uživatelů, pokud je vybrána jako cíl resetu.","Anyone can run the draw/reset command":"Příkaz losování či resetu může spustit kdokoli","Automatic":"Automatické","Available operations":"Dostupné operace","Both branches still require the leading":"Obě větve stále vyžadují úvodní","Check whether the events came from different platforms. Platform + user ID intentionally creates separate identities.":"Zkontrolujte, zda události přišly z různých platforem. Platforma a ID uživatele záměrně vytvářejí samostatné identity.","Choose":"Vyberte","Clear All Users":"Vymazat všechny uživatele","Clear All Users Now":"Vymazat všechny uživatele nyní","Clear after inactivity, on stream start, or on stream stop. A value of 0 disables inactivity reset.":"Vymazání po nečinnosti, při zahájení nebo ukončení vysílání. Hodnota 0 vypíná reset po nečinnosti.","Connect the normal event path with teal wires and use":"Běžnou cestu událostí propojte tyrkysovými čarami a použijte","Dashed purple: this node uses that memory":"Fialová přerušovaná: tento uzel používá tuto paměť","Download the participation + draw example flow":"Stáhnout ukázkový tok účasti a losování","Drag":"Přetáhněte","Drag the small purple side diamond onto a User Memory node, or choose the memory by name in the node properties. Internally the operation stores the state node’s ID. Selecting the memory highlights every linked operation, and deleting it warns before those links are broken.":"Přetáhněte malý fialový postranní kosočtverec na uzel Paměť uživatelů nebo vyberte paměť podle názvu ve vlastnostech uzlu. Operace interně ukládá ID stavového uzlu. Výběr paměti zvýrazní všechny propojené operace a její smazání zobrazí varování před přerušením těchto vazeb.","Draw outputs":"Výstupy losování","Empties only the selected User Memory object.":"Vyprázdní pouze vybraný objekt paměti uživatelů.","Enable":"Zapněte","Event Flow Guide":"Průvodce Event Flow","Event Flow canvas showing Remember User and User Is Remembered linked to the Prize Draw Entrants memory with dashed purple lines":"Plátno Event Flow s uzly Zapamatovat uživatele a Uživatel je zapamatován propojenými s pamětí Účastníci losování fialovými přerušovanými čarami","Event Flow shared state":"Sdílený stav Event Flow","Event Type → Other: gift":"Typ události → Jiný: gift","Event Type → Other: liked → Remember User ···→ [Liked Stream]":"Typ události → Jiný: liked → Zapamatovat uživatele ···→ [Dali vysílání To se mi líbí]","Every reset option belongs to this one named memory. Other User Memory nodes are not touched.":"Každá volba resetu patří pouze této pojmenované paměti. Ostatních uzlů Paměť uživatelů se nedotkne.","Field":"Pole","For TikTok Team/Fan status, choose":"Pro stav člena týmu či fanouška TikToku zvolte","Forget User":"Zapomenout uživatele","From a flow":"Z toku","Gift payloads differ by capture mode. A common setup is":"Data dárků se liší podle režimu zachytávání. Běžné nastavení je","Heart Me Eligible":"Způsobilí díky Heart Me","How it works":"Jak to funguje","How many times that person has participated.":"Kolikrát se daný člověk zúčastnil.","Identity rule:":"Pravidlo identity:","Liked Stream":"Dali vysílání To se mi líbí","Manual":"Ručně","Meaning":"Význam","Memory actions add fields to the message so downstream Show Text, Send Message, webhook, or custom actions can use them.":"Paměťové akce přidávají do zprávy pole, která mohou použít následné akce Zobrazit text, Odeslat zprávu, webhook nebo vlastní akce.","Message Contains: Heart Me":"Zpráva obsahuje: Heart Me","Message Starts With !enter → Remember User ···→ [Prize Draw Entrants] Moderator + Message Starts With !draw → AND → Pick Random User ···→ [Prize Draw Entrants] Moderator + Message Starts With !resetdraw → AND → Clear All Users ···→ [Prize Draw Entrants]":"Message Starts With !enter → Remember User ···→ [Prize Draw Entrants] Moderator + Message Starts With !draw → AND → Pick Random User ···→ [Prize Draw Entrants] Moderator + Message Starts With !resetdraw → AND → Clear All Users ···→ [Prize Draw Entrants]","Name it for the list it owns, such as":"Pojmenujte jej podle seznamu, který spravuje, například","Node":"Uzel","One named memory, many tools":"Jedna pojmenovaná paměť, mnoho nástrojů","Pick Random User":"Vybrat náhodného uživatele","Practical recipes":"Praktické postupy","Prize Draw Entrants":"Účastníci losování","Recipes":"Příklady postupů","Remember User":"Zapamatovat uživatele","Remember people who liked or participated":"Zapamatování lidí, kteří dali To se mi líbí nebo se zapojili","Remember unique participants, check them on later messages, draw a random winner, and reset exactly the list you intended without turning a platform role into permanent global state.":"Zapamatujte si jednotlivé účastníky, ověřujte je u dalších zpráv, vylosujte náhodného výherce a resetujte přesně požadovaný seznam – bez proměny role platformy v trvalý globální stav.","Remove selected user":"Odebrat vybraného uživatele","Removes only the current event’s user.":"Odebere pouze uživatele aktuální události.","Reset State Node":"Resetovat stavový uzel","Reset and persistence":"Reset a trvalé ukládání","Save across restarts":"Ukládat mezi restarty","Select the operation and choose a User Memory target, or drag its purple side diamond to the memory hub.":"Vyberte operaci a zvolte cílovou paměť uživatelů nebo přetáhněte její fialový postranní kosočtverec k centrálnímu uzlu paměti.","Selects one unique remembered user. It can optionally remove the winner so they cannot win again.":"Vybere jednoho jedinečného zapamatovaného uživatele. Volitelně může výherce odebrat, aby nemohl vyhrát znovu.","Session memories start empty with the app. Saved memories reload until that specific memory is cleared.":"Paměti relace se při spuštění aplikace začínají prázdné. Uložené paměti se znovu načítají, dokud není daná paměť výslovně vymazána.","Set it up":"Nastavení","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja ·":"Social Stream Ninja ·","Solid teal: this event runs next":"Plná tyrkysová: tato událost se provede dál","State Nodes Guide":"Návod ke stavovým uzlům","State Nodes → User Memory":"Stavové uzly → Paměť uživatelů","TTS":"TTS","Test Flow":"Test toku (Test Flow)","Test Flow result showing a selected prize draw user and one remaining entrant":"Výsledek Testu toku s vybraným výhercem losování a jedním zbývajícím účastníkem","The dashed line is missing":"Přerušovaná čára chybí","The drawn user’s display name.":"Zobrazované jméno vylosovaného uživatele.","The drawn user’s stable ID and platform.":"Stálé ID a platforma vylosovaného uživatele.","The event probably had no user identity. Inspect the event payload; aggregate counts cannot become named entrants.":"Událost pravděpodobně neměla identitu uživatele. Prozkoumejte její data; ze souhrnných počtů nelze vytvořit pojmenované účastníky.","The hub reports its current unique-user count and owns persistence/reset settings.":"Centrální uzel hlásí aktuální počet jedinečných uživatelů a spravuje nastavení ukládání a resetu.","The latest reason template saved by Remember User.":"Poslední šablona důvodu uložená akcí Zapamatovat uživatele.","The same person appears twice":"Stejný člověk se objevuje dvakrát","The selected memory’s name.":"Název vybrané paměti.","The winner’s recorded participation count.":"Zaznamenaný počet účastí výherce.","This app session":"Tato relace aplikace","This works when the captured like/participation event names a user. Aggregate like-count updates do not identify a person and therefore cannot be remembered. Use a separate memory for each kind of participation if you want independent checks or draws.":"Funguje, když zachycená událost To se mi líbí nebo účasti označuje konkrétního uživatele. Souhrnné aktualizace počtu lajků člověka neurčují, a proto je nelze zapamatovat. Chcete-li nezávislé kontroly nebo losování, použijte samostatnou paměť pro každý druh účasti.","TikTok Heart Me or Team Member →":"TikTok Heart Me nebo člen týmu →","TikTok gift event + “Heart Me” match → AND → Remember User ···→ [Heart Me Eligible]":"TikTok gift event + “Heart Me” match → AND → Remember User ···→ [Heart Me Eligible]","Troubleshooting":"Řešení potíží","True only when Remember User added a new unique person.":"Pravda pouze tehdy, když Zapamatovat uživatele přidal nového jedinečného člověka.","Unique users currently remembered.":"Aktuálně zapamatovaní jedineční uživatelé.","Unique-entry prize draw":"Losování s jedním záznamem na účastníka","Use":"Použijte","Use Clear All Users on that memory. Changing a flow or clearing a different memory does not erase it.":"Použijte Vymazat všechny uživatele u dané paměti. Změna toku ani vymazání jiné paměti ji nesmaže.","Use Event Flow user memory in Social Stream Ninja to store viewer-specific values and build automations that respond to previous interactions.":"Použijte paměť uživatelů Event Flow v Social Stream Ninja k ukládání hodnot jednotlivých diváků a tvorbě automatizací reagujících na předchozí interakce.","Use draw and participation outputs":"Použití výstupů losování a účasti","Use the gift event to remember the sender; do not try to turn the one gift row into a permanent “member” role.":"Pomocí události dárku zapamatujte odesílatele; nepokoušejte se z jediného řádku dárku vytvořit trvalou roli „člen“.","User Is Remembered":"Uživatel je zapamatován","User Memory":"Paměť uživatelů (User Memory)","User Memory Guide - Social Stream Ninja":"Návod k paměti uživatelů – Social Stream Ninja","User Memory node properties showing two current users and Save across restarts":"Vlastnosti uzlu Paměť uživatelů se dvěma aktuálními uživateli a volbou Ukládat mezi restarty","User Memory reset properties including inactivity, stream start, stream stop, and Clear All Users Now":"Vlastnosti resetu paměti uživatelů zahrnující nečinnost, začátek a konec vysílání a Vymazat všechny uživatele nyní","User Role → TikTok Team Member":"Role uživatele → Člen týmu TikTok","What it does":"Co dělá","Whether the draw removed the selected winner.":"Zda losování odebralo vybraného výherce.","in the memory properties while building/testing.":"ve vlastnostech paměti během vytváření a testování.","it means all users inside the selected memory, not all Event Flow state, not every draw, and not every memory in Social Stream Ninja.":"znamená to všechny uživatele uvnitř vybrané paměti – nikoli celý stav Event Flow, všechna losování nebo všechny paměti Social Stream Ninja.","onto the canvas.":"na plátno.","or":"nebo","or the generic":"nebo obecný","plus":"a také","state node owns one isolated set of people. Every Remember, Forget, Check, Draw, or Clear node selects that state node. Create another User Memory node when you need a separate list, for example, one for “liked the stream” and another for “entered the giveaway.”":"stavový uzel spravuje jednu oddělenou sadu lidí. Každý uzel pro zapamatování, zapomenutí, kontrolu, losování nebo vymazání vybírá tento stavový uzel. Pokud potřebujete samostatný seznam, vytvořte další uzel Paměť uživatelů – například jeden pro lidi, kteří dali vysílání To se mi líbí, a druhý pro účastníky soutěže.","users are keyed by platform plus user ID. The displayed username is used only as a fallback. An anonymous or aggregate event with no user identity is safely ignored.":"uživatelé jsou určeni kombinací platformy a ID uživatele. Zobrazované uživatelské jméno slouží pouze jako náhradní identifikátor. Anonymní nebo souhrnná událost bez identity uživatele se bezpečně ignoruje.","when winners should not be drawn twice. In a public stream, protect draw/reset commands with a moderator, admin, or exact-user check.":"pokud se výherci nemají losovat dvakrát. Ve veřejném vysílání chraňte příkazy losování a resetu kontrolou moderátora, správce nebo přesného uživatele.","with two different usernames before going live.":"se dvěma různými uživatelskými jmény před živým použitím.","“Clear all” is scoped:":"„Vymazat vše“ má omezený rozsah:"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/actions/user-memory-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header>
+        <div class="shell">
+            <div class="eyebrow">Sdílený stav Event Flow</div>
+            <h1>Paměť uživatelů (User Memory)</h1>
+            <p>Zapamatujte si jednotlivé účastníky, ověřujte je u dalších zpráv, vylosujte náhodného výherce a resetujte přesně požadovaný seznam – bez proměny role platformy v trvalý globální stav.</p>
+            <nav>
+                <a href="#model">Jak to funguje</a>
+                <a href="#setup">Nastavení</a>
+                <a href="#recipes">Příklady postupů</a>
+                <a href="#reset">Reset a trvalé ukládání</a>
+                <a href="#outputs">Výstupy losování</a>
+            </nav>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/user-memory-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/user-memory-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/user-memory-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/user-memory-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/user-memory-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/user-memory-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/user-memory-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/user-memory-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/user-memory-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/user-memory-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/user-memory-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/user-memory-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/user-memory-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/user-memory-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/user-memory-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="user-memory-guide.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/actions/user-memory-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+    </header>
+
+    <main class="shell">
+        <section id="model">
+            <h2>Jedna pojmenovaná paměť, mnoho nástrojů</h2>
+            <div class="lead">
+                Událost <strong>Paměť uživatelů (User Memory)</strong> stavový uzel spravuje jednu oddělenou sadu lidí. Každý uzel pro zapamatování, zapomenutí, kontrolu, losování nebo vymazání vybírá tento stavový uzel. Pokud potřebujete samostatný seznam, vytvořte další uzel Paměť uživatelů – například jeden pro lidi, kteří dali vysílání To se mi líbí, a druhý pro účastníky soutěže.
+            </div>
+            <div class="wire-key">
+                <span class="wire">Plná tyrkysová: tato událost se provede dál</span>
+                <span class="wire state">Fialová přerušovaná: tento uzel používá tuto paměť</span>
+            </div>
+            <p>Přetáhněte malý fialový postranní kosočtverec na uzel Paměť uživatelů nebo vyberte paměť podle názvu ve vlastnostech uzlu. Operace interně ukládá ID stavového uzlu. Výběr paměti zvýrazní všechny propojené operace a její smazání zobrazí varování před přerušením těchto vazeb.</p>
+            <figure>
+                <img src="../../actions/img/user-memory-shared-state.png" alt="Plátno Event Flow s uzly Zapamatovat uživatele a Uživatel je zapamatován propojenými s pamětí Účastníci losování fialovými přerušovanými čarami">
+                <figcaption>Skutečný tok SSApp se dvěma zapamatovanými účastníky. Cesta událostí zůstává tyrkysová; odkazy na sdílený stav jsou fialové přerušované čáry.</figcaption>
+            </figure>
+        </section>
+
+        <section id="setup">
+            <h2>Nastavení</h2>
+            <ol>
+                <li>Přetáhněte <strong>Stavové uzly → Paměť uživatelů</strong> na plátno.</li>
+                <li>Pojmenujte jej podle seznamu, který spravuje, například <em>Způsobilí díky Heart Me</em>, <em>Dali vysílání To se mi líbí</em>, nebo <em>Účastníci losování</em>.</li>
+                <li>Vyberte <strong>Tato relace aplikace</strong> nebo <strong>Ukládat mezi restarty</strong>.</li>
+                <li>Přidejte potřebné kontroly a akce a každou propojte s pojmenovanou pamětí pomocí postranního kosočtverce nebo rozbalovací nabídky.</li>
+                <li>Běžnou cestu událostí propojte tyrkysovými čarami a použijte <strong>Test toku (Test Flow)</strong> se dvěma různými uživatelskými jmény před živým použitím.</li>
+            </ol>
+            <div class="two-col">
+                <div>
+                    <h3>Dostupné operace</h3>
+                    <table tabindex="0">
+                        <thead><tr><th>Uzel</th><th>Co dělá</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Zapamatovat uživatele</strong></td><td>Přidá uživatele aktuální události pouze jednou. Opakovaná účast zvyšuje počet účastí daného uživatele, aniž by přidávala duplicitní losy.</td></tr>
+                            <tr><td><strong>Uživatel je zapamatován</strong></td><td>Spouštěč či kontrola, která vrací pravdu, když aktuální zpráva patří někomu z vybrané paměti.</td></tr>
+                            <tr><td><strong>Zapomenout uživatele</strong></td><td>Odebere pouze uživatele aktuální události.</td></tr>
+                            <tr><td><strong>Vybrat náhodného uživatele</strong></td><td>Vybere jednoho jedinečného zapamatovaného uživatele. Volitelně může výherce odebrat, aby nemohl vyhrát znovu.</td></tr>
+                            <tr><td><strong>Vymazat všechny uživatele</strong></td><td>Vyprázdní pouze vybraný objekt paměti uživatelů.</td></tr>
+                            <tr><td><strong>Resetovat stavový uzel</strong></td><td>Také vymaže paměť uživatelů, pokud je vybrána jako cíl resetu.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <figure>
+                    <img src="../../actions/img/user-memory-settings.png" alt="Vlastnosti uzlu Paměť uživatelů se dvěma aktuálními uživateli a volbou Ukládat mezi restarty">
+                    <figcaption>Centrální uzel hlásí aktuální počet jedinečných uživatelů a spravuje nastavení ukládání a resetu.</figcaption>
+                </figure>
+            </div>
+            <div class="callout">
+                <strong>Pravidlo identity:</strong> uživatelé jsou určeni kombinací platformy a ID uživatele. Zobrazované uživatelské jméno slouží pouze jako náhradní identifikátor. Anonymní nebo souhrnná událost bez identity uživatele se bezpečně ignoruje.
+            </div>
+        </section>
+
+        <section id="recipes">
+            <h2>Praktické postupy</h2>
+
+            <div class="recipe">
+                <h3>TikTok Heart Me nebo člen týmu → <code>?</code> TTS</h3>
+                <p>Pomocí události dárku zapamatujte odesílatele; nepokoušejte se z jediného řádku dárku vytvořit trvalou roli „člen“.</p>
+                <div class="flow">TikTok gift event + “Heart Me” match → AND → Remember User ···→ [Heart Me Eligible]</div>
+                <div class="flow">? command + TikTok source + (TikTok Team Member OR User Is Remembered) → AND → Speak Text
+? command + NOT TikTok source → AND ────────────────────────────────→ Speak Text</div>
+                <ul>
+                    <li>Pro stav člena týmu či fanouška TikToku zvolte <strong>Role uživatele → Člen týmu TikTok</strong>. Čte přímo příchozí údaje odznaků a úrovní TikToku; zobrazovací nastavení „považovat za členy“ v hlavním překryvu chatu není potřeba.</li>
+                    <li>Data dárků se liší podle režimu zachytávání. Běžné nastavení je <strong>Typ události → Jiný: gift</strong> a také <strong>Zpráva obsahuje: Heart Me</strong>. Ověřte zachycený řádek v Testu toku / Přehledu událostí a porovnávejte nejvhodnější pole poskytované vaším zdrojem.</li>
+                    <li>Obě větve stále vyžadují úvodní <code>?</code>, takže ostatní platformy čtou všem, zatímco TikTok zůstává omezený.</li>
+                </ul>
+            </div>
+
+            <div class="recipe">
+                <h3>Zapamatování lidí, kteří dali To se mi líbí nebo se zapojili</h3>
+                <div class="flow">Typ události → Jiný: liked → Zapamatovat uživatele ···→ [Dali vysílání To se mi líbí]</div>
+                <p>Funguje, když zachycená událost To se mi líbí nebo účasti označuje konkrétního uživatele. Souhrnné aktualizace počtu lajků člověka neurčují, a proto je nelze zapamatovat. Chcete-li nezávislé kontroly nebo losování, použijte samostatnou paměť pro každý druh účasti.</p>
+            </div>
+
+            <div class="recipe">
+                <h3>Losování s jedním záznamem na účastníka</h3>
+                <div class="flow">Message Starts With !enter → Remember User ···→ [Prize Draw Entrants]
+Moderator + Message Starts With !draw → AND → Pick Random User ···→ [Prize Draw Entrants]
+Moderator + Message Starts With !resetdraw → AND → Clear All Users ···→ [Prize Draw Entrants]</div>
+                <p>Zapněte <strong>Odebrat vybraného uživatele</strong> pokud se výherci nemají losovat dvakrát. Ve veřejném vysílání chraňte příkazy losování a resetu kontrolou moderátora, správce nebo přesného uživatele.</p>
+                <p><a class="button" href="../../actions/examples/user-memory-participation-draw.json" download>Stáhnout ukázkový tok účasti a losování</a></p>
+            </div>
+        </section>
+
+        <section id="reset">
+            <h2>Reset a trvalé ukládání</h2>
+            <div class="grid">
+                <div class="card"><h3>Ručně</h3><p>Použijte <strong>Vymazat všechny uživatele nyní</strong> ve vlastnostech paměti během vytváření a testování.</p></div>
+                <div class="card"><h3>Z toku</h3><p>Použijte <strong>Vymazat všechny uživatele</strong> nebo obecný <strong>Resetovat stavový uzel</strong>, s výběrem přesné paměti.</p></div>
+                <div class="card"><h3>Automatické</h3><p>Vymazání po nečinnosti, při zahájení nebo ukončení vysílání. Hodnota 0 vypíná reset po nečinnosti.</p></div>
+                <div class="card"><h3>Napříč restarty</h3><p>Paměti relace se při spuštění aplikace začínají prázdné. Uložené paměti se znovu načítají, dokud není daná paměť výslovně vymazána.</p></div>
+            </div>
+            <figure>
+                <img src="../../actions/img/user-memory-reset-controls.png" alt="Vlastnosti resetu paměti uživatelů zahrnující nečinnost, začátek a konec vysílání a Vymazat všechny uživatele nyní">
+                <figcaption>Každá volba resetu patří pouze této pojmenované paměti. Ostatních uzlů Paměť uživatelů se nedotkne.</figcaption>
+            </figure>
+            <div class="callout warning">
+                <strong>„Vymazat vše“ má omezený rozsah:</strong> znamená to všechny uživatele uvnitř vybrané paměti – nikoli celý stav Event Flow, všechna losování nebo všechny paměti Social Stream Ninja.
+            </div>
+        </section>
+
+        <section id="outputs">
+            <h2>Použití výstupů losování a účasti</h2>
+            <p>Paměťové akce přidávají do zprávy pole, která mohou použít následné akce Zobrazit text, Odeslat zprávu, webhook nebo vlastní akce.</p>
+            <table tabindex="0">
+                <thead><tr><th>Pole</th><th>Význam</th></tr></thead>
+                <tbody>
+                    <tr><td><code>userMemoryName</code></td><td>Název vybrané paměti.</td></tr>
+                    <tr><td><code>userMemoryCount</code></td><td>Aktuálně zapamatovaní jedineční uživatelé.</td></tr>
+                    <tr><td><code>userMemoryAdded</code></td><td>Pravda pouze tehdy, když Zapamatovat uživatele přidal nového jedinečného člověka.</td></tr>
+                    <tr><td><code>userMemoryEntryCount</code></td><td>Kolikrát se daný člověk zúčastnil.</td></tr>
+                    <tr><td><code>selectedUser</code></td><td>Zobrazované jméno vylosovaného uživatele.</td></tr>
+                    <tr><td><code>selectedUserId</code>, <code>selectedUserSource</code></td><td>Stálé ID a platforma vylosovaného uživatele.</td></tr>
+                    <tr><td><code>selectedUserParticipationCount</code></td><td>Zaznamenaný počet účastí výherce.</td></tr>
+                    <tr><td><code>selectedUserReason</code></td><td>Poslední šablona důvodu uložená akcí Zapamatovat uživatele.</td></tr>
+                    <tr><td><code>selectedUserRemoved</code></td><td>Zda losování odebralo vybraného výherce.</td></tr>
+                </tbody>
+            </table>
+            <figure>
+                <img src="../../actions/img/user-memory-draw-result.png" alt="Výsledek Testu toku s vybraným výhercem losování a jedním zbývajícím účastníkem">
+                <figcaption>Skutečný výstup Testu toku: byla vybrána Alice a počet v paměti klesl na jednoho, protože bylo zapnuto odebrání vybraného uživatele.</figcaption>
+            </figure>
+        </section>
+
+        <section>
+            <h2>Řešení potíží</h2>
+            <table tabindex="0">
+                <tbody>
+                    <tr><th>Přerušovaná čára chybí</th><td>Vyberte operaci a zvolte cílovou paměť uživatelů nebo přetáhněte její fialový postranní kosočtverec k centrálnímu uzlu paměti.</td></tr>
+                    <tr><th>Stejný člověk se objevuje dvakrát</th><td>Zkontrolujte, zda události přišly z různých platforem. Platforma a ID uživatele záměrně vytvářejí samostatné identity.</td></tr>
+                    <tr><th>To se mi líbí nikoho nepřidalo</th><td>Událost pravděpodobně neměla identitu uživatele. Prozkoumejte její data; ze souhrnných počtů nelze vytvořit pojmenované účastníky.</td></tr>
+                    <tr><th>Uložená paměť se vrátila</th><td>Použijte Vymazat všechny uživatele u dané paměti. Změna toku ani vymazání jiné paměti ji nesmaže.</td></tr>
+                    <tr><th>Příkaz losování či resetu může spustit kdokoli</th><td>Před akci přidejte do brány AND roli uživatele moderátor/správce (nebo přesnou kontrolu uživatele moderátora vysílání).</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer><div class="shell">Social Stream Ninja · <a href="event-flow-guide.html">Průvodce Event Flow</a> · <a href="state-nodes-guide.html">Návod ke stavovým uzlům</a></div></footer>
+</body>
+</html>

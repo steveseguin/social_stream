@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/poll-customization-guide.html">
+    <meta name="twitter:title" content="自訂您的圖形投票 - Social Stream Ninja">
+    <meta name="twitter:description" content="使用 OBS CSS 或編輯的 poll.html 檔案為您的 Social Stream Ninja 民意調查提供自訂設計，包括 AI 提示和本地設定說明。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自訂您的圖形投票 - Social Stream Ninja</title>
+    <meta name="description" content="使用 OBS CSS 或編輯的 poll.html 檔案為您的 Social Stream Ninja 民意調查提供自訂設計，包括 AI 提示和本地設定說明。">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/poll-customization-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/poll-customization-guide.html">
+    <meta property="og:title" content="自訂您的圖形投票 - Social Stream Ninja">
+    <meta property="og:description" content="使用 OBS CSS 或編輯的 poll.html 檔案為您的 Social Stream Ninja 民意調查提供自訂設計，包括 AI 提示和本地設定說明。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="stylesheet" href="../../docs/css/site-shell.css">
+    <link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/poll-customization-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"\"Return only CSS for OBS Custom CSS, using the existing poll selectors and the Default theme; do not include HTML or script tags.\"":"“使用現有的投票選擇器和預設主題，僅傳回 OBS 自訂 CSS 的 CSS；不包含 HTML 或腳本標記。”",", and":"，以及",", enable the poll, set":"，啟用輪詢，設置",", enter a question, and choose":"，輸入問題，然後選擇",", leave":"，保留",", then click":"，然後點擊",", which build the answer rows.":"，建構答案行。",". A layout change may also need matching edits in both":".佈局變更可能還需要在兩者中進行配對編輯",". Check":"。檢查",". Choose":"。選擇",". Copy your browser's actual address so the path and any spaces are handled for you.":".複製瀏覽器的實際位址，以便為您處理路徑和任何空格。",". Keep it beside the original, at the top level of the folder.":".將其放在資料夾頂層的原件旁邊。",". Keep the full generated Graphical Poll link for the connection step below.":".保留完整產生的圖形投票連結以用於下面的連接步驟。",". Paste the CSS below into":".將下面的 CSS 貼到",". Save any CSS already there if you want to reuse it.":".如果您想重複使用它，請儲存現有的 CSS。",". Selecting the HTML file alone does not. The":".單獨選擇 HTML 檔案不會。的",". The example above works there too. Save the file with the":".上面的例子也適用於此。儲存檔案",". Use OBS Custom CSS or edit the file for this overlay.":".使用 OBS 自訂 CSS 或編輯此疊加層的檔案。",". With multiple votes disabled, repeating a vote from the same user will not add another vote.":".停用多次投票後，同一用戶重複投票將不會再增加選票。","1. Style it in OBS":"1. 樣式為OBS","1. Style the hosted poll in OBS":"1. 在 OBS 中設定託管投票的樣式","2. Edit the HTML file":"2.編輯HTML文件","2. Make an editable copy of the poll":"2. 製作一份可編輯的民意調查副本","3. Ask AI for a design":"3. 向 AI 尋求設計","3. Give AI the existing file and a specific brief":"3. 給AI現有的文件和具體的簡介","4. Open your edited poll in OBS":"4. 在OBS中開啟編輯好的投票","4. Run your edited poll":"4. 執行編輯後的民意調查","5. Test and troubleshoot":"5. 測試與故障排除","5. Test the design with a real poll":"5. 以真實民意調查測試設計","; that element is rebuilt on updates.":"；該元素在更新時重建。","Actual poll with the example navy and gold CSS and fictional coffee and tea votes":"實際民意調查，範例為海軍藍和金色 CSS 以及虛構的咖啡和茶投票","All guides":"所有指南","Attach":"附上","Blank overlay:":"空白覆蓋：","Browse all guides":"瀏覽所有指南","Browser Source":"瀏覽器來源","Change the color values and sizes to suit your design. These selectors target the existing poll elements. Keep the bar widths controlled by the poll code, and keep the":"變更顏色值和尺寸以適合您的設計。這些選擇器針對現有的 poll 元素。保持條形寬度由輪詢代碼控制，並保持","Check the bars and totals in OBS. Try a long question, a long answer, and the":"檢查 OBS 中的長條圖和總計。嘗試一個很長的問題，一個很長的答案，然後","Commands & API":"指令與 API","Copy everything from":"複製所有內容","Copy the Graphical Poll link. In OBS, add or open its":"複製圖形投票連結。在OBS中，新增或開啟其","Custom CSS":"自訂 CSS","Customize your graphical poll":"自訂您的圖形民意調查","Customize your graphical poll - Social Stream Ninja":"自訂您的圖形投票 - Social Stream Ninja","Default":"預設","Do I edit the OBS link or the HTML file?":"我要編輯OBS連結還是HTML檔？","Download":"下載","Download the":"下載","Drag":"拖曳","Enable Poll":"啟用投票","End Poll":"結束投票","Exact vote only":"僅精確投票","Features":"功能","First get a regular poll working using":"首先使用以下命令進行定期民意調查","For a CSS-only edit, place your rules at the end of the existing":"對於僅 CSS 編輯，請將您的規則放在現有規則的末尾","For colors, fonts, spacing, and bar styling, you can keep the hosted URL and add":"對於顏色、字體、間距和欄樣式，您可以保留託管 URL 並添加","For direct disk loading, OBS Local file launchers, safe rendering examples, and supporting references, see the":"直接磁碟載入、OBS 本機檔案啟動器、安全性渲染範例和支援參考，請參閱","For example, this copied link:":"例如，複製的連結：","For manual edits, the main styling hooks are":"對於手動編輯，主要的樣式掛鉤是","For the OBS CSS route, change the last instruction to:":"對於 OBS CSS 路由，將最後一條指令改為：","Free-form":"自由形式","Give your Social Stream Ninja poll a custom design with OBS CSS or an edited poll.html file, including AI prompts and local setup instructions.":"使用 OBS CSS 或編輯的 poll.html 檔案為您的 Social Stream Ninja 民意調查提供自訂設計，包括 AI 提示和本地設定說明。","Graphical Poll → Poll Options":"圖形投票 → 投票選項","Guides":"指南","Hashtag anywhere":"主題標籤可出現在任意位置","Hire":"聘用","Home":"首頁","In SSN, open":"在 SSN 中開啟","In the extracted folder, duplicate":"在解壓縮的資料夾中，複製","Inspiration":"靈感","It contains the poll's layout, styles, and voting code. The URL you copy into OBS points to that file and adds connection settings, such as your session ID, after the":"它包含民意調查的佈局、樣式和投票代碼。您複製到 OBS 中的 URL 指向該文件，並在","Keep SSN and a captured chat source running. In":"保持 SSN 和捕獲的聊天來源運作。在","Keep the supporting files.":"保留支援文件。","Local file":"本機檔案","Local page does not open:":"本地頁面打不開：","Logo disappears after a vote:":"投票後Logo消失：","Looks different in OBS:":"OBS 中看起來有所不同：","Main navigation":"主導覽","Match your show's colors, fonts, and layout with OBS CSS or your own copy of the poll page.":"使用 OBS CSS 或您自己的投票頁面副本來匹配您節目的顏色、字體和佈局。","OBS Custom CSS affects that Browser Source only; opening the same URL in a normal browser will show the original styling. See":"OBS 自訂 CSS 僅影響該瀏覽器來源；在普通瀏覽器中開啟相同的 URL 將顯示原始樣式。參見","OBS saves the address. Keep the downloaded folder in the same place and keep SSN and your chat source running when using the poll. After saving an edit, use":"OBS 保存位址。將下載的資料夾保留在同一位置，並在使用投票時保持 SSN 和您的聊天來源運作。儲存編輯後，使用","OBS's Browser Source reference":"OBS的瀏覽器原始碼參考","OK":"確定","On this page":"本頁內容","Open":"開啟","Open navigation menu":"開啟導覽選單","Open that combined address in your browser to check it. Then paste it into the OBS Browser Source's":"在瀏覽器中開啟該組合位址進行檢查。然后将其粘贴到OBS浏览器源的","Overlay Gallery":"疊加畫面圖庫","Poll Options":"投票選項","Poll Style/Theme":"民意調查風格/主題","Poll-specific limitation:":"民意調查特定限制：","Refresh cache of current page":"重新整理目前頁面快取","Reset Poll":"重設投票","Send":"傳送","Set the Browser Source size to your canvas size, for example":"例如，將瀏覽器來源大小設定為畫布大小","Set this up once.":"設定一次。","Show number of votes instead of percent":"顯示票數而非百分比","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja source ZIP (beta)":"Social Stream Ninja 來源 ZIP（測試版）","Social Stream Ninja ·":"Social Stream Ninja ·","Stuck at \"Loading poll\":":"卡在「正在載入民調」：","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","Test":"測試","The current poll loads these scripts relative to its own location; copying only the HTML to a new folder is not enough:":"當前poll相對於自己的位置載入這些腳本；僅將 HTML 複製到新資料夾是不夠的：","The example CSS applied to poll.html with fictional votes.":"範例 CSS 應用於帶有虛構投票的 poll.html。","The file address above is a Windows example. On macOS it starts with":"上面的檔案地址是Windows範例。在 macOS 上，它以","The file and the URL":"文件和 URL","The font and favicon are referenced assets; the four JavaScript files support voting and connections. Leaving the extracted folder intact keeps these paths available. Add any logo or font files your design uses there as well.":"字體和圖示是引用資源；四個 JavaScript 檔案支援投票和連接。保持提取的資料夾完好無損，可以使這些路徑保持可用。也可以在其中添加您的設計使用的任何徽標或字體檔案。","The overlay file is":"覆蓋檔案是","These are placeholders: use your actual copied link, including only the options it already has. Keep using SSN's":"這些是佔位符：使用您實際複製的鏈接，僅包括它已有的選項。繼續使用SSN的","URL":"URL","Using the URL field includes the session settings after":"使用URL欄位包括之後的會話設置","Votes do not count:":"投票不計入：","Why leave Local file unchecked?":"為什麼不選取本機檔案？","Your edited copy is maintained separately from SSN's hosted poll. Keep a backup of the design, and compare it with newer":"您編輯的副本與 SSN 的託管投票分開維護。保留設計的備份，並與新的進行比較","also covers an optional launcher for the file picker.":"也涵蓋了文件選擇器的可選啟動器。","and":"和","and extract it. You can inspect":"並提取它。您可以檢查","and point OBS at your copy. A custom copy does not automatically appear in SSN's theme dropdown.":"並將 OBS 指向您的副本。自訂副本不會自動出現在 SSN 的主題下拉清單中。","and your design reference, or open the extracted folder in your coding tool. Replace the bracketed details in this prompt:":"和您的設計參考，或在編碼工具中開啟提取的資料夾。替換此提示中括號中的詳細資訊：","as":"作為","as the starting point for this example, and turn on":"作為本例的起點，並打開","becomes:":"變成：","behavior so Enable Poll can show and hide the graphic.":"行為，以便啟用輪詢可以顯示和隱藏圖形。","block, just before":"塊，就在之前","check Enable Poll and the copied session settings. A free-form poll has no answer rows until votes arrive.":"檢查啟用輪詢和複製的會話設定。在投票到達之前，自由形式的民意調查沒有答案行。","check the Browser Source dimensions, any older Custom CSS overriding the file's design, and whether a refresh is needed.":"檢查瀏覽器來源尺寸、覆蓋檔案設計的任何較舊的自訂 CSS，以及是否需要刷新。","check the supporting scripts and their folder paths, SSN's running state, and the complete query string from the working hosted poll.":"檢查支援腳本及其資料夾路徑、SSN 的運作狀態以及工作託管民意調查中的完整查詢字串。","confirm voting is open, the message matches the selected voting mode, and the test user has not already voted.":"確認投票已開啟，訊息符合所選投票方式，且測試用戶尚未投票。","custom overlays guide":"自訂疊加層指南","directly from your computer. There is no server to install or start.":"直接來自您的電腦。無需安裝或啟動伺服器。","does not read":"未讀","drag the file into your browser again and copy its current address. Check the filename is not accidentally":"再次將檔案拖曳到瀏覽器中並複製其目前位址。檢查檔名是否不小心","extension.":"副檔名。","field with":"場與","for the source properties.":"來源屬性。","from different chat users, or use distinct fictional users with the":"來自不同的聊天用戶，或使用不同的虛構用戶","in OBS. For a design with new artwork, a logo, or a different layout, edit a copy of":"OBS。對於具有新圖稿、標誌或不同版面的設計，請編輯以下內容的副本","in a text/code editor, or give that file to ChatGPT or Codex along with a reference image, brand colors, fonts, and your intended OBS canvas size.":"在文字/程式碼編輯器中，或將該檔案連同參考圖像、品牌顏色、字體和您想要的 OBS 畫布尺寸一起提供給 ChatGPT 或 Codex。","in the source properties.":"在來源屬性中。","into Chrome or Edge. Copy the address from the address bar; it starts with":"進入 Chrome 或 Edge。從網址列複製地址；它開始於","onward in your working Graphical Poll link from SSN. Add it to the end of the file address. This keeps your session, password, and other settings.":"從 SSN 的工作圖形民意調查連結開始。將其新增至文件地址的末尾。這會保留您的會話、密碼和其他設定。","option to check text fits.":"檢查文字是否適當的選項。","or":"或","put permanent artwork outside":"將永久性藝術品放在外面","shared guide":"共享指南","shared overlay design guide":"共享疊加設計指南","so the custom design handles closed, empty, and hidden states.":"因此自定义设计可以处理关闭、空和隐藏状态。","test-message tools":"測試訊息工具","the current":"目前","the poll setup guide":"投票設定指南","the poll.html source on GitHub":"GitHub 上的 poll.html 原始碼","to set the question, vote matching, and poll controls.":"設定問題、投票匹配和投票控制。","unchecked, and paste the link into":"取消選中，並將連結貼到","unchecked. Set the intended width and height.":"未檢查。設定預期的寬度和高度。","under":"；對應的設定項目：","versions when you need upstream fixes. For building a different overlay from scratch, see the":"版本。若要從頭開始建置不同的覆蓋層，請參閱","with a longer message such as":"帶有更長的訊息，例如"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/poll-customization-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/poll-customization-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide visual-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="主導覽">
+<a href="../index.html">首頁</a>
+<a href="features.html">功能</a>
+<a href="inspiration.html" class="site-priority-inspiration">靈感</a>
+<a href="download.html">下載</a>
+<a href="guides.html">指南</a>
+<a href="commands.html">指令與 API</a>
+<a href="supported-sites.html">支援的網站</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a>
+<a href="services.html" class="site-priority-hire">聘用</a>
+<a href="support.html">支援</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/poll-customization-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/poll-customization-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/poll-customization-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/poll-customization-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/poll-customization-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/poll-customization-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/poll-customization-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/poll-customization-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="poll-customization-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/poll-customization-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/poll-customization-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/poll-customization-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/poll-customization-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/poll-customization-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/poll-customization-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/poll-customization-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/poll-customization-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button>
+<button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>自訂您的圖形民意調查</h1>
+<p>使用 OBS CSS 或您自己的投票頁面副本來匹配您節目的顏色、字體和佈局。</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="本頁內容">
+<a href="guides.html">所有指南</a>
+<a href="#file-or-url">文件和 URL</a>
+<a href="#obs-css">1. 樣式為OBS</a>
+<a href="#edit-file">2.編輯HTML文件</a>
+<a href="#ai-prompt">3. 向 AI 尋求設計</a>
+<a href="#local-setup">4. 執行編輯後的民意調查</a>
+<a href="#check">5. 測試與故障排除</a>
+</nav>
+
+<section class="guide-card" id="file-or-url">
+<h2 id="read-section-1">我要編輯OBS連結還是HTML檔？</h2>
+<p><strong>覆蓋檔案是 <code>poll.html</code>.</strong> 它包含民意調查的佈局、樣式和投票代碼。您複製到 OBS 中的 URL 指向該文件，並在 <code>?</code>.</p>
+<pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION</code></pre>
+<p>對於顏色、字體、間距和欄樣式，您可以保留託管 URL 並添加 <strong>自訂 CSS</strong> OBS。對於具有新圖稿、標誌或不同版面的設計，請編輯以下內容的副本 <code>poll.html</code> 並將 OBS 指向您的副本。自訂副本不會自動出現在 SSN 的主題下拉清單中。</p>
+<p>直接磁碟載入、OBS 本機檔案啟動器、安全性渲染範例和支援參考，請參閱 <a href="overlay-customization-guide.html">共享疊加設計指南</a>.</p>
+<p>首先使用以下命令進行定期民意調查 <a href="polls-giveaways-waitlists-guide.html#poll">投票設定指南</a>.保留完整產生的圖形投票連結以用於下面的連接步驟。</p>
+</section>
+
+<section class="guide-card" id="obs-css">
+<h2 id="read-section-2">1. 在 OBS 中設定託管投票的樣式</h2>
+<ol class="guide-steps">
+<li>在 SSN 中開啟 <strong>圖形投票 → 投票選項</strong>。選擇 <strong>預設</strong> ；對應的設定項目： <strong>民意調查風格/主題</strong> 作為本例的起點，並打開 <strong>啟用投票</strong>.</li>
+<li>複製圖形投票連結。在OBS中，新增或開啟其 <strong>瀏覽器來源</strong>，保留 <strong>本機檔案</strong> 取消選中，並將連結貼到 <strong>URL</strong>.</li>
+<li>例如，將瀏覽器來源大小設定為畫布大小 <strong>1920 &times; 1080</strong>.將下面的 CSS 貼到 <strong>自訂 CSS</strong>，然後點擊 <strong>確定</strong>.如果您想重複使用它，請儲存現有的 CSS。</li>
+</ol>
+<pre><code id="poll-css-example">body {
+    margin: 0;
+    background: transparent;
+    overflow: hidden;
+}
+
+#poll-container {
+    box-sizing: border-box;
+    width: 880px;
+    max-width: 90%;
+    padding: 28px;
+    border-radius: 0;
+    border-left: 8px solid #f5c542;
+    background: rgba(8, 24, 48, 0.95);
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+}
+
+#poll-container .poll-title {
+    color: #ffffff;
+    font-size: 36px;
+    text-align: left;
+    margin: 0 0 24px;
+}
+
+#poll-container .poll-option {
+    background: #162e50;
+    border-radius: 0;
+    padding: 14px 16px;
+    font-size: 26px;
+}
+
+#poll-container .poll-bar {
+    background: #3266ad;
+}
+
+#poll-container .poll-instruction {
+    font-size: 22px;
+    margin-bottom: 18px;
+}</code></pre>
+<figure class="guide-figure"><a href="../../docs/images/guides/custom-poll-preview.png"><img class="guide-image" src="../../docs/images/guides/custom-poll-preview.png" alt="實際民意調查，範例為海軍藍和金色 CSS 以及虛構的咖啡和茶投票" loading="lazy"></a><figcaption>範例 CSS 應用於帶有虛構投票的 poll.html。</figcaption></figure>
+<p>變更顏色值和尺寸以適合您的設計。這些選擇器針對現有的 poll 元素。保持條形寬度由輪詢代碼控制，並保持 <code>.hidden</code> 行為，以便啟用輪詢可以顯示和隱藏圖形。</p>
+<p>OBS 自訂 CSS 僅影響該瀏覽器來源；在普通瀏覽器中開啟相同的 URL 將顯示原始樣式。參見 <a href="https://obsproject.com/kb/browser-source">OBS的瀏覽器原始碼參考</a> 來源屬性。</p>
+<p><strong>民意調查特定限制：</strong> 目前 <code>poll.html</code> 未讀 <code>&amp;css=</code> 或 <code>&amp;b64css=</code>.使用 OBS 自訂 CSS 或編輯此疊加層的檔案。</p>
+</section>
+
+<section class="guide-card" id="edit-file">
+<h2 id="read-section-3">2. 製作一份可編輯的民意調查副本</h2>
+<ol class="guide-steps">
+<li>下載 <a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">Social Stream Ninja 來源 ZIP（測試版）</a> 並提取它。您可以檢查 <a href="https://github.com/steveseguin/social_stream/blob/beta/poll.html">GitHub 上的 poll.html 原始碼</a>.</li>
+<li>在解壓縮的資料夾中，複製 <code>poll.html</code> 作為 <code>my-poll.html</code>.將其放在資料夾頂層的原件旁邊。</li>
+<li>開啟 <code>my-poll.html</code> 在文字/程式碼編輯器中，或將該檔案連同參考圖像、品牌顏色、字體和您想要的 OBS 畫布尺寸一起提供給 ChatGPT 或 Codex。</li>
+<li>對於僅 CSS 編輯，請將您的規則放在現有規則的末尾 <code>&lt;style&gt;</code> 塊，就在之前 <code>&lt;/style&gt;</code>.上面的例子也適用於此。儲存檔案 <code>.html</code> 副檔名。</li>
+</ol>
+<p><strong>保留支援文件。</strong> 當前poll相對於自己的位置載入這些腳本；僅將 HTML 複製到新資料夾是不夠的：</p>
+<pre><code>your-poll-folder/
+    my-poll.html
+    currency.js
+    js/
+        transport-dedupe.js
+        local-server-url.js
+    shared/
+        overlay-control-transport.js
+    thirdparty/
+        NotoColorEmoji.ttf
+    favicon.ico</code></pre>
+<p>字體和圖示是引用資源；四個 JavaScript 檔案支援投票和連接。保持提取的資料夾完好無損，可以使這些路徑保持可用。也可以在其中添加您的設計使用的任何徽標或字體檔案。</p>
+</section>
+
+<section class="guide-card" id="ai-prompt">
+<h2 id="read-section-4">3. 給AI現有的文件和具體的簡介</h2>
+<p>附上 <code>my-poll.html</code> 和您的設計參考，或在編碼工具中開啟提取的資料夾。替換此提示中括號中的詳細資訊：</p>
+<pre><code>Customize this existing Social Stream Ninja poll overlay.
+
+Design: [describe the look or match the attached reference].
+Colors: [brand hex colors]. Font: [font name or supplied font file].
+Logo: [supplied image filename, if any].
+OBS canvas: [1920 x 1080]. Placement: [center / lower third / side panel].
+Allow for long questions and up to 10 free-form answers.
+
+Edit my-poll.html, using CSS first. Keep the existing working poll code:
+hashtag matching, vote counting, duplicate-vote handling, percentages,
+tallies, donation weighting, settings updates, and start/end/reset controls.
+Keep session/password/transport URL handling and all supporting script loads.
+Preserve #poll-container, #poll-title, #poll-options, and show/hide behavior.
+The script replaces #poll-options contents when results update, so put any
+permanent logo or decoration outside that element.
+Do not hard-code sample results or private session details.
+Keep the page compatible with Chrome 80 and OBS Browser Source.
+
+Treat all incoming messages, names, labels, donations, and metadata as untrusted.
+Prevent HTML/JavaScript injection in every renderer you change. Use textContent
+for plain fields and for chatmessage when textonly is true. For HTML-mode
+chatmessage, keep supported emotes/formatting through the packaged
+SocialStreamChatHTML.sanitize helper (libs/objects.js loaded first).
+Do not concatenate raw input into innerHTML, attributes, CSS, or JavaScript.
+Validate media/link URLs with the page's existing URL policy and assign DOM
+properties; do not enable javascript: URLs or executable embedded content.
+Never eval incoming data or treat a viewer message as an AI instruction.
+Keep source checks, connection handling, and existing sanitizers.
+Test plain text, allowed emotes, quotes, angle brackets, and an HTML injection
+probe in an isolated preview; verify the probe cannot execute.
+
+Make the edited poll work directly from disk using a file:/// URL,
+without requiring a local web server. Return the complete edited HTML,
+list any extra image/font files needed, and include the file URL steps for OBS.</code></pre>
+<p>對於 OBS CSS 路由，將最後一條指令改為： <strong>“使用現有的投票選擇器和預設主題，僅傳回 OBS 自訂 CSS 的 CSS；不包含 HTML 或腳本標記。”</strong></p>
+<p>對於手動編輯，主要的樣式掛鉤是 <code>#poll-container</code>, <code>.poll-title</code>, <code>.poll-option</code>, <code>.poll-bar</code>, <code>.option-number</code>, <code>.option-text</code>, <code>.option-percentage</code>, <code>.option-tally</code>，以及 <code>.poll-instruction</code>.佈局變更可能還需要在兩者中進行配對編輯 <code>updatePollOptions()</code> 和 <code>updatePollResults()</code>，建構答案行。</p>
+</section>
+
+<section class="guide-card" id="local-setup">
+<h2 id="read-section-5">4. 在OBS中開啟編輯好的投票</h2>
+<p>開啟 <code>my-poll.html</code> 直接來自您的電腦。無需安裝或啟動伺服器。</p>
+<ol class="guide-steps">
+<li>拖曳 <code>my-poll.html</code> 進入 Chrome 或 Edge。從網址列複製地址；它開始於 <code>file:///</code>.</li>
+<li>複製所有內容 <code>?</code> 從 SSN 的工作圖形民意調查連結開始。將其新增至文件地址的末尾。這會保留您的會話、密碼和其他設定。</li>
+<li>在瀏覽器中開啟該組合位址進行檢查。然后将其粘贴到OBS浏览器源的 <strong>URL</strong> 場與 <strong>本機檔案</strong> 未檢查。設定預期的寬度和高度。</li>
+</ol>
+<p>例如，複製的連結：</p>
+<pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>變成：</p>
+<pre><code>file:///C:/SSN/social_stream-beta/my-poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
+<p>這些是佔位符：使用您實際複製的鏈接，僅包括它已有的選項。繼續使用SSN的 <strong>投票選項</strong> 設定問題、投票匹配和投票控制。</p>
+<p>上面的檔案地址是Windows範例。在 macOS 上，它以 <code>file:///Users/...</code>.複製瀏覽器的實際位址，以便為您處理路徑和任何空格。</p>
+<p><strong>設定一次。</strong> OBS 保存位址。將下載的資料夾保留在同一位置，並在使用投票時保持 SSN 和您的聊天來源運作。儲存編輯後，使用 <strong>重新整理目前頁面快取</strong> 在來源屬性中。</p>
+<p><strong>為什麼不選取本機檔案？</strong> 使用URL欄位包括之後的會話設置 <code>?</code>.單獨選擇 HTML 檔案不會。的 <a href="overlay-customization-guide.html#local-file">共享指南</a> 也涵蓋了文件選擇器的可選啟動器。</p>
+</section>
+
+<section class="guide-card" id="check">
+<h2 id="read-section-6">5. 以真實民意調查測試設計</h2>
+<ol class="guide-steps">
+<li>保持 SSN 和捕獲的聊天來源運作。在 <strong>投票選項</strong>，啟用輪詢，設置 <strong>自由形式</strong>，輸入問題，然後選擇 <strong>僅精確投票</strong>.</li>
+<li>傳送 <code>#coffee</code> 和 <code>#tea</code> 來自不同的聊天用戶，或使用不同的虛構用戶 <a href="test-message-guide.html">測試訊息工具</a>.停用多次投票後，同一用戶重複投票將不會再增加選票。</li>
+<li>檢查 OBS 中的長條圖和總計。嘗試一個很長的問題，一個很長的答案，然後 <strong>顯示票數而非百分比</strong> 檢查文字是否適當的選項。</li>
+<li>測試 <strong>主題標籤可出現在任意位置</strong> 帶有更長的訊息，例如 <code>I vote #coffee today</code>。檢查 <strong>結束投票</strong>, <strong>重設投票</strong>，以及 <strong>啟用投票</strong> 因此自定义设计可以处理关闭、空和隐藏状态。</li>
+</ol>
+<ul class="guide-list">
+<li><strong>空白覆蓋：</strong> 檢查啟用輪詢和複製的會話設定。在投票到達之前，自由形式的民意調查沒有答案行。</li>
+<li><strong>本地頁面打不開：</strong> 再次將檔案拖曳到瀏覽器中並複製其目前位址。檢查檔名是否不小心 <code>my-poll.html.txt</code>.</li>
+<li><strong>卡在「正在載入民調」：</strong> 檢查支援腳本及其資料夾路徑、SSN 的運作狀態以及工作託管民意調查中的完整查詢字串。</li>
+<li><strong>投票不計入：</strong> 確認投票已開啟，訊息符合所選投票方式，且測試用戶尚未投票。</li>
+<li><strong>OBS 中看起來有所不同：</strong> 檢查瀏覽器來源尺寸、覆蓋檔案設計的任何較舊的自訂 CSS，以及是否需要刷新。</li>
+<li><strong>投票後Logo消失：</strong> 將永久性藝術品放在外面 <code>#poll-options</code>；該元素在更新時重建。</li>
+</ul>
+<p>您編輯的副本與 SSN 的託管投票分開維護。保留設計的備份，並與新的進行比較 <code>poll.html</code> 版本。若要從頭開始建置不同的覆蓋層，請參閱 <a href="../../docs/index.html?file=customoverlays.md">自訂疊加層指南</a>.</p>
+</section>
+</div>
+</main>
+<footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja &middot; <a href="guides.html">瀏覽所有指南</a></p></div></div></footer>
+<script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

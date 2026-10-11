@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ko/docs/local-websocket-server-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/ko/docs/local-websocket-server-guide.html">
+    <meta property="og:title" content="호스팅 WebSocket 및 로컬 서버 모드 - Social Stream Ninja">
+    <meta property="og:description" content="채팅, 오버레이, 답장, 명령에 Social Stream Ninja의 호스팅 WebSocket 경로를 사용하거나 공개 서버를 사용할 수 없을 때 고급 로컬 릴레이를 사용하세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ko/docs/local-websocket-server-guide.html">
+    <meta name="twitter:title" content="호스팅 WebSocket 및 로컬 서버 모드 - Social Stream Ninja">
+    <meta name="twitter:description" content="채팅, 오버레이, 답장, 명령에 Social Stream Ninja의 호스팅 WebSocket 경로를 사용하거나 공개 서버를 사용할 수 없을 때 고급 로컬 릴레이를 사용하세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>호스팅 WebSocket 및 로컬 서버 모드 - Social Stream Ninja</title>
+	<meta name="description" content="채팅, 오버레이, 답장, 명령에 Social Stream Ninja의 호스팅 WebSocket 경로를 사용하거나 공개 서버를 사용할 수 없을 때 고급 로컬 릴레이를 사용하세요.">
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/local-websocket-server-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", and incoming chat route match SSApp. Saved OBS URLs do not change automatically when you toggle Local Server or change its port.":", 수신 채팅 경로가 SSApp과 일치하는지 확인하세요. 로컬 서버를 켜거나 끄거나 포트를 변경해도 저장된 OBS URL은 자동으로 바뀌지 않습니다.",", and optional":", 선택 사항인",", that shortcut enables the chat and command fallback routes together. Open this settings section and confirm the first":"를 제공한다면 이 바로가기는 채팅과 명령 폴백 경로를 함께 활성화합니다. 이 설정 섹션을 열고 첫 번째",". An upgraded installation that already used port":"를 사용합니다. 기존에 다음 포트를 사용하던 설치를 업그레이드한 경우:",". The menu shows the selected port.":"을 선택하세요. 메뉴에 선택된 포트가 표시됩니다.",". This adds":"을 활성화하면 다음이 추가됩니다:","; add":"가 필요합니다. 추가할 항목:","; older installs may intentionally remain on":"가 추가됩니다. 이전 설치에서는 의도적으로 다음을 유지할 수 있습니다:","A generated two-way Dock link may contain:":"생성된 양방향 도크 링크에는 다음이 포함될 수 있습니다:","A regional, corporate, school, or filtered network may block the public relay. Try another network first; advanced SSApp users can use Local Server instead.":"지역, 기업, 학교 또는 필터링된 네트워크에서 공개 릴레이를 차단할 수 있습니다. 먼저 다른 네트워크를 시험하세요. 고급 SSApp 사용자는 로컬 서버를 대신 사용할 수 있습니다.","Advanced Local Options":"고급 로컬 옵션","Advanced use only: self-host the relay on the SSApp computer, or use it when a regional, corporate, or restricted network cannot reach the public hosted WebSocket service.":"고급 용도 전용: SSApp 컴퓨터에서 릴레이를 자체 호스팅하거나 지역, 기업 또는 제한된 네트워크에서 공개 호스팅 WebSocket 서비스에 접근할 수 없을 때 사용하세요.","Advanced: Use SSApp's Local Server":"고급: SSApp 로컬 서버 사용","Another program may own the port. Choose another unused port, restart the relay, and recopy links.":"다른 프로그램이 해당 포트를 사용 중일 수 있습니다. 사용하지 않는 다른 포트를 선택하고 릴레이를 다시 시작한 뒤 링크를 다시 복사하세요.","Changing this port does not change the Local Control API on":"이 포트를 변경해도 다음 포트의 로컬 제어 API는 바뀌지 않습니다:","Chat arrives but replies fail":"채팅은 도착하지만 답장이 실패함","Choose":"선택:","Commands & API":"명령 및 API","Common Problems":"자주 발생하는 문제","Complete the hosted-route switch setup above. The same":"위의 호스팅 경로 스위치 설정을 완료하세요. 동일한","Confirm LAN access is enabled, the client uses the SSApp computer's LAN IP, and the firewall permits the selected port.":"LAN 접근이 활성화되어 있고 클라이언트가 SSApp 컴퓨터의 LAN IP를 사용하며 방화벽이 선택된 포트를 허용하는지 확인하세요.","Confirm the source and page use the same session and password. For hosted mode, confirm":"소스와 페이지가 같은 세션과 비밀번호를 사용하는지 확인하세요. 호스팅 모드에서는 다음을 확인하세요:","Copy fresh Dock and overlay links, replace old saved URLs in OBS, and reopen any pages that were already running.":"새 도크 및 오버레이 링크를 복사하고 OBS에 저장된 이전 URL을 교체한 뒤 이미 실행 중이던 페이지를 다시 여세요.","Copy fresh Dock and overlay links. SSApp adds":"새 도크 및 오버레이 링크를 복사하세요. SSApp이 추가하는 항목:","Copy fresh generated links so they contain the new":"새로 생성한 링크를 복사하여 새 값이 포함되도록 하세요:","Copy generated links instead of adding flags to every page by hand. Routing support differs between the Dock, overlays, alerts, games, and utility pages.":"모든 페이지에 수동으로 플래그를 추가하지 말고 생성된 링크를 복사하세요. 도크, 오버레이, 알림, 게임, 유틸리티 페이지마다 라우팅 지원이 다릅니다.","Copy the game link again after selecting the preset. Confirm its session,":"프리셋을 선택한 뒤 게임 링크를 다시 복사하세요. 세션,","Direction":"방향","Dock or overlay stays blank":"도크 또는 오버레이가 계속 비어 있음","Dock sends its commands to Extension via server":"도크가 서버를 통해 확장 프로그램에 명령 전송 (Dock sends its commands to Extension via server)","Dock to extension":"도크에서 확장 프로그램으로","Dock/API route":"도크/API 경로","Download":"다운로드","Enable":"활성화","Enable Dock to use and publish via API server":"도크의 API 서버 사용 및 게시 활성화 (Enable Dock to use and publish via API server)","Enable Hosted WebSocket Mode":"호스팅 WebSocket 모드 활성화","Enable Server Fallback":"서버 폴백 활성화 (Enable Server Fallback)","Enable Social Stream Ninja's hosted WebSocket routes for chat, overlays, replies, and commands, or use the advanced local relay when the public server is unavailable.":"채팅, 오버레이, 답장, 명령에 Social Stream Ninja의 호스팅 WebSocket 경로를 사용하거나 공개 서버를 사용할 수 없을 때 고급 로컬 릴레이를 사용하세요.","Event Flows reports a background loading error":"이벤트 흐름에 백그라운드 로드 오류가 표시됨","Experimental/temporary: also send API-routed chat to normal dock/overlay connections":"실험적/임시: API로 라우팅한 채팅을 일반 도크/오버레이 연결에도 전송 (Experimental/temporary: also send API-routed chat to normal dock/overlay connections)","Extension to Dock":"확장 프로그램에서 도크로","Features":"기능","File > Allow Local Server Connections from the LAN":"File > Allow Local Server Connections from the LAN","File > Enable Local Server":"File > Enable Local Server","File > Set Local Server Port":"File > Set Local Server Port","Flag":"플래그","For a complete two-way setup, enable the three blue switches shown here. View-only setups generally need":"완전한 양방향 설정을 위해 여기에 표시된 파란색 스위치 세 개를 활성화하세요. 보기 전용 설정에는 일반적으로","For mini-games, enable":"미니게임에는 다음을 활성화하세요:","Game joins work intermittently":"게임 참가가 간헐적으로 작동함","Global settings and tools > Mechanics - Connections & Integrations":"전역 설정 및 도구 > 동작 - 연결 및 통합 (Global settings and tools > Mechanics - Connections & Integrations)","Guides":"가이드","Hire":"작업 의뢰","Home":"홈","Hosted WebSocket":"호스팅 WebSocket","Hosted WebSocket and Local Server Modes":"호스팅 WebSocket 및 로컬 서버 모드","Hosted WebSocket and Local Server Modes - Social Stream Ninja":"호스팅 WebSocket 및 로컬 서버 모드 - Social Stream Ninja","Hosted WebSocket will not connect":"호스팅 WebSocket이 연결되지 않음","If the Dock offers":"도크에서","If you want replies or moderation and source commands that travel from the Dock back to the extension, enable":"도크에서 확장 프로그램으로 돌아가는 답장, 관리 및 소스 명령을 사용하려면 다음을 활성화하세요:","In SSApp, choose":"SSApp에서 다음을 선택하세요:","Inspiration":"아이디어","It does not serve the SSN interface, capture platform chat by itself, or expose the Local Control API.":"SSN 인터페이스를 제공하거나 자체적으로 플랫폼 채팅을 캡처하거나 로컬 제어 API를 공개하지 않습니다.","Keep the defaults when your Dock and overlays already connect reliably. No server flags are needed.":"도크와 오버레이가 이미 안정적으로 연결된다면 기본값을 유지하세요. 서버 플래그는 필요하지 않습니다.","LAN device cannot connect":"LAN 장치가 연결되지 않음","LAN mode has no authentication or encryption.":"LAN 모드에는 인증이나 암호화가 없습니다.","Leave":"유지:","Lets supported Dock and API pages use and publish through the hosted server route.":"지원되는 도크 및 API 페이지에서 호스팅 서버 경로를 사용하고 게시할 수 있게 합니다.","Local Control API and MCP":"로컬 제어 API 및 MCP","Local Server":"로컬 서버","Local Server does not make every feature work offline. Waitlist, Word Cloud, Custom GIF Commands, private chatbot requests, and AI/co-host control bridges still use WebRTC for some or all communication. Website files, platform chat, and external AI, voice, music, or payment services can still require internet access.":"로컬 서버를 사용해도 모든 기능이 오프라인으로 작동하지는 않습니다. 대기 목록, 워드 클라우드, 사용자 지정 GIF 명령, 비공개 챗봇 요청, AI/공동 진행자 제어 브리지는 일부 또는 모든 통신에 여전히 WebRTC를 사용합니다. 웹사이트 파일, 플랫폼 채팅, 외부 AI, 음성, 음악, 결제 서비스에도 인터넷이 필요할 수 있습니다.","Local Server replaces the public hosted WebSocket endpoint with a relay running inside the Social Stream Ninja desktop app. Use it when you intentionally want to self-host the relay or the public server cannot be reached from your network or region.":"로컬 서버는 공개 호스팅 WebSocket 엔드포인트를 Social Stream Ninja 데스크톱 앱 안에서 실행되는 릴레이로 대체합니다. 의도적으로 릴레이를 자체 호스팅하거나 네트워크 또는 지역에서 공개 서버에 접근할 수 없을 때 사용하세요.","Local Server will not start":"로컬 서버가 시작되지 않음","Local Servers and Services Explained":"로컬 서버 및 서비스 설명","Main navigation":"기본 탐색 메뉴","Mode":"모드","Most users should not enable Local Server.":"대부분의 사용자는 로컬 서버를 활성화할 필요가 없습니다.","New installations normally use":"새 설치의 일반적인 주소는","Normal WebRTC":"일반 WebRTC","On this page":"이 페이지에서","Open":"열기","Open navigation menu":"탐색 메뉴 열기","Open the Social Stream Ninja extension popup or the settings panel in SSApp.":"Social Stream Ninja 확장 프로그램 팝업 또는 SSApp의 설정 패널을 여세요.","Optional Trusted-LAN Access":"선택 사항: 신뢰할 수 있는 LAN 접근","Overlay Gallery":"오버레이 갤러리","Peer-to-peer connections via local network only":"로컬 네트워크에서만 피어 간 연결 (Peer-to-peer connections via local network only)","Problem":"문제","Related Guides":"관련 가이드","Replace old saved URLs in OBS and reopen active pages.":"OBS에 저장된 이전 URL을 교체하고 실행 중인 페이지를 다시 여세요.","Replace saved OBS URLs and reopen active pages.":"저장된 OBS URL을 교체하고 실행 중인 페이지를 다시 여세요.","Replace the old link. New installs add":"이전 링크를 교체하세요. 새 설치에는","Returns supported replies and commands to the extension. It is optional for a view-only Dock.":"지원되는 답장과 명령을 확장 프로그램으로 돌려보냅니다. 보기 전용 도크에서는 선택 사항입니다.","Select an unused port from":"사용하지 않는 포트를 다음 범위에서 선택하세요:","Send a fake test message, then test a reply or Dock command if":"가짜 테스트 메시지를 보낸 뒤 답장이나 도크 명령도 시험하세요. 조건:","Send messages to Dock from Extension via server":"서버를 통해 확장 프로그램에서 도크로 메시지 전송 (Send messages to Dock from Extension via server)","Sends captured chat messages to the Dock through the hosted server.":"캡처된 채팅 메시지를 호스팅 서버를 통해 도크로 보냅니다.","Sessions, Passwords, Relay, and Server Modes":"세션, 비밀번호, 릴레이 및 서버 모드","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Mechanics - Connections and Integrations popup with the server, server2, and server3 switches enabled":"server, server2, server3 스위치가 활성화된 Social Stream Ninja의 동작 - 연결 및 통합 팝업","Social Stream Ninja desktop app File menu showing the Enable Local Server command":"Enable Local Server 명령을 보여 주는 Social Stream Ninja 데스크톱 앱의 File 메뉴","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","The API sample and test-message tool use WebSocket in local mode. The local relay does not accept the public API's HTTP GET, POST, or webhook URLs. Public webhook receivers need the hosted relay; provider-specific reliable receivers are separate services.":"API 샘플과 테스트 메시지 도구는 로컬 모드에서 WebSocket을 사용합니다. 로컬 릴레이는 공개 API의 HTTP GET, POST 또는 웹훅 URL을 받지 않습니다. 공개 웹훅 수신기는 호스팅 릴레이가 필요하며, 제공업체별 안정적인 수신기는 별도의 서비스입니다.","The Chrome extension and normal SSApp setups can use Social Stream's hosted WebSocket service by enabling the routing switches shown below. Local Server is an advanced replacement for the hosted relay.":"Chrome 확장 프로그램과 일반 SSApp 구성은 아래 라우팅 스위치를 활성화하여 Social Stream의 호스팅 WebSocket 서비스를 사용할 수 있습니다. 로컬 서버는 호스팅 릴레이를 대체하는 고급 기능입니다.","The Local Server command is in SSApp's File menu. Do not turn it on for the normal hosted WebSocket setup.":"로컬 서버 명령은 SSApp의 File 메뉴에 있습니다. 일반 호스팅 WebSocket 설정에서는 켜지 마세요.","The incoming and command routes are separate. Enable":"수신 경로와 명령 경로는 별개입니다. 다음을 활성화하세요:","The link uses port 3000 but SSApp shows 3003":"링크는 포트 3000을 사용하지만 SSApp에는 3003이 표시됨","The normal server fallback for the Chrome extension or SSApp. It uses Social Stream's public hosted relay and does not require":"Chrome 확장 프로그램 또는 SSApp의 일반 서버 폴백입니다. Social Stream의 공개 호스팅 릴레이를 사용하며 다음 기능은 필요하지 않습니다:","This concerns website files, not the chat relay. Retry loading when the connection recovers. Toggling the relay preserves the selected Event Flow storage origin; a separate offline startup can still open the packaged interface with its own storage.":"이는 채팅 릴레이가 아닌 웹사이트 파일에 관한 문제입니다. 연결이 복구되면 로드를 다시 시도하세요. 릴레이를 전환해도 선택된 이벤트 흐름 저장소 출처는 유지됩니다. 별도의 오프라인 시작에서는 자체 저장소를 사용하는 내장 인터페이스가 열릴 수 있습니다.","This is a relay, not a website host.":"웹사이트 호스트가 아닌 릴레이입니다.","Use":"사용:","Use Social Stream's hosted WebSocket routes for normal Chrome extension and desktop app setups. Run a local relay only when you specifically need one.":"일반 Chrome 확장 프로그램 및 데스크톱 앱 구성에는 Social Stream의 호스팅 WebSocket 경로를 사용하세요. 로컬 릴레이는 특별히 필요한 경우에만 실행하세요.","Use it only on a trusted private network. Do not port-forward it or expose it to the internet. For normal cross-machine internet control, use Social Stream's existing WebRTC or hosted WebSocket transport.":"신뢰할 수 있는 사설 네트워크에서만 사용하세요. 포트 포워딩하거나 인터넷에 노출하지 마세요. 일반적인 컴퓨터 간 인터넷 제어에는 Social Stream의 기존 WebRTC 또는 호스팅 WebSocket 전송 방식을 사용하세요.","Using Another Port":"다른 포트 사용","What The Three Server Flags Do":"세 서버 플래그의 역할","What To Check":"확인할 항목","When To Use It":"사용할 때","Which Mode Should I Use?":"어떤 모드를 사용해야 하나요?","and":"그리고","and carries captured chat to the Dock.":"가 추가되고 캡처된 채팅이 도크로 전달됩니다.","and copy the game link after selecting the game. Local game links with":"를 활성화하고 게임을 선택한 뒤 게임 링크를 복사하세요. 다음이 있는 로컬 게임 링크는","and the active":"와 활성 상태의","are in a freshly copied Dock link.":"가 새로 복사한 도크 링크에 있는지 확인하세요.","changes the relay from loopback-only to listening on the computer's network interfaces. A client on another device must connect to the SSApp computer's LAN address, not":"는 릴레이가 루프백에서만 수신하던 것을 컴퓨터의 네트워크 인터페이스에서도 수신하도록 변경합니다. 다른 장치의 클라이언트는 SSApp 컴퓨터의 LAN 주소에 연결해야 합니다. 사용하지 말아야 할 주소:","directions still apply.":"방향이 그대로 적용됩니다.","for replies and commands.":"를 답장과 명령용으로 추가하세요.","is enabled.":"가 활성화된 경우.","may keep it. A generated local two-way Dock link may contain:":"을 유지할 수 있습니다. 생성된 로컬 양방향 도크 링크에는 다음이 포함될 수 있습니다:","off for the normal hosted setup.":"는 일반 호스팅 설정에서는 꺼 두세요.","off unless you are specifically testing additive delivery.":"는 추가 전송을 특별히 시험하는 경우가 아니면 꺼 두세요.","or the local media server on":"이며 다음 포트의 로컬 미디어 서버도 바뀌지 않습니다:","receive captured chat directly from SSApp, even when no Dock is open. Changing games keeps the local mode and port.":"도크가 열려 있지 않아도 SSApp에서 캡처된 채팅을 직접 받습니다. 게임을 바꿔도 로컬 모드와 포트는 유지됩니다.","so the link includes":"를 활성화하여 링크에 다음이 포함되게 하세요:","switch is also on for the complete three-route setup.":"스위치도 켜져 있어야 세 경로가 모두 설정됩니다.","through":"경로:","to supported generated links.":"가 지원되는 생성 링크에 추가됩니다.","where supported.":"가 지원되는 곳에 추가됩니다."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/local-websocket-server-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="guides-page visual-guide">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/local-websocket-server-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/local-websocket-server-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/local-websocket-server-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/local-websocket-server-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/local-websocket-server-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/local-websocket-server-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/local-websocket-server-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/local-websocket-server-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/local-websocket-server-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/local-websocket-server-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/local-websocket-server-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="local-websocket-server-guide.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/local-websocket-server-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/local-websocket-server-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/local-websocket-server-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/local-websocket-server-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/local-websocket-server-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>호스팅 WebSocket 및 로컬 서버 모드</h1>
+			<p>일반 Chrome 확장 프로그램 및 데스크톱 앱 구성에는 Social Stream의 호스팅 WebSocket 경로를 사용하세요. 로컬 릴레이는 특별히 필요한 경우에만 실행하세요.</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+			<nav class="guide-jump-links" aria-label="이 페이지에서"><a href="#read-section-1">어떤 모드를 사용해야 하나요?</a><a href="#read-section-2">호스팅 WebSocket 모드 활성화</a><a href="#read-section-3">세 서버 플래그의 역할</a><a href="#read-section-4">고급: SSApp 로컬 서버 사용</a><a href="#read-section-5">고급 로컬 옵션</a><a href="#read-section-6">자주 발생하는 문제</a><a href="#read-section-7">관련 가이드</a></nav>
+<div class="guide-card">
+				<h2 id="read-section-1">어떤 모드를 사용해야 하나요?</h2>
+				<div class="guide-note">
+					<p><strong>대부분의 사용자는 로컬 서버를 활성화할 필요가 없습니다.</strong> Chrome 확장 프로그램과 일반 SSApp 구성은 아래 라우팅 스위치를 활성화하여 Social Stream의 호스팅 WebSocket 서비스를 사용할 수 있습니다. 로컬 서버는 호스팅 릴레이를 대체하는 고급 기능입니다.</p>
+				</div>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>모드</th><th>사용할 때</th></tr></thead>
+					<tbody>
+						<tr><td data-label="모드"><span>일반 WebRTC</span></td><td data-label="사용할 때"><span>도크와 오버레이가 이미 안정적으로 연결된다면 기본값을 유지하세요. 서버 플래그는 필요하지 않습니다.</span></td></tr>
+						<tr><td data-label="모드"><span>호스팅 WebSocket</span></td><td data-label="사용할 때"><span>Chrome 확장 프로그램 또는 SSApp의 일반 서버 폴백입니다. Social Stream의 공개 호스팅 릴레이를 사용하며 다음 기능은 필요하지 않습니다: <strong>File &gt; Enable Local Server</strong>.</span></td></tr>
+						<tr><td data-label="모드"><span>로컬 서버</span></td><td data-label="사용할 때"><span>고급 용도 전용: SSApp 컴퓨터에서 릴레이를 자체 호스팅하거나 지역, 기업 또는 제한된 네트워크에서 공개 호스팅 WebSocket 서비스에 접근할 수 없을 때 사용하세요.</span></td></tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="read-section-2">호스팅 WebSocket 모드 활성화</h2>
+				<ol class="guide-steps">
+					<li>Social Stream Ninja 확장 프로그램 팝업 또는 SSApp의 설정 패널을 여세요.</li>
+					<li>열기 <strong>전역 설정 및 도구 &gt; 동작 - 연결 및 통합 (Global settings and tools &gt; Mechanics - Connections &amp; Integrations)</strong>.</li>
+					<li>활성화 <strong>도크의 API 서버 사용 및 게시 활성화 (Enable Dock to use and publish via API server)</strong>을 활성화하면 다음이 추가됩니다: <code>server</code> 가 지원되는 생성 링크에 추가됩니다.</li>
+					<li>활성화 <strong>서버를 통해 확장 프로그램에서 도크로 메시지 전송 (Send messages to Dock from Extension via server)</strong>을 활성화하면 다음이 추가됩니다: <code>server2</code> 가 추가되고 캡처된 채팅이 도크로 전달됩니다.</li>
+					<li>도크에서 확장 프로그램으로 돌아가는 답장, 관리 및 소스 명령을 사용하려면 다음을 활성화하세요: <strong>도크가 서버를 통해 확장 프로그램에 명령 전송 (Dock sends its commands to Extension via server)</strong>을 활성화하면 다음이 추가됩니다: <code>server3</code>.</li>
+					<li>유지: <strong>실험적/임시: API로 라우팅한 채팅을 일반 도크/오버레이 연결에도 전송 (Experimental/temporary: also send API-routed chat to normal dock/overlay connections)</strong> 는 추가 전송을 특별히 시험하는 경우가 아니면 꺼 두세요.</li>
+					<li>유지: <strong>로컬 네트워크에서만 피어 간 연결 (Peer-to-peer connections via local network only)</strong> 는 일반 호스팅 설정에서는 꺼 두세요.</li>
+					<li>새 도크 및 오버레이 링크를 복사하고 OBS에 저장된 이전 URL을 교체한 뒤 이미 실행 중이던 페이지를 다시 여세요.</li>
+				</ol>
+				<figure class="guide-figure">
+					<img src="../../docs/images/guides/guide-hosted-websocket-popup-toggles.png" alt="server, server2, server3 스위치가 활성화된 Social Stream Ninja의 동작 - 연결 및 통합 팝업" class="guide-image-narrow">
+					<figcaption>완전한 양방향 설정을 위해 여기에 표시된 파란색 스위치 세 개를 활성화하세요. 보기 전용 설정에는 일반적으로 <code>server</code> 그리고 <code>server2</code>가 필요합니다. 추가할 항목: <code>server3</code> 를 답장과 명령용으로 추가하세요.</figcaption>
+				</figure>
+				<p>도크에서 <strong>서버 폴백 활성화 (Enable Server Fallback)</strong>를 제공한다면 이 바로가기는 채팅과 명령 폴백 경로를 함께 활성화합니다. 이 설정 섹션을 열고 첫 번째 <strong>도크의 API 서버 사용 및 게시 활성화 (Enable Dock to use and publish via API server)</strong> 스위치도 켜져 있어야 세 경로가 모두 설정됩니다.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="read-section-3">세 서버 플래그의 역할</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>플래그</th><th>방향</th><th>사용:</th></tr></thead>
+					<tbody>
+						<tr><td data-label="플래그"><span><code>server</code></span></td><td data-label="방향"><span>도크/API 경로</span></td><td data-label="사용:"><span>지원되는 도크 및 API 페이지에서 호스팅 서버 경로를 사용하고 게시할 수 있게 합니다.</span></td></tr>
+						<tr><td data-label="플래그"><span><code>server2</code></span></td><td data-label="방향"><span>확장 프로그램에서 도크로</span></td><td data-label="사용:"><span>캡처된 채팅 메시지를 호스팅 서버를 통해 도크로 보냅니다.</span></td></tr>
+						<tr><td data-label="플래그"><span><code>server3</code></span></td><td data-label="방향"><span>도크에서 확장 프로그램으로</span></td><td data-label="사용:"><span>지원되는 답장과 명령을 확장 프로그램으로 돌려보냅니다. 보기 전용 도크에서는 선택 사항입니다.</span></td></tr>
+					</tbody>
+				</table>
+				<p>생성된 양방향 도크 링크에는 다음이 포함될 수 있습니다:</p>
+				<pre><code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;server&amp;server2&amp;server3</code></pre>
+				<p>모든 페이지에 수동으로 플래그를 추가하지 말고 생성된 링크를 복사하세요. 도크, 오버레이, 알림, 게임, 유틸리티 페이지마다 라우팅 지원이 다릅니다.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="read-section-4">고급: SSApp 로컬 서버 사용</h2>
+				<p>로컬 서버는 공개 호스팅 WebSocket 엔드포인트를 Social Stream Ninja 데스크톱 앱 안에서 실행되는 릴레이로 대체합니다. 의도적으로 릴레이를 자체 호스팅하거나 네트워크 또는 지역에서 공개 서버에 접근할 수 없을 때 사용하세요.</p>
+				<div class="guide-note">
+					<p><strong>웹사이트 호스트가 아닌 릴레이입니다.</strong> SSN 인터페이스를 제공하거나 자체적으로 플랫폼 채팅을 캡처하거나 로컬 제어 API를 공개하지 않습니다.</p>
+				</div>
+				<ol class="guide-steps">
+					<li>위의 호스팅 경로 스위치 설정을 완료하세요. 동일한 <code>server</code>, <code>server2</code>, 선택 사항인 <code>server3</code> 방향이 그대로 적용됩니다.</li>
+					<li>SSApp에서 다음을 선택하세요: <strong>File &gt; Enable Local Server</strong>을 선택하세요. 메뉴에 선택된 포트가 표시됩니다.</li>
+					<li>새 도크 및 오버레이 링크를 복사하세요. SSApp이 추가하는 항목: <code>localserver</code> 와 활성 상태의 <code>localserverport</code> 가 지원되는 곳에 추가됩니다.</li>
+					<li>OBS에 저장된 이전 URL을 교체하고 실행 중인 페이지를 다시 여세요.</li>
+					<li>가짜 테스트 메시지를 보낸 뒤 답장이나 도크 명령도 시험하세요. 조건: <code>server3</code> 가 활성화된 경우.</li>
+				</ol>
+				<figure class="guide-figure">
+					<img src="../../docs/images/guides/guide-local-server-file-menu.png" alt="Enable Local Server 명령을 보여 주는 Social Stream Ninja 데스크톱 앱의 File 메뉴" class="guide-image-narrow">
+					<figcaption>로컬 서버 명령은 SSApp의 File 메뉴에 있습니다. 일반 호스팅 WebSocket 설정에서는 켜지 마세요.</figcaption>
+				</figure>
+				<p>새 설치의 일반적인 주소는 <code>127.0.0.1:3003</code>를 사용합니다. 기존에 다음 포트를 사용하던 설치를 업그레이드한 경우: <code>3000</code> 을 유지할 수 있습니다. 생성된 로컬 양방향 도크 링크에는 다음이 포함될 수 있습니다:</p>
+				<pre><code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;server&amp;server2&amp;server3&amp;localserver&amp;localserverport=3003</code></pre>
+				<p>미니게임에는 다음을 활성화하세요: <strong>서버를 통해 확장 프로그램에서 도크로 메시지 전송 (Send messages to Dock from Extension via server)</strong> 를 활성화하고 게임을 선택한 뒤 게임 링크를 복사하세요. 다음이 있는 로컬 게임 링크는 <code>server2</code> 도크가 열려 있지 않아도 SSApp에서 캡처된 채팅을 직접 받습니다. 게임을 바꿔도 로컬 모드와 포트는 유지됩니다.</p>
+				<p>API 샘플과 테스트 메시지 도구는 로컬 모드에서 WebSocket을 사용합니다. 로컬 릴레이는 공개 API의 HTTP GET, POST 또는 웹훅 URL을 받지 않습니다. 공개 웹훅 수신기는 호스팅 릴레이가 필요하며, 제공업체별 안정적인 수신기는 별도의 서비스입니다.</p>
+				<p>로컬 서버를 사용해도 모든 기능이 오프라인으로 작동하지는 않습니다. 대기 목록, 워드 클라우드, 사용자 지정 GIF 명령, 비공개 챗봇 요청, AI/공동 진행자 제어 브리지는 일부 또는 모든 통신에 여전히 WebRTC를 사용합니다. 웹사이트 파일, 플랫폼 채팅, 외부 AI, 음성, 음악, 결제 서비스에도 인터넷이 필요할 수 있습니다.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="read-section-5">고급 로컬 옵션</h2>
+				<h3>다른 포트 사용</h3>
+				<ol class="guide-steps">
+					<li>선택: <strong>File &gt; Set Local Server Port</strong>.</li>
+					<li>사용하지 않는 포트를 다음 범위에서 선택하세요: <code>1024</code> 경로: <code>65535</code>.</li>
+					<li>새로 생성한 링크를 복사하여 새 값이 포함되도록 하세요: <code>localserverport</code>.</li>
+					<li>저장된 OBS URL을 교체하고 실행 중인 페이지를 다시 여세요.</li>
+				</ol>
+				<p>이 포트를 변경해도 다음 포트의 로컬 제어 API는 바뀌지 않습니다: <code>17777</code> 이며 다음 포트의 로컬 미디어 서버도 바뀌지 않습니다: <code>3001</code>.</p>
+				<h3>선택 사항: 신뢰할 수 있는 LAN 접근</h3>
+				<p><strong>File &gt; Allow Local Server Connections from the LAN</strong> 는 릴레이가 루프백에서만 수신하던 것을 컴퓨터의 네트워크 인터페이스에서도 수신하도록 변경합니다. 다른 장치의 클라이언트는 SSApp 컴퓨터의 LAN 주소에 연결해야 합니다. 사용하지 말아야 할 주소: <code>127.0.0.1</code>.</p>
+				<div class="warning-note">
+					<p><strong>LAN 모드에는 인증이나 암호화가 없습니다.</strong> 신뢰할 수 있는 사설 네트워크에서만 사용하세요. 포트 포워딩하거나 인터넷에 노출하지 마세요. 일반적인 컴퓨터 간 인터넷 제어에는 Social Stream의 기존 WebRTC 또는 호스팅 WebSocket 전송 방식을 사용하세요.</p>
+				</div>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="read-section-6">자주 발생하는 문제</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>문제</th><th>확인할 항목</th></tr></thead>
+					<tbody>
+						<tr><td data-label="문제"><span>도크 또는 오버레이가 계속 비어 있음</span></td><td data-label="확인할 항목"><span>소스와 페이지가 같은 세션과 비밀번호를 사용하는지 확인하세요. 호스팅 모드에서는 다음을 확인하세요: <code>server</code> 그리고 <code>server2</code> 가 새로 복사한 도크 링크에 있는지 확인하세요.</span></td></tr>
+						<tr><td data-label="문제"><span>채팅은 도착하지만 답장이 실패함</span></td><td data-label="확인할 항목"><span>수신 경로와 명령 경로는 별개입니다. 다음을 활성화하세요: <strong>도크가 서버를 통해 확장 프로그램에 명령 전송 (Dock sends its commands to Extension via server)</strong> 를 활성화하여 링크에 다음이 포함되게 하세요: <code>server3</code>.</span></td></tr>
+						<tr><td data-label="문제"><span>호스팅 WebSocket이 연결되지 않음</span></td><td data-label="확인할 항목"><span>지역, 기업, 학교 또는 필터링된 네트워크에서 공개 릴레이를 차단할 수 있습니다. 먼저 다른 네트워크를 시험하세요. 고급 SSApp 사용자는 로컬 서버를 대신 사용할 수 있습니다.</span></td></tr>
+						<tr><td data-label="문제"><span>링크는 포트 3000을 사용하지만 SSApp에는 3003이 표시됨</span></td><td data-label="확인할 항목"><span>이전 링크를 교체하세요. 새 설치에는 <code>localserverport=3003</code>가 추가됩니다. 이전 설치에서는 의도적으로 다음을 유지할 수 있습니다: <code>3000</code>.</span></td></tr>
+						<tr><td data-label="문제"><span>로컬 서버가 시작되지 않음</span></td><td data-label="확인할 항목"><span>다른 프로그램이 해당 포트를 사용 중일 수 있습니다. 사용하지 않는 다른 포트를 선택하고 릴레이를 다시 시작한 뒤 링크를 다시 복사하세요.</span></td></tr>
+						<tr><td data-label="문제"><span>게임 참가가 간헐적으로 작동함</span></td><td data-label="확인할 항목"><span>프리셋을 선택한 뒤 게임 링크를 다시 복사하세요. 세션, <code>localserverport</code>, 수신 채팅 경로가 SSApp과 일치하는지 확인하세요. 로컬 서버를 켜거나 끄거나 포트를 변경해도 저장된 OBS URL은 자동으로 바뀌지 않습니다.</span></td></tr>
+						<tr><td data-label="문제"><span>이벤트 흐름에 백그라운드 로드 오류가 표시됨</span></td><td data-label="확인할 항목"><span>이는 채팅 릴레이가 아닌 웹사이트 파일에 관한 문제입니다. 연결이 복구되면 로드를 다시 시도하세요. 릴레이를 전환해도 선택된 이벤트 흐름 저장소 출처는 유지됩니다. 별도의 오프라인 시작에서는 자체 저장소를 사용하는 내장 인터페이스가 열릴 수 있습니다.</span></td></tr>
+						<tr><td data-label="문제"><span>LAN 장치가 연결되지 않음</span></td><td data-label="확인할 항목"><span>LAN 접근이 활성화되어 있고 클라이언트가 SSApp 컴퓨터의 LAN IP를 사용하며 방화벽이 선택된 포트를 허용하는지 확인하세요.</span></td></tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="read-section-7">관련 가이드</h2>
+				<ul class="guide-list">
+					<li><a href="local-services-guide.html">로컬 서버 및 서비스 설명</a></li>
+					<li><a href="sessions-passwords-relay-modes.html">세션, 비밀번호, 릴레이 및 서버 모드</a></li>
+					<li><a href="llm-control-guide.html">로컬 제어 API 및 MCP</a></li>
+				</ul>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 라이선스.</p></div></div></footer>
+	<script data-copy-markdown src="../../docs/js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

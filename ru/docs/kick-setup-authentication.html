@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru" data-site-root="../../" data-site-language="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ru/docs/kick-setup-authentication.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:url" content="https://socialstream.ninja/ru/docs/kick-setup-authentication.html">
+    <meta property="og:title" content="Настройка и аутентификация Kick — Social Stream Ninja">
+    <meta property="og:description" content="Подключите чат и оповещения Kick к Social Stream Ninja, выберите режим Standard или WebSocket, безопасно войдите и устраните проблемы с идентификатором канала или OAuth.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Логотип Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ru/docs/kick-setup-authentication.html">
+    <meta name="twitter:title" content="Настройка и аутентификация Kick — Social Stream Ninja">
+    <meta name="twitter:description" content="Подключите чат и оповещения Kick к Social Stream Ninja, выберите режим Standard или WebSocket, безопасно войдите и устраните проблемы с идентификатором канала или OAuth.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Логотип Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройка и аутентификация Kick — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Подключите чат и оповещения Kick к Social Stream Ninja, выберите режим Standard или WebSocket, безопасно войдите и устраните проблемы с идентификатором канала или OAuth.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ru">
+<script id="ssn-site-language" type="application/json">{"language":"ru","page":"docs/kick-setup-authentication.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Переключиться на светлую тему","Switch to dark theme":"Переключиться на тёмную тему","Light mode":"Светлая тема","Dark mode":"Тёмная тема","Open navigation menu":"Открыть меню навигации","Close navigation menu":"Закрыть меню навигации","Copy this document as Markdown to the clipboard":"Скопировать этот документ в формате Markdown в буфер обмена","Copy Markdown":"Копировать Markdown","Copying…":"Копирование…","Markdown copied":"Markdown скопирован","Copy failed":"Не удалось скопировать","Copy comprehensive Markdown for an AI assistant":"Скопировать полное описание в Markdown для ИИ-помощника","Copy this documentation page as Markdown for an AI assistant":"Скопировать эту страницу документации в Markdown для ИИ-помощника"},"strings":{"## Verified maintainer context Current `sources/websocket/kick.js` OAuth scopes: `user:read`, `channel:read`, `channel:write`, `channel:rewards:read`, `chat:write`, `events:subscribe`, `moderation:ban`, `moderation:chat_message:manage`, `kicks:read`. Current default official subscriptions: `chat.message.sent`, `channel.followed`, `channel.subscription.new`, `channel.subscription.renewal`, `channel.subscription.gifts`, `channel.reward.redemption.updated`, `kicks.gifted`, `moderation.banned`, `livestream.status.updated`. The source can add custom and newly advertised donation/support event names when Kick returns them from its event-type endpoint. Do not document those dynamic names as guaranteed. The current official Kick event list has no raid/host webhook. Standard browser capture is implemented by the current manifest-injected `sources/kick.js`. The structured source is `sources/websocket/kick.html` plus `sources/websocket/kick.js`; the stale `sources/kick_new.js` file is not the manifest source of truth.":"## Контекст, проверенный сопровождающим\n\nТекущие права OAuth в `sources/websocket/kick.js`:\n\n`user:read`, `channel:read`, `channel:write`, `channel:rewards:read`, `chat:write`, `events:subscribe`, `moderation:ban`, `moderation:chat_message:manage`, `kicks:read`.\n\nТекущие официальные подписки по умолчанию:\n\n`chat.message.sent`, `channel.followed`, `channel.subscription.new`, `channel.subscription.renewal`, `channel.subscription.gifts`, `channel.reward.redemption.updated`, `kicks.gifted`, `moderation.banned`, `livestream.status.updated`.\n\nИсточник может добавлять пользовательские и недавно объявленные названия событий пожертвований или поддержки, если Kick возвращает их через конечную точку типов событий. Не описывайте эти динамические имена как гарантированно доступные. В текущем официальном списке событий Kick нет вебхука рейда или хоста.\n\nСтандартный захват браузера реализован текущим `sources/kick.js`, подключаемым через манифест. Структурированный источник состоит из `sources/websocket/kick.html` и `sources/websocket/kick.js`; устаревший файл `sources/kick_new.js` не является источником истины для манифеста.",", and":", и",", and the":", а",", the source value is":", значением источника будет",". You may paste the full URL or enter only that slug.":". Можно вставить полный URL или только этот идентификатор.","A display name may contain underscores while the URL uses hyphens. Copy the slug from the address bar instead of retyping the displayed name.":"Отображаемое имя может содержать подчёркивания, хотя в URL используются дефисы. Скопируйте идентификатор из адресной строки, а не перепечатывайте видимое имя.","A fresh Kick WebSocket source before sign-in. In the desktop app, External browser is usually easiest when embedded login is blocked or a CAPTCHA appears.":"Новый источник Kick WebSocket до входа. В настольном приложении внешний браузер обычно удобнее, если встроенный вход блокируется или появляется CAPTCHA.","Activate source":"Активировать источник (Activate source)","Add source → Kick":"Добавить источник → Kick","Ban/unban users and manage chat messages when the account has permission.":"Блокировка и разблокировка пользователей, управление сообщениями чата при наличии прав у аккаунта.","Best For":"Для чего подходит","Bridge":"Мост","Browser Extension WebSocket Setup":"Настройка WebSocket в расширении браузера","Channel":"Канал","Channel write":"Изменение канала","Chat socket":"Сокет чата","Chat write":"Отправка в чат","Chat:":"Чат:","Check that":"Проверьте, что","Check the Social Stream dock before debugging OBS. If the dock receives Kick data, the remaining problem is the overlay or OBS URL.":"Перед поиском проблемы в OBS проверьте док-панель Social Stream. Если данные Kick поступают туда, проблема остаётся в оверлее или URL OBS.","Choose A Kick Source Mode":"Выберите режим источника Kick","Commands & API":"Команды и API","Confirm the signed-in account owns or may moderate the channel before testing send/moderation controls.":"Перед проверкой отправки сообщений и модерации убедитесь, что аккаунт владеет каналом или имеет права модератора.","Connect Kick chat and alerts to Social Stream Ninja, choose Standard or WebSocket mode, sign in safely, and fix channel slug or OAuth problems.":"Подключите чат и оповещения Kick к Social Stream Ninja, выберите режим Standard или WebSocket, безопасно войдите и устраните проблемы с идентификатором канала или OAuth.","Connect channel":"Подключить канал","Copy the exact channel slug from the Kick URL.":"Скопируйте точный идентификатор канала из URL Kick.","Desktop App Setup":"Настройка настольного приложения","Download":"Скачать","Event subscriptions":"Подписки на события","Events and Alerts Compatibility guide":"Руководство по совместимости событий и оповещений","External browser":"Внешний браузер","Features":"Возможности","Fix A Kick Source That Will Not Connect":"Если источник Kick не подключается","Follows:":"Новые подписчики:","For":"Для","For Standard capture, open":"Для стандартного захвата откройте","Guides":"Руководства","Hire":"Найти специалиста","Home":"Главная","If chat works but official alerts do not, sign in again and wait for":"Если чат работает, а официальные оповещения — нет, войдите заново и дождитесь, пока","If embedded login or CAPTCHA fails, use":"Если встроенный вход или CAPTCHA не работают, используйте","In the Kick source window, select":"В окне источника Kick выберите","Inspiration":"Идеи","Install and enable the current Social Stream Ninja extension.":"Установите и включите актуальное расширение Social Stream Ninja.","KICKs":"KICKs","KICKs gifts:":"Подарки KICKs:","Keep the page open while streaming.":"Оставляйте страницу открытой во время трансляции.","Keep the source window open and check the Channel, Chat socket, Bridge, and Subscriptions status chips.":"Держите окно источника открытым и проверяйте индикаторы канала, сокета чата, моста и подписок.","Kick API reference":"Справочник Kick API","Kick Alerts for Social Stream source showing channel status, chat socket, bridge, subscription status, authentication methods, and channel slug input":"Источник Kick Alerts для Social Stream со статусами канала, сокета чата, моста и подписок, способами входа и полем идентификатора канала","Kick Setup and Authentication":"Настройка и аутентификация Kick","Kick Setup and Authentication - Social Stream Ninja":"Настройка и аутентификация Kick — Social Stream Ninja","Kick WebSocket source page":"страницу источника Kick WebSocket","Kick display names can differ from URL slugs.":"Отображаемое имя Kick может отличаться от идентификатора в URL.","Kick's current OAuth flow uses authorization-code login with PKCE. Do not paste an access token, refresh token, client secret, or browser cookie into a guide, chat, or support ticket.":"Текущий процесс OAuth Kick использует вход по коду авторизации с PKCE. Не вставляйте токен доступа, токен обновления, секрет клиента или cookie браузера в руководство, чат или обращение в поддержку.","Kick's current official webhook list does not publish a raid/host event. Social Stream has compatibility handling if Kick exposes one through a connected feed, but a Kick raid alert should not be treated as guaranteed.":"В текущем официальном списке вебхуков Kick нет события рейда или хоста. Social Stream предусматривает совместимую обработку, если Kick передаёт его через подключённый поток, но оповещение о рейде Kick нельзя считать гарантированным.","Leave":"Оставьте","Main navigation":"Основная навигация","Mode":"Режим","Moderation":"Модерация","Moderation:":"Модерация:","OAuth 2.1":"OAuth 2.1","Official Events The Current Source Subscribes To":"Официальные события, на которые подписывается текущий источник","Official references:":"Официальные источники:","On this page":"На этой странице","Open navigation menu":"Открыть меню навигации","Open the":"Откройте","Overlay Gallery":"Галерея оверлеев","Paste the full Kick channel URL or enter its URL slug.":"Вставьте полный URL канала Kick или его идентификатор из URL.","Permission Group":"Группа разрешений","Public chat can connect separately, but OAuth is required for official event subscriptions, sending chat, and channel/moderation controls.":"Общедоступный чат может подключаться отдельно, но для официальных подписок на события, отправки сообщений и управления каналом или модерацией нужен OAuth.","Raid/host note:":"Примечание о рейдах и хостах:","Read KICKs-related support information.":"Чтение сведений о поддержке через KICKs.","Read channel reward information and normalize reward redemptions.":"Чтение информации о наградах канала и нормализация их активаций.","Reading visible Kick chat from the normal or popout chat page.":"Чтение видимого чата Kick с обычной страницы или отдельного окна чата.","Replace":"Замените","Resolve the signed-in user, channel, category, and current channel information.":"Определение вошедшего пользователя, канала, категории и текущих сведений о канале.","Rewards":"Награды","Rewards:":"Награды:","See Kick's current official":"Смотрите актуальный официальный","Select":"Выберите","Send broadcaster or bot chat from the source.":"Отправка сообщений ведущего или бота из источника.","Sign in with Kick":"Войти через Kick","Sign-In":"Вход","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Логотип Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Лицензия GPLv3.0.","Standard":"Standard","Stream status:":"Статус трансляции:","Structured chat plus official follow, subscription, reward, KICKs, moderation, and live-status events.":"Структурированный чат и официальные события новых подписчиков, платных подписок, наград, KICKs, модерации и статуса эфира.","Subscribe to official real-time Kick events.":"Подписка на официальные события Kick в реальном времени.","Subscriptions":"Подписки","Subscriptions:":"Подписки:","Support":"Поддержка","Supported Sites":"Поддерживаемые сайты","Switch theme":"Сменить тему","Update stream title/category from Advanced Controls.":"Изменение названия и категории трансляции через расширенное управление.","Use The URL Slug, Not The Display Name":"Используйте идентификатор из URL, а не отображаемое имя","Use the exact channel URL slug, then choose simple page capture or the richer WebSocket alert source.":"Используйте точный идентификатор канала из URL, затем выберите простой захват страницы или более функциональный источник оповещений WebSocket.","Used For":"Назначение","User and channel read":"Чтение пользователя и канала","Usually not required for public chat capture. The page still must load and show chat.":"Обычно не требуется для захвата общедоступного чата. Страница всё равно должна загрузиться и показать чат.","WebSocket":"WebSocket","What The Current Kick Login Requests":"Какие права запрашивает текущий вход Kick","and":"и","and Social Stream's":"и Social Stream —","and approve the requested permissions.":"и подтвердите запрошенные разрешения.","changes from disconnected.":"сменит состояние «отключено».","if the page has not connected automatically.":"если страница не подключилась автоматически.","in the desktop app.":"в настольном приложении.","new, renewal, and gifts →":"новые, продления и подарочные →","or":"или","or its popout chat and leave chat visible.":"или его отдельное окно чата и оставьте чат видимым.","scopes":"права доступа","selected for structured alerts. Kick currently defaults to WebSocket mode in the app.":"выбранным для структурированных оповещений. В приложении Kick сейчас по умолчанию использует режим WebSocket.","shows the intended slug and":"показывает нужный идентификатор, а","to connect.":"подключатся.","to enable official event subscriptions and account controls.":"для включения официальных подписок на события и управления аккаунтом.","webhook event list":"список событий вебхуков","with the KICKs amount.":"с количеством KICKs.","with the channel's exact URL slug.":"на точный идентификатор канала из URL.","→ Social Stream":"→ Social Stream"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/kick-setup-authentication.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Основная навигация"><a href="../index.html">Главная</a><a href="features.html">Возможности</a><a href="inspiration.html" class="site-priority-inspiration">Идеи</a><a href="download.html">Скачать</a><a href="guides.html">Руководства</a><a href="commands.html">Команды и API</a><a href="supported-sites.html">Поддерживаемые сайты</a><a href="overlay-gallery.html" class="site-priority-gallery">Галерея оверлеев</a><a href="services.html" class="site-priority-hire">Найти специалиста</a><a href="support.html">Поддержка</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Русский"><span aria-hidden="true">🌐 </span><span lang="ru">Русский</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/kick-setup-authentication.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/kick-setup-authentication.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/kick-setup-authentication.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="kick-setup-authentication.html" lang="ru" hreflang="ru" aria-current="true">Русский</a><a class="site-language-link" href="../../fr/docs/kick-setup-authentication.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/kick-setup-authentication.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/kick-setup-authentication.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/kick-setup-authentication.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/kick-setup-authentication.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/kick-setup-authentication.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/kick-setup-authentication.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/kick-setup-authentication.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/kick-setup-authentication.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/kick-setup-authentication.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/kick-setup-authentication.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/kick-setup-authentication.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/kick-setup-authentication.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Сменить тему"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Открыть меню навигации" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Настройка и аутентификация Kick</h1>
+            <p>Используйте точный идентификатор канала из URL, затем выберите простой захват страницы или более функциональный источник оповещений WebSocket.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="На этой странице"><a href="#read-section-1">Выберите режим источника Kick</a><a href="#read-section-2">Используйте идентификатор из URL, а не отображаемое имя</a><a href="#read-section-3">Настройка настольного приложения</a><a href="#read-section-4">Настройка WebSocket в расширении браузера</a><a href="#read-section-5">Какие права запрашивает текущий вход Kick</a><a href="#read-section-6">Официальные события, на которые подписывается текущий источник</a><a href="#read-section-7">Если источник Kick не подключается</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Выберите режим источника Kick</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Режим</th><th>Для чего подходит</th><th>Вход</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Режим">Standard</td>
+                            <td data-label="Для чего подходит">Чтение видимого чата Kick с обычной страницы или отдельного окна чата.</td>
+                            <td data-label="Вход">Обычно не требуется для захвата общедоступного чата. Страница всё равно должна загрузиться и показать чат.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Режим">WebSocket</td>
+                            <td data-label="Для чего подходит">Структурированный чат и официальные события новых подписчиков, платных подписок, наград, KICKs, модерации и статуса эфира.</td>
+                            <td data-label="Вход">Общедоступный чат может подключаться отдельно, но для официальных подписок на события, отправки сообщений и управления каналом или модерацией нужен OAuth.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">Используйте идентификатор из URL, а не отображаемое имя</h2>
+                <p>Для <code>https://kick.com/example-channel</code>, значением источника будет <code>example-channel</code>. Можно вставить полный URL или только этот идентификатор.</p>
+                <div class="warning-note">
+                    <p><strong>Отображаемое имя Kick может отличаться от идентификатора в URL.</strong> Отображаемое имя может содержать подчёркивания, хотя в URL используются дефисы. Скопируйте идентификатор из адресной строки, а не перепечатывайте видимое имя.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">Настройка настольного приложения</h2>
+                <ol class="guide-steps">
+                    <li>Выберите <strong>Добавить источник → Kick</strong>.</li>
+                    <li>Вставьте полный URL канала Kick или его идентификатор из URL.</li>
+                    <li>Оставьте <strong>WebSocket</strong> выбранным для структурированных оповещений. В приложении Kick сейчас по умолчанию использует режим WebSocket.</li>
+                    <li>Выберите <strong>Активировать источник (Activate source)</strong>.</li>
+                    <li>В окне источника Kick выберите <strong>Войти через Kick</strong> и подтвердите запрошенные разрешения.</li>
+                    <li>Держите окно источника открытым и проверяйте индикаторы канала, сокета чата, моста и подписок.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/kick-authentication-source.png" alt="Источник Kick Alerts для Social Stream со статусами канала, сокета чата, моста и подписок, способами входа и полем идентификатора канала" class="guide-image">
+                    <figcaption>Новый источник Kick WebSocket до входа. В настольном приложении внешний браузер обычно удобнее, если встроенный вход блокируется или появляется CAPTCHA.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">Настройка WebSocket в расширении браузера</h2>
+                <ol class="guide-steps">
+                    <li>Установите и включите актуальное расширение Social Stream Ninja.</li>
+                    <li>Откройте <a href="https://socialstream.ninja/sources/websocket/kick.html?channel=example-channel" target="_blank" rel="noopener">страницу источника Kick WebSocket</a>.</li>
+                    <li>Замените <code>example-channel</code> на точный идентификатор канала из URL.</li>
+                    <li>Выберите <strong>Подключить канал</strong> если страница не подключилась автоматически.</li>
+                    <li>Выберите <strong>Войти через Kick</strong> для включения официальных подписок на события и управления аккаунтом.</li>
+                    <li>Оставляйте страницу открытой во время трансляции.</li>
+                </ol>
+                <pre><code>https://socialstream.ninja/sources/websocket/kick.html?channel=CHANNEL_SLUG</code></pre>
+                <p>Для стандартного захвата откройте <code>https://kick.com/CHANNEL_SLUG</code> или его отдельное окно чата и оставьте чат видимым.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">Какие права запрашивает текущий вход Kick</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Группа разрешений</th><th>Назначение</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Группа разрешений">Чтение пользователя и канала</td><td data-label="Назначение">Определение вошедшего пользователя, канала, категории и текущих сведений о канале.</td></tr>
+                        <tr><td data-label="Группа разрешений">Изменение канала</td><td data-label="Назначение">Изменение названия и категории трансляции через расширенное управление.</td></tr>
+                        <tr><td data-label="Группа разрешений">Награды</td><td data-label="Назначение">Чтение информации о наградах канала и нормализация их активаций.</td></tr>
+                        <tr><td data-label="Группа разрешений">Отправка в чат</td><td data-label="Назначение">Отправка сообщений ведущего или бота из источника.</td></tr>
+                        <tr><td data-label="Группа разрешений">Подписки на события</td><td data-label="Назначение">Подписка на официальные события Kick в реальном времени.</td></tr>
+                        <tr><td data-label="Группа разрешений">Модерация</td><td data-label="Назначение">Блокировка и разблокировка пользователей, управление сообщениями чата при наличии прав у аккаунта.</td></tr>
+                        <tr><td data-label="Группа разрешений">KICKs</td><td data-label="Назначение">Чтение сведений о поддержке через KICKs.</td></tr>
+                    </tbody>
+                </table>
+                <p>Текущий процесс OAuth Kick использует вход по коду авторизации с PKCE. Не вставляйте токен доступа, токен обновления, секрет клиента или cookie браузера в руководство, чат или обращение в поддержку.</p>
+                <p>Официальные источники: <a href="https://github.com/KickEngineering/KickDevDocs/blob/main/getting-started/generating-tokens-oauth2-flow.md" target="_blank" rel="noopener">OAuth 2.1</a>, <a href="https://github.com/KickEngineering/KickDevDocs/blob/main/scopes/scopes.md" target="_blank" rel="noopener">права доступа</a>, а <a href="https://api.kick.com/swagger/index.html" target="_blank" rel="noopener">Справочник Kick API</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">Официальные события, на которые подписывается текущий источник</h2>
+                <ul class="guide-list">
+                    <li><strong>Чат:</strong> <code>chat.message.sent</code>.</li>
+                    <li><strong>Новые подписчики:</strong> <code>channel.followed</code> → Social Stream <code>new_follower</code>.</li>
+                    <li><strong>Подписки:</strong> новые, продления и подарочные → <code>new_subscriber</code>, <code>resub</code>, и <code>subscription_gift</code>.</li>
+                    <li><strong>Награды:</strong> <code>channel.reward.redemption.updated</code> → <code>reward</code>.</li>
+                    <li><strong>Подарки KICKs:</strong> <code>kicks.gifted</code> → <code>donation</code> с количеством KICKs.</li>
+                    <li><strong>Модерация:</strong> <code>moderation.banned</code>.</li>
+                    <li><strong>Статус трансляции:</strong> <code>livestream.status.updated</code> → <code>stream_online</code> или <code>stream_offline</code>.</li>
+                </ul>
+                <div class="guide-note">
+                    <p><strong>Примечание о рейдах и хостах:</strong> В текущем официальном списке вебхуков Kick нет события рейда или хоста. Social Stream предусматривает совместимую обработку, если Kick передаёт его через подключённый поток, но оповещение о рейде Kick нельзя считать гарантированным.</p>
+                </div>
+                <p>Смотрите актуальный официальный <a href="https://github.com/KickEngineering/KickDevDocs/blob/main/events/event-types.md" target="_blank" rel="noopener">список событий вебхуков</a> и Social Stream — <a href="events-alerts-compatibility.html">Руководство по совместимости событий и оповещений</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-7">Если источник Kick не подключается</h2>
+                <ol class="guide-steps">
+                    <li>Скопируйте точный идентификатор канала из URL Kick.</li>
+                    <li>Проверьте, что <strong>Канал</strong> показывает нужный идентификатор, а <strong>Сокет чата</strong> сменит состояние «отключено».</li>
+                    <li>Если чат работает, а официальные оповещения — нет, войдите заново и дождитесь, пока <strong>Мост</strong> и <strong>Подписки</strong> подключатся.</li>
+                    <li>Если встроенный вход или CAPTCHA не работают, используйте <strong>Внешний браузер</strong> в настольном приложении.</li>
+                    <li>Перед проверкой отправки сообщений и модерации убедитесь, что аккаунт владеет каналом или имеет права модератора.</li>
+                    <li>Перед поиском проблемы в OBS проверьте док-панель Social Stream. Если данные Kick поступают туда, проблема остаётся в оверлее или URL OBS.</li>
+                </ol>
+            </div>
+
+            <template data-copy-markdown-extra>
+## Контекст, проверенный сопровождающим
+
+Текущие права OAuth в `sources/websocket/kick.js`:
+
+`user:read`, `channel:read`, `channel:write`, `channel:rewards:read`, `chat:write`, `events:subscribe`, `moderation:ban`, `moderation:chat_message:manage`, `kicks:read`.
+
+Текущие официальные подписки по умолчанию:
+
+`chat.message.sent`, `channel.followed`, `channel.subscription.new`, `channel.subscription.renewal`, `channel.subscription.gifts`, `channel.reward.redemption.updated`, `kicks.gifted`, `moderation.banned`, `livestream.status.updated`.
+
+Источник может добавлять пользовательские и недавно объявленные названия событий пожертвований или поддержки, если Kick возвращает их через конечную точку типов событий. Не описывайте эти динамические имена как гарантированно доступные. В текущем официальном списке событий Kick нет вебхука рейда или хоста.
+
+Стандартный захват браузера реализован текущим `sources/kick.js`, подключаемым через манифест. Структурированный источник состоит из `sources/websocket/kick.html` и `sources/websocket/kick.js`; устаревший файл `sources/kick_new.js` не является источником истины для манифеста.
+            </template>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. Лицензия GPLv3.0.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

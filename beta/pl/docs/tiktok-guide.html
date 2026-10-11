@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pl" data-site-root="../../" data-site-language="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/pl/docs/tiktok-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="pl_PL">
+    <meta property="og:url" content="https://socialstream.ninja/beta/pl/docs/tiktok-guide.html">
+    <meta property="og:title" content="Poradnik TikToka — Social Stream Ninja">
+    <meta property="og:description" content="Jak używać TikToka z Social Stream Ninja, w tym trybu Standard, TikTok WS, odpowiedzi, Polling, opcji Euler i awaryjnego TikFinity.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/pl/docs/tiktok-guide.html">
+    <meta name="twitter:title" content="Poradnik TikToka — Social Stream Ninja">
+    <meta name="twitter:description" content="Jak używać TikToka z Social Stream Ninja, w tym trybu Standard, TikTok WS, odpowiedzi, Polling, opcji Euler i awaryjnego TikFinity.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poradnik TikToka — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Jak używać TikToka z Social Stream Ninja, w tym trybu Standard, TikTok WS, odpowiedzi, Polling, opcji Euler i awaryjnego TikFinity.">
+    <style>
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .setup-grid .guide-card {
+            margin-bottom: 0;
+        }
+
+        .mini-label {
+            display: inline-block;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .callout-box {
+            background: rgba(26, 115, 232, 0.08);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 1.6rem;
+            margin: 2rem 0;
+        }
+
+        .callout-box.warning {
+            background: rgba(251, 188, 5, 0.14);
+        }
+
+        .dark-mode .callout-box {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .dark-mode .callout-box.warning {
+            background: rgba(251, 188, 5, 0.2);
+        }
+
+        .steps-table-wrap {
+            overflow-x: auto;
+            margin-top: 1.5rem;
+        }
+
+        .steps-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .steps-table th,
+        .steps-table td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .steps-table th {
+            color: var(--primary-color);
+        }
+
+        .steps-table code,
+        .guide-card code,
+        .callout-box code {
+            word-break: break-word;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            margin-top: 2rem;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+        }
+
+        @media (max-width: 700px) {
+            .field-table, .steps-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="pl">
+<script id="ssn-site-language" type="application/json">{"language":"pl","page":"docs/tiktok-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Przełącz na jasny motyw","Switch to dark theme":"Przełącz na ciemny motyw","Light mode":"Tryb jasny","Dark mode":"Tryb ciemny","Open navigation menu":"Otwórz menu nawigacji","Close navigation menu":"Zamknij menu nawigacji","Copy this document as Markdown to the clipboard":"Skopiuj ten dokument w formacie Markdown do schowka","Copy Markdown":"Kopiuj Markdown","Copying…":"Kopiowanie…","Markdown copied":"Skopiowano Markdown","Copy failed":"Nie udało się skopiować","Copy comprehensive Markdown for an AI assistant":"Skopiuj pełny Markdown dla asystenta AI","Copy this documentation page as Markdown for an AI assistant":"Skopiuj tę stronę dokumentacji jako Markdown dla asystenta AI"},"strings":{"\"I keep getting rate-limited\"":"„Ciągle trafiam na limit żądań”","\"It says I am offline\"":"„Pokazuje, że jestem offline”","\"Messages are missing\"":"„Brakuje wiadomości”","\"Messages duplicate after reconnects\"":"„Wiadomości powielają się po ponownym połączeniu”","\"The auth window closes\"":"„Okno uwierzytelniania się zamyka”","\"What should I try first?\"":"„Co wypróbować najpierw?”",". For event payload details, see the":". Szczegóły danych zdarzeń znajdziesz w sekcji","Activate source":"Aktywuj źródło (Activate source)","Activate the new source and keep TikFinity open while live.":"Aktywuj nowe źródło i pozostaw TikFinity otwarte podczas transmisji.","Advanced signing options for users with their own API key or custom setup.":"Zaawansowane opcje podpisywania dla użytkowników z własnym kluczem API lub niestandardową konfiguracją.","Auto for reading":"Auto do odczytu","Auto, Polling, TikFinity fallback":"Auto, Polling, awaryjne TikFinity","Back To Guides":"Powrót do poradników","Best default for most users. Uses WebSocket first, then falls back to Polling if needed.":"Najlepsze domyślne ustawienie dla większości użytkowników. Najpierw używa WebSocket, a w razie potrzeby przechodzi na Polling.","Best for":"Najlepsze dla","Best reply mode:":"Najlepszy tryb odpowiedzi:","Best when you want to send replies from SSN and use the live TikTok page inside the app.":"Najlepszy, gdy chcesz wysyłać odpowiedzi z SSN i używać strony TikTok na żywo w aplikacji.","Bluesky":"Bluesky","Choose the TikTok mode or preset you want.":"Wybierz żądany tryb lub preset TikToka.","Click":"Kliknij","Click the":"Kliknij","Close extra TikTok tabs or apps on the same device if possible.":"W miarę możliwości zamknij dodatkowe karty lub aplikacje TikToka na tym samym urządzeniu.","Close other TikTok tabs, apps, or duplicate viewers on the same device.":"Zamknij inne karty, aplikacje lub powielone okna oglądania TikToka na tym samym urządzeniu.","Commands & API":"Polecenia i API","Common TikTok problems":"Typowe problemy z TikTokiem","Community":"Społeczność","Compatibility mode. Slower, but useful when WebSocket paths fail.":"Tryb zgodności. Wolniejszy, ale przydatny, gdy ścieżki WebSocket zawodzą.","Connect TikTok in SSN":"Połącz TikTok w SSN","Consolidates your live social messaging streams and more. Free and open source.":"Łączy strumienie wiadomości społecznościowych na żywo i nie tylko. Bezpłatny i otwartoźródłowy.","Contribute":"Współtwórz","Copy the dock URL.":"Skopiuj adres doku.","Customization Guide":"Poradnik dostosowywania","Discord":"Discord","Discord StreamKit and TikFinity Sources":"Źródła Discord StreamKit i TikFinity","Donate":"Wesprzyj","Download":"Pobierz","Download Desktop App":"Pobierz aplikację komputerową","Enter the TikTok username, live URL, or requested value.":"Wpisz nazwę użytkownika TikToka, adres transmisji lub żądaną wartość.","Euler Proxy / Euler Signing":"Euler Proxy / Euler Signing","Event Reference":"Dokumentacja wydarzeń","Extension":"Rozszerzenie","FAQ":"Częste pytania","Fallback":"Tryb awaryjny","Fallback reply mode:":"Awaryjny tryb odpowiedzi:","Fallback when Standard is flaky but you still want replies.":"Opcja awaryjna, gdy Standard działa niestabilnie, ale nadal chcesz odpowiadać.","Features":"Funkcje","For a complete walkthrough of this fallback and Discord StreamKit, see":"Pełny opis tej opcji awaryjnej i Discord StreamKit znajdziesz w poradniku","GitHub":"GitHub","GitHub Repository":"Repozytorium GitHub","Go live first, then try":"Najpierw rozpocznij transmisję, a następnie wypróbuj","Go to":"Otwórz","Guides":"Poradniki","Hire":"Zleć pracę","Home":"Strona główna","How to connect TikTok in Social Stream Ninja, choose the right mode, send replies, and use TikFinity as a fallback when needed.":"Jak połączyć TikTok w Social Stream Ninja, wybrać właściwy tryb, wysyłać odpowiedzi i w razie potrzeby używać TikFinity jako opcji awaryjnej.","How to send replies to TikTok chat":"Jak wysyłać odpowiedzi na czat TikToka","How to use TikFinity OBS Dock":"Jak używać TikFinity OBS Dock","How to use TikTok with Social Stream Ninja, including Standard mode, TikTok WS, replies, Polling, Euler options, and TikFinity fallback.":"Jak używać TikToka z Social Stream Ninja, w tym trybu Standard, TikTok WS, odpowiedzi, Polling, opcji Euler i awaryjnego TikFinity.","If Standard is flaky, try":"Jeśli Standard działa niestabilnie, wypróbuj","If Standard is unstable":"Jeśli Standard jest niestabilny","If TikTok keeps missing chat, use":"Jeśli TikTok ciągle pomija czat, użyj","If TikTok still misses too much chat, switch to the TikFinity fallback below.":"Jeśli TikTok nadal pomija zbyt wiele wiadomości, przejdź na opisane poniżej awaryjne TikFinity.","If WebSocket still fails, try":"Jeśli WebSocket nadal nie działa, wypróbuj","If it still duplicates, switch modes or use TikFinity temporarily.":"Jeśli wiadomości nadal się powielają, zmień tryb lub tymczasowo użyj TikFinity.","If you already use TikFinity activity-feed widgets, SSN can also work with supported TikFinity widget pages in browser-based workflows.":"Jeśli już używasz widżetów kanału aktywności TikFinity, SSN może również współpracować z obsługiwanymi stronami widżetów TikFinity w konfiguracjach przeglądarkowych.","If you need replies":"Jeśli potrzebujesz odpowiedzi","If you need to reply, switch to":"Jeśli potrzebujesz odpowiadać, przełącz na","If you use the browser extension instead":"Jeśli zamiast tego używasz rozszerzenia przeglądarki","Important:":"Ważne:","In SSN, click":"W SSN kliknij","Inspiration":"Inspiracje","Installation Guide":"Instrukcja instalacji","Join our Discord":"Dołącz do naszego Discorda","Keep the signer window open.":"Pozostaw okno podpisywania otwarte.","Local Signer":"Lokalne podpisywanie (Local Signer)","Local Signer if Standard is unstable":"Local Signer, jeśli Standard jest niestabilny","Main navigation":"Nawigacja główna","Make sure you are logged into the TikTok account that should send messages.":"Upewnij się, że zalogowano się na konto TikToka, które ma wysyłać wiadomości.","Modes":"Tryby","No":"Nie","Not meant for replies:":"Nie służą do odpowiedzi:","Open":"Otwórz","Open TikFinity.":"Otwórz TikFinity.","Open navigation menu":"Otwórz menu nawigacji","Open the broadcaster's TikTok live page in your browser and keep the extension enabled.":"Otwórz stronę transmisji nadawcy na TikToku w przeglądarce i pozostaw rozszerzenie włączone.","Open the standalone app.":"Otwórz samodzielną aplikację.","Option":"Opcja","Other chat sites":"Inne witryny czatu","Overlay -> OBS Docks":"Overlay -> OBS Docks","Overlay Gallery":"Galeria nakładek","Overview":"Przegląd","Paste the TikFinity dock URL.":"Wklej adres doku TikFinity.","Pick a dock slot and configure it for chat.":"Wybierz miejsce doku i skonfiguruj je do czatu.","Polling":"Odpytywanie (Polling)","Practical rule:":"Praktyczna zasada:","Privacy Policy":"Polityka prywatności","Quick Links":"Szybkie linki","Quick recommendation:":"Szybka wskazówka:","Read-only fallback when TikTok native modes miss too much chat or fail to connect.":"Awaryjna opcja tylko do odczytu, gdy natywne tryby TikToka pomijają zbyt wiele wiadomości lub nie mogą się połączyć.","Reload":"Przeładuj (Reload)","Replies":"Odpowiedzi","Reply support depends on having a valid signed-in TikTok session.":"Obsługa odpowiedzi zależy od prawidłowej zalogowanej sesji TikToka.","Report an Issue":"Zgłoś problem","Resources":"Materiały","Show capture page":"Pokaż stronę przechwytywania (Show capture page)","Sign in":"Zaloguj się","Sign in if you need authenticated-only or host-only page events on your own live.":"Zaloguj się, jeśli potrzebujesz zdarzeń strony dostępnych tylko po uwierzytelnieniu lub tylko dla prowadzącego podczas własnej transmisji.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. Licencja GPLv3.0. Autor:","Standard":"Standard","Standard for replies":"Standard do odpowiedzi","Start here":"Zacznij tutaj","Start with":"Zacznij od","Step 1":"Krok 1","Step 2":"Krok 2","Step 3":"Krok 3","Steve Seguin":"Steve Seguin","Stop the source fully, then reconnect cleanly.":"Całkowicie zatrzymaj źródło, a następnie połącz się od nowa.","Support":"Pomoc","Supported Sites":"Obsługiwane witryny","Switch theme":"Zmień motyw","Templates":"Szablony","Terms of Service":"Warunki korzystania","Testing after a stream ends will often fail.":"Testowanie po zakończeniu transmisji często się nie udaje.","The Supported Sites entry for TikTok Live: use a":"Wpis TikTok Live w Obsługiwanych witrynach: użyj","The standalone app still offers the widest TikTok mode selection and the cleanest fallback options.":"Samodzielna aplikacja nadal oferuje najszerszy wybór trybów TikToka i najprostsze opcje awaryjne.","This can be a TikTok-side limitation, not always an SSN bug.":"Może to być ograniczenie po stronie TikToka, a nie zawsze błąd SSN.","This is a backup reader, not a reply tool.":"To awaryjny odbiornik, a nie narzędzie do odpowiadania.","TikFinity OBS Dock":"Dok OBS TikFinity","TikFinity activity-feed pages can also work in browser-based SSN setups.":"Strony kanału aktywności TikFinity mogą również działać w przeglądarkowych konfiguracjach SSN.","TikFinity can work as a backup source when TikTok itself is dropping or hiding too much chat.":"TikFinity może działać jako źródło zapasowe, gdy sam TikTok pomija lub ukrywa zbyt wiele wiadomości.","TikFinity if TikTok itself is the problem":"TikFinity, jeśli problemem jest sam TikTok","TikTok":"TikTok","TikTok Guide":"Przewodnik po TikToku","TikTok Guide - Social Stream Ninja":"Poradnik TikToka — Social Stream Ninja","TikTok Live setup instructions modal from the Supported Sites page":"Okno instrukcji konfiguracji TikTok Live ze strony Obsługiwane witryny","TikTok WS + Auto":"TikTok WS + Auto","TikTok WS + Local Signer":"TikTok WS + Local Signer","TikTok chat only works when the account is actually live.":"Czat TikToka działa tylko wtedy, gdy konto rzeczywiście nadaje na żywo.","TikTok is one of the hardest platforms to keep stable because TikTok changes behavior often and not every account sees the same thing.":"TikTok jest jedną z najtrudniejszych platform do utrzymania stabilnego działania, ponieważ często zmienia zachowanie i nie każde konto widzi to samo.","TikTok issues are not always caused by SSN. Missing messages, auth failures, and throttling can be caused by TikTok itself, by account state, or by region-specific restrictions.":"Problemy z TikTokiem nie zawsze są powodowane przez SSN. Brakujące wiadomości, błędy uwierzytelniania i ograniczanie mogą wynikać z samego TikToka, stanu konta lub ograniczeń regionalnych.","Troubleshooting":"Rozwiązywanie problemów","Try":"Wypróbuj","Try another mode before deciding one path is permanently best.":"Wypróbuj inny tryb, zanim uznasz jedną ścieżkę za trwale najlepszą.","Try another mode or signing path.":"Wypróbuj inny tryb lub ścieżkę podpisywania.","URL and keep the chat page open while the extension captures it.":"adresu URL i pozostaw stronę czatu otwartą, gdy rozszerzenie ją przechwytuje.","Update to the newest app build first.":"Najpierw zaktualizuj aplikację do najnowszej wersji.","Use":"Użyj","Use TikFinity as a fallback if it is behaving better for your account.":"Użyj TikFinity jako opcji awaryjnej, jeśli działa lepiej dla Twojego konta.","Usually No":"Zwykle nie","Wait a few minutes before retrying.":"Odczekaj kilka minut przed ponowną próbą.","Which TikTok option should I use?":"Której opcji TikToka użyć?","X.com":"X.com","Yes":"Tak","after sign-in.":"po zalogowaniu.","button in the left sidebar.":"na lewym pasku bocznym.","if needed.":"w razie potrzeby.","if reading reliability matters most, start with Auto or Polling. If replying matters most, use Standard or Local Signer.":"jeśli najważniejsza jest niezawodność odczytu, zacznij od Auto lub Polling. Jeśli najważniejsze jest odpowiadanie, użyj Standard lub Local Signer.","mode first.":"w pierwszej kolejności.","so you can see sign-in or CAPTCHA.":", aby zobaczyć logowanie lub CAPTCHA.","through":"przez","with contributions from the community.":"przy współudziale społeczności."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tiktok-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Nawigacja główna"><a href="../index.html">Strona główna</a><a href="features.html">Funkcje</a><a href="inspiration.html" class="site-priority-inspiration">Inspiracje</a><a href="download.html">Pobierz</a><a href="guides.html">Poradniki</a><a href="commands.html">Polecenia i API</a><a href="supported-sites.html">Obsługiwane witryny</a><a href="overlay-gallery.html" class="site-priority-gallery">Galeria nakładek</a><a href="services.html" class="site-priority-hire">Zleć pracę</a><a href="support.html">Pomoc</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Polski"><span aria-hidden="true">🌐 </span><span lang="pl">Polski</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tiktok-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tiktok-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tiktok-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tiktok-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tiktok-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tiktok-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tiktok-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tiktok-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tiktok-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tiktok-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="tiktok-guide.html" lang="pl" hreflang="pl" aria-current="true">Polski</a><a class="site-language-link" href="../../ko/docs/tiktok-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tiktok-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tiktok-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tiktok-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tiktok-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tiktok-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Zmień motyw"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otwórz menu nawigacji" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Przewodnik po TikToku</h1>
+            <p>Jak połączyć TikTok w Social Stream Ninja, wybrać właściwy tryb, wysyłać odpowiedzi i w razie potrzeby używać TikFinity jako opcji awaryjnej.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <span class="mini-label">Przegląd</span>
+                    <h3>Zacznij tutaj</h3>
+                    <p>TikTok jest jedną z najtrudniejszych platform do utrzymania stabilnego działania, ponieważ często zmienia zachowanie i nie każde konto widzi to samo.</p>
+                    <div class="callout-box">
+                        <strong>Szybka wskazówka:</strong>
+                        <ul class="guide-list">
+                            <li>Zacznij od <strong>TikTok WS + Auto</strong>.</li>
+                            <li>Jeśli potrzebujesz odpowiadać, przełącz na <strong>Standard</strong>.</li>
+                            <li>Jeśli Standard działa niestabilnie, wypróbuj <strong>Lokalne podpisywanie (Local Signer)</strong>.</li>
+                            <li>Jeśli TikTok ciągle pomija czat, użyj <strong>Dok OBS TikFinity</strong> przez <strong>Inne witryny czatu</strong>.</li>
+                        </ul>
+                    </div>
+                    <div class="callout-box warning">
+                        <strong>Ważne:</strong> Problemy z TikTokiem nie zawsze są powodowane przez SSN. Brakujące wiadomości, błędy uwierzytelniania i ograniczanie mogą wynikać z samego TikToka, stanu konta lub ograniczeń regionalnych.
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">Tryby</span>
+                    <h3>Której opcji TikToka użyć?</h3>
+                    <div class="steps-table-wrap">
+                    <table class="steps-table">
+                        <thead>
+                            <tr>
+                                <th>Opcja</th>
+                                <th>Najlepsze dla</th>
+                                <th>Odpowiedzi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>TikTok WS + Auto</strong></td>
+                                <td>Najlepsze domyślne ustawienie dla większości użytkowników. Najpierw używa WebSocket, a w razie potrzeby przechodzi na Polling.</td>
+                                <td>Nie</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Standard</strong></td>
+                                <td>Najlepszy, gdy chcesz wysyłać odpowiedzi z SSN i używać strony TikTok na żywo w aplikacji.</td>
+                                <td>Tak</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TikTok WS + Local Signer</strong></td>
+                                <td>Opcja awaryjna, gdy Standard działa niestabilnie, ale nadal chcesz odpowiadać.</td>
+                                <td>Tak</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Odpytywanie (Polling)</strong></td>
+                                <td>Tryb zgodności. Wolniejszy, ale przydatny, gdy ścieżki WebSocket zawodzą.</td>
+                                <td>Nie</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Euler Proxy / Euler Signing</strong></td>
+                                <td>Zaawansowane opcje podpisywania dla użytkowników z własnym kluczem API lub niestandardową konfiguracją.</td>
+                                <td>Zwykle nie</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Dok OBS TikFinity</strong></td>
+                                <td>Awaryjna opcja tylko do odczytu, gdy natywne tryby TikToka pomijają zbyt wiele wiadomości lub nie mogą się połączyć.</td>
+                                <td>Nie</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+
+                <div class="setup-grid">
+                    <div class="guide-card">
+                        <span class="mini-label">Krok 1</span>
+                        <h3>Połącz TikTok w SSN</h3>
+                        <ol class="guide-steps">
+                            <li>Otwórz samodzielną aplikację.</li>
+                            <li>Kliknij <strong>TikTok</strong> na lewym pasku bocznym.</li>
+                            <li>Wpisz nazwę użytkownika TikToka, adres transmisji lub żądaną wartość.</li>
+                            <li>Wybierz żądany tryb lub preset TikToka.</li>
+                            <li>Kliknij <strong>Aktywuj źródło (Activate source)</strong>.</li>
+                        </ol>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">Krok 2</span>
+                        <h3>Jeśli potrzebujesz odpowiedzi</h3>
+                        <ol class="guide-steps">
+                            <li>Użyj <strong>Standard</strong> w pierwszej kolejności.</li>
+                            <li>Kliknij <strong>Zaloguj się</strong> w razie potrzeby.</li>
+                            <li>Otwórz <strong>Pokaż stronę przechwytywania (Show capture page)</strong>.</li>
+                            <li>Upewnij się, że zalogowano się na konto TikToka, które ma wysyłać wiadomości.</li>
+                        </ol>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">Krok 3</span>
+                        <h3>Jeśli Standard jest niestabilny</h3>
+                        <ol class="guide-steps">
+                            <li>Wypróbuj <strong>Lokalne podpisywanie (Local Signer)</strong>.</li>
+                            <li>Pozostaw okno podpisywania otwarte.</li>
+                            <li>Jeśli WebSocket nadal nie działa, wypróbuj <strong>Odpytywanie (Polling)</strong>.</li>
+                            <li>Jeśli TikTok nadal pomija zbyt wiele wiadomości, przejdź na opisane poniżej awaryjne TikFinity.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">Odpowiedzi</span>
+                    <h3>Jak wysyłać odpowiedzi na czat TikToka</h3>
+                    <p>Obsługa odpowiedzi zależy od prawidłowej zalogowanej sesji TikToka.</p>
+                    <ul class="guide-list">
+                        <li><strong>Najlepszy tryb odpowiedzi:</strong> <strong>Standard</strong></li>
+                        <li><strong>Awaryjny tryb odpowiedzi:</strong> <strong>Lokalne podpisywanie (Local Signer)</strong></li>
+                        <li><strong>Nie służą do odpowiedzi:</strong> Auto, Polling, awaryjne TikFinity</li>
+                    </ul>
+                    <div class="callout-box">
+                        <strong>Praktyczna zasada:</strong> jeśli najważniejsza jest niezawodność odczytu, zacznij od Auto lub Polling. Jeśli najważniejsze jest odpowiadanie, użyj Standard lub Local Signer.
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">Tryb awaryjny</span>
+                    <h3>Jak używać TikFinity OBS Dock</h3>
+                    <p>TikFinity może działać jako źródło zapasowe, gdy sam TikTok pomija lub ukrywa zbyt wiele wiadomości.</p>
+                    <ol class="guide-steps">
+                        <li>Otwórz TikFinity.</li>
+                        <li>Otwórz <strong>Overlay -&gt; OBS Docks</strong>.</li>
+                        <li>Wybierz miejsce doku i skonfiguruj je do czatu.</li>
+                        <li>Skopiuj adres doku.</li>
+                        <li>W SSN kliknij <strong>Inne witryny czatu</strong>.</li>
+                        <li>Wklej adres doku TikFinity.</li>
+                        <li>Aktywuj nowe źródło i pozostaw TikFinity otwarte podczas transmisji.</li>
+                    </ol>
+                    <ul class="guide-list">
+                        <li>To awaryjny odbiornik, a nie narzędzie do odpowiadania.</li>
+                        <li>Jeśli już używasz widżetów kanału aktywności TikFinity, SSN może również współpracować z obsługiwanymi stronami widżetów TikFinity w konfiguracjach przeglądarkowych.</li>
+                    </ul>
+                    <p>Pełny opis tej opcji awaryjnej i Discord StreamKit znajdziesz w poradniku <a href="external-overlay-sources.html#tikfinity">Źródła Discord StreamKit i TikFinity</a>. Szczegóły danych zdarzeń znajdziesz w sekcji <a href="event-reference.html">Dokumentacja wydarzeń</a>.</p>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">Rozwiązywanie problemów</span>
+                    <h3>Typowe problemy z TikTokiem</h3>
+                    <div class="setup-grid">
+                        <div class="guide-card">
+                            <h4>„Pokazuje, że jestem offline”</h4>
+                            <ul class="guide-list">
+                                <li>Czat TikToka działa tylko wtedy, gdy konto rzeczywiście nadaje na żywo.</li>
+                                <li>Najpierw rozpocznij transmisję, a następnie wypróbuj <strong>Przeładuj (Reload)</strong>.</li>
+                                <li>Testowanie po zakończeniu transmisji często się nie udaje.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>„Okno uwierzytelniania się zamyka”</h4>
+                            <ul class="guide-list">
+                                <li>Użyj <strong>Pokaż stronę przechwytywania (Show capture page)</strong> , aby zobaczyć logowanie lub CAPTCHA.</li>
+                                <li>Wypróbuj <strong>Przeładuj (Reload)</strong> po zalogowaniu.</li>
+                                <li>W miarę możliwości zamknij dodatkowe karty lub aplikacje TikToka na tym samym urządzeniu.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>„Brakuje wiadomości”</h4>
+                            <ul class="guide-list">
+                                <li>Może to być ograniczenie po stronie TikToka, a nie zawsze błąd SSN.</li>
+                                <li>Wypróbuj inny tryb, zanim uznasz jedną ścieżkę za trwale najlepszą.</li>
+                                <li>Użyj TikFinity jako opcji awaryjnej, jeśli działa lepiej dla Twojego konta.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>„Wiadomości powielają się po ponownym połączeniu”</h4>
+                            <ul class="guide-list">
+                                <li>Najpierw zaktualizuj aplikację do najnowszej wersji.</li>
+                                <li>Całkowicie zatrzymaj źródło, a następnie połącz się od nowa.</li>
+                                <li>Jeśli wiadomości nadal się powielają, zmień tryb lub tymczasowo użyj TikFinity.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>„Ciągle trafiam na limit żądań”</h4>
+                            <ul class="guide-list">
+                                <li>Zamknij inne karty, aplikacje lub powielone okna oglądania TikToka na tym samym urządzeniu.</li>
+                                <li>Odczekaj kilka minut przed ponowną próbą.</li>
+                                <li>Wypróbuj inny tryb lub ścieżkę podpisywania.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>„Co wypróbować najpierw?”</h4>
+                            <ul class="guide-list">
+                                <li>Auto do odczytu</li>
+                                <li>Standard do odpowiedzi</li>
+                                <li>Local Signer, jeśli Standard jest niestabilny</li>
+                                <li>TikFinity, jeśli problemem jest sam TikTok</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">Rozszerzenie</span>
+                    <h3>Jeśli zamiast tego używasz rozszerzenia przeglądarki</h3>
+                    <ul class="guide-list">
+                        <li>Otwórz stronę transmisji nadawcy na TikToku w przeglądarce i pozostaw rozszerzenie włączone.</li>
+                        <li>Zaloguj się, jeśli potrzebujesz zdarzeń strony dostępnych tylko po uwierzytelnieniu lub tylko dla prowadzącego podczas własnej transmisji.</li>
+                        <li>Strony kanału aktywności TikFinity mogą również działać w przeglądarkowych konfiguracjach SSN.</li>
+                        <li>Samodzielna aplikacja nadal oferuje najszerszy wybór trybów TikToka i najprostsze opcje awaryjne.</li>
+                    </ul>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/tiktok-live-setup-modal.png" alt="Okno instrukcji konfiguracji TikTok Live ze strony Obsługiwane witryny" class="guide-image guide-image-medium">
+                        <figcaption>Wpis TikTok Live w Obsługiwanych witrynach: użyj <code>tiktok.com/*/live</code> adresu URL i pozostaw stronę czatu otwartą, gdy rozszerzenie ją przechwytuje.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="footer-links">
+                    <a href="guides.html#standalone-tiktok" class="btn btn-secondary">Powrót do poradników</a>
+                    <a href="download.html#standalone" class="btn btn-primary">Pobierz aplikację komputerową</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Łączy strumienie wiadomości społecznościowych na żywo i nie tylko. Bezpłatny i otwartoźródłowy.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+                        <a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+                        <a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Szybkie linki</h3>
+                    <ul>
+                        <li><a href="../index.html">Strona główna</a></li>
+                        <li><a href="features.html">Funkcje</a></li>
+                        <li><a href="download.html">Pobierz</a></li>
+                        <li><a href="guides.html">Poradniki</a></li>
+                        <li><a href="commands.html">Polecenia i API</a></li>
+                        <li><a href="supported-sites.html">Obsługiwane witryny</a></li>
+                        <li><a href="templates.html">Szablony</a></li>
+                        <li><a href="support.html">Pomoc</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Materiały</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">Instrukcja instalacji</a></li>
+                        <li><a href="guides.html#extension-customization">Poradnik dostosowywania</a></li>
+                        <li><a href="guides.html#faq">Częste pytania</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Zgłoś problem</a></li>
+                        <li><a href="../privacy.html">Polityka prywatności</a></li>
+                        <li><a href="../TOS.html">Warunki korzystania</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Społeczność</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Dołącz do naszego Discorda</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">Repozytorium GitHub</a></li>
+                        <li><a href="support.html#contribute">Współtwórz</a></li>
+                        <li><a href="https://github.com/sponsors/steveseguin" target="_blank">Wesprzyj</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licencja GPLv3.0. Autor: <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> przy współudziale społeczności.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

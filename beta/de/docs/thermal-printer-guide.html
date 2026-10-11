@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="de" data-site-root="../../" data-site-language="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/de/docs/thermal-printer-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="de_DE">
+    <meta property="og:url" content="https://socialstream.ninja/beta/de/docs/thermal-printer-guide.html">
+    <meta property="og:title" content="Thermodrucker und Stream-Labels – Social Stream Ninja">
+    <meta property="og:description" content="Richte einen USB-Thermobeleg- oder Etikettendrucker in Social Stream Ninja ein und drucke Namen, Spenden, Käufe, Tickets und Etiketten fester Größe aus Event Flow.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja-Logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/de/docs/thermal-printer-guide.html">
+    <meta name="twitter:title" content="Thermodrucker und Stream-Labels – Social Stream Ninja">
+    <meta name="twitter:description" content="Richte einen USB-Thermobeleg- oder Etikettendrucker in Social Stream Ninja ein und drucke Namen, Spenden, Käufe, Tickets und Etiketten fester Größe aus Event Flow.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja-Logo">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Thermodrucker und Stream-Labels – Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Richte einen USB-Thermobeleg- oder Etikettendrucker in Social Stream Ninja ein und drucke Namen, Spenden, Käufe, Tickets und Etiketten fester Größe aus Event Flow.">
+	<style>
+		.printer-gallery { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; margin:24px 0; align-items:start; }
+		.paper-example { display:flex; flex-direction:column; align-items:center; gap:10px; margin:0; }
+		.paper { position:relative; width:min(100%,220px); min-height:260px; padding:25px 19px; color:#151515; background:#fffdf7; border:1px solid #d9d3c5; box-shadow:0 14px 26px rgba(28,25,18,.15); font-family:"Roboto Mono",monospace; text-align:center; }
+		.paper.receipt::after { content:""; position:absolute; inset:auto 0 -7px; height:13px; background:linear-gradient(135deg,transparent 7px,#fffdf7 0) 0 0/14px 14px repeat-x; }
+		.paper.label { min-height:170px; border-radius:6px; outline:8px solid #e9e5dc; }
+		.paper .eyebrow { font-size:11px; letter-spacing:.13em; text-transform:uppercase; }
+		.paper .big { margin:15px 0 6px; font-size:27px; font-weight:800; overflow-wrap:anywhere; }
+		.paper .amount { margin-top:9px; font-size:22px; font-weight:800; }
+		.paper .rule { border-top:2px dashed #777; margin:17px 0; }
+		.paper-caption { max-width:250px; color:var(--text-secondary); text-align:center; font-size:1.35rem; line-height:1.45; }
+		.flow-demo { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:16px; align-items:center; margin:22px 0; max-width:64rem; }
+		.flow-node { padding:16px 18px; border:1px solid var(--border-color); border-radius:12px; background:var(--background-card); }
+		.flow-node strong { display:block; margin-bottom:7px; }
+		.flow-arrow { color:var(--primary-color); font-size:28px; font-weight:700; text-align:center; }
+		.printer-types { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:20px 0; }
+		.printer-type { padding:16px 18px; border:1px solid var(--border-color); border-radius:12px; background:var(--background-card); }
+		.printer-type h3 { margin-top:0; font-size:1.7rem; }
+		.printer-type p { margin:0; font-size:1.45rem; line-height:1.55; }
+		@media (max-width:800px) {
+			.printer-gallery, .printer-types { grid-template-columns:minmax(0,1fr); }
+			.flow-demo { grid-template-columns:minmax(0,1fr); }
+			.flow-arrow { transform:rotate(90deg); }
+		}
+	</style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="de">
+<script id="ssn-site-language" type="application/json">{"language":"de","page":"docs/thermal-printer-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Zum hellen Design wechseln","Switch to dark theme":"Zum dunklen Design wechseln","Light mode":"Heller Modus","Dark mode":"Dunkler Modus","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Copy this document as Markdown to the clipboard":"Dieses Dokument als Markdown in die Zwischenablage kopieren","Copy Markdown":"Markdown kopieren","Copying…":"Wird kopiert…","Markdown copied":"Markdown kopiert","Copy failed":"Kopieren fehlgeschlagen","Copy comprehensive Markdown for an AI assistant":"Umfassende Markdown-Dokumentation für einen KI-Assistenten kopieren","Copy this documentation page as Markdown for an AI assistant":"Diese Dokumentationsseite als Markdown für einen KI-Assistenten kopieren"},"strings":{"$25.00 CAD":"25,00 CAD","(under Integrations) and connect the trigger to it.":"(unter Integrationen) und verbinde den Auslöser damit.",", a new line, then":", eine neue Zeile, dann",", add an amount, and run it. This prints a real label.":", ergänze einen Betrag und führe es aus. Dabei wird ein echtes Etikett gedruckt.",", and":", und",", and pick the downloaded file.":"und wähle die heruntergeladene Datei.",", click":", klicke auf",", filtered to Whatnot. Bids and auction-ending notices don't print. See the":", gefiltert auf Whatnot. Gebote und Auktionsendemeldungen werden nicht gedruckt. Siehe die",", or":", oder",", plus an error or code when something fails, for later steps. Success means the job was sent to Windows, not that paper came out. Check the Windows print queue before retrying, or you may get duplicate labels.":"und bei Fehlern eine Fehlermeldung oder einen Code für nachfolgende Schritte hinzu. Erfolg bedeutet, dass der Auftrag an Windows gesendet wurde, nicht dass Papier herauskam. Prüfe vor einem erneuten Versuch die Windows-Druckwarteschlange, um doppelte Etiketten zu vermeiden.",", so it misses most sales.":"und erfasst daher die meisten Verkäufe nicht.",", use":", verwende",". Check both print actions. They use your Printer Control printer and label length.":". Prüfe beide Druckaktionen. Sie verwenden Drucker und Etikettenlänge aus Printer Control.",". Enter a name, turn on":". Gib einen Namen ein und aktiviere",". Filter by provider if needed.":". Filtere bei Bedarf nach Anbieter.",". If an edge is cut off, raise that side's safe margin and test again.":". Wird eine Kante abgeschnitten, erhöhe dort den Sicherheitsrand und teste erneut.",". It prints the buyer in bold, the item name, and an order ID when there is one. If a payment fails, it prints a separate":". Es druckt den Käufer fett, den Artikelnamen und, falls vorhanden, eine Bestell-ID. Schlägt eine Zahlung fehl, druckt es separat ein",". It's usually":". Normalerweise ist es",". Pick the font size, weight, alignment, and copies.":". Wähle Schriftgröße, Schriftstärke, Ausrichtung und Anzahl der Kopien.",". Pick your printer by the name Windows shows.":". Wähle den Drucker anhand seines Namens in Windows.",". Quantity may be in":". Die Anzahl kann stehen in",". Values made by earlier steps in the flow work too.":". Auch Werte aus früheren Flow-Schritten funktionieren.",". Your Printer Control settings will be used.":". Deine Einstellungen aus Printer Control werden verwendet.","24 pt · bold · centred":"24 pt · fett · zentriert","3 × 1 inch labels (including a Munbyn BT320):":"3 × 1-Zoll-Etiketten (auch Munbyn BT320):","58 mm receipt paper. Length grows with the text.":"58-mm-Bonpapier. Die Länge wächst mit dem Text.","A 62 × 29 mm label is usually 62 mm wide with a 29 mm fixed length.":"Ein Etikett mit 62 × 29 mm ist normalerweise 62 mm breit und hat eine feste Länge von 29 mm.","A Counter numbers purchases, not unique buyers. Giving the same number to every purchase by one buyer needs a separate buyer-to-number list, reset at the start of each stream. User Memory's reason field is plain text, not a buyer-number counter.":"Ein Zähler nummeriert Käufe, nicht einzelne Käufer. Für dieselbe Nummer bei jedem Kauf einer Person brauchst du eine separate Käufer-Nummern-Liste, die zu Streambeginn zurückgesetzt wird. Das Begründungsfeld in User Memory ist Klartext, kein Käufernummernzähler.","A fixed die-cut label: name plus donation.":"Ein vorgestanztes Etikett mit fester Größe: Name und Spende.","A merch or pickup label using event details and a counter.":"Ein Merch- oder Abholetikett mit Ereignisdetails und Zähler.","A running order number":"Eine fortlaufende Bestellnummer","A sale label doesn't mean it's paid.":"Ein Verkaufsetikett bestätigt keine Zahlung.","A shared or networked label station":"Eine gemeinsame oder vernetzte Etikettenstation","A short to-do list for a producer sitting next to you.":"Eine kurze Aufgabenliste für den Produzenten neben dir.","A sturdier receipt printer":"Ein robusterer Bondrucker","A-037":"A-037","Add":"Hinzufügen","Add a":"Füge hinzu","Add the":"Füge","An edge is cut off":"Eine Kante wird abgeschnitten","BUYER #12":"KÄUFER #12","Before you start:":"Vor dem Start:","Blue Ninja Mug":"Blaue Ninja-Tasse","Bold the buyer, keep the item normal":"Käufer fett, Artikel normal drucken","Brother QL-800":"Brother QL-800","Brother QL-820NWB":"Brother QL-820NWB","Cheap 58 mm receipts":"Günstige 58-mm-Bons","Click":"Klicke auf","Commands & API":"Befehle und API","Completed gifts":"Abgeschlossene Geschenke","Continuous sticker roll":"Endlos-Stickerrolle","Counter":"Zähler","Die-cut labels":"Gestanzte Etiketten","Do this":"So geht's","Don't print private info.":"Drucke keine privaten Daten.","Donation / Tip":"Spende / Trinkgeld","Donation trigger connected to a thermal print action":"Spendenauslöser verbunden mit einer Thermodruckaktion","Download":"Herunterladen","Download the Whatnot example flow":"Whatnot-Beispielflow herunterladen","Each notice prints as it arrives. The flow doesn't wait for payment, fix an earlier label, or give out buyer numbers. Missing fields print blank. A failure notice with no buyer, item, or order details can't tell you which label it belongs to.":"Jede Meldung wird beim Eintreffen gedruckt. Der Flow wartet weder auf Zahlung noch korrigiert er ältere Etiketten oder vergibt Käufernummern. Fehlende Felder bleiben leer. Bei einer Fehlermeldung ohne Käufer-, Artikel- oder Bestelldaten lässt sich das zugehörige Etikett nicht erkennen.","Enter the":"Gib Folgendes ein:","Enter this as the label text:":"Gib diesen Etikettentext ein:","Epson TM-T20III":"Epson TM-T20III","Event Flow Editor":"Event-Flow-Editor","Event Type":"Ereignistyp","Event Type (Advanced) → Custom Event":"Ereignistyp (erweitert) → Benutzerdefiniertes Ereignis","Example printers":"Beispieldrucker","Examples of thermal receipt and label output":"Beispiele für Thermobeleg- und Etikettendruck","Features":"Funktionen","Find printers":"Drucker suchen","Fix problems":"Probleme beheben","Fixed label length":"Feste Etikettenlänge","Fixed means fixed":"Fest bedeutet fest","For flow builders: print results and buyer numbers":"Für Flow-Ersteller: Druckergebnisse und Käufernummern","For matching badges and product labels. Set the exact fixed length, and pick the same stock in Windows Printing Preferences.":"Für einheitliche Namensschilder und Produktetiketten. Lege die genaue feste Länge fest und wähle dasselbe Material in den Windows-Druckeinstellungen.","For purchase slips, queue tickets, and receipts of any length. Leave fixed label length at 0.":"Für Kaufbelege, Wartetickets und Bons beliebiger Länge. Feste Etikettenlänge auf 0 lassen.","For sticky name strips of any length. Works like receipt paper, but the printer or driver must do the cutting.":"Für klebende Namensstreifen beliebiger Länge. Funktioniert wie Bonpapier, aber Drucker oder Treiber müssen schneiden.","Generic “POS-58”":"Generischer „POS-58“","Get fixed-size labels right":"Etiketten mit fester Größe richtig einrichten","Global settings and tools → Mechanics - Connections & Integrations → Printer Control":"Globale Einstellungen und Werkzeuge → Mechanik – Verbindungen und Integrationen → Druckersteuerung","Good for":"Gut für","Guides":"Anleitungen","Has Donation":"Spendenbetrag","Hire":"Beauftragen","Home":"Startseite","How the example flow works":"Wie der Beispielflow funktioniert","I want to print":"Ich möchte drucken","I want to print…":"Ich möchte drucken …","INKY":"INKY","Ideas":"Ideen","If an earlier step makes":"Wenn ein früherer Schritt Folgendes erzeugt:","Import":"Importieren","In Social Stream, open":"Öffne in Social Stream","In the standalone app, set up":"Richte in der eigenständigen App Folgendes ein:","Inky":"Inky","Inspiration":"Inspiration","It says success, but nothing prints":"Erfolg gemeldet, aber kein Ausdruck","It uses":"Es verwendet","Keep Use printable area on. Raise the safe margin on that side.":"Lass „Druckbaren Bereich verwenden“ aktiviert. Erhöhe auf dieser Seite den Sicherheitsrand.","Keep your Whatnot source open with stream-event capture on.":"Halte deine Whatnot-Quelle mit aktivierter Stream-Ereigniserfassung geöffnet.","Label sizes":"Etikettengrößen","Labels already set to All bold or Normal keep their look.":"Etiketten mit „Alles fett“ oder „Normal“ behalten ihr Aussehen.","Leave":"Lass","Leave the action's printer and fixed-length overrides blank or":"Lass Drucker- und Festlängenüberschreibungen der Aktion leer oder auf","Long names, product options, and extra lines need more room or smaller text.":"Lange Namen, Produktoptionen und zusätzliche Zeilen benötigen mehr Platz oder kleinere Schrift.","Main navigation":"Hauptnavigation","Make sure Windows can print a test page. Restart Social Stream and click Find printers again.":"Prüfe, ob Windows eine Testseite drucken kann. Starte Social Stream neu und klicke erneut auf Drucker suchen.","Match Windows too":"Auch Windows passend einstellen","Measure in the feed direction":"In Vorschubrichtung messen","Merch, commission, drink, or pickup tags as orders come in.":"Merch-, Auftrags-, Getränke- oder Abholetiketten beim Eingang von Bestellungen.","Minimum Amount":"Mindestbetrag","Minimum Amount:":"Mindestbetrag:","Ninja Hoodie":"Ninja-Hoodie","No extra feed is added. Text that's too tall may be cut off or spill over, depending on the driver.":"Es wird kein zusätzlicher Vorschub angefügt. Zu hoher Text kann je nach Treiber abgeschnitten werden oder auf die nächste Seite überlaufen.","No printer shows up":"Kein Drucker erscheint","Notes":"Hinweise","On this page":"Auf dieser Seite","One label prints as two":"Ein Etikett wird auf zwei gedruckt","Only text inside":"Nur Text innerhalb von","Open navigation menu":"Navigationsmenü öffnen","Open the":"Öffne","Open the printer's Windows queue. Look for paused, offline, paper, driver, or port errors.":"Öffne die Druckwarteschlange in Windows. Prüfe auf Pause, Offline-Status, Papier-, Treiber- oder Anschlussfehler.","Other handy placeholders:":"Weitere nützliche Platzhalter:","Overlay Gallery":"Overlay-Galerie","PAYMENT FAILED":"ZAHLUNG FEHLGESCHLAGEN","Paper width (mm)":"Papierbreite (mm)","Pick a printer override on the Print Thermal Label step. When blank, testing in the editor uses the Windows default printer.":"Wähle im Schritt Thermoetikett drucken einen anderen Drucker. Ist das Feld leer, verwendet der Editortest den Windows-Standarddrucker.","Pick your paper":"Papier wählen","Pickup":"Abholung","Plug the printer in by USB, turn it on, and install its Windows driver. Print a Windows test page to be sure it works.":"Verbinde den Drucker über USB, schalte ihn ein und installiere den Windows-Treiber. Drucke eine Windows-Testseite, um die Funktion zu prüfen.","Print Thermal Label":"Thermoetikett drucken","Print a label when someone donates":"Bei einer Spende ein Etikett drucken","Print on a donation":"Bei einer Spende drucken","Print sales":"Verkäufe drucken","Print sales, gifts, and order numbers":"Verkäufe, Geschenke und Bestellnummern drucken","Print test":"Test drucken","Printer":"Drucker","Printer Control":"Druckersteuerung","Problem":"Problem","Purchase tag":"Kaufanhänger","Raffle tickets. Add rate limits and eligibility checks before the print step.":"Lose. Füge vor dem Druckschritt Ratenbegrenzungen und Teilnahmeprüfungen hinzu.","Receipt roll":"Belegrolle","Rule":"Regel","Sales":"Verkäufe","See the":"Siehe","Select":"Auswählen","Selected text":"Ausgewählter Text","Set":"Setze","Set it up":"Einrichten","Set it up in 6 steps":"In 6 Schritten einrichten","Set the same stock, direction, gap/mark sensing, and cutter in the driver's Printing Preferences.":"Stelle im Treiber unter Druckeinstellungen dasselbe Material, dieselbe Ausrichtung, Lücken-/Markierungserkennung und den Schneider ein.","Set up a USB thermal receipt or label printer in Social Stream Ninja and print names, donations, purchases, tickets, and fixed-size labels from Event Flow.":"Richte einen USB-Thermobeleg- oder Etikettendrucker in Social Stream Ninja ein und drucke Namen, Spenden, Käufe, Tickets und Etiketten fester Größe aus Event Flow.","Shopify and eBay don't send the buyer's name. Use an order counter or a product-only tag for those.":"Shopify und eBay senden keinen Käufernamen. Verwende dafür einen Bestellzähler oder ein reines Produktetikett.","Size L":"Größe L","Skip addresses, emails, payment details, and private messages. Thermal paper also fades with heat, light, and time.":"Lass Adressen, E-Mails, Zahlungsdaten und private Nachrichten weg. Thermopapier verblasst außerdem durch Wärme, Licht und mit der Zeit.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja-Logo","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0-Lizenz.","Social Stream asks for at least 20 mm. The driver may still limit short page sizes.":"Social Stream fordert mindestens 20 mm an. Der Treiber kann kurze Seitengrößen dennoch begrenzen.","Stickers and name labels":"Aufkleber und Namensetiketten","Stream ideas":"Ideen für den Stream","Support":"Hilfe","Supported Sites":"Unterstützte Websites","Supporter name stickers for a wall, prop, map, or progress board.":"Namensaufkleber von Unterstützern für eine Wand, Requisite, Karte oder Fortschrittstafel.","Switch theme":"Design wechseln","Test Flow":"Flow testen","Test Flow uses the wrong printer":"Flow testen verwendet den falschen Drucker","Test your longest text":"Den längsten Text testen","Thank you":"Danke","The action adds":"Die Aktion ergänzt","The default 2 mm left and right safe margins suit many cheap 58 mm receipt printers. The driver decides the real printable area, so keep":"Die standardmäßigen Sicherheitsränder von 2 mm links und rechts passen zu vielen günstigen 58-mm-Bondruckern. Der Treiber bestimmt den tatsächlichen Druckbereich; lass daher","The test print's side borders show the safe width. Its height follows the test text. It doesn't outline the whole label.":"Die seitlichen Linien des Testdrucks zeigen die sichere Breite. Die Höhe folgt dem Testtext. Sie umrahmen nicht das ganze Etikett.","The text is taller than the label, or Windows has the wrong stock size. Use less text, smaller font, tighter spacing, or smaller margins.":"Der Text ist höher als das Etikett oder Windows verwendet das falsche Papierformat. Nutze weniger Text, kleinere Schrift, engere Abstände oder kleinere Ränder.","Thermal Printers And Stream Labels":"Thermodrucker und Stream-Labels","Thermal Printers And Stream Labels - Social Stream Ninja":"Thermodrucker und Stream-Labels – Social Stream Ninja","These are examples, not a tested list. Before buying, check the exact model has a current Windows driver, fits your label size, and shows up as a normal Windows printer.":"Dies sind Beispiele, keine getestete Liste. Prüfe vor dem Kauf, ob genau dieses Modell einen aktuellen Windows-Treiber hat, deine Etikettengröße unterstützt und als normaler Windows-Drucker erscheint.","Too much blank paper":"Zu viel leeres Papier","Try this":"Versuche Folgendes","Turn purchases, donations, and chat events into physical receipts, stickers, tickets, or pickup tags.":"Verwandle Käufe, Spenden und Chatereignisse in physische Belege, Sticker, Tickets oder Abholanhänger.","Turn the flow on and save. It imports turned off.":"Aktiviere den Flow und speichere. Er wird deaktiviert importiert.","Type":"Tippe","USB, Ethernet, Wi-Fi, and Bluetooth.":"USB, Ethernet, WLAN und Bluetooth.","USB. 80 mm paper, or 58 mm with the included adapter.":"USB. 80-mm-Papier oder 58 mm mit mitgeliefertem Adapter.","USB. About 25–112 mm media. Direct-thermal and thermal-transfer versions.":"USB. Medienbreite etwa 25–112 mm. Thermodirekt- und Thermotransferversionen.","USB. Up to 62 mm, die-cut or continuous, with an auto cutter.":"USB. Bis zu 62 mm, vorgestanzt oder endlos, mit automatischem Schneider.","Use":"Verwende","Use fixed length 0 for receipts. Lower the bottom margin and extra feed. For labels, set the exact length.":"Verwende für Bons die feste Länge 0. Verringere unteren Rand und zusätzlichen Vorschub. Stelle bei Etiketten die genaue Länge ein.","Use printable area":"Bedruckbaren Bereich verwenden","Use single braces. Sales put the product name in":"Verwende einfache geschweifte Klammern. Bei Verkäufen steht der Produktname in","Usually USB. Names and drivers vary by seller. A basic POS-58 was used to test Social Stream.":"Meist USB. Namen und Treiber unterscheiden sich je nach Verkäufer. Social Stream wurde mit einem einfachen POS-58 getestet.","VIP badges, team picks, challenge tokens, or milestone labels.":"VIP-Ausweise, Teamauswahl, Challenge-Marken oder Meilensteinetiketten.","Very short labels may not work":"Sehr kurze Etiketten funktionieren möglicherweise nicht","Weight":"Schriftstärke","Whatnot event fields":"Whatnot-Ereignisfelder","Whatnot item labels":"Whatnot-Artikeletiketten","Whatnot labels":"Whatnot-Etiketten","Whatnot: Item Labels + Payment Warnings":"Whatnot: Artikeletiketten und Zahlungswarnungen","Why":"Warum","Wider product, shipping, or wristband labels":"Breitere Produkt-, Versand- oder Armbandetiketten","Zebra ZD220":"Zebra ZD220","and":"und","and make a new flow.":"und erstelle einen neuen Flow.","and run its test print.":"und führe den Testdruck aus.","at":"auf","before the print action.":"vor der Druckaktion.","commerce event fields":"Verkaufsereignisfelder","for":"unter","for receipt paper. For die-cut labels, enter the label's length in mm (the direction the paper feeds).":"für Bonpapier. Gib bei vorgestanzten Etiketten die Länge in mm in Vorschubrichtung ein.","for what each sale includes.":"für die Inhalte jedes Verkaufs.","if only bigger donations should print.":"wenn nur größere Spenden gedruckt werden sollen.","instead.":"stattdessen.","label with whatever details that notice includes.":"Etikett mit den verfügbaren Angaben dieser Meldung.","mm and fixed length to":"mm und die feste Länge auf","mm when the 1-inch side feeds first. Pick the same stock and direction in Windows Printing Preferences. Start with 12–14 pt text.":"mm, wenn die 1-Zoll-Seite zuerst eingezogen wird. Wähle in Windows-Druckeinstellungen dasselbe Material und dieselbe Ausrichtung. Beginne mit 12–14 pt Schrift.","needs":"benötigt","or":"oder","selected unless you've tested something else.":"aktiviert, sofern du nichts anderes getestet hast.","set width to":"setze die Breite auf","this needs the Windows standalone app. Your printer must show up as a normal Windows printer. Social Stream prints through the Windows driver. It does not send raw ESC/POS, ZPL, or maker SDK commands.":"dafür brauchst du die eigenständige Windows-App. Der Drucker muss als normaler Windows-Drucker erscheinen. Social Stream druckt über den Windows-Treiber und sendet keine rohen ESC/POS-, ZPL- oder Hersteller-SDK-Befehle.","to":"auf","trigger. Set":"Auslöser. Setze","turns bold. No HTML or JavaScript needed.":"wird fett. HTML oder JavaScript ist nicht nötig.","with":"mit","💰 Donation / Tip":"💰 Spende / Trinkgeld","🖨️ Print Thermal Label":"🖨️ Thermoetikett drucken"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/thermal-printer-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/thermal-printer-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hauptnavigation"><a href="../index.html">Startseite</a><a href="features.html">Funktionen</a><a href="inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="download.html">Herunterladen</a><a href="guides.html">Anleitungen</a><a href="commands.html">Befehle und API</a><a href="supported-sites.html">Unterstützte Websites</a><a href="overlay-gallery.html" class="site-priority-gallery">Overlay-Galerie</a><a href="services.html" class="site-priority-hire">Beauftragen</a><a href="support.html">Hilfe</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Deutsch"><span aria-hidden="true">🌐 </span><span lang="de">Deutsch</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/thermal-printer-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/thermal-printer-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/thermal-printer-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/thermal-printer-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/thermal-printer-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="thermal-printer-guide.html" lang="de" hreflang="de" aria-current="true">Deutsch</a><a class="site-language-link" href="../../ja/docs/thermal-printer-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/thermal-printer-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/thermal-printer-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/thermal-printer-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/thermal-printer-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/thermal-printer-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/thermal-printer-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/thermal-printer-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/thermal-printer-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/thermal-printer-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/thermal-printer-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Design wechseln"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Navigationsmenü öffnen" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero"><div class="container"><h1>Thermodrucker und Stream-Labels</h1><p>Verwandle Käufe, Spenden und Chatereignisse in physische Belege, Sticker, Tickets oder Abholanhänger.</p></div></section>
+
+	<main>
+		<section class="guide-section">
+		<div class="container">
+			<nav class="guide-jump-links" aria-label="Auf dieser Seite">
+				<a href="#setup">Einrichten</a>
+				<a href="#donation-label">Bei einer Spende drucken</a>
+				<a href="#sales">Verkäufe drucken</a>
+				<a href="#whatnot-item-labels">Whatnot-Etiketten</a>
+				<a href="#paper">Papier wählen</a>
+				<a href="#label-size">Etikettengrößen</a>
+				<a href="#ideas">Ideen</a>
+				<a href="#problems">Probleme beheben</a>
+			</nav>
+
+			<div class="guide-card">
+				<h2 id="setup">In 6 Schritten einrichten</h2>
+				<div class="guide-note"><strong>Vor dem Start:</strong> dafür brauchst du die eigenständige Windows-App. Der Drucker muss als normaler Windows-Drucker erscheinen. Social Stream druckt über den Windows-Treiber und sendet keine rohen ESC/POS-, ZPL- oder Hersteller-SDK-Befehle.</div>
+				<ol class="guide-steps">
+					<li>Verbinde den Drucker über USB, schalte ihn ein und installiere den Windows-Treiber. Drucke eine Windows-Testseite, um die Funktion zu prüfen.</li>
+					<li>Öffne in Social Stream <strong>Globale Einstellungen und Werkzeuge → Mechanik – Verbindungen und Integrationen → Druckersteuerung</strong>.</li>
+					<li>Klicke auf <strong>Drucker suchen</strong>. Wähle den Drucker anhand seines Namens in Windows.</li>
+					<li>Gib Folgendes ein: <strong>Papierbreite (mm)</strong>. Normalerweise ist es <code>58</code>, <code>80</code>, oder <code>62</code>.</li>
+					<li>Lass <strong>Feste Etikettenlänge</strong> auf <code>0</code> für Bonpapier. Gib bei vorgestanzten Etiketten die Länge in mm in Vorschubrichtung ein.</li>
+					<li>Klicke auf <strong>Test drucken</strong>. Wird eine Kante abgeschnitten, erhöhe dort den Sicherheitsrand und teste erneut.</li>
+				</ol>
+				<p>Die standardmäßigen Sicherheitsränder von 2 mm links und rechts passen zu vielen günstigen 58-mm-Bondruckern. Der Treiber bestimmt den tatsächlichen Druckbereich; lass daher <strong>Bedruckbaren Bereich verwenden</strong> aktiviert, sofern du nichts anderes getestet hast.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="donation-label">Bei einer Spende ein Etikett drucken</h2>
+				<div class="flow-demo" aria-label="Spendenauslöser verbunden mit einer Thermodruckaktion"><div class="flow-node"><strong>💰 Spende / Trinkgeld</strong>Mindestbetrag: <code>10</code></div><div class="flow-arrow" aria-hidden="true">→</div><div class="flow-node"><strong>🖨️ Thermoetikett drucken</strong><code>{username}<br>{donation}</code><br>24 pt · fett · zentriert</div></div>
+				<ol class="guide-steps">
+					<li>Öffne <a href="../../actions/">Event-Flow-Editor</a> und erstelle einen neuen Flow.</li>
+					<li>Füge <strong>Spende / Trinkgeld</strong> Auslöser. Setze <strong>Mindestbetrag</strong> wenn nur größere Spenden gedruckt werden sollen.</li>
+					<li>Hinzufügen <strong>Thermoetikett drucken</strong> (unter Integrationen) und verbinde den Auslöser damit.</li>
+					<li>Tippe <code>{username}</code>, eine neue Zeile, dann <code>{donation}</code>. Wähle Schriftgröße, Schriftstärke, Ausrichtung und Anzahl der Kopien.</li>
+					<li>Lass Drucker- und Festlängenüberschreibungen der Aktion leer oder auf <code>0</code>. Deine Einstellungen aus Printer Control werden verwendet.</li>
+					<li>Klicke auf <strong>Flow testen</strong>. Gib einen Namen ein und aktiviere <strong>Spendenbetrag</strong>, ergänze einen Betrag und führe es aus. Dabei wird ein echtes Etikett gedruckt.</li>
+				</ol>
+				<p>Weitere nützliche Platzhalter: <code>{message}</code>, <code>{source}</code>, <code>{donationAmount}</code>, und <code>{counterValue}</code>. Auch Werte aus früheren Flow-Schritten funktionieren.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="sales">Verkäufe, Geschenke und Bestellnummern drucken</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Ich möchte drucken …</th><th>So geht's</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Ich möchte drucken">Verkäufe</td><td data-label="So geht&#x27;s">Verwende <strong>Ereignistyp</strong> mit <code>purchase</code>. <strong>Spende / Trinkgeld</strong> benötigt <code>hasDonation</code>und erfasst daher die meisten Verkäufe nicht.</td></tr>
+						<tr><td data-label="Ich möchte drucken">Abgeschlossene Geschenke</td><td data-label="So geht&#x27;s">Verwende <code>gift</code> oder <code>giftfunded</code>. Filtere bei Bedarf nach Anbieter.</td></tr>
+						<tr><td data-label="Ich möchte drucken">Eine fortlaufende Bestellnummer</td><td data-label="So geht&#x27;s">Füge hinzu <strong>Zähler</strong> vor der Druckaktion.</td></tr>
+					</tbody>
+				</table>
+				<p>Siehe <a href="event-reference.html#commerce-events">Verkaufsereignisfelder</a> für die Inhalte jedes Verkaufs.</p>
+
+				<h3>Käufer fett, Artikel normal drucken</h3>
+				<ol class="guide-steps">
+					<li>Setze <strong>Schriftstärke</strong> auf <strong>Ausgewählter Text</strong>.</li>
+					<li>Gib diesen Etikettentext ein:</li>
+				</ol>
+				<pre><code>**{username}**
+{subtitle}</code></pre>
+				<ul>
+					<li>Nur Text innerhalb von <code>**</code> wird fett. HTML oder JavaScript ist nicht nötig.</li>
+					<li>Verwende einfache geschweifte Klammern. Bei Verkäufen steht der Produktname in <code>{subtitle}</code>. Die Anzahl kann stehen in <code>{meta.commerce.quantity}</code>.</li>
+					<li>Wenn ein früherer Schritt Folgendes erzeugt: <code>buyer</code>, verwende <code>**{buyer}**</code> stattdessen.</li>
+					<li>Shopify und eBay senden keinen Käufernamen. Verwende dafür einen Bestellzähler oder ein reines Produktetikett.</li>
+					<li>Etiketten mit „Alles fett“ oder „Normal“ behalten ihr Aussehen.</li>
+				</ul>
+
+				<details class="guide-extra">
+					<summary>Für Flow-Ersteller: Druckergebnisse und Käufernummern</summary>
+					<p>Die Aktion ergänzt <code>meta.thermalPrintResult.success</code>und bei Fehlern eine Fehlermeldung oder einen Code für nachfolgende Schritte hinzu. Erfolg bedeutet, dass der Auftrag an Windows gesendet wurde, nicht dass Papier herauskam. Prüfe vor einem erneuten Versuch die Windows-Druckwarteschlange, um doppelte Etiketten zu vermeiden.</p>
+					<p>Ein Zähler nummeriert Käufe, nicht einzelne Käufer. Für dieselbe Nummer bei jedem Kauf einer Person brauchst du eine separate Käufer-Nummern-Liste, die zu Streambeginn zurückgesetzt wird. Das Begründungsfeld in User Memory ist Klartext, kein Käufernummernzähler.</p>
+				</details>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="whatnot-item-labels">Whatnot-Artikeletiketten</h2>
+				<p><a href="../../actions/examples/whatnot-item-labels.json" download>Whatnot-Beispielflow herunterladen</a>. Es druckt den Käufer fett, den Artikelnamen und, falls vorhanden, eine Bestell-ID. Schlägt eine Zahlung fehl, druckt es separat ein <strong>ZAHLUNG FEHLGESCHLAGEN</strong> Etikett mit den verfügbaren Angaben dieser Meldung.</p>
+				<ol class="guide-steps">
+					<li>Richte in der eigenständigen App Folgendes ein: <strong>Druckersteuerung</strong> und führe den Testdruck aus.</li>
+					<li>Öffne <strong>Event-Flow-Editor</strong>, klicke auf <strong>Importieren</strong>und wähle die heruntergeladene Datei.</li>
+					<li>Auswählen <strong>Whatnot: Artikeletiketten und Zahlungswarnungen</strong>. Prüfe beide Druckaktionen. Sie verwenden Drucker und Etikettenlänge aus Printer Control.</li>
+					<li>Aktiviere den Flow und speichere. Er wird deaktiviert importiert.</li>
+					<li>Halte deine Whatnot-Quelle mit aktivierter Stream-Ereigniserfassung geöffnet.</li>
+				</ol>
+				<div class="warning-note"><strong>Ein Verkaufsetikett bestätigt keine Zahlung.</strong> Jede Meldung wird beim Eintreffen gedruckt. Der Flow wartet weder auf Zahlung noch korrigiert er ältere Etiketten oder vergibt Käufernummern. Fehlende Felder bleiben leer. Bei einer Fehlermeldung ohne Käufer-, Artikel- oder Bestelldaten lässt sich das zugehörige Etikett nicht erkennen.</div>
+				<details class="guide-extra">
+					<summary>Wie der Beispielflow funktioniert</summary>
+					<p>Es verwendet <strong>Ereignistyp (erweitert) → Benutzerdefiniertes Ereignis</strong> unter <code>product_sold</code> und <code>payment_failed</code>, gefiltert auf Whatnot. Gebote und Auktionsendemeldungen werden nicht gedruckt. Siehe die <a href="event-reference.html#whatnot">Whatnot-Ereignisfelder</a>.</p>
+				</details>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="paper">Papier wählen</h2>
+				<div class="printer-types">
+					<div class="printer-type"><h3>Belegrolle</h3><p>Für Kaufbelege, Wartetickets und Bons beliebiger Länge. Feste Etikettenlänge auf 0 lassen.</p></div>
+					<div class="printer-type"><h3>Endlos-Stickerrolle</h3><p>Für klebende Namensstreifen beliebiger Länge. Funktioniert wie Bonpapier, aber Drucker oder Treiber müssen schneiden.</p></div>
+					<div class="printer-type"><h3>Gestanzte Etiketten</h3><p>Für einheitliche Namensschilder und Produktetiketten. Lege die genaue feste Länge fest und wähle dasselbe Material in den Windows-Druckeinstellungen.</p></div>
+				</div>
+				<div class="printer-gallery" aria-label="Beispiele für Thermobeleg- und Etikettendruck">
+					<figure class="paper-example"><div class="paper receipt"><div class="eyebrow">Kaufanhänger</div><div class="big">KÄUFER #12</div><div class="rule"></div><strong>Inky</strong><br>Blaue Ninja-Tasse</div><figcaption class="paper-caption">58-mm-Bonpapier. Die Länge wächst mit dem Text.</figcaption></figure>
+					<figure class="paper-example"><div class="paper label"><div class="eyebrow">Danke</div><div class="big">INKY</div><div class="amount">25,00 CAD</div></div><figcaption class="paper-caption">Ein vorgestanztes Etikett mit fester Größe: Name und Spende.</figcaption></figure>
+					<figure class="paper-example"><div class="paper label"><div class="eyebrow">Abholung</div><div class="big">A-037</div><div class="rule"></div><strong>Ninja-Hoodie</strong><br>Größe L</div><figcaption class="paper-caption">Ein Merch- oder Abholetikett mit Ereignisdetails und Zähler.</figcaption></figure>
+				</div>
+
+				<h3>Beispieldrucker</h3>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Drucker</th><th>Gut für</th><th>Hinweise</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Drucker">Generischer „POS-58“</td><td data-label="Gut für">Günstige 58-mm-Bons</td><td data-label="Hinweise">Meist USB. Namen und Treiber unterscheiden sich je nach Verkäufer. Social Stream wurde mit einem einfachen POS-58 getestet.</td></tr>
+						<tr><td data-label="Drucker"><a href="https://files.support.epson.com/pdf/pos/bulk/tm-t20iii_trg_en_reva.pdf" target="_blank" rel="noopener">Epson TM-T20III</a></td><td data-label="Gut für">Ein robusterer Bondrucker</td><td data-label="Hinweise">USB. 80-mm-Papier oder 58 mm mit mitgeliefertem Adapter.</td></tr>
+						<tr><td data-label="Drucker"><a href="https://www.brother-usa.com/products/ql800" target="_blank" rel="noopener">Brother QL-800</a></td><td data-label="Gut für">Aufkleber und Namensetiketten</td><td data-label="Hinweise">USB. Bis zu 62 mm, vorgestanzt oder endlos, mit automatischem Schneider.</td></tr>
+						<tr><td data-label="Drucker"><a href="https://www.brother-usa.com/products/ql820nwb" target="_blank" rel="noopener">Brother QL-820NWB</a></td><td data-label="Gut für">Eine gemeinsame oder vernetzte Etikettenstation</td><td data-label="Hinweise">USB, Ethernet, WLAN und Bluetooth.</td></tr>
+						<tr><td data-label="Drucker"><a href="https://www.zebra.com/gb/en/products/spec-sheets/printers/desktop/zd220.html" target="_blank" rel="noopener">Zebra ZD220</a></td><td data-label="Gut für">Breitere Produkt-, Versand- oder Armbandetiketten</td><td data-label="Hinweise">USB. Medienbreite etwa 25–112 mm. Thermodirekt- und Thermotransferversionen.</td></tr>
+					</tbody>
+				</table>
+				<p>Dies sind Beispiele, keine getestete Liste. Prüfe vor dem Kauf, ob genau dieses Modell einen aktuellen Windows-Treiber hat, deine Etikettengröße unterstützt und als normaler Windows-Drucker erscheint.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="label-size">Etiketten mit fester Größe richtig einrichten</h2>
+				<div class="guide-note"><strong>3 × 1-Zoll-Etiketten (auch Munbyn BT320):</strong> setze die Breite auf <code>76.2</code> mm und die feste Länge auf <code>25.4</code> mm, wenn die 1-Zoll-Seite zuerst eingezogen wird. Wähle in Windows-Druckeinstellungen dasselbe Material und dieselbe Ausrichtung. Beginne mit 12–14 pt Schrift.</div>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Regel</th><th>Warum</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Regel">In Vorschubrichtung messen</td><td data-label="Warum">Ein Etikett mit 62 × 29 mm ist normalerweise 62 mm breit und hat eine feste Länge von 29 mm.</td></tr>
+						<tr><td data-label="Regel">Auch Windows passend einstellen</td><td data-label="Warum">Stelle im Treiber unter Druckeinstellungen dasselbe Material, dieselbe Ausrichtung, Lücken-/Markierungserkennung und den Schneider ein.</td></tr>
+						<tr><td data-label="Regel">Fest bedeutet fest</td><td data-label="Warum">Es wird kein zusätzlicher Vorschub angefügt. Zu hoher Text kann je nach Treiber abgeschnitten werden oder auf die nächste Seite überlaufen.</td></tr>
+						<tr><td data-label="Regel">Den längsten Text testen</td><td data-label="Warum">Lange Namen, Produktoptionen und zusätzliche Zeilen benötigen mehr Platz oder kleinere Schrift.</td></tr>
+						<tr><td data-label="Regel">Sehr kurze Etiketten funktionieren möglicherweise nicht</td><td data-label="Warum">Social Stream fordert mindestens 20 mm an. Der Treiber kann kurze Seitengrößen dennoch begrenzen.</td></tr>
+					</tbody>
+				</table>
+				<p>Die seitlichen Linien des Testdrucks zeigen die sichere Breite. Die Höhe folgt dem Testtext. Sie umrahmen nicht das ganze Etikett.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="ideas">Ideen für den Stream</h2>
+				<ul>
+					<li>Namensaufkleber von Unterstützern für eine Wand, Requisite, Karte oder Fortschrittstafel.</li>
+					<li>Merch-, Auftrags-, Getränke- oder Abholetiketten beim Eingang von Bestellungen.</li>
+					<li>Lose. Füge vor dem Druckschritt Ratenbegrenzungen und Teilnahmeprüfungen hinzu.</li>
+					<li>VIP-Ausweise, Teamauswahl, Challenge-Marken oder Meilensteinetiketten.</li>
+					<li>Eine kurze Aufgabenliste für den Produzenten neben dir.</li>
+				</ul>
+				<div class="warning-note"><strong>Drucke keine privaten Daten.</strong> Lass Adressen, E-Mails, Zahlungsdaten und private Nachrichten weg. Thermopapier verblasst außerdem durch Wärme, Licht und mit der Zeit.</div>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="problems">Probleme beheben</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Problem</th><th>Versuche Folgendes</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Problem">Kein Drucker erscheint</td><td data-label="Versuche Folgendes">Prüfe, ob Windows eine Testseite drucken kann. Starte Social Stream neu und klicke erneut auf Drucker suchen.</td></tr>
+						<tr><td data-label="Problem">Erfolg gemeldet, aber kein Ausdruck</td><td data-label="Versuche Folgendes">Öffne die Druckwarteschlange in Windows. Prüfe auf Pause, Offline-Status, Papier-, Treiber- oder Anschlussfehler.</td></tr>
+						<tr><td data-label="Problem">Eine Kante wird abgeschnitten</td><td data-label="Versuche Folgendes">Lass „Druckbaren Bereich verwenden“ aktiviert. Erhöhe auf dieser Seite den Sicherheitsrand.</td></tr>
+						<tr><td data-label="Problem">Zu viel leeres Papier</td><td data-label="Versuche Folgendes">Verwende für Bons die feste Länge 0. Verringere unteren Rand und zusätzlichen Vorschub. Stelle bei Etiketten die genaue Länge ein.</td></tr>
+						<tr><td data-label="Problem">Ein Etikett wird auf zwei gedruckt</td><td data-label="Versuche Folgendes">Der Text ist höher als das Etikett oder Windows verwendet das falsche Papierformat. Nutze weniger Text, kleinere Schrift, engere Abstände oder kleinere Ränder.</td></tr>
+						<tr><td data-label="Problem">Flow testen verwendet den falschen Drucker</td><td data-label="Versuche Folgendes">Wähle im Schritt Thermoetikett drucken einen anderen Drucker. Ist das Feld leer, verwendet der Editortest den Windows-Standarddrucker.</td></tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		</section>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0-Lizenz.</p></div></div></footer>
+	<script data-copy-markdown src="../../docs/js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

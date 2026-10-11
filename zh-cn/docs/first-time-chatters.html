@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-cn/docs/first-time-chatters.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/zh-cn/docs/first-time-chatters.html">
+    <meta property="og:title" content="首次发言者指南 - Social Stream Ninja">
+    <meta property="og:description" content="如何在 Social Stream Ninja 中启用首次发言者检测、徽章、高亮和提示音。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-cn/docs/first-time-chatters.html">
+    <meta name="twitter:title" content="首次发言者指南 - Social Stream Ninja">
+    <meta name="twitter:description" content="如何在 Social Stream Ninja 中启用首次发言者检测、徽章、高亮和提示音。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首次发言者指南 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="如何在 Social Stream Ninja 中启用首次发言者检测、徽章、高亮和提示音。">
+    <style>
+        .guide-image {
+            display: block;
+            width: 100%;
+            max-width: 1100px;
+            margin: 1.5rem auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .quick-note {
+            background: rgba(26, 115, 232, 0.08);
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 1.4rem 1.6rem;
+            margin: 1.5rem 0;
+        }
+
+        .dark-mode .quick-note {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .warning-note {
+            background: rgba(251, 188, 5, 0.14);
+            border-left-color: #f9ab00;
+        }
+
+        .dark-mode .warning-note {
+            background: rgba(251, 188, 5, 0.2);
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/first-time-chatters.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{". If the leaf badge option is enabled, the badge is included in":"。如果启用了叶子徽章选项，徽章会包含在","Background shading:":"背景底色：","Beep for new or returning chatters:":"新观众或回归观众提示音：","Commands & API":"命令与 API","Confirm":"确认","Custom overlays can look for":"自定义叠加层可以检查","Disable the local message database":"禁用本地消息数据库","Display options":"显示选项","Dock beep for first-time chatters:":"停靠面板首次发言提示音：","Dock preview showing a highlighted first-time chatter with a leaf badge":"停靠面板预览，显示高亮的首次发言者和叶子徽章","Download":"下载","Event Reference":"事件参考","Features":"功能","First-Time Chatters Guide":"首次发言者指南","First-Time Chatters Guide - Social Stream Ninja":"首次发言者指南 - Social Stream Ninja","First-time chatter detection":"首次发言者检测","First-time chatter detection adds":"首次发言者检测会添加","Guides":"指南","Hire":"雇用","Home":"首页","How to enable first-time chatter detection, badges, highlights, and beeps in Social Stream Ninja.":"如何在 Social Stream Ninja 中启用首次发言者检测、徽章、高亮和提示音。","If it does not show":"如果没有显示","Important:":"重要：","Inspiration":"灵感","Keep":"保持","Leaf badge:":"叶子徽章：","Leave your dock or overlay open with the same session ID.":"使用相同会话 ID，保持停靠面板或叠加层打开。","Main navigation":"主导航","Mark brand-new chatters with a highlight, a leaf badge, or an optional sound cue.":"用高亮、叶子徽章或可选提示音标记全新的聊天参与者。","Mark first-time chatters with a custom badge":"用自定义徽章标记首次发言者","No background shading for first-time chatters":"不为首次发言者添加背景底色","Open navigation menu":"打开导航菜单","Open the Social Stream Ninja popup.":"打开 Social Stream Ninja 弹出菜单。","Overlay Gallery":"叠加层图库","Popup settings showing local database, first-time chatter detection, badge, and beep options":"弹出菜单设置，显示本地数据库、首次发言者检测、徽章和提示音选项","Required setup":"必要设置","Resources":"资源","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Support":"支持","Supported Sites":"支持的网站","Switch theme":"切换主题","Test with a username/source combination that is not already stored in the local database.":"使用尚未存储在本地数据库中的用户名/来源组合进行测试。","The local database is required. If the database is disabled, Social Stream Ninja cannot tell whether someone is new.":"此功能需要本地数据库。如果禁用了数据库，Social Stream Ninja 就无法判断某人是否为新观众。","Turn on":"开启","Using the flag in custom overlays":"在自定义叠加层中使用此标志","What this feature does":"此功能的作用","before the message reaches overlays.":"，在消息到达叠加层之前完成。","enabled by default in the dock. Keep":"停靠面板默认启用。请保持","is off if you expect a highlight.":"处于关闭状态，才能显示高亮。","is off.":"处于关闭状态。","is on if you expect the leaf badge.":"处于开启状态，才能显示叶子徽章。","is on.":"处于开启状态。","to a viewer's first stored chat message for that source. The dock can use that flag for background shading, a first-time-only beep, and the optional leaf badge.":"到该来源中为该观众存储的第一条聊天消息。停靠面板可利用此标志添加背景底色、仅首次发言提示音和可选的叶子徽章。","to prepend a small leaf badge to the chatter's badges.":"，在聊天参与者的徽章前加上小叶子徽章。","turn on":"开启","turn this on if you also want a sound for viewers who return after 8 or more quiet hours.":"如果也希望为安静 8 小时以上后再次发言的观众播放提示音，请开启此项。","turn this on if you want the dock beep to happen only for first-time chatters.":"如果希望停靠面板仅在有人首次发言时播放提示音，请开启此项。","turned off if you want the highlight.":"处于关闭状态，即可显示高亮。","turned off.":"处于关闭状态。","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja。保留所有权利。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/first-time-chatters.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/first-time-chatters.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/first-time-chatters.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/first-time-chatters.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/first-time-chatters.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/first-time-chatters.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/first-time-chatters.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/first-time-chatters.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/first-time-chatters.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="first-time-chatters.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/first-time-chatters.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/first-time-chatters.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/first-time-chatters.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/first-time-chatters.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/first-time-chatters.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/first-time-chatters.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/first-time-chatters.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/first-time-chatters.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/first-time-chatters.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>首次发言者指南</h1>
+            <p>用高亮、叶子徽章或可选提示音标记全新的聊天参与者。</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <h3>此功能的作用</h3>
+                    <p>首次发言者检测会添加 <code>firsttime=true</code> 到该来源中为该观众存储的第一条聊天消息。停靠面板可利用此标志添加背景底色、仅首次发言提示音和可选的叶子徽章。</p>
+                    <img src="../../docs/images/first-time-chatters-dock-preview.png" alt="停靠面板预览，显示高亮的首次发言者和叶子徽章" class="guide-image">
+                </div>
+
+                <div class="guide-card">
+                    <h3>必要设置</h3>
+                    <ol class="guide-steps">
+                        <li>打开 Social Stream Ninja 弹出菜单。</li>
+                        <li>保持 <strong>禁用本地消息数据库</strong> 处于关闭状态。</li>
+                        <li>开启 <strong>首次发言者检测</strong>.</li>
+                        <li>使用相同会话 ID，保持停靠面板或叠加层打开。</li>
+                    </ol>
+                    <img src="../../docs/images/first-time-chatters-popup-settings.png" alt="弹出菜单设置，显示本地数据库、首次发言者检测、徽章和提示音选项" class="guide-image">
+                    <div class="quick-note warning-note">
+                        <strong>重要：</strong> 此功能需要本地数据库。如果禁用了数据库，Social Stream Ninja 就无法判断某人是否为新观众。
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>显示选项</h3>
+                    <ul class="guide-list">
+                        <li><strong>背景底色：</strong> 停靠面板默认启用。请保持 <strong>不为首次发言者添加背景底色</strong> 处于关闭状态，即可显示高亮。</li>
+                        <li><strong>叶子徽章：</strong> 开启 <strong>用自定义徽章标记首次发言者</strong> ，在聊天参与者的徽章前加上小叶子徽章。</li>
+                        <li><strong>停靠面板首次发言提示音：</strong> 如果希望停靠面板仅在有人首次发言时播放提示音，请开启此项。</li>
+                        <li><strong>新观众或回归观众提示音：</strong> 如果也希望为安静 8 小时以上后再次发言的观众播放提示音，请开启此项。</li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h3>在自定义叠加层中使用此标志</h3>
+                    <p>自定义叠加层可以检查 <code>data.firsttime === true</code>。如果启用了叶子徽章选项，徽章会包含在 <code>chatbadges</code> ，在消息到达叠加层之前完成。</p>
+                    <pre><code>{
+  "chatname": "Ava",
+  "chatmessage": "First message here!",
+  "type": "twitch",
+  "firsttime": true
+}</code></pre>
+                </div>
+
+                <div class="guide-card">
+                    <h3>如果没有显示</h3>
+                    <ol class="guide-steps">
+                        <li>确认 <strong>禁用本地消息数据库</strong> 处于关闭状态。</li>
+                        <li>确认 <strong>首次发言者检测</strong> 处于开启状态。</li>
+                        <li>确认 <strong>不为首次发言者添加背景底色</strong> 处于关闭状态，才能显示高亮。</li>
+                        <li>确认 <strong>用自定义徽章标记首次发言者</strong> 处于开启状态，才能显示叶子徽章。</li>
+                        <li>使用尚未存储在本地数据库中的用户名/来源组合进行测试。</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../../media/logo.png" alt="Social Stream Ninja 标志">
+                    <span>Social Stream Ninja</span>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>资源</h4>
+                        <ul>
+                            <li><a href="guides.html">指南</a></li>
+                            <li><a href="event-reference.html">事件参考</a></li>
+                            <li><a href="support.html">支持</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Social Stream Ninja。保留所有权利。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

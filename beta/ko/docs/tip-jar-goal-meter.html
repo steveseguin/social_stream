@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/tip-jar-goal-meter.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/tip-jar-goal-meter.html">
+    <meta property="og:title" content="후원 저금통 및 목표 게이지 가이드 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja 후원 저금통과 목표 게이지를 설정하고 후원, 회원권, 선물 회원권 누락 문제를 해결하세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/tip-jar-goal-meter.html">
+    <meta name="twitter:title" content="후원 저금통 및 목표 게이지 가이드 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja 후원 저금통과 목표 게이지를 설정하고 후원, 회원권, 선물 회원권 누락 문제를 해결하세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>후원 저금통 및 목표 게이지 가이드 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja 후원 저금통과 목표 게이지를 설정하고 후원, 회원권, 선물 회원권 누락 문제를 해결하세요.">
+    <style>
+        .style-group { margin: 2.4rem 0 1rem; font-size: 1.6rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; }
+        .visual-guide .guide-card > .style-grid { max-width: none; list-style: none; padding: 0; margin: 0; }
+        .style-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: 1.4rem; margin: 0; padding: 0; list-style: none; }
+        .visual-guide main .style-grid li { margin: 0; padding: 0; }
+        .style-grid li::before { content: none !important; display: none !important; }
+        .style-tile { height: 100%; overflow: hidden; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .style-tile img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; }
+        .style-tile div { padding: .9rem 1.2rem 1.1rem; }
+        .style-tile strong { display: block; font-size: 1.55rem; color: var(--text-primary); }
+        .style-tile span { display: block; margin-top: .2rem; font-size: 1.35rem; line-height: 1.45; color: var(--text-secondary); }
+        .style-tile code { font-size: 1.2rem; }
+        .setup-screenshots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem; align-items: start; }
+        .setup-screenshots > .guide-figure { min-width: 0; margin: 1rem 0; }
+        .count-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4rem; margin: 1.4rem 0; }
+        .count-picker > div { padding: 1.4rem 1.6rem; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
+        .count-picker strong { display: block; margin-bottom: .4rem; font-size: 1.65rem; }
+        .count-picker p { margin: 0; font-size: 1.45rem; line-height: 1.5; }
+        .count-picker .example { margin-top: .8rem; color: var(--text-secondary); }
+        @media (max-width: 760px) {
+            .setup-screenshots { grid-template-columns: minmax(0, 1fr); }
+            .count-picker { grid-template-columns: minmax(0, 1fr); }
+            .style-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
+            .style-tile span { display: none; }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/tip-jar-goal-meter.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"(0 to 1).":"(0~1).","(12 to 96 pixels).":"(12~96픽셀).","(hex colours, with":"(16진수 색상에서",". An animated GIF keeps playing, but this setting does not switch images as progress changes or add artwork beside a bar.":". 애니메이션 GIF는 계속 재생되지만, 이 설정으로 진행률에 따라 이미지를 바꾸거나 막대 옆에 이미지를 추가할 수는 없습니다.",". Its previews use sample data and do not change your live totals.":". 미리보기는 예제 데이터를 사용하므로 실제 방송의 합계는 바뀌지 않습니다.",". Leave a box blank to keep the style's default. Bar text size and “bar only” apply to Fluid Goal Bar only.":". 칸을 비워 두면 해당 스타일의 기본값이 적용됩니다. 막대 글자 크기와 ‘막대만’ 설정은 Fluid Goal Bar에만 적용됩니다.",". The styles below include built-in animations.":". 아래 스타일에는 기본 애니메이션이 포함되어 있습니다.",". These do not apply to every style; check the preview. The four panels below also support":". 모든 스타일에 적용되는 것은 아니므로 미리보기에서 확인하세요. 아래 네 가지 패널은 다음 설정도 지원합니다:",". Use the fill colours above for Fluid Goal Bar.":". Fluid Goal Bar에는 위의 채우기 색상을 사용하세요.","340 / 1000 points":"340 / 1000포인트","3D Rotating Jar":"3D 회전병","7 / 20 Super Chats":"Super Chat 7 / 20개","A $1 and a $100 Super Chat each add one. To count Super Stickers too, change the paid event filter.":"1달러와 100달러 Super Chat 모두 각각 한 번으로 계산됩니다. Super Sticker도 세려면 유료 이벤트 필터를 바꾸세요.","A money goal in the Goal Meter style.":"Goal Meter 스타일의 금액 목표.","A slowly turning glass.":"천천히 회전하는 유리잔.","A sweeping needle.":"눈금을 따라 움직이는 바늘.","Add to the link":"링크에 추가","All donations":"모든 후원","An old total comes back":"이전 합계가 다시 나타남","Animated artwork":"애니메이션 이미지","Bar plus recent supporters.":"막대와 최근 후원자.","Bars":"막대","Battery":"배터리","Beer Mug":"맥주잔","Big total, slim bar.":"큰 합계 숫자와 가느다란 막대.","Bigger total:":"합계 크게 표시:","Carry extra points":"초과 포인트 이월","Change artwork as the goal fills":"목표 진행률에 따라 이미지 바꾸기","Change the Fluid Goal Bar fill colours":"Fluid Goal Bar의 채우기 색상 바꾸기","Change the Glass Tip Jar label":"Glass Tip Jar의 라벨 바꾸기","Change the celebration effect":"축하 효과 바꾸기","Change what falls into the jar":"병 안으로 떨어지는 항목 바꾸기","Charges red to green.":"빨간색에서 초록색으로 충전.","Check the source is on, the session IDs match, and your filters allow that event.":"소스가 켜져 있고 세션 ID가 일치하며 필터가 해당 이벤트를 허용하는지 확인하세요.","Choose a Display Style, such as Fluid Goal Bar.":"Display Style에서 Fluid Goal Bar 등의 표시 스타일을 선택하세요.","Chunky RPG bar.":"두툼한 RPG 스타일 막대.","Circle with a percentage.":"백분율이 표시되는 원.","Classic Jar":"Classic Jar(기본 병)","Classic fundraiser look.":"전통적인 모금 계기 모양.","Click [copy link] beside Tip Jar and Goal Meter and add the link to OBS as a Browser Source.":"Tip Jar and Goal Meter 옆의 [copy link]를 클릭하여 링크를 복사한 뒤, OBS에 브라우저 소스로 추가하세요.","Click either screenshot to enlarge.":"스크린샷을 클릭하면 확대됩니다.","Coffee Mug":"커피 머그","Commands & API":"명령 및 API","Compact Bar":"작은 막대 (Compact Bar)","Count Super Chats instead of money":"금액 대신 Super Chat 개수 세기","Count individual gift recipients too":"개별 선물 수령자도 집계","Count subs and memberships too":"구독과 멤버십도 세기","Count unit label":"횟수 단위 이름","Custom jar image":"사용자 지정 병 이미지","Default for Hype goals. The completion delay sets how long it stays full.":"Hype 목표의 기본값입니다. 완료 지연 시간은 가득 찬 상태를 유지하는 시간을 정합니다.","Default for money and count goals.":"금액 및 횟수 목표의 기본값입니다.","Default, Neon, or Gold.":"Default, Neon 또는 Gold.","Dial":"다이얼","Donation points per USD":"기부 1달러당 포인트","Donation type filter":"후원 유형 필터","Donations":"후원","Download":"다운로드","Event Reference":"이벤트 참고 문서","Every donation adds one, whatever the amount.":"금액과 관계없이 기부 한 건마다 하나씩 늘어납니다.","Every style tracks the same goal. Only the appearance changes. Compare sample layouts in the":"모든 스타일은 같은 목표를 추적하며 모양만 바뀝니다. 예제 배치를 비교하려면 다음을 여세요:","Extra options for Goal Card, Progress Ring, Lower Third, and Segmented Bar":"Goal Card, Progress Ring, Lower Third, Segmented Bar의 추가 옵션","Features":"기능","Fill colours you set yourself win over":"직접 설정한 채우기 색상은 다음 설정보다 우선합니다:","Five checkpoints light up.":"다섯 단계 지점에 불이 들어옵니다.","Fix problems":"문제 해결","Fluid Goal Bar":"유동 목표 막대 (Fluid Goal Bar)","Foam and bubbles.":"거품과 기포.","Follow the step-by-step GIF tutorial":"단계별 GIF 튜토리얼 보기","For a bar that fills with donations, choose":"기부에 따라 차오르는 막대를 쓰려면 다음을 선택하세요:","Game-style level bar.":"게임 스타일 레벨 막대.","Gifted memberships":"선물 회원권","Gifted memberships add too little":"선물 멤버십의 증가량이 너무 적음","Gifted memberships count twice":"선물 멤버십이 두 번 계산됨","Gifted memberships shouldn't count":"선물 멤버십을 계산하고 싶지 않음","Gifted sub/member points":"선물 구독/멤버십 포인트","Glass Tip Jar":"유리 팁 용기","Glowing and bubbling.":"빛나며 기포가 올라옵니다.","Glowing, flickering tube.":"빛나고 깜빡이는 튜브.","Go up in levels (100, 200, 300…)":"단계별로 목표 높이기(100, 200, 300…)","Goal Card":"목표 카드 (Goal Card)","Goal Meter":"목표 게이지","Goal Settings with Goal target set to 500 and Custom Title set to Community Fundraiser.":"목표값(Goal target)을 500, 사용자 지정 제목(Custom Title)을 Community Fundraiser로 설정한 목표 설정 화면.","Goal and title fields, further down in the same section.":"같은 섹션 아래쪽에 있는 목표값과 제목 입력란.","Goal measures":"목표 측정 기준","Goal meter bar showing $63.50 of a $100 goal with recent supporters":"100달러 목표 중 63.50달러와 최근 후원자를 보여 주는 목표 미터 막대","Guides":"가이드","Health Bar":"체력바","Hide the dollar signs (":"달러 기호 숨기기(","Hide the title or percentage on newer jars and meters":"새 병과 미터 스타일에서 제목 또는 백분율 숨기기","Hire":"작업 의뢰","Home":"홈","How YouTube gifts are counted":"YouTube 선물 계산 방식","How it counts":"집계 방식","Hype Cup Scoring":"Hype Cup 점수 (Hype Cup Scoring)","Hype goals restart by default. Use Keep total and advance target.":"Hype 목표는 기본적으로 다시 시작합니다. Keep total and advance target을 사용하세요.","Hype only: number of gifts × gift points. YouTube doesn't send the price, so the cash value is unknown.":"Hype 전용: 선물 개수 × 선물 포인트. YouTube는 가격을 보내지 않으므로 현금 가치는 알 수 없습니다.","Hype points":"Hype 포인트","I want the goal to":"원하는 목표 동작","I want the goal to…":"목표가 다음과 같이 동작하게 하기…","I want to":"원하는 작업","I want to…":"원하는 작업…","Ignored by default, so gifts aren't counted twice.":"선물이 두 번 계산되지 않도록 기본적으로 무시합니다.","In the menu, find Tip Jar and Goal Meter and open Style, Goal, and Filters.":"메뉴에서 Tip Jar and Goal Meter를 찾아 Style, Goal, and Filters를 여세요.","Inspiration":"아이디어","Its value for a money goal, one for a donation-count goal, or your configured donation points in Hype mode. The event must pass your filters.":"금액 목표에서는 해당 금액, 기부 횟수 목표에서는 1회, Hype 모드에서는 설정한 기부 포인트를 더합니다. 이벤트가 필터 조건을 통과해야 합니다.","Jars and objects":"병과 사물","Jewels / virtual gifts":"Jewels / 가상 선물","Just big numbers.":"큰 숫자만 표시.","Keep amount between sessions":"세션 간 금액 유지","Keep amount between sessions is on. Reset the amount.":"Keep amount between sessions가 켜져 있습니다. 금액을 초기화하세요.","Keep counting and raise the target":"계속 누적하면서 목표 높이기","Keep leftover points when it starts over":"다시 시작할 때 남은 포인트 유지하기","Keep total and advance target":"합계 유지 및 목표 증가","Leave":"유지:","Lid opens as it fills.":"채워질수록 뚜껑이 열립니다.","Low and wide.":"낮고 넓은 형태.","Lower Third":"하단 자막형 (Lower Third)","Main navigation":"기본 탐색 메뉴","Memberships or subs don't count":"멤버십이나 구독이 계산되지 않음","Milestone Track":"마일스톤 트랙","Minimal":"최소","Money":"금액","Most of these are settings in the Tip Jar options. You can also add the code to the end of your overlay link.":"대부분은 Tip Jar 옵션에서 설정할 수 있습니다. 오버레이 링크 끝에 코드를 추가해도 됩니다.","Neon Tube":"네온관","Nothing showing up?":"아무것도 표시되지 않나요?","Nothing updates":"아무것도 업데이트되지 않음","Number of donations":"기부 횟수","Number of qualifying donations":"조건에 맞는 후원 횟수","Old-school loading bar.":"옛날 스타일 로딩 막대.","On this page":"이 페이지에서","One GIF inside the Classic Jar?":"Classic Jar 안에 GIF 하나만 넣고 싶나요?","One line of text.":"한 줄짜리 텍스트.","Only turn on":"다음 설정은 필요한 경우에만 켜세요:","Open navigation menu":"탐색 메뉴 열기","Overlay Gallery":"오버레이 갤러리","Paid event filter":"유료 이벤트 필터","Panels and text":"패널과 텍스트","Pick a look":"모양 선택","Pick one. Changing the look (jar, bar, etc.) never changes what counts.":"한 가지를 선택하세요. 모양을 병이나 막대 등으로 바꿔도 계산 대상은 바뀌지 않습니다.","Piggy Bank":"돼지 저금통","Pixel Bar":"픽셀바","Point unit label":"포인트 단위 라벨","Points for each dollar donated.":"기부 1달러당 포인트.","Points for each new sub or renewal.":"신규 구독 또는 갱신 한 건당 포인트.","Points per gift. 5 gifts = 5 × this number.":"선물 한 개당 포인트. 선물 5개 = 5 × 이 값.","Potion Flask":"포션 플라스크","Problem":"문제","Progress Ring":"진행 원형 (Progress Ring)","Put a donation goal on stream that fills up every time someone supports you.":"후원을 받을 때마다 채워지는 기부 목표를 방송 화면에 표시하세요.","Quick tweaks":"간단한 조정","Recurring goal increment":"반복 목표 증가량","Remember the total after a restart":"재시작 후에도 합계 기억하기","Resources":"자료","Retro block meter.":"복고풍 블록 미터.","Reusing OBS for a new goal?":"OBS에서 새 목표를 시작하나요?","Saved totals are stored in that browser or OBS profile, not per session. Reset the amount first.":"합계는 세션별이 아니라 해당 브라우저나 OBS 프로필에 저장됩니다. 먼저 금액을 초기화하세요.","See-through panel:":"패널 투명도:","Segmented Bar":"구간 막대 (Segmented Bar)","Set":"설정:","Set Paid event filter to Super Chats only.":"유료 이벤트 필터를 Super Chats only로 설정하세요.","Set an accent on newer panels, jars, or meters":"새 패널, 병 또는 미터의 강조색 설정","Set how many points each thing is worth (below).":"아래에서 각 항목의 포인트를 설정하세요.","Set it up":"설정하기","Set it up in 5 steps":"5단계로 설정하기","Set the goal, for example":"목표를 설정하세요. 예:","Set up the Social Stream Ninja Tip Jar and Goal Meter and troubleshoot missing donations, memberships, and gifted memberships.":"Social Stream Ninja 후원 저금통과 목표 게이지를 설정하고 후원, 회원권, 선물 회원권 누락 문제를 해결하세요.","Setting":"설정","Small, for a corner.":"모서리에 놓기 좋은 작은 크기.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Someone receiving a gift":"선물을 받는 사람","Source filter":"소스 필터","Start over after it fills":"가득 차면 다시 시작하기","Stay full until I reset it":"직접 초기화할 때까지 가득 찬 상태 유지","Stop the 3D jar spinning":"3D 병 회전 멈추기","Style selector and copy-link button.":"스타일 선택란과 링크 복사 버튼.","Sub/member points":"구독/멤버십 포인트","Super Chat / Super Sticker":"Super Chat / Super Sticker","Super Chat count includes Super Stickers":"Super Chat 횟수에 Super Sticker가 포함됨","Super Chats only":"Super Chat만 (Super Chats only)","Super Chats, Bits, tips, and other donations add their value.":"Super Chat, Bits, 팁 및 기타 기부는 해당 가치를 더합니다.","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Tall, for a side column.":"측면에 놓기 좋은 세로형.","Terminal":"터미널","Text Only":"텍스트만 (Text Only)","The original, with falling items.":"아이템이 떨어지는 원래 스타일.","The overlay link and Social Stream must use the same session ID. Keep that link private.":"오버레이 링크와 Social Stream은 같은 세션 ID를 사용해야 합니다. 이 링크를 공개하지 마세요.","The test buttons only send donations. To test memberships or gifts, watch the Dock or Events Dashboard on the same session and check the event arrives.":"테스트 버튼은 기부만 전송합니다. 멤버십이나 선물을 테스트하려면 같은 세션의 Dock 또는 Events Dashboard에서 이벤트가 도착하는지 확인하세요.","The word or symbol shown, like":"표시할 단어나 기호. 예:","Theme:":"테마:","Thermometer":"온도계","They use your gift points setting, not a price. Raise the points.":"가격 대신 설정한 선물 포인트를 사용합니다. 포인트를 높이세요.","Tip Jar and Goal Meter":"후원함 및 목표 미터","Tip Jar and Goal Meter Guide - Social Stream Ninja":"후원 저금통 및 목표 게이지 가이드 - Social Stream Ninja","Tip Jar and Goal Meter menu with Style, Goal, and Filters expanded and Fluid Goal Bar selected.":"Style, Goal, and Filters를 펼치고 Fluid Goal Bar를 선택한 Tip Jar and Goal Meter 메뉴.","Tips drop through the lid.":"뚜껑의 구멍으로 팁이 떨어집니다.","To show your own GIF at 0%, 25%, 50%, 75%, and 100%, customize a copy of the overlay. There is no milestone-GIF picker in the built-in options. Keep the artwork and bar in the same custom overlay so they use the same total.":"0%, 25%, 50%, 75%, 100%에서 직접 준비한 GIF를 표시하려면 오버레이 복사본을 수정하세요. 기본 옵션에는 단계별 GIF 선택기가 없습니다. 이미지와 막대를 같은 사용자 지정 오버레이에 넣어 같은 합계를 사용하게 하세요.","Total drops to zero at the goal":"목표에 도달하면 합계가 0이 됨","Treasure Chest":"보물상자","Try this":"시도할 방법","Turn off Count individual gift recipients.":"Count individual gift recipients를 끄세요.","Turn on":"켜기:","Turn on Exclude YouTube gifted memberships.":"Exclude YouTube gifted memberships를 켜세요.","Turn on Hype Cup Scoring and set Donation type filter to All donations.":"Hype Cup Scoring을 켜고 Donation type filter를 All donations로 설정하세요.","Turn on your YouTube, Twitch, or other chat source in Social Stream Ninja.":"Social Stream Ninja에서 YouTube, Twitch 또는 다른 채팅 소스를 켜세요.","Twenty easy-to-read blocks.":"읽기 쉬운 블록 스무 개.","Under Goal Settings, set Goal target to 500 and enter a Custom Title.":"Goal Settings에서 Goal target을 500으로 설정하고 Custom Title에 제목을 입력하세요.","Use":"사용:","Use a solid or gradient fill":"단색 또는 그라데이션 채우기 사용","Use my own jar picture (Classic Jar only)":"직접 준비한 병 이미지 사용(Classic Jar 전용)","Use the matching donation type filter.":"해당하는 기부 유형 필터를 사용하세요.","Use the newer look on older styles":"기존 스타일에 새로운 모양 적용","Use this":"사용할 기능","Vertical Bar":"세로 막대 (Vertical Bar)","What counts":"계산 대상","What counts toward the goal":"목표에 포함되는 항목","What it does":"역할","When the goal fills":"목표가 가득 찼을 때","When the goal fills up":"목표가 가득 찼을 때의 동작","Wide animated bar.":"넓은 애니메이션 막대.","With drifting steam.":"김이 피어오릅니다.","Wobbles on each tip.":"팁을 받을 때마다 흔들립니다.","XP Bar":"XP바","YouTube":"YouTube","YouTube event":"YouTube 이벤트","changes the word shown.":"설정으로 표시되는 단어를 바꿉니다.","for a $500 example, artwork filenames, an AI customization prompt, and preview checks.":". 500달러 예제, 이미지 파일 이름, AI 수정 프롬프트, 미리보기 확인 절차가 있습니다.","if you want to add points on top of the gift itself.":". 선물 자체의 포인트에 추가 포인트를 더하고 싶을 때 사용합니다.","instead of":"를 사용하세요. 대체할 값:","off.":"꺼짐.","on":"위치:","or":"또는","plus":"추가:","style preview gallery":"스타일 미리보기 갤러리","subs, memberships, and gifted subs.":"구독, 멤버십, 선물 구독.","to":"대상:","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja. 모든 권리 보유.","· also":"· 그 외"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tip-jar-goal-meter.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tip-jar-goal-meter.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tip-jar-goal-meter.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tip-jar-goal-meter.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tip-jar-goal-meter.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tip-jar-goal-meter.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tip-jar-goal-meter.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tip-jar-goal-meter.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tip-jar-goal-meter.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tip-jar-goal-meter.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tip-jar-goal-meter.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tip-jar-goal-meter.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="tip-jar-goal-meter.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/tip-jar-goal-meter.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tip-jar-goal-meter.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tip-jar-goal-meter.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tip-jar-goal-meter.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tip-jar-goal-meter.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>후원함 및 목표 미터</h1>
+            <p>후원을 받을 때마다 채워지는 기부 목표를 방송 화면에 표시하세요.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <nav class="guide-jump-links" aria-label="이 페이지에서">
+                    <a href="#setup">설정하기</a>
+                    <a href="#artwork">애니메이션 이미지</a>
+                    <a href="#styles">모양 선택</a>
+                    <a href="#tweaks">간단한 조정</a>
+                    <a href="#what-counts">계산 대상</a>
+                    <a href="#goal-reached">목표가 가득 찼을 때</a>
+                    <a href="#problems">문제 해결</a>
+                </nav>
+
+                <div class="guide-card">
+                    <h2 id="setup">5단계로 설정하기</h2>
+                    <ol class="guide-steps">
+                        <li>Social Stream Ninja에서 YouTube, Twitch 또는 다른 채팅 소스를 켜세요.</li>
+                        <li>메뉴에서 Tip Jar and Goal Meter를 찾아 Style, Goal, and Filters를 여세요.</li>
+                        <li>Display Style에서 Fluid Goal Bar 등의 표시 스타일을 선택하세요.</li>
+                        <li>Goal Settings에서 Goal target을 500으로 설정하고 Custom Title에 제목을 입력하세요.</li>
+                        <li>Tip Jar and Goal Meter 옆의 [copy link]를 클릭하여 링크를 복사한 뒤, OBS에 브라우저 소스로 추가하세요.</li>
+                    </ol>
+                    <p>스크린샷을 클릭하면 확대됩니다.</p>
+                    <div class="setup-screenshots">
+                        <figure class="guide-figure">
+                            <a href="../../docs/images/guides/tip-jar-popup-style.png"><img src="../../docs/images/guides/tip-jar-popup-style.png" alt="Style, Goal, and Filters를 펼치고 Fluid Goal Bar를 선택한 Tip Jar and Goal Meter 메뉴." class="guide-image" width="1040" height="730" loading="lazy"></a>
+                            <figcaption>스타일 선택란과 링크 복사 버튼.</figcaption>
+                        </figure>
+                        <figure class="guide-figure">
+                            <a href="../../docs/images/guides/tip-jar-popup-goal.png"><img src="../../docs/images/guides/tip-jar-popup-goal.png" alt="목표값(Goal target)을 500, 사용자 지정 제목(Custom Title)을 Community Fundraiser로 설정한 목표 설정 화면." class="guide-image" width="988" height="660" loading="lazy"></a>
+                            <figcaption>같은 섹션 아래쪽에 있는 목표값과 제목 입력란.</figcaption>
+                        </figure>
+                    </div>
+                    <div class="guide-note"><strong>아무것도 표시되지 않나요?</strong> 오버레이 링크와 Social Stream은 같은 세션 ID를 사용해야 합니다. 이 링크를 공개하지 마세요.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="artwork">목표 진행률에 따라 이미지 바꾸기</h2>
+                    <p>기부에 따라 차오르는 막대를 쓰려면 다음을 선택하세요: <strong>유동 목표 막대 (Fluid Goal Bar)</strong> 또는 <strong>목표 게이지</strong>. 아래 스타일에는 기본 애니메이션이 포함되어 있습니다.</p>
+                    <p>0%, 25%, 50%, 75%, 100%에서 직접 준비한 GIF를 표시하려면 오버레이 복사본을 수정하세요. 기본 옵션에는 단계별 GIF 선택기가 없습니다. 이미지와 막대를 같은 사용자 지정 오버레이에 넣어 같은 합계를 사용하게 하세요.</p>
+                    <p><a href="goals-customization-guide.html#milestone-artwork">단계별 GIF 튜토리얼 보기</a> . 500달러 예제, 이미지 파일 이름, AI 수정 프롬프트, 미리보기 확인 절차가 있습니다.</p>
+                    <div class="guide-note"><strong>Classic Jar 안에 GIF 하나만 넣고 싶나요?</strong> 사용: <strong>사용자 지정 병 이미지</strong> 또는 <code>&amp;jarimage=https://&hellip;</code>. 애니메이션 GIF는 계속 재생되지만, 이 설정으로 진행률에 따라 이미지를 바꾸거나 막대 옆에 이미지를 추가할 수는 없습니다.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="styles">모양 선택</h2>
+                    <p>모든 스타일은 같은 목표를 추적하며 모양만 바뀝니다. 예제 배치를 비교하려면 다음을 여세요: <a href="../../tipjar-preview.html">스타일 미리보기 갤러리</a>. 미리보기는 예제 데이터를 사용하므로 실제 방송의 합계는 바뀌지 않습니다.</p>
+
+                    <h3 class="style-group">막대</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/bar.jpg" alt="유동 목표 막대 (Fluid Goal Bar)" loading="lazy" width="480" height="320"><div><strong>유동 목표 막대 (Fluid Goal Bar)</strong><span>넓은 애니메이션 막대.</span><code>style=bar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/meter.jpg" alt="목표 게이지" loading="lazy" width="480" height="320"><div><strong>목표 게이지</strong><span>막대와 최근 후원자.</span><code>style=meter</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/compact.jpg" alt="작은 막대 (Compact Bar)" loading="lazy" width="480" height="320"><div><strong>작은 막대 (Compact Bar)</strong><span>모서리에 놓기 좋은 작은 크기.</span><code>style=compact</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/vertical.jpg" alt="세로 막대 (Vertical Bar)" loading="lazy" width="480" height="320"><div><strong>세로 막대 (Vertical Bar)</strong><span>측면에 놓기 좋은 세로형.</span><code>style=vertical</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/segmented.jpg" alt="구간 막대 (Segmented Bar)" loading="lazy" width="480" height="320"><div><strong>구간 막대 (Segmented Bar)</strong><span>읽기 쉬운 블록 스무 개.</span><code>style=segmented</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/milestones.jpg" alt="마일스톤 트랙" loading="lazy" width="480" height="320"><div><strong>마일스톤 트랙</strong><span>다섯 단계 지점에 불이 들어옵니다.</span><code>style=milestones</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/xpbar.jpg" alt="XP바" loading="lazy" width="480" height="320"><div><strong>XP바</strong><span>게임 스타일 레벨 막대.</span><code>style=xpbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/healthbar.jpg" alt="체력바" loading="lazy" width="480" height="320"><div><strong>체력바</strong><span>두툼한 RPG 스타일 막대.</span><code>style=healthbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/battery.jpg" alt="배터리" loading="lazy" width="480" height="320"><div><strong>배터리</strong><span>빨간색에서 초록색으로 충전.</span><code>style=battery</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/pixelbar.jpg" alt="픽셀바" loading="lazy" width="480" height="320"><div><strong>픽셀바</strong><span>복고풍 블록 미터.</span><code>style=pixelbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/neonbar.jpg" alt="네온관" loading="lazy" width="480" height="320"><div><strong>네온관</strong><span>빛나고 깜빡이는 튜브.</span><code>style=neonbar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/terminal.jpg" alt="터미널" loading="lazy" width="480" height="320"><div><strong>터미널</strong><span>옛날 스타일 로딩 막대.</span><code>style=terminal</code></div></div></li>
+                    </ul>
+
+                    <h3 class="style-group">병과 사물</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/jar.jpg" alt="Classic Jar(기본 병)" loading="lazy" width="480" height="320"><div><strong>Classic Jar(기본 병)</strong><span>아이템이 떨어지는 원래 스타일.</span><code>style=jar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/glassjar.jpg" alt="유리 팁 용기" loading="lazy" width="480" height="320"><div><strong>유리 팁 용기</strong><span>뚜껑의 구멍으로 팁이 떨어집니다.</span><code>style=glassjar</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/jar3d.jpg" alt="3D 회전병" loading="lazy" width="480" height="320"><div><strong>3D 회전병</strong><span>천천히 회전하는 유리잔.</span><code>style=jar3d</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/beermug.jpg" alt="맥주잔" loading="lazy" width="480" height="320"><div><strong>맥주잔</strong><span>거품과 기포.</span><code>style=beermug</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/coffeemug.jpg" alt="커피 머그" loading="lazy" width="480" height="320"><div><strong>커피 머그</strong><span>김이 피어오릅니다.</span><code>style=coffeemug</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/potion.jpg" alt="포션 플라스크" loading="lazy" width="480" height="320"><div><strong>포션 플라스크</strong><span>빛나며 기포가 올라옵니다.</span><code>style=potion</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/piggybank.jpg" alt="돼지 저금통" loading="lazy" width="480" height="320"><div><strong>돼지 저금통</strong><span>팁을 받을 때마다 흔들립니다.</span><code>style=piggybank</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/chest.jpg" alt="보물상자" loading="lazy" width="480" height="320"><div><strong>보물상자</strong><span>채워질수록 뚜껑이 열립니다.</span><code>style=chest</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/thermometer.jpg" alt="온도계" loading="lazy" width="480" height="320"><div><strong>온도계</strong><span>전통적인 모금 계기 모양.</span><code>style=thermometer</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/gauge.jpg" alt="다이얼" loading="lazy" width="480" height="320"><div><strong>다이얼</strong><span>눈금을 따라 움직이는 바늘.</span><code>style=gauge</code></div></div></li>
+                    </ul>
+
+                    <h3 class="style-group">패널과 텍스트</h3>
+                    <ul class="style-grid">
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/card.jpg" alt="목표 카드 (Goal Card)" loading="lazy" width="480" height="320"><div><strong>목표 카드 (Goal Card)</strong><span>큰 합계 숫자와 가느다란 막대.</span><code>style=card</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/ring.jpg" alt="진행 원형 (Progress Ring)" loading="lazy" width="480" height="320"><div><strong>진행 원형 (Progress Ring)</strong><span>백분율이 표시되는 원.</span><code>style=ring</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/lowerthird.jpg" alt="하단 자막형 (Lower Third)" loading="lazy" width="480" height="320"><div><strong>하단 자막형 (Lower Third)</strong><span>낮고 넓은 형태.</span><code>style=lowerthird</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/minimal.jpg" alt="최소" loading="lazy" width="480" height="320"><div><strong>최소</strong><span>큰 숫자만 표시.</span><code>style=minimal</code></div></div></li>
+                        <li><div class="style-tile"><img src="../../docs/images/guides/tipjar-styles/text.jpg" alt="텍스트만 (Text Only)" loading="lazy" width="480" height="320"><div><strong>텍스트만 (Text Only)</strong><span>한 줄짜리 텍스트.</span><code>style=text</code></div></div></li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="tweaks">간단한 조정</h2>
+                    <p>대부분은 Tip Jar 옵션에서 설정할 수 있습니다. 오버레이 링크 끝에 코드를 추가해도 됩니다.</p>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>원하는 작업…</th><th>링크에 추가</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="원하는 작업">달러 기호 숨기기(<code>0 / 500</code>)</td><td data-label="링크에 추가"><code>&amp;hidecurrency</code></td></tr>
+                            <tr><td data-label="원하는 작업">병 안으로 떨어지는 항목 바꾸기</td><td data-label="링크에 추가"><code>&amp;dropitem=coins</code> · 그 외 <code>gems</code>, <code>stars</code>, <code>bills</code>, <code>hearts</code></td></tr>
+                            <tr><td data-label="원하는 작업">축하 효과 바꾸기</td><td data-label="링크에 추가"><code>&amp;celebration=confetti</code> · 그 외 <code>hearts</code>, <code>fireworks</code>, <code>none</code></td></tr>
+                            <tr><td data-label="원하는 작업">Fluid Goal Bar의 채우기 색상 바꾸기</td><td data-label="링크에 추가"><code>&amp;fillstart=%2366d9b2&amp;fillend=%23ffcc88</code> (16진수 색상에서 <code>%23</code> 를 사용하세요. 대체할 값: <code>#</code>)</td></tr>
+                            <tr><td data-label="원하는 작업">새 패널, 병 또는 미터의 강조색 설정</td><td data-label="링크에 추가"><code>&amp;accent=%23ffcc88</code>. Fluid Goal Bar에는 위의 채우기 색상을 사용하세요.</td></tr>
+                            <tr><td data-label="원하는 작업">새 병과 미터 스타일에서 제목 또는 백분율 숨기기</td><td data-label="링크에 추가"><code>&amp;hidetitle</code> &middot; <code>&amp;hidepercent</code>. 모든 스타일에 적용되는 것은 아니므로 미리보기에서 확인하세요. 아래 네 가지 패널은 다음 설정도 지원합니다: <code>hidepercent</code>.</td></tr>
+                            <tr><td data-label="원하는 작업">Glass Tip Jar의 라벨 바꾸기</td><td data-label="링크에 추가"><code>&amp;jarlabel=TIPS</code></td></tr>
+                            <tr><td data-label="원하는 작업">3D 병 회전 멈추기</td><td data-label="링크에 추가"><code>&amp;nospin</code></td></tr>
+                            <tr><td data-label="원하는 작업">직접 준비한 병 이미지 사용(Classic Jar 전용)</td><td data-label="링크에 추가"><code>&amp;jarimage=https://&hellip;</code></td></tr>
+                            <tr><td data-label="원하는 작업">단색 또는 그라데이션 채우기 사용</td><td data-label="링크에 추가"><code>&amp;fillmode=solid</code> &middot; <code>&amp;fillmode=gradient</code></td></tr>
+                            <tr><td data-label="원하는 작업">기존 스타일에 새로운 모양 적용</td><td data-label="링크에 추가"><code>&amp;refresh</code></td></tr>
+                        </tbody>
+                    </table>
+
+                    <details class="guide-extra">
+                        <summary>Goal Card, Progress Ring, Lower Third, Segmented Bar의 추가 옵션</summary>
+                        <ul>
+                            <li><strong>테마:</strong> Default, Neon 또는 Gold.</li>
+                            <li><strong>패널 투명도:</strong> <code>&amp;panelopacity=0.5</code> (0~1).</li>
+                            <li><strong>합계 크게 표시:</strong> <code>&amp;amountsize=32</code> (12~96픽셀).</li>
+                        </ul>
+                        <p>직접 설정한 채우기 색상은 다음 설정보다 우선합니다: <code>accent</code>. 칸을 비워 두면 해당 스타일의 기본값이 적용됩니다. 막대 글자 크기와 ‘막대만’ 설정은 Fluid Goal Bar에만 적용됩니다.</p>
+                    </details>
+
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="what-counts">목표에 포함되는 항목</h2>
+                    <p>한 가지를 선택하세요. 모양을 병이나 막대 등으로 바꿔도 계산 대상은 바뀌지 않습니다.</p>
+                    <div class="count-picker">
+                        <div><strong>금액</strong><p>Super Chat, Bits, 팁 및 기타 기부는 해당 가치를 더합니다.</p><p class="example">$63.50 / $100</p></div>
+                        <div><strong>기부 횟수</strong><p>금액과 관계없이 기부 한 건마다 하나씩 늘어납니다.</p><p class="example">Super Chat 7 / 20개</p></div>
+                        <div><strong>Hype 포인트</strong><p>후원 <em>추가:</em> 구독, 멤버십, 선물 구독.</p><p class="example">340 / 1000포인트</p></div>
+                    </div>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/goal-meter-bar-demo.png" alt="100달러 목표 중 63.50달러와 최근 후원자를 보여 주는 목표 미터 막대" class="guide-image guide-image-medium" loading="lazy">
+                        <figcaption>Goal Meter 스타일의 금액 목표.</figcaption>
+                    </figure>
+
+                    <h3>금액 대신 Super Chat 개수 세기</h3>
+                    <ol class="guide-steps">
+                        <li>유지: <strong>Hype Cup 점수 (Hype Cup Scoring)</strong> 꺼짐.</li>
+                        <li>설정: <strong>목표 측정 기준</strong> 대상: <strong>조건에 맞는 후원 횟수</strong>.</li>
+                        <li>설정: <strong>소스 필터</strong> 대상: <strong>YouTube</strong>.</li>
+                        <li>설정: <strong>유료 이벤트 필터</strong> 대상: <strong>Super Chat만 (Super Chats only)</strong>.</li>
+                        <li>목표를 설정하세요. 예: <code>20</code>.</li>
+                    </ol>
+                    <p>1달러와 100달러 Super Chat 모두 각각 한 번으로 계산됩니다. Super Sticker도 세려면 유료 이벤트 필터를 바꾸세요. <strong>횟수 단위 이름</strong> 설정으로 표시되는 단어를 바꿉니다.</p>
+
+                    <h3>구독과 멤버십도 세기</h3>
+                    <ol class="guide-steps">
+                        <li>켜기: <strong>Hype Cup 점수 (Hype Cup Scoring)</strong>.</li>
+                        <li>유지: <strong>후원 유형 필터</strong> 위치: <strong>모든 후원</strong>.</li>
+                        <li>아래에서 각 항목의 포인트를 설정하세요.</li>
+                    </ol>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>설정</th><th>역할</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="설정">구독/멤버십 포인트</td><td data-label="역할">신규 구독 또는 갱신 한 건당 포인트.</td></tr>
+                            <tr><td data-label="설정">선물 구독/멤버십 포인트</td><td data-label="역할">선물 한 개당 포인트. 선물 5개 = 5 × 이 값.</td></tr>
+                            <tr><td data-label="설정">기부 1달러당 포인트</td><td data-label="역할">기부 1달러당 포인트.</td></tr>
+                            <tr><td data-label="설정">포인트 단위 라벨</td><td data-label="역할">표시할 단어나 기호. 예: <code>pts</code>.</td></tr>
+                        </tbody>
+                    </table>
+
+                    <details class="guide-extra">
+                        <summary>YouTube 선물 계산 방식</summary>
+                        <table class="guide-table guide-table-stack">
+                            <thead><tr><th>YouTube 이벤트</th><th>집계 방식</th></tr></thead>
+                            <tbody>
+                                <tr><td data-label="YouTube 이벤트">Super Chat / Super Sticker</td><td data-label="집계 방식">금액 목표에서는 해당 금액, 기부 횟수 목표에서는 1회, Hype 모드에서는 설정한 기부 포인트를 더합니다. 이벤트가 필터 조건을 통과해야 합니다.</td></tr>
+                                <tr><td data-label="YouTube 이벤트">선물 회원권</td><td data-label="집계 방식">Hype 전용: 선물 개수 × 선물 포인트. YouTube는 가격을 보내지 않으므로 현금 가치는 알 수 없습니다.</td></tr>
+                                <tr><td data-label="YouTube 이벤트">선물을 받는 사람</td><td data-label="집계 방식">선물이 두 번 계산되지 않도록 기본적으로 무시합니다.</td></tr>
+                                <tr><td data-label="YouTube 이벤트">Jewels / 가상 선물</td><td data-label="집계 방식">해당하는 기부 유형 필터를 사용하세요.</td></tr>
+                            </tbody>
+                        </table>
+                        <p>다음 설정은 필요한 경우에만 켜세요: <strong>개별 선물 수령자도 집계</strong> . 선물 자체의 포인트에 추가 포인트를 더하고 싶을 때 사용합니다.</p>
+                    </details>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="goal-reached">목표가 가득 찼을 때의 동작</h2>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>목표가 다음과 같이 동작하게 하기…</th><th>사용할 기능</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="원하는 목표 동작">직접 초기화할 때까지 가득 찬 상태 유지</td><td data-label="사용할 기능">금액 및 횟수 목표의 기본값입니다.</td></tr>
+                            <tr><td data-label="원하는 목표 동작">가득 차면 다시 시작하기</td><td data-label="사용할 기능">Hype 목표의 기본값입니다. 완료 지연 시간은 가득 찬 상태를 유지하는 시간을 정합니다.</td></tr>
+                            <tr><td data-label="원하는 목표 동작">다시 시작할 때 남은 포인트 유지하기</td><td data-label="사용할 기능"><strong>초과 포인트 이월</strong></td></tr>
+                            <tr><td data-label="원하는 목표 동작">계속 누적하면서 목표 높이기</td><td data-label="사용할 기능"><strong>합계 유지 및 목표 증가</strong></td></tr>
+                            <tr><td data-label="원하는 목표 동작">단계별로 목표 높이기(100, 200, 300…)</td><td data-label="사용할 기능"><strong>반복 목표 증가량</strong></td></tr>
+                            <tr><td data-label="원하는 목표 동작">재시작 후에도 합계 기억하기</td><td data-label="사용할 기능"><strong>세션 간 금액 유지</strong></td></tr>
+                        </tbody>
+                    </table>
+                    <div class="warning-note"><strong>OBS에서 새 목표를 시작하나요?</strong> 합계는 세션별이 아니라 해당 브라우저나 OBS 프로필에 저장됩니다. 먼저 금액을 초기화하세요.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h2 id="problems">문제 해결</h2>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>문제</th><th>시도할 방법</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="문제">아무것도 업데이트되지 않음</td><td data-label="시도할 방법">소스가 켜져 있고 세션 ID가 일치하며 필터가 해당 이벤트를 허용하는지 확인하세요.</td></tr>
+                            <tr><td data-label="문제">멤버십이나 구독이 계산되지 않음</td><td data-label="시도할 방법">Hype Cup Scoring을 켜고 Donation type filter를 All donations로 설정하세요.</td></tr>
+                            <tr><td data-label="문제">선물 멤버십의 증가량이 너무 적음</td><td data-label="시도할 방법">가격 대신 설정한 선물 포인트를 사용합니다. 포인트를 높이세요.</td></tr>
+                            <tr><td data-label="문제">선물 멤버십이 두 번 계산됨</td><td data-label="시도할 방법">Count individual gift recipients를 끄세요.</td></tr>
+                            <tr><td data-label="문제">선물 멤버십을 계산하고 싶지 않음</td><td data-label="시도할 방법">Exclude YouTube gifted memberships를 켜세요.</td></tr>
+                            <tr><td data-label="문제">목표에 도달하면 합계가 0이 됨</td><td data-label="시도할 방법">Hype 목표는 기본적으로 다시 시작합니다. Keep total and advance target을 사용하세요.</td></tr>
+                            <tr><td data-label="문제">이전 합계가 다시 나타남</td><td data-label="시도할 방법">Keep amount between sessions가 켜져 있습니다. 금액을 초기화하세요.</td></tr>
+                            <tr><td data-label="문제">Super Chat 횟수에 Super Sticker가 포함됨</td><td data-label="시도할 방법">유료 이벤트 필터를 Super Chats only로 설정하세요.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>테스트 버튼은 기부만 전송합니다. 멤버십이나 선물을 테스트하려면 같은 세션의 Dock 또는 Events Dashboard에서 이벤트가 도착하는지 확인하세요.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo"><img src="../../media/logo.png" alt="Social Stream Ninja 로고"><span>Social Stream Ninja</span></div>
+                <div class="footer-links"><div class="footer-section"><h4>자료</h4><ul><li><a href="guides.html">가이드</a></li><li><a href="event-reference.html">이벤트 참고 문서</a></li><li><a href="support.html">지원</a></li></ul></div></div>
+            </div>
+            <div class="footer-bottom"><p>© 2026 Social Stream Ninja. 모든 권리 보유.</p></div>
+        </div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

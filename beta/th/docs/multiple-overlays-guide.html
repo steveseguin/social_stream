@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/th/docs/multiple-overlays-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/beta/th/docs/multiple-overlays-guide.html">
+    <meta property="og:title" content="หลายช่องและโอเวอร์เลย์แยก - Social Stream Ninja">
+    <meta property="og:description" content="อ่านทุกแชตในแผงด็อกเดียว พร้อมเลือกว่าจะให้แต่ละโอเวอร์เลย์ผู้ชมแสดงแพลตฟอร์มใด">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/th/docs/multiple-overlays-guide.html">
+    <meta name="twitter:title" content="หลายช่องและโอเวอร์เลย์แยก - Social Stream Ninja">
+    <meta name="twitter:description" content="อ่านทุกแชตในแผงด็อกเดียว พร้อมเลือกว่าจะให้แต่ละโอเวอร์เลย์ผู้ชมแสดงแพลตฟอร์มใด">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>หลายช่องและโอเวอร์เลย์แยก - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="อ่านทุกแชตในแผงด็อกเดียว พร้อมเลือกว่าจะให้แต่ละโอเวอร์เลย์ผู้ชมแสดงแพลตฟอร์มใด">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/multiple-overlays-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{"(advanced, see below).":"(ขั้นสูง ดูด้านล่าง)","(replace values that are already there). Make the Hype layer taller if your style needs room.":"(แทนค่าที่มีอยู่) เพิ่มความสูงชั้น Hype หากสไตล์ต้องใช้พื้นที่","(see the":"(ดู","(works when the source sends a channel name).":"(ใช้ได้เมื่อแหล่งแชตส่งชื่อช่องมา)",") only works on the Dock.":") ใช้ได้เฉพาะ Dock",") or percent (":") หรือเปอร์เซ็นต์ (",", and":", และ",", and remove":" แล้วลบ",", height":" ความสูง",", left":" ตำแหน่งซ้าย",", may not work on this page. YouTube Shorts is its own type: add":" อาจใช้กับหน้านี้ไม่ได้ YouTube Shorts เป็นอีกประเภทหนึ่ง ให้เพิ่ม",", then":", จากนั้น",", top":" ตำแหน่งบน",". Add layers bottom first, and type just the numbers (no commas, no “px”) under each layer's":" เพิ่มชั้นล่างก่อน และกรอกเฉพาะตัวเลข ไม่มีจุลภาคหรือ “px” ใต้",". Blank width and height fill the browser; blank left and top start at the top-left corner.":" เว้นความกว้างและความสูงว่างเพื่อเต็มเบราว์เซอร์ เว้นซ้ายและบนว่างเพื่อเริ่มที่มุมซ้ายบน",". For a compact look, try":" หากต้องการแบบกะทัดรัด ลอง",". Keep that Dock unfiltered. It's your own view.":" ไม่ต้องกรอง Dock นั้น เพราะเป็นหน้าที่คุณดูเอง",". Name them clearly, like":" ตั้งชื่อให้ชัด เช่น",". Other layers stay fullscreen.":" ชั้นอื่นยังเต็มจอ",". Other pages need their own transparent setting. Some outside sites block embedding.":" หน้าอื่นต้องตั้งความโปร่งใสของตัวเอง บางเว็บไซต์ภายนอกไม่อนุญาตให้ฝัง",". Other scene sizes need other numbers.":" ขนาดฉากอื่นต้องใช้ตัวเลขต่างกัน",". Replace any":" แทนที่ค่า",". Set width, height, left, and top in pixels (":" ตั้งความกว้าง ความสูง ซ้าย และบนเป็นพิกเซล (","1. Live Chat / Dock":"1. แชตสด / แผงด็อก","2. Hype counter":"2. ตัวนับ Hype","3. Emoji / Emote Wall":"3. กำแพงอีโมจิ / อีโมต","4. Featured Chat":"4. แชตเด่น (Featured Chat)","5. NinjaBacker (optional)":"5. NinjaBacker (ไม่บังคับ)","A full example:":"ตัวอย่างเต็ม:","A layer has a solid background":"ชั้นหนึ่งมีพื้นหลังทึบ","A layer is empty":"ชั้นหนึ่งว่าง","A see-through layer can still block taps. Turn off":"ชั้นโปร่งใสก็อาจบังการแตะได้ ปิด","A view is blank":"มุมมองว่าง","Add":"เพิ่ม","Add a filter to the end of each copy, like":"เพิ่มตัวกรองท้ายแต่ละสำเนา เช่น","Add all your chats to Social Stream Ninja. Check one new message from each shows up in your":"เพิ่มแชตทั้งหมดใน Social Stream Ninja ตรวจว่าข้อความใหม่จากแต่ละแหล่งแสดงใน","Add each link to OBS as its own":"เพิ่มแต่ละลิงก์ใน OBS แยกเป็น","Add more overlays":"เพิ่มโอเวอร์เลย์","Add to the Dock link":"เพิ่มท้ายลิงก์ Dock","All guides":"คู่มือทั้งหมด","Allow taps and scrolling":"อนุญาตการแตะและเลื่อน","Allow taps and scrolling on this layer":"อนุญาตให้แตะและเลื่อนในชั้นนี้","An overlay with a different session but no matching capture will just sit empty. An overlay's":"โอเวอร์เลย์ที่ใช้คนละเซสชันโดยไม่มีตัวจับข้อมูลตรงกันจะว่าง ตัวเลือก","Automatic transparency works for":"ความโปร่งใสอัตโนมัติใช้ได้กับ","Browse all guides":"ดูคู่มือทั้งหมด","Browser Source":"แหล่งเบราว์เซอร์ (Browser Source)","Can't tap or scroll chat":"แตะหรือเลื่อนแชตไม่ได้","Capture":"จับข้อมูล","Center Hype in the column.":"จัด Hype กึ่งกลางคอลัมน์","Chat and alerts in one browser tab":"แชตและแจ้งเตือนในแท็บเบราว์เซอร์เดียว","Chat and alerts in one tab":"แชตและแจ้งเตือนในแท็บเดียว","Chat layer: width":"ชั้นแชต: ความกว้าง","Check both show in your Dock, and each chat overlay shows only its own platform.":"ตรวจว่าทั้งคู่แสดงใน Dock และแต่ละโอเวอร์เลย์แสดงเฉพาะแพลตฟอร์มของตัวเอง","Clear saved setup":"ล้างการตั้งค่าที่บันทึก","Combine overlays":"รวมโอเวอร์เลย์","Commands & API":"คำสั่งและ API","Copy combined link":"คัดลอกลิงก์รวม","Copy the new combined link into OBS.":"คัดลอกลิงก์รวมใหม่ไปใส่ใน OBS","Copy them from your existing Browser Sources so session, password, styles, and connection settings come along. Leave":"คัดลอกจาก Browser Source ที่มีอยู่ เพื่อคงเซสชัน รหัสผ่าน สไตล์ และการเชื่อมต่อไว้ คง","Copy your generated":"คัดลอกลิงก์","Create test messages":"สร้างข้อความทดสอบ","Do this":"ทำตามนี้","Download":"ดาวน์โหลด","Each layer is its own area. Set the OBS Browser Source to":"แต่ละชั้นมีพื้นที่ของตัวเอง ตั้ง Browser Source ใน OBS เป็น","Each overlay gets its own Browser Source.":"แต่ละโอเวอร์เลย์มี Browser Source ของตัวเอง","Edit a combined link later":"แก้ลิงก์รวมภายหลัง","Edits on desktop don't update an older link. Copy or scan the new link after editing. Nothing syncs through your session ID.":"การแก้บนคอมพิวเตอร์ไม่อัปเดตลิงก์เก่า คัดลอกหรือสแกนลิงก์ใหม่หลังแก้ ไม่มีการซิงก์ผ่าน session ID","Event reference":"เอกสารอ้างอิงอีเวนต์","Everything except Discord":"ทุกอย่างยกเว้น Discord","Example: one overlay shows only Twitch chat, another shows only YouTube chat. You still read everything in one Dock.":"ตัวอย่าง: โอเวอร์เลย์หนึ่งแสดงเฉพาะ Twitch อีกอันแสดงเฉพาะ YouTube แต่คุณยังอ่านทั้งหมดใน Dock เดียว","Feature each message, then press clear. Check every featured page after switching platforms.":"เลือกแสดงแต่ละข้อความแล้วกดล้าง ตรวจทุกหน้า Featured Chat หลังสลับแพลตฟอร์ม","Featured Chat":"แชตเด่น (Featured Chat)","Featured Chat takes one platform per link.":"Featured Chat รับหนึ่งแพลตฟอร์มต่อลิงก์","Features":"ฟีเจอร์","Filter options":"ตัวเลือกตัวกรอง","Filter options for chat overlays":"ตัวกรองสำหรับโอเวอร์เลย์แชต","Filter the Dock by browser tab":"กรอง Dock ตามแท็บเบราว์เซอร์","Find the":"หา","Guides":"คู่มือ","Height":"ความสูง","Hire":"จ้างงาน","Home":"หน้าแรก","How":"วิธี","I want to":"ฉันต้องการ","I want to show":"ฉันต้องการแสดง","I want to show…":"ฉันต้องการแสดง…","I want to…":"ฉันต้องการ…","If a layer is blank or covers chat":"หากเลเยอร์ว่างหรือบังแชต","Inspiration":"ไอเดียสร้างสรรค์","It is not a platform channel ID.":"ไม่ใช่ ID ช่องของแพลตฟอร์ม","It takes the numeric ID of the browser tab the message came from. Separate several with commas.":"ใช้ ID ตัวเลขของแท็บเบราว์เซอร์ที่ส่งข้อความมา หากมีหลาย ID ให้คั่นด้วยจุลภาค","It works on the Dock only, not as a Featured Chat channel filter.":"ใช้ได้เฉพาะ Dock ไม่ใช่ตัวกรองช่องสำหรับ Featured Chat","Keep Featured Chat beside the chat column.":"วาง Featured Chat ข้างคอลัมน์แชต","Keep combined links and QR codes as private as your overlay links.":"เก็บลิงก์รวมและ QR เป็นความลับเช่นเดียวกับลิงก์โอเวอร์เลย์","Keep each overlay in its own OBS Browser Source.":"เก็บแต่ละภาพซ้อนทับไว้ใน OBS Browser Source ของตัวเอง","Keep your Dock open to pick messages.":"เปิด Dock ไว้เพื่อเลือกข้อความ","Layer":"เลเยอร์","Layer options":"ตัวเลือกชั้น","Leave":"คงค่า","Left":"ซ้าย","Left = 450":"ซ้าย = 450","Main navigation":"เมนูหลัก","Make a layer fullscreen again":"ทำให้ชั้นเต็มจออีกครั้ง","Make a left chat column (1920×1080)":"สร้างคอลัมน์แชตด้านซ้าย (1920×1080)","Multi-Stream Alert Box":"กล่องแจ้งเตือนหลายสตรีม","Multiple channels and separate overlays":"หลายช่องและโอเวอร์เลย์แยก","Multiple channels and separate overlays - Social Stream Ninja":"หลายช่องและโอเวอร์เลย์แยก - Social Stream Ninja","No CSS needed.":"ไม่ต้องใช้ CSS","No sound on the phone":"โทรศัพท์ไม่มีเสียง","OBS layout recipe":"สูตรจัดวาง OBS","OBS recipe: left chat column with fullscreen effects":"สูตร OBS: คอลัมน์แชตซ้ายพร้อมเอฟเฟกต์เต็มจอ","OBS views":"มุมมอง OBS","On the":"บน","On this page":"ในหน้านี้","One SSN session":"เซสชัน SSN เดียว","One feed can power several filtered views.":"ฟีดเดียวส่งข้อมูลให้หลายมุมมองที่กรองต่างกันได้","Open":"เปิด","Open its original link on its own first. Alerts stay empty until an event arrives. Combining doesn't capture anything new.":"เปิดลิงก์ต้นฉบับแยกก่อน แจ้งเตือนจะว่างจนมีเหตุการณ์ การรวมไม่ได้จับข้อมูลเพิ่ม","Open navigation menu":"เปิดเมนูนำทาง","Options from other overlays, like":"ตัวเลือกจากโอเวอร์เลย์อื่น เช่น","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Paste its viewer overlay link as the top layer, with its right-entry animation setting. The combiner sets its area and order; NinjaBacker sets its own animation. Its background must be transparent and its site must allow embedding. This layer wasn't part of the tested example.":"วางลิงก์โอเวอร์เลย์สำหรับผู้ชมเป็นชั้นบนสุด พร้อมตั้งแอนิเมชันเข้าจากขวา ตัวรวมกำหนดพื้นที่และลำดับ ส่วน NinjaBacker กำหนดแอนิเมชันเอง พื้นหลังต้องโปร่งใสและเว็บไซต์ต้องอนุญาตการฝัง ชั้นนี้ไม่ได้อยู่ในตัวอย่างที่ทดสอบ","Paste your":"วาง","Paste your full overlay links.":"วางลิงก์โอเวอร์เลย์แบบเต็ม","Performance:":"ประสิทธิภาพ:","Phones may need a tap before playing sound. Turn on taps for that layer and tap it. Test on the real phone before relying on it.":"โทรศัพท์อาจต้องแตะก่อนเล่นเสียง เปิดให้แตะชั้นนั้นแล้วแตะ ทดสอบบนโทรศัพท์จริงก่อนใช้งาน","Pixel sizes stay fixed when the browser resizes. Percentages follow it. Each overlay keeps its own content and settings.":"ขนาดพิกเซลคงที่เมื่อเบราว์เซอร์เปลี่ยนขนาด ส่วนเปอร์เซ็นต์ปรับตาม แต่ละโอเวอร์เลย์คงเนื้อหาและการตั้งค่าของตัวเอง","Press":"กด","Preview":"ดูตัวอย่าง","Preview at 1920×1080.":"ดูตัวอย่างที่ 1920×1080","Problem":"ปัญหา","Put NinjaBacker last (optional).":"วาง NinjaBacker ท้ายสุด (ไม่บังคับ)","Put a layer in front or behind":"ย้ายชั้นไปหน้าหรือหลัง","Read all your chats in one Dock while choosing which platforms appear in each audience overlay.":"อ่านทุกแชตในแผงด็อกเดียว พร้อมเลือกว่าจะให้แต่ละโอเวอร์เลย์ผู้ชมแสดงแพลตฟอร์มใด","Real Chromium test with four SSN overlays and a test feed. The image is transparent; the dark background is added here so you can read it. Click for full size. Your fonts and colors come from your own overlay settings.":"ทดสอบ Chromium จริงด้วยโอเวอร์เลย์ SSN สี่อันและฟีดทดสอบ ภาพโปร่งใส โดยเพิ่มพื้นหลังมืดที่นี่ให้อ่านง่าย คลิกดูขนาดเต็ม ฟอนต์และสีมาจากการตั้งค่าโอเวอร์เลย์ของคุณ","Remove its filter for a moment. If chat comes back, check the exact source type or tab ID.":"เอาตัวกรองออกชั่วคราว หากแชตกลับมา ให้ตรวจประเภทแหล่งแชตหรือ tab ID ให้ตรง","Renamed the OBS source but nothing changed":"เปลี่ยนชื่อแหล่ง OBS แล้วแต่ไม่เปลี่ยน","Renaming doesn't change the saved link. Edit the URL itself.":"การเปลี่ยนชื่อไม่แก้ลิงก์ที่บันทึก ต้องแก้ URL เอง","Repeat with a real message from each of your sources. Fake messages don't have real tab IDs.":"ทดสอบซ้ำด้วยข้อความจริงจากแต่ละแหล่ง ข้อความจำลองไม่มี tab ID จริง","Reset to fullscreen":"รีเซ็ตเป็นเต็มหน้าจอ","Run two fully separate shows":"จัดสองรายการที่แยกกันทั้งหมด","SSN capture must still be running, and the phone must reach the same servers as the original links.":"SSN ต้องยังจับข้อมูลอยู่ และโทรศัพท์ต้องเข้าถึงเซิร์ฟเวอร์เดียวกับลิงก์ต้นฉบับ","Saving, phones, and privacy":"การบันทึก โทรศัพท์ และความเป็นส่วนตัว","See":"ดู","Send a chat message with emojis, feature a message from your Dock, and turn on Hype data in SSN. Normal chat doesn't pick a featured message on its own.":"ส่งแชตที่มีอีโมจิ เลือกข้อความเด่นจาก Dock และเปิดข้อมูล Hype ใน SSN แชตปกติไม่เลือกข้อความเด่นให้เอง","Send a fake Twitch message and a fake YouTube message into a test session. Use":"ส่งข้อความจำลอง Twitch และ YouTube เข้าสู่เซสชันทดสอบ ใช้","Set":"ตั้งค่า","Set that Browser Source to Width 1920, Height 1080. The preview size doesn't set this. Fit it to your scene without cropping. After every layout change, copy the link again; the old link keeps the old layout.":"ตั้ง Browser Source เป็นกว้าง 1920 สูง 1080 ขนาดตัวอย่างไม่กำหนดค่านี้ จัดให้พอดีฉากโดยไม่ครอป หลังเปลี่ยนการจัดวางทุกครั้ง ให้คัดลอกลิงก์ใหม่ ลิงก์เก่ายังคงแบบเก่า","Show QR code":"แสดง QR code","Show which channel each message came from":"แสดงว่าแต่ละข้อความมาจากช่องไหน","Size and position":"ขนาดและตำแหน่ง","Size or move a layer":"ปรับขนาดหรือย้ายชั้น","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja ·":"Social Stream Ninja ·","Source types":"ประเภทแหล่งข้อมูล","Split Featured Chat (selected messages)":"แยก Featured Chat (ข้อความที่เลือก)","Split chat by platform":"แยกแชตตามแพลตฟอร์ม","Split chat by platform in 4 steps":"แยกแชตตามแพลตฟอร์มใน 4 ขั้นตอน","Start over":"เริ่มใหม่","Still blank without the filter":"ยังว่างแม้เอาตัวกรองออก","Streaming Chat Dock":"แผงด็อก Streaming Chat","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Switch theme":"เปลี่ยนธีม","Tab IDs can change when a source reopens. Sources without a matching tab ID may be hidden.":"tab ID อาจเปลี่ยนเมื่อเปิดแหล่งใหม่ แหล่งที่ไม่มี tab ID ตรงกันอาจถูกซ่อน","Test each view":"ทดสอบแต่ละมุมมอง","Test it":"ทดสอบ","Tested combined output: Hype centered over a narrow left chat column, emojis across the scene, and a featured message along the bottom to the right of chat.":"ผลรวมที่ทดสอบแล้ว: Hype อยู่กึ่งกลางเหนือคอลัมน์แชตแคบด้านซ้าย อีโมจิทั่วฉาก และข้อความเด่นด้านล่างทางขวาของแชต","The combined link and QR code hold the whole layout. Set it up on desktop, scan once, then bookmark it on your phone. Opening it also saves the setup in the phone's browser.":"ลิงก์รวมและ QR เก็บการจัดวางทั้งหมด ตั้งค่าบนคอมพิวเตอร์ สแกนครั้งเดียว แล้วบุ๊กมาร์กบนโทรศัพท์ การเปิดลิงก์ยังบันทึกการตั้งค่าในเบราว์เซอร์โทรศัพท์ด้วย","The combined view has no setup controls. It just shows your overlays.":"มุมมองรวมไม่มีตัวควบคุมการตั้งค่า แสดงโอเวอร์เลย์เท่านั้น","The comma list (":"รายการคั่นจุลภาค (","The filter only decides which picks a page accepts. It doesn't give you separate queues. A rejected pick doesn't clear the screen either. When you switch segments, clear the featured message yourself so an old one isn't left showing.":"ตัวกรองกำหนดเพียงว่าหน้ารับข้อความที่เลือกใดบ้าง ไม่ได้แยกคิวให้ การปฏิเสธข้อความไม่ล้างหน้าจอด้วย เมื่อเปลี่ยนช่วงรายการ ให้ล้างข้อความเด่นเองเพื่อไม่ให้ข้อความเก่าค้าง","The top 80 pixels hold Hype, with the chat column below. Want chat full height behind Hype? Set Live Chat's height to":"พื้นที่บน 80 พิกเซลใช้แสดง Hype และคอลัมน์แชตอยู่ด้านล่าง ต้องการให้แชตเต็มความสูงหลัง Hype? ตั้งความสูง Live Chat เป็น","Top":"บน","Transparent SSN background":"พื้นหลัง SSN โปร่งใส","Try this":"ลองวิธีนี้","Turn on":"เปิด","Twitch + YouTube":"Twitch + YouTube","Twitch and YouTube together":"Twitch และ YouTube ร่วมกัน","Twitch chat":"แชต Twitch","Twitch only":"เฉพาะ Twitch","Twitch-only and YouTube-only":"เฉพาะ Twitch และเฉพาะ YouTube","Two channels on the same platform":"สองช่องบนแพลตฟอร์มเดียวกัน","Two channels, same platform":"สองช่อง แพลตฟอร์มเดียวกัน","Up to eight links.":"สูงสุดแปดลิงก์","Use":"ใช้","Use separate capture instances or profiles, each with its own session, each opening only its own sources.":"ใช้ตัวจับข้อมูลหรือโปรไฟล์แยกกัน แต่ละอันมีเซสชันของตัวเองและเปิดเฉพาะแหล่งของตัวเอง","Use the arrow buttons.":"ใช้ปุ่มลูกศร","Use the editable link, or add":"ใช้ลิงก์แก้ไขได้ หรือเพิ่ม","Very long links may not fit in a QR code. You can still copy the link.":"ลิงก์ยาวมากอาจใส่ QR ไม่ได้ แต่ยังคัดลอกลิงก์ได้","Width":"ความกว้าง","Width = 1470":"ความกว้าง = 1470","YouTube chat":"แชต YouTube","YouTube only":"เฉพาะ YouTube","Your Dock sees both":"Dock ของคุณเห็นทั้งคู่","Your links and layer options save automatically in this browser, even unfinished ones. Private browsing may not keep them.":"ลิงก์และตัวเลือกชั้นบันทึกอัตโนมัติในเบราว์เซอร์นี้ แม้ยังตั้งไม่เสร็จ โหมดส่วนตัวอาจไม่เก็บ","and":"และ","and scan it with your phone. Or press":"แล้วสแกนด้วยโทรศัพท์ หรือกด","and top to":"และระยะบนเป็น","before the":"ก่อน","checked.":"ไว้","checked. OBS crops, transforms, filters, and Custom CSS are not in the link and won't carry over.":"ไว้ การครอป การแปลง ตัวกรอง และ Custom CSS ของ OBS ไม่อยู่ในลิงก์ จึงไม่ย้ายตามไป","for chat. Turn it off for alerts, so they don't block chat.":"สำหรับแชต ปิดสำหรับแจ้งเตือนเพื่อไม่ให้บังแชต","here.":"ที่นี่","if your capture reports it. See":"หากตัวจับข้อมูลส่งค่านี้มา ดู","in a real captured payload. See the":"ในข้อมูลข้อความที่จับได้จริง ดู","link into the bottom layer.":"ในชั้นล่าง","link into the top layer. Keep the full links, with session, password, and connection options.":"ในชั้นบน เก็บลิงก์เต็มพร้อมเซสชัน รหัสผ่าน และตัวเลือกเชื่อมต่อ","link twice.":"สองครั้ง","link twice. Copying keeps your session, password, version, and server settings.":"สองครั้ง การคัดลอกคงเซสชัน รหัสผ่าน รุ่น และการตั้งค่าเซิร์ฟเวอร์","link, use":"ให้ใช้","means all of Twitch, not one Twitch channel. Channel names and stream titles can't be used as filter names.":"หมายถึง Twitch ทั้งหมด ไม่ใช่ช่อง Twitch เดียว ใช้ชื่อช่องหรือชื่อสตรีมเป็นชื่อตัวกรองไม่ได้","means the phone itself.":"หมายถึงโทรศัพท์เครื่องนั้นเอง","names the page for routing; it is not a channel filter.":"ตั้งชื่อหน้าเพื่อกำหนดเส้นทาง ไม่ใช่ตัวกรองช่อง","on layers above chat that don't need it.":"บนชั้นเหนือแชตที่ไม่ต้องใช้","one Browser Source still runs every overlay inside it. Fewer OBS sources doesn't guarantee lower CPU or memory. Close the browser preview when done, and compare OBS with the old sources turned off. M1 Mac performance and your own NinjaBacker link are untested. You can keep Live Chat separate and combine only the rest.":"Browser Source เดียวยังต้องรันทุกโอเวอร์เลย์ภายใน จำนวนแหล่ง OBS น้อยลงไม่รับประกันว่าจะใช้ CPU หรือหน่วยความจำน้อยลง ปิดหน้าตัวอย่างเมื่อเสร็จ แล้วเปรียบเทียบ OBS ขณะปิดแหล่งเก่า ยังไม่ได้ทดสอบประสิทธิภาพ M1 Mac หรือลิงก์ NinjaBacker ของคุณ คุณแยก Live Chat ไว้และรวมเฉพาะส่วนที่เหลือได้","or":"หรือ","session and routing troubleshooting":"การแก้ปัญหาเซสชันและการกำหนดเส้นทาง","stacks your overlay links into one tab or one OBS Browser Source. Handy for reading chat on your phone during an IRL stream.":"ซ้อนลิงก์โอเวอร์เลย์เป็นแท็บเดียวหรือ Browser Source เดียวใน OBS เหมาะกับอ่านแชตบนโทรศัพท์ระหว่างสตรีม IRL","table below":"ตารางด้านล่าง","to":"เป็น","to center short messages in that area. To center across the whole scene, use Left 0, Width 1920, and":"เพื่อจัดข้อความสั้นกลางพื้นที่นั้น หากต้องการกลางทั้งฉาก ใช้ Left 0, Width 1920 และ","to one and":"ให้ลิงก์หนึ่ง และ","to paste into a Browser Source.":"เพื่อนำไปวางใน Browser Source","to the other.":"ให้อีกลิงก์","together (450 + 1470 = 1920). Moving a 1920-wide layer right would cut off its edge. Add":"รวมกัน (450 + 1470 = 1920) การเลื่อนชั้นกว้าง 1920 ไปขวาจะตัดขอบออก เพิ่ม","works":"ใช้ได้"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/multiple-overlays-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide visual-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก">
+<a href="../index.html">หน้าแรก</a>
+<a href="features.html">ฟีเจอร์</a>
+<a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a>
+<a href="download.html">ดาวน์โหลด</a>
+<a href="guides.html">คู่มือ</a>
+<a href="commands.html">คำสั่งและ API</a>
+<a href="supported-sites.html">เว็บไซต์ที่รองรับ</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a>
+<a href="services.html" class="site-priority-hire">จ้างงาน</a>
+<a href="support.html">การสนับสนุน</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/multiple-overlays-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/multiple-overlays-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/multiple-overlays-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/multiple-overlays-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/multiple-overlays-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/multiple-overlays-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/multiple-overlays-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/multiple-overlays-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/multiple-overlays-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/multiple-overlays-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/multiple-overlays-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/multiple-overlays-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/multiple-overlays-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/multiple-overlays-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/multiple-overlays-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/multiple-overlays-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="multiple-overlays-guide.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="เปลี่ยนธีม">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>หลายช่องและโอเวอร์เลย์แยก</h1>
+<p>อ่านทุกแชตในแผงด็อกเดียว พร้อมเลือกว่าจะให้แต่ละโอเวอร์เลย์ผู้ชมแสดงแพลตฟอร์มใด</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="guide-jump-links" aria-label="ในหน้านี้">
+<a href="#setup">แยกแชตตามแพลตฟอร์ม</a>
+<a href="#rolling">ตัวเลือกตัวกรอง</a>
+<a href="#featured">แชตเด่น (Featured Chat)</a>
+<a href="#channels">สองช่อง แพลตฟอร์มเดียวกัน</a>
+<a href="#check">ทดสอบ</a>
+<a href="#combine">แชตและแจ้งเตือนในแท็บเดียว</a>
+<a href="#combine-obs">สูตรจัดวาง OBS</a>
+<a href="guides.html">คู่มือทั้งหมด</a>
+</nav>
+
+<section class="guide-card">
+<h2 id="setup">แยกแชตตามแพลตฟอร์มใน 4 ขั้นตอน</h2>
+<p>ตัวอย่าง: โอเวอร์เลย์หนึ่งแสดงเฉพาะ Twitch อีกอันแสดงเฉพาะ YouTube แต่คุณยังอ่านทั้งหมดใน Dock เดียว</p>
+<div class="guide-step-layout">
+<ol class="guide-steps">
+<li>เพิ่มแชตทั้งหมดใน Social Stream Ninja ตรวจว่าข้อความใหม่จากแต่ละแหล่งแสดงใน <strong>แผงด็อก Streaming Chat</strong> ไม่ต้องกรอง Dock นั้น เพราะเป็นหน้าที่คุณดูเอง</li>
+<li>คัดลอกลิงก์ <code>dock.html</code> สองครั้ง การคัดลอกคงเซสชัน รหัสผ่าน รุ่น และการตั้งค่าเซิร์ฟเวอร์</li>
+<li>เพิ่มตัวกรองท้ายแต่ละสำเนา เช่น <code>&amp;onlyfrom=twitch&amp;hidemenu</code> (ดู <a href="#rolling">ตารางด้านล่าง</a>).</li>
+<li>เพิ่มแต่ละลิงก์ใน OBS แยกเป็น <strong>แหล่งเบราว์เซอร์ (Browser Source)</strong> ตั้งชื่อให้ชัด เช่น <strong>แชต Twitch</strong> และ <strong>แชต YouTube</strong>.</li>
+</ol>
+<figure class="guide-figure"><a href="../../docs/images/guides/obs-studio-sources.png"><img src="../../docs/images/guides/obs-studio-sources.png" width="265" height="580" alt="เก็บแต่ละภาพซ้อนทับไว้ใน OBS Browser Source ของตัวเอง" loading="lazy" decoding="async"></a><figcaption>แต่ละโอเวอร์เลย์มี Browser Source ของตัวเอง</figcaption></figure>
+</div>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>จับข้อมูล</strong>
+<span>Twitch + YouTube</span>
+</li>
+<li>
+<strong>เซสชัน SSN เดียว</strong>
+<span>Dock ของคุณเห็นทั้งคู่</span>
+</li>
+<li>
+<strong>มุมมอง OBS</strong>
+<span>เฉพาะ Twitch และเฉพาะ YouTube</span>
+</li>
+</ol>
+<figcaption>ฟีดเดียวส่งข้อมูลให้หลายมุมมองที่กรองต่างกันได้</figcaption>
+</figure>
+</section>
+
+<section class="guide-card">
+<h2 id="rolling">ตัวกรองสำหรับโอเวอร์เลย์แชต</h2>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">ฉันต้องการแสดง…</th>
+<th scope="col">เพิ่มท้ายลิงก์ Dock</th>
+</tr>
+</thead>
+<tbody>
+<tr><td data-label="ฉันต้องการแสดง">เฉพาะ Twitch</td><td data-label="เพิ่มท้ายลิงก์ Dock"><code>&amp;onlyfrom=twitch&amp;hidemenu</code></td></tr>
+<tr><td data-label="ฉันต้องการแสดง">เฉพาะ YouTube</td><td data-label="เพิ่มท้ายลิงก์ Dock"><code>&amp;onlyfrom=youtube&amp;hidemenu</code></td></tr>
+<tr><td data-label="ฉันต้องการแสดง">Twitch และ YouTube ร่วมกัน</td><td data-label="เพิ่มท้ายลิงก์ Dock"><code>&amp;onlyfrom=twitch,youtube&amp;hidemenu</code></td></tr>
+<tr><td data-label="ฉันต้องการแสดง">ทุกอย่างยกเว้น Discord</td><td data-label="เพิ่มท้ายลิงก์ Dock"><code>&amp;hidefrom=discord&amp;hidemenu</code></td></tr>
+</tbody>
+</table>
+<p>ตัวอย่างเต็ม:</p>
+<pre><code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;onlyfrom=twitch&amp;hidemenu</code></pre>
+<div class="guide-note"><strong>ใช้ <code>onlyfrom</code> และ <code>hidefrom</code> ที่นี่</strong> ตัวเลือกจากโอเวอร์เลย์อื่น เช่น <code>onlytype</code> อาจใช้กับหน้านี้ไม่ได้ YouTube Shorts เป็นอีกประเภทหนึ่ง ให้เพิ่ม <code>youtubeshorts</code> หากตัวจับข้อมูลส่งค่านี้มา ดู <a href="source-types-guide.html">ประเภทแหล่งข้อมูล</a>.</div>
+</section>
+
+<section class="guide-card">
+<h2 id="featured">แยก Featured Chat (ข้อความที่เลือก)</h2>
+<ol class="guide-steps">
+<li>คัดลอกลิงก์ <code>featured.html</code> สองครั้ง</li>
+<li>เพิ่ม <code>&amp;onlyfrom=twitch</code> ให้ลิงก์หนึ่ง และ <code>&amp;onlyfrom=youtube</code> ให้อีกลิงก์</li>
+<li>เปิด Dock ไว้เพื่อเลือกข้อความ</li>
+</ol>
+<div class="warning-note"><strong>Featured Chat รับหนึ่งแพลตฟอร์มต่อลิงก์</strong> รายการคั่นจุลภาค (<code>twitch,youtube</code>) ใช้ได้เฉพาะ Dock</div>
+<p>ตัวกรองกำหนดเพียงว่าหน้ารับข้อความที่เลือกใดบ้าง ไม่ได้แยกคิวให้ การปฏิเสธข้อความไม่ล้างหน้าจอด้วย เมื่อเปลี่ยนช่วงรายการ ให้ล้างข้อความเด่นเองเพื่อไม่ให้ข้อความเก่าค้าง</p>
+</section>
+
+<section class="guide-card">
+<h2 id="channels">สองช่องบนแพลตฟอร์มเดียวกัน</h2>
+<p><code>onlyfrom=twitch</code> หมายถึง Twitch ทั้งหมด ไม่ใช่ช่อง Twitch เดียว ใช้ชื่อช่องหรือชื่อสตรีมเป็นชื่อตัวกรองไม่ได้</p>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>ฉันต้องการ…</th><th>ทำตามนี้</th></tr></thead>
+<tbody>
+<tr><td data-label="ฉันต้องการ">แสดงว่าแต่ละข้อความมาจากช่องไหน</td><td data-label="ทำตามนี้">เพิ่ม <code>&amp;showchannelname</code> (ใช้ได้เมื่อแหล่งแชตส่งชื่อช่องมา)</td></tr>
+<tr><td data-label="ฉันต้องการ">จัดสองรายการที่แยกกันทั้งหมด</td><td data-label="ทำตามนี้">ใช้ตัวจับข้อมูลหรือโปรไฟล์แยกกัน แต่ละอันมีเซสชันของตัวเองและเปิดเฉพาะแหล่งของตัวเอง</td></tr>
+<tr><td data-label="ฉันต้องการ">กรอง Dock ตามแท็บเบราว์เซอร์</td><td data-label="ทำตามนี้"><code>&amp;filtertid=123</code> (ขั้นสูง ดูด้านล่าง)</td></tr>
+</tbody>
+</table>
+<div class="guide-note">โอเวอร์เลย์ที่ใช้คนละเซสชันโดยไม่มีตัวจับข้อมูลตรงกันจะว่าง ตัวเลือก <code>label</code> ตั้งชื่อหน้าเพื่อกำหนดเส้นทาง ไม่ใช่ตัวกรองช่อง</div>
+<details class="guide-extra">
+<summary>วิธี <code>filtertid</code> ใช้ได้</summary>
+<ul>
+<li>ใช้ ID ตัวเลขของแท็บเบราว์เซอร์ที่ส่งข้อความมา หากมีหลาย ID ให้คั่นด้วยจุลภาค</li>
+<li>หา <code>tid</code> ในข้อมูลข้อความที่จับได้จริง ดู <a href="event-reference.html">เอกสารอ้างอิงอีเวนต์</a> และ <a href="commands.html">คำสั่งและ API</a>.</li>
+<li>ไม่ใช่ ID ช่องของแพลตฟอร์ม</li>
+<li>tab ID อาจเปลี่ยนเมื่อเปิดแหล่งใหม่ แหล่งที่ไม่มี tab ID ตรงกันอาจถูกซ่อน</li>
+<li>ใช้ได้เฉพาะ Dock ไม่ใช่ตัวกรองช่องสำหรับ Featured Chat</li>
+</ul>
+</details>
+</section>
+
+<section class="guide-card">
+<h2 id="check">ทดสอบแต่ละมุมมอง</h2>
+<ol class="guide-steps">
+<li>ส่งข้อความจำลอง Twitch และ YouTube เข้าสู่เซสชันทดสอบ ใช้ <a href="test-message-guide.html">สร้างข้อความทดสอบ</a>.</li>
+<li>ตรวจว่าทั้งคู่แสดงใน Dock และแต่ละโอเวอร์เลย์แสดงเฉพาะแพลตฟอร์มของตัวเอง</li>
+<li>เลือกแสดงแต่ละข้อความแล้วกดล้าง ตรวจทุกหน้า Featured Chat หลังสลับแพลตฟอร์ม</li>
+<li>ทดสอบซ้ำด้วยข้อความจริงจากแต่ละแหล่ง ข้อความจำลองไม่มี tab ID จริง</li>
+</ol>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>ปัญหา</th><th>ลองวิธีนี้</th></tr></thead>
+<tbody>
+<tr><td data-label="ปัญหา">มุมมองว่าง</td><td data-label="ลองวิธีนี้">เอาตัวกรองออกชั่วคราว หากแชตกลับมา ให้ตรวจประเภทแหล่งแชตหรือ tab ID ให้ตรง</td></tr>
+<tr><td data-label="ปัญหา">ยังว่างแม้เอาตัวกรองออก</td><td data-label="ลองวิธีนี้">ดู <a href="sessions-passwords-relay-modes.html">การแก้ปัญหาเซสชันและการกำหนดเส้นทาง</a>.</td></tr>
+<tr><td data-label="ปัญหา">เปลี่ยนชื่อแหล่ง OBS แล้วแต่ไม่เปลี่ยน</td><td data-label="ลองวิธีนี้">การเปลี่ยนชื่อไม่แก้ลิงก์ที่บันทึก ต้องแก้ URL เอง</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="guide-card">
+<h2 id="combine">แชตและแจ้งเตือนในแท็บเบราว์เซอร์เดียว</h2>
+<p><a href="../../combine.html">รวมโอเวอร์เลย์</a> ซ้อนลิงก์โอเวอร์เลย์เป็นแท็บเดียวหรือ Browser Source เดียวใน OBS เหมาะกับอ่านแชตบนโทรศัพท์ระหว่างสตรีม IRL</p>
+<ol class="guide-steps">
+<li>วาง <strong>แผงด็อก Streaming Chat</strong> ในชั้นล่าง</li>
+<li>วาง <strong>กล่องแจ้งเตือนหลายสตรีม</strong> ในชั้นบน เก็บลิงก์เต็มพร้อมเซสชัน รหัสผ่าน และตัวเลือกเชื่อมต่อ</li>
+<li>คงค่า <strong>พื้นหลัง SSN โปร่งใส</strong> ไว้</li>
+<li>เปิด <strong>อนุญาตให้แตะและเลื่อนในชั้นนี้</strong> สำหรับแชต ปิดสำหรับแจ้งเตือนเพื่อไม่ให้บังแชต</li>
+<li>กด <strong>ดูตัวอย่าง</strong>, จากนั้น <strong>แสดง QR code</strong> แล้วสแกนด้วยโทรศัพท์ หรือกด <strong>คัดลอกลิงก์รวม</strong> เพื่อนำไปวางใน Browser Source</li>
+</ol>
+<p>มุมมองรวมไม่มีตัวควบคุมการตั้งค่า แสดงโอเวอร์เลย์เท่านั้น</p>
+
+<h3>ตัวเลือกชั้น</h3>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>ฉันต้องการ…</th><th>ทำตามนี้</th></tr></thead>
+<tbody>
+<tr><td data-label="ฉันต้องการ">เพิ่มโอเวอร์เลย์</td><td data-label="ทำตามนี้">สูงสุดแปดลิงก์</td></tr>
+<tr><td data-label="ฉันต้องการ">ย้ายชั้นไปหน้าหรือหลัง</td><td data-label="ทำตามนี้">ใช้ปุ่มลูกศร</td></tr>
+<tr><td data-label="ฉันต้องการ">ปรับขนาดหรือย้ายชั้น</td><td data-label="ทำตามนี้">เปิด <strong>ขนาดและตำแหน่ง</strong> ตั้งความกว้าง ความสูง ซ้าย และบนเป็นพิกเซล (<code>450</code>) หรือเปอร์เซ็นต์ (<code>100%</code>).</td></tr>
+<tr><td data-label="ฉันต้องการ">ทำให้ชั้นเต็มจออีกครั้ง</td><td data-label="ทำตามนี้"><strong>รีเซ็ตเป็นเต็มหน้าจอ</strong> เว้นความกว้างและความสูงว่างเพื่อเต็มเบราว์เซอร์ เว้นซ้ายและบนว่างเพื่อเริ่มที่มุมซ้ายบน</td></tr>
+<tr><td data-label="ฉันต้องการ">สร้างคอลัมน์แชตด้านซ้าย (1920×1080)</td><td data-label="ทำตามนี้">ชั้นแชต: ความกว้าง <code>450</code> ความสูง <code>1080</code> ตำแหน่งซ้าย <code>0</code> ตำแหน่งบน <code>0</code> ชั้นอื่นยังเต็มจอ</td></tr>
+<tr><td data-label="ฉันต้องการ">แก้ลิงก์รวมภายหลัง</td><td data-label="ทำตามนี้">ใช้ลิงก์แก้ไขได้ หรือเพิ่ม <code>?edit=1</code> ก่อน <code>#</code>.</td></tr>
+<tr><td data-label="ฉันต้องการ">เริ่มใหม่</td><td data-label="ทำตามนี้"><strong>ล้างการตั้งค่าที่บันทึก</strong>.</td></tr>
+</tbody>
+</table>
+<p>ขนาดพิกเซลคงที่เมื่อเบราว์เซอร์เปลี่ยนขนาด ส่วนเปอร์เซ็นต์ปรับตาม แต่ละโอเวอร์เลย์คงเนื้อหาและการตั้งค่าของตัวเอง</p>
+
+<details class="guide-extra">
+<summary>การบันทึก โทรศัพท์ และความเป็นส่วนตัว</summary>
+<ul>
+<li>ลิงก์และตัวเลือกชั้นบันทึกอัตโนมัติในเบราว์เซอร์นี้ แม้ยังตั้งไม่เสร็จ โหมดส่วนตัวอาจไม่เก็บ</li>
+<li>ลิงก์รวมและ QR เก็บการจัดวางทั้งหมด ตั้งค่าบนคอมพิวเตอร์ สแกนครั้งเดียว แล้วบุ๊กมาร์กบนโทรศัพท์ การเปิดลิงก์ยังบันทึกการตั้งค่าในเบราว์เซอร์โทรศัพท์ด้วย</li>
+<li>การแก้บนคอมพิวเตอร์ไม่อัปเดตลิงก์เก่า คัดลอกหรือสแกนลิงก์ใหม่หลังแก้ ไม่มีการซิงก์ผ่าน session ID</li>
+<li>เก็บลิงก์รวมและ QR เป็นความลับเช่นเดียวกับลิงก์โอเวอร์เลย์</li>
+<li>SSN ต้องยังจับข้อมูลอยู่ และโทรศัพท์ต้องเข้าถึงเซิร์ฟเวอร์เดียวกับลิงก์ต้นฉบับ <code>localhost</code> หรือ <code>127.0.0.1</code> หมายถึงโทรศัพท์เครื่องนั้นเอง</li>
+<li>ลิงก์ยาวมากอาจใส่ QR ไม่ได้ แต่ยังคัดลอกลิงก์ได้</li>
+</ul>
+</details>
+</section>
+
+<section class="guide-card">
+<h2 id="combine-obs">สูตร OBS: คอลัมน์แชตซ้ายพร้อมเอฟเฟกต์เต็มจอ</h2>
+<p><strong>ไม่ต้องใช้ CSS</strong> แต่ละชั้นมีพื้นที่ของตัวเอง ตั้ง Browser Source ใน OBS เป็น <strong>1920&times;1080</strong> เพิ่มชั้นล่างก่อน และกรอกเฉพาะตัวเลข ไม่มีจุลภาคหรือ “px” ใต้ <strong>ขนาดและตำแหน่ง</strong>.</p>
+<div class="guide-table-scroll">
+<table class="guide-table">
+<thead><tr><th scope="col">เลเยอร์</th><th scope="col">ความกว้าง</th><th scope="col">ความสูง</th><th scope="col">ซ้าย</th><th scope="col">บน</th></tr></thead>
+<tbody>
+<tr><td data-label="เลเยอร์">1. แชตสด / แผงด็อก</td><td data-label="ความกว้าง">450</td><td data-label="ความสูง">1000</td><td data-label="ซ้าย">0</td><td data-label="บน">80</td></tr>
+<tr><td data-label="เลเยอร์">2. ตัวนับ Hype</td><td data-label="ความกว้าง">450</td><td data-label="ความสูง">80</td><td data-label="ซ้าย">0</td><td data-label="บน">0</td></tr>
+<tr><td data-label="เลเยอร์">3. กำแพงอีโมจิ / อีโมต</td><td data-label="ความกว้าง">1920</td><td data-label="ความสูง">1080</td><td data-label="ซ้าย">0</td><td data-label="บน">0</td></tr>
+<tr><td data-label="เลเยอร์">4. แชตเด่น (Featured Chat)</td><td data-label="ความกว้าง">1470</td><td data-label="ความสูง">1080</td><td data-label="ซ้าย">450</td><td data-label="บน">0</td></tr>
+<tr><td data-label="เลเยอร์">5. NinjaBacker (ไม่บังคับ)</td><td data-label="ความกว้าง">1920</td><td data-label="ความสูง">1080</td><td data-label="ซ้าย">0</td><td data-label="บน">0</td></tr>
+</tbody>
+</table>
+</div>
+<p>พื้นที่บน 80 พิกเซลใช้แสดง Hype และคอลัมน์แชตอยู่ด้านล่าง ต้องการให้แชตเต็มความสูงหลัง Hype? ตั้งความสูง Live Chat เป็น <code>1080</code> และระยะบนเป็น <code>0</code> ขนาดฉากอื่นต้องใช้ตัวเลขต่างกัน</p>
+<ol class="guide-steps">
+<li><strong>วางลิงก์โอเวอร์เลย์แบบเต็ม</strong> คัดลอกจาก Browser Source ที่มีอยู่ เพื่อคงเซสชัน รหัสผ่าน สไตล์ และการเชื่อมต่อไว้ คง <strong>พื้นหลัง SSN โปร่งใส</strong> ไว้ การครอป การแปลง ตัวกรอง และ Custom CSS ของ OBS ไม่อยู่ในลิงก์ จึงไม่ย้ายตามไป</li>
+<li><strong>จัด Hype กึ่งกลางคอลัมน์</strong> บน <code>hype.html</code> ให้ใช้ <code>&amp;align=center</code> แทนที่ค่า <code>align=left</code> หรือ <code>align=right</code> แล้วลบ <code>alignright</code> หากต้องการแบบกะทัดรัด ลอง <code>&amp;combineall&amp;hidetitle&amp;style=compact&amp;scale=0.75</code> (แทนค่าที่มีอยู่) เพิ่มความสูงชั้น Hype หากสไตล์ต้องใช้พื้นที่</li>
+<li><strong>วาง Featured Chat ข้างคอลัมน์แชต</strong> ตั้งค่า <strong>ซ้าย = 450</strong> และ <strong>ความกว้าง = 1470</strong> รวมกัน (450 + 1470 = 1920) การเลื่อนชั้นกว้าง 1920 ไปขวาจะตัดขอบออก เพิ่ม <code>&amp;center</code> เป็น <code>featured.html</code> เพื่อจัดข้อความสั้นกลางพื้นที่นั้น หากต้องการกลางทั้งฉาก ใช้ Left 0, Width 1920 และ <code>&amp;center</code>.</li>
+<li><strong>วาง NinjaBacker ท้ายสุด (ไม่บังคับ)</strong> วางลิงก์โอเวอร์เลย์สำหรับผู้ชมเป็นชั้นบนสุด พร้อมตั้งแอนิเมชันเข้าจากขวา ตัวรวมกำหนดพื้นที่และลำดับ ส่วน NinjaBacker กำหนดแอนิเมชันเอง พื้นหลังต้องโปร่งใสและเว็บไซต์ต้องอนุญาตการฝัง ชั้นนี้ไม่ได้อยู่ในตัวอย่างที่ทดสอบ</li>
+<li><strong>ดูตัวอย่างที่ 1920×1080</strong> ส่งแชตที่มีอีโมจิ เลือกข้อความเด่นจาก Dock และเปิดข้อมูล Hype ใน SSN แชตปกติไม่เลือกข้อความเด่นให้เอง</li>
+<li><strong>คัดลอกลิงก์รวมใหม่ไปใส่ใน OBS</strong> ตั้ง Browser Source เป็นกว้าง 1920 สูง 1080 ขนาดตัวอย่างไม่กำหนดค่านี้ จัดให้พอดีฉากโดยไม่ครอป หลังเปลี่ยนการจัดวางทุกครั้ง ให้คัดลอกลิงก์ใหม่ ลิงก์เก่ายังคงแบบเก่า</li>
+</ol>
+<figure class="guide-figure">
+<a href="../../docs/images/combined-podcast-scene.png" target="_blank" rel="noopener noreferrer"><img class="guide-image" src="../../docs/images/combined-podcast-scene.png" width="1920" height="1080" loading="lazy" style="background:#181b23" alt="ผลรวมที่ทดสอบแล้ว: Hype อยู่กึ่งกลางเหนือคอลัมน์แชตแคบด้านซ้าย อีโมจิทั่วฉาก และข้อความเด่นด้านล่างทางขวาของแชต"></a>
+<figcaption>ทดสอบ Chromium จริงด้วยโอเวอร์เลย์ SSN สี่อันและฟีดทดสอบ ภาพโปร่งใส โดยเพิ่มพื้นหลังมืดที่นี่ให้อ่านง่าย คลิกดูขนาดเต็ม ฟอนต์และสีมาจากการตั้งค่าโอเวอร์เลย์ของคุณ</figcaption>
+</figure>
+<div class="guide-note"><strong>ประสิทธิภาพ:</strong> Browser Source เดียวยังต้องรันทุกโอเวอร์เลย์ภายใน จำนวนแหล่ง OBS น้อยลงไม่รับประกันว่าจะใช้ CPU หรือหน่วยความจำน้อยลง ปิดหน้าตัวอย่างเมื่อเสร็จ แล้วเปรียบเทียบ OBS ขณะปิดแหล่งเก่า ยังไม่ได้ทดสอบประสิทธิภาพ M1 Mac หรือลิงก์ NinjaBacker ของคุณ คุณแยก Live Chat ไว้และรวมเฉพาะส่วนที่เหลือได้</div>
+
+<h3>หากเลเยอร์ว่างหรือบังแชต</h3>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>ปัญหา</th><th>ลองวิธีนี้</th></tr></thead>
+<tbody>
+<tr><td data-label="ปัญหา">ชั้นหนึ่งว่าง</td><td data-label="ลองวิธีนี้">เปิดลิงก์ต้นฉบับแยกก่อน แจ้งเตือนจะว่างจนมีเหตุการณ์ การรวมไม่ได้จับข้อมูลเพิ่ม</td></tr>
+<tr><td data-label="ปัญหา">ชั้นหนึ่งมีพื้นหลังทึบ</td><td data-label="ลองวิธีนี้">ความโปร่งใสอัตโนมัติใช้ได้กับ <code>dock.html</code>, <code>featured.html</code>, <code>multi-alerts.html</code>, และ <code>minecraft.html</code> หน้าอื่นต้องตั้งความโปร่งใสของตัวเอง บางเว็บไซต์ภายนอกไม่อนุญาตให้ฝัง</td></tr>
+<tr><td data-label="ปัญหา">แตะหรือเลื่อนแชตไม่ได้</td><td data-label="ลองวิธีนี้">ชั้นโปร่งใสก็อาจบังการแตะได้ ปิด <strong>อนุญาตการแตะและเลื่อน</strong> บนชั้นเหนือแชตที่ไม่ต้องใช้</td></tr>
+<tr><td data-label="ปัญหา">โทรศัพท์ไม่มีเสียง</td><td data-label="ลองวิธีนี้">โทรศัพท์อาจต้องแตะก่อนเล่นเสียง เปิดให้แตะชั้นนั้นแล้วแตะ ทดสอบบนโทรศัพท์จริงก่อนใช้งาน</td></tr>
+</tbody>
+</table>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">ดูคู่มือทั้งหมด</a>
+</p>
+</div>
+</div>
+</footer>
+<script data-copy-markdown src="../../docs/js/main.js">
+</script>
+</body>
+</html>

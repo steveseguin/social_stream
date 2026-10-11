@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ar" data-site-root="../../" data-site-language="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ar/docs/events-alerts-compatibility.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ar_AR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ar/docs/events-alerts-compatibility.html">
+    <meta property="og:title" content="توافق الأحداث والتنبيهات — Social Stream Ninja">
+    <meta property="og:description" content="اطّلع على أحداث YouTube وTwitch وKick التي تصل إلى تنبيهات Social Stream Ninja وEvent Flow وتحويل النص إلى كلام والأهداف والتراكبات ومستهلكي API.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="شعار Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ar/docs/events-alerts-compatibility.html">
+    <meta name="twitter:title" content="توافق الأحداث والتنبيهات — Social Stream Ninja">
+    <meta name="twitter:description" content="اطّلع على أحداث YouTube وTwitch وKick التي تصل إلى تنبيهات Social Stream Ninja وEvent Flow وتحويل النص إلى كلام والأهداف والتراكبات ومستهلكي API.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="شعار Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>توافق الأحداث والتنبيهات — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="اطّلع على أحداث YouTube وTwitch وKick التي تصل إلى تنبيهات Social Stream Ninja وEvent Flow وتحويل النص إلى كلام والأهداف والتراكبات ومستهلكي API.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="ar">
+<script id="ssn-site-language" type="application/json">{"language":"ar","page":"docs/events-alerts-compatibility.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"التبديل إلى السمة الفاتحة","Switch to dark theme":"التبديل إلى السمة الداكنة","Light mode":"الوضع الفاتح","Dark mode":"الوضع الداكن","Open navigation menu":"فتح قائمة التنقل","Close navigation menu":"إغلاق قائمة التنقل","Copy this document as Markdown to the clipboard":"نسخ هذا المستند بصيغة Markdown إلى الحافظة","Copy Markdown":"نسخ Markdown","Copying…":"جارٍ النسخ…","Markdown copied":"تم نسخ Markdown","Copy failed":"تعذّر النسخ","Copy comprehensive Markdown for an AI assistant":"نسخ Markdown شامل لمساعد ذكاء اصطناعي","Copy this documentation page as Markdown for an AI assistant":"نسخ صفحة التوثيق هذه بصيغة Markdown لمساعد ذكاء اصطناعي"},"strings":{"## Verified maintainer context - Multi Alerts currently normalizes follow, subscription, donation/gift, bits, raid, auction, and Hype Train aliases into seven alert categories. Auction and Hype Train are opt-in. - Its current classifier accepts canonical names plus legacy aliases. A payload with `hasDonation` and no event is valid: bits/cheer wording routes it to Bits, while other amounts route it to Donation. - Count/status events such as `viewer_update`, `follower_update`, `subscriber_update`, and ad-break status intentionally do not become general alert cards. - Kick's current official subscribed event set includes chat, follows, new/renewed/gifted subscriptions, reward redemptions, KICKs gifts, bans, and livestream status. Kick currently has no official raid/host subscription; raid handling is compatibility-only. - TTS defaults to skipping non-donation rows with an `event` value. `readevents` disables that skip, while normal source/member/donation filters still apply. - The popup preview verifies overlay handling only. Platform capture still requires a live source, matching session, correct role/scopes, and a real event.":"## سياق موثّق من المشرف على المشروع\n\n- يوحّد Multi Alerts حالياً الأسماء البديلة للمتابعة والاشتراك والتبرع أو الهدية وbits والغارة والمزاد وقطار الحماس ضمن سبع فئات تنبيه. المزاد وقطار الحماس اختياريان.\n- يقبل المصنّف الحالي الأسماء القياسية والأسماء البديلة القديمة. البيانات التي تحتوي على `hasDonation` دون حدث صالحة: توجهها صياغة bits/cheer إلى Bits، بينما توجه المبالغ الأخرى إلى Donation.\n- لا تتحول أحداث العدد أو الحالة مثل `viewer_update` و`follower_update` و`subscriber_update` وحالة الفاصل الإعلاني إلى بطاقات تنبيه عامة عمداً.\n- تتضمن مجموعة الأحداث الرسمية المشترك بها حالياً في Kick الدردشة والمتابعات والاشتراكات الجديدة والمجددة والمُهداة واستبدال المكافآت وهدايا KICKs والحظر وحالة البث المباشر. لا يوجد حالياً في Kick اشتراك رسمي للغارات أو الاستضافة؛ ومعالجة الغارات للتوافق فقط.\n- يتخطى تحويل النص إلى كلام افتراضياً الصفوف غير المرتبطة بالتبرعات التي تحمل قيمة `event`. يعطّل `readevents` هذا التخطي، بينما تظل مرشحات المصدر والأعضاء والتبرعات العادية سارية.\n- تتحقق معاينة النافذة المنبثقة من معالجة التراكب فقط. لا يزال التقاط المنصة يتطلب مصدراً مباشراً وجلسة مطابقة ودوراً ونطاقات صحيحة وحدثاً حقيقياً.",", and fields your source emits. Use the Test Message tool before relying on a live event.":"، والحقول التي يصدرها مصدرك. استخدم أداة Test Message قبل الاعتماد على حدث مباشر.",", donation aliases":"، والأسماء البديلة للتبرعات",", membership aliases":"، والأسماء البديلة للعضوية",", membership fields, and selected":"، وحقول العضوية، وقيم مختارة من",", or a row with":"، أو صفاً يحتوي على","; API-delayed and public subscriptions only":"؛ اشتراكات عامة فقط وقد تتأخر عبر API","A donation preview checks the overlay. Next, trigger or observe a real platform event to verify the source connection.":"تتحقق معاينة التبرع من التراكب. بعد ذلك، شغّل أو راقب حدث منصة حقيقياً للتحقق من اتصال المصدر.","A donation-style chat row may instead use":"قد يستخدم صف دردشة شبيه بالتبرع بدلاً من ذلك","A successful preview proves the alert layout works.":"تثبت المعاينة الناجحة أن تخطيط التنبيه يعمل.","Activity":"النشاط","Auction":"المزاد","Auction-win alerts are opt-in.":"تنبيهات الفوز بالمزادات اختيارية.","Availability and naming depend on the platform source.":"يعتمد التوفر والتسمية على مصدر المنصة.","Bits":"Bits","Category":"الفئة","Channel reward":"مكافأة قناة","Chat plus lightweight page markers for gifts, rewards, and viewer updates.":"الدردشة وعلامات صفحة خفيفة للهدايا والمكافآت وتحديثات المشاهدين.","Chat-rendered rewards, gifted-sub notices, viewer updates, and a few page-only notices.":"المكافآت المعروضة في الدردشة وإشعارات الاشتراكات المُهداة وتحديثات المشاهدين وبعض الإشعارات الخاصة بالصفحة.","Check minimum cash/donation filters when small tips or cheers are missing.":"تحقق من مرشحات الحد الأدنى للمبلغ أو التبرع عند غياب التبرعات الصغيرة أو Cheers.","Check minimum-value filters for donations and bits.":"تحقق من مرشحات الحد الأدنى للقيمة للتبرعات وbits.","Check source filters if events work in the Dock but not in Multi Alerts.":"تحقق من مرشحات المصادر إذا عملت الأحداث في لوحة الإرساء ولم تعمل في Multi Alerts.","Choose the source mode deliberately and complete authentication when the desired official events require it; do not expect an official raid event.":"اختر وضع المصدر بعناية وأكمل المصادقة عندما تتطلبها الأحداث الرسمية المطلوبة؛ ولا تتوقع حدث غارة رسمياً.","Classifies canonical":"يصنّف القيم القياسية","Commands & API":"الأوامر وAPI","Common Event Names":"أسماء الأحداث الشائعة","Compatibility Rule":"قاعدة التوافق","Compatibility input only; not a current official Kick event subscription":"مدخل للتوافق فقط؛ ليس اشتراك حدث رسمياً حالياً في Kick","Configure each alert category independently. Enabling an alert does not grant the platform permission needed to capture it.":"اضبط كل فئة تنبيه بصورة مستقلة. لا يمنح تفعيل تنبيه صلاحية المنصة المطلوبة لالتقاطه.","Confirm that category is enabled and not excluded by source or channel filters.":"تأكد من تفعيل تلك الفئة وعدم استبعادها بمرشحات المصدر أو القناة.","Confirm that the selected source actually emits the event type, not only chat messages.":"تأكد من أن المصدر المحدد يصدر نوع الحدث فعلياً، وليس رسائل دردشة فقط.","Confirm the source and Multi Alerts page use the same session ID and password.":"تأكد من استخدام المصدر وصفحة Multi Alerts معرّف الجلسة وكلمة المرور نفسيهما.","Confirm the source received the event in its own log, Dock, or API output.":"تأكد من أن المصدر استقبل الحدث في سجله الخاص أو لوحة الإرساء أو مخرجات API.","Connect and activate the platform source that provides the event.":"صِل مصدر المنصة الذي يوفر الحدث وفعّله.","Connect captured platform events to Multi Alerts without confusing normal chat, donations, and event payloads.":"صِل أحداث المنصات الملتقطة بـ Multi Alerts دون الخلط بين الدردشة العادية والتبرعات وبيانات الأحداث.","Create Test Messages":"إنشاء رسائل اختبار","Custom overlay / API consumer":"تراكب مخصص / مستهلك API","Donation / gift":"تبرع / هدية","Download":"تنزيل","Enable The Alert Types You Want":"تفعيل أنواع التنبيهات المطلوبة","Event Flow":"Event Flow","Event Flow Recipes":"وصفات Event Flow","Event Reference":"مرجع الأحداث","Event rows are skipped by default unless they are donation-style. Add":"تُتخطى صفوف الأحداث افتراضياً ما لم تكن شبيهة بالتبرعات. أضف","EventSub adds followers, subscriptions, renewals, cheers, raids, rewards, and supported count/status events when the account and scopes permit them.":"يضيف EventSub المتابعين والاشتراكات والتجديدات وCheers والغارات والمكافآت وأحداث الأعداد والحالة المدعومة عندما يسمح الحساب والنطاقات بذلك.","Events and Alerts Compatibility":"توافق الأحداث والتنبيهات","Events and Alerts Compatibility - Social Stream Ninja":"توافق الأحداث والتنبيهات — Social Stream Ninja","Features":"الميزات","First Check":"أول ما يجب فحصه","Follow":"متابعة","Follow / public subscriber alert":"متابعة / تنبيه مشترك عام","For Twitch or Kick, sign in again if chat works but protected events do not.":"في Twitch أو Kick، سجّل الدخول مجدداً إذا عملت الدردشة ولم تعمل الأحداث المحمية.","Gifted membership / subscription":"عضوية / اشتراك مُهدى","Guide":"الدليل","Guides":"الأدلة","Hire":"الاستعانة بخدمات المطوّر","Home":"الرئيسية","Hype Train":"قطار الحماس (Hype Train)","Hype Train alerts are opt-in and require eligible Twitch EventSub access.":"تنبيهات قطار الحماس اختيارية وتتطلب صلاحية وصول مؤهلة إلى Twitch EventSub.","If multiple devices or connection modes are involved, review":"إذا شاركت عدة أجهزة أو أوضاع اتصال، فراجع","Includes recurring, gifted, and membership-style events where supported.":"يشمل الأحداث المتكررة والمُهداة والشبيهة بالعضوية حيث تكون مدعومة.","Inspiration":"أفكار ملهمة","Interact with the browser page once if custom alert audio is blocked by autoplay rules.":"تفاعل مع صفحة المتصفح مرة واحدة إذا حظرت قواعد التشغيل التلقائي صوت التنبيه المخصص.","It does not prove the platform source has permission to receive that live event.":"لا يثبت أن مصدر المنصة يملك صلاحية استقبال ذلك الحدث المباشر.","Keep that source page or standalone-app source window active.":"أبقِ صفحة ذلك المصدر أو نافذته في التطبيق المستقل نشطة.","Keep the source window active long enough to observe a real event; a preview alone is not an end-to-end platform test.":"أبقِ نافذة المصدر نشطة مدة تكفي لمراقبة حدث حقيقي؛ فالمعاينة وحدها ليست اختباراً شاملاً للمنصة.","Kick":"Kick","Kick raid note:":"ملاحظة غارات Kick:","Kick setup and authentication":"إعداد Kick والمصادقة","Main navigation":"التنقل الرئيسي","Major Platform Events":"أحداث المنصات الرئيسية","Match the exact":"طابق بالضبط","Multi Alerts":"Multi Alerts","Multi Alerts Categories":"فئات Multi Alerts","Multi Alerts displays events that Social Stream has already captured. It does not sign in to Twitch, Kick, YouTube, TikTok, or another platform by itself.":"يعرض Multi Alerts أحداثاً التقطها Social Stream بالفعل. ولا يسجل الدخول بنفسه إلى Twitch أو Kick أو YouTube أو TikTok أو أي منصة أخرى.","Multi Alerts donation preview showing a styled donation card and preview controls":"معاينة تبرع Multi Alerts تعرض بطاقة تبرع منسقة وعناصر تحكم المعاينة","New member / subscriber":"عضو / مشترك جديد","Normal mode uses donation amounts. Hype mode can also score membership, renewal, and gifted-membership fields.":"يستخدم الوضع العادي مبالغ التبرعات. ويمكن لوضع الحماس أيضاً احتساب حقول العضوية والتجديد والعضويات المُهداة.","Notes":"ملاحظات","Official follow, subscription, gift, reward-redemption, KICKs, moderation, and live-status events when authenticated.":"أحداث المتابعة والاشتراك والهدايا واستبدال المكافآت وKICKs والإشراف وحالة البث الرسمية عند المصادقة.","On this page":"في هذه الصفحة","Open navigation menu":"فتح قائمة التنقل","Open the Multi Alerts options from Social Stream settings. Follows, subscriptions, donations, bits, and raids have their own enable, style, sound, and appearance controls. Auction and Hype Train alerts require their dedicated opt-in controls.":"افتح خيارات Multi Alerts من إعدادات Social Stream. للمتابعات والاشتراكات والتبرعات وbits والغارات عناصر مستقلة للتفعيل والنمط والصوت والمظهر. تتطلب تنبيهات المزاد وقطار الحماس تفعيل عناصرهما الاختيارية المخصصة.","Other sources":"مصادر أخرى","Overlay Gallery":"معرض التراكبات","Paid messages, memberships, membership gifts, viewer updates, and limited page-detected events.":"الرسائل المدفوعة والعضويات وهدايا العضوية وتحديثات المشاهدين وأحداث محدودة تكتشفها الصفحة.","Paid support":"الدعم المدفوع","Platform":"المنصة","Platform Setup Notes":"ملاحظات إعداد المنصات","Preview Before Going Live":"المعاينة قبل البث المباشر","Queue alerts":"إضافة التنبيهات إلى قائمة انتظار","Raid":"غارة","Raid / host":"غارة / استضافة","Renewal":"تجديد","Requires a source that captures follow events and the necessary platform permission.":"يتطلب مصدراً يلتقط أحداث المتابعة وصلاحية المنصة اللازمة.","See which YouTube, Twitch, and Kick events reach Social Stream Ninja alerts, Event Flow, TTS, goals, overlays, and API consumers.":"اطّلع على أحداث YouTube وTwitch وKick التي تصل إلى تنبيهات Social Stream Ninja وEvent Flow وتحويل النص إلى كلام والأهداف والتراكبات ومستهلكي API.","Sessions, Passwords, and Relay Modes":"الجلسات وكلمات المرور وأوضاع التمرير","Sign in with the broadcaster or permitted moderator and keep EventSub connected.":"سجّل الدخول بحساب المذيع أو المشرف المصرّح له وأبقِ EventSub متصلاً.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Multi Alerts options showing separate alert-type controls for follows, subscriptions, donations, bits, raids, auction wins, and Hype Trains":"خيارات Multi Alerts في Social Stream Ninja تعرض عناصر تحكم مستقلة للمتابعات والاشتراكات والتبرعات وbits والغارات والفوز بالمزادات وقطارات الحماس","Social Stream Ninja logo":"شعار Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. ترخيص GPLv3.0.","Social Stream accepts a legacy raid/host-shaped payload for compatibility, but Kick's current official event catalog has no raid/host subscription. Do not make a Kick workflow depend on receiving one.":"يقبل Social Stream بيانات قديمة ببنية غارة أو استضافة للتوافق، لكن كتالوج أحداث Kick الرسمي الحالي لا يتضمن اشتراكاً للغارات أو الاستضافة. لا تجعل سير عمل Kick يعتمد على تلقي أحدها.","Standard Capture":"الالتقاط القياسي","Standard Versus WebSocket Mode":"الوضع القياسي مقابل WebSocket","Start With The Event Source":"ابدأ بمصدر الحدث","Subscription":"اشتراك","Support":"الدعم","Supported Sites":"المواقع المدعومة","Supported sites":"المواقع المدعومة","Switch theme":"تبديل السمة","TTS":"تحويل النص إلى كلام","Test the alert overlay from its options before debugging the platform connection.":"اختبر تراكب التنبيهات من خياراته قبل فحص أخطاء اتصال المنصة.","The amount can be filtered with the minimum donation/cash option.":"يمكن تصفية المبلغ باستخدام خيار الحد الأدنى للتبرع أو المبلغ.","The shared paid/member events plus member milestones, recent public-subscriber alerts, and supported count updates.":"أحداث الدفع والعضوية المشتركة، إضافةً إلى محطات إنجاز الأعضاء وتنبيهات المشتركين العامين الجدد وتحديثات الأعداد المدعومة.","These are the current canonical event names when the selected source mode can deliver the activity.":"هذه أسماء الأحداث القياسية الحالية عندما يستطيع وضع المصدر المحدد تقديم النشاط.","Tip Jar / Goal Meter":"وعاء التبرعات / مقياس الهدف","Tool":"الأداة","Twitch":"Twitch","Twitch EventSub setup":"إعداد Twitch EventSub","Use":"استخدم","Use the canonical payload fields from the Event Reference. Accept documented aliases only for backward compatibility.":"استخدم حقول البيانات القياسية من مرجع الأحداث. اقبل الأسماء البديلة الموثقة فقط للتوافق مع الإصدارات السابقة.","Use the preview controls to verify the selected category, text, amount, media, sound, animation, and queue behavior.":"استخدم عناصر المعاينة للتحقق من الفئة المحددة والنص والمبلغ والوسائط والصوت والحركة وسلوك قائمة الانتظار.","Use the same Social Stream session ID in the source, popup, Dock, and Multi Alerts URL.":"استخدم معرّف جلسة Social Stream نفسه في المصدر والنافذة المنبثقة ولوحة الإرساء ورابط Multi Alerts.","Viewer counts, follower totals, stream status, and ad-break status are updates rather than normal alert cards. Use the":"أعداد المشاهدين وإجماليات المتابعين وحالة البث والفاصل الإعلاني تحديثات وليست بطاقات تنبيه عادية. استخدم","WebSocket / API Capture":"التقاط WebSocket / API","WebSocket mode is normally the right choice for event-driven alerts. Standard capture remains useful when only rendered chat is needed or authentication is unavailable.":"يكون وضع WebSocket عادةً الخيار المناسب للتنبيهات التي تعتمد على الأحداث. يظل الالتقاط القياسي مفيداً عند الحاجة إلى الدردشة المعروضة فقط أو عند عدم توفر المصادقة.","When A Real Alert Is Missing":"عندما يغيب تنبيه حقيقي","Which Fields Each Tool Uses":"الحقول التي تستخدمها كل أداة","YouTube":"YouTube","and":"و","for KICKs gifts;":"لهدايا KICKs؛","for support/tip events. Both populate":"لأحداث الدعم أو التبرع. يملأ كلاهما","for working automation examples.":"لأمثلة أتمتة عملية.","names, aliases,":"الأسماء والأسماء البديلة و","to verify the expected event and":"للتحقق من الحدث المتوقع وقيمة","values into shared categories.":"إلى فئات مشتركة.","when building an API consumer or custom overlay.":"عند بناء مستهلك API أو تراكب مخصص.","when non-donation event messages should be spoken, then apply normal TTS filters.":"عندما ينبغي نطق رسائل الأحداث غير المرتبطة بالتبرعات، ثم طبّق مرشحات تحويل النص إلى كلام العادية.","when several events may arrive together.":"عندما قد تصل عدة أحداث معاً."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/events-alerts-compatibility.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="التنقل الرئيسي"><a href="../index.html">الرئيسية</a><a href="features.html">الميزات</a><a href="inspiration.html" class="site-priority-inspiration">أفكار ملهمة</a><a href="download.html">تنزيل</a><a href="guides.html">الأدلة</a><a href="commands.html">الأوامر وAPI</a><a href="supported-sites.html">المواقع المدعومة</a><a href="overlay-gallery.html" class="site-priority-gallery">معرض التراكبات</a><a href="services.html" class="site-priority-hire">الاستعانة بخدمات المطوّر</a><a href="support.html">الدعم</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="العربية"><span aria-hidden="true">🌐 </span><span lang="ar">العربية</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/events-alerts-compatibility.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/events-alerts-compatibility.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/events-alerts-compatibility.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/events-alerts-compatibility.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/events-alerts-compatibility.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/events-alerts-compatibility.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/events-alerts-compatibility.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/events-alerts-compatibility.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/events-alerts-compatibility.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/events-alerts-compatibility.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/events-alerts-compatibility.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/events-alerts-compatibility.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/events-alerts-compatibility.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="events-alerts-compatibility.html" lang="ar" hreflang="ar" aria-current="true">العربية</a><a class="site-language-link" href="../../tr/docs/events-alerts-compatibility.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/events-alerts-compatibility.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/events-alerts-compatibility.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="تبديل السمة"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="فتح قائمة التنقل" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>توافق الأحداث والتنبيهات</h1>
+            <p>صِل أحداث المنصات الملتقطة بـ Multi Alerts دون الخلط بين الدردشة العادية والتبرعات وبيانات الأحداث.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="في هذه الصفحة"><a href="#read-section-1">ابدأ بمصدر الحدث</a><a href="#read-section-2">فئات Multi Alerts</a><a href="#read-section-3">أحداث المنصات الرئيسية</a><a href="#read-section-4">الوضع القياسي مقابل WebSocket</a><a href="#read-section-5">تفعيل أنواع التنبيهات المطلوبة</a><a href="#read-section-6">المعاينة قبل البث المباشر</a><a href="#read-section-9">عندما يغيب تنبيه حقيقي</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">ابدأ بمصدر الحدث</h2>
+                <p>يعرض Multi Alerts أحداثاً التقطها Social Stream بالفعل. ولا يسجل الدخول بنفسه إلى Twitch أو Kick أو YouTube أو TikTok أو أي منصة أخرى.</p>
+                <ol class="guide-steps">
+                    <li>صِل مصدر المنصة الذي يوفر الحدث وفعّله.</li>
+                    <li>أبقِ صفحة ذلك المصدر أو نافذته في التطبيق المستقل نشطة.</li>
+                    <li>استخدم معرّف جلسة Social Stream نفسه في المصدر والنافذة المنبثقة ولوحة الإرساء ورابط Multi Alerts.</li>
+                    <li>اختبر تراكب التنبيهات من خياراته قبل فحص أخطاء اتصال المنصة.</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>تثبت المعاينة الناجحة أن تخطيط التنبيه يعمل.</strong> لا يثبت أن مصدر المنصة يملك صلاحية استقبال ذلك الحدث المباشر.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">فئات Multi Alerts</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>الفئة</th><th>أسماء الأحداث الشائعة</th><th>ملاحظات</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="الفئة">متابعة</td><td data-label="أسماء الأحداث الشائعة"><code>new_follower</code>, <code>follow</code>, <code>followed</code></td><td data-label="ملاحظات">يتطلب مصدراً يلتقط أحداث المتابعة وصلاحية المنصة اللازمة.</td></tr>
+                        <tr><td data-label="الفئة">اشتراك</td><td data-label="أسماء الأحداث الشائعة"><code>new_subscriber</code>, <code>resub</code>, <code>subscription_gift</code>، والأسماء البديلة للعضوية</td><td data-label="ملاحظات">يشمل الأحداث المتكررة والمُهداة والشبيهة بالعضوية حيث تكون مدعومة.</td></tr>
+                        <tr><td data-label="الفئة">تبرع / هدية</td><td data-label="أسماء الأحداث الشائعة"><code>superchat</code>, <code>supersticker</code>, <code>gift</code>, <code>tip</code>، والأسماء البديلة للتبرعات</td><td data-label="ملاحظات">قد يستخدم صف دردشة شبيه بالتبرع بدلاً من ذلك <code>hasDonation</code> و <code>donoValue</code>.</td></tr>
+                        <tr><td data-label="الفئة">Bits</td><td data-label="أسماء الأحداث الشائعة"><code>cheer</code>, <code>bits</code></td><td data-label="ملاحظات">يمكن تصفية المبلغ باستخدام خيار الحد الأدنى للتبرع أو المبلغ.</td></tr>
+                        <tr><td data-label="الفئة">غارة</td><td data-label="أسماء الأحداث الشائعة"><code>raid</code>, <code>host</code>, <code>redirect</code></td><td data-label="ملاحظات">يعتمد التوفر والتسمية على مصدر المنصة.</td></tr>
+                        <tr><td data-label="الفئة">المزاد</td><td data-label="أسماء الأحداث الشائعة"><code>auction_update</code></td><td data-label="ملاحظات">تنبيهات الفوز بالمزادات اختيارية.</td></tr>
+                        <tr><td data-label="الفئة">قطار الحماس (Hype Train)</td><td data-label="أسماء الأحداث الشائعة"><code>hype_train</code></td><td data-label="ملاحظات">تنبيهات قطار الحماس اختيارية وتتطلب صلاحية وصول مؤهلة إلى Twitch EventSub.</td></tr>
+                    </tbody>
+                </table>
+                <p>أعداد المشاهدين وإجماليات المتابعين وحالة البث والفاصل الإعلاني تحديثات وليست بطاقات تنبيه عادية. استخدم <a href="event-reference.html">مرجع الأحداث</a> عند بناء مستهلك API أو تراكب مخصص.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">أحداث المنصات الرئيسية</h2>
+                <p>هذه أسماء الأحداث القياسية الحالية عندما يستطيع وضع المصدر المحدد تقديم النشاط.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>النشاط</th><th>YouTube</th><th>Twitch</th><th>Kick</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="النشاط">عضو / مشترك جديد</td>
+                            <td data-label="YouTube"><code>sponsorship</code></td>
+                            <td data-label="Twitch"><code>new_subscriber</code></td>
+                            <td data-label="Kick"><code>new_subscriber</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="النشاط">تجديد</td>
+                            <td data-label="YouTube"><code>resub</code></td>
+                            <td data-label="Twitch"><code>resub</code></td>
+                            <td data-label="Kick"><code>resub</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="النشاط">عضوية / اشتراك مُهدى</td>
+                            <td data-label="YouTube"><code>giftpurchase</code>, <code>giftredemption</code></td>
+                            <td data-label="Twitch"><code>subscription_gift</code></td>
+                            <td data-label="Kick"><code>subscription_gift</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="النشاط">الدعم المدفوع</td>
+                            <td data-label="YouTube"><code>superchat</code>, <code>supersticker</code>, <code>jeweldonation</code></td>
+                            <td data-label="Twitch"><code>cheer</code>، أو صفاً يحتوي على <code>hasDonation</code></td>
+                            <td data-label="Kick"><code>gift</code> لهدايا KICKs؛ <code>donation</code> لأحداث الدعم أو التبرع. يملأ كلاهما <code>hasDonation</code>.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="النشاط">متابعة / تنبيه مشترك عام</td>
+                            <td data-label="YouTube"><code>new_follower</code>؛ اشتراكات عامة فقط وقد تتأخر عبر API</td>
+                            <td data-label="Twitch"><code>new_follower</code></td>
+                            <td data-label="Kick"><code>new_follower</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="النشاط">مكافأة قناة</td>
+                            <td data-label="YouTube">-</td>
+                            <td data-label="Twitch"><code>reward</code></td>
+                            <td data-label="Kick"><code>reward</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="النشاط">غارة / استضافة</td>
+                            <td data-label="YouTube">-</td>
+                            <td data-label="Twitch"><code>raid</code></td>
+                            <td data-label="Kick">مدخل للتوافق فقط؛ ليس اشتراك حدث رسمياً حالياً في Kick</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="warning-note">
+                    <p><strong>ملاحظة غارات Kick:</strong> يقبل Social Stream بيانات قديمة ببنية غارة أو استضافة للتوافق، لكن كتالوج أحداث Kick الرسمي الحالي لا يتضمن اشتراكاً للغارات أو الاستضافة. لا تجعل سير عمل Kick يعتمد على تلقي أحدها.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">الوضع القياسي مقابل WebSocket</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>المنصة</th><th>الالتقاط القياسي</th><th>التقاط WebSocket / API</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="المنصة">YouTube</td>
+                            <td data-label="الالتقاط القياسي">الرسائل المدفوعة والعضويات وهدايا العضوية وتحديثات المشاهدين وأحداث محدودة تكتشفها الصفحة.</td>
+                            <td data-label="التقاط WebSocket / API">أحداث الدفع والعضوية المشتركة، إضافةً إلى محطات إنجاز الأعضاء وتنبيهات المشتركين العامين الجدد وتحديثات الأعداد المدعومة.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="المنصة">Twitch</td>
+                            <td data-label="الالتقاط القياسي">المكافآت المعروضة في الدردشة وإشعارات الاشتراكات المُهداة وتحديثات المشاهدين وبعض الإشعارات الخاصة بالصفحة.</td>
+                            <td data-label="التقاط WebSocket / API">يضيف EventSub المتابعين والاشتراكات والتجديدات وCheers والغارات والمكافآت وأحداث الأعداد والحالة المدعومة عندما يسمح الحساب والنطاقات بذلك.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="المنصة">Kick</td>
+                            <td data-label="الالتقاط القياسي">الدردشة وعلامات صفحة خفيفة للهدايا والمكافآت وتحديثات المشاهدين.</td>
+                            <td data-label="التقاط WebSocket / API">أحداث المتابعة والاشتراك والهدايا واستبدال المكافآت وKICKs والإشراف وحالة البث الرسمية عند المصادقة.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>يكون وضع WebSocket عادةً الخيار المناسب للتنبيهات التي تعتمد على الأحداث. يظل الالتقاط القياسي مفيداً عند الحاجة إلى الدردشة المعروضة فقط أو عند عدم توفر المصادقة.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">تفعيل أنواع التنبيهات المطلوبة</h2>
+                <p>افتح خيارات Multi Alerts من إعدادات Social Stream. للمتابعات والاشتراكات والتبرعات وbits والغارات عناصر مستقلة للتفعيل والنمط والصوت والمظهر. تتطلب تنبيهات المزاد وقطار الحماس تفعيل عناصرهما الاختيارية المخصصة.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/multi-alert-types-options.png" alt="خيارات Multi Alerts في Social Stream Ninja تعرض عناصر تحكم مستقلة للمتابعات والاشتراكات والتبرعات وbits والغارات والفوز بالمزادات وقطارات الحماس" class="guide-image">
+                    <figcaption>اضبط كل فئة تنبيه بصورة مستقلة. لا يمنح تفعيل تنبيه صلاحية المنصة المطلوبة لالتقاطه.</figcaption>
+                </figure>
+                <ul class="guide-list">
+                    <li>استخدم <strong>إضافة التنبيهات إلى قائمة انتظار</strong> عندما قد تصل عدة أحداث معاً.</li>
+                    <li>تحقق من مرشحات المصادر إذا عملت الأحداث في لوحة الإرساء ولم تعمل في Multi Alerts.</li>
+                    <li>تحقق من مرشحات الحد الأدنى للمبلغ أو التبرع عند غياب التبرعات الصغيرة أو Cheers.</li>
+                    <li>تفاعل مع صفحة المتصفح مرة واحدة إذا حظرت قواعد التشغيل التلقائي صوت التنبيه المخصص.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-6">المعاينة قبل البث المباشر</h2>
+                <p>استخدم عناصر المعاينة للتحقق من الفئة المحددة والنص والمبلغ والوسائط والصوت والحركة وسلوك قائمة الانتظار.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/multi-alerts-donation-preview.png" alt="معاينة تبرع Multi Alerts تعرض بطاقة تبرع منسقة وعناصر تحكم المعاينة" class="guide-image">
+                    <figcaption>تتحقق معاينة التبرع من التراكب. بعد ذلك، شغّل أو راقب حدث منصة حقيقياً للتحقق من اتصال المصدر.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-7">الحقول التي تستخدمها كل أداة</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>الأداة</th><th>قاعدة التوافق</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="الأداة">Multi Alerts</td><td data-label="قاعدة التوافق">يصنّف القيم القياسية <code>event</code> الأسماء والأسماء البديلة و <code>hasDonation</code>، وحقول العضوية، وقيم مختارة من <code>meta</code> إلى فئات مشتركة.</td></tr>
+                        <tr><td data-label="الأداة">Event Flow</td><td data-label="قاعدة التوافق">طابق بالضبط <code>type</code>, <code>event</code>، والحقول التي يصدرها مصدرك. استخدم أداة Test Message قبل الاعتماد على حدث مباشر.</td></tr>
+                        <tr><td data-label="الأداة">تحويل النص إلى كلام</td><td data-label="قاعدة التوافق">تُتخطى صفوف الأحداث افتراضياً ما لم تكن شبيهة بالتبرعات. أضف <code>&amp;readevents</code> عندما ينبغي نطق رسائل الأحداث غير المرتبطة بالتبرعات، ثم طبّق مرشحات تحويل النص إلى كلام العادية.</td></tr>
+                        <tr><td data-label="الأداة">وعاء التبرعات / مقياس الهدف</td><td data-label="قاعدة التوافق">يستخدم الوضع العادي مبالغ التبرعات. ويمكن لوضع الحماس أيضاً احتساب حقول العضوية والتجديد والعضويات المُهداة.</td></tr>
+                        <tr><td data-label="الأداة">تراكب مخصص / مستهلك API</td><td data-label="قاعدة التوافق">استخدم حقول البيانات القياسية من مرجع الأحداث. اقبل الأسماء البديلة الموثقة فقط للتوافق مع الإصدارات السابقة.</td></tr>
+                    </tbody>
+                </table>
+                <p>استخدم <a href="test-message-guide.html">إنشاء رسائل اختبار</a> للتحقق من الحدث المتوقع وقيمة <a href="event-flow-recipes.html">وصفات Event Flow</a> لأمثلة أتمتة عملية.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-8">ملاحظات إعداد المنصات</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>المنصة</th><th>أول ما يجب فحصه</th><th>الدليل</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="المنصة">Twitch</td><td data-label="أول ما يجب فحصه">سجّل الدخول بحساب المذيع أو المشرف المصرّح له وأبقِ EventSub متصلاً.</td><td data-label="الدليل"><a href="twitch-eventsub-setup.html">إعداد Twitch EventSub</a></td></tr>
+                        <tr><td data-label="المنصة">Kick</td><td data-label="أول ما يجب فحصه">اختر وضع المصدر بعناية وأكمل المصادقة عندما تتطلبها الأحداث الرسمية المطلوبة؛ ولا تتوقع حدث غارة رسمياً.</td><td data-label="الدليل"><a href="kick-setup-authentication.html">إعداد Kick والمصادقة</a></td></tr>
+                        <tr><td data-label="المنصة">مصادر أخرى</td><td data-label="أول ما يجب فحصه">تأكد من أن المصدر المحدد يصدر نوع الحدث فعلياً، وليس رسائل دردشة فقط.</td><td data-label="الدليل"><a href="supported-sites.html">المواقع المدعومة</a></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-9">عندما يغيب تنبيه حقيقي</h2>
+                <ol class="guide-steps">
+                    <li>تأكد من أن المصدر استقبل الحدث في سجله الخاص أو لوحة الإرساء أو مخرجات API.</li>
+                    <li>تأكد من استخدام المصدر وصفحة Multi Alerts معرّف الجلسة وكلمة المرور نفسيهما.</li>
+                    <li>تأكد من تفعيل تلك الفئة وعدم استبعادها بمرشحات المصدر أو القناة.</li>
+                    <li>تحقق من مرشحات الحد الأدنى للقيمة للتبرعات وbits.</li>
+                    <li>في Twitch أو Kick، سجّل الدخول مجدداً إذا عملت الدردشة ولم تعمل الأحداث المحمية.</li>
+                    <li>أبقِ نافذة المصدر نشطة مدة تكفي لمراقبة حدث حقيقي؛ فالمعاينة وحدها ليست اختباراً شاملاً للمنصة.</li>
+                </ol>
+                <p>إذا شاركت عدة أجهزة أو أوضاع اتصال، فراجع <a href="sessions-passwords-relay-modes.html">الجلسات وكلمات المرور وأوضاع التمرير</a>.</p>
+            </div>
+
+            <template data-copy-markdown-extra>
+## سياق موثّق من المشرف على المشروع
+
+- يوحّد Multi Alerts حالياً الأسماء البديلة للمتابعة والاشتراك والتبرع أو الهدية وbits والغارة والمزاد وقطار الحماس ضمن سبع فئات تنبيه. المزاد وقطار الحماس اختياريان.
+- يقبل المصنّف الحالي الأسماء القياسية والأسماء البديلة القديمة. البيانات التي تحتوي على `hasDonation` دون حدث صالحة: توجهها صياغة bits/cheer إلى Bits، بينما توجه المبالغ الأخرى إلى Donation.
+- لا تتحول أحداث العدد أو الحالة مثل `viewer_update` و`follower_update` و`subscriber_update` وحالة الفاصل الإعلاني إلى بطاقات تنبيه عامة عمداً.
+- تتضمن مجموعة الأحداث الرسمية المشترك بها حالياً في Kick الدردشة والمتابعات والاشتراكات الجديدة والمجددة والمُهداة واستبدال المكافآت وهدايا KICKs والحظر وحالة البث المباشر. لا يوجد حالياً في Kick اشتراك رسمي للغارات أو الاستضافة؛ ومعالجة الغارات للتوافق فقط.
+- يتخطى تحويل النص إلى كلام افتراضياً الصفوف غير المرتبطة بالتبرعات التي تحمل قيمة `event`. يعطّل `readevents` هذا التخطي، بينما تظل مرشحات المصدر والأعضاء والتبرعات العادية سارية.
+- تتحقق معاينة النافذة المنبثقة من معالجة التراكب فقط. لا يزال التقاط المنصة يتطلب مصدراً مباشراً وجلسة مطابقة ودوراً ونطاقات صحيحة وحدثاً حقيقياً.
+            </template>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. ترخيص GPLv3.0.</p></div></div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/docs/tiktok-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/docs/tiktok-guide.html">
+    <meta property="og:title" content="Průvodce TikTokem - Social Stream Ninja">
+    <meta property="og:description" content="Jak používat TikTok se Social Stream Ninja, včetně režimu Standard, TikTok WS, odpovědí, Polling, možností Euler a zálohy přes TikFinity.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/docs/tiktok-guide.html">
+    <meta name="twitter:title" content="Průvodce TikTokem - Social Stream Ninja">
+    <meta name="twitter:description" content="Jak používat TikTok se Social Stream Ninja, včetně režimu Standard, TikTok WS, odpovědí, Polling, možností Euler a zálohy přes TikFinity.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Průvodce TikTokem - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Jak používat TikTok se Social Stream Ninja, včetně režimu Standard, TikTok WS, odpovědí, Polling, možností Euler a zálohy přes TikFinity.">
+    <style>
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .setup-grid .guide-card {
+            margin-bottom: 0;
+        }
+
+        .mini-label {
+            display: inline-block;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .callout-box {
+            background: rgba(26, 115, 232, 0.08);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 1.6rem;
+            margin: 2rem 0;
+        }
+
+        .callout-box.warning {
+            background: rgba(251, 188, 5, 0.14);
+        }
+
+        .dark-mode .callout-box {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .dark-mode .callout-box.warning {
+            background: rgba(251, 188, 5, 0.2);
+        }
+
+        .steps-table-wrap {
+            overflow-x: auto;
+            margin-top: 1.5rem;
+        }
+
+        .steps-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .steps-table th,
+        .steps-table td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .steps-table th {
+            color: var(--primary-color);
+        }
+
+        .steps-table code,
+        .guide-card code,
+        .callout-box code {
+            word-break: break-word;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            margin-top: 2rem;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+        }
+
+        @media (max-width: 700px) {
+            .field-table, .steps-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/tiktok-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"\"I keep getting rate-limited\"":"„Neustále narážím na omezení četnosti“","\"It says I am offline\"":"„Píše to, že jsem offline“","\"Messages are missing\"":"„Chybí zprávy“","\"Messages duplicate after reconnects\"":"„Po opětovném připojení se zprávy duplikují“","\"The auth window closes\"":"„Ověřovací okno se zavírá“","\"What should I try first?\"":"„Co mám zkusit nejdřív?“",". For event payload details, see the":". Podrobnosti o datech událostí najdete v části","Activate source":"Aktivovat zdroj (Activate source)","Activate the new source and keep TikFinity open while live.":"Aktivujte nový zdroj a během živého vysílání nechte TikFinity otevřené.","Advanced signing options for users with their own API key or custom setup.":"Pokročilé možnosti podepisování pro uživatele s vlastním API klíčem nebo vlastním nastavením.","Auto for reading":"Auto pro čtení","Auto, Polling, TikFinity fallback":"Auto, Polling, záloha přes TikFinity","Back To Guides":"Zpět na průvodce","Best default for most users. Uses WebSocket first, then falls back to Polling if needed.":"Nejlepší výchozí volba pro většinu uživatelů. Nejprve používá WebSocket a v případě potřeby přejde na Polling.","Best for":"Nejlepší pro","Best reply mode:":"Nejlepší režim pro odpovědi:","Best when you want to send replies from SSN and use the live TikTok page inside the app.":"Nejlepší, pokud chcete posílat odpovědi z SSN a používat stránku živého vysílání TikToku v aplikaci.","Bluesky":"Bluesky","Choose the TikTok mode or preset you want.":"Vyberte požadovaný režim nebo předvolbu TikToku.","Click":"Klikněte na","Click the":"Klikněte na","Close extra TikTok tabs or apps on the same device if possible.":"Pokud je to možné, zavřete na stejném zařízení další karty nebo aplikace TikToku.","Close other TikTok tabs, apps, or duplicate viewers on the same device.":"Zavřete ostatní karty, aplikace nebo duplicitní zobrazení TikToku na stejném zařízení.","Commands & API":"Příkazy a API","Common TikTok problems":"Běžné problémy s TikTokem","Community":"Komunita","Compatibility mode. Slower, but useful when WebSocket paths fail.":"Režim kompatibility. Je pomalejší, ale hodí se při selhání připojení WebSocket.","Connect TikTok in SSN":"Připojení TikToku v SSN","Consolidates your live social messaging streams and more. Free and open source.":"Spojuje vaše živé konverzace ze sociálních sítí a nabízí ještě víc. Zdarma a s otevřeným zdrojovým kódem.","Contribute":"Přispět k projektu","Copy the dock URL.":"Zkopírujte URL doku.","Customization Guide":"Průvodce přizpůsobením","Discord":"Discord","Discord StreamKit and TikFinity Sources":"Zdroje Discord StreamKit a TikFinity","Donate":"Přispět finančně","Download":"Stáhnout","Download Desktop App":"Stáhnout desktopovou aplikaci","Enter the TikTok username, live URL, or requested value.":"Zadejte uživatelské jméno TikToku, URL živého vysílání nebo požadovanou hodnotu.","Euler Proxy / Euler Signing":"Euler Proxy / Euler Signing","Event Reference":"Referenční příručka událostí","Extension":"Rozšíření","FAQ":"Časté dotazy","Fallback":"Záložní možnost","Fallback reply mode:":"Záložní režim pro odpovědi:","Fallback when Standard is flaky but you still want replies.":"Záloha, pokud je Standard nespolehlivý, ale stále chcete odpovídat.","Features":"Funkce","For a complete walkthrough of this fallback and Discord StreamKit, see":"Úplný postup pro tuto záložní možnost a Discord StreamKit najdete v průvodci","GitHub":"GitHub","GitHub Repository":"Repozitář GitHub","Go live first, then try":"Nejprve spusťte živé vysílání a poté zkuste","Go to":"Otevřete","Guides":"Návody","Hire":"Najmout odborníka","Home":"Domů","How to connect TikTok in Social Stream Ninja, choose the right mode, send replies, and use TikFinity as a fallback when needed.":"Jak připojit TikTok v Social Stream Ninja, zvolit správný režim, odpovídat a v případě potřeby použít TikFinity jako zálohu.","How to send replies to TikTok chat":"Jak odpovídat do chatu TikToku","How to use TikFinity OBS Dock":"Jak používat TikFinity OBS Dock","How to use TikTok with Social Stream Ninja, including Standard mode, TikTok WS, replies, Polling, Euler options, and TikFinity fallback.":"Jak používat TikTok se Social Stream Ninja, včetně režimu Standard, TikTok WS, odpovědí, Polling, možností Euler a zálohy přes TikFinity.","If Standard is flaky, try":"Pokud je Standard nespolehlivý, zkuste","If Standard is unstable":"Pokud je Standard nestabilní","If TikTok keeps missing chat, use":"Pokud TikTok stále vynechává chat, použijte","If TikTok still misses too much chat, switch to the TikFinity fallback below.":"Pokud TikTok stále vynechává příliš mnoho zpráv, přejděte na níže uvedenou zálohu přes TikFinity.","If WebSocket still fails, try":"Pokud WebSocket stále selhává, zkuste","If it still duplicates, switch modes or use TikFinity temporarily.":"Pokud se zprávy stále duplikují, změňte režim nebo dočasně použijte TikFinity.","If you already use TikFinity activity-feed widgets, SSN can also work with supported TikFinity widget pages in browser-based workflows.":"Pokud už používáte widgety přehledu aktivit TikFinity, SSN umí pracovat i s podporovanými stránkami widgetů TikFinity v postupech využívajících prohlížeč.","If you need replies":"Pokud potřebujete odpovědi","If you need to reply, switch to":"Pokud potřebujete odpovídat, přepněte na","If you use the browser extension instead":"Pokud místo toho používáte rozšíření prohlížeče","Important:":"Důležité:","In SSN, click":"V SSN klikněte na","Inspiration":"Inspirace","Installation Guide":"Průvodce instalací","Join our Discord":"Připojte se k našemu Discordu","Keep the signer window open.":"Nechte okno podepisování otevřené.","Local Signer":"Místní podepisování","Local Signer if Standard is unstable":"Local Signer, pokud je Standard nestabilní","Main navigation":"Hlavní navigace","Make sure you are logged into the TikTok account that should send messages.":"Ujistěte se, že jste přihlášeni k účtu TikToku, ze kterého se mají zprávy odesílat.","Modes":"Režimy","No":"Ne","Not meant for replies:":"Není určeno pro odpovědi:","Open":"Otevřít","Open TikFinity.":"Otevřete TikFinity.","Open navigation menu":"Otevřít navigační nabídku","Open the broadcaster's TikTok live page in your browser and keep the extension enabled.":"Otevřete v prohlížeči stránku živého vysílání daného autora na TikToku a nechte rozšíření zapnuté.","Open the standalone app.":"Otevřete samostatnou aplikaci.","Option":"Možnost","Other chat sites":"Ostatní weby s chatem","Overlay -> OBS Docks":"Overlay -> OBS Docks","Overlay Gallery":"Galerie překryvů","Overview":"Přehled","Paste the TikFinity dock URL.":"Vložte URL doku TikFinity.","Pick a dock slot and configure it for chat.":"Vyberte pozici doku a nastavte ji pro chat.","Polling":"Dotazování (Polling)","Practical rule:":"Praktické pravidlo:","Privacy Policy":"Zásady ochrany soukromí","Quick Links":"Rychlé odkazy","Quick recommendation:":"Rychlé doporučení:","Read-only fallback when TikTok native modes miss too much chat or fail to connect.":"Záloha pouze pro čtení, když nativní režimy TikToku vynechávají příliš mnoho zpráv nebo se nepřipojí.","Reload":"Znovu načíst","Replies":"Odpovědi","Reply support depends on having a valid signed-in TikTok session.":"Podpora odpovědí závisí na platné přihlášené relaci TikToku.","Report an Issue":"Nahlásit problém","Resources":"Zdroje informací","Show capture page":"Zobrazit stránku zachytávání (Show capture page)","Sign in":"Přihlásit se (Sign in)","Sign in if you need authenticated-only or host-only page events on your own live.":"Přihlaste se, pokud ve vlastním vysílání potřebujete události stránky dostupné pouze po přihlášení nebo pouze pro autora.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. Licence GPLv3.0. Autor:","Standard":"Standard","Standard for replies":"Standard pro odpovědi","Start here":"Začněte zde","Start with":"Začněte s","Step 1":"Krok 1","Step 2":"Krok 2","Step 3":"Krok 3","Steve Seguin":"Steve Seguin","Stop the source fully, then reconnect cleanly.":"Zdroj zcela zastavte a poté ho znovu čistě připojte.","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","Templates":"Šablony","Terms of Service":"Podmínky používání","Testing after a stream ends will often fail.":"Testování po skončení vysílání často selže.","The Supported Sites entry for TikTok Live: use a":"Položka TikTok Live v seznamu podporovaných webů: použijte","The standalone app still offers the widest TikTok mode selection and the cleanest fallback options.":"Samostatná aplikace stále nabízí nejširší výběr režimů TikToku a nejpřehlednější záložní možnosti.","This can be a TikTok-side limitation, not always an SSN bug.":"Může jít o omezení na straně TikToku, ne vždy o chybu SSN.","This is a backup reader, not a reply tool.":"Jde o záložní čtečku, nikoli nástroj pro odpovědi.","TikFinity OBS Dock":"Dok OBS TikFinity","TikFinity activity-feed pages can also work in browser-based SSN setups.":"Stránky přehledu aktivit TikFinity mohou fungovat také v nastaveních SSN využívajících prohlížeč.","TikFinity can work as a backup source when TikTok itself is dropping or hiding too much chat.":"TikFinity může sloužit jako záložní zdroj, pokud samotný TikTok zahazuje nebo skrývá příliš mnoho zpráv.","TikFinity if TikTok itself is the problem":"TikFinity, pokud je problém v samotném TikToku","TikTok":"TikTok","TikTok Guide":"Průvodce TikTok","TikTok Guide - Social Stream Ninja":"Průvodce TikTokem - Social Stream Ninja","TikTok Live setup instructions modal from the Supported Sites page":"Dialog s pokyny k nastavení TikTok Live ze stránky podporovaných webů","TikTok WS + Auto":"TikTok WS + Auto","TikTok WS + Local Signer":"TikTok WS + Local Signer","TikTok chat only works when the account is actually live.":"Chat TikToku funguje jen tehdy, když účet skutečně vysílá živě.","TikTok is one of the hardest platforms to keep stable because TikTok changes behavior often and not every account sees the same thing.":"TikTok patří k nejobtížnějším platformám z hlediska stability, protože často mění své chování a ne všechny účty mají stejné podmínky.","TikTok issues are not always caused by SSN. Missing messages, auth failures, and throttling can be caused by TikTok itself, by account state, or by region-specific restrictions.":"Problémy s TikTokem nezpůsobuje vždy SSN. Chybějící zprávy, selhání ověření a omezování provozu může způsobit samotný TikTok, stav účtu nebo regionální omezení.","Troubleshooting":"Řešení potíží","Try":"Vyzkoušejte","Try another mode before deciding one path is permanently best.":"Než některý postup označíte za trvale nejlepší, vyzkoušejte jiný režim.","Try another mode or signing path.":"Zkuste jiný režim nebo způsob podepisování.","URL and keep the chat page open while the extension captures it.":"URL a během zachytávání rozšířením nechte stránku chatu otevřenou.","Update to the newest app build first.":"Nejprve aktualizujte na nejnovější sestavení aplikace.","Use":"Použijte","Use TikFinity as a fallback if it is behaving better for your account.":"Použijte TikFinity jako zálohu, pokud s vaším účtem funguje lépe.","Usually No":"Obvykle ne","Wait a few minutes before retrying.":"Před dalším pokusem několik minut počkejte.","Which TikTok option should I use?":"Kterou možnost TikToku mám použít?","X.com":"X.com","Yes":"Ano","after sign-in.":"po přihlášení.","button in the left sidebar.":"v levém postranním panelu.","if needed.":"podle potřeby.","if reading reliability matters most, start with Auto or Polling. If replying matters most, use Standard or Local Signer.":"pokud je nejdůležitější spolehlivé čtení, začněte s Auto nebo Polling. Pokud jsou nejdůležitější odpovědi, použijte Standard nebo Local Signer.","mode first.":"jako první.","so you can see sign-in or CAPTCHA.":"abyste viděli přihlášení nebo CAPTCHA.","through":"přes","with contributions from the community.":"s příspěvky komunity."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tiktok-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tiktok-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tiktok-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tiktok-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tiktok-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tiktok-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tiktok-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tiktok-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tiktok-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tiktok-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tiktok-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tiktok-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tiktok-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tiktok-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tiktok-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tiktok-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="tiktok-guide.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/tiktok-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Průvodce TikTok</h1>
+            <p>Jak připojit TikTok v Social Stream Ninja, zvolit správný režim, odpovídat a v případě potřeby použít TikFinity jako zálohu.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <span class="mini-label">Přehled</span>
+                    <h3>Začněte zde</h3>
+                    <p>TikTok patří k nejobtížnějším platformám z hlediska stability, protože často mění své chování a ne všechny účty mají stejné podmínky.</p>
+                    <div class="callout-box">
+                        <strong>Rychlé doporučení:</strong>
+                        <ul class="guide-list">
+                            <li>Začněte s <strong>TikTok WS + Auto</strong>.</li>
+                            <li>Pokud potřebujete odpovídat, přepněte na <strong>Standard</strong>.</li>
+                            <li>Pokud je Standard nespolehlivý, zkuste <strong>Místní podepisování</strong>.</li>
+                            <li>Pokud TikTok stále vynechává chat, použijte <strong>Dok OBS TikFinity</strong> přes <strong>Ostatní weby s chatem</strong>.</li>
+                        </ul>
+                    </div>
+                    <div class="callout-box warning">
+                        <strong>Důležité:</strong> Problémy s TikTokem nezpůsobuje vždy SSN. Chybějící zprávy, selhání ověření a omezování provozu může způsobit samotný TikTok, stav účtu nebo regionální omezení.
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">Režimy</span>
+                    <h3>Kterou možnost TikToku mám použít?</h3>
+                    <div class="steps-table-wrap">
+                    <table class="steps-table">
+                        <thead>
+                            <tr>
+                                <th>Možnost</th>
+                                <th>Nejlepší pro</th>
+                                <th>Odpovědi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>TikTok WS + Auto</strong></td>
+                                <td>Nejlepší výchozí volba pro většinu uživatelů. Nejprve používá WebSocket a v případě potřeby přejde na Polling.</td>
+                                <td>Ne</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Standard</strong></td>
+                                <td>Nejlepší, pokud chcete posílat odpovědi z SSN a používat stránku živého vysílání TikToku v aplikaci.</td>
+                                <td>Ano</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TikTok WS + Local Signer</strong></td>
+                                <td>Záloha, pokud je Standard nespolehlivý, ale stále chcete odpovídat.</td>
+                                <td>Ano</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Dotazování (Polling)</strong></td>
+                                <td>Režim kompatibility. Je pomalejší, ale hodí se při selhání připojení WebSocket.</td>
+                                <td>Ne</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Euler Proxy / Euler Signing</strong></td>
+                                <td>Pokročilé možnosti podepisování pro uživatele s vlastním API klíčem nebo vlastním nastavením.</td>
+                                <td>Obvykle ne</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Dok OBS TikFinity</strong></td>
+                                <td>Záloha pouze pro čtení, když nativní režimy TikToku vynechávají příliš mnoho zpráv nebo se nepřipojí.</td>
+                                <td>Ne</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+
+                <div class="setup-grid">
+                    <div class="guide-card">
+                        <span class="mini-label">Krok 1</span>
+                        <h3>Připojení TikToku v SSN</h3>
+                        <ol class="guide-steps">
+                            <li>Otevřete samostatnou aplikaci.</li>
+                            <li>Klikněte na <strong>TikTok</strong> v levém postranním panelu.</li>
+                            <li>Zadejte uživatelské jméno TikToku, URL živého vysílání nebo požadovanou hodnotu.</li>
+                            <li>Vyberte požadovaný režim nebo předvolbu TikToku.</li>
+                            <li>Klikněte na <strong>Aktivovat zdroj (Activate source)</strong>.</li>
+                        </ol>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">Krok 2</span>
+                        <h3>Pokud potřebujete odpovědi</h3>
+                        <ol class="guide-steps">
+                            <li>Použijte <strong>Standard</strong> jako první.</li>
+                            <li>Klikněte na <strong>Přihlásit se (Sign in)</strong> podle potřeby.</li>
+                            <li>Otevřít <strong>Zobrazit stránku zachytávání (Show capture page)</strong>.</li>
+                            <li>Ujistěte se, že jste přihlášeni k účtu TikToku, ze kterého se mají zprávy odesílat.</li>
+                        </ol>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">Krok 3</span>
+                        <h3>Pokud je Standard nestabilní</h3>
+                        <ol class="guide-steps">
+                            <li>Vyzkoušejte <strong>Místní podepisování</strong>.</li>
+                            <li>Nechte okno podepisování otevřené.</li>
+                            <li>Pokud WebSocket stále selhává, zkuste <strong>Dotazování (Polling)</strong>.</li>
+                            <li>Pokud TikTok stále vynechává příliš mnoho zpráv, přejděte na níže uvedenou zálohu přes TikFinity.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">Odpovědi</span>
+                    <h3>Jak odpovídat do chatu TikToku</h3>
+                    <p>Podpora odpovědí závisí na platné přihlášené relaci TikToku.</p>
+                    <ul class="guide-list">
+                        <li><strong>Nejlepší režim pro odpovědi:</strong> <strong>Standard</strong></li>
+                        <li><strong>Záložní režim pro odpovědi:</strong> <strong>Místní podepisování</strong></li>
+                        <li><strong>Není určeno pro odpovědi:</strong> Auto, Polling, záloha přes TikFinity</li>
+                    </ul>
+                    <div class="callout-box">
+                        <strong>Praktické pravidlo:</strong> pokud je nejdůležitější spolehlivé čtení, začněte s Auto nebo Polling. Pokud jsou nejdůležitější odpovědi, použijte Standard nebo Local Signer.
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">Záložní možnost</span>
+                    <h3>Jak používat TikFinity OBS Dock</h3>
+                    <p>TikFinity může sloužit jako záložní zdroj, pokud samotný TikTok zahazuje nebo skrývá příliš mnoho zpráv.</p>
+                    <ol class="guide-steps">
+                        <li>Otevřete TikFinity.</li>
+                        <li>Otevřete <strong>Overlay -&gt; OBS Docks</strong>.</li>
+                        <li>Vyberte pozici doku a nastavte ji pro chat.</li>
+                        <li>Zkopírujte URL doku.</li>
+                        <li>V SSN klikněte na <strong>Ostatní weby s chatem</strong>.</li>
+                        <li>Vložte URL doku TikFinity.</li>
+                        <li>Aktivujte nový zdroj a během živého vysílání nechte TikFinity otevřené.</li>
+                    </ol>
+                    <ul class="guide-list">
+                        <li>Jde o záložní čtečku, nikoli nástroj pro odpovědi.</li>
+                        <li>Pokud už používáte widgety přehledu aktivit TikFinity, SSN umí pracovat i s podporovanými stránkami widgetů TikFinity v postupech využívajících prohlížeč.</li>
+                    </ul>
+                    <p>Úplný postup pro tuto záložní možnost a Discord StreamKit najdete v průvodci <a href="external-overlay-sources.html#tikfinity">Zdroje Discord StreamKit a TikFinity</a>. Podrobnosti o datech událostí najdete v části <a href="event-reference.html">Referenční příručka událostí</a>.</p>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">Řešení potíží</span>
+                    <h3>Běžné problémy s TikTokem</h3>
+                    <div class="setup-grid">
+                        <div class="guide-card">
+                            <h4>„Píše to, že jsem offline“</h4>
+                            <ul class="guide-list">
+                                <li>Chat TikToku funguje jen tehdy, když účet skutečně vysílá živě.</li>
+                                <li>Nejprve spusťte živé vysílání a poté zkuste <strong>Znovu načíst</strong>.</li>
+                                <li>Testování po skončení vysílání často selže.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>„Ověřovací okno se zavírá“</h4>
+                            <ul class="guide-list">
+                                <li>Použijte <strong>Zobrazit stránku zachytávání (Show capture page)</strong> abyste viděli přihlášení nebo CAPTCHA.</li>
+                                <li>Vyzkoušejte <strong>Znovu načíst</strong> po přihlášení.</li>
+                                <li>Pokud je to možné, zavřete na stejném zařízení další karty nebo aplikace TikToku.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>„Chybí zprávy“</h4>
+                            <ul class="guide-list">
+                                <li>Může jít o omezení na straně TikToku, ne vždy o chybu SSN.</li>
+                                <li>Než některý postup označíte za trvale nejlepší, vyzkoušejte jiný režim.</li>
+                                <li>Použijte TikFinity jako zálohu, pokud s vaším účtem funguje lépe.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>„Po opětovném připojení se zprávy duplikují“</h4>
+                            <ul class="guide-list">
+                                <li>Nejprve aktualizujte na nejnovější sestavení aplikace.</li>
+                                <li>Zdroj zcela zastavte a poté ho znovu čistě připojte.</li>
+                                <li>Pokud se zprávy stále duplikují, změňte režim nebo dočasně použijte TikFinity.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>„Neustále narážím na omezení četnosti“</h4>
+                            <ul class="guide-list">
+                                <li>Zavřete ostatní karty, aplikace nebo duplicitní zobrazení TikToku na stejném zařízení.</li>
+                                <li>Před dalším pokusem několik minut počkejte.</li>
+                                <li>Zkuste jiný režim nebo způsob podepisování.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>„Co mám zkusit nejdřív?“</h4>
+                            <ul class="guide-list">
+                                <li>Auto pro čtení</li>
+                                <li>Standard pro odpovědi</li>
+                                <li>Local Signer, pokud je Standard nestabilní</li>
+                                <li>TikFinity, pokud je problém v samotném TikToku</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">Rozšíření</span>
+                    <h3>Pokud místo toho používáte rozšíření prohlížeče</h3>
+                    <ul class="guide-list">
+                        <li>Otevřete v prohlížeči stránku živého vysílání daného autora na TikToku a nechte rozšíření zapnuté.</li>
+                        <li>Přihlaste se, pokud ve vlastním vysílání potřebujete události stránky dostupné pouze po přihlášení nebo pouze pro autora.</li>
+                        <li>Stránky přehledu aktivit TikFinity mohou fungovat také v nastaveních SSN využívajících prohlížeč.</li>
+                        <li>Samostatná aplikace stále nabízí nejširší výběr režimů TikToku a nejpřehlednější záložní možnosti.</li>
+                    </ul>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/tiktok-live-setup-modal.png" alt="Dialog s pokyny k nastavení TikTok Live ze stránky podporovaných webů" class="guide-image guide-image-medium">
+                        <figcaption>Položka TikTok Live v seznamu podporovaných webů: použijte <code>tiktok.com/*/live</code> URL a během zachytávání rozšířením nechte stránku chatu otevřenou.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="footer-links">
+                    <a href="guides.html#standalone-tiktok" class="btn btn-secondary">Zpět na průvodce</a>
+                    <a href="download.html#standalone" class="btn btn-primary">Stáhnout desktopovou aplikaci</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Spojuje vaše živé konverzace ze sociálních sítí a nabízí ještě víc. Zdarma a s otevřeným zdrojovým kódem.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+                        <a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+                        <a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Rychlé odkazy</h3>
+                    <ul>
+                        <li><a href="../index.html">Domů</a></li>
+                        <li><a href="features.html">Funkce</a></li>
+                        <li><a href="download.html">Stáhnout</a></li>
+                        <li><a href="guides.html">Návody</a></li>
+                        <li><a href="commands.html">Příkazy a API</a></li>
+                        <li><a href="supported-sites.html">Podporované weby</a></li>
+                        <li><a href="templates.html">Šablony</a></li>
+                        <li><a href="support.html">Podpora</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Zdroje informací</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">Průvodce instalací</a></li>
+                        <li><a href="guides.html#extension-customization">Průvodce přizpůsobením</a></li>
+                        <li><a href="guides.html#faq">Časté dotazy</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Nahlásit problém</a></li>
+                        <li><a href="../privacy.html">Zásady ochrany soukromí</a></li>
+                        <li><a href="../TOS.html">Podmínky používání</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Komunita</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Připojte se k našemu Discordu</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">Repozitář GitHub</a></li>
+                        <li><a href="support.html#contribute">Přispět k projektu</a></li>
+                        <li><a href="https://github.com/sponsors/steveseguin" target="_blank">Přispět finančně</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0. Autor: <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> s příspěvky komunity.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
