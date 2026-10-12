@@ -68,6 +68,8 @@
             if (last && (now < last.time || now - last.time > this.options.gapMs)) { previous = []; invalidRun = false; }
             previous = previous.filter(function (x) { return now - x.time <= this.options.totalMs; },this);
             if (!previous.length) invalidRun = false;
+            // Expiring the context window is not a word boundary. Continuous letters
+            // must not restart matching inside an innocent word such as Scunthorpe.
             if (invalidRun && s && s.length === 1) {
                 previous.push({ id:e.id, text:s, time:now, userid:stableId });
                 previous = previous.slice(-12); previous.invalidRun = true;

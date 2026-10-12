@@ -99,29 +99,40 @@ assert.ok(dockHtml.includes('new MutationObserver(scheduleViewerBarSpaceUpdate)'
 assert.ok(parametersSource.includes('| `reserveviewercountspace` | boolean |'), "parameter documentation is missing");
 assert.ok(urlParameterConfig.includes('"key": "reserveviewercountspace"'), "generated parameter metadata is missing");
 
-assert.ok(!popupHtml.includes('data-param30="showtime"'), "Auto-hide uses the main chat control, without duplicate theme controls");
+const themeAutoHideControl = popupHtml.match(/<input\b[^>]*id="theme-auto-hide"[^>]*>/);
+assert.ok(themeAutoHideControl && themeAutoHideControl[0].includes('data-param30="showtime"'), "theme auto-hide must use its own link control");
+assert.ok(!/\bchecked\b/.test(themeAutoHideControl[0]), "theme auto-hide must default to off");
+assert.ok(/<input\b[^>]*id="theme-showtime"[^>]*data-numbersetting30="showtime"/.test(popupHtml), "theme duration must use its own numeric setting");
 
-// Exercise actual preset link generation as the dock timing changes.
+// Theme timing is independent of the dock and survives preset changes.
 {
   const dock = { raw: "https://socialstream.ninja/dock.html?session=test&showtime=12000" };
   const template = { raw: "https://socialstream.ninja/themes/compact-classic.html?session=test&ultra&font=18&showtime=999" };
+  const autoHide = { checked: false };
+  const duration = { value: "30000" };
   const apply = Function("document", "getGeneratedLinkParams", "mergeSupportedServerParamsIntoQuery", "buildGeneratedUrl", "setGeneratedLink", "syncChatOverlayTemplateConfig", "refreshLinks", "DEFAULT_CHAT_OVERLAY_TEMPLATE", "baseURL",
     extractFunction("applyChatOverlayTemplatePreset") + "; return applyChatOverlayTemplatePreset;")(
-      { getElementById: id => id === "dock" ? dock : id === "chatoverlaytemplate" ? template : null },
+      { getElementById: id => ({ dock, chatoverlaytemplate: template, "theme-auto-hide": autoHide, "theme-showtime": duration })[id] || null },
       element => element.raw.split("?")[1], params => params,
       Function("baseURL", extractFunction("buildGeneratedUrl") + "; return buildGeneratedUrl;")("https://socialstream.ninja/"),
       (element, url) => { element.raw = url; }, () => {}, () => {}, "sampleoverlay.html", "https://socialstream.ninja/"
     );
   for (const timing of ["12000", "5000", "0", null]) {
     dock.raw = "https://socialstream.ninja/dock.html?session=test" + (timing === null ? "" : "&showtime=" + timing);
-    for (const preset of ["themes/compact-classic.html", "themes/compact-clean.html?style=cute", "themes/compact-clean.html?style=cozy", "themes/compact-clean.html", "sampleoverlay.html"]) {
-      apply(preset);
-      const params = new URL(template.raw).searchParams;
-      assert.strictEqual(params.get("showtime"), timing || "0");
-      if (preset.includes("compact-clean")) assert.strictEqual(params.get("style"), new URL(preset, "https://socialstream.ninja/").searchParams.get("style"));
-      assert.strictEqual(params.get("font"), "18");
-      assert.ok(params.has("ultra"));
-      assert.strictEqual(params.get("session"), "test");
+    const originalDockUrl = dock.raw;
+    for (const [enabled, value, expected] of [[false, "5000", "0"], [true, "5000", "5000"], [true, "", "30000"], [true, "0", "1"], [true, "1000000", "999999"]]) {
+      autoHide.checked = enabled;
+      duration.value = value;
+      for (const preset of ["themes/compact-classic.html", "themes/compact-clean.html?style=cute", "themes/compact-clean.html?style=cozy", "themes/compact-clean.html", "sampleoverlay.html"]) {
+        apply(preset);
+        const params = new URL(template.raw).searchParams;
+        assert.strictEqual(params.get("showtime"), expected);
+        assert.strictEqual(dock.raw, originalDockUrl, "theme changes must not alter the dock URL");
+        if (preset.includes("compact-clean")) assert.strictEqual(params.get("style"), new URL(preset, "https://socialstream.ninja/").searchParams.get("style"));
+        assert.strictEqual(params.get("font"), "18");
+        assert.ok(params.has("ultra"));
+        assert.strictEqual(params.get("session"), "test");
+      }
     }
   }
 }
