@@ -2326,7 +2326,7 @@ TTS.ElevenLabsTTS = async function(tts, options) {
                 similarity_boost: TTS.elevenLabsSettings.similarity,
                 style: TTS.elevenLabsSettings.style,
                 use_speaker_boost: TTS.elevenLabsSettings.speakerBoost,
-                speaking_rate: TTS.elevenLabsSettings.speakingRate
+                speed: TTS.elevenLabsSettings.speakingRate
             }
         };
 

@@ -11162,7 +11162,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 				similarity_boost: settings.elevenLabs.similarityBoost,
 				style: settings.elevenLabs.style,
 				use_speaker_boost: settings.elevenLabs.speakerBoost,
-				speaking_rate: settings.elevenLabs.speakingRate
+				speed: settings.elevenLabs.speakingRate
 			}
 		};
 		
