@@ -898,7 +898,7 @@ Most messages look like:
 - membership: string like "Tier 1", "Member (6 months)", etc.
 - subtitle: secondary info, often months subscribed or gift count.
 - meta: structured extra data. For counter events it can be a number or an object keyed by type (e.g. { youtube: 815, twitch: 221 }). `viewer_updates` is a FULL SNAPSHOT of the current per-platform counts — replace your whole state from data.meta on every update, do NOT merge it on top of old platform keys, or stale platforms will linger forever. For commerce overlays meta is also a snapshot object (auction_update, commerce_update).
-- contentimg: an image embedded in the message (emote, sticker, donation image).
+- contentimg: a separate image attachment, such as a GIF, Super Sticker, or premium gift. Render it once outside the message-body element, at attachment size rather than inline emote size. Image-only messages are valid, including when textonly is true; do not require chatmessage or reject an attachment merely because event or meta is present.
 - nameColor: hex color for the username.
 - chatbadges: array of badge URLs.
 - bot / mod / host / vip: booleans.
@@ -923,7 +923,7 @@ Example auction update:
 1a. Message-body rule: `data.chatmessage` is SSN's renderable HTML unless `data.textonly === true`. Put it in a dedicated message element with `innerHTML` when not text-only, and `textContent` when text-only; escape all other fields normally. Constrain both message-body `img` and inline `svg` elements to emote/icon dimensions.
 1. ALWAYS escape untrusted strings before inserting as HTML. Use textContent where possible. NEVER build inline HTML event handlers (onerror=, onclick=, etc.) inside a JS string — the escaping gets tangled and produces syntax errors. Instead, create the element, then `el.addEventListener("error", ...)` or `el.onerror = function () { ... }`. Same rule for inline `style="..."` built from dynamic values with quotes: prefer element.style.color = .... Build DOM with createElement + appendChild in ONE pass — don't rewrite .outerHTML on a node that's already in the tree, don't wipe the row with `.innerHTML = ""` mid-function, and never call insertBefore(newNode, refNode) unless refNode is already a child of the parent you're inserting into. Plan the node tree before you start creating elements.
 2. Filter by data.type / data.event early so the overlay stays focused on its job.
-3. When the user wants "chat", skip messages where data.event is set (unless they also ask for events).
+3. When the user wants "chat", skip system events unless they also ask for events, but retain messages with contentimg, including paid stickers.
 4. When the user wants "alerts" or "events", require data.event, data.hasDonation, or data.membership.
 5. Respect common URL params when they make sense: ?limit=50, ?onlytype=twitch, ?hidetype=bots, ?donationsonly, ?eventsonly, ?css= (external stylesheet).
 6. Animations should clean themselves up (remove elements, clear timers) to avoid memory leaks during long streams.
@@ -1014,6 +1014,7 @@ If the user asks a question that does not require a file change, answer normally
 		.name { font-weight: 700; color: var(--name); }
 		.text { margin-top: 2px; word-wrap: break-word; }
 		.text img, .text svg { max-width: 3.4em; max-height: 1.35em; vertical-align: middle; }
+		.content-image { display: block; width: auto; max-width: 100%; max-height: 240px; object-fit: contain; margin-top: 6px; }
 		.platform { font-size: 10px; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-left: 6px; letter-spacing: 0.05em; }
 		@keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
 		.row.fade-out { animation: fadeOut 300ms ease-in forwards; }
@@ -1060,7 +1061,7 @@ If the user asks a question that does not require a file change, answer normally
 			}
 		}
 		function addRow(data) {
-			if (data.event || data.bot) return;
+			if ((data.event && !data.contentimg) || data.bot) return;
 			var row = document.createElement("div");
 			row.className = "row";
 			var safeType = data.type ? String(data.type).toLowerCase().replace(/[^a-z0-9_-]/g, "") : "";
@@ -1101,6 +1102,14 @@ If the user asks a question that does not require a file change, answer normally
 			text.className = "text";
 			setMessageHtml(text, data);
 			body.appendChild(text);
+			if (typeof data.contentimg === "string" && data.contentimg.trim()) {
+				var attachment = document.createElement("img");
+				attachment.className = "content-image";
+				attachment.alt = (data.meta && data.meta.gifLabel) || "Chat attachment";
+				attachment.src = data.contentimg;
+				hideBrokenImage(attachment);
+				body.appendChild(attachment);
+			}
 			row.appendChild(body);
 			feed.appendChild(row);
 			while (feed.children.length > limit) {
@@ -1148,6 +1157,7 @@ If the user asks a question that does not require a file change, answer normally
 		.headline { font-size: 20px; font-weight: 800; margin-top: 4px; }
 		.detail { color: rgba(255,255,255,0.75); margin-top: 4px; }
 		.detail img { max-height: 1.35em; vertical-align: middle; }
+		.content-image { display: block; width: auto; max-width: 100%; max-height: 240px; object-fit: contain; margin-top: 6px; }
 		.alert.out { animation: out 320ms ease-in forwards; }
 		@keyframes in { to { opacity: 1; transform: translateY(0); } }
 		@keyframes out { to { opacity: 0; transform: translateY(-16px); } }
@@ -1179,7 +1189,7 @@ If the user asks a question that does not require a file change, answer normally
 			type = type ? String(type).toLowerCase().replace(/[^a-z0-9_-]/g, "") : "";
 			return type ? "https://socialstream.ninja/sources/images/" + type + ".png" : "";
 		}
-		function show(kind, headline, detail, type, detailIsHtml) {
+		function show(kind, headline, detail, type, detailIsHtml, contentimg) {
 			var div = document.createElement("div");
 			var iconUrl = sourceIconUrl(type);
 			div.className = "alert " + kind;
@@ -1194,6 +1204,14 @@ If the user asks a question that does not require a file change, answer normally
 				else detailEl.textContent = String(detail);
 				div.appendChild(detailEl);
 			}
+			if (typeof contentimg === "string" && contentimg.trim()) {
+				var attachment = document.createElement("img");
+				attachment.className = "content-image";
+				attachment.alt = "Alert attachment";
+				attachment.src = contentimg;
+				attachment.addEventListener("error", function () { attachment.style.display = "none"; });
+				div.appendChild(attachment);
+			}
 			var icon = div.querySelector(".source-icon");
 			if (icon) icon.addEventListener("error", function () { icon.style.display = "none"; });
 			stage.appendChild(div);
@@ -1203,16 +1221,16 @@ If the user asks a question that does not require a file change, answer normally
 			if (!data || typeof data !== "object") return;
 			if (data.hasDonation) {
 				// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
-				show("donation", (data.chatname || "Someone") + " tipped " + data.hasDonation, data.chatmessage || "", data.type, !data.textonly);
+				show("donation", (data.chatname || "Someone") + " tipped " + data.hasDonation, data.chatmessage || "", data.type, !data.textonly, data.contentimg);
 			} else if (data.event === "new_follower") {
-				show("follow", (data.chatname || "Someone") + " followed!", data.type || "", data.type);
+				show("follow", (data.chatname || "Someone") + " followed!", data.type || "", data.type, false, data.contentimg);
 			} else if (data.event === "subscription_gift" || data.event === "gifted") {
-				show("gifted", (data.chatname || "Someone") + " gifted " + (data.subtitle || (data.meta && data.meta.gift_count) || "a sub"), data.membership || "", data.type);
+				show("gifted", (data.chatname || "Someone") + " gifted " + (data.subtitle || (data.meta && data.meta.gift_count) || "a sub"), data.membership || "", data.type, false, data.contentimg);
 			} else if (data.event === "subscriber" || data.membership) {
-				show("sub", (data.chatname || "Someone") + " subscribed!", data.membership || data.subtitle || "", data.type);
+				show("sub", (data.chatname || "Someone") + " subscribed!", data.membership || data.subtitle || "", data.type, false, data.contentimg);
 			} else if (data.event === "raid") {
 				var viewers = (data.meta && data.meta.viewers) || data.subtitle || "";
-				show("raid", (data.chatname || "Someone") + " is raiding!", viewers ? (viewers + " viewers") : "", data.type);
+				show("raid", (data.chatname || "Someone") + " is raiding!", viewers ? (viewers + " viewers") : "", data.type, false, data.contentimg);
 			}
 		}
 		window.handleOverlayPayload = route;
@@ -1385,6 +1403,7 @@ If the user asks a question that does not require a file change, answer normally
 		.chat .row { background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 10px; font-size: 13px; opacity: 0; transform: translateY(8px); animation: slideIn 220ms ease-out forwards; }
 		.chat .name { font-weight: 700; color: #79d6ac; margin-right: 6px; }
 		.chat .message img, .chat .message svg { max-width: 3.4em; max-height: 1.35em; vertical-align: middle; }
+		.chat .content-image { display: block; width: auto; max-width: 100%; max-height: 160px; object-fit: contain; margin-top: 6px; }
 		@keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
 	</style>
 </head>
@@ -1430,7 +1449,7 @@ If the user asks a question that does not require a file change, answer normally
 			else el.innerHTML = value;
 		}
 		function addChat(data) {
-			if (data.event || data.bot || !data.chatmessage) return;
+			if ((data.event && !data.contentimg) || data.bot || (!data.chatmessage && !data.contentimg)) return;
 			var row = document.createElement("div");
 			row.className = "row";
 			var name = document.createElement("span");
@@ -1441,6 +1460,14 @@ If the user asks a question that does not require a file change, answer normally
 			setMessageHtml(message, data);
 			row.appendChild(name);
 			row.appendChild(message);
+			if (typeof data.contentimg === "string" && data.contentimg.trim()) {
+				var attachment = document.createElement("img");
+				attachment.className = "content-image";
+				attachment.alt = (data.meta && data.meta.gifLabel) || "Chat attachment";
+				attachment.src = data.contentimg;
+				attachment.addEventListener("error", function () { attachment.style.display = "none"; });
+				row.appendChild(attachment);
+			}
 			chat.insertBefore(row, chat.firstChild);
 			while (chat.children.length > 6) chat.removeChild(chat.lastChild);
 		}
@@ -2131,7 +2158,7 @@ If the user asks a question that does not require a file change, answer normally
 				"If the request explicitly asks for ssnpatch, patch only, or a focused edit, return only one ```ssnpatch fenced block containing strict valid JSON with exact find/replace edits. If it needs a new overlay or broad rewrite and the user did not ask for patch-only output, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
 				"Before returning HTML, check every <script> block for valid plain JavaScript syntax. If you include dynamic text inside JavaScript, quote it with JSON-safe string literals. Do not leave raw prose, markdown, smart quotes, or stray punctuation inside <script> blocks.",
 				"When returning ssnpatch, the fenced block content must parse as JSON. Escape backslashes as \\\\, quotes as \\\", and newlines as \\n inside string values. Each edit.find string must occur exactly once in the current HTML. Include enough stable surrounding context to make it unique. Do not include line numbers. Do not return both ssnpatch and full HTML.",
-				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; default chat/alert overlays to var label = params.get(\"label\") || \"dock\"; default dedicated auction/commerce/viewer meta overlays to var label = params.get(\"label\") || \"meta\"; never use random/time-based labels for live chat/events/auction/counter overlays; support chat fields (chatname/chatmessage/textonly/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), viewer_updates snapshots, and auction_update snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. When editing an existing live payload handler, preserve existing event branches and add the new branch without replacing unrelated behavior. Do not create a second handlePayload function or second window.handleOverlayPayload assignment; merge new logic into the existing handler. data.chatmessage is renderable HTML unless data.textonly === true; render only that field with innerHTML in a dedicated message element when not text-only, and use textContent when text-only. Auction overlays must update visible DOM on every auction_update payload and should render meta.title, meta.priceText/price, meta.bidder/statusText, meta.bidsText/bids, and meta.timer. If a requested live field has no visible element yet, add one and update it from payloads; do not calculate unused values. Treat 0 as valid and sum only numeric top-level values for viewer_updates unless asked otherwise. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons. For plain questions, answer in 2-5 helpful short sentences without HTML."
+				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; default chat/alert overlays to var label = params.get(\"label\") || \"dock\"; default dedicated auction/commerce/viewer meta overlays to var label = params.get(\"label\") || \"meta\"; never use random/time-based labels for live chat/events/auction/counter overlays; support chat fields (chatname/chatmessage/textonly/chatimg/type/contentimg), render contentimg once as a separate larger attachment even when chatmessage is empty or textonly is true, retain paid image messages such as supersticker in chat overlays, support alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), viewer_updates snapshots, and auction_update snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. When editing an existing live payload handler, preserve existing event branches and add the new branch without replacing unrelated behavior. Do not create a second handlePayload function or second window.handleOverlayPayload assignment; merge new logic into the existing handler. data.chatmessage is renderable HTML unless data.textonly === true; render only that field with innerHTML in a dedicated message element when not text-only, and use textContent when text-only. Auction overlays must update visible DOM on every auction_update payload and should render meta.title, meta.priceText/price, meta.bidder/statusText, meta.bidsText/bids, and meta.timer. If a requested live field has no visible element yet, add one and update it from payloads; do not calculate unused values. Treat 0 as valid and sum only numeric top-level values for viewer_updates unless asked otherwise. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons. For plain questions, answer in 2-5 helpful short sentences without HTML."
 			].join("\n");
 		}
 
