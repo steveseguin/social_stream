@@ -7688,9 +7688,6 @@ function enableBackgroundKeepAlive() {
 			const stickerMessage = actualMessage || stickerData.altText || getTranslation("super-sticker-text", "Super Sticker");
 			const stickerUrl = Object.prototype.hasOwnProperty.call(YOUTUBE_SUPER_STICKER_IMAGES, stickerData.stickerId)
 				? YOUTUBE_SUPER_STICKER_IMAGES[stickerData.stickerId] : '';
-			const stickerHtml = stickerUrl
-				? '<img class="supersticker" src="' + strictEscapeHtml(stickerUrl) + '" alt="' + strictEscapeHtml(stickerMessage) + '">'
-				: escapeHtml(stickerMessage);
 			
 			pushMessage(applySourceIdentity(preserveKnownModerator({
 				chatname: escapeHtml(stickerData.authorName),
@@ -7698,8 +7695,9 @@ function enableBackgroundKeepAlive() {
 				userid: stickerData.authorChannelId,
 				backgroundColor: "",
 				textColor: "#111",
-				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
-				chatmessage: settings.textonlymode ? stickerMessage : stickerHtml,
+				// A Super Sticker is standalone paid media; keep it out of the inline emote layout.
+				chatmessage: stickerUrl ? "" : (settings.textonlymode ? stickerMessage : escapeHtml(stickerMessage)),
+				contentimg: stickerUrl,
 				chatimg: stickerData.profileImageUrl || "",
 				hasDonation: stickerData.amount,
 				membership: "",

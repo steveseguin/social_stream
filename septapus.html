@@ -17,6 +17,15 @@
 	<link href="https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&family=Imprima&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <style>
 
+	.content-image {
+		display: block;
+		width: auto;
+		max-width: 100%;
+		max-height: 240px;
+		object-fit: contain;
+		margin: 8px 0;
+	}
+
 	yt-live-chat-renderer {
 		height: 100%;
 		display: block;
@@ -649,6 +658,15 @@
 		  if (data.textonly) {
 			var messageText = messageElement.querySelector('#message');
 			if (messageText) messageText.textContent = data.chatmessage || '';
+		  }
+
+		  if (typeof data.contentimg === 'string' && data.contentimg.trim()) {
+			var contentImage = document.createElement('img');
+			contentImage.className = 'content-image';
+			contentImage.alt = (data.meta && data.meta.gifLabel) || 'Chat attachment';
+			contentImage.onerror = function () { this.style.display = 'none'; };
+			contentImage.src = data.contentimg;
+			messageElement.querySelector('#content').appendChild(contentImage);
 		  }
 
 		  if (data.mid) {

@@ -104,6 +104,15 @@ body, html {
     vertical-align: bottom;
 }
 
+.content-image {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: 240px;
+    object-fit: contain;
+    margin: 8px 0;
+}
+
 .event-type {
     font-weight: 700;
     display: inline-block;
@@ -2016,7 +2025,7 @@ body.light-mode .meta-value.badge {
 			return;
 		}
 
-		const hasDisplayContent = (display.message && display.message.trim().length > 0) || data.hasDonation || display.forceShow;
+		const hasDisplayContent = (display.message && display.message.trim().length > 0) || data.contentimg || data.hasDonation || display.forceShow;
 		if (!hasDisplayContent) {
 			return;
 		}
@@ -2139,6 +2148,15 @@ body.light-mode .meta-value.badge {
 			textNode.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(display.message || '') : fallbackEscapeHtml(display.message || ''));
 		}
 		messageDiv.appendChild(textNode);
+
+		if (typeof data.contentimg === 'string' && data.contentimg.trim()) {
+			const contentImage = document.createElement('img');
+			contentImage.className = 'content-image';
+			contentImage.alt = (data.meta && data.meta.gifLabel) || 'Event attachment';
+			contentImage.onerror = function () { this.style.display = 'none'; };
+			contentImage.src = data.contentimg;
+			messageDiv.appendChild(contentImage);
+		}
 
 		if (data.hasDonation) {
 			const donationNode = document.createElement('div');

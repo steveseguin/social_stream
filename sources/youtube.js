@@ -1647,10 +1647,8 @@
 			if (!eventType) {
 				eventType = "supersticker";
 			}
-			// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
-			if (!settings.textonlymode) {
-				chatmessage = '<img class="supersticker" src="' + chatsticker + '">';
-			}
+			// A Super Sticker is standalone paid media; render it once through contentimg.
+			chatmessage = "";
 		}
 
 		var backgroundColor = "";
@@ -1772,7 +1770,9 @@
 		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube"; 
-		if (jewelDonation && jewelDonation.giftUrl) {
+		if (chatsticker) {
+			data.contentimg = chatsticker;
+		} else if (jewelDonation && jewelDonation.giftUrl) {
 			data.contentimg = jewelDonation.giftUrl;
 		}
 		if (jewelDonation && jewelDonation.meta) {
@@ -1798,7 +1798,7 @@
 		
 		if (data.hasDonation){
 			data.title = getTranslation("donation", "DONATION");
-			if (!data.chatmessage){
+			if (!data.chatmessage && !chatsticker){
 				data.chatmessage = getCustomDonationThankYouText();
 				if (!eventType){
 					eventType = "thankyou";
