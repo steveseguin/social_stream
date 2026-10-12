@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" style="font-size: 10px; font-family: Roboto, Arial, sans-serif">
 <head>
+<script src="../../shared/utils/documentation.js"></script>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
     <meta name="description" content="YouTube: a chat source connection page for Social Stream Ninja. Use it with the app or extension to bring chat into your session.">
     <meta name="robots" content="noindex">
@@ -8026,7 +8027,8 @@ function enableBackgroundKeepAlive() {
 	}
 	function getSetupGuideUrl() {
 		try {
-			return new URL('../../docs/youtube-project-setup.html', window.location.href).toString();
+			const guideUrl = new URL('../../docs/youtube-project-setup.html', window.location.href).toString();
+			return window.SSNDocumentationURL ? window.SSNDocumentationURL(guideUrl) : guideUrl;
 		} catch (_) {
 			return '../../docs/youtube-project-setup.html';
 		}
