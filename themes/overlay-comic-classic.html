@@ -143,6 +143,7 @@ body, html {
 }
 
 .message.fading {
+    animation: none;
     opacity: 0;
     transform: translateY(-24px) scale(0.85);
     filter: blur(1px);
@@ -544,7 +545,7 @@ body, html {
 		messageDiv.classList.add('message');
 		
 		// Generate unique ID and track timestamp for aging
-		const messageId = data.mid || 'msg-' + Date.now();
+		const messageId = String(data.mid || 'msg-' + Date.now());
 		messageDiv.id = messageId;
 		messageTimestamps.set(messageId, Date.now());
 		

@@ -199,12 +199,24 @@ function applyUserDisplayAlias(data) {
 function getOverlayDisplayMessage(data) {
 	if (!data || typeof data !== "object") return data;
 	const displayMessage = Object.assign({}, data);
-	return applyUserDisplayAlias(displayMessage) ? displayMessage : data;
+	if (applyUserDisplayAlias(displayMessage)) return displayMessage;
+	if (getSettingFlag("showdisplaynameusername") && typeof data.chatname === "string" && typeof data.username === "string") {
+		const username = data.username.trim();
+		const displayName = data.chatname.trim();
+		const suffix = " (" + username + ")";
+		if (username && displayName && displayName.toLowerCase() !== username.toLowerCase() && !displayName.toLowerCase().endsWith(suffix.toLowerCase())) {
+			displayMessage.chatname = displayName + suffix;
+			// Retain the source name for moderation of displayed and queued rows.
+			displayMessage.meta = Object.assign({}, data.meta, { sourceDisplayName: data.chatname });
+			return displayMessage;
+		}
+	}
+	return data;
 }
 
 function getOverlayDisplayPayload(data) {
 	if (!data || typeof data !== "object") return data;
-	if (!getUserDisplayAliasEntries().length) return data;
+	if (!getUserDisplayAliasEntries().length && !getSettingFlag("showdisplaynameusername")) return data;
 	let displayPayload = getOverlayDisplayMessage(data);
 	["userHistory", "recentHistory", "historyBefore"].forEach(key => {
 		if (!Array.isArray(data[key])) return;
@@ -797,6 +809,13 @@ if (typeof chrome.runtime == "undefined") {
 	};
 
 	chrome.tabs = {};
+	ipcRenderer.on("youtube-source-closed", (event, tabId) => {
+		if (!Number.isInteger(tabId) || tabId <= 0) return;
+		// SSApp has no tabs.onRemoved event; clear only the YouTube source gate.
+		for (const key of activeChatSources.keys()) {
+			if (key.startsWith(`${tabId}-`)) activeChatSources.delete(key);
+		}
+	});
 	chrome.tabs.query = async function (a, callback) {
 		var response = await ipcRenderer.sendSync("getTabs", {});
 
@@ -1804,6 +1823,13 @@ function loadSettings(item, resave = false) {
 
 	if (item && item.settings) {
 		settings = item.settings;
+		if (Object.prototype.hasOwnProperty.call(settings, "twitchshowusername")) {
+			if (!Object.prototype.hasOwnProperty.call(settings, "showdisplaynameusername")) {
+				settings.showdisplaynameusername = settings.twitchshowusername;
+			}
+			delete settings.twitchshowusername;
+			normalizedSettings = true;
+		}
 		if (migrateAiChatbotEnabledSetting(settings)) {
 			normalizedSettings = true;
 		}
@@ -5162,7 +5188,7 @@ async function buildEmoteOnlyMessage(rawMessage, textOnly = false) {
 		return workingMessage;
 	}
 
-	const wrapper = document.createElement("div");
+	const wrapper = document.createElement("template").content.appendChild(document.createElement("div"));
 	wrapper.innerHTML = workingMessage;
 	const kept = [];
 
@@ -5598,11 +5624,13 @@ function routeIndividualLikeEvent(message, alreadyRouted) {
 // Only captures still being processed are retained; completed messages need no tombstone cache.
 const pendingModeratedCaptures = new Set();
 function cancelPendingModeratedCaptures(deletion) {
-	if (!["youtube", "youtubeshorts", "twitch", "kick"].includes(deletion.type)) return;
+	if (!["youtube", "youtubeshorts", "twitch", "kick", "vpzone"].includes(deletion.type)) return;
 	const matches = [];
 	pendingModeratedCaptures.forEach(function (pending) {
 		const message = pending.message;
 		if (message.type !== deletion.type) return;
+		if (deletion.type === "vpzone" && deletion.meta && deletion.meta.streamUsername &&
+			String(message.meta && message.meta.streamUsername).toLowerCase() !== String(deletion.meta.streamUsername).toLowerCase()) return;
 		const nativeId = deletion.meta && deletion.meta.messageId;
 		if (nativeId) {
 			if (String(message.meta && message.meta.messageId) !== String(nativeId)) return;
@@ -5754,7 +5782,7 @@ async function processIncomingMessage(message, sender = null) {
 			noteTabActivity(tabIdForActivity, message);
 		}
 
-		const pendingCapture = ["youtube", "youtubeshorts", "twitch", "kick"].includes(message.type)
+		const pendingCapture = ["youtube", "youtubeshorts", "twitch", "kick", "vpzone"].includes(message.type)
 			? { message: Object.assign({}, message), cancelled: false } : null;
 		if (pendingCapture) pendingModeratedCaptures.add(pendingCapture);
 		try {
@@ -5933,6 +5961,17 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				}
 				sendResponse({ success: false, error: payload });
 			}
+		} else if (request.cmd === "getRAGSearchStatus") {
+            sendResponse(typeof getRAGSearchStatus === 'function' ? getRAGSearchStatus() : { text: 'Loading knowledge search…' });
+        } else if (request.cmd === "getCensorModelStatus") {
+            sendResponse(getCensorModelStatus());
+        } else if (request.cmd === "testCensorModel") {
+            try {
+                const result = await testCensorModel(request.model || 'main', String(request.text || '').slice(0, 16000), request.settingsOverride || null);
+                sendResponse({ success: true, text: result.text });
+            } catch (error) {
+                sendResponse({ success: false, error: error.message || String(error) });
+            }
 		} else if (request.cmd && request.cmd === "classifyMessageForExport") {
 			try {
 				const llmResponse = await callLLMAPI(String(request.prompt || ""), null, null, null, null, null, { settings: request.settingsOverride || null });
@@ -6012,6 +6051,8 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			}
 
 			pruneSettingsObjects(settings);
+
+            if ((request.setting === 'ragSearchMode' || request.setting === 'ollamaRagEnabled') && typeof resetRAGSemanticSearch === 'function') resetRAGSemanticSearch(true);
 
 			if ((request.setting === "beepreturning" || request.setting === "firsttimerbadge") && request.value && !getSettingFlag("disableDB") && !getSettingFlag("firsttimers")) {
 				settings.firsttimers = { setting: true };
@@ -6462,6 +6503,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if ("delete" in request) {
 			sendResponse({ state: isExtensionOn });
 			if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)) {
+				forgetLocalCensorMessages(request.delete, sender?.tab);
 				cancelPendingModeratedCaptures(request.delete);
 				sendToDestinations({ delete: request.delete });
 			}
@@ -8208,6 +8250,8 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 
 	// Emote/pronoun/translation lookups can also yield before the first relay.
 	if (pendingCapture && pendingCapture.cancelled) return false;
+    // A local moderation decision may arrive while those lookups are pending.
+    if (typeof isLocalCensorBlocked === 'function' && isLocalCensorBlocked(message)) return false;
 
 	if (message && typeof message === "object" && typeof sanitizeRelayPayloadFields === "function") {
 		message = sanitizeRelayPayloadFields(message) || message;
@@ -13097,8 +13141,8 @@ function sendDataP2P(data, UUID = false) {
 	}
 }
 /////
-var users = {};
-var hype = {};
+var users = Object.create(null);
+var hype = Object.create(null);
 var viewerCounts = {};
 var lastUpdated = {};
 var activeViewerSources = {}; // Track sources that have received viewer updates
@@ -13140,7 +13184,7 @@ function processHype(data) {
 		users[sourceType][userKey] = Date.now() + 60000 * 5;
 	} else if (data.chatname) {
 		// New site
-		var site = {};
+		var site = Object.create(null);
 		site[userKey] = Date.now() + 60000 * 5;
 		users[sourceType] = site;
 		hype[sourceType] = 1;
@@ -13200,7 +13244,7 @@ function processHype2() {
 		return;
 	}
 
-	hype = {}; // Reset active chatters counts for this interval's calculation
+	hype = Object.create(null); // Reset active chatters counts for this interval's calculation
 	var now = Date.now();
 
 	// Track sources with actual viewer data (>0)
@@ -13212,7 +13256,7 @@ function processHype2() {
 	}
 
 	// Process active chatters from `users`
-	var currentActiveUsersPerSource = {}; // Temporary object to build fresh `hype` counts
+	var currentActiveUsersPerSource = Object.create(null); // Temporary object to build fresh `hype` counts
 	var activeUsersSites = Object.keys(users);
 	for (var i = 0; i < activeUsersSites.length; i++) {
 		const sourceName = activeUsersSites[i];
@@ -13245,7 +13289,7 @@ function processHype2() {
 }
 
 function combineHypeData() {
-	const result = { chatters: {}, viewers: {}, combined: {} };
+	const result = { chatters: Object.create(null), viewers: Object.create(null), combined: Object.create(null) };
 
 	// Copy active chatters data (only from opted-in sources)
 	for (const sourceType in hype) {
@@ -14275,7 +14319,7 @@ function sendTickerP2P(data, uid = null) {
 
 var drawListCount = 0;
 var allowNewEntries = true;
-var waitListUsers = {};
+var waitListUsers = Object.create(null);
 var waitlist = [];
 
 function escapeRegex(input = "") {
@@ -14437,7 +14481,7 @@ function processWaitlist(data) {
 				waitlist.push(data);
 			}
 		} else {
-			var site = {};
+			var site = Object.create(null);
 			site[userKey] = Date.now();
 			waitListUsers[data.type] = site;
 			waitlist.push(data);
@@ -14572,7 +14616,7 @@ function initializeWaitlist() {
 		if (!settings.waitlistmode) {
 			// stop and clear
 			waitlist = [];
-			waitListUsers = {};
+			waitListUsers = Object.create(null);
 
 			drawListCount = 0;
 
@@ -14687,7 +14731,7 @@ function selectRandomWaitlist(n = 1) {
 }
 
 function resetWaitlist() {
-	waitListUsers = {};
+	waitListUsers = Object.create(null);
 	waitlist = [];
 	drawListCount = 0;
 	allowNewEntries = true;
@@ -19153,21 +19197,21 @@ async function applyBotActions(data, tab = false) {
 					if (data.chatmessage && data.chatmessage.length <= 3) {
 						// For very short messages, use the history-aware censoring
 						//try {
-						good = await censorMessageWithLLM(data); // # TODO: IMPROVE AND FIX.
+						good = await censorMessageWithLLM(data, tab); // # TODO: IMPROVE AND FIX.
 						//good = await censorMessageWithHistory(data);
 						//} catch(e){
 						//	good = await censorMessageWithLLM(data);
 						//}
 					} else {
 						// For longer messages, use the existing single-message censoring
-						good = await censorMessageWithLLM(data);
+						good = await censorMessageWithLLM(data, tab);
 					}
 
 					if (!good) {
 						return false;
 					}
 				} else {
-					censorMessageWithLLM(data);
+					censorMessageWithLLM(data, tab);
 				}
 			} catch (e) {
 				console.log(e); // ai.js file missing?

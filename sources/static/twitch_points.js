@@ -2,6 +2,9 @@
     var settings = {};
     var checkReady = null;
     var updateAdAnnouncement = null;
+    var adKeepAlive = null;
+    var adKeepAliveRetry = null;
+    var pageActive = true;
     let videoEventListeners = new Map();
     let lastKnownVolume = 1.0; // Store the last known volume of the main video
     
@@ -16,14 +19,120 @@
         if (callbacks.onAdStart) adCallbacks.onAdStart = callbacks.onAdStart;
         if (callbacks.onAdEnd) adCallbacks.onAdEnd = callbacks.onAdEnd;
     }
+
+    function updateAdPlayerSettings() {
+        if (location.origin === 'null') return;
+        window.postMessage({
+            source: 'ssn-twitch-ad-player-settings',
+            enabled: !!settings.twichadmute,
+            volume: lastKnownVolume
+        }, location.origin);
+    }
+    window.addEventListener('message', function (event) {
+        if (event.source === window && event.origin === location.origin && event.data &&
+            event.data.source === 'ssn-twitch-ad-player-ready') updateAdPlayerSettings();
+    });
+
+    function stopAdKeepAlive() {
+        clearTimeout(adKeepAliveRetry);
+        adKeepAliveRetry = null;
+        var connection = adKeepAlive;
+        adKeepAlive = null;
+        if (!connection) return;
+        connection.peers.forEach(function (peer) {
+            peer.onicecandidate = null;
+            peer.onconnectionstatechange = null;
+            peer.ondatachannel = null;
+            peer.close();
+        });
+    }
+
+    function updateAdKeepAlive() {
+        // An open local data channel avoids Chrome's intensive background timer
+        // throttling. It needs no server, microphone, camera, or heartbeat timer.
+        // Only keep the Twitch player awake while automatic ad muting is enabled.
+        if (!pageActive || !settings.twichadmute || !document.querySelector('video')) {
+            stopAdKeepAlive();
+            return;
+        }
+        if (adKeepAlive || adKeepAliveRetry || typeof RTCPeerConnection === 'undefined') return;
+        var connection = { peers: [], candidates: [[], []] };
+        adKeepAlive = connection;
+
+        function failed() {
+            if (adKeepAlive !== connection) return;
+            stopAdKeepAlive();
+            adKeepAliveRetry = setTimeout(function () {
+                adKeepAliveRetry = null;
+                updateAdKeepAlive();
+            }, 30000);
+        }
+
+        async function connect() {
+            var local = new RTCPeerConnection({ iceServers: [] });
+            connection.peers.push(local);
+            var remote = new RTCPeerConnection({ iceServers: [] });
+            connection.peers.push(remote);
+            connection.peers.forEach(function (peer, index) {
+                var other = connection.peers[1 - index];
+                peer.onicecandidate = function (event) {
+                    if (!event.candidate || adKeepAlive !== connection) return;
+                    if (other.remoteDescription) {
+                        other.addIceCandidate(event.candidate).catch(failed);
+                    } else {
+                        connection.candidates[1 - index].push(event.candidate);
+                    }
+                };
+                peer.onconnectionstatechange = function () {
+                    if (peer.connectionState === 'failed' || peer.connectionState === 'closed') failed();
+                };
+            });
+            var channel = local.createDataChannel('ssn-twitch-ad-keepalive');
+            channel.onclose = failed;
+            remote.ondatachannel = function (event) {
+                event.channel.onclose = failed;
+            };
+            var offer = await local.createOffer();
+            if (adKeepAlive !== connection) return;
+            await local.setLocalDescription(offer);
+            if (adKeepAlive !== connection) return;
+            await remote.setRemoteDescription(local.localDescription);
+            if (adKeepAlive !== connection) return;
+            await Promise.all(connection.candidates[1].splice(0).map(function (candidate) {
+                return remote.addIceCandidate(candidate);
+            }));
+            if (adKeepAlive !== connection) return;
+            var answer = await remote.createAnswer();
+            if (adKeepAlive !== connection) return;
+            await remote.setLocalDescription(answer);
+            if (adKeepAlive !== connection) return;
+            await local.setRemoteDescription(remote.localDescription);
+            if (adKeepAlive !== connection) return;
+            await Promise.all(connection.candidates[0].splice(0).map(function (candidate) {
+                return local.addIceCandidate(candidate);
+            }));
+        }
+        connect().catch(failed);
+    }
+
+    window.addEventListener('pagehide', function () {
+        pageActive = false;
+        stopAdKeepAlive();
+    });
+    window.addEventListener('pageshow', function () {
+        pageActive = true;
+        updateAdKeepAlive();
+    });
     
-    if (chrome && chrome.runtime) {
+    if (typeof chrome !== 'undefined' && chrome.runtime) {
         chrome.runtime.onMessage.addListener(
             function (request, sender, sendResponse) {
                 try {
                     if (typeof request === "object") {
                         if ("settings" in request) {
                             settings = request.settings;
+                            updateAdPlayerSettings();
+                            updateAdKeepAlive();
                             if (updateAdAnnouncement) updateAdAnnouncement();
                             sendResponse(true);
                             if (settings.collecttwitchpoints) {
@@ -45,6 +154,8 @@
         chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response) {
             if (response && "settings" in response) {
                 settings = response.settings;
+                updateAdPlayerSettings();
+                updateAdKeepAlive();
                 if (updateAdAnnouncement) updateAdAnnouncement();
                 if (settings.collecttwitchpoints) {
                     startCheck();
@@ -71,11 +182,16 @@
                 adCallbacks.onAdEnd();
             }
         };
-        var adObserver = new MutationObserver(updateAdAnnouncement);
+        var adObserver = new MutationObserver(function () {
+            updateAdAnnouncement();
+            updateAdKeepAlive();
+        });
         adObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-a-target'] });
         updateAdAnnouncement();
+        updateAdKeepAlive();
 
         document.body.addEventListener("play", (event) => {
+            updateAdKeepAlive();
             addVideoEventListeners();
         }, true);
         
@@ -103,6 +219,7 @@
                             // Store the volume only when it's manually changed (not during ad playback)
                             if (!adVideo) {
                                 lastKnownVolume = mainVideo.volume;
+                                updateAdPlayerSettings();
                             }
                         }
                         

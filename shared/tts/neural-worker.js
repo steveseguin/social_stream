@@ -154,6 +154,13 @@ async function synthesize(text, options, progress) {
         try { output = await session.run(feeds); }
         catch (error) { error.neuralInferenceFailure = true; throw error; }
         const samples = output[session.outputNames[0]].data;
+        // A GPU can finish inference successfully but return NaNs (notably FP16).
+        // Treat unusable output like a shader failure so the same section retries.
+        if (!samples.length || samples.some(value => !Number.isFinite(value))) {
+            const error = new Error('Speech model returned invalid audio.');
+            error.neuralInferenceFailure = true;
+            throw error;
+        }
         return Float32Array.from(options.engine === 'kitten' ? samples.slice(0, Math.max(1, samples.length - 5000)) : samples);
     } finally {
         Object.values(feeds).forEach(tensor => tensor.dispose());
@@ -178,12 +185,12 @@ self.onmessage = async function(event) {
                 try { samples = await synthesize(parts[i], options, progress); break; }
                 catch (error) {
                     if (!error.neuralInferenceFailure || options.engine !== 'kokoro' || device !== 'webgpu') throw error;
-                    if (dtype === 'fp16' && options.dtype === 'auto') {
+                    if (dtype === 'fp16') {
                         progress({ message: 'Trying full precision on the GPU…' });
                         await initialize(options, progress, { device: 'webgpu', dtype: 'fp32' });
                     } else if (options.device === 'auto') {
                         progress({ message: 'GPU unavailable; loading the CPU voice…' });
-                        await initialize(options, progress, { device: 'wasm', dtype: options.dtype === 'auto' ? 'q8' : options.dtype });
+                        await initialize(options, progress, { device: 'wasm', dtype: ['auto', 'fp16'].includes(options.dtype) ? 'q8' : options.dtype });
                     } else { throw error; }
                 }
             }

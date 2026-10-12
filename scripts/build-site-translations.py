@@ -114,7 +114,7 @@ class Document(HTMLParser):
 
 
 def translatable_attribute(tag, attrs, name):
-    return name in TEXT_ATTRIBUTES or (tag == "meta" and name == "content" and
+    return name in TEXT_ATTRIBUTES or (tag == "td" and name == "data-label") or (tag == "meta" and name == "content" and
            (attrs.get("name") or attrs.get("property")) in TEXT_METADATA)
 
 
@@ -194,7 +194,7 @@ def validate_runtime_sources(root, pages, english_fallback=False):
 def runtime_source_hash(root, source):
     text = (root / source).read_text(encoding="utf-8")
     if source.endswith(".html") and source != "popup.html":
-        text = '\n'.join(re.findall(r'<script\b[^>]*>([\s\S]*?)</script\s*>', clean_source(text), re.I))
+        text = '\n'.join(re.findall(r'<script\b[^>]*>([\s\S]*?)</script(?:\s[^>]*|/[^>]*)?>', clean_source(text), re.I))
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 

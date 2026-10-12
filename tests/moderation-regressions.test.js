@@ -27,6 +27,11 @@ const censorFlowSnippet = extractBetween(
     'let censorProcessingSlots = [false, false, false];',
     'async function censorMessageWithHistory(data) {'
 );
+const localCensorSetupSnippet = extractBetween(
+    aiSource,
+    'let localCensor = null;',
+    'function getCensorMessageKey(data) {'
+);
 
 const context = {
     Date,
@@ -190,7 +195,8 @@ async function runModerationFlowAssertions() {
 
     vm.createContext(flowContext);
     vm.runInContext(
-        `${censorFlowSnippet}
+        `${localCensorSetupSnippet}
+${censorFlowSnippet}
 this.__censorMessageWithLLM = censorMessageWithLLM;
 this.__setCensorProcessingSlots = (value) => { censorProcessingSlots = value; };`,
         flowContext

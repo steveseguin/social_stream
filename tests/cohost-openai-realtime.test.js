@@ -7,6 +7,7 @@ const cohost = fs.readFileSync(path.join(root, "cohost.html"), "utf8");
 const background = fs.readFileSync(path.join(root, "background.js"), "utf8");
 const popup = fs.readFileSync(path.join(root, "popup.js"), "utf8");
 const guide = fs.readFileSync(path.join(root, "docs", "ai-modes-guide.html"), "utf8");
+const cohostGuide = fs.readFileSync(path.join(root, "docs", "ai-cohost-guide.html"), "utf8");
 
 function extractFunction(source, name) {
     const start = source.indexOf(`function ${name}(`);
@@ -140,7 +141,9 @@ assert.strictEqual(
 assert(cohost.includes('sessionStorage.setItem("cohostAccessCapability", cohostBridgeCapability)'), "The hosted co-host should retain the fragment capability only for its tab session");
 assert(cohost.includes("history.replaceState"), "The hosted co-host should scrub the capability from the address bar");
 assert(background.includes('request.cmd === "createOpenAIRealtimeClientSecret"'), "Extension/Desktop pages should be able to request a client secret directly");
-assert(guide.includes("Microphone and AI voice audio then travel over WebRTC"), "The AI guide should explain native OpenAI voice transport");
-assert(guide.includes("standard key stays in the SSN extension/Desktop background"), "The AI guide should explain secure Realtime key handling");
+assert(guide.includes('href="ai-cohost-guide.html'), "The AI overview should link to the detailed co-host guide");
+assert(cohostGuide.includes("Listening (OpenAI WebRTC)"), "The co-host guide should identify the Realtime listening mode");
+assert(cohostGuide.includes("Your standard key stays in Social Stream."), "The co-host guide should explain where the standard key stays");
+assert(cohostGuide.includes("The co-host page only gets a short-lived pass."), "The co-host guide should explain temporary page access");
 
 console.log("OpenAI Realtime co-host contract passed.");

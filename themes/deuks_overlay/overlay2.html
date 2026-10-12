@@ -428,7 +428,7 @@ img.ssn-content-image {
 			messageContainer.classList.add('message-container');
 
 			// Generate unique ID and track timestamp for aging
-			const messageId = data.mid || 'msg-' + Date.now();
+			const messageId = String(data.mid || 'msg-' + Date.now());
 			messageContainer.id = messageId;
 			messageTimestamps.set(messageId, Date.now());
 

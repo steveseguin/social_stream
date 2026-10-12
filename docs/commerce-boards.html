@@ -20,12 +20,184 @@
     <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
     <meta name="twitter:image:alt" content="Social Stream Ninja logo"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Spot boards & recent sales | Social Stream Ninja</title><meta name="description" content="Set up spot boards, team breaks and recent-sales overlays in Social Stream Ninja. Learn the operator controls and how to show commerce boards in OBS.">
-<link rel="icon" href="../icons/favicon.ico"><link rel="stylesheet" href="css/commerce-guide.css"><link rel="stylesheet" href="css/site-shell.css"><script src="js/site-shell.js"></script>
-</head><body class="site-page site-editorial site-commerce"><a class="skip" href="#main">Skip to content</a><header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header><main id="main" class="commerce-guide"><section class="commerce-intro"><p class="eyebrow"><a href="monetization.html">Commerce</a> / spot boards &amp; recent sales</p><h1>Spot boards &amp; recent sales</h1><p>Track available spots and keep recent purchases on screen. Controlled from SSN, displayed in OBS.</p><nav class="commerce-jumps" aria-label="On this page"><a href="#spots">Reveal spots ↓</a><a href="#teams">Team boards ↓</a><a href="#sales">Recent sales ↓</a><a href="#live-selling">Whatnot / eBay Live ↓</a></nav></section>
-<section id="spots" class="commerce-section"><div class="commerce-heading"><div><p class="eyebrow">Spot board</p><h2>Numbered spots</h2></div><a href="../commerce-board.html?demo">Open sample preview ↗</a></div><figure class="guide-shot"><a href="images/monetization/spot-board.png"><img src="images/monetization/spot-board.png" alt="A 20-column, six-row board with numbered available, claimed and revealed tiles" loading="lazy"></a><figcaption>Actual SSN overlay · sample spot states · Select image to enlarge.</figcaption></figure><ol class="commerce-steps"><li><strong>Create the board</strong><span>In <b>Monetization → Spot boards &amp; recent sales</b>, choose numbered tiles. Use 120 spots and 20 columns for a 20 × 6 grid.</span></li><li><strong>Mark a claim</strong><span>Select a tile, then <b>Record sale for this spot</b> after checking payment. Use <b>Mark claimed only</b> for a reservation without a sales entry.</span></li><li><strong>Reveal the item</strong><span>Enter its assigned item and select <b>Reveal</b>. Use <b>Make available</b> to correct a spot, or <b>Refund &amp; reopen</b> to remove its linked sale too.</span></li></ol><p class="commerce-note">SSN displays your assignments. It does not sell spots or randomly allocate prizes.</p></section>
-<section id="teams" class="commerce-section commerce-split"><div><p class="eyebrow">Named spots</p><h2>Team breaks</h2><p>A team break divides the opened cards by team, player or another named spot.</p><ol><li>Choose <b>Team tiles</b>.</li><li>Paste your team names, one per line. That list sets the number of spots.</li><li>Mark each purchased spot claimed. Reveal it when ready.</li></ol><a href="../commerce-board.html?demo&amp;style=teams">Open team preview ↗</a><p>Claims are host-controlled. SSN does not infer a team purchase from a chat message or an auction ending.</p></div><figure class="guide-shot"><a href="images/monetization/team-board.png"><img src="images/monetization/team-board.png" alt="Team-break overlay showing thirty teams and how many remain available" loading="lazy"></a><figcaption>Actual SSN overlay · sample team assignments · Select image to enlarge.</figcaption></figure></section>
-<section id="live-selling" class="commerce-section"><h2>During a Whatnot or eBay Live show</h2><ol class="commerce-steps"><li><strong>Capture your show</strong><span>Open your show in SSN and enable <b>Capture Stream Events</b>. Whatnot needs the show view with its auction footer visible. eBay Live supports the chat or stream page.</span></li><li><strong>Check the sale</strong><span>Under <b>Recent sales</b>, choose Whatnot or eBay Live in <b>Auction item helper</b> and save. <b>Use auction item</b> copies the last captured name. Verify the item and payment on the selling platform, then enter the sale total and currency.</span></li><li><strong>Confirm, then reveal</strong><span>For a spot, select its tile and choose <b>Record sale for this spot</b> first. <b>Confirm sale &amp; claim spot</b> records both together. Add reveal text when ready to show the assigned item.</span></li></ol><figure class="guide-shot"><a href="images/monetization/live-sale-controls.png"><img src="images/monetization/live-sale-controls.png" alt="Seller confirms a captured eBay Live item and claims its linked spot" loading="lazy"></a><figcaption>Seller controls · fictional auction and sale · Select image to enlarge.</figcaption></figure><p class="commerce-note">The helper is an operator draft. It never turns a bid or an auction ending into a sale. New auction updates leave your draft alone. Enable <b>Show recent sales</b> to select the audience display; use a separate OBS source for the board and sales if you want both.</p><p>For a refund, use <b>Refund &amp; reopen</b> on a linked sale to remove it and release the spot. <b>Remove</b> only removes the sales entry. A replacement board is kept separate from the old board’s sales.</p><details><summary>Live capture versus a store connection</summary><p>Whatnot and eBay Live capture provides item, bid and auction status. The separate <b>eBay seller connection</b> receives paid-order events for selected listings; it can populate recent sales automatically. Avoid manually confirming the same purchase that your store connection already records. Other automatic sources are Shopify, Fourthwall, Ko-fi and Buy Me a Coffee.</p><p>The helper keeps only the last captured item from the selected platform, expires after five minutes without an update, and clears on restart. Verify the item if you have multiple shows open. A blank helper needs a new auction update after enabling it.</p><p><a href="https://www.ebay.com/help/selling/ebay-live/livestream-selling-ebay-live?id=5762">eBay: check payment status in the seller console</a> · <a href="https://help.whatnot.com/hc/en-us/articles/37362462405261-Fix-a-payment-issue-or-declined-payment">Whatnot: failed auction payments</a></p></details></section>
-<section id="sales" class="commerce-section"><p class="eyebrow">Sales history</p><h2>Recent purchases</h2><p>Keep actual purchases visible after an alert disappears. Choose a compact list, a six-card wall or a strip beside the action.</p><figure class="guide-shot"><a href="images/monetization/sales-wall.png"><img src="images/monetization/sales-wall.png" alt="Six recent-sale cards, each with a fictional item and manually entered price" loading="lazy"></a><figcaption>Actual SSN wall view · fictional sales · Select image to enlarge.</figcaption></figure><div class="commerce-jumps"><a href="../commerce-board.html?demo&amp;view=sales">List preview ↗</a><a href="../commerce-board.html?demo&amp;view=wall">Wall preview ↗</a><a href="../commerce-board.html?demo&amp;view=ticker">Strip preview ↗</a></div><div class="commerce-provider-grid"><article><h3>Collect from a store</h3><p>Turn on <b>Show recent sales</b> and <b>Collect connected store purchases</b>, then save the sales options.</p><p>Uses new Shopify, eBay seller, Fourthwall, Ko-fi and Buy Me a Coffee <b>purchase</b> events received by SSN.</p></article><article><h3>Confirm a sale yourself</h3><p>Enter the item, optional sale total and currency. Select <b>Confirm sale</b>.</p><p>Useful for Whatnot, eBay Live or in-person sales after you check the purchase. These rows say <b>Host confirmed</b>.</p></article><article><h3>Corrections and refunds</h3><p>Remove mistakes or refunded sales. Clear the wall for a fresh show.</p><p>Bids, tips, gifts and sandbox tests do not populate it. Board claims do not create sales.</p></article></div><details><summary>Prices, history and privacy</summary><p>Connected purchase feeds do not consistently provide item prices, so automatic rows leave them blank. To show a known price, remove that row and confirm it manually. For multiple items, enter the total for that entry, not a per-item price. No listing price, highest bid or donation amount is substituted.</p><p>SSN keeps the latest 100 entries on this installation, including through restart. Collection starts when enabled; this is not a full order-history import. Repeated delivery IDs are ignored within the saved 2,000-ID window. Refunds need manual removal.</p><p>Buyer names, addresses, payment details and unrevealed item text are not included in this display. Demo links use clearly marked fictional data.</p></details></section>
-<section id="obs" class="commerce-section"><h2>OBS setup</h2><ol class="commerce-steps"><li><strong>Choose a display</strong><span>Select Spot / team board, Recent sales list, wall or strip in the board controls.</span></li><li><strong>Copy OBS link</strong><span>Add a Browser Source at 1920 × 1080. Transparent space lets your camera show through.</span></li><li><strong>Control it in SSN</strong><span>Keep SSN on. Changes save immediately. The <a href="obs-control-dock-guide.html#commerce">OBS product control dock</a> has the same controls if you prefer.</span></li></ol><figure class="guide-shot"><a href="images/monetization/board-controls.png"><img src="images/monetization/board-controls.png" alt="SSN popup with spot-board setup and tile controls" loading="lazy"></a><figcaption>Operator controls · keep this panel off the audience feed · Select image to enlarge.</figcaption></figure><details><summary>Optional URL settings</summary><p><code>&amp;view=board</code>, <code>sales</code>, <code>wall</code> or <code>ticker</code> chooses the layout. <code>&amp;limit=6</code> shows up to six recent entries (maximum 24). <code>&amp;prices=0</code> hides prices. <code>&amp;label=Recently%20sold</code> sets the sales heading. <code>&amp;onlytype=shopify,ebay</code> filters sales sources.</p><p>Keep the session, password and relay settings in the copied link. A missing connection or empty display stays transparent; setup messages never appear on the viewer overlay.</p></details></section>
-<section id="formats" class="commerce-section"><h2>What are those grids on live shows?</h2><div class="commerce-provider-grid"><article><h3>Team spots</h3><p>Buyers purchase a share of a card break, such as a team’s cards. The board tracks who has claimed each spot.</p><a href="https://help.whatnot.com/hc/en-us/articles/26596362677389-Breaks-feature-for-sellers">Whatnot’s breaks guide ↗</a><br><a href="https://pages.ebay.com/breaks/">eBay’s breaks guide ↗</a></article><article><h3>Numbered reveals</h3><p>A numbered or ball-themed grid can track assigned items. Without seeing a specific show, its exact rules are unclear. Whatnot’s Surprise Sets allocate products after a spot sells.</p><a href="https://help.whatnot.com/hc/en-us/articles/34545407302797-Surprise-Set-Feature-for-Sellers">Whatnot’s Surprise Sets guide ↗</a></article></div><p class="commerce-note">Use your platform’s approved selling and assignment tools. An SSN board is a presentation layer; it does not replace the platform’s rules or checkout.</p></section>
-<section id="automation" class="commerce-section"><details><summary>API &amp; Event Flow integration</summary><p>These controls extend the existing <code>commerceControl</code> API. SSN, Stream Deck custom API actions and the optional OBS dock read the same <code>getCommerceState</code> response.</p><pre><code>{"action":"commerceControl","value":{"command":"boardSpot","data":{"id":"12","status":"claimed"}}}</code></pre><p>Commands: <code>boardSave</code> (title, style, columns, count or newline-separated labels), <code>boardSpot</code> (id, status, result), <code>boardVisibility</code> (visible), <code>saleAdd</code> (title, optional amount/currency/quantity/platform; optional boardId and spotId to claim a spot), <code>saleRemove</code> (id, optional reopenSpot), <code>salesClear</code>, and <code>salesSettings</code> (visible, automatic, optional auctionSource: whatnot, ebay, or an empty string). Put those fields in <code>data</code>. These edits do not emit purchase events or trigger paid rewards.</p><p>In <a href="../actions/event-flow-guide.html">Event Flow</a>, use the existing <b>Products &amp; Support</b> action. Choose a board or sales command and enter its fields in <b>Board / sales fields</b>. String values accept variables such as <code>{subtitle}</code>. Match a confirmed purchase event for sale actions. Turn off automatic collection if your flow adds the same sale manually.</p></details></section></main></body></html>
+<script>
+(function() {
+    var savedTheme = localStorage.getItem("darkMode");
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+})();
+</script>
+<link rel="icon" href="../icons/favicon.ico"><link rel="stylesheet" href="css/styles.css"><link rel="stylesheet" href="css/guides.css">
+<style>
+.skip { position:absolute; left:16px; top:-100px; z-index:2100; padding:10px; background:var(--background-card); color:var(--text-primary); }
+.skip:focus { top:12px; }
+.tall-shot img { width:auto; max-width:100%; max-height:52rem; margin:0 auto; }
+</style>
+<link rel="stylesheet" href="css/site-shell.css"><script src="js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
+</head><body class="visual-guide">
+<a class="skip" href="#main">Skip to content</a><header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+<section class="page-hero"><div class="container"><h1>Spot boards &amp; recent sales</h1><p>Show which spots are taken and keep recent sales on screen. You control it in SSN; viewers see it in OBS.</p></div></section>
+<main id="main">
+<section class="guide-section">
+<div class="container">
+<nav class="guide-jump-links" aria-label="On this page">
+<a href="#spots">Spot board</a>
+<a href="#teams">Team breaks</a>
+<a href="#live-selling">Whatnot / eBay Live</a>
+<a href="#sales">Recent sales</a>
+<a href="#obs">Show it in OBS</a>
+<a href="#formats">What are these grids?</a>
+<a href="#automation">API</a>
+</nav>
+
+<div class="guide-card" id="spots">
+<h2 id="setup">Set up a spot board in 5 steps</h2>
+<div class="guide-step-layout">
+<ol class="guide-steps">
+<li>In SSN, open <strong>Monetization &rarr; Spot boards &amp; recent sales</strong>.</li>
+<li>Pick <strong>Numbered tiles</strong>. For a 20 &times; 6 grid, use 120 spots and 20 columns. Click <strong>Create board</strong>.</li>
+<li>Click <strong>Copy OBS link</strong> and add it to OBS as a <strong>Browser Source</strong> at 1920 &times; 1080.</li>
+<li>When a spot sells, click its tile. Check the payment, then click <strong>Record sale for this spot</strong> and confirm the sale.</li>
+<li>To show what they got, type it in <strong>Reveal text</strong> and click <strong>Reveal</strong>.</li>
+</ol>
+<figure class="guide-figure"><a href="images/monetization/spot-board.png"><img src="images/monetization/spot-board.png" alt="A 20-column, six-row board with numbered available, claimed and revealed tiles" class="guide-image" loading="lazy"></a><figcaption>Sample spot board. <a href="../commerce-board.html?demo">Open the live preview</a>.</figcaption></figure>
+</div>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>I want to&hellip;</th><th>Click this</th></tr></thead>
+<tbody>
+<tr><td data-label="I want to">Hold a spot without logging a sale</td><td data-label="Click this"><strong>Mark claimed only</strong></td></tr>
+<tr><td data-label="I want to">Fix a spot I marked by mistake</td><td data-label="Click this"><strong>Make available</strong></td></tr>
+<tr><td data-label="I want to">Refund a spot and free it up</td><td data-label="Click this"><strong>Refund &amp; reopen</strong> (also removes its sale)</td></tr>
+</tbody>
+</table>
+<div class="guide-note">SSN only shows what you assign. It doesn't sell spots or hand out prizes at random.</div>
+</div>
+
+<div class="guide-card" id="teams">
+<h2>Team breaks</h2>
+<p>A team break splits the opened cards by team, player, or another named spot.</p>
+<div class="guide-step-layout">
+<ol class="guide-steps">
+<li>Pick <strong>Team tiles</strong>.</li>
+<li>Paste your team names, one per line. The list sets how many spots there are.</li>
+<li>Mark each bought spot as claimed. Reveal it when you're ready.</li>
+</ol>
+<figure class="guide-figure"><a href="images/monetization/team-board.png"><img src="images/monetization/team-board.png" alt="Team-break overlay showing thirty teams and how many remain available" class="guide-image" loading="lazy"></a><figcaption>Sample team board. <a href="../commerce-board.html?demo&amp;style=teams">Open the live preview</a>.</figcaption></figure>
+</div>
+<div class="guide-note">You mark every claim yourself. SSN doesn't guess a team purchase from chat or from an auction ending.</div>
+</div>
+
+<div class="guide-card" id="live-selling">
+<h2>During a Whatnot or eBay Live show</h2>
+<div class="guide-step-layout">
+<ol class="guide-steps">
+<li>Open your show in SSN and turn on <strong>Capture Stream Events</strong>. Whatnot needs the show page with its auction footer showing. eBay Live works from the chat or stream page.</li>
+<li>Under <strong>Recent sales</strong>, set <strong>Auction item helper</strong> to Whatnot or eBay Live. Click <strong>Save sales options</strong>.</li>
+<li>When an item sells, click <strong>Use auction item</strong> to copy its name.</li>
+<li>Check the item and payment on the selling site. Then enter the sale total and currency.</li>
+<li>For a spot, click its tile, then <strong>Record sale for this spot</strong>. The confirm button becomes <strong>Confirm sale &amp; claim spot</strong>, which records both at once.</li>
+<li>Add reveal text when you're ready to show the item.</li>
+</ol>
+<figure class="guide-figure"><a href="images/monetization/live-sale-controls.png"><img src="images/monetization/live-sale-controls.png" alt="Seller confirms a captured eBay Live item and claims its linked spot" class="guide-image" loading="lazy"></a><figcaption>Seller controls with a made-up sale.</figcaption></figure>
+</div>
+<div class="warning-note"><strong>Nothing is logged until you confirm it.</strong> The helper only fills in a draft. A bid or an auction ending never becomes a sale by itself, and new auction updates won't overwrite your draft.</div>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>I want to&hellip;</th><th>Do this</th></tr></thead>
+<tbody>
+<tr><td data-label="I want to">Show sales on screen</td><td data-label="Do this">Turn on <strong>Show recent sales</strong>. Use a second OBS source if you want the board and sales at the same time.</td></tr>
+<tr><td data-label="I want to">Refund a sale and free its spot</td><td data-label="Do this"><strong>Refund &amp; reopen</strong> on that sale.</td></tr>
+<tr><td data-label="I want to">Remove only the sales entry</td><td data-label="Do this"><strong>Remove</strong></td></tr>
+</tbody>
+</table>
+<p>A new board starts fresh. Sales from the old board stay with the old board.</p>
+<details class="guide-extra"><summary>Live capture vs. a store connection</summary>
+<p>Whatnot and eBay Live capture gives you the item, bids, and auction status. The separate <strong>eBay seller connection</strong> gets paid orders for chosen listings and can fill recent sales on its own. Don't also confirm those sales by hand, or they'll show twice. Other automatic sources are Shopify, Fourthwall, Ko-fi, and Buy Me a Coffee.</p>
+<p>The helper keeps only the last item from the chosen site. It clears after five minutes with no update, and when SSN restarts. Double-check the item if you have several shows open. If the helper is blank, wait for a new auction update after turning it on.</p>
+<p><a href="https://www.ebay.com/help/selling/ebay-live/livestream-selling-ebay-live?id=5762">eBay: check payment status in the seller console</a> &middot; <a href="https://help.whatnot.com/hc/en-us/articles/37362462405261-Fix-a-payment-issue-or-declined-payment">Whatnot: failed auction payments</a></p>
+</details>
+</div>
+
+<div class="guide-card" id="sales">
+<h2>Show recent sales</h2>
+<p>Keep real purchases on screen after the alert is gone. Pick a short list, a six-card wall, or a strip.</p>
+<figure class="guide-figure"><a href="images/monetization/sales-wall.png"><img src="images/monetization/sales-wall.png" alt="Six recent-sale cards, each with a fictional item and manually entered price" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>The wall view with made-up sales. Previews: <a href="../commerce-board.html?demo&amp;view=sales">list</a> &middot; <a href="../commerce-board.html?demo&amp;view=wall">wall</a> &middot; <a href="../commerce-board.html?demo&amp;view=ticker">strip</a></figcaption></figure>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>Where sales come from</th><th>How to set it up</th></tr></thead>
+<tbody>
+<tr><td data-label="Where sales come from">Your online store</td><td data-label="How to set it up">Turn on <strong>Show recent sales</strong> and <strong>Collect connected store purchases</strong>, then click <strong>Save sales options</strong>. Works with new purchases from Shopify, eBay seller, Fourthwall, Ko-fi, and Buy Me a Coffee.</td></tr>
+<tr><td data-label="Where sales come from">Sales you confirm yourself</td><td data-label="How to set it up">Enter the item, plus the total and currency if you like. Click <strong>Confirm sale</strong>. Good for Whatnot, eBay Live, or in-person sales once you've checked payment. These show as <strong>Host confirmed</strong>.</td></tr>
+</tbody>
+</table>
+<p>To fix mistakes or refunds, click <strong>Remove</strong> on that sale. Click <strong>Clear sales</strong> to start fresh for a new show.</p>
+<div class="guide-note"><strong>What doesn't show up:</strong> bids, tips, gifts, and sandbox tests. Claiming a board spot doesn't add a sale either.</div>
+<details class="guide-extra"><summary>Prices, history, and privacy</summary>
+<p>Store feeds don't always include prices, so automatic rows leave the price blank. To show a price, remove that row and confirm it yourself. For several items, enter the total for the entry, not the price of each. SSN never fills in a listing price, top bid, or donation amount instead.</p>
+<p>SSN keeps the latest 100 sales on this computer, even after a restart. It only collects from when you turn it on. It doesn't import old orders. Repeat deliveries are ignored (it remembers the last 2,000 IDs). Refunds must be removed by hand.</p>
+<p>Buyer names, addresses, payment details, and unrevealed items are never shown. Demo links use clearly marked made-up data.</p>
+</details>
+</div>
+
+<div class="guide-card" id="obs">
+<h2>Show it in OBS</h2>
+<div class="guide-step-layout">
+<ol class="guide-steps">
+<li>In the board controls, pick a display: <strong>Spot / team board</strong>, or recent sales as a list, wall, or strip.</li>
+<li>Click <strong>Copy OBS link</strong>. Add it as a Browser Source at 1920 &times; 1080. Empty space is see-through, so your camera shows behind it.</li>
+<li>Keep SSN running. Your changes show up right away.</li>
+</ol>
+<figure class="guide-figure tall-shot"><a href="images/monetization/board-controls.png"><img src="images/monetization/board-controls.png" alt="SSN popup with spot-board setup and tile controls" class="guide-image" loading="lazy"></a><figcaption>The board controls. Keep this panel off your stream.</figcaption></figure>
+</div>
+<p>Prefer controlling it from OBS? The <a href="obs-control-dock-guide.html#commerce">OBS product control dock</a> has the same buttons.</p>
+<details class="guide-extra"><summary>Optional link settings</summary>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>Add to the link</th><th>What it does</th></tr></thead>
+<tbody>
+<tr><td data-label="Add to the link"><code>&amp;view=board</code>, <code>sales</code>, <code>wall</code>, or <code>ticker</code></td><td data-label="What it does">Picks the layout.</td></tr>
+<tr><td data-label="Add to the link"><code>&amp;limit=6</code></td><td data-label="What it does">Shows up to six recent sales (24 max).</td></tr>
+<tr><td data-label="Add to the link"><code>&amp;prices=0</code></td><td data-label="What it does">Hides prices.</td></tr>
+<tr><td data-label="Add to the link"><code>&amp;label=Recently%20sold</code></td><td data-label="What it does">Sets the sales heading.</td></tr>
+<tr><td data-label="Add to the link"><code>&amp;onlytype=shopify,ebay</code></td><td data-label="What it does">Only shows sales from those sources.</td></tr>
+</tbody>
+</table>
+<p>Keep the session, password, and server settings from the copied link. If the connection is missing or there's nothing to show, the overlay stays see-through. Setup messages never appear to viewers.</p>
+</details>
+</div>
+
+<div class="guide-card" id="formats">
+<h2>What are those grids on live shows?</h2>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>Format</th><th>What it is</th></tr></thead>
+<tbody>
+<tr><td data-label="Format">Team spots</td><td data-label="What it is">Buyers pay for a share of a card break, like one team's cards. The board tracks who claimed each spot. See <a href="https://help.whatnot.com/hc/en-us/articles/26596362677389-Breaks-feature-for-sellers">Whatnot's breaks guide</a> and <a href="https://pages.ebay.com/breaks/">eBay's breaks guide</a>.</td></tr>
+<tr><td data-label="Format">Numbered reveals</td><td data-label="What it is">A numbered or ball-style grid can track assigned items. Exact rules vary by show. Whatnot's Surprise Sets assign products after a spot sells. See <a href="https://help.whatnot.com/hc/en-us/articles/34545407302797-Surprise-Set-Feature-for-Sellers">Whatnot's Surprise Sets guide</a>.</td></tr>
+</tbody>
+</table>
+<div class="guide-note">Use your platform's own selling and assignment tools. The SSN board is just for display. It doesn't replace the platform's rules or checkout.</div>
+</div>
+
+<div class="guide-card" id="automation">
+<h2>API &amp; Event Flow</h2>
+<p>Most people can skip this. It's for Stream Deck buttons, scripts, and automations.</p>
+<details class="guide-extra"><summary>API commands and Event Flow</summary>
+<p>These controls extend the existing <code>commerceControl</code> API. SSN, Stream Deck custom API actions, and the optional OBS dock all read the same <code>getCommerceState</code> response.</p>
+<pre><code>{"action":"commerceControl","value":{"command":"boardSpot","data":{"id":"12","status":"claimed"}}}</code></pre>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>Command</th><th>Fields in <code>data</code></th></tr></thead>
+<tbody>
+<tr><td data-label="Command"><code>boardSave</code></td><td data-label="Fields">title, style, columns, count or newline-separated labels</td></tr>
+<tr><td data-label="Command"><code>boardSpot</code></td><td data-label="Fields">id, status, result</td></tr>
+<tr><td data-label="Command"><code>boardVisibility</code></td><td data-label="Fields">visible</td></tr>
+<tr><td data-label="Command"><code>saleAdd</code></td><td data-label="Fields">title; optional amount, currency, quantity, platform; optional boardId and spotId to claim a spot</td></tr>
+<tr><td data-label="Command"><code>saleRemove</code></td><td data-label="Fields">id; optional reopenSpot</td></tr>
+<tr><td data-label="Command"><code>salesClear</code></td><td data-label="Fields">none</td></tr>
+<tr><td data-label="Command"><code>salesSettings</code></td><td data-label="Fields">visible, automatic; optional auctionSource: <code>whatnot</code>, <code>ebay</code>, or an empty string</td></tr>
+</tbody>
+</table>
+<p>These edits don't send purchase events or trigger paid rewards.</p>
+<p>In <a href="../actions/event-flow-guide.html">Event Flow</a>, use the <strong>Products &amp; Support</strong> action. Pick a board or sales command and fill in <strong>Board / sales fields</strong>. Text values accept variables like <code>{subtitle}</code>. For sale actions, match a confirmed purchase event. If your flow adds sales by hand, turn off automatic collection so they don't show twice.</p>
+</details>
+</div>
+</div>
+</section>
+</main></body></html>

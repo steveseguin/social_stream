@@ -398,7 +398,7 @@
 						<tr>
 							<td><code>data.chatname</code></td>
 							<td>string</td>
-							<td>Source-provided display name used by message processing and non-overlay outputs. A configured user display-name alias may replace this value only in copied dock and overlay transport payloads.</td>
+							<td>Source-provided display name used by message processing and non-overlay outputs. A configured user display-name alias may replace this value only in copied dock and overlay transport payloads. The opt-in <strong>Show display name (username)</strong> setting appends the username when a source supplies both names and they differ, ignoring capitalization, for example <code>알렌 (allenhklee)</code>. These copies retain the source name in <code>meta.sourceDisplayName</code> for moderation matching. Custom aliases take priority; <code>username</code> remains the account login.</td>
 						</tr>
 						<tr>
 							<td><code>data.username</code></td>
@@ -1470,7 +1470,7 @@
                     <ul class="requirements">
                         <li>Connects to <code>wss://chat.vpzone.tv/ws?channel=USERNAME</code>; OAuth requests <code>profile:read</code>, <code>chat:read</code>, <code>chat:write</code>, <code>channel:read</code>, <code>channel:write</code>, and <code>chat:moderate</code>. A bearer token can also be supplied manually.</li>
                         <li>Flat VPZone frames such as <code>type: "msg"</code> are normalized into standard chat payloads.</li>
-                        <li>Platform-side <code>delete_message</code> / <code>clear_chat</code> frames remove the matching rows from the dock; optional toggles sync dock deletes and blocks back to VPZone (channel owner only).</li>
+                        <li>Platform-side <code>delete_message</code> / <code>clear_chat</code> frames remove the matching rows from the dock. Deletions carry <code>meta.streamUsername</code> to select the channel and <code>meta.messageId</code> when targeting a native message ID. Optional toggles sync dock deletes and blocks back to VPZone (channel owner only).</li>
                         <li>Channel owners get a page-local Stream Info panel to update the live stream's title and category (same pattern as the Twitch source page).</li>
                     </ul>
                     <div class="table-scroll" role="region" tabindex="0" aria-label="VPZone - WebSocket table">

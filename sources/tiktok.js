@@ -1,5 +1,7 @@
 // new code
 (function() {
+	if (window.__ssnTikTokCaptureLoaded) return;
+	window.__ssnTikTokCaptureLoaded = true;
 	console.log("Social stream injected");
 	const avatarCache = {
 		_cache: {},
@@ -3055,6 +3057,8 @@
 		// Gift counts repeat legitimately in later streaks on recycled DOM slots.
 		// Their bounded streak tracker below handles duplicate renders instead.
 		const nativeMessageId = !ital && !isGiftMessage ? getTikTokMessageId(ele) : "";
+		// TikTok replaces local placeholders with confirmed IDs and badges. Wait for that replacement.
+		if (nativeMessageId.indexOf("self_comment_") === 0) return;
 		if (nativeMessageId && deletedTikTokMessageIds.has(nativeMessageId)) return;
 		if (nativeMessageId && (!chatname || !chatmessage.trim())) return;
 		var data = {};
@@ -3323,6 +3327,7 @@
 	var bigDUPE = false;
 	let observedDomElementForObserver1 = null;
 	let observedDomElementForObserver2 = null;
+	let observedTikTokChatPath = null;
 	var observer = false;
 	var observer2 = false;
 	var counter = 0;
@@ -3971,17 +3976,32 @@
 			}
 		});
 		if (observer && observer instanceof MutationObserver && target && target.isConnected && isExtensionOn) {
+			const initialChatSurface = observedTikTokChatPath !== location.pathname;
 			if (target.children) {
 				Array.from(target.children).forEach(ele => {
 					if (ele && ele.dataset && ele.isConnected) {
-						ele.dataset.skip = ++msgCount;
-						ele.dataset.tiktokInitial = "true";
+						if (initialChatSurface) {
+							ele.dataset.skip = ++msgCount;
+							ele.dataset.tiktokInitial = "true";
+						} else {
+							delete ele.dataset.tiktokInitial;
+						}
 					}
 				});
 			}
 			document.querySelectorAll('[data-e2e="chat-message"]').forEach(ele => {
-				ele.dataset.skip = ++msgCount;
-				ele.dataset.tiktokInitial = "true";
+				const messageId = getTikTokMessageId(ele);
+				if (initialChatSurface) {
+					ele.dataset.skip = ++msgCount;
+					ele.dataset.tiktokInitial = "true";
+					// Remember excluded history so rebuilt rows are not emitted later.
+					if (messageId) messageLog.isDuplicate('history', '', 'chat:' + messageId);
+				} else {
+					delete ele.dataset.tiktokInitial;
+					// A replaced list can already contain new chat. Native IDs let the
+					// existing deduper distinguish it from rows previously delivered.
+					if (messageId && target.contains(ele)) setTimeout(processMessage, 10, ele);
+				}
 			});
 			observer.observe(target, {
 				childList: true,
@@ -3989,6 +4009,7 @@
 				subtree: subtree
 			});
 			observedDomElementForObserver1 = target;
+			observedTikTokChatPath = location.pathname;
 			markTikTokStandardConnected();
 			////console.log("Main observer is now observing.", target);
 		} else {
@@ -4277,7 +4298,16 @@
 					}
 					if (typeof request === "object") {
 						if ("state" in request) {
+							const resumingCapture = !isExtensionOn && request.state;
 							isExtensionOn = request.state;
+							if (resumingCapture) {
+								// Rows received while paused remain excluded history.
+								if (observer) observer.disconnect();
+								observer = false;
+								observedDomElementForObserver1 = null;
+								observedTikTokChatPath = null;
+								start();
+							}
 						}
 						if ("settings" in request) {
 							settings = request.settings;

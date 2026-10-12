@@ -5,6 +5,12 @@
   const DEFAULT_REMOTE_PIPER_BASE = 'https://largefiles.socialstream.ninja/piper';
   const HUGGING_FACE_PIPER_BASE = 'https://huggingface.co/rhasspy/piper-voices/resolve/main';
   const PIPER_VOICE_PATHS = {
+    'en_US-hfc_female-medium': 'en/en_US/hfc_female/medium/en_US-hfc_female-medium.onnx',
+    'en_US-amy-medium': 'en/en_US/amy/medium/en_US-amy-medium.onnx',
+    'en_US-danny-low': 'en/en_US/danny/low/en_US-danny-low.onnx',
+    'en_US-ryan-high': 'en/en_US/ryan/high/en_US-ryan-high.onnx',
+    'en_GB-alan-low': 'en/en_GB/alan/low/en_GB-alan-low.onnx',
+    'en_GB-alba-medium': 'en/en_GB/alba/medium/en_GB-alba-medium.onnx',
     'es_ES-davefx-medium': 'es/es_ES/davefx/medium/es_ES-davefx-medium.onnx',
     'es_MX-ald-medium': 'es/es_MX/ald/medium/es_MX-ald-medium.onnx',
     'pt_BR-edresson-low': 'pt/pt_BR/edresson/low/pt_BR-edresson-low.onnx',
@@ -286,7 +292,21 @@
       return ids;
     }
 
-    async synthesize(text, speed = 1.0) {
+    // One clip keeps sender and message together in the playback/skip queue.
+    async synthesizeWithPause(intro, message, speed = 1.0, cancelled = () => false) {
+      const first = await this.synthesize(intro, speed, true);
+      if (cancelled()) return null;
+      const second = await this.synthesize(message, speed, true);
+      if (cancelled()) return null;
+      const sampleRate = this.voiceConfig.audio?.sample_rate || 22050;
+      const pauseSamples = Math.round(sampleRate * 0.3);
+      const samples = new Float32Array(first.length + pauseSamples + second.length);
+      samples.set(first);
+      samples.set(second, first.length + pauseSamples);
+      return this.createWAV(samples, sampleRate);
+    }
+
+    async synthesize(text, speed = 1.0, returnSamples = false) {
       // Ensure initialization is complete
       if (!this.initialized) {
         console.log('Waiting for Piper TTS initialization...');
@@ -340,6 +360,9 @@
         
         const audioData = results.output.data;
         console.log(`Generated audio: ${audioData.length} samples`);
+
+        // Copy before another inference can reuse the model output buffer.
+        if (returnSamples) return new Float32Array(audioData);
 
         // Convert to WAV format
         const sampleRate = this.voiceConfig.audio?.sample_rate || 22050;

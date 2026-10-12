@@ -765,7 +765,7 @@ body.bigbubbles .message {
         }
         
         // Generate unique ID and track timestamp for aging
-        const messageId = data.mid || 'msg-' + Date.now();
+        const messageId = String(data.mid || 'msg-' + Date.now());
         messageDiv.id = messageId;
         messageTimestamps.set(messageId, Date.now());
         

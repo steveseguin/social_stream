@@ -1179,7 +1179,8 @@ class EventFlowEditor {
     }
 
     openGuide(guideKey) {
-        const target = this.resolveGuideTarget(guideKey);
+        const guideTarget = this.resolveGuideTarget(guideKey);
+        const target = window.SSNDocumentationURL ? window.SSNDocumentationURL(guideTarget) : guideTarget;
         if (!target) return;
         try {
             window.open(target, '_blank');

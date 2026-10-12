@@ -41,22 +41,175 @@
 	<body class="visual-guide">
 		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 		<section class="page-hero">
-			<div class="container"><h1>Connect your store. Show your products.</h1></div>
+			<div class="container">
+				<h1>Connect your store. Show your products.</h1>
+				<p>Alerts from Fourthwall, Ko-fi, and Buy Me a Coffee, plus products with QR codes.</p>
+			</div>
 		</section>
-<main class="guide-section"><div class="container">
-<section class="guide-card"><h2 id="read-section-1">Products and alerts are separate</h2><p>Use <strong>Monetization</strong> in SSN to promote public products and support pages, receive activity, or do both. This guide covers Fourthwall, Ko-fi and Buy Me a Coffee. For NinjaBacker, Throne, Amazon and eBay, see the <a href="monetization.html">monetization guide</a>.</p><p><a href="#connect">Connect alerts</a> &middot; <a href="#fourthwall">Fourthwall</a> &middot; <a href="#kofi">Ko-fi</a> &middot; <a href="#bmac">Buy Me a Coffee</a> &middot; <a href="#import">Import a product</a> &middot; <a href="#obs">OBS and QR codes</a> &middot; <a href="#troubleshooting">Troubleshooting</a></p></section>
-<section class="guide-card" id="connect"><h2 id="read-section-2">Connect activity alerts</h2><ol><li>Open <strong>Monetization &rarr; Fourthwall, Ko-fi &amp; Buy Me a Coffee alerts</strong> and choose your provider.</li><li>Click <strong>Receiver setting</strong>. Enable the existing <strong>remote API control of extension</strong> switch, then keep SSN turned on.</li><li>Return to Monetization and click <strong>Copy webhook URL</strong>. Paste this private address into your provider's webhook settings below.</li><li>Check the receiver status. <strong>Receiver connected</strong> means SSN is listening, not that your provider configuration has been verified. The last-event line updates when a parsed, nonduplicate provider event reaches this running app; it resets on restart.</li><li>Use <strong>Preview sample alert</strong> to check appearance in a separate sample page. This does not send a payment, update totals, run Event Flow, or verify webhook delivery.</li></ol>
-<figure class="guide-figure"><a href="images/monetization/provider-setup.png" target="_blank" rel="noopener"><img class="guide-image" src="images/monetization/provider-setup.png" alt="SSN provider selector, masked webhook URL, receiver setting, setup guide and sample preview controls" loading="lazy" style="max-width:618px;margin-left:auto;margin-right:auto"></a><figcaption>SSApp's provider setup panel. The private URL stays masked. Select any screenshot to view it at full size.</figcaption></figure>
-<p>These three existing session-URL endpoints rely on keeping the URL private; SSN's current setup does not accept their signing secrets. They are suitable for stream alerts, not proof of payment for fulfillment. Do not publish the webhook address or use it as a viewer QR destination.</p></section>
-<section class="guide-card" id="fourthwall"><h2 id="read-section-3">Fourthwall</h2><ol><li>In Fourthwall, open <strong>Settings &rarr; For Developers &rarr; Webhooks</strong>.</li><li>Create a webhook and paste the Fourthwall URL copied from SSN.</li><li>Select the supported events you need: <code>ORDER_PLACED</code>, <code>GIFT_PURCHASE</code>, <code>DONATION</code> and <code>SUBSCRIPTION_PURCHASED</code>.</li><li>Save the webhook and keep SSN running.</li></ol><p>Orders appear as purchases, product gifting as gifts, and new subscriptions as memberships. For compatibility, ordinary Fourthwall orders still carry their existing donation value. Gift-card redemption orders do not add prepaid value again. Marked test events are skipped.</p><p><a href="https://docs.fourthwall.com/webhooks/getting-started">Fourthwall webhook documentation</a> &middot; <a href="../monetization.html?demo&amp;mode=commerce&amp;view=alerts&amp;provider=fourthwall">Preview a sample purchase</a></p></section>
-<section class="guide-card" id="kofi"><h2 id="read-section-4">Ko-fi</h2><ol><li>Open <a href="https://ko-fi.com/manage/webhooks">Ko-fi Webhooks</a>.</li><li>Paste the Ko-fi URL copied from SSN into <strong>Webhook URL</strong>, then save/update it.</li><li>Keep SSN running. Public tips, membership payments, shop orders and commissions use the same connection.</li></ol><p>Private payments are excluded. Membership payments appear as membership activity; shop orders and commissions appear as purchases without adding donation totals. Ko-fi does not provide membership cancellation notifications through this webhook.</p><p><strong>Testing:</strong> use SSN's isolated sample preview first. Ko-fi sample payments may resemble real payments and can trigger alerts, totals and actions if sent to the active receiver. Do not use the provider test on a session with paid rewards enabled.</p><p><a href="https://help.ko-fi.com/hc/en-us/articles/360004162298-Does-Ko-fi-have-an-API-or-webhook">Ko-fi webhook documentation</a> &middot; <a href="../monetization.html?demo&amp;mode=commerce&amp;view=alerts&amp;provider=kofi">Preview sample support</a></p></section>
-<section class="guide-card" id="bmac"><h2 id="read-section-5">Buy Me a Coffee</h2><ol><li>Open <strong>Integrations</strong> in the creator dashboard and choose <strong>New webhook</strong>.</li><li>Give it a name and paste the SSN Buy Me a Coffee URL as the endpoint.</li><li>Select <code>donation.created</code>, <code>extra_purchase.created</code>, <code>commission_order.created</code>, <code>wishlist_payment.created</code> and <code>membership.started</code> as needed.</li><li>Save and leave delivery enabled. Use the provider's event-delivery history to investigate failures.</li></ol><p>Shop and commission orders are purchases. Wishlist payments are gift contributions. Membership starts are membership announcements, not separate confirmed charges. Hidden notes stay hidden, and anonymous supporters stay anonymous. Dashboard tests marked <code>live_mode: false</code> are skipped without paid alerts. Refunds and lifecycle updates do not create payments or reverse existing totals.</p><p><a href="https://help.buymeacoffee.com/en/articles/15743173-how-to-setup-and-use-buy-me-a-coffee-webhooks">Buy Me a Coffee webhook documentation</a> &middot; <a href="../monetization.html?demo&amp;mode=commerce&amp;view=alerts&amp;provider=bmac">Preview a sample contribution</a></p></section>
-<section class="guide-card" id="import"><h2 id="read-section-6">Import a Fourthwall product</h2><ol><li>In Fourthwall's <strong>Settings &rarr; For Developers</strong>, create a <strong>Storefront token</strong>. Use the storefront token for public catalog access, not an administrative API key.</li><li>In SSN, open <strong>Products &amp; support links &rarr; Set up products and links &rarr; Import a Fourthwall product</strong>.</li><li>Paste the public product URL and token, then click <strong>Load product details</strong>.</li><li>Review the loaded name, image, price and public URL. Confirm the URL belongs to the same shop as the token, including any custom domain. The token determines which shop's catalog is queried.</li><li>Choose Shop, Gift, Support or Join to describe what viewers will do. Click <strong>Add product or link</strong>, enable Products &amp; support links, then <strong>Save setup</strong>.</li></ol>
-<figure class="guide-figure"><a href="images/monetization/fourthwall-import.png" target="_blank" rel="noopener"><img class="guide-image" src="images/monetization/fourthwall-import.png" alt="Fourthwall import controls and loaded product fields ready for review in SSApp" loading="lazy" style="max-width:585px;margin-left:auto;margin-right:auto"></a><figcaption>Import fills the existing editor for review before adding or saving.</figcaption></figure>
-<p>This imports one available, public product at a time through Fourthwall's Storefront API. The token is used for that request, cleared afterward and not saved or sent to overlays. Different variant prices and bundle prices are left blank to avoid implying a fixed checkout total. Import is a snapshot: prices, stock and images do not refresh automatically. Reimport or edit when they change. The catalog holds up to 20 entries; adding again creates another entry.</p><p><a href="https://docs.fourthwall.com/storefront/getting-started">Create a Storefront token</a> &middot; <a href="https://docs.fourthwall.com/api-reference/storefront/products/get-product">Fourthwall product fields</a></p></section>
-<section class="guide-card" id="obs"><h2 id="read-section-7">Show products, public links and QR codes</h2><p>You can also enter a public product or support link manually from any site, including Shopify, Tiltify or Patreon. Add an image URL and optional price, choose its purpose, enable the catalog and save. Adding a link does not connect a payment feed.</p><ol><li>Choose <strong>Products &amp; support links</strong> under <strong>Overlay link for</strong>.</li><li>Open <strong>Overlay link options</strong>. Choose Product showcase, Support card, Activity alerts, or the combined view.</li><li>Click <strong>Copy OBS link</strong> and paste it into an OBS Browser Source. Start at 800 &times; 600. For separate promotional and activity layers, create a source for each view.</li><li>Use Display options to pin the first product or rotate entries. Enable QR codes so viewers can scan the public destination. Use <strong>Copy public link</strong> beside an entry to share its clickable address in chat yourself.</li></ol>
-<figure class="guide-figure"><a href="images/monetization/product-showcase.png" target="_blank" rel="noopener"><img class="guide-image guide-image-medium" src="images/monetization/product-showcase.png" alt="Cropped product showcase displaying a product name, price, readable public link and QR code" loading="lazy" style="max-width:476px;margin-left:auto;margin-right:auto"></a><figcaption>Product promotion with a matching public QR destination. Example product and URL.</figcaption></figure>
-<p>The showcase includes the product image when provided; the smaller support card hides it. Activity alerts work independently and do not attach an unrelated rotating product's QR code. Keep the public link readable and test the QR from a phone while viewing your final OBS layout. Changing the OBS link's scale or cropping too tightly can make scanning difficult.</p><p>For multi-alerts or the activity feed, use their existing overlay links with the same SSN session. You do not need the product catalog enabled for these existing activity overlays. The generic Monetization activity view requires the catalog enabled. In Event Flow, Donation remains the trigger for rows with <code>hasDonation</code>; use Event Type for purchases or gift completion. See the <a href="event-reference.html#creator-commerce-webhooks">event mapping</a>.</p></section>
-<section class="guide-card" id="troubleshooting"><h2 id="read-section-8">If nothing appears</h2><ul><li><strong>Receiver off:</strong> enable remote API control of extension. Other API toggles serve different uses.</li><li><strong>Disconnected:</strong> keep SSN on and check network access. This status is the shared receiver connection, not the provider dashboard's delivery status.</li><li><strong>No event received:</strong> check the selected provider, private URL and provider delivery settings. Local preview success only checks appearance.</li><li><strong>Event skipped:</strong> marked tests, private payments, unsupported event types or invalid amounts are excluded. No buyer details are displayed in status.</li><li><strong>Event received but no overlay:</strong> check session/password, source filters, event categories, SSN rules and OBS visibility. Purchases are not subscriptions; most purchases are not donations.</li><li><strong>Duplicates:</strong> avoid feeding the same payment through both the direct provider and an aggregator. Retry deduplication uses provider delivery IDs.</li><li><strong>Import failed:</strong> check the product slug and Storefront token, and that the product is public and available. Manual entry remains available.</li></ul><p>This is live stream activity, not an order ledger. Use the provider dashboard for payment confirmation, refunds and fulfillment. <a href="shopify-setup.html">Shopify now has its own product-import and signed paid-order setup</a>. Tiltify campaign activity and Patreon paid memberships remain future integrations.</p></section>
-</div><p><a href="product-controls.html">Live product controls and public viewer pages</a></p>
-</main><script data-copy-markdown src="js/main.js"></script></body></html>
+
+	<main>
+		<section class="guide-section">
+			<div class="container">
+				<nav class="guide-jump-links" aria-label="On this page">
+					<a href="#connect">Connect alerts</a>
+					<a href="#fourthwall">Fourthwall</a>
+					<a href="#kofi">Ko-fi</a>
+					<a href="#bmac">Buy Me a Coffee</a>
+					<a href="#import">Import a product</a>
+					<a href="#obs">Show it on stream</a>
+					<a href="#troubleshooting">Fix problems</a>
+				</nav>
+
+				<div class="guide-card" id="connect">
+					<h2 id="read-section-2">Connect alerts in 5 steps</h2>
+					<div class="guide-step-layout">
+						<ol class="guide-steps">
+							<li>Open <strong>Monetization &rarr; Fourthwall, Ko-fi &amp; Buy Me a Coffee alerts</strong> and pick your <strong>Provider</strong>.</li>
+							<li>Click <strong>Receiver setting</strong> and turn on <strong>remote API control of extension</strong>.</li>
+							<li>Go back to Monetization and click <strong>Copy webhook URL</strong>.</li>
+							<li>Paste it into your provider's webhook settings (steps below).</li>
+							<li>Keep Social Stream Ninja running.</li>
+						</ol>
+						<figure class="guide-figure">
+							<a href="images/monetization/provider-setup.png" target="_blank" rel="noopener"><img class="guide-image" src="images/monetization/provider-setup.png" alt="SSN provider selector, masked webhook URL, receiver setting, setup guide and sample preview controls" loading="lazy"></a>
+							<figcaption>The provider setup panel. The private URL stays hidden. Click to enlarge.</figcaption>
+						</figure>
+					</div>
+					<div class="guide-note"><strong>Is it working?</strong> &ldquo;Receiver connected&rdquo; only means SSN is listening. The last-event line updates when a real event arrives (it resets on restart).</div>
+					<div class="warning-note"><strong>Keep the webhook URL private.</strong> It's the only lock on these alerts (no signing secret is checked). Fine for alerts, not proof of payment for shipping orders. Never post it or use it in a QR code.</div>
+					<p><strong>Preview sample alert</strong> only shows the look. It doesn't touch totals, Event Flow, or your webhook.</p>
+					<p>NinjaBacker, Throne, Amazon, and eBay: see the <a href="monetization.html">monetization guide</a>. Shopify: see <a href="shopify-setup.html">Shopify setup</a>.</p>
+				</div>
+
+				<div class="guide-card" id="fourthwall">
+					<h2 id="read-section-3">Fourthwall</h2>
+					<ol class="guide-steps">
+						<li>In Fourthwall, open <strong>Settings &rarr; For Developers &rarr; Webhooks</strong>.</li>
+						<li>Create a webhook and paste the Fourthwall URL from SSN.</li>
+						<li>Tick the events you want (see table).</li>
+						<li>Save, and keep SSN running.</li>
+					</ol>
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>Fourthwall event</th><th>Shows up as</th></tr></thead>
+						<tbody>
+							<tr><td data-label="Fourthwall event"><code>ORDER_PLACED</code></td><td data-label="Shows up as">A purchase. It still adds its donation value, to match older setups.</td></tr>
+							<tr><td data-label="Fourthwall event"><code>GIFT_PURCHASE</code></td><td data-label="Shows up as">A gift.</td></tr>
+							<tr><td data-label="Fourthwall event"><code>DONATION</code></td><td data-label="Shows up as">A donation.</td></tr>
+							<tr><td data-label="Fourthwall event"><code>SUBSCRIPTION_PURCHASED</code></td><td data-label="Shows up as">A new membership.</td></tr>
+						</tbody>
+					</table>
+					<p>Gift-card orders don't add their value twice. Test events are skipped.</p>
+					<p><a href="https://docs.fourthwall.com/webhooks/getting-started">Fourthwall webhook documentation</a> &middot; <a href="../monetization.html?demo&amp;mode=commerce&amp;view=alerts&amp;provider=fourthwall">Preview a sample purchase</a></p>
+				</div>
+
+				<div class="guide-card" id="kofi">
+					<h2 id="read-section-4">Ko-fi</h2>
+					<ol class="guide-steps">
+						<li>Open <a href="https://ko-fi.com/manage/webhooks">Ko-fi Webhooks</a>.</li>
+						<li>Paste the Ko-fi URL from SSN into <strong>Webhook URL</strong> and save.</li>
+						<li>Keep SSN running.</li>
+					</ol>
+					<p>Public tips, memberships, shop orders, and commissions all use this one link. Private payments are left out. Shop orders and commissions show as purchases and don't add to donation totals. Ko-fi doesn't report cancelled memberships.</p>
+					<div class="warning-note"><strong>Test with SSN's preview.</strong> Ko-fi test payments look real and can trigger alerts, totals, and actions. Don't use them while paid rewards are on.</div>
+					<p><a href="https://help.ko-fi.com/hc/en-us/articles/360004162298-Does-Ko-fi-have-an-API-or-webhook">Ko-fi webhook documentation</a> &middot; <a href="../monetization.html?demo&amp;mode=commerce&amp;view=alerts&amp;provider=kofi">Preview sample support</a></p>
+				</div>
+
+				<div class="guide-card" id="bmac">
+					<h2 id="read-section-5">Buy Me a Coffee</h2>
+					<ol class="guide-steps">
+						<li>In your creator dashboard, open <strong>Integrations</strong> and choose <strong>New webhook</strong>.</li>
+						<li>Name it and paste the Buy Me a Coffee URL from SSN.</li>
+						<li>Tick the events you want (see table).</li>
+						<li>Save and leave delivery on. If something fails, check the delivery history there.</li>
+					</ol>
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>Event</th><th>Shows up as</th></tr></thead>
+						<tbody>
+							<tr><td data-label="Event"><code>donation.created</code></td><td data-label="Shows up as">A donation.</td></tr>
+							<tr><td data-label="Event"><code>extra_purchase.created</code></td><td data-label="Shows up as">A purchase.</td></tr>
+							<tr><td data-label="Event"><code>commission_order.created</code></td><td data-label="Shows up as">A purchase.</td></tr>
+							<tr><td data-label="Event"><code>wishlist_payment.created</code></td><td data-label="Shows up as">A gift contribution.</td></tr>
+							<tr><td data-label="Event"><code>membership.started</code></td><td data-label="Shows up as">A new membership announcement (not a separate charge).</td></tr>
+						</tbody>
+					</table>
+					<p>Hidden notes and anonymous supporters stay hidden. Dashboard tests (<code>live_mode: false</code>) are skipped. Refunds don't lower totals.</p>
+					<p><a href="https://help.buymeacoffee.com/en/articles/15743173-how-to-setup-and-use-buy-me-a-coffee-webhooks">Buy Me a Coffee webhook documentation</a> &middot; <a href="../monetization.html?demo&amp;mode=commerce&amp;view=alerts&amp;provider=bmac">Preview a sample contribution</a></p>
+				</div>
+
+				<div class="guide-card" id="import">
+					<h2 id="read-section-6">Import a Fourthwall product</h2>
+					<div class="guide-step-layout">
+						<ol class="guide-steps">
+							<li>In Fourthwall, go to <strong>Settings &rarr; For Developers</strong> and create a <strong>Storefront token</strong>. Don't use an admin API key.</li>
+							<li>In SSN, open <strong>Products &amp; support links &rarr; Set up products and links &rarr; Import a Fourthwall product</strong>.</li>
+							<li>Paste the product's public link and the token. Click <strong>Load product details</strong>.</li>
+							<li>Check the name, image, price, and link. The link must be from the same shop as the token.</li>
+							<li>Pick a purpose: Shop, Gift, Support, or Join.</li>
+							<li>Click <strong>Add product or link</strong>, turn on <strong>Products &amp; support links</strong>, and click <strong>Save setup</strong>.</li>
+						</ol>
+						<figure class="guide-figure">
+							<a href="images/monetization/fourthwall-import.png" target="_blank" rel="noopener"><img class="guide-image" src="images/monetization/fourthwall-import.png" alt="Fourthwall import controls and loaded product fields ready for review in SSApp" loading="lazy"></a>
+							<figcaption>Import fills the editor so you can check it before saving.</figcaption>
+						</figure>
+					</div>
+					<details class="guide-extra">
+						<summary>What the import does</summary>
+						<ul>
+							<li>It loads one public, available product at a time.</li>
+							<li>The token decides which shop is searched. It's used once, then cleared. It's never saved or sent to overlays.</li>
+							<li>If variants or bundles have different prices, the price is left blank.</li>
+							<li>It's a snapshot. Prices, stock, and images don't update, so import again or edit when they change.</li>
+							<li>You can save up to 20 products. Adding the same one again makes a second copy.</li>
+						</ul>
+						<p><a href="https://docs.fourthwall.com/storefront/getting-started">Create a Storefront token</a> &middot; <a href="https://docs.fourthwall.com/api-reference/storefront/products/get-product">Fourthwall product fields</a></p>
+					</details>
+				</div>
+
+				<div class="guide-card" id="obs">
+					<h2 id="read-section-7">Show products and QR codes on stream</h2>
+					<p>You can also add any public link by hand (Shopify, Tiltify, Patreon, and so on). That doesn't connect payment alerts.</p>
+					<div class="guide-step-layout">
+						<ol class="guide-steps">
+							<li>Under <strong>OBS overlay for</strong>, choose <strong>Products &amp; support links</strong>.</li>
+							<li>Open <strong>Overlay link options</strong> and pick an <strong>Overlay view</strong>: Product showcase only, Support card only, Activity alerts only, or Showcase and alerts.</li>
+							<li>Click <strong>Copy OBS link</strong> and add it to OBS as a <strong>Browser Source</strong>. Start at 800 &times; 600. Use one source per view.</li>
+							<li>In <strong>Display options</strong>, pin the first product or rotate them, and turn on <strong>Show QR code</strong>.</li>
+							<li>Scan the QR code with your phone while looking at your final OBS layout.</li>
+						</ol>
+						<figure class="guide-figure">
+							<a href="images/monetization/product-showcase.png" target="_blank" rel="noopener"><img class="guide-image" src="images/monetization/product-showcase.png" alt="Cropped product showcase displaying a product name, price, readable public link and QR code" loading="lazy"></a>
+							<figcaption>A product card with its public link and QR code. Example product.</figcaption>
+						</figure>
+					</div>
+					<div class="guide-note"><strong>QR code won't scan?</strong> Don't shrink or crop the overlay too much. To share a link in chat, click <strong>Copy public link</strong>.</div>
+					<details class="guide-extra">
+						<summary>Alerts, multi-alerts, and Event Flow</summary>
+						<ul>
+							<li>The showcase shows the product image. The smaller support card doesn't.</li>
+							<li>Activity alerts work on their own, and never show a QR code from an unrelated product.</li>
+							<li>Multi-alerts and the activity feed work with the same session, with no product list needed. The Monetization activity view needs the product list turned on.</li>
+							<li>In Event Flow, the Donation trigger still covers rows with <code>hasDonation</code>. Use Event Type for purchases or completed gifts. See the <a href="event-reference.html#creator-commerce-webhooks">event mapping</a>.</li>
+						</ul>
+					</details>
+					<p>Switch products live or share one viewer link: see <a href="product-controls.html">live product controls</a>.</p>
+				</div>
+
+				<div class="guide-card" id="troubleshooting">
+					<h2 id="read-section-8">If nothing appears</h2>
+					<table class="guide-table guide-table-stack">
+						<thead><tr><th>Problem</th><th>Try this</th></tr></thead>
+						<tbody>
+							<tr><td data-label="Problem">Receiver is off</td><td data-label="Try this">Turn on <strong>remote API control of extension</strong>. Other API switches do different things.</td></tr>
+							<tr><td data-label="Problem">Disconnected</td><td data-label="Try this">Keep SSN on and check your internet. This is SSN's connection, not your provider's.</td></tr>
+							<tr><td data-label="Problem">No event received</td><td data-label="Try this">Check the provider you picked, the URL, and the provider's webhook settings.</td></tr>
+							<tr><td data-label="Problem">Event skipped</td><td data-label="Try this">Tests, private payments, unsupported events, and bad amounts are left out.</td></tr>
+							<tr><td data-label="Problem">Event arrived, but no overlay</td><td data-label="Try this">Check session, password, filters, SSN rules, and that the OBS source is visible. Most purchases aren't donations.</td></tr>
+							<tr><td data-label="Problem">Alerts show twice</td><td data-label="Try this">Don't send the same payment through both the provider and another service.</td></tr>
+							<tr><td data-label="Problem">Import failed</td><td data-label="Try this">Check the product link and Storefront token, and that the product is public and available. You can always type it in by hand.</td></tr>
+						</tbody>
+					</table>
+					<p>This is a live alert feed, not an order record. Use your provider's dashboard for payments, refunds, and shipping. Tiltify and Patreon alerts aren't supported yet.</p>
+				</div>
+			</div>
+		</section>
+	</main><script data-copy-markdown src="js/main.js"></script></body></html>

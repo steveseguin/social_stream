@@ -444,7 +444,7 @@ body, html {
 		const messageDiv = document.createElement('div');
 		messageDiv.classList.add('message');
 		
-		const messageId = data.mid || 'msg-' + Date.now();
+		const messageId = String(data.mid || 'msg-' + Date.now());
 		messageDiv.id = messageId;
 		messageTimestamps.set(messageId, Date.now());
 		

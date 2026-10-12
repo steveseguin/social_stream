@@ -1,4 +1,27 @@
 import * as SSNKokoroOrt from "./kokoro-ort/ort.webgpu.min.mjs";
+
+// Use the packaged chunks so hosts do not need to serve one oversized WASM file.
+let ssnKokoroWasmPromise = null;
+async function ssnLoadKokoroWasm() {
+  if (SSNKokoroOrt.env.wasm.wasmBinary) return;
+  if (!ssnKokoroWasmPromise) {
+    ssnKokoroWasmPromise = (async () => {
+      const parts = await Promise.all([1, 2].map(async (part) => {
+        const response = await fetch(new URL('./neural-tts/ort-wasm-simd-threaded.asyncify.part' + part + '.bin', import.meta.url));
+        if (!response.ok) throw new Error('Speech runtime could not load. Reload the page and try again.');
+        return new Uint8Array(await response.arrayBuffer());
+      }));
+      const binary = new Uint8Array(parts[0].length + parts[1].length);
+      binary.set(parts[0]);
+      binary.set(parts[1], parts[0].length);
+      SSNKokoroOrt.env.wasm.wasmBinary = binary.buffer;
+    })().catch((error) => {
+      ssnKokoroWasmPromise = null;
+      throw error;
+    });
+  }
+  await ssnKokoroWasmPromise;
+}
 // replaced cdn links with ./thirdparty/
 // this version is specifically for the chrome extension and not webpage
 /**
@@ -32170,6 +32193,7 @@ class ag {
     this.model = C, this.tokenizer = d;
   }
   static async from_pretrained(C, { dtype: d = "fp32", device: k = null, progress_callback: P = null } = {}) {
+    await ssnLoadKokoroWasm();
     const j = Y4.from_pretrained(C, { progress_callback: P, dtype: d, device: k }), O = O4.from_pretrained(C, { progress_callback: P }), R = await Promise.all([j, O]);
     return new ag(...R);
   }
