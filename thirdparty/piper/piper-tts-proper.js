@@ -17,6 +17,10 @@
     'pt_BR-faber-medium': 'pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx',
     'pt_PT-tug\u00e3o-medium': 'pt/pt_PT/tug\u00e3o/medium/pt_PT-tug\u00e3o-medium.onnx'
   };
+  // English greetings the Portuguese phonemizer reads by its own rules ("hi" -> "i"), spelled as they sound.
+  const PIPER_RESPELLINGS = {
+    pt: { hi: 'rai', hello: 'relou', hey: 'rei', bye: 'bai' }
+  };
   const trimTrailingSlash = (value) => typeof value === 'string' ? value.replace(/\/+$/, '') : '';
   
   class ProperPiperTTS {
@@ -292,6 +296,17 @@
       return ids;
     }
 
+    // Whole words only; other languages and unlisted words pass through unchanged.
+    respell(text) {
+      const voice = (this.voiceConfig && this.voiceConfig.espeak && this.voiceConfig.espeak.voice) || '';
+      const words = PIPER_RESPELLINGS[String(voice).toLowerCase().split(/[-_]/)[0]];
+      if (!words || typeof text !== 'string') return text;
+      return text.replace(/[A-Za-z\u00C0-\u024F]+/g, word => {
+        const key = word.toLowerCase();
+        return Object.prototype.hasOwnProperty.call(words, key) ? words[key] : word;
+      });
+    }
+
     // One clip keeps sender and message together in the playback/skip queue.
     async synthesizeWithPause(intro, message, speed = 1.0, cancelled = () => false) {
       const first = await this.synthesize(intro, speed, true);
@@ -316,7 +331,7 @@
       try {
         // Get phoneme IDs using the real phonemizer
         console.log('Phonemizing text:', text);
-        const phonemeIds = await this.phonemize(text);
+        const phonemeIds = await this.phonemize(this.respell(text));
         console.log('Phoneme IDs:', phonemeIds);
 
         // Create input tensors

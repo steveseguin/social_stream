@@ -9,6 +9,12 @@ const {chromium}=require('playwright-core');const root=path.resolve(__dirname,'.
  engine.voiceConfig={phoneme_id_map:{'^':[1],'_':[0],'$':[2],'a':[4],'b':[7]}};
  assert.deepEqual(Array.from(engine.encodePhonemes({phonemes:['a','b'],phoneme_ids:[1,0,141,0,2]})),[1,0,4,0,7,0,2]);
  console.log('PASS Piper uses the selected model vocabulary, including low-quality voices');
+ engine.voiceConfig={espeak:{voice:'pt'}};assert.equal(engine.respell('Hi, hello HEY bye hihi constructor'),'rai, relou rei bai hihi constructor');
+ engine.voiceConfig={espeak:{voice:'es'}};assert.equal(engine.respell('hi'),'hi');
+ let phonemized='';engine.phonemizerModule={callMain(args){phonemized=JSON.parse(args[3])[0].text;setTimeout(()=>engine.phonemizerCallback(JSON.stringify({phoneme_ids:[1,2],phonemes:['a']})),5);}};
+ engine.voiceConfig={espeak:{voice:'pt-br'}};engine.initialized=true;engine.session={run:async()=>({output:{data:new Float32Array(2)}})};ctx.ort={Tensor:function(){}};ctx.performance={now:()=>0};
+ await engine.synthesize('hi',1,true);assert.equal(phonemized,'rai');
+ console.log('PASS Piper respells English greetings for Portuguese voices only');
 
  const server=http.createServer((req,res)=>{const u=new URL(req.url,'http://localhost');if(u.pathname==='/'){res.setHeader('Content-Security-Policy',"script-src 'self' 'wasm-unsafe-eval'; object-src 'none'");res.end('<html><body></body></html>');return;}const f=path.resolve(root,'.'+decodeURIComponent(u.pathname));if(!f.startsWith(root+path.sep)||!fs.existsSync(f)||fs.statSync(f).isDirectory()){res.writeHead(404);return res.end();}res.setHeader('Content-Type',/\.m?js$/.test(f)?'text/javascript':f.endsWith('.wasm')?'application/wasm':'application/octet-stream');let body=fs.readFileSync(f);if(/kokoro-bundle.es(?:.ext)?.js$/.test(f))body=Buffer.from(body.toString()+'\nexport { Zu as testPhonemes };');res.end(body);});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;try{browser=await chromium.launch({channel:'chrome',headless:true});const page=await browser.newPage();await page.goto('http://127.0.0.1:'+server.address().port);
