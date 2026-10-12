@@ -889,6 +889,15 @@ body.feed-noheader #chat-container { height: 100vh; }
 /* Important, so it also clears a style's page tint. */
 html.feed-transparent, body.transparent-mode { background: transparent !important; }
 body.feed-noanimation .message { animation: none; opacity: 1; transform: none; }
+body.feed-hidemessage .message > .text,
+body.feed-hidecontentimg .content-image,
+body.feed-hideplatformicons .source-icon,
+body.feed-hideeventlabels .event-type,
+body.feed-hideeventlabels .event-specific,
+body.feed-hideamounts .donation,
+body.feed-hideamounts .usd-value,
+body.feed-hideempty .no-events { display: none !important; }
+body.event-style-twitch.feed-hideplatformicons .message:not(.hype-train-panel) { padding-left: var(--feed-padding); }
 /* With no heading to sit on, the viewer bar takes its own row instead of covering the newest event. */
 body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.event-style-ticker #topbar { position: static; flex: 0 0 auto; margin-left: auto; }
 @media (max-width: 700px) {
@@ -1069,6 +1078,13 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 	var transparentMode = urlParams.has("transparent") || urlParams.has("transparency");
 	var hideMetaPanels = urlParams.has("hidemeta");
 	var hideTimestamps = urlParams.has("notime");
+	var disableFeaturing = urlParams.has('nofeature');
+	var eventDuration = Number(urlParams.get('eventduration'));
+	eventDuration = Number.isFinite(eventDuration) && eventDuration >= 1 ? Math.min(eventDuration, 86400) : 0;
+	var filteredFeedEvents = (urlParams.get('filterevents') || '').split(',').map(normalizeEventKey).filter(Boolean);
+	['hidemessage', 'hidecontentimg', 'hideplatformicons', 'hideeventlabels', 'hideamounts', 'hideempty'].forEach(function(option) {
+		if (urlParams.has(option)) document.body.classList.add('feed-' + option);
+	});
 	var maxEvents = urlParams.has("maxevents") ? parseInt(urlParams.get("maxevents")) : 200;
 	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
 	var googleFont = urlParams.has("googlefont") ? urlParams.get("googlefont") : "";
@@ -1266,6 +1282,42 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 		return event.replace(/[_-]+/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
 	}
 
+	// These are display groups, not new payload event names. Named actions take
+	// precedence over a monetary value (a paid gifted membership is still a gift sub).
+	const FEED_EVENT_GROUPS = {
+		follows: ['new_follower', 'follow', 'followed'],
+		giftmemberships: ['subscription_gift', 'giftpurchase', 'giftredemption', 'subgift', 'gift_membership', 'giftmemberships', 'gifted_membership', 'gifted_memberships', 'membership_gift', 'community_gift'],
+		memberships: ['new_subscriber', 'resub', 'sponsorship', 'membermilestone', 'member_milestone', 'subscription', 'membership', 'new_member', 'new_membership', 'newmember', 'upgraded_membership', 'membership_upgrade', 'membership_milestone'],
+		gifts: ['gift', 'jeweldonation', 'giftcontribution', 'giftfunded'],
+		purchases: ['purchase'],
+		raids: ['raid', 'redirect'],
+		rewards: ['reward'],
+		hypetrain: ['hype_train'],
+		status: Array.from(STATUS_EVENT_TYPES).concat(Array.from(STREAM_EVENT_TYPES)),
+		ads: Array.from(AD_EVENT_TYPES),
+		activity: ['joined', 'liked', 'shared', 'share', 'share_live', 'watch_streak'],
+		paid: ['donation', 'superchat', 'supersticker', 'cheer', 'thankyou']
+	};
+	const hiddenFeedGroups = new Set(Object.keys(FEED_EVENT_GROUPS).concat(['other']).filter(function(group) {
+		return urlParams.has('hide' + group);
+	}));
+
+	function shouldHideFeedEvent(data) {
+		const event = normalizeEventKey(data.event);
+		if (event && filteredFeedEvents.indexOf(event) !== -1) return true;
+		if (!hiddenFeedGroups.size) return false;
+		// Twitch EventSub also marks individual gifted subscriptions this way.
+		if (event === 'new_subscriber' && data.meta && data.meta.isGift === true) {
+			return hiddenFeedGroups.has('giftmemberships');
+		}
+		const groups = Object.keys(FEED_EVENT_GROUPS);
+		for (let i = 0; i < groups.length; i++) {
+			if (FEED_EVENT_GROUPS[groups[i]].indexOf(event) !== -1) return hiddenFeedGroups.has(groups[i]);
+		}
+		// DOM Twitch bits and ordinary tips can have an amount but no named event.
+		return hiddenFeedGroups.has(data.hasDonation ? 'paid' : 'other');
+	}
+
 	function resolveTranslationEntry(entry, fallback) {
 		if (Array.isArray(entry)) {
 			return getTranslation(entry[0], entry[1]);
@@ -1451,6 +1503,7 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 		}
 
 		panel.__hypeData = data;
+		if (eventDuration) panel.__feedUpdatedAt = Date.now();
 		renderHypeTrainPanel(panel);
 
 		if (String(meta.phase || '').toLowerCase() === 'end') {
@@ -2321,6 +2374,7 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 			return;
 		}
 		updateViewerTopBar(data);
+		if (shouldHideFeedEvent(data)) return;
 		if (handleHypeTrainPayload(data)) {
 			return;
 		}
@@ -2372,7 +2426,7 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 		messageDiv.classList.add(eventClass);
 		
         messageDiv.rawContents = data; // Store the original data object
-        messageDiv.classList.add('clickable-message');
+        if (!disableFeaturing) messageDiv.classList.add('clickable-message');
 		
 		if (data.mid) {
 			messageDiv.id = data.mid;
@@ -2517,6 +2571,7 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 		}
 		
 		chatContainer.prepend(messageDiv);
+		if (eventDuration) messageDiv.__feedUpdatedAt = Date.now();
 		
 		// Auto-scroll to the latest message
 		chatContainer.scrollTop = 0;
@@ -2528,8 +2583,29 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 	}
 	
 	let currentActiveMessage = null; // Track the currently active message
+	if (eventDuration) {
+		setInterval(function() {
+			const cutoff = Date.now() - eventDuration * 1000;
+			Array.from(chatContainer.children).forEach(function(row) {
+				if (typeof row.__feedUpdatedAt !== 'number' || row.__feedUpdatedAt > cutoff) return;
+				if (row === currentActiveMessage) currentActiveMessage = null;
+				if (row.__hypeData) {
+					removeHypeTrainPanel(row, (row.__hypeData.type || 'twitch') + ':' + (row.__hypeData.meta.id || 'active'));
+				} else {
+					row.remove();
+				}
+			});
+			if (!chatContainer.children.length) {
+				noEventsMessage = document.createElement('div');
+				noEventsMessage.className = 'no-events';
+				noEventsMessage.textContent = getTranslation('events-waiting-message', 'Waiting for stream events and donations...');
+				chatContainer.appendChild(noEventsMessage);
+			}
+		}, 1000);
+	}
 	
 	chatContainer.addEventListener('click', function(event) {
+        if (disableFeaturing) return;
         const messageDiv = event.target.closest('.message.clickable-message');
         if (!messageDiv || !messageDiv.rawContents) return;
 		

@@ -67,6 +67,33 @@
 </ul>
 <p>For example, append <code>&amp;style=twitch&amp;accent=%23e5b94f&amp;padding=8&amp;fontsize=14</code> for a denser activity list with a gold accent.</p>
 </section>
+<section class="guide-card" id="activity-feed-filters">
+<h2>Choose what appears in the activity feed</h2>
+<p>In <strong>Activity Feed / Events &rarr; Enable and customize</strong>, open <strong>Choose which events appear</strong> or <strong>Row contents and behavior</strong>. Leave the controls off and fields empty to keep the default view. Copy the updated link after changing them. These controls affect this feed only; ordinary chat remains excluded.</p>
+<p>Each row belongs to one category based on its event name. Named memberships, gifts and purchases keep their category even when they include an amount. Tips with <code>hasDonation</code> and no recognized event name belong to the paid-message category, including Twitch DOM bits. Membership badges on ordinary chat do not turn it into a membership event.</p>
+<table class="guide-table guide-table-stack"><thead><tr><th>Hide category</th><th>URL option</th><th>Events covered</th></tr></thead><tbody>
+<tr><td data-label="Hide category">Follows / free subscriptions</td><td data-label="URL option"><code>hidefollows</code></td><td data-label="Events covered"><code>new_follower</code>, including free YouTube subscriber alerts; older <code>follow</code>/<code>followed</code> names.</td></tr>
+<tr><td data-label="Hide category">Subscriptions / memberships</td><td data-label="URL option"><code>hidememberships</code></td><td data-label="Events covered"><code>new_subscriber</code>, <code>resub</code>, <code>sponsorship</code>, membership milestones and legacy membership names.</td></tr>
+<tr><td data-label="Hide category">Gifted subscriptions / memberships</td><td data-label="URL option"><code>hidegiftmemberships</code></td><td data-label="Events covered"><code>subscription_gift</code>, <code>giftpurchase</code>, <code>giftredemption</code> and legacy gift-membership names. Also <code>new_subscriber</code> with <code>meta.isGift: true</code>.</td></tr>
+<tr><td data-label="Hide category">Tips / paid messages</td><td data-label="URL option"><code>hidepaid</code></td><td data-label="Events covered"><code>superchat</code>, <code>supersticker</code>, <code>cheer</code>, <code>donation</code>, <code>thankyou</code>, and otherwise unclassified rows with <code>hasDonation</code>.</td></tr>
+<tr><td data-label="Hide category">Virtual / wishlist gifts</td><td data-label="URL option"><code>hidegifts</code></td><td data-label="Events covered"><code>gift</code>, <code>jeweldonation</code>, <code>giftcontribution</code>, <code>giftfunded</code>. Gifted memberships have their own category.</td></tr>
+<tr><td data-label="Hide category">Purchases</td><td data-label="URL option"><code>hidepurchases</code></td><td data-label="Events covered"><code>purchase</code>.</td></tr>
+<tr><td data-label="Hide category">Raids / redirects</td><td data-label="URL option"><code>hideraids</code></td><td data-label="Events covered"><code>raid</code>, YouTube <code>redirect</code>.</td></tr>
+<tr><td data-label="Hide category">Channel point redemptions</td><td data-label="URL option"><code>hiderewards</code></td><td data-label="Events covered"><code>reward</code>, including the <code>channel_points</code> alias.</td></tr>
+<tr><td data-label="Hide category">Hype Trains</td><td data-label="URL option"><code>hidehypetrain</code></td><td data-label="Events covered"><code>hype_train</code> panels and updates.</td></tr>
+<tr><td data-label="Hide category">Counts / stream status</td><td data-label="URL option"><code>hidestatus</code></td><td data-label="Events covered">Viewer, follower, subscriber, view and like count rows; stream online/offline rows. The optional viewer-count bar is controlled separately.</td></tr>
+<tr><td data-label="Hide category">Ad notices</td><td data-label="URL option"><code>hideads</code></td><td data-label="Events covered"><code>ad_break</code>, <code>ad_request</code>, <code>ad_schedule</code>.</td></tr>
+<tr><td data-label="Hide category">Joins / likes / shares / streaks</td><td data-label="URL option"><code>hideactivity</code></td><td data-label="Events covered"><code>joined</code>, <code>liked</code>, <code>shared</code>, <code>share</code>, <code>share_live</code>, <code>watch_streak</code>.</td></tr>
+<tr><td data-label="Hide category">Other notices</td><td data-label="URL option"><code>hideother</code></td><td data-label="Events covered">Unclassified events, including unnamed <code>event: true</code> notices without a donation amount.</td></tr>
+</tbody></table>
+<p>For finer control, use <code>filterevents=supersticker,watch_streak</code> to hide exact event names. Matching ignores case and uses the feed's existing event aliases; it does not search message text. Category and exact-name exclusions combine with the existing source, donations-only, gifted-subs-only and minimum-value filters. Enabling several filters can leave no matching events. See the <a href="event-reference.html">event reference</a> for source-specific payloads.</p>
+<ul>
+<li><code>hidemessage</code>, <code>hidecontentimg</code>, <code>hideplatformicons</code>, <code>hideeventlabels</code> and <code>hideamounts</code> hide the corresponding row elements. They do not discard the event or change what click-to-feature sends. Inline emotes are part of message text. Amounts or names written into message text, metadata or Hype Train details are not redacted by these controls.</li>
+<li><code>nofeature</code> disables click-to-feature in this feed. Metadata details can still be opened.</li>
+<li><code>eventduration=60</code> removes a row from this feed after 60 seconds. Blank or <code>0</code> keeps the existing retention behavior; positive values range from 1 to 86,400 seconds. Hype Train updates restart their timer; ended trains still disappear after at most 30 seconds. Removal does not clear an event already sent to a featured overlay.</li>
+<li><code>hideempty</code> hides the waiting message when no events are visible.</li>
+</ul>
+</section>
 <section class="guide-card" id="files"><h2 id="read-section-2">Download and keep the file structure</h2>
 <ol class="guide-steps"><li><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">Download the source ZIP</a> and extract it. These guides use the beta source; keep the files from one download together.</li>
 <li>Copy <code>multi-alerts.html</code> to <code>my-alerts.html</code> beside the original. If choosing a different page or theme, keep its copy in that file's original folder.</li>
