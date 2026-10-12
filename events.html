@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="description" content="Events Dashboard. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="description" content="Activity Feed / Events. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
     <meta name="robots" content="noindex">
     <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
   <script type="text/javascript" src="./js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Events Dashboard</title>
+    <title>Activity Feed / Events</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
 <style>
 @import url('https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap');
@@ -624,6 +624,158 @@ body.light-mode .meta-value.badge {
 	}
 }
 
+
+/* Optional activity-feed layouts. The original cards remain the default. */
+body.events-styled {
+    --feed-page: #18181b;
+    --feed-card: #242427;
+    --feed-ink: #efeff1;
+    --feed-muted: #b6b6c0;
+    --feed-accent: #bf94ff;
+    --feed-line: #45454d;
+    --feed-radius: 6px;
+    --feed-gap: 8px;
+    --feed-padding: 12px;
+    background: var(--feed-page);
+    color: var(--feed-ink);
+}
+html.events-styled { background: var(--feed-page, #18181b); }
+body.events-styled.light-mode {
+    --feed-page: #f7f7f8;
+    --feed-card: #ffffff;
+    --feed-ink: #202024;
+    --feed-muted: #60606a;
+    --feed-accent: #7130b8;
+    --feed-line: #d6d6dd;
+}
+body.events-styled #header { background: var(--feed-card); color: var(--feed-ink); box-shadow: none; }
+body.events-styled #chat-container { box-sizing: border-box; padding: var(--feed-padding); }
+body.events-styled .message {
+    background: var(--feed-card);
+    color: var(--feed-ink);
+    border: 1px solid var(--feed-line);
+    border-radius: var(--feed-radius);
+    margin-bottom: var(--feed-gap);
+    padding: var(--feed-padding);
+    box-shadow: none;
+    overflow-wrap: anywhere;
+}
+body.events-styled .message-header, body.events-styled .message-meta { min-width: 0; }
+body.events-styled .meta-fields { grid-template-columns: minmax(0, 1fr); }
+body.events-styled .message-meta { flex-wrap: wrap; gap: 5px 8px; }
+body.events-styled .name { color: var(--feed-ink); font-size: 1em; }
+body.events-styled .text { margin: 6px 0; }
+body.events-styled .timestamp, body.events-styled .no-events { color: var(--feed-muted); }
+body.events-styled .source-icon { width: 16px; height: 16px; margin: 0; }
+body.events-styled .event-type { display: none; }
+body.events-styled .event-specific {
+    background: transparent;
+    color: var(--feed-accent);
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    font-size: .8em;
+}
+body.events-styled .donation { color: var(--feed-accent); font-size: 1em; }
+body.events-styled .usd-value { position: static; display: inline-block; margin: 3px 0; }
+body.events-styled .meta-details { background: var(--feed-card); color: var(--feed-ink); border-color: var(--feed-line); }
+body.events-styled .meta-toggle { background: var(--feed-card); color: var(--feed-ink); border: 1px solid var(--feed-line); }
+body.events-styled .meta-label, body.events-styled .meta-section-title { color: var(--feed-muted); }
+body.events-styled .meta-value { color: var(--feed-ink); }
+body.events-styled .message.active { outline: 2px solid var(--feed-accent); outline-offset: -2px; }
+body.events-styled .high-value { border: 2px solid var(--feed-accent); }
+body.events-styled .medium-value { border-color: var(--feed-accent); }
+body.events-styled .meta-toggle:focus { outline: 2px solid var(--feed-accent); outline-offset: 2px; }
+
+body.event-style-compact {
+    --feed-page: #172122;
+    --feed-card: #172122;
+    --feed-accent: #6cdebe;
+    --feed-radius: 0px;
+    --feed-gap: 0px;
+    --feed-padding: 7px;
+    font-size: 13px;
+}
+body.event-style-compact .message { border-width: 0 0 1px; }
+body.event-style-compact .message-header, body.event-style-compact .text { display: inline; }
+body.event-style-compact .message-meta { display: inline; }
+body.event-style-compact .message-meta > * { margin-right: 6px; }
+body.event-style-compact .text { margin: 0; }
+body.event-style-compact .timestamp { display: inline-block; margin-left: 8px; }
+body.event-style-compact .donation { display: inline-block; margin: 0 6px; }
+body.event-style-compact .meta-details { margin-top: 4px; }
+
+body.event-style-twitch { --feed-radius: 0px; --feed-gap: 0px; --feed-padding: 10px; font-size: 14px; }
+body.event-style-twitch #chat-container { padding: 0; }
+body.event-style-twitch .message {
+    border-width: 0 0 1px;
+    padding-left: calc(var(--feed-padding) + 30px);
+}
+body.event-style-twitch .source-icon { position: absolute; left: var(--feed-padding); top: var(--feed-padding); width: 20px; height: 20px; }
+body.event-style-twitch .name { order: -1; }
+body.event-style-twitch .event-specific { font-size: .85em; }
+body.event-style-twitch .timestamp { font-size: .7em; }
+
+body.event-style-timeline {
+    --feed-page: #1f2027;
+    --feed-card: #292b36;
+    --feed-accent: #f0c566;
+    --feed-radius: 10px;
+    --feed-gap: 16px;
+    --feed-padding: 14px;
+}
+body.event-style-timeline #chat-container { padding-left: 38px; }
+body.event-style-timeline .message::before {
+    content: ''; position: absolute; left: -23px; top: 0;
+    height: calc(100% + var(--feed-gap) + 2px); width: 2px; background: var(--feed-line);
+}
+body.event-style-timeline .message::after {
+    content: ''; position: absolute; left: -28px; top: 18px;
+    width: 10px; height: 10px; border: 1px solid var(--feed-page);
+    border-radius: 50%; background: var(--feed-accent);
+}
+body.event-style-timeline .message:last-child::before { height: 24px; }
+body.event-style-timeline.light-mode { --feed-accent: #805600; }
+
+body.event-style-glass {
+    --feed-page: #172031;
+    --feed-card: rgba(37, 52, 78, .85);
+    --feed-line: rgba(161, 191, 235, .35);
+    --feed-accent: #8fd8ff;
+    --feed-radius: 18px;
+    --feed-gap: 16px;
+    --feed-padding: 18px;
+}
+body.event-style-glass .message {
+    backdrop-filter: blur(14px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+}
+body.event-style-glass .event-specific { border: 1px solid var(--feed-line); padding: 4px 9px; border-radius: 20px; }
+body.event-style-glass.light-mode { --feed-card: rgba(255, 255, 255, .88); --feed-accent: #00628f; }
+
+/* Explicit URL overrides also work with the original layout. */
+html.feed-custom-page, body.feed-custom-page { background: var(--feed-page) !important; }
+body.feed-custom-card .message, body.feed-custom-card #header { background: var(--feed-card) !important; }
+body.feed-custom-ink .message, body.feed-custom-ink .name, body.feed-custom-ink #header, body.feed-custom-ink .meta-value { color: var(--feed-ink); }
+body.feed-custom-muted .timestamp, body.feed-custom-muted .no-events, body.feed-custom-muted .meta-label { color: var(--feed-muted); }
+body.feed-custom-accent .event-specific { background: transparent; color: var(--feed-accent); }
+body.feed-custom-accent .donation { color: var(--feed-accent); }
+body.feed-custom-radius .message { border-radius: var(--feed-radius); }
+body.feed-custom-gap .message { margin-bottom: var(--feed-gap); }
+body.feed-custom-padding .message { padding: var(--feed-padding); }
+body.event-style-twitch.feed-custom-padding .message { padding-left: calc(var(--feed-padding) + 30px); }
+body.feed-noheader #header { display: none; }
+body.feed-noheader #chat-container { height: 100vh; }
+html.feed-transparent, body.events-styled.transparent-mode { background: transparent !important; }
+body.feed-noanimation .message { animation: none; opacity: 1; transform: none; }
+@media (max-width: 700px) {
+    body.events-styled #header { display: none; }
+    body.events-styled #chat-container { height: 100vh; }
+}
+@media (prefers-reduced-motion: reduce) {
+    body.events-styled .message { animation: none; opacity: 1; transform: none; }
+}
+
 </style>
 <script src="./libs/objects.js"></script>
 <script src="./shared/utils/chatHtml.js"></script>
@@ -631,8 +783,8 @@ body.light-mode .meta-value.badge {
 <body>
 <div id="topbar"></div>
 <div id="header">
-    <h1 class="large">Events Dashboard</h1>
-	<h1 class="small">Events Dashboard</h1>
+    <h1 class="large">Activity Feed / Events</h1>
+	<h1 class="small">Activity Feed / Events</h1>
 </div>
 <div id="chat-container">
     <div class="no-events">Waiting for stream events and donations...</div>
@@ -716,7 +868,7 @@ body.light-mode .meta-value.badge {
 	}
 
 	function applyStaticTranslations() {
-		const dashboardTitle = getTranslation('events-dashboard-title', 'Events Dashboard');
+		const dashboardTitle = getTranslation('events-dashboard-title', 'Activity Feed / Events');
 		document.title = dashboardTitle;
 		document.querySelectorAll('#header h1').forEach(function(heading) {
 			heading.textContent = dashboardTitle;
@@ -851,6 +1003,47 @@ body.light-mode .meta-value.badge {
 		document.body.style.backgroundColor = "transparent";
 		document.documentElement.style.setProperty("--bg-color", "transparent");
 	}
+
+    // Presentation only: every layout uses the same event renderer and filters.
+    var eventStyle = (urlParams.get('style') || 'default').toLowerCase();
+    if (['compact', 'twitch', 'timeline', 'glass'].indexOf(eventStyle) !== -1) {
+        document.body.classList.add('events-styled', 'event-style-' + eventStyle);
+        document.documentElement.classList.add('events-styled');
+    }
+    [
+        ['pagebg', '--feed-page', 'feed-custom-page'],
+        ['cardbg', '--feed-card', 'feed-custom-card'],
+        ['textcolor', '--feed-ink', 'feed-custom-ink'],
+        ['mutedcolor', '--feed-muted', 'feed-custom-muted'],
+        ['accent', '--feed-accent', 'feed-custom-accent']
+    ].forEach(function(option) {
+        var color = normalizeColorParam(urlParams.get(option[0]));
+        if (color && window.CSS && CSS.supports('color', color)) {
+            document.body.style.setProperty(option[1], color);
+            document.documentElement.style.setProperty(option[1], color);
+            document.body.classList.add(option[2]);
+            if (option[0] === 'pagebg') document.documentElement.classList.add(option[2]);
+        }
+    });
+    [
+        ['radius', '--feed-radius', 'feed-custom-radius', 0, 40],
+        ['gap', '--feed-gap', 'feed-custom-gap', 0, 40],
+        ['padding', '--feed-padding', 'feed-custom-padding', 0, 40]
+    ].forEach(function(option) {
+        var raw = urlParams.get(option[0]);
+        var value = Number(raw);
+        if (raw !== null && raw.trim() !== '' && Number.isFinite(value)) {
+            document.body.style.setProperty(option[1], Math.max(option[3], Math.min(option[4], value)) + 'px');
+            document.body.classList.add(option[2]);
+        }
+    });
+    var feedFontSize = Number(urlParams.get('fontsize'));
+    if (feedFontSize > 0 && Number.isFinite(feedFontSize)) {
+        document.body.style.fontSize = Math.max(10, Math.min(40, feedFontSize)) + 'px';
+    }
+    if (urlParams.has('noheader')) document.body.classList.add('feed-noheader');
+    if (urlParams.has('noanimation')) document.body.classList.add('feed-noanimation');
+    if (transparentMode) document.documentElement.classList.add('feed-transparent');
 
 	updateCompactHeightMode();
 	window.addEventListener("resize", updateCompactHeightMode);

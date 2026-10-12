@@ -68,7 +68,7 @@
 	--meta-color: #475569;
 	--leaderboard-color: #7d3c98;
 	--scoreboard-color: #ac3024;
-	--eventsdashboard-color: #111;
+	--eventsdashboard-color: #8a5900;
     --download-link: blue;
     --font-family: "Segoe UI", Tahoma, "Sora", Roboto, Arial, sans-serif;
 }
@@ -129,7 +129,7 @@
 		--leaderboard-color: #b880d6;
 		--scoreboard-color: #e74c3c;
         --download-link: lightblue;
-		--eventsdashboard-color: white;
+		--eventsdashboard-color: #f2c14e;
     }
 }
 
@@ -10380,7 +10380,7 @@ input:checked + .slider:before {
                                         </label>
                                         <label for="ollamaRagEnabled"><span class="popup-control-icon" aria-hidden="true">&#128218;</span><span data-translate="enable-ragEnabled-bot">Use a custom knowledge base (RAG)</span></label>
                                     </div>
-                                    <p id="ragKnowledgeHelp" class="popup-help-text">Add text or Markdown files for the chat bot to reference in its replies.</p>
+                                    <p id="ragKnowledgeHelp" class="popup-help-text">Add text or Markdown files. <a href="https://socialstream.ninja/docs/chatbot-knowledge-guide.html" target="_blank" rel="noopener">Preparation and testing guide</a></p>
                                     <div id="ragFileManagement" style="display:none;">
                                         <div class="textInputContainer rag-search-field">
                                             <select id="ragSearchMode" class="textInput popup-reviewed-control" data-optionsetting="ragSearchMode" aria-describedby="ragSearchHelp ragSearchStatus">
@@ -10389,7 +10389,7 @@ input:checked + .slider:before {
                                             </select>
                                             <label for="ragSearchMode">Search method</label>
                                         </div>
-                                        <p id="ragSearchHelp" class="popup-help-text">Semantic search matches questions by meaning using a small local model. It builds a cached index from existing imports without AI service calls. Keyword search stays available while it prepares. Replies still use your selected AI service.</p>
+                                        <p id="ragSearchHelp" class="popup-help-text">Semantic search is for English. Replies use your selected AI service.</p>
                                         <p id="ragSearchStatus" class="popup-help-text" role="status">Keyword search is selected.</p>
                                         <div class="popup-toggle-row">
                                             <label class="switch">
@@ -10398,7 +10398,7 @@ input:checked + .slider:before {
                                             </label>
                                             <label for="ragFilesOnly"><span class="popup-control-icon" aria-hidden="true">&#128214;</span>Answer only from my files</label>
                                         </div>
-                                        <p id="ragFilesOnlyHelp" class="popup-help-text">Skip the general-chat fallback when no answer is returned from your files. AI-generated answers can still be inaccurate.</p>
+                                        <p id="ragFilesOnlyHelp" class="popup-help-text">Keep factual answers based on your files.</p>
                                         <div class="popup-toggle-row">
                                             <label class="switch">
                                                 <input type="checkbox" id="enhancedProcessing" aria-describedby="ragProcessingHelp" />
@@ -10406,7 +10406,7 @@ input:checked + .slider:before {
                                             </label>
                                             <label for="enhancedProcessing">Use AI to enrich new imports</label>
                                         </div>
-                                        <p id="ragProcessingHelp" class="popup-help-text">Optional: uses your selected AI service to create summaries and search tags. Takes longer and may incur provider charges. Leave off to import locally without AI processing.</p>
+                                        <p id="ragProcessingHelp" class="popup-help-text">Optional AI summaries and tags; may incur provider charges.</p>
                                         <div class="popup-panel-actions">
                                             <button type="button" data-action="uploadRAGfile"><span data-translate="add-another-rag-file">Add file</span></button>
                                             <button type="button" data-action="clearRag" title="Remove all imported documents from the knowledge base. Original files are kept."><span data-translate="clear-rag">Clear all files</span></button>
@@ -11377,7 +11377,7 @@ input:checked + .slider:before {
 
 			<div class="link" title="Monitor donation events and activity in real-time" data-panel-section="eventsdashboard">
 				<h2 class="events_dashboard_title">
-					<span class="title-group"><span class="emoji" aria-hidden="true">📊</span><span data-translate="eventsdashboard">Events Dashboard</span></span>
+					<span class="title-group"><span class="emoji" aria-hidden="true">📊</span><span data-translate="eventsdashboard">Activity Feed / Events</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<button type="button" class="edit-link rounded_area" data-edit-link="eventsdashboard" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-events" class="help-link rounded_area" title="Click for detailed help">[?]</label>
@@ -11411,6 +11411,32 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group events_dashboard">
+                                <div class="popup-settings-panel">
+                                    <label for="events-style"><span class="popup-control-icon" aria-hidden="true">&#127912;</span>Feed style</label>
+                                    <select id="events-style" class="textInput popup-reviewed-control" data-optionparam17="style">
+                                        <option value="">Cards (Default)</option>
+                                        <option value="compact">Compact - dense rows</option>
+                                        <option value="twitch">Twitch-style - activity list</option>
+                                        <option value="timeline">Timeline - connected events</option>
+                                        <option value="glass">Glass - floating cards</option>
+                                    </select>
+                                    <details class="popup-subsection">
+                                        <summary>Customize feed appearance</summary>
+                                        <div class="textInputContainer"><input id="events-accent" class="textInput" type="text" data-optionparam17="accent" placeholder="#bf94ff" /><label for="events-accent">Accent color</label></div>
+                                        <div class="textInputContainer"><input id="events-pagebg" class="textInput" type="text" data-optionparam17="pagebg" placeholder="#18181b" /><label for="events-pagebg">Page background</label></div>
+                                        <div class="textInputContainer"><input id="events-cardbg" class="textInput" type="text" data-optionparam17="cardbg" placeholder="#242427 or rgba(24,24,27,0.8)" /><label for="events-cardbg">Card / row background</label></div>
+                                        <div class="textInputContainer"><input id="events-textcolor" class="textInput" type="text" data-optionparam17="textcolor" placeholder="#efeff1" /><label for="events-textcolor">Text color</label></div>
+                                        <div class="textInputContainer"><input id="events-mutedcolor" class="textInput" type="text" data-optionparam17="mutedcolor" placeholder="#b6b6c0" /><label for="events-mutedcolor">Secondary text color</label></div>
+                                        <div class="textInputContainer"><input id="events-fontsize" class="textInput" type="number" min="10" max="40" data-optionparam17="fontsize" placeholder="Style default" /><label for="events-fontsize">Text size (px)</label></div>
+                                        <div class="textInputContainer"><input id="events-padding" class="textInput" type="number" min="0" max="40" data-optionparam17="padding" placeholder="Style default" /><label for="events-padding">Row padding (px)</label></div>
+                                        <div class="textInputContainer"><input id="events-gap" class="textInput" type="number" min="0" max="40" data-optionparam17="gap" placeholder="Style default" /><label for="events-gap">Space between events (px)</label></div>
+                                        <div class="textInputContainer"><input id="events-radius" class="textInput" type="number" min="0" max="40" data-optionparam17="radius" placeholder="Style default" /><label for="events-radius">Corner radius (px)</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-noheader" type="checkbox" data-param17="noheader" /><span class="slider round"></span></label><label for="events-noheader">Hide page heading</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-noanimation" type="checkbox" data-param17="noanimation" /><span class="slider round"></span></label><label for="events-noanimation">Disable entry animation</label></div>
+                                        <a class="popup-guide-link" href="https://socialstream.ninja/docs/alerts-customization-guide.html#activity-feed-styles" target="_blank" rel="noopener">Feed styles and URL options</a>
+                                    </details>
+                                </div>
+
 								<h3><span class="popup-control-icon" aria-hidden="true">📡</span><span data-translate="source-selection">Sources to Monitor</span></h3>
 
 								<div class="source-selection-container">

@@ -909,7 +909,7 @@ function getEditableGeneratedLinkConfig(targetId) {
 		dock: ["dock.html", "Main Chat"],
 		overlay: ["featured.html", "Featured Chat (Classic)"],
 		multialerts: ["multi-alerts.html", "Multi-Stream Alert Box"],
-		eventsdashboard: ["events.html", "Events Dashboard"],
+		eventsdashboard: ["events.html", "Activity Feed / Events"],
 		reactions: ["reactions.html", "Reactions"],
 		emoteswall: ["emotes.html", "Emote Wall"],
 		hypemeter: ["hype.html", "Viewer Count & Chat Activity"],

@@ -46,6 +46,25 @@
 
 
 </section>
+<section class="guide-card" id="activity-feed-styles">
+<h2>Choose an activity feed style</h2>
+<p>Open <strong>Activity Feed / Events &rarr; Enable and customize &rarr; Feed style</strong>, choose a layout, then copy the updated link into your browser or OBS Browser Source. Open <strong>Customize feed appearance</strong> to adjust colors and spacing. Leave a field empty to use the style's default.</p>
+<table class="guide-table guide-table-stack"><thead><tr><th>Style</th><th>URL option</th><th>Appearance</th></tr></thead><tbody>
+<tr><td data-label="Style">Cards (Default)</td><td data-label="URL option"><code>style=default</code> or omit it</td><td data-label="Appearance">Original event cards with platform borders and event labels.</td></tr>
+<tr><td data-label="Style">Compact</td><td data-label="URL option"><code>style=compact</code></td><td data-label="Appearance">Dense rows with names and messages inline.</td></tr>
+<tr><td data-label="Style">Twitch-style</td><td data-label="URL option"><code>style=twitch</code></td><td data-label="Appearance">Flat activity list with platform icons, purple accents, and row separators.</td></tr>
+<tr><td data-label="Style">Timeline</td><td data-label="URL option"><code>style=timeline</code></td><td data-label="Appearance">Connected event cards with a gold timeline.</td></tr>
+<tr><td data-label="Style">Glass</td><td data-label="URL option"><code>style=glass</code></td><td data-label="Appearance">Rounded translucent cards with soft shadows.</td></tr>
+</tbody></table>
+<p>Add these options to your existing <code>events.html?session=YOUR_SESSION_ID</code> link with <code>&amp;</code>. Preserve your session, password, and connection options.</p>
+<ul>
+<li><code>accent</code>, <code>pagebg</code>, <code>cardbg</code>, <code>textcolor</code>, and <code>mutedcolor</code>: CSS colors. Encode a hex color's <code>#</code> as <code>%23</code> in the URL, or omit the <code>#</code>.</li>
+<li><code>fontsize=14</code>: text size, 10&ndash;40 pixels. <code>padding=8</code>, <code>gap=4</code>, and <code>radius=6</code>: row padding, space between events, and corner radius, each 0&ndash;40 pixels.</li>
+<li><code>noheader</code> hides the page heading; <code>noanimation</code> disables entry animation.</li>
+<li>Combine styles with <code>lightmode</code>, <code>transparent</code>, <code>font</code>, <code>googlefont</code>, <code>scale</code>, <code>notime</code>, and <code>hidemeta</code>. Transparent mode overrides the page background; card backgrounds remain separately adjustable.</li>
+</ul>
+<p>For example, append <code>&amp;style=twitch&amp;accent=%23e5b94f&amp;padding=8&amp;fontsize=14</code> for a denser activity list with a gold accent.</p>
+</section>
 <section class="guide-card" id="files"><h2 id="read-section-2">Download and keep the file structure</h2>
 <ol class="guide-steps"><li><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">Download the source ZIP</a> and extract it. These guides use the beta source; keep the files from one download together.</li>
 <li>Copy <code>multi-alerts.html</code> to <code>my-alerts.html</code> beside the original. If choosing a different page or theme, keep its copy in that file's original folder.</li>

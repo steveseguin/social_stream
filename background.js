@@ -8087,6 +8087,9 @@ function hasTargetedMetaPayload(message) {
 async function sendToDestinations(message, individualLikeAlreadyRouted, pendingCapture) {
 
 	if (typeof message == "object") {
+		if (message.delete && typeof cancelQueuedBotResponses === "function") {
+			cancelQueuedBotResponses(message.delete);
+		}
 		captureLiveStatsFromMessage(message);
 
 		if (message.suppressRelay) {
