@@ -1,0 +1,597 @@
+
+    * {
+        margin: 0; 
+        padding: 0; 
+        box-sizing: border-box; 
+    }
+
+    body, html { 
+        width: 100%; 
+        height: 100%; 
+        overflow: hidden; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        background-color: transparent;
+        font-family: 'Arial', sans-serif;
+    }
+
+    body.align-right {
+        justify-content: flex-end;
+    }
+
+    /* Style-specific containers */
+    .style-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: none;
+    }
+    
+    .style-container.active {
+        display: block;
+    }
+
+    /* Original Jar Style */
+    #jar-style {
+        width: 400px;
+        height: 600px;
+        max-height: 100vh;
+        margin: 0 auto;
+    }
+
+    #canvas-container { 
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    canvas { 
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        width: 100%;
+        height: 100%;
+        z-index: 1; 
+    }
+
+    #tip-text {
+        position: absolute;
+        top: 10px;
+        left: 0;
+        width: 100%; 
+        text-align: center; 
+        color: #0A1236; 
+        font-weight: bold; 
+        font-size: 24px; 
+        z-index: 4;
+        text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
+    }
+
+    #completion-text {
+        position: absolute;
+        bottom: 92px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        color: #0A1236;
+        font-weight: bold;
+        font-size: 20px;
+        z-index: 4;
+        display: none;
+        text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
+    }
+
+    body.hype-mode #completion-text {
+        display: block;
+    }
+
+    #cup-overlay { 
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        z-index: 0; 
+        pointer-events: none; 
+    }
+
+    /* Goal Meter Style */
+    #meter-style {
+        width: 100%;
+        max-width: 800px;
+        padding: 20px;
+    }
+
+    .goal-meter-container {
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .goal-title {
+        color: #fff;
+        font-size: 28px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .meter-wrapper {
+        background: #2a2a2a;
+        border-radius: 50px;
+        height: 60px;
+        padding: 5px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .meter-fill {
+        background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 50%, #CDDC39 100%);
+        height: 100%;
+        border-radius: 45px;
+        width: 0%;
+        transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .meter-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.3) 50%,
+            transparent 100%
+        );
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .meter-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        font-size: 24px;
+        font-weight: bold;
+        text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+    }
+
+    .milestones {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+        color: #ccc;
+        font-size: 14px;
+    }
+
+    /* Recent Tips List */
+    .recent-tips {
+        margin-top: 20px;
+        max-height: 200px;
+        overflow-y: hidden;
+    }
+
+    .tip-item {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .tip-name {
+        color: #4CAF50;
+        font-weight: bold;
+    }
+
+    .tip-amount {
+        color: #FFD700;
+        font-weight: bold;
+    }
+
+    /* Celebration Effects */
+    .celebration-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1000;
+    }
+
+    .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: #f0f;
+        animation: confettiFall 3s linear forwards;
+    }
+
+    @keyframes confettiFall {
+        to {
+            transform: translateY(100vh) rotate(720deg);
+            opacity: 0;
+        }
+    }
+
+    .firework {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        animation: fireworkExplode 1s ease-out forwards;
+    }
+
+    @keyframes fireworkExplode {
+        0% {
+            transform: scale(0);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(30);
+            opacity: 0;
+        }
+    }
+
+    /* Notification Styles */
+    #notification { 
+        position: fixed; 
+        top: 20px; 
+        left: 50%; 
+        transform: translateX(-50%); 
+        background: rgba(60, 60, 60, 0.95);
+        color: #f0f0f0; 
+        padding: 15px 30px; 
+        border-radius: 8px; 
+        display: none;
+        z-index: 1001;
+        font-size: 16px;
+        font-weight: normal;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        animation: notificationPop 0.5s ease-out;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes notificationPop {
+        0% {
+            transform: translateX(-50%) scale(0);
+        }
+        70% {
+            transform: translateX(-50%) scale(1.1);
+        }
+        100% {
+            transform: translateX(-50%) scale(1);
+        }
+    }
+
+    /* Theme variations */
+    body.neon {
+        --primary-color: #ff00ff;
+        --secondary-color: #00ffff;
+        --bg-color: #000;
+    }
+
+    body.neon .goal-meter-container {
+        background: rgba(0, 0, 0, 0.9);
+        border: 2px solid var(--primary-color);
+        box-shadow: 0 0 30px var(--primary-color);
+    }
+
+    body.neon .meter-fill {
+        background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        box-shadow: 0 0 20px var(--primary-color);
+    }
+
+    body.gold .goal-meter-container {
+        background: linear-gradient(135deg, #B8860B 0%, #FFD700 50%, #B8860B 100%);
+        border: 3px solid #FFD700;
+    }
+
+    body.gold .meter-fill {
+        background: linear-gradient(90deg, #FFD700 0%, #FFA500 50%, #FFD700 100%);
+    }
+
+    /* Minimal style */
+    #minimal-style {
+        width: 100%;
+        max-width: 400px;
+        padding: 20px;
+    }
+
+    .minimal-container {
+        text-align: center;
+    }
+
+    .minimal-amount {
+        font-size: 48px;
+        font-weight: bold;
+        color: #4CAF50;
+        text-shadow: 0 2px 10px rgba(76, 175, 80, 0.5);
+        margin-bottom: 10px;
+    }
+
+    .minimal-goal {
+        font-size: 20px;
+        color: #ccc;
+    }
+
+    .minimal-percentage {
+        font-size: 72px;
+        font-weight: bold;
+        background: linear-gradient(45deg, #4CAF50, #8BC34A);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 20px 0;
+    }
+
+    /* Fluid Goal Bar Style */
+    #bar-style {
+        width: 100%;
+        max-width: 900px;
+        padding: 24px;
+    }
+
+    .fluid-bar-container {
+        width: 100%;
+    }
+
+    .fluid-bar-title {
+        color: #fff;
+        font-size: 30px;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 14px;
+        letter-spacing: 0.5px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+    }
+
+    .fluid-bar-track {
+        position: relative;
+        width: 100%;
+        height: 64px;
+        background: rgba(0, 0, 0, 0.55);
+        border-radius: 999px;
+        overflow: hidden;
+        border: 2px solid rgba(255, 255, 255, 0.12);
+        box-shadow: inset 0 3px 12px rgba(0, 0, 0, 0.6), 0 6px 22px rgba(0, 0, 0, 0.35);
+    }
+
+    .fluid-bar-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 0%;
+        background-color: #2196F3;
+        background-repeat: no-repeat;
+        border-radius: inherit;
+        transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1), background-color 1.1s ease, box-shadow 1.1s ease;
+        box-shadow: 0 0 20px rgba(33, 150, 243, 0.55);
+        overflow: hidden;
+    }
+
+    /* Top sheen, gives the liquid a glossy surface */
+    .fluid-bar-fill::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 48%;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
+        border-radius: inherit;
+        pointer-events: none;
+    }
+
+    /* Flowing diagonal stripes, gives the "fluid" motion */
+    .fluid-bar-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 250%;
+        height: 100%;
+        background-image: repeating-linear-gradient(
+            -45deg,
+            rgba(255, 255, 255, 0.16) 0px,
+            rgba(255, 255, 255, 0.16) 16px,
+            rgba(255, 255, 255, 0) 16px,
+            rgba(255, 255, 255, 0) 38px
+        );
+        animation: fluidFlow 2.6s linear infinite;
+        pointer-events: none;
+    }
+
+    body.bar-static .fluid-bar-fill::after { animation: none; }
+
+    body.bar-only #bar-style {
+        padding: 0;
+    }
+
+    body.bar-only .fluid-bar-title,
+    body.bar-only .fluid-bar-meta {
+        display: none;
+    }
+
+    @keyframes fluidFlow {
+        0% { transform: translateX(-38px); }
+        100% { transform: translateX(0); }
+    }
+
+    .fluid-bar-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        font-size: 26px;
+        font-weight: 800;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+        z-index: 5;
+        white-space: nowrap;
+        max-width: calc(100% - 24px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: center;
+        line-height: 1.1;
+        pointer-events: none;
+    }
+
+    .fluid-bar-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 12px;
+        color: #ddd;
+        font-size: 16px;
+        font-weight: 600;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+    }
+
+    body.neon .fluid-bar-track {
+        border-color: var(--primary-color);
+        box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.7), 0 0 26px var(--primary-color);
+    }
+
+    /* Compact Bar Style (square edges, corner-friendly) */
+    #compact-style {
+        width: 100%;
+        max-width: 460px;
+        padding: 12px;
+    }
+
+    .compact-container { width: 100%; }
+
+    .compact-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+    }
+
+    .compact-header .compact-amount { font-variant-numeric: tabular-nums; }
+
+    .compact-track {
+        position: relative;
+        width: 100%;
+        height: 22px;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .compact-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 0%;
+        background-color: #2196F3;
+        transition: width 0.6s ease, background-color 0.6s ease;
+    }
+
+    /* Vertical Bar Style (thermometer, square edges) */
+    #vertical-style {
+        width: 100%;
+        height: 100%;
+        padding: 20px;
+    }
+
+    .vertical-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .vertical-title {
+        color: #fff;
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        text-align: center;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+    }
+
+    .vertical-track {
+        position: relative;
+        width: 70px;
+        height: 320px;
+        max-height: 70vh;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .vertical-fill {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 0%;
+        background-color: #2196F3;
+        transition: height 0.8s ease, background-color 0.8s ease;
+    }
+
+    .vertical-text {
+        margin-top: 10px;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        text-align: center;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+    }
+
+    /* Text Only Style (minimal one-liner) */
+    #text-style {
+        width: 100%;
+        padding: 14px;
+    }
+
+    .text-line {
+        color: #fff;
+        font-size: 26px;
+        font-weight: 800;
+        white-space: nowrap;
+        text-align: center;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+    }
+    

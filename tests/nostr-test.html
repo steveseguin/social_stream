@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nostr Integration Test - Social Stream Ninja</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        h1 {
+            color: #00d4ff;
+            border-bottom: 2px solid #00d4ff;
+            padding-bottom: 10px;
+        }
+        .section {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #e94560;
+        }
+        .config-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #0f0f23;
+            color: #eee;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #ff6b6b;
+        }
+        button.secondary {
+            background: #0f3460;
+        }
+        button.secondary:hover {
+            background: #1a4a7a;
+        }
+        #log {
+            background: #0f0f23;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #222;
+        }
+        .log-time {
+            color: #666;
+        }
+        .log-info { color: #00d4ff; }
+        .log-success { color: #4ade80; }
+        .log-warning { color: #fbbf24; }
+        .log-error { color: #f87171; }
+        .log-event { color: #c084fc; }
+        .log-zap { color: #facc15; }
+        .log-chat { color: #34d399; }
+        
+        #messages {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .message {
+            display: flex;
+            align-items: flex-start;
+            padding: 10px;
+            background: #0f0f23;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .message img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+        .message-content {
+            flex: 1;
+        }
+        .message-name {
+            font-weight: bold;
+            color: #e94560;
+        }
+        .message-text {
+            margin-top: 4px;
+        }
+        .message-donation {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .status.connected { background: #22c55e; color: #000; }
+        .status.connecting { background: #eab308; color: #000; }
+        .status.disconnected { background: #ef4444; color: #fff; }
+        
+        .relay-status {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .relay-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #333;
+        }
+        .relay-badge.open { background: #22c55e; color: #000; }
+        .relay-badge.connecting { background: #eab308; color: #000; }
+        .relay-badge.closed { background: #ef4444; }
+        
+        .examples {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        .examples code {
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .examples code:hover {
+            background: #444;
+        }
+    </style>
+</head>
+<body>
+    <h1>⚡ Nostr Integration Test</h1>
+    
+    <div class="section">
+        <h2>Configuration</h2>
+        <div class="config-group">
+            <label>Streamer npub (or hex pubkey):</label>
+            <input type="text" id="npub" placeholder="npub1... or hex pubkey">
+            <div class="examples">
+                Examples: 
+                <code onclick="document.getElementById('npub').value=this.textContent">npub1w0rthyjyp2f5gful3q5lu0auaxtzrq7ety4hht3fjxv9lzuqp37szq4pkd</code>
+            </div>
+        </div>
+        <div class="config-group">
+            <label>Relays (comma-separated):</label>
+            <input type="text" id="relays" value="wss://relay.damus.io,wss://nos.lol,wss://relay.snort.social,wss://nostr.wine,wss://relay.primal.net">
+        </div>
+        <div class="config-group">
+            <label>Stream ID (optional - leave empty for auto-detection):</label>
+            <input type="text" id="streamId" placeholder="Auto-detect from live stream">
+        </div>
+        <button onclick="startTest()">🔌 Connect</button>
+        <button onclick="stopTest()" class="secondary">⏹ Disconnect</button>
+        <button onclick="clearLog()" class="secondary">🗑 Clear Log</button>
+        
+        <div class="relay-status" id="relayStatus"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Connection Log</h2>
+        <div id="log"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Messages <span id="messageCount">(0)</span></h2>
+        <div id="messages">
+            <p style="color:#666">Messages will appear here when connected...</p>
+        </div>
+    </div>
+
+<script>
+// ============================================================================
+// Nostr Test Client (standalone version of nostr.js for testing)
+// ============================================================================
+
+const BECH32_ALPHABET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+
+var websockets = [];
+var seenEvents = new Set();
+var profileCache = new Map();
+var pendingProfileCallbacks = new Map(); // NEW: store callbacks waiting for profiles
+var messageCount = 0;
+var liveStreamInfo = null;
+
+var config = {
+    relays: [],
+    npub: '',
+    pubkey: '',
+    streamId: '',
+    aTag: '',
+    kinds: [9735, 1311], // zaps, live chat
+    limit: 100
+};
+
+function log(message, type = 'info') {
+    const logDiv = document.getElementById('log');
+    const time = new Date().toLocaleTimeString();
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${message}</span>`;
+    logDiv.appendChild(entry);
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+function clearLog() {
+    document.getElementById('log').innerHTML = '';
+    document.getElementById('messages').innerHTML = '<p style="color:#666">Messages will appear here when connected...</p>';
+    messageCount = 0;
+    document.getElementById('messageCount').textContent = '(0)';
+}
+
+function updateRelayStatus() {
+    const statusDiv = document.getElementById('relayStatus');
+    statusDiv.innerHTML = websockets.map(ws => {
+        let status = 'closed';
+        if (ws.readyState === WebSocket.OPEN) status = 'open';
+        else if (ws.readyState === WebSocket.CONNECTING) status = 'connecting';
+        return `<span class="relay-badge ${status}">${ws.url.replace('wss://', '')} (${status})</span>`;
+    }).join('');
+}
+
+function npubToHex(npub) {
+    if (!npub || !npub.startsWith('npub1')) {
+        return npub;
+    }
+    try {
+        var decoded = [];
+        npub = npub.toLowerCase();
+        
+        for (var i = 5; i < npub.length - 6; i++) {
+            decoded.push(BECH32_ALPHABET.indexOf(npub[i]));
+        }
+        
+        var bytes = [];
+        var acc = 0;
+        var bits = 0;
+        for (var i = 0; i < decoded.length; i++) {
+            acc = (acc << 5) | decoded[i];
+            bits += 5;
+            while (bits >= 8) {
+                bits -= 8;
+                bytes.push((acc >> bits) & 0xff);
+            }
+        }
+        
+        return bytes.map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch(e) {
+        log('Error decoding npub: ' + e.message, 'error');
+        return '';
+    }
+}
+
+function hexToNpub(hex) {
+    if (!hex || hex.length !== 64) return hex;
+    return hex.substring(0, 8) + '...';
+}
+
+function escapeHtml(unsafe) {
+    if (!unsafe) return "";
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;") || "";
+}
+
+// Fetch profile metadata (kind 0) - same as nostr.js
+function fetchProfile(pubkey, callback) {
+    if (profileCache.has(pubkey)) {
+        callback(profileCache.get(pubkey));
+        return;
+    }
+
+    // Add callback to pending list
+    if (!pendingProfileCallbacks.has(pubkey)) {
+        pendingProfileCallbacks.set(pubkey, []);
+    }
+    pendingProfileCallbacks.get(pubkey).push(callback);
+
+    // Only request if this is the first callback for this pubkey
+    if (pendingProfileCallbacks.get(pubkey).length === 1) {
+        // Request profile from first connected relay
+        for (var ws of websockets) {
+            if (ws.readyState === WebSocket.OPEN) {
+                var subId = 'profile_' + pubkey.substring(0, 8);
+                var filter = {
+                    kinds: [0],
+                    authors: [pubkey],
+                    limit: 1
+                };
+                log(`Fetching profile for ${hexToNpub(pubkey)}...`, 'info');
+                ws.send(JSON.stringify(['REQ', subId, filter]));
+                
+                // Set timeout to use default if not found
+                setTimeout(function() {
+                    if (!profileCache.has(pubkey) && pendingProfileCallbacks.has(pubkey)) {
+                        var defaultProfile = {
+                            name: hexToNpub(pubkey),
+                            picture: ''
+                        };
+                        profileCache.set(pubkey, defaultProfile);
+                        // Call all pending callbacks
+                        var callbacks = pendingProfileCallbacks.get(pubkey) || [];
+                        pendingProfileCallbacks.delete(pubkey);
+                        callbacks.forEach(function(cb) { cb(defaultProfile); });
+                    }
+                }, 3000);
+                return;
+            }
+        }
+    } else {
+        // Already requested, just wait for callback
+        return;
+    }
+    
+    // No connected relay, use default immediately
+    var defaultProfile = { name: hexToNpub(pubkey), picture: '' };
+    var callbacks = pendingProfileCallbacks.get(pubkey) || [];
+    pendingProfileCallbacks.delete(pubkey);
+    callbacks.forEach(function(cb) { cb(defaultProfile); });
+}
+
+function parseZapReceipt(event) {
+    var zapInfo = {
+        amount: 0,
+        message: '',
+        zapper: '',
+        zappee: ''
+    };
+
+    try {
+        var bolt11Tag = event.tags.find(t => t[0] === 'bolt11');
+        if (bolt11Tag && bolt11Tag[1]) {
+            var bolt11 = bolt11Tag[1].toLowerCase();
+            var amountMatch = bolt11.match(/lnbc(\d+)([munp]?)/);
+            if (amountMatch) {
+                var num = parseInt(amountMatch[1], 10);
+                var unit = amountMatch[2] || '';
+                switch(unit) {
+                    case 'm': zapInfo.amount = num * 100000; break;
+                    case 'u': zapInfo.amount = num * 100; break;
+                    case 'n': zapInfo.amount = num / 10; break;
+                    case 'p': zapInfo.amount = num / 10000; break;
+                    default: zapInfo.amount = num * 100000000; break;
+                }
+                zapInfo.amount = Math.round(zapInfo.amount / 1000);
+            }
+        }
+
+        var descTag = event.tags.find(t => t[0] === 'description');
+        if (descTag && descTag[1]) {
+            try {
+                var zapRequest = JSON.parse(descTag[1]);
+                zapInfo.zapper = zapRequest.pubkey || '';
+                zapInfo.message = zapRequest.content || '';
+            } catch(e) {}
+        }
+
+        var pTag = event.tags.find(t => t[0] === 'p');
+        if (pTag && pTag[1]) {
+            zapInfo.zappee = pTag[1];
+        }
+    } catch(e) {
+        log('Error parsing zap: ' + e.message, 'error');
+    }
+
+    return zapInfo;
+}
+
+function addMessage(data) {
+    const messagesDiv = document.getElementById('messages');
+    if (messageCount === 0) {
+        messagesDiv.innerHTML = '';
+    }
+    
+    messageCount++;
+    document.getElementById('messageCount').textContent = `(${messageCount})`;
+    
+    const msgEl = document.createElement('div');
+    msgEl.className = 'message';
+    
+    let html = '';
+    if (data.chatimg) {
+        html += `<img src="${data.chatimg}" onerror="this.style.display='none'">`;
+    } else {
+        html += `<div style="width:40px;height:40px;background:#333;border-radius:50%;margin-right:12px;display:flex;align-items:center;justify-content:center;">👤</div>`;
+    }
+    
+    html += '<div class="message-content">';
+    html += `<span class="message-name">${data.chatname}</span>`;
+    if (data.hasDonation) {
+        html += `<span class="message-donation">⚡ ${data.hasDonation}</span>`;
+    }
+    html += `<div class="message-text">${data.chatmessage}</div>`;
+    html += '</div>';
+    
+    msgEl.innerHTML = html;
+    messagesDiv.insertBefore(msgEl, messagesDiv.firstChild);
+}
+
+function processEvent(event) {
+    if (!event || !event.id) return;
+    
+    if (seenEvents.has(event.id)) return;
+    seenEvents.add(event.id);
+    
+    if (seenEvents.size > 1000) {
+        var iterator = seenEvents.values();
+        seenEvents.delete(iterator.next().value);
+    }
+
+    var data = {
+        chatname: '',
+        chatimg: '',
+        chatmessage: '',
+        hasDonation: ''
+    };
+
+    switch(event.kind) {
+        case 0: // Profile metadata
+            try {
+                var profile = JSON.parse(event.content);
+                var profileData = {
+                    name: profile.name || profile.display_name || hexToNpub(event.pubkey),
+                    picture: profile.picture || ''
+                };
+                profileCache.set(event.pubkey, profileData);
+                log(`Profile cached: ${profileData.name}`, 'success');
+                
+                // Call any pending callbacks waiting for this profile
+                if (pendingProfileCallbacks.has(event.pubkey)) {
+                    var callbacks = pendingProfileCallbacks.get(event.pubkey);
+                    pendingProfileCallbacks.delete(event.pubkey);
+                    callbacks.forEach(function(cb) { cb(profileData); });
+                }
+            } catch(e) {}
+            return;
+
+        case 30311: // Live stream event
+            handleLiveStreamEvent(event);
+            return;
+
+        case 1311: // Live chat
+            data.chatmessage = escapeHtml(event.content);
+            log(`Chat message from ${hexToNpub(event.pubkey)}: ${event.content.substring(0, 50)}...`, 'chat');
+            break;
+
+        case 9735: // Zap
+            var zap = parseZapReceipt(event);
+            if (zap.amount > 0) {
+                data.hasDonation = zap.amount.toLocaleString() + ' sats';
+                data.chatmessage = zap.message ? escapeHtml(zap.message) : '⚡ Zap!';
+                event.pubkey = zap.zapper || event.pubkey;
+                log(`⚡ ZAP: ${zap.amount} sats from ${hexToNpub(zap.zapper)}`, 'zap');
+            } else {
+                return;
+            }
+            break;
+
+        default:
+            log(`Unknown event kind: ${event.kind}`, 'warning');
+            return;
+    }
+
+    // Fetch profile for the event author (async like nostr.js)
+    fetchProfile(event.pubkey, function(profile) {
+        data.chatname = profile.name || hexToNpub(event.pubkey);
+        data.chatimg = profile.picture || '';
+        
+        if (data.chatmessage || data.hasDonation) {
+            addMessage(data);
+        }
+    });
+}
+
+function handleLiveStreamEvent(event) {
+    if (liveStreamInfo && liveStreamInfo.status === 'live') {
+        return;
+    }
+    
+    var dTag = event.tags.find(t => t[0] === 'd');
+    if (!dTag || !dTag[1]) {
+        log('Live stream event missing "d" tag', 'warning');
+        return;
+    }
+    
+    var streamId = dTag[1];
+    var status = '';
+    var title = '';
+    
+    event.tags.forEach(function(tag) {
+        if (tag[0] === 'status') status = tag[1];
+        if (tag[0] === 'title') title = tag[1];
+    });
+    
+    log(`Found stream: "${title}" (${streamId}) - Status: ${status}`, 'event');
+    
+    if (status !== 'live') {
+        log(`Stream is not live (${status}), skipping...`, 'warning');
+        return;
+    }
+    
+    liveStreamInfo = {
+        id: streamId,
+        pubkey: event.pubkey,
+        title: title,
+        status: status,
+        aTag: '30311:' + event.pubkey + ':' + streamId
+    };
+    
+    config.streamId = streamId;
+    config.aTag = liveStreamInfo.aTag;
+    
+    log(`✅ Subscribing to live stream: ${title}`, 'success');
+    log(`aTag: ${config.aTag}`, 'info');
+    
+    subscribeToLiveChat();
+}
+
+function subscribeToLiveChat() {
+    if (!config.aTag) {
+        log('No stream aTag configured', 'error');
+        return;
+    }
+    
+    for (var ws of websockets) {
+        if (ws.readyState === WebSocket.OPEN) {
+            var filter = {
+                kinds: config.kinds,
+                '#a': [config.aTag],
+                limit: config.limit
+            };
+            
+            log(`Subscribing to live events with filter: ${JSON.stringify(filter)}`, 'info');
+            ws.send(JSON.stringify(['REQ', 'live_' + config.streamId, filter]));
+        }
+    }
+}
+
+function connectRelay(url) {
+    log(`Connecting to relay: ${url}`, 'info');
+    
+    try {
+        var ws = new WebSocket(url);
+        ws.url = url;
+        
+        ws.onopen = function() {
+            log(`✅ Connected to: ${url}`, 'success');
+            updateRelayStatus();
+            
+            if (config.pubkey && !config.aTag) {
+                var liveStreamFilter = {
+                    kinds: [30311],
+                    "#p": [config.pubkey],
+                    limit: 20
+                };
+                
+                log(`Looking for live streams by ${hexToNpub(config.pubkey)}...`, 'info');
+                ws.send(JSON.stringify(['REQ', 'find_stream', liveStreamFilter]));
+            } else if (config.aTag) {
+                subscribeToLiveChat();
+            }
+        };
+        
+        ws.onmessage = function(e) {
+            try {
+                var msg = JSON.parse(e.data);
+                
+                if (msg[0] === 'EVENT' && msg[2]) {
+                    processEvent(msg[2]);
+                } else if (msg[0] === 'EOSE') {
+                    log(`End of stored events: ${msg[1]}`, 'info');
+                } else if (msg[0] === 'NOTICE') {
+                    log(`Relay notice: ${msg[1]}`, 'warning');
+                }
+            } catch(err) {
+                log(`Error parsing message: ${err.message}`, 'error');
+            }
+        };
+        
+        ws.onerror = function(e) {
+            log(`❌ Relay error: ${url}`, 'error');
+            updateRelayStatus();
+        };
+        
+        ws.onclose = function(e) {
+            log(`Relay closed: ${url}`, 'warning');
+            updateRelayStatus();
+        };
+        
+        websockets.push(ws);
+        updateRelayStatus();
+    } catch(e) {
+        log(`Error connecting to ${url}: ${e.message}`, 'error');
+    }
+}
+
+function startTest() {
+    // Reset state
+    stopTest();
+    seenEvents.clear();
+    profileCache.clear();
+    liveStreamInfo = null;
+    
+    // Read config from inputs
+    var npubInput = document.getElementById('npub').value.trim();
+    var relaysInput = document.getElementById('relays').value.trim();
+    var streamIdInput = document.getElementById('streamId').value.trim();
+    
+    if (!npubInput) {
+        log('❌ Please enter an npub or pubkey', 'error');
+        return;
+    }
+    
+    config.relays = relaysInput.split(',').map(r => r.trim()).filter(r => r);
+    config.npub = npubInput;
+    config.pubkey = npubToHex(npubInput);
+    config.streamId = streamIdInput;
+    config.aTag = streamIdInput && config.pubkey ? '30311:' + config.pubkey + ':' + streamIdInput : '';
+    
+    log(`Starting Nostr connection...`, 'info');
+    log(`Pubkey: ${config.pubkey}`, 'info');
+    log(`Relays: ${config.relays.join(', ')}`, 'info');
+    
+    if (config.aTag) {
+        log(`Manual stream ID: ${config.streamId}`, 'info');
+    } else {
+        log(`Auto-detecting live stream...`, 'info');
+    }
+    
+    // Connect to all relays
+    config.relays.forEach(function(relay) {
+        connectRelay(relay);
+    });
+}
+
+function stopTest() {
+    websockets.forEach(ws => {
+        try { ws.close(); } catch(e) {}
+    });
+    websockets = [];
+    updateRelayStatus();
+    log('Disconnected from all relays', 'info');
+}
+
+// Initialize
+log('Nostr test client ready. Enter an npub and click Connect.', 'info');
+</script>
+
+</body>
+</html>

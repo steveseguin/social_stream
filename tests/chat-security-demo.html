@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat source → OBS page test</title>
+  <style>
+    :root { color-scheme: light dark; --bg:#111827; --panel:#1f2937; --ink:#f3f4f6; --muted:#cbd5e1; --line:#475569; }
+    * { box-sizing:border-box; }
+    body { margin:0 auto; padding:24px; max-width:1280px; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui,sans-serif; }
+    h1 { font-size:26px; margin:0 0 8px; } h2 { font-size:19px; margin:0 0 10px; }
+    p { margin:8px 0 18px; } .muted { color:var(--muted); } a { color:#93c5fd; }
+    section, details { border:1px solid var(--line); border-radius:8px; padding:16px; margin:16px 0; background:var(--panel); }
+    .controls { display:flex; align-items:end; gap:16px; flex-wrap:wrap; }
+    label { display:block; margin-bottom:5px; font-weight:600; }
+    select, button { font:inherit; min-height:44px; padding:8px 12px; border:1px solid var(--line); border-radius:5px; color:var(--ink); background:var(--bg); }
+    button { cursor:pointer; } button.primary { background:#2563eb; color:white; } button:disabled { opacity:.55; cursor:wait; }
+    :focus-visible { outline:3px solid #93c5fd; outline-offset:3px; }
+    #status { border-left:5px solid #94a3b8; padding:12px; background:var(--panel); }
+    #status[data-state="executed"] { border-color:#f87171; } #status[data-state="safe"] { border-color:#4ade80; }
+    .stages { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    pre { white-space:pre-wrap; overflow-wrap:anywhere; font:13px/1.55 ui-monospace,monospace; margin:8px 0; }
+    iframe { display:block; width:100%; border:1px solid var(--line); background:white; }
+    #source-slot { padding:10px; border:1px solid var(--line); border-radius:5px; overflow-wrap:anywhere; }
+    .chat-author__display-name { font-weight:600; margin-right:8px; }
+    #receiver-frame { height:330px; }
+    table { border-collapse:collapse; width:100%; } th,td { text-align:left; padding:9px; border-bottom:1px solid var(--line); }
+    .table-scroll { overflow:auto; } summary { cursor:pointer; font-weight:600; }
+    @media(max-width:720px) { body { padding:14px; } .stages { grid-template-columns:1fr; } }
+    @media(prefers-color-scheme:light) { :root { --bg:#f8fafc; --panel:#fff; --ink:#111827; --muted:#475569; --line:#cbd5e1; } a { color:#1d4ed8; } }
+  </style>
+  <script data-role="source" src="fixtures/chat-security-demo/bootstrap.js"></script>
+  <script defer src="../sources/twitch.js"></script>
+  <script defer src="chat-security-demo.js"></script>
+</head>
+<body>
+  <h1>Chat source → OBS page test</h1>
+  <p class="muted">A local Twitch chat fixture runs the real capture code, background message processing and sanitizers, then delivers to Dock or Featured. The probe only increments a counter. No live chat or OBS exploit is involved.</p>
+  <div class="controls">
+    <div><label for="target">Receiver</label><select id="target"><option value="dock-tts">Dock with TTS</option><option value="featured-tts">Featured with TTS</option><option value="dock">Dock default</option><option value="featured">Featured default</option><option value="dock-normalize">Dock with normalization</option></select></div>
+    <div><label for="mode">Twitch text-only capture</label><select id="mode"><option value="true">Enabled (textonly: true)</option><option value="false">Disabled (textonly: false)</option></select></div>
+    <button id="run" class="primary">Run selected case</button><button id="compare">Run all 8 comparisons</button>
+  </div>
+  <p id="status" role="status" aria-live="polite">Ready. Start this page with <code>node tests/serve-chat-security-demo.cjs</code>, then run a case.</p>
+  <section><h2>Literal viewer message</h2><pre id="probe"></pre><div id="source-slot" class="chat-room__content"><div id="messages"><div id="backlog" class="chat-line__message">Existing backlog (ignored)</div></div></div><p class="muted">The fixture inserts this with <code>textContent</code>. The production Twitch mutation observer captures it directly in this top-level page.</p></section>
+  <div class="stages">
+    <section><h2>1. Captured by sources/twitch.js</h2><p id="source-state">Waiting</p><pre id="captured">—</pre><details><summary>Source DOM HTML</summary><pre id="source-html">—</pre></details></section>
+    <section><h2>2. Sent by background.js</h2><p id="relay-state">Waiting</p><pre id="relayed">—</pre></section>
+  </div>
+  <section><h2>3. Actual downstream page</h2><p id="receiver-state">Waiting</p><div id="receiver-slot"></div><details><summary>HTML parsing locations and intercepted speech</summary><pre id="evidence">—</pre></details></section>
+  <section><h2>Comparison results</h2><div class="table-scroll"><table><thead><tr><th scope="col">Receiver</th><th scope="col">textonly</th><th scope="col">Body sanitizer calls</th><th scope="col">Downstream execution</th></tr></thead><tbody id="results"></tbody></table></div></section>
+  <details><summary>What this test includes</summary><p>Production code: the complete Twitch capture script; <code>processIncomingMessage</code>, <code>applyBotActions</code>, <code>sendToDestinations</code>, <code>sendDataP2P</code>; bundled sanitizers; and the full Dock/Featured page with its normal iframe listener and TTS processing.</p><p>Local substitutes: a Twitch-shaped DOM, Chrome messaging/configuration, offline transports, database I/O, and disabled optional integrations. Event Flow has no configured rules. TTS audio output is muted after message processing. The source fixture blocks inline handlers via CSP; receiver pages allow their normal inline scripts. The server redirects the bridge iframe locally and blocks external resources. A timeout or processing error is reported as an error, never as protection.</p><p>This demonstrates application behavior in a browser. It does not connect to Twitch, run inside OBS, or demonstrate a Chromium exploit. <a href="chat-security-boundaries.md">Detailed review</a>.</p></details>
+  <div id="relay-slot" hidden></div>
+</body>
+</html>

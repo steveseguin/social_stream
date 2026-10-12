@@ -1,0 +1,147 @@
+﻿name: AI Code Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number to review
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ai-review:
+    runs-on: ubuntu-latest
+    env:
+      PR_NUMBER: ${{ inputs.pr_number }}
+    steps:
+      - name: Check for auto-enhanced commit
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the latest commit message
+          COMMIT_MSG=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json commits --jq '.commits[-1].messageHeadline')
+          if echo "$COMMIT_MSG" | grep -q "\[auto-enhanced\]"; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Skipping - commit was auto-enhanced"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout repository
+        if: steps.check.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR diff
+        if: steps.check.outputs.skip != 'true'
+        id: diff
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the diff between base and head
+          DIFF=$(gh pr diff "$PR_NUMBER" --repo ${{ github.repository }})
+
+          # Truncate if too large (API has token limits)
+          MAX_CHARS=30000
+          if [ ${#DIFF} -gt $MAX_CHARS ]; then
+            DIFF="${DIFF:0:$MAX_CHARS}
+
+          ... [diff truncated due to size]"
+          fi
+
+          # Save to file to handle special characters
+          echo "$DIFF" > /tmp/pr_diff.txt
+
+      - name: Get PR info
+        if: steps.check.outputs.skip != 'true'
+        id: pr_info
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_TITLE=$(gh pr view "$PR_NUMBER" --repo ${{ github.repository }} --json title -q '.title')
+          PR_BODY=$(gh pr view "$PR_NUMBER" --repo ${{ github.repository }} --json body -q '.body')
+          echo "title=$PR_TITLE" >> $GITHUB_OUTPUT
+          echo "$PR_BODY" > /tmp/pr_body.txt
+
+      - name: Run AI Code Review
+        if: steps.check.outputs.skip != 'true'
+        id: review
+        env:
+          ZEN_API_TOKEN: ${{ secrets.ZEN_API_TOKEN }}
+          PR_TITLE: ${{ steps.pr_info.outputs.title }}
+        run: |
+          DIFF=$(cat /tmp/pr_diff.txt)
+          PR_BODY=$(cat /tmp/pr_body.txt)
+
+          # Prepare the prompt
+          SYSTEM_PROMPT="You are a bug finder. Only report issues you can PROVE from the diff.
+
+          CRITICAL: If no provable bugs exist, respond with ONLY: NO_ISSUES_FOUND
+
+          ABSOLUTE RULES:
+          1. NEVER invent 'old code' - you can only see the diff, not history. Do NOT claim 'previously X did Y' or 'the old code had Z' unless the removed lines (-) explicitly show it.
+          2. NEVER claim 'this breaks existing behavior' unless the diff shows both the old AND new code.
+          3. Lines marked with + are NEW code. If there's no corresponding - line, there is NO 'old version' to compare against.
+          4. Do NOT infer what 'should' exist based on variable names or patterns.
+
+          ONLY report:
+          - Syntax errors that will crash
+          - Null/undefined access on lines shown in the diff
+          - Security issues (injection, XSS, exposed secrets)
+          - Logic errors provable from the code shown
+
+          Do NOT report:
+          - Style, formatting, whitespace
+          - 'Missing' fallbacks or features you think should exist
+          - Hypothetical regressions without proof in the diff
+          - Suggestions or improvements
+
+          If in doubt, say nothing."
+
+          USER_PROMPT="Find bugs ONLY. Do not invent what 'old code' looked like - you cannot see git history.
+
+          **PR:** ${PR_TITLE}
+
+          **Context:** ${PR_BODY}
+
+          **Diff (+ = added, - = removed):**
+          \`\`\`diff
+          ${DIFF}
+          \`\`\`
+
+          Remember: If there are no - lines for a section, there is NO old code to compare against. Do not hallucinate previous behavior."
+
+          export SYSTEM_PROMPT USER_PROMPT
+          node .github/scripts/opencode-client.cjs /tmp/review.txt
+
+      - name: Post review comment
+        if: steps.check.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REVIEW=$(cat /tmp/review.txt)
+
+          # Skip posting if no issues found
+          if echo "$REVIEW" | grep -q "NO_ISSUES_FOUND"; then
+            echo "No issues found - skipping comment"
+            exit 0
+          fi
+
+          # Create the comment with header
+          COMMENT="## OpenCode AI Bug Check
+
+          $REVIEW
+
+          ---
+          <sub>Auto-check by OpenCode (opencode.ai/go) · Style/formatting ignored · Verify findings before acting</sub>"
+
+          # Post comment to PR
+          gh pr comment "$PR_NUMBER" \
+            --repo ${{ github.repository }} \
+            --body "$COMMENT"
