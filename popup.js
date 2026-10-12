@@ -8167,10 +8167,13 @@ function handleCustomGifCommand(ele, sync) {
 }
 
 function handlePollSettings(ele, sync) {
-    if (!ele.closest('.options_group.poll') || !sync || !PollManager.currentPollId) return false;
-    
-    PollManager.savePollsToStorage();
-    return true;
+    if (!ele.closest('.options_group.poll') || !sync || !PollManager.currentPollId || window.isLoadingPoll) return;
+
+    const poll = PollManager.savedPolls.find(p => p.id === PollManager.currentPollId);
+    if (poll) {
+        poll.settings = PollManager.getCurrentSettings();
+        PollManager.savePollsToStorage();
+    }
 }
 
 function updateSettings(ele, sync = true, value = null) {
@@ -8201,7 +8204,7 @@ function updateSettings(ele, sync = true, value = null) {
     if (handleCustomGifCommand(ele, sync)) return;
 	
     // Handle poll settings
-    if (handlePollSettings(ele, sync)) return;
+    handlePollSettings(ele, sync);
 	
     // Handle delete parameters
     if (handleDelParam(ele, sync)) {
@@ -11655,6 +11658,7 @@ const PollManager = {
     },
 
     createNewPoll() {
+        this.currentPollId = null;
         const defaultSettings = {
             pollType: 'freeform',
             pollQuestion: '',
@@ -11693,7 +11697,6 @@ const PollManager = {
             }
         }
 
-        this.currentPollId = null;
         this.updatePollsList();
     },
 

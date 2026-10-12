@@ -14521,29 +14521,32 @@ function initializePoll() {
 	} catch (e) {}
 }
 
+function getSavedPolls() {
+	try {
+		const stored = settings.savedPolls;
+		const polls = stored && (stored.object || JSON.parse(stored.json || "[]"));
+		return Array.isArray(polls) ? polls : [];
+	} catch (e) {
+		log("Error reading poll presets: " + e.message);
+		return [];
+	}
+}
+
 function loadPollPreset(pollId) {
-	chrome.storage.local.get(["savedPolls"], function (result) {
-		if (result.savedPolls) {
-			try {
-				const savedPolls = JSON.parse(result.savedPolls);
-				const poll = savedPolls.find(p => p.id === pollId);
-				if (poll && poll.settings) {
-					// Update settings with the loaded poll
-					Object.keys(poll.settings).forEach(key => {
-						if (settings.hasOwnProperty(key)) {
-							settings[key] = poll.settings[key];
-						}
-					});
-					// Send updated settings to poll overlay
-					sendTargetP2P({ settings: settings }, "poll");
-					// Save updated settings
-					chrome.storage.local.set({ settings: settings });
-				}
-			} catch (e) {
-				log("Error loading poll preset: " + e.message);
-			}
-		}
+	const poll = getSavedPolls().find(p => p.id === pollId);
+	if (!poll || !poll.settings) return;
+
+	const fields = {
+		pollType: "optionsetting", pollQuestion: "textsetting", multipleChoiceOptions: "textsetting",
+		pollMatchMode: "optionsetting", pollStyle: "optionsetting", pollTimer: "numbersetting",
+		pollTimerState: "setting", pollTally: "setting", pollSpam: "setting", pollDonationWeighted: "setting"
+	};
+	Object.keys(fields).forEach(key => {
+		if (!Object.prototype.hasOwnProperty.call(poll.settings, key)) return;
+		settings[key] = { [fields[key]]: poll.settings[key] };
 	});
+	sendTargetP2P({ settings: settings }, "poll");
+	chrome.storage.local.set({ settings: settings });
 }
 
 function updatePollSettings(newSettings) {
@@ -14567,24 +14570,7 @@ function updatePollSettings(newSettings) {
 }
 
 function getPollPresets(callback) {
-	chrome.storage.local.get(["savedPolls"], function (result) {
-		try {
-			if (result.savedPolls) {
-				const savedPolls = JSON.parse(result.savedPolls);
-				// Return simplified list with id and name
-				const presets = savedPolls.map(poll => ({
-					id: poll.id,
-					name: poll.name
-				}));
-				callback(presets);
-			} else {
-				callback([]);
-			}
-		} catch (e) {
-			log("Error getting poll presets: " + e.message);
-			callback([]);
-		}
-	});
+	callback(getSavedPolls().map(poll => ({ id: poll.id, name: poll.name })));
 }
 
 function createNewPoll(pollSettings) {
@@ -19660,7 +19646,7 @@ async function pickTickerFileWithBrowserDialog() {
 		} else {
 			primaryResult = pickerResult;
 		}
-		if (!primaryResult) {
+		if (!primaryResult || typeof primaryResult === "number") {
 			return { handle: null, canceled: true, unavailable: false };
 		}
 		return { handle: primaryResult, canceled: false, unavailable: false };
@@ -19687,7 +19673,7 @@ async function selectTickerFile() {
 		pickerUnavailable = nativeResult.unavailable;
 	}
 
-	if (!selectedHandle) {
+	if (!selectedHandle && !pickerCanceled) {
 		const browserResult = await pickTickerFileWithBrowserDialog();
 		if (browserResult.handle) {
 			selectedHandle = browserResult.handle;
@@ -19696,10 +19682,10 @@ async function selectTickerFile() {
 		pickerUnavailable = pickerUnavailable || browserResult.unavailable;
 	}
 
+	if (pickerCanceled) return;
+
 	if (!selectedHandle) {
-		if (pickerCanceled) {
-			await markHandleNeedsAttention("ticker", "Select a ticker source file");
-		} else if (pickerUnavailable) {
+		if (pickerUnavailable) {
 			await markHandleNeedsAttention("ticker", "File picker not available");
 		} else {
 			await markHandleNeedsAttention("ticker", "Unable to open ticker file");
