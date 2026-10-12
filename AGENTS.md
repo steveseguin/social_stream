@@ -8,6 +8,8 @@ This repository supports three distinct delivery targets:
 
 Key architectural notes:
 
+- Keep ZIP-only exclusions in `.gitattributes`; preserve repository assets for hosted pages and legacy users. Default overlay links open on `socialstream.ninja` and load assets from the web, independently of the installed extension. Check local consumers before excluding an asset: `ai.js` and `background.js` use packaged models, and `popup.js` voice previews and explicitly opened local overlays also use packaged assets. A hosted overlay link alone does not establish that its shared dependencies are unused locally.
+
 - Content scripts such as `sources/websocket/twitch.js` and `sources/websocket/kick.js` remain classic scripts.  They load shared helpers with dynamic `import()` guarded by `chrome.runtime.getURL(…)` and a relative fallback so Electron (which lacks `chrome.*`) continues to work.
 - Prefer old-school browser scripts for pages/overlays and keep browser-facing code Chrome 80 friendly. Avoid `<script type="module">`, top-level `import`/`export`, and newer syntax or APIs unless there is already a compatibility path or Steve explicitly asks to raise the baseline.
 - Provider cores (`providers/twitch/chatClient.js`, `providers/kick/core.js`, `providers/youtube/liveChat.js`) must stay environment agnostic: no direct DOM or Chrome APIs, all logging should be optional, and transports (RTC vs extension messaging) sit in their respective adapters.
