@@ -8,7 +8,7 @@ const categories={chat:'Combined chat',featured:'Featured message',alerts:'Multi
 const cards=catalog.map(entry=>{
   const title=escape(entry.name),image=escape(entry.image);
   const thumb=image.replace(/\.webp$/,'-thumb.webp');
-  return `<article class="gallery-card" data-kind="${entry.category}"${entry.collection ? ` data-collection="${escape(entry.collection)}"` : ''} data-path="${escape(entry.path)}" data-search="${escape((entry.name+' '+entry.description+' '+entry.tags+' '+categories[entry.category]).toLowerCase())}">
+  return `<article class="gallery-card"${entry.collection && entry.category === 'featured' ? ` id="pack-${escape(entry.collection)}"` : ''} data-kind="${entry.category}"${entry.collection ? ` data-collection="${escape(entry.collection)}"` : ''} data-path="${escape(entry.path)}" data-search="${escape((entry.name+' '+entry.description+' '+entry.tags+' '+categories[entry.category]).toLowerCase())}">
   <a class="gallery-preview" href="${image}" data-screenshot data-title="${title}" aria-label="Enlarge ${title} screenshot"><img src="${thumb}" width="800" height="480" loading="lazy" decoding="async" alt="${title} overlay with sample messages"></a>
   <div class="gallery-card-content"><span class="gallery-category">${escape(categories[entry.category])}</span><h2>${title}</h2><p class="gallery-description">${escape(entry.description)}</p>
   <div class="gallery-card-actions"><a class="gallery-open" href="overlay-template-quick-start.html" target="_blank" rel="noopener">Open overlay</a><a href="${image}" data-screenshot data-title="${title}">View screenshot</a>${entry.collection ? '<button type="button" class="gallery-use-set" hidden>Use matching set</button>' : ''}</div></div>

@@ -166,3 +166,13 @@ body .textInputContainer.popup-inset-field { width:260px; max-width:calc(100% - 
 
 .tts-name-option { margin-top: 12px; }
 .tts-name-option small { display: block; margin-top: 4px; }
+
+/* Event-overlay controls use the same fields at narrow popup and desktop widths. */
+body .event-board-settings { width:100%; box-sizing:border-box; }
+body .event-board-settings .textInputContainer { width:100%; }
+body .event-board-settings .textInputContainer > label { position:static; grid-area:1 / 1 / 2 / 3; padding:0; max-width:100%; color:var(--default-text-color); }
+body .event-board-settings > label, body .event-board-settings details > label { display:block; margin-top:10px; }
+body .event-board-settings select { display:block; width:100%; margin:4px 0 10px; }
+body .event-board-settings .popup-action-row { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
+/* Keep the added stack panel above the existing alert-type panel. */
+body .wrapper.beginner-basic[data-panel-section="multialerts"] { flex-direction:column; }

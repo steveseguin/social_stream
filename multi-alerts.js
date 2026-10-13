@@ -11,7 +11,7 @@ const ALERT_CATEGORIES = Object.freeze({
 
 const DEFAULT_ALERT_STYLE = 'twitch';
 
-const ANIMATION_STYLES = new Set(['slidedown', 'slideup', 'pop', 'none']);
+const ANIMATION_STYLES = new Set(['slidedown', 'slideup', 'pop', 'fade', 'none']);
 
 const CATEGORY_LABELS = Object.freeze({
   [ALERT_CATEGORIES.FOLLOW]: 'New Follower',
@@ -297,6 +297,9 @@ const state = {
   iframe: null,
   socket: null,
   queue: [],
+  paused: false,
+  muted: false,
+  lastAlert: null,
   currentAlert: null,
   currentAlertNode: null,
   alertSequence: 0,
@@ -322,7 +325,36 @@ const elements = {
   audio: document.getElementById('custom-alert-audio')
 };
 
+var alertBoard = null;
 applyPagePresentation();
+if (settings.stack) {
+  document.body.classList.add('stack-alerts');
+  document.body.style.setProperty('--stack-gap', settings.stackGap + 'px');
+  alertBoard = SSNEventBoard.create({ params: urlParams, container: elements.stage, kind: 'alerts', limit: settings.limit,
+    translate: getTranslation,
+    category: function (payload) { return inferCategory(payload); },
+    receive: function (payload) {
+      var model = buildAlertViewModel(payload);
+      if (model && !settings.disabledCategories[model.category]) displayStackAlert(model, { silent: alertBoard.isRestoring() });
+    },
+    replay: function (payload) {
+      var row = alertBoard.rows().find(function (item) { return item.payload === payload; });
+      var pinned = row && row.pinned; alertBoard.remove(row);
+      var model = buildAlertViewModel(payload);
+      if (model) {
+        displayStackAlert(model);
+        if (pinned) alertBoard.command({ action: 'eventOverlayControl', surface: 'alerts', board: urlParams.get('board') || 'default', command: 'pin' });
+      }
+    },
+    command: function (command) { controlAlertPlayback(command); },
+    cleared: function () { stopActiveAlertSound(); if (typeof TTS !== 'undefined' && TTS.clearQueue) TTS.clearQueue(); },
+    changed: function (rows) { elements.stage.classList.toggle('has-alert', rows.length > 0); }
+  });
+  alertBoard.restore();
+}
+if (urlParams.has('demo')) {
+  SSNEventBoard.samples().forEach(function (payload) { handlePreviewMessage({ __multiAlertsPreviewEnvelope: true, payload: payload, silent: true }); });
+}
 attachWindowListeners();
 attachAudioUnlockListeners();
 if (settings.previewOnly) {
@@ -427,6 +459,7 @@ async function loadTranslationFromUrl() {
     const response = await fetch(`./translations/${encodeURIComponent(lang)}.json`, { cache: 'no-store' });
     if (response.ok) {
       translation = await response.json();
+      if (alertBoard) alertBoard.translateControls();
     }
   } catch (error) {
     log('translation load failed', error);
@@ -1746,6 +1779,10 @@ function readSettings() {
       : false;
 
   return {
+    stack: urlParams.has('stack'),
+    limit: Math.round(Math.max(1, Math.min(10, parseNumberParam('limit', 3)))),
+    keep: urlParams.has('keep'),
+    stackGap: Math.max(0, Math.min(80, parseNumberParam('gap', 12))),
     roomID: normalizeText(urlParams.get('session')),
     password: normalizeText(urlParams.get('password')) || 'false',
     showTime: Math.max(1800, parseNumberParam('showtime', 8000)),
@@ -1799,7 +1836,7 @@ function readSettings() {
       ? normalizeText(urlParams.get('animation')).toLowerCase()
       : '',
     transparent: urlParams.has('transparent') || urlParams.has('transparency'),
-    previewOnly: urlParams.has('preview'),
+    previewOnly: urlParams.has('preview') || urlParams.has('demo'),
     showStatus: urlParams.has('showstatus') || urlParams.has('debug') || urlParams.has('preview'),
     debug: urlParams.has('debug'),
     useServerOnlyTransport: useServerOnlyTransport(),
@@ -1864,7 +1901,7 @@ function attachWindowListeners() {
       return;
     }
 
-    if (!event.data || !Object.prototype.hasOwnProperty.call(event.data, 'multiAlertsPreview')) {
+    if (!settings.previewOnly || event.source !== window.parent || !event.data || !Object.prototype.hasOwnProperty.call(event.data, 'multiAlertsPreview')) {
       return;
     }
 
@@ -1992,7 +2029,7 @@ function handlePreviewMessage(previewMessage) {
     return;
   }
 
-  clearAlert({ clearQueue: true, preserveCooldown: true });
+  if (!settings.stack) clearAlert({ clearQueue: true, preserveCooldown: true });
   displayAlert(model, previewOptions);
   updateStatus(`Previewing ${getCategoryLabel(model.category) || 'alert'}`);
 }
@@ -2002,6 +2039,11 @@ function handleIncomingPayload(payload) {
   if (payload && typeof payload === 'object' && payload.action === 'clearAlerts') {
     clearAlert({ clearQueue: true });
     updateStatus('Alerts cleared');
+    return;
+  }
+  if (payload && payload.action === 'eventOverlayControl') {
+    if (alertBoard) alertBoard.command(payload);
+    else if (payload.surface === 'alerts' && (payload.board || 'default') === (urlParams.get('board') || 'default')) controlAlertPlayback(payload.command);
     return;
   }
   flattenPayloads(payload).forEach((entry) => {
@@ -2049,7 +2091,54 @@ function flattenPayloads(payload) {
   return [payload];
 }
 
+function playModelSound(model) {
+  if (state.muted) return;
+  playAlertSound(model).then(function () {
+    if (!state.muted && typeof TTS !== 'undefined' && TTS.speech && model.payload) TTS.speechMeta(model.payload);
+  });
+}
+
+function controlAlertPlayback(command) {
+  if (command === 'mute') { state.muted = true; stopActiveAlertSound(); if (typeof TTS !== 'undefined' && TTS.clearQueue) TTS.clearQueue(); }
+  if (command === 'unmute') state.muted = false;
+  if (command === 'pause') state.paused = true;
+  if (command === 'resume') { state.paused = false; processQueue(); }
+  if (command === 'clear') clearAlert({ clearQueue: true });
+  if (command === 'skip') {
+    if (alertBoard) { var rows = alertBoard.rows(); alertBoard.remove(rows[rows.length - 1]); stopActiveAlertSound(); }
+    else { stopActiveAlertSound(); finalizeAlert(state.currentAlertNode, state.alertSequence); }
+  }
+  if (command === 'replay' && state.lastAlert && !state.paused) displayAlert(state.lastAlert);
+}
+
+function displayStackAlert(model, options) {
+  if (alertBoard.duplicate(model.payload) || alertBoard.defer(model.payload)) return;
+  options = options || {};
+  var streak = pickTikTokGiftStreakId(model.payload);
+  var previous = streak && alertBoard.rows().find(function (row) { return pickTikTokGiftStreakId(row.payload) === streak; });
+  if (previous) { alertBoard.remove(previous); options.silent = true; }
+  var card = renderAlert(model);
+  elements.stage.appendChild(card);
+  alertBoard.register(card, model.payload, settings.keep ? 0 : settings.showTime);
+  if (!card.isConnected) return;
+  state.lastAlert = model;
+  if (!options.silent && !alertBoard.isRestoring()) playModelSound(model);
+  if (settings.keep) {
+    card.classList.add('persistent-alert');
+    // Leave the event text visible after its media presentation finishes.
+    var finishMedia = function () {
+      card.querySelectorAll('video').forEach(function (video) { video.pause(); });
+      card.querySelectorAll('.alert-media').forEach(function (media) { media.style.display = 'none'; });
+    };
+    if (alertBoard.isRestoring()) finishMedia();
+    else setTimeout(finishMedia, settings.showTime);
+  }
+  updateStatus(model.title);
+}
+
 function queueAlert(model) {
+  if (settings.stack) { displayStackAlert(model); return; }
+  if (state.paused) { state.queue.push(model); while (state.queue.length > settings.maxQueue) state.queue.shift(); return; }
   const tikTokGiftStreakId = pickTikTokGiftStreakId(model?.payload);
   if (tikTokGiftStreakId) {
     if (pickTikTokGiftStreakId(state.currentAlert?.payload) === tikTokGiftStreakId) {
@@ -2098,6 +2187,8 @@ function clearDisplayTimers() {
 }
 
 function displayAlert(model, options = {}) {
+  if (settings.stack) { displayStackAlert(model, options); return; }
+  state.lastAlert = model;
   clearDisplayTimers();
   const card = renderAlert(model);
   const alertToken = ++state.alertSequence;
@@ -2106,10 +2197,10 @@ function displayAlert(model, options = {}) {
   elements.stage.innerHTML = '';
   elements.stage.appendChild(card);
   elements.stage.classList.add('has-alert');
-  if (!options.silent) {
+  if (!options.silent && !state.muted) {
     playAlertSound(model).then(() => {
       if (
-        state.alertSequence === alertToken &&
+        state.alertSequence === alertToken && !state.muted &&
         typeof TTS !== 'undefined' &&
         TTS.speech &&
         model.payload
@@ -2117,8 +2208,6 @@ function displayAlert(model, options = {}) {
         TTS.speechMeta(model.payload);
       }
     });
-  } else if (typeof TTS !== 'undefined' && TTS.speech && model.payload) {
-    TTS.speechMeta(model.payload);
   }
   updateStatus(model.title);
 
@@ -2175,6 +2264,7 @@ function finalizeAlert(card, alertToken) {
 }
 
 function processQueue() {
+  if (state.paused) return;
   if (state.currentAlert) {
     return;
   }
@@ -2187,6 +2277,7 @@ function processQueue() {
 }
 
 function clearAlert({ clearQueue = false, preserveCooldown = false } = {}) {
+  if (alertBoard) alertBoard.clear();
   clearDisplayTimers();
   if (state.cooldownTimer) {
     window.clearTimeout(state.cooldownTimer);
@@ -2404,7 +2495,7 @@ function buildAlertMedia(model, shell) {
   if (tagName === 'video') {
     mediaElement.autoplay = true;
     mediaElement.muted = true;
-    mediaElement.loop = true;
+    mediaElement.loop = !(settings.stack && settings.keep);
     mediaElement.playsInline = true;
     mediaElement.setAttribute('playsinline', '');
   } else {
@@ -2712,6 +2803,7 @@ async function playAlertSound(model) {
 window.__multiAlertsOverlay = {
   getSettings() {
     return {
+      stack: settings.stack, limit: settings.limit, keep: settings.keep,
       roomID: settings.roomID,
       password: settings.password,
       showTime: settings.showTime,
@@ -2765,8 +2857,9 @@ window.__multiAlertsOverlay = {
   },
   getState() {
     return {
+      visibleCount: alertBoard ? alertBoard.rows().length : (state.currentAlert ? 1 : 0),
       queueLength: state.queue.length,
-      hasAlert: Boolean(state.currentAlert),
+      hasAlert: alertBoard ? alertBoard.rows().length > 0 : Boolean(state.currentAlert),
       blockedUntil: state.blockedUntil,
       currentCategory: state.currentAlert ? state.currentAlert.category : '',
       currentTitle: state.currentAlert ? state.currentAlert.title : '',

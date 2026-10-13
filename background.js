@@ -8087,6 +8087,9 @@ function hasTargetedMetaPayload(message) {
 async function sendToDestinations(message, individualLikeAlreadyRouted, pendingCapture) {
 
 	if (typeof message == "object") {
+		if (message.delete && typeof cancelQueuedBotResponses === "function") {
+			cancelQueuedBotResponses(message.delete);
+		}
 		captureLiveStatsFromMessage(message);
 
 		if (message.suppressRelay) {
@@ -13470,7 +13473,7 @@ function prepareOverlayControl(data, target) {
         (target === "map" && (data.settings || data.setting || ["startmap", "pausemap", "resetmap"].includes(data.cmd))) ||
         (target === "timer" && data.timer) || (target === "ticker" && data.ticker) || (target === "spotify" && data.spotify) ||
         (target === "tipjar" && ["resettipjar", "settipjaramount"].includes(data.cmd)) ||
-        (target === "alerts" && data.action === "clearAlerts") || (target === "bot" && data.action === "clearBotOverlay") ||
+        ((target === "alerts" || target === "dock") && data.action === "eventOverlayControl" && data.surface === (target === "alerts" ? "alerts" : "events")) || (target === "alerts" && data.action === "clearAlerts") || (target === "bot" && data.action === "clearBotOverlay") ||
         (target === "wordcloud" && (data.chatmessage || "state" in data)) || (target === "gif" && data.contentimg) ||
         (target === "reactions" && ["reaction", "liked", "like"].includes(data.event)) ||
         (target === "waitlist" && ("drawmode" in data || "drawPoolSize" in data)))) return data;

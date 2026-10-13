@@ -1208,11 +1208,11 @@ document.addEventListener('DOMContentLoaded', function() {
 			type: 'popout',
 			instructions: `
 				<ul>
-					<li>URL: https://sealteamsloth.com/popout-chat/USERNAME</li>
+					<li>URL: https://sealteamsloth.com/USERNAME?popout=1</li>
 					<li>Open the streamer's pop-out chat while signed in</li>
 				</ul>
 			`,
-			notes: 'Captures new chat messages, emotes, avatars, name colors, user/message IDs, and optional viewer-count updates.'
+			notes: 'Captures new chat messages, emotes, avatars, name colors, message IDs, and optional viewer-count updates.'
 		},
 		{
 			name: 'Starvios',

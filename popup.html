@@ -68,7 +68,7 @@
 	--meta-color: #475569;
 	--leaderboard-color: #7d3c98;
 	--scoreboard-color: #ac3024;
-	--eventsdashboard-color: #111;
+	--eventsdashboard-color: #8a5900;
     --download-link: blue;
     --font-family: "Segoe UI", Tahoma, "Sora", Roboto, Arial, sans-serif;
 }
@@ -129,7 +129,7 @@
 		--leaderboard-color: #b880d6;
 		--scoreboard-color: #e74c3c;
         --download-link: lightblue;
-		--eventsdashboard-color: white;
+		--eventsdashboard-color: #f2c14e;
     }
 }
 
@@ -6747,21 +6747,161 @@ input:checked + .slider:before {
 
 			<div class="link beginner-basic" title="Dedicated multi-stream alert overlay for follows, subscriptions, donations, cheers, and raids." data-panel-section="multialerts">
 				<h2 class="multi_alert_title">
-					<span class="title-group"><span class="emoji" aria-hidden="true">🚨</span><span>Multi-Stream Alert Box</span></span>
+					<span class="title-group"><span class="emoji" aria-hidden="true">🚨</span><span data-translate="popup-multi-stream-alert-box">Multi-Stream Alert Box</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="multialerts" title="Load an existing link for this overlay">[edit link]</button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="multialerts" title="Load an existing link for this overlay" data-translate="popup-edit-link">[edit link]</button>
 				</h2>
-				<small class="beginner-section-note">Shows follows, subs, donations, bits, and raids as alert popups, plus optional auction winner and hype train alerts. Use the sections below for common alert controls.</small>
+				<small class="beginner-section-note" data-translate="popup-shows-follows-subs-donations-bits-and-raids-as-alert-popups-plus-optional-a">Shows follows, subs, donations, bits, and raids as alert popups, plus optional auction winner and hype train alerts. Use the sections below for common alert controls.</small>
 				<div id="multialerts" data-raw="" class="single_message"><a href="" id="multialertslink"></a></div>
 				<div id="multialerts-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
-				<div class="help-tip" style="margin-top: 10px;">🎯 Choose alerts · 🧪 Preview · 📋 Copy OBS link</div>
+				<div class="help-tip" style="margin-top: 10px;" data-translate="popup-choose-alerts-preview-copy-obs-link">🎯 Choose alerts · 🧪 Preview · 📋 Copy OBS link</div>
 			</div>
 			<a href="" id="multi-alert-options" data-panel-section="multialerts"></a>
 
 			<div class="wrapper beginner-basic" data-panel-section="multialerts">
+<div class="collapsible">
+<input type="checkbox" class="collapsible-input" id="wrapper-multi-board" />
+<label class="collapsible-label" for="wrapper-multi-board" data-translate="popup-multiple-alerts-event-list">&#129374; Multiple alerts / Event list</label>
+<div class="collapsible-text">
+<div class="options">
+<div class="options_group">
+<div class="popup-settings-panel event-board-settings">
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="multi-stack" type="checkbox" data-param25="stack" />
+<span class="slider round">
+</span>
+</label>
+<label for="multi-stack" data-translate="popup-show-multiple-alerts">Show multiple alerts</label>
+</div>
+<div class="textInputContainer">
+<label for="multi-limit" data-translate="popup-visible-alerts">Visible alerts</label>
+<input id="multi-limit" class="textInput" type="number" data-optionparam25="limit" min="1" max="10" placeholder="3" />
+</div>
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="multi-keep" type="checkbox" data-param25="keep" />
+<span class="slider round">
+</span>
+</label>
+<label for="multi-keep" data-translate="popup-keep-alerts-until-replaced-stack-only">Keep alerts until replaced (stack only)</label>
+</div>
+<div class="textInputContainer">
+<label for="multi-gap" data-translate="popup-space-between-alerts-px">Space between alerts (px)</label>
+<input id="multi-gap" class="textInput" type="number" data-optionparam25="gap" min="0" max="80" placeholder="12" />
+</div>
+<p data-translate="popup-timed-stacks-use-the-existing-display-duration-per-card-stacks-show-incomin">Timed stacks use the existing display duration per card. Stacks show incoming alerts immediately; the single-alert queue applies only when stacking is off.</p>
+<div class="popup-action-row">
+<button type="button" class="popup-action-button" data-board-preset="alerts" data-translate="popup-last-three-transparent">Last three — transparent</button>
+<button type="button" class="tts-test-button" data-board-preview="alerts" data-translate="popup-preview-sample-events">Preview sample events</button>
+</div>
+<details class="popup-subsection">
+<summary data-translate="popup-layout-and-motion">Layout and motion</summary>
+<label for="board-alerts-layout" data-translate="popup-layout">Layout</label>
+<select id="board-alerts-layout" class="textInput" data-optionparam25="layout">
+<option value="" data-translate="popup-list">List</option>
+<option value="horizontal" data-translate="popup-horizontal-cards">Horizontal cards</option>
+<option value="rotate" data-translate="popup-one-event-at-a-time-rotate">One event at a time — rotate</option>
+<option value="latest" data-translate="popup-latest-event-in-each-category">Latest event in each category</option>
+<option value="marquee" data-translate="popup-scrolling-strip">Scrolling strip</option>
+</select>
+<label for="board-alerts-order" data-translate="popup-new-events-appear">New events appear</label>
+<select id="board-alerts-order" class="textInput" data-optionparam25="order">
+<option value="" data-translate="popup-at-the-top-left">At the top / left</option>
+<option value="oldest" data-translate="popup-at-the-bottom-right">At the bottom / right</option>
+</select>
+<label for="board-alerts-textalign" data-translate="popup-text-alignment">Text alignment</label>
+<select id="board-alerts-textalign" class="textInput" data-optionparam25="textalign">
+<option value="" data-translate="popup-left">Left</option>
+<option value="right" data-translate="popup-right">Right</option>
+</select>
+<div class="textInputContainer">
+<label for="board-alerts-rowwidth" data-translate="popup-maximum-row-width-px">Maximum row width (px)</label>
+<input id="board-alerts-rowwidth" class="textInput" type="number" data-optionparam25="rowwidth" min="200" max="1920" placeholder="Automatic" />
+</div>
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="board-alerts-nowrap" type="checkbox" data-param25="nowrap" />
+<span class="slider round">
+</span>
+</label>
+<label for="board-alerts-nowrap" data-translate="popup-keep-text-on-one-line">Keep text on one line</label>
+</div>
+<label for="board-alerts-exitmotion" data-translate="popup-exit-animation">Exit animation</label>
+<select id="board-alerts-exitmotion" class="textInput" data-optionparam25="exitmotion"><option value="" data-translate="popup-none">None</option><option value="fade" data-translate="popup-fade">Fade</option><option value="slide" data-translate="popup-slide">Slide</option></select>
+<label for="board-alerts-motion" data-translate="popup-entry-animation">Entry animation</label>
+<select id="board-alerts-motion" class="textInput" data-optionparam25="motion">
+<option value="" data-translate="popup-style-default">Style default</option>
+<option value="slide" data-translate="popup-slide">Slide</option>
+<option value="fade" data-translate="popup-fade">Fade</option>
+<option value="none" data-translate="popup-none">None</option>
+</select>
+<div class="textInputContainer">
+<label for="board-alerts-animationspeed" data-translate="popup-animation-speed-ms">Animation speed (ms)</label>
+<input id="board-alerts-animationspeed" class="textInput" type="number" data-optionparam25="animationspeed" min="0" max="3000" placeholder="350" />
+</div>
+<div class="textInputContainer">
+<label for="board-alerts-rotatetime" data-translate="popup-rotation-interval-seconds">Rotation interval (seconds)</label>
+<input id="board-alerts-rotatetime" class="textInput" type="number" data-optionparam25="rotatetime" min="1" max="120" placeholder="5" />
+</div>
+<div class="textInputContainer">
+<label for="board-alerts-scrollspeed" data-translate="popup-scrolling-cycle-seconds">Scrolling cycle (seconds)</label>
+<input id="board-alerts-scrollspeed" class="textInput" type="number" data-optionparam25="scrollspeed" min="5" max="180" placeholder="30" />
+</div>
+<div class="textInputContainer">
+<label for="board-alerts-cardopacity" data-translate="popup-card-background-opacity">Card background opacity (%)</label>
+<input id="board-alerts-cardopacity" class="textInput" type="number" data-optionparam25="cardopacity" min="0" max="100" placeholder="Style default" />
+</div>
+<label for="board-alerts-accentby" data-translate="popup-accent-colors">Accent colors</label>
+<select id="board-alerts-accentby" class="textInput" data-optionparam25="accentby">
+<option value="" data-translate="popup-style-default">Style default</option>
+<option value="platform" data-translate="popup-by-platform">By platform</option>
+<option value="category" data-translate="popup-by-event-category">By event category</option>
+</select>
+</details>
+<details class="popup-subsection">
+<summary data-translate="popup-history-and-operator-controls">History and operator controls</summary>
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="board-alerts-remember" type="checkbox" data-param25="remember" />
+<span class="slider round">
+</span>
+</label>
+<label for="board-alerts-remember" data-translate="popup-remember-visible-events-after-refresh">Remember visible events after refresh</label>
+</div>
+<div class="textInputContainer">
+<label for="board-alerts-historyhours" data-translate="popup-keep-saved-history-for-hours">Keep saved history for (hours)</label>
+<input id="board-alerts-historyhours" class="textInput" type="number" data-optionparam25="historyhours" min="1" max="168" placeholder="24" />
+</div>
+<div class="textInputContainer">
+<label for="board-alerts-id" data-translate="popup-board-name-for-separate-scenes">Board name (for separate scenes)</label>
+<input id="board-alerts-id" class="textInput" type="text" data-optionparam25="board" placeholder="default" />
+</div>
+<p data-translate="popup-commands-apply-to-the-board-name-above-history-stays-in-this-browser-pinnin">Commands apply to the board name above. History stays in this browser. Pinning uses one visible slot.</p>
+<div class="popup-action-row">
+<button type="button" class="popup-action-button" data-board-command="pause" data-board-surface="alerts" data-translate="nc-audience-pause">Pause</button>
+<button type="button" class="popup-action-button" data-board-command="resume" data-board-surface="alerts" data-translate="nc-audience-resume">Resume</button>
+<button type="button" class="popup-action-button" data-board-command="pin" data-board-surface="alerts" data-translate="popup-pin">Pin</button>
+<button type="button" class="popup-action-button" data-board-command="unpin" data-board-surface="alerts" data-translate="popup-unpin">Unpin</button>
+<button type="button" class="popup-action-button" data-board-command="remove" data-board-surface="alerts" data-translate="remove">Remove</button>
+<button type="button" class="popup-action-button" data-board-command="skip" data-board-surface="alerts" data-translate="popup-skip">Skip</button>
+<button type="button" class="popup-action-button" data-board-command="mute" data-board-surface="alerts" data-translate="popup-mute">Mute</button>
+<button type="button" class="popup-action-button" data-board-command="unmute" data-board-surface="alerts" data-translate="popup-unmute">Unmute</button>
+<button type="button" class="popup-action-button" data-board-command="replay" data-board-surface="alerts" data-translate="popup-replay">Replay</button>
+<button type="button" class="popup-action-button" data-board-command="clear" data-board-surface="alerts" data-translate="popup-clear">Clear</button>
+</div>
+<p id="board-alerts-status" role="status">
+</p>
+</details>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/event-overlays.html" target="_blank" rel="noopener" data-translate="popup-event-overlays-setup-styles-and-controls">Event overlays: setup, styles and controls</a>
+</div>
+</div>
+</div>
+</div>
+</div>
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-types-options" />
-					<label class="collapsible-label" for="wrapper-multi-alert-types-options"><span>🎯 Alert Types</span></label>
+					<label class="collapsible-label" for="wrapper-multi-alert-types-options"><span data-translate="popup-alert-types">🎯 Alert Types</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
@@ -6770,53 +6910,53 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param25="disablefollows" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">👤</span>Skip follow alerts</span>
+									<span><span class="popup-control-icon" aria-hidden="true">👤</span><span data-translate="popup-skip-follow-alerts">Skip follow alerts</span></span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="disablesubs" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">⭐</span>Skip subscription/member alerts</span>
+									<span><span class="popup-control-icon" aria-hidden="true">⭐</span><span data-translate="popup-skip-subscription-member-alerts">Skip subscription/member alerts</span></span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="disabledonos" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">💵</span>Skip donation alerts</span>
+									<span><span class="popup-control-icon" aria-hidden="true">💵</span><span data-translate="popup-skip-donation-alerts">Skip donation alerts</span></span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="disablebits" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">💎</span>Skip bits/cheer alerts</span>
+									<span><span class="popup-control-icon" aria-hidden="true">💎</span><span data-translate="popup-skip-bits-cheer-alerts">Skip bits/cheer alerts</span></span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="disableraids" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">👥</span>Skip raid/host alerts</span>
+									<span><span class="popup-control-icon" aria-hidden="true">👥</span><span data-translate="popup-skip-raid-host-alerts">Skip raid/host alerts</span></span>
 								</div>
 								<div title="Opt-in: shows an alert when a live auction ends with a winner (Whatnot, eBay Live).">
 									<label class="switch">
 										<input type="checkbox" data-param25="auctionwins" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">🏆</span>Show auction winner alerts (Whatnot/eBay)</span>
+									<span><span class="popup-control-icon" aria-hidden="true">🏆</span><span data-translate="popup-show-auction-winner-alerts-whatnot-ebay">Show auction winner alerts (Whatnot/eBay)</span></span>
 								</div>
 								<div title="Opt-in: shows an alert when a Twitch hype train starts or reaches a new level.">
 									<label class="switch">
 										<input type="checkbox" data-param25="hypetrain" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">🚂</span>Show hype train level alerts (Twitch)</span>
+									<span><span class="popup-control-icon" aria-hidden="true">🚂</span><span data-translate="popup-show-hype-train-level-alerts-twitch">Show hype train level alerts (Twitch)</span></span>
 								</div>
 								<div class="textInputContainer" style="width: 95%;" title="Minimum converted USD value required for donation/bits alerts. Example: 5 blocks 100 bits but allows $5+ alerts.">
 									<input type="text" id="multialertmindonation" class="textInput instant" autocomplete="off" placeholder="5" data-textparam25="mindonation" />
-									<label for="multialertmindonation"><span class="popup-control-icon" aria-hidden="true">💵</span><span>Minimum donation / bits value (USD)</span></label>
+									<label for="multialertmindonation"><span class="popup-control-icon" aria-hidden="true">💵</span><span data-translate="popup-minimum-donation-bits-value-usd">Minimum donation / bits value (USD)</span></label>
 								</div>
 								<br>
 								<div>
@@ -6824,9 +6964,9 @@ input:checked + .slider:before {
 										<input type="checkbox" data-setting="excludeAlertsDock" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">🔎</span>Exclude alert events from dock</span>
+									<span><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="popup-exclude-alert-events-from-dock">Exclude alert events from dock</span></span>
 								</div>
-								<small style="opacity: 0.75; display:block; margin-top:4px; margin-bottom:8px;">
+								<small style="opacity: 0.75; display:block; margin-top:4px; margin-bottom:8px;" data-translate="popup-when-enabled-event-messages-follows-subs-raids-etc-are-sent-only-to-the-mul">
 									When enabled, event messages (follows, subs, raids, etc.) are sent only to the multi-alert overlay and not to dock.html. Normal chat messages are unaffected.
 								</small>
 							</div>
@@ -6838,194 +6978,194 @@ input:checked + .slider:before {
 			<div class="wrapper beginner-basic" data-panel-section="multialerts">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-variants-options" />
-					<label class="collapsible-label" for="wrapper-multi-alert-variants-options"><span>🎨 Variants / Presets</span></label>
+					<label class="collapsible-label" for="wrapper-multi-alert-variants-options"><span data-translate="popup-variants-presets">🎨 Variants / Presets</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
-								<div title="Illustrated themes only; other animations keep their existing settings."><label class="switch"><input type="checkbox" data-param25="staticart" aria-label="Keep illustrated characters still" /><span class="slider round"></span></label><span>⏸️ Keep illustrated characters still</span></div>
+								<div title="Illustrated themes only; other animations keep their existing settings."><label class="switch"><input type="checkbox" data-param25="staticart" aria-label="Keep illustrated characters still" /><span class="slider round"></span></label><span data-translate="popup-keep-illustrated-characters-still">⏸️ Keep illustrated characters still</span></div>
 <div>
-									<label for="multi-alert-followstyle">💚 Follow preset</label>
+									<label for="multi-alert-followstyle" data-translate="popup-follow-preset">💚 Follow preset</label>
 									<select id="multi-alert-followstyle" data-optionparam25="followstyle" class="textInput popup-reviewed-control">
-										<option value="twitch" selected>Twitch Style</option>
-										<option value="classic">Classic</option>
-										<option value="minimal">Minimal</option>
-										<option value="solid">Solid / Flat</option>
-									<option value="cute">🍬 Pastel Pop</option>
-<option value="cozy">☕ Cozy Cafe</option>
-<option value="art-cat">🐱 Strawberry Cat — Illustrated</option>
-<option value="art-dog">🐶 Good Company — Illustrated</option>
-<option value="art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
-<option value="art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
-<option value="art-music">🎵 Midnight Mixtape — Illustrated</option>
-<option value="art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
-<option value="art-space">🌙 Moon Bunny — Illustrated</option>
-<option value="art-dragon">🐉 Crystal Guardian — Illustrated</option>
-<option value="cats">🐱 Cat Cafe</option>
-<option value="music">🎵 Studio Sessions</option>
-<option value="arcade">🕹️ Pocket Arcade</option>
-<option value="slate">🌑 Compact Slate</option>
-<option value="paper">📄 Compact Paper</option>
-<option value="micro">➖ Micro Line</option>
-</select>
+										<option value="twitch" selected data-translate="popup-twitch-style">Twitch Style</option>
+										<option value="classic" data-translate="popup-classic">Classic</option>
+										<option value="minimal" data-translate="popup-minimal">Minimal</option>
+										<option value="solid" data-translate="popup-solid-flat">Solid / Flat</option>
+									<option value="cute" data-translate="popup-pastel-pop">🍬 Pastel Pop</option>
+<option value="cozy" data-translate="popup-cozy-cafe">☕ Cozy Cafe</option>
+<option value="art-cat" data-translate="popup-strawberry-cat-illustrated">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog" data-translate="popup-good-company-illustrated">🐶 Good Company — Illustrated</option>
+<option value="art-halloween" data-translate="popup-pumpkin-haunt-illustrated">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas" data-translate="popup-merry-little-reindeer-illustrated">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music" data-translate="popup-midnight-mixtape-illustrated">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest" data-translate="popup-moss-mushrooms-illustrated">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space" data-translate="popup-moon-bunny-illustrated">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon" data-translate="popup-crystal-guardian-illustrated">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats" data-translate="popup-cat-cafe">🐱 Cat Cafe</option>
+<option value="music" data-translate="popup-studio-sessions">🎵 Studio Sessions</option>
+<option value="arcade" data-translate="popup-pocket-arcade">🕹️ Pocket Arcade</option>
+<option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
+<option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
+<option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
 								</div>
 								<div>
-									<label for="multi-alert-substyle">💜 Subscription preset</label>
+									<label for="multi-alert-substyle" data-translate="popup-subscription-preset">💜 Subscription preset</label>
 									<select id="multi-alert-substyle" data-optionparam25="substyle" class="textInput popup-reviewed-control">
-										<option value="twitch" selected>Twitch Style</option>
-										<option value="classic">Classic</option>
-										<option value="minimal">Minimal</option>
-										<option value="solid">Solid / Flat</option>
-									<option value="cute">🍬 Pastel Pop</option>
-<option value="cozy">☕ Cozy Cafe</option>
-<option value="art-cat">🐱 Strawberry Cat — Illustrated</option>
-<option value="art-dog">🐶 Good Company — Illustrated</option>
-<option value="art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
-<option value="art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
-<option value="art-music">🎵 Midnight Mixtape — Illustrated</option>
-<option value="art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
-<option value="art-space">🌙 Moon Bunny — Illustrated</option>
-<option value="art-dragon">🐉 Crystal Guardian — Illustrated</option>
-<option value="cats">🐱 Cat Cafe</option>
-<option value="music">🎵 Studio Sessions</option>
-<option value="arcade">🕹️ Pocket Arcade</option>
-<option value="slate">🌑 Compact Slate</option>
-<option value="paper">📄 Compact Paper</option>
-<option value="micro">➖ Micro Line</option>
-</select>
+										<option value="twitch" selected data-translate="popup-twitch-style">Twitch Style</option>
+										<option value="classic" data-translate="popup-classic">Classic</option>
+										<option value="minimal" data-translate="popup-minimal">Minimal</option>
+										<option value="solid" data-translate="popup-solid-flat">Solid / Flat</option>
+									<option value="cute" data-translate="popup-pastel-pop">🍬 Pastel Pop</option>
+<option value="cozy" data-translate="popup-cozy-cafe">☕ Cozy Cafe</option>
+<option value="art-cat" data-translate="popup-strawberry-cat-illustrated">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog" data-translate="popup-good-company-illustrated">🐶 Good Company — Illustrated</option>
+<option value="art-halloween" data-translate="popup-pumpkin-haunt-illustrated">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas" data-translate="popup-merry-little-reindeer-illustrated">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music" data-translate="popup-midnight-mixtape-illustrated">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest" data-translate="popup-moss-mushrooms-illustrated">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space" data-translate="popup-moon-bunny-illustrated">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon" data-translate="popup-crystal-guardian-illustrated">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats" data-translate="popup-cat-cafe">🐱 Cat Cafe</option>
+<option value="music" data-translate="popup-studio-sessions">🎵 Studio Sessions</option>
+<option value="arcade" data-translate="popup-pocket-arcade">🕹️ Pocket Arcade</option>
+<option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
+<option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
+<option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
 								</div>
 								<div>
-									<label for="multi-alert-donostyle">💛 Donation preset</label>
+									<label for="multi-alert-donostyle" data-translate="popup-donation-preset">💛 Donation preset</label>
 									<select id="multi-alert-donostyle" data-optionparam25="donostyle" class="textInput popup-reviewed-control">
-										<option value="twitch" selected>Twitch Style</option>
-										<option value="classic">Classic</option>
-										<option value="minimal">Minimal</option>
-										<option value="solid">Solid / Flat</option>
-									<option value="cute">🍬 Pastel Pop</option>
-<option value="cozy">☕ Cozy Cafe</option>
-<option value="art-cat">🐱 Strawberry Cat — Illustrated</option>
-<option value="art-dog">🐶 Good Company — Illustrated</option>
-<option value="art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
-<option value="art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
-<option value="art-music">🎵 Midnight Mixtape — Illustrated</option>
-<option value="art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
-<option value="art-space">🌙 Moon Bunny — Illustrated</option>
-<option value="art-dragon">🐉 Crystal Guardian — Illustrated</option>
-<option value="cats">🐱 Cat Cafe</option>
-<option value="music">🎵 Studio Sessions</option>
-<option value="arcade">🕹️ Pocket Arcade</option>
-<option value="slate">🌑 Compact Slate</option>
-<option value="paper">📄 Compact Paper</option>
-<option value="micro">➖ Micro Line</option>
-</select>
+										<option value="twitch" selected data-translate="popup-twitch-style">Twitch Style</option>
+										<option value="classic" data-translate="popup-classic">Classic</option>
+										<option value="minimal" data-translate="popup-minimal">Minimal</option>
+										<option value="solid" data-translate="popup-solid-flat">Solid / Flat</option>
+									<option value="cute" data-translate="popup-pastel-pop">🍬 Pastel Pop</option>
+<option value="cozy" data-translate="popup-cozy-cafe">☕ Cozy Cafe</option>
+<option value="art-cat" data-translate="popup-strawberry-cat-illustrated">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog" data-translate="popup-good-company-illustrated">🐶 Good Company — Illustrated</option>
+<option value="art-halloween" data-translate="popup-pumpkin-haunt-illustrated">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas" data-translate="popup-merry-little-reindeer-illustrated">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music" data-translate="popup-midnight-mixtape-illustrated">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest" data-translate="popup-moss-mushrooms-illustrated">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space" data-translate="popup-moon-bunny-illustrated">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon" data-translate="popup-crystal-guardian-illustrated">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats" data-translate="popup-cat-cafe">🐱 Cat Cafe</option>
+<option value="music" data-translate="popup-studio-sessions">🎵 Studio Sessions</option>
+<option value="arcade" data-translate="popup-pocket-arcade">🕹️ Pocket Arcade</option>
+<option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
+<option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
+<option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
 								</div>
 								<div>
-									<label for="multi-alert-bitsstyle">💙 Bits/Cheer preset</label>
+									<label for="multi-alert-bitsstyle" data-translate="popup-bits-cheer-preset">💙 Bits/Cheer preset</label>
 									<select id="multi-alert-bitsstyle" data-optionparam25="bitsstyle" class="textInput popup-reviewed-control">
-										<option value="twitch" selected>Twitch Style</option>
-										<option value="classic">Classic</option>
-										<option value="minimal">Minimal</option>
-										<option value="solid">Solid / Flat</option>
-									<option value="cute">🍬 Pastel Pop</option>
-<option value="cozy">☕ Cozy Cafe</option>
-<option value="art-cat">🐱 Strawberry Cat — Illustrated</option>
-<option value="art-dog">🐶 Good Company — Illustrated</option>
-<option value="art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
-<option value="art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
-<option value="art-music">🎵 Midnight Mixtape — Illustrated</option>
-<option value="art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
-<option value="art-space">🌙 Moon Bunny — Illustrated</option>
-<option value="art-dragon">🐉 Crystal Guardian — Illustrated</option>
-<option value="cats">🐱 Cat Cafe</option>
-<option value="music">🎵 Studio Sessions</option>
-<option value="arcade">🕹️ Pocket Arcade</option>
-<option value="slate">🌑 Compact Slate</option>
-<option value="paper">📄 Compact Paper</option>
-<option value="micro">➖ Micro Line</option>
-</select>
+										<option value="twitch" selected data-translate="popup-twitch-style">Twitch Style</option>
+										<option value="classic" data-translate="popup-classic">Classic</option>
+										<option value="minimal" data-translate="popup-minimal">Minimal</option>
+										<option value="solid" data-translate="popup-solid-flat">Solid / Flat</option>
+									<option value="cute" data-translate="popup-pastel-pop">🍬 Pastel Pop</option>
+<option value="cozy" data-translate="popup-cozy-cafe">☕ Cozy Cafe</option>
+<option value="art-cat" data-translate="popup-strawberry-cat-illustrated">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog" data-translate="popup-good-company-illustrated">🐶 Good Company — Illustrated</option>
+<option value="art-halloween" data-translate="popup-pumpkin-haunt-illustrated">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas" data-translate="popup-merry-little-reindeer-illustrated">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music" data-translate="popup-midnight-mixtape-illustrated">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest" data-translate="popup-moss-mushrooms-illustrated">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space" data-translate="popup-moon-bunny-illustrated">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon" data-translate="popup-crystal-guardian-illustrated">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats" data-translate="popup-cat-cafe">🐱 Cat Cafe</option>
+<option value="music" data-translate="popup-studio-sessions">🎵 Studio Sessions</option>
+<option value="arcade" data-translate="popup-pocket-arcade">🕹️ Pocket Arcade</option>
+<option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
+<option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
+<option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
 								</div>
 								<div>
-									<label for="multi-alert-raidstyle">🧡 Raid preset</label>
+									<label for="multi-alert-raidstyle" data-translate="popup-raid-preset">🧡 Raid preset</label>
 									<select id="multi-alert-raidstyle" data-optionparam25="raidstyle" class="textInput popup-reviewed-control">
-										<option value="twitch" selected>Twitch Style</option>
-										<option value="classic">Classic</option>
-										<option value="minimal">Minimal</option>
-										<option value="solid">Solid / Flat</option>
-									<option value="cute">🍬 Pastel Pop</option>
-<option value="cozy">☕ Cozy Cafe</option>
-<option value="art-cat">🐱 Strawberry Cat — Illustrated</option>
-<option value="art-dog">🐶 Good Company — Illustrated</option>
-<option value="art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
-<option value="art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
-<option value="art-music">🎵 Midnight Mixtape — Illustrated</option>
-<option value="art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
-<option value="art-space">🌙 Moon Bunny — Illustrated</option>
-<option value="art-dragon">🐉 Crystal Guardian — Illustrated</option>
-<option value="cats">🐱 Cat Cafe</option>
-<option value="music">🎵 Studio Sessions</option>
-<option value="arcade">🕹️ Pocket Arcade</option>
-<option value="slate">🌑 Compact Slate</option>
-<option value="paper">📄 Compact Paper</option>
-<option value="micro">➖ Micro Line</option>
-</select>
+										<option value="twitch" selected data-translate="popup-twitch-style">Twitch Style</option>
+										<option value="classic" data-translate="popup-classic">Classic</option>
+										<option value="minimal" data-translate="popup-minimal">Minimal</option>
+										<option value="solid" data-translate="popup-solid-flat">Solid / Flat</option>
+									<option value="cute" data-translate="popup-pastel-pop">🍬 Pastel Pop</option>
+<option value="cozy" data-translate="popup-cozy-cafe">☕ Cozy Cafe</option>
+<option value="art-cat" data-translate="popup-strawberry-cat-illustrated">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog" data-translate="popup-good-company-illustrated">🐶 Good Company — Illustrated</option>
+<option value="art-halloween" data-translate="popup-pumpkin-haunt-illustrated">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas" data-translate="popup-merry-little-reindeer-illustrated">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music" data-translate="popup-midnight-mixtape-illustrated">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest" data-translate="popup-moss-mushrooms-illustrated">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space" data-translate="popup-moon-bunny-illustrated">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon" data-translate="popup-crystal-guardian-illustrated">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats" data-translate="popup-cat-cafe">🐱 Cat Cafe</option>
+<option value="music" data-translate="popup-studio-sessions">🎵 Studio Sessions</option>
+<option value="arcade" data-translate="popup-pocket-arcade">🕹️ Pocket Arcade</option>
+<option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
+<option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
+<option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
 								</div>
 								<div>
-									<label for="multi-alert-auctionstyle">🏆 Auction win preset</label>
+									<label for="multi-alert-auctionstyle" data-translate="popup-auction-win-preset">🏆 Auction win preset</label>
 									<select id="multi-alert-auctionstyle" data-optionparam25="auctionstyle" class="textInput popup-reviewed-control">
-										<option value="twitch" selected>Twitch Style</option>
-										<option value="classic">Classic</option>
-										<option value="minimal">Minimal</option>
-										<option value="solid">Solid / Flat</option>
-									<option value="cute">🍬 Pastel Pop</option>
-<option value="cozy">☕ Cozy Cafe</option>
-<option value="art-cat">🐱 Strawberry Cat — Illustrated</option>
-<option value="art-dog">🐶 Good Company — Illustrated</option>
-<option value="art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
-<option value="art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
-<option value="art-music">🎵 Midnight Mixtape — Illustrated</option>
-<option value="art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
-<option value="art-space">🌙 Moon Bunny — Illustrated</option>
-<option value="art-dragon">🐉 Crystal Guardian — Illustrated</option>
-<option value="cats">🐱 Cat Cafe</option>
-<option value="music">🎵 Studio Sessions</option>
-<option value="arcade">🕹️ Pocket Arcade</option>
-<option value="slate">🌑 Compact Slate</option>
-<option value="paper">📄 Compact Paper</option>
-<option value="micro">➖ Micro Line</option>
-</select>
+										<option value="twitch" selected data-translate="popup-twitch-style">Twitch Style</option>
+										<option value="classic" data-translate="popup-classic">Classic</option>
+										<option value="minimal" data-translate="popup-minimal">Minimal</option>
+										<option value="solid" data-translate="popup-solid-flat">Solid / Flat</option>
+									<option value="cute" data-translate="popup-pastel-pop">🍬 Pastel Pop</option>
+<option value="cozy" data-translate="popup-cozy-cafe">☕ Cozy Cafe</option>
+<option value="art-cat" data-translate="popup-strawberry-cat-illustrated">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog" data-translate="popup-good-company-illustrated">🐶 Good Company — Illustrated</option>
+<option value="art-halloween" data-translate="popup-pumpkin-haunt-illustrated">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas" data-translate="popup-merry-little-reindeer-illustrated">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music" data-translate="popup-midnight-mixtape-illustrated">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest" data-translate="popup-moss-mushrooms-illustrated">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space" data-translate="popup-moon-bunny-illustrated">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon" data-translate="popup-crystal-guardian-illustrated">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats" data-translate="popup-cat-cafe">🐱 Cat Cafe</option>
+<option value="music" data-translate="popup-studio-sessions">🎵 Studio Sessions</option>
+<option value="arcade" data-translate="popup-pocket-arcade">🕹️ Pocket Arcade</option>
+<option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
+<option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
+<option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
 								</div>
 								<div>
-									<label for="multi-alert-hypestyle">🚂 Hype train preset</label>
+									<label for="multi-alert-hypestyle" data-translate="popup-hype-train-preset">🚂 Hype train preset</label>
 									<select id="multi-alert-hypestyle" data-optionparam25="hypestyle" class="textInput popup-reviewed-control">
-										<option value="twitch" selected>Twitch Style</option>
-										<option value="classic">Classic</option>
-										<option value="minimal">Minimal</option>
-										<option value="solid">Solid / Flat</option>
-									<option value="cute">🍬 Pastel Pop</option>
-<option value="cozy">☕ Cozy Cafe</option>
-<option value="art-cat">🐱 Strawberry Cat — Illustrated</option>
-<option value="art-dog">🐶 Good Company — Illustrated</option>
-<option value="art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
-<option value="art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
-<option value="art-music">🎵 Midnight Mixtape — Illustrated</option>
-<option value="art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
-<option value="art-space">🌙 Moon Bunny — Illustrated</option>
-<option value="art-dragon">🐉 Crystal Guardian — Illustrated</option>
-<option value="cats">🐱 Cat Cafe</option>
-<option value="music">🎵 Studio Sessions</option>
-<option value="arcade">🕹️ Pocket Arcade</option>
-<option value="slate">🌑 Compact Slate</option>
-<option value="paper">📄 Compact Paper</option>
-<option value="micro">➖ Micro Line</option>
-</select>
+										<option value="twitch" selected data-translate="popup-twitch-style">Twitch Style</option>
+										<option value="classic" data-translate="popup-classic">Classic</option>
+										<option value="minimal" data-translate="popup-minimal">Minimal</option>
+										<option value="solid" data-translate="popup-solid-flat">Solid / Flat</option>
+									<option value="cute" data-translate="popup-pastel-pop">🍬 Pastel Pop</option>
+<option value="cozy" data-translate="popup-cozy-cafe">☕ Cozy Cafe</option>
+<option value="art-cat" data-translate="popup-strawberry-cat-illustrated">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog" data-translate="popup-good-company-illustrated">🐶 Good Company — Illustrated</option>
+<option value="art-halloween" data-translate="popup-pumpkin-haunt-illustrated">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas" data-translate="popup-merry-little-reindeer-illustrated">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music" data-translate="popup-midnight-mixtape-illustrated">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest" data-translate="popup-moss-mushrooms-illustrated">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space" data-translate="popup-moon-bunny-illustrated">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon" data-translate="popup-crystal-guardian-illustrated">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats" data-translate="popup-cat-cafe">🐱 Cat Cafe</option>
+<option value="music" data-translate="popup-studio-sessions">🎵 Studio Sessions</option>
+<option value="arcade" data-translate="popup-pocket-arcade">🕹️ Pocket Arcade</option>
+<option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
+<option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
+<option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
 								</div>
 								<div>
-									<label><span class="popup-control-icon" aria-hidden="true">✨</span>Entrance animation</label>
+									<label><span class="popup-control-icon" aria-hidden="true">✨</span><span data-translate="popup-entrance-animation">Entrance animation</span></label>
 									<select data-optionparam25="animation" class="textInput">
-										<option value="fade" selected>Fade &amp; rise (default)</option>
-										<option value="slidedown">Slide in from top</option>
-										<option value="slideup">Slide in from bottom</option>
-										<option value="pop">Pop in</option>
-										<option value="none">No animation</option>
+										<option value="fade" selected data-translate="popup-fade-rise-default">Fade &amp; rise (default)</option>
+										<option value="slidedown" data-translate="popup-slide-in-from-top">Slide in from top</option>
+										<option value="slideup" data-translate="popup-slide-in-from-bottom">Slide in from bottom</option>
+										<option value="pop" data-translate="popup-pop-in">Pop in</option>
+										<option value="none" data-translate="popup-no-animation">No animation</option>
 									</select>
 								</div>
 								<div title="Replaces translucent gradients, blur, and glow with solid fills on every preset.">
@@ -7033,7 +7173,7 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param25="flat" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">🎨</span>Flat cards (solid fills, no blur/glow)</span>
+									<span><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-flat-cards-solid-fills-no-blur-glow">Flat cards (solid fills, no blur/glow)</span></span>
 								</div>
 								<div title="Overrides the corner rounding of alert cards and media boxes.">
 									<label class="switch">
@@ -7041,9 +7181,9 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span>
-										⬜ Corner radius
+										<span data-translate="popup-corner-radius">⬜ Corner radius</span>
 										<input type="range" min="0" max="32" step="1" value="7" style="width: 150px;" data-numbersetting25="radius" data-range-display="multi-alert-radius-display" data-range-suffix="px" />
-										<span class="range-value" id="multi-alert-radius-display">7px</span>
+										<span class="range-value" id="multi-alert-radius-display" data-translate="popup-7px">7px</span>
 									</span>
 								</div>
 								<div title="Opt in to use the source platform color for every alert instead of a different color for each alert type.">
@@ -7051,21 +7191,21 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param25="platformcolors" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">🎨</span>Color alerts by platform instead of alert type</span>
+									<span><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-color-alerts-by-platform-instead-of-alert-type">Color alerts by platform instead of alert type</span></span>
 								</div>
 								<div class="textInputContainer" style="width: 95%;" title="Overrides the accent color for every alert type when platform colors are disabled. Per-type URL params also exist: followaccent, subaccent, donoaccent, bitsaccent, raidaccent, auctionaccent, hypeaccent.">
 									<input type="text" id="multialertaccent" class="textInput instant" autocomplete="off" placeholder="#ff2d5e" data-textparam25="accent" />
-									<label for="multialertaccent"><span class="popup-control-icon" aria-hidden="true">🎨</span><span>&gt; Accent color (all alert types)</span></label>
+									<label for="multialertaccent"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-accent-color-all-alert-types">&gt; Accent color (all alert types)</span></label>
 								</div>
 								<div class="textInputContainer" style="width: 95%;" title="Solid background color for the alert card. Pairs well with flat cards.">
 									<input type="text" id="multialertcardbg" class="textInput instant" autocomplete="off" placeholder="#18122b" data-textparam25="cardbg" />
-									<label for="multialertcardbg"><span class="popup-control-icon" aria-hidden="true">🎨</span><span>&gt; Card background color</span></label>
+									<label for="multialertcardbg"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-card-background-color">&gt; Card background color</span></label>
 								</div>
 								<div class="textInputContainer" style="width: 95%;" title="Overrides the main and muted text colors.">
 									<input type="text" id="multialerttextcolor" class="textInput instant" autocomplete="off" placeholder="#f8fafc" data-textparam25="textcolor" />
-									<label for="multialerttextcolor"><span class="popup-control-icon" aria-hidden="true">🎨</span><span>&gt; Text color</span></label>
+									<label for="multialerttextcolor"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-text-color">&gt; Text color</span></label>
 								</div>
-								<small style="opacity: 0.8;">By default, each alert type keeps its own color. Enable platform colors to use each source platform's standard color across every alert from that platform. The remaining options apply on top of every preset.</small>
+								<small style="opacity: 0.8;" data-translate="popup-by-default-each-alert-type-keeps-its-own-color-enable-platform-colors-to-us">By default, each alert type keeps its own color. Enable platform colors to use each source platform's standard color across every alert from that platform. The remaining options apply on top of every preset.</small>
 							</div>
 						</div>
 					</div>
@@ -7075,27 +7215,27 @@ input:checked + .slider:before {
 			<div class="wrapper" data-panel-section="multialerts">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-source-options" />
-					<label class="collapsible-label" for="wrapper-multi-alert-source-options"><span>🔎 Filter by Platform / Channel</span></label>
+					<label class="collapsible-label" for="wrapper-multi-alert-source-options"><span data-translate="popup-filter-by-platform-channel">🔎 Filter by Platform / Channel</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
 								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of platforms to allow. Example: youtube,twitch">
 									<input type="text" id="multialertsources" class="textInput instant" autocomplete="off" placeholder="youtube,twitch,tiktok,etc" data-textparam25="sources" />
-									<label for="multialertsources"><span class="popup-control-icon" aria-hidden="true">🔎</span><span>&gt; Only allow platform(s)</span></label>
+									<label for="multialertsources"><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="popup-only-allow-platform-s">&gt; Only allow platform(s)</span></label>
 								</div>
 								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of platforms to exclude. Example: tiktok,kick">
 									<input type="text" id="multialerthidesources" class="textInput instant" autocomplete="off" placeholder="tiktok,kick,etc" data-textparam25="hidesources" />
-									<label for="multialerthidesources"><span class="popup-control-icon" aria-hidden="true">🔎</span><span>&gt; Exclude platform(s)</span></label>
+									<label for="multialerthidesources"><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="popup-exclude-platform-s">&gt; Exclude platform(s)</span></label>
 								</div>
 								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of exact source/channel matches to allow. Matches existing payload fields like sourceName, sourceId, channelId, and videoId.">
 									<input type="text" id="multialertsourceids" class="textInput instant" autocomplete="off" placeholder="My Channel,UC123,video123" data-textparam25="sourceids" />
-									<label for="multialertsourceids"><span class="popup-control-icon" aria-hidden="true">🔎</span><span>&gt; Only allow channel/source match(es)</span></label>
+									<label for="multialertsourceids"><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="popup-only-allow-channel-source-match-es">&gt; Only allow channel/source match(es)</span></label>
 								</div>
 								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of exact source/channel matches to exclude. Matches existing payload fields like sourceName, sourceId, channelId, and videoId.">
 									<input type="text" id="multialerthidesourceids" class="textInput instant" autocomplete="off" placeholder="Other Channel,UC999,video999" data-textparam25="hidesourceids" />
-									<label for="multialerthidesourceids"><span class="popup-control-icon" aria-hidden="true">🔎</span><span>&gt; Exclude channel/source match(es)</span></label>
+									<label for="multialerthidesourceids"><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="popup-exclude-channel-source-match-es">&gt; Exclude channel/source match(es)</span></label>
 								</div>
-								<small style="opacity: 0.8;">Use <code>&sources=youtubeshorts</code> to limit by platform, or <code>&sourceids=My Channel,UC123,video123</code> to limit by existing source/channel fields like <code>sourceName</code>, <code>sourceId</code>, <code>channelId</code>, or <code>videoId</code>.</small>
+								<small style="opacity: 0.8;"><span data-translate="popup-use">Use</span> <code>&sources=youtubeshorts</code> <span data-translate="popup-to-limit-by-platform-or">to limit by platform, or</span> <code>&sourceids=My Channel,UC123,video123</code> <span data-translate="popup-to-limit-by-existing-source-channel-fields-like">to limit by existing source/channel fields like</span> <code>sourceName</code>, <code>sourceId</code>, <code>channelId</code><span data-translate="popup-or">, or</span> <code>videoId</code>.</small>
 							</div>
 						</div>
 					</div>
@@ -7105,7 +7245,7 @@ input:checked + .slider:before {
 			<div class="wrapper beginner-basic" data-panel-section="multialerts">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-layout-options" />
-					<label class="collapsible-label" for="wrapper-multi-alert-layout-options"><span>🖼️ Layout & Visibility</span></label>
+					<label class="collapsible-label" for="wrapper-multi-alert-layout-options"><span data-translate="popup-layout-visibility">🖼️ Layout & Visibility</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
@@ -7114,21 +7254,21 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param25="compact" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">📐</span>Compact alert cards</span>
+									<span><span class="popup-control-icon" aria-hidden="true">📐</span><span data-translate="popup-compact-alert-cards">Compact alert cards</span></span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="align=center" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">📐</span>Center align alert box</span>
+									<span><span class="popup-control-icon" aria-hidden="true">📐</span><span data-translate="popup-center-align-alert-box">Center align alert box</span></span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="alignright" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">📐</span>Right align alert box</span>
+									<span><span class="popup-control-icon" aria-hidden="true">📐</span><span data-translate="popup-right-align-alert-box">Right align alert box</span></span>
 								</div>
 								<div>
 									<label class="switch">
@@ -7136,9 +7276,9 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span>
-										🔍 Scale multiplier
+										<span data-translate="popup-scale-multiplier">🔍 Scale multiplier</span>
 										<input type="range" min="0.6" max="2.4" step="0.05" value="1" style="width: 150px;" data-numbersetting25="scale" data-range-display="multi-alert-scale-display" data-range-suffix="x" />
-										<span class="range-value" id="multi-alert-scale-display">1.00x</span>
+										<span class="range-value" id="multi-alert-scale-display" data-translate="popup-1-00x">1.00x</span>
 									</span>
 								</div>
 								<div>
@@ -7147,9 +7287,9 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span>
-										🔠 Headline size
+										<span data-translate="popup-headline-size">🔠 Headline size</span>
 										<input type="range" min="0.8" max="1.6" step="0.05" value="1" style="width: 150px;" data-numbersetting25="headlinescale" data-range-display="multi-alert-headline-display" data-range-suffix="x" />
-										<span class="range-value" id="multi-alert-headline-display">1.00x</span>
+										<span class="range-value" id="multi-alert-headline-display" data-translate="popup-1-00x">1.00x</span>
 									</span>
 								</div>
 								<div>
@@ -7158,9 +7298,9 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span>
-										🔎 Detail text size
+										<span data-translate="popup-detail-text-size">🔎 Detail text size</span>
 										<input type="range" min="0.8" max="1.7" step="0.05" value="1" style="width: 150px;" data-numbersetting25="detailscale" data-range-display="multi-alert-detail-display" data-range-suffix="x" />
-										<span class="range-value" id="multi-alert-detail-display">1.00x</span>
+										<span class="range-value" id="multi-alert-detail-display" data-translate="popup-1-00x">1.00x</span>
 									</span>
 								</div>
 								<div>
@@ -7169,9 +7309,9 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span>
-										🖼️ Gift / media size
+										<span data-translate="popup-gift-media-size">🖼️ Gift / media size</span>
 										<input type="range" min="0.7" max="1.8" step="0.05" value="1" style="width: 150px;" data-numbersetting25="mediascale" data-range-display="multi-alert-media-display" data-range-suffix="x" />
-										<span class="range-value" id="multi-alert-media-display">1.00x</span>
+										<span class="range-value" id="multi-alert-media-display" data-translate="popup-1-00x">1.00x</span>
 									</span>
 								</div>
 								<div>
@@ -7179,81 +7319,81 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param25="hideavatar" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">👁️</span>Hide avatars</span>
+									<span><span class="popup-control-icon" aria-hidden="true">👁️</span><span data-translate="popup-hide-avatars">Hide avatars</span></span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="hidemedia" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">👁️</span>Hide GIF / media attachments</span>
+									<span><span class="popup-control-icon" aria-hidden="true">👁️</span><span data-translate="popup-hide-gif-media-attachments">Hide GIF / media attachments</span></span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="hidesource" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">👁️</span>Hide source badges</span>
+									<span><span class="popup-control-icon" aria-hidden="true">👁️</span><span data-translate="popup-hide-source-badges">Hide source badges</span></span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="hidetitle" aria-label="Hide alert title" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">👁️</span>Hide alert title</span>
+									<span><span class="popup-control-icon" aria-hidden="true">👁️</span><span data-translate="popup-hide-alert-title">Hide alert title</span></span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="hidemessage" aria-label="Hide message text" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">👁️</span>Hide message text</span>
+									<span><span class="popup-control-icon" aria-hidden="true">👁️</span><span data-translate="popup-hide-message-text">Hide message text</span></span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="hideprogress" aria-label="Hide progress bar" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">👁️</span>Hide progress bar</span>
+									<span><span class="popup-control-icon" aria-hidden="true">👁️</span><span data-translate="popup-hide-progress-bar">Hide progress bar</span></span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="hidesubtitle" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">👁️</span>Hide subtitle row</span>
+									<span><span class="popup-control-icon" aria-hidden="true">👁️</span><span data-translate="popup-hide-subtitle-row">Hide subtitle row</span></span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="hideamount" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">👁️</span>Hide amount / value pills</span>
+									<span><span class="popup-control-icon" aria-hidden="true">👁️</span><span data-translate="popup-hide-amount-value-pills">Hide amount / value pills</span></span>
 								</div>
 								<div title="Useful for standalone pop-out overlays.">
 									<label class="switch">
 										<input type="checkbox" data-param25="transparent" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="force-transparent-background">Force transparent background </span></span><span class="obs-transparent-note"> (Useful for standalone pop-out overlays)</span>
+									<span><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="force-transparent-background">Force transparent background </span></span><span class="obs-transparent-note" data-translate="popup-useful-for-standalone-pop-out-overlays"> (Useful for standalone pop-out overlays)</span>
 								</div>
 								<div title="Use a solid page background instead of transparency.">
 									<label class="switch">
 										<input type="checkbox" data-param25="pagebg" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">🎨</span>Solid page background</span>
+									<span><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-solid-page-background">Solid page background</span></span>
 								</div>
 								<div class="textInputContainer" style="width: 95%;">
 									<input type="text" class="textInput instant" autocomplete="off" placeholder="rgba(7, 10, 16, 0.9)" data-textparam25="pagebg" />
-									<label><span class="popup-control-icon" aria-hidden="true">🎨</span><span>&gt; Page background color</span></label>
+									<label><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-page-background-color">&gt; Page background color</span></label>
 								</div>
 								<div title="Set a green screen background for chroma key workflows.">
 									<label class="switch">
 										<input type="checkbox" data-param25="chroma=00ff00" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">🎨</span>Green page background</span>
+									<span><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-green-page-background">Green page background</span></span>
 								</div>
 							</div>
 						</div>
@@ -7264,7 +7404,7 @@ input:checked + .slider:before {
 			<div class="wrapper beginner-basic" data-panel-section="multialerts">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-sound-options" />
-					<label class="collapsible-label" for="wrapper-multi-alert-sound-options"><span>🔊 Sound & Timing</span></label>
+					<label class="collapsible-label" for="wrapper-multi-alert-sound-options"><span data-translate="popup-sound-timing">🔊 Sound & Timing</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
@@ -7273,62 +7413,62 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param25="beep" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">🔊</span>Play alert sound</span>
+									<span><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="popup-play-alert-sound">Play alert sound</span></span>
 								</div>
-                                <p>Choose a sound to enable audio. Listen previews it locally.</p>
+                                <p data-translate="popup-choose-a-sound-to-enable-audio-listen-previews-it-locally">Choose a sound to enable audio. Listen previews it locally.</p>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="beepvolume" />
 										<span class="slider round"></span>
 									</label>
 									<span>
-										🔉 Sound volume
+										<span data-translate="popup-sound-volume">🔉 Sound volume</span>
 										<input type="range" min="0" max="100" step="5" value="35" style="width: 150px;" data-numbersetting25="beepvolume" data-range-display="multi-alert-beep-display" data-range-suffix="%" />
 										<span class="range-value" id="multi-alert-beep-display">35%</span>
 									</span>
 								</div>
 								<div class="textInputContainer textInputWithUpload" style="width: 95%;">
 									<input type="text" class="textInput instant" autocomplete="off" placeholder="https://example.com/alert.wav" data-textparam25="custombeep" id="multi-alert-custombeep" />
-									<label><span class="popup-control-icon" aria-hidden="true">🔗</span><span>&gt; Custom sound URL (all alerts)</span></label>
-									<button type="button" id="uploadMultiAlertSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span>Upload</button>
+									<label><span class="popup-control-icon" aria-hidden="true">🔗</span><span data-translate="popup-custom-sound-url-all-alerts">&gt; Custom sound URL (all alerts)</span></label>
+									<button type="button" id="uploadMultiAlertSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
 								</div>
 								<details style="width: 95%; margin-top: 4px;">
-									<summary style="cursor: pointer; font-size: 0.95em; padding: 6px 10px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);"><span class="popup-control-icon" aria-hidden="true">🔊</span>Per-type custom sounds (override above)</summary>
+									<summary style="cursor: pointer; font-size: 0.95em; padding: 6px 10px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);"><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="popup-per-type-custom-sounds-override-above">Per-type custom sounds (override above)</span></summary>
 									<div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Follow sound URL (.ogg, .mp3, .wav)" data-textparam25="followsound" id="multi-alert-followsound" />
-											<label><span>&gt; 💖 Follow sound</span></label>
-											<button type="button" id="uploadFollowSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span>Upload</button>
+											<label><span data-translate="popup-follow-sound">&gt; 💖 Follow sound</span></label>
+											<button type="button" id="uploadFollowSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
 										</div>
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Sub sound URL (.ogg, .mp3, .wav)" data-textparam25="subsound" id="multi-alert-subsound" />
-											<label><span>&gt; 💜 Subscription sound</span></label>
-											<button type="button" id="uploadSubSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span>Upload</button>
+											<label><span data-translate="popup-subscription-sound">&gt; 💜 Subscription sound</span></label>
+											<button type="button" id="uploadSubSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
 										</div>
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Donation sound URL (.ogg, .mp3, .wav)" data-textparam25="donosound" id="multi-alert-donosound" />
-											<label><span>&gt; 💚 Donation sound</span></label>
-											<button type="button" id="uploadDonoSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span>Upload</button>
+											<label><span data-translate="popup-donation-sound">&gt; 💚 Donation sound</span></label>
+											<button type="button" id="uploadDonoSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
 										</div>
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Bits sound URL (.ogg, .mp3, .wav)" data-textparam25="bitssound" id="multi-alert-bitssound" />
-											<label><span>&gt; 💙 Bits/Cheer sound</span></label>
-											<button type="button" id="uploadBitsSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span>Upload</button>
+											<label><span data-translate="popup-bits-cheer-sound">&gt; 💙 Bits/Cheer sound</span></label>
+											<button type="button" id="uploadBitsSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
 										</div>
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Raid sound URL (.ogg, .mp3, .wav)" data-textparam25="raidsound" id="multi-alert-raidsound" />
-											<label><span>&gt; 🧡 Raid sound</span></label>
-											<button type="button" id="uploadRaidSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span>Upload</button>
+											<label><span data-translate="popup-raid-sound">&gt; 🧡 Raid sound</span></label>
+											<button type="button" id="uploadRaidSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
 										</div>
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Auction win sound URL (.ogg, .mp3, .wav)" data-textparam25="auctionsound" id="multi-alert-auctionsound" />
-											<label><span>&gt; 💛 Auction win sound</span></label>
-											<button type="button" id="uploadAuctionSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span>Upload</button>
+											<label><span data-translate="popup-auction-win-sound">&gt; 💛 Auction win sound</span></label>
+											<button type="button" id="uploadAuctionSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
 										</div>
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Hype train sound URL (.ogg, .mp3, .wav)" data-textparam25="hypesound" id="multi-alert-hypesound" />
-											<label><span>&gt; ❤️ Hype train sound</span></label>
-											<button type="button" id="uploadHypeSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span>Upload</button>
+											<label><span data-translate="popup-hype-train-sound">&gt; ❤️ Hype train sound</span></label>
+											<button type="button" id="uploadHypeSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
 										</div>
 									</div>
 								</details>
@@ -7337,28 +7477,28 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param25="showtime" />
 										<span class="slider round"></span>
 									</label>
-									<span>⏲️ Show each alert for <input type="number" style="max-width: 8ch;" min="1000" max="60000" value="8000" data-numbersetting25="showtime" />ms</span>
+									<span data-translate="popup-ms"><span data-translate="popup-show-each-alert-for">⏲️ Show each alert for</span> <input type="number" style="max-width: 8ch;" min="1000" max="60000" value="8000" data-numbersetting25="showtime" />ms</span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="cooldown" />
 										<span class="slider round"></span>
 									</label>
-									<span>⏳ Cooldown between alerts <input type="number" style="max-width: 8ch;" min="0" max="30000" value="900" data-numbersetting25="cooldown" />ms</span>
+									<span data-translate="popup-ms"><span data-translate="popup-cooldown-between-alerts">⏳ Cooldown between alerts</span> <input type="number" style="max-width: 8ch;" min="0" max="30000" value="900" data-numbersetting25="cooldown" />ms</span>
 								</div>
 								<div title="Keep overlapping alerts in a queue instead of ignoring them while another alert is already visible.">
 									<label class="switch">
 										<input type="checkbox" data-param25="queue" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">📋</span>Queue overlapping alerts</span>
+									<span><span class="popup-control-icon" aria-hidden="true">📋</span><span data-translate="popup-queue-overlapping-alerts">Queue overlapping alerts</span></span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="debug" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">🐛</span>Debug mode (console logs)</span>
+									<span><span class="popup-control-icon" aria-hidden="true">🐛</span><span data-translate="popup-debug-mode-console-logs">Debug mode (console logs)</span></span>
 								</div>
 							</div>
 						</div>
@@ -7369,132 +7509,132 @@ input:checked + .slider:before {
 			<div class="wrapper beginner-basic" data-panel-section="multialerts">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-effect-options" />
-                    <label class="collapsible-label" for="wrapper-multi-alert-effect-options"><span>✨ Event animations &amp; sound effects</span></label>
+                    <label class="collapsible-label" for="wrapper-multi-alert-effect-options"><span data-translate="popup-event-animations-sound-effects">✨ Event animations &amp; sound effects</span></label>
                     <div class="collapsible-text">
                         <div class="options ssn-alert-setup popup-settings-panel"><div class="options_group">
 
 
                             <details open style="width: 95%; margin-top: 6px;">
-                                    <summary>✨ Alert 1<small id="multi-alert-effect1-summary" class="ssn-effect-summary">Not configured</small></summary>
+                                    <summary><span data-translate="popup-alert-1">✨ Alert 1</span><small id="multi-alert-effect1-summary" class="ssn-effect-summary" data-translate="popup-not-configured">Not configured</small></summary>
                                     <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px 0;">
-                                        <div><label class="switch"><input type="checkbox" id="multi-alert-effect1-enabled" checked aria-label="Enable alert 1" /><span class="slider round"></span></label><label for="multi-alert-effect1-enabled"><span class="popup-control-icon" aria-hidden="true">📣</span>Enable alert</label></div>
+                                        <div><label class="switch"><input type="checkbox" id="multi-alert-effect1-enabled" checked aria-label="Enable alert 1" /><span class="slider round"></span></label><label for="multi-alert-effect1-enabled"><span class="popup-control-icon" aria-hidden="true">📣</span><span data-translate="popup-enable-alert">Enable alert</span></label></div>
                                         <select id="multi-alert-effect1-state" data-optionparam25="effect1enabled" hidden aria-hidden="true"><option value="">Enabled</option><option value="false">Disabled</option></select>
-                                        <div><button type="button" id="multi-alert-effect1-preset" class="popup-secondary-button" style="margin: 2px 1px;">💵 $100 donation preset</button></div>
-                                        <label for="multi-alert-effect1-type">🎯 Event</label>
+                                        <div><button type="button" id="multi-alert-effect1-preset" class="popup-secondary-button" style="margin: 2px 1px;" data-translate="popup-100-donation-preset">💵 $100 donation preset</button></div>
+                                        <label for="multi-alert-effect1-type" data-translate="popup-event">🎯 Event</label>
                                         <select id="multi-alert-effect1-type" class="textInput" data-optionparam25="effect1type">
-                                            <option value="donation">Donation / paid gift</option>
-                                            <option value="follow">Follow</option>
-                                            <option value="subscription">Subscription / member</option>
-                                            <option value="bits">Bits / cheer</option>
-                                            <option value="raid">Raid / host</option>
-                                            <option value="auction">Auction win</option>
-                                            <option value="hype">Hype train</option>
+                                            <option value="donation" data-translate="popup-donation-paid-gift">Donation / paid gift</option>
+                                            <option value="follow" data-translate="popup-follow">Follow</option>
+                                            <option value="subscription" data-translate="popup-subscription-member">Subscription / member</option>
+                                            <option value="bits" data-translate="popup-bits-cheer">Bits / cheer</option>
+                                            <option value="raid" data-translate="popup-raid-host">Raid / host</option>
+                                            <option value="auction" data-translate="popup-auction-win">Auction win</option>
+                                            <option value="hype" data-translate="popup-hype-train">Hype train</option>
                                         </select>
                                         <div class="textInputContainer textInputWithUpload" style="width: 100%;">
                                             <input type="text" id="multi-alert-effect1-media" class="textInput instant" data-textparam25="effect1media" placeholder="Direct GIF/image/video URL (not a Giphy page link)" autocomplete="off" />
-                                            <label for="multi-alert-effect1-media">🖼️ Media (optional)</label>
-                                            <button type="button" id="uploadMultiEffect1MediaBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span>Upload</button>
+                                            <label for="multi-alert-effect1-media" data-translate="popup-media-optional">🖼️ Media (optional)</label>
+                                            <button type="button" id="uploadMultiEffect1MediaBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
                                         </div>
                                         <div class="textInputContainer textInputWithUpload" style="width: 100%;">
                                             <input type="text" id="multi-alert-effect1-sound" class="textInput instant" data-textparam25="effect1sound" placeholder="Sound URL (.mp3, .ogg, .wav)" autocomplete="off" />
-                                            <label for="multi-alert-effect1-sound"><span class="popup-control-icon" aria-hidden="true">🔗</span>Sound URL</label>
-                                            <button type="button" id="uploadMultiEffect1SoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span>Upload</button>
+                                            <label for="multi-alert-effect1-sound"><span class="popup-control-icon" aria-hidden="true">🔗</span><span data-translate="popup-sound-url">Sound URL</span></label>
+                                            <button type="button" id="uploadMultiEffect1SoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
                                         </div>
-                                        <details class="ssn-effect-advanced"><summary>💵 Amount limits (USD)</summary>
+                                        <details class="ssn-effect-advanced"><summary data-translate="popup-amount-limits-usd">💵 Amount limits (USD)</summary>
 
                                         <div class="textInputContainer" style="width: 100%;">
                                             <input type="text" inputmode="decimal" id="multi-alert-effect1-min" class="textInput instant" data-textparam25="effect1min" placeholder="Any amount" autocomplete="off" />
-                                            <label for="multi-alert-effect1-min"><span class="popup-control-icon" aria-hidden="true">💵</span>Minimum USD</label>
+                                            <label for="multi-alert-effect1-min"><span class="popup-control-icon" aria-hidden="true">💵</span><span data-translate="popup-minimum-usd">Minimum USD</span></label>
                                         </div>
                                         <div class="textInputContainer" style="width: 100%;">
                                             <input type="text" inputmode="decimal" id="multi-alert-effect1-max" class="textInput instant" data-textparam25="effect1max" placeholder="No upper limit" autocomplete="off" />
-                                            <label for="multi-alert-effect1-max"><span class="popup-control-icon" aria-hidden="true">💵</span>Maximum USD</label>
+                                            <label for="multi-alert-effect1-max"><span class="popup-control-icon" aria-hidden="true">💵</span><span data-translate="popup-maximum-usd">Maximum USD</span></label>
                                         </div>
 
                                         </details>
-                                        <button type="button" id="multi-alert-effect1-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect1-clear-sound" class="popup-secondary-button">🔇 Clear sound</button><button type="button" id="multi-alert-effect1-reset" class="popup-secondary-button">↺ Reset alert</button></div><span id="multi-alert-effect1-status" role="status" aria-live="polite"></span>
+                                        <button type="button" id="multi-alert-effect1-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;" data-translate="popup-test-alert">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect1-clear-sound" class="popup-secondary-button" data-translate="popup-clear-sound">🔇 Clear sound</button><button type="button" id="multi-alert-effect1-reset" class="popup-secondary-button" data-translate="popup-reset-alert">↺ Reset alert</button></div><span id="multi-alert-effect1-status" role="status" aria-live="polite"></span>
                                     </div>
                                 </details>
                                 <details style="width: 95%; margin-top: 6px;">
-                                    <summary>✨ Alert 2<small id="multi-alert-effect2-summary" class="ssn-effect-summary">Not configured</small></summary>
+                                    <summary><span data-translate="popup-alert-2">✨ Alert 2</span><small id="multi-alert-effect2-summary" class="ssn-effect-summary" data-translate="popup-not-configured">Not configured</small></summary>
                                     <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px 0;">
-                                        <div><label class="switch"><input type="checkbox" id="multi-alert-effect2-enabled" checked aria-label="Enable alert 2" /><span class="slider round"></span></label><label for="multi-alert-effect2-enabled"><span class="popup-control-icon" aria-hidden="true">📣</span>Enable alert</label></div>
+                                        <div><label class="switch"><input type="checkbox" id="multi-alert-effect2-enabled" checked aria-label="Enable alert 2" /><span class="slider round"></span></label><label for="multi-alert-effect2-enabled"><span class="popup-control-icon" aria-hidden="true">📣</span><span data-translate="popup-enable-alert">Enable alert</span></label></div>
                                         <select id="multi-alert-effect2-state" data-optionparam25="effect2enabled" hidden aria-hidden="true"><option value="">Enabled</option><option value="false">Disabled</option></select>
-                                        <div><button type="button" id="multi-alert-effect2-preset" class="popup-secondary-button" style="margin: 2px 1px;">💵 $100 donation preset</button></div>
-                                        <label for="multi-alert-effect2-type">🎯 Event</label>
+                                        <div><button type="button" id="multi-alert-effect2-preset" class="popup-secondary-button" style="margin: 2px 1px;" data-translate="popup-100-donation-preset">💵 $100 donation preset</button></div>
+                                        <label for="multi-alert-effect2-type" data-translate="popup-event">🎯 Event</label>
                                         <select id="multi-alert-effect2-type" class="textInput" data-optionparam25="effect2type">
-                                            <option value="donation">Donation / paid gift</option>
-                                            <option value="follow">Follow</option>
-                                            <option value="subscription">Subscription / member</option>
-                                            <option value="bits">Bits / cheer</option>
-                                            <option value="raid">Raid / host</option>
-                                            <option value="auction">Auction win</option>
-                                            <option value="hype">Hype train</option>
+                                            <option value="donation" data-translate="popup-donation-paid-gift">Donation / paid gift</option>
+                                            <option value="follow" data-translate="popup-follow">Follow</option>
+                                            <option value="subscription" data-translate="popup-subscription-member">Subscription / member</option>
+                                            <option value="bits" data-translate="popup-bits-cheer">Bits / cheer</option>
+                                            <option value="raid" data-translate="popup-raid-host">Raid / host</option>
+                                            <option value="auction" data-translate="popup-auction-win">Auction win</option>
+                                            <option value="hype" data-translate="popup-hype-train">Hype train</option>
                                         </select>
                                         <div class="textInputContainer textInputWithUpload" style="width: 100%;">
                                             <input type="text" id="multi-alert-effect2-media" class="textInput instant" data-textparam25="effect2media" placeholder="Direct GIF/image/video URL (not a Giphy page link)" autocomplete="off" />
-                                            <label for="multi-alert-effect2-media">🖼️ Media (optional)</label>
-                                            <button type="button" id="uploadMultiEffect2MediaBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span>Upload</button>
+                                            <label for="multi-alert-effect2-media" data-translate="popup-media-optional">🖼️ Media (optional)</label>
+                                            <button type="button" id="uploadMultiEffect2MediaBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
                                         </div>
                                         <div class="textInputContainer textInputWithUpload" style="width: 100%;">
                                             <input type="text" id="multi-alert-effect2-sound" class="textInput instant" data-textparam25="effect2sound" placeholder="Sound URL (.mp3, .ogg, .wav)" autocomplete="off" />
-                                            <label for="multi-alert-effect2-sound"><span class="popup-control-icon" aria-hidden="true">🔗</span>Sound URL</label>
-                                            <button type="button" id="uploadMultiEffect2SoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span>Upload</button>
+                                            <label for="multi-alert-effect2-sound"><span class="popup-control-icon" aria-hidden="true">🔗</span><span data-translate="popup-sound-url">Sound URL</span></label>
+                                            <button type="button" id="uploadMultiEffect2SoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
                                         </div>
-                                        <details class="ssn-effect-advanced"><summary>💵 Amount limits (USD)</summary>
+                                        <details class="ssn-effect-advanced"><summary data-translate="popup-amount-limits-usd">💵 Amount limits (USD)</summary>
 
                                         <div class="textInputContainer" style="width: 100%;">
                                             <input type="text" inputmode="decimal" id="multi-alert-effect2-min" class="textInput instant" data-textparam25="effect2min" placeholder="Any amount" autocomplete="off" />
-                                            <label for="multi-alert-effect2-min"><span class="popup-control-icon" aria-hidden="true">💵</span>Minimum USD</label>
+                                            <label for="multi-alert-effect2-min"><span class="popup-control-icon" aria-hidden="true">💵</span><span data-translate="popup-minimum-usd">Minimum USD</span></label>
                                         </div>
                                         <div class="textInputContainer" style="width: 100%;">
                                             <input type="text" inputmode="decimal" id="multi-alert-effect2-max" class="textInput instant" data-textparam25="effect2max" placeholder="No upper limit" autocomplete="off" />
-                                            <label for="multi-alert-effect2-max"><span class="popup-control-icon" aria-hidden="true">💵</span>Maximum USD</label>
+                                            <label for="multi-alert-effect2-max"><span class="popup-control-icon" aria-hidden="true">💵</span><span data-translate="popup-maximum-usd">Maximum USD</span></label>
                                         </div>
 
                                         </details>
-                                        <button type="button" id="multi-alert-effect2-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect2-clear-sound" class="popup-secondary-button">🔇 Clear sound</button><button type="button" id="multi-alert-effect2-reset" class="popup-secondary-button">↺ Reset alert</button></div><span id="multi-alert-effect2-status" role="status" aria-live="polite"></span>
+                                        <button type="button" id="multi-alert-effect2-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;" data-translate="popup-test-alert">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect2-clear-sound" class="popup-secondary-button" data-translate="popup-clear-sound">🔇 Clear sound</button><button type="button" id="multi-alert-effect2-reset" class="popup-secondary-button" data-translate="popup-reset-alert">↺ Reset alert</button></div><span id="multi-alert-effect2-status" role="status" aria-live="polite"></span>
                                     </div>
                                 </details>
                                 <details style="width: 95%; margin-top: 6px;">
-                                    <summary>✨ Alert 3<small id="multi-alert-effect3-summary" class="ssn-effect-summary">Not configured</small></summary>
+                                    <summary><span data-translate="popup-alert-3">✨ Alert 3</span><small id="multi-alert-effect3-summary" class="ssn-effect-summary" data-translate="popup-not-configured">Not configured</small></summary>
                                     <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px 0;">
-                                        <div><label class="switch"><input type="checkbox" id="multi-alert-effect3-enabled" checked aria-label="Enable alert 3" /><span class="slider round"></span></label><label for="multi-alert-effect3-enabled"><span class="popup-control-icon" aria-hidden="true">📣</span>Enable alert</label></div>
+                                        <div><label class="switch"><input type="checkbox" id="multi-alert-effect3-enabled" checked aria-label="Enable alert 3" /><span class="slider round"></span></label><label for="multi-alert-effect3-enabled"><span class="popup-control-icon" aria-hidden="true">📣</span><span data-translate="popup-enable-alert">Enable alert</span></label></div>
                                         <select id="multi-alert-effect3-state" data-optionparam25="effect3enabled" hidden aria-hidden="true"><option value="">Enabled</option><option value="false">Disabled</option></select>
-                                        <div><button type="button" id="multi-alert-effect3-preset" class="popup-secondary-button" style="margin: 2px 1px;">💵 $100 donation preset</button></div>
-                                        <label for="multi-alert-effect3-type">🎯 Event</label>
+                                        <div><button type="button" id="multi-alert-effect3-preset" class="popup-secondary-button" style="margin: 2px 1px;" data-translate="popup-100-donation-preset">💵 $100 donation preset</button></div>
+                                        <label for="multi-alert-effect3-type" data-translate="popup-event">🎯 Event</label>
                                         <select id="multi-alert-effect3-type" class="textInput" data-optionparam25="effect3type">
-                                            <option value="donation">Donation / paid gift</option>
-                                            <option value="follow">Follow</option>
-                                            <option value="subscription">Subscription / member</option>
-                                            <option value="bits">Bits / cheer</option>
-                                            <option value="raid">Raid / host</option>
-                                            <option value="auction">Auction win</option>
-                                            <option value="hype">Hype train</option>
+                                            <option value="donation" data-translate="popup-donation-paid-gift">Donation / paid gift</option>
+                                            <option value="follow" data-translate="popup-follow">Follow</option>
+                                            <option value="subscription" data-translate="popup-subscription-member">Subscription / member</option>
+                                            <option value="bits" data-translate="popup-bits-cheer">Bits / cheer</option>
+                                            <option value="raid" data-translate="popup-raid-host">Raid / host</option>
+                                            <option value="auction" data-translate="popup-auction-win">Auction win</option>
+                                            <option value="hype" data-translate="popup-hype-train">Hype train</option>
                                         </select>
                                         <div class="textInputContainer textInputWithUpload" style="width: 100%;">
                                             <input type="text" id="multi-alert-effect3-media" class="textInput instant" data-textparam25="effect3media" placeholder="Direct GIF/image/video URL (not a Giphy page link)" autocomplete="off" />
-                                            <label for="multi-alert-effect3-media">🖼️ Media (optional)</label>
-                                            <button type="button" id="uploadMultiEffect3MediaBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span>Upload</button>
+                                            <label for="multi-alert-effect3-media" data-translate="popup-media-optional">🖼️ Media (optional)</label>
+                                            <button type="button" id="uploadMultiEffect3MediaBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
                                         </div>
                                         <div class="textInputContainer textInputWithUpload" style="width: 100%;">
                                             <input type="text" id="multi-alert-effect3-sound" class="textInput instant" data-textparam25="effect3sound" placeholder="Sound URL (.mp3, .ogg, .wav)" autocomplete="off" />
-                                            <label for="multi-alert-effect3-sound"><span class="popup-control-icon" aria-hidden="true">🔗</span>Sound URL</label>
-                                            <button type="button" id="uploadMultiEffect3SoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span>Upload</button>
+                                            <label for="multi-alert-effect3-sound"><span class="popup-control-icon" aria-hidden="true">🔗</span><span data-translate="popup-sound-url">Sound URL</span></label>
+                                            <button type="button" id="uploadMultiEffect3SoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
                                         </div>
-                                        <details class="ssn-effect-advanced"><summary>💵 Amount limits (USD)</summary>
+                                        <details class="ssn-effect-advanced"><summary data-translate="popup-amount-limits-usd">💵 Amount limits (USD)</summary>
 
                                         <div class="textInputContainer" style="width: 100%;">
                                             <input type="text" inputmode="decimal" id="multi-alert-effect3-min" class="textInput instant" data-textparam25="effect3min" placeholder="Any amount" autocomplete="off" />
-                                            <label for="multi-alert-effect3-min"><span class="popup-control-icon" aria-hidden="true">💵</span>Minimum USD</label>
+                                            <label for="multi-alert-effect3-min"><span class="popup-control-icon" aria-hidden="true">💵</span><span data-translate="popup-minimum-usd">Minimum USD</span></label>
                                         </div>
                                         <div class="textInputContainer" style="width: 100%;">
                                             <input type="text" inputmode="decimal" id="multi-alert-effect3-max" class="textInput instant" data-textparam25="effect3max" placeholder="No upper limit" autocomplete="off" />
-                                            <label for="multi-alert-effect3-max"><span class="popup-control-icon" aria-hidden="true">💵</span>Maximum USD</label>
+                                            <label for="multi-alert-effect3-max"><span class="popup-control-icon" aria-hidden="true">💵</span><span data-translate="popup-maximum-usd">Maximum USD</span></label>
                                         </div>
 
                                         </details>
-                                        <button type="button" id="multi-alert-effect3-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect3-clear-sound" class="popup-secondary-button">🔇 Clear sound</button><button type="button" id="multi-alert-effect3-reset" class="popup-secondary-button">↺ Reset alert</button></div><span id="multi-alert-effect3-status" role="status" aria-live="polite"></span>
+                                        <button type="button" id="multi-alert-effect3-test" class="tts-test-button" style="align-self: flex-start; margin: 2px 1px;" data-translate="popup-test-alert">▶ Test alert</button><div class="ssn-effect-management"><button type="button" id="multi-alert-effect3-clear-sound" class="popup-secondary-button" data-translate="popup-clear-sound">🔇 Clear sound</button><button type="button" id="multi-alert-effect3-reset" class="popup-secondary-button" data-translate="popup-reset-alert">↺ Reset alert</button></div><span id="multi-alert-effect3-status" role="status" aria-live="polite"></span>
                                     </div>
                                 </details>
                             <p class="popup-guide-link"><a href="./docs/alert-effects.html" target="_blank" rel="noopener">?✨ Alert setup guide</a></p>
@@ -7506,34 +7646,34 @@ input:checked + .slider:before {
 			<div class="wrapper beginner-basic" data-panel-section="multialerts">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-preview-options" />
-					<label class="collapsible-label" for="wrapper-multi-alert-preview-options"><span>🧪 Preview & Test</span></label>
+					<label class="collapsible-label" for="wrapper-multi-alert-preview-options"><span data-translate="popup-preview-test">🧪 Preview & Test</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
 								<div style="width: 100%; margin-bottom: 10px;">
-									<label for="multi-alert-preview-platform"><span class="popup-control-icon" aria-hidden="true">🧪</span>Preview platform</label>
+									<label for="multi-alert-preview-platform"><span class="popup-control-icon" aria-hidden="true">🧪</span><span data-translate="popup-preview-platform">Preview platform</span></label>
 									<select id="multi-alert-preview-platform" class="textInput">
-										<option value="tiktok" selected>TikTok</option>
-										<option value="twitch">Twitch</option>
-										<option value="youtube">YouTube</option>
-										<option value="kick">Kick</option>
+										<option value="tiktok" selected data-translate="popup-tiktok">TikTok</option>
+										<option value="twitch" data-translate="popup-twitch">Twitch</option>
+										<option value="youtube" data-translate="popup-youtube">YouTube</option>
+										<option value="kick" data-translate="popup-kick">Kick</option>
 									</select>
 								</div>
 								<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
-									<button type="button" id="multi-alert-preview-follow" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">👤</span>Follow</button>
-									<button type="button" id="multi-alert-preview-sub" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">⭐</span>Sub</button>
-									<button type="button" id="multi-alert-preview-dono" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">💵</span>Donation</button>
-									<button type="button" id="multi-alert-preview-bits" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">💎</span>Bits</button>
-									<button type="button" id="multi-alert-preview-raid" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">👥</span>Raid</button>
-									<button type="button" id="multi-alert-preview-auction" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">🏆</span>Auction</button>
-									<button type="button" id="multi-alert-preview-hype" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">🚂</span>Hype</button>
-									<button type="button" id="multi-alert-preview-clear" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">🗑️</span>Clear</button>
+									<button type="button" id="multi-alert-preview-follow" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">👤</span><span data-translate="popup-follow">Follow</span></button>
+									<button type="button" id="multi-alert-preview-sub" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">⭐</span><span data-translate="popup-sub">Sub</span></button>
+									<button type="button" id="multi-alert-preview-dono" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">💵</span><span data-translate="popup-donation">Donation</span></button>
+									<button type="button" id="multi-alert-preview-bits" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">💎</span><span data-translate="popup-bits">Bits</span></button>
+									<button type="button" id="multi-alert-preview-raid" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">👥</span><span data-translate="popup-raid">Raid</span></button>
+									<button type="button" id="multi-alert-preview-auction" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">🏆</span><span data-translate="money-overlay-auction">Auction</span></button>
+									<button type="button" id="multi-alert-preview-hype" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">🚂</span><span data-translate="popup-hype">Hype</span></button>
+									<button type="button" id="multi-alert-preview-clear" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">🗑️</span><span data-translate="popup-clear">Clear</span></button>
 									<button type="button" id="multi-alert-preview-mute" class="overlayButton" style="flex: 0 0 auto; min-width: 0; white-space: nowrap; opacity: 0.6;" title="Mute preview sound">🔊</button>
 								</div>
 								<div style="width: 100%; height: 280px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: linear-gradient(135deg, rgba(10,12,18,0.94), rgba(19,24,35,0.92));">
 									<iframe id="multi-alerts-preview-frame" title="Multi alert preview" style="width: 100%; height: 100%; border: 0; background: transparent;" loading="lazy" allow="autoplay"></iframe>
 								</div>
-								<small class="popup-guide-link">Local preview ? <a href="./docs/alert-effects.html#testing" target="_blank" rel="noopener">📖 Preview help</a></small>
+								<small class="popup-guide-link"><span data-translate="popup-local-preview">Local preview ?</span> <a href="./docs/alert-effects.html#testing" target="_blank" rel="noopener" data-translate="popup-preview-help">📖 Preview help</a></small>
 							</div>
 						</div>
 					</div>
@@ -10380,7 +10520,7 @@ input:checked + .slider:before {
                                         </label>
                                         <label for="ollamaRagEnabled"><span class="popup-control-icon" aria-hidden="true">&#128218;</span><span data-translate="enable-ragEnabled-bot">Use a custom knowledge base (RAG)</span></label>
                                     </div>
-                                    <p id="ragKnowledgeHelp" class="popup-help-text">Add text or Markdown files for the chat bot to reference in its replies.</p>
+                                    <p id="ragKnowledgeHelp" class="popup-help-text">Add text or Markdown files. <a href="https://socialstream.ninja/docs/chatbot-knowledge-guide.html" target="_blank" rel="noopener">Preparation and testing guide</a></p>
                                     <div id="ragFileManagement" style="display:none;">
                                         <div class="textInputContainer rag-search-field">
                                             <select id="ragSearchMode" class="textInput popup-reviewed-control" data-optionsetting="ragSearchMode" aria-describedby="ragSearchHelp ragSearchStatus">
@@ -10389,7 +10529,7 @@ input:checked + .slider:before {
                                             </select>
                                             <label for="ragSearchMode">Search method</label>
                                         </div>
-                                        <p id="ragSearchHelp" class="popup-help-text">Semantic search matches questions by meaning using a small local model. It builds a cached index from existing imports without AI service calls. Keyword search stays available while it prepares. Replies still use your selected AI service.</p>
+                                        <p id="ragSearchHelp" class="popup-help-text">Semantic search is for English. Replies use your selected AI service.</p>
                                         <p id="ragSearchStatus" class="popup-help-text" role="status">Keyword search is selected.</p>
                                         <div class="popup-toggle-row">
                                             <label class="switch">
@@ -10398,7 +10538,7 @@ input:checked + .slider:before {
                                             </label>
                                             <label for="ragFilesOnly"><span class="popup-control-icon" aria-hidden="true">&#128214;</span>Answer only from my files</label>
                                         </div>
-                                        <p id="ragFilesOnlyHelp" class="popup-help-text">Skip the general-chat fallback when no answer is returned from your files. AI-generated answers can still be inaccurate.</p>
+                                        <p id="ragFilesOnlyHelp" class="popup-help-text">Keep factual answers based on your files.</p>
                                         <div class="popup-toggle-row">
                                             <label class="switch">
                                                 <input type="checkbox" id="enhancedProcessing" aria-describedby="ragProcessingHelp" />
@@ -10406,7 +10546,7 @@ input:checked + .slider:before {
                                             </label>
                                             <label for="enhancedProcessing">Use AI to enrich new imports</label>
                                         </div>
-                                        <p id="ragProcessingHelp" class="popup-help-text">Optional: uses your selected AI service to create summaries and search tags. Takes longer and may incur provider charges. Leave off to import locally without AI processing.</p>
+                                        <p id="ragProcessingHelp" class="popup-help-text">Optional AI summaries and tags; may incur provider charges.</p>
                                         <div class="popup-panel-actions">
                                             <button type="button" data-action="uploadRAGfile"><span data-translate="add-another-rag-file">Add file</span></button>
                                             <button type="button" data-action="clearRag" title="Remove all imported documents from the knowledge base. Original files are kept."><span data-translate="clear-rag">Clear all files</span></button>
@@ -11377,22 +11517,22 @@ input:checked + .slider:before {
 
 			<div class="link" title="Monitor donation events and activity in real-time" data-panel-section="eventsdashboard">
 				<h2 class="events_dashboard_title">
-					<span class="title-group"><span class="emoji" aria-hidden="true">📊</span><span data-translate="eventsdashboard">Events Dashboard</span></span>
+					<span class="title-group"><span class="emoji" aria-hidden="true">📊</span><span data-translate="eventsdashboard">Activity Feed / Events</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="eventsdashboard" title="Load an existing link for this overlay">[edit link]</button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="eventsdashboard" title="Load an existing link for this overlay" data-translate="popup-edit-link">[edit link]</button>
 					<label for="help-events" class="help-link rounded_area" title="Click for detailed help">[?]</label>
 				</h2>
 				<input type="checkbox" id="help-events" class="link-help-toggle">
 				<div class="link-help-content">
-					<strong>Real-time activity feed for stream events.</strong>
-					<p>Monitor follows, subscriptions, raids, donations, and other platform events as they happen across all connected sources.</p>
+					<strong data-translate="popup-real-time-activity-feed-for-stream-events">Real-time activity feed for stream events.</strong>
+					<p data-translate="popup-monitor-follows-subscriptions-raids-donations-and-other-platform-events-as-">Monitor follows, subscriptions, raids, donations, and other platform events as they happen across all connected sources.</p>
 					<ul>
-						<li>Track new followers and subscribers</li>
-						<li>See raids, hosts, and gift subs</li>
-						<li>Monitor donations and tips</li>
-						<li>Customize which events to display</li>
+						<li data-translate="popup-track-new-followers-and-subscribers">Track new followers and subscribers</li>
+						<li data-translate="popup-see-raids-hosts-and-gift-subs">See raids, hosts, and gift subs</li>
+						<li data-translate="popup-monitor-donations-and-tips">Monitor donations and tips</li>
+						<li data-translate="popup-customize-which-events-to-display">Customize which events to display</li>
 					</ul>
-					<div class="help-tip">💡 <strong>Tip:</strong> Great for keeping track of supporter activity during streams or for creating an on-stream event ticker.</div>
+					<div class="help-tip">💡 <strong data-translate="popup-tip">Tip:</strong> <span data-translate="popup-great-for-keeping-track-of-supporter-activity-during-streams-or-for-creatin">Great for keeping track of supporter activity during streams or for creating an on-stream event ticker.</span></div>
 				</div>
 				<h3><span class="popup-control-icon" aria-hidden="true">💵</span>
 					<span data-translate="when-enabled-donation-events">
@@ -11411,6 +11551,191 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group events_dashboard">
+<div class="popup-settings-panel event-board-settings">
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="events-audience" type="checkbox" data-param17="audience" />
+<span class="slider round">
+</span>
+</label>
+<label for="events-audience" data-translate="popup-audience-preset-transparent-recent-events">Audience preset — transparent recent events</label>
+</div>
+<div class="popup-action-row">
+<button type="button" class="popup-action-button" data-board-preset="events" data-translate="popup-last-three-transparent">Last three — transparent</button>
+<button type="button" class="tts-test-button" data-board-preview="events" data-translate="popup-preview-sample-events">Preview sample events</button>
+</div>
+<p data-translate="popup-the-audience-preset-hides-the-heading-timestamps-operator-details-counts-ad">The audience preset hides the heading, timestamps, operator details, counts, ads and casual activity. Turn it off to customize those individually.</p>
+<details class="popup-subsection">
+<summary data-translate="popup-layout-and-motion">Layout and motion</summary>
+<label for="board-events-layout" data-translate="popup-layout">Layout</label>
+<select id="board-events-layout" class="textInput" data-optionparam17="layout">
+<option value="" data-translate="popup-list">List</option>
+<option value="horizontal" data-translate="popup-horizontal-cards">Horizontal cards</option>
+<option value="rotate" data-translate="popup-one-event-at-a-time-rotate">One event at a time — rotate</option>
+<option value="latest" data-translate="popup-latest-event-in-each-category">Latest event in each category</option>
+<option value="marquee" data-translate="popup-scrolling-strip">Scrolling strip</option>
+</select>
+<label for="board-events-order" data-translate="popup-new-events-appear">New events appear</label>
+<select id="board-events-order" class="textInput" data-optionparam17="order">
+<option value="" data-translate="popup-at-the-top-left">At the top / left</option>
+<option value="oldest" data-translate="popup-at-the-bottom-right">At the bottom / right</option>
+</select>
+<label for="board-events-textalign" data-translate="popup-text-alignment">Text alignment</label>
+<select id="board-events-textalign" class="textInput" data-optionparam17="textalign">
+<option value="" data-translate="popup-left">Left</option>
+<option value="right" data-translate="popup-right">Right</option>
+</select>
+<div class="textInputContainer">
+<label for="board-events-rowwidth" data-translate="popup-maximum-row-width-px">Maximum row width (px)</label>
+<input id="board-events-rowwidth" class="textInput" type="number" data-optionparam17="rowwidth" min="200" max="1920" placeholder="Automatic" />
+</div>
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="board-events-nowrap" type="checkbox" data-param17="nowrap" />
+<span class="slider round">
+</span>
+</label>
+<label for="board-events-nowrap" data-translate="popup-keep-text-on-one-line">Keep text on one line</label>
+</div>
+<label for="board-events-exitmotion" data-translate="popup-exit-animation">Exit animation</label>
+<select id="board-events-exitmotion" class="textInput" data-optionparam17="exitmotion"><option value="" data-translate="popup-none">None</option><option value="fade" data-translate="popup-fade">Fade</option><option value="slide" data-translate="popup-slide">Slide</option></select>
+<label for="board-events-motion" data-translate="popup-entry-animation">Entry animation</label>
+<select id="board-events-motion" class="textInput" data-optionparam17="motion">
+<option value="" data-translate="popup-style-default">Style default</option>
+<option value="slide" data-translate="popup-slide">Slide</option>
+<option value="fade" data-translate="popup-fade">Fade</option>
+<option value="none" data-translate="popup-none">None</option>
+</select>
+<div class="textInputContainer">
+<label for="board-events-animationspeed" data-translate="popup-animation-speed-ms">Animation speed (ms)</label>
+<input id="board-events-animationspeed" class="textInput" type="number" data-optionparam17="animationspeed" min="0" max="3000" placeholder="350" />
+</div>
+<div class="textInputContainer">
+<label for="board-events-rotatetime" data-translate="popup-rotation-interval-seconds">Rotation interval (seconds)</label>
+<input id="board-events-rotatetime" class="textInput" type="number" data-optionparam17="rotatetime" min="1" max="120" placeholder="5" />
+</div>
+<div class="textInputContainer">
+<label for="board-events-scrollspeed" data-translate="popup-scrolling-cycle-seconds">Scrolling cycle (seconds)</label>
+<input id="board-events-scrollspeed" class="textInput" type="number" data-optionparam17="scrollspeed" min="5" max="180" placeholder="30" />
+</div>
+<div class="textInputContainer">
+<label for="board-events-cardopacity" data-translate="popup-card-background-opacity">Card background opacity (%)</label>
+<input id="board-events-cardopacity" class="textInput" type="number" data-optionparam17="cardopacity" min="0" max="100" placeholder="Style default" />
+</div>
+<label for="board-events-accentby" data-translate="popup-accent-colors">Accent colors</label>
+<select id="board-events-accentby" class="textInput" data-optionparam17="accentby">
+<option value="" data-translate="popup-style-default">Style default</option>
+<option value="platform" data-translate="popup-by-platform">By platform</option>
+<option value="category" data-translate="popup-by-event-category">By event category</option>
+</select>
+</details>
+<details class="popup-subsection">
+<summary data-translate="popup-history-and-operator-controls">History and operator controls</summary>
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="board-events-remember" type="checkbox" data-param17="remember" />
+<span class="slider round">
+</span>
+</label>
+<label for="board-events-remember" data-translate="popup-remember-visible-events-after-refresh">Remember visible events after refresh</label>
+</div>
+<div class="textInputContainer">
+<label for="board-events-historyhours" data-translate="popup-keep-saved-history-for-hours">Keep saved history for (hours)</label>
+<input id="board-events-historyhours" class="textInput" type="number" data-optionparam17="historyhours" min="1" max="168" placeholder="24" />
+</div>
+<div class="textInputContainer">
+<label for="board-events-id" data-translate="popup-board-name-for-separate-scenes">Board name (for separate scenes)</label>
+<input id="board-events-id" class="textInput" type="text" data-optionparam17="board" placeholder="default" />
+</div>
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="board-events-operator" type="checkbox" data-param17="operator" />
+<span class="slider round">
+</span>
+</label>
+<label for="board-events-operator" data-translate="popup-show-operator-buttons-private-dashboard-only">Show operator buttons (private dashboard only)</label>
+</div>
+<p data-translate="popup-commands-apply-to-the-board-name-above-history-stays-in-this-browser-pinnin">Commands apply to the board name above. History stays in this browser. Pinning uses one visible slot.</p>
+<div class="popup-action-row">
+<button type="button" class="popup-action-button" data-board-command="pause" data-board-surface="events" data-translate="nc-audience-pause">Pause</button>
+<button type="button" class="popup-action-button" data-board-command="resume" data-board-surface="events" data-translate="nc-audience-resume">Resume</button>
+<button type="button" class="popup-action-button" data-board-command="pin" data-board-surface="events" data-translate="popup-pin">Pin</button>
+<button type="button" class="popup-action-button" data-board-command="unpin" data-board-surface="events" data-translate="popup-unpin">Unpin</button>
+<button type="button" class="popup-action-button" data-board-command="remove" data-board-surface="events" data-translate="remove">Remove</button>
+<button type="button" class="popup-action-button" data-board-command="clear" data-board-surface="events" data-translate="popup-clear">Clear</button>
+</div>
+<p id="board-events-status" role="status">
+</p>
+</details>
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="events-showavatar" type="checkbox" data-param17="showavatar" />
+<span class="slider round">
+</span>
+</label>
+<label for="events-showavatar" data-translate="popup-show-avatars-when-available">Show avatars when available</label>
+</div>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/event-overlays.html" target="_blank" rel="noopener" data-translate="popup-event-overlay-guide-and-gallery">Event overlay guide and gallery</a>
+</div>
+                                <div class="popup-settings-panel">
+                                    <label for="events-style"><span class="popup-control-icon" aria-hidden="true">&#127912;</span><span data-translate="popup-feed-style">Feed style</span></label>
+                                    <select id="events-style" class="textInput popup-reviewed-control" data-optionparam17="style">
+                                        <option value="" data-translate="popup-cards-default">Cards (Default)</option>
+                                        <option value="compact" data-translate="popup-compact-dense-rows">Compact - dense rows</option>
+                                        <option value="twitch" data-translate="popup-twitch-style-activity-list">Twitch-style - activity list</option>
+                                        <option value="timeline" data-translate="popup-timeline-connected-events">Timeline - connected events</option>
+                                        <option value="glass" data-translate="popup-glass-floating-cards">Glass - floating cards</option>
+                                        <option value="minimal" data-translate="popup-minimal-text-only-no-boxes">Minimal - text only, no boxes</option>
+                                        <option value="ticker" data-translate="popup-ticker-horizontal-strip">Ticker - horizontal strip</option><option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined-rows">Outlined rows</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option><option value="paper" data-translate="popup-warm-paper">Warm paper</option>
+                                    </select>
+                                    <details class="popup-subsection" id="events-category-options">
+                                        <summary><span aria-hidden="true">&#128065;</span> <span data-translate="popup-choose-which-events-appear">Choose which events appear</span></summary>
+                                        <p data-translate="popup-hide-selected-categories-in-this-feed-ordinary-chat-stays-excluded">Hide selected categories in this feed. Ordinary chat stays excluded.</p>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hidefollows" type="checkbox" data-param17="hidefollows" /><span class="slider round"></span></label><label for="events-hidefollows" data-translate="popup-hide-follows-free-youtube-subscriptions">Hide follows / free YouTube subscriptions</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hidememberships" type="checkbox" data-param17="hidememberships" /><span class="slider round"></span></label><label for="events-hidememberships" data-translate="popup-hide-subscriptions-memberships-and-milestones">Hide subscriptions, memberships and milestones</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hidegiftmemberships" type="checkbox" data-param17="hidegiftmemberships" /><span class="slider round"></span></label><label for="events-hidegiftmemberships" data-translate="popup-hide-gifted-subscriptions-memberships">Hide gifted subscriptions / memberships</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hidepaid" type="checkbox" data-param17="hidepaid" /><span class="slider round"></span></label><label for="events-hidepaid" data-translate="popup-hide-tips-super-chats-super-stickers-and-cheers">Hide tips, Super Chats, Super Stickers and cheers</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hidegifts" type="checkbox" data-param17="hidegifts" /><span class="slider round"></span></label><label for="events-hidegifts" data-translate="popup-hide-virtual-wishlist-gifts-and-contributions">Hide virtual / wishlist gifts and contributions</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hidepurchases" type="checkbox" data-param17="hidepurchases" /><span class="slider round"></span></label><label for="events-hidepurchases" data-translate="popup-hide-purchases">Hide purchases</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hideraids" type="checkbox" data-param17="hideraids" /><span class="slider round"></span></label><label for="events-hideraids" data-translate="popup-hide-raids-youtube-redirects">Hide raids / YouTube redirects</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hiderewards" type="checkbox" data-param17="hiderewards" /><span class="slider round"></span></label><label for="events-hiderewards" data-translate="popup-hide-channel-point-redemptions">Hide channel point redemptions</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hidehypetrain" type="checkbox" data-param17="hidehypetrain" /><span class="slider round"></span></label><label for="events-hidehypetrain" data-translate="popup-hide-hype-trains">Hide Hype Trains</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hidestatus" type="checkbox" data-param17="hidestatus" /><span class="slider round"></span></label><label for="events-hidestatus" data-translate="popup-hide-count-updates-and-stream-status-rows">Hide count updates and stream status rows</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hideads" type="checkbox" data-param17="hideads" /><span class="slider round"></span></label><label for="events-hideads" data-translate="popup-hide-ad-notices">Hide ad notices</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hideactivity" type="checkbox" data-param17="hideactivity" /><span class="slider round"></span></label><label for="events-hideactivity" data-translate="popup-hide-joins-likes-shares-and-watch-streaks">Hide joins, likes, shares and watch streaks</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hideother" type="checkbox" data-param17="hideother" /><span class="slider round"></span></label><label for="events-hideother" data-translate="popup-hide-other-unclassified-notices">Hide other / unclassified notices</label></div>
+                                        <div class="textInputContainer"><input id="events-filterevents" class="textInput" type="text" data-optionparam17="filterevents" placeholder="e.g. superchat,watch_streak" /><label for="events-filterevents" data-translate="popup-hide-exact-event-names-comma-separated">Hide exact event names (comma-separated)</label></div>
+                                        <a class="popup-guide-link" href="https://socialstream.ninja/docs/alerts-customization-guide.html#activity-feed-filters" target="_blank" rel="noopener" data-translate="popup-category-details-and-filter-combinations">Category details and filter combinations</a>
+                                    </details>
+                                    <details class="popup-subsection" id="events-content-options">
+                                        <summary><span aria-hidden="true">&#128221;</span> <span data-translate="popup-row-contents-and-behavior">Row contents and behavior</span></summary>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hidemessage" type="checkbox" data-param17="hidemessage" /><span class="slider round"></span></label><label for="events-hidemessage" data-translate="popup-hide-message-summary-text">Hide message / summary text</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hidecontentimg" type="checkbox" data-param17="hidecontentimg" /><span class="slider round"></span></label><label for="events-hidecontentimg" data-translate="popup-hide-attachment-and-super-sticker-images">Hide attachment and Super Sticker images</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hideplatformicons" type="checkbox" data-param17="hideplatformicons" /><span class="slider round"></span></label><label for="events-hideplatformicons" data-translate="popup-hide-platform-icons-on-rows">Hide platform icons on rows</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hideeventlabels" type="checkbox" data-param17="hideeventlabels" /><span class="slider round"></span></label><label for="events-hideeventlabels" data-translate="popup-hide-event-labels-on-rows">Hide event labels on rows</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hideamounts" type="checkbox" data-param17="hideamounts" /><span class="slider round"></span></label><label for="events-hideamounts" data-translate="popup-hide-amount-badges-and-usd-conversions">Hide amount badges and USD conversions</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-nofeature" type="checkbox" data-param17="nofeature" /><span class="slider round"></span></label><label for="events-nofeature" data-translate="popup-disable-click-to-feature">Disable click-to-feature</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-hideempty" type="checkbox" data-param17="hideempty" /><span class="slider round"></span></label><label for="events-hideempty" data-translate="popup-hide-the-waiting-message-when-empty">Hide the waiting message when empty</label></div>
+                                        <div class="textInputContainer"><input id="events-eventduration" class="textInput" type="number" min="0" max="86400" step="1" data-optionparam17="eventduration" placeholder="0 = keep events" /><label for="events-eventduration" data-translate="popup-remove-events-after-seconds">Remove events after (seconds)</label></div>
+                                        <a class="popup-guide-link" href="https://socialstream.ninja/docs/alerts-customization-guide.html#activity-feed-filters" target="_blank" rel="noopener" data-translate="popup-display-and-timed-removal-options">Display and timed-removal options</a>
+                                    </details>
+                                    <details class="popup-subsection">
+                                        <summary data-translate="popup-customize-feed-appearance">Customize feed appearance</summary>
+                                        <div class="textInputContainer"><input id="events-accent" class="textInput" type="text" data-optionparam17="accent" placeholder="#bf94ff" /><label for="events-accent" data-translate="popup-accent-color">Accent color</label></div>
+                                        <div class="textInputContainer"><input id="events-pagebg" class="textInput" type="text" data-optionparam17="pagebg" placeholder="#18181b" /><label for="events-pagebg" data-translate="popup-page-background">Page background</label></div>
+                                        <div class="textInputContainer"><input id="events-cardbg" class="textInput" type="text" data-optionparam17="cardbg" placeholder="#242427 or rgba(24,24,27,0.8)" /><label for="events-cardbg" data-translate="popup-card-row-background">Card / row background</label></div>
+                                        <div class="textInputContainer"><input id="events-textcolor" class="textInput" type="text" data-optionparam17="textcolor" placeholder="#efeff1" /><label for="events-textcolor" data-translate="popup-text-color-1c7a30">Text color</label></div>
+                                        <div class="textInputContainer"><input id="events-mutedcolor" class="textInput" type="text" data-optionparam17="mutedcolor" placeholder="#b6b6c0" /><label for="events-mutedcolor" data-translate="popup-secondary-text-color">Secondary text color</label></div>
+                                        <div class="textInputContainer"><input id="events-fontsize" class="textInput" type="number" min="10" max="40" data-optionparam17="fontsize" placeholder="Style default" /><label for="events-fontsize" data-translate="popup-text-size-px">Text size (px)</label></div>
+                                        <div class="textInputContainer"><input id="events-padding" class="textInput" type="number" min="0" max="40" data-optionparam17="padding" placeholder="Style default" /><label for="events-padding" data-translate="popup-row-padding-px">Row padding (px)</label></div>
+                                        <div class="textInputContainer"><input id="events-gap" class="textInput" type="number" min="0" max="40" data-optionparam17="gap" placeholder="Style default" /><label for="events-gap" data-translate="popup-space-between-events-px">Space between events (px)</label></div>
+                                        <div class="textInputContainer"><input id="events-radius" class="textInput" type="number" min="0" max="40" data-optionparam17="radius" placeholder="Style default" /><label for="events-radius" data-translate="popup-corner-radius-px">Corner radius (px)</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-noheader" type="checkbox" data-param17="noheader" /><span class="slider round"></span></label><label for="events-noheader" data-translate="popup-hide-page-heading">Hide page heading</label></div>
+                                        <div class="popup-toggle-row"><label class="switch"><input id="events-noanimation" type="checkbox" data-param17="noanimation" /><span class="slider round"></span></label><label for="events-noanimation" data-translate="popup-disable-entry-animation">Disable entry animation</label></div>
+                                        <a class="popup-guide-link" href="https://socialstream.ninja/docs/alerts-customization-guide.html#activity-feed-styles" target="_blank" rel="noopener" data-translate="popup-feed-styles-and-url-options">Feed styles and URL options</a>
+                                    </details>
+                                </div>
+
 								<h3><span class="popup-control-icon" aria-hidden="true">📡</span><span data-translate="source-selection">Sources to Monitor</span></h3>
 
 								<div class="source-selection-container">
@@ -11468,19 +11793,19 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param17="showviewercount" />
 										<span class="slider round"></span>
 									</label>
-									<span>👀 Show viewer count bar in the top-right</span>
+									<span data-translate="popup-show-viewer-count-bar-in-the-top-right">👀 Show viewer count bar in the top-right</span>
 								</div>
 								<div title="Set the top-right viewer count bar background color. Supports hex, rgba, and named colors.">
 									<label class="switch">
 										<input type="checkbox" data-param17="viewerbarbg" />
 										<span class="slider round"></span>
 									</label>
-									<span>🎨 Custom viewer bar background color</span>
+									<span data-translate="popup-custom-viewer-bar-background-color">🎨 Custom viewer bar background color</span>
 								</div>
 								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
 									<div class="textInputContainer" style="width: 95%;" title="Examples: #0009, #1f2937cc, rgba(0,0,0,0.65)">
 										<input type="text" id="events_viewerbarbg" class="textInput instant" autocomplete="off" placeholder="e.g. #0009 or rgba(0,0,0,0.65)" data-textparam17="viewerbarbg" data-palette="events_viewerbarbg_palette" />
-										<label for="events_viewerbarbg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Viewer bar background color</label>
+										<label for="events_viewerbarbg"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-viewer-bar-background-color">&gt; Viewer bar background color</span></label>
 									</div>
 									<input type="color" data-color="events_viewerbarbg" id="events_viewerbarbg_palette" class="colorPicker" title="Pick a viewer bar background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
 								</div>
@@ -11490,7 +11815,7 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param17="hidemeta" />
 										<span class="slider round"></span>
 									</label>
-									<span>🗂️ Hide metadata details under messages</span>
+									<span data-translate="popup-hide-metadata-details-under-messages">🗂️ Hide metadata details under messages</span>
 								</div>
 
 								<div>
@@ -11514,7 +11839,7 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param17="transparent" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="force-transparent-background">â­• Force transparent background </span></span><span class="obs-transparent-note"> (Useful for standalone pop-out overlays)</span>
+									<span><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="force-transparent-background">â­• Force transparent background </span></span><span class="obs-transparent-note" data-translate="popup-useful-for-standalone-pop-out-overlays"> (Useful for standalone pop-out overlays)</span>
 								</div>
 								<div data-keywords="font size zoom scale enlarge shrink">
 									<label class="switch">
@@ -11522,9 +11847,9 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span>
-										🔍 Scale
+										<span data-translate="popup-scale">🔍 Scale</span>
 										<input type="range" id="events-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting17="scale" data-range-display="events-scale-display" data-range-suffix="x" />
-										<span class="range-value" id="events-scale-display">1.00x</span>
+										<span class="range-value" id="events-scale-display" data-translate="popup-1-00x">1.00x</span>
 									</span>
 								</div>
 
@@ -11534,16 +11859,16 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="max-events">Maximum events to display:</span></span>
-									<input type="number" id="maxEvents" class="numberInput" min="10" max="500" value="100" data-numbersetting17="maxevents">
+									<input type="number" id="maxEvents" class="numberInput" min="1" max="500" value="100" data-numbersetting17="maxevents">
 								</div>
 
 								<div>
 									<span data-translate="font-family">Font Family</span>
 									<select data-optionparam17="font">
-										<option value="">Default / no font override</option>
-										<option value="Roboto" style="font-family: 'Roboto';">Roboto - abc123XYZ</option>
-										<option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
-										<option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
+										<option value="" data-translate="popup-default-no-font-override">Default / no font override</option>
+										<option value="Roboto" style="font-family: 'Roboto';" data-translate="popup-roboto-abc123xyz">Roboto - abc123XYZ</option>
+										<option value="Sora" style="font-family: 'Sora';" data-translate="popup-sora-abc123xyz">Sora - abc123XYZ</option>
+										<option value="opendyslexic" style="font-family: 'opendyslexic';" data-translate="popup-open-dyslexic-abc123xyz">Open Dyslexic - abc123XYZ</option>
 									</select>
 								</div>
 
@@ -11552,11 +11877,11 @@ input:checked + .slider:before {
 									<label for="googlefont17"><span class="popup-control-icon" aria-hidden="true">🔤</span><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
 								</div>
 								<div>
-									<i>note: Install custom fonts on your system (Windows: right-click .ttf/.otf &rarr; Install, then restart browser). <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">Font detector &amp; help</a></i>
+									<i><span data-translate="popup-note-install-custom-fonts-on-your-system-windows-right-click-ttf-otf-instal">note: Install custom fonts on your system (Windows: right-click .ttf/.otf &rarr; Install, then restart browser).</span> <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue" data-translate="popup-font-detector-help">Font detector &amp; help</a></i>
 								</div>
 								<div>
-									<h3><span class="popup-control-icon" aria-hidden="true">📣</span>Event cheat sheet:</h3>
-									<p>Review which sources emit new subs, follows, donations, and viewer counts in the <a href="https://socialstream.ninja/docs/event-reference.html" target="_blank" class="lightblue">Social Stream Event Reference</a>. It lists payload names, platform quirks, and workarounds so you can configure dashboards with confidence.</p>
+									<h3><span class="popup-control-icon" aria-hidden="true">📣</span><span data-translate="popup-event-cheat-sheet">Event cheat sheet:</span></h3>
+									<p><span data-translate="popup-review-which-sources-emit-new-subs-follows-donations-and-viewer-counts-in-t">Review which sources emit new subs, follows, donations, and viewer counts in the</span> <a href="https://socialstream.ninja/docs/event-reference.html" target="_blank" class="lightblue" data-translate="popup-social-stream-event-reference">Social Stream Event Reference</a><span data-translate="popup-it-lists-payload-names-platform-quirks-and-workarounds-so-you-can-configure">. It lists payload names, platform quirks, and workarounds so you can configure dashboards with confidence.</span></p>
 								</div>
 							</div>
 						</div>
@@ -11566,7 +11891,7 @@ input:checked + .slider:before {
 
 			<div class="link" title="Reaction-only overlay for floating hearts, thumbs, and similar live reactions." data-panel-section="reactions">
 				<h2 class="reactions_title">
-					<span class="title-group"><span class="emoji" aria-hidden="true">💖</span><span>Reactions Overlay</span></span>
+					<span class="title-group"><span class="emoji" aria-hidden="true">💖</span><span data-translate="popup-reactions-overlay">Reactions Overlay</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<button type="button" class="edit-link rounded_area" data-edit-link="reactions" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-reactions" class="help-link rounded_area" title="Click for detailed help">[?]</label>
@@ -12220,7 +12545,7 @@ input:checked + .slider:before {
 
 			<div class="link" title="Meta data bar for auction, commerce, and giveaway-style status updates" data-panel-section="meta">
 				<h2 class="meta_mode_title">
-					<span class="title-group"><span class="emoji" aria-hidden="true">📦</span><span>Meta Data Bar</span></span>
+					<span class="title-group"><span class="emoji" aria-hidden="true">📦</span><span data-translate="popup-meta-data-bar">Meta Data Bar</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<button type="button" class="edit-link rounded_area" data-edit-link="meta" title="Load an existing link for this overlay">[edit link]</button>
 					<label for="help-meta" class="help-link rounded_area" title="Click for detailed help">[?]</label>
@@ -16332,7 +16657,7 @@ input:checked + .slider:before {
 
 			<div class="link" title="Timer overlay" data-panel-section="timer">
 				<h2 class="timer_section_title">
-					<span class="title-group"><span class="emoji" aria-hidden="true">⏳</span>Timer</span>
+					<span class="title-group"><span class="emoji" aria-hidden="true">⏳</span><span data-translate="popup-timer">Timer</span></span>
 					<span class="options-link-group" style="float: right; display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
 						<a class="copy-link rounded_area" title="Copy timer link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<button type="button" class="edit-link rounded_area" data-edit-link="timer" title="Load an existing link for this overlay">[edit link]</button>
@@ -16449,7 +16774,7 @@ input:checked + .slider:before {
 
 			<div class="link" id="spotify-integration" title="Spotify Integration" data-panel-section="spotify">
 				<h2 class="spotify_section_title">
-					<span class="title-group"><span class="emoji" aria-hidden="true">🎵</span>Spotify Integration</span>
+					<span class="title-group"><span class="emoji" aria-hidden="true">🎵</span><span data-translate="popup-spotify-integration">Spotify Integration</span></span>
 					<span class="options-link-group" style="float: right; display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
 						<a class="copy-link rounded_area" title="Copy overlay link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<button type="button" class="edit-link rounded_area" data-edit-link="spotify" title="Load an existing link for this overlay">[edit link]</button>

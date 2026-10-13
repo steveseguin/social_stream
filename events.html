@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="shared/overlay-control-transport.js"></script>
+<script src="shared/alerts/event-board.js"></script>
     <meta charset="UTF-8">
-    <meta name="description" content="Events Dashboard. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="description" content="Activity Feed / Events. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
     <meta name="robots" content="noindex">
     <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
   <script type="text/javascript" src="./js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Events Dashboard</title>
+    <title>Activity Feed / Events</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
 <style>
 @import url('https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap');
@@ -34,7 +36,18 @@ body, html {
     zoom: var(--scale-output);
 }
 
+/* A column, so the feed takes exactly the space the heading leaves. */
+body {
+    display: flex;
+    flex-direction: column;
+    /* Both roots apply zoom; retain that size while fitting the feed to the viewport. */
+    height: calc(100vh / var(--scale-output) / var(--scale-output));
+}
+
 #chat-container {
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    min-height: 0;
     padding: 15px;
     height: calc(100vh - 70px);
     overflow-y: auto;
@@ -58,6 +71,7 @@ body, html {
     transform: translateY(-20px);
     animation: slideFadeIn 0.5s ease forwards;
     position: relative;
+    overflow-wrap: anywhere;
 }
 
 .youtube-event {
@@ -272,11 +286,14 @@ body.compact-height #topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-width: 0;
 }
 
 .message-meta {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
+    min-width: 0;
 }
 
 .event-specific {
@@ -446,6 +463,11 @@ body.light-mode .event-type {
 
 body.light-mode .no-events {
     color: #777;
+}
+
+/* Its text colors assume the dark panel, so keep that in light mode. */
+body.light-mode .hype-train-panel {
+    background: linear-gradient(145deg, #241d38, #18273a);
 }
 .clickable-message {
     cursor: pointer;
@@ -624,15 +646,280 @@ body.light-mode .meta-value.badge {
 	}
 }
 
+
+/* Optional activity-feed layouts. The original cards remain the default. */
+/* No root background, so the body's own paints the whole window at any scale. */
+html.events-styled { background: none; }
+body.events-styled {
+    --feed-page: #18181b;
+    --feed-card: #242427;
+    --feed-ink: #efeff1;
+    --feed-muted: #b6b6c0;
+    --feed-accent: #bf94ff;
+    --feed-line: #45454d;
+    --feed-radius: 6px;
+    --feed-gap: 8px;
+    --feed-padding: 12px;
+    background: var(--feed-page);
+    color: var(--feed-ink);
+}
+body.events-styled.light-mode {
+    --feed-page: #f7f7f8;
+    --feed-card: #ffffff;
+    --feed-ink: #202024;
+    --feed-muted: #60606a;
+    --feed-accent: #7130b8;
+    --feed-line: #d6d6dd;
+}
+body.events-styled #header { background: var(--feed-card); color: var(--feed-ink); box-shadow: none; }
+body.events-styled #chat-container { padding: var(--feed-padding); }
+body.events-styled .message {
+    background: var(--feed-card);
+    color: var(--feed-ink);
+    border: 1px solid var(--feed-line);
+    border-radius: var(--feed-radius);
+    margin-bottom: var(--feed-gap);
+    padding: var(--feed-padding);
+    box-shadow: var(--feed-ring, 0 0 0 0 transparent), var(--feed-shadow, 0 0 0 0 transparent);
+}
+body.events-styled .meta-fields { grid-template-columns: minmax(0, 1fr); }
+/* Margins rather than flex gap, which older OBS browser sources lack. */
+body.events-styled .message-meta > * { margin: 1px 8px 1px 0; }
+body.events-styled .name { color: var(--feed-ink); font-size: 1em; }
+body.events-styled .text { margin: 6px 0; }
+body.events-styled .timestamp, body.events-styled .no-events { color: var(--feed-muted); }
+body.events-styled .source-icon { width: 16px; height: 16px; }
+body.events-styled .event-type { display: none; }
+body.events-styled .event-specific {
+    background: transparent;
+    color: var(--feed-accent);
+    border-radius: 0;
+    padding: 0;
+    font-size: .8em;
+}
+body.events-styled .donation { display: inline-block; color: var(--feed-accent); font-size: 1em; margin: 2px 8px 2px 0; }
+body.events-styled .usd-value { position: static; display: inline-block; margin: 2px 0; background: transparent; color: var(--feed-muted); border: 1px solid var(--feed-line); font-size: .85em; }
+body.events-styled .meta-details { background: var(--feed-card); color: var(--feed-ink); border-color: var(--feed-line); }
+body.events-styled .meta-toggle { background: var(--feed-card); color: var(--feed-ink); border: 1px solid var(--feed-line); }
+body.events-styled .meta-label, body.events-styled .meta-section-title { color: var(--feed-muted); }
+body.events-styled .meta-value { color: var(--feed-ink); }
+body.events-styled .meta-toggle:focus { outline: 2px solid var(--feed-accent); outline-offset: 2px; }
+body.events-styled .hype-train-title, body.events-styled .hype-train-details { color: var(--feed-ink); }
+body.events-styled .hype-train-contributors { color: var(--feed-muted); }
+body.events-styled .hype-train-status { background: transparent; color: var(--feed-accent); border-color: var(--feed-line); }
+body.events-styled .hype-train-progress { background: var(--feed-line); }
+
+/* Highlight and featured rings are inset shadows: they follow rounded corners and never shift the layout. */
+body.events-styled .medium-value { --feed-ring: inset 0 0 0 1px var(--feed-accent); border-color: var(--feed-accent); }
+body.events-styled .high-value, body.events-styled .message.active { --feed-ring: inset 0 0 0 2px var(--feed-accent); border-color: var(--feed-accent); }
+body.events-styled .message.active { background: var(--feed-card) !important; box-shadow: var(--feed-ring), var(--feed-shadow, 0 0 0 0 transparent); }
+body.events-styled .clickable-message:hover, body.events-styled .clickable-message:active { top: 0; filter: brightness(1.12); }
+body.events-styled.light-mode .clickable-message:hover, body.events-styled.light-mode .clickable-message:active { filter: brightness(.96); }
+/* The FEATURED tag sits in the header row here, so it can't cover names or amounts. */
+body.events-styled .message.active::before { content: none; }
+body.events-styled:not(.event-style-ticker) .message.active .message-header { flex-wrap: wrap; }
+body.events-styled .message.active .message-header::after {
+    content: "FEATURED";
+    flex: 0 0 auto;
+    align-self: flex-start;
+    box-sizing: border-box;
+    max-width: 100%;
+    background-color: #4CAF50;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: .7em;
+    font-weight: bold;
+    text-shadow: none;
+}
+
+body.event-style-compact {
+    --feed-page: #172122;
+    --feed-card: #172122;
+    --feed-accent: #6cdebe;
+    --feed-radius: 0px;
+    --feed-gap: 0px;
+    --feed-padding: 7px;
+    font-size: 13px;
+}
+body.event-style-compact.light-mode { --feed-accent: #0b6b58; }
+body.event-style-compact .message { border-width: 0 0 1px; line-height: 1.45; }
+body.event-style-compact .message-header, body.event-style-compact .message-meta,
+body.event-style-compact .text, body.event-style-compact .name { display: inline; }
+body.event-style-compact .message-meta > * { margin: 0 6px 0 0; }
+body.event-style-compact .text { margin: 0; }
+body.event-style-compact .content-image { display: inline-block; max-height: 3em; margin: 0 6px; vertical-align: middle; }
+body.event-style-compact .donation { margin: 0 6px; }
+body.event-style-compact .usd-value { margin: 0; padding: 0 6px; }
+body.event-style-compact .timestamp { display: inline-block; margin: 0 0 0 8px; }
+body.event-style-compact .meta-summary { margin-top: 2px; }
+body.event-style-compact .meta-details { margin-top: 4px; }
+body.event-style-compact .message.active .message-header::after { display: inline-block; margin: 0 6px 0 0; }
+
+body.event-style-twitch { --feed-radius: 0px; --feed-gap: 0px; --feed-padding: 10px; font-size: 14px; }
+body.event-style-twitch #chat-container { padding: 0; }
+body.event-style-twitch .message { border-width: 0 0 1px; }
+/* Leaves the icon gutter out of rows that have no icon. */
+body.event-style-twitch .message:not(.hype-train-panel) { padding-left: calc(var(--feed-padding) + 30px); }
+body.event-style-twitch .source-icon { position: absolute; left: var(--feed-padding); top: var(--feed-padding); width: 20px; height: 20px; margin: 0; }
+body.event-style-twitch .name { order: -1; }
+body.event-style-twitch .event-specific { font-size: .85em; }
+body.event-style-twitch .timestamp { font-size: .7em; }
+body.event-style-twitch .content-image { max-height: 120px; }
+
+body.event-style-timeline {
+    --feed-page: #1f2027;
+    --feed-card: #292b36;
+    --feed-accent: #f0c566;
+    --feed-radius: 10px;
+    --feed-gap: 16px;
+    --feed-padding: 14px;
+}
+body.event-style-timeline.light-mode { --feed-accent: #805600; }
+body.event-style-timeline #chat-container { padding-left: 38px; }
+/* .active is listed so the default FEATURED tag's box can't leak into the rail. */
+body.event-style-timeline .message::before,
+body.event-style-timeline .message.active::before {
+    content: ''; position: absolute; left: -23px; right: auto; top: 0;
+    width: 2px; height: calc(100% + var(--feed-gap) + 2px);
+    padding: 0; border-radius: 0; background: var(--feed-line);
+}
+body.event-style-timeline .message::after {
+    content: ''; position: absolute; left: -28px; top: calc(var(--feed-padding) + .6em - 6px);
+    width: 10px; height: 10px; border: 1px solid var(--feed-page);
+    border-radius: 50%; background: var(--feed-accent);
+}
+/* The rail runs dot to dot: it starts at the newest event and stops at the oldest. Dots sit on the first text line. */
+body.event-style-timeline .message:first-child::before { top: calc(var(--feed-padding) + .6em); height: calc(100% + var(--feed-gap) + 2px - var(--feed-padding) - .6em); }
+body.event-style-timeline .message:last-child::before { height: calc(var(--feed-padding) + .6em); }
+body.event-style-timeline .message:first-child:last-child::before { display: none; }
+
+body.event-style-glass {
+    --feed-page: #172031;
+    --feed-card: rgba(37, 52, 78, .72);
+    --feed-line: rgba(161, 191, 235, .35);
+    --feed-accent: #8fd8ff;
+    --feed-radius: 18px;
+    --feed-gap: 16px;
+    --feed-padding: 18px;
+    --feed-shadow: 0 8px 24px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .14);
+    /* A soft tint gives the translucent cards something to show through on a solid page. */
+    background: linear-gradient(155deg, rgba(110, 168, 255, .30), rgba(110, 168, 255, 0) 45%, rgba(178, 124, 255, .22)) fixed var(--feed-page);
+}
+body.event-style-glass.light-mode {
+    --feed-page: #e9eef7;
+    --feed-card: rgba(255, 255, 255, .78);
+    --feed-line: rgba(70, 100, 150, .28);
+    --feed-accent: #00628f;
+}
+body.event-style-glass .event-specific { border: 1px solid var(--feed-line); padding: 2px 9px; border-radius: 20px; }
+
+/* Text only, for sitting directly over video: no boxes, shadowed for legibility. */
+body.event-style-minimal {
+    --feed-page: #101114;
+    --feed-card: transparent;
+    --feed-accent: #9be564;
+    --feed-radius: 4px;
+    --feed-gap: 10px;
+    --feed-padding: 8px;
+    font-size: 16px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .9), 0 0 6px rgba(0, 0, 0, .55);
+}
+body.event-style-minimal.light-mode {
+    --feed-card: transparent;
+    --feed-accent: #2c6e12;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, .9), 0 0 6px rgba(255, 255, 255, .6);
+}
+body.event-style-minimal .message { border-width: 0; padding: 4px 8px; }
+body.event-style-minimal .event-specific { font-size: .7em; text-transform: uppercase; letter-spacing: .06em; }
+body.event-style-minimal .text { margin: 2px 0; }
+body.event-style-minimal .content-image { max-height: 120px; }
+
+/* One row of pills, newest on the left, for a lower-third strip. */
+body.event-style-ticker {
+    --feed-page: #15161c;
+    --feed-card: #23252f;
+    --feed-accent: #ff9f80;
+    --feed-radius: 999px;
+    --feed-gap: 8px;
+    --feed-padding: 8px;
+    font-size: 14px;
+}
+body.event-style-ticker.light-mode { --feed-accent: #b23b1e; }
+body.event-style-ticker #header { display: none; }
+body.event-style-ticker #chat-container { display: flex; align-items: flex-start; overflow: hidden; white-space: nowrap; }
+body.event-style-ticker .message {
+    display: flex; align-items: center; flex: 0 0 auto; max-width: 85%; overflow: hidden;
+    margin: 0 var(--feed-gap) 0 0;
+    padding: calc(var(--feed-padding) * .75) calc(var(--feed-padding) * 1.75);
+    transform: translateX(-24px);
+}
+/* When a pill runs out of room the message text gives way first, then the label, then the name. Amounts are never cut. */
+body.event-style-ticker .message-header { flex: 0 1 auto; overflow: hidden; }
+body.event-style-ticker .message-meta { flex-wrap: nowrap; }
+body.event-style-ticker .message-meta > * { flex: 0 0 auto; margin: 0 6px 0 0; }
+body.event-style-ticker .event-specific { flex: 0 100 auto; overflow: hidden; text-overflow: ellipsis; }
+body.event-style-ticker .name { flex: 0 1 auto; max-width: 12em; overflow: hidden; text-overflow: ellipsis; }
+body.event-style-ticker .text { flex: 0 10000 auto; min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; }
+body.event-style-ticker .text div, body.event-style-ticker .text p { display: inline; }
+body.event-style-ticker .donation, body.event-style-ticker .usd-value { flex: 0 0 auto; margin: 0 0 0 8px; }
+body.event-style-ticker .content-image { flex: 0 0 auto; max-height: 1.6em; margin: 0 0 0 8px; }
+body.event-style-ticker .timestamp, body.event-style-ticker .meta-wrapper, body.event-style-ticker .hype-train-contributors { display: none; }
+body.event-style-ticker .message.active .message-header::after { align-self: center; margin: 0 6px 0 0; }
+/* On a narrow strip the ring alone marks the featured pill, leaving the room to the name. */
+@media (max-width: 480px) {
+    body.event-style-ticker .message.active .message-header::after { content: none; }
+}
+body.event-style-ticker .hype-train-title-row { flex: 0 0 auto; }
+body.event-style-ticker .hype-train-progress { flex: 0 0 90px; margin: 0 0 0 10px; }
+body.event-style-ticker .hype-train-details { flex: 0 0 auto; flex-wrap: nowrap; margin: 0 0 0 10px; }
+body.event-style-ticker .no-events { margin: 0; padding: calc(var(--feed-padding) * .75) 0; }
+
+/* Explicit URL overrides also work with the original layout. */
+html.feed-custom-page:not(.events-styled), body.feed-custom-page { background-color: var(--feed-page) !important; }
+body.feed-custom-card .message, body.feed-custom-card #header { background: var(--feed-card) !important; }
+body.feed-custom-ink .message, body.feed-custom-ink .name, body.feed-custom-ink #header, body.feed-custom-ink .meta-value, body.feed-custom-ink .hype-train-title { color: var(--feed-ink); }
+body.feed-custom-muted .timestamp, body.feed-custom-muted .no-events, body.feed-custom-muted .meta-label { color: var(--feed-muted); }
+body.feed-custom-accent .event-specific { background: transparent; color: var(--feed-accent); }
+body.feed-custom-accent:not(.events-styled) .event-specific { border: 1px solid var(--feed-accent); }
+body.feed-custom-accent .donation { color: var(--feed-accent); }
+body.feed-custom-radius .message { border-radius: var(--feed-radius); }
+body.feed-custom-gap .message { margin-bottom: var(--feed-gap); }
+body.feed-custom-padding .message { padding: var(--feed-padding); }
+body.feed-noheader #header { display: none; }
+body.feed-noheader #chat-container { height: 100vh; }
+/* Important, so it also clears a style's page tint. */
+html.feed-transparent, body.transparent-mode { background: transparent !important; }
+body.feed-noanimation .message { animation: none; opacity: 1; transform: none; }
+body.feed-hidemessage .message > .text,
+body.feed-hidecontentimg .content-image,
+body.feed-hideplatformicons .source-icon,
+body.feed-hideeventlabels .event-type,
+body.feed-hideeventlabels .event-specific,
+body.feed-hideamounts .donation,
+body.feed-hideamounts .usd-value,
+body.feed-hideempty .no-events { display: none !important; }
+body.event-style-twitch.feed-hideplatformicons .message:not(.hype-train-panel) { padding-left: var(--feed-padding); }
+/* With no heading to sit on, the viewer bar takes its own row instead of covering the newest event. */
+body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.event-style-ticker #topbar { position: static; flex: 0 0 auto; margin-left: auto; }
+@media (max-width: 700px) {
+    body.events-styled #header { display: none; }
+    body.events-styled #topbar { position: static; flex: 0 0 auto; margin-left: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+    body.events-styled .message { animation: none; opacity: 1; transform: none; }
+}
+
 </style>
 <script src="./libs/objects.js"></script>
 <script src="./shared/utils/chatHtml.js"></script>
+<link rel="stylesheet" href="shared/alerts/event-board.css">
 </head>
 <body>
 <div id="topbar"></div>
 <div id="header">
-    <h1 class="large">Events Dashboard</h1>
-	<h1 class="small">Events Dashboard</h1>
+    <h1 class="large">Activity Feed / Events</h1>
+	<h1 class="small">Activity Feed / Events</h1>
 </div>
 <div id="chat-container">
     <div class="no-events">Waiting for stream events and donations...</div>
@@ -640,6 +927,12 @@ body.light-mode .meta-value.badge {
 <script type="text/javascript" src="currency.js"></script>
 <script>
     var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('audience')) {
+        ['transparent', 'noheader', 'hidemeta', 'nofeature', 'hideempty', 'notime', 'hidestatus', 'hideads', 'hideactivity', 'hidehypetrain'].forEach(function (key) { urlParams.set(key, ''); });
+        if (!urlParams.has('maxevents')) urlParams.set('maxevents', '3');
+        if (!urlParams.has('style')) urlParams.set('style', 'compact');
+    }
+    var eventBoard = null;
     var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
     // Transport migration guard: only pages with full server parity may skip the legacy bridge.
     var TRANSPORT_CAPABILITIES = {
@@ -716,7 +1009,8 @@ body.light-mode .meta-value.badge {
 	}
 
 	function applyStaticTranslations() {
-		const dashboardTitle = getTranslation('events-dashboard-title', 'Events Dashboard');
+		if (eventBoard) eventBoard.translateControls();
+		const dashboardTitle = getTranslation('events-dashboard-title', 'Activity Feed / Events');
 		document.title = dashboardTitle;
 		document.querySelectorAll('#header h1').forEach(function(heading) {
 			heading.textContent = dashboardTitle;
@@ -794,7 +1088,14 @@ body.light-mode .meta-value.badge {
 	var transparentMode = urlParams.has("transparent") || urlParams.has("transparency");
 	var hideMetaPanels = urlParams.has("hidemeta");
 	var hideTimestamps = urlParams.has("notime");
-	var maxEvents = urlParams.has("maxevents") ? parseInt(urlParams.get("maxevents")) : 200;
+	var disableFeaturing = urlParams.has('nofeature');
+	var eventDuration = Number(urlParams.get('eventduration'));
+	eventDuration = Number.isFinite(eventDuration) && eventDuration >= 1 ? Math.min(eventDuration, 86400) : 0;
+	var filteredFeedEvents = (urlParams.get('filterevents') || '').split(',').map(normalizeEventKey).filter(Boolean);
+	['hidemessage', 'hidecontentimg', 'hideplatformicons', 'hideeventlabels', 'hideamounts', 'hideempty'].forEach(function(option) {
+		if (urlParams.has(option)) document.body.classList.add('feed-' + option);
+	});
+	var maxEvents = Math.max(1, Math.min(500, parseInt(urlParams.get("maxevents")) || 200));
 	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
 	var googleFont = urlParams.has("googlefont") ? urlParams.get("googlefont") : "";
 	const showViewerCount = urlParams.has("showviewercount");
@@ -822,6 +1123,8 @@ body.light-mode .meta-value.badge {
 		document.documentElement.style.setProperty('--text-color', '#333');
 		document.documentElement.style.setProperty('--card-bg', '#fff');
 		document.documentElement.style.setProperty('--card-shadow', 'rgba(0, 0, 0, 0.1)');
+		// The viewer bar's text follows the theme, so its default backing has to as well.
+		if (!viewerBarBg) document.documentElement.style.setProperty('--topbar-background', '#fffc');
 	}
 
 	if (hideTimestamps) {
@@ -851,6 +1154,51 @@ body.light-mode .meta-value.badge {
 		document.body.style.backgroundColor = "transparent";
 		document.documentElement.style.setProperty("--bg-color", "transparent");
 	}
+
+    // Presentation only: every layout uses the same event renderer and filters.
+    var eventStyle = (urlParams.get('style') || 'default').toLowerCase();
+    if (['compact', 'twitch', 'timeline', 'glass', 'minimal', 'ticker', 'broadcast', 'outline', 'pills', 'neon', 'paper'].indexOf(eventStyle) !== -1) {
+        document.body.classList.add('events-styled', 'event-style-' + eventStyle);
+        document.documentElement.classList.add('events-styled');
+        // A chosen style brings its own page color, so the OBS default steps aside.
+        if (isObsStudio) document.body.style.backgroundColor = '';
+    }
+    [
+        ['pagebg', '--feed-page', 'feed-custom-page'],
+        ['cardbg', '--feed-card', 'feed-custom-card'],
+        ['textcolor', '--feed-ink', 'feed-custom-ink'],
+        ['mutedcolor', '--feed-muted', 'feed-custom-muted'],
+        ['accent', '--feed-accent', 'feed-custom-accent']
+    ].forEach(function(option) {
+        // Transparent mode owns the page background.
+        if (option[0] === 'pagebg' && transparentMode) return;
+        var color = normalizeColorParam(urlParams.get(option[0]));
+        if (color && window.CSS && CSS.supports('color', color)) {
+            document.body.style.setProperty(option[1], color);
+            document.documentElement.style.setProperty(option[1], color);
+            document.body.classList.add(option[2]);
+            if (option[0] === 'pagebg') document.documentElement.classList.add(option[2]);
+        }
+    });
+    [
+        ['radius', '--feed-radius', 'feed-custom-radius', 0, 40],
+        ['gap', '--feed-gap', 'feed-custom-gap', 0, 40],
+        ['padding', '--feed-padding', 'feed-custom-padding', 0, 40]
+    ].forEach(function(option) {
+        var raw = urlParams.get(option[0]);
+        var value = Number(raw);
+        if (raw !== null && raw.trim() !== '' && Number.isFinite(value)) {
+            document.body.style.setProperty(option[1], Math.max(option[3], Math.min(option[4], value)) + 'px');
+            document.body.classList.add(option[2]);
+        }
+    });
+    var feedFontSize = Number(urlParams.get('fontsize'));
+    if (feedFontSize > 0 && Number.isFinite(feedFontSize)) {
+        document.body.style.fontSize = Math.max(10, Math.min(40, feedFontSize)) + 'px';
+    }
+    if (urlParams.has('noheader')) document.body.classList.add('feed-noheader');
+    if (urlParams.has('noanimation')) document.body.classList.add('feed-noanimation');
+    if (transparentMode) document.documentElement.classList.add('feed-transparent');
 
 	updateCompactHeightMode();
 	window.addEventListener("resize", updateCompactHeightMode);
@@ -942,6 +1290,42 @@ body.light-mode .meta-value.badge {
 
 	function humanizeEventKey(event) {
 		return event.replace(/[_-]+/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+	}
+
+	// These are display groups, not new payload event names. Named actions take
+	// precedence over a monetary value (a paid gifted membership is still a gift sub).
+	const FEED_EVENT_GROUPS = {
+		follows: ['new_follower', 'follow', 'followed'],
+		giftmemberships: ['subscription_gift', 'giftpurchase', 'giftredemption', 'subgift', 'gift_membership', 'giftmemberships', 'gifted_membership', 'gifted_memberships', 'membership_gift', 'community_gift'],
+		memberships: ['new_subscriber', 'resub', 'sponsorship', 'membermilestone', 'member_milestone', 'subscription', 'membership', 'new_member', 'new_membership', 'newmember', 'upgraded_membership', 'membership_upgrade', 'membership_milestone'],
+		gifts: ['gift', 'jeweldonation', 'giftcontribution', 'giftfunded'],
+		purchases: ['purchase'],
+		raids: ['raid', 'redirect'],
+		rewards: ['reward'],
+		hypetrain: ['hype_train'],
+		status: Array.from(STATUS_EVENT_TYPES).concat(Array.from(STREAM_EVENT_TYPES)),
+		ads: Array.from(AD_EVENT_TYPES),
+		activity: ['joined', 'liked', 'shared', 'share', 'share_live', 'watch_streak'],
+		paid: ['donation', 'superchat', 'supersticker', 'cheer', 'thankyou']
+	};
+	const hiddenFeedGroups = new Set(Object.keys(FEED_EVENT_GROUPS).concat(['other']).filter(function(group) {
+		return urlParams.has('hide' + group);
+	}));
+
+	function shouldHideFeedEvent(data) {
+		const event = normalizeEventKey(data.event);
+		if (event && filteredFeedEvents.indexOf(event) !== -1) return true;
+		if (!hiddenFeedGroups.size) return false;
+		// Twitch EventSub also marks individual gifted subscriptions this way.
+		if (event === 'new_subscriber' && data.meta && data.meta.isGift === true) {
+			return hiddenFeedGroups.has('giftmemberships');
+		}
+		const groups = Object.keys(FEED_EVENT_GROUPS);
+		for (let i = 0; i < groups.length; i++) {
+			if (FEED_EVENT_GROUPS[groups[i]].indexOf(event) !== -1) return hiddenFeedGroups.has(groups[i]);
+		}
+		// DOM Twitch bits and ordinary tips can have an amount but no named event.
+		return hiddenFeedGroups.has(data.hasDonation ? 'paid' : 'other');
 	}
 
 	function resolveTranslationEntry(entry, fallback) {
@@ -1129,6 +1513,7 @@ body.light-mode .meta-value.badge {
 		}
 
 		panel.__hypeData = data;
+		if (eventDuration) panel.__feedUpdatedAt = Date.now();
 		renderHypeTrainPanel(panel);
 
 		if (String(meta.phase || '').toLowerCase() === 'end') {
@@ -1149,7 +1534,8 @@ body.light-mode .meta-value.badge {
 			}, 1000);
 		}
 
-		while (chatContainer.children.length > maxEvents) {
+        if (eventBoard) eventBoard.register(panel, data, eventDuration * 1000);
+		while (!eventBoard && chatContainer.children.length > maxEvents) {
 			const lastChild = chatContainer.lastChild;
 			if (lastChild === panel) break;
 			chatContainer.removeChild(lastChild);
@@ -1992,13 +2378,20 @@ body.light-mode .meta-value.badge {
     	return false;
     }
     function addMessageToOverlay(data) {
-		if (isDuplicateTransportDelivery(data)) {
+        if (!data || typeof data !== 'object') return;
+        if (data.action === 'eventOverlayControl') {
+            if (SSNOverlayControl.accept(data, 'dock') && eventBoard) eventBoard.command(data);
+            return;
+        }
+        if (eventBoard && (eventBoard.duplicate(data) || eventBoard.defer(data))) return;
+        if (!(eventBoard && eventBoard.isRestoring()) && isDuplicateTransportDelivery(data)) {
 			return;
 		}
 		if (data && String(data.type || '').toLowerCase() === 'obs') {
 			return;
 		}
 		updateViewerTopBar(data);
+		if (shouldHideFeedEvent(data)) return;
 		if (handleHypeTrainPayload(data)) {
 			return;
 		}
@@ -2050,7 +2443,7 @@ body.light-mode .meta-value.badge {
 		messageDiv.classList.add(eventClass);
 		
         messageDiv.rawContents = data; // Store the original data object
-        messageDiv.classList.add('clickable-message');
+        if (!disableFeaturing) messageDiv.classList.add('clickable-message');
 		
 		if (data.mid) {
 			messageDiv.id = data.mid;
@@ -2096,6 +2489,11 @@ body.light-mode .meta-value.badge {
 		}
 		
 		messageDiv.textContent = '';
+
+        if (urlParams.has('showavatar') && typeof data.chatimg === 'string' && /^(https?:|data:image\/)/i.test(data.chatimg)) {
+            var avatar = document.createElement('img'); avatar.className = 'board-avatar'; avatar.src = data.chatimg; avatar.alt = '';
+            avatar.onerror = function () { this.remove(); }; messageDiv.appendChild(avatar);
+        }
 
 		const header = document.createElement('div');
 		header.className = 'message-header';
@@ -2146,6 +2544,16 @@ body.light-mode .meta-value.badge {
 		} else {
 			// Check the display copy because direct senders can bypass relay sanitization.
 			textNode.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(display.message || '') : fallbackEscapeHtml(display.message || ''));
+			if (eventStyle === 'ticker') {
+				// Flatten lines without joining words or removing inline formatting and emotes.
+				textNode.querySelectorAll('br').forEach(function(lineBreak) {
+					lineBreak.parentNode.replaceChild(document.createTextNode(' '), lineBreak);
+				});
+				textNode.querySelectorAll('div, p').forEach(function(block) {
+					block.insertAdjacentText('beforebegin', ' ');
+					block.insertAdjacentText('afterend', ' ');
+				});
+			}
 		}
 		messageDiv.appendChild(textNode);
 
@@ -2185,19 +2593,41 @@ body.light-mode .meta-value.badge {
 		}
 		
 		chatContainer.prepend(messageDiv);
+		if (eventDuration) messageDiv.__feedUpdatedAt = Date.now();
 		
 		// Auto-scroll to the latest message
 		chatContainer.scrollTop = 0;
 		
 		// Keep max N events in the dashboard (from URL param or default 200)
-		while (chatContainer.children.length > maxEvents) {
-			chatContainer.removeChild(chatContainer.lastChild);
-		}
+        if (eventBoard) eventBoard.register(messageDiv, data, eventDuration * 1000);
+        else while (chatContainer.children.length > maxEvents) chatContainer.removeChild(chatContainer.lastChild);
 	}
 	
 	let currentActiveMessage = null; // Track the currently active message
+	if (eventDuration) {
+		setInterval(function() {
+			const cutoff = Date.now() - eventDuration * 1000;
+			Array.from(chatContainer.children).forEach(function(row) {
+                if (row.classList.contains('board-row')) return;
+				if (typeof row.__feedUpdatedAt !== 'number' || row.__feedUpdatedAt > cutoff) return;
+				if (row === currentActiveMessage) currentActiveMessage = null;
+				if (row.__hypeData) {
+					removeHypeTrainPanel(row, (row.__hypeData.type || 'twitch') + ':' + (row.__hypeData.meta.id || 'active'));
+				} else {
+					row.remove();
+				}
+			});
+			if (!chatContainer.children.length) {
+				noEventsMessage = document.createElement('div');
+				noEventsMessage.className = 'no-events';
+				noEventsMessage.textContent = getTranslation('events-waiting-message', 'Waiting for stream events and donations...');
+				chatContainer.appendChild(noEventsMessage);
+			}
+		}, 1000);
+	}
 	
 	chatContainer.addEventListener('click', function(event) {
+        if (disableFeaturing) return;
         const messageDiv = event.target.closest('.message.clickable-message');
         if (!messageDiv || !messageDiv.rawContents) return;
 		
@@ -2291,7 +2721,7 @@ body.light-mode .meta-value.badge {
     }
 
     var iframe = null; // Keep iframe global
-	if (roomID && !useServerOnlyTransport()){
+	if (roomID && !urlParams.has("preview") && !urlParams.has("demo") && !useServerOnlyTransport()){
         iframe = document.createElement("iframe");
 		if (featuredMode){ // featuredMode is false by default in events.html
 			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${encodeURIComponent(password)}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
@@ -2397,10 +2827,26 @@ body.light-mode .meta-value.badge {
     
     if (urlParams.has("server") || urlParams.has("server2")){
         serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
-		if (roomID){
+		if (roomID && !urlParams.has("preview") && !urlParams.has("demo")){
 			setupSocket();
 		}
     }
+    eventBoard = SSNEventBoard.create({ params: urlParams, container: chatContainer, kind: 'events', limit: maxEvents,
+        translate: getTranslation,
+        receive: addMessageToOverlay,
+        removed: function (node) {
+            if (node.__hypeData) removeHypeTrainPanel(node, (node.__hypeData.type || 'twitch') + ':' + (node.__hypeData.meta.id || 'active'));
+        },
+        category: function (payload) {
+            var event = normalizeEventKey(payload.event);
+            var keys = Object.keys(FEED_EVENT_GROUPS);
+            for (var i = 0; i < keys.length; i++) if (FEED_EVENT_GROUPS[keys[i]].indexOf(event) !== -1) return keys[i];
+            return payload.hasDonation ? 'paid' : event;
+        }
+    });
+    eventBoard.restore();
+    if (!urlParams.has('preview') && !urlParams.has('demo')) SSNOverlayControl.connect(urlParams, roomID, 'dock', addMessageToOverlay);
+    if (urlParams.has('demo')) SSNEventBoard.samples().forEach(addMessageToOverlay);
 </script>
 <script src="shared/stickers/catalog.js"></script>
 <script src="shared/stickers/player.js"></script>

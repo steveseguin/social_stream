@@ -82,6 +82,17 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
       document.body.appendChild(iframe);
       await loaded;
       connectedPeers = { fixture: 'bot' };
+      // The production iframe transport targets the VDO origin. Use its bridge
+      // interface to deliver to this test's loopback origin instead.
+      ninjaBridge = {
+        isReady: () => true,
+        getPeers: () => ({ fixture: 'bot' }),
+        sendToLabel: data => {
+          iframe.contentWindow.postMessage({ sendData: { overlayNinja: data } }, endpoint);
+          return true;
+        },
+        destroy() {}
+      };
       serverURL = 'ws://127.0.0.1:' + port;
       settings.socketserver = true;
       setupSocket();
@@ -128,7 +139,8 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     assert.equal(requests.length, 1);
     assert.equal(await bg.evaluate(() => window.__platformCalls.length), 0, 'No target cannot reach account-role routing');
     console.log('PASS bot/reflection, trigger, moderator and missing-target protections');
-    await bg.evaluate(() => { delete settings.botreplyaccountroles; settings.ollamaRateLimitPerTab = { numbersetting: 60000 }; });
+    // Selective mode still skips busy/cooldown input; always-respond mode now queues it.
+    await bg.evaluate(() => { delete settings.botreplyaccountroles; settings.alwaysRespondLLM = false; settings.ollamaRateLimitPerTab = { numbersetting: 60000 }; });
     await send('Describe the planets orbiting the sun', { tid: 990001 });
     assert.equal(requests.length, 2);
     assert.equal(await bg.evaluate(() => window.__platformCalls[0].tid), 990001);

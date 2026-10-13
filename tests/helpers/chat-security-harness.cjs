@@ -50,7 +50,7 @@ async function installRelay(page) {
     'window.__recordFactory = { daysToKeep: 30,\n' +
       section('db.js', '    createMessageRecord(', '    async addMigratedMessages(') + '\n};',
     section('background.js', 'function getUserDisplayAliasEntries()', 'function getCommandAliases('),
-    section('background.js', 'function sendDataP2P(', 'var users = {};'),
+    section('background.js', 'function sendDataP2P(', 'var users = Object.create(null);'),
     section('background.js', 'async function sendToDestinations(', 'async function replayMessagesFromTimestamp(')
   ].join('\n') });
   return async payload => {

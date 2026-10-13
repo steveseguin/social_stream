@@ -7,8 +7,8 @@
 	var seenMessageIds = {};
 	var seenMessageIdQueue = [];
 	var MAX_SEEN_MESSAGE_IDS = 500;
-	var CHAT_CONTAINER_SELECTOR = "#chatMessages";
-	var CHAT_MESSAGE_SELECTOR = ".chat-line.pro-message";
+	var CHAT_CONTAINER_SELECTOR = "#chatMessages, .chat #messages";
+	var CHAT_MESSAGE_SELECTOR = ".chat-line.pro-message, .message[id^='msg-']:not(.chat-announcement)";
 
 	function hasChromeRuntime() {
 		return typeof chrome !== "undefined" && chrome && chrome.runtime && chrome.runtime.id;
@@ -83,6 +83,20 @@
 	}
 
 	function findMessageElement(row) {
+		var separator = row.querySelector(".chat-colon");
+		if (separator) {
+			// The new layout puts text and emotes directly between the name and tools.
+			var content = document.createElement("span");
+			var node = separator.nextSibling;
+			while (node) {
+				if (node.nodeType === 1 && node.classList.contains("message-tools")) {
+					break;
+				}
+				content.appendChild(node.cloneNode(true));
+				node = node.nextSibling;
+			}
+			return content;
+		}
 		var bubble = row.querySelector(".chat-bubble");
 		if (!bubble) {
 			return null;
@@ -93,6 +107,10 @@
 			}
 		}
 		return null;
+	}
+
+	function getMessageId(row) {
+		return row.getAttribute("data-message-id") || (row.id && row.id.indexOf("msg-") === 0 ? row.id.slice(4) : "");
 	}
 
 	function rememberMessageId(messageId) {
@@ -110,20 +128,20 @@
 		if (!row || !row.querySelector || row.ssnSealTeamSlothProcessed) {
 			return false;
 		}
-		var messageId = row.getAttribute("data-message-id") || "";
+		var messageId = getMessageId(row);
 		if (messageId && seenMessageIds[messageId]) {
 			row.ssnSealTeamSlothProcessed = true;
 			return false;
 		}
-		var nameElement = row.querySelector(".chat-name");
+		var nameElement = row.querySelector(".chat-name, .chat-username");
 		var messageElement = findMessageElement(row);
 		var name = nameElement ? nameElement.textContent.trim() : "";
 		var message = getMessageContent(messageElement).trim();
 		if (!name || !message) {
 			return false;
 		}
-		var avatar = row.querySelector(".chat-avatar-mini img[src]");
-		var badgeImages = row.querySelectorAll(".sts-role-badges img[src]");
+		var avatar = row.querySelector(".chat-avatar-mini img[src], img.chat-avatar[src]");
+		var badgeImages = row.querySelectorAll(".sts-role-badges img[src], .badge img[src]");
 		var chatbadges = [];
 		for (var i = 0; i < badgeImages.length; i++) {
 			if (badgeImages[i].src && chatbadges.indexOf(badgeImages[i].src) === -1) {
@@ -168,7 +186,7 @@
 		var rows = container.querySelectorAll(CHAT_MESSAGE_SELECTOR);
 		for (var i = 0; i < rows.length; i++) {
 			rows[i].ssnSealTeamSlothProcessed = true;
-			rememberMessageId(rows[i].getAttribute("data-message-id") || "");
+			rememberMessageId(getMessageId(rows[i]));
 		}
 	}
 
@@ -205,7 +223,7 @@
 		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)) {
 			return;
 		}
-		var viewerElement = document.querySelector("#chatViewerCount");
+		var viewerElement = document.querySelector("#chatViewerCount, #viewer-count");
 		if (!viewerElement) {
 			return;
 		}
@@ -224,7 +242,7 @@
 	}
 
 	function focusChatInput() {
-		var input = document.querySelector("#chatInput, #chatForm input, input[placeholder='Send a message...']");
+		var input = document.querySelector("#chatInput, #chat-input, #chatForm input, input[placeholder='Send a message...']");
 		if (!input || input.disabled || input.readOnly) {
 			return false;
 		}
