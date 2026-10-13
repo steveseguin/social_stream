@@ -14980,12 +14980,12 @@ function attachEventBoardControls() {
         button.addEventListener('click', function () {
             var surface = button.dataset.boardSurface;
             if (surface === 'alerts' && !link(surface).searchParams.has('stack') && ['pin', 'unpin', 'remove'].indexOf(button.dataset.boardCommand) !== -1) {
-                document.getElementById('board-alerts-status').textContent = 'Enable multiple alerts to pin or remove cards.'; return;
+                document.getElementById('board-alerts-status').textContent = getTranslation('event-board-stack-required', 'Enable multiple alerts to pin or remove cards.'); return;
             }
             chrome.runtime.sendMessage({ message: { action: 'eventOverlayControl', surface: surface,
                 board: link(surface).searchParams.get('board') || 'default', command: button.dataset.boardCommand },
                 target: surface === 'alerts' ? 'alerts' : 'dock' });
-            document.getElementById('board-' + surface + '-status').textContent = button.textContent + ' command sent';
+            document.getElementById('board-' + surface + '-status').textContent = getTranslation('event-board-command-sent', '{command} command sent').replace('{command}', button.textContent);
         });
     });
     document.querySelectorAll('[data-board-preset]').forEach(function (button) {

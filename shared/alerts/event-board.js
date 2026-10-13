@@ -22,7 +22,18 @@
                 })));
             } catch (error) { report('History could not be saved in this browser.'); }
         }
-        function report(text) { if (status) status.textContent = text; }
+        function translate(text) {
+            var key = 'event-board-' + text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            return options.translate ? options.translate(key, text) : text;
+        }
+        function report(text) { if (status) { status.dataset.boardText = text; status.textContent = translate(text); } }
+        function translateControls() {
+            [container, toolbar].forEach(function (root) {
+                if (!root) return;
+                root.querySelectorAll('[data-board-text]').forEach(function (el) { el.textContent = translate(el.dataset.boardText); });
+                root.querySelectorAll('[data-board-label]').forEach(function (el) { el.setAttribute('aria-label', translate(el.dataset.boardLabel)); });
+            });
+        }
         function remove(row) {
             if (!row) return;
             clearTimeout(row.timer);
@@ -134,8 +145,8 @@
             return row;
         }
         function button(parent, text, fn, label) {
-            var el = document.createElement('button'); el.type = 'button'; el.textContent = text;
-            el.setAttribute('aria-label', label || text);
+            var el = document.createElement('button'); el.type = 'button'; el.dataset.boardText = text; el.textContent = translate(text);
+            el.dataset.boardLabel = label || text; el.setAttribute('aria-label', translate(label || text));
             el.addEventListener('click', function (event) { event.stopPropagation(); fn(); }); parent.appendChild(el);
         }
         function command(data) {
@@ -201,7 +212,7 @@
         if (layout === 'rotate') timer = setInterval(function () { if (!paused) { rotation++; refresh(); } }, number('rotatetime', 5, 1, 120) * 1000);
         window.addEventListener('beforeunload', function () { save(); clearInterval(timer); });
         if (layout === 'marquee') window.addEventListener('resize', refresh);
-        return { register: register, remove: remove, command: command, defer: defer, restore: restore, duplicate: duplicate,
+        return { register: register, remove: remove, command: command, defer: defer, restore: restore, duplicate: duplicate, translateControls: translateControls,
             isRestoring: function () { return !!restoring; }, rows: function () { return rows.filter(function (row) { return row.node.isConnected; }); },
             clear: function () { command({ action: 'eventOverlayControl', surface: options.kind, board: board, command: 'clear' }); } };
     }

@@ -331,6 +331,7 @@ if (settings.stack) {
   document.body.classList.add('stack-alerts');
   document.body.style.setProperty('--stack-gap', settings.stackGap + 'px');
   alertBoard = SSNEventBoard.create({ params: urlParams, container: elements.stage, kind: 'alerts', limit: settings.limit,
+    translate: getTranslation,
     category: function (payload) { return inferCategory(payload); },
     receive: function (payload) {
       var model = buildAlertViewModel(payload);
@@ -458,6 +459,7 @@ async function loadTranslationFromUrl() {
     const response = await fetch(`./translations/${encodeURIComponent(lang)}.json`, { cache: 'no-store' });
     if (response.ok) {
       translation = await response.json();
+      if (alertBoard) alertBoard.translateControls();
     }
   } catch (error) {
     log('translation load failed', error);

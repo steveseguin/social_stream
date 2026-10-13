@@ -1009,6 +1009,7 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 	}
 
 	function applyStaticTranslations() {
+		if (eventBoard) eventBoard.translateControls();
 		const dashboardTitle = getTranslation('events-dashboard-title', 'Activity Feed / Events');
 		document.title = dashboardTitle;
 		document.querySelectorAll('#header h1').forEach(function(heading) {
@@ -2831,6 +2832,7 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 		}
     }
     eventBoard = SSNEventBoard.create({ params: urlParams, container: chatContainer, kind: 'events', limit: maxEvents,
+        translate: getTranslation,
         receive: addMessageToOverlay,
         removed: function (node) {
             if (node.__hypeData) removeHypeTrainPanel(node, (node.__hypeData.type || 'twitch') + ':' + (node.__hypeData.meta.id || 'active'));
