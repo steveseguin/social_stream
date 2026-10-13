@@ -187,7 +187,7 @@ const KICK_OAUTH_SCOPES = [
     'kicks:read'
 ];
 
-const PUSHER_KEY = '32cbd69e4b950bf97679';
+const PUSHER_KEY = '34bf7a0ff419a2a775b9';
 const PUSHER_WS_BASE = 'wss://ws-us2.pusher.com';
 const PUSHER_RECONNECT_DELAY_MS = 5000;
 const PUSHER_CONNECT_TIMEOUT_MS = 30000;

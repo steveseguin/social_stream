@@ -86,7 +86,7 @@
 		for (var i = 0; i < order.length; i++) {
 			var key = order[i];
 			var item = overlays[key];
-			if (!item || !item.html) continue;
+			if (!item || typeof item.html !== "string") continue;
 			pages.push({
 				id: key,
 				name: normalizeName(item.name || item.slug || key),
@@ -99,7 +99,7 @@
 		if (!pages.length) return null;
 		return {
 			version: 2,
-			activeId: pack.activeOverlay && overlays[pack.activeOverlay] ? pack.activeOverlay : pages[0].id,
+			activeId: pages.some(function (page) { return page.id === pack.activeOverlay; }) ? pack.activeOverlay : pages[0].id,
 			pages: pages
 		};
 	}

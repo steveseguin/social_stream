@@ -894,6 +894,7 @@ body.feed-noanimation .message { animation: none; opacity: 1; transform: none; }
 body.feed-hidemessage .message > .text,
 body.feed-hidecontentimg .content-image,
 body.feed-hideplatformicons .source-icon,
+body.feed-hidecategorytag .event-type,
 body.feed-hideeventlabels .event-type,
 body.feed-hideeventlabels .event-specific,
 body.feed-hideamounts .donation,
@@ -1092,7 +1093,7 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 	var eventDuration = Number(urlParams.get('eventduration'));
 	eventDuration = Number.isFinite(eventDuration) && eventDuration >= 1 ? Math.min(eventDuration, 86400) : 0;
 	var filteredFeedEvents = (urlParams.get('filterevents') || '').split(',').map(normalizeEventKey).filter(Boolean);
-	['hidemessage', 'hidecontentimg', 'hideplatformicons', 'hideeventlabels', 'hideamounts', 'hideempty'].forEach(function(option) {
+	['hidemessage', 'hidecontentimg', 'hideplatformicons', 'hidecategorytag', 'hideeventlabels', 'hideamounts', 'hideempty'].forEach(function(option) {
 		if (urlParams.has(option)) document.body.classList.add('feed-' + option);
 	});
 	var maxEvents = Math.max(1, Math.min(500, parseInt(urlParams.get("maxevents")) || 200));
@@ -1516,25 +1517,32 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 		if (eventDuration) panel.__feedUpdatedAt = Date.now();
 		renderHypeTrainPanel(panel);
 
+		var boardDuration = eventDuration * 1000;
 		if (String(meta.phase || '').toLowerCase() === 'end') {
 			if (panel.__hypeInterval) {
 				clearInterval(panel.__hypeInterval);
 				panel.__hypeInterval = null;
 			}
-			panel.__hypeRemoveTimeout = setTimeout(function() {
-				removeHypeTrainPanel(panel, key);
-			}, HYPE_TRAIN_REMOVE_DELAY_MS);
+			if (eventBoard) {
+				boardDuration = boardDuration ? Math.min(boardDuration, HYPE_TRAIN_REMOVE_DELAY_MS) : HYPE_TRAIN_REMOVE_DELAY_MS;
+			} else {
+				panel.__hypeRemoveTimeout = setTimeout(function() {
+					removeHypeTrainPanel(panel, key);
+				}, HYPE_TRAIN_REMOVE_DELAY_MS);
+			}
 		} else if (meta.expiresAt && !panel.__hypeInterval) {
 			panel.__hypeInterval = setInterval(function() {
 				if (!panel.isConnected) {
 					removeHypeTrainPanel(panel, key);
 					return;
 				}
+				var actions = panel.querySelector('.board-row-actions');
 				renderHypeTrainPanel(panel);
+				if (actions) panel.appendChild(actions);
 			}, 1000);
 		}
 
-        if (eventBoard) eventBoard.register(panel, data, eventDuration * 1000);
+        if (eventBoard) eventBoard.register(panel, data, boardDuration);
 		while (!eventBoard && chatContainer.children.length > maxEvents) {
 			const lastChild = chatContainer.lastChild;
 			if (lastChild === panel) break;

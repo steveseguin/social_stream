@@ -84,24 +84,24 @@
             return [payload.platform, payload.type, payload.sourceid, payload.channel, payload.id].join('|');
         }
         function signature(payload) {
-            return JSON.stringify([payload.event, payload.chatname, payload.chatmessage, payload.hasDonation, payload.membership, payload.meta]);
+            return JSON.stringify([payload.event, payload.chatname, payload.chatmessage, payload.hasDonation, payload.membership, payload.contentimg, payload.meta]);
         }
         function duplicate(payload) {
             var key = identity(payload);
             return !!key && rows.some(function (row) { return row.node.isConnected && identity(row.payload) === key && signature(row.payload) === signature(payload); });
         }
-        function register(node, payload, duration) {
+        function register(node, payload, duration, previousRow) {
             var at = restoring ? restoring.at : Date.now();
             var key = identity(payload), pinned = false;
             rows.slice().forEach(function (r) {
-                if (r.node === node || (key && identity(r.payload) === key)) {
+                if (r === previousRow || r.node === node || (key && identity(r.payload) === key)) {
                     pinned = r.pinned; clearTimeout(r.timer);
                     if (r.node !== node) remove(r);
                     else rows = rows.filter(function (item) { return item !== r; });
                 }
             });
             if (layout === 'latest') {
-                rows.slice().forEach(function (r) { if (category(r.payload) === category(payload)) remove(r); });
+                rows.slice().forEach(function (r) { if (!r.pinned && category(r.payload) === category(payload)) remove(r); });
             }
             var row = { node: node, payload: payload, at: at, pinned: pinned || !!(restoring && restoring.pinned) };
             rows.push(row);

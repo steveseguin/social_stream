@@ -52,7 +52,8 @@ function refreshPopupSettingsAfterLanguageSave() {
 function applyPopupTranslationLanguageImmediately(lang) {
 	const normalized = normalizePopupTranslationLanguage(lang);
 	if (!normalized || typeof fetch !== "function") return false;
-	if (requestedImmediateTranslationLanguage === normalized || appliedImmediateTranslationLanguage === normalized) return true;
+	if (requestedImmediateTranslationLanguage === normalized) return true;
+	if (!requestedImmediateTranslationLanguage && appliedImmediateTranslationLanguage === normalized) return true;
 	requestedImmediateTranslationLanguage = normalized;
 	const applyToken = `${normalized}:${Date.now()}:${Math.random()}`;
 	latestExternalTranslationApply = applyToken;
@@ -62,10 +63,11 @@ function applyPopupTranslationLanguageImmediately(lang) {
 			return response.json();
 		})
 		.then(function(data) {
-			if (!data || latestExternalTranslationApply !== applyToken) return;
+			if (latestExternalTranslationApply !== applyToken) return;
+			requestedImmediateTranslationLanguage = "";
+			if (!data) return;
 			translation = data;
 			appliedImmediateTranslationLanguage = normalized;
-			requestedImmediateTranslationLanguage = "";
 			if (lastResponse && lastResponse.settings) {
 				lastResponse.settings.translation = data;
 			}
@@ -74,7 +76,7 @@ function applyPopupTranslationLanguageImmediately(lang) {
 			renderHandleStatus();
 		})
 		.catch(function(error) {
-			if (requestedImmediateTranslationLanguage === normalized) {
+			if (latestExternalTranslationApply === applyToken) {
 				requestedImmediateTranslationLanguage = "";
 			}
 			console.warn("Failed to apply popup translation immediately:", error && error.message ? error.message : error);
@@ -1362,25 +1364,69 @@ function getTranslation(key, value=false){
 		return key.replaceAll("-", " "); //
 	}
 }
+function translatePopupAttribute(ele, attribute, values) {
+	if (!ele[attribute]) return;
+	var saved = ele._popupTranslationAttributes || (ele._popupTranslationAttributes = {});
+	var item = saved[attribute];
+	if (!item || ele[attribute] !== item.value) {
+		item = { key: ele[attribute].toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ", "-") };
+		saved[attribute] = item;
+	}
+	if (item.key in values) ele[attribute] = values[item.key];
+	item.value = ele[attribute];
+}
+
+function setPopupTranslatedContent(ele, html) {
+	var controls = ele.querySelectorAll('input, select, textarea, button');
+	if (!controls.length) {
+		ele.innerHTML = html;
+		return;
+	}
+	var template = document.createElement('template');
+	template.innerHTML = html;
+	var translatedControls = template.content.querySelectorAll('input, select, textarea, button');
+	// Translation strings can share a label across different setting namespaces.
+	// Keep the actual controls, their values, and their bound handlers.
+	if (controls.length !== translatedControls.length) return;
+	for (var i = 0; i < controls.length; i++) {
+		if (controls[i].tagName !== translatedControls[i].tagName) return;
+	}
+	var focusedControl = ele.contains(document.activeElement) ? document.activeElement : null;
+	for (var i = 0; i < controls.length; i++) {
+		if (controls[i].tagName === 'SELECT') {
+			Array.prototype.forEach.call(controls[i].options, function(option) {
+				var translatedOption = Array.prototype.find.call(translatedControls[i].options, function(candidate) {
+					return candidate.value === option.value;
+				});
+				if (translatedOption) option.textContent = translatedOption.textContent;
+			});
+		}
+		translatedControls[i].parentNode.replaceChild(controls[i], translatedControls[i]);
+	}
+	ele.innerHTML = '';
+	ele.appendChild(template.content);
+	if (focusedControl) focusedControl.focus({ preventScroll: true });
+}
+
 function miniTranslate(ele, ident = false, direct=false) {
 	
 	if (ident){
 		if (translation.innerHTML && (ident in translation.innerHTML)){
 			if (ele.querySelector('[data-translate]')){
-				ele.querySelector('[data-translate]').innerHTML = translation.innerHTML[ident];
+				setPopupTranslatedContent(ele.querySelector('[data-translate]'), translation.innerHTML[ident]);
 				ele.querySelector('[data-translate]').dataset.translate = ident;
 			} else {
-				ele.innerHTML = translation.innerHTML[ident];
+				setPopupTranslatedContent(ele, translation.innerHTML[ident]);
 				ele.dataset.translate = ident;
 			}
 			return;
 		} else if (direct){
 			if (ele.querySelector('[data-translate]')){
-				ele.querySelector('[data-translate]').innerHTML = direct;
+				setPopupTranslatedContent(ele.querySelector('[data-translate]'), direct);
 				ele.querySelector('[data-translate]').dataset.translate = ident;
 			} else {
 				ele.dataset.translate = ident;
-				ele.innerHTML = direct;
+				setPopupTranslatedContent(ele, direct);
 			}
 			return;
 		} else {
@@ -1393,10 +1439,10 @@ function miniTranslate(ele, ident = false, direct=false) {
 			}
 			
 			if (ele.querySelector('[data-translate]')){
-				ele.querySelector('[data-translate]').innerHTML = value;
+				setPopupTranslatedContent(ele.querySelector('[data-translate]'), value);
 				ele.querySelector('[data-translate]').dataset.translate = ident;
 			} else {
-				ele.innerHTML = value;
+				setPopupTranslatedContent(ele, value);
 				ele.dataset.translate = ident;
 			}
 			return;
@@ -1406,50 +1452,31 @@ function miniTranslate(ele, ident = false, direct=false) {
 	var allItems = ele.querySelectorAll('[data-translate]');
 	allItems.forEach(function(ele2) {
 		if (translation.innerHTML  && (ele2.dataset.translate in translation.innerHTML)){
-			ele2.innerHTML = translation.innerHTML[ele2.dataset.translate];
+			setPopupTranslatedContent(ele2, translation.innerHTML[ele2.dataset.translate]);
 		} else if (translation.miscellaneous && (ele2.dataset.translate in translation.miscellaneous)){
-			ele2.innerHTML = translation.miscellaneous[ele2.dataset.translate];
+			setPopupTranslatedContent(ele2, translation.miscellaneous[ele2.dataset.translate]);
 		}
 	});
 	if (ele.dataset){
 		if (translation.innerHTML && (ele.dataset.translate in translation.innerHTML)){
-			ele.innerHTML = translation.innerHTML[ele.dataset.translate];
+			setPopupTranslatedContent(ele, translation.innerHTML[ele.dataset.translate]);
 		} else if (translation.miscellaneous && (ele.dataset.translate in translation.miscellaneous)){
-			ele.innerHTML = translation.miscellaneous[ele.dataset.translate];
+			setPopupTranslatedContent(ele, translation.miscellaneous[ele.dataset.translate]);
 		}
 	}
 	if (translation.titles){
 		var allTitles = ele.querySelectorAll('[title]');
 		allTitles.forEach(function(ele2) {
-			var key = ele2.title.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ","-");;
-			if (key in translation.titles) {
-				ele2.title = translation.titles[key];
-			}
+			translatePopupAttribute(ele2, "title", translation.titles);
 		});
-		if (ele.title){
-			var key = ele.title.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ","-");;
-			if (key in translation.titles) {
-				ele.title = translation.titles[key];
-			}
-		}
+		translatePopupAttribute(ele, "title", translation.titles);
 	}
 	if (translation.placeholders){
 		var allPlaceholders = ele.querySelectorAll('[placeholder]');
 		allPlaceholders.forEach(function(ele2) {
-			if (ele2.placeholder) {
-				var key = ele2.placeholder.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ","-");;
-				if (key in translation.placeholders) {
-					ele2.placeholder = translation.placeholders[key];
-				}
-			}
+			translatePopupAttribute(ele2, "placeholder", translation.placeholders);
 		});
-		
-		if (ele.placeholder){
-			var key = ele.placeholder.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ","-");;
-			if (key in translation.placeholders) {
-				ele.placeholder = translation.placeholders[key];
-			}
-		}
+		translatePopupAttribute(ele, "placeholder", translation.placeholders);
 	}
 	var obsTransparentNotes = ele.querySelectorAll('.obs-transparent-note');
 	obsTransparentNotes.forEach(function(ele2) {
@@ -4885,20 +4912,18 @@ function update(response, sync = true) {
 
         if (("state" in response) && streamID) {
             isExtensionOn = response.state;
-            // The status is dynamic; a later language fetch must not replace it
-            // with the static "Extension active" translation for toggle-on-off.
-            document.getElementById("disableButtonText").removeAttribute("data-translate");
+            // Keep the translation key in sync with the current service state.
             if (isExtensionOn) {
                 document.body.classList.add("extension-enabled");
                 document.body.classList.remove("extension-disabled");
-                document.getElementById("disableButtonText").innerHTML = ssapp ? "⚡ Service Active" : "⚡ Extension active"; // Assuming ssapp is defined
+                miniTranslate(document.getElementById("disableButtonText"), ssapp ? "popup-service-active" : "popup-extension-active", ssapp ? "⚡ Service Active" : "⚡ Extension active");
                 document.getElementById("disableButton").style.display = "";
                 document.getElementById("extensionState").checked = true;
                 if (typeof chrome !== 'undefined' && chrome.browserAction) {
                     chrome.browserAction.setIcon({ path: "/icons/on.png" });
                 }
             } else {
-                document.getElementById("disableButtonText").innerHTML = ssapp ? "🔌 Service Disabled" : "🔌 Extension Disabled";
+                miniTranslate(document.getElementById("disableButtonText"), ssapp ? "popup-service-disabled" : "popup-extension-disabled", ssapp ? "🔌 Service Disabled" : "🔌 Extension Disabled");
                 document.body.classList.remove("extension-enabled");
                 document.body.classList.add("extension-disabled");
                 document.getElementById("disableButton").style.display = "";
@@ -12131,10 +12156,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		applyExternalTranslationLanguage(urlParams.get("ln"), { reload: false });
 	}
 	if (ssapp){
-		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
+		miniTranslate(document.getElementById("disableButtonText"), "popup-service-loading", "🔌 Services Loading");
 		setupSsappChatHistoryPanel();
 	} else {
-		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
+		miniTranslate(document.getElementById("disableButtonText"), "popup-extension-loading", "🔌 Extension Loading");
 	}
 	
 	if (ssapp && urlParams.get("ssapp")){
