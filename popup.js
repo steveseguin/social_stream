@@ -52,7 +52,8 @@ function refreshPopupSettingsAfterLanguageSave() {
 function applyPopupTranslationLanguageImmediately(lang) {
 	const normalized = normalizePopupTranslationLanguage(lang);
 	if (!normalized || typeof fetch !== "function") return false;
-	if (requestedImmediateTranslationLanguage === normalized || appliedImmediateTranslationLanguage === normalized) return true;
+	if (requestedImmediateTranslationLanguage === normalized) return true;
+	if (!requestedImmediateTranslationLanguage && appliedImmediateTranslationLanguage === normalized) return true;
 	requestedImmediateTranslationLanguage = normalized;
 	const applyToken = `${normalized}:${Date.now()}:${Math.random()}`;
 	latestExternalTranslationApply = applyToken;
@@ -62,10 +63,11 @@ function applyPopupTranslationLanguageImmediately(lang) {
 			return response.json();
 		})
 		.then(function(data) {
-			if (!data || latestExternalTranslationApply !== applyToken) return;
+			if (latestExternalTranslationApply !== applyToken) return;
+			requestedImmediateTranslationLanguage = "";
+			if (!data) return;
 			translation = data;
 			appliedImmediateTranslationLanguage = normalized;
-			requestedImmediateTranslationLanguage = "";
 			if (lastResponse && lastResponse.settings) {
 				lastResponse.settings.translation = data;
 			}
@@ -74,7 +76,7 @@ function applyPopupTranslationLanguageImmediately(lang) {
 			renderHandleStatus();
 		})
 		.catch(function(error) {
-			if (requestedImmediateTranslationLanguage === normalized) {
+			if (latestExternalTranslationApply === applyToken) {
 				requestedImmediateTranslationLanguage = "";
 			}
 			console.warn("Failed to apply popup translation immediately:", error && error.message ? error.message : error);
@@ -1374,25 +1376,57 @@ function translatePopupAttribute(ele, attribute, values) {
 	item.value = ele[attribute];
 }
 
+function setPopupTranslatedContent(ele, html) {
+	var controls = ele.querySelectorAll('input, select, textarea, button');
+	if (!controls.length) {
+		ele.innerHTML = html;
+		return;
+	}
+	var template = document.createElement('template');
+	template.innerHTML = html;
+	var translatedControls = template.content.querySelectorAll('input, select, textarea, button');
+	// Translation strings can share a label across different setting namespaces.
+	// Keep the actual controls, their values, and their bound handlers.
+	if (controls.length !== translatedControls.length) return;
+	for (var i = 0; i < controls.length; i++) {
+		if (controls[i].tagName !== translatedControls[i].tagName) return;
+	}
+	var focusedControl = ele.contains(document.activeElement) ? document.activeElement : null;
+	for (var i = 0; i < controls.length; i++) {
+		if (controls[i].tagName === 'SELECT') {
+			Array.prototype.forEach.call(controls[i].options, function(option) {
+				var translatedOption = Array.prototype.find.call(translatedControls[i].options, function(candidate) {
+					return candidate.value === option.value;
+				});
+				if (translatedOption) option.textContent = translatedOption.textContent;
+			});
+		}
+		translatedControls[i].parentNode.replaceChild(controls[i], translatedControls[i]);
+	}
+	ele.innerHTML = '';
+	ele.appendChild(template.content);
+	if (focusedControl) focusedControl.focus({ preventScroll: true });
+}
+
 function miniTranslate(ele, ident = false, direct=false) {
 	
 	if (ident){
 		if (translation.innerHTML && (ident in translation.innerHTML)){
 			if (ele.querySelector('[data-translate]')){
-				ele.querySelector('[data-translate]').innerHTML = translation.innerHTML[ident];
+				setPopupTranslatedContent(ele.querySelector('[data-translate]'), translation.innerHTML[ident]);
 				ele.querySelector('[data-translate]').dataset.translate = ident;
 			} else {
-				ele.innerHTML = translation.innerHTML[ident];
+				setPopupTranslatedContent(ele, translation.innerHTML[ident]);
 				ele.dataset.translate = ident;
 			}
 			return;
 		} else if (direct){
 			if (ele.querySelector('[data-translate]')){
-				ele.querySelector('[data-translate]').innerHTML = direct;
+				setPopupTranslatedContent(ele.querySelector('[data-translate]'), direct);
 				ele.querySelector('[data-translate]').dataset.translate = ident;
 			} else {
 				ele.dataset.translate = ident;
-				ele.innerHTML = direct;
+				setPopupTranslatedContent(ele, direct);
 			}
 			return;
 		} else {
@@ -1405,10 +1439,10 @@ function miniTranslate(ele, ident = false, direct=false) {
 			}
 			
 			if (ele.querySelector('[data-translate]')){
-				ele.querySelector('[data-translate]').innerHTML = value;
+				setPopupTranslatedContent(ele.querySelector('[data-translate]'), value);
 				ele.querySelector('[data-translate]').dataset.translate = ident;
 			} else {
-				ele.innerHTML = value;
+				setPopupTranslatedContent(ele, value);
 				ele.dataset.translate = ident;
 			}
 			return;
@@ -1418,16 +1452,16 @@ function miniTranslate(ele, ident = false, direct=false) {
 	var allItems = ele.querySelectorAll('[data-translate]');
 	allItems.forEach(function(ele2) {
 		if (translation.innerHTML  && (ele2.dataset.translate in translation.innerHTML)){
-			ele2.innerHTML = translation.innerHTML[ele2.dataset.translate];
+			setPopupTranslatedContent(ele2, translation.innerHTML[ele2.dataset.translate]);
 		} else if (translation.miscellaneous && (ele2.dataset.translate in translation.miscellaneous)){
-			ele2.innerHTML = translation.miscellaneous[ele2.dataset.translate];
+			setPopupTranslatedContent(ele2, translation.miscellaneous[ele2.dataset.translate]);
 		}
 	});
 	if (ele.dataset){
 		if (translation.innerHTML && (ele.dataset.translate in translation.innerHTML)){
-			ele.innerHTML = translation.innerHTML[ele.dataset.translate];
+			setPopupTranslatedContent(ele, translation.innerHTML[ele.dataset.translate]);
 		} else if (translation.miscellaneous && (ele.dataset.translate in translation.miscellaneous)){
-			ele.innerHTML = translation.miscellaneous[ele.dataset.translate];
+			setPopupTranslatedContent(ele, translation.miscellaneous[ele.dataset.translate]);
 		}
 	}
 	if (translation.titles){
