@@ -28,6 +28,7 @@
             s.board = { id:String(now)+'-'+(s.revision+1), title: text(data.title, 80) || 'Pick your spot', style: data.style === 'teams' ? 'teams' : 'spots', columns: columns, visible: true,
                 spots: Array.from({length:count}, function (_, i) { return { id:String(i + 1), label: text(labels[i], 60) || String(i + 1), status:'available', result:'' }; }) };
         } else if (command === 'boardSpot') {
+            if (data.boardId !== undefined && data.boardId !== s.board.id) throw new Error('The board changed. Select the spot again.');
             var spot = s.board.spots.filter(function (x) { return x.id === String(data.id); })[0];
             if (!spot || ['available', 'claimed', 'revealed'].indexOf(data.status) === -1) throw new Error('Choose a saved spot and its status.');
             spot.status = data.status; spot.result = data.status === 'revealed' ? text(data.result, 100) : '';

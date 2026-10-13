@@ -45,6 +45,10 @@
         function links() { try { field('link').value = link(false); } catch (_) { field('link').value = ''; } try { panel.querySelector('[data-preview]').href = link(true); } catch (_) {} }
         function render(next) {
             if (!next || !next.boards) throw new Error('Board controls are unavailable. Update Social Stream.');
+            if (state && state.board.id !== next.boards.board.id) {
+                selected = '';
+                field('result').value = '';
+            }
             state = next.boards;
             if (next.auction !== undefined) auction = next.auction;
             if (next.hostOn !== undefined) hostOn = next.hostOn;
@@ -151,7 +155,7 @@
                 selected = ''; return send('boardSave', {title:field('title').value, style:field('style').value, count:Number(field('count').value), columns:Number(field('columns').value), labels:field('labels').value});
             }
             if (action === 'visibility') return send('boardVisibility', {visible:!state.board.visible});
-            if (['available','claimed','revealed'].indexOf(action) !== -1) return send('boardSpot', {id:selected, status:action, result:field('result').value});
+            if (['available','claimed','revealed'].indexOf(action) !== -1) return send('boardSpot', {boardId:state.board.id, id:selected, status:action, result:field('result').value});
             if (action === 'settings') return send('salesSettings', {automatic:field('automatic').checked, visible:field('visible').checked, auctionSource:field('auction-source').value});
             if (action === 'sale') return send('saleAdd', {title:field('sale-title').value, amount:field('amount').value, currency:field('currency').value.toUpperCase(), quantity:Number(field('quantity').value), spotId:saleSpot && saleSpot.id, boardId:saleSpot && saleSpot.boardId, platform:salePlatform});
             if (action === 'clear' && window.confirm('Clear the recent-sales display?')) return send('salesClear', {});

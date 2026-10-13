@@ -27,8 +27,11 @@ export function loadScript(url, { attributes = {}, timeout = 15000 } = {}) {
     });
 
     let timer = null;
+    let settled = false;
     if (timeout && Number.isFinite(timeout)) {
       timer = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
         script.remove();
         const error = new Error(`Loading timed out for ${url}`);
         ACTIVE_LOADS.delete(key);
@@ -37,6 +40,8 @@ export function loadScript(url, { attributes = {}, timeout = 15000 } = {}) {
     }
 
     script.addEventListener('load', () => {
+      if (settled) return;
+      settled = true;
       if (timer) {
         window.clearTimeout(timer);
       }
@@ -45,6 +50,8 @@ export function loadScript(url, { attributes = {}, timeout = 15000 } = {}) {
     });
 
     script.addEventListener('error', () => {
+      if (settled) return;
+      settled = true;
       if (timer) {
         window.clearTimeout(timer);
       }
