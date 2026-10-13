@@ -6759,6 +6759,146 @@ input:checked + .slider:before {
 			<a href="" id="multi-alert-options" data-panel-section="multialerts"></a>
 
 			<div class="wrapper beginner-basic" data-panel-section="multialerts">
+<div class="collapsible">
+<input type="checkbox" class="collapsible-input" id="wrapper-multi-board" />
+<label class="collapsible-label" for="wrapper-multi-board">&#129374; Multiple alerts / Event list</label>
+<div class="collapsible-text">
+<div class="options">
+<div class="options_group">
+<div class="popup-settings-panel event-board-settings">
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="multi-stack" type="checkbox" data-param25="stack" />
+<span class="slider round">
+</span>
+</label>
+<label for="multi-stack">Show multiple alerts</label>
+</div>
+<div class="textInputContainer">
+<label for="multi-limit">Visible alerts</label>
+<input id="multi-limit" class="textInput" type="number" data-optionparam25="limit" min="1" max="10" placeholder="3" />
+</div>
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="multi-keep" type="checkbox" data-param25="keep" />
+<span class="slider round">
+</span>
+</label>
+<label for="multi-keep">Keep alerts until replaced (stack only)</label>
+</div>
+<div class="textInputContainer">
+<label for="multi-gap">Space between alerts (px)</label>
+<input id="multi-gap" class="textInput" type="number" data-optionparam25="gap" min="0" max="80" placeholder="12" />
+</div>
+<p>Timed stacks use the existing display duration per card. Stacks show incoming alerts immediately; the single-alert queue applies only when stacking is off.</p>
+<div class="popup-action-row">
+<button type="button" class="popup-action-button" data-board-preset="alerts">Last three — transparent</button>
+<button type="button" class="tts-test-button" data-board-preview="alerts">Preview sample events</button>
+</div>
+<details class="popup-subsection">
+<summary>Layout and motion</summary>
+<label for="board-alerts-layout">Layout</label>
+<select id="board-alerts-layout" class="textInput" data-optionparam25="layout">
+<option value="">List</option>
+<option value="horizontal">Horizontal cards</option>
+<option value="rotate">One event at a time — rotate</option>
+<option value="latest">Latest event in each category</option>
+<option value="marquee">Scrolling strip</option>
+</select>
+<label for="board-alerts-order">New events appear</label>
+<select id="board-alerts-order" class="textInput" data-optionparam25="order">
+<option value="">At the top / left</option>
+<option value="oldest">At the bottom / right</option>
+</select>
+<label for="board-alerts-textalign">Text alignment</label>
+<select id="board-alerts-textalign" class="textInput" data-optionparam25="textalign">
+<option value="">Left</option>
+<option value="right">Right</option>
+</select>
+<div class="textInputContainer">
+<label for="board-alerts-rowwidth">Maximum row width (px)</label>
+<input id="board-alerts-rowwidth" class="textInput" type="number" data-optionparam25="rowwidth" min="200" max="1920" placeholder="Automatic" />
+</div>
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="board-alerts-nowrap" type="checkbox" data-param25="nowrap" />
+<span class="slider round">
+</span>
+</label>
+<label for="board-alerts-nowrap">Keep text on one line</label>
+</div>
+<label for="board-alerts-exitmotion">Exit animation</label>
+<select id="board-alerts-exitmotion" class="textInput" data-optionparam25="exitmotion"><option value="">None</option><option value="fade">Fade</option><option value="slide">Slide</option></select>
+<label for="board-alerts-motion">Entry animation</label>
+<select id="board-alerts-motion" class="textInput" data-optionparam25="motion">
+<option value="">Style default</option>
+<option value="slide">Slide</option>
+<option value="fade">Fade</option>
+<option value="none">None</option>
+</select>
+<div class="textInputContainer">
+<label for="board-alerts-animationspeed">Animation speed (ms)</label>
+<input id="board-alerts-animationspeed" class="textInput" type="number" data-optionparam25="animationspeed" min="0" max="3000" placeholder="350" />
+</div>
+<div class="textInputContainer">
+<label for="board-alerts-rotatetime">Rotation interval (seconds)</label>
+<input id="board-alerts-rotatetime" class="textInput" type="number" data-optionparam25="rotatetime" min="1" max="120" placeholder="5" />
+</div>
+<div class="textInputContainer">
+<label for="board-alerts-scrollspeed">Scrolling cycle (seconds)</label>
+<input id="board-alerts-scrollspeed" class="textInput" type="number" data-optionparam25="scrollspeed" min="5" max="180" placeholder="30" />
+</div>
+<div class="textInputContainer">
+<label for="board-alerts-cardopacity">Card background opacity (%)</label>
+<input id="board-alerts-cardopacity" class="textInput" type="number" data-optionparam25="cardopacity" min="0" max="100" placeholder="Style default" />
+</div>
+<label for="board-alerts-accentby">Accent colors</label>
+<select id="board-alerts-accentby" class="textInput" data-optionparam25="accentby">
+<option value="">Style default</option>
+<option value="platform">By platform</option>
+<option value="category">By event category</option>
+</select>
+</details>
+<details class="popup-subsection">
+<summary>History and operator controls</summary>
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="board-alerts-remember" type="checkbox" data-param25="remember" />
+<span class="slider round">
+</span>
+</label>
+<label for="board-alerts-remember">Remember visible events after refresh</label>
+</div>
+<div class="textInputContainer">
+<label for="board-alerts-historyhours">Keep saved history for (hours)</label>
+<input id="board-alerts-historyhours" class="textInput" type="number" data-optionparam25="historyhours" min="1" max="168" placeholder="24" />
+</div>
+<div class="textInputContainer">
+<label for="board-alerts-id">Board name (for separate scenes)</label>
+<input id="board-alerts-id" class="textInput" type="text" data-optionparam25="board" placeholder="default" />
+</div>
+<p>Commands apply to the board name above. History stays in this browser. Pinning uses one visible slot.</p>
+<div class="popup-action-row">
+<button type="button" class="popup-action-button" data-board-command="pause" data-board-surface="alerts">Pause</button>
+<button type="button" class="popup-action-button" data-board-command="resume" data-board-surface="alerts">Resume</button>
+<button type="button" class="popup-action-button" data-board-command="pin" data-board-surface="alerts">Pin</button>
+<button type="button" class="popup-action-button" data-board-command="unpin" data-board-surface="alerts">Unpin</button>
+<button type="button" class="popup-action-button" data-board-command="remove" data-board-surface="alerts">Remove</button>
+<button type="button" class="popup-action-button" data-board-command="skip" data-board-surface="alerts">Skip</button>
+<button type="button" class="popup-action-button" data-board-command="mute" data-board-surface="alerts">Mute</button>
+<button type="button" class="popup-action-button" data-board-command="unmute" data-board-surface="alerts">Unmute</button>
+<button type="button" class="popup-action-button" data-board-command="replay" data-board-surface="alerts">Replay</button>
+<button type="button" class="popup-action-button" data-board-command="clear" data-board-surface="alerts">Clear</button>
+</div>
+<p id="board-alerts-status" role="status">
+</p>
+</details>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/event-overlays.html" target="_blank" rel="noopener">Event overlays: setup, styles and controls</a>
+</div>
+</div>
+</div>
+</div>
+</div>
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-types-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-types-options"><span>🎯 Alert Types</span></label>
@@ -6866,7 +7006,7 @@ input:checked + .slider:before {
 <option value="slate">🌑 Compact Slate</option>
 <option value="paper">📄 Compact Paper</option>
 <option value="micro">➖ Micro Line</option>
-</select>
+<option value="broadcast">Broadcast bars</option><option value="outline">Outlined</option><option value="pills">Rounded pills</option><option value="neon">Neon</option></select>
 								</div>
 								<div>
 									<label for="multi-alert-substyle">💜 Subscription preset</label>
@@ -6891,7 +7031,7 @@ input:checked + .slider:before {
 <option value="slate">🌑 Compact Slate</option>
 <option value="paper">📄 Compact Paper</option>
 <option value="micro">➖ Micro Line</option>
-</select>
+<option value="broadcast">Broadcast bars</option><option value="outline">Outlined</option><option value="pills">Rounded pills</option><option value="neon">Neon</option></select>
 								</div>
 								<div>
 									<label for="multi-alert-donostyle">💛 Donation preset</label>
@@ -6916,7 +7056,7 @@ input:checked + .slider:before {
 <option value="slate">🌑 Compact Slate</option>
 <option value="paper">📄 Compact Paper</option>
 <option value="micro">➖ Micro Line</option>
-</select>
+<option value="broadcast">Broadcast bars</option><option value="outline">Outlined</option><option value="pills">Rounded pills</option><option value="neon">Neon</option></select>
 								</div>
 								<div>
 									<label for="multi-alert-bitsstyle">💙 Bits/Cheer preset</label>
@@ -6941,7 +7081,7 @@ input:checked + .slider:before {
 <option value="slate">🌑 Compact Slate</option>
 <option value="paper">📄 Compact Paper</option>
 <option value="micro">➖ Micro Line</option>
-</select>
+<option value="broadcast">Broadcast bars</option><option value="outline">Outlined</option><option value="pills">Rounded pills</option><option value="neon">Neon</option></select>
 								</div>
 								<div>
 									<label for="multi-alert-raidstyle">🧡 Raid preset</label>
@@ -6966,7 +7106,7 @@ input:checked + .slider:before {
 <option value="slate">🌑 Compact Slate</option>
 <option value="paper">📄 Compact Paper</option>
 <option value="micro">➖ Micro Line</option>
-</select>
+<option value="broadcast">Broadcast bars</option><option value="outline">Outlined</option><option value="pills">Rounded pills</option><option value="neon">Neon</option></select>
 								</div>
 								<div>
 									<label for="multi-alert-auctionstyle">🏆 Auction win preset</label>
@@ -6991,7 +7131,7 @@ input:checked + .slider:before {
 <option value="slate">🌑 Compact Slate</option>
 <option value="paper">📄 Compact Paper</option>
 <option value="micro">➖ Micro Line</option>
-</select>
+<option value="broadcast">Broadcast bars</option><option value="outline">Outlined</option><option value="pills">Rounded pills</option><option value="neon">Neon</option></select>
 								</div>
 								<div>
 									<label for="multi-alert-hypestyle">🚂 Hype train preset</label>
@@ -7016,7 +7156,7 @@ input:checked + .slider:before {
 <option value="slate">🌑 Compact Slate</option>
 <option value="paper">📄 Compact Paper</option>
 <option value="micro">➖ Micro Line</option>
-</select>
+<option value="broadcast">Broadcast bars</option><option value="outline">Outlined</option><option value="pills">Rounded pills</option><option value="neon">Neon</option></select>
 								</div>
 								<div>
 									<label><span class="popup-control-icon" aria-hidden="true">✨</span>Entrance animation</label>
@@ -11411,6 +11551,132 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group events_dashboard">
+<div class="popup-settings-panel event-board-settings">
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="events-audience" type="checkbox" data-param17="audience" />
+<span class="slider round">
+</span>
+</label>
+<label for="events-audience">Audience preset — transparent recent events</label>
+</div>
+<div class="popup-action-row">
+<button type="button" class="popup-action-button" data-board-preset="events">Last three — transparent</button>
+<button type="button" class="tts-test-button" data-board-preview="events">Preview sample events</button>
+</div>
+<p>The audience preset hides the heading, timestamps, operator details, counts, ads and casual activity. Turn it off to customize those individually.</p>
+<details class="popup-subsection">
+<summary>Layout and motion</summary>
+<label for="board-events-layout">Layout</label>
+<select id="board-events-layout" class="textInput" data-optionparam17="layout">
+<option value="">List</option>
+<option value="horizontal">Horizontal cards</option>
+<option value="rotate">One event at a time — rotate</option>
+<option value="latest">Latest event in each category</option>
+<option value="marquee">Scrolling strip</option>
+</select>
+<label for="board-events-order">New events appear</label>
+<select id="board-events-order" class="textInput" data-optionparam17="order">
+<option value="">At the top / left</option>
+<option value="oldest">At the bottom / right</option>
+</select>
+<label for="board-events-textalign">Text alignment</label>
+<select id="board-events-textalign" class="textInput" data-optionparam17="textalign">
+<option value="">Left</option>
+<option value="right">Right</option>
+</select>
+<div class="textInputContainer">
+<label for="board-events-rowwidth">Maximum row width (px)</label>
+<input id="board-events-rowwidth" class="textInput" type="number" data-optionparam17="rowwidth" min="200" max="1920" placeholder="Automatic" />
+</div>
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="board-events-nowrap" type="checkbox" data-param17="nowrap" />
+<span class="slider round">
+</span>
+</label>
+<label for="board-events-nowrap">Keep text on one line</label>
+</div>
+<label for="board-events-exitmotion">Exit animation</label>
+<select id="board-events-exitmotion" class="textInput" data-optionparam17="exitmotion"><option value="">None</option><option value="fade">Fade</option><option value="slide">Slide</option></select>
+<label for="board-events-motion">Entry animation</label>
+<select id="board-events-motion" class="textInput" data-optionparam17="motion">
+<option value="">Style default</option>
+<option value="slide">Slide</option>
+<option value="fade">Fade</option>
+<option value="none">None</option>
+</select>
+<div class="textInputContainer">
+<label for="board-events-animationspeed">Animation speed (ms)</label>
+<input id="board-events-animationspeed" class="textInput" type="number" data-optionparam17="animationspeed" min="0" max="3000" placeholder="350" />
+</div>
+<div class="textInputContainer">
+<label for="board-events-rotatetime">Rotation interval (seconds)</label>
+<input id="board-events-rotatetime" class="textInput" type="number" data-optionparam17="rotatetime" min="1" max="120" placeholder="5" />
+</div>
+<div class="textInputContainer">
+<label for="board-events-scrollspeed">Scrolling cycle (seconds)</label>
+<input id="board-events-scrollspeed" class="textInput" type="number" data-optionparam17="scrollspeed" min="5" max="180" placeholder="30" />
+</div>
+<div class="textInputContainer">
+<label for="board-events-cardopacity">Card background opacity (%)</label>
+<input id="board-events-cardopacity" class="textInput" type="number" data-optionparam17="cardopacity" min="0" max="100" placeholder="Style default" />
+</div>
+<label for="board-events-accentby">Accent colors</label>
+<select id="board-events-accentby" class="textInput" data-optionparam17="accentby">
+<option value="">Style default</option>
+<option value="platform">By platform</option>
+<option value="category">By event category</option>
+</select>
+</details>
+<details class="popup-subsection">
+<summary>History and operator controls</summary>
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="board-events-remember" type="checkbox" data-param17="remember" />
+<span class="slider round">
+</span>
+</label>
+<label for="board-events-remember">Remember visible events after refresh</label>
+</div>
+<div class="textInputContainer">
+<label for="board-events-historyhours">Keep saved history for (hours)</label>
+<input id="board-events-historyhours" class="textInput" type="number" data-optionparam17="historyhours" min="1" max="168" placeholder="24" />
+</div>
+<div class="textInputContainer">
+<label for="board-events-id">Board name (for separate scenes)</label>
+<input id="board-events-id" class="textInput" type="text" data-optionparam17="board" placeholder="default" />
+</div>
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="board-events-operator" type="checkbox" data-param17="operator" />
+<span class="slider round">
+</span>
+</label>
+<label for="board-events-operator">Show operator buttons (private dashboard only)</label>
+</div>
+<p>Commands apply to the board name above. History stays in this browser. Pinning uses one visible slot.</p>
+<div class="popup-action-row">
+<button type="button" class="popup-action-button" data-board-command="pause" data-board-surface="events">Pause</button>
+<button type="button" class="popup-action-button" data-board-command="resume" data-board-surface="events">Resume</button>
+<button type="button" class="popup-action-button" data-board-command="pin" data-board-surface="events">Pin</button>
+<button type="button" class="popup-action-button" data-board-command="unpin" data-board-surface="events">Unpin</button>
+<button type="button" class="popup-action-button" data-board-command="remove" data-board-surface="events">Remove</button>
+<button type="button" class="popup-action-button" data-board-command="clear" data-board-surface="events">Clear</button>
+</div>
+<p id="board-events-status" role="status">
+</p>
+</details>
+<div class="popup-toggle-row">
+<label class="switch">
+<input id="events-showavatar" type="checkbox" data-param17="showavatar" />
+<span class="slider round">
+</span>
+</label>
+<label for="events-showavatar">Show avatars when available</label>
+</div>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/event-overlays.html" target="_blank" rel="noopener">Event overlay guide and gallery</a>
+</div>
                                 <div class="popup-settings-panel">
                                     <label for="events-style"><span class="popup-control-icon" aria-hidden="true">&#127912;</span>Feed style</label>
                                     <select id="events-style" class="textInput popup-reviewed-control" data-optionparam17="style">
@@ -11420,7 +11686,7 @@ input:checked + .slider:before {
                                         <option value="timeline">Timeline - connected events</option>
                                         <option value="glass">Glass - floating cards</option>
                                         <option value="minimal">Minimal - text only, no boxes</option>
-                                        <option value="ticker">Ticker - horizontal strip</option>
+                                        <option value="ticker">Ticker - horizontal strip</option><option value="broadcast">Broadcast bars</option><option value="outline">Outlined rows</option><option value="pills">Rounded pills</option><option value="neon">Neon</option><option value="paper">Warm paper</option>
                                     </select>
                                     <details class="popup-subsection" id="events-category-options">
                                         <summary><span aria-hidden="true">&#128065;</span> Choose which events appear</summary>
@@ -11593,7 +11859,7 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="max-events">Maximum events to display:</span></span>
-									<input type="number" id="maxEvents" class="numberInput" min="10" max="500" value="100" data-numbersetting17="maxevents">
+									<input type="number" id="maxEvents" class="numberInput" min="1" max="500" value="100" data-numbersetting17="maxevents">
 								</div>
 
 								<div>

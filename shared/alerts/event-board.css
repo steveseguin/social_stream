@@ -1,0 +1,39 @@
+.event-board .board-row { max-width: var(--board-width, 100%); }
+.event-board.board-text-right .board-row { text-align: right; }
+.event-board.board-nowrap .text, .event-board.board-nowrap .alert-message,
+.event-board.board-nowrap .alert-headline { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.event-board .board-rotation-hidden { display: none !important; }
+.event-board.board-horizontal, .event-board.board-marquee { display: flex; align-items: flex-start; overflow: hidden; }
+.event-board.board-horizontal > .board-row, .event-board.board-marquee > .board-row { flex: 0 0 var(--board-width, 360px); margin-right: 12px; }
+@keyframes boardMarquee { from { transform: translateX(var(--board-start, 100vw)); } to { transform: translateX(calc(0px - var(--board-travel, 1800px))); } }
+.event-board[data-motion] .board-row { animation-duration: var(--board-speed, 350ms); }
+.event-board[data-motion="fade"] .board-row { animation-name: boardFade; }
+.event-board[data-motion="slide"] .board-row { animation-name: boardSlide; }
+.event-board[data-motion="none"] .board-row { animation: none; opacity: 1; transform: none; }
+.event-board.board-marquee:not([data-motion="none"]) > .board-row { animation: boardMarquee var(--board-scroll, 30s) linear infinite; opacity: 1; }
+@keyframes boardFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes boardSlide { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.board-exit-ghost { animation: boardFadeOut var(--board-speed, 350ms) ease forwards !important; }
+.board-exit-ghost[data-exit="slide"] { animation-name: boardSlideOut !important; }
+@keyframes boardFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes boardSlideOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-12px); } }
+.board-toolbar { flex: 0 0 auto; display: flex; flex-wrap: wrap; padding: 8px; background: #20242c; color: white; font: 14px sans-serif; }
+.board-toolbar button, .board-row-actions button { color: #fff; background: #303948; border: 1px solid #7a899d; border-radius: 5px; padding: 6px 10px; margin: 3px; cursor: pointer; }
+.board-toolbar button:focus-visible, .board-row-actions button:focus-visible { outline: 3px solid #b9a0ff; outline-offset: 2px; }
+.board-row-actions { display: flex; position: relative; z-index: 3; pointer-events: auto; }
+.board-toolbar span { align-self: center; margin-left: 10px; }
+.board-pinned { box-shadow: inset 0 0 0 2px var(--feed-accent, #b9a0ff) !important; }
+@media (prefers-reduced-motion: reduce) { .event-board .board-row { animation: none !important; opacity: 1; transform: none; } }
+/* Matching event-list and alert-card treatments. */
+body.event-style-broadcast .message, .theme-broadcast .alert-shell { background: var(--feed-card, #172132); border: 0; border-left: 5px solid var(--feed-accent, var(--alert-accent)); border-radius: 2px; box-shadow: 0 5px 18px #0003; }
+body.event-style-outline .message, .theme-outline .alert-shell { background: transparent; border: 2px solid var(--feed-accent, var(--alert-accent)); border-radius: 6px; box-shadow: none; }
+body.event-style-pills .message, .theme-pills .alert-shell { background: var(--feed-card, #20283b); border: 1px solid #ffffff30; border-radius: 38px; padding: 16px 26px; box-shadow: 0 4px 12px #0002; }
+body.event-style-neon .message, .theme-neon .alert-shell { background: var(--feed-card, #15132a); border: 1px solid var(--feed-accent, var(--alert-accent)); border-radius: 8px; box-shadow: inset 0 0 15px #9146ff22, 0 0 12px #9146ff33; }
+body.event-style-paper { --feed-page: #eee7d9; --feed-card: #fff8eb; --feed-ink: #3d3025; --feed-muted: #665545; --feed-accent: #90551c; }
+body.event-style-paper .message { border: 1px solid #c6b49b; box-shadow: 3px 3px 0 #c6b49b; border-radius: 3px; }
+.event-board .board-avatar { width: 36px; height: 36px; object-fit: cover; border-radius: 50%; float: left; margin: 0 10px 6px 0; }
+body.event-style-broadcast .message-header, body.event-style-outline .message-header, body.event-style-pills .message-header, body.event-style-neon .message-header, body.event-style-paper .message-header { display: flex; align-items: center; }
+body.events-styled .board-row { box-sizing: border-box; }
+#chat-container.event-board.board-horizontal, #chat-container.event-board.board-marquee { display: flex; flex-direction: row; }
+#chat-container.event-board.board-horizontal .message, #chat-container.event-board.board-marquee .message { min-width: 0; }
+.event-board .board-row[data-event-id] { overflow-wrap: anywhere; }

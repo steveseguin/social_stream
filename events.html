@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="shared/overlay-control-transport.js"></script>
+<script src="shared/alerts/event-board.js"></script>
     <meta charset="UTF-8">
     <meta name="description" content="Activity Feed / Events. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
     <meta name="robots" content="noindex">
@@ -911,6 +913,7 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 </style>
 <script src="./libs/objects.js"></script>
 <script src="./shared/utils/chatHtml.js"></script>
+<link rel="stylesheet" href="shared/alerts/event-board.css">
 </head>
 <body>
 <div id="topbar"></div>
@@ -924,6 +927,12 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 <script type="text/javascript" src="currency.js"></script>
 <script>
     var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('audience')) {
+        ['transparent', 'noheader', 'hidemeta', 'nofeature', 'hideempty', 'notime', 'hidestatus', 'hideads', 'hideactivity', 'hidehypetrain'].forEach(function (key) { urlParams.set(key, ''); });
+        if (!urlParams.has('maxevents')) urlParams.set('maxevents', '3');
+        if (!urlParams.has('style')) urlParams.set('style', 'compact');
+    }
+    var eventBoard = null;
     var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
     // Transport migration guard: only pages with full server parity may skip the legacy bridge.
     var TRANSPORT_CAPABILITIES = {
@@ -1085,7 +1094,7 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 	['hidemessage', 'hidecontentimg', 'hideplatformicons', 'hideeventlabels', 'hideamounts', 'hideempty'].forEach(function(option) {
 		if (urlParams.has(option)) document.body.classList.add('feed-' + option);
 	});
-	var maxEvents = urlParams.has("maxevents") ? parseInt(urlParams.get("maxevents")) : 200;
+	var maxEvents = Math.max(1, Math.min(500, parseInt(urlParams.get("maxevents")) || 200));
 	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
 	var googleFont = urlParams.has("googlefont") ? urlParams.get("googlefont") : "";
 	const showViewerCount = urlParams.has("showviewercount");
@@ -1147,7 +1156,7 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 
     // Presentation only: every layout uses the same event renderer and filters.
     var eventStyle = (urlParams.get('style') || 'default').toLowerCase();
-    if (['compact', 'twitch', 'timeline', 'glass', 'minimal', 'ticker'].indexOf(eventStyle) !== -1) {
+    if (['compact', 'twitch', 'timeline', 'glass', 'minimal', 'ticker', 'broadcast', 'outline', 'pills', 'neon', 'paper'].indexOf(eventStyle) !== -1) {
         document.body.classList.add('events-styled', 'event-style-' + eventStyle);
         document.documentElement.classList.add('events-styled');
         // A chosen style brings its own page color, so the OBS default steps aside.
@@ -1524,7 +1533,8 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 			}, 1000);
 		}
 
-		while (chatContainer.children.length > maxEvents) {
+        if (eventBoard) eventBoard.register(panel, data, eventDuration * 1000);
+		while (!eventBoard && chatContainer.children.length > maxEvents) {
 			const lastChild = chatContainer.lastChild;
 			if (lastChild === panel) break;
 			chatContainer.removeChild(lastChild);
@@ -2367,7 +2377,13 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
     	return false;
     }
     function addMessageToOverlay(data) {
-		if (isDuplicateTransportDelivery(data)) {
+        if (!data || typeof data !== 'object') return;
+        if (data.action === 'eventOverlayControl') {
+            if (SSNOverlayControl.accept(data, 'dock') && eventBoard) eventBoard.command(data);
+            return;
+        }
+        if (eventBoard && (eventBoard.duplicate(data) || eventBoard.defer(data))) return;
+        if (!(eventBoard && eventBoard.isRestoring()) && isDuplicateTransportDelivery(data)) {
 			return;
 		}
 		if (data && String(data.type || '').toLowerCase() === 'obs') {
@@ -2473,6 +2489,11 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 		
 		messageDiv.textContent = '';
 
+        if (urlParams.has('showavatar') && typeof data.chatimg === 'string' && /^(https?:|data:image\/)/i.test(data.chatimg)) {
+            var avatar = document.createElement('img'); avatar.className = 'board-avatar'; avatar.src = data.chatimg; avatar.alt = '';
+            avatar.onerror = function () { this.remove(); }; messageDiv.appendChild(avatar);
+        }
+
 		const header = document.createElement('div');
 		header.className = 'message-header';
 		const meta = document.createElement('div');
@@ -2577,9 +2598,8 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 		chatContainer.scrollTop = 0;
 		
 		// Keep max N events in the dashboard (from URL param or default 200)
-		while (chatContainer.children.length > maxEvents) {
-			chatContainer.removeChild(chatContainer.lastChild);
-		}
+        if (eventBoard) eventBoard.register(messageDiv, data, eventDuration * 1000);
+        else while (chatContainer.children.length > maxEvents) chatContainer.removeChild(chatContainer.lastChild);
 	}
 	
 	let currentActiveMessage = null; // Track the currently active message
@@ -2587,6 +2607,7 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 		setInterval(function() {
 			const cutoff = Date.now() - eventDuration * 1000;
 			Array.from(chatContainer.children).forEach(function(row) {
+                if (row.classList.contains('board-row')) return;
 				if (typeof row.__feedUpdatedAt !== 'number' || row.__feedUpdatedAt > cutoff) return;
 				if (row === currentActiveMessage) currentActiveMessage = null;
 				if (row.__hypeData) {
@@ -2699,7 +2720,7 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
     }
 
     var iframe = null; // Keep iframe global
-	if (roomID && !useServerOnlyTransport()){
+	if (roomID && !urlParams.has("preview") && !urlParams.has("demo") && !useServerOnlyTransport()){
         iframe = document.createElement("iframe");
 		if (featuredMode){ // featuredMode is false by default in events.html
 			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${encodeURIComponent(password)}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
@@ -2805,10 +2826,25 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
     
     if (urlParams.has("server") || urlParams.has("server2")){
         serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
-		if (roomID){
+		if (roomID && !urlParams.has("preview") && !urlParams.has("demo")){
 			setupSocket();
 		}
     }
+    eventBoard = SSNEventBoard.create({ params: urlParams, container: chatContainer, kind: 'events', limit: maxEvents,
+        receive: addMessageToOverlay,
+        removed: function (node) {
+            if (node.__hypeData) removeHypeTrainPanel(node, (node.__hypeData.type || 'twitch') + ':' + (node.__hypeData.meta.id || 'active'));
+        },
+        category: function (payload) {
+            var event = normalizeEventKey(payload.event);
+            var keys = Object.keys(FEED_EVENT_GROUPS);
+            for (var i = 0; i < keys.length; i++) if (FEED_EVENT_GROUPS[keys[i]].indexOf(event) !== -1) return keys[i];
+            return payload.hasDonation ? 'paid' : event;
+        }
+    });
+    eventBoard.restore();
+    if (!urlParams.has('preview') && !urlParams.has('demo')) SSNOverlayControl.connect(urlParams, roomID, 'dock', addMessageToOverlay);
+    if (urlParams.has('demo')) SSNEventBoard.samples().forEach(addMessageToOverlay);
 </script>
 <script src="shared/stickers/catalog.js"></script>
 <script src="shared/stickers/player.js"></script>

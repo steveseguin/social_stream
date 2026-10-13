@@ -14959,3 +14959,50 @@ function setupLocalTtsLanguageFilters() {
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupLocalTtsLanguageFilters);
 else setupLocalTtsLanguageFilters();
+
+
+function attachEventBoardControls() {
+    function link(surface) {
+        var div = document.getElementById(surface === 'alerts' ? 'multialerts' : 'eventsdashboard');
+        return new URL(div && div.raw || (surface === 'alerts' ? 'multi-alerts.html' : 'events.html'), window.location.href);
+    }
+    document.querySelectorAll('[data-board-preview]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var surface = button.dataset.boardPreview, current = link(surface);
+            var preview = new URL(getLocalOverlayUrl(surface === 'alerts' ? 'multi-alerts.html' : 'events.html'));
+            preview.search = current.search;
+            ['session', 'password', 'server', 'server2', 'server3', 'localserver', 'operator', 'remember'].forEach(function (key) { preview.searchParams.delete(key); });
+            preview.searchParams.set('demo', '1'); preview.searchParams.set('preview', '1');
+            window.open(preview.toString(), '_blank');
+        });
+    });
+    document.querySelectorAll('[data-board-command]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var surface = button.dataset.boardSurface;
+            if (surface === 'alerts' && !link(surface).searchParams.has('stack') && ['pin', 'unpin', 'remove'].indexOf(button.dataset.boardCommand) !== -1) {
+                document.getElementById('board-alerts-status').textContent = 'Enable multiple alerts to pin or remove cards.'; return;
+            }
+            chrome.runtime.sendMessage({ message: { action: 'eventOverlayControl', surface: surface,
+                board: link(surface).searchParams.get('board') || 'default', command: button.dataset.boardCommand },
+                target: surface === 'alerts' ? 'alerts' : 'dock' });
+            document.getElementById('board-' + surface + '-status').textContent = button.textContent + ' command sent';
+        });
+    });
+    document.querySelectorAll('[data-board-preset]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var surface = button.dataset.boardPreset, n = surface === 'alerts' ? 25 : 17;
+            var values = surface === 'alerts' ? { stack: true, keep: true, limit: '3', compact: true, transparent: true, hidemedia: true, hideprogress: true, layout: '', order: '' } : { audience: true, maxevents: '3', style: 'compact', layout: '', order: '', eventduration: '', operator: false };
+            beginPopupLinkRefreshBatch();
+            Object.keys(values).forEach(function (param) {
+                document.querySelectorAll('[data-param' + n + '="' + param + '"], [data-optionparam' + n + '="' + param + '"], [data-numbersetting' + n + '="' + param + '"]').forEach(function (input) {
+                    if (input.type === 'checkbox') input.checked = values[param] !== false && values[param] !== '';
+                    else input.value = values[param];
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            });
+            endPopupLinkRefreshBatch();
+        });
+    });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', attachEventBoardControls);
+else attachEventBoardControls();

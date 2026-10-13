@@ -9,6 +9,7 @@
   var cards = Array.prototype.slice.call(document.querySelectorAll('.gallery-card'));
   var filters = Array.prototype.slice.call(document.querySelectorAll('[data-category]'));
   var search = document.getElementById('gallery-search');
+  var eventLayout = document.getElementById('gallery-event-layout');
   var session = document.getElementById('gallery-session');
   var password = document.getElementById('gallery-password');
   var setup = document.getElementById('gallery-setup');
@@ -128,7 +129,7 @@
     var terms = search.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
     var visible = 0;
     cards.forEach(function (card) {
-      var match = (category === 'all' || card.dataset.kind === category) && terms.every(function (term) { return (card.dataset.search + ' ' + card.textContent.toLowerCase()).indexOf(term) !== -1; });
+      var match = (!eventLayout || !eventLayout.value || card.dataset.path.indexOf(eventLayout.value) !== -1) && (category === 'all' || card.dataset.kind === category) && terms.every(function (term) { return (card.dataset.search + ' ' + card.textContent.toLowerCase()).indexOf(term) !== -1; });
       card.hidden = !match;
       if (match) visible++;
     });
@@ -138,6 +139,7 @@
   }
   filters.forEach(function (button) { button.addEventListener('click', function () { category = button.dataset.category; filterCards(); }); });
   search.addEventListener('input', filterCards);
+  if (eventLayout) eventLayout.addEventListener('change', function () { category = eventLayout.value ? 'alerts' : category; filterCards(); });
   function updateLinks() {
     cards.forEach(function (card) {
       var link = card.querySelector('.gallery-open');
@@ -187,5 +189,6 @@
     if (event.key === 'Tab') { event.preventDefault(); close.focus(); }
   });
   updateLinks();
+  search.value = new URLSearchParams(window.location.search).get('search') || search.value;
   filterCards();
 })();
