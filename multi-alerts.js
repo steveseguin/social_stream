@@ -332,15 +332,15 @@ if (settings.stack) {
   document.body.style.setProperty('--stack-gap', settings.stackGap + 'px');
   alertBoard = SSNEventBoard.create({ params: urlParams, container: elements.stage, kind: 'alerts', limit: settings.limit,
     translate: getTranslation,
-    category: function (payload) { return inferCategory(payload); },
+    category: function (payload) { return inferCategory(payload, true); },
     receive: function (payload) {
-      var model = buildAlertViewModel(payload);
+      var model = buildAlertViewModel(payload, !alertBoard.isRestoring());
       if (model && !settings.disabledCategories[model.category]) displayStackAlert(model, { silent: alertBoard.isRestoring() });
     },
     replay: function (payload) {
       var row = alertBoard.rows().find(function (item) { return item.payload === payload; });
       var pinned = row && row.pinned; alertBoard.remove(row);
-      var model = buildAlertViewModel(payload);
+      var model = buildAlertViewModel(payload, true);
       if (model) {
         displayStackAlert(model);
         if (pinned) alertBoard.command({ action: 'eventOverlayControl', surface: 'alerts', board: urlParams.get('board') || 'default', command: 'pin' });
@@ -1035,7 +1035,7 @@ function pickAuctionPriceLabel(payload = {}) {
   return priceText;
 }
 
-function isAuctionWinPayload(payload = {}) {
+function isAuctionWinPayload(payload = {}, displayOnly = false) {
   const meta = payload.meta && typeof payload.meta === 'object' ? payload.meta : {};
   const status = normalizeKey(meta.status);
   const statusText = normalizeKey(meta.statusText);
@@ -1043,6 +1043,7 @@ function isAuctionWinPayload(payload = {}) {
   if (!isWin) {
     return false;
   }
+  if (displayOnly) return true;
   const signature = [
     normalizeText(meta.id),
     normalizeText(meta.title),
@@ -1061,18 +1062,19 @@ function pickHypeLevel(payload = {}) {
   return Number.isFinite(level) && level > 0 ? Math.floor(level) : 0;
 }
 
-function shouldAlertHypeTrain(payload = {}) {
+function shouldAlertHypeTrain(payload = {}, displayOnly = false) {
   const meta = payload.meta && typeof payload.meta === 'object' ? payload.meta : {};
   const trainId = normalizeText(meta.id) || `${pickSourceKey(payload)}-train`;
   const phase = normalizeKey(meta.phase);
   if (phase === 'end') {
-    delete hypeTrainLevels[trainId];
+    if (!displayOnly) delete hypeTrainLevels[trainId];
     return false;
   }
   const level = pickHypeLevel(payload);
   if (!level) {
     return false;
   }
+  if (displayOnly) return true;
   const lastLevel = hypeTrainLevels[trainId] || 0;
   if (level <= lastLevel) {
     return false;
@@ -1231,7 +1233,7 @@ function inferCategoryFromText(payload = {}) {
   return null;
 }
 
-function inferCategory(payload = {}) {
+function inferCategory(payload = {}, displayOnly = false) {
   const eventKey = pickEventKey(payload);
   if (COUNT_EVENTS.has(eventKey)) {
     return null;
@@ -1240,10 +1242,10 @@ function inferCategory(payload = {}) {
   if (eventKey === 'purchase') return ALERT_CATEGORIES.PURCHASE;
 
   if (AUCTION_EVENTS.has(eventKey)) {
-    return isAuctionWinPayload(payload) ? ALERT_CATEGORIES.AUCTION : null;
+    return isAuctionWinPayload(payload, displayOnly) ? ALERT_CATEGORIES.AUCTION : null;
   }
   if (HYPE_EVENTS.has(eventKey)) {
-    return shouldAlertHypeTrain(payload) ? ALERT_CATEGORIES.HYPE : null;
+    return shouldAlertHypeTrain(payload, displayOnly) ? ALERT_CATEGORIES.HYPE : null;
   }
 
   const donationLabel = normalizeKey(pickDonationLabel(payload));
@@ -1438,12 +1440,13 @@ function buildBodyText(category, payload, viewerCount, format = {}) {
   return rawMessage ? chatBody() : subtitle;
 }
 
-function buildAlertViewModel(payload = {}) {
+function buildAlertViewModel(payload = {}, displayOnly = false) {
   if (!payload || typeof payload !== 'object') {
     return null;
   }
 
-  const category = inferCategory(payload);
+  // Board replay, resume, and layout checks must not consume live-event history again.
+  const category = inferCategory(payload, displayOnly);
   if (!category) {
     return null;
   }
@@ -2091,10 +2094,13 @@ function flattenPayloads(payload) {
   return [payload];
 }
 
-function playModelSound(model) {
+function playModelSound(model, card) {
   if (state.muted) return;
-  playAlertSound(model).then(function () {
-    if (!state.muted && typeof TTS !== 'undefined' && TTS.speech && model.payload) TTS.speechMeta(model.payload);
+  const playback = playAlertSound(model);
+  const soundToken = state.soundSequence;
+  playback.then(function () {
+    if (state.soundSequence === soundToken && card.isConnected && !state.muted &&
+        typeof TTS !== 'undefined' && TTS.speech && model.payload) TTS.speechMeta(model.payload);
   });
 }
 
@@ -2122,7 +2128,7 @@ function displayStackAlert(model, options) {
   alertBoard.register(card, model.payload, settings.keep ? 0 : settings.showTime);
   if (!card.isConnected) return;
   state.lastAlert = model;
-  if (!options.silent && !alertBoard.isRestoring()) playModelSound(model);
+  if (!options.silent && !alertBoard.isRestoring()) playModelSound(model, card);
   if (settings.keep) {
     card.classList.add('persistent-alert');
     // Leave the event text visible after its media presentation finishes.
@@ -2198,16 +2204,7 @@ function displayAlert(model, options = {}) {
   elements.stage.appendChild(card);
   elements.stage.classList.add('has-alert');
   if (!options.silent && !state.muted) {
-    playAlertSound(model).then(() => {
-      if (
-        state.alertSequence === alertToken && !state.muted &&
-        typeof TTS !== 'undefined' &&
-        TTS.speech &&
-        model.payload
-      ) {
-        TTS.speechMeta(model.payload);
-      }
-    });
+    playModelSound(model, card);
   }
   updateStatus(model.title);
 
