@@ -171,8 +171,13 @@ body .textInputContainer.popup-inset-field { width:260px; max-width:calc(100% - 
 body .event-board-settings { width:100%; box-sizing:border-box; }
 body .event-board-settings .textInputContainer { width:100%; }
 body .event-board-settings .textInputContainer > label { position:static; grid-area:1 / 1 / 2 / 3; padding:0; max-width:100%; color:var(--default-text-color); }
-body .event-board-settings > label, body .event-board-settings details > label { display:block; margin-top:10px; }
+body .event-board-settings > label, body .event-board-settings details > label { display:block; position:static; margin-top:10px; padding:0; font-size:1em; color:var(--default-text-color); pointer-events:auto; }
+body .event-board-settings > label::before, body .event-board-settings details > label::before { display:none; }
 body .event-board-settings select { display:block; width:100%; margin:4px 0 10px; }
 body .event-board-settings .popup-action-row { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
 /* Keep the added stack panel above the existing alert-type panel. */
 body .wrapper.beginner-basic[data-panel-section="multialerts"] { flex-direction:column; }
+
+/* Leave room for the expand arrow when translated headings wrap. */
+body .collapsible-label { padding-inline-end:32px; }
+[dir="rtl"] .collapsible-label::after { right:auto; left:8px; }

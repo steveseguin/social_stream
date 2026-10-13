@@ -1362,6 +1362,18 @@ function getTranslation(key, value=false){
 		return key.replaceAll("-", " "); //
 	}
 }
+function translatePopupAttribute(ele, attribute, values) {
+	if (!ele[attribute]) return;
+	var saved = ele._popupTranslationAttributes || (ele._popupTranslationAttributes = {});
+	var item = saved[attribute];
+	if (!item || ele[attribute] !== item.value) {
+		item = { key: ele[attribute].toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ", "-") };
+		saved[attribute] = item;
+	}
+	if (item.key in values) ele[attribute] = values[item.key];
+	item.value = ele[attribute];
+}
+
 function miniTranslate(ele, ident = false, direct=false) {
 	
 	if (ident){
@@ -1421,35 +1433,16 @@ function miniTranslate(ele, ident = false, direct=false) {
 	if (translation.titles){
 		var allTitles = ele.querySelectorAll('[title]');
 		allTitles.forEach(function(ele2) {
-			var key = ele2.title.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ","-");;
-			if (key in translation.titles) {
-				ele2.title = translation.titles[key];
-			}
+			translatePopupAttribute(ele2, "title", translation.titles);
 		});
-		if (ele.title){
-			var key = ele.title.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ","-");;
-			if (key in translation.titles) {
-				ele.title = translation.titles[key];
-			}
-		}
+		translatePopupAttribute(ele, "title", translation.titles);
 	}
 	if (translation.placeholders){
 		var allPlaceholders = ele.querySelectorAll('[placeholder]');
 		allPlaceholders.forEach(function(ele2) {
-			if (ele2.placeholder) {
-				var key = ele2.placeholder.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ","-");;
-				if (key in translation.placeholders) {
-					ele2.placeholder = translation.placeholders[key];
-				}
-			}
+			translatePopupAttribute(ele2, "placeholder", translation.placeholders);
 		});
-		
-		if (ele.placeholder){
-			var key = ele.placeholder.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ","-");;
-			if (key in translation.placeholders) {
-				ele.placeholder = translation.placeholders[key];
-			}
-		}
+		translatePopupAttribute(ele, "placeholder", translation.placeholders);
 	}
 	var obsTransparentNotes = ele.querySelectorAll('.obs-transparent-note');
 	obsTransparentNotes.forEach(function(ele2) {
@@ -4885,20 +4878,18 @@ function update(response, sync = true) {
 
         if (("state" in response) && streamID) {
             isExtensionOn = response.state;
-            // The status is dynamic; a later language fetch must not replace it
-            // with the static "Extension active" translation for toggle-on-off.
-            document.getElementById("disableButtonText").removeAttribute("data-translate");
+            // Keep the translation key in sync with the current service state.
             if (isExtensionOn) {
                 document.body.classList.add("extension-enabled");
                 document.body.classList.remove("extension-disabled");
-                document.getElementById("disableButtonText").innerHTML = ssapp ? "⚡ Service Active" : "⚡ Extension active"; // Assuming ssapp is defined
+                miniTranslate(document.getElementById("disableButtonText"), ssapp ? "popup-service-active" : "popup-extension-active", ssapp ? "⚡ Service Active" : "⚡ Extension active");
                 document.getElementById("disableButton").style.display = "";
                 document.getElementById("extensionState").checked = true;
                 if (typeof chrome !== 'undefined' && chrome.browserAction) {
                     chrome.browserAction.setIcon({ path: "/icons/on.png" });
                 }
             } else {
-                document.getElementById("disableButtonText").innerHTML = ssapp ? "🔌 Service Disabled" : "🔌 Extension Disabled";
+                miniTranslate(document.getElementById("disableButtonText"), ssapp ? "popup-service-disabled" : "popup-extension-disabled", ssapp ? "🔌 Service Disabled" : "🔌 Extension Disabled");
                 document.body.classList.remove("extension-enabled");
                 document.body.classList.add("extension-disabled");
                 document.getElementById("disableButton").style.display = "";
@@ -12131,10 +12122,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		applyExternalTranslationLanguage(urlParams.get("ln"), { reload: false });
 	}
 	if (ssapp){
-		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
+		miniTranslate(document.getElementById("disableButtonText"), "popup-service-loading", "🔌 Services Loading");
 		setupSsappChatHistoryPanel();
 	} else {
-		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
+		miniTranslate(document.getElementById("disableButtonText"), "popup-extension-loading", "🔌 Extension Loading");
 	}
 	
 	if (ssapp && urlParams.get("ssapp")){
