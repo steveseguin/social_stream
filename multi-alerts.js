@@ -2122,10 +2122,10 @@ function displayStackAlert(model, options) {
   options = options || {};
   var streak = pickTikTokGiftStreakId(model.payload);
   var previous = streak && alertBoard.rows().find(function (row) { return pickTikTokGiftStreakId(row.payload) === streak; });
-  if (previous) { alertBoard.remove(previous); options.silent = true; }
+  if (previous) options.silent = true;
   var card = renderAlert(model);
   elements.stage.appendChild(card);
-  alertBoard.register(card, model.payload, settings.keep ? 0 : settings.showTime);
+  alertBoard.register(card, model.payload, settings.keep ? 0 : settings.showTime, previous);
   if (!card.isConnected) return;
   state.lastAlert = model;
   if (!options.silent && !alertBoard.isRestoring()) playModelSound(model, card);

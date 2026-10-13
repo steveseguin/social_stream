@@ -7,6 +7,7 @@
     var pageActive = true;
     let videoEventListeners = new Map();
     let lastKnownVolume = 1.0; // Store the last known volume of the main video
+    let lastKnownMuted = null;
     
     // Callback functions for ad state changes
     const adCallbacks = {
@@ -25,7 +26,8 @@
         window.postMessage({
             source: 'ssn-twitch-ad-player-settings',
             enabled: !!settings.twichadmute,
-            volume: lastKnownVolume
+            volume: lastKnownVolume,
+            muted: lastKnownMuted
         }, location.origin);
     }
     window.addEventListener('message', function (event) {
@@ -201,6 +203,15 @@
             ];
             
             const videos = document.querySelectorAll('video');
+            const mainVideo = document.querySelector('video[id]');
+            const adVideo = document.querySelector('video:not([id])');
+            if (mainVideo && ((!videoEventListeners.has(mainVideo) && !adVideo) || lastKnownMuted === null)) {
+                // Before touching either player, remember the viewer's audio state.
+                const audioVideo = adVideo || mainVideo;
+                lastKnownVolume = audioVideo.volume;
+                lastKnownMuted = audioVideo.muted;
+                updateAdPlayerSettings();
+            }
             videos.forEach(video => {
                 if (videoEventListeners.has(video)) {
                     let listeners = videoEventListeners.get(video);
@@ -219,6 +230,7 @@
                             // Store the volume only when it's manually changed (not during ad playback)
                             if (!adVideo) {
                                 lastKnownVolume = mainVideo.volume;
+                                lastKnownMuted = mainVideo.muted;
                                 updateAdPlayerSettings();
                             }
                         }
@@ -231,14 +243,14 @@
                             
                             if (mainVideo) {
                                 if (mainVideo.paused) {
-                                    event.target.muted = false;
+                                    event.target.muted = lastKnownMuted;
                                 } else {
                                     if (adVideo) {
                                         // Use stored volume instead of ad video's volume
                                         mainVideo.volume = lastKnownVolume;
                                         adVideo.muted = true;
                                     }
-                                    mainVideo.muted = false;
+                                    mainVideo.muted = lastKnownMuted;
                                 }
                             }
                         } else if (eventType === 'abort') {
@@ -249,7 +261,7 @@
                             
                             if (mainVideo) {
                                 if (adVideo) {
-                                    adVideo.muted = false;
+                                    adVideo.muted = lastKnownMuted;
                                     mainVideo.muted = true;
                                 }
                             }

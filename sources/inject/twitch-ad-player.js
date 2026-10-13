@@ -4,6 +4,7 @@
     window.__ssnTwitchAdPlayer = true;
     var enabled = false;
     var volume = 1;
+    var muted = null;
     var observer = null;
     var players = new Map();
 
@@ -81,7 +82,7 @@
                 // deliberately paused video, or change the primary/ad player.
                 if (document.hidden && video.paused && video.readyState === 0 && !video.src && !video.srcObject) {
                     player.setVolume(volume);
-                    player.setMuted(false);
+                    player.setMuted(muted === null ? (adVideo || video).muted : muted);
                     player.play();
                 }
             } catch (e) {}
@@ -106,6 +107,7 @@
         if (typeof event.data.volume === 'number' && isFinite(event.data.volume)) {
             volume = Math.max(0, Math.min(1, event.data.volume));
         }
+        if (typeof event.data.muted === 'boolean') muted = event.data.muted;
         setEnabled(event.data.enabled === true);
     });
     window.addEventListener('pagehide', function () { setEnabled(false); });
