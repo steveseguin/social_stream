@@ -19216,7 +19216,8 @@ async function applyBotActions(data, tab = false) {
 		console.error(e);
 	}
 	try {
-		if (settings.allowLLMSummary && data.chatmessage && data.chatmessage.startsWith("!summary")) {
+		const memberAllowed = !settings.memberLLMonly || data.membership || data.hasMembership;
+		if (memberAllowed && settings.allowLLMSummary && data.chatmessage && data.chatmessage.startsWith("!summary")) {
 			if (settings.modLLMonly) {
 				if (data.mod) {
 					return await processSummary(data);
@@ -19252,7 +19253,7 @@ async function applyBotActions(data, tab = false) {
 				console.log(e); // ai.js file missing?
 			}
 		}
-		if (isAiChatbotEnabled()) {
+		if (memberAllowed && isAiChatbotEnabled()) {
 			try {
 				if (settings.modLLMonly) {
 					if (data.mod) {
