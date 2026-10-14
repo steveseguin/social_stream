@@ -3604,6 +3604,17 @@
 		sendMetaEvent("top_viewers_update", snapshot);
 	}
 
+	function isTikTokVerificationVisible(element) {
+		const bounds = element.getBoundingClientRect();
+		if (!bounds.width || !bounds.height) return false;
+		const style = getComputedStyle(element);
+		if (style.visibility === "hidden" || style.visibility === "collapse") return false;
+		for (let parent = element; parent; parent = parent.parentElement) {
+			if (getComputedStyle(parent).opacity === "0") return false;
+		}
+		return true;
+	}
+
 	function getTikTokStandardBlockedReason() {
 		const isLivePage = window.location.href.includes("livecenter") ||
 			(window.location.pathname.includes("@") && window.location.pathname.includes("live"));
@@ -3628,18 +3639,24 @@
 			if (bodyText.includes("comments turned off") || bodyText.includes("comments are turned off")) {
 				return "TikTok says comments are turned off on this page.";
 			}
-			if (
-				bodyText.includes("verify to continue") ||
-				bodyText.includes("security check") ||
-				bodyText.includes("please verify") ||
-				bodyText.includes("complete the puzzle") ||
-				bodyText.includes("too many attempts")
-			) {
-				return "TikTok is showing a verification challenge in standard mode.";
+			const verificationText = /verify to continue|security check|please verify|complete the puzzle|too many attempts/i;
+			if (verificationText.test(bodyText)) {
+				// innerText still includes transparent elements. Check the actual text's
+				// visibility, and don't mistake a viewer's chat message for a challenge.
+				const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+				let node;
+				while ((node = walker.nextNode())) {
+					const parent = node.parentElement;
+					if (parent && verificationText.test(node.textContent) &&
+						!parent.closest('[data-e2e="chat-message"]') && isTikTokVerificationVisible(parent)) {
+						return "TikTok is showing a verification challenge in standard mode.";
+					}
+				}
 			}
 		}
 
-		if (document.querySelector("[id*='captcha'], [class*='captcha'], iframe[src*='captcha'], iframe[src*='verify'], [data-e2e*='captcha']")) {
+		const hasVisibleChallenge = Array.from(document.querySelectorAll("[id*='captcha'], [class*='captcha'], iframe[src*='captcha'], iframe[src*='verify'], [data-e2e*='captcha']")).some(isTikTokVerificationVisible);
+		if (hasVisibleChallenge) {
 			return "TikTok is showing a verification challenge in standard mode.";
 		}
 
