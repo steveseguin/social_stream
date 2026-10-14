@@ -26,6 +26,7 @@
 		if (lower.indexOf("de") === 0) return "de";
 		if (lower.indexOf("cs") === 0) return "cs";
 		if (lower.indexOf("th") === 0) return "th";
+		if (lower === "ko" || lower.indexOf("ko-") === 0) return "ko";
 		if (lower.indexOf("tr") === 0) return "tr";
 		if (lower.indexOf("uk") === 0) return "uk";
 		return "en-us";
