@@ -29,7 +29,6 @@ body, html {
     padding: 0;
     width: 100%;
     height: 100vh;
-    background-color: var(--bg-color);
     color: var(--text-color);
     font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
@@ -38,6 +37,8 @@ body, html {
 
 /* A column, so the feed takes exactly the space the heading leaves. */
 body {
+    /* Keep the page background on body so OBS Browser Source CSS can clear it. */
+    background-color: var(--feed-page, var(--bg-color));
     display: flex;
     flex-direction: column;
     /* Both roots apply zoom; retain that size while fitting the feed to the viewport. */
@@ -242,7 +243,6 @@ body.hide-timestamps .timestamp {
 
 body.obsstudio-mode {
     --bg-color: #13141A;
-    background-color: #13141A;
 }
 
 body.obsstudio-mode #header {
@@ -253,10 +253,6 @@ body.obsstudio-mode #chat-container,
 body.transparent-mode #chat-container,
 body.compact-height #chat-container {
     height: 100vh;
-}
-
-body.transparent-mode {
-    background-color: transparent;
 }
 
 body.transparent-mode #header,
@@ -433,7 +429,6 @@ body.compact-height #topbar {
 
 /* Light mode styling */
 body.light-mode {
-    background-color: #f5f5f5;
     color: #333;
 }
 
@@ -648,8 +643,6 @@ body.light-mode .meta-value.badge {
 
 
 /* Optional activity-feed layouts. The original cards remain the default. */
-/* No root background, so the body's own paints the whole window at any scale. */
-html.events-styled { background: none; }
 body.events-styled {
     --feed-page: #18181b;
     --feed-card: #242427;
@@ -660,7 +653,6 @@ body.events-styled {
     --feed-radius: 6px;
     --feed-gap: 8px;
     --feed-padding: 12px;
-    background: var(--feed-page);
     color: var(--feed-ink);
 }
 body.events-styled.light-mode {
@@ -804,7 +796,8 @@ body.event-style-glass {
     --feed-padding: 18px;
     --feed-shadow: 0 8px 24px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .14);
     /* A soft tint gives the translucent cards something to show through on a solid page. */
-    background: linear-gradient(155deg, rgba(110, 168, 255, .30), rgba(110, 168, 255, 0) 45%, rgba(178, 124, 255, .22)) fixed var(--feed-page);
+    background-image: linear-gradient(155deg, rgba(110, 168, 255, .30), rgba(110, 168, 255, 0) 45%, rgba(178, 124, 255, .22));
+    background-attachment: fixed;
 }
 body.event-style-glass.light-mode {
     --feed-page: #e9eef7;
@@ -876,7 +869,6 @@ body.event-style-ticker .hype-train-details { flex: 0 0 auto; flex-wrap: nowrap;
 body.event-style-ticker .no-events { margin: 0; padding: calc(var(--feed-padding) * .75) 0; }
 
 /* Explicit URL overrides also work with the original layout. */
-html.feed-custom-page:not(.events-styled), body.feed-custom-page { background-color: var(--feed-page) !important; }
 body.feed-custom-card .message, body.feed-custom-card #header { background: var(--feed-card) !important; }
 body.feed-custom-ink .message, body.feed-custom-ink .name, body.feed-custom-ink #header, body.feed-custom-ink .meta-value, body.feed-custom-ink .hype-train-title { color: var(--feed-ink); }
 body.feed-custom-muted .timestamp, body.feed-custom-muted .no-events, body.feed-custom-muted .meta-label { color: var(--feed-muted); }
@@ -1146,13 +1138,11 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 	const isObsStudio = typeof window !== 'undefined' && typeof window.obsstudio !== 'undefined';
 	if (isObsStudio) {
 		document.body.classList.add('obsstudio-mode');
-		document.body.style.backgroundColor = '#13141A';
 		document.documentElement.style.setProperty('--bg-color', '#13141A');
 	}
 
 	if (transparentMode) {
 		document.body.classList.add("transparent-mode");
-		document.body.style.backgroundColor = "transparent";
 		document.documentElement.style.setProperty("--bg-color", "transparent");
 	}
 
@@ -1161,8 +1151,6 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
     if (['compact', 'twitch', 'timeline', 'glass', 'minimal', 'ticker', 'broadcast', 'outline', 'pills', 'neon', 'paper'].indexOf(eventStyle) !== -1) {
         document.body.classList.add('events-styled', 'event-style-' + eventStyle);
         document.documentElement.classList.add('events-styled');
-        // A chosen style brings its own page color, so the OBS default steps aside.
-        if (isObsStudio) document.body.style.backgroundColor = '';
     }
     [
         ['pagebg', '--feed-page', 'feed-custom-page'],
