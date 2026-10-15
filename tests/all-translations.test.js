@@ -13,6 +13,7 @@ const localeNames = [
 	"de",
 	"cs",
 	"th",
+	"ko",
 	"zh-CN",
 	"zh-TW",
 	"tr",

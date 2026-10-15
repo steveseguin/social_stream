@@ -2417,7 +2417,9 @@
 			}
 
 			.electronDraggable {
-				-webkit-app-region: var(--electron-drag-fix);
+				/* Keep drag literal: Electron 44 resolves the var() form to none.
+				   Recheck window dragging and button clicks when upgrading Electron. */
+				-webkit-app-region: drag;
 			}
 
 			.context-menu {

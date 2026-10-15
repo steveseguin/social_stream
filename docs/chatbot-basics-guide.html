@@ -115,6 +115,7 @@
                         <tr><td data-label="Setting">Rate limit for responses per tab / source</td><td data-label="First test"><code>5000</code> ms</td><td data-label="Later">Raise it if the bot posts too often. Only matters when posting into chat.</td></tr>
                         <tr><td data-label="Setting">Max parallel bot replies</td><td data-label="First test"><code>1</code></td><td data-label="Later">Keep low unless your AI can handle more.</td></tr>
                         <tr><td data-label="Setting">Will respond to Moderators only</td><td data-label="First test">Off</td><td data-label="Later">Only if you want that.</td></tr>
+                        <tr><td data-label="Setting">Reply to members only</td><td data-label="First test">Off</td><td data-label="Later">Limit replies and <code>!summary</code> to users marked as members by their source. Other chat stays visible in the Dock and overlays.</td></tr>
                     </tbody>
                 </table>
                 <h3>Run the test</h3>
@@ -151,6 +152,7 @@
                     <li>Short messages like <code>hello</code> may be skipped. Say the bot's name to be clear.</li>
                     <li>If you set a trigger word, the message must contain it.</li>
                     <li>Moderators-only mode skips everyone else.</li>
+                    <li>Members-only mode requires a membership marker from the source. If both restrictions are on, the sender must be both a member and a moderator.</li>
                     <li>It answers one message at a time by default. When posting into chat, it also waits 5 seconds per source.</li>
                     <li>It skips its own messages, empty messages, and messages too close to its last reply.</li>
                 </ul>

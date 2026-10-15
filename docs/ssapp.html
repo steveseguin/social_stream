@@ -50,6 +50,10 @@
             align-items: center;
             min-height: 100vh;
         }
+        html:lang(ko) body {
+            word-break: keep-all;
+            overflow-wrap: break-word;
+        }
         .container {
             background-color: rgba(0, 0, 0, 0.3); /* Slightly darker background for readability */
             border-radius: 10px;
@@ -227,7 +231,7 @@
     </div>
     <script>
         (function() {
-            var supportedLanguages = ["en-us", "en-uk", "pt-br", "fr", "es", "de", "cs", "th", "zh-CN", "zh-TW", "tr", "uk", "ar", "test"];
+            var supportedLanguages = ["en-us", "en-uk", "pt-br", "fr", "es", "de", "cs", "th", "ko", "zh-CN", "zh-TW", "tr", "uk", "ar", "test"];
             var translations = {
                 "en-us": {
                     documentTitle: "Welcome to Social Stream Ninja",
@@ -265,6 +269,43 @@
                     "help.discord": "Join the Social Stream Ninja Discord Server",
                     "help.happy": "<strong>Happy Streaming!</strong>",
                     "footer.terms": "By using Social Stream Ninja, you agree to our <a href=\"https://socialstream.ninja/TOS\" target=\"_blank\">Terms of Service</a> and <a href=\"https://socialstream.ninja/privacy\" target=\"_blank\">Privacy Policy</a>. Please also be aware of <a class=\"lightblue\" href=\"https://www.youtube.com/t/terms\" target=\"_blank\">YouTube's Terms of Service</a>."
+                },
+                "ko": {
+                    documentTitle: "Social Stream Ninja 시작하기",
+                    videoPlayerTitle: "YouTube 동영상 플레이어",
+                    "welcome.title": "Social Stream Ninja에 오신 것을 환영합니다! 🥷",
+                    "welcome.intro": "실시간 소셜 메시지와 다양한 기능을 한곳에 모으세요. 이 페이지에서 첫 단계를 안내합니다.",
+                    "welcome.note": "첫 소스를 추가하면 이 환영 메시지는 사라집니다.",
+                    "welcome.warning": "<strong>주요 안내:</strong> 이 애플리케이션 사용은 일부 소셜 미디어 플랫폼의 이용약관을 위반할 수 있습니다. 또한 채팅에서 예약 명령, 봇 또는 자동 메시지를 사용하면 해당 플랫폼에서 계정이 일시적으로 차단되거나 영구 정지될 위험이 높아집니다. 책임 있게 사용하고 진행 전에 각 플랫폼의 약관을 확인하세요.",
+                    "video.title": "영상 가이드",
+                    "video.intro": "다음 영상에서 단계별 안내를 확인하세요:",
+                    "video.fallback": "YouTube에서 안내 영상 보기",
+                    "gettingStarted.title": "시작하기: 첫 채팅 소스 추가",
+                    "steps.sidebar": "메인 앱 창의 <strong>왼쪽 사이드바</strong>를 확인하세요.",
+                    "steps.platformButton": "추가할 플랫폼의 버튼을 클릭하세요(예: <img src=\"https://socialstream.ninja/sources/images/youtube.png\" alt=\"YouTube 아이콘\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>YouTube Username</code>, <img src=\"https://socialstream.ninja/sources/images/twitch.png\" alt=\"Twitch 아이콘\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>Twitch Username</code> 등).",
+                    "steps.prompt": "입력 창이 나타나면 요청에 따라 <strong>사용자 이름</strong>, <strong>동영상 ID</strong> 또는 <strong>URL</strong>을 입력하세요.",
+                    "steps.username": "대부분의 플랫폼에서는 사용자 이름을 입력합니다(예: <code>YourChannelName</code>).",
+                    "steps.youtubeVideoId": "YouTube는 <strong>동영상 ID</strong>를 알고 있다면 해당 ID로도 추가할 수 있습니다.",
+                    "steps.otherSites": "지원되지 않는 사이트는 <code>Other chat sites</code>를 선택하고 직접 채팅 URL을 붙여 넣으세요.",
+                    "steps.activate": "소스가 메인 영역에 추가되면 <code>Activate source</code> 버튼을 클릭하세요. YouTube 채널 소스는 <code>Select Live Sources</code> 또는 <code>Auto-find & Activate</code>를 클릭하세요.",
+                    "steps.signIn": "Facebook, TikTok, Instagram 등의 일부 사이트에서는 먼저 <code>Sign in</code> 버튼을 사용하거나 팝업 창 안에서 라이브 채팅을 찾아야 할 수 있습니다.",
+                    "steps.streamingChat": "이제 <strong>Streaming Chat</strong> 페이지에 채팅 메시지가 표시됩니다! 메인 앱 창 오른쪽 위의 <code>Streaming chat (dock & overlay)</code> 링크로 열 수 있습니다. 이 링크를 OBS에 브라우저 소스나 도크로 추가하세요.",
+                    "features.title": "주요 기능",
+                    "features.twoWay": "Facebook, YouTube, Twitch, Kick, Zoom, TikTok, Rumble, DLive 등 수십 개 플랫폼에서 실시간 자동 <strong>양방향 채팅 메시지</strong>를 지원합니다.",
+                    "features.featured": "도크형 대시보드에서 메시지를 자동 또는 수동으로 선택할 수 있는 <strong>강조된 채팅</strong> 오버레이가 포함되어 있습니다.",
+                    "features.bots": "<strong>봇 명령</strong> 및 자동 채팅 응답을 지원합니다. 스크립트형 플러그인으로 동작을 사용자 지정할 수 있습니다.",
+                    "features.llm": "<strong>LLM 지원</strong>(네이티브 Ollama API 포함)으로 AI 관리, 채팅 지원, RAG, 사용자 지정 지침을 사용할 수 있습니다.",
+                    "features.tts": "무료, 프리미엄, 울트라 프리미엄 서비스의 <strong>텍스트 음성 변환(TTS)</strong>을 지원합니다.",
+                    "features.icons": "여러 채널의 소스 아이콘을 지원하여 방송을 쉽게 구분할 수 있습니다.",
+                    "features.relaying": "플랫폼 간 자동 <strong>메시지 릴레이</strong>를 지원합니다.",
+                    "features.noLogin": "대부분 사이트의 채팅 캡처에는 <strong>사용자 로그인, API 키 또는 권한이 필요하지 않습니다</strong>.",
+                    "features.queue": "나중에 강조할 메시지를 대기열에 보관합니다.",
+                    "features.transport": "VDO.Ninja API를 이용한 안전한 데이터 전송 — 무료이며 지연이 짧습니다!",
+                    "help.title": "도움이 필요한가요?",
+                    "help.intro": "질문이나 문제가 있다면 Discord의 친절한 커뮤니티에서 도움을 받을 수 있습니다.",
+                    "help.discord": "Social Stream Ninja Discord 서버 참여",
+                    "help.happy": "<strong>즐거운 방송 되세요!</strong>",
+                    "footer.terms": "Social Stream Ninja를 사용하면 <a href=\"https://socialstream.ninja/TOS\" target=\"_blank\">이용약관</a> 및 <a href=\"https://socialstream.ninja/privacy\" target=\"_blank\">개인정보 처리방침</a>에 동의하게 됩니다. <a class=\"lightblue\" href=\"https://www.youtube.com/t/terms\" target=\"_blank\">YouTube 이용약관</a>도 확인하세요."
                 },
                 "en-uk": {
                     documentTitle: "Welcome to Social Stream Ninja",
@@ -718,6 +759,7 @@
                 if (lower.indexOf("tr") === 0) return "tr";
                 if (lower.indexOf("uk") === 0) return "uk";
                 if (lower.indexOf("ar") === 0) return "ar";
+                if (lower === "ko" || lower.indexOf("ko-") === 0) return "ko";
                 if (lower === "test") return "test";
                 return supportedLanguages.indexOf(trimmed) >= 0 ? trimmed : "en-us";
             }

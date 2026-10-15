@@ -3564,7 +3564,8 @@ function drainBotResponseQueue() {
     for (let i = 0; i < botResponseQueue.length;) {
         const entry = botResponseQueue[i];
         const expired = Date.now() - entry.queuedAt > 300000;
-        if (!isBotResponseQueueEnabled() || entry.session !== streamID || entry.cancelled || expired || (settings.modLLMonly && !entry.data.mod)) {
+        if (!isBotResponseQueueEnabled() || entry.session !== streamID || entry.cancelled || expired || (settings.modLLMonly && !entry.data.mod) ||
+            (settings.memberLLMonly && !(entry.data.membership || entry.data.hasMembership))) {
             botResponseQueue.splice(i, 1);
             if (expired) console.warn('[ChatBot] A queued reply expired after five minutes.');
             noteChatBotDecision(expired ? 'queue-expired' : 'queue-cancelled', entry.data);
@@ -3862,7 +3863,8 @@ async function processMessageWithOllama(data, idx=null, queuedEntry=null) {
     }
 	//console.log(additionalInstructions, cleanedText, botname, data);
 	const response = await processUserInput(cleanedText, data, additionalInstructions, botname);
-	if (queuedEntry && (queuedEntry.cancelled || queuedEntry.session !== streamID || !isBotResponseQueueEnabled() || (settings.modLLMonly && !data.mod))) return false;
+	if (queuedEntry && (queuedEntry.cancelled || queuedEntry.session !== streamID || !isBotResponseQueueEnabled() || (settings.modLLMonly && !data.mod) ||
+		(settings.memberLLMonly && !(data.membership || data.hasMembership)))) return false;
 
 	let shouldSendResponse = false;
 	if (response && typeof response === 'string') {

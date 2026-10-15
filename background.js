@@ -10485,6 +10485,52 @@ var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSoc
 var conCon = 0;
 var reconnectionTimeout = null;
 
+// SSApp can change its local relay while a poll, giveaway or credits roll is
+// running. Reconnect only the relay sockets; reloading this page loses that state.
+window.addEventListener("message", function (event) {
+	if (window.parent === window || event.source !== window.parent
+		|| typeof ipcRenderer === "undefined" || !event.data
+		|| event.data.type !== "ssapp:local-relay" || !event.ports[0]) return;
+	var reply = event.ports[0];
+	try {
+		var enabled = event.data.enabled === true;
+		var port = SocialStreamLocalServer.normalizeExplicitPort(event.data.port);
+		if (port === null) return;
+		var url = new URL(window.location.href);
+		if (enabled) {
+			url.searchParams.set("localserver", "");
+			url.searchParams.set("localserverport", String(port));
+		} else {
+			url.searchParams.delete("localserver");
+			url.searchParams.delete("localserverport");
+		}
+		var nextApi = enabled ? SocialStreamLocalServer.getWebSocketUrl(url.searchParams) : "wss://io.socialstream.ninja/api";
+		var nextDock = enabled ? SocialStreamLocalServer.getWebSocketUrl(url.searchParams) : "wss://io.socialstream.ninja/dock";
+		history.replaceState(history.state, "", url.href);
+		urlParams = url.searchParams;
+		if (serverURL !== nextApi || serverURLDock !== nextDock) {
+			clearTimeout(reconnectionTimeout);
+			clearTimeout(reconnectionTimeoutDock);
+			reconnectionTimeout = reconnectionTimeoutDock = null;
+			var oldApi = socketserver, oldDock = socketserverDock;
+			socketserver = socketserverDock = false;
+			if (oldApi) { oldApi.onclose = null; oldApi.close(); }
+			if (oldDock) { oldDock.onclose = null; oldDock.close(); }
+			serverURL = nextApi;
+			serverURLDock = nextDock;
+			conCon = conConDock = 0;
+			setupSocket();
+			setupSocketDock();
+		}
+		reply.postMessage({ ok: true });
+	} catch (error) {
+		console.warn("[SSApp] Relay update failed:", error);
+		reply.postMessage({ ok: false });
+	} finally {
+		reply.close();
+	}
+});
+
 function resetP2PTransportStateForStream(roomStreamID) {
 	if (p2pTransportState.streamID === roomStreamID) {
 		return;
@@ -19170,7 +19216,8 @@ async function applyBotActions(data, tab = false) {
 		console.error(e);
 	}
 	try {
-		if (settings.allowLLMSummary && data.chatmessage && data.chatmessage.startsWith("!summary")) {
+		const memberAllowed = !settings.memberLLMonly || data.membership || data.hasMembership;
+		if (memberAllowed && settings.allowLLMSummary && data.chatmessage && data.chatmessage.startsWith("!summary")) {
 			if (settings.modLLMonly) {
 				if (data.mod) {
 					return await processSummary(data);
@@ -19206,7 +19253,7 @@ async function applyBotActions(data, tab = false) {
 				console.log(e); // ai.js file missing?
 			}
 		}
-		if (isAiChatbotEnabled()) {
+		if (memberAllowed && isAiChatbotEnabled()) {
 			try {
 				if (settings.modLLMonly) {
 					if (data.mod) {

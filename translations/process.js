@@ -42,6 +42,7 @@ const updateList = [
     "tr",
     "uk",
     "th",
+    "ko",
     "zh-CN",
     "zh-TW",
     "test"

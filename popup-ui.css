@@ -1,6 +1,15 @@
 /* Popup-wide control styles. Keep provider panels on these same tokens. */
 /* SSApp embeds this menu in panels narrower than the extension popup. */
 body.ssapp { min-width:0; }
+/* Korean labels should wrap between words, including in narrow SSApp panels. */
+html:lang(ko) body {
+    font-family: 'Segoe UI', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
+html:lang(ko) .streaming_chat_title .title-group {
+    overflow-wrap: break-word;
+}
 #popupSearchToolbar { flex-wrap:wrap; gap:4px; }
 body .popup-panel-hidden { display:none !important; }
 #panelPreviewNotice { flex-basis:100%; font-size:.85em; }
