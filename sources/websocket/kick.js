@@ -188,7 +188,10 @@ const KICK_OAUTH_SCOPES = [
 ];
 
 const PUSHER_KEY = '34bf7a0ff419a2a775b9';
-const PUSHER_WS_BASE = 'wss://ws-us2.pusher.com';
+const PUSHER_CLUSTER = 'us2';
+const PUSHER_CONFIG_TIMEOUT_MS = 5000;
+const PUSHER_CONFIG_TTL_MS = 5 * 60 * 1000;
+const PUSHER_CONFIG_RETRY_MS = 60000;
 const PUSHER_RECONNECT_DELAY_MS = 5000;
 const PUSHER_CONNECT_TIMEOUT_MS = 30000;
 const PUSHER_PING_INTERVAL_MS = 45000;
@@ -266,6 +269,14 @@ const state = {
         lastError: '',
         connecting: false,
         pusherWs: null,
+        pusherConfig: { key: PUSHER_KEY, cluster: PUSHER_CLUSTER },
+        pusherConfigBase: '',
+        pusherConfigFetchedAt: 0,
+        pusherConfigController: null,
+        pusherConnectAttempt: 0,
+        pusherRejectedConfig: '',
+        pusherConfigRecoveryAt: 0,
+        pusherConfigError: '',
         pusherStatus: 'disconnected',
         pusherConnectTimer: null,
         pusherPingTimer: null,
@@ -3640,7 +3651,7 @@ function updateSocketState(payload = {}) {
         label = 'Chat socket connecting';
         className = 'status-chip warning';
     } else if (status === 'error') {
-        label = 'Chat socket error';
+        label = state.socket.pusherConfigError ? 'Kick settings outdated; retrying' : 'Chat socket error';
         className = 'status-chip danger';
     } else if (status === 'disconnected') {
         if (bridgeChat) {
@@ -3652,6 +3663,7 @@ function updateSocketState(payload = {}) {
         }
     }
     els.socketState.textContent = label;
+    els.socketState.title = status === 'error' ? state.socket.pusherConfigError : '';
     els.socketState.className = className;
 
     if (status !== lastSocketNotifyStatus) {
@@ -3871,6 +3883,11 @@ function clearPusherConnectTimer() {
 }
 
 function disconnectPusherSocket() {
+    state.socket.pusherConnectAttempt += 1;
+    if (state.socket.pusherConfigController) {
+        state.socket.pusherConfigController.abort();
+        state.socket.pusherConfigController = null;
+    }
     clearPusherConnectTimer();
     if (state.socket.pusherPingTimer) {
         clearInterval(state.socket.pusherPingTimer);
@@ -3901,13 +3918,13 @@ function disconnectPusherSocket() {
     state.socket.pusherActivityTimeoutMs = 0;
 }
 
-function schedulePusherReconnect(reason = 'unknown') {
+function schedulePusherReconnect(reason = 'unknown', delayMs = PUSHER_RECONNECT_DELAY_MS) {
     if (state.socket.pusherReconnectTimer) return;
-    log(`Scheduling Pusher reconnect (${reason}) in ${PUSHER_RECONNECT_DELAY_MS}ms.`);
+    log(`Scheduling Pusher reconnect (${reason}) in ${delayMs}ms.`);
     state.socket.pusherReconnectTimer = setTimeout(() => {
         state.socket.pusherReconnectTimer = null;
         connectPusherSocket();
-    }, PUSHER_RECONNECT_DELAY_MS);
+    }, delayMs);
 }
 
 function recoverPusherSocket(reason, options = {}) {
@@ -3916,7 +3933,7 @@ function recoverPusherSocket(reason, options = {}) {
     disconnectPusherSocket();
     state.socket.status = status;
     updateSocketState(error ? { status, error } : { status });
-    schedulePusherReconnect(reason);
+    schedulePusherReconnect(reason, options.delayMs);
     syncBridgeChatMode();
 }
 
@@ -4095,6 +4112,8 @@ function handlePusherMessage(event) {
         let connectionData = {};
         try { connectionData = JSON.parse(payload.data || '{}'); } catch (_) {}
         clearPusherConnectTimer();
+        state.socket.pusherRejectedConfig = '';
+        state.socket.pusherConfigError = '';
         state.socket.pusherStatus = 'connected';
         state.socket.status = 'connected';
         updateSocketState({ status: 'connected' });
@@ -4143,10 +4162,16 @@ function handlePusherMessage(event) {
     if (eventName === 'pusher:pong') return;
 
     if (eventName === 'pusher:error') {
-        const pusherError = typeof payload?.data === 'string'
-            ? payload.data
-            : (payload?.data?.message || 'Unknown');
+        let errorData = payload.data;
+        if (typeof errorData === 'string') {
+            try { errorData = JSON.parse(errorData); } catch (_) {}
+        }
+        const pusherError = typeof errorData === 'string' ? errorData : (errorData?.message || 'Unknown');
         log(`Pusher error: ${pusherError}`, 'warning');
+        if (Number(errorData?.code) === 4001 || /app key .*not in this cluster/i.test(pusherError)) {
+            rejectPusherConfig();
+            return;
+        }
         recoverPusherSocket('pusher_error', {
             status: 'error',
             error: pusherError
@@ -4165,11 +4190,44 @@ function handlePusherMessage(event) {
     }
 }
 
-function connectPusherSocket() {
+function rejectPusherConfig() {
+    const config = state.socket.pusherConfig;
+    state.socket.pusherRejectedConfig = `${config.key}:${config.cluster}`;
+    const now = Date.now();
+    const delayMs = Math.max(0, state.socket.pusherConfigRecoveryAt + PUSHER_CONFIG_RETRY_MS - now);
+    state.socket.pusherConfigRecoveryAt = now + delayMs;
+    log('Kick rejected the chat connection settings. Refreshing them from the bridge.', 'warning');
+    recoverPusherSocket('refresh_chat_config', { status: 'error', error: 'Refreshing Kick chat connection settings.', delayMs });
+}
+
+async function fetchPusherConfig(base, controller) {
+    const timer = setTimeout(() => controller.abort(), PUSHER_CONFIG_TIMEOUT_MS);
+    try {
+        const response = await fetch(`${base}/kick/chat-config`, {
+            cache: 'no-store', credentials: 'omit', signal: controller.signal
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const config = data && data.pusher;
+        // Build the host locally; a config response cannot redirect sockets to arbitrary hosts.
+        if (!config || typeof config.key !== 'string' || !/^[a-zA-Z0-9]{1,128}$/.test(config.key)
+            || typeof config.cluster !== 'string' || !/^[a-z]{2,4}[0-9]{0,2}$/.test(config.cluster)) {
+            throw new Error('Invalid Kick chat connection settings');
+        }
+        return { key: config.key, cluster: config.cluster };
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+async function connectPusherSocket() {
+    // Other channel/auth callbacks must not bypass the rejected-settings retry delay.
+    if (state.socket.pusherRejectedConfig && state.socket.pusherReconnectTimer) return;
     if (state.socket.pusherStatus === 'connected') {
         if (isPusherSocketOpen()) return;
         disconnectPusherSocket();
     } else if (state.socket.pusherStatus === 'connecting') {
+        if (state.socket.pusherConfigController) return;
         const ws = state.socket.pusherWs;
         if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) return;
         disconnectPusherSocket();
@@ -4180,10 +4238,43 @@ function connectPusherSocket() {
         return;
     }
     disconnectPusherSocket();
-    const url = `${PUSHER_WS_BASE}/app/${PUSHER_KEY}?protocol=7&client=js&version=8.4.0&flash=false`;
+    const attempt = state.socket.pusherConnectAttempt;
     state.socket.pusherStatus = 'connecting';
     state.socket.status = 'connecting';
     updateSocketState({ status: 'connecting' });
+    const base = getBridgeBaseUrl();
+    if (base !== state.socket.pusherConfigBase || state.socket.pusherRejectedConfig
+        || Date.now() - state.socket.pusherConfigFetchedAt >= PUSHER_CONFIG_TTL_MS) {
+        const controller = new AbortController();
+        state.socket.pusherConfigController = controller;
+        let config = base === state.socket.pusherConfigBase
+            ? state.socket.pusherConfig : { key: PUSHER_KEY, cluster: PUSHER_CLUSTER };
+        try {
+            config = await fetchPusherConfig(base, controller);
+        } catch (err) {
+            if (state.socket.pusherConnectAttempt !== attempt) return;
+            log(`Unable to refresh Kick chat settings (${err?.message || err}). Keeping fallback settings.`, 'warning');
+        }
+        if (state.socket.pusherConnectAttempt !== attempt) return;
+        state.socket.pusherConfigController = null;
+        if (base !== getBridgeBaseUrl() || chatroomId !== state.socket.chatroomId) {
+            disconnectPusherSocket();
+            connectPusherSocket();
+            return;
+        }
+        state.socket.pusherConfig = config;
+        state.socket.pusherConfigBase = base;
+        state.socket.pusherConfigFetchedAt = Date.now();
+    }
+    const config = state.socket.pusherConfig;
+    if (state.socket.pusherRejectedConfig === `${config.key}:${config.cluster}`) {
+        state.socket.pusherConfigError = 'Kick chat settings are outdated. Retrying automatically; update Social Stream if this continues.';
+        recoverPusherSocket('outdated_chat_config', {
+            status: 'error', error: state.socket.pusherConfigError, delayMs: PUSHER_CONFIG_RETRY_MS
+        });
+        return;
+    }
+    const url = `wss://ws-${config.cluster}.pusher.com/app/${config.key}?protocol=7&client=js&version=8.4.0&flash=false`;
     log(`Connecting Pusher chat socket for chatroom ${chatroomId}...`);
     try {
         state.socket.pusherWs = new WebSocket(url);
@@ -4212,6 +4303,10 @@ function connectPusherSocket() {
     ws.addEventListener('close', (event) => {
         if (state.socket.pusherWs !== ws) return;
         clearPusherConnectTimer();
+        if (event?.code === 4001) {
+            rejectPusherConfig();
+            return;
+        }
         log(`Pusher socket closed (code: ${event?.code || 'unknown'}).`);
         recoverPusherSocket(`close_${event?.code || 'unknown'}`);
     });
