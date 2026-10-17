@@ -921,29 +921,36 @@ p a {
 }
 
 #importantChanges.beginner-welcome {
-    padding: 0.75em 1em;
+    padding: 10px 12px;
     background: var(--color-accent-subtle);
     color: var(--default-text-color);
     border-bottom: 1px solid rgba(0, 166, 255, 0.45);
 }
 
+/* Title, one line of explanation, then the action: stacked so nothing runs together. */
 #importantChanges.beginner-welcome .beginner-welcome-card {
     max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
 }
 
 #importantChanges.beginner-welcome strong {
     display: block;
-    margin-bottom: 2px;
+    font-size: 13px;
 }
 
 #importantChanges.beginner-welcome small {
-    display: inline;
+    display: block;
+    font-size: 12px;
+    line-height: 1.4;
     color: var(--default-text-color);
 }
 
 #importantChanges.beginner-welcome button {
-    margin-left: 8px;
-    padding: 2px 8px;
+    margin: 0;
+    padding: 4px 10px;
     border-radius: 4px;
     border: 1px solid #0969da;
     background: #0969da;
@@ -2537,6 +2544,15 @@ input:checked + .slider:before {
             <button type="button" id="customizePanel" class="popup-icon-button showalways" aria-haspopup="dialog" title="Customize panel" aria-label="Customize panel"><span aria-hidden="true">🔧</span></button>
             <button type="button" id="languageIcon" class="popup-icon-button showalways" title="Select language" aria-label="Select language">🌐</button>
             <div id="panelPreviewNotice" hidden role="status"><span id="panelPreviewText"></span> <button type="button" id="hidePanelPreview" class="popup-secondary-button showalways" data-translate="hide-again">Hide again</button></div>
+            <!-- Each tab lists the data-panel-section IDs it shows; unlisted sections fall back to the last tab. -->
+            <div id="popupTabs" role="tablist" aria-label="Feature categories">
+                <button type="button" role="tab" id="popup-tab-chat" class="popup-tab showalways" data-popup-tab-sections="dock chatoverlaytemplate overlay"><span class="popup-tab-icon" aria-hidden="true">💬</span><span data-translate="popup-tab-chat">Chat</span></button>
+                <button type="button" role="tab" id="popup-tab-alerts" class="popup-tab showalways" data-popup-tab-sections="multialerts eventsdashboard hypemeter reactions emoteswall ticker credits"><span class="popup-tab-icon" aria-hidden="true">🚨</span><span data-translate="popup-tab-alerts">Alerts</span></button>
+                <button type="button" role="tab" id="popup-tab-interactive" class="popup-tab showalways" data-popup-tab-sections="poll giveaway waitlist games wordcloud map leaderboard scoreboard custom-gif-commands timer spotify"><span class="popup-tab-icon" aria-hidden="true">🎮</span><span data-translate="popup-tab-interactive">Interactive</span></button>
+                <button type="button" role="tab" id="popup-tab-money" class="popup-tab showalways" data-popup-tab-sections="tipjar monetization meta"><span class="popup-tab-icon" aria-hidden="true">💰</span><span data-translate="popup-tab-money">Money</span></button>
+                <button type="button" role="tab" id="popup-tab-bots" class="popup-tab showalways" data-popup-tab-sections="ai flowactions"><span class="popup-tab-icon" aria-hidden="true">🤖</span><span data-translate="popup-tab-bots">Bots &amp; AI</span></button>
+                <button type="button" role="tab" id="popup-tab-settings" class="popup-tab showalways" data-popup-tab-sections="global"><span class="popup-tab-icon" aria-hidden="true">🧰</span><span data-translate="popup-tab-settings">Settings</span></button>
+            </div>
         </div>
         <dialog id="panelEditor" class="popup-settings-panel" aria-labelledby="panelEditorTitle" aria-describedby="panelEditorDescription">
             <h2 id="panelEditorTitle" data-translate="customize-panel">Customize panel</h2>
@@ -11542,11 +11558,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong data-translate="popup-tip">Tip:</strong> <span data-translate="popup-great-for-keeping-track-of-supporter-activity-during-streams-or-for-creatin">Great for keeping track of supporter activity during streams or for creating an on-stream event ticker.</span></div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">💵</span>
-					<span data-translate="when-enabled-donation-events">
+				<p class="popup-section-description"><span data-translate="when-enabled-donation-events">
 						A real-time dashboard displaying donations and stream events. Create a customized view for monitoring.
 					</span>
-				</h3>
+				</p>
 			<div id="eventsdashboard" data-raw="" class="eventsdashboard"><a href="" id="eventsdashboardlink"></a></div>
 				<div id="eventsdashboard-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
@@ -12202,11 +12217,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Use to encourage chat participation or create hype-based goals during streams.</div>
 				</div>
-                <h3><span class="popup-control-icon" aria-hidden="true">↺</span>
-                    <span data-translate="viewer-overlay-automatic-counts">
+                <p class="popup-section-description"><span data-translate="viewer-overlay-automatic-counts">
                         Viewer counts start automatically when this overlay is open. Enable Track active chatters to also count recent chat participants.
                     </span>
-                </h3>
+                </p>
                 <div id="hypemeter" data-raw="" class="hype_meter"></div>
 				<div id="hypemeter-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -12572,11 +12586,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> If no event filter is checked, the overlay defaults to auction + commerce + viewer + Hype Train meta.</div>
 				</div>
-					<h3><span class="popup-control-icon" aria-hidden="true">🏆</span>
-						<span>
+					<p class="popup-section-description"><span>
 							Displays metadata-only events (no chat message required), such as auction status and catalog summaries.
 						</span>
-					</h3>
+					</p>
 					<div id="meta" data-raw="" class="streaming_chat"><a href="" id="metalink"></a></div>
 				<div id="meta-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 					<div class="sticky-action-row top-67">
@@ -12828,11 +12841,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Perfect for charity streams or setting up sub/donation goals for your community.</div>
 				</div>
-                <h3><span class="popup-control-icon" aria-hidden="true">💵</span>
-                    <span data-translate="when-enabled-a-tally-tipjar">
-                        When enabled, a tally of donations receieved is kept.
+                <p class="popup-section-description"><span data-translate="when-enabled-a-tally-tipjar">
+                        When enabled, a tally of donations received is kept.
                     </span>
-                </h3>
+                </p>
                 <div id="tipjar" data-raw="" class="tipjar"></div>
 				<div id="tipjar-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -13265,13 +13277,12 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Great for viewer games, giveaways, or managing who gets to participate in activities.</div>
 				</div>
-                <h3><span class="popup-control-icon" aria-hidden="true">↺</span>
-                    <span data-translate="when-enabled-guests-can-type">When enabled, guests can type </span>
+                <p class="popup-section-description"><span data-translate="when-enabled-guests-can-type">When enabled, guests can type </span>
                     <i>
                         <b><span data-translate="join">!join</span></b>
                     </i>
                     <span data-translate="in-chat-to-be-added-to-an-ordered-list-of-users-stopstart-to-reset-the-queue"> (or a custom command) in chat to be added to an ordered list of users. Stop/start to reset the queue/draw.</span>
-                </h3>
+                </p>
                 <div id="waitlist" data-raw="" class="waitlist"></div>
 				<div id="waitlist-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -13309,10 +13320,9 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-setting="waitlistmode" />
                                         <span class="slider round"></span>
                                     </label>
-                                    🚦
                                     <div class="textInputContainer" style="display: inline-grid; width: 215px;">
                                         <input type="text" id="customwaitlistcommand" class="textInput" autocomplete="off" placeholder="Set a different !trigger command here" data-textsetting="customwaitlistcommand" />
-                                        <label for="customwaitlistcommand"><span class="popup-control-icon" aria-hidden="true">⚙️</span><span data-translate="enables-the-wait-list-feature">&gt; Enables this page</span></label>
+                                        <label for="customwaitlistcommand"><span class="popup-control-icon" aria-hidden="true">🚦</span><span data-translate="enables-the-wait-list-feature">&gt; Enables this page</span></label>
                                     </div>
                                 </div>
 
@@ -13548,13 +13558,12 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-warning">⚠️ <strong>Requires setup:</strong> Use the Event Flow Editor (in the extension menu) to create your automations first.</div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">💬</span>
-                    <span data-translate="flowactions-description">This page is the output for actions triggered by the Flow Editor page.</span>
+				<p class="popup-section-description"><span data-translate="flowactions-description">This page is the output for actions triggered by the Flow Editor page.</span>
                     <br>
-                    <span style="font-size: 0.9em; font-weight: 400;">
+                    <span>
                        Note: To access the Event Flow Editor, <a href="#" id="open-event-flow-editor-link" class="lightblue">click here</a>.
                     </span>
-                </h3>
+                </p>
                 <div id="flowactions" data-raw="" class="flowactions_chat"><a href="" id="flowactionslink"></a></div>
 				<div id="flowactions-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -14236,11 +14245,11 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-warning">⚠️ <strong>Note:</strong> Community-contributed feature - may have occasional bugs.</div>
 				</div>
-				<h3>
+				<p class="popup-section-description">
                     <span data-translate="giveaway-tools-description">
                        Run giveaways and point games with a winner card, name reel, or community wheel. Control them here or with the API / Stream Deck.
                     </span>
-                </h3>
+                </p>
                 <div id="giveaway" data-raw="" class="streaming_chat"><a href="" id="giveawaylink"></a></div>
 				<div id="giveaway-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -14329,11 +14338,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Great for audience decisions, game choices, or just fun community engagement.</div>
 				</div>
-                <h3><span class="popup-control-icon" aria-hidden="true">👤</span>
-                    <span data-translate="when-enabled-a-poll">
-                       A graphic poll. Users can enter a hash-tagged word to vote it it.
+                <p class="popup-section-description"><span data-translate="when-enabled-a-poll">
+                       A graphic poll. Users can enter a hash-tagged word to vote.
                     </span>
-                </h3>
+                </p>
 				<div id="poll" data-raw="" class="streaming_chat"><a href="" id="polllink"></a></div>
 				<div id="poll-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -14477,11 +14485,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Fun way to show your community how global your audience is!</div>
 				</div>
-                <h3><span class="popup-control-icon" aria-hidden="true">👤</span>
-                    <span data-translate="when-enabled-a-map">
+                <p class="popup-section-description"><span data-translate="when-enabled-a-map">
                        A graphical map. Users can enter their location to mark on it.
                     </span>
-                </h3>
+                </p>
 				<div id="map" data-raw="" class="streaming_chat"><a href="" id="maplink"></a></div>
 				<div id="map-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -14670,11 +14677,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Great for ending streams with a thank-you to your community!</div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">👁️</span>
-					<span data-translate="when-enabled-a-credits">
+				<p class="popup-section-description"><span data-translate="when-enabled-a-credits">
 					   A credits roll overlay. Show appreciation to your chat participants and donors.
 					</span>
-				</h3>
+				</p>
 				<div id="credits" data-raw="" class="streaming_chat"><a href="" id="creditslink"></a></div>
 				<div id="credits-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
@@ -14906,11 +14912,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Encourages engagement by showing viewers how they rank in your community!</div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">🏆</span>
-					<span data-translate="when-enabled-a-leaderboard">
+				<p class="popup-section-description"><span data-translate="when-enabled-a-leaderboard">
 					   An interactive leaderboard overlay. Track and display top contributors, chatters, or custom scores.
 					</span>
-				</h3>
+				</p>
 				<div id="leaderboard" data-raw="" class="streaming_chat"><a href="" id="leaderboardlink"></a></div>
 				<div id="leaderboard-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
@@ -15131,11 +15136,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Enable the global Points System above to show persistent loyalty points, or use the local fallback options below for temporary chat activity scores.</div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">💵</span>
-					<span data-translate="when-enabled-a-scoreboard">
+				<p class="popup-section-description"><span data-translate="when-enabled-a-scoreboard">
 					   A real-time points tracking scoreboard for loyalty points, chat activity, donations, and custom Event Flow score payloads.
 					</span>
-				</h3>
+				</p>
 				<div id="scoreboard" data-raw="" class="streaming_chat"><a href="" id="scoreboardlink"></a></div>
 				<div id="scoreboard-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
@@ -15913,11 +15917,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Perfect for BRB screens or dedicated game segments!</div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">👤</span>
-					<span data-translate="interactive-chat-games">
+				<p class="popup-section-description"><span data-translate="interactive-chat-games">
 					   Interactive chat-based games for viewer engagement. Choose from various mini-games.
 					</span>
-				</h3>
+				</p>
 				<div id="games" data-raw="" class="streaming_chat"><a href="" id="gameslink"></a></div>
 
 				<!-- Games Preset Selector -->
@@ -16330,11 +16333,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Use for stream announcements, social media handles, or a scrolling chat feed.</div>
 				</div>
-                <h3><span class="popup-control-icon" aria-hidden="true">📡</span>
-                    <span data-translate="when-enabled-a-ticker">
+                <p class="popup-section-description"><span data-translate="when-enabled-a-ticker">
                        A ticker banner. Select the source for the ticker text messages
                     </span>
-                </h3>
+                </p>
 				<div id="ticker" data-raw="" class="streaming_chat"><a href="" id="tickerlink"></a></div>
 				<div id="ticker-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -16514,11 +16516,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Ask your chat a question and watch the most popular answers grow in the cloud!</div>
 				</div>
-                <h3><span class="popup-control-icon" aria-hidden="true">💬</span>
-                    <span data-translate="when-enabled-a-wordcloud">
+                <p class="popup-section-description"><span data-translate="when-enabled-a-wordcloud">
                        A wordcloud overlay. Chat messages that contain a single word are counted by default.
                     </span>
-                </h3>
+                </p>
 				<div id="wordcloud" data-raw="" class="streaming_chat"><a href="" id="wordcloudlink"></a></div>
 				<div id="wordcloud-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -16615,11 +16616,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Create fun reactions for your community - like a celebration GIF when someone says !party.</div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">🖼️</span>
-					<span data-translate="when-enabled-custom-commands">
+				<p class="popup-section-description"><span data-translate="when-enabled-custom-commands">
 						When enabled, custom commands will trigger specific GIFs or media in the overlay.
 					</span>
-				</h3>
+				</p>
 				<div id="custom-gif-commands" data-raw="" class="streaming_chat"><a href="" id="custom-gif-commandslink"></a></div>
 				<div id="custom-gif-commands-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
@@ -16684,7 +16684,7 @@ input:checked + .slider:before {
 						<li>Works with the <code>&amp;server</code> API path for remote control</li>
 					</ul>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">⏱️</span><span>A focused timer overlay for breaks, interviews, countdowns, and on-stream pacing.</span></h3>
+				<p class="popup-section-description"><span>A focused timer overlay for breaks, interviews, countdowns, and on-stream pacing.</span></p>
 				<div id="timer" data-raw="" class="streaming_chat"><a href="" id="timerlink"></a></div>
 				<div id="timer-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
@@ -16803,7 +16803,7 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-warning">⚠️ <strong>Requires setup:</strong> You need to authorize your Spotify account in the setup section below.</div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">🔌</span><span>Connect your Spotify account to create a widget overlay or announce to chat the current song.</span></h3>
+				<p class="popup-section-description"><span>Connect your Spotify account to create a widget overlay or announce to chat the current song.</span></p>
 				<div id="spotify" data-raw="" class="streaming_chat"><a href="" id="spotifylink"></a></div>
 				<div id="spotify-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>

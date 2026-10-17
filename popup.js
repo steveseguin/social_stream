@@ -5423,6 +5423,179 @@ function setupPopupPanelEditor() {
 	});
 }
 
+// Feature tabs: one category of sections at a time, each section collapsible to its heading row.
+var popupTabState = null;
+var popupTabSections = {};
+
+function getPopupTabButtons() {
+	return Array.from(document.querySelectorAll('#popupTabs [role="tab"]'));
+}
+
+function savePopupTabState() {
+	try {
+		localStorage.setItem('popupTabState', JSON.stringify(popupTabState));
+	} catch (e) {}
+}
+
+function loadPopupTabState() {
+	var state = null;
+	try {
+		state = JSON.parse(localStorage.getItem('popupTabState'));
+	} catch (e) {}
+	if (!state || typeof state.tab !== 'string' || !Array.isArray(state.open)) {
+		state = { tab: 'popup-tab-chat', open: ['dock'] };
+	}
+	return state;
+}
+
+function getPopupSectionTab(sectionId) {
+	var tabs = getPopupTabButtons();
+	return tabs.find(function(tab) { return popupTabSections[tab.id].indexOf(sectionId) !== -1; }) || tabs[tabs.length - 1];
+}
+
+function isPopupTabSectionVisible(section) {
+	return popupPanelPreview === section.id || isPopupPanelSectionShown(section);
+}
+
+function setPopupFeatureOpen(section, open) {
+	var index = popupTabState.open.indexOf(section.id);
+	if (open && index === -1) popupTabState.open.push(section.id);
+	if (!open && index !== -1) popupTabState.open.splice(index, 1);
+	showPopupFeatureOpen(section, open);
+}
+
+function showPopupFeatureOpen(section, open) {
+	if (!section.heading) return;
+	var head = section.heading.parentElement;
+	head.classList.toggle('popup-feature-collapsed', !open);
+	section.elements.forEach(function(element) {
+		if (element !== head) element.classList.toggle('popup-feature-hidden', !open);
+	});
+	var toggle = section.heading.querySelector('.popup-feature-toggle');
+	if (toggle) toggle.setAttribute('aria-expanded', String(open));
+}
+
+function applyPopupTabs() {
+	if (!popupTabState) return;
+	var bar = document.getElementById('popupTabs');
+	var sections = getPopupPanelSections();
+	var tabs = getPopupTabButtons();
+	var visibleTabs = tabs.filter(function(tab) {
+		tab.hidden = !sections.some(function(section) {
+			return getPopupSectionTab(section.id) === tab && isPopupTabSectionVisible(section);
+		});
+		return !tab.hidden;
+	});
+	var active = visibleTabs.find(function(tab) { return tab.id === popupTabState.tab; }) || visibleTabs[0];
+	// With one category left there is nothing to switch between, so show everything.
+	bar.hidden = visibleTabs.length < 2;
+	tabs.forEach(function(tab) {
+		tab.setAttribute('aria-selected', String(tab === active));
+		tab.tabIndex = tab === active ? 0 : -1;
+	});
+	if (active) document.querySelector('.container').setAttribute('aria-labelledby', active.id);
+	var inView = function(section) { return bar.hidden || getPopupSectionTab(section.id) === active; };
+	var shown = sections.filter(function(section) { return inView(section) && isPopupTabSectionVisible(section); });
+	sections.forEach(function(section) {
+		section.elements.forEach(function(element) { element.classList.toggle('popup-tab-hidden', !inView(section)); });
+		// The tab bar already draws a line above the first section.
+		if (section.heading) section.heading.parentElement.classList.toggle('popup-feature-first', section === shown[0]);
+		// A lone section opens by itself; a collapsed row would just be an extra click.
+		showPopupFeatureOpen(section, popupTabState.open.indexOf(section.id) !== -1 || (shown.length === 1 && shown[0] === section));
+	});
+}
+
+function selectPopupTab(tab, focus) {
+	popupTabState.tab = tab.id;
+	applyPopupTabs();
+	savePopupTabState();
+	if (focus) tab.focus();
+	// Start the new tab at its first section rather than partway down the page.
+	var offset = document.querySelector('.container').getBoundingClientRect().top - document.getElementById('popupSearchToolbar').getBoundingClientRect().bottom;
+	if (offset < 0) {
+		var scroller = document.documentElement.classList.contains('extension-popup-surface') ? document.body : (document.scrollingElement || document.documentElement);
+		scroller.scrollTop += offset;
+	}
+}
+
+function revealPopupFeature(element) {
+	var section = popupTabState && getPopupPanelSection(element);
+	if (!section) return;
+	popupTabState.tab = getPopupSectionTab(section.id).id;
+	setPopupFeatureOpen(section, true);
+	applyPopupTabs();
+	savePopupTabState();
+}
+
+function setupPopupTabs() {
+	var bar = document.getElementById('popupTabs');
+	var panel = document.querySelector('.container');
+	if (!bar || !panel) return;
+	popupTabState = loadPopupTabState();
+	bar.setAttribute('aria-label', getTranslation('popup-tabs-label', 'Feature categories'));
+	panel.id = panel.id || 'popupTabPanel';
+	panel.setAttribute('role', 'tabpanel');
+	getPopupTabButtons().forEach(function(tab) {
+		popupTabSections[tab.id] = (tab.dataset.popupTabSections || '').split(/\s+/).filter(Boolean);
+		tab.setAttribute('aria-controls', panel.id);
+		tab.addEventListener('click', function() { selectPopupTab(tab); });
+		// Labels are clipped in narrow panels and long translations; hovering shows the full name.
+		tab.addEventListener('mouseenter', function() { tab.title = tab.querySelector('.popup-tab-icon + span').textContent.trim(); });
+	});
+	bar.addEventListener('keydown', function(event) {
+		var tabs = getPopupTabButtons().filter(function(tab) { return !tab.hidden; });
+		var index = tabs.indexOf(document.activeElement);
+		var step = getComputedStyle(bar).direction === 'rtl' ? -1 : 1;
+		var next = { ArrowLeft: index - step, ArrowRight: index + step, Home: 0, End: tabs.length - 1 }[event.key];
+		if (index === -1 || next === undefined) return;
+		event.preventDefault();
+		selectPopupTab(tabs[(next + tabs.length) % tabs.length], true);
+	});
+	getPopupPanelSections().forEach(function(section) {
+		if (!section.heading) return;
+		var heading = section.heading;
+		var head = heading.parentElement;
+		var title = heading.querySelector(':scope > .title-group') || heading.firstElementChild;
+		var toggle = document.createElement('button');
+		toggle.type = 'button';
+		toggle.className = 'popup-feature-toggle showalways';
+		if (title) {
+			title.id = title.id || 'popup-feature-title-' + section.id;
+			toggle.setAttribute('aria-labelledby', title.id);
+		}
+		heading.insertBefore(toggle, heading.firstChild);
+		// Group the heading links so, when space runs out, they drop under the title together instead of squeezing it.
+		var actions = document.createElement('span');
+		actions.className = 'popup-feature-actions';
+		while (title && title.nextSibling) actions.appendChild(title.nextSibling);
+		if (actions.textContent.trim()) heading.appendChild(actions);
+		head.classList.add('popup-feature-head');
+		heading.addEventListener('click', function(event) {
+			var control = event.target.closest('a, button, label, input, select, textarea');
+			if (control && control !== toggle) {
+				// Copying works from the collapsed row; help, edit and jump links need the section open.
+				if (!control.matches('[data-copy], #copy-stream-id')) revealPopupFeature(heading);
+				return;
+			}
+			setPopupFeatureOpen(section, head.classList.contains('popup-feature-collapsed'));
+			savePopupTabState();
+		});
+	});
+	// In-page links (e.g. "#botnamesext") may point into another tab or a collapsed section.
+	document.addEventListener('click', function(event) {
+		var link = event.target.closest && event.target.closest('a[href^="#"]');
+		var target = link && link.getAttribute('href').length > 1 && document.getElementById(link.getAttribute('href').slice(1));
+		if (!target) return;
+		revealPopupFeature(target);
+		var group = target.closest('.wrapper');
+		var groupToggle = group && group.querySelector('input.collapsible-input');
+		if (groupToggle) groupToggle.checked = true;
+	}, true);
+	document.addEventListener('popup-beginner-mode-changed', applyPopupTabs);
+	document.addEventListener('popup-panel-visibility-changed', applyPopupTabs);
+	applyPopupTabs();
+}
+
 var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 	"wrapper-additional-chat-services-options": [
 		'[data-setting="xcapture"]',
@@ -6479,6 +6652,7 @@ function scrollToSetting(targetSection, targetSetting) {
     // Find the setting element
     const settingElement = document.querySelector(`[data-setting="${targetSetting}"]`);
     if (settingElement) {
+        revealPopupFeature(settingElement);
         // Scroll to the setting
         settingElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -6890,6 +7064,7 @@ function setupFirstTimerControls() {
             const databaseRow = document.getElementById("databaseSettingsRow");
             if (databaseRow) {
                 event.preventDefault();
+                revealPopupFeature(databaseRow);
                 databaseRow.scrollIntoView();
             }
         };
@@ -11942,6 +12117,7 @@ async function testThermalPrinterAlignment() {
 
 document.addEventListener("DOMContentLoaded", async function(event) {
     setupPopupPanelEditor();
+    setupPopupTabs();
     reorderGlobalSettingsSections();
     loadSourcesListFromRuntimeManifest();
 	setupDynamicCustomUrlControls();
@@ -12894,6 +13070,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		var panelSection = getPopupPanelSection(target);
 		popupPanelPreview = panelSection && !isPopupPanelSectionShown(panelSection) ? panelSection.id : '';
 		applyPopupPanelVisibility();
+		revealPopupFeature(target || wrapper);
 		if (wrapper) {
 			openPopupSearchSection(wrapper);
 		}
@@ -13435,6 +13612,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		activeToggle = enabled;
 		document.getElementById('activeIcon').setAttribute('aria-pressed', String(enabled));
+		// The enabled-only view spans every tab and expands every section.
+		document.body.classList.toggle('popup-enabled-filter', enabled);
 		if (activeToggle) {
 			// Remember open sections and scroll position so toggling off restores them
 			activeToggleOpenState = [];

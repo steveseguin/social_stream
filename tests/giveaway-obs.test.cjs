@@ -52,6 +52,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   const popup=await context.newPage();await popup.goto('chrome-extension://'+extensionId+'/popup.html');
   await popup.waitForFunction(()=>window.popupStartupSettingsHydrated&&document.body.classList.contains('loaded'));
   if(await popup.locator('#beginnerWelcomeAdvanced').isVisible())await popup.locator('#beginnerWelcomeAdvanced').click();
+  await popup.click('#popup-tab-interactive');await popup.click('.link[data-panel-section="giveaway"] .popup-feature-toggle');
   await popup.locator('label[for="wrapper-giveaway-options"]').click();
   const imagePage=await context.newPage();
   const base='http://127.0.0.1:'+server.address().port+'/giveaway.html?session=obs-qa&managed&server='+encodeURIComponent('ws://127.0.0.1:'+relay.address().port);

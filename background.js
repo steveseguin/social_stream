@@ -15755,6 +15755,8 @@ async function processIncomingRequest(request, UUID = false) {
 			if (request.value) {
 				forwardSourceControlToWebsocketPages("deleteMessage", request.value);
 			}
+		} else if (request.action === "pinSourceMessage" || request.action === "unpinSourceMessage") {
+			forwardSourceControlToWebsocketPages(request.action === "pinSourceMessage" ? "pinMessage" : "unpinMessage", request.value);
 		} else if (request.action === "obsCommand") {
 			if (isExtensionOn) {
 				fowardOBSCommand(request);
@@ -16135,6 +16137,15 @@ function broadcastSourceControlMessageToWebsocketPages(message, platforms) {
 
 function forwardSourceControlToWebsocketPages(control, payload) {
 	if (!payload || typeof payload !== "object") {
+		return;
+	}
+	// Pins must stay with the originating Twitch connection; never broadcast them.
+	if (control === "pinMessage" || control === "unpinMessage") {
+		const tabId = Number(payload.tid);
+		if (payload.type !== "twitch" || !Number.isInteger(tabId) || tabId <= 0) return;
+		sendSourceControlMessageToTab(tabId, {
+			type: "SOURCE_CONTROL", control: control, platform: "twitch", payload: payload
+		}, new Set(["twitch"]));
 		return;
 	}
 	const platforms = new Set(getSourceControlPlatforms(payload.type || payload.platform || ""));
