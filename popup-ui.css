@@ -190,3 +190,48 @@ body .wrapper.beginner-basic[data-panel-section="multialerts"] { flex-direction:
 /* Leave room for the expand arrow when translated headings wrap. */
 body .collapsible-label { padding-inline-end:32px; }
 [dir="rtl"] .collapsible-label::after { right:auto; left:8px; }
+
+/* Feature tabs, plus sections that collapse to their heading row. */
+#popupTabs { flex-basis:100%; display:flex; min-width:0; border-bottom:1px solid var(--collapsible-border-color); }
+#popupTabs[hidden], #popupTabs .popup-tab[hidden], body.popup-enabled-filter #popupTabs { display:none; }
+#popupTabs .popup-tab { flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:1px; margin:0 0 -1px; padding:3px 2px 4px; border:0; border-bottom:2px solid transparent; border-radius:0; background:transparent; color:var(--default-text-color); font:inherit; font-size:10.5px; line-height:1.15; cursor:pointer; }
+#popupTabs .popup-tab-icon { font-size:16px; line-height:1.1; }
+#popupTabs .popup-tab-icon + span { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@media (max-width:360px) {
+    #popupTabs .popup-tab-icon { font-size:18px; }
+    #popupTabs .popup-tab-icon + span { position:absolute; width:1px; height:1px; clip:rect(0 0 0 0); }
+}
+#popupTabs .popup-tab:hover { color:var(--color-accent); }
+#popupTabs .popup-tab[aria-selected="true"] { border-bottom-color:var(--color-accent); color:var(--color-accent); font-weight:600; }
+#popupTabs .popup-tab:focus-visible { outline:2px solid var(--color-accent); outline-offset:1px; }
+#popupTabs .popup-tab:focus:not(:focus-visible) { outline:none; }
+body:not(.popup-enabled-filter) .popup-tab-hidden,
+body:not(.popup-enabled-filter) .popup-feature-hidden,
+/* Collapsed sections keep their title, links and URL; descriptions and options fold away. */
+body:not(.popup-enabled-filter) .popup-feature-collapsed > :not(h2):not([data-raw]) { display:none !important; }
+body.popup-enabled-filter .popup-feature-toggle { display:none; }
+/* Section headings keep their usual look. A divider marks where each section starts (and the previous one ends);
+   spacing is identical open or closed so the title never moves when toggled. */
+body .container > .popup-feature-head { margin:12px 0 0; padding:12px 0 0; border-top:1px solid var(--collapsible-border-color); }
+body .container > .popup-feature-head.popup-feature-first { margin-top:6px; padding-top:0; border-top:0; }
+/* The URL stays right under the title whether the section is open or closed. */
+body .container > .popup-feature-head { display:flex; flex-direction:column; }
+body .container > .popup-feature-head > h2 { order:-2; }
+body .container > .popup-feature-head > [data-raw] { order:-1; }
+/* One quiet line describes each section; the beginner notes on the core sections match it. */
+body .container .popup-section-description,
+body .container > .popup-feature-head > .beginner-section-note { margin:6px 0 8px; font-size:12px; font-weight:400; line-height:1.4; color:var(--text-secondary); opacity:1; }
+body .container > .popup-feature-head > h2 { flex-wrap:wrap; gap:3px 6px; margin:0 0 6px; cursor:pointer; }
+.popup-feature-head > h2 > .popup-feature-toggle + * { flex:1 1 auto; min-width:0; }
+.popup-feature-actions { display:flex; flex-basis:100%; flex-wrap:wrap; align-items:center; gap:4px; padding-inline-start:26px; }
+body .container .popup-feature-actions > * { margin:0; }
+body .container .popup-feature-actions .rounded_area { padding:1px 6px; font-size:.7rem; }
+/* A clipboard marks copy link so it reads at a glance. */
+.popup-feature-actions .copy-link[data-copy]::before { content:"\1F4CB"; margin-inline-end:3px; }
+.popup-feature-head > h2 .rounded_area { white-space:nowrap; }
+.popup-feature-toggle { flex:0 0 auto; width:20px; height:20px; margin:0; padding:0; border:0; border-radius:4px; background:transparent; cursor:pointer; }
+/* Same chevron as the option bars below, so both levels read as one family. */
+.popup-feature-toggle::before { content:""; display:block; width:16px; height:16px; margin:2px; background:url(icons/wrapper_button.png) no-repeat 0 0 / 16px; transition:transform .15s; }
+.popup-feature-toggle[aria-expanded="true"]::before { transform:rotate(90deg); }
+[dir="rtl"] .popup-feature-toggle[aria-expanded="false"]::before { transform:scaleX(-1); }
+.popup-feature-toggle:focus-visible { outline:2px solid var(--color-accent); outline-offset:1px; }

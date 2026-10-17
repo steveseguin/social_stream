@@ -9990,18 +9990,29 @@
 				return response;
 			}
 
-			function unpinIt(element) {
+			function unpinIt(element, syncSource = false) {
+				var wasPinned = element.classList.contains("pinned");
 				element.classList.remove("pinned");
 				getById("output").prepend(element);
 				element.title = "Alt + Click to pin message";
 				applyHiddenState(element);
+				if (syncSource && wasPinned) syncTwitchPin(element, false);
 			}
 
-			function pinIt(element) {
+			function pinIt(element, syncSource = false) {
+				var wasPinned = element.classList.contains("pinned");
 				element.classList.add("pinned");
 				element.title = "Alt + Click to remove pinned message";
 				getById("pinned").appendChild(element);
 				applyHiddenState(element);
+				if (syncSource && !wasPinned) syncTwitchPin(element, true);
+			}
+
+			function syncTwitchPin(element, pinned) {
+				const payload = buildSourceControlPayload(element);
+				if (payload && payload.type === "twitch" && payload.tid) {
+					send2Extension({ action: pinned ? "pinSourceMessage" : "unpinSourceMessage", value: payload });
+				}
 			}
 
 			function normalizeSourceControlType(type) {
@@ -10525,12 +10536,12 @@
 					return;
 				} else if (event && event.altKey) {
 					if (element.classList.contains("pinned")) {
-						unpinIt(element);
+						unpinIt(element, true);
 						if (element.dataset.mid) {
 							syncDataAny({ unpin: [element.dataset.mid] });
 						}
 					} else {
-						pinIt(element);
+						pinIt(element, true);
 						if (element.dataset.mid && element.rawContents) {
 							syncDataAny({ pin: [element.rawContents] });
 						} else if (element.dataset.mid) {
@@ -13819,10 +13830,10 @@
 							copyTextToClipboard(taskItemInContext);
 						} else if (action === "Pin") {
 							if (taskItemInContext.classList.contains("pinned")) {
-								unpinIt(taskItemInContext);
+								unpinIt(taskItemInContext, true);
 								syncDataAny({ unpin: [taskItemInContext.dataset.mid] });
 							} else {
-								pinIt(taskItemInContext);
+								pinIt(taskItemInContext, true);
 								syncDataAny({ pin: [taskItemInContext.rawContents] });
 							}
 						} else if (link.getAttribute("data-action") === "TTS") {
