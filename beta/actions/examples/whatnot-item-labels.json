@@ -1,0 +1,100 @@
+{
+  "name": "Whatnot: Item Labels + Payment Warnings",
+  "description": "Print a buyer/item label on product_sold and a separate warning on payment_failed. Configure Printer Control, then enable this flow. A sale label is not proof of payment. Order IDs print only when supplied; this flow does not wait for or match payment updates.",
+  "active": false,
+  "nodes": [
+    {
+      "id": "trigger_sale",
+      "type": "trigger",
+      "triggerType": "eventType",
+      "label": "Item sold",
+      "x": 80,
+      "y": 60,
+      "config": { "eventType": "product_sold" }
+    },
+    {
+      "id": "trigger_whatnot",
+      "type": "trigger",
+      "triggerType": "fromSource",
+      "label": "Source is Whatnot",
+      "x": 80,
+      "y": 240,
+      "config": { "source": "whatnot" }
+    },
+    {
+      "id": "trigger_payment_failed",
+      "type": "trigger",
+      "triggerType": "eventType",
+      "label": "Payment failed",
+      "x": 80,
+      "y": 420,
+      "config": { "eventType": "payment_failed" }
+    },
+    {
+      "id": "logic_whatnot_sale",
+      "type": "logic",
+      "logicType": "AND",
+      "label": "Whatnot item sold",
+      "x": 380,
+      "y": 100,
+      "config": {}
+    },
+    {
+      "id": "logic_whatnot_payment_failed",
+      "type": "logic",
+      "logicType": "AND",
+      "label": "Whatnot payment failed",
+      "x": 380,
+      "y": 380,
+      "config": {}
+    },
+    {
+      "id": "action_sale_label",
+      "type": "action",
+      "actionType": "printThermal",
+      "label": "Print item label",
+      "x": 680,
+      "y": 100,
+      "config": {
+        "text": "**{username}**\n{subtitle}\n{meta.orderId}",
+        "fontSize": 12,
+        "fontFamily": "monospace",
+        "fontWeight": "selected",
+        "textAlign": "left",
+        "lineHeight": 1.1,
+        "copies": 1,
+        "printerName": "",
+        "labelHeight": 0
+      }
+    },
+    {
+      "id": "action_payment_warning",
+      "type": "action",
+      "actionType": "printThermal",
+      "label": "Print separate warning",
+      "x": 680,
+      "y": 380,
+      "config": {
+        "text": "**PAYMENT FAILED**\n{username}\n{subtitle}\n{meta.orderId}",
+        "fontSize": 12,
+        "fontFamily": "monospace",
+        "fontWeight": "selected",
+        "textAlign": "left",
+        "lineHeight": 1.1,
+        "copies": 1,
+        "printerName": "",
+        "labelHeight": 0
+      }
+    }
+  ],
+  "connections": [
+    { "from": "trigger_sale", "to": "logic_whatnot_sale" },
+    { "from": "trigger_whatnot", "to": "logic_whatnot_sale" },
+    { "from": "logic_whatnot_sale", "to": "action_sale_label" },
+    { "from": "trigger_payment_failed", "to": "logic_whatnot_payment_failed" },
+    { "from": "trigger_whatnot", "to": "logic_whatnot_payment_failed" },
+    { "from": "logic_whatnot_payment_failed", "to": "action_payment_warning" }
+  ],
+  "version": "1.0.0",
+  "exportedBy": "Social Stream Event Flow System"
+}
