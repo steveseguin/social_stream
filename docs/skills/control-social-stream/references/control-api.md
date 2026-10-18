@@ -43,6 +43,44 @@ The events endpoint is a Server-Sent Events stream. It emits bounded, resumable 
 
 ## Commands
 
+### Settings export
+
+Requires API 1.5.0 / MCP 1.4.0 in the updated SSApp 0.4.38 development build.
+Check for `exportSettingsBackup` in capabilities; published 0.4.38 alone is insufficient.
+
+| API action | MCP tool | Arguments and result |
+| --- | --- | --- |
+| `exportSettingsBackup` | `ssapp_export_settings_backup` | `{confirm:true}` creates an immutable settings backup. Returns `status: "completed"`, opaque `artifactId`, `fileName`, `mimeType`, byte `size`, `sha256`, `expiresAt`, and `chunkBytes`. No backup bytes in this response. |
+| `readSettingsExport` | `ssapp_read_settings_export` | `{artifactId,offset?,length?}` reads base64 bytes with metadata, `offset`, `nextOffset`, and `eof`. Offset defaults to 0; length defaults to 262144, maximum 262144. Length 0 reads metadata only. |
+| `releaseSettingsExport` | `ssapp_release_settings_export` | `{artifactId,confirm:true}` discards the retained backup; returns `status: "released"`. Use when finished or abandoning transfer. |
+
+These use `POST /api/v1/command` with the normal `{action,value}` envelope. Export
+requires user authorization because the backup contains the same saved settings and
+credentials as File > Settings Backup > Export Settings. It excludes browser-session
+files, as the ordinary settings export does. No save dialog or notification is opened.
+No filesystem path is accepted by these commands; unrelated downloads are not registered.
+
+Read chunks in order, write decoded bytes to a private file, and verify byte length and
+SHA-256 before delivering it. Do not print file contents. Chunks can be retried at the
+same offset. Up to four backups of 8 MiB each remain in memory for five minutes from
+creation, then expire. App restart also invalidates them. Release ends future retrieval;
+it does not remove copies already transferred or transport results already cached.
+`EXPORT_LIMIT`, `EXPORT_TOO_LARGE`, `EXPORT_TIMEOUT`, `EXPORT_FAILED`, and
+`EXPORT_NOT_FOUND` indicate failure, never a completed backup. A collection timeout
+retains no late export; a still-pending renderer read must finish before another export.
+
+With Ninja MCP, the host must grant a controller `allowSettingsExport: true` separately
+from `allowHostFiles`. Claim control before export/release. Only that client can read or
+release its exports; observers cannot use them. Use `ninja_ssapp_save_settings_export`
+with `{artifactId,destination}` to save on the **agent computer**, returning metadata only.
+Destination must be an absolute new path in an existing directory that supports hard links.
+The helper verifies the complete file before publishing it and never overwrites existing files.
+Local API clients share the existing loopback trust boundary; per-client ownership is
+enforced by the remote bridge. These permissions govern the dedicated export tools,
+not arbitrary actions already permitted by broader controller access.
+
+### Other commands
+
 For general browser interaction in API 1.4.0, see [browser-control.md](browser-control.md).
 It covers source, sign-in, popup, embedded-view and main-app targets using the same input
 and screenshot tools, plus navigation, native menus, uploads, and live viewport streams.
