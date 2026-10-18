@@ -21,6 +21,15 @@ the API. Pass both mode flags when a local agent needs to control a headless ins
 
 ## Discovery and status
 
+API 1.4.1 adds `GET /api/v1/instance`, available without consulting the renderer.
+Its random `instanceId` changes when the local API starts again. Responses also
+include this ID and the `X-SSApp-Instance-Id` header. A bridge can send that header
+on subsequent requests; a mismatch returns HTTP 409 / `SSAPP_INSTANCE_CHANGED`
+before command execution. The MCP adapter forwards `SSAPP_EXPECTED_INSTANCE_ID`
+as this header and preserves the structured error. After a mismatch, rediscover
+the app and its targets before continuing. This check is optional for ordinary
+local clients and does not authenticate remote callers.
+
 ```text
 GET /api/v1/capabilities
 GET /api/v1/status

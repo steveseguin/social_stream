@@ -4,6 +4,7 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
+| 1.4.1 / MCP 1.3.1 | 0.4.37 with instance binding | Adds renderer-independent `/api/v1/instance`, `instanceId` in API responses, and optional `X-SSApp-Instance-Id` / `SSAPP_EXPECTED_INSTANCE_ID` binding; stale requests fail before execution after app restart. Existing tool schemas and ordinary local clients are unchanged. |
 | 1.4.0 / MCP 1.3.0 | 0.4.37 with browser controls | Adds common browser targets, screenshots with coordinate mapping, native mouse/keyboard/touch batches, navigation, window control, menus, upload selection, and on-demand JPEG frame streams; requires the updated development build and advertised commands |
 | 1.3.1 / MCP 1.2.2 | 0.4.32 | Adds platforms.whatnot with live show URL/videoId input and default WebSocket public-chat capture; requires updated Whatnot page sources and settings; existing source commands and schemas unchanged |
 | 1.3.1 / MCP 1.2.2 | 0.4.25 | Fixes screenshots of never-shown source windows; shares capture-surface preparation with app-window screenshots, restores hidden state and opacity, and serializes screenshots of the same window; schemas unchanged |

@@ -13,6 +13,13 @@ browser navigation, window controls, menus, uploads, and an on-demand live view.
 the updated SSApp 0.4.37 development build; check advertised commands before using it.
 The existing Local AI / Automation option enables these tools. No model or harness is required.
 
+API 1.4.1 / MCP 1.3.1 in the updated SSApp 0.4.37 build supports binding a remote
+bridge to one running app instance. Read `GET /api/v1/instance`, then launch the
+local MCP adapter with `SSAPP_EXPECTED_INSTANCE_ID` set to its `instanceId`.
+`SSAPP_INSTANCE_CHANGED` means the app restarted: rediscover targets and obtain
+fresh control permission before sending more input. Ordinary local clients can
+omit this setting. See the [API reference](references/control-api.md).
+
 ## Start SSApp
 
 Prefer enabling **Local AI / Automation** from SSApp's File menu. The API listens only on
