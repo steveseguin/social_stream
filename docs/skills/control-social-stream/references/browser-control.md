@@ -2,8 +2,8 @@
 
 Enable **File > Local AI / Automation**, restart SSApp, and connect using **Copy MCP Setup**.
 The same controls are available through `POST /api/v1/command` on the loopback API.
-Check capabilities for API 1.4.0 commands. The minimum runtime is the updated SSApp 0.4.37
-development build with MCP 1.3.0; earlier builds with the same app version may lack them.
+Use SSApp 0.4.38 or newer, with API 1.4.1 and MCP adapter 1.3.1. Earlier 0.4.37
+development builds may expose some browser commands; check their advertised capabilities.
 
 ## Choose a surface
 
