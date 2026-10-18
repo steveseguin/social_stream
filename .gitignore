@@ -339,7 +339,27 @@ tests/helpers/*
 !tests/ai-event-overlay.test.cjs
 
 # Local Web Store package snapshots, review files, and release archives.
-/webstore/
+webstore/
+
+# Private review packages and local agent output
+.agents/
+.codex/
+.codex-tmp*/
+[Mm]eta-[Aa]pp-[Rr]eview*
+[Mm]eta-[Rr]eview*
+[Ff]acebook-[Aa]pp-[Rr]eview*
+prior-submission-*
+claude-artifacts/
+
+# Local credentials and service configuration
+.env
+.env.*
+.secret
+.secret.*
+.dev.vars
+.dev.vars.*
+!.env.example
+!.dev.vars.example
 
 # Private monetization server source and deployment files.
-/monetization-server/
+monetization-server/

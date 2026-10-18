@@ -4,6 +4,7 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
+| 1.4.0 / MCP 1.3.0 | 0.4.37 with browser controls | Adds common browser targets, screenshots with coordinate mapping, native mouse/keyboard/touch batches, navigation, window control, menus, upload selection, and on-demand JPEG frame streams; requires the updated development build and advertised commands |
 | 1.3.1 / MCP 1.2.2 | 0.4.32 | Adds platforms.whatnot with live show URL/videoId input and default WebSocket public-chat capture; requires updated Whatnot page sources and settings; existing source commands and schemas unchanged |
 | 1.3.1 / MCP 1.2.2 | 0.4.25 | Fixes screenshots of never-shown source windows; shares capture-surface preparation with app-window screenshots, restores hidden state and opacity, and serializes screenshots of the same window; schemas unchanged |
 | 1.3.1 / MCP 1.2.2 | 0.4.24 | Bounds semantic page inspection so unresponsive subframes cannot consume the command timeout; main-page failures return SOURCE_PAGE_UNAVAILABLE; tool schemas unchanged |
@@ -21,6 +22,15 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.1.1 | 0.4.2 | Rejects connection-mode updates that are unsupported by the selected source platform |
 | 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
+
+## Browser controls in the updated 0.4.37 development build
+
+Minimum runtime: SSApp 0.4.37 advertising API 1.4.0 commands; MCP adapter 1.3.0.
+The application version alone does not distinguish older 0.4.37 builds.
+See [browser-control.md](browser-control.md) for tools, coordinate mapping, file selection,
+and the live-view endpoint. Existing source and element-reference commands remain available.
+Controls use the existing Local AI / Automation opt-in. Frame capture runs only while a
+stream client is connected, and browser input does not move the operating-system pointer.
 
 ## Unreleased diagnostic event memory correction
 

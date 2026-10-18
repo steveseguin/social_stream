@@ -34,6 +34,10 @@ The events endpoint is a Server-Sent Events stream. It emits bounded, resumable 
 
 ## Commands
 
+For general browser interaction in API 1.4.0, see [browser-control.md](browser-control.md).
+It covers source, sign-in, popup, embedded-view and main-app targets using the same input
+and screenshot tools, plus navigation, native menus, uploads, and live viewport streams.
+
 Send commands to `POST /api/v1/command`:
 
 ```json
@@ -128,10 +132,12 @@ characters and password/file inputs are blocked. References expire after about 3
 and become invalid after navigation. `reloadSourcePage` and `showSourceForHuman` also require
 confirmation.
 
-Sign-in, CAPTCHA, passwords, payments, and other private steps are deliberately not automated.
+The element-reference tools do not fill password or file inputs. API 1.4.0 adds native
+browser input and a dedicated file chooser command for authorized workflows.
 SSApp 0.4.25 also fixes false `STALE_PAGE_REF` errors when an inspected input's label
 differs from its placeholder, by using matching name precedence during interaction.
-Call `showSourceForHuman`, let the user complete the step, and resume with read-only tools.
+When a step needs the user's participation, call `showSourceForHuman` or show the relevant
+browser window, let the user complete it, and resume the authorized workflow.
 
 ## Examples
 
