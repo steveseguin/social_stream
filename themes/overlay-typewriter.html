@@ -775,9 +775,10 @@ body::before {
         const donationHtml = data.hasDonation ? `<span class="donation"> [DONATION: ${escapePlainMetadata(data.hasDonation)}]</span>` : '';
         const timestampHtml = `<span class="timestamp">${timestamp}</span>`;
         
-        const contentImgHtml = data.contentimg ? 
+        const contentImgUrl = sanitizeRelayUrl(data.contentimg, true);
+        const contentImgHtml = contentImgUrl ? 
             `<div style="margin: 10px 0;">
-                <img src="${data.contentimg}" alt="Content Image" class="large-image" onerror="this.parentNode.style.display='none';">
+                <img src="${fallbackEscapeHtml(contentImgUrl)}" alt="Content Image" class="large-image" onerror="this.parentNode.style.display='none';">
              </div>` : '';
 
         messageDiv.innerHTML = `

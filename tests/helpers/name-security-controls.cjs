@@ -11,7 +11,10 @@ function positiveControl(file) {
     } else {
         source = source.replace(/escapeCssUrlAttribute\(data.chatimg\)/g, 'data.chatimg');
     }
-    source = source.replace(/(?:fallbackEscapeHtml|escapeHtml)\((data\.(?:chatimg|backupChatimg|id)|imgSrc|chatimg)\)/g, '$1');
+    // Avatars are URL-validated before escaping; the control removes both layers.
+    source = source.replace(/sanitizeRelayUrl\((data\.(?:chatimg|backupChatimg)), true\)/g, '$1');
+    source = source.replace(/escapeCssUrlAttribute\((avatarUrl|avatarSrc|safeChatImg)\)/g, '$1');
+    source = source.replace(/(?:fallbackEscapeHtml|escapeHtml)\((data\.(?:chatimg|backupChatimg|id)|imgSrc|chatimg|avatarSrc|backupImage)\)/g, '$1');
     source = source.replace('fallbackEscapeHtml(entry.chatimg || "")', '(entry.chatimg || "")');
     source = source.replace("escapeHtml(message.chatimg || 'https://socialstream.ninja/sources/images/unknown.png')", "message.chatimg || 'https://socialstream.ninja/sources/images/unknown.png'");
     source = source.replace("template.content.appendChild(document.createElement('div'))", "document.createElement('div')");

@@ -678,17 +678,19 @@ body.ultra .content-img {
         if (data.type) { messageDiv.dataset.sourceType = data.type; }
         messageTimestamps.set(messageId, Date.now());
 
-        var nameColor = data.nameColor;
+        var nameColor = sanitizeRelayCssColor(data.nameColor);
         if (!nameColor && typeof getColorFromType === 'function' && data.type) {
             try { nameColor = getColorFromType(data.type); } catch (e) {}
         }
         if (!nameColor) { nameColor = "#9fd0ff"; }
 
         var clockHtml = showClock ? "<span class='timestamp'>" + nowClock() + "</span>" : "";
-        var avatarHtml = (showAvatar && data.chatimg)
-            ? "<span class='avatar' style=\"background-image:url('" + data.chatimg + "')\"></span>" : "";
-        var iconHtml = (!hideIcon && data.type)
-            ? "<img class='source-icon' src='https://socialstream.ninja/sources/images/" + data.type + ".png' alt='" + data.type + "' onerror=\"this.style.display='none'\">" : "";
+        var avatarSrc = showAvatar ? sanitizeRelayUrl(data.chatimg, true) : "";
+        var safeType = String(data.type || "").replace(/[^a-zA-Z0-9_-]/g, "");
+        var avatarHtml = avatarSrc
+            ? "<span class='avatar' style=\"background-image:url('" + escapeCssUrlAttribute(avatarSrc) + "')\"></span>" : "";
+        var iconHtml = (!hideIcon && safeType)
+            ? "<img class='source-icon' src='https://socialstream.ninja/sources/images/" + safeType + ".png' alt='" + safeType + "' onerror=\"this.style.display='none'\">" : "";
         var badgesHtml = buildBadges(data);
         var nameHtml = data.chatname
             ? "<span class='name' style='color:" + nameColor + "'>" + escapeHtml(data.chatname) + "</span>" : "";
@@ -699,8 +701,9 @@ body.ultra .content-img {
         var msg = data.chatmessage ? (data.textonly ? escapeHtml(data.chatmessage) : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage) : fallbackEscapeHtml(data.chatmessage))) : "";
         var textHtml = msg ? "<span class='text" + (data.event ? " event-text" : "") + "'>" + msg + "</span>" : "";
         var donationHtml = donation ? "<span class='donation'>" + escapeHtml(donation) + "</span>" : "";
-        var contentImgHtml = data.contentimg
-            ? "<img class='content-img' src='" + data.contentimg + "' alt='' onerror=\"this.style.display='none'\">" : "";
+        var contentImgSrc = sanitizeRelayUrl(data.contentimg, true);
+        var contentImgHtml = contentImgSrc
+            ? "<img class='content-img' src='" + fallbackEscapeHtml(contentImgSrc) + "' alt='' onerror=\"this.style.display='none'\">" : "";
 
         messageDiv.innerHTML = clockHtml + avatarHtml + iconHtml + badgesHtml + membershipHtml +
             nameHtml + colonHtml + textHtml + donationHtml + contentImgHtml;

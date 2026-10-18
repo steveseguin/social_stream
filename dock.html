@@ -7229,7 +7229,8 @@
 					return "";
 				}
 
-				var suppliedColor = data.nameColor || "";
+				// Source colours land in a style attribute; an invalid value counts as missing.
+				var suppliedColor = data.nameColor ? sanitizeRelayCssColor(data.nameColor) : "";
 				if (nameColorMode === "all" || (nameColorMode === "missing" && !suppliedColor)) {
 					var identity = data.userid || data.username || data.chatname;
 					return getColorFromString(String(identity).toLowerCase());

@@ -555,10 +555,12 @@ body::after {
             }
         }
 
-        const sourceIconHtml = data.type ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="source" class="source-icon">` : '';
-        const avatarHtml = data.chatimg ? `
+        const sourceType = data.type ? String(data.type).replace(/[^a-zA-Z0-9_-]/g, '') : '';
+        const avatarSrc = data.chatimg ? sanitizeRelayUrl(data.chatimg, true) : '';
+        const sourceIconHtml = sourceType ? `<img src="https://socialstream.ninja/sources/images/${sourceType}.png" alt="source" class="source-icon">` : '';
+        const avatarHtml = avatarSrc ? `
             <div class="avatar-ring">
-                <div class="avatar" style="background-image: url('${escapeCssUrlAttribute(data.chatimg)}');"></div>
+                <div class="avatar" style="background-image: url('${escapeCssUrlAttribute(avatarSrc)}');"></div>
             </div>` : `
             <div class="avatar-ring">
                 <div class="avatar" style="background-image: url('https://socialstream.ninja/unknown.png');"></div>
@@ -568,13 +570,15 @@ body::after {
         const donationHtml = data.hasDonation ? `<div class="donation">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';
         // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
         const messageTextHtml = data.chatmessage ? `<div class="text"${data.event ? ' style="font-style: italic;"' : ''}>${data.textonly ? '' : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage) : fallbackEscapeHtml(data.chatmessage))}</div>` : '';
-        const contentImageHtml = data.contentimg ? `
+        const contentSrc = data.contentimg ? sanitizeRelayUrl(data.contentimg, true) : '';
+        const contentImageHtml = contentSrc ? `
             <div class="content-image-wrapper">
-                <img src="${data.contentimg}" alt="content" class="large-image" onerror="this.closest('.content-image-wrapper').style.display='none';">
+                <img src="${fallbackEscapeHtml(contentSrc)}" alt="content" class="large-image" onerror="this.closest('.content-image-wrapper').style.display='none';">
             </div>` : '';
 
         const badgesHtml = buildBadges(data.chatbadges);
-        const nameHtml = data.chatname ? `<span class="name"${data.nameColor ? ` style="color: ${data.nameColor};"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</span>` : '';
+        const nameColor = sanitizeRelayCssColor(data.nameColor);
+        const nameHtml = data.chatname ? `<span class="name"${nameColor ? ` style="color: ${nameColor};"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</span>` : '';
 
         messageDiv.innerHTML = `
             <div class="message-inner">

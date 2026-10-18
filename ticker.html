@@ -212,6 +212,111 @@
 			letter-spacing: 1px;
 		}
 
+		/* Sleek Style - floating rounded bar */
+		@font-face {
+			font-family: 'SSN Sora';
+			font-style: normal;
+			font-weight: 100 800;
+			font-display: swap;
+			src: url(./thirdparty/xMQbuFFYT72XzQspDre2.woff2) format('woff2');
+			unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+		}
+		@font-face {
+			font-family: 'SSN Sora';
+			font-style: normal;
+			font-weight: 100 800;
+			font-display: swap;
+			src: url(./thirdparty/xMQbuFFYT72XzQUpDg.woff2) format('woff2');
+			unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+		}
+
+		body.sleek .ticker-container {
+			--background-color: rgba(16, 19, 26, 0.92);
+			--font-color: #f3f5f9;
+			--border-top: 1px solid rgba(255, 255, 255, 0.1);
+			left: 12px;
+			right: 12px;
+			bottom: 12px;
+			width: auto;
+			height: 52px;
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			border-radius: 14px;
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+			-webkit-backdrop-filter: blur(8px);
+			backdrop-filter: blur(8px);
+		}
+
+		/* &transparent keeps only the text, like the other styles. */
+		body.sleek.transparent-bg .ticker-container {
+			--background-color: transparent;
+			border-color: transparent;
+			box-shadow: none;
+			-webkit-backdrop-filter: none;
+			backdrop-filter: none;
+		}
+
+		body.sleek.transparent-bg .ticker-container::before,
+		body.sleek.transparent-bg .ticker-container::after {
+			display: none;
+		}
+
+		body.sleek .ticker-item,
+		body.sleek .ticker-separator {
+			font-size: calc(var(--font-size) * 0.85);
+			line-height: 52px;
+		}
+
+		body.sleek .ticker-item {
+			position: relative;
+			font-weight: 500;
+			letter-spacing: 0.01em;
+		}
+
+		body.sleek .ticker-separator {
+			color: rgba(255, 255, 255, 0.45);
+		}
+
+		/* Small dot centred in the gap before each item */
+		body.sleek .ticker-item::before {
+			content: "";
+			position: absolute;
+			left: -3px;
+			top: 50%;
+			width: 6px;
+			height: 6px;
+			margin-top: -3px;
+			border-radius: 50%;
+			background: rgba(255, 255, 255, 0.35);
+		}
+
+		body.sleek .ticker-item--spacer::before,
+		body.sleek .ticker-separator ~ .ticker-item::before,
+		body.sleek .ticker-wrapper.rotate-mode .ticker-item::before {
+			display: none;
+		}
+
+		/* Soft fade where text enters and leaves the bar */
+		body.sleek .ticker-container::before,
+		body.sleek .ticker-container::after {
+			content: "";
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			width: 40px;
+			z-index: 1;
+			pointer-events: none;
+		}
+
+		body.sleek .ticker-container::before {
+			left: 0;
+			background: linear-gradient(90deg, rgba(16, 19, 26, 0.9), rgba(16, 19, 26, 0));
+		}
+
+		body.sleek .ticker-container::after {
+			right: 0;
+			background: linear-gradient(270deg, rgba(16, 19, 26, 0.9), rgba(16, 19, 26, 0));
+		}
+
     </style>
 </head>
 <body>
@@ -367,6 +472,9 @@
 	if (style !== 'default') {
 		document.body.classList.add(style);
 	}
+	if (style === 'sleek' && !urlParams.get('font') && !urlParams.get('googlefont')) {
+		document.documentElement.style.setProperty('--font-family', "'SSN Sora', 'Segoe UI', Roboto, Arial, sans-serif");
+	}
 	
 	if (urlParams.has('css')){
 		var cssURL = urlParams.get('css');
@@ -479,6 +587,7 @@
 
 	if (urlParams.has("transparent")){
 		document.documentElement.style.setProperty("--background-color", "#0000", "important");
+		document.body.classList.add("transparent-bg");
 	}
 	
 	const tickerElement = document.getElementById("ticker");

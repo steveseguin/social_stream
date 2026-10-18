@@ -126,3 +126,60 @@
 .viewer-layout-active #hype.viewer-column > .sourceStatHolder { margin: 0 0 var(--viewer-gap, 2px); }
 .viewer-layout-active #hype.viewer-rotating > .sourceStatHolder { display: none; margin: 0; }
 .viewer-layout-active #hype.viewer-rotating > .sourceStatHolder[data-viewer-active] { display: flex; }
+/* Keep the title on the same side as the platform row. */
+.viewer-layout-active.viewer-align-left #hypetitle { align-items: flex-start; text-align: left; }
+.viewer-layout-active.viewer-align-right #hypetitle { align-items: flex-end; text-align: right; }
+.viewer-layout-active.viewer-align-left .viewer-title-viewport #hypetitle { transform-origin: top left; }
+.viewer-layout-active.viewer-align-right .viewer-title-viewport #hypetitle { transform-origin: top right; }
+
+/* Sleek: stacked stat cards with a small inset from the window edge. */
+.viewer-design.style-sleek {
+  --viewer-panel: rgba(15, 18, 25, 0.86);
+  --viewer-border: rgba(255, 255, 255, 0.1);
+}
+.viewer-design.viewer-light.style-sleek {
+  --viewer-panel: rgba(255, 255, 255, 0.94);
+  --viewer-border: rgba(0, 0, 0, 0.1);
+}
+.viewer-design.has-custom-viewerbarbg.style-sleek { --viewer-panel: var(--topbar-background); }
+.viewer-design.style-sleek #hype { padding: 8px; }
+.viewer-design.style-sleek .sourceStatHolder,
+.viewer-design.style-sleek #hype.viewer-rotating > .sourceStatHolder[data-viewer-active] {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  justify-content: start;
+  padding: 8px 14px 8px 10px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  text-shadow: none;
+}
+.viewer-design.style-sleek .sourceStatHolder > * + * { margin-left: 0; }
+.viewer-design.style-sleek .sourceStatHolder img {
+  grid-column: 1;
+  grid-row: span 2;
+  width: 26px;
+  height: 26px;
+  margin: 0 10px 0 0;
+  border-radius: 6px;
+}
+.viewer-design.style-sleek [data-viewers], .viewer-design.style-sleek [data-chatters] {
+  grid-column: 2;
+  justify-self: start;
+  margin: 0;
+  text-align: left;
+}
+.viewer-design.style-sleek [data-viewers] { font-size: 20px; font-weight: 700; line-height: 1.2; }
+.viewer-design.style-sleek [data-chatters] { font-size: 13px; font-weight: 600; line-height: 1.35; opacity: 0.75; }
+.viewer-design.style-sleek span[data-chatters]:first-of-type { font-size: 20px; font-weight: 700; line-height: 1.2; opacity: 1; }
+.viewer-design.style-sleek [data-viewers]::before { content: "\1f441\fe0e"; margin-right: 5px; font-size: 0.7em; opacity: 0.6; }
+.viewer-design.style-sleek [data-chatters]::before { content: "\1f4ac"; margin-right: 5px; font-size: 0.85em; }
+.viewer-design.style-sleek #hypetitle {
+  padding: 0 8px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+.viewer-design.viewer-light.style-sleek #hypetitle { text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8); }

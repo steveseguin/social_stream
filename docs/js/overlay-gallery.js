@@ -162,6 +162,18 @@
       session.scrollIntoView({ block: 'center' });
     });
   });
+  cards.forEach(function (card) {
+    var variant = card.querySelector('.gallery-variant select');
+    if (!variant) return;
+    variant.addEventListener('change', function () {
+      var option = variant.options[variant.selectedIndex];
+      var image = option.getAttribute('data-image');
+      card.dataset.path = option.value;
+      Array.prototype.forEach.call(card.querySelectorAll('[data-screenshot]'), function (link) { link.href = image; });
+      card.querySelector('.gallery-preview img').src = image.slice(0, -'.webp'.length) + '-thumb.webp';
+      updateLinks();
+    });
+  });
   function closeDialog() {
     dialog.hidden = true;
     document.body.style.overflow = '';

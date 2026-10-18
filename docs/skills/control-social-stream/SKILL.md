@@ -8,7 +8,7 @@ description: Control Social Stream Ninja sources, app windows, sign-in windows, 
 Use SSApp's declarative control API. Do not use renderer execution or UI automation when a supported command exists.
 
 For a requested settings backup, see [settings export](references/control-api.md#settings-export).
-API 1.5.0 / MCP 1.4.0 adds temporary exports in the updated 0.4.38 development build;
+API 1.5.0 / MCP 1.4.0 adds temporary exports in SSApp 0.4.39 and newer;
 require advertised commands. Backups include saved credentials. Export only at the user's
 request, save the bytes as a file, and return metadata rather than printing their contents.
 

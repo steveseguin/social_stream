@@ -45,8 +45,8 @@ The events endpoint is a Server-Sent Events stream. It emits bounded, resumable 
 
 ### Settings export
 
-Requires API 1.5.0 / MCP 1.4.0 in the updated SSApp 0.4.38 development build.
-Check for `exportSettingsBackup` in capabilities; published 0.4.38 alone is insufficient.
+Requires SSApp 0.4.39 or newer with API 1.5.0 / MCP 1.4.0.
+Check for `exportSettingsBackup` in capabilities before requesting a backup.
 
 | API action | MCP tool | Arguments and result |
 | --- | --- | --- |

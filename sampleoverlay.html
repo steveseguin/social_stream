@@ -27,6 +27,7 @@ If editing this file, please note:
    - Preserve the iframe implementation for WebRTC functionality
    - Maintain opacity/transform animations for smooth message display
    - Keep the maximum message count logic intact
+   - Treat payload fields as untrusted: escape text and check URLs, colours and type before building HTML (see addMessageToOverlay)
 
 This overlay works by:
 1. Receiving messages through WebRTC data channels (iframe) or WebSocket
@@ -658,9 +659,16 @@ body, html {
 		
 		var chatbadgesHtml = SocialStreamBadges.render(data.chatbadges);
 		
+		// Payload fields are untrusted, so build HTML only from cleaned copies.
+		// Colours use sanitizeRelayCssColor, image URLs use sanitizeRelayUrl, and type is cut to a safe file name.
+		// Plain text goes through fallbackEscapeHtml (textonly chatmessage uses textContent below); HTML chatmessage goes through SocialStreamChatHTML.sanitize.
+		const nameColor = sanitizeRelayCssColor(data.nameColor);
+		const sourceType = String(data.type || '').replace(/[^a-zA-Z0-9_-]/g, '');
+		const avatarUrl = sanitizeRelayUrl(data.chatimg, true);
+		const contentImgUrl = sanitizeRelayUrl(data.contentimg, true);
 		let avatarBorderColor = "linear-gradient(45deg, #4ab8f9, #4cd137)"; // Default gradient
-		if (data.nameColor) {
-			avatarBorderColor = `linear-gradient(45deg, ${data.nameColor}, ${data.nameColor}88)`;
+		if (nameColor) {
+			avatarBorderColor = `linear-gradient(45deg, ${nameColor}, ${nameColor}88)`;
 		}
 		
 		let leftEdgeColor = null;
@@ -677,18 +685,18 @@ body, html {
 			messageDiv.style.paddingLeft = '12px';
 		}
 		
-		const sourceIconHtml = data.type ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : '';
-		const avatarHtml = data.chatimg ? 
-			`<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${escapeCssUrlAttribute(data.chatimg)}');"></div></div>` : '';
-		const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';
+		const sourceIconHtml = sourceType ? `<img src="https://socialstream.ninja/sources/images/${sourceType}.png" alt="Source" class="source-icon">` : '';
+		const avatarHtml = avatarUrl ? 
+			`<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${escapeCssUrlAttribute(avatarUrl)}');"></div></div>` : '';
+		const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${nameColor ? `style="text-shadow: 0 0 3px ${nameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';
 		const membershipHtml = data.membership ? `<div class="membership-status">${fallbackEscapeHtml(data.membership)}</div>` : '';
 		// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
 		const messageTextHtml = `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.textonly ? '' : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage || '') : fallbackEscapeHtml(data.chatmessage || ''))}</div>`;
 		const donationHtml = data.hasDonation ? `<div class="donation">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';
 		
-		const contentImgHtml = data.contentimg ? 
+		const contentImgHtml = contentImgUrl ? 
 			`<div style="padding: 3px; border-radius: 12px; background: ${avatarBorderColor}; display: inline-block; margin-top: 10px;">
-				<img src="${data.contentimg}" alt="Content Image" class="large-image" style="margin-top: 0; border-radius: 8px;" onerror="this.parentNode.style.display='none';">
+				<img src="${fallbackEscapeHtml(contentImgUrl)}" alt="Content Image" class="large-image" style="margin-top: 0; border-radius: 8px;" onerror="this.parentNode.style.display='none';">
 			 </div>` : '';
 
 		messageDiv.innerHTML = `

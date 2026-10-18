@@ -1219,6 +1219,9 @@ function applyImportedGeneratedLink(targetId, parsedUrl) {
 				saveImportedLinkControl(element, "optionsetting", element.dataset.optionsetting, imported.value);
 			}
 		}
+		if (element.dataset.palette) {
+			syncColorHelpers(element);
+		}
 		if (element.dataset.optionsetting) {
 			handleOptionSetting(element, false);
 		}
@@ -3921,7 +3924,7 @@ function applyChatOverlayTemplatePreset(presetValue, options) {
   // Pre-styled overlays have their own auto-hide timing.
   const templateParams = new URLSearchParams(params);
   // The selected collection owns its style; do not carry the previous preset forward.
-  if (templatePath.split("?")[0] === "themes/compact-clean.html") {
+  if (["themes/compact-clean.html", "themes/vertical-chat.html"].indexOf(templatePath.split("?")[0]) !== -1) {
     templateParams.delete("style");
     const selectedStyle = new URL(templatePath, baseURL).searchParams.get("style");
     if (selectedStyle) templateParams.set("style", selectedStyle);
@@ -7584,6 +7587,9 @@ function handleOptionParam(ele, targetId, paramType, sync) {
         }, function (response) {});
     }
     
+    if (ele.dataset.palette) {
+        syncColorHelpers(ele);
+    }
     return true;
 }
 
@@ -8267,7 +8273,8 @@ function handleColorAndPalette(ele) {
         const colorEle = document.getElementById(ele.dataset.color);
         if (colorEle) {
             const sliderEle = getAlphaSliderForInput(colorEle);
-            const alphaValue = sliderEle ? sliderEle.value : 100;
+            const currentColor = parseColorValue(colorEle.value);
+            const alphaValue = sliderEle ? sliderEle.value : (currentColor ? currentColor.a * 100 : 100);
             const mergedColor = mergeColorWithAlpha(ele.value, alphaValue);
             colorEle.value = mergedColor || ele.value;
             syncColorHelpers(colorEle);

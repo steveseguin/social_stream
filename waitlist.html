@@ -178,6 +178,147 @@
 		#waitlist:empty{
 			display:none;
 		}
+
+		#waitlisttitle.hidden,
+		#waitlistsupertitle.hidden {
+			display: none;
+		}
+
+		/* Sleek style (&style=sleek): compact numbered card */
+		body.style-sleek {
+			text-shadow: none;
+		}
+
+		body.style-sleek #parentHolder {
+			max-width: 440px;
+		}
+
+		body.style-sleek #waitlisttitle,
+		body.style-sleek #waitlistsupertitle,
+		body.style-sleek #waitlist {
+			background-color: rgba(16, 19, 26, 0.88);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+		}
+
+		body.style-sleek #waitlisttitle,
+		body.style-sleek #waitlistsupertitle {
+			display: table;
+			margin: 0;
+			padding: 6px 14px;
+			border-radius: 999px;
+			font-size: calc(var(--font-size) * 0.3);
+			font-weight: 600;
+			text-align: left;
+		}
+
+		body.style-sleek #waitlisttitle {
+			margin-bottom: 8px;
+		}
+
+		body.style-sleek #waitlistsupertitle {
+			margin-top: 8px;
+			font-weight: 500;
+		}
+
+		body.style-sleek #waitlisttitle:empty,
+		body.style-sleek #waitlistsupertitle:empty {
+			display: none;
+		}
+
+		body.style-sleek #waitlisttitle.hidden,
+		body.style-sleek #waitlistsupertitle.hidden {
+			display: none;
+		}
+
+		body.style-sleek #waitlist {
+			margin: 0;
+			padding: 8px;
+			border-radius: 16px;
+			font-size: calc(var(--font-size) * 0.4);
+			font-weight: 600;
+			counter-reset: waitlist-position;
+		}
+
+		body.style-sleek .guestListHolder {
+			gap: 0;
+			margin: 0;
+			padding: 6px 10px 6px 6px;
+			border-radius: 10px;
+		}
+
+		body.style-sleek .guestListHolder + .guestListHolder {
+			margin-top: 2px;
+		}
+
+		body.style-sleek .guestListHolder::before {
+			counter-increment: waitlist-position;
+			content: counter(waitlist-position);
+			flex: 0 0 auto;
+			min-width: 1.5em;
+			margin-right: 6px;
+			font-size: 0.75em;
+			text-align: center;
+			opacity: 0.55;
+			font-variant-numeric: tabular-nums;
+		}
+
+		body.style-sleek .guestListHolder.winner::before,
+		body.style-sleek .guestListHolder.loser::before {
+			display: none;
+		}
+
+		body.style-sleek .guestListHolder img,
+		body.style-sleek .guestListHolder .spacer {
+			width: 1.6em;
+			height: 1.6em;
+			margin-right: 10px;
+		}
+
+		body.style-sleek .guestListHolder .spacer {
+			border-radius: 50%;
+			background-color: rgba(255, 255, 255, 0.08);
+		}
+
+		body.style-sleek .guestListHolder img[src^="./sources/"] {
+			width: 0.9em;
+			height: 0.9em;
+			margin-right: 8px;
+			border-radius: 0;
+			object-fit: contain;
+		}
+
+		body.style-sleek .guestListHolder .waitlist-entry-text {
+			font-size: 1em;
+			line-height: 1.3;
+			gap: 0;
+		}
+
+		body.style-sleek .waitlist-message {
+			font-size: calc(2.2em * var(--waitlist-message-scale));
+			margin-left: 0.5em;
+			opacity: 0.7;
+		}
+
+		body.style-sleek .selected {
+			background-color: rgba(88, 166, 255, 0.22) !important;
+		}
+
+		body.style-sleek.lightmode #waitlisttitle,
+		body.style-sleek.lightmode #waitlistsupertitle,
+		body.style-sleek.lightmode #waitlist {
+			background-color: rgba(255, 255, 255, 0.94);
+			border-color: rgba(0, 0, 0, 0.08);
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+		}
+
+		body.style-sleek.lightmode .guestListHolder .spacer {
+			background-color: rgba(0, 0, 0, 0.08);
+		}
+
+		body.style-sleek.lightmode .selected {
+			background-color: rgba(30, 110, 230, 0.14) !important;
+		}
     </style>
 </head>
 <body class="electronDraggable scrolllll" id="output">
@@ -413,6 +554,10 @@
 		document.getElementById("parentHolder").style.margin="auto";
 	}
 	
+	if ((urlParams.get("style") || "").toLowerCase() === "sleek"){
+		document.body.classList.add("style-sleek");
+	}
+
 	if (urlParams.has("hidetitle")){
 		document.getElementById("waitlisttitle").classList.add("hidden");
 		document.getElementById("waitlistsupertitle").classList.add("hidden");
@@ -880,7 +1025,7 @@
 				for (var i = 0; i<data.winlist.length;i++){
 					let extraData = "";
 					if (showsource){
-						extraData = "<img onerror='hideImage(this)' src='./sources/images/"+data.winlist[i].type+".png'>";
+						extraData = "<img onerror='hideImage(this)' src='./sources/images/"+fallbackEscapeHtml(data.winlist[i].type)+".png'>";
 					}
 					var classAdd = "winner";
 					winnerHtml.push(formatWaitlistEntry(data.winlist[i], classAdd, extraData, false));
@@ -995,7 +1140,7 @@
 						}
 						let extraData = "";
 						if (showsource){
-							extraData = "<img onerror='hideImage(this)' src='./sources/images/"+data.waitlist[i].type+".png'>";
+							extraData = "<img onerror='hideImage(this)' src='./sources/images/"+fallbackEscapeHtml(data.waitlist[i].type)+".png'>";
 						}
 						var entryHtml = "";
 						if (randomize){

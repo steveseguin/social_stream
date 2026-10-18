@@ -5,11 +5,13 @@ pass --clean to remove only those catalogued PNGs after successful conversion.
 """
 from pathlib import Path
 import json
+import os
 import sys
 from PIL import Image, ImageChops
 
 root = Path(__file__).resolve().parent.parent
-catalog = json.loads((root / 'docs/data/overlay-gallery.json').read_text(encoding='utf8'))
+catalog_path = Path(os.environ['GALLERY_CATALOG']) if os.environ.get('GALLERY_CATALOG') else root / 'docs/data/overlay-gallery.json'
+catalog = json.loads(catalog_path.read_text(encoding='utf8'))
 output = root / 'docs/images/overlay-gallery'
 missing = []
 for entry in catalog:

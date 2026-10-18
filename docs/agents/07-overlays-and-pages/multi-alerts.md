@@ -152,7 +152,7 @@ Category styles:
 - `auctionstyle`
 - `hypestyle`
 
-Default style is `twitch`. HTML/CSS defines `twitch`, `classic`, `minimal`, `solid`, `cute`, `cozy`, `cats`, `music`, `arcade`, `slate`, `paper`, and `micro` themes. `solid` is a flat preset: opaque card, no blur/glow/accent stripe, 7px default corner radius.
+Default style is `twitch`. HTML/CSS defines `twitch`, `classic`, `minimal`, `solid`, `cute`, `cozy`, `cats`, `music`, `arcade`, `slate`, `paper`, `micro`, `spring`, `summer`, `hearts`, and `lunar` themes. `solid` is a flat preset: opaque card, no blur/glow/accent stripe, 7px default corner radius.
 
 Category accent colors (optional overrides; hex like `ff2d5e` or any CSS color):
 
@@ -294,6 +294,6 @@ Repeated alerts:
 
 ## Style controls
 
-All 12 presets support `hidetitle` (category title badge), `hidemessage` (message body), and `hideprogress` (countdown bar). These switches are also available in the popup. They preserve the alert headline and display timing.
+All 16 presets support `hidetitle` (category title badge), `hidemessage` (message body), and `hideprogress` (countdown bar). These switches are also available in the popup. They preserve the alert headline and display timing.
 
-Presets: twitch, classic, minimal, solid, cute, cozy, cats, music, arcade, slate, paper, micro. Flat mode preserves collection background colors; explicit accent/category/platform colors override collection name and border colors. All presets respect reduced-motion preferences.
+Presets: twitch, classic, minimal, solid, cute, cozy, cats, music, arcade, slate, paper, micro, spring, summer, hearts, lunar. Flat mode preserves collection background colors; explicit accent/category/platform colors override collection name and border colors. All presets respect reduced-motion preferences.

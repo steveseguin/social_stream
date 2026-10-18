@@ -4,7 +4,7 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
-| 1.5.0 / MCP 1.4.0 | 0.4.38 with settings-export commands | Adds confirmed `exportSettingsBackup`, bounded `readSettingsExport`, and `releaseSettingsExport`. Requires the updated development build and advertised commands; no released minimum is assigned. Ordinary exports keep their existing dialogs and destinations. |
+| 1.5.0 / MCP 1.4.0 | 0.4.39 | Adds confirmed `exportSettingsBackup`, bounded `readSettingsExport`, and `releaseSettingsExport`. Check advertised commands before use. Ordinary exports keep their existing dialogs and destinations. |
 | 1.4.1 / MCP 1.3.1 | 0.4.38 | Released browser controls and instance-bound requests for remote Ninja MCP access. Enable Local AI / Automation in SSApp and configure the remote bridge separately; ordinary startup does not connect to remote agents or start frame capture. |
 | 1.4.1 / MCP 1.3.1 | 0.4.37 with instance binding | Adds renderer-independent `/api/v1/instance`, `instanceId` in API responses, and optional `X-SSApp-Instance-Id` / `SSAPP_EXPECTED_INSTANCE_ID` binding; stale requests fail before execution after app restart. Existing tool schemas and ordinary local clients are unchanged. |
 | 1.4.0 / MCP 1.3.0 | 0.4.37 with browser controls | Adds common browser targets, screenshots with coordinate mapping, native mouse/keyboard/touch batches, navigation, window control, menus, upload selection, and on-demand JPEG frame streams; requires the updated development build and advertised commands |

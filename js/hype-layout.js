@@ -6,7 +6,7 @@
         var track = options.track;
         var title = options.title;
         var design = params.get("style") || "default";
-        var designs = ["micro", "pills", "glass", "neon", "outline", "broadcast", "cards", "scoreboard", "vertical", "grid", "autofit", "ticker", "rotate"];
+        var designs = ["micro", "pills", "glass", "neon", "outline", "broadcast", "cards", "scoreboard", "vertical", "grid", "autofit", "ticker", "rotate", "sleek"];
         var isNew = designs.indexOf(design) !== -1;
         var layout = params.get("viewerlayout");
         var layouts = ["fixed", "fit", "wrap", "grid", "vertical", "ticker", "rotate"];
@@ -34,6 +34,8 @@
         columns = isFinite(columns) && columns > 0 ? Math.min(columns, 12) : 0;
         var baseScale = options.scale > 0 && isFinite(options.scale) ? options.scale : 1;
         var alignment = options.alignment || (design === "topbar" ? "right" : "left");
+        // Existing links keep their centred title; sleek and an explicit &align line it up with the tiles.
+        if (options.alignment || design === "sleek") parent.classList.add("viewer-align-" + alignment);
         var viewport = document.createElement("div");
         viewport.className = "viewer-viewport";
         parent.insertBefore(viewport, track);

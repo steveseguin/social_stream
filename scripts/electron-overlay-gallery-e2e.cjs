@@ -25,7 +25,7 @@ app.whenReady().then(async()=>{
   assert(await run('Array.from(document.querySelectorAll(".gallery-preview img")).slice(0,3).every(i=>i.complete&&i.naturalWidth>0)'));
   fs.writeFileSync(path.join(output,'desktop.png'),(await win.webContents.capturePage()).toPNG());
   await run('document.getElementById("gallery-search").value="Cat Cafe"; document.getElementById("gallery-search").dispatchEvent(new Event("input"));');
-  assert.strictEqual(await run('document.querySelectorAll(".gallery-card:not([hidden])").length'),3);
+  assert.strictEqual(await run('Array.from(document.querySelectorAll(".gallery-card:not([hidden]) h2")).filter(h=>h.textContent==="Cat Cafe").length'),3);
   await run('document.querySelector("[data-category=featured]").click();');
   assert.strictEqual(await run('document.querySelectorAll(".gallery-card:not([hidden])").length'),1);
   await run('document.querySelector(".gallery-card:not([hidden]) [data-screenshot]").click();');
@@ -43,11 +43,11 @@ app.whenReady().then(async()=>{
   assert(!await run('location.search.includes("room")'));
   await run('document.getElementById("gallery-search").value="no-such-overlay-xyz"; document.getElementById("gallery-search").dispatchEvent(new Event("input"));');
   assert(await run('!document.getElementById("gallery-empty").hidden'));
-  await run('document.getElementById("gallery-search").value=""; document.querySelector("[data-category=all]").click(); document.getElementById("gallery-setup").open=false; document.getElementById("gallery-theme").click(); window.scrollTo(0,0);');
+  await run('document.getElementById("gallery-search").value=""; document.querySelector("[data-category=all]").click(); document.getElementById("gallery-setup").open=false; document.querySelector(".site-theme").click(); window.scrollTo(0,0);');
   win.setSize(390,844);
   await delay(500);
   assert(await run('document.documentElement.scrollWidth<=innerWidth+1'));
-  assert(await run('(() => {const r=document.querySelector(".gallery-topbar nav").getBoundingClientRect(); return r.left>=0 && r.right<=innerWidth+1;})()'));
+  assert(await run('(() => {const r=document.querySelector(".site-bar").getBoundingClientRect(); return r.left>=0 && r.right<=innerWidth+1;})()'));
   const columns=await run('getComputedStyle(document.querySelector(".gallery-grid")).gridTemplateColumns');
   assert.strictEqual(columns.split(' ').length,1);
   fs.writeFileSync(path.join(output,'mobile.png'),(await win.webContents.capturePage()).toPNG());
@@ -98,10 +98,15 @@ app.whenReady().then(async()=>{
   win.setSize(1400,1000);
   await run('document.getElementById("gallery-setup").scrollIntoView({block:"start"});');await delay(400);
   fs.writeFileSync(path.join(output,'matching-desktop.png'),(await win.webContents.capturePage()).toPNG());
-  await run('document.getElementById("gallery-theme").click();');await delay(200);
+  await run('document.querySelector(".site-theme").click();');await delay(200);
   fs.writeFileSync(path.join(output,'matching-dark.png'),(await win.webContents.capturePage()).toPNG());
   assert(!await run('location.search.includes("room")'));
   assert(await run('Object.keys(localStorage).every(k=>!(/session|password/i.test(k)))'));
+  // Variant cards swap their overlay link and preview together.
+  const variant=await run('(() => {const card=document.querySelector(".gallery-variant").closest(".gallery-card"); const select=card.querySelector("select"); select.selectedIndex=select.options.length-1; select.dispatchEvent(new Event("change")); return {path:card.dataset.path, value:select.value, href:card.querySelector(".gallery-open").href, img:card.querySelector(".gallery-preview img").getAttribute("src"), image:select.options[select.selectedIndex].getAttribute("data-image")};})()');
+  assert.strictEqual(variant.path,variant.value);
+  assert.strictEqual(new URL(variant.href).searchParams.get('style'),new URLSearchParams(variant.value.split('?')[1]).get('style'));
+  assert.strictEqual(variant.img,variant.image.replace('.webp','-thumb.webp'));
   console.log('PASS matching sets: eight themes, three links, credentials, motion, copy/fallback, focus and responsive previews');
   console.log('PASS gallery filters, search, images, modal keyboard/focus, encoded links, empty state, theme and mobile layout');
   console.log('Screenshots: '+output);

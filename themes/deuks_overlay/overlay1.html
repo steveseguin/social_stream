@@ -91,7 +91,7 @@
 			margin-top: 22px;
 			margin-left: 15px;
 			border-radius: 10px;
-			color: #e02c53;
+			color: #f25a75;
 			position: relative;
 			word-wrap: break-word;
 		}
@@ -279,12 +279,12 @@ img.ssn-content-image {
 	}
 	// Content images are separate from chat text (including GIF-only messages).
 	function appendContentImage(container, data) {
-		if (typeof data.contentimg !== 'string' || !data.contentimg.trim()) return;
+		if (typeof data.contentimg !== 'string' || !sanitizeRelayUrl(data.contentimg, true)) return;
 		const img = document.createElement('img');
 		img.className = 'ssn-content-image';
 		img.alt = (data.meta && data.meta.gifLabel) || 'Content image';
 		img.onerror = function () { this.style.display = 'none'; };
-		img.src = data.contentimg;
+		img.src = sanitizeRelayUrl(data.contentimg, true);
 		container.appendChild(img);
 	}
 
@@ -310,8 +310,9 @@ img.ssn-content-image {
 		// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
 		const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage || '') : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage || '') : fallbackEscapeHtml(data.chatmessage || ''));
 
+		const avatarSrc = data.chatimg ? sanitizeRelayUrl(data.chatimg, true) : '';
 		messageDiv.innerHTML = `
-			${data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${escapeCssUrlAttribute(data.chatimg)}');"></div></div>` : ''}
+			${avatarSrc ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${escapeCssUrlAttribute(avatarSrc)}');"></div></div>` : ''}
 			<div class="username-box">
 				<span>${escapeHtml(data.chatname)}</span>
 				<span class="badges">${chatbadges}</span>

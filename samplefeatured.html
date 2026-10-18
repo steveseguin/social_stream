@@ -2,6 +2,7 @@
 Development Notes:
 - It's important that the IFRAME logic stay intact, as it is how we receieve messages
 - This code is in vanilla Javascript designed for web browsers without compiling
+- Payload fields are untrusted: escape text with fallbackEscapeHtml, check URLs with sanitizeRelayUrl and colours with sanitizeRelayCssColor, and keep type to a safe file name (cleanType)
 - Details of the incoming message structure can be found here: https://github.com/steveseguin/social_stream/blob/main/README.md#message-structure
  !-->
 <!DOCTYPE html>
@@ -510,7 +511,7 @@ Development Notes:
 
             // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
             return `
-                <div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="${data.type || 'none'}">
+                <div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="${this.cleanType(data.type || 'none')}">
 					<div class="hl-title">
 					${avatarImg}
                     <div class="hl-name" ${styleOverride} id="nameDIV">
@@ -525,22 +526,24 @@ Development Notes:
         },
 
         buildImageContent(data) {
-            if (!data.contentimg) return '';
+            const contentimg = sanitizeRelayUrl(data.contentimg, true);
+            if (!contentimg) return '';
 
-            const isVideo = data.contentimg.includes('.mp4') || data.contentimg.includes('.webm');
+            const isVideo = contentimg.includes('.mp4') || contentimg.includes('.webm');
             const mediaElement = isVideo ? 
-                `<video loop="true" autoplay="true" muted="true" src="${data.contentimg}" onerror="this.parentElement.style.display='none'" />` :
-                `<img src="${data.contentimg}" onerror="this.parentElement.style.display='none'" />`;
+                `<video loop="true" autoplay="true" muted="true" src="${fallbackEscapeHtml(contentimg)}" onerror="this.parentElement.style.display='none'" />` :
+                `<img src="${fallbackEscapeHtml(contentimg)}" onerror="this.parentElement.style.display='none'" />`;
 
             return `<div class="hl-imgContent">${mediaElement}</div>`;
         },
 
         buildAvatarImage(data) {
-            const imgSrc = data.chatimg || (!data.chatname && data.event ? 
+            const imgSrc = sanitizeRelayUrl(data.chatimg, true) || (!data.chatname && data.event ? 
                 './icons/announcement.png' : './sources/images/unknown.png');
 
-            const backupAttr = data.backupChatimg ? 
-                `data-backup-image="${fallbackEscapeHtml(data.backupChatimg)}"` : '';
+            const backupImage = sanitizeRelayUrl(data.backupChatimg, true);
+            const backupAttr = backupImage ? 
+                `data-backup-image="${fallbackEscapeHtml(backupImage)}"` : '';
 
             return `
                 <div class="hl-img">
@@ -564,7 +567,13 @@ Development Notes:
             return `<div class="hl-donation">${fallbackEscapeHtml(donationAmount)}</div>`;
         },
 
+        // Payload type ends up in file paths and attributes, so keep it to a safe file name.
+        cleanType(type) {
+            return String(type).replace(/[^a-zA-Z0-9_-]/g, '');
+        },
+
         buildSourceType(type = 'none') {
+            type = this.cleanType(type);
             return `
                 <img src="./sources/images/${type}.png" 
                      class="icon sourcetype" 
@@ -575,15 +584,17 @@ Development Notes:
         getStyleOverride(data) {
             const styles = [];
             
-            if (data.backgroundColor) {
-                styles.push(data.backgroundColor.startsWith('background-color:') ? 
-                    data.backgroundColor : `background-color: ${data.backgroundColor}`);
+            const backgroundColor = sanitizeRelayCssColor(data.backgroundColor);
+            const nameColor = sanitizeRelayCssColor(data.nameColor);
+            const textNameColor = sanitizeRelayCssDeclaration(data.textNameColor, 'color');
+            if (backgroundColor) {
+                styles.push(`background-color: ${backgroundColor}`);
             }
             
-            if (data.nameColor) {
-                styles.push(`color: ${data.nameColor}`);
-            } else if (data.textNameColor) {
-                styles.push(data.textNameColor);
+            if (nameColor) {
+                styles.push(`color: ${nameColor}`);
+            } else if (textNameColor) {
+                styles.push(textNameColor);
             }
             
             return styles.length ? `style="${fallbackEscapeHtml(styles.join('; '))}"` : '';

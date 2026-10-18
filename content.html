@@ -4,6 +4,7 @@
     <meta name="description" content="Emotes Wall. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
     <meta name="robots" content="noindex">
   <script type="text/javascript" src="./js/local-server-url.js"></script>
+  <script type="text/javascript" src="./libs/objects.js"></script>
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 
 	<meta content="utf-8" http-equiv="encoding" />
@@ -597,7 +598,8 @@
 
 	function processData(data){
 
-		if (!data.contentimg){
+		var contentimg = sanitizeRelayUrl(data.contentimg, true);
+		if (!contentimg){
 			return;
 		}
 		
@@ -631,7 +633,7 @@
 		
 		
 		var node = document.createElement('img');
-		node.src = data.contentimg;
+		node.src = contentimg;
 		
 		node.classList.add("hidden");
 		mainOutputWindow.appendChild(node);

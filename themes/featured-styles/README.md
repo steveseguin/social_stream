@@ -61,6 +61,7 @@ featured-animated.html?session=YOUR_SESSION_ID&style=bounce
 - `showtime` - How long to display each message in milliseconds (default: 30000)
 - `server` - Custom WebSocket server URL (default: wss://io.socialstream.ninja)
 - `exit` - Exit animation style for animated overlay: `bounce`, `slide`, `fade`
+- `ambient` - Keep background effects (particles, shards, streaks, glows) running when no message is featured. By default they only appear behind a featured message.
 
 #### Text-to-Speech
 - `tts` - Enable TTS with language code (e.g., `en-US`, `es-ES`)

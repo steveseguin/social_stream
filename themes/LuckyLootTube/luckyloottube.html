@@ -6,6 +6,7 @@
     <meta name="description" content="From LuckyLootTube with Love: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
     <meta name="robots" content="noindex">
     <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<script src="../../libs/objects.js"></script>
 <script src="../../js/local-server-url.js"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -920,11 +921,12 @@ wrap.className = "msg";
 const isDonation = !!data.hasDonation;
 if (isDonation) wrap.classList.add("is-donation");
 
-const avatarUrl = safeText(data.chatimg);
+const avatarUrl = sanitizeRelayUrl(data.chatimg, true);
 const name = safeText(data.chatname) || "Unknown";
 const msg = safeText(data.chatmessage) || "";
 const platform = normalizePlatform(data.type);
 const donationValue = safeText(data.hasDonation);
+const contentSrc = data.contentimg ? sanitizeRelayUrl(data.contentimg, true) : "";
 
 wrap.innerHTML = `
        <div class="avatar">
@@ -940,13 +942,13 @@ wrap.innerHTML = `
            </div>
          </div>
 
-          <div class="message">${sanitizeChatHTML(msg)}</div>
+          <div class="message">${data.textonly ? escapeTextHTML(msg) : sanitizeChatHTML(msg)}</div>
 
-         ${data.contentimg ? `
+         ${contentSrc ? `
            <div class="media">
-             ${String(data.contentimg).match(/\.(mp4|webm|ogg)(\?.*)?$/i)
-           ? `<video src="${escapeHTML(data.contentimg)}" autoplay muted loop playsinline></video>`
-           : `<img alt="" src="${escapeHTML(data.contentimg)}" />`
+             ${contentSrc.match(/\.(mp4|webm|ogg)(\?.*)?$/i)
+           ? `<video src="${escapeHTML(contentSrc)}" autoplay muted loop playsinline></video>`
+           : `<img alt="" src="${escapeHTML(contentSrc)}" />`
          }
            </div>
          ` : ""}

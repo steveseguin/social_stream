@@ -383,12 +383,12 @@ img.ssn-content-image {
 	}
 	// Content images are separate from chat text (including GIF-only messages).
 	function appendContentImage(container, data) {
-		if (typeof data.contentimg !== 'string' || !data.contentimg.trim()) return;
+		if (typeof data.contentimg !== 'string' || !sanitizeRelayUrl(data.contentimg, true)) return;
 		const img = document.createElement('img');
 		img.className = 'ssn-content-image';
 		img.alt = (data.meta && data.meta.gifLabel) || 'Content image';
 		img.onerror = function () { this.style.display = 'none'; };
-		img.src = data.contentimg;
+		img.src = sanitizeRelayUrl(data.contentimg, true);
 		container.appendChild(img);
 	}
 
@@ -437,8 +437,9 @@ img.ssn-content-image {
 
 			let sourceIcon = '';
 			if (data.type) {
-				const providerName = data.type.charAt(0).toUpperCase() + data.type.slice(1);
-				const iconUrl = `https://socialstream.ninja/sources/images/${data.type}.png`;
+				const sourceType = String(data.type).replace(/[^a-zA-Z0-9_-]/g, '');
+				const providerName = sourceType.charAt(0).toUpperCase() + sourceType.slice(1);
+				const iconUrl = `https://socialstream.ninja/sources/images/${sourceType}.png`;
 				sourceIcon = `<img src="${iconUrl}" alt="${providerName}" class="source-icon" onerror="this.remove();">`;
 			}
 
