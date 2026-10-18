@@ -177,6 +177,17 @@ function addLogMessage(message, isError = false) {
 }
 
 // Function to update the detailed peer list
+// Escape peer-supplied strings before interpolating into innerHTML.
+function escapeDashboardPeerHtml(unsafe) {
+    if (unsafe === null || unsafe === undefined) return '';
+    return String(unsafe)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function updatePeerList() {
     const peerListContent = document.getElementById('peer-list-content');
     if (!peerListContent) return;
@@ -197,14 +208,14 @@ function updatePeerList() {
             peersByLabel[peerLabel] = [];
         }
         // Store just first 8 chars of UUID to keep display compact
-        peersByLabel[peerLabel].push(uuid.substring(0, 8) + '...');
+        peersByLabel[peerLabel].push(escapeDashboardPeerHtml(uuid.substring(0, 8)) + '...');
     });
     
     // Create HTML for the peer list
     let html = '<strong>Connected Peers:</strong><br>';
     
     Object.entries(peersByLabel).forEach(([label, uuids]) => {
-        html += `<span style="color: var(--primary-color);">${label}</span> (${uuids.length}): `;
+        html += `<span style="color: var(--primary-color);">${escapeDashboardPeerHtml(label)}</span> (${uuids.length}): `;
         if (uuids.length <= 3) {
             html += uuids.join(', ');
         } else {
