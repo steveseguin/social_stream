@@ -1924,6 +1924,17 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						provider,
 						model: message.model
 					}, options.requestTimeoutMs);
+					if (response.error && response.data === undefined) {
+						// Electron uses status 500 for local fetch failures, even without an HTTP response.
+						const timedOut = response.type === 'request-timeout' || response.type === 'body-timeout';
+						throw createLLMError(buildContext(), {
+							code: response.code || response.type || 'network_error',
+							message: timedOut
+								? 'The AI request timed out before a response was received. Try again or use a faster model.'
+								: String(response.error),
+							details: response
+						});
+					}
 					
 					if (response.status !== 200) {
 						let errorMessage = '';

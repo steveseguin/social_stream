@@ -15928,7 +15928,9 @@ async function processIncomingRequest(request, UUID = false) {
 					const controller = new AbortController();
 					privateChatbotControllers[UUID] = controller;
 
-					callLLMAPI(prompt, model, sendChatbotChunk, controller, UUID, request.images || null)
+					// Full overlay generation can outlast the desktop HTTP default of 30 seconds.
+					const llmOptions = request.context === "aiprompt" ? { requestTimeoutMs: 180000 } : {};
+					callLLMAPI(prompt, model, sendChatbotChunk, controller, UUID, request.images || null, llmOptions)
 						.then(fullResponse => {
 							if (privateChatbotControllers[UUID] === controller) {
 								delete privateChatbotControllers[UUID];

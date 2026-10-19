@@ -2498,7 +2498,7 @@ If the user asks a question that does not require a file change, answer normally
 					setStatus("AI request timed out.", "error");
 				}, AI_RESPONSE_TIMEOUT_MS);
 
-				var payload = { action: "chatbot", value: prompt, target: messageID, turbo: false };
+				var payload = { action: "chatbot", context: "aiprompt", value: prompt, target: messageID, turbo: false };
 				if (images && images.length) payload.images = images;
 
 				var sentParts = postBridgeOverlayPayload(payload);
