@@ -1968,7 +1968,14 @@ function loadSettings(item, resave = false) {
 	setupSocketDock();
 	handleVideoStatsSettingsChange();
 	handleStreamerBotSettingsChange();
+	const notifySsappPopup = isSSAPP && !loadedFirst;
 	loadedFirst = true;
+	if (notifySsappPopup) {
+		// The desktop popup may have stopped polling during a slow startup.
+		handleRuntimeMessage({ cmd: "getSettings" }, {}, function (response) {
+			ipcRenderer.send("fromBackgroundPopupResponse", response);
+		}).catch(error => console.warn("[SSApp] Failed to send startup settings:", error));
+	}
 }
 ////////////
 
@@ -5829,8 +5836,8 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			console.error("Shouldn't run sendResponse twice");
 		} else if (sendResponseReal) {
 			alreadySet = true;
-			// Always include current state in responses
-			if (typeof msg == "object") {
+			// A desktop startup retry must not overwrite the saved service state.
+			if (typeof msg == "object" && (!isSSAPP || loadedFirst)) {
 				msg.state = isExtensionOn;
 			}
 			sendResponseReal(msg);

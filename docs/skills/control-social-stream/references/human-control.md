@@ -20,7 +20,7 @@ not a reason to switch to another observation or execution interface. Use
 and `automationPaused`. It contains no page content or viewer token.
 
 Private viewing keeps a selected hidden Windows target rendering off-screen and
-transparent. Disconnect or handback restores its hidden state and opacity while
+transparent. Disconnect or handback restores its original size, hidden state and opacity while
 preserving any window size manually chosen on the host during the session.
 
 A disconnect or timeout keeps automation paused. Ask the person to reopen the
