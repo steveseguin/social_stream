@@ -15300,7 +15300,7 @@ function normalizeAiPromptOverlayStore(store) {
 
 	function addOverlay(rawKey) {
 		const item = source[rawKey];
-		if (!item || !item.html) return;
+		if (!item || typeof item.html !== "string") return;
 		let root = normalizeAiPromptOverlayKey(item.slug || item.id || item.name || rawKey);
 		let key = root;
 		let count = 2;
@@ -15329,8 +15329,10 @@ function normalizeAiPromptOverlayStore(store) {
 }
 
 function loadAiPromptOverlays() {
-	return new Promise(resolve => {
+	return new Promise((resolve, reject) => {
 		chrome.storage.local.get(["aiPromptOverlays"], result => {
+			const error = chrome.runtime.lastError;
+			if (error) { reject(new Error(error.message || "Could not read saved overlays")); return; }
 			aiPromptOverlays = normalizeAiPromptOverlayStore(result && result.aiPromptOverlays);
 			resolve(aiPromptOverlays);
 		});
@@ -15343,14 +15345,15 @@ async function getAiPromptOverlays() {
 }
 
 function saveAiPromptOverlays(store) {
-	aiPromptOverlays = normalizeAiPromptOverlayStore(store);
+	const snapshot = normalizeAiPromptOverlayStore(store);
+	aiPromptOverlays = snapshot;
 	return new Promise(resolve => {
-		chrome.storage.local.set({ aiPromptOverlays }, () => {
+		chrome.storage.local.set({ aiPromptOverlays: snapshot }, () => {
 			const error = chrome.runtime.lastError && chrome.runtime.lastError.message ? chrome.runtime.lastError.message : "";
 			if (error) {
 				console.error("Failed to save AI prompt overlays:", error);
 			}
-			resolve({ store: aiPromptOverlays, error });
+			resolve({ store: snapshot, error });
 		});
 	});
 }
@@ -15811,7 +15814,19 @@ async function processIncomingRequest(request, UUID = false) {
 				sendDataP2P({ aiEventResponse: { target: request.target, error: error.message || "AI overlay request failed." } }, UUID);
 			}
 		} else if (request.action === "saveAiPromptOverlays" && request.value) {
-			const saveResult = await saveAiPromptOverlays(request.value);
+			// New builders retry an immutable snapshot. Do not let a delayed retry
+			// replace a later acknowledged save; legacy clients keep their existing behavior.
+			const saveKey = request.snapshot === true && UUID ? UUID + ":" + request.target : null;
+			let savePromise = saveKey && aiPromptSaveRequests.get(saveKey);
+			if (!savePromise) {
+				savePromise = saveAiPromptOverlays(request.value).then(result => ({ error: result.error, updatedAt: result.store && result.store.updatedAt }));
+				if (saveKey) {
+					aiPromptSaveRequests.set(saveKey, savePromise);
+					if (aiPromptSaveRequests.size > 100) aiPromptSaveRequests.delete(aiPromptSaveRequests.keys().next().value);
+				}
+			}
+			const saveResult = await savePromise;
+			if (saveResult.error && saveKey) aiPromptSaveRequests.delete(saveKey);
 			if (UUID && request.target) {
 				sendDataP2P(
 					{
@@ -15819,7 +15834,7 @@ async function processIncomingRequest(request, UUID = false) {
 							target: request.target,
 							ok: !saveResult.error,
 							error: saveResult.error || "",
-							updatedAt: saveResult.store && saveResult.store.updatedAt
+							updatedAt: saveResult.updatedAt
 						}
 					},
 					UUID
@@ -15876,15 +15891,22 @@ async function processIncomingRequest(request, UUID = false) {
 				);
 			}
 		} else if (request.action === "getAiPromptOverlays" && UUID) {
-			const overlayStore = await getAiPromptOverlays();
-			sendDataP2PChunked({ aiPromptOverlays: { target: request.target || null, value: overlayStore } }, UUID);
+			try {
+				const overlayStore = await getAiPromptOverlays();
+				sendDataP2PChunked({ aiPromptOverlays: { target: request.target || null, value: overlayStore } }, UUID);
+			} catch (error) {
+				// Do not send an empty package on read failure: old builders would save over it.
+				console.error("Failed to read AI prompt overlays:", error);
+			}
 		} else if (request.action === "chatbotStop" && UUID) {
-			const activeController = privateChatbotControllers[UUID];
+			const controllerKey = request.context === "aiprompt" ? UUID + ":" + request.target : UUID;
+			const controllers = request.context === "aiprompt" ? aiPromptControllers : privateChatbotControllers;
+			const activeController = controllers[controllerKey];
 			if (activeController) {
 				try {
 					activeController.abort();
 				} catch (e) {}
-				delete privateChatbotControllers[UUID];
+				delete controllers[controllerKey];
 			}
 		} else if (request.action === "chatbotCapabilities" && UUID) {
 			sendDataP2P({ chatbotCapabilities: { target: request.target || null, value: getPrivateChatbotCapabilities() } }, UUID);
@@ -15896,6 +15918,7 @@ async function processIncomingRequest(request, UUID = false) {
 				try {
 					let streamedChunks = 0;
 					const sendChatbotChunk = chunk => {
+						if (request.context === "aiprompt" && controller.signal.aborted) return;
 						streamedChunks++;
 						sendDataP2P({ chatbotChunk: { value: chunk, target: request.target } }, UUID);
 					};
@@ -15926,21 +15949,27 @@ async function processIncomingRequest(request, UUID = false) {
 					}
 					let model = request.model || null;
 					const controller = new AbortController();
-					privateChatbotControllers[UUID] = controller;
+					const isAiPrompt = request.context === "aiprompt";
+					const controllerKey = isAiPrompt ? UUID + ":" + request.target : UUID;
+					const controllers = isAiPrompt ? aiPromptControllers : privateChatbotControllers;
+					controllers[controllerKey] = controller;
+					const deadline = isAiPrompt ? setTimeout(() => controller.abort(), 180000) : null;
 
-					// Full overlay generation can outlast the desktop HTTP default of 30 seconds.
-					const llmOptions = request.context === "aiprompt" ? { requestTimeoutMs: 180000 } : {};
-					callLLMAPI(prompt, model, sendChatbotChunk, controller, UUID, request.images || null, llmOptions)
+					// Builder requests have their own cancellation scope and longer deadline.
+					const llmOptions = isAiPrompt ? { requestTimeoutMs: 180000, overlayBuilder: true } : {};
+					callLLMAPI(prompt, model, sendChatbotChunk, controller, controllerKey, request.images || null, llmOptions)
 						.then(fullResponse => {
-							if (privateChatbotControllers[UUID] === controller) {
-								delete privateChatbotControllers[UUID];
+							if (controllers[controllerKey] === controller) {
+								delete controllers[controllerKey];
 							}
+							if (isAiPrompt && controller.signal.aborted) return;
 							sendChatbotFinal(fullResponse);
 						})
 						.catch(error => {
-							if (privateChatbotControllers[UUID] === controller) {
-								delete privateChatbotControllers[UUID];
+							if (controllers[controllerKey] === controller) {
+								delete controllers[controllerKey];
 							}
+							if (isAiPrompt && controller.signal.aborted) return;
 							let payload;
 							if (typeof LLMServiceError !== "undefined" && error instanceof LLMServiceError) {
 								payload = {
@@ -15955,7 +15984,7 @@ async function processIncomingRequest(request, UUID = false) {
 								payload = { message: error?.message || "Unknown error" };
 							}
 							sendDataP2P({ chatbotResponse: { value: JSON.stringify({ error: payload }), target: request.target } }, UUID);
-						});
+						}).finally(() => { if (deadline) clearTimeout(deadline); });
 				} catch (e) {
 					console.error("Unexpected error:", e);
 					sendDataP2P({ chatbotResponse: { value: JSON.stringify({ error: { message: e?.message || "Unexpected error" } }), target: request.target } }, UUID);
@@ -15976,6 +16005,8 @@ async function processIncomingRequest(request, UUID = false) {
 }
 
 const privateChatbotControllers = {};
+const aiPromptControllers = {};
+const aiPromptSaveRequests = new Map();
 
 function getPrivateChatbotCapabilities() {
 	// Describes the currently configured LLM to the private chatbot page.

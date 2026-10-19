@@ -702,6 +702,7 @@
 
 					<div class="button-row">
 						<button id="sendPrompt" type="button" class="primary">Ask AI</button>
+						<button id="stopPrompt" type="button" disabled>Stop</button>
 						<button id="reviewAndPolish" type="button" title="Capture the current preview, send the screenshot to a vision-capable AI, and ask for polish suggestions applied as new HTML.">📸 Review & polish</button>
 					</div>
 					<div class="prompt-options">
@@ -720,6 +721,7 @@
 					<div class="button-row">
 						<button id="compactConversation" type="button" class="ghost" title="Summarize this chat into a shorter context note.">Compact chat</button>
 						<button id="clearConversation" type="button" class="ghost">Clear chat</button>
+						<button id="undoAI" type="button" class="ghost" disabled>Undo AI edit</button>
 					</div>
 
 					<div class="button-row">
@@ -768,6 +770,11 @@
 								<button type="button" data-event="viewer_updates">👁️ Viewer counts</button>
 								<button type="button" data-event="custom" title="Paste a JSON payload and send it to the preview.">＋ Custom JSON…</button>
 							</div>
+							<details class="guidance">
+								<summary>Preview options</summary>
+								<div class="prompt-options"><label class="opt"><input type="checkbox" id="isolatePreview"><span>Isolate preview from the editor and browser storage</span></label></div>
+								<div class="small">Use for generated or imported code you do not trust. Custom overlays that use browser storage may need this turned off.</div>
+							</details>
 							<div class="preview-stage" id="previewStage">
 								<div class="preview-frame-wrap fit" id="previewFrameWrap">
 									<iframe id="previewFrame" sandbox="allow-scripts allow-forms allow-popups allow-same-origin"></iframe>
@@ -1493,6 +1500,8 @@ If the user asks a question that does not require a file change, answer normally
 		var bridgeRoomID = "";
 		var bridgePassword = "false";
 		var pendingResponses = {};
+		var latestPageRequest = {};
+		var undoAI = {};
 		var saveTimer = null;
 		var previewTimer = null;
 		var lastIframeError = null;
@@ -1505,9 +1514,14 @@ If the user asks a question that does not require a file change, answer normally
 		var overlayPackageRequestTarget = null;
 		var overlayPackageLoaded = false;
 		var overlayPackageSyncPending = false;
-		var overlayPackageLocalDirty = false;
+		var overlayPackageBaseline = null;
+		var lastSyncedState = null;
+		var overlaySaveState = null;
+		var pendingStorageKey = "ssnAiPromptPending:" + (new URLSearchParams(location.search).get("session") || "");
+		var overlayPackageRetryTimer = null;
 		var overlaySavePending = false;
 		var overlaySaveTarget = null;
+		var overlaySaveSnapshot = null;
 		var overlaySaveTimer = null;
 		var overlaySaveAttempts = 0;
 		var BRIDGE_CHUNK_SIZE = 12000;
@@ -1672,7 +1686,7 @@ If the user asks a question that does not require a file change, answer normally
 					var p = parsed.pages[i];
 					p.conversation = p.conversation || [];
 					p.systemPrompt = p.systemPrompt || defaultSystemPrompt;
-					p.html = p.html || TEMPLATES[0].src;
+					p.html = typeof p.html === "string" ? p.html : TEMPLATES[0].src;
 					p.name = cleanName(p.name);
 				}
 				normalizePageNames(parsed.pages);
@@ -1691,6 +1705,10 @@ If the user asks a question that does not require a file change, answer normally
 		function saveState() {
 			try {
 				OverlayStore.writeState(state, localStorage);
+				if (bridgeRoomID) {
+					try { localStorage.setItem(pendingStorageKey, JSON.stringify({ state: state, baseline: overlayPackageBaseline || lastSyncedState })); }
+					catch (e) { console.warn("Could not save overlay sync recovery data", e); }
+				}
 				storageStatus.textContent = "Saved locally " + new Date().toLocaleTimeString();
 				queueOverlayPublish();
 			} catch (e) {
@@ -1726,26 +1744,29 @@ If the user asks a question that does not require a file change, answer normally
 		function queueOverlayPublish() {
 			overlaySavePending = true;
 			if (overlayPackageSyncPending) {
-				overlayPackageLocalDirty = true;
+				storageStatus.textContent = "Saved locally; waiting for saved overlays before syncing.";
 				return;
 			}
-			publishOverlays();
+			if (!overlaySaveTarget) publishOverlays();
 		}
 
 		function publishOverlays() {
-			if (!overlaySavePending || overlayPackageSyncPending) return false;
+			if ((!overlaySavePending && !overlaySaveTarget) || overlayPackageSyncPending) return false;
 			if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow || !bridgeRoomID) return false;
 			if (!overlaySaveTarget) {
 				overlaySaveTarget = makeMessageId();
+				overlaySaveSnapshot = buildOverlayPackage();
+				overlaySaveState = JSON.parse(JSON.stringify(state));
+				overlaySavePending = false;
 				overlaySaveAttempts = 0;
 			}
 			overlaySaveAttempts++;
-			postBridgeOverlayPayload({ action: "saveAiPromptOverlays", target: overlaySaveTarget, value: buildOverlayPackage() }, "rpcs");
+			postBridgeOverlayPayload({ action: "saveAiPromptOverlays", target: overlaySaveTarget, snapshot: true, value: overlaySaveSnapshot }, "rpcs");
 			storageStatus.textContent = "Saved locally; syncing overlay...";
 			clearOverlaySaveTimer();
 			if (overlaySaveAttempts < 10) {
 				overlaySaveTimer = setTimeout(function () {
-					if (overlaySavePending) publishOverlays();
+					if (overlaySaveTarget) publishOverlays();
 				}, 1000);
 			} else {
 				storageStatus.textContent = "Saved locally; backend sync not confirmed.";
@@ -1759,17 +1780,59 @@ If the user asks a question that does not require a file change, answer normally
 				storageStatus.textContent = "Saved locally; backend save failed: " + (response.error || "unknown error");
 				return true;
 			}
-			overlaySavePending = false;
+			lastSyncedState = overlaySaveState;
+			overlaySaveState = null;
 			overlaySaveTarget = null;
+			overlaySaveSnapshot = null;
 			overlaySaveAttempts = 0;
 			clearOverlaySaveTimer();
-			storageStatus.textContent = "Saved and synced " + new Date().toLocaleTimeString();
+			if (overlaySavePending) publishOverlays();
+			else {
+				try { localStorage.removeItem(pendingStorageKey); } catch (e) {}
+				storageStatus.textContent = "Saved and synced " + new Date().toLocaleTimeString();
+			}
 			return true;
 		}
 
 		function applyOverlayPackage(pack) {
 			var nextState = OverlayStore.packageToState(pack, { defaultSystemPrompt: defaultSystemPrompt, normalizeName: cleanName });
-			if (!nextState) return false;
+			if (!nextState) {
+				lastSyncedState = { version: 2, activeId: "", pages: [] };
+				return false;
+			}
+			normalizePageNames(nextState.pages);
+			lastSyncedState = JSON.parse(JSON.stringify(nextState));
+			// Keep edits made while the initial read was in flight. Conflicting versions
+			// become separate pages so neither the saved nor the local work is lost.
+			if (overlayPackageBaseline) {
+				syncFormToPage();
+				var selected = activePage();
+				for (var i = 0; i < state.pages.length; i++) {
+					var local = state.pages[i];
+					var baseline = overlayPackageBaseline.pages.filter(function (p) { return p.id === local.id; })[0];
+					if (baseline && pageContent(baseline) === pageContent(local)) continue;
+					var remote = nextState.pages.filter(function (p) { return p.name === (baseline || local).name; })[0];
+					if (remote && (pageContent(remote) === pageContent(local) || (baseline && pageContent(remote) === pageContent(baseline)))) {
+						nextState.pages.splice(nextState.pages.indexOf(remote), 1);
+					} else if (remote) {
+						cancelPageRequests(local.id);
+						local.name += "-local";
+						local.id = makeId();
+					}
+					nextState.pages.push(local);
+					if (local === selected) nextState.activeId = local.id;
+					overlaySavePending = true;
+				}
+				overlayPackageBaseline.pages.forEach(function (before) {
+					if (findPage(before.id)) return;
+					// A deletion only removes an unchanged saved copy.
+					nextState.pages = nextState.pages.filter(function (remote) {
+						return pageContent(remote) !== pageContent(before);
+					});
+				});
+				if (!nextState.pages.length) return false;
+				if (!nextState.pages.some(function (p) { return p.id === nextState.activeId; })) nextState.activeId = nextState.pages[0].id;
+			}
 			normalizePageNames(nextState.pages);
 			state = nextState;
 			OverlayStore.writeState(state, localStorage);
@@ -1778,19 +1841,29 @@ If the user asks a question that does not require a file change, answer normally
 			return true;
 		}
 
+		function pageContent(page) {
+			return JSON.stringify([page.name, page.html, page.systemPrompt, page.conversation]);
+		}
+
 		function requestOverlayPackage() {
 			if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow || !bridgeRoomID) return;
-			overlayPackageRequestTarget = makeMessageId();
-			overlayPackageLoaded = false;
+			if (overlayPackageLoaded) {
+				overlayPackageSyncPending = false;
+				publishOverlays();
+				return;
+			}
+			if (!overlayPackageRequestTarget) overlayPackageRequestTarget = makeMessageId();
 			overlayPackageSyncPending = true;
-			overlayPackageLocalDirty = overlaySavePending;
-			postBridgeOverlayPayload({ action: "getAiPromptOverlays", target: overlayPackageRequestTarget }, "rpcs");
-			setTimeout(function () {
-				if (!overlayPackageLoaded) {
-					overlayPackageSyncPending = false;
-					queueOverlayPublish();
-				}
-			}, 2500);
+			var target = overlayPackageRequestTarget;
+			var attempts = 0;
+			clearTimeout(overlayPackageRetryTimer);
+			function request() {
+				if (overlayPackageLoaded || target !== overlayPackageRequestTarget) return;
+				postBridgeOverlayPayload({ action: "getAiPromptOverlays", target: target }, "rpcs");
+				if (++attempts < 12) overlayPackageRetryTimer = setTimeout(request, 2500);
+				else storageStatus.textContent = "Saved locally; sync unavailable. Use Save to retry.";
+			}
+			request();
 		}
 
 		function syncFormToPage() {
@@ -1824,7 +1897,10 @@ If the user asks a question that does not require a file change, answer normally
 		}
 
 		function loadActivePage() {
+			clearTimeout(previewTimer);
+			lastAppliedFromAI = false;
 			var page = activePage();
+			el("undoAI").disabled = !undoAI[page.id];
 			pageName.value = cleanName(page.name);
 			systemPrompt.value = page.systemPrompt || defaultSystemPrompt;
 			htmlEditor.value = page.html || "";
@@ -1851,8 +1927,8 @@ If the user asks a question that does not require a file change, answer normally
 			conversationLog.scrollTop = conversationLog.scrollHeight;
 		}
 
-		function saveConversationMessage(role, content) {
-			var page = activePage();
+		function saveConversationMessage(role, content, page) {
+			page = page || activePage();
 			page.conversation = page.conversation || [];
 			page.conversation.push({ role: role, content: content || "", at: Date.now() });
 			if (page.conversation.length > MAX_HISTORY) {
@@ -1919,10 +1995,10 @@ If the user asks a question that does not require a file change, answer normally
 			var elapsed = formatElapsed(Date.now() - pending.requestedAt);
 			var chunks = pending.chunks || 0;
 			var chars = pending.text ? pending.text.length : 0;
-			var label = state || (chunks ? "Streaming" : "Waiting for first streamed token");
+			var label = state || (chunks ? "Streaming" : "Waiting for AI response");
 			pending.meta.className = "stream-meta" + (!chunks && Date.now() - pending.requestedAt > 10000 ? " warn" : "");
 			pending.meta.innerHTML = '<span class="dot"></span><span>' + label + ' · ' + elapsed + ' · ' + chunks + ' chunks · ' + chars + ' chars</span>';
-			pending.preview.textContent = streamExcerpt(pending.text) || "No tokens received yet.";
+			pending.preview.textContent = streamExcerpt(pending.text) || "Some providers send the complete response at once.";
 		}
 
 		function createPendingStreamView(body, pending) {
@@ -1940,7 +2016,7 @@ If the user asks a question that does not require a file change, answer normally
 			pending.noChunkTimer = setTimeout(function () {
 				if (!pending.chunks) {
 					logBuilder("warn", "No streamed chunks received after 10 seconds", { target: pending.id });
-					updatePendingStream(pending, "Still waiting for first streamed token");
+					updatePendingStream(pending, "Still waiting for AI response");
 				}
 			}, 10000);
 		}
@@ -1973,6 +2049,9 @@ If the user asks a question that does not require a file change, answer normally
 
 		function injectErrorReporter(source) {
 			var reporter = "<script>(function(){function send(message,stack){try{parent.postMessage({__aiPromptError:true,message:String(message&&message.message||message),stack:stack?String(stack):\"\"},\"*\");}catch(e){}}window.addEventListener(\"error\",function(e){var detail=\"\";if(e.filename)detail+=\"Source: \"+e.filename+\"\\n\";if(e.lineno)detail+=\"Line: \"+e.lineno+\" Column: \"+(e.colno||0)+\"\\n\";var stack=e.error&&e.error.stack?e.error.stack:detail;send(e.error||e.message,stack);});window.addEventListener(\"unhandledrejection\",function(e){send(e.reason||\"Unhandled promise rejection\",e.reason&&e.reason.stack?e.reason.stack:\"\");});var origErr=console.error;console.error=function(){var parts=[];for(var i=0;i<arguments.length;i++)parts.push(String(arguments[i]));send(parts.join(\" \"),\"\");origErr.apply(console,arguments);};}());<\/script>";
+			if (el("isolatePreview").checked) {
+				reporter += "<script>(" + isolatedPreviewCapture.toString() + ")();<\/script>";
+			}
 			var lower = String(source || "").toLowerCase();
 			var headIdx = lower.indexOf("<head>");
 			if (headIdx >= 0) {
@@ -1986,6 +2065,7 @@ If the user asks a question that does not require a file change, answer normally
 			syncFormToPage();
 			hideConsoleBar();
 			var html = htmlEditor.value || "";
+			previewFrame.setAttribute("sandbox", "allow-scripts allow-forms allow-popups" + (el("isolatePreview").checked ? "" : " allow-same-origin"));
 			previewFrame.srcdoc = html ? injectErrorReporter(html) : "";
 			if (!options.skipSave) scheduleSave();
 		}
@@ -2021,7 +2101,9 @@ If the user asks a question that does not require a file change, answer normally
 			autoFixAttempts += 1;
 			var retryNote = "Auto-fix attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + " - the preview threw this error:\n\n" + lastIframeError + "\n\nReturn a corrected, complete HTML document. Focus only on fixing the runtime or syntax error first; keep the existing design unless the error requires changing it.";
 			setStatus("Auto-fixing error (attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + ")…", "warn");
+			var retryPage = activePage(), retryHtml = retryPage.html;
 			setTimeout(function () {
+				if (activePage() !== retryPage || retryPage.html !== retryHtml) return;
 				hideConsoleBar();
 				sendPrompt(retryNote, { isAutoFix: true });
 			}, 400);
@@ -2034,7 +2116,9 @@ If the user asks a question that does not require a file change, answer normally
 			autoFixAttempts += 1;
 			var retryNote = "Auto-fix attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + " - the ssnpatch could not be applied:\n\n" + message + "\n\nReturn only a corrected ```ssnpatch fenced JSON block. The block content must be valid JSON; escape backslashes, quotes, and newlines inside string values. Use exact text copied from the current overlay HTML. Each find string must match exactly once. Do not return a full HTML file.";
 			setStatus("Retrying patch (attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + ")…", "warn");
+			var retryPage = activePage(), retryHtml = retryPage.html;
 			setTimeout(function () {
+				if (activePage() !== retryPage || retryPage.html !== retryHtml) return;
 				sendPrompt(retryNote, { isAutoFix: true });
 			}, 400);
 			return true;
@@ -2057,41 +2141,106 @@ If the user asks a question that does not require a file change, answer normally
 			return html2canvasPromise;
 		}
 
-		function capturePreviewDataUrl() {
-			return loadHtml2Canvas().then(function (h2c) {
-				var doc = previewFrame.contentDocument;
-				if (!doc || !doc.body) throw new Error("Preview iframe not ready for capture");
-				var rootEl = doc.documentElement;
-				var opts = {
-					backgroundColor: null,
-					scale: 1,
-					logging: false,
-					useCORS: true,
-					allowTaint: false,
-					width: Math.max(rootEl.clientWidth, 320),
-					height: Math.max(rootEl.clientHeight, 240),
-					windowWidth: Math.max(rootEl.clientWidth, 320),
-					windowHeight: Math.max(rootEl.clientHeight, 240)
-				};
-				return h2c(doc.body, opts).then(function (canvas) {
-					var MAX = 1280;
-					if (canvas.width > MAX || canvas.height > MAX) {
-						var scale = MAX / Math.max(canvas.width, canvas.height);
-						var scaled = document.createElement("canvas");
-						scaled.width = Math.round(canvas.width * scale);
-						scaled.height = Math.round(canvas.height * scale);
-						scaled.getContext("2d").drawImage(canvas, 0, 0, scaled.width, scaled.height);
-						canvas = scaled;
+		function renderPreviewDocument(doc, h2c) {
+			if (!doc || !doc.body) return Promise.reject(new Error("Preview not ready for capture"));
+			var width = Math.max(doc.documentElement.clientWidth, 320);
+			var height = Math.max(doc.documentElement.clientHeight, 240);
+			return h2c(doc.body, { backgroundColor: null, scale: 1, logging: false, useCORS: true,
+				allowTaint: false, width: width, height: height, windowWidth: width, windowHeight: height
+			}).then(function (canvas) {
+				if (canvas.width > 1280 || canvas.height > 1280) {
+					var scale = 1280 / Math.max(canvas.width, canvas.height);
+					var scaled = doc.createElement("canvas");
+					scaled.width = Math.round(canvas.width * scale);
+					scaled.height = Math.round(canvas.height * scale);
+					scaled.getContext("2d").drawImage(canvas, 0, 0, scaled.width, scaled.height);
+					canvas = scaled;
+				}
+				return canvas.toDataURL("image/png");
+			});
+		}
+
+		// Snapshot the rendered preview without giving its scripts access to the editor.
+		function isolatedPreviewCapture() {
+			window.addEventListener("message", function (event) {
+				if (event.source !== parent || !event.data || !event.data.__aiPromptCapture) return;
+				var target = event.data.__aiPromptCapture;
+				try {
+					var copy = document.documentElement.cloneNode(true);
+					var originals = document.documentElement.querySelectorAll("*");
+					var copies = copy.querySelectorAll("*");
+					for (var i = 0; i < originals.length; i++) {
+						var style = getComputedStyle(originals[i]);
+						for (var j = 0; j < style.length; j++) copies[i].style.setProperty(style[j], style.getPropertyValue(style[j]));
+						copies[i].style.setProperty("animation", "none");
+						if (originals[i].tagName === "CANVAS") {
+							var img = document.createElement("img");
+							img.src = originals[i].toDataURL();
+							img.style.cssText = copies[i].style.cssText;
+							copies[i].parentNode.replaceChild(img, copies[i]);
+						}
 					}
-					return canvas.toDataURL("image/png");
-				});
+					parent.postMessage({ __aiPromptCaptured: target, html: copy.outerHTML }, "*");
+				} catch (error) {
+					parent.postMessage({ __aiPromptCaptured: target, error: error.message }, "*");
+				}
+			});
+		}
+
+		function capturePreviewDataUrl() {
+			if (!el("isolatePreview").checked) return loadHtml2Canvas().then(function (h2c) {
+				return renderPreviewDocument(previewFrame.contentDocument, h2c);
+			});
+			return new Promise(function (resolve, reject) {
+				var target = makeMessageId();
+				var snapshotFrame = null;
+				var timer = setTimeout(function () { finish(new Error("Preview capture timed out")); }, 15000);
+				function finish(error, image) {
+					clearTimeout(timer);
+					window.removeEventListener("message", receive);
+					if (snapshotFrame) { snapshotFrame.remove(); snapshotFrame = null; }
+					if (error) reject(error); else resolve(image);
+				}
+				function receive(event) {
+					var data = event.data || {};
+					if (event.source !== previewFrame.contentWindow || data.__aiPromptCaptured !== target) return;
+					window.removeEventListener("message", receive);
+					if (data.error || typeof data.html !== "string") { finish(new Error(data.error || "Invalid preview snapshot")); return; }
+					// html2canvas needs a same-origin document. Render an inert copy:
+					// scripts remain disabled for this frame and all its descendants.
+					var doc = new DOMParser().parseFromString(data.html, "text/html");
+					doc.querySelectorAll("script,iframe,object,embed,meta,base,noscript").forEach(function (node) { node.remove(); });
+					var base = doc.createElement("base");
+					base.href = location.href;
+					doc.head.insertBefore(base, doc.head.firstChild);
+					snapshotFrame = document.createElement("iframe");
+					snapshotFrame.setAttribute("sandbox", "allow-same-origin");
+					snapshotFrame.style.cssText = "position:fixed;left:-100000px;top:0;border:0;";
+					snapshotFrame.style.width = Math.max(previewFrame.clientWidth, 320) + "px";
+					snapshotFrame.style.height = Math.max(previewFrame.clientHeight, 240) + "px";
+					snapshotFrame.onload = function () {
+						loadHtml2Canvas().then(function (h2c) {
+							if (!snapshotFrame) throw new Error("Preview capture expired");
+							return renderPreviewDocument(snapshotFrame.contentDocument, h2c);
+						}).then(function (image) { finish(null, image); }).catch(function (error) { finish(error); });
+					};
+					snapshotFrame.srcdoc = "<!doctype html>" + doc.documentElement.outerHTML;
+					document.body.appendChild(snapshotFrame);
+				}
+				window.addEventListener("message", receive);
+				previewFrame.contentWindow.postMessage({ __aiPromptCapture: target }, "*");
 			});
 		}
 
 		function reviewAndPolish() {
 			syncFormToPage();
+			var reviewPage = activePage(), reviewHtml = reviewPage.html;
 			setStatus("Capturing preview for review…", "warn");
 			capturePreviewDataUrl().then(function (dataUrl) {
+				if (activePage() !== reviewPage || reviewPage.html !== reviewHtml) {
+					setStatus("The page changed during capture. Run review again.", "warn");
+					return;
+				}
 				var prompt = "Here is a rendered screenshot of the current overlay. Review the visual design and propose improvements: layout, spacing, color hierarchy, animations, legibility. Return the complete updated HTML file. Do not change core logic unless it's causing a visual problem.";
 				sendPrompt(prompt, { images: [dataUrl] });
 			}).catch(function (err) {
@@ -2451,6 +2600,10 @@ If the user asks a question that does not require a file change, answer normally
 
 			if (!opts.isAutoFix) autoFixAttempts = 0;
 
+			cancelPageRequests(page.id);
+			var requestID = makeMessageId();
+			latestPageRequest[page.id] = requestID;
+			var sourceHtml = page.html;
 			var attachFlag = !!(attachScreenshot && attachScreenshot.checked);
 			var provided = Array.isArray(opts.images) ? opts.images : (opts.images ? [opts.images] : null);
 			var sentAfterBridgeWait = false;
@@ -2476,7 +2629,11 @@ If the user asks a question that does not require a file change, answer normally
 			};
 
 			var submit = function (images) {
-				var messageID = makeMessageId();
+				if (findPage(page.id) !== page || page.html !== sourceHtml || latestPageRequest[page.id] !== requestID || activePage() !== page) {
+					setStatus("The page changed before the request was sent. Ask AI again.", "warn");
+					return;
+				}
+				var messageID = requestID;
 				var prompt = buildPrompt(page, request);
 				if (requestOverride == null) userRequest.value = "";
 				var displayRequest = opts.displayRequest || request;
@@ -2484,16 +2641,17 @@ If the user asks a question that does not require a file change, answer normally
 				appendConversationMessage("user", userMsg, true);
 				var assistantBody = appendConversationMessage("assistant", "Thinking…", false);
 
-				pendingResponses[messageID] = { id: messageID, body: assistantBody, text: "", chunks: 0, requestedAt: Date.now(), requestText: request, isAutoFix: !!opts.isAutoFix, isCompaction: !!opts.isCompaction };
+				pendingResponses[messageID] = { page: page, sourceHtml: sourceHtml, conversation: page.conversation, id: messageID, body: assistantBody, text: "", chunks: 0, requestedAt: Date.now(), requestText: request, isAutoFix: !!opts.isAutoFix, isCompaction: !!opts.isCompaction };
 				createPendingStreamView(assistantBody, pendingResponses[messageID]);
+				el("stopPrompt").disabled = false;
 				pendingResponses[messageID].timeoutTimer = setTimeout(function () {
 					var pending = pendingResponses[messageID];
 					if (!pending) return;
 					clearPendingTimers(pending);
 					var msg = pending.chunks ? "The AI stream started but never sent a final response." : "No AI response arrived. The session bridge or bot service may not be connected.";
 					pending.body.textContent = "Error: " + msg;
-					saveConversationMessage("assistant", "Error: " + msg);
-					delete pendingResponses[messageID];
+					saveConversationMessage("assistant", "Error: " + msg, pending.page);
+					cancelRequest(messageID);
 					logBuilder("error", msg, { target: messageID, chunks: pending.chunks, chars: pending.text.length });
 					setStatus("AI request timed out.", "error");
 				}, AI_RESPONSE_TIMEOUT_MS);
@@ -2522,6 +2680,37 @@ If the user asks a question that does not require a file change, answer normally
 			}
 		}
 
+		function cancelRequest(id) {
+			var pending = pendingResponses[id];
+			if (!pending) return;
+			clearPendingTimers(pending);
+			postBridgeOverlayPayload({ action: "chatbotStop", context: "aiprompt", target: pending.id });
+			delete pendingResponses[id];
+			el("stopPrompt").disabled = !Object.keys(pendingResponses).length;
+		}
+
+		function cancelPageRequests(pageId) {
+			latestPageRequest[pageId] = null;
+			Object.keys(pendingResponses).forEach(function (id) {
+				if (pendingResponses[id].page.id !== pageId) return;
+				pendingResponses[id].body.textContent = "Request stopped.";
+				cancelRequest(id);
+			});
+		}
+
+		function applyAIHtml(page, html) {
+			undoAI[page.id] = { before: page.html, after: html };
+			page.html = html;
+			page.updatedAt = Date.now();
+			if (activePage() === page) {
+				htmlEditor.value = html;
+				el("undoAI").disabled = false;
+				lastAppliedFromAI = true;
+				refreshPreview();
+			}
+			scheduleSave();
+		}
+
 		function receiveAIResponse(response, chunk) {
 			var id = response.target;
 			var pending = pendingResponses[id];
@@ -2543,25 +2732,37 @@ If the user asks a question that does not require a file change, answer normally
 			}
 
 			clearPendingTimers(pending);
+			delete pendingResponses[id];
+			el("stopPrompt").disabled = !Object.keys(pendingResponses).length;
+			var page = pending.page;
+			if (findPage(page.id) !== page || latestPageRequest[page.id] !== pending.id || page.conversation !== pending.conversation) return;
 			var finalText = value || pending.text || "";
 			var errorMessage = parseErrorResponse(finalText);
 			if (errorMessage) {
 				var annotated = annotateErrorMessage(errorMessage);
 				logBuilder("error", "AI request failed: " + errorMessage, finalText);
 				pending.body.textContent = "Error: " + annotated;
-				saveConversationMessage("assistant", "Error: " + annotated);
-				delete pendingResponses[id];
+				saveConversationMessage("assistant", "Error: " + annotated, page);
+				if (activePage() === page) renderConversation();
 				setStatus("AI request failed.", "error");
+				return;
+			}
+
+			if (page.html !== pending.sourceHtml) {
+				var retained = "The page changed while AI was working. Your edits were kept. AI response:\n\n" + finalText;
+				pending.body.textContent = retained;
+				saveConversationMessage("assistant", retained, page);
+				if (activePage() === page) renderConversation();
+				setStatus("AI response kept in chat; your edits were preserved.", "warn");
 				return;
 			}
 
 			if (pending.isCompaction) {
 				var summary = String(finalText || "").trim();
 				if (!summary) summary = "Conversation compacted, but no summary was returned.";
-				activePage().conversation = [{ role: "assistant", content: "Conversation summary:\n" + summary, at: Date.now() }];
+				page.conversation = [{ role: "assistant", content: "Conversation summary:\n" + summary, at: Date.now() }];
 				saveState();
-				renderConversation();
-				delete pendingResponses[id];
+				if (activePage() === page) renderConversation();
 				logBuilder("log", "Chat compacted", { chars: summary.length });
 				setStatus("Chat compacted.", "ok");
 				return;
@@ -2572,10 +2773,9 @@ If the user asks a question that does not require a file change, answer normally
 				if (patch.__ssnPatchError) {
 					var patchParseError = "Patch could not be applied: " + patch.__ssnPatchError;
 					pending.body.textContent = patchParseError;
-					saveConversationMessage("assistant", patchParseError);
+					saveConversationMessage("assistant", patchParseError, page);
 					logBuilder("error", patchParseError, finalText);
-					delete pendingResponses[id];
-					if (!maybeRetryPatchFailure(patchParseError)) {
+					if (activePage() !== page || !maybeRetryPatchFailure(patchParseError)) {
 						setStatus(patchParseError, "error");
 					}
 					return;
@@ -2583,55 +2783,53 @@ If the user asks a question that does not require a file change, answer normally
 				if (hasHtmlFence(finalText)) {
 					var mixedPatchError = "Patch could not be applied: The AI returned both ssnpatch and full HTML.";
 					pending.body.textContent = mixedPatchError;
-					saveConversationMessage("assistant", mixedPatchError);
+					saveConversationMessage("assistant", mixedPatchError, page);
 					logBuilder("error", mixedPatchError, finalText);
-					delete pendingResponses[id];
-					if (!maybeRetryPatchFailure(mixedPatchError)) {
+					if (activePage() !== page || !maybeRetryPatchFailure(mixedPatchError)) {
 						setStatus(mixedPatchError, "error");
 					}
 					return;
 				}
-				var patchResult = applyPatchResponse(patch, htmlEditor.value || "");
+				var patchResult = applyPatchResponse(patch, page.html || "");
 				if (!patchResult.ok) {
 					var patchError = "Patch could not be applied: " + patchResult.error;
 					pending.body.textContent = patchError;
-					saveConversationMessage("assistant", patchError);
+					saveConversationMessage("assistant", patchError, page);
 					logBuilder("error", patchError, finalText);
-					delete pendingResponses[id];
-					if (!maybeRetryPatchFailure(patchError)) {
+					if (activePage() !== page || !maybeRetryPatchFailure(patchError)) {
 						setStatus(patchError, "error");
 					}
 					return;
 				}
-				htmlEditor.value = patchResult.html;
-				syncFormToPage();
-				lastAppliedFromAI = true;
-				refreshPreview();
+				applyAIHtml(page, patchResult.html);
 				var patchNote = patchResult.reply || "Patch applied.";
 				if (patchResult.count) patchNote += "\n\nApplied " + patchResult.count + " exact-match edit" + (patchResult.count === 1 ? "." : "s.");
 				pending.body.textContent = patchNote;
-				saveConversationMessage("assistant", patchNote);
+				saveConversationMessage("assistant", patchNote, page);
 				setStatus("Patch update applied.", "ok");
 			} else {
 				var html = extractHtml(finalText);
+				if (html && /<html[\s>]/i.test(html) && !/<\/html\s*>/i.test(html)) {
+					var incomplete = "The AI returned an incomplete HTML document. Your overlay was kept. Ask for a smaller edit or try again.";
+					saveConversationMessage("assistant", incomplete, page);
+					if (activePage() === page) renderConversation();
+					setStatus(incomplete, "error");
+					return;
+				}
 				if (html) {
 				if (requestRequiresPatch(pending.requestText)) {
 					var patchOnlyError = "Patch could not be applied: The request asked for ssnpatch/patch-only output, but the AI returned full HTML.";
 					pending.body.textContent = patchOnlyError;
-					saveConversationMessage("assistant", patchOnlyError);
+					saveConversationMessage("assistant", patchOnlyError, page);
 					logBuilder("error", patchOnlyError, finalText);
-					delete pendingResponses[id];
-					if (!maybeRetryPatchFailure(patchOnlyError)) {
+					if (activePage() !== page || !maybeRetryPatchFailure(patchOnlyError)) {
 						setStatus(patchOnlyError, "error");
 					}
 					return;
 				}
 				var review = reviewGeneratedHtml(html, pending.requestText || "");
 				html = review.html;
-				htmlEditor.value = html;
-				syncFormToPage();
-				lastAppliedFromAI = true;
-				refreshPreview();
+				applyAIHtml(page, html);
 				var summaryIdx = finalText.indexOf("```");
 				var note = (summaryIdx > 0 ? finalText.slice(0, summaryIdx).trim() : "") || "Updated HTML applied.";
 				if (review.notes.length) {
@@ -2639,15 +2837,15 @@ If the user asks a question that does not require a file change, answer normally
 					logBuilder("warn", "Generated HTML safety review", review.notes);
 				}
 				pending.body.textContent = note;
-				saveConversationMessage("assistant", note);
+				saveConversationMessage("assistant", note, page);
 				setStatus(review.notes.length ? "HTML update applied with safety review." : "HTML update applied.", "ok");
 				} else {
 				pending.body.textContent = finalText;
-				saveConversationMessage("assistant", finalText);
+				saveConversationMessage("assistant", finalText, page);
 				setStatus("AI response received.", "ok");
 				}
 			}
-			delete pendingResponses[id];
+			if (activePage() === page) renderConversation();
 		}
 
 		function exportPage() {
@@ -2710,6 +2908,8 @@ If the user asks a question that does not require a file change, answer normally
 			for (var i = 0; i < state.pages.length; i++) {
 				if (state.pages[i].id !== current.id) next.push(state.pages[i]);
 			}
+			cancelPageRequests(current.id);
+			delete undoAI[current.id];
 			state.pages = next;
 			state.activeId = state.pages[0].id;
 			saveState();
@@ -2770,6 +2970,7 @@ If the user asks a question that does not require a file change, answer normally
 			var page = activePage();
 			if (!page.conversation || !page.conversation.length) return;
 			if (!confirm("Clear this page's chat history?")) return;
+			cancelPageRequests(page.id);
 			page.conversation = [];
 			saveState();
 			renderConversation();
@@ -2815,6 +3016,8 @@ If the user asks a question that does not require a file change, answer normally
 		function saveNow() {
 			syncFormToPage();
 			saveState();
+			if (overlayPackageSyncPending) requestOverlayPackage();
+			else if (overlaySaveTarget) publishOverlays();
 			logBuilder("log", "Saved current overlay manually");
 			setStatus("Saved current overlay.", "ok");
 		}
@@ -2875,6 +3078,22 @@ If the user asks a question that does not require a file change, answer normally
 			el("exportPage").addEventListener("click", exportPage);
 			el("refreshPreview").addEventListener("click", refreshPreview);
 			el("sendPrompt").addEventListener("click", function () { sendPrompt(); });
+			el("stopPrompt").addEventListener("click", function () {
+				state.pages.forEach(function (page) { cancelPageRequests(page.id); });
+				setStatus("AI requests stopped.", "warn");
+			});
+			el("undoAI").addEventListener("click", function () {
+				var page = activePage(), previous = undoAI[page.id];
+				if (!previous) return;
+				if (htmlEditor.value !== previous.after && !confirm("Undo the AI edit and your changes made after it?")) return;
+				cancelPageRequests(page.id);
+				htmlEditor.value = previous.before;
+				delete undoAI[page.id];
+				el("undoAI").disabled = true;
+				lastAppliedFromAI = false;
+				refreshPreview();
+				setStatus("AI edit undone.", "ok");
+			});
 			el("reviewAndPolish").addEventListener("click", reviewAndPolish);
 			el("openSettings").addEventListener("click", function () {
 				alert("The AI runs in the Social Stream Ninja extension. Configure your LLM provider and model in SSN's popup → AI settings. Any provider that speaks the OpenAI chat-completions format works here, including local vLLM or Ollama endpoints.");
@@ -2899,6 +3118,10 @@ If the user asks a question that does not require a file change, answer normally
 				}
 			});
 			previewSize.addEventListener("change", applyPreviewSize);
+			el("isolatePreview").addEventListener("change", function () {
+				try { localStorage.setItem("ssnAiPromptIsolatePreview", String(el("isolatePreview").checked)); } catch (e) {}
+				refreshPreview({ skipSave: true });
+			});
 
 			var tabs = document.querySelectorAll(".tab");
 			for (var i = 0; i < tabs.length; i++) {
@@ -2944,14 +3167,17 @@ If the user asks a question that does not require a file change, answer normally
 					} else if (payload.chatbotResponse && typeof payload.chatbotResponse.value !== "undefined") {
 						receiveAIResponse(payload.chatbotResponse, false);
 					} else if (payload.aiPromptOverlays && payload.aiPromptOverlays.target === overlayPackageRequestTarget) {
+						if (overlayPackageLoaded) return;
+						if (payload.aiPromptOverlays.error) {
+							storageStatus.textContent = "Saved locally; could not read saved overlays: " + payload.aiPromptOverlays.error;
+							return;
+						}
 						overlayPackageLoaded = true;
 						overlayPackageSyncPending = false;
-						if (overlayPackageLocalDirty) {
-							overlayPackageLocalDirty = false;
-							queueOverlayPublish();
-						} else if (!applyOverlayPackage(payload.aiPromptOverlays.value || payload.aiPromptOverlays)) {
-							queueOverlayPublish();
-						}
+						clearTimeout(overlayPackageRetryTimer);
+						if (!applyOverlayPackage(payload.aiPromptOverlays.value || payload.aiPromptOverlays)) overlaySavePending = true;
+						overlayPackageBaseline = null;
+						if (overlaySavePending) publishOverlays();
 					} else if (payload.aiPromptOverlaysSaved) {
 						confirmOverlaySave(payload.aiPromptOverlaysSaved);
 					}
@@ -2959,6 +3185,7 @@ If the user asks a question that does not require a file change, answer normally
 			});
 
 			window.addEventListener("beforeunload", function () {
+				state.pages.forEach(function (page) { cancelPageRequests(page.id); });
 				syncFormToPage();
 				saveState();
 			});
@@ -2974,6 +3201,17 @@ If the user asks a question that does not require a file change, answer normally
 		}
 
 		state = loadState();
+		overlayPackageBaseline = JSON.parse(JSON.stringify(state));
+		try {
+			var unsynced = JSON.parse(localStorage.getItem(pendingStorageKey) || "null");
+			if (unsynced && unsynced.state && unsynced.state.pages && unsynced.state.pages.length && unsynced.baseline && unsynced.baseline.pages) {
+				state = unsynced.state;
+				overlayPackageBaseline = unsynced.baseline;
+				overlaySavePending = true;
+			}
+		} catch (e) {}
+		overlayPackageSyncPending = !!new URLSearchParams(location.search).get("session");
+		try { el("isolatePreview").checked = localStorage.getItem("ssnAiPromptIsolatePreview") === "true"; } catch (e) {}
 		renderTemplateGrid();
 		bindEvents();
 		loadActivePage();

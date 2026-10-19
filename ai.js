@@ -1421,6 +1421,17 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			break;
 	}
 		
+	function checkOverlayCompletion(data) {
+		if (!options.overlayBuilder) return;
+		const reason = data.choices?.[0]?.finish_reason || data.done_reason || data.candidates?.[0]?.finishReason;
+		if (["length", "max_tokens", "max_output_tokens", "content_filter", "safety", "recitation", "tool_calls", "function_call"].includes(String(reason || "").toLowerCase())) {
+			throw createLLMError(buildContext(), {
+				code: "overlay_response_incomplete",
+				message: "The AI response was incomplete (" + reason + "). Your overlay was kept. Try a smaller edit or a model with a larger output limit."
+			});
+		}
+	}
+
 	function handleChunk(chunk, emitContent) {
 		const lines = chunk.split('\n').filter(line => line.trim());
 		for (const line of lines) {
@@ -1431,6 +1442,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 				try {
 					const jsonStr = line.startsWith('data: ') ? line.slice(6) : line;
 					const data = JSON.parse(jsonStr);
+					checkOverlayCompletion(data);
 
 					if (data.response) { // Ollama format
 						emitContent(data.response);
@@ -1449,6 +1461,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						return true;
 					}
 				} catch (e) {
+					if (options.overlayBuilder && e instanceof LLMServiceError) throw e;
 					console.warn("Parse error:", e, line);
 					const match = line.match(/"response":"(.*?)"/);
 					if (match && match[1]) {
@@ -1919,11 +1932,30 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                     return stripLLMReasoningOutput(fullResponse);
 				} else {
 					const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
-					const response = await electronFetch(endpoint, headers, 'POST', message, {
-						kind: 'llm',
-						provider,
-						model: message.model
-					}, options.requestTimeoutMs);
+					let response;
+					if (options.overlayBuilder && abortController) {
+						// Reuse the cancellable desktop transport, keeping the provider's
+						// existing non-streaming JSON request and response format.
+						let body = '';
+						const result = await streamElectronLLMRequest({
+							url: endpoint, headers, body: message,
+							diagnostics: { kind: 'llm', provider, model: message.model }
+						}, chunk => { body += chunk; }, abortController.signal);
+						if (result && result.error) {
+							throw createLLMError(buildContext(), {
+								status: result.status || result.error?.status || null,
+								code: result.code || result.error?.code || null,
+								message: result.message || result.error?.message || (typeof result.error === 'string' ? result.error : 'The AI request failed before a complete response was received.'),
+								details: result,
+								...getLLMResponseMetadata(result.headers, result)
+							});
+						}
+						response = { status: 200, data: body };
+					} else {
+						response = await electronFetch(endpoint, headers, 'POST', message, {
+							kind: 'llm', provider, model: message.model
+						}, options.requestTimeoutMs);
+					}
 					if (response.error && response.data === undefined) {
 						// Electron uses status 500 for local fetch failures, even without an HTTP response.
 						const timedOut = response.type === 'request-timeout' || response.type === 'body-timeout';
@@ -1956,6 +1988,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					}
 
 					const data = JSON.parse(response.data);
+					checkOverlayCompletion(data);
 					return stripLLMReasoningOutput(data.choices[0].message.content || '');
 				}
 			} else {
@@ -2039,6 +2072,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					}
 
 					const data = await response.json();
+					checkOverlayCompletion(data);
 					return stripLLMReasoningOutput(data.choices[0].message.content || '');
 				}
 			}
