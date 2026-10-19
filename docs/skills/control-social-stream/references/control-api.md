@@ -21,6 +21,11 @@ the API. Pass both mode flags when a local agent needs to control a headless ins
 
 ## Discovery and status
 
+API 1.6.0 / SSApp 0.4.40 adds `capabilities.humanControl` and the
+`getHumanControlStatus` command. During private human control all other automation
+reads and writes return `HUMAN_CONTROL_ACTIVE`; the instance and non-sensitive
+human status remain available. See [human-control.md](human-control.md).
+
 API 1.4.1 adds `GET /api/v1/instance`, available without consulting the renderer.
 Its random `instanceId` changes when the local API starts again. Responses also
 include this ID and the `X-SSApp-Instance-Id` header. A bridge can send that header

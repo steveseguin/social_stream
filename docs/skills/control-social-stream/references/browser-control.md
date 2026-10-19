@@ -20,6 +20,11 @@ is an explicit operation and is unavailable in headless mode.
 
 ## Observe and act
 
+In SSApp 0.4.40 / API 1.6.0, screenshot payloads also contain `page.redactedUrl`
+and `page.title` for the captured page. Private human takeover pauses browser
+tools until explicit handback; use `ssapp_get_human_control_status` while waiting.
+See [human-control.md](human-control.md) for sign-in handoff.
+
 | MCP tool | HTTP command | Use |
 | --- | --- | --- |
 | `ssapp_browser_screenshot` | `captureBrowserScreenshot` | Viewport image, screenshot ID and coordinate mapping |

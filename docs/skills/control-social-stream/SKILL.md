@@ -7,6 +7,12 @@ description: Control Social Stream Ninja sources, app windows, sign-in windows, 
 
 Use SSApp's declarative control API. Do not use renderer execution or UI automation when a supported command exists.
 
+SSApp 0.4.40 / API 1.6.0 / MCP 1.5.0 adds a private human viewer and
+`ssapp_get_human_control_status`. When `HUMAN_CONTROL_ACTIVE` is returned, stop
+automation and poll only that status tool until the person explicitly returns
+control. Do not request viewer credentials or use the private viewer endpoints
+as model tools. See [human control](references/human-control.md).
+
 For a requested settings backup, see [settings export](references/control-api.md#settings-export).
 API 1.5.0 / MCP 1.4.0 adds temporary exports in SSApp 0.4.39 and newer;
 require advertised commands. Backups include saved credentials. Export only at the user's
