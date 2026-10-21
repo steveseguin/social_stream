@@ -16022,7 +16022,7 @@ function getPrivateChatbotCapabilities() {
 	switch (provider) {
 		case "ollama":
 			model = settings?.ollamamodel?.textsetting || "";
-			imageInput = /vision|llava|moondream|minicpm|bakllava|gemma3|qwen2\.5vl|qwen2-vl|qwen-vl|pixtral|llama4|internvl/i.test(model) ? true : "maybe";
+			imageInput = /vision|llava|moondream|minicpm|bakllava|gemma3|gemma[-_ .]?4|qwen2\.5vl|qwen2-vl|qwen-vl|pixtral|llama4|internvl/i.test(model) ? true : "maybe";
 			break;
 		case "localgemma":
 		case "localqwen":

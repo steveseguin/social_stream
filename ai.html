@@ -152,7 +152,7 @@
 						<li>Install <a href="https://lmstudio.ai/">LM Studio</a> and open it.</li>
 						<li>In <strong>Discover</strong> (the magnifier icon), search for <strong>gemma 4</strong> and download an E4B or E2B build. Any instruction-tuned chat model works.</li>
 						<li>Open the <strong>Developer</strong> tab and switch the server to <strong>Running</strong>. The default address is <code>http://localhost:1234</code>.</li>
-						<li>In the server settings, turn on <strong>Enable CORS</strong>. It is off by default. Turning on <strong>Just-in-Time Model Loading</strong> lets the model named in the request load automatically. Otherwise load the model yourself at the top of the window.
+						<li>In the server settings, turn on <strong>Enable CORS</strong>. It is off by default. Turning on <strong>Just in Time Model Loading</strong> lets the model named in the request load automatically. Otherwise load the model yourself at the top of the window.
 							<p>Prefer a terminal? <code>lms server start --port 1234 --cors</code> does the same.</p>
 						</li>
 						<li>Enter these values in Social Stream Ninja:</li>
@@ -226,9 +226,9 @@
 							<tr><th>Server</th><th>Endpoint to enter</th><th>Model</th><th>Notes</th></tr>
 						</thead>
 						<tbody>
-							<tr><td data-label="Server">Jan</td><td data-label="Endpoint"><code>http://localhost:1337</code></td><td data-label="Model">The id Jan shows for the model</td><td data-label="Notes">Turn on the server and CORS in Jan's Local API Server settings.</td></tr>
+							<tr><td data-label="Server">Jan</td><td data-label="Endpoint"><code>http://localhost:1337</code></td><td data-label="Model">The id Jan shows for the model</td><td data-label="Notes">Start Jan's Local API Server. CORS is enabled by default; copy any configured API key into Social Stream.</td></tr>
 							<tr><td data-label="Server">KoboldCpp</td><td data-label="Endpoint"><code>http://localhost:5001</code></td><td data-label="Model">Any name</td><td data-label="Notes">Browser requests are allowed by default.</td></tr>
-							<tr><td data-label="Server">LocalAI</td><td data-label="Endpoint"><code>http://localhost:8080</code></td><td data-label="Model">The model name from its gallery or config</td><td data-label="Notes">Start it with <code>--cors</code> for the extension or web version.</td></tr>
+							<tr><td data-label="Server">LocalAI</td><td data-label="Endpoint"><code>http://localhost:8080</code></td><td data-label="Model">The model name from its gallery or config</td><td data-label="Notes">Start it with <code>--cors</code> for browser-page requests.</td></tr>
 							<tr><td data-label="Server">Ollama on another PC</td><td data-label="Endpoint"><code>http://THAT-PC-IP:11434</code></td><td data-label="Model">The tag from <code>ollama list</code></td><td data-label="Notes">Use the Ollama provider, not Custom API. That PC needs <code>OLLAMA_HOST=0.0.0.0</code>.</td></tr>
 							<tr><td data-label="Server">Cloud services with an OpenAI-style API</td><td data-label="Endpoint">The base URL from their docs</td><td data-label="Model">Their model id</td><td data-label="Notes">Mistral, Together, Fireworks, Cerebras, and similar. Paste their API key in the key box.</td></tr>
 						</tbody>
@@ -260,7 +260,7 @@
 							<tr><td data-label="Provider">Custom API</td><td data-label="Get a key">Any OpenAI-compatible cloud service</td><td data-label="Default model">Whatever you type</td><td data-label="Notes">Base URL, key, and model id from the service's docs.</td></tr>
 						</tbody>
 					</table>
-					<p>For live chat, the small tier of each service is the right choice: <code>gpt-5.4-mini</code>, <code>gemini-2.5-flash</code>, <code>deepseek-v4-flash</code>. They answer in a second or two and cost a fraction of the flagship models.</p>
+					<p>For live chat, the small tier of each service is the right choice: <code>gpt-5.4-mini</code>, <code>gemini-2.5-flash</code>, <code>deepseek-v4-flash</code>. They usually cost less than flagship models. Use the connection test to check response time before going live.</p>
 				</div>
 			</div>
 
@@ -283,7 +283,7 @@
 				<ul class="guide-list">
 					<li><strong>Fits in GPU memory means fast.</strong> After a test reply, run <code>ollama ps</code>. It should say <code>100% GPU</code>. If it shows CPU, pick a smaller model.</li>
 					<li><strong>Keep it loaded.</strong> The first reply after a few idle minutes is slow because the model reloads from disk. Set Ollama keep-alive to <code>-1</code> in Social Stream, or turn off auto-unload in LM Studio.</li>
-					<li><strong>Skip thinking modes.</strong> Reasoning adds seconds before the first word. Social Stream hides the reasoning text, but it still has to wait for it. Gemma 4 only thinks when the system prompt starts with <code>&lt;|think|&gt;</code>, so leave that out. Other families, such as Qwen 3.5 and DeepSeek, may think by default, so use their instruct or non-thinking variants or disable thinking on the server.</li>
+					<li><strong>Skip thinking modes.</strong> Reasoning adds seconds before the first word. Social Stream hides the reasoning text, but it still has to wait for it. Thinking settings vary by model and server. Social Stream uses the server's default thinking behavior for Ollama. If replies are too slow, choose a non-thinking model or configure a non-thinking default on your server. <a href="https://docs.ollama.com/capabilities/thinking">Ollama thinking controls</a>.</li>
 					<li><strong>Other families work too.</strong> Qwen 3.5, Llama, Mistral, and Phi are all fine. Pick an instruction-tuned chat model (often marked <code>-it</code> or <code>instruct</code>) and paste its exact tag.</li>
 					<li><strong>Bigger is not safer.</strong> A model that spills out of GPU memory can be ten times slower than one that fits. When in doubt, go one size down.</li>
 				</ul>
@@ -309,32 +309,32 @@
 						<tr><th>Where it runs</th><th>Does CORS apply?</th><th>What to do</th></tr>
 					</thead>
 					<tbody>
-						<tr><td data-label="Where">Desktop app</td><td data-label="CORS">No. Requests leave from the app itself, not from a web page.</td><td data-label="What to do">If the test fails, the server is not running, the address or port is wrong, or a firewall is in the way. Open the endpoint in a browser on the same computer to check.</td></tr>
+						<tr><td data-label="Where">Desktop app</td><td data-label="CORS">No. Requests leave from the app itself, not from a web page.</td><td data-label="What to do">Read the test error: check the server address, model name, API key and quota. For connection failures, confirm the server is running and reachable on that computer.</td></tr>
 						<tr><td data-label="Where">Chrome extension</td><td data-label="CORS">Mostly no. The extension is allowed to call any local address, so LM Studio, llama.cpp, and vLLM work without changes.</td><td data-label="What to do">Ollama is the exception. It checks the request origin and answers <code>403</code> unless <code>OLLAMA_ORIGINS</code> includes <code>chrome-extension://*</code>. Steps are below.</td></tr>
-						<tr><td data-label="Where">Web version in a browser tab</td><td data-label="CORS">Yes, the full browser rules.</td><td data-label="What to do">The server must allow the origin <code>https://socialstream.ninja</code>. Ollama: add it to <code>OLLAMA_ORIGINS</code>. LM Studio: turn on Enable CORS. llama.cpp and vLLM allow it by default. If Chrome asks for permission to reach devices on your local network, allow it. An <code>http://</code> address other than localhost cannot be called from an https page at all, so for a server on another PC use the desktop app or put https in front of it.</td></tr>
+						<tr><td data-label="Where">Web version in a browser tab</td><td data-label="CORS">Yes, the full browser rules.</td><td data-label="What to do">The server must allow the origin <code>https://socialstream.ninja</code>. Ollama: add it to <code>OLLAMA_ORIGINS</code>. LM Studio: turn on Enable CORS. llama.cpp and vLLM allow it by default. If Chrome asks for permission to reach devices on your local network, allow it. Current Chrome can allow HTTP requests to a private IP address or <code>.local</code> hostname after local-network permission is granted. If your browser still blocks the connection as mixed content, use the desktop app or an HTTPS endpoint. <a href="https://developer.chrome.com/blog/local-network-access">Chrome local-network access</a>.</td></tr>
 					</tbody>
 				</table>
 
 				<h3>Set OLLAMA_ORIGINS</h3>
-				<p>A value of <code>*</code> allows every origin and is fine on a home PC. To be stricter, use <code>chrome-extension://*,https://socialstream.ninja</code>. Ollama only reads the variable when it starts, so always quit and reopen it afterwards.</p>
+				<p>Use <code>chrome-extension://*,https://socialstream.ninja</code> to allow the extension and Social Stream website. A value of <code>*</code> allows requests from any website. Ollama only reads the variable when it starts, so always quit and reopen it afterwards.</p>
 				<p><strong>Windows</strong></p>
 				<ol>
 					<li>Quit Ollama from the system tray.</li>
 					<li>Open the Start menu and search for <strong>Edit environment variables for your account</strong>.</li>
-					<li>Add a user variable named <code>OLLAMA_ORIGINS</code> with the value <code>*</code>, then click OK.</li>
+					<li>Add a user variable named <code>OLLAMA_ORIGINS</code> with the value <code>chrome-extension://*,https://socialstream.ninja</code>, then click OK.</li>
 					<li>Start Ollama again and click <strong>Test selected chat bot</strong>.</li>
 				</ol>
 				<p><strong>macOS</strong> (Ollama app): run this in Terminal, then quit and reopen Ollama. Repeat it after a reboot.</p>
-				<pre><code>launchctl setenv OLLAMA_ORIGINS "*"</code></pre>
+				<pre><code>launchctl setenv OLLAMA_ORIGINS "chrome-extension://*,https://socialstream.ninja"</code></pre>
 				<p><strong>Linux</strong> (systemd service): run <code>sudo systemctl edit ollama.service</code>, add the lines below, then run <code>sudo systemctl daemon-reload &amp;&amp; sudo systemctl restart ollama</code>.</p>
 				<pre><code>[Service]
-Environment="OLLAMA_ORIGINS=*"</code></pre>
+Environment="OLLAMA_ORIGINS=chrome-extension://*,https://socialstream.ninja"</code></pre>
 				<p><strong>Quick test on any system:</strong> quit Ollama, then start it from a terminal with the variable set for that session only.</p>
 				<pre><code># PowerShell
-$env:OLLAMA_ORIGINS="*"; ollama serve
+$env:OLLAMA_ORIGINS="chrome-extension://*,https://socialstream.ninja"; ollama serve
 
 # macOS or Linux
-OLLAMA_ORIGINS="*" ollama serve</code></pre>
+OLLAMA_ORIGINS="chrome-extension://*,https://socialstream.ninja" ollama serve</code></pre>
 
 				<h3>What the error means</h3>
 				<table class="guide-table guide-table-stack">
@@ -343,7 +343,7 @@ OLLAMA_ORIGINS="*" ollama serve</code></pre>
 					</thead>
 					<tbody>
 						<tr><td data-label="You see"><code>403 Forbidden</code> from Ollama</td><td data-label="Likely cause">Origin blocked</td><td data-label="Fix">Set <code>OLLAMA_ORIGINS</code> as above and restart Ollama.</td></tr>
-						<tr><td data-label="You see"><code>Failed to fetch</code>, or a CORS message in the browser console</td><td data-label="Likely cause">Server not running, wrong port, or CORS off on a browser surface</td><td data-label="Fix">Open the endpoint in a browser. Ollama shows &ldquo;Ollama is running&rdquo;. OpenAI-style servers list models at <code>/v1/models</code>. Then enable CORS on the server if you use the extension or web version.</td></tr>
+						<tr><td data-label="You see"><code>Failed to fetch</code>, or a CORS message in the browser console</td><td data-label="Likely cause">Server not running, wrong port, or CORS off on a browser surface</td><td data-label="Fix">Open the endpoint in a browser. Ollama shows &ldquo;Ollama is running&rdquo;. OpenAI-style servers list models at <code>/v1/models</code>. For browser-page requests, enable CORS on the server; for Ollama, check its allowed origins as above.</td></tr>
 						<tr><td data-label="You see"><code>404</code> or model not found</td><td data-label="Likely cause">Model not downloaded, or the name does not match</td><td data-label="Fix">Compare with <code>ollama list</code> or <code>/v1/models</code>. For Custom API the model must be the server's id, not the <code>.gguf</code> file name.</td></tr>
 						<tr><td data-label="You see"><code>401</code> or <code>403</code> from a cloud provider</td><td data-label="Likely cause">Missing or wrong key, or no billing set up</td><td data-label="Fix">Make a fresh key, paste it without spaces, and add credit or a payment method.</td></tr>
 						<tr><td data-label="You see"><code>429</code></td><td data-label="Likely cause">Rate limit or quota reached</td><td data-label="Fix">Add credit, pick a cheaper model, or make the bot reply less often.</td></tr>

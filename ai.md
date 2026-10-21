@@ -63,7 +63,7 @@ LM Studio lets you search for and download models from a graphical interface, th
 1. Install LM Studio from https://lmstudio.ai/ and open it.
 2. In **Discover** (the magnifier icon), search for **gemma 4** and download an E4B or E2B build. Any instruction-tuned chat model works.
 3. Open the **Developer** tab and switch the server to **Running**. The default address is `http://localhost:1234`.
-4. In the server settings, turn on **Enable CORS**. It is off by default. Turning on **Just-in-Time Model Loading** lets the model named in the request load automatically. Otherwise load the model yourself at the top of the window. Prefer a terminal? `lms server start --port 1234 --cors` does the same.
+4. In the server settings, turn on **Enable CORS**. It is off by default. Turning on **Just in Time Model Loading** lets the model named in the request load automatically. Otherwise load the model yourself at the top of the window. Prefer a terminal? `lms server start --port 1234 --cors` does the same.
 5. Enter these values in Social Stream Ninja:
 
 | Setting | Value |
@@ -134,9 +134,9 @@ If a server speaks the OpenAI chat format, Custom API can use it. The recipe is 
 
 | Server | Endpoint to enter | Model | Notes |
 |---|---|---|---|
-| Jan | `http://localhost:1337` | The id Jan shows for the model | Turn on the server and CORS in Jan's Local API Server settings. |
+| Jan | `http://localhost:1337` | The id Jan shows for the model | Start Jan's Local API Server. CORS is enabled by default; copy any configured API key into Social Stream. |
 | KoboldCpp | `http://localhost:5001` | Any name | Browser requests are allowed by default. |
-| LocalAI | `http://localhost:8080` | The model name from its gallery or config | Start it with `--cors` for the extension or web version. |
+| LocalAI | `http://localhost:8080` | The model name from its gallery or config | Start it with `--cors` for browser-page requests. |
 | Ollama on another PC | `http://THAT-PC-IP:11434` | The tag from `ollama list` | Use the Ollama provider, not Custom API. That PC needs `OLLAMA_HOST=0.0.0.0`. |
 | Cloud services with an OpenAI-style API | The base URL from their docs | Their model id | Mistral, Together, Fireworks, Cerebras, and similar. Paste their API key in the key box. |
 
@@ -161,7 +161,7 @@ Cloud models are fast and good, and nothing to maintain. The trade-off is that y
 | SSN Hosted Trial LLM | None needed | Server default | Free while the trial lasts, and may be rate limited or switched off. Good for a first test, not for relying on. |
 | Custom API | Any OpenAI-compatible cloud service | Whatever you type | Base URL, key, and model id from the service's docs. |
 
-For live chat, the small tier of each service is the right choice: `gpt-5.4-mini`, `gemini-2.5-flash`, `deepseek-v4-flash`. They answer in a second or two and cost a fraction of the flagship models.
+For live chat, the small tier of each service is the right choice: `gpt-5.4-mini`, `gemini-2.5-flash`, `deepseek-v4-flash`. They usually cost less than flagship models. Use the connection test to check response time before going live.
 
 ## Pick a model: fast beats smart for live chat
 
@@ -179,7 +179,7 @@ Download sizes are the ranges Ollama lists for each tag. You need roughly that m
 
 - **Fits in GPU memory means fast.** After a test reply, run `ollama ps`. It should say `100% GPU`. If it shows CPU, pick a smaller model.
 - **Keep it loaded.** The first reply after a few idle minutes is slow because the model reloads from disk. Set Ollama keep-alive to `-1` in Social Stream, or turn off auto-unload in LM Studio.
-- **Skip thinking modes.** Reasoning adds seconds before the first word. Social Stream hides the reasoning text, but it still has to wait for it. Gemma 4 only thinks when the system prompt starts with `<|think|>`, so leave that out. Other families, such as Qwen 3.5 and DeepSeek, may think by default, so use their instruct or non-thinking variants or disable thinking on the server.
+- **Skip thinking modes.** Reasoning adds seconds before the first word. Social Stream hides the reasoning text, but it still has to wait for it. Thinking settings vary by model and server. Social Stream uses the server's default thinking behavior for Ollama. If replies are too slow, choose a non-thinking model or configure a non-thinking default on your server. [Ollama thinking controls](https://docs.ollama.com/capabilities/thinking).
 - **Other families work too.** Qwen 3.5, Llama, Mistral, and Phi are all fine. Pick an instruction-tuned chat model (often marked `-it` or `instruct`) and paste its exact tag.
 - **Bigger is not safer.** A model that spills out of GPU memory can be ten times slower than one that fits. When in doubt, go one size down.
 
@@ -204,19 +204,19 @@ CORS is a browser rule. A web page may only call another address if that server 
 
 | Where it runs | Does CORS apply? | What to do |
 |---|---|---|
-| Desktop app | No. Requests leave from the app itself, not from a web page. | If the test fails, the server is not running, the address or port is wrong, or a firewall is in the way. Open the endpoint in a browser on the same computer to check. |
+| Desktop app | No. Requests leave from the app itself, not from a web page. | Read the test error: check the server address, model name, API key and quota. For connection failures, confirm the server is running and reachable on that computer. |
 | Chrome extension | Mostly no. The extension is allowed to call any local address, so LM Studio, llama.cpp, and vLLM work without changes. | Ollama is the exception. It checks the request origin and answers `403` unless `OLLAMA_ORIGINS` includes `chrome-extension://*`. Steps are below. |
-| Web version in a browser tab | Yes, the full browser rules. | The server must allow the origin `https://socialstream.ninja`. Ollama: add it to `OLLAMA_ORIGINS`. LM Studio: turn on Enable CORS. llama.cpp and vLLM allow it by default. If Chrome asks for permission to reach devices on your local network, allow it. An `http://` address other than localhost cannot be called from an https page at all, so for a server on another PC use the desktop app or put https in front of it. |
+| Web version in a browser tab | Yes, the full browser rules. | The server must allow the origin `https://socialstream.ninja`. Ollama: add it to `OLLAMA_ORIGINS`. LM Studio: turn on Enable CORS. llama.cpp and vLLM allow it by default. If Chrome asks for permission to reach devices on your local network, allow it. Current Chrome can allow HTTP requests to a private IP address or `.local` hostname after local-network permission is granted. If your browser still blocks the connection as mixed content, use the desktop app or an HTTPS endpoint. [Chrome local-network access](https://developer.chrome.com/blog/local-network-access). |
 
 ### Set OLLAMA_ORIGINS
 
-A value of `*` allows every origin and is fine on a home PC. To be stricter, use `chrome-extension://*,https://socialstream.ninja`. Ollama only reads the variable when it starts, so always quit and reopen it afterwards.
+Use `chrome-extension://*,https://socialstream.ninja` to allow the extension and Social Stream website. A value of `*` allows requests from any website. Ollama only reads the variable when it starts, so always quit and reopen it afterwards.
 
 **Windows**
 
 1. Quit Ollama from the system tray.
 2. Open the Start menu and search for **Edit environment variables for your account**.
-3. Add a user variable named `OLLAMA_ORIGINS` with the value `*`, then click OK.
+3. Add a user variable named `OLLAMA_ORIGINS` with the value `chrome-extension://*,https://socialstream.ninja`, then click OK.
 4. Start Ollama again and click **Test selected chat bot**.
 
 ![OLLAMA_ORIGINS in the Windows environment variables dialog](https://github.com/user-attachments/assets/7587ed12-aa85-498c-8cd4-25fdb56a6543)
@@ -224,24 +224,24 @@ A value of `*` allows every origin and is fine on a home PC. To be stricter, use
 **macOS** (Ollama app): run this in Terminal, then quit and reopen Ollama. Repeat it after a reboot.
 
 ```
-launchctl setenv OLLAMA_ORIGINS "*"
+launchctl setenv OLLAMA_ORIGINS "chrome-extension://*,https://socialstream.ninja"
 ```
 
 **Linux** (systemd service): run `sudo systemctl edit ollama.service`, add the lines below, then run `sudo systemctl daemon-reload && sudo systemctl restart ollama`.
 
 ```
 [Service]
-Environment="OLLAMA_ORIGINS=*"
+Environment="OLLAMA_ORIGINS=chrome-extension://*,https://socialstream.ninja"
 ```
 
 **Quick test on any system:** quit Ollama, then start it from a terminal with the variable set for that session only.
 
 ```
 # PowerShell
-$env:OLLAMA_ORIGINS="*"; ollama serve
+$env:OLLAMA_ORIGINS="chrome-extension://*,https://socialstream.ninja"; ollama serve
 
 # macOS or Linux
-OLLAMA_ORIGINS="*" ollama serve
+OLLAMA_ORIGINS="chrome-extension://*,https://socialstream.ninja" ollama serve
 ```
 
 ### What the error means
@@ -249,7 +249,7 @@ OLLAMA_ORIGINS="*" ollama serve
 | You see | Likely cause | Fix |
 |---|---|---|
 | `403 Forbidden` from Ollama | Origin blocked | Set `OLLAMA_ORIGINS` as above and restart Ollama. |
-| `Failed to fetch`, or a CORS message in the browser console | Server not running, wrong port, or CORS off on a browser surface | Open the endpoint in a browser. Ollama shows "Ollama is running". OpenAI-style servers list models at `/v1/models`. Then enable CORS on the server if you use the extension or web version. |
+| `Failed to fetch`, or a CORS message in the browser console | Server not running, wrong port, or CORS off on a browser surface | Open the endpoint in a browser. Ollama shows "Ollama is running". OpenAI-style servers list models at `/v1/models`. For browser-page requests, enable CORS on the server; for Ollama, check its allowed origins as above. |
 | `404` or model not found | Model not downloaded, or the name does not match | Compare with `ollama list` or `/v1/models`. For Custom API the model must be the server's id, not the `.gguf` file name. |
 | `401` or `403` from a cloud provider | Missing or wrong key, or no billing set up | Make a fresh key, paste it without spaces, and add credit or a payment method. |
 | `429` | Rate limit or quota reached | Add credit, pick a cheaper model, or make the bot reply less often. |
