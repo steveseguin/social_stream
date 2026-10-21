@@ -15953,10 +15953,11 @@ async function processIncomingRequest(request, UUID = false) {
 					const controllerKey = isAiPrompt ? UUID + ":" + request.target : UUID;
 					const controllers = isAiPrompt ? aiPromptControllers : privateChatbotControllers;
 					controllers[controllerKey] = controller;
-					const deadline = isAiPrompt ? setTimeout(() => controller.abort(), 180000) : null;
+					const deadline = isAiPrompt ? setTimeout(() => controller.abort(), 600000) : null;
 
 					// Builder requests have their own cancellation scope and longer deadline.
-					const llmOptions = isAiPrompt ? { requestTimeoutMs: 180000, overlayBuilder: true } : {};
+					const llmOptions = isAiPrompt ? { requestTimeoutMs: 600000, overlayBuilder: true,
+						overlayTask: ["style", "summarize"].includes(request.overlayTask) ? request.overlayTask : "create" } : {};
 					callLLMAPI(prompt, model, sendChatbotChunk, controller, controllerKey, request.images || null, llmOptions)
 						.then(fullResponse => {
 							if (controllers[controllerKey] === controller) {
@@ -16066,6 +16067,9 @@ function getPrivateChatbotCapabilities() {
 			break;
 		case "custom":
 			model = settings?.customAIModel?.textsetting || "";
+			break;
+		case "hostedllm":
+			model = settings?.hostedLLMModel?.textsetting || "";
 			break;
 	}
 	return {

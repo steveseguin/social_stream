@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Connect an AI to Social Stream Ninja</title>
+	<meta name="description" content="Set up a local AI server (Ollama, LM Studio, llama.cpp, vLLM) or a hosted API key, pick a model that is fast enough for live chat, fix CORS errors, and add vision, voice, and TTS.">
+	<link rel="canonical" href="https://socialstream.ninja/ai.html">
+	<link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+	<link rel="stylesheet" href="docs/css/styles.css">
+	<link rel="stylesheet" href="docs/css/guides.css">
+	<link rel="stylesheet" href="docs/css/site-shell.css">
+	<script src="docs/js/site-shell.js"></script>
+	<style>
+		.backend-tabs {
+			flex-wrap: wrap;
+			justify-content: flex-start;
+			gap: 0.8rem;
+			margin-bottom: 1.6rem;
+			padding-bottom: 1.2rem;
+		}
+		.backend-tabs .tab-btn {
+			padding: 0.7rem 1.4rem;
+			font-size: 1.5rem;
+		}
+		@media (max-width: 480px) {
+			.backend-tabs {
+				flex-direction: row;
+				align-items: stretch;
+			}
+			.backend-tabs .tab-btn {
+				width: auto;
+				max-width: none;
+				flex: 1 1 45%;
+			}
+		}
+		.backend-panel[hidden] {
+			display: none;
+		}
+		.backend-panel h3:first-child {
+			margin-top: 0;
+		}
+		.settings-table td:first-child {
+			font-weight: 600;
+			white-space: nowrap;
+		}
+		@media (max-width: 768px) {
+			.settings-table td:first-child {
+				white-space: normal;
+			}
+		}
+		.nav-links a {
+			padding: 0.4rem 0.9rem;
+			border: 1px solid var(--border-color);
+			border-radius: var(--radius-sm);
+		}
+	</style>
+</head>
+<body>
+	<header class="site-header">
+		<div class="site-bar">
+			<a class="site-brand" href="index.html"><img src="icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
+			<nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation">
+				<a href="index.html">Home</a>
+				<a href="docs/guides.html">Guides</a>
+				<a href="docs/support.html">Support</a>
+			</nav>
+			<div class="site-actions">
+				<button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button>
+				<button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button>
+			</div>
+		</div>
+	</header>
+	<section class="page-hero">
+		<div class="container">
+			<h1>Connect an AI to Social Stream Ninja</h1>
+			<p>Run a free model on your own computer, or plug in a paid API key. Then point the chat bot at it.</p>
+		</div>
+	</section>
+	<main class="guide-section">
+		<div class="container">
+			<div class="nav-links">
+				<a href="#backends">Set up a backend</a>
+				<a href="#models">Pick a model</a>
+				<a href="#test">Connect and test</a>
+				<a href="#cors">Fix CORS and errors</a>
+				<a href="#multimodal">Images, voice, realtime</a>
+				<a href="#tts">Text-to-speech</a>
+			</div>
+
+			<div class="guide-card">
+				<h2 id="choose">Which setup is right for you?</h2>
+				<p>Every option on this page is the same idea. A server runs a language model and answers requests. Social Stream Ninja sends it the chat message and your instructions, then posts the reply. The <strong>Provider</strong> setting only tells Social Stream which API style to speak. Ollama has its own native API. Almost everything else, local or cloud, speaks the OpenAI chat format, which is what <strong>Custom API</strong> is for.</p>
+				<table class="guide-table guide-table-stack">
+					<thead>
+						<tr><th>You want&hellip;</th><th>Use</th><th>Where to start</th></tr>
+					</thead>
+					<tbody>
+						<tr><td data-label="You want">Free, private, and the easiest install</td><td data-label="Use">Ollama</td><td data-label="Where to start"><a href="#ollama">Ollama tab</a></td></tr>
+						<tr><td data-label="You want">A point-and-click app with a built-in model browser</td><td data-label="Use">LM Studio</td><td data-label="Where to start"><a href="#lmstudio">LM Studio tab</a></td></tr>
+						<tr><td data-label="You want">Full control, or you already have <code>.gguf</code> files</td><td data-label="Use">llama.cpp</td><td data-label="Where to start"><a href="#llamacpp">llama.cpp tab</a></td></tr>
+						<tr><td data-label="You want">A Linux GPU server, or one model shared by many bots</td><td data-label="Use">vLLM</td><td data-label="Where to start"><a href="#vllm">vLLM tab</a></td></tr>
+						<tr><td data-label="You want">Jan, KoboldCpp, LocalAI, a server on another PC, or a cloud service with an OpenAI-style API</td><td data-label="Use">Custom API</td><td data-label="Where to start"><a href="#other">Other servers tab</a></td></tr>
+						<tr><td data-label="You want">No install, pay per use or a free tier</td><td data-label="Use">OpenAI, Gemini, Groq, OpenRouter, and others</td><td data-label="Where to start"><a href="#hosted">Hosted APIs tab</a></td></tr>
+						<tr><td data-label="You want">To try it in the next two minutes</td><td data-label="Use">SSN Hosted Trial LLM</td><td data-label="Where to start"><a href="#hosted">Hosted APIs tab</a></td></tr>
+						<tr><td data-label="You want">No install and nothing leaves your browser</td><td data-label="Use">Local Qwen 3.5 (Browser)</td><td data-label="Where to start">Pick it in the provider list. The model downloads once and runs on your GPU inside the browser. Slower than a real server, fine for testing.</td></tr>
+					</tbody>
+				</table>
+				<div class="guide-note"><strong>Speed matters more than smarts for live chat.</strong> A reply that lands in one or two seconds feels natural. A reply that takes ten seconds feels broken, even if it is cleverer. Small models like Gemma 4 E2B and E4B are usually the right call. See <a href="#models">Pick a model</a>.</div>
+			</div>
+
+			<div class="guide-card" id="backends">
+				<h2>Set up your backend</h2>
+				<p>Pick the tab for the server or service you want to use. Each one ends with the exact values to enter in Social Stream Ninja.</p>
+				<div class="guide-tabs backend-tabs" role="tablist" aria-label="AI backend">
+					<button class="tab-btn active" type="button" role="tab" data-tab="ollama" id="tab-ollama" aria-controls="backend-ollama" aria-selected="true">Ollama</button>
+					<button class="tab-btn" type="button" role="tab" data-tab="lmstudio" id="tab-lmstudio" aria-controls="backend-lmstudio" aria-selected="false" tabindex="-1">LM Studio</button>
+					<button class="tab-btn" type="button" role="tab" data-tab="llamacpp" id="tab-llamacpp" aria-controls="backend-llamacpp" aria-selected="false" tabindex="-1">llama.cpp</button>
+					<button class="tab-btn" type="button" role="tab" data-tab="vllm" id="tab-vllm" aria-controls="backend-vllm" aria-selected="false" tabindex="-1">vLLM</button>
+					<button class="tab-btn" type="button" role="tab" data-tab="other" id="tab-other" aria-controls="backend-other" aria-selected="false" tabindex="-1">Other servers</button>
+					<button class="tab-btn" type="button" role="tab" data-tab="hosted" id="tab-hosted" aria-controls="backend-hosted" aria-selected="false" tabindex="-1">Hosted APIs</button>
+				</div>
+
+				<div class="backend-panel" id="backend-ollama" role="tabpanel" aria-labelledby="tab-ollama">
+					<h3>Ollama: free and local</h3>
+					<p>Ollama is the simplest way to run a model on Windows, macOS, or Linux. It works on NVIDIA and AMD GPUs and on Apple Silicon, and falls back to the CPU for small models.</p>
+					<ol>
+						<li>Download and install <a href="https://ollama.com/download">Ollama</a>, then open it. Keep it running while you stream.</li>
+						<li>Download a model. Open PowerShell or Command Prompt on Windows, or Terminal on macOS and Linux, and run:
+							<pre><code>ollama pull gemma4:e4b</code></pre>
+							<p>Want the fastest replies on a small GPU or laptop? Use <code>ollama pull gemma4:e2b</code>. Have a 24 GB GPU or a 32 GB Mac? Try <code>ollama pull gemma4:26b</code>. More choices are in <a href="#models">Pick a model</a> and the <a href="https://ollama.com/library">Ollama library</a>.</p>
+						</li>
+						<li>Check it is installed with <code>ollama list</code>. Copy the exact name shown, tag included.</li>
+						<li>Enter these values in Social Stream Ninja (see <a href="#test">Connect and test</a>):</li>
+					</ol>
+					<table class="guide-table settings-table">
+						<tbody>
+							<tr><td>Provider</td><td>Ollama (Native Local API)</td></tr>
+							<tr><td>Ollama API endpoint</td><td><code>http://localhost:11434</code></td></tr>
+							<tr><td>Ollama Model to use</td><td><code>gemma4:e4b</code>, or whatever <code>ollama list</code> shows</td></tr>
+							<tr><td>Keep-alive model time</td><td><code>-1</code> keeps the model loaded so replies stay fast. The default unloads it after 5 idle minutes.</td></tr>
+						</tbody>
+					</table>
+					<p><strong>Chrome extension or web version?</strong> Ollama refuses requests from browser origins it does not know, so you must set <code>OLLAMA_ORIGINS</code>. The desktop app does not need this. Steps for each operating system are in <a href="#cors">Fix CORS and connection errors</a>.</p>
+					<p><strong>Ollama on another computer:</strong> set <code>OLLAMA_HOST=0.0.0.0</code> on that machine, restart Ollama, and use <code>http://ITS-IP-ADDRESS:11434</code> as the endpoint. Ollama also serves an OpenAI-style API at <code>/v1</code>, so Custom API works with it too, but the native option above is the better fit.</p>
+				</div>
+
+				<div class="backend-panel" id="backend-lmstudio" role="tabpanel" aria-labelledby="tab-lmstudio" hidden>
+					<h3>LM Studio: a desktop app with a model browser</h3>
+					<p>LM Studio lets you search for and download models from a graphical interface, then serves them over an OpenAI-compatible API.</p>
+					<ol>
+						<li>Install <a href="https://lmstudio.ai/">LM Studio</a> and open it.</li>
+						<li>In <strong>Discover</strong> (the magnifier icon), search for <strong>gemma 4</strong> and download an E4B or E2B build. Any instruction-tuned chat model works.</li>
+						<li>Open the <strong>Developer</strong> tab and switch the server to <strong>Running</strong>. The default address is <code>http://localhost:1234</code>.</li>
+						<li>In the server settings, turn on <strong>Enable CORS</strong>. It is off by default. Turning on <strong>Just-in-Time Model Loading</strong> lets the model named in the request load automatically. Otherwise load the model yourself at the top of the window.
+							<p>Prefer a terminal? <code>lms server start --port 1234 --cors</code> does the same.</p>
+						</li>
+						<li>Enter these values in Social Stream Ninja:</li>
+					</ol>
+					<table class="guide-table settings-table">
+						<tbody>
+							<tr><td>Provider</td><td>Custom API (OpenAI-compatible / llama.cpp)</td></tr>
+							<tr><td>Custom endpoint</td><td><code>http://localhost:1234</code></td></tr>
+							<tr><td>Model to use</td><td>The model's API identifier shown in the Developer tab. It is the server's model id, not the <code>.gguf</code> file name. You can also read it from <code>http://localhost:1234/v1/models</code>.</td></tr>
+							<tr><td>Optional API key</td><td>Leave blank unless you turned on authentication in LM Studio.</td></tr>
+						</tbody>
+					</table>
+					<p>Quick check: open <a href="http://localhost:1234/v1/models">http://localhost:1234/v1/models</a> on the same computer. It should list your model ids.</p>
+				</div>
+
+				<div class="backend-panel" id="backend-llamacpp" role="tabpanel" aria-labelledby="tab-llamacpp" hidden>
+					<h3>llama.cpp: the engine underneath most local tools</h3>
+					<p><code>llama-server</code> is small, fast, and runs almost anywhere. It is the right pick if you want full control, already have <code>.gguf</code> files, or run on an unusual GPU.</p>
+					<ol>
+						<li>Get a build. On macOS, <code>brew install llama.cpp</code>. On Windows and Linux, download the release for your GPU (CUDA for NVIDIA, Vulkan for most others) from the <a href="https://github.com/ggml-org/llama.cpp/releases">llama.cpp releases page</a> and unzip it.</li>
+						<li>Start the server. This example downloads Gemma 4 E4B from Hugging Face on first run and caches it:
+							<pre><code>llama-server -hf unsloth/gemma-4-E4B-it-GGUF:Q8_0 --port 8080</code></pre>
+							<p>Already have a file? Use <code>llama-server -m path\to\model.gguf --port 8080</code>. For a larger model on a 24 GB GPU: <code>-hf unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_XL</code>. Add <code>--api-key yourkey</code> if the server is reachable by anyone else.</p>
+						</li>
+						<li>Enter these values in Social Stream Ninja:</li>
+					</ol>
+					<table class="guide-table settings-table">
+						<tbody>
+							<tr><td>Provider</td><td>Custom API (OpenAI-compatible / llama.cpp)</td></tr>
+							<tr><td>Custom endpoint</td><td><code>http://localhost:8080</code></td></tr>
+							<tr><td>Model to use</td><td>Any name works when one model is loaded. If you serve several models, use the name the server lists at <code>/v1/models</code>.</td></tr>
+							<tr><td>Optional API key</td><td>Blank, or the value you gave <code>--api-key</code>.</td></tr>
+						</tbody>
+					</table>
+					<p><code>llama-server</code> allows browser requests by default, so no CORS flag is needed. Vision works when the model's <code>mmproj</code> file is loaded. With <code>-hf</code> it is fetched automatically when the repo has one.</p>
+				</div>
+
+				<div class="backend-panel" id="backend-vllm" role="tabpanel" aria-labelledby="tab-vllm" hidden>
+					<h3>vLLM: a production server for GPUs</h3>
+					<p>vLLM is built to serve many requests at once on Linux with NVIDIA (and some AMD) GPUs. It is more than one streamer needs, but if you already run it, Social Stream Ninja connects in a minute. On Windows, run it inside WSL2 or Docker.</p>
+					<ol>
+						<li>Install it: <code>pip install vllm</code>, or use the <code>vllm/vllm-openai</code> Docker image.</li>
+						<li>Start the server with a model from Hugging Face:
+							<pre><code>vllm serve google/gemma-4-E4B-it --port 8000 --max-model-len 8192</code></pre>
+							<p><code>--max-model-len</code> caps the context to save GPU memory. Add <code>--served-model-name gemma</code> to give it a short alias, and <code>--api-key yourkey</code> if other machines can reach it.</p>
+						</li>
+						<li>Enter these values in Social Stream Ninja:</li>
+					</ol>
+					<table class="guide-table settings-table">
+						<tbody>
+							<tr><td>Provider</td><td>Custom API (OpenAI-compatible / llama.cpp)</td></tr>
+							<tr><td>Custom endpoint</td><td><code>http://localhost:8000</code>, or the server's address</td></tr>
+							<tr><td>Model to use</td><td>The exact id you served, for example <code>google/gemma-4-E4B-it</code>, or your <code>--served-model-name</code> alias</td></tr>
+							<tr><td>Optional API key</td><td>Blank, or the value you gave <code>--api-key</code>.</td></tr>
+						</tbody>
+					</table>
+					<p>vLLM allows all browser origins by default (<code>--allowed-origins</code> is <code>*</code>), so CORS only comes up if you restricted it.</p>
+				</div>
+
+				<div class="backend-panel" id="backend-other" role="tabpanel" aria-labelledby="tab-other" hidden>
+					<h3>Other OpenAI-compatible servers</h3>
+					<p>If a server speaks the OpenAI chat format, Custom API can use it. The recipe is always the same.</p>
+					<ol>
+						<li>Start the server and find its address. Most listen on <code>http://localhost:PORT</code> and serve <code>/v1/chat/completions</code>.</li>
+						<li>In Social Stream Ninja pick <strong>Custom API</strong>. The endpoint box accepts the base address, the address ending in <code>/v1</code>, or the full <code>/v1/chat/completions</code> URL. Social Stream fills in the rest.</li>
+						<li>Set the model to one of the ids the server lists at <code>/v1/models</code>. Add an API key only if the server asks for one.</li>
+						<li>Click <strong>Test selected chat bot</strong>. If the desktop app works but the extension or web version fails, see <a href="#cors">Fix CORS and connection errors</a>.</li>
+					</ol>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr><th>Server</th><th>Endpoint to enter</th><th>Model</th><th>Notes</th></tr>
+						</thead>
+						<tbody>
+							<tr><td data-label="Server">Jan</td><td data-label="Endpoint"><code>http://localhost:1337</code></td><td data-label="Model">The id Jan shows for the model</td><td data-label="Notes">Turn on the server and CORS in Jan's Local API Server settings.</td></tr>
+							<tr><td data-label="Server">KoboldCpp</td><td data-label="Endpoint"><code>http://localhost:5001</code></td><td data-label="Model">Any name</td><td data-label="Notes">Browser requests are allowed by default.</td></tr>
+							<tr><td data-label="Server">LocalAI</td><td data-label="Endpoint"><code>http://localhost:8080</code></td><td data-label="Model">The model name from its gallery or config</td><td data-label="Notes">Start it with <code>--cors</code> for the extension or web version.</td></tr>
+							<tr><td data-label="Server">Ollama on another PC</td><td data-label="Endpoint"><code>http://THAT-PC-IP:11434</code></td><td data-label="Model">The tag from <code>ollama list</code></td><td data-label="Notes">Use the Ollama provider, not Custom API. That PC needs <code>OLLAMA_HOST=0.0.0.0</code>.</td></tr>
+							<tr><td data-label="Server">Cloud services with an OpenAI-style API</td><td data-label="Endpoint">The base URL from their docs</td><td data-label="Model">Their model id</td><td data-label="Notes">Mistral, Together, Fireworks, Cerebras, and similar. Paste their API key in the key box.</td></tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div class="backend-panel" id="backend-hosted" role="tabpanel" aria-labelledby="tab-hosted" hidden>
+					<h3>Hosted APIs: no install, pay per use</h3>
+					<p>Cloud models are fast and good, and nothing to maintain. The trade-off is that your chat goes to that company and most of them bill per request. Set a monthly spending limit in the provider's dashboard before you go live.</p>
+					<ol>
+						<li>Create an account with the provider and make an API key. Many need a payment method or a small prepaid credit before the key works.</li>
+						<li>In Social Stream Ninja pick that provider, paste the key, and leave the model box blank to use the default shown below, or type a model name.</li>
+						<li>Click <strong>Test selected chat bot</strong>.</li>
+					</ol>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr><th>Provider in Social Stream</th><th>Get a key</th><th>Default model if blank</th><th>Notes</th></tr>
+						</thead>
+						<tbody>
+							<tr><td data-label="Provider">ChatGPT API</td><td data-label="Get a key"><a href="https://platform.openai.com/">platform.openai.com</a></td><td data-label="Default model"><code>gpt-5.4-mini</code></td><td data-label="Notes">Also unlocks OpenAI Realtime for the voice co-host. Understands images.</td></tr>
+							<tr><td data-label="Provider">Gemini API</td><td data-label="Get a key"><a href="https://aistudio.google.com/">aistudio.google.com</a></td><td data-label="Default model"><code>gemini-2.5-flash</code></td><td data-label="Notes">Has a free tier. Understands images. Gemini Live is available for the voice co-host.</td></tr>
+							<tr><td data-label="Provider">DeepSeek API</td><td data-label="Get a key"><a href="https://platform.deepseek.com/">platform.deepseek.com</a></td><td data-label="Default model"><code>deepseek-v4-flash</code></td><td data-label="Notes">Very cheap. Text only in Social Stream.</td></tr>
+							<tr><td data-label="Provider">xAI API (Grok)</td><td data-label="Get a key"><a href="https://console.x.ai/">console.x.ai</a></td><td data-label="Default model"><code>grok-4.3</code></td><td data-label="Notes">xAI Realtime is available for the voice co-host.</td></tr>
+							<tr><td data-label="Provider">Groq API</td><td data-label="Get a key"><a href="https://console.groq.com/">console.groq.com</a></td><td data-label="Default model"><code>openai/gpt-oss-120b</code></td><td data-label="Notes">Very fast hosting of open models, with a free tier. Images only with its vision models.</td></tr>
+							<tr><td data-label="Provider">OpenRouter API</td><td data-label="Get a key"><a href="https://openrouter.ai/">openrouter.ai</a></td><td data-label="Default model"><code>openai/gpt-5.4-mini</code></td><td data-label="Notes">One key for hundreds of models, including Claude. Pick a fast one for chat.</td></tr>
+							<tr><td data-label="Provider">AWS Bedrock API</td><td data-label="Get a key">AWS console (access key, secret key, region)</td><td data-label="Default model"><code>anthropic.claude-sonnet-5</code></td><td data-label="Notes">For people already on AWS. Text only in Social Stream.</td></tr>
+							<tr><td data-label="Provider">OpenCode API</td><td data-label="Get a key"><a href="https://opencode.ai/go?ref=8V3339P30P">opencode.ai</a> (referral link)</td><td data-label="Default model">Auto, picks a free model</td><td data-label="Notes">Free models are available. A Go subscription adds more. The model list loads inside Social Stream.</td></tr>
+							<tr><td data-label="Provider">SSN Hosted Trial LLM</td><td data-label="Get a key">None needed</td><td data-label="Default model">Server default</td><td data-label="Notes">Free while the trial lasts, and may be rate limited or switched off. Good for a first test, not for relying on.</td></tr>
+							<tr><td data-label="Provider">Custom API</td><td data-label="Get a key">Any OpenAI-compatible cloud service</td><td data-label="Default model">Whatever you type</td><td data-label="Notes">Base URL, key, and model id from the service's docs.</td></tr>
+						</tbody>
+					</table>
+					<p>For live chat, the small tier of each service is the right choice: <code>gpt-5.4-mini</code>, <code>gemini-2.5-flash</code>, <code>deepseek-v4-flash</code>. They answer in a second or two and cost a fraction of the flagship models.</p>
+				</div>
+			</div>
+
+			<div class="guide-card" id="models">
+				<h2>Pick a model: fast beats smart for live chat</h2>
+				<p>A chat bot has a few seconds to answer before the conversation moves on. You do not need the best model, you need one that fits in your GPU memory and starts talking quickly. The Gemma 4 family is a good place to start. Every size understands images, and the same models exist as <code>.gguf</code> files for LM Studio and llama.cpp.</p>
+				<table class="guide-table guide-table-stack">
+					<thead>
+						<tr><th>Model</th><th>Ollama tag</th><th>Download</th><th>Runs well on</th><th>Good for</th></tr>
+					</thead>
+					<tbody>
+						<tr><td data-label="Model">Gemma 4 E2B</td><td data-label="Ollama tag"><code>gemma4:e2b</code></td><td data-label="Download">4.6 to 7.5 GB</td><td data-label="Runs well on">Laptops, 6 to 8 GB GPUs, even CPU only</td><td data-label="Good for">Fastest replies. Moderation, short chat answers, the voice co-host.</td></tr>
+						<tr><td data-label="Model">Gemma 4 E4B</td><td data-label="Ollama tag"><code>gemma4:e4b</code> (also plain <code>gemma4</code>)</td><td data-label="Download">6.6 to 9.5 GB</td><td data-label="Runs well on">8 to 12 GB GPUs, 16 GB Macs</td><td data-label="Good for">The default pick for a live chat bot.</td></tr>
+						<tr><td data-label="Model">Gemma 4 12B</td><td data-label="Ollama tag"><code>gemma4:12b</code></td><td data-label="Download">about 8 GB</td><td data-label="Runs well on">12 GB GPUs, 16 to 24 GB Macs</td><td data-label="Good for">More knowledge, still quick.</td></tr>
+						<tr><td data-label="Model">Gemma 4 26B (mixture of experts, 3.8B active)</td><td data-label="Ollama tag"><code>gemma4:26b</code></td><td data-label="Download">16 to 19 GB</td><td data-label="Runs well on">24 GB GPUs, 32 GB Macs</td><td data-label="Good for">Noticeably better conversation that is still quick per word, because only a slice of the model runs for each token.</td></tr>
+						<tr><td data-label="Model">Gemma 4 31B</td><td data-label="Ollama tag"><code>gemma4:31b</code></td><td data-label="Download">19 to 20 GB</td><td data-label="Runs well on">24 GB GPUs with room to spare</td><td data-label="Good for">Highest quality, slowest. Not needed for chat.</td></tr>
+					</tbody>
+				</table>
+				<p>Download sizes are the ranges Ollama lists for each tag. You need roughly that much free GPU or unified memory, plus a few GB for context.</p>
+				<ul class="guide-list">
+					<li><strong>Fits in GPU memory means fast.</strong> After a test reply, run <code>ollama ps</code>. It should say <code>100% GPU</code>. If it shows CPU, pick a smaller model.</li>
+					<li><strong>Keep it loaded.</strong> The first reply after a few idle minutes is slow because the model reloads from disk. Set Ollama keep-alive to <code>-1</code> in Social Stream, or turn off auto-unload in LM Studio.</li>
+					<li><strong>Skip thinking modes.</strong> Reasoning adds seconds before the first word. Social Stream hides the reasoning text, but it still has to wait for it. Gemma 4 only thinks when the system prompt starts with <code>&lt;|think|&gt;</code>, so leave that out. Other families, such as Qwen 3.5 and DeepSeek, may think by default, so use their instruct or non-thinking variants or disable thinking on the server.</li>
+					<li><strong>Other families work too.</strong> Qwen 3.5, Llama, Mistral, and Phi are all fine. Pick an instruction-tuned chat model (often marked <code>-it</code> or <code>instruct</code>) and paste its exact tag.</li>
+					<li><strong>Bigger is not safer.</strong> A model that spills out of GPU memory can be ten times slower than one that fits. When in doubt, go one size down.</li>
+				</ul>
+			</div>
+
+			<div class="guide-card" id="test">
+				<h2>Connect and test in Social Stream Ninja</h2>
+				<ol>
+					<li>In Social Stream settings, open <strong>Bots &amp; AI &rarr; Chat Bots and AI services &rarr; Configure LLM Service Provider</strong>.</li>
+					<li>Under <strong>Configure LLM</strong>, pick your provider and fill in the endpoint, model, and key from your tab above.</li>
+					<li>Click <strong>Test selected chat bot</strong> and wait for a reply. The first reply can take a while when the model is still loading. Read any error that appears under the button. It usually names the problem.</li>
+					<li>Open <strong>Chat Bot - Primary</strong> and turn on <strong>Enable the LLM AI chat bot</strong>.</li>
+					<li>For your first live test, turn on <strong>Bot replies ONLY go to the bot overlay page</strong> and open the bot overlay link under <strong>Overlay Page and TTS for Chat Bot</strong>. Nothing is posted to your real chat until you turn that off.</li>
+				</ol>
+				<p>The <a href="docs/chatbot-basics-guide.html#first-test">chat bot setup guide</a> covers trigger words, reply targets, bot names, and why a connected AI can still stay silent in chat.</p>
+			</div>
+
+			<div class="guide-card" id="cors">
+				<h2>Fix CORS and connection errors</h2>
+				<p>CORS is a browser rule. A web page may only call another address if that server says the page is allowed. Whether it affects you depends on where Social Stream Ninja is running.</p>
+				<table class="guide-table guide-table-stack">
+					<thead>
+						<tr><th>Where it runs</th><th>Does CORS apply?</th><th>What to do</th></tr>
+					</thead>
+					<tbody>
+						<tr><td data-label="Where">Desktop app</td><td data-label="CORS">No. Requests leave from the app itself, not from a web page.</td><td data-label="What to do">If the test fails, the server is not running, the address or port is wrong, or a firewall is in the way. Open the endpoint in a browser on the same computer to check.</td></tr>
+						<tr><td data-label="Where">Chrome extension</td><td data-label="CORS">Mostly no. The extension is allowed to call any local address, so LM Studio, llama.cpp, and vLLM work without changes.</td><td data-label="What to do">Ollama is the exception. It checks the request origin and answers <code>403</code> unless <code>OLLAMA_ORIGINS</code> includes <code>chrome-extension://*</code>. Steps are below.</td></tr>
+						<tr><td data-label="Where">Web version in a browser tab</td><td data-label="CORS">Yes, the full browser rules.</td><td data-label="What to do">The server must allow the origin <code>https://socialstream.ninja</code>. Ollama: add it to <code>OLLAMA_ORIGINS</code>. LM Studio: turn on Enable CORS. llama.cpp and vLLM allow it by default. If Chrome asks for permission to reach devices on your local network, allow it. An <code>http://</code> address other than localhost cannot be called from an https page at all, so for a server on another PC use the desktop app or put https in front of it.</td></tr>
+					</tbody>
+				</table>
+
+				<h3>Set OLLAMA_ORIGINS</h3>
+				<p>A value of <code>*</code> allows every origin and is fine on a home PC. To be stricter, use <code>chrome-extension://*,https://socialstream.ninja</code>. Ollama only reads the variable when it starts, so always quit and reopen it afterwards.</p>
+				<p><strong>Windows</strong></p>
+				<ol>
+					<li>Quit Ollama from the system tray.</li>
+					<li>Open the Start menu and search for <strong>Edit environment variables for your account</strong>.</li>
+					<li>Add a user variable named <code>OLLAMA_ORIGINS</code> with the value <code>*</code>, then click OK.</li>
+					<li>Start Ollama again and click <strong>Test selected chat bot</strong>.</li>
+				</ol>
+				<p><strong>macOS</strong> (Ollama app): run this in Terminal, then quit and reopen Ollama. Repeat it after a reboot.</p>
+				<pre><code>launchctl setenv OLLAMA_ORIGINS "*"</code></pre>
+				<p><strong>Linux</strong> (systemd service): run <code>sudo systemctl edit ollama.service</code>, add the lines below, then run <code>sudo systemctl daemon-reload &amp;&amp; sudo systemctl restart ollama</code>.</p>
+				<pre><code>[Service]
+Environment="OLLAMA_ORIGINS=*"</code></pre>
+				<p><strong>Quick test on any system:</strong> quit Ollama, then start it from a terminal with the variable set for that session only.</p>
+				<pre><code># PowerShell
+$env:OLLAMA_ORIGINS="*"; ollama serve
+
+# macOS or Linux
+OLLAMA_ORIGINS="*" ollama serve</code></pre>
+
+				<h3>What the error means</h3>
+				<table class="guide-table guide-table-stack">
+					<thead>
+						<tr><th>You see</th><th>Likely cause</th><th>Fix</th></tr>
+					</thead>
+					<tbody>
+						<tr><td data-label="You see"><code>403 Forbidden</code> from Ollama</td><td data-label="Likely cause">Origin blocked</td><td data-label="Fix">Set <code>OLLAMA_ORIGINS</code> as above and restart Ollama.</td></tr>
+						<tr><td data-label="You see"><code>Failed to fetch</code>, or a CORS message in the browser console</td><td data-label="Likely cause">Server not running, wrong port, or CORS off on a browser surface</td><td data-label="Fix">Open the endpoint in a browser. Ollama shows &ldquo;Ollama is running&rdquo;. OpenAI-style servers list models at <code>/v1/models</code>. Then enable CORS on the server if you use the extension or web version.</td></tr>
+						<tr><td data-label="You see"><code>404</code> or model not found</td><td data-label="Likely cause">Model not downloaded, or the name does not match</td><td data-label="Fix">Compare with <code>ollama list</code> or <code>/v1/models</code>. For Custom API the model must be the server's id, not the <code>.gguf</code> file name.</td></tr>
+						<tr><td data-label="You see"><code>401</code> or <code>403</code> from a cloud provider</td><td data-label="Likely cause">Missing or wrong key, or no billing set up</td><td data-label="Fix">Make a fresh key, paste it without spaces, and add credit or a payment method.</td></tr>
+						<tr><td data-label="You see"><code>429</code></td><td data-label="Likely cause">Rate limit or quota reached</td><td data-label="Fix">Add credit, pick a cheaper model, or make the bot reply less often.</td></tr>
+						<tr><td data-label="You see">The first reply takes 20 to 60 seconds, then it is fine</td><td data-label="Likely cause">The model is loading from disk</td><td data-label="Fix">Set keep-alive to <code>-1</code>, or choose a smaller model.</td></tr>
+						<tr><td data-label="You see">Every reply is slow or times out</td><td data-label="Likely cause">The model does not fit in GPU memory and is running on the CPU</td><td data-label="Fix">Run <code>ollama ps</code>. Go one size down, or use a hosted API.</td></tr>
+						<tr><td data-label="You see">Empty or rambling replies</td><td data-label="Likely cause">A base model instead of a chat model, or a thinking model that ran out of time</td><td data-label="Fix">Use an instruction-tuned model and turn thinking off.</td></tr>
+						<tr><td data-label="You see">Test works, but the bot never replies in chat</td><td data-label="Likely cause">The AI is fine. The bot settings decide which messages it answers.</td><td data-label="Fix">See <a href="docs/chatbot-basics-guide.html#problems">Fix problems</a> in the chat bot guide.</td></tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card" id="multimodal">
+				<h2>Images, voice, and realtime AI</h2>
+				<h3>Vision</h3>
+				<p>Social Stream Ninja sends pictures to the AI when a feature attaches them. The private chat bot can attach screenshots, and the voice co-host can send one still image from your camera or screen share with each request. It never streams live video. For that to work, the model has to understand images.</p>
+				<ul class="guide-list">
+					<li><strong>Ollama:</strong> every Gemma 4 size, Gemma 3 from 4B up, Qwen 2.5 VL, and LLaVA all accept images.</li>
+					<li><strong>LM Studio and llama.cpp:</strong> use a vision model and make sure its <code>mmproj</code> file is loaded alongside it.</li>
+					<li><strong>vLLM:</strong> serve a vision model such as Gemma 4.</li>
+					<li><strong>Hosted:</strong> OpenAI, Gemini, and OpenRouter vision models accept images. Grok and Groq only with their vision models. DeepSeek and Bedrock are text only in Social Stream, so images are not sent to them.</li>
+				</ul>
+				<p>If the model is text only, the picture is dropped or the request fails, so check this before relying on it on stream.</p>
+
+				<h3>Voice co-host and realtime</h3>
+				<p>The <a href="docs/ai-cohost-guide.html">voice co-host</a> listens to your microphone and talks back on stream. There are two routes, and the model you picked on this page matters for the second one.</p>
+				<ul class="guide-list">
+					<li><strong>Speech-to-speech services:</strong> OpenAI Realtime (uses your ChatGPT API key), xAI Realtime, and Google Gemini Live. Lowest delay and the most natural voice, billed per minute of audio.</li>
+					<li><strong>SSN Configured LLM:</strong> uses whatever you set up on this page. The desktop app transcribes your voice locally with Whisper (a 42 MB download on first use), sends the text to your model, and reads the reply with text-to-speech. In the Chrome extension, Chrome's speech recognition does the listening. Here speed is everything, so use Gemma 4 E2B or E4B, or a hosted mini or flash model, and keep it loaded.</li>
+					<li><strong>Local Qwen or Gemma (Browser):</strong> the co-host page can also run a small model inside the browser with no server at all. Good for trying it, not the fastest.</li>
+				</ul>
+				<p>Chat bot replies have the same time budget. A model that answers in one or two seconds keeps up with chat. One that needs ten seconds does not, however smart it is.</p>
+			</div>
+
+			<div class="guide-card" id="tts">
+				<h2>Text-to-speech</h2>
+				<p>Bot replies can be read aloud from the bot overlay page. Turn it on under <strong>Overlay Page and TTS for Chat Bot</strong>, then capture that page's audio in OBS. The voice is separate from the AI model, so you can mix a local model with a cloud voice or the other way around.</p>
+				<ul class="guide-list">
+					<li><a href="docs/tts-setup-guide.html">TTS setup guide</a>: browser voices, OBS audio, and the main options in plain language.</li>
+					<li><a href="docs/local-tts.html">Local AI TTS guide</a>: private voices that run on your own computer, voice cloning, and self-hosted servers.</li>
+					<li><a href="docs/tts.html">TTS voice reference</a>: every provider, URL parameter, and troubleshooting step.</li>
+				</ul>
+			</div>
+
+			<div class="guide-card" id="next">
+				<h2>Next steps</h2>
+				<ul class="guide-list">
+					<li><a href="docs/chatbot-basics-guide.html">AI chat bot setup</a>: trigger words, where replies go, and safe testing.</li>
+					<li><a href="docs/chatbot-knowledge-guide.html">Answers from your files</a>: give the bot a knowledge base about your channel.</li>
+					<li><a href="docs/ai-modes-guide.html">Complete AI guide</a>: moderation, translation, summaries, the ChatGPT browser companion, and AI-built overlays.</li>
+					<li><a href="docs/ai-cohost-guide.html">Voice AI co-host</a>: microphone conversation, stage overlay, and stream controls.</li>
+					<li><a href="docs/commands.html">Commands &amp; API</a>: the full provider list and the local control API.</li>
+				</ul>
+			</div>
+		</div>
+	</main>
+	<script>
+		(function () {
+			var tabs = Array.prototype.slice.call(document.querySelectorAll('.backend-tabs .tab-btn'));
+			var panels = Array.prototype.slice.call(document.querySelectorAll('.backend-panel'));
+			var ids = tabs.map(function (tab) { return tab.getAttribute('data-tab'); });
+			function show(id, updateHash) {
+				if (ids.indexOf(id) === -1) return false;
+				tabs.forEach(function (tab) {
+					var on = tab.getAttribute('data-tab') === id;
+					tab.classList.toggle('active', on);
+					tab.setAttribute('aria-selected', String(on));
+					tab.tabIndex = on ? 0 : -1;
+				});
+				panels.forEach(function (panel) { panel.hidden = panel.id !== 'backend-' + id; });
+				if (updateHash) history.replaceState(null, '', '#' + id);
+				return true;
+			}
+			tabs.forEach(function (tab, index) {
+				tab.addEventListener('click', function () { show(tab.getAttribute('data-tab'), true); });
+				tab.addEventListener('keydown', function (event) {
+					var step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+					if (!step) return;
+					event.preventDefault();
+					var next = tabs[(index + step + tabs.length) % tabs.length];
+					show(next.getAttribute('data-tab'), true);
+					next.focus();
+				});
+			});
+			function fromHash(scroll) {
+				var id = location.hash.replace('#', '');
+				if (show(id, false) && scroll) {
+					var card = document.getElementById('backends');
+					if (card) card.scrollIntoView();
+				}
+			}
+			fromHash(true);
+			window.addEventListener('hashchange', function () { fromHash(false); });
+			document.addEventListener('click', function (event) {
+				var link = event.target.closest('a[href^="#"]');
+				if (!link) return;
+				var id = link.getAttribute('href').slice(1);
+				if (ids.indexOf(id) !== -1) {
+					event.preventDefault();
+					show(id, true);
+					document.getElementById('backends').scrollIntoView({ behavior: 'smooth', block: 'start' });
+				}
+			});
+		})();
+	</script>
+</body>
+</html>

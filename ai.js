@@ -1421,6 +1421,74 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			break;
 	}
 		
+	// Only the overlay builder's direct Haiku connection uses this adapter.
+	// Other custom endpoints and ordinary chatbot requests keep their existing protocol.
+	if (options.overlayBuilder && provider === "custom" && /^claude-haiku-5-5(?:-|$)/i.test(model || "") &&
+		/^https:\/\/api\.anthropic\.com\/v1\/chat\/completions\/?$/.test(endpoint)) {
+		endpoint = "https://api.anthropic.com/v1/messages";
+		try {
+			const content = [{ type: "text", text: prompt }];
+			normalizeImagesForOpenAI(images).forEach(url => {
+				const dataImage = /^data:(image\/(?:png|jpeg|gif|webp));base64,([\s\S]+)$/i.exec(url);
+				if (dataImage) content.push({ type: "image", source: { type: "base64", media_type: dataImage[1].toLowerCase(), data: dataImage[2] } });
+				else if (/^https:\/\//i.test(url)) content.push({ type: "image", source: { type: "url", url } });
+			});
+			const fastEdit = options.overlayTask === "style" || options.overlayTask === "summarize";
+			const body = {
+				model, messages: [{ role: "user", content }], stream: true,
+				max_tokens: fastEdit ? 4096 : 32768,
+				thinking: { type: fastEdit ? "disabled" : "adaptive" },
+				output_config: { effort: "low" }
+			};
+			if (options.systemPrompt) body.system = String(options.systemPrompt);
+			const headers = { "Content-Type": "application/json", "x-api-key": apiKey || "", "anthropic-version": "2023-06-01" };
+			let pending = "", answer = "", stopped = false;
+			const consume = chunk => {
+				pending += chunk;
+				const lines = pending.split("\n");
+				pending = lines.pop();
+				for (const line of lines) {
+					if (!line.startsWith("data:")) continue;
+					const event = JSON.parse(line.slice(5).trim());
+					if (event.type === "error") throw createLLMError(buildContext(), { code: event.error?.type, message: event.error?.message || "Anthropic stream failed." });
+					if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
+						answer += event.delta.text;
+						if (callback) callback(event.delta.text);
+					}
+					if (event.type === "message_delta" && event.delta?.stop_reason && event.delta.stop_reason !== "end_turn") {
+						throw createLLMError(buildContext(), { code: "overlay_response_incomplete", message: "The AI response was incomplete (" + event.delta.stop_reason + "). Your overlay was kept. Try a smaller edit." });
+					}
+					if (event.type === "message_stop") stopped = true;
+				}
+			};
+			if (typeof ipcRenderer !== "undefined" && !options.strictEndpoint) {
+				const result = await streamElectronLLMRequest({ url: endpoint, headers, body, diagnostics: { kind: "llm", provider, model } }, consume, abortController && abortController.signal);
+				if (result && result.error) throw createLLMError(buildContext(), { status: result.status, message: result.message || result.error?.message || "Anthropic request failed." });
+			} else {
+				headers["anthropic-dangerous-direct-browser-access"] = "true";
+				const response = await fetch(endpoint, { method: "POST", headers, body: JSON.stringify(body), signal: abortController && abortController.signal, credentials: "omit", redirect: "error" });
+				if (!response.ok) {
+					const data = await response.json().catch(() => ({}));
+					throw createLLMError(buildContext(), { status: response.status, code: data.error?.type, message: data.error?.message || "Anthropic request failed." });
+				}
+				const reader = response.body.getReader(), decoder = new TextDecoder();
+				try {
+					while (!stopped) {
+						const chunk = await reader.read();
+						if (chunk.done) { consume(decoder.decode()); break; }
+						consume(decoder.decode(chunk.value, { stream: true }));
+					}
+				} finally { await reader.cancel().catch(() => {}); }
+			}
+			if (pending.trim()) consume("\n");
+			if (!stopped || !answer.trim()) throw createLLMError(buildContext(), { code: "overlay_response_incomplete", message: "The AI stream ended without a complete response. Your overlay was kept." });
+			return answer;
+		} catch (error) {
+			if (error.name === "AbortError") return { aborted: true };
+			throw wrapLLMError(error);
+		}
+	}
+
 	function checkOverlayCompletion(data) {
 		if (!options.overlayBuilder) return;
 		const reason = data.choices?.[0]?.finish_reason || data.done_reason || data.candidates?.[0]?.finishReason;
