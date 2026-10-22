@@ -131,6 +131,10 @@ body button:disabled { cursor:default; }
 body .options button:disabled { opacity:.65; }
 .popup-secondary-button { margin:2px 1px; }
 
+/* File actions stay compact and wrap as whole buttons in narrow panels. */
+.popup-file-actions { display:flex; flex-wrap:wrap; align-items:center; margin:8px -3px 5px; }
+body .popup-file-actions > button { flex:0 0 auto; max-width:calc(100% - 6px); margin:0 3px 6px; }
+
 body .options h4, body .options h5 { color:var(--h3-color); font-size:1em; font-weight:600; margin:12px 0 8px; }
 body .options details > summary, body .popup-settings-panel details > summary {
     color:var(--h3-color); font-size:1em; font-weight:600; line-height:1.4;

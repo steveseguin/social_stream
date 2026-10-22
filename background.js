@@ -15957,7 +15957,7 @@ async function processIncomingRequest(request, UUID = false) {
 
 					// Builder requests have their own cancellation scope and longer deadline.
 					const llmOptions = isAiPrompt ? { requestTimeoutMs: 600000, overlayBuilder: true,
-						overlayTask: ["style", "summarize"].includes(request.overlayTask) ? request.overlayTask : "create" } : {};
+						overlayTask: ["settings", "style", "summarize"].includes(request.overlayTask) ? request.overlayTask : "create" } : {};
 					callLLMAPI(prompt, model, sendChatbotChunk, controller, controllerKey, request.images || null, llmOptions)
 						.then(fullResponse => {
 							if (controllers[controllerKey] === controller) {

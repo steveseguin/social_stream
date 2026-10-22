@@ -1366,6 +1366,7 @@
 	<script src="./shared/utils/chatHtml.js"></script>
 	<script src="./shared/aiPrompt/security.js"></script>
 	<script src="./shared/aiPrompt/starter.js"></script>
+	<script src="./shared/aiPrompt/validation.js"></script>
 	<script>
 	(function () {
 		var OverlayStore = window.SSNAiPromptOverlayStore;
@@ -1885,10 +1886,9 @@
 			if (!pending || !pending.meta || !pending.preview) return;
 			var elapsed = formatElapsed(Date.now() - pending.requestedAt);
 			var chunks = pending.chunks || 0;
-			var chars = pending.text ? pending.text.length : 0;
-			var label = state || (chunks ? "Streaming" : "Waiting for AI response");
+			var label = state || (chunks ? "Generating your update" : "Waiting for AI response");
 			pending.meta.className = "stream-meta" + (!chunks && Date.now() - pending.requestedAt > 10000 ? " warn" : "");
-			pending.meta.innerHTML = '<span class="dot"></span><span>' + label + ' · ' + elapsed + ' · ' + chunks + ' chunks · ' + chars + ' chars</span>';
+			pending.meta.textContent = label + ' · ' + elapsed;
 			pending.preview.textContent = streamExcerpt(pending.text) || "Some providers send the complete response at once.";
 		}
 
@@ -1899,7 +1899,8 @@
 			pending.meta.className = "stream-meta";
 			pending.preview.className = "stream-preview";
 			body.appendChild(pending.meta);
-			body.appendChild(pending.preview);
+			var details = document.createElement("details"), summary = document.createElement("summary");
+			summary.textContent = "Generation details"; details.appendChild(summary); details.appendChild(pending.preview); body.appendChild(details);
 			updatePendingStream(pending);
 			pending.timer = setInterval(function () {
 				updatePendingStream(pending);
@@ -1996,22 +1997,18 @@
 			setTimeout(function () {
 				if (activePage() !== retryPage || retryPage.html !== retryHtml) return;
 				hideConsoleBar();
-				sendPrompt(retryNote, { isAutoFix: true, task: "repair" });
+				sendPrompt(retryNote, { isAutoFix: true, task: "repair", internal: true });
 			}, 400);
 		}
 
-		function maybeRetryPatchFailure(message) {
+		function maybeRetryPatchFailure(message, pending) {
 			if (!autoFixErrors || !autoFixErrors.checked) return false;
 			if (autoFixAttempts >= MAX_AUTO_FIX) return false;
 			if (!bridgeFrame || !bridgeFrame.contentWindow) return false;
 			autoFixAttempts += 1;
 			var retryNote = "Auto-fix attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + " - the ssnpatch could not be applied:\n\n" + message + "\n\nReturn only a corrected ```ssnpatch fenced JSON block. The block content must be valid JSON; escape backslashes, quotes, and newlines inside string values. Use exact text copied from the current overlay HTML. Each find string must match exactly once. Do not return a full HTML file.";
 			setStatus("Retrying patch (attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + ")…", "warn");
-			var retryPage = activePage(), retryHtml = retryPage.html;
-			setTimeout(function () {
-				if (activePage() !== retryPage || retryPage.html !== retryHtml) return;
-				sendPrompt(retryNote, { isAutoFix: true, task: "patchRepair" });
-			}, 400);
+			sendPrompt(retryNote, { isAutoFix: true, task: "patchRepair", continuationOf: pending, internal: true, originalRequest: pending && pending.originalRequest });
 			return true;
 		}
 
@@ -2133,7 +2130,7 @@
 					return;
 				}
 				var prompt = "Here is a rendered screenshot of the current overlay. Review the visual design and propose improvements: layout, spacing, color hierarchy, animations, legibility. Return the complete updated HTML file. Do not change core logic unless it's causing a visual problem.";
-				sendPrompt(prompt, { images: [dataUrl], task: "create" });
+				sendPrompt(prompt, { images: [dataUrl], task: "create", displayRequest: "Review and polish this overlay." });
 			}).catch(function (err) {
 				logBuilder("error", "Screenshot review failed", err);
 				setStatus("Screenshot failed: " + (err && err.message ? err.message : err), "error");
@@ -2206,13 +2203,16 @@
 		}
 
 		function starterTypes(page, request, task, capabilities, options) {
-			if (selectPromptProfile(capabilities) !== "compact" || (options && options.forceFull) || additionalPromptInstructions(page.systemPrompt).trim()) return null;
-			if (task === "edit" && isCosmeticEdit(request) && !requestRequiresPatch(request)) {
+			if ((options && options.forceFull) || requestRequiresPatch(request)) return null;
+			var custom = additionalPromptInstructions(page.systemPrompt), intent = String(request) + "\n" + custom;
+			// These requests need behavior beyond the settings contract, regardless of model.
+			if (/label\s*=|\b(?:custom|private|targeted)\s+(?:bridge\s+)?label|\b(?:javascript|websocket|fetch|api|camera|clock|timer|game|auction|filter|threshold)\b/i.test(intent)) return null;
+			if (task === "edit") {
 				var current = SSNAiPromptStarter.read(page.html, el("tmpl-blank").value);
 				return current ? current.types : null;
 			}
 			if (task !== "create") return null;
-			var types = promptMessageTypes(request), keys = Object.keys(types);
+			var types = promptMessageTypes(intent), keys = Object.keys(types);
 			if (!keys.length || types.auction || (types.viewer && keys.length > 1)) return null;
 			return types;
 		}
@@ -2254,7 +2254,7 @@
 			postBridgeOverlayPayload({ action: "chatbotCapabilities", context: "aiprompt", target: target });
 		}
 
-		function promptMessageTypes(text) {
+		function promptMessageTypes(text, includeExcluded) {
 			var types = {};
 			var structuredAlerts = false;
 			function inspect(value) {
@@ -2281,10 +2281,11 @@
 			});
 			var start = prose.search(/[\[{]/), end = Math.max(prose.lastIndexOf("}"), prose.lastIndexOf("]"));
 			if (start >= 0 && end > start && parse(prose.slice(start, end + 1))) prose = prose.slice(0, start) + " " + prose.slice(end + 1);
-			prose = prose.replace(/\b(?:no|not|without|exclude|excluding|ignore|skip|do not (?:show|include|add|invent)|don't (?:show|include|add|invent))\s+[^;.\n]*?(?=\b(?:but|instead|with)\b|[;.\n]|$)/gi, " ");
+			prose = prose.replace(/\blabel\s*=\s*[^\s,;]+/gi, " ");
+			if (!includeExcluded) prose = prose.replace(/\b(?:no|not|without|exclude|excluding|ignore|skip|do not (?:show|include|add|invent)|don't (?:show|include|add|invent))\s+[^;.\n]*?(?=\b(?:but|instead|with)\b|[;.\n]|$)/gi, " ");
 			if (/\b(?:rewards?|redeems?|redemptions?|channel[ -]points?|point[ -]rewards?)\b/i.test(prose)) types.reward = true;
 			if (/\b(?:featured?|highlight(?:ed)?|spotlight|selected|pinned?)\s+(?:chat|messages?|questions?)\b|meta\.featured/i.test(prose)) types.featured = true;
-			if (/\b(?:donations?|tips?|tipping|cheers?|bits|super[ -]?chats?|super[ -]?stickers?|jeweldonation|hasDonation|donoValue)\b/i.test(prose)) types.donation = true;
+			if (/\b(?:donations?|paid[ -]support|tips?|tipping|cheers?|bits|super[ -]?chats?|super[ -]?stickers?|jeweldonation|hasDonation|donoValue)\b/i.test(prose)) types.donation = true;
 			if (/\b(?:alerts?|follows?|followers?|subscriptions?|subscribers?|gifted|raids?|membership|new_follower|subscription_gift|resub)\b/i.test(prose)) types.alerts = true;
 			if (/viewer_updates?|viewer[\s_-]+(?:counts?|counter|ticker|total|stats)/i.test(prose)) types.viewer = true;
 			if (/\bauction(?:_update)?\b|\bcommerce(?:_update)?\b|\bwhatnot\b/i.test(prose)) types.auction = true;
@@ -2329,7 +2330,7 @@
 			var starter = starterTypes(page, request, task, capabilities, options);
 			if (starter) {
 				var current = task === "edit" ? SSNAiPromptStarter.read(page.html, el("tmpl-blank").value) : null;
-				return SSNAiPromptStarter.prompt(starter, request, current && current.settings) + (options && options.starterRepair ? "\n\nCorrect the previous invalid settings response. Use ONLY the listed setting keys and value types. " + options.starterRepair : "");
+				return SSNAiPromptStarter.prompt(starter, request, current && current.settings, additionalPromptInstructions(page.systemPrompt), promptMessageTypes(request), selectPromptProfile(capabilities)) + (options && options.starterRepair ? "\n\nCorrect the previous invalid settings response. Use ONLY the listed setting keys and value types. " + options.starterRepair : "");
 			}
 			var profile = selectPromptProfile(capabilities);
 			var instruction = (profile === "compact" && COMPACT_TASK_PROMPTS[task]) || TASK_PROMPTS[task];
@@ -2687,15 +2688,20 @@
 				var messageID = requestID;
 				var starter = images && images.length ? null : starterTypes(page, request, task, capabilities, opts);
 				var promptOptions = Object.assign({}, opts, { forceFull: !starter });
-				var prompt = buildPrompt(page, request, task, capabilities, promptOptions);
+				var promptPage = opts.candidateHtml ? Object.assign({}, page, { html: opts.candidateHtml }) : page;
+				var prompt = buildPrompt(promptPage, request, task, capabilities, promptOptions);
 				logBuilder("log", "AI task: " + task + " (" + selectPromptProfile(capabilities) + ", " + prompt.length + " characters)");
 				if (requestOverride == null) userRequest.value = "";
 				var displayRequest = opts.displayRequest || request;
 				var userMsg = displayRequest + ((images && images.length) ? ("\n\n[attached " + images.length + " screenshot" + (images.length > 1 ? "s" : "") + "]") : "");
-				appendConversationMessage("user", userMsg, true);
-				var assistantBody = appendConversationMessage("assistant", "Thinking…", false);
+				if (!opts.continuationOf && !opts.internal) appendConversationMessage("user", userMsg, true);
+				var assistantBody = opts.continuationOf ? opts.continuationOf.body : appendConversationMessage("assistant", "Working…", false);
 
 				pendingResponses[messageID] = { page: page, sourceHtml: sourceHtml, customInstructions: additionalPromptInstructions(page.systemPrompt), conversation: page.conversation, id: messageID, body: assistantBody, text: "", chunks: 0, requestedAt: Date.now(), requestText: request, task: task, isAutoFix: !!opts.isAutoFix, isCompaction: !!opts.isCompaction };
+				pendingResponses[messageID].originalRequest = opts.originalRequest || request;
+				pendingResponses[messageID].systemPrompt = page.systemPrompt;
+				pendingResponses[messageID].validationRepair = !!opts.validationRepair;
+				pendingResponses[messageID].validationTypes = opts.validationTypes || null;
 				pendingResponses[messageID].starterTypes = starter;
 				pendingResponses[messageID].starterRepair = !!opts.starterRepair;
 				pendingResponses[messageID].starterBase = starter && task === "edit" ? SSNAiPromptStarter.read(page.html, el("tmpl-blank").value).settings : null;
@@ -2714,7 +2720,7 @@
 				}, AI_RESPONSE_TIMEOUT_MS);
 
 				var payload = { action: "chatbot", context: "aiprompt", value: prompt, target: messageID, turbo: false };
-				payload.overlayTask = task === "summarize" ? "summarize" : (task === "edit" && isCosmeticEdit(request) ? "style" : task);
+				payload.overlayTask = starter ? "settings" : (task === "summarize" ? "summarize" : (task === "edit" && isCosmeticEdit(request) ? "style" : task));
 				if (images && images.length) payload.images = images;
 
 				var sentParts = postBridgeOverlayPayload(payload);
@@ -2749,6 +2755,7 @@
 			var pending = pendingResponses[id];
 			if (!pending) return;
 			clearPendingTimers(pending);
+			if (pending.validation) pending.validation.cancel();
 			postBridgeOverlayPayload({ action: "chatbotStop", context: "aiprompt", target: pending.id });
 			delete pendingResponses[id];
 			el("stopPrompt").disabled = !Object.keys(pendingResponses).length;
@@ -2761,6 +2768,53 @@
 				pendingResponses[id].body.textContent = "Request stopped.";
 				cancelRequest(id);
 			});
+		}
+
+		function applyCheckedHtml(pending, html, note, status) {
+			var page = pending.page;
+			function current() { return findPage(page.id) === page && latestPageRequest[page.id] === pending.id && page.html === pending.sourceHtml && page.systemPrompt === pending.systemPrompt && page.conversation === pending.conversation; }
+			if (!current()) return;
+			var snapshot = SSNAiPromptStarter.read(html, el("tmpl-blank").value);
+			var types = snapshot ? snapshot.types : (pending.validationTypes || promptMessageTypes(pending.originalRequest + "\n" + pending.customInstructions));
+			var strict = !!snapshot || (!/\b(?:only|filter|exclude|unless|minimum|threshold|anonymous|keyword)\b|hide.{0,20}(?:name|message)/i.test(pending.originalRequest + " " + pending.customInstructions));
+			pending.validating = true; pendingResponses[pending.id] = pending;
+			el("stopPrompt").disabled = false; pending.body.textContent = "Checking your overlay...";
+			if (activePage() === page) setStatus("Checking the overlay before applying it...", "warn");
+			function finished(result) {
+				if (pendingResponses[pending.id] !== pending) return;
+				delete pendingResponses[pending.id]; el("stopPrompt").disabled = !Object.keys(pendingResponses).length;
+				if (result.cancelled) return;
+				if (!current()) {
+					if (findPage(page.id) === page && latestPageRequest[page.id] === pending.id && page.conversation === pending.conversation) {
+						var retained = "Your edits were kept. The AI update was not applied because the page changed during its checks.";
+						pending.body.textContent = retained; saveConversationMessage("assistant", retained, page);
+						if (activePage() === page) { renderConversation(); setStatus("Your edits were preserved.", "warn"); }
+					}
+					return;
+				}
+				if (result.ok) {
+					applyAIHtml(page, html);
+					if (result.unchecked.length) note += " Use the simulation buttons to check any custom filtering or hidden fields.";
+					pending.body.textContent = note; saveConversationMessage("assistant", note, page);
+					if (activePage() === page) { renderConversation(); setStatus(status, "ok"); }
+					return;
+				}
+				var issue = (result.issues || ["The test preview could not run."]).join("\n");
+				logBuilder("warn", "Candidate overlay did not pass its checks", issue);
+				if (!pending.validationRepair && autoFixErrors.checked && activePage() === page) {
+					pending.body.textContent = "The preview found a problem. Trying one correction...";
+					sendPrompt("Fix this candidate overlay without changing the requested design. Original request: " + pending.originalRequest + "\n\nPreview checks failed:\n" + issue,
+						{ task: "repair", forceFull: true, isAutoFix: true, continuationOf: pending, candidateHtml: html, validationRepair: true, validationTypes: types, originalRequest: pending.originalRequest });
+					return;
+				}
+				var message = "I couldn't apply this update: " + issue + "\nYour previous overlay is unchanged. Try a smaller change or another model.";
+				pending.body.textContent = message; saveConversationMessage("assistant", message, page);
+				if (activePage() === page) { renderConversation(); setStatus("Update not applied; previous overlay kept.", "error"); }
+			}
+			try {
+				pending.validation = SSNAiPromptValidation.check(html, { types: types, settings: snapshot && snapshot.settings, strict: strict });
+				pending.validation.promise.then(finished, function (error) { finished({ ok: false, issues: [error.message] }); });
+			} catch (error) { finished({ ok: false, issues: [error.message] }); }
 		}
 
 		function applyAIHtml(page, html) {
@@ -2783,6 +2837,7 @@
 				logBuilder("warn", "Received AI response for unknown target", response);
 				return;
 			}
+			if (pending.validating) return;
 			var value = response.value || "";
 
 			if (chunk) {
@@ -2813,7 +2868,7 @@
 				return;
 			}
 
-			if (page.html !== pending.sourceHtml) {
+			if (page.html !== pending.sourceHtml || page.systemPrompt !== pending.systemPrompt) {
 				var retained = "The page changed while AI was working. Your edits were kept. AI response:\n\n" + finalText;
 				pending.body.textContent = retained;
 				saveConversationMessage("assistant", retained, page);
@@ -2843,23 +2898,32 @@
 			if (pending.starterTypes) {
 				var customLayout = false;
 				try {
-					var settingsText = String(finalText).trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-					var layoutSettings = JSON.parse(settingsText);
+					var layoutSettings = SSNAiPromptStarter.parse(finalText);
 					if (layoutSettings && layoutSettings.unsupported === true) { customLayout = true; throw new Error("Custom layout requested."); }
-					if (pending.starterBase) layoutSettings = SSNAiPromptStarter.merge(pending.starterBase, layoutSettings);
-					var starterHtml = SSNAiPromptStarter.build(layoutSettings, pending.starterTypes, el("tmpl-blank").value);
-					applyAIHtml(page, starterHtml);
-					pending.body.textContent = "Updated overlay applied.";
-					saveConversationMessage("assistant", pending.body.textContent, page);
-					setStatus("HTML update applied.", "ok");
+					var mentionedTypes = promptMessageTypes(pending.originalRequest + "\n" + pending.customInstructions, true);
+					var resolved = SSNAiPromptStarter.resolve(layoutSettings, pending.starterTypes, pending.starterBase, mentionedTypes);
+					var starterHtml = SSNAiPromptStarter.build(resolved.settings, resolved.types, el("tmpl-blank").value);
+					var note = SSNAiPromptStarter.describe(pending.starterBase, resolved.settings, pending.starterTypes, resolved.types);
+					if (pending.starterBase && JSON.stringify(pending.starterBase) === JSON.stringify(resolved.settings) && JSON.stringify(pending.starterTypes) === JSON.stringify(resolved.types)) {
+						pending.body.textContent = note; saveConversationMessage("assistant", note, page);
+						if (activePage() === page) { renderConversation(); setStatus("No changes needed.", "ok"); }
+						return;
+					}
+					return applyCheckedHtml(pending, starterHtml, note, "HTML update applied.");
 				} catch (error) {
+					if (!customLayout && pending.starterRepair) {
+						var failed = "I couldn't read the requested settings. Your overlay was kept. Try a simpler request or another model.";
+						pending.body.textContent = failed; saveConversationMessage("assistant", failed, page);
+						if (activePage() === page) { renderConversation(); setStatus("Update not applied; previous overlay kept.", "error"); }
+						return;
+					}
 					var repairSettings = !customLayout && !pending.starterRepair;
 					pending.body.textContent = repairSettings ? "Correcting the overlay settings…" : "Building the requested custom layout…";
 					if (activePage() === page) sendPrompt(pending.requestText, { task: pending.task, forceFull: !repairSettings,
+						continuationOf: pending, originalRequest: pending.originalRequest,
 						starterRepair: repairSettings ? String(error.message).slice(0, 300) + "\nPrevious response:\n" + String(finalText).slice(0, 4000) : "",
 						displayRequest: repairSettings ? "Correct the overlay settings." : "Continue building the requested layout." });
 				}
-				if (activePage() === page) renderConversation();
 				return;
 			}
 
@@ -2868,9 +2932,10 @@
 				if (patch.__ssnPatchError) {
 					var patchParseError = "Patch could not be applied: " + patch.__ssnPatchError;
 					pending.body.textContent = patchParseError;
-					saveConversationMessage("assistant", patchParseError, page);
 					logBuilder("error", patchParseError, finalText);
-					if (activePage() !== page || !maybeRetryPatchFailure(patchParseError)) {
+					if (activePage() !== page || !maybeRetryPatchFailure(patchParseError, pending)) {
+						saveConversationMessage("assistant", patchParseError, page);
+						if (activePage() === page) renderConversation();
 						setStatus(patchParseError, "error");
 					}
 					return;
@@ -2878,9 +2943,10 @@
 				if (hasHtmlFence(finalText)) {
 					var mixedPatchError = "Patch could not be applied: The AI returned both ssnpatch and full HTML.";
 					pending.body.textContent = mixedPatchError;
-					saveConversationMessage("assistant", mixedPatchError, page);
 					logBuilder("error", mixedPatchError, finalText);
-					if (activePage() !== page || !maybeRetryPatchFailure(mixedPatchError)) {
+					if (activePage() !== page || !maybeRetryPatchFailure(mixedPatchError, pending)) {
+						saveConversationMessage("assistant", mixedPatchError, page);
+						if (activePage() === page) renderConversation();
 						setStatus(mixedPatchError, "error");
 					}
 					return;
@@ -2889,19 +2955,16 @@
 				if (!patchResult.ok) {
 					var patchError = "Patch could not be applied: " + patchResult.error;
 					pending.body.textContent = patchError;
-					saveConversationMessage("assistant", patchError, page);
 					logBuilder("error", patchError, finalText);
-					if (activePage() !== page || !maybeRetryPatchFailure(patchError)) {
+					if (activePage() !== page || !maybeRetryPatchFailure(patchError, pending)) {
+						saveConversationMessage("assistant", patchError, page);
+						if (activePage() === page) renderConversation();
 						setStatus(patchError, "error");
 					}
 					return;
 				}
-				applyAIHtml(page, patchResult.html);
 				var patchNote = patchResult.reply || "Patch applied.";
-				if (patchResult.count) patchNote += "\n\nApplied " + patchResult.count + " exact-match edit" + (patchResult.count === 1 ? "." : "s.");
-				pending.body.textContent = patchNote;
-				saveConversationMessage("assistant", patchNote, page);
-				setStatus("Patch update applied.", "ok");
+				return applyCheckedHtml(pending, patchResult.html, patchNote + " Undo AI edit restores the previous version.", "Patch update applied.");
 			} else {
 				var html = extractHtml(finalText);
 				if (html && /<html[\s>]/i.test(html) && !/<\/html\s*>/i.test(html)) {
@@ -2915,25 +2978,23 @@
 				if (pending.task === "edit" || pending.task === "patchRepair") {
 					var patchOnlyError = "Patch could not be applied: This edit requires ssnpatch output, but the AI returned full HTML.";
 					pending.body.textContent = patchOnlyError;
-					saveConversationMessage("assistant", patchOnlyError, page);
 					logBuilder("error", patchOnlyError, finalText);
-					if (activePage() !== page || !maybeRetryPatchFailure(patchOnlyError)) {
+					if (activePage() !== page || !maybeRetryPatchFailure(patchOnlyError, pending)) {
+						saveConversationMessage("assistant", patchOnlyError, page);
+						if (activePage() === page) renderConversation();
 						setStatus(patchOnlyError, "error");
 					}
 					return;
 				}
 				var review = reviewGeneratedHtml(html, pending.requestText || "", pending.customInstructions);
 				html = review.html;
-				applyAIHtml(page, html);
 				var summaryIdx = finalText.indexOf("```");
 				var note = (summaryIdx > 0 ? finalText.slice(0, summaryIdx).trim() : "") || "Updated HTML applied.";
 				if (review.notes.length) {
-					note += "\n\nSafety review:\n- " + review.notes.join("\n- ");
+
 					logBuilder("warn", "Generated HTML safety review", review.notes);
 				}
-				pending.body.textContent = note;
-				saveConversationMessage("assistant", note, page);
-				setStatus(review.notes.length ? "HTML update applied with safety review." : "HTML update applied.", "ok");
+				return applyCheckedHtml(pending, html, note + " Undo AI edit restores the previous version.", "HTML update applied.");
 				} else {
 				pending.body.textContent = finalText;
 				saveConversationMessage("assistant", finalText, page);
@@ -3188,6 +3249,7 @@
 				el("undoAI").disabled = true;
 				lastAppliedFromAI = false;
 				refreshPreview();
+				saveConversationMessage("assistant", "Undid the last AI edit.", page); renderConversation();
 				setStatus("AI edit undone.", "ok");
 			});
 			el("reviewAndPolish").addEventListener("click", reviewAndPolish);

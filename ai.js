@@ -1433,7 +1433,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 				if (dataImage) content.push({ type: "image", source: { type: "base64", media_type: dataImage[1].toLowerCase(), data: dataImage[2] } });
 				else if (/^https:\/\//i.test(url)) content.push({ type: "image", source: { type: "url", url } });
 			});
-			const fastEdit = options.overlayTask === "style" || options.overlayTask === "summarize";
+			const fastEdit = options.overlayTask === "settings" || options.overlayTask === "style" || options.overlayTask === "summarize";
 			const body = {
 				model, messages: [{ role: "user", content }], stream: true,
 				max_tokens: fastEdit ? 4096 : 32768,
@@ -1927,6 +1927,15 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
         if (Number.isFinite(options.topP)) {
             message.top_p = options.topP;
         }
+		// The hosted builder's settings task returns data, not overlay code.
+		if (options.overlayBuilder && options.overlayTask === "settings" && provider === "hostedllm" &&
+			/^https:\/\/llm\.socialstream\.ninja\/v1\/chat\/completions\/?$/i.test(endpoint)) {
+			message.response_format = { type: "json_object" };
+			message.chat_template_kwargs = { enable_thinking: false };
+			message.reasoning_effort = "none";
+			message.temperature = 0.2;
+			message.max_tokens = 2048;
+		}
 
 		const headers = {
 			'Content-Type': 'application/json'
