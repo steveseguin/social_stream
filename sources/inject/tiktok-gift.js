@@ -1,6 +1,6 @@
 (function() {
 	if (window.__ssnReadTikTokGift) return;
-	// Main-world access to rendered chat IDs and TikTok's decoded moderation events.
+	// Main-world access to rendered chat metadata and TikTok's decoded moderation events.
 	var chatAuthors = new Map();
 	var client = null;
 	var roomId = "";
@@ -38,21 +38,48 @@
 			return;
 		}
 	}
-	function readChatId(element) {
+	function readChatMessage(element) {
 		var key = element && Object.keys(element).filter(function(k) { return k.indexOf('__reactFiber') === 0; })[0];
 		var fiber = key && element[key];
 		for (var depth = 0; fiber && depth < 8; depth++, fiber = fiber.return) {
 			var message = fiber.memoizedProps && fiber.memoizedProps.message;
 			if (!message || message.messageType !== 'ChatMessage' || !message.msgId) continue;
-			if (message.payload) rememberChat(message.payload, { msg_id: message.msgId });
-			return String(message.msgId);
+			return message;
 		}
-		return "";
+		return null;
+	}
+	function readChatId(element) {
+		var message = readChatMessage(element);
+		if (!message) return "";
+		if (message.payload) rememberChat(message.payload, { msg_id: message.msgId });
+		return String(message.msgId);
+	}
+	function readTeamLevel(element) {
+		var message = readChatMessage(element);
+		var user = message && message.payload && message.payload.user;
+		var badges = user && user.badge_list;
+		if (!Array.isArray(badges)) return null;
+		for (var i = 0; i < badges.length; i++) {
+			var badge = badges[i];
+			if (!badge || Number(badge.scene_type) !== 10) continue;
+			// Scene 8 is the gifter rank; scene 10 contains the exact Fan Club level.
+			var level = badge.privilege_log_extra && badge.privilege_log_extra.level;
+			if (typeof level === 'string' && /^\d+$/.test(level.trim())) level = Number(level.trim());
+			if (typeof level === 'number' && Number.isSafeInteger(level) && level >= 0) return level;
+		}
+		return null;
 	}
 	window.__ssnReadTikTokChatId = readChatId;
+	window.__ssnReadTikTokTeamLevel = readTeamLevel;
 	document.addEventListener('ssn-tiktok-connect', function(event) { try { connectModeration(event.target); } catch (e) {} });
 	document.addEventListener('ssn-read-tiktok-chat-id', function(event) {
 		try { event.target.setAttribute('data-ssn-tiktok-chat-id', readChatId(event.target)); } catch (e) {}
+	});
+	document.addEventListener('ssn-read-tiktok-team-level', function(event) {
+		try {
+			var level = readTeamLevel(event.target);
+			if (level !== null) event.target.setAttribute('data-ssn-tiktok-team-level', String(level));
+		} catch (e) {}
 	});
 	window.addEventListener('beforeunload', function() {
 		if (client) { client.off('ChatMessage', rememberChat); client.off('ImDeleteMessage', receiveDelete); }

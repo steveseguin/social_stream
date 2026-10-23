@@ -4307,7 +4307,7 @@ class EventFlowEditor {
 						<select class="property-input" id="prop-property-select">
 							${commonProperties.map(p => `<option value="${p.value}" ${(node.config.property === p.value || (isCustomProp && p.value === '_custom')) ? 'selected' : ''}>${p.label}</option>`).join('')}
 						</select>
-						<div class="property-help" id="team-level-property-help" style="${node.config.property === 'meta.teamMemberLevel' ? '' : 'display: none;'}">Exact Fan Club level supplied by SSApp, available as <code>meta.teamMemberLevel</code>. Missing levels do not match. Combine with a TikTok source condition.</div>
+						<div class="property-help" id="team-level-property-help" style="${node.config.property === 'meta.teamMemberLevel' ? '' : 'display: none;'}">Exact Fan Club level supplied with the TikTok message, available as <code>meta.teamMemberLevel</code>. Missing levels do not match. Combine with a TikTok source condition.</div>
 					</div>
 					<div class="property-group" id="custom-property-group" style="${isCustomProp ? '' : 'display: none;'}">
 						<label class="property-label">Custom Property Name</label>
