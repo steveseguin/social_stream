@@ -80,14 +80,13 @@
 
 	
 	var isExtensionOn = true;
-var lastMessage = {};
 	var lastName = "";
 	var lastImage = "";
-	var messageHistory = [];
+	var messageHistory = new Set();
+	var chatInitialized = false;
+	var meetingScope = "";
+	var observedChatContainers = new WeakSet();
 
-  setInterval(() => {
-    lastMessage = {}
-  }, 5000)
 
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
@@ -247,70 +246,18 @@ var lastMessage = {};
 	}
 	
 	function processMessage(ele, skip=false) {
-		
-		//console.log(ele);
-	  // Check if element is already processed
-	  if (ele && ele.marked) {
-		  //console.log("marked");
-		return;
-	  } else {
-		ele.marked = true;
-	  }
-	  
-	  // Check for valid message size
-	  if (ele.dataset.knownSize) {
-		if (!parseInt(ele.dataset.knownSize)) {
-		  //console.log("no knownSize");
-		  return;
-		}
-	  }
-	  
-	  // Get message ID from dataset or container
-	  let id = false;
-	  if (!id && ele.dataset) {
-		id = ele.dataset?.index;
-		id = id === undefined ? false : id;
-	  }
-	  
-	  if (id === false) {
-		// Check for message container with ID
-		if (ele.id && ele.classList.contains("chat-item-container")){
-			id = ele.id;
-		} else {
-		
-			const mid = ele.querySelector("div[id][class*='chat']");
-			if (!mid || !("id" in mid)) {
-			  return;
-			}
-			id = mid.id;
-		}
-	  }
-	  
-	  // Skip if message is already processed
-	  if (id !== false) {
-		if (messageHistory.includes(id)) {
-			//console.log(id, "in hisotyr");
-			//console.log(messageHistory);
-		  return;
-		}
-		messageHistory.push(id);
-	  } else {
-		  //console.log("no id");
-		return;
-	  }
-	  
+	  if (!ele || ele.nodeType !== 1 || !ele.isConnected) return;
+	  // Mutations may identify a list wrapper, a message, or one of its children.
+	  // Always read the same message row, never its changing list position.
+	  ele = ele.closest(".chat-item-container") ||
+		ele.closest(".new-chat-message__container, .chat-message__container");
+	  if (!ele) return;
+	  const body = ele.querySelector('.new-chat-message__text-box[id], .chat-message__text-content[id]');
+	  const id = ele.getAttribute("data-id") || (body && body.id) || ele.id;
+	  if (!id || messageHistory.has(id)) return;
 	  if (skip) {
-		  //console.log("skip true");
+		messageHistory.add(id);
 		return;
-	  }
-	  
-	  // Additional check for chat container - supports both old and new layouts
-	  if (document.querySelector("chat-message__container")) {
-		if (document.querySelector("chat-message__container").marked) {
-		  return;
-		} else {
-		  document.querySelector("chat-message__container").marked = true;
-		}
 	  }
 
 	  // Get the avatar image - works with both layouts
@@ -439,13 +386,10 @@ var lastMessage = {};
 		type: "zoom"
 	  };
 	  
-	  // Avoid duplicate messages
-	  if (lastMessage === JSON.stringify(data)) {
-		  //console.log("dupe");
-		return;
-	  }
-	  lastMessage = JSON.stringify(data);
-	  
+	  // Incomplete rows and reply editors are not messages. Retry when they hydrate.
+	  if (!msg) return;
+	  messageHistory.add(id);
+
 	  // Handle content images
 	  if (data.contentimg) {
 		try {
@@ -529,93 +473,49 @@ var lastMessage = {};
 	  return resp;
 	}
 
-	// Update the element insertion observer for better compatibility
-	function onElementInserted(target) {
-	  if (!target) return;
-	  
-	  const onMutationsObserved = function(mutations) {
-		mutations.forEach(function(mutation) {
-		  if (mutation.addedNodes.length) {
-			for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-			  try {
-				const node = mutation.addedNodes[i];
-				
-				//console.warn(node);
-				
-				// Check for shadow root
-				if (node.nodeType === 1 && node.shadowRoot) {
-				  // Observe the shadow root
-				  observer.observe(node.shadowRoot, config);
-				  
-				  // Process any existing messages in shadow DOM
-				  const shadowMessages = querySelectorAllIncludingShadow('.chat-item-container, .new-chat-message__container', node.shadowRoot);
-				  shadowMessages.forEach(msg => processMessage(msg));
-				}
-				
-				// Handle regular elements
-				if (node.hasAttribute && node.hasAttribute("role")) {
-				  processMessage(node);
-				} else if (node.hasAttribute && node.hasAttribute("id")) {
-				  processMessage(node);
-				} else if (node.hasAttribute && node.hasAttribute("data-index")) {
-				  processMessage(node);
-				} else if (node.classList && 
-						  (node.classList.contains("chat-item-container") || 
-						   node.classList.contains("new-chat-message__container"))) {
-				  processMessage(node);
-				}
-			  } catch(e) {
-				//console.log("Error processing mutation:", e);
-			  }
-			}
-		  }
-		  
-		  // Check for added shadow roots
-		  if (mutation.type === 'childList' && mutation.target.shadowRoot && !mutation.target.shadowRoot.observed) {
-			mutation.target.shadowRoot.observed = true;
-			observer.observe(mutation.target.shadowRoot, config);
-			
-			// Process any existing messages in shadow DOM
-			const shadowMessages = querySelectorAllIncludingShadow('.chat-item-container, .new-chat-message__container', mutation.target.shadowRoot);
-			shadowMessages.forEach(msg => processMessage(msg));
-		  }
-		});
-	  };
-	  
-	  const config = { childList: true, subtree: true };
-	  const MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-	  const observer = new MutationObserver(onMutationsObserved);
-	  observer.observe(target, config);
+	function processChatNode(node, skip=false) {
+		if (!node) return;
+		if (node.nodeType === 3) node = node.parentElement;
+		if (!node || !node.querySelectorAll) return;
+		if (node.nodeType === 1) processMessage(node, skip);
+		node.querySelectorAll('.chat-item-container, .new-chat-message__container, .chat-message__container')
+			.forEach(row => processMessage(row, skip));
+		const scanShadow = element => {
+			if (!element.shadowRoot) return;
+			processChatNode(element.shadowRoot, skip);
+			onElementInserted(element.shadowRoot);
+		};
+		scanShadow(node);
+		node.querySelectorAll('*').forEach(scanShadow);
 	}
 
+	function onElementInserted(target) {
+		if (observedChatContainers.has(target)) return;
+		observedChatContainers.add(target);
+		// Zoom batches row replacements; scan that batch once, including hydrated rows.
+		const observer = new MutationObserver(() => processChatNode(target));
+		observer.observe(target, { childList: true, subtree: true, characterData: true });
+	}
 
 	console.log("social stream injected");
 
 	setInterval(function() {
-			messageHistory = messageHistory.slice(-5000);
+			const meeting = window.location.pathname.match(/\/(?:wc|j)\/(\d+)/);
+			const scope = meeting ? meeting[1] : window.location.pathname;
+			if (scope !== meetingScope) {
+				meetingScope = scope;
+				messageHistory.clear();
+				chatInitialized = false;
+				lastName = "";
+				lastImage = "";
+			}
 
-			// Helper function to process a chat container
-			const processChatContainer = (container, isInShadowDOM = false) => {
-				if (!container.marked) {
-				  lastName = "";
-				  lastImage = "";
-				  container.marked = true;
-				  
-				  setTimeout(function(container) {
-						try {
-						  const selector = isInShadowDOM ? querySelectorAllIncludingShadow("[id^='chat-item-container-']", container) : container.querySelectorAll("[id^='chat-item-container-']");
-							  //console.warn("1");
-							  selector.forEach(x => {
-								x.marked = true;
-								processMessage(x, true);
-							  });
-						} catch(e) {
-						  //console.log("Error processing chat items:", e);
-						}
-						
-						onElementInserted(container);
-				  }, 2000, container);
-				}
+			const processChatContainer = container => {
+				if (!container) return;
+				// Exclude history only on first attachment, not every list rebuild.
+				processChatNode(container, !chatInitialized);
+				chatInitialized = true;
+				onElementInserted(container);
 			};
 
 			// Scan for chat containers in main DOM
@@ -625,7 +525,7 @@ var lastMessage = {};
 			} else if (document.querySelector('[data-testid="virtuoso-item-list"]')) {
 				processChatContainer(document.querySelector('[data-testid="virtuoso-item-list"]'));
 				
-			}  else if (document.querySelector('[data-testid="virtuoso-item-list"]')) {
+			} else if (document.querySelector('.chat-container__chat-list, .chat-container')) {
 				processChatContainer(document.querySelector('.chat-container__chat-list,  .chat-container'));
 			}
 
