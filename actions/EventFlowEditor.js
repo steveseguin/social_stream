@@ -2193,10 +2193,11 @@ class EventFlowEditor {
                 }
                 case 'compareProperty': {
                     const prop = node.config.property || 'donoValue';
+                    const propLabel = prop === 'meta.teamMemberLevel' ? 'TikTok Team Level' : prop;
                     const op = node.config.operator || 'gt';
                     const val = node.config.value ?? 0;
                     const opSymbols = { gt: '>', lt: '<', eq: '=', gte: '>=', lte: '<=', ne: '!=' };
-                    return `${prop} ${opSymbols[op] || op} ${val}`;
+                    return `${propLabel} ${opSymbols[op] || op} ${val}`;
                 }
                 case 'randomChance': {
                     const prob = Math.round((node.config.probability ?? 0.1) * 100);
@@ -3040,6 +3041,16 @@ class EventFlowEditor {
 		const lastActivityControls = document.getElementById('lastactivity-controls');
 		const lastActivityValue = document.getElementById('test-lastactivity-value');
 		const lastActivityUnit = document.getElementById('test-lastactivity-unit');
+		const testSource = document.getElementById('test-source');
+		const teamLevelGroup = document.getElementById('test-team-level-group');
+		const teamLevelInput = document.getElementById('test-team-level');
+		if (testSource && teamLevelGroup) {
+			const updateTeamLevelVisibility = () => {
+				teamLevelGroup.style.display = testSource.value === 'tiktok' ? '' : 'none';
+			};
+			testSource.addEventListener('change', updateTeamLevelVisibility);
+			updateTeamLevelVisibility();
+		}
 
 		// Show/hide donation amount field based on checkbox
 		donationCheckbox.addEventListener('change', function() {
@@ -3098,6 +3109,11 @@ class EventFlowEditor {
 				timestamp: Date.now(),
 			};
 			Object.assign(testMessage, donationPayload);
+			if (source === 'tiktok' && teamLevelInput && teamLevelInput.value.trim() !== '') {
+				const level = Number(teamLevelInput.value);
+				if (!teamLevelInput.reportValidity() || !Number.isSafeInteger(level) || level < 0) return;
+				testMessage.meta = { teamMemberLevel: level };
+			}
 
 			const eventType = document.getElementById('test-event')?.value || document.getElementById('test-event-custom')?.value?.trim() || '';
 			if (eventType) {
@@ -3920,7 +3936,7 @@ class EventFlowEditor {
 				html += `<div class="property-group"><label class="property-label">User Role</label><select class="property-input" id="prop-role">
 						   ${userRoles.map(role => `<option value="${role.value}" ${node.config.role === role.value ? 'selected' : ''}>${role.label}</option>`).join('')}
 						 </select></div>
-						 <div class="property-help">TikTok Team Member matches Fan Club/team levels and badges supplied with a TikTok message.</div>`;
+						 <div class="property-help">TikTok Team Member matches Fan Club/team levels and badges supplied with a TikTok message. For a minimum Fan Club level, use Compare Property → TikTok Team Level.</div>`;
 				break;
 			case 'userMemoryContains':
 				html += this.renderUserMemoryTargetField(node, 'Outputs true when the current event belongs to a user stored in this memory.');
@@ -4268,6 +4284,7 @@ class EventFlowEditor {
 					{ value: 'hasDonation', label: 'Donation Label' },
 					{ value: 'karma', label: 'Karma Score (0-1)' },
 					{ value: 'memberMonths', label: 'Member Months' },
+					{ value: 'meta.teamMemberLevel', label: 'TikTok Team Level' },
 					{ value: 'bitsAmount', label: 'Bits Amount (Twitch)' },
 					{ value: 'superChatAmount', label: 'Super Chat Amount (YouTube)' },
 					{ value: 'viewerCount', label: 'Viewer Count' },
@@ -4290,6 +4307,7 @@ class EventFlowEditor {
 						<select class="property-input" id="prop-property-select">
 							${commonProperties.map(p => `<option value="${p.value}" ${(node.config.property === p.value || (isCustomProp && p.value === '_custom')) ? 'selected' : ''}>${p.label}</option>`).join('')}
 						</select>
+						<div class="property-help" id="team-level-property-help" style="${node.config.property === 'meta.teamMemberLevel' ? '' : 'display: none;'}">Exact Fan Club level supplied by SSApp, available as <code>meta.teamMemberLevel</code>. Missing levels do not match. Combine with a TikTok source condition.</div>
 					</div>
 					<div class="property-group" id="custom-property-group" style="${isCustomProp ? '' : 'display: none;'}">
 						<label class="property-label">Custom Property Name</label>
@@ -6708,6 +6726,8 @@ class EventFlowEditor {
         const customPropertyInput = document.getElementById('prop-property');
         if (propertySelect && customPropertyGroup) {
             propertySelect.addEventListener('change', (e) => {
+                const teamLevelHelp = document.getElementById('team-level-property-help');
+                if (teamLevelHelp) teamLevelHelp.style.display = e.target.value === 'meta.teamMemberLevel' ? '' : 'none';
                 if (e.target.value === '_custom') {
                     customPropertyGroup.style.display = '';
                     // Use the custom input value
