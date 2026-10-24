@@ -13,6 +13,7 @@ function normalizePopupTranslationLanguage(lang) {
 	if (lower === "pt-br" || lower.startsWith("pt")) return "pt-br";
 	if (lower.startsWith("fr")) return "fr";
 	if (lower.startsWith("es")) return "es";
+	if (lower === "et" || lower.startsWith("et-")) return "et";
 	if (lower.startsWith("de")) return "de";
 	if (lower.startsWith("cs")) return "cs";
 	if (lower.startsWith("th")) return "th";
@@ -10580,7 +10581,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             google: {
                 key: getId('googleAPIKey')?.value || getText('ttskey') || document.getElementById('ttskey')?.value,
                 voice: getId('googleVoiceName')?.value || getText('voicegoogle'),
-                lang: getParam('googlelang') ? getOption('googlelang', 'en-US') : "en-US",
+                lang: getParam('googlelang') ? getOption('googlelang', 'en-US') : false,
                 rate: getParam('googlerate') ? getNumber('googlerate', 1.0) : 1.0,
                 pitch: getParam('googlepitch') ? getNumber('googlepitch', 0) : 0,
                 audioProfile: getParam('googlepitch') ? getOption('googleaudioprofile', false) : false
@@ -10694,7 +10695,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         const testPhrase = getLocalTtsSample(this.getProviderSelect(section)?.value,
             document.getElementById((this.getProviderSelect(section)?.value === 'edge' ? 'edgeVoiceSelect' : 'kokoroVoiceSelect') + section)?.value,
             document.getElementById('piperVoiceSelect' + section)?.value,
-            document.getElementById('espeakVoiceSelect' + section)?.value);
+            document.getElementById('espeakVoiceSelect' + section)?.value,
+            document.getElementById('googleVoiceName' + section)?.value ||
+                (document.querySelector('[data-param' + (section || '1') + '="googlelang"]')?.checked
+                    ? document.getElementById('googleLanguageSelect' + section)?.value : ''));
         const provider = this.getProviderSelect(section)?.value || "system";
         if (provider === 'edge' && !getEdgeTtsBridge()) {
             updateEdgeTtsAvailability(section);
@@ -11282,11 +11286,14 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         this.premiumQueueActive = true;
         const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${settings.google.key}`;
         
+        const voiceName = settings.google.voice || (settings.google.lang ? undefined : "en-GB-Standard-A");
+        const voiceMatch = voiceName && voiceName.match(/^([a-z]{2,3}-(?:[a-z]{2}|[0-9]{3}))-/i);
+        const languageCode = voiceMatch ? voiceMatch[1] : (settings.google.lang || "en-GB");
         const data = {
             input: { text },
             voice: {
-                languageCode: settings.google.lang.toLowerCase(),
-                name: settings.google.voice || "en-GB-Standard-A"
+                languageCode: languageCode,
+                name: voiceName
             },
             audioConfig: {
                 audioEncoding: "MP3",
@@ -15191,11 +15198,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 });
 
-function getLocalTtsSample(provider, kokoroVoice, piperVoice, espeakVoice) {
+function getLocalTtsSample(provider, kokoroVoice, piperVoice, espeakVoice, googleVoice) {
     const voice = provider === 'edge' ? kokoroVoice : provider === 'kokoro' ? kokoroVoice : provider === 'piper' ? piperVoice : provider === 'espeak' ? espeakVoice : '';
     if (/^(e[fm]_|es(?:$|[_-]))/i.test(voice || '')) return 'Hola, gracias por participar. ¿Qué jugamos hoy?';
     if (/^(p[fm]_|pt(?:$|[_-]BR))/i.test(voice || '')) return 'Olá, obrigado por participar. O que vamos jogar hoje?';
     if (/^pt[_-]PT/.test(voice || '')) return 'Olá, obrigado por participares. O que vamos jogar hoje?';
+    if (/^et(?:$|[_-])/i.test((provider === 'google' ? googleVoice : voice) || '')) return 'Tere! Aitäh, et liitusid vestlusega. Mida me täna mängime?';
     return 'The quick brown fox jumps over the lazy dog';
 }
 function setupLocalTtsLanguageFilters() {

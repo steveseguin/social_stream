@@ -24,6 +24,7 @@
 		if (lower.indexOf("es") === 0) return "es";
 		if (lower.indexOf("fr") === 0) return "fr";
 		if (lower.indexOf("de") === 0) return "de";
+		if (lower === "et" || lower.indexOf("et-") === 0) return "et";
 		if (lower.indexOf("cs") === 0) return "cs";
 		if (lower.indexOf("th") === 0) return "th";
 		if (lower === "ko" || lower.indexOf("ko-") === 0) return "ko";

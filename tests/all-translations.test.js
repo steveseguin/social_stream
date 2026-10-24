@@ -11,6 +11,7 @@ const localeNames = [
 	"es",
 	"fr",
 	"de",
+	"et",
 	"cs",
 	"th",
 	"ko",

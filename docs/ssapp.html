@@ -231,7 +231,7 @@
     </div>
     <script>
         (function() {
-            var supportedLanguages = ["en-us", "en-uk", "pt-br", "fr", "es", "de", "cs", "th", "ko", "zh-CN", "zh-TW", "tr", "uk", "ar", "test"];
+            var supportedLanguages = ["en-us", "en-uk", "pt-br", "fr", "es", "de", "cs", "th", "ko", "zh-CN", "zh-TW", "tr", "uk", "ar", "et", "test"];
             var translations = {
                 "en-us": {
                     documentTitle: "Welcome to Social Stream Ninja",
@@ -739,6 +739,43 @@
             Object.keys(remainingTranslations).forEach(function(lang) {
                 translations[lang] = remainingTranslations[lang];
             });
+            translations["et"] = {
+                "documentTitle": "Tere tulemast Social Stream Ninjasse",
+                "videoPlayerTitle": "YouTube’i videopleier",
+                "welcome.title": "Tere tulemast Social Stream Ninjasse! 🥷",
+                "welcome.intro": "Koonda oma otseülekannete vestlused ja muud sõnumid ühte kohta. See leht aitab sul alustada.",
+                "welcome.note": "Kui lisad esimese allika, kaob see tervitussõnum.",
+                "welcome.warning": "<strong>Oluline teave:</strong> Selle rakenduse kasutamine võib olla vastuolus mõne sotsiaalmeediaplatvormi kasutustingimustega. Ajastatud käskude, robotite või automaatsõnumite kasutamine vestlustes suurendab ka konto ajutise või püsiva blokeerimise ohtu. Kasuta rakendust vastutustundlikult ja tutvu enne iga platvormi tingimustega.",
+                "video.title": "Videojuhend",
+                "video.intro": "Vaata alustamiseks videojuhendit:",
+                "video.fallback": "Vaata juhendit YouTube’is",
+                "gettingStarted.title": "Alustamine: esimese vestlusallika lisamine",
+                "steps.sidebar": "Vaata rakenduse peaakna <strong>vasakut külgriba</strong>.",
+                "steps.platformButton": "Klõpsa lisatava platvormi nuppu (nt <img src=\"https://socialstream.ninja/sources/images/youtube.png\" alt=\"YouTube icon\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>YouTube</code>, <img src=\"https://socialstream.ninja/sources/images/twitch.png\" alt=\"Twitch icon\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>Twitch</code> jne).",
+                "steps.prompt": "Avaneb sisestusaken. Sisesta vastavalt juhisele oma <strong>kasutajanimi</strong>, <strong>video ID</strong> või <strong>URL</strong>.",
+                "steps.username": "Enamiku platvormide puhul on selleks sinu kasutajanimi (nt <code>YourChannelName</code>).",
+                "steps.youtubeVideoId": "YouTube’i allika saad lisada ka <strong>video ID</strong> järgi, kui tead seda.",
+                "steps.otherSites": "Muude saitide jaoks vali <code>Lisa muu allikas</code> ja kleebi vestluse otselink.",
+                "steps.activate": "Allikas lisatakse põhialasse. Klõpsa nüüd nuppu <code>Aktiveeri allikas</code> (YouTube’i kanaliallika puhul <code>Vali otseülekande allikad</code> või <code>Leia ja aktiveeri automaatselt</code>).",
+                "steps.signIn": "Mõne saidi (nt Facebook, TikTok või Instagram) puhul pead esmalt kasutama nuppu <code>Logi sisse</code> või leidma avanenud aknas otsevestluse.",
+                "steps.streamingChat": "Sinu vestlussõnumid ilmuvad nüüd lehele <strong>Voogedastuse vestlus</strong>! Ava see rakenduse peaakna paremas ülanurgas oleva lingi <code>Peamine vestluskiht ja juhtpaneel</code> kaudu. Kopeeri link OBS-i brauseriallikaks või dokiks.",
+                "features.title": "Põhifunktsioonid",
+                "features.twoWay": "Toetab reaalajas automaatset <strong>kahesuunalist vestlust</strong> Facebookis, YouTube’is, Twitchis, Kickis, Zoomis, TikTokis, Rumble’is, DLive’is ja kümnetel muudel platvormidel.",
+                "features.featured": "Sisaldab ülekatet „<strong>Esiletõstetud vestlus</strong>“, kuhu saad sõnumeid valida dokitava juhtpaneeli kaudu käsitsi või automaatselt.",
+                "features.bots": "Toetab <strong>robotikäske</strong> ja automaatseid vestlusvastuseid (kohandatav skriptitavate pistikprogrammidega).",
+                "features.llm": "<strong>Keelemudelite tugi</strong> (sh Ollama API) tehisintellektiga modereerimiseks, vestlusabiks, RAG-i ja kohandatud juhiste jaoks.",
+                "features.tts": "<strong>Kõnesünteesi (TTS) tugi</strong> tasuta ja tasuliste teenustega.",
+                "features.icons": "Allikaikoonid aitavad eri kanalite vooge eristada.",
+                "features.relaying": "Automaatne <strong>sõnumite edastamine</strong> platvormide vahel.",
+                "features.noLogin": "Enamiku saitide vestluse kogumiseks <strong>pole vaja sisse logida, API-võtit ega õigusi anda</strong>.",
+                "features.queue": "Sõnumite järjekord hilisemaks esiletõstmiseks.",
+                "features.transport": "Turvaline andmeedastus VDO.Ninja API abil – tasuta ja väikese viivitusega!",
+                "help.title": "Vajad abi?",
+                "help.intro": "Kui sul tekib küsimusi või probleeme, saad abi meie sõbralikust Discordi kogukonnast.",
+                "help.discord": "Liitu Social Stream Ninja Discordi serveriga",
+                "help.happy": "<strong>Head voogedastust!</strong>",
+                "footer.terms": "Social Stream Ninja kasutamisega nõustud meie <a href=\"https://socialstream.ninja/TOS\" target=\"_blank\">kasutustingimuste</a> ja <a href=\"https://socialstream.ninja/privacy\" target=\"_blank\">privaatsuspõhimõtetega</a>. Tutvu ka <a class=\"lightblue\" href=\"https://www.youtube.com/t/terms\" target=\"_blank\">YouTube’i kasutustingimustega</a>."
+            };
             translations["en-uk"] = Object.assign({}, translations["en-us"], translations["en-uk"]);
             translations["test"] = Object.assign({}, translations["en-us"], translations["test"]);
 
@@ -760,6 +797,7 @@
                 if (lower.indexOf("uk") === 0) return "uk";
                 if (lower.indexOf("ar") === 0) return "ar";
                 if (lower === "ko" || lower.indexOf("ko-") === 0) return "ko";
+                if (lower === "et" || lower.indexOf("et-") === 0) return "et";
                 if (lower === "test") return "test";
                 return supportedLanguages.indexOf(trimmed) >= 0 ? trimmed : "en-us";
             }

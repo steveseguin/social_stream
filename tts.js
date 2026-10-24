@@ -2121,8 +2121,8 @@ TTS.speechMeta = function(data, allow = false) {
                     }
                     if (giftVoice && giftVoice.lang) giftLanguage = giftVoice.lang;
                 } else if (giftProvider === "google" && TTS.googleSettings) {
-                    var googleGiftVoice = String(TTS.googleSettings.voiceName || "").match(/^([a-z]{2,3}-[a-z]{2})-/i);
-                    giftLanguage = TTS.googleSettings.lang || (googleGiftVoice && googleGiftVoice[1]) || giftLanguage;
+                    var googleGiftVoice = String(TTS.googleSettings.voiceName || "").match(/^([a-z]{2,3}-(?:[a-z]{2}|[0-9]{3}))-/i);
+                    giftLanguage = (googleGiftVoice && googleGiftVoice[1]) || TTS.googleSettings.lang || giftLanguage;
                 } else if (giftProvider === "gemini" && TTS.geminiSettings) {
                     giftLanguage = TTS.geminiSettings.lang || giftLanguage;
                 } else if (giftProvider === "speechify" && TTS.speechifySettings) {
@@ -2133,7 +2133,7 @@ TTS.speechMeta = function(data, allow = false) {
                 giftLanguage = String(giftLanguage).toLowerCase().split(/[-_]/)[0];
                 var giftVerbs = {
                     en: "sent", es: "envi\u00f3", pt: "enviou", fr: "a envoy\u00e9",
-                    de: "sendete", it: "ha inviato", nl: "stuurde"
+                    de: "sendete", it: "ha inviato", nl: "stuurde", et: "saatis"
                 };
                 var giftVerb = TTS.simpleGiftSpeech || (giftLanguage === "en" && !TTS.English) ? "" : giftVerbs[giftLanguage];
                 // Keep platform gift names intact; never guess translations from their IDs.
@@ -2545,17 +2545,13 @@ TTS.googleTTS = function(tts, options) {
     try {
         const url = "https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=" + TTS.GoogleAPIKey;
         
-        // Smart language code extraction from voice name
+        // A named voice determines its language, even when the link has a different language setting.
         let languageCode = TTS.googleSettings.lang || TTS.speechLang;
-        const voiceName = TTS.getVoiceOverride(options) || TTS.googleSettings.voiceName || "en-GB-Standard-A";
-        
-        // If no explicit language is set but we have a voice name, extract language from it
-        if (!TTS.googleSettings.lang && voiceName) {
-            // Voice names follow pattern: languageCode-variantName (e.g., en-GB-Chirp3-HD-Laomedeia)
-            const voiceMatch = voiceName.match(/^([a-z]{2}-[A-Z]{2})/);
-            if (voiceMatch) {
-                languageCode = voiceMatch[1];
-            }
+        const voiceName = TTS.getVoiceOverride(options) || TTS.googleSettings.voiceName ||
+            (TTS.googleSettings.lang ? undefined : "en-GB-Standard-A");
+        const voiceMatch = voiceName && voiceName.match(/^([a-z]{2,3}-(?:[a-z]{2}|[0-9]{3}))-/i);
+        if (voiceMatch) {
+            languageCode = voiceMatch[1];
         }
         
         var data = {

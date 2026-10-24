@@ -9,7 +9,8 @@ Supported catalogs are Spanish (`es`), Brazilian Portuguese (`pt-br`), Russian
 (`ru`), French (`fr`), German (`de`), Japanese (`ja`), Simplified Chinese
 (`zh-cn`), Traditional Chinese (`zh-tw`), Italian (`it`), Polish (`pl`), Korean
 (`ko`), Ukrainian (`uk`), Arabic (`ar`), Turkish (`tr`), Czech (`cs`) and Thai
-(`th`). Arabic pages use right-to-left layout with left-to-right code examples.
+(`th`) and Estonian (`et`). Estonian covers the homepage, downloads, getting started,
+and TTS guides; other pages use English where a translation is unavailable. Arabic pages use right-to-left layout with left-to-right code examples.
 `publish.json` selects the editions to publish. Deployment keeps available
 translations and temporarily uses English for missing or invalid entries.
 Strict authoring checks still require every string to be translated.
