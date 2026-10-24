@@ -198,7 +198,7 @@ function sanitizeXSSTransform(value) {
 	var raw = String(value || "").trim();
 	if (!raw || raw.length > 2000) return "";
 	if (/[^a-z0-9eE+\-.,()\s%]/i.test(raw)) return "";
-	return /^(?:\s*(?:matrix|translate|scale|rotate|skewX|skewY)\s*\(\s*[-+0-9eE.,\s%]+\s*\)\s*)+$/i.test(raw) ? raw : "";
+	return /^\s*(?:(?:matrix|translate|scale|rotate|skewX|skewY)\s*\([-+0-9eE.,\s%]+\)\s*)+$/i.test(raw) ? raw : "";
 }
 
 function sanitizeXSSSvgAttr(tag, name, value) {

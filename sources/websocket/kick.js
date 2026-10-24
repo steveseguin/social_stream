@@ -1584,13 +1584,18 @@ function deepMerge(target, source) {
     if (!source || typeof source !== 'object') {
         return output;
     }
+    if (typeof output !== 'object' && typeof output !== 'function') {
+        return output;
+    }
     Object.keys(source).forEach(key => {
         const value = source[key];
-        if (value && typeof value === 'object' && !Array.isArray(value)) {
-            output[key] = deepMerge(output[key] || {}, value);
-        } else {
-            output[key] = value;
-        }
+        const existing = Object.prototype.hasOwnProperty.call(output, key) ? output[key] : null;
+        const mergedValue = value && typeof value === 'object' && !Array.isArray(value)
+            ? deepMerge(existing || {}, value)
+            : value;
+        Object.defineProperty(output, key, {
+            value: mergedValue, enumerable: true, writable: true, configurable: true
+        });
     });
     return output;
 }

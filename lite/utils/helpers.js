@@ -4,6 +4,11 @@ export function randomSessionId() {
   if (window.crypto && window.crypto.randomUUID) {
     return window.crypto.randomUUID().replace(/-/g, '').slice(0, 12);
   }
+  if (window.crypto && window.crypto.getRandomValues) {
+    const bytes = new Uint8Array(6);
+    window.crypto.getRandomValues(bytes);
+    return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+  }
   return Math.random().toString(36).slice(2, 14);
 }
 

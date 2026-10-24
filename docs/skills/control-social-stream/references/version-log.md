@@ -242,3 +242,7 @@ Windows x64 voice commands in this unreleased preview use a pinned local whisper
 - Documented operations, authenticated status events, confirmation requirements, and API 1.1.0.
 
 When an endpoint, command, schema, MCP tool, or compatibility requirement changes, update this log and the rest of this skill in the same change.
+
+## Edge Natural speech (updated 0.4.42 development build)
+
+Minimum runtime: SSApp 0.4.42 with the Edge Natural addition and matching Social Stream page sources. Check for the advertised provider in the TTS settings; older builds with the same version lack it. This adds no REST or MCP commands. Trusted page IPC exposes edgeTtsVoices and edgeTts; overlay links use ttsprovider=edge, voiceedge, edgerate, and optional edgepitch. The app generates audio in Node.js and replies to edgeTts requests through the existing session WebRTC or WebSocket relay. Edge Natural requires the desktop app and internet access.

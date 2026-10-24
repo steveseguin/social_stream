@@ -1994,7 +1994,7 @@ class EventFlowEditor {
 				pointClasses += " logic-input-single"; // NOT gates expect a single input
 			}
 			
-			inputPointsHTML = `<div class="${pointClasses}" data-point-type="input" data-logic-type="${node.logicType}"></div>`;
+			inputPointsHTML = `<div class="${pointClasses}" data-point-type="input" data-logic-type="${this.escapeHtml(node.logicType)}"></div>`;
 			outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
 		} else if (node.type === 'state') {
 			if (node.stateType === 'USER_MEMORY') {

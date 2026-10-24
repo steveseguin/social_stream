@@ -3464,20 +3464,22 @@ input:checked + .slider:before {
 
 						<div class="tts-provider-selection" style="margin:0 10px 10px 10px">
 							<h3><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-service-provider">Text-to-Speech Service Provider</span></h3>
-							<select id="ttsProvider" data-optionparam1="ttsprovider" data-optionsetting="ttsProvider" class="textInput">
-								<option selected value="system">System TTS</option>
-								<option value="kokoro">Kokoro (webGPU/CPU)</option>
-								<option value="kitten">Kitten TTS (browser-based)</option>
-									<option value="elevenlabs">ElevenLabs</option>
-									<option value="google">Google Cloud</option>
-									<option value="gemini">Gemini (Preview TTS)</option>
-								<option value="fish">Fish Audio</option>
-								<option value="speechify">Speechify</option>
-								<option value="openai">OpenAI</option>
-								<option value="customtts">Custom / Local TTS Endpoint</option>
-								<option value="piper">Piper TTS</option>
-								<option value="espeak">eSpeak TTS</option>
+							<select aria-describedby="ttsProviderHelp" id="ttsProvider" data-optionparam1="ttsprovider" data-optionsetting="ttsProvider" class="textInput">
+								<option selected value="system" title="Voices and languages depend on your browser and installed system voices. Some browser voices use an online service.">System TTS &mdash; Free &middot; Device/browser &middot; Languages vary</option>
+								<option value="kokoro">Kokoro &mdash; Free &middot; Local &middot; Many languages</option>
+								<option value="kitten">Kitten TTS &mdash; Free &middot; Local &middot; English only</option>
+									<option value="elevenlabs" title="Requires an API key. Free usage is limited; voice access and languages depend on your plan and model.">ElevenLabs &mdash; Free tier / paid &middot; Online &middot; Many languages</option>
+									<option value="google" title="Requires an API key and billing setup. Free quotas depend on the voice type; usage above the quota is billed.">Google Cloud &mdash; Free quota / paid &middot; Online &middot; Many languages</option>
+									<option value="gemini" title="Requires an API key. Some TTS models have a limited free tier; other models require paid access.">Gemini TTS &mdash; Free tier / paid &middot; Online &middot; Many languages</option>
+								<option value="fish" title="Requires an API key. Choose s2.1-pro-free for free speech; other models may charge for usage.">Fish Audio &mdash; Free model / paid &middot; Online &middot; Many languages</option>
+								<option value="speechify" title="Requires an API key. Trial credits may be available; languages depend on the model.">Speechify &mdash; Paid &middot; Online &middot; Many languages</option>
+								<option value="openai" title="The OpenAI service charges for API usage. Languages depend on the model.">OpenAI &mdash; Paid &middot; Online &middot; Many languages</option>
+								<option value="customtts" title="Your server determines the cost, whether speech runs locally or online, and the supported languages.">Custom / Local TTS Endpoint &mdash; Depends on your server</option>
+								<option value="piper">Piper TTS &mdash; Free &middot; Local &middot; Many languages</option>
+								<option value="espeak">eSpeak TTS &mdash; Free &middot; Local &middot; Many languages</option>
+								<option value="edge" title="Requires the SSApp desktop app and an internet connection. Choose a voice for your language.">Edge Natural (desktop app) &mdash; Free &middot; Online &middot; Many languages</option>
 							</select>
+							<p id="ttsProviderHelp" class="tts-provider-help"><small>Local: speech runs on your computer; models may download first. Many languages: choose a matching voice or model. Online free tiers have usage limits.</small></p>
 							<div class="tts-name-option" data-keywords="read sender name chatname message only simpletts2">
 								<input type="checkbox" data-param1="simpletts2" hidden />
 								<label class="switch">
@@ -3491,6 +3493,23 @@ input:checked + .slider:before {
 
 						<div id="ttsButton" class="hidden"></div>
 
+						<div class="tts-provider-options options_group hidden" id="edgeTTS">
+							<h4>Edge Natural voices</h4>
+							<p>Free online voices. Keep SSApp open. Speech text is sent to Microsoft; no API key or voice installation is needed.</p>
+							<div class="textInputContainer"><label for="edgeVoiceSelect">Voice</label>
+							<select id="edgeVoiceSelect" data-optionparam1="voiceedge" class="textInput popup-reviewed-control">
+							<option value="en-US-EmmaMultilingualNeural">English (US) — Emma</option>
+							<option value="es-ES-ElviraNeural">Spanish (Spain) — Elvira</option>
+							<option value="es-ES-AlvaroNeural">Spanish (Spain) — Alvaro</option>
+							<option value="es-MX-DaliaNeural">Spanish (Mexico) — Dalia</option>
+							<option value="es-MX-JorgeNeural">Spanish (Mexico) — Jorge</option>
+							</select></div>
+							<div class="textInputContainer"><label for="edgeRateSelect">Speed</label>
+							<select id="edgeRateSelect" data-optionparam1="edgerate" class="textInput popup-reviewed-control">
+							<option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div>
+							<button type="button" class="edge-voices-refresh" data-section="">Load all voices</button>
+							<p id="edgeVoiceStatus" role="status"></p>
+						</div>
 						<div class="tts-provider-options options_group" id="systemTTS">
 							<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-system-options">Built-in System TTS Options</span></h4>
 							<i>note: the free built-in TTS plays out via the default audio device. <a class="lightblue" target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
@@ -5803,19 +5822,21 @@ input:checked + .slider:before {
                         <!-- TTS Provider Selection -->
                         <div class="tts-provider-selection" style="margin:0 10px 10px 10px">
                             <h3><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-service-provider">Text-to-Speech Service Provider</span></h3>
-                            <select id="ttsProvider2" data-optionparam2="ttsprovider" data-optionsetting2="ttsProvider" class="textInput">
-                                <option selected value="system">System TTS</option>
-                                <option value="kokoro">Kokoro (webGPU/CPU)</option>
-                                <option value="kitten">Kitten TTS (browser-based)</option>
-                                <option value="elevenlabs">ElevenLabs</option>
-                                <option value="google">Google Cloud</option>
-                                <option value="fish">Fish Audio</option>
-                                <option value="speechify">Speechify</option>
-                                <option value="openai">OpenAI</option>
-                                <option value="customtts">Custom / Local TTS Endpoint</option>
-                                <option value="piper">Piper TTS</option>
-                                <option value="espeak">eSpeak TTS</option>
+                            <select aria-describedby="ttsProvider2Help" id="ttsProvider2" data-optionparam2="ttsprovider" data-optionsetting2="ttsProvider" class="textInput">
+                                <option selected value="system" title="Voices and languages depend on your browser and installed system voices. Some browser voices use an online service.">System TTS &mdash; Free &middot; Device/browser &middot; Languages vary</option>
+                                <option value="kokoro">Kokoro &mdash; Free &middot; Local &middot; Many languages</option>
+                                <option value="kitten">Kitten TTS &mdash; Free &middot; Local &middot; English only</option>
+                                <option value="elevenlabs" title="Requires an API key. Free usage is limited; voice access and languages depend on your plan and model.">ElevenLabs &mdash; Free tier / paid &middot; Online &middot; Many languages</option>
+                                <option value="google" title="Requires an API key and billing setup. Free quotas depend on the voice type; usage above the quota is billed.">Google Cloud &mdash; Free quota / paid &middot; Online &middot; Many languages</option>
+                                <option value="fish" title="Requires an API key. Choose s2.1-pro-free for free speech; other models may charge for usage.">Fish Audio &mdash; Free model / paid &middot; Online &middot; Many languages</option>
+                                <option value="speechify" title="Requires an API key. Trial credits may be available; languages depend on the model.">Speechify &mdash; Paid &middot; Online &middot; Many languages</option>
+                                <option value="openai" title="The OpenAI service charges for API usage. Languages depend on the model.">OpenAI &mdash; Paid &middot; Online &middot; Many languages</option>
+                                <option value="customtts" title="Your server determines the cost, whether speech runs locally or online, and the supported languages.">Custom / Local TTS Endpoint &mdash; Depends on your server</option>
+                                <option value="piper">Piper TTS &mdash; Free &middot; Local &middot; Many languages</option>
+                                <option value="espeak">eSpeak TTS &mdash; Free &middot; Local &middot; Many languages</option>
+                                <option value="edge" title="Requires the SSApp desktop app and an internet connection. Choose a voice for your language.">Edge Natural (desktop app) &mdash; Free &middot; Online &middot; Many languages</option>
                             </select>
+                            <p id="ttsProvider2Help" class="tts-provider-help"><small>Local: speech runs on your computer; models may download first. Many languages: choose a matching voice or model. Online free tiers have usage limits.</small></p>
                             <div class="tts-name-option" data-keywords="read sender name chatname message only simpletts2">
                                 <input type="checkbox" data-param2="simpletts2" hidden />
                                 <label class="switch">
@@ -5828,6 +5849,23 @@ input:checked + .slider:before {
                         </div>
 
                         <!-- System TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="edgeTTS2">
+                            <h4>Edge Natural voices</h4>
+                            <p>Free online voices. Keep SSApp open. Speech text is sent to Microsoft; no API key or voice installation is needed.</p>
+                            <div class="textInputContainer"><label for="edgeVoiceSelect2">Voice</label>
+                            <select id="edgeVoiceSelect2" data-optionparam2="voiceedge" class="textInput popup-reviewed-control">
+                            <option value="en-US-EmmaMultilingualNeural">English (US) — Emma</option>
+                            <option value="es-ES-ElviraNeural">Spanish (Spain) — Elvira</option>
+                            <option value="es-ES-AlvaroNeural">Spanish (Spain) — Alvaro</option>
+                            <option value="es-MX-DaliaNeural">Spanish (Mexico) — Dalia</option>
+                            <option value="es-MX-JorgeNeural">Spanish (Mexico) — Jorge</option>
+                            </select></div>
+                            <div class="textInputContainer"><label for="edgeRateSelect2">Speed</label>
+                            <select id="edgeRateSelect2" data-optionparam2="edgerate" class="textInput popup-reviewed-control">
+                            <option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div>
+                            <button type="button" class="edge-voices-refresh" data-section="2">Load all voices</button>
+                            <p id="edgeVoiceStatus2" role="status"></p>
+                        </div>
                         <div class="tts-provider-options options_group" id="systemTTS2">
                             <h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-system-options">Built-in System TTS Options</span></h4>
                             <i>note: the free built-in TTS plays out via the default audio device. <a class="lightblue" target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
@@ -10793,20 +10831,22 @@ input:checked + .slider:before {
 
 						<div class="tts-provider-selection" style="margin:0 10px 10px 10px">
 							<h3><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-service-provider">Text-to-Speech Service Provider</span></h3>
-							<select id="ttsProvider10" data-optionparam10="ttsprovider" data-optionsetting10="ttsProvider" class="textInput">
-								<option selected value="system">System TTS</option>
-								<option value="kokoro">Kokoro (webGPU/CPU)</option>
-								<option value="kitten">Kitten TTS (browser-based)</option>
-								<option value="elevenlabs">ElevenLabs</option>
-								<option value="google">Google Cloud</option>
-								<option value="gemini">Gemini (Preview TTS)</option>
-								<option value="fish">Fish Audio</option>
-								<option value="speechify">Speechify</option>
-								<option value="openai">OpenAI</option>
-								<option value="customtts">Custom / Local TTS Endpoint</option>
-								<option value="piper">Piper TTS</option>
-								<option value="espeak">eSpeak TTS</option>
+							<select aria-describedby="ttsProvider10Help" id="ttsProvider10" data-optionparam10="ttsprovider" data-optionsetting10="ttsProvider" class="textInput">
+								<option selected value="system" title="Voices and languages depend on your browser and installed system voices. Some browser voices use an online service.">System TTS &mdash; Free &middot; Device/browser &middot; Languages vary</option>
+								<option value="kokoro">Kokoro &mdash; Free &middot; Local &middot; Many languages</option>
+								<option value="kitten">Kitten TTS &mdash; Free &middot; Local &middot; English only</option>
+								<option value="elevenlabs" title="Requires an API key. Free usage is limited; voice access and languages depend on your plan and model.">ElevenLabs &mdash; Free tier / paid &middot; Online &middot; Many languages</option>
+								<option value="google" title="Requires an API key and billing setup. Free quotas depend on the voice type; usage above the quota is billed.">Google Cloud &mdash; Free quota / paid &middot; Online &middot; Many languages</option>
+								<option value="gemini" title="Requires an API key. Some TTS models have a limited free tier; other models require paid access.">Gemini TTS &mdash; Free tier / paid &middot; Online &middot; Many languages</option>
+								<option value="fish" title="Requires an API key. Choose s2.1-pro-free for free speech; other models may charge for usage.">Fish Audio &mdash; Free model / paid &middot; Online &middot; Many languages</option>
+								<option value="speechify" title="Requires an API key. Trial credits may be available; languages depend on the model.">Speechify &mdash; Paid &middot; Online &middot; Many languages</option>
+								<option value="openai" title="The OpenAI service charges for API usage. Languages depend on the model.">OpenAI &mdash; Paid &middot; Online &middot; Many languages</option>
+								<option value="customtts" title="Your server determines the cost, whether speech runs locally or online, and the supported languages.">Custom / Local TTS Endpoint &mdash; Depends on your server</option>
+								<option value="piper">Piper TTS &mdash; Free &middot; Local &middot; Many languages</option>
+								<option value="espeak">eSpeak TTS &mdash; Free &middot; Local &middot; Many languages</option>
+								<option value="edge" title="Requires the SSApp desktop app and an internet connection. Choose a voice for your language.">Edge Natural (desktop app) &mdash; Free &middot; Online &middot; Many languages</option>
 							</select>
+							<p id="ttsProvider10Help" class="tts-provider-help"><small>Local: speech runs on your computer; models may download first. Many languages: choose a matching voice or model. Online free tiers have usage limits.</small></p>
 							<div class="tts-name-option" data-keywords="read sender name chatname message only simpletts2">
 								<input type="checkbox" data-param10="simpletts2" hidden />
 								<label class="switch">
@@ -10820,6 +10860,23 @@ input:checked + .slider:before {
 
 						<div id="ttsButton10" class="hidden"></div>
 
+						<div class="tts-provider-options options_group hidden" id="edgeTTS10">
+							<h4>Edge Natural voices</h4>
+							<p>Free online voices. Keep SSApp open. Speech text is sent to Microsoft; no API key or voice installation is needed.</p>
+							<div class="textInputContainer"><label for="edgeVoiceSelect10">Voice</label>
+							<select id="edgeVoiceSelect10" data-optionparam10="voiceedge" class="textInput popup-reviewed-control">
+							<option value="en-US-EmmaMultilingualNeural">English (US) — Emma</option>
+							<option value="es-ES-ElviraNeural">Spanish (Spain) — Elvira</option>
+							<option value="es-ES-AlvaroNeural">Spanish (Spain) — Alvaro</option>
+							<option value="es-MX-DaliaNeural">Spanish (Mexico) — Dalia</option>
+							<option value="es-MX-JorgeNeural">Spanish (Mexico) — Jorge</option>
+							</select></div>
+							<div class="textInputContainer"><label for="edgeRateSelect10">Speed</label>
+							<select id="edgeRateSelect10" data-optionparam10="edgerate" class="textInput popup-reviewed-control">
+							<option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div>
+							<button type="button" class="edge-voices-refresh" data-section="10">Load all voices</button>
+							<p id="edgeVoiceStatus10" role="status"></p>
+						</div>
 						<div class="tts-provider-options options_group" id="systemTTS10">
 							<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-system-options">Built-in System TTS Options</span></h4>
 							<i>note: the free built-in TTS plays out via the default audio device. <a class="lightblue"  target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
@@ -13784,23 +13841,42 @@ input:checked + .slider:before {
                         <!-- TTS Provider Selection -->
                         <div class="tts-provider-selection" style="margin:0 10px 10px 10px">
                             <h3><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-service-provider">Text-to-Speech Service Provider</span></h3>
-                            <select id="ttsProvider18" data-optionparam18="ttsprovider" data-optionsetting18="ttsProvider" class="textInput">
-                                <option selected value="system">System TTS</option>
-                                <option value="kokoro">Kokoro (webGPU/CPU)</option>
-                                <option value="kitten">Kitten TTS (browser-based)</option>
-                                <option value="elevenlabs">ElevenLabs</option>
-                                <option value="google">Google Cloud</option>
-                                <option value="gemini">Gemini (Preview TTS)</option>
-                                <option value="fish">Fish Audio</option>
-                                <option value="speechify">Speechify</option>
-                                <option value="openai">OpenAI</option>
-                                <option value="customtts">Custom / Local TTS Endpoint</option>
-                                <option value="piper">Piper TTS</option>
-                                <option value="espeak">eSpeak TTS</option>
+                            <select aria-describedby="ttsProvider18Help" id="ttsProvider18" data-optionparam18="ttsprovider" data-optionsetting18="ttsProvider" class="textInput">
+                                <option selected value="system" title="Voices and languages depend on your browser and installed system voices. Some browser voices use an online service.">System TTS &mdash; Free &middot; Device/browser &middot; Languages vary</option>
+                                <option value="kokoro">Kokoro &mdash; Free &middot; Local &middot; Many languages</option>
+                                <option value="kitten">Kitten TTS &mdash; Free &middot; Local &middot; English only</option>
+                                <option value="elevenlabs" title="Requires an API key. Free usage is limited; voice access and languages depend on your plan and model.">ElevenLabs &mdash; Free tier / paid &middot; Online &middot; Many languages</option>
+                                <option value="google" title="Requires an API key and billing setup. Free quotas depend on the voice type; usage above the quota is billed.">Google Cloud &mdash; Free quota / paid &middot; Online &middot; Many languages</option>
+                                <option value="gemini" title="Requires an API key. Some TTS models have a limited free tier; other models require paid access.">Gemini TTS &mdash; Free tier / paid &middot; Online &middot; Many languages</option>
+                                <option value="fish" title="Requires an API key. Choose s2.1-pro-free for free speech; other models may charge for usage.">Fish Audio &mdash; Free model / paid &middot; Online &middot; Many languages</option>
+                                <option value="speechify" title="Requires an API key. Trial credits may be available; languages depend on the model.">Speechify &mdash; Paid &middot; Online &middot; Many languages</option>
+                                <option value="openai" title="The OpenAI service charges for API usage. Languages depend on the model.">OpenAI &mdash; Paid &middot; Online &middot; Many languages</option>
+                                <option value="customtts" title="Your server determines the cost, whether speech runs locally or online, and the supported languages.">Custom / Local TTS Endpoint &mdash; Depends on your server</option>
+                                <option value="piper">Piper TTS &mdash; Free &middot; Local &middot; Many languages</option>
+                                <option value="espeak">eSpeak TTS &mdash; Free &middot; Local &middot; Many languages</option>
+                                <option value="edge" title="Requires the SSApp desktop app and an internet connection. Choose a voice for your language.">Edge Natural (desktop app) &mdash; Free &middot; Online &middot; Many languages</option>
                             </select>
+                            <p id="ttsProvider18Help" class="tts-provider-help"><small>Local: speech runs on your computer; models may download first. Many languages: choose a matching voice or model. Online free tiers have usage limits.</small></p>
                         </div>
 
                         <!-- System TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="edgeTTS18">
+                            <h4>Edge Natural voices</h4>
+                            <p>Free online voices. Keep SSApp open. Speech text is sent to Microsoft; no API key or voice installation is needed.</p>
+                            <div class="textInputContainer"><label for="edgeVoiceSelect18">Voice</label>
+                            <select id="edgeVoiceSelect18" data-optionparam18="voiceedge" class="textInput popup-reviewed-control">
+                            <option value="en-US-EmmaMultilingualNeural">English (US) — Emma</option>
+                            <option value="es-ES-ElviraNeural">Spanish (Spain) — Elvira</option>
+                            <option value="es-ES-AlvaroNeural">Spanish (Spain) — Alvaro</option>
+                            <option value="es-MX-DaliaNeural">Spanish (Mexico) — Dalia</option>
+                            <option value="es-MX-JorgeNeural">Spanish (Mexico) — Jorge</option>
+                            </select></div>
+                            <div class="textInputContainer"><label for="edgeRateSelect18">Speed</label>
+                            <select id="edgeRateSelect18" data-optionparam18="edgerate" class="textInput popup-reviewed-control">
+                            <option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div>
+                            <button type="button" class="edge-voices-refresh" data-section="18">Load all voices</button>
+                            <p id="edgeVoiceStatus18" role="status"></p>
+                        </div>
                         <div class="tts-provider-options options_group" id="systemTTS18">
                             <h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-system-options">Built-in System TTS Options</span></h4>
                             <i>note: the free built-in TTS plays out via the default audio device.</i>

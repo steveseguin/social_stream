@@ -3,6 +3,9 @@
 
 // Create global TTS namespace
 window.TTS = {};
+TTS.edgeClientBaseUrl = document.currentScript && document.currentScript.src;
+TTS.edgeSettings = { voice: 'en-US-EmmaMultilingualNeural', rate: 1, pitch: 0 };
+TTS.edgeClientPromise = null;
 
 // Initialize variables
 TTS.speechLang = "en-US";
@@ -1090,6 +1093,10 @@ TTS.configure = function(urlParams) {
         TTS.audio.onended = TTS.finishedAudio;
     }
 
+    // Edge Natural settings only affect the explicitly selected Edge provider.
+    TTS.edgeSettings.voice = urlParams.get('voiceedge') || 'en-US-EmmaMultilingualNeural';
+    TTS.edgeSettings.rate = urlParams.has('edgerate') ? Number(urlParams.get('edgerate')) : 1;
+    TTS.edgeSettings.pitch = urlParams.has('edgepitch') ? Number(urlParams.get('edgepitch')) : 0;
     // Kokoro settings
     TTS.kokoroSettings.speed = urlParams.has("kokorospeed")
         ? TTS.parseMinFloatParam(urlParams, "kokorospeed", 1.0, 0.1)
@@ -1536,6 +1543,10 @@ TTS.speak = function(text, allow = false, options = {}) {
 
     // Use the selected provider
 	switch (TTS.TTSProvider) {
+        case "edge":
+            if (!TTS.premiumQueueActive) TTS.edgeTTS(text, options);
+            else TTS.queuePremiumTTS(text, allow, options);
+            return;
 		case "piper":
 			if (!TTS.premiumQueueActive) {
 				TTS.piperTTS(text, options);
@@ -1712,6 +1723,14 @@ TTS.clearQueue = function() {
         }
     });
     TTS.pendingTikTokGiftSpeech.clear();
+    if (TTS.TTSProvider === "edge") {
+        TTS.premiumSerial++;
+        TTS.premiumQueueTTS = [];
+        if (TTS.audio) TTS.audio.pause();
+        TTS.revokeCurrentObjectUrl();
+        TTS.premiumQueueActive = false;
+        return;
+    }
 
     // clear but don't stop tts
     if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
@@ -2804,6 +2823,47 @@ TTS.SpeechifyTTS = function(tts, options) {
     }
 };
 
+// Generate in SSApp and play in this overlay through the existing speech queue.
+TTS.edgeTTS = async function(text, options) {
+    TTS.premiumQueueActive = true;
+    const serial = ++TTS.premiumSerial;
+    if (!TTS.audio) TTS.audio = document.createElement('audio');
+    try {
+        const bridge = window.ninjafy || window.electronApi;
+        let result;
+        const settings = Object.assign({}, TTS.edgeSettings, { voice: TTS.getVoiceOverride(options) || TTS.edgeSettings.voice });
+        if (bridge && typeof bridge.edgeTts === 'function') result = await bridge.edgeTts(text, settings);
+        else {
+            if (!TTS.edgeClientPromise) {
+                TTS.edgeClientPromise = new Promise(function(resolve, reject) {
+                    const script = document.createElement('script');
+                    script.src = new URL('./shared/tts/edge-client.js', TTS.edgeClientBaseUrl || location.href).href;
+                    script.onload = resolve;
+                    script.onerror = function() { script.remove(); TTS.edgeClientPromise = null; reject(new Error('Could not load Edge Natural support.')); };
+                    document.head.appendChild(script);
+                });
+            }
+            await TTS.edgeClientPromise;
+            if (serial !== TTS.premiumSerial) return;
+            result = await window.SSNEdgeTts.synthesize(text, settings);
+        }
+        if (serial !== TTS.premiumSerial) return;
+        const bytes = Uint8Array.from(atob(result.audio), function(c) { return c.charCodeAt(0); });
+        const blob = new Blob([bytes], { type: 'audio/mpeg' });
+        TTS.audio.onended = function() { if (serial === TTS.premiumSerial) TTS.finishedAudio(); };
+        TTS.audio.onerror = function() { if (serial === TTS.premiumSerial) { console.error('Edge Natural audio could not play.'); TTS.finishedAudio(); } };
+        TTS.setAudioSource(URL.createObjectURL(blob), true);
+        TTS.applyVolume(TTS.audio);
+        await TTS.audio.play();
+        TTS.lastEdgeError = '';
+    } catch (error) {
+        if (serial !== TTS.premiumSerial) return;
+        TTS.lastEdgeError = error.message || 'Edge Natural failed.';
+        console.error('[Edge Natural]', TTS.lastEdgeError);
+        TTS.finishedAudio();
+    }
+};
+
 /**
  * Kokoro TTS implementation
  * @param {string} text - Text to speak
@@ -3195,7 +3255,10 @@ TTS.phraseClipCache = {};
 
 // Ignores case, spacing, punctuation, emoji and stretched letters ("Hiii!", "good night", "goodnight").
 TTS.normalizePhraseText = function(text) {
-    return String(text || "").toLowerCase().replace(/[^a-z]/g, "").replace(/([a-z])\1+/g, "$1");
+    text = String(text || "").normalize("NFC");
+    // Other words or numbers must be synthesized, not discarded to match an English clip.
+    if (/[\p{L}\p{N}]/u.test(text.replace(/[a-z]/gi, ""))) return "";
+    return text.toLowerCase().replace(/[^a-z]/g, "").replace(/([a-z])\1+/g, "$1");
 };
 
 TTS.getPhraseClipId = function(text, voice) {

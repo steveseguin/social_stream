@@ -255,7 +255,7 @@ body {
 		if (typeof value !== "string" || !value) {
 			return "";
 		}
-		temp = document.createElement("div");
+		temp = document.createElement("template").content.appendChild(document.createElement("div"));
 		temp.innerHTML = value;
 		return (temp.textContent || temp.innerText || "").replace(/\s+/g, " ").trim();
 	}

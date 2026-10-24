@@ -1284,7 +1284,8 @@ function passGoodWords(sentence) {
 	const uniqueWords = new Set(words);
 	for (let word of uniqueWords) {
 		if (!isGoodWord(word)) {
-			sentence = sentence.replace(new RegExp("\\b" + word + "\\b", "gi"), "*".repeat(word.length));
+			const literalWord = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			sentence = sentence.replace(new RegExp("\\b" + literalWord + "\\b", "gi"), "*".repeat(word.length));
 		}
 	}
 	return sentence;
@@ -10453,6 +10454,10 @@ function setupSocketDock() {
 
 		// Give managed audience displays the same snapshot they can already receive.
 		if (handleOverlayControlRequest(data, socketserverDock, 3, !!settings.server2)) return;
+		const edgeReplySocket = socketserverDock;
+		if ((settings.server2 || settings.server3) && handleEdgeTtsRequest(data, packet => {
+			if (edgeReplySocket && edgeReplySocket.readyState === 1) edgeReplySocket.send(JSON.stringify(Object.assign({ out: 7 }, packet)));
+		})) return;
 		if (data && data.action === "getgiveawaystate" && settings.server2 && isExtensionOn && !settings.disablehost) {
 			publishGiveawayState();
 			return;
@@ -11466,6 +11471,10 @@ function setupSocket() {
 			}
 
 			if (handleOverlayControlRequest(data, socketserver, 1, !!settings.socketserver)) return;
+			const edgeReplySocket = socketserver;
+			if (settings.socketserver && handleEdgeTtsRequest(data, packet => {
+				if (edgeReplySocket && edgeReplySocket.readyState === 1) edgeReplySocket.send(JSON.stringify(Object.assign({ out: 7 }, packet)));
+			})) return;
 
 			// Lightweight API: allow requesting a Hype snapshot and respond on the same paired channel
 			// Expected request formats:
@@ -15358,6 +15367,38 @@ function saveAiPromptOverlays(store) {
 	});
 }
 
+// Generate Edge speech in the desktop app and tag it for the requesting overlay.
+var edgeTtsRequests = new Map();
+function handleEdgeTtsRequest(request, reply) {
+	if (!request || request.action !== 'edgeTts') return false;
+	if (!isExtensionOn || settings.disablehost) return true;
+	const target = request.target;
+	if (typeof target !== 'string' || !/^edge-[a-z0-9-]{1,100}$/i.test(target)) return true;
+	const now = Date.now();
+	edgeTtsRequests.forEach((time, id) => { if (now - time > 120000) edgeTtsRequests.delete(id); });
+	if (edgeTtsRequests.has(target)) return true;
+	if (edgeTtsRequests.size >= 128) {
+		reply({ edgeTtsResponse: { target, error: 'Edge Natural is busy. Try again shortly.' } });
+		return true;
+	}
+	edgeTtsRequests.set(target, now);
+	(async () => {
+		try {
+			const bridge = window.ninjafy || window.electronApi;
+			if (!bridge || typeof bridge.edgeTts !== 'function') throw new Error('Edge Natural needs an updated SSApp desktop app running in this session.');
+			const value = request.value || {};
+			const result = await bridge.edgeTts(value.text, { voice: value.voice, rate: value.rate, pitch: value.pitch });
+			const total = Math.ceil(result.audio.length / 12000);
+			for (let index = 0; index < total; index++) {
+				reply({ edgeTtsResponse: { target, index, total, audio: result.audio.slice(index * 12000, (index + 1) * 12000) } });
+			}
+		} catch (error) {
+			reply({ edgeTtsResponse: { target, error: error.message || 'Edge Natural could not generate speech.' } });
+		}
+	})();
+	return true;
+}
+
 function sendDataP2PChunked(data, UUID = false) {
 	let text = "";
 	try {
@@ -15470,6 +15511,7 @@ async function processEventFlowBridgeEvent(value) {
 }
 
 async function processIncomingRequest(request, UUID = false) {
+	if (UUID && handleEdgeTtsRequest(request, packet => sendDataP2P(packet, UUID))) return;
 	// from the dock or chat bot, etc.
 	if (request && request.action === "stickerReceipt") {
 		if (window.receiveStickerReceipt) window.receiveStickerReceipt(request, UUID);

@@ -113,9 +113,12 @@
     const time = new Date().toLocaleTimeString();
     const entry = document.createElement('div');
     entry.className = 'log-entry';
-    entry.innerHTML = `[${time}] ${level.toUpperCase()}: ${message}${
-      extra ? `<span> ${extra}</span>` : ''
-    }`;
+    entry.textContent = `[${time}] ${level.toUpperCase()}: ${message}`;
+    if (extra) {
+      const details = document.createElement('span');
+      details.textContent = ` ${extra}`;
+      entry.appendChild(details);
+    }
     elements.log.appendChild(entry);
     elements.log.scrollTop = elements.log.scrollHeight;
     const maxEntries = 200;

@@ -1133,7 +1133,7 @@
       elements.content.textContent = "Loading documentation...";
       elements.currentPath.className = "toolbar-path is-path";
       elements.currentPath.textContent = cleanPath;
-      elements.rawLink.href = cleanPath;
+      elements.rawLink.href = /^(mailto:|tel:)/i.test(cleanPath) ? cleanPath : "./" + cleanPath;
       elements.rawLink.style.display = "";
       setActiveLink(cleanPath);
       if (push) updateUrl(cleanPath + hash);

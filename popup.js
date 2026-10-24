@@ -4257,6 +4257,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
         gemini: ['geminikey', 'geminiapikey', 'geminiApiKey', 'geminimodel', 'voicegemini', 'geminilang', 'geministyle', 'geminiprompt'],
         fish: ['fishkey', 'voicefish', 'fishmodel', 'fishspeed', 'fishendpoint'],
         speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
+        edge: ['voiceedge', 'edgerate', 'edgepitch'],
         kokoro: ['kokoro', 'kokorotts', 'kokorokey', 'voicekokoro', 'kokorospeed', 'korospeed', 'kokorodevice', 'kokorobackend', 'kokorodtype', 'kokoroprecision', 'kokororuntime', 'kokoroplayback', 'kokorowasm', 'kokorowebgpu'],
         kitten: ['kitten', 'kittentts', 'kittenvoice', 'kittenspeed', 'kittensamplerate', 'kittenmodel', 'kittenplayback'],
         piper: ['piper', 'pipertts', 'pipervoice', 'piperspeed'],
@@ -6215,12 +6216,15 @@ function isOpenAITTSProvider(provider) {
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
     // Hide all TTS elements
-    ["systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "fishTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS", "piperTTS", "espeakTTS"].forEach(id => {
+    ["edgeTTS", "systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "fishTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS", "piperTTS", "espeakTTS"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
     // Show element based on selected provider
-    if (provider == "system") {
+    if (provider == "edge") {
+        document.getElementById("edgeTTS").classList.remove("hidden");
+        loadEdgeVoices("");
+    } else if (provider == "system") {
         document.getElementById("systemTTS").classList.remove("hidden");
     } else if (provider == "elevenlabs") {
         document.getElementById("elevenlabsTTS").classList.remove("hidden");
@@ -6248,12 +6252,15 @@ function handleTTSProviderVisibility(provider) {
 // Handle secondary TTS provider visibility
 function handleTTSProvider10Visibility(provider) {
     // Hide all TTS10 elements
-    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "fishTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10", "piperTTS10", "espeakTTS10"].forEach(id => {
+    ["edgeTTS10", "systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "fishTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10", "piperTTS10", "espeakTTS10"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
     // Show element based on selected provider
-    if (provider == "system") {
+    if (provider == "edge") {
+        document.getElementById("edgeTTS10").classList.remove("hidden");
+        loadEdgeVoices("10");
+    } else if (provider == "system") {
         document.getElementById("systemTTS10").classList.remove("hidden");
     } else if (provider == "elevenlabs") {
         document.getElementById("elevenlabsTTS10").classList.remove("hidden");
@@ -6281,12 +6288,15 @@ function handleTTSProvider10Visibility(provider) {
 // Handle featured TTS provider visibility (param2)
 function handleTTSProvider2Visibility(provider) {
     // Hide all TTS2 elements
-    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "geminiTTS2", "fishTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
+    ["edgeTTS2", "systemTTS2", "elevenlabsTTS2", "googleTTS2", "geminiTTS2", "fishTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
     // Show element based on selected provider
-    if (provider == "system") {
+    if (provider == "edge") {
+        document.getElementById("edgeTTS2").classList.remove("hidden");
+        loadEdgeVoices("2");
+    } else if (provider == "system") {
         document.getElementById("systemTTS2").classList.remove("hidden");
     } else if (provider == "elevenlabs") {
         document.getElementById("elevenlabsTTS2").classList.remove("hidden");
@@ -6314,12 +6324,15 @@ function handleTTSProvider2Visibility(provider) {
 // Handle Flow Actions TTS provider visibility (param18)
 function handleTTSProvider18Visibility(provider) {
     // Hide all TTS18 elements
-    ["systemTTS18", "elevenlabsTTS18", "googleTTS18", "geminiTTS18", "fishTTS18", "speechifyTTS18", "kokoroTTS18", "kittenTTS18", "openaiTTS18", "piperTTS18", "espeakTTS18"].forEach(id => {
+    ["edgeTTS18", "systemTTS18", "elevenlabsTTS18", "googleTTS18", "geminiTTS18", "fishTTS18", "speechifyTTS18", "kokoroTTS18", "kittenTTS18", "openaiTTS18", "piperTTS18", "espeakTTS18"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
 
     // Show element based on selected provider
-    if (provider == "system") {
+    if (provider == "edge") {
+        document.getElementById("edgeTTS18").classList.remove("hidden");
+        loadEdgeVoices("18");
+    } else if (provider == "system") {
         document.getElementById("systemTTS18")?.classList.remove("hidden");
     } else if (provider == "elevenlabs") {
         document.getElementById("elevenlabsTTS18")?.classList.remove("hidden");
@@ -7971,7 +7984,7 @@ function handleOptionSetting(ele, sync) {
         const suffix = settingType === 'optionsetting2' ? '2' : (settingType === 'optionsetting10' ? '10' : (settingType === 'optionsetting18' ? '18' : ''));
         const ttsProviderElements = [
             `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, `geminiTTS${suffix}`,
-            `fishTTS${suffix}`, `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `kittenTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
+            `edgeTTS${suffix}`, `fishTTS${suffix}`, `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `kittenTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
         ];
         
         ttsProviderElements.forEach(id => {
@@ -7983,6 +7996,7 @@ function handleOptionSetting(ele, sync) {
         // Show elements relevant to the selected TTS provider
         const providerKey = isOpenAITTSProvider(ele.value) ? "openai" : ele.value;
         const selectedProvider = `${providerKey}TTS${suffix}`;
+        if (providerKey === "edge") loadEdgeVoices(suffix);
         if (document.getElementById(selectedProvider)) {
             document.getElementById(selectedProvider).classList.remove("hidden");
         }
@@ -10524,6 +10538,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             speech: getParam('speech'),
             volume: getParam('volume') ? getNumber('volume', 1.0) : 1.0,
 			service: this.getProviderSelect(section)?.value || "system",
+            edge: { voice: getOption("voiceedge", "en-US-EmmaMultilingualNeural"), rate: Number(getOption("edgerate", "1")) },
             
             // System TTS settings
             system: {
@@ -10676,7 +10691,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     
     testTTS(section = "") {
         const testPhrase = getLocalTtsSample(this.getProviderSelect(section)?.value,
-            document.getElementById('kokoroVoiceSelect' + section)?.value,
+            document.getElementById((this.getProviderSelect(section)?.value === 'edge' ? 'edgeVoiceSelect' : 'kokoroVoiceSelect') + section)?.value,
             document.getElementById('piperVoiceSelect' + section)?.value);
         const provider = this.getProviderSelect(section)?.value || "system";
         if (window.location.protocol === "moz-extension:" && ["kokoro", "kitten", "piper"].includes(provider)) {
@@ -10784,7 +10799,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 if (!this.premiumQueueActive) {
                     await this.geminiTTS(text, settings, section);
                 }
-			} else if (settings.service == "kokoro") {
+			} else if (settings.service === "edge") {
+                if (!this.premiumQueueActive) await this.edgeTTS(text, settings, section);
+            } else if (settings.service == "kokoro") {
                 if (!this.premiumQueueActive) {
                     if (settings.kokoro.background || settings.kokoro.stream || settings.kokoro.dtype === 'fp32') await this.neuralTTS(text, settings, section);
                     else await this.kokoroTTS(text, settings, section);
@@ -10927,6 +10944,36 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         window.speechSynthesis.speak(utterance);
     },
 	
+    async edgeTTS(text, settings, section) {
+        const bridge = window.ninjafy || window.electronApi;
+        if (!bridge || typeof bridge.edgeTts !== "function") {
+            this.showFeedback("Edge Natural needs an updated SSApp desktop app.", "error", section, 0);
+            return;
+        }
+        const token = {};
+        this.audioFetchToken = token;
+        this.cancelRequested = false;
+        this.premiumQueueActive = true;
+        this.setTestRunning(section, true, "Generating...");
+        try {
+            const result = await bridge.edgeTts(text, settings.edge);
+            if (this.cancelRequested || this.audioFetchToken !== token) return;
+            const bytes = Uint8Array.from(atob(result.audio), c => c.charCodeAt(0));
+            const audio = document.createElement("audio");
+            this.activeAudioElement = audio;
+            this.activeAudioUrl = URL.createObjectURL(new Blob([bytes], { type: "audio/mpeg" }));
+            audio.src = this.activeAudioUrl;
+            audio.volume = Math.max(0, Math.min(1, settings.volume));
+            audio.onended = () => { this.showFeedback("Audio played here. Check OBS playback separately.", "success", section); this.finishedAudio(section); };
+            audio.onerror = () => { this.showFeedback("Edge audio could not play.", "error", section); this.finishedAudio(section); };
+            this.setTestRunning(section, true, "Playing...");
+            await audio.play();
+        } catch (error) {
+            if (this.audioFetchToken !== token) return;
+            this.showFeedback(error.message || "Edge Natural failed.", "error", section, 0);
+            this.finishedAudio(section);
+        }
+    },
 	async kokoroTTS(text, settings, section = this.currentTtsSection || "") {
 		try {
             this.premiumQueueActive = true;
@@ -15139,10 +15186,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 });
 
 function getLocalTtsSample(provider, kokoroVoice, piperVoice) {
-    const voice = provider === 'kokoro' ? kokoroVoice : provider === 'piper' ? piperVoice : '';
-    if (/^(e[fm]_|es_)/.test(voice || '')) return 'Hola, gracias por participar. ¿Qué jugamos hoy?';
-    if (/^(p[fm]_|pt_BR)/.test(voice || '')) return 'Olá, obrigado por participar. O que vamos jogar hoje?';
-    if (/^pt_PT/.test(voice || '')) return 'Olá, obrigado por participares. O que vamos jogar hoje?';
+    const voice = provider === 'edge' ? kokoroVoice : provider === 'kokoro' ? kokoroVoice : provider === 'piper' ? piperVoice : '';
+    if (/^(e[fm]_|es[_-])/.test(voice || '')) return 'Hola, gracias por participar. ¿Qué jugamos hoy?';
+    if (/^(p[fm]_|pt[_-]BR)/.test(voice || '')) return 'Olá, obrigado por participar. O que vamos jogar hoje?';
+    if (/^pt[_-]PT/.test(voice || '')) return 'Olá, obrigado por participares. O que vamos jogar hoje?';
     return 'The quick brown fox jumps over the lazy dog';
 }
 function setupLocalTtsLanguageFilters() {
@@ -15218,3 +15265,32 @@ function attachEventBoardControls() {
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', attachEventBoardControls);
 else attachEventBoardControls();
+
+var edgeVoiceListPromise = null;
+async function loadEdgeVoices(section, refresh) {
+    const select = document.getElementById('edgeVoiceSelect' + section);
+    const status = document.getElementById('edgeVoiceStatus' + section);
+    const bridge = window.ninjafy || window.electronApi;
+    if (!select || !status) return;
+    if (!bridge || typeof bridge.edgeTtsVoices !== 'function') { status.textContent = 'Voice discovery needs an updated SSApp desktop app.'; return; }
+    if (select.dataset.loaded && !refresh) return;
+    status.textContent = 'Loading voices...';
+    try {
+        if (!edgeVoiceListPromise || refresh) edgeVoiceListPromise = bridge.edgeTtsVoices(refresh === true).catch(error => { edgeVoiceListPromise = null; throw error; });
+        const voices = await edgeVoiceListPromise;
+        const selected = select.value;
+        // Preserve a saved voice even when it is temporarily absent from the service.
+        voices.sort((a, b) => a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
+        const old = Array.from(select.options).find(option => option.value === selected);
+        select.textContent = '';
+        if (selected && !voices.some(voice => voice.name === selected) && old) select.appendChild(old);
+        voices.forEach(voice => { const option = document.createElement('option'); option.value = voice.name; option.textContent = voice.lang + ' — ' + voice.label; select.appendChild(option); });
+        select.value = selected || 'en-US-EmmaMultilingualNeural';
+        select.dataset.loaded = 'true';
+        status.textContent = voices.length + ' voices available.';
+    } catch (error) { status.textContent = error.message || 'Could not load voices. Try again.'; }
+}
+document.addEventListener('click', function(event) {
+    const button = event.target.closest('.edge-voices-refresh');
+    if (button) loadEdgeVoices(button.dataset.section || '', true);
+});
