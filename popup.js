@@ -10121,6 +10121,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         }
 
         this.updateKokoroCacheControls(section);
+        updateEdgeTtsAvailability(section);
     },
 
     getTestContainer(section = "") {
@@ -10141,7 +10142,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         const testButton = this.getTestButton(section);
         const cancelButton = this.getCancelButton(section);
         if (testButton) {
-            testButton.disabled = !!running;
+            testButton.disabled = !!running || (this.getProviderSelect(section)?.value === 'edge' && !getEdgeTtsBridge());
             testButton.textContent = running ? (label || "Testing...") : "Test";
         }
         if (cancelButton) {
@@ -10695,6 +10696,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             document.getElementById('piperVoiceSelect' + section)?.value,
             document.getElementById('espeakVoiceSelect' + section)?.value);
         const provider = this.getProviderSelect(section)?.value || "system";
+        if (provider === 'edge' && !getEdgeTtsBridge()) {
+            updateEdgeTtsAvailability(section);
+            return;
+        }
         if (window.location.protocol === "moz-extension:" && ["kokoro", "kitten", "piper"].includes(provider)) {
             this.showFeedback("This voice engine is not included in the Firefox extension. Select eSpeak, System TTS or a TTS service.", 'error', section, 0);
             return;
@@ -10946,8 +10951,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     },
 	
     async edgeTTS(text, settings, section) {
-        const bridge = window.ninjafy || window.electronApi;
-        if (!bridge || typeof bridge.edgeTts !== "function") {
+        const bridge = getEdgeTtsBridge();
+        if (!bridge) {
             this.showFeedback("Edge Natural needs an updated SSApp desktop app.", "error", section, 0);
             return;
         }
@@ -15268,10 +15273,61 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else attachEventBoardControls();
 
 var edgeVoiceListPromise = null;
+function getEdgeTtsBridge() {
+    const bridge = window.ninjafy || window.electronApi;
+    return ssapp && bridge && typeof bridge.edgeTts === 'function' && typeof bridge.edgeTtsVoices === 'function' ? bridge : null;
+}
+function updateEdgeTtsAvailability(section) {
+    const provider = document.getElementById('ttsProvider' + section);
+    const option = provider && provider.querySelector('option[value="edge"]');
+    if (!option) return;
+    const available = !!getEdgeTtsBridge();
+    const message = ssapp ? 'Update SSApp to use Edge Natural.' : 'Edge Natural requires the standalone SSApp desktop app.';
+    option.disabled = !available;
+    option.title = available ? 'Requires an internet connection. Choose a voice for your language.' : message;
+    let help = document.getElementById('edgeAvailability' + section);
+    if (!help) {
+        help = document.createElement('p');
+        help.id = 'edgeAvailability' + section;
+        help.className = 'tts-provider-help';
+        const text = document.createElement('small');
+        const link = document.createElement('a');
+        link.className = 'downloadLink';
+        link.href = 'https://github.com/steveseguin/social_stream/releases';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        text.appendChild(document.createTextNode(''));
+        text.appendChild(link);
+        help.appendChild(text);
+        provider.insertAdjacentElement('afterend', help);
+        const descriptions = (provider.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
+        if (!descriptions.includes(help.id)) descriptions.push(help.id);
+        provider.setAttribute('aria-describedby', descriptions.join(' '));
+    }
+    help.classList.toggle('hidden', available);
+    help.firstChild.firstChild.textContent = message + ' ';
+    help.querySelector('a').textContent = ssapp ? 'Download the updated app' : 'Download SSApp';
+    const panel = document.getElementById('edgeTTS' + section);
+    if (panel) panel.querySelectorAll('select, button').forEach(control => { control.disabled = !available; });
+    const test = document.querySelector('#ttsTestContainer' + section + ' .tts-test-button');
+    if (test && provider.value === 'edge') { test.disabled = !available || TTSManager.premiumQueueActive; test.dataset.edgeUnavailable = available ? '' : 'true'; }
+    else if (test && test.dataset.edgeUnavailable) { test.disabled = TTSManager.premiumQueueActive; delete test.dataset.edgeUnavailable; }
+}
+function setupEdgeTtsAvailability() {
+    ['', '2', '10', '18'].forEach(section => {
+        updateEdgeTtsAvailability(section);
+        const provider = document.getElementById('ttsProvider' + section);
+        if (provider) provider.addEventListener('change', () => updateEdgeTtsAvailability(section));
+    });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupEdgeTtsAvailability);
+else setupEdgeTtsAvailability();
+
 async function loadEdgeVoices(section, refresh) {
     const select = document.getElementById('edgeVoiceSelect' + section);
     const status = document.getElementById('edgeVoiceStatus' + section);
-    const bridge = window.ninjafy || window.electronApi;
+    const bridge = getEdgeTtsBridge();
+    updateEdgeTtsAvailability(section);
     if (!select || !status) return;
     if (!bridge || typeof bridge.edgeTtsVoices !== 'function') { status.textContent = 'Voice discovery needs an updated SSApp desktop app.'; return; }
     if (select.dataset.loaded && !refresh) return;
