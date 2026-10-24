@@ -1,0 +1,31 @@
+# Keep source archives focused on the extension and local overlays.
+/translations/site export-ignore
+/tests export-ignore
+/.github export-ignore
+/.githooks export-ignore
+/lite export-ignore
+/media/creator-pack export-ignore
+/AGENTS.md export-ignore
+/CLAUDE.md export-ignore
+/TODO.md export-ignore
+/timer-plan.md export-ignore
+/eslint.config.js export-ignore
+/.htmlhintrc export-ignore
+/.prettierrc export-ignore
+
+# Local pages share these website assets; guides open on the hosted site.
+/docs/** export-ignore
+/docs/css -export-ignore
+/docs/css/** -export-ignore
+/docs/js -export-ignore
+/docs/js/** -export-ignore
+# SSApp loads this welcome page directly when using a local ZIP.
+/docs/ssapp.html -export-ignore
+
+# Preserve user setup tools while omitting development and deployment scripts.
+/scripts/** export-ignore
+/scripts/local-tts-bridge.cjs -export-ignore
+/scripts/setup-local-qwen35-browser.ps1 -export-ignore
+
+# Current Kitten loaders use the copy under thirdparty/kitten-tts/.
+/thirdparty/kitten_tts_nano_v0_1.onnx export-ignore
