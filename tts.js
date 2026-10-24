@@ -1526,7 +1526,8 @@ TTS.speak = function(text, allow = false, options = {}) {
 	
 	if (TTS.ttsQuick){
 		if (text.length > TTS.ttsQuick){
-			text = text.substring(0, TTS.ttsQuick);
+			// Count whole Unicode characters, not halves of supplementary letters.
+			text = Array.from(text).slice(0, Math.max(0, TTS.ttsQuick)).join("");
 		}
 	}
     
@@ -2052,7 +2053,8 @@ TTS.speechMeta = function(data, allow = false) {
 
         msgPlain = msgPlain || "";
         msgPlain = msgPlain
-            .replace(/[\u2700-\u27BF\uE000-\uF8FF\uD83C\uD800-\uDFFF\uD83E\uD810-\uDFFF\u2011-\u26FF]/g, "")
+            // Match whole Unicode characters so emoji removal preserves supplementary letters.
+            .replace(/[\u2700-\u27BF\uE000-\uF8FF\uD800-\uDFFF\u{1F000}-\u{1FFFF}\u2011-\u26FF]/gu, "")
             .replace(/_/g, " ")
             .replace(/@/g, " ");
 
