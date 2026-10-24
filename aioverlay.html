@@ -28,6 +28,9 @@
 </head>
 <body>
 	<script src="./shared/aiPrompt/overlayStore.js"></script>
+	<script src="./libs/objects.js"></script>
+	<script src="./shared/utils/chatHtml.js"></script>
+	<script src="./shared/aiPrompt/security.js"></script>
 	<script>
 	(function () {
 		var OverlayStore = window.SSNAiPromptOverlayStore;
@@ -116,26 +119,19 @@
 			overlayFrame = document.createElement("iframe");
 			overlayFrame.id = "overlayFrame";
 			overlayFrame.allow = "midi;microphone;";
-			overlayFrame.src = "about:blank";
-			document.body.appendChild(overlayFrame);
-			setTimeout(function () {
-				var doc = overlayFrame.contentDocument;
-				if (!doc) {
-					console.error("[AI Overlay] Failed to create overlay iframe document.");
-					return;
-				}
-				doc.open();
-				doc.write(html);
-				doc.close();
+			overlayFrame.setAttribute("sandbox", "allow-scripts");
+			overlayFrame.onload = function () {
 				overlayReady = true;
-				setTimeout(flushPendingPayloads, 0);
-			}, 0);
+				flushPendingPayloads();
+			};
+			overlayFrame.srcdoc = SSNAiPromptSecurity.prepare(html);
+			document.body.appendChild(overlayFrame);
 		}
 
 		function loadFromPackage(pack) {
 			var overlay = OverlayStore.selectOverlay(pack, requestedOverlay);
-			if (overlay && overlay.html) {
-				loadHtml(overlay.html);
+			if (overlay && typeof overlay.html === "string") {
+				loadHtml(overlay.html || "<!doctype html><html><head></head><body></body></html>");
 				return true;
 			}
 			return false;
@@ -356,7 +352,7 @@
 			}
 		});
 
-		var loadedLocal = loadFromLocalState();
+		var loadedLocal = roomID ? false : loadFromLocalState();
 		connectServerModes();
 		if (requestExtensionOverlays()) {
 			setTimeout(function () {

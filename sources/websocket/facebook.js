@@ -72,6 +72,11 @@ const AUTH_MESSAGE_SUCCESS = 'ssn-facebook-auth-success';
 const AUTH_MESSAGE_ERROR = 'ssn-facebook-auth-error';
 const AUTH_RESULT_KEY = 'facebook_auth_result';
 const AUTH_ERROR_KEY = 'facebook_auth_error';
+// Facebook's login pages sever window.opener, so the popup returns to this page and
+// hands the result back to the opener over a BroadcastChannel keyed by a one-time nonce.
+const AUTH_POPUP_PARAM = 'ssn_auth_popup';
+const AUTH_RELAY_CHANNEL = 'ssn-facebook-auth-relay';
+const AUTH_RELAY_TIMEOUT_MS = 2000;
 const FACEBOOK_AUTH_SCOPES = [
   'pages_show_list',
   'pages_read_engagement',
@@ -126,6 +131,8 @@ const state = {
   authPages: [],
   selectedPageId: '',
   authPopup: null,
+  authPopupNonce: '',
+  authRelayChannel: null,
   authInFlight: false
 };
 
@@ -311,7 +318,8 @@ function mergeCurrentSearchParams(url) {
       return_to: true,
       returnTo: true,
       redirect_uri: true,
-      redirectUri: true
+      redirectUri: true,
+      [AUTH_POPUP_PARAM]: true
     };
     params.forEach((value, key) => {
       if (!ignored[key] && !target.searchParams.has(key)) {
@@ -381,11 +389,85 @@ function getAuthReturnTo() {
   }
 }
 
-function getAuthStartUrl() {
+function addAuthPopupMarker(returnTo, popupNonce) {
+  if (!returnTo || !popupNonce) return returnTo;
+  try {
+    const url = new URL(returnTo);
+    url.searchParams.set(AUTH_POPUP_PARAM, popupNonce);
+    return url.toString();
+  } catch (err) {
+    return returnTo;
+  }
+}
+
+function getAuthStartUrl(popupNonce) {
   const url = new URL(`${state.oauthBase}/start`);
-  url.searchParams.set('return_to', getAuthReturnTo());
+  url.searchParams.set('return_to', addAuthPopupMarker(getAuthReturnTo(), popupNonce));
   url.searchParams.set('origin', getRuntimeOrigin());
   return url.toString();
+}
+
+function createAuthPopupNonce() {
+  try {
+    const bytes = new Uint8Array(12);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  } catch (err) {
+    return `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+  }
+}
+
+function getAuthRelayChannel() {
+  if (state.authRelayChannel) return state.authRelayChannel;
+  if (typeof BroadcastChannel !== 'function') return null;
+  try {
+    state.authRelayChannel = new BroadcastChannel(AUTH_RELAY_CHANNEL);
+  } catch (err) {
+    state.authRelayChannel = null;
+  }
+  return state.authRelayChannel;
+}
+
+// Runs in the returned popup: resolves true once the opener has applied the result.
+function relayAuthPayloadToOpener(payload, popupNonce) {
+  const channel = getAuthRelayChannel();
+  if (!channel) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    let timer = null;
+    const finish = (delivered) => {
+      clearTimeout(timer);
+      channel.removeEventListener('message', onMessage);
+      resolve(delivered);
+    };
+    const onMessage = (event) => {
+      const data = event.data || {};
+      if (data.type === 'ack' && data.nonce === popupNonce) finish(true);
+    };
+    timer = setTimeout(() => finish(false), AUTH_RELAY_TIMEOUT_MS);
+    channel.addEventListener('message', onMessage);
+    channel.postMessage({ type: 'relay', nonce: popupNonce, payload });
+  });
+}
+
+function finishAuthRelay(payload, popupNonce) {
+  setStatus('connecting', 'Returning your Facebook sign-in to Social Stream...');
+  relayAuthPayloadToOpener(payload, popupNonce).then((delivered) => {
+    if (!delivered) {
+      // No opener answered (closed or reloaded): use the sign-in in this window instead.
+      handleAuthPayload(payload);
+      return;
+    }
+    try {
+      window.close();
+    } catch (err) {}
+    // Still open (close blocked): show the sign-in the opener just saved.
+    setTimeout(() => {
+      loadAuthState();
+      updateInputs();
+      updatePageOptions();
+      setStatus('connected', 'Signed in. Social Stream received your Facebook Pages; you can close this window.');
+    }, 300);
+  });
 }
 
 function base64UrlToJson(value) {
@@ -734,12 +816,21 @@ function consumeAuthResultFromHash() {
   let changed = false;
   try {
     const hash = new URLSearchParams(window.location.hash.slice(1));
+    const search = new URLSearchParams(window.location.search);
+    const popupNonce = search.get(AUTH_POPUP_PARAM) || '';
     const encodedResult = hash.get(AUTH_RESULT_KEY);
     const encodedError = hash.get(AUTH_ERROR_KEY);
+    const applyPayload = (payload) => {
+      if (popupNonce) {
+        finishAuthRelay(payload, popupNonce);
+      } else {
+        handleAuthPayload(payload);
+      }
+    };
     if (encodedResult) {
       const payload = base64UrlToJson(encodedResult);
       if (payload) {
-        handleAuthPayload(payload);
+        applyPayload(payload);
       }
       hash.delete(AUTH_RESULT_KEY);
       changed = true;
@@ -747,13 +838,18 @@ function consumeAuthResultFromHash() {
     if (encodedError) {
       const payload = base64UrlToJson(encodedError);
       if (payload) {
-        handleAuthPayload(payload);
+        applyPayload(payload);
       }
       hash.delete(AUTH_ERROR_KEY);
       changed = true;
     }
+    if (popupNonce) {
+      search.delete(AUTH_POPUP_PARAM);
+      changed = true;
+    }
     if (changed) {
-      const cleanUrl = `${window.location.pathname}${window.location.search}${hash.toString() ? `#${hash.toString()}` : ''}`;
+      const cleanSearch = search.toString();
+      const cleanUrl = `${window.location.pathname}${cleanSearch ? `?${cleanSearch}` : ''}${hash.toString() ? `#${hash.toString()}` : ''}`;
       history.replaceState({}, document.title, cleanUrl);
     }
   } catch (err) {
@@ -869,13 +965,15 @@ function openAuthPopup() {
     syncStateFromInputs();
     saveConfig();
     saveAuthState();
-    const authUrl = getAuthStartUrl();
+    const popupNonce = createAuthPopupNonce();
+    const authUrl = getAuthStartUrl(popupNonce);
     const popup = window.open(authUrl, 'facebookAuth', 'width=560,height=760');
     if (!popup) {
       setStatus('error', 'Popup blocked. Allow popups for this site and try again.');
       return;
     }
     state.authPopup = popup;
+    state.authPopupNonce = popupNonce;
     setStatus('connecting', 'Opening Facebook sign-in...');
   } catch (err) {
     setStatus('error', `Facebook sign-in failed to start: ${err.message || err}`);
@@ -907,6 +1005,22 @@ function bindAuthMessages() {
       state.authPopup = null;
     }
   });
+
+  const channel = getAuthRelayChannel();
+  if (channel) {
+    channel.addEventListener('message', (event) => {
+      const data = event.data || {};
+      if (data.type !== 'relay' || !data.nonce || data.nonce !== state.authPopupNonce) {
+        return;
+      }
+      if (!handleAuthPayload(data.payload)) {
+        return;
+      }
+      state.authPopupNonce = '';
+      state.authPopup = null;
+      channel.postMessage({ type: 'ack', nonce: data.nonce });
+    });
+  }
 }
 
 function focusPrimaryControl() {

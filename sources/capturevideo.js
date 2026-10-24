@@ -1044,7 +1044,7 @@
             const videoIcon = hasVideo ? '📹' : '❌';
             const audioIcon = hasAudio ? '🔊' : '🔇';
             
-            const displayLabel = label || '';
+            const displayLabel = String(label || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             
             // Generate solo view link
             const soloLink = `${VDO_NINJA_URL}/?room=${ROOM_ID}&view=${streamId}&solo`;

@@ -39,9 +39,16 @@ function showAuthCallback() {
 
     function updateStatus(message, isError) {
         const statusDiv = document.getElementById('status');
-        statusDiv.innerHTML = 
-            '<p class="' + (isError ? 'error' : 'success') + '">' + message + '</p>' +
-            (isError ? '' : '<p>You can close this window.</p>');
+        statusDiv.textContent = '';
+        const statusMessage = document.createElement('p');
+        statusMessage.className = isError ? 'error' : 'success';
+        statusMessage.textContent = message;
+        statusDiv.appendChild(statusMessage);
+        if (!isError) {
+            const closeMessage = document.createElement('p');
+            closeMessage.textContent = 'You can close this window.';
+            statusDiv.appendChild(closeMessage);
+        }
     }
 
     if (error) {

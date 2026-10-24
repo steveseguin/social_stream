@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main, beta]
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     if: "!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip pages]') && !contains(github.event.head_commit.message, '[auto-enhanced]') && github.actor != 'github-pages[bot]'"

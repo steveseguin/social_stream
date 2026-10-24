@@ -83,6 +83,8 @@ async function run() {
     if (await popup.locator('#beginnerWelcomeAdvanced').isVisible()) {
         await popup.locator('#beginnerWelcomeAdvanced').click();
     }
+    await popup.locator('#popup-tab-bots').click();
+    await popup.locator('.chatbot_category_title h2').click();
     await popup.locator('label[for="wrapper-bots-options-ext"]').click();
     // Observe actual provider calls; leave the real transport and response handling intact.
     await page.evaluate(() => {

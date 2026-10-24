@@ -565,10 +565,14 @@ body, html {
 		messageTimestamps.set(messageId, Date.now());
 		
 		var chatbadgesHtml = SocialStreamBadges.render(data.chatbadges);
+		const safeNameColor = sanitizeRelayCssColor(data.nameColor);
+		const safeType = String(data.type || '').replace(/[^a-zA-Z0-9_-]/g, '');
+		const safeChatImg = sanitizeRelayUrl(data.chatimg, true);
+		const safeContentImg = sanitizeRelayUrl(data.contentimg, true);
 		
 		let avatarBorderColor = "linear-gradient(45deg, #4ab8f9, #4cd137)"; // Default gradient
-		if (data.nameColor) {
-			avatarBorderColor = `linear-gradient(45deg, ${data.nameColor}, ${data.nameColor}88)`;
+		if (safeNameColor) {
+			avatarBorderColor = `linear-gradient(45deg, ${safeNameColor}, ${safeNameColor}88)`;
 		}
 		
 		let leftEdgeColor = null;
@@ -585,18 +589,18 @@ body, html {
 			messageDiv.style.paddingLeft = '12px';
 		}
 		
-		const sourceIconHtml = data.type ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : '';
-		const avatarHtml = data.chatimg ? 
-			`<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${escapeCssUrlAttribute(data.chatimg)}');"></div></div>` : '';
-		const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';
+		const sourceIconHtml = safeType ? `<img src="https://socialstream.ninja/sources/images/${safeType}.png" alt="Source" class="source-icon">` : '';
+		const avatarHtml = safeChatImg ? 
+			`<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${escapeCssUrlAttribute(safeChatImg)}');"></div></div>` : '';
+		const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${safeNameColor ? `style="text-shadow: 0 0 3px ${safeNameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';
 		const membershipHtml = data.membership ? `<div class="membership-status">${fallbackEscapeHtml(data.membership)}</div>` : '';
 		// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
 		const messageTextHtml = `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.textonly ? '' : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage || '') : fallbackEscapeHtml(data.chatmessage || ''))}</div>`;
 		const donationHtml = data.hasDonation ? `<div class="donation">${fallbackEscapeHtml(data.hasDonation)}</div>` : '';
 		
-		const contentImgHtml = data.contentimg ? 
+		const contentImgHtml = safeContentImg ? 
 			`<div style="padding: 3px; border-radius: 12px; background: ${avatarBorderColor}; display: inline-block; margin-top: 10px;">
-				<img src="${data.contentimg}" alt="Content Image" class="large-image" style="margin-top: 0; border-radius: 8px;" onerror="this.parentNode.style.display='none';">
+				<img src="${fallbackEscapeHtml(safeContentImg)}" alt="Content Image" class="large-image" style="margin-top: 0; border-radius: 8px;" onerror="this.parentNode.style.display='none';">
 			 </div>` : '';
 
 		messageDiv.innerHTML = `

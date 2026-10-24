@@ -644,12 +644,14 @@ try{
 			const parsed = JSON.parse(localStorage.getItem(TWITCH_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
 			return {
 				syncDeleteMessages: parsed.syncDeleteMessages !== false,
-				syncBlockUsers: !!parsed.syncBlockUsers
+				syncBlockUsers: !!parsed.syncBlockUsers,
+				syncPinMessages: parsed.syncPinMessages === true
 			};
 		} catch (_) {
 			return {
 				syncDeleteMessages: true,
-				syncBlockUsers: false
+				syncBlockUsers: false,
+				syncPinMessages: false
 			};
 		}
 	}
@@ -2793,10 +2795,27 @@ async function ensureChatClientInstance() {
 		sendResponse(false);
 	});
 
+	let twitchPinControlQueue = Promise.resolve();
+
 	async function handleSourceControlRequest(request) {
 		const payload = request?.payload || {};
 		if (normalizeSourceControlPlatform(request?.platform || payload?.type) !== 'twitch') {
 			return false;
+		}
+		if (request.control === 'pinMessage' || request.control === 'unpinMessage') {
+			if (!isAdvancedControlEnabled('syncPinMessages')) return false;
+			const messageId = resolveTwitchDeleteMessageId(payload);
+			if (!messageId) {
+				addEvent('Skipped dock pin sync: missing native Twitch message ID');
+				return false;
+			}
+			const channelId = currentChannelId;
+			const token = getStoredToken();
+			// Keep rapid pin/unpin actions in order, including while auth is checked.
+			twitchPinControlQueue = twitchPinControlQueue.then(() =>
+				syncDockPinToTwitch(request.control === 'pinMessage', messageId, channelId, token)
+			);
+			return twitchPinControlQueue;
 		}
 		if (request.control === 'deleteMessage') {
 			if (!isAdvancedControlEnabled('syncDeleteMessages')) {
@@ -5296,6 +5315,48 @@ async function cleanupCurrentConnection() {
 		} catch (error) {
 			console.error('updateChannelInformation error', error);
 			addEvent('Stream title/category update failed');
+			return false;
+		}
+	}
+
+	async function syncDockPinToTwitch(pinned, messageId, channelId, token) {
+		try {
+			if (!isAdvancedControlEnabled('syncPinMessages')) return false;
+			if (!token || !channelId || token !== getStoredToken() || channelId !== currentChannelId) {
+				addEvent('Skipped dock pin sync: Twitch connection changed or is signed out');
+				return false;
+			}
+			const moderator = await getCurrentModerator();
+			if (!moderator?.user_id) {
+				addEvent('Dock pin sync failed: could not verify Twitch sign-in');
+				return false;
+			}
+			if (!isAdvancedControlEnabled('syncPinMessages') || token !== getStoredToken() || channelId !== currentChannelId) return false;
+			const response = await fetch(`https://api.twitch.tv/helix/chat/pins?broadcaster_id=${encodeURIComponent(channelId)}&moderator_id=${encodeURIComponent(moderator.user_id)}&message_id=${encodeURIComponent(messageId)}`, {
+				method: pinned ? 'PUT' : 'DELETE',
+				headers: { 'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}` }
+			});
+			if (response.ok) {
+				addEvent(pinned ? 'Pinned dock message on Twitch' : 'Unpinned dock message on Twitch');
+				return true;
+			}
+			if (pinned && response.status === 409) {
+				addEvent('Dock message is already pinned on Twitch');
+				return true;
+			}
+			if (!pinned && response.status === 404) {
+				addEvent('Dock message is no longer pinned on Twitch');
+				return true;
+			}
+			let reason = 'Twitch returned HTTP ' + response.status;
+			if (response.status === 401) reason = 'reconnect Twitch to grant chat moderation permission';
+			if (response.status === 403) reason = 'broadcaster or moderator access is required';
+			if (response.status === 404) reason = 'message was not found in this Twitch channel';
+			if (response.status === 429) reason = 'Twitch rate limit reached; try again later';
+			addEvent('Dock ' + (pinned ? 'pin' : 'unpin') + ' sync failed: ' + reason);
+			return false;
+		} catch (error) {
+			addEvent('Dock pin sync failed: could not reach Twitch');
 			return false;
 		}
 	}

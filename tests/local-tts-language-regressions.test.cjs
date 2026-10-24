@@ -63,6 +63,31 @@ const {chromium}=require('playwright-core');const root=path.resolve(__dirname,'.
  await ui.addScriptTag({content:managerSource+'\nwindow.testTtsManager=TTSManager;'});
  const cancelled=await ui.evaluate(async()=>{const m=testTtsManager;let release,syntheses=0;window.ort={};window.ProperPiperTTS=class{constructor(voice){this.voiceId=voice;}init(){return new Promise(r=>release=r);}synthesize(){syntheses++;}};m.setTestRunning=()=>{};m.showFeedback=()=>{};const pending=m.piperTTS('test',{volume:1},'');m.cancelTest('');release();await pending;return{syntheses,busy:m.piperPreviewBusy,active:m.premiumQueueActive};});
  assert.deepEqual(cancelled,{syntheses:0,busy:false,active:false});console.log('PASS cancelled Piper loading cannot start stale speech');
+ const phrasePage=await browser.newPage();await phrasePage.goto('http://127.0.0.1:'+server.address().port);await phrasePage.addScriptTag({url:'/tts.js'});
+ const phraseIds=await phrasePage.evaluate(()=>[['Hiii!','pt_PT-tug\u00e3o-medium'],['hello, everyone \ud83d\udc4b','es_ES-davefx-medium'],['goodnight','pt-pt'],['hi','en_US-amy-medium'],['hi','en'],['hi there friend','pt-pt'],['olá','pt-pt'],['constructor','pt-pt']].map(([text,voice])=>TTS.getPhraseClipId(text,voice)));
+ assert.deepEqual(phraseIds,['hi','hello-everyone','good-night','','','','','']);
+ const clipFiles=(await phrasePage.evaluate(()=>Object.keys(TTS.phraseClips))).map(id=>'audio/tts-phrases/'+id+'.ogg');assert.deepEqual(clipFiles.filter(file=>!fs.existsSync(path.join(root,file))),[]);
+ const clip=await phrasePage.evaluate(async()=>{const samples=await TTS.loadPhraseClip('hi',22050);return{seconds:samples.length/22050,level:TTS.speechLevel(samples)};});
+ assert.ok(clip.seconds>0.5&&clip.seconds<1.5&&clip.level>0.05,JSON.stringify(clip));console.log('PASS short English messages use packaged phrase clips for non-English voices only');
+ const piperJoin=await phrasePage.evaluate(async()=>{
+  const calls=[],loads=[],blobs=[];TTS.piperSettings.voice='pt_PT-tug\u00e3o-medium';TTS.piperSettings.speed=1.5;TTS.piperLoaded=true;TTS.piperActiveVoice=TTS.piperSettings.voice;
+  TTS.piperInstance={voiceConfig:{audio:{sample_rate:16000}},async synthesize(text,speed,samples){calls.push([text,samples]);return samples?new Float32Array(512).fill(0.2):new Blob([text]);},async synthesizeWithPause(intro,message){calls.push([intro,message]);return new Blob([message]);}};
+  TTS.loadPhraseClip=async(id,rate)=>{loads.push([id,rate]);return new Float32Array(512).fill(0.1);};TTS.playAudioBlobAndWait=async blob=>{blobs.push(blob);return true;};
+  await TTS.piperTTS('afonso. Hi!!',{speechIntro:'afonso'});await TTS.piperTTS('afonso. hi, como estás?',{speechIntro:'afonso'});
+  TTS.loadPhraseClip=async()=>{throw Error('offline');};await TTS.piperTTS('hello everyone');
+  const wav=new DataView(await blobs[0].arrayBuffer());return{calls,loads,size:wav.byteLength,clipSample:wav.getInt16(44+(512+4800)*2,true),fallback:await blobs[2].text()};
+ });
+ // Sender, 0.3 s pause, then the clip raised to the sender's level; longer messages and missing clips use the voice.
+ assert.deepEqual(piperJoin,{calls:[['afonso',true],['afonso','hi, como estás?'],['hello everyone',undefined]],loads:[['hi',16000]],size:44+(512+4800+512)*2,clipSample:Math.round(0.2*32767),fallback:'hello everyone'});
+ const espeakJoin=await phrasePage.evaluate(async()=>{
+  const spoken=[];let blob;TTS.espeakSettings.voice='pt-pt';TTS.espeakSettings.speed=140;TTS.espeakLoaded=true;
+  TTS.espeakInstance={async speak(text){spoken.push(text);return TTS.samplesToWav(new Float32Array(2205).fill(0.2),22050).arrayBuffer();}};
+  TTS.loadPhraseClip=async(id,rate)=>{spoken.push([id,rate]);return new Float32Array(2205).fill(0.1);};
+  const createObjectURL=URL.createObjectURL;URL.createObjectURL=value=>{blob=value;return createObjectURL.call(URL,value);};HTMLMediaElement.prototype.play=()=>Promise.resolve();
+  await TTS.espeakTTS('afonso. good night',{speechIntro:'afonso'});return{spoken,size:blob&&blob.size};
+ });
+ assert.deepEqual(espeakJoin,{spoken:[['good-night',22050],'afonso'],size:44+(2205+6615+2205)*2});
+ await phrasePage.close();console.log('PASS Piper and eSpeak join the sender with the phrase clip and fall back to the voice');
 
 
 

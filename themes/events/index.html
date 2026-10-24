@@ -374,7 +374,7 @@ img.ssn-content-image {
         } else if (data.event) {
             if (typeof data.event === 'string') {
                 eventTypeText = 'EVENT';
-                eventSpecificText = data.event.toUpperCase();
+                eventSpecificText = escapePlainMetadata(String(data.event).toUpperCase());
             } else {
                 eventTypeText = 'EVENT';
             }
@@ -394,13 +394,16 @@ img.ssn-content-image {
         }
         
         // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
+        // Plain payload fields: validate the colour and icon URL before they reach attributes.
+        const safeNameColor = data.nameColor ? sanitizeRelayCssColor(data.nameColor) : '';
+        const sourceIcon = data.sourceicon ? sanitizeRelayUrl(data.sourceicon, true) : '';
         messageDiv.innerHTML = `
             <div class="message-header">
                 <div class="message-meta">
                     ${eventTypeText ? `<div class="event-type ${eventTypeClass}">${eventTypeText}</div>` : ''}
                     ${eventSpecificText ? `<div class="event-specific">${eventSpecificText}</div>` : ''}
-                    <div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname || 'Anonymous') : fallbackEscapeHtml(data.chatname || 'Anonymous'))}</div>
-                    ${data.sourceicon ? `<img src="${data.sourceicon}" alt="${data.type}" class="source-icon">` : ''}
+                    <div class="name" ${safeNameColor ? `style="text-shadow: 0 0 3px ${safeNameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname || 'Anonymous') : fallbackEscapeHtml(data.chatname || 'Anonymous'))}</div>
+                    ${sourceIcon ? `<img src="${fallbackEscapeHtml(sourceIcon)}" alt="${fallbackEscapeHtml(data.type || '')}" class="source-icon">` : ''}
                 </div>
             </div>
             

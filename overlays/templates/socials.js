@@ -686,13 +686,14 @@
 			{ key: "radius", label: "Corner radius", type: "range", group: "Style", default: 999, min: 0, max: 999, step: 1 },
 			SSO.f.font("Poppins"),
 			{ key: "fontsize", label: "Text size", type: "range", group: "Text", default: 22, min: 10, max: 72, step: 1 },
+			{ key: "shadow", label: "Text shadow", type: "bool", group: "Text", default: true, help: "Adds dark shading so light text stays readable over bright backgrounds." },
 			{ key: "weight", label: "Weight", type: "select", group: "Text", default: "700", options: [["400", "Regular"], ["600", "Semi-bold"], ["700", "Bold"], ["800", "Extra bold"]] }
 		],
 		presets: [
 			{ name: "Dark pill", tags: ["simple"], values: {} },
 			{ name: "Brand colours", tags: ["simple"], values: { brandbg: true, icons: "mono", netlabel: false, radius: 12 } },
 			{ name: "Minimal text", tags: ["simple"], values: { bgopacity: 0, icons: "mono", netlabel: false, prefix: "Follow", transition: "slide", font: "Bebas Neue", fontsize: 34, weight: "400" } },
-			{ name: "Light tag", tags: ["simple"], values: { bg: "ffffff", bgopacity: 1, fg: "111111", radius: 8, transition: "fade" } }
+			{ name: "Light tag", tags: ["simple"], values: { bg: "ffffff", bgopacity: 1, fg: "111111", radius: 8, transition: "fade", shadow: false } }
 		],
 		css: [
 			".cy-wrap{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;padding:0 10px;}",
@@ -717,6 +718,7 @@
 			var stage = document.createElement("div");
 			stage.className = "cy";
 			stage.style.cssText = "color:" + SSO.color(c.fg) + ";font-family:" + SSO.fontStack(c.font) + ";font-size:" + c.fontsize + "px;font-weight:" + c.weight + ";";
+			if (c.shadow) { stage.style.textShadow = "0 1px 2px rgba(0,0,0,.9),0 0 4px rgba(0,0,0,.8)"; }
 			stage.innerHTML = socials.map(function (s) {
 				var bg = c.brandbg ? s.info.color : SSO.rgba(c.bg, c.bgopacity);
 				var fg = c.brandbg && /^#(e7e9ea|53fc18|85c742|c7d5e0)$/i.test(s.info.color) ? "color:#111;" : "";
@@ -780,6 +782,8 @@
 			{ key: "buttons", label: "Buttons", type: "select", group: "Content", default: "like,subscribe,bell", options: [["like,subscribe,bell", "Like + Subscribe + Bell"], ["like,subscribe", "Like + Subscribe"], ["follow", "Follow"], ["follow,subscribe", "Follow + Subscribe"], ["like,share", "Like + Share"], ["subscribe,bell", "Subscribe + Bell"]] },
 			{ key: "every", label: "Repeat every (seconds, 0 = stay up)", type: "number", group: "Content", default: 90, min: 0, max: 3600, step: 5 },
 			{ key: "cursor", label: "Show mouse cursor", type: "bool", group: "Content", default: true },
+			{ key: "enter", label: "Fade in from", type: "select", group: "Animation", default: "bottom", options: [["bottom", "Bottom"], ["top", "Top"], ["left", "Left"], ["right", "Right"], ["fade", "Fade only"]] },
+			{ key: "exit", label: "Fade out to", type: "select", group: "Animation", default: "bottom", options: [["bottom", "Bottom"], ["top", "Top"], ["left", "Left"], ["right", "Right"], ["fade", "Fade only"]], show: { every: "!0" } },
 			{ key: "bg", label: "Button colour", type: "color", group: "Style", default: "272727" },
 			{ key: "fg", label: "Text colour", type: "color", group: "Style", default: "ffffff" },
 			{ key: "accent", label: "Subscribe/Follow colour", type: "color", group: "Style", default: "ff0033" },
@@ -796,7 +800,8 @@
 		],
 		css: [
 			".cta-wrap{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;}",
-			".cta{position:relative;display:flex;align-items:center;transform:translateY(140%) scale(.9);opacity:0;transition:transform .6s cubic-bezier(.2,1.3,.4,1),opacity .4s;}",
+			".cta{position:relative;display:flex;align-items:center;transform:var(--cta-enter,translateY(140%) scale(.9));opacity:0;transition:transform .6s cubic-bezier(.2,1.3,.4,1),opacity .4s;}",
+			".cta.exit{transform:var(--cta-exit,translateY(140%) scale(.9));}",
 			".cta.show{transform:none;opacity:1;}",
 			".cta-btn{display:flex;align-items:center;padding:.5em 1.05em;margin:0 .3em;font-weight:700;white-space:nowrap;transition:background .25s,transform .15s;box-shadow:0 4px 14px rgba(0,0,0,.3);}",
 			".cta-btn svg{width:1.25em;height:1.25em;fill:currentColor;}",
@@ -816,6 +821,9 @@
 			var box = document.createElement("div");
 			box.className = "cta";
 			box.style.cssText = "font-family:" + SSO.fontStack(c.font) + ";font-size:" + c.fontsize + "px;";
+			var directions = { bottom: "translateY(140%) scale(.9)", top: "translateY(-140%) scale(.9)", left: "translateX(-140%) scale(.9)", right: "translateX(140%) scale(.9)", fade: "none" };
+			box.style.setProperty("--cta-enter", directions[c.enter] || directions.bottom);
+			box.style.setProperty("--cta-exit", directions[c.exit] || directions.bottom);
 			box.innerHTML = kinds.map(function (k) {
 				return '<div class="cta-btn ' + k + '" data-k="' + k + '"><svg viewBox="0 0 24 24"><path d="' + CTA_ICONS[k] + '"/></svg><span>' + CTA_TEXT[k][0] + "</span></div>";
 			}).join("") + (c.cursor ? '<svg class="cta-cursor" viewBox="0 0 24 24"><path d="M5 2l14 11-6.5 1 3.8 7.5-2.6 1.3L9.9 15 5 19.5z" fill="#fff" stroke="#000" stroke-width="1.2"/></svg>' : "");
@@ -837,6 +845,11 @@
 
 			function play() {
 				reset();
+				// Reset to the entrance side while hidden before each repeat.
+				box.style.transition = "none";
+				box.className = "cta";
+				void box.offsetWidth;
+				box.style.transition = "";
 				box.className = "cta show";
 				if (cursor) { cursor.style.left = "40%"; cursor.style.top = "130%"; }
 				var t = 900;
@@ -859,7 +872,7 @@
 				}
 				if (every > 0) {
 					at(t + 3500, function () {
-						box.className = "cta";
+						box.className = "cta exit";
 						if (cursor) { cursor.style.top = "130%"; }
 					});
 				}

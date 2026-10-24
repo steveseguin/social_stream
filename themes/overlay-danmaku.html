@@ -295,11 +295,13 @@ img.ssn-content-image { display: inline-block; width: 3em; height: 1.3em; margin
     // Content images are separate from chat text (including GIF-only messages).
     function appendContentImage(container, data) {
         if (typeof data.contentimg !== 'string' || !data.contentimg.trim()) return;
+        const contentSrc = sanitizeRelayUrl(data.contentimg, true);
+        if (!contentSrc) return;
         const img = document.createElement('img');
         img.className = 'ssn-content-image';
         img.alt = (data.meta && data.meta.gifLabel) || 'Content image';
         img.onerror = function () { this.style.display = 'none'; };
-        img.src = data.contentimg;
+        img.src = contentSrc;
         container.appendChild(img);
     }
 
@@ -313,7 +315,7 @@ img.ssn-content-image { display: inline-block; width: 3em; height: 1.3em; margin
         if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg) { return; }
         if (!data.chatname && data.meta && !data.chatmessage && !data.contentimg && !data.hasDonation && !data.donation && !data.contentimg) { return; }
 
-        var nameColor = data.nameColor;
+        var nameColor = sanitizeRelayCssColor(data.nameColor);
         if (!nameColor && typeof getColorFromType === "function" && data.type) {
             try { nameColor = getColorFromType(data.type); } catch (e) {}
         }
@@ -325,10 +327,12 @@ img.ssn-content-image { display: inline-block; width: 3em; height: 1.3em; margin
         var donation = data.hasDonation || data.donation || "";
         if (donation) { bullet.className += " donation-bullet"; }
 
-        var avatarHtml = (!hideAvatars && data.chatimg)
-            ? "<span class='avatar' style=\"background-image:url('" + escapeCssUrlAttribute(data.chatimg) + "')\"></span>" : "";
-        var iconHtml = data.type
-            ? "<img class='source-icon' src='https://socialstream.ninja/sources/images/" + data.type + ".png' alt='' onerror=\"this.style.display='none'\">" : "";
+        var avatarSrc = hideAvatars ? "" : sanitizeRelayUrl(data.chatimg, true);
+        var safeType = String(data.type || "").replace(/[^a-zA-Z0-9_-]/g, "");
+        var avatarHtml = avatarSrc
+            ? "<span class='avatar' style=\"background-image:url('" + escapeCssUrlAttribute(avatarSrc) + "')\"></span>" : "";
+        var iconHtml = safeType
+            ? "<img class='source-icon' src='https://socialstream.ninja/sources/images/" + safeType + ".png' alt='' onerror=\"this.style.display='none'\">" : "";
         var badgesHtml = buildBadges(data);
         var nameHtml = (!hideNames && data.chatname)
             ? "<span class='name' style='color:" + nameColor + "'>" + escapeHtml(data.chatname) + "</span>" : "";

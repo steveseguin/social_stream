@@ -92,9 +92,18 @@ body .textInputContainer .textInput { grid-area:2 / 1 / 3 / 3; min-height:32px; 
 body .textInputContainer .textInput + label { position:static; grid-area:1 / 1 / 2 / 3; max-width:100%; padding:0; font-size:1em; color:var(--default-text-color); white-space:normal; }
 body .textInputContainer .textInput + label::before { display:none; }
 body .textInputContainer .textInputUploadButton { grid-area:2 / 2; position:static; }
-.colorInputRow { display:flex; align-items:center; gap:8px; }
-.colorInputRow > .textInputContainer { flex:1; margin-right:5px; }
-.colorInputRow > .colorPicker { cursor:pointer; width:27px; height:27px; padding:0; background:transparent; }
+/* Align swatches with the field below its label, including wrapped labels. */
+.colorInputRow { display:flex; flex-wrap:wrap; align-items:flex-end; column-gap:8px; row-gap:0; }
+body .colorInputRow > .textInputContainer { flex:1; min-width:0; width:auto; margin:8px 0; padding:0; }
+body .colorInputRow > .textInputContainer > input.textInput { height:32px; min-height:32px; margin:0; padding:6px 8px; }
+body .colorInputRow > input.colorPicker[type="color"] { flex:0 0 32px; box-sizing:border-box; cursor:pointer; width:32px; height:32px; margin:0 0 8px; padding:2px; border:1px solid var(--settings-control-border); border-radius:4px; background:var(--color-accent-subtle); }
+.colorInputRow > .alphaInput { display:flex; flex-wrap:wrap; align-items:center; gap:8px; flex-basis:100%; margin:0 0 8px; }
+body .options .alphaInput input[type="range"] { margin:0; }
+.colorInputRow > .switch { flex:0 0 30px; margin:0 0 14px; }
+.donationThresholdControls { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.donationThresholdControls > .switch { flex:0 0 30px; margin:0; }
+body .donationThresholdControls > input[type="number"] { width:90px; }
+.donationColorThreshold + .donationColorThreshold { margin-top:8px; }
 
 /* Related sliders sit below their toggle and retain the shared range styling. */
 .popup-range-field { margin:6px 0 8px 40px; }
@@ -121,6 +130,10 @@ body .options button.textInputUploadButton:not(.glowingButton) {
 body button:disabled { cursor:default; }
 body .options button:disabled { opacity:.65; }
 .popup-secondary-button { margin:2px 1px; }
+
+/* File actions stay compact and wrap as whole buttons in narrow panels. */
+.popup-file-actions { display:flex; flex-wrap:wrap; align-items:center; margin:8px -3px 5px; }
+body .popup-file-actions > button { flex:0 0 auto; max-width:calc(100% - 6px); margin:0 3px 6px; }
 
 body .options h4, body .options h5 { color:var(--h3-color); font-size:1em; font-weight:600; margin:12px 0 8px; }
 body .options details > summary, body .popup-settings-panel details > summary {
@@ -190,3 +203,48 @@ body .wrapper.beginner-basic[data-panel-section="multialerts"] { flex-direction:
 /* Leave room for the expand arrow when translated headings wrap. */
 body .collapsible-label { padding-inline-end:32px; }
 [dir="rtl"] .collapsible-label::after { right:auto; left:8px; }
+
+/* Feature tabs, plus sections that collapse to their heading row. */
+#popupTabs { flex-basis:100%; display:flex; min-width:0; border-bottom:1px solid var(--collapsible-border-color); }
+#popupTabs[hidden], #popupTabs .popup-tab[hidden], body.popup-enabled-filter #popupTabs { display:none; }
+#popupTabs .popup-tab { flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:1px; margin:0 0 -1px; padding:3px 2px 4px; border:0; border-bottom:2px solid transparent; border-radius:0; background:transparent; color:var(--default-text-color); font:inherit; font-size:10.5px; line-height:1.15; cursor:pointer; }
+#popupTabs .popup-tab-icon { font-size:16px; line-height:1.1; }
+#popupTabs .popup-tab-icon + span { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@media (max-width:360px) {
+    #popupTabs .popup-tab-icon { font-size:18px; }
+    #popupTabs .popup-tab-icon + span { position:absolute; width:1px; height:1px; clip:rect(0 0 0 0); }
+}
+#popupTabs .popup-tab:hover { color:var(--color-accent); }
+#popupTabs .popup-tab[aria-selected="true"] { border-bottom-color:var(--color-accent); color:var(--color-accent); font-weight:600; }
+#popupTabs .popup-tab:focus-visible { outline:2px solid var(--color-accent); outline-offset:1px; }
+#popupTabs .popup-tab:focus:not(:focus-visible) { outline:none; }
+body:not(.popup-enabled-filter) .popup-tab-hidden,
+body:not(.popup-enabled-filter) .popup-feature-hidden,
+/* Collapsed sections keep their title, links and URL; descriptions and options fold away. */
+body:not(.popup-enabled-filter) .popup-feature-collapsed > :not(h2):not([data-raw]) { display:none !important; }
+body.popup-enabled-filter .popup-feature-toggle { display:none; }
+/* Section headings keep their usual look. A divider marks where each section starts (and the previous one ends);
+   spacing is identical open or closed so the title never moves when toggled. */
+body .container > .popup-feature-head { margin:12px 0 0; padding:12px 0 0; border-top:1px solid var(--collapsible-border-color); }
+body .container > .popup-feature-head.popup-feature-first { margin-top:6px; padding-top:0; border-top:0; }
+/* The URL stays right under the title whether the section is open or closed. */
+body .container > .popup-feature-head { display:flex; flex-direction:column; }
+body .container > .popup-feature-head > h2 { order:-2; }
+body .container > .popup-feature-head > [data-raw] { order:-1; }
+/* One quiet line describes each section; the beginner notes on the core sections match it. */
+body .container .popup-section-description,
+body .container > .popup-feature-head > .beginner-section-note { margin:6px 0 8px; font-size:12px; font-weight:400; line-height:1.4; color:var(--text-secondary); opacity:1; }
+body .container > .popup-feature-head > h2 { flex-wrap:wrap; gap:3px 6px; margin:0 0 6px; cursor:pointer; }
+.popup-feature-head > h2 > .popup-feature-toggle + * { flex:1 1 auto; min-width:0; }
+.popup-feature-actions { display:flex; flex-basis:100%; flex-wrap:wrap; align-items:center; gap:4px; padding-inline-start:26px; }
+body .container .popup-feature-actions > * { margin:0; }
+body .container .popup-feature-actions .rounded_area { padding:1px 6px; font-size:.7rem; }
+/* A clipboard marks copy link so it reads at a glance. */
+.popup-feature-actions .copy-link[data-copy]::before { content:"\1F4CB"; margin-inline-end:3px; }
+.popup-feature-head > h2 .rounded_area { white-space:nowrap; }
+.popup-feature-toggle { flex:0 0 auto; width:20px; height:20px; margin:0; padding:0; border:0; border-radius:4px; background:transparent; cursor:pointer; }
+/* Same chevron as the option bars below, so both levels read as one family. */
+.popup-feature-toggle::before { content:""; display:block; width:16px; height:16px; margin:2px; background:url(icons/wrapper_button.png) no-repeat 0 0 / 16px; transition:transform .15s; }
+.popup-feature-toggle[aria-expanded="true"]::before { transform:rotate(90deg); }
+[dir="rtl"] .popup-feature-toggle[aria-expanded="false"]::before { transform:scaleX(-1); }
+.popup-feature-toggle:focus-visible { outline:2px solid var(--color-accent); outline-offset:1px; }

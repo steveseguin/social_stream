@@ -21,6 +21,20 @@ the API. Pass both mode flags when a local agent needs to control a headless ins
 
 ## Discovery and status
 
+API 1.6.0 / SSApp 0.4.40 adds `capabilities.humanControl` and the
+`getHumanControlStatus` command. During private human control all other automation
+reads and writes return `HUMAN_CONTROL_ACTIVE`; the instance and non-sensitive
+human status remain available. See [human-control.md](human-control.md).
+
+API 1.4.1 adds `GET /api/v1/instance`, available without consulting the renderer.
+Its random `instanceId` changes when the local API starts again. Responses also
+include this ID and the `X-SSApp-Instance-Id` header. A bridge can send that header
+on subsequent requests; a mismatch returns HTTP 409 / `SSAPP_INSTANCE_CHANGED`
+before command execution. The MCP adapter forwards `SSAPP_EXPECTED_INSTANCE_ID`
+as this header and preserves the structured error. After a mismatch, rediscover
+the app and its targets before continuing. This check is optional for ordinary
+local clients and does not authenticate remote callers.
+
 ```text
 GET /api/v1/capabilities
 GET /api/v1/status
@@ -33,6 +47,48 @@ Status includes app version, session, headless/visibility state, local-media ser
 The events endpoint is a Server-Sent Events stream. It emits bounded, resumable status, operation, and captured-source events and accepts the standard `Last-Event-ID` header. Mutation responses include an operation ID that can be inspected independently.
 
 ## Commands
+
+### Settings export
+
+Requires SSApp 0.4.39 or newer with API 1.5.0 / MCP 1.4.0.
+Check for `exportSettingsBackup` in capabilities before requesting a backup.
+
+| API action | MCP tool | Arguments and result |
+| --- | --- | --- |
+| `exportSettingsBackup` | `ssapp_export_settings_backup` | `{confirm:true}` creates an immutable settings backup. Returns `status: "completed"`, opaque `artifactId`, `fileName`, `mimeType`, byte `size`, `sha256`, `expiresAt`, and `chunkBytes`. No backup bytes in this response. |
+| `readSettingsExport` | `ssapp_read_settings_export` | `{artifactId,offset?,length?}` reads base64 bytes with metadata, `offset`, `nextOffset`, and `eof`. Offset defaults to 0; length defaults to 262144, maximum 262144. Length 0 reads metadata only. |
+| `releaseSettingsExport` | `ssapp_release_settings_export` | `{artifactId,confirm:true}` discards the retained backup; returns `status: "released"`. Use when finished or abandoning transfer. |
+
+These use `POST /api/v1/command` with the normal `{action,value}` envelope. Export
+requires user authorization because the backup contains the same saved settings and
+credentials as File > Settings Backup > Export Settings. It excludes browser-session
+files, as the ordinary settings export does. No save dialog or notification is opened.
+No filesystem path is accepted by these commands; unrelated downloads are not registered.
+
+Read chunks in order, write decoded bytes to a private file, and verify byte length and
+SHA-256 before delivering it. Do not print file contents. Chunks can be retried at the
+same offset. Up to four backups of 8 MiB each remain in memory for five minutes from
+creation, then expire. App restart also invalidates them. Release ends future retrieval;
+it does not remove copies already transferred or transport results already cached.
+`EXPORT_LIMIT`, `EXPORT_TOO_LARGE`, `EXPORT_TIMEOUT`, `EXPORT_FAILED`, and
+`EXPORT_NOT_FOUND` indicate failure, never a completed backup. A collection timeout
+retains no late export; a still-pending renderer read must finish before another export.
+
+With Ninja MCP, the host must grant a controller `allowSettingsExport: true` separately
+from `allowHostFiles`. Claim control before export/release. Only that client can read or
+release its exports; observers cannot use them. Use `ninja_ssapp_save_settings_export`
+with `{artifactId,destination}` to save on the **agent computer**, returning metadata only.
+Destination must be an absolute new path in an existing directory that supports hard links.
+The helper verifies the complete file before publishing it and never overwrites existing files.
+Local API clients share the existing loopback trust boundary; per-client ownership is
+enforced by the remote bridge. These permissions govern the dedicated export tools,
+not arbitrary actions already permitted by broader controller access.
+
+### Other commands
+
+For general browser interaction in API 1.4.0, see [browser-control.md](browser-control.md).
+It covers source, sign-in, popup, embedded-view and main-app targets using the same input
+and screenshot tools, plus navigation, native menus, uploads, and live viewport streams.
 
 Send commands to `POST /api/v1/command`:
 
@@ -128,10 +184,12 @@ characters and password/file inputs are blocked. References expire after about 3
 and become invalid after navigation. `reloadSourcePage` and `showSourceForHuman` also require
 confirmation.
 
-Sign-in, CAPTCHA, passwords, payments, and other private steps are deliberately not automated.
+The element-reference tools do not fill password or file inputs. API 1.4.0 adds native
+browser input and a dedicated file chooser command for authorized workflows.
 SSApp 0.4.25 also fixes false `STALE_PAGE_REF` errors when an inspected input's label
 differs from its placeholder, by using matching name precedence during interaction.
-Call `showSourceForHuman`, let the user complete the step, and resume with read-only tools.
+When a step needs the user's participation, call `showSourceForHuman` or show the relevant
+browser window, let the user complete it, and resume the authorized workflow.
 
 ## Examples
 

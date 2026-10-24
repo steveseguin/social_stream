@@ -114,6 +114,7 @@
                                     <li><a href="#meetme-dom">MeetMe</a></li>
                                     <li><a href="#velora">Velora</a></li>
                                     <li><a href="#parti">Parti</a></li>
+                                    <li><a href="#razo">Razo</a></li>
                                     <li><a href="#chzzk">CHZZK</a></li>
                                     <li><a href="#rumble-dom">Rumble DOM</a></li>
                                     <li><a href="#rumble-ws">Rumble API</a></li>
@@ -1112,6 +1113,7 @@
 
                 <article class="platform-card" id="tiktok">
                     <h3>TikTok Live &ndash; DOM Capture and TikFinity Feed</h3>
+                    <p><strong>Fan Club level:</strong> TikTok chat messages include <code>meta.teamMemberLevel</code> when an explicit Team level or numeric Fan Club badge level is available. It is a non-negative integer; <code>0</code> is an explicitly supplied zero, while an absent field means unknown. It excludes user-grade/gifter ranks and levels inferred from badge image filenames. Standard capture reads the numeric Fan Club badge metadata attached to each rendered chat message. The TikFinity activity-feed widget does not supply this field. For minimum-level filtering, use <em>Compare Property → TikTok Team Level</em> together with a TikTok source condition; messages with unknown levels do not match. The older <code>meta.memberLevel</code> field has capture-dependent meaning and should not be used for an exact Fan Club threshold.</p>
                     <p class="source-note">Implementation: <code>sources/tiktok.js</code> for native TikTok pages and <code>sources/tikfinity.js</code> for TikFinity's activity-feed widget/iframe. SSApp still has a native TikTok integration with the widest event coverage (see SSApp docs). Standard chat includes <code>meta.messageId</code> when the page exposes a native message ID; distinct messages with identical text retain distinct IDs.</p>
                     <ul class="requirements">
                         <li>Works on the broadcaster's live page. Gift/like/follow banners only populate when the session is authenticated.</li>
@@ -1635,8 +1637,9 @@
 
                 <article class="platform-card" id="instagram">
                     <h3>Instagram &ndash; Live REST Capture and News Inbox</h3>
-                    <p class="source-note">Implementation: <code>sources/instagram.js</code> and <code>sources/instagramlive.js</code> (identical copies)</p>
+                    <p class="source-note">Implementation: <code>sources/instagram.js</code> and <code>sources/instagramlive.js</code> (identical copies), plus the optional Graph API bridge at <code>sources/websocket/instagram.html</code></p>
                     <ul class="requirements">
+                        <li>The API bridge polls Graph API comments for one chosen media item. A live video emits <code>type: "instagramlive"</code> and a post or Reel emits <code>type: "instagram"</code>; <code>platform</code> carries the same value. Comments are plain text (<code>textonly: true</code>) with an empty <code>chatimg</code>, <code>userid</code> when the API returns the author ID, and <code>timestamp</code> in Unix milliseconds when valid. <code>meta.messageId</code> is the native comment ID and <code>meta.mediaId</code> the media it belongs to. Comments that already exist when capture starts are shown on the page as history and not forwarded; hidden comments are skipped.</li>
                         <li>On live pages (<code>/&lt;user&gt;/live/?broadcast_id=...</code>), live chat comes from Instagram's own web API, polled same-origin with the session cookie: <code>GET /api/v1/live/{broadcast_id}/get_comment/?last_comment_ts={ts}</code> every ~2s, and <code>POST /api/v1/live/{broadcast_id}/heartbeat_and_get_viewer_count/</code> every ~5s when viewer counts are enabled. After 3 consecutive failures (or when no <code>broadcast_id</code> is discoverable) the source falls back to parsing the rendered chat DOM.</li>
                         <li>The account's own activity feed is polled via <code>POST /api/v1/news/inbox/</code> every ~45s on any Instagram page. The first poll only seeds the dedupe set so backlog is never replayed; stories dedupe by <code>tuuid</code>.</li>
                         <li>Required API headers (all static/derivable): <code>X-IG-App-ID: 936619743392459</code>, <code>X-CSRFToken</code> (from cookie), <code>X-ASBD-ID: 359341</code>, <code>X-Requested-With: XMLHttpRequest</code>, <code>Content-Type: application/x-www-form-urlencoded</code>.</li>
@@ -2056,6 +2059,17 @@
                         </tbody>
                     </table>
                 </div>
+                </article>
+
+                <article class="platform-card" id="razo">
+                    <h3>Razo - Popout Chat Capture</h3>
+                    <p class="source-note">Implementation: <code>sources/razo.js</code></p>
+                    <ul class="requirements">
+                        <li>Open <code>https://razo.tv/dashboard/chat-popout</code> while signed in, or use <code>https://razo.tv/overlay/chat/USERNAME</code> for read-only capture.</li>
+                        <li>Captures ordinary Razo chat, including loaded history, once per native message ID during the page session. Messages received while capture is off are skipped.</li>
+                        <li>Chat uses <code>type: "razo"</code> and <code>platform: "razo"</code>, with display name, username, name color, image badges and message text or emotes. Text-only mode uses emote alt text.</li>
+                        <li>Visible &ldquo;Message removed&rdquo; updates remove the corresponding captured message. Paid cards, activity notices, private staff/bot notices and imported multichat rows are excluded; use Razo for those features.</li>
+                    </ul>
                 </article>
 
                 <article class="platform-card" id="parti">

@@ -84,7 +84,8 @@
         font-weight: bold;
         font-size: 24px;
         z-index: 4;
-        text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
+        /* Tight white halo keeps the navy title readable over dark scenes. */
+        text-shadow: 0 0 1px #fff, 0 0 2px #fff, 0 0 3px #fff, 0 0 6px rgba(255, 255, 255, 0.8), 2px 2px 4px rgba(255, 255, 255, 0.7);
     }
 
     #completion-text {
@@ -1819,7 +1820,7 @@
         let levelRolloverTimer = null;
         let levelCompletionState = null;
         const recentTips = [];
-        const maxRecentTips = 5;
+        const maxRecentTips = 4; // .recent-tips (max-height 200px) fits four rows
         const donationHistory = persistent ? (JSON.parse(localStorage.getItem(historyStorageKey) || '[]')) : [];
         const processedContributions = {};
         

@@ -1284,7 +1284,8 @@ function passGoodWords(sentence) {
 	const uniqueWords = new Set(words);
 	for (let word of uniqueWords) {
 		if (!isGoodWord(word)) {
-			sentence = sentence.replace(new RegExp("\\b" + word + "\\b", "gi"), "*".repeat(word.length));
+			const literalWord = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			sentence = sentence.replace(new RegExp("\\b" + literalWord + "\\b", "gi"), "*".repeat(word.length));
 		}
 	}
 	return sentence;
@@ -1968,7 +1969,14 @@ function loadSettings(item, resave = false) {
 	setupSocketDock();
 	handleVideoStatsSettingsChange();
 	handleStreamerBotSettingsChange();
+	const notifySsappPopup = isSSAPP && !loadedFirst;
 	loadedFirst = true;
+	if (notifySsappPopup) {
+		// The desktop popup may have stopped polling during a slow startup.
+		handleRuntimeMessage({ cmd: "getSettings" }, {}, function (response) {
+			ipcRenderer.send("fromBackgroundPopupResponse", response);
+		}).catch(error => console.warn("[SSApp] Failed to send startup settings:", error));
+	}
 }
 ////////////
 
@@ -5829,8 +5837,8 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			console.error("Shouldn't run sendResponse twice");
 		} else if (sendResponseReal) {
 			alreadySet = true;
-			// Always include current state in responses
-			if (typeof msg == "object") {
+			// A desktop startup retry must not overwrite the saved service state.
+			if (typeof msg == "object" && (!isSSAPP || loadedFirst)) {
 				msg.state = isExtensionOn;
 			}
 			sendResponseReal(msg);
@@ -10446,6 +10454,10 @@ function setupSocketDock() {
 
 		// Give managed audience displays the same snapshot they can already receive.
 		if (handleOverlayControlRequest(data, socketserverDock, 3, !!settings.server2)) return;
+		const edgeReplySocket = socketserverDock;
+		if ((settings.server2 || settings.server3) && handleEdgeTtsRequest(data, packet => {
+			if (edgeReplySocket && edgeReplySocket.readyState === 1) edgeReplySocket.send(JSON.stringify(Object.assign({ out: 7 }, packet)));
+		})) return;
 		if (data && data.action === "getgiveawaystate" && settings.server2 && isExtensionOn && !settings.disablehost) {
 			publishGiveawayState();
 			return;
@@ -11459,6 +11471,10 @@ function setupSocket() {
 			}
 
 			if (handleOverlayControlRequest(data, socketserver, 1, !!settings.socketserver)) return;
+			const edgeReplySocket = socketserver;
+			if (settings.socketserver && handleEdgeTtsRequest(data, packet => {
+				if (edgeReplySocket && edgeReplySocket.readyState === 1) edgeReplySocket.send(JSON.stringify(Object.assign({ out: 7 }, packet)));
+			})) return;
 
 			// Lightweight API: allow requesting a Hype snapshot and respond on the same paired channel
 			// Expected request formats:
@@ -15293,7 +15309,7 @@ function normalizeAiPromptOverlayStore(store) {
 
 	function addOverlay(rawKey) {
 		const item = source[rawKey];
-		if (!item || !item.html) return;
+		if (!item || typeof item.html !== "string") return;
 		let root = normalizeAiPromptOverlayKey(item.slug || item.id || item.name || rawKey);
 		let key = root;
 		let count = 2;
@@ -15322,8 +15338,10 @@ function normalizeAiPromptOverlayStore(store) {
 }
 
 function loadAiPromptOverlays() {
-	return new Promise(resolve => {
+	return new Promise((resolve, reject) => {
 		chrome.storage.local.get(["aiPromptOverlays"], result => {
+			const error = chrome.runtime.lastError;
+			if (error) { reject(new Error(error.message || "Could not read saved overlays")); return; }
 			aiPromptOverlays = normalizeAiPromptOverlayStore(result && result.aiPromptOverlays);
 			resolve(aiPromptOverlays);
 		});
@@ -15336,16 +15354,49 @@ async function getAiPromptOverlays() {
 }
 
 function saveAiPromptOverlays(store) {
-	aiPromptOverlays = normalizeAiPromptOverlayStore(store);
+	const snapshot = normalizeAiPromptOverlayStore(store);
+	aiPromptOverlays = snapshot;
 	return new Promise(resolve => {
-		chrome.storage.local.set({ aiPromptOverlays }, () => {
+		chrome.storage.local.set({ aiPromptOverlays: snapshot }, () => {
 			const error = chrome.runtime.lastError && chrome.runtime.lastError.message ? chrome.runtime.lastError.message : "";
 			if (error) {
 				console.error("Failed to save AI prompt overlays:", error);
 			}
-			resolve({ store: aiPromptOverlays, error });
+			resolve({ store: snapshot, error });
 		});
 	});
+}
+
+// Generate Edge speech in the desktop app and tag it for the requesting overlay.
+var edgeTtsRequests = new Map();
+function handleEdgeTtsRequest(request, reply) {
+	if (!request || request.action !== 'edgeTts') return false;
+	if (!isExtensionOn || settings.disablehost) return true;
+	const target = request.target;
+	if (typeof target !== 'string' || !/^edge-[a-z0-9-]{1,100}$/i.test(target)) return true;
+	const now = Date.now();
+	edgeTtsRequests.forEach((time, id) => { if (now - time > 120000) edgeTtsRequests.delete(id); });
+	if (edgeTtsRequests.has(target)) return true;
+	if (edgeTtsRequests.size >= 128) {
+		reply({ edgeTtsResponse: { target, error: 'Edge Natural is busy. Try again shortly.' } });
+		return true;
+	}
+	edgeTtsRequests.set(target, now);
+	(async () => {
+		try {
+			const bridge = window.ninjafy || window.electronApi;
+			if (!bridge || typeof bridge.edgeTts !== 'function') throw new Error('Edge Natural needs an updated SSApp desktop app running in this session.');
+			const value = request.value || {};
+			const result = await bridge.edgeTts(value.text, { voice: value.voice, rate: value.rate, pitch: value.pitch });
+			const total = Math.ceil(result.audio.length / 12000);
+			for (let index = 0; index < total; index++) {
+				reply({ edgeTtsResponse: { target, index, total, audio: result.audio.slice(index * 12000, (index + 1) * 12000) } });
+			}
+		} catch (error) {
+			reply({ edgeTtsResponse: { target, error: error.message || 'Edge Natural could not generate speech.' } });
+		}
+	})();
+	return true;
 }
 
 function sendDataP2PChunked(data, UUID = false) {
@@ -15460,6 +15511,7 @@ async function processEventFlowBridgeEvent(value) {
 }
 
 async function processIncomingRequest(request, UUID = false) {
+	if (UUID && handleEdgeTtsRequest(request, packet => sendDataP2P(packet, UUID))) return;
 	// from the dock or chat bot, etc.
 	if (request && request.action === "stickerReceipt") {
 		if (window.receiveStickerReceipt) window.receiveStickerReceipt(request, UUID);
@@ -15755,6 +15807,8 @@ async function processIncomingRequest(request, UUID = false) {
 			if (request.value) {
 				forwardSourceControlToWebsocketPages("deleteMessage", request.value);
 			}
+		} else if (request.action === "pinSourceMessage" || request.action === "unpinSourceMessage") {
+			forwardSourceControlToWebsocketPages(request.action === "pinSourceMessage" ? "pinMessage" : "unpinMessage", request.value);
 		} else if (request.action === "obsCommand") {
 			if (isExtensionOn) {
 				fowardOBSCommand(request);
@@ -15802,7 +15856,19 @@ async function processIncomingRequest(request, UUID = false) {
 				sendDataP2P({ aiEventResponse: { target: request.target, error: error.message || "AI overlay request failed." } }, UUID);
 			}
 		} else if (request.action === "saveAiPromptOverlays" && request.value) {
-			const saveResult = await saveAiPromptOverlays(request.value);
+			// New builders retry an immutable snapshot. Do not let a delayed retry
+			// replace a later acknowledged save; legacy clients keep their existing behavior.
+			const saveKey = request.snapshot === true && UUID ? UUID + ":" + request.target : null;
+			let savePromise = saveKey && aiPromptSaveRequests.get(saveKey);
+			if (!savePromise) {
+				savePromise = saveAiPromptOverlays(request.value).then(result => ({ error: result.error, updatedAt: result.store && result.store.updatedAt }));
+				if (saveKey) {
+					aiPromptSaveRequests.set(saveKey, savePromise);
+					if (aiPromptSaveRequests.size > 100) aiPromptSaveRequests.delete(aiPromptSaveRequests.keys().next().value);
+				}
+			}
+			const saveResult = await savePromise;
+			if (saveResult.error && saveKey) aiPromptSaveRequests.delete(saveKey);
 			if (UUID && request.target) {
 				sendDataP2P(
 					{
@@ -15810,7 +15876,7 @@ async function processIncomingRequest(request, UUID = false) {
 							target: request.target,
 							ok: !saveResult.error,
 							error: saveResult.error || "",
-							updatedAt: saveResult.store && saveResult.store.updatedAt
+							updatedAt: saveResult.updatedAt
 						}
 					},
 					UUID
@@ -15867,15 +15933,22 @@ async function processIncomingRequest(request, UUID = false) {
 				);
 			}
 		} else if (request.action === "getAiPromptOverlays" && UUID) {
-			const overlayStore = await getAiPromptOverlays();
-			sendDataP2PChunked({ aiPromptOverlays: { target: request.target || null, value: overlayStore } }, UUID);
+			try {
+				const overlayStore = await getAiPromptOverlays();
+				sendDataP2PChunked({ aiPromptOverlays: { target: request.target || null, value: overlayStore } }, UUID);
+			} catch (error) {
+				// Do not send an empty package on read failure: old builders would save over it.
+				console.error("Failed to read AI prompt overlays:", error);
+			}
 		} else if (request.action === "chatbotStop" && UUID) {
-			const activeController = privateChatbotControllers[UUID];
+			const controllerKey = request.context === "aiprompt" ? UUID + ":" + request.target : UUID;
+			const controllers = request.context === "aiprompt" ? aiPromptControllers : privateChatbotControllers;
+			const activeController = controllers[controllerKey];
 			if (activeController) {
 				try {
 					activeController.abort();
 				} catch (e) {}
-				delete privateChatbotControllers[UUID];
+				delete controllers[controllerKey];
 			}
 		} else if (request.action === "chatbotCapabilities" && UUID) {
 			sendDataP2P({ chatbotCapabilities: { target: request.target || null, value: getPrivateChatbotCapabilities() } }, UUID);
@@ -15887,6 +15960,7 @@ async function processIncomingRequest(request, UUID = false) {
 				try {
 					let streamedChunks = 0;
 					const sendChatbotChunk = chunk => {
+						if (request.context === "aiprompt" && controller.signal.aborted) return;
 						streamedChunks++;
 						sendDataP2P({ chatbotChunk: { value: chunk, target: request.target } }, UUID);
 					};
@@ -15917,19 +15991,28 @@ async function processIncomingRequest(request, UUID = false) {
 					}
 					let model = request.model || null;
 					const controller = new AbortController();
-					privateChatbotControllers[UUID] = controller;
+					const isAiPrompt = request.context === "aiprompt";
+					const controllerKey = isAiPrompt ? UUID + ":" + request.target : UUID;
+					const controllers = isAiPrompt ? aiPromptControllers : privateChatbotControllers;
+					controllers[controllerKey] = controller;
+					const deadline = isAiPrompt ? setTimeout(() => controller.abort(), 600000) : null;
 
-					callLLMAPI(prompt, model, sendChatbotChunk, controller, UUID, request.images || null)
+					// Builder requests have their own cancellation scope and longer deadline.
+					const llmOptions = isAiPrompt ? { requestTimeoutMs: 600000, overlayBuilder: true,
+						overlayTask: ["settings", "style", "summarize"].includes(request.overlayTask) ? request.overlayTask : "create" } : {};
+					callLLMAPI(prompt, model, sendChatbotChunk, controller, controllerKey, request.images || null, llmOptions)
 						.then(fullResponse => {
-							if (privateChatbotControllers[UUID] === controller) {
-								delete privateChatbotControllers[UUID];
+							if (controllers[controllerKey] === controller) {
+								delete controllers[controllerKey];
 							}
+							if (isAiPrompt && controller.signal.aborted) return;
 							sendChatbotFinal(fullResponse);
 						})
 						.catch(error => {
-							if (privateChatbotControllers[UUID] === controller) {
-								delete privateChatbotControllers[UUID];
+							if (controllers[controllerKey] === controller) {
+								delete controllers[controllerKey];
 							}
+							if (isAiPrompt && controller.signal.aborted) return;
 							let payload;
 							if (typeof LLMServiceError !== "undefined" && error instanceof LLMServiceError) {
 								payload = {
@@ -15944,7 +16027,7 @@ async function processIncomingRequest(request, UUID = false) {
 								payload = { message: error?.message || "Unknown error" };
 							}
 							sendDataP2P({ chatbotResponse: { value: JSON.stringify({ error: payload }), target: request.target } }, UUID);
-						});
+						}).finally(() => { if (deadline) clearTimeout(deadline); });
 				} catch (e) {
 					console.error("Unexpected error:", e);
 					sendDataP2P({ chatbotResponse: { value: JSON.stringify({ error: { message: e?.message || "Unexpected error" } }), target: request.target } }, UUID);
@@ -15965,6 +16048,8 @@ async function processIncomingRequest(request, UUID = false) {
 }
 
 const privateChatbotControllers = {};
+const aiPromptControllers = {};
+const aiPromptSaveRequests = new Map();
 
 function getPrivateChatbotCapabilities() {
 	// Describes the currently configured LLM to the private chatbot page.
@@ -15979,7 +16064,7 @@ function getPrivateChatbotCapabilities() {
 	switch (provider) {
 		case "ollama":
 			model = settings?.ollamamodel?.textsetting || "";
-			imageInput = /vision|llava|moondream|minicpm|bakllava|gemma3|qwen2\.5vl|qwen2-vl|qwen-vl|pixtral|llama4|internvl/i.test(model) ? true : "maybe";
+			imageInput = /vision|llava|moondream|minicpm|bakllava|gemma3|gemma[-_ .]?4|qwen2\.5vl|qwen2-vl|qwen-vl|pixtral|llama4|internvl/i.test(model) ? true : "maybe";
 			break;
 		case "localgemma":
 		case "localqwen":
@@ -16024,6 +16109,9 @@ function getPrivateChatbotCapabilities() {
 			break;
 		case "custom":
 			model = settings?.customAIModel?.textsetting || "";
+			break;
+		case "hostedllm":
+			model = settings?.hostedLLMModel?.textsetting || "";
 			break;
 	}
 	return {
@@ -16135,6 +16223,15 @@ function broadcastSourceControlMessageToWebsocketPages(message, platforms) {
 
 function forwardSourceControlToWebsocketPages(control, payload) {
 	if (!payload || typeof payload !== "object") {
+		return;
+	}
+	// Pins must stay with the originating Twitch connection; never broadcast them.
+	if (control === "pinMessage" || control === "unpinMessage") {
+		const tabId = Number(payload.tid);
+		if (payload.type !== "twitch" || !Number.isInteger(tabId) || tabId <= 0) return;
+		sendSourceControlMessageToTab(tabId, {
+			type: "SOURCE_CONTROL", control: control, platform: "twitch", payload: payload
+		}, new Set(["twitch"]));
 		return;
 	}
 	const platforms = new Set(getSourceControlPlatforms(payload.type || payload.platform || ""));

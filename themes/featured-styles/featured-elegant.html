@@ -565,6 +565,16 @@
                 opacity: 0;
             }
         }
+
+        /* Background effects only appear behind a featured message unless &ambient is set. */
+        .elegant-bg {
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        body.featured-active .elegant-bg, body.ambient .elegant-bg {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -584,6 +594,7 @@
         
         // Apply selected style
         document.body.className = `style-${style}`;
+        if (urlParams.has('ambient')) document.body.classList.add('ambient');
 
         // Create elegant background elements
         const bgContainer = document.querySelector('.elegant-bg');
@@ -796,6 +807,7 @@
                 // Trigger animation
                 requestAnimationFrame(() => {
                     wrapper.classList.add('show');
+                    document.body.classList.add('featured-active');
                 });
 
                 currentMessage = wrapper;
@@ -827,6 +839,7 @@
             if (currentMessage) {
                 currentMessage.classList.remove('show');
                 currentMessage.classList.add('hide');
+                document.body.classList.remove('featured-active');
                 setTimeout(() => {
                     if (currentMessage && currentMessage.parentNode) {
                         currentMessage.parentNode.removeChild(currentMessage);

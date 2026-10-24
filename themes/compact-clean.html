@@ -236,6 +236,8 @@ body.ultra .source-icon {
     width: 0.72em;
     height: 0.72em;
 }
+.badge.textbadge { width: auto; max-width: 8em; padding: 0 0.3em; border-radius: 0.3em; background: rgba(128, 128, 128, 0.22); font-size: 0.75em; white-space: nowrap; }
+body.ultra .badge.textbadge { width: auto; max-width: 8em; height: auto; max-height: none; }
 body.ultra .badge {
     width: 0.75em;
     height: 0.75em;
@@ -286,7 +288,7 @@ body.ultra .content-img {
         document.body.classList.add('art-chat', 'style-' + collectionStyle);
     }
     if (urlParams.has('staticart')) document.body.classList.add('static-art');
-    if (['cute', 'cozy', 'cats', 'music', 'arcade', 'slate', 'paper', 'micro'].indexOf(collectionStyle) !== -1) {
+    if (['cute', 'cozy', 'cats', 'music', 'arcade', 'slate', 'paper', 'micro', 'spring', 'summer', 'hearts', 'lunar'].indexOf(collectionStyle) !== -1) {
         document.body.classList.add('collection', 'collection-chat', 'style-' + collectionStyle);
     }
     var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
@@ -677,7 +679,9 @@ body.ultra .content-img {
         if (data.type) { messageDiv.dataset.sourceType = data.type; }
         messageTimestamps.set(messageId, Date.now());
 
-        var accent = data.nameColor || (document.body.classList.contains('art-chat') ? 'var(--art-accent)' : '');
+        // Payload colours, types and media URLs are plain text; only validated values reach markup.
+        var accent = (data.nameColor && typeof sanitizeRelayCssColor === 'function' ? sanitizeRelayCssColor(data.nameColor) : '') || (document.body.classList.contains('art-chat') ? 'var(--art-accent)' : '');
+        var sourceType = data.type ? String(data.type).replace(/[^a-zA-Z0-9_-]/g, '') : '';
         if (!accent && typeof getColorFromType === 'function' && data.type) {
             try { accent = getColorFromType(data.type); } catch (e) {}
         }
@@ -685,8 +689,8 @@ body.ultra .content-img {
 
         var avatarHtml = (!hideAvatar && data.chatimg)
             ? "<span class='avatar' style=\"background-image:url('" + escapeCssUrlAttribute(data.chatimg) + "')\"></span>" : "";
-        var iconHtml = (!hideIcon && data.type)
-            ? "<img class='source-icon' src='https://socialstream.ninja/sources/images/" + data.type + ".png' alt='" + data.type + "' onerror=\"this.style.display='none'\">" : "";
+        var iconHtml = (!hideIcon && sourceType)
+            ? "<img class='source-icon' src='https://socialstream.ninja/sources/images/" + sourceType + ".png' alt='" + sourceType + "' onerror=\"this.style.display='none'\">" : "";
         var badgesHtml = buildBadges(data);
         var clockHtml = showClock ? "<span class='timestamp'>" + nowClock() + "</span>" : "";
         var nameHtml = data.chatname
@@ -697,8 +701,9 @@ body.ultra .content-img {
         var textHtml = msg ? "<div class='text" + (data.event ? " event-text" : "") + "'>" + msg + "</div>" : "";
         var donation = data.hasDonation || data.donation || "";
         var donationHtml = donation ? "<div class='donation'>" + escapeHtml(donation) + "</div>" : "";
-        var contentImgHtml = data.contentimg
-            ? "<img class='content-img' src='" + data.contentimg + "' alt='' onerror=\"this.style.display='none'\">" : "";
+        var contentSrc = data.contentimg && typeof sanitizeRelayUrl === 'function' ? sanitizeRelayUrl(data.contentimg, true) : '';
+        var contentImgHtml = contentSrc
+            ? "<img class='content-img' src='" + fallbackEscapeHtml(contentSrc) + "' alt='' onerror=\"this.style.display='none'\">" : "";
 
         messageDiv.innerHTML =
             avatarHtml +

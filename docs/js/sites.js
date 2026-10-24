@@ -1522,6 +1522,18 @@ document.addEventListener('DOMContentLoaded', function() {
 			notes: 'Also works with: https://manage.wix.com/dashboard/*/live-video/* and embedded widgets at https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*'
 		},
 		{
+			name: 'Razo.tv',
+			icon: 'razo.png',
+			description: 'Razo live chat.',
+			type: 'popout',
+			instructions: `
+				<ul>
+					<li>Open https://razo.tv/dashboard/chat-popout while signed in, or https://razo.tv/overlay/chat/USERNAME for read-only capture.</li>
+					<li>In the desktop app, add that URL as an Other source.</li>
+				</ul>
+			`
+		},
+		{
 			name: 'Retake.tv',
 			icon: 'retake.png',
 			description: 'Web3 live streaming platform.',
