@@ -2564,11 +2564,15 @@ TTS.googleTTS = function(tts, options) {
                 ssmlGender: TTS.voiceGender ? TTS.voiceGender.toUpperCase() : "FEMALE"
             },
             audioConfig: {
-                audioEncoding: "MP3",
-                speakingRate: TTS.googleSettings.rate,
-                pitch: TTS.googleSettings.pitch
+                audioEncoding: "MP3"
             }
         };
+
+        // Chirp 3: HD rejects speaking rate and pitch, including their default values.
+        if (!/-Chirp3-HD-/i.test(voiceName || "")) {
+            data.audioConfig.speakingRate = TTS.googleSettings.rate;
+            data.audioConfig.pitch = TTS.googleSettings.pitch;
+        }
 
         if (TTS.googleSettings.audioProfile) {
             data.audioConfig.effectsProfileId = [TTS.googleSettings.audioProfile];

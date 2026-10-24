@@ -10584,7 +10584,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 lang: getParam('googlelang') ? getOption('googlelang', 'en-US') : false,
                 rate: getParam('googlerate') ? getNumber('googlerate', 1.0) : 1.0,
                 pitch: getParam('googlepitch') ? getNumber('googlepitch', 0) : 0,
-                audioProfile: getParam('googlepitch') ? getOption('googleaudioprofile', false) : false
+                audioProfile: getParam('googleaudioprofile') ? getOption('googleaudioprofile', false) : false
             },
 
             // Gemini TTS settings
@@ -11296,14 +11296,17 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 name: voiceName
             },
             audioConfig: {
-                audioEncoding: "MP3",
-                speakingRate: settings.google.rate,
-                pitch: settings.google.pitch
+                audioEncoding: "MP3"
             }
         };
 
+        if (!/-Chirp3-HD-/i.test(voiceName || "")) {
+            data.audioConfig.speakingRate = settings.google.rate;
+            data.audioConfig.pitch = settings.google.pitch;
+        }
+
         if (settings.google.audioProfile) {
-            data.audioConfig.audioProfile = settings.google.audioProfile;
+            data.audioConfig.effectsProfileId = [settings.google.audioProfile];
         }
         
         this.fetchAudioContent(url, {
