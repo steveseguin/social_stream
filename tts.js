@@ -1203,9 +1203,13 @@ TTS.configure = function(urlParams) {
         }
     }
 
-    // Language settings
-    if (urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln")) {
-        TTS.speechLang = urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln");
+    // The interface language is only a fallback when no speech language was selected.
+    const explicitSpeechLanguage = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") ||
+        urlParams.get("ttsdonos") || urlParams.get("ttsnewmembers") || urlParams.get("ttsclicked");
+    const languageOverride = urlParams.get("language") || urlParams.get("lang") ||
+        (!explicitSpeechLanguage && urlParams.get("ln"));
+    if (languageOverride) {
+        TTS.speechLang = languageOverride;
         if (TTS.speechLang.split("-")[0].toLowerCase() == "en") {
             TTS.English = true;
         } else {

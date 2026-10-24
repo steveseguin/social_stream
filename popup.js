@@ -10692,7 +10692,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     testTTS(section = "") {
         const testPhrase = getLocalTtsSample(this.getProviderSelect(section)?.value,
             document.getElementById((this.getProviderSelect(section)?.value === 'edge' ? 'edgeVoiceSelect' : 'kokoroVoiceSelect') + section)?.value,
-            document.getElementById('piperVoiceSelect' + section)?.value);
+            document.getElementById('piperVoiceSelect' + section)?.value,
+            document.getElementById('espeakVoiceSelect' + section)?.value);
         const provider = this.getProviderSelect(section)?.value || "system";
         if (window.location.protocol === "moz-extension:" && ["kokoro", "kitten", "piper"].includes(provider)) {
             this.showFeedback("This voice engine is not included in the Firefox extension. Select eSpeak, System TTS or a TTS service.", 'error', section, 0);
@@ -15185,10 +15186,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 });
 
-function getLocalTtsSample(provider, kokoroVoice, piperVoice) {
-    const voice = provider === 'edge' ? kokoroVoice : provider === 'kokoro' ? kokoroVoice : provider === 'piper' ? piperVoice : '';
-    if (/^(e[fm]_|es[_-])/.test(voice || '')) return 'Hola, gracias por participar. ¿Qué jugamos hoy?';
-    if (/^(p[fm]_|pt[_-]BR)/.test(voice || '')) return 'Olá, obrigado por participar. O que vamos jogar hoje?';
+function getLocalTtsSample(provider, kokoroVoice, piperVoice, espeakVoice) {
+    const voice = provider === 'edge' ? kokoroVoice : provider === 'kokoro' ? kokoroVoice : provider === 'piper' ? piperVoice : provider === 'espeak' ? espeakVoice : '';
+    if (/^(e[fm]_|es(?:$|[_-]))/i.test(voice || '')) return 'Hola, gracias por participar. ¿Qué jugamos hoy?';
+    if (/^(p[fm]_|pt(?:$|[_-]BR))/i.test(voice || '')) return 'Olá, obrigado por participar. O que vamos jogar hoje?';
     if (/^pt[_-]PT/.test(voice || '')) return 'Olá, obrigado por participares. O que vamos jogar hoje?';
     return 'The quick brown fox jumps over the lazy dog';
 }

@@ -38,7 +38,7 @@
       const extensionBase = typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getURL === 'function'
         ? trimTrailingSlash(chrome.runtime.getURL(''))
         : null;
-      const locationBase = trimTrailingSlash(window.location.href.substring(0, window.location.href.lastIndexOf('/')));
+      const locationBase = trimTrailingSlash(new URL('.', window.location.href).href);
       this.baseUrl = locationBase;
       this.extensionBaseUrl = extensionBase && extensionBase !== locationBase ? extensionBase : null;
       this.remoteBaseUrl = ProperPiperTTS.getRemoteBaseUrl();
