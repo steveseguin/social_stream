@@ -17236,6 +17236,22 @@ async function processRelayTabBatch(tabs, published, validator, processor) {
 	);
 }
 
+function getYouTubeReplyVideoId(url) {
+	if (!url) return null;
+	const videoId = extractVideoId(url);
+	if (videoId) return videoId;
+	try {
+		const parsed = new URL(url);
+		if (isWebsocketSourceTabUrl(url) && parsed.pathname.endsWith("/sources/websocket/youtube.html")) {
+			return parsed.searchParams.get("videoId") || parsed.searchParams.get("video_id") || parsed.searchParams.get("v") || new URLSearchParams(parsed.hash.slice(1)).get("videoId");
+		}
+		if (["youtube.com", "www.youtube.com", "m.youtube.com"].includes(parsed.hostname) && parsed.pathname.startsWith("/shorts/")) {
+			return parsed.pathname.split("/")[2] || null;
+		}
+	} catch (e) {}
+	return null;
+}
+
 async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 0) {
 	if (!chrome.debugger || !isExtensionOn || settings.disablehost) {
 		return false;
@@ -17314,6 +17330,13 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 
 		const relayRoleAllowList = shouldApplyRelayAccountRoleFilter(routingData, relayMode) ? getAccountRoleListSetting("relayaccountroles") : [];
 		const relayRoleBlockList = shouldApplyRelayAccountRoleFilter(routingData, relayMode) ? getAccountRoleListSetting("blockrelayaccountroles") : [];
+
+		// Only primary AI replies that explicitly opt in carry this constraint.
+		// Filter before either dispatch pass so URL fallback cannot broaden it.
+		if (messageOrigin === "chatbot" && data.youtubeReplyVideoId !== undefined) {
+			if (!data.youtubeReplyVideoId) return false;
+			tabs = tabs.filter(tab => getYouTubeReplyVideoId(tab.url) === data.youtubeReplyVideoId);
+		}
 
 		const roleRoutingReverse = reverse || !!chatbotDestinationRoles.length;
 		tabs = filterRelayCandidateTabs(tabs, routingData, roleRoutingReverse);

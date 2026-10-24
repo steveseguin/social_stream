@@ -10550,6 +10550,20 @@ input:checked + .slider:before {
 										📛 <span><span class="popup-control-icon" aria-hidden="true">💬</span><span data-translate="no-ollama-bot-name">Do not include the bot's name when responding</span></span>
 									</div>
 								</div>
+								<div title="Only post AI replies to the originating YouTube video. Separate bot accounts must be connected to that same video. If no destination matches, the reply is not posted into chat.">
+									<label class="switch">
+										<input type="checkbox" id="aiReplySameYouTubeStream" data-setting="aiReplySameYouTubeStream" aria-labelledby="aiReplySameYouTubeStreamLabel" />
+										<span class="slider round"></span>
+									</label>
+									<label for="aiReplySameYouTubeStream" id="aiReplySameYouTubeStreamLabel" data-translate="popup-ai-reply-originating-youtube">🎯 Reply only to the originating YouTube chat</label>
+								</div>
+								<div title="Add @name to AI replies posted into chat. Uses the viewer's handle when available, otherwise their displayed name.">
+									<label class="switch">
+										<input type="checkbox" id="aiReplyMentionUser" data-setting="aiReplyMentionUser" aria-labelledby="aiReplyMentionUserLabel" />
+										<span class="slider round"></span>
+									</label>
+									<label for="aiReplyMentionUser" id="aiReplyMentionUserLabel" data-translate="popup-ai-reply-mention-viewer">💬 Mention the viewer in replies</label>
+								</div>
 								<div title="By default the bot is told not if it doesn't see value in doing so. You can disable that instruction here though">
 									<div>
 										<label class="switch">

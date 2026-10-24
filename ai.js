@@ -3978,6 +3978,18 @@ async function processMessageWithOllama(data, idx=null, queuedEntry=null) {
       return;
     }
 
+    // Keep the originating video fixed while the model generates its reply.
+    let youtubeReplyVideoId;
+    if (!botOverlayOnly && getAiSettingFlag('aiReplySameYouTubeStream') &&
+        (data.type === 'youtube' || data.type === 'youtubeshorts')) {
+      youtubeReplyVideoId = String(data.videoid || data.videoId || '').trim();
+      if (!youtubeReplyVideoId) {
+        const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
+        const sourceTab = tabs.find(tab => String(tab.id) === String(data.tid));
+        youtubeReplyVideoId = getYouTubeReplyVideoId(sourceTab && sourceTab.url) || '';
+      }
+    }
+
     // Get additional instructions
     let additionalInstructions = "";
     if (settings.ollamaprompt) {
@@ -4035,11 +4047,21 @@ async function processMessageWithOllama(data, idx=null, queuedEntry=null) {
 
       // Send to tabs if not overlay-only
       if (!botOverlayOnly) {
+        let replyText = response.trim();
+        if (getAiSettingFlag('aiReplyMentionUser')) {
+          const name = String(data.username || data.chatname || '').trim().replace(/^@+/, '');
+          const mention = name ? '@' + name : '';
+          const following = replyText.slice(mention.length, mention.length + 1);
+          const alreadyMentioned = mention && replyText.slice(0, mention.length).toLowerCase() === mention.toLowerCase() &&
+            (!following || /[\s,:.!?]/.test(following));
+          if (mention && !alreadyMentioned) replyText = mention + ' ' + replyText;
+        }
         const msg = {
           tid: data.tid,
-          response: settings.noollamabotname ? response.trim() : (botname + ": " + response.trim()),
+          response: settings.noollamabotname ? replyText : (botname + ": " + replyText),
           bot: true
         };
+        if (youtubeReplyVideoId !== undefined) msg.youtubeReplyVideoId = youtubeReplyVideoId;
         sendMessageToTabs(msg);
         lastResponseTime[data.tid] = Date.now();
         lastSentMessage = response;
