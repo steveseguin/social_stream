@@ -1805,6 +1805,7 @@ function readSettings() {
     hideAvatar: urlParams.has('hideavatar'),
     hideMedia: urlParams.has('hidemedia'),
     hideSource: urlParams.has('hidesource'),
+    badgeByTitle: urlParams.has('badgebytitle'),
     hideAmount: urlParams.has('hideamount'),
     hideSubtitle: urlParams.has('hidesubtitle'),
     hideTitle: urlParams.has('hidetitle'),
@@ -2337,9 +2338,11 @@ function renderAlert(model) {
   }
 
   if (!settings.hideSource) {
-    const spacer = document.createElement('div');
-    spacer.className = 'alert-header-spacer';
-    header.appendChild(spacer);
+    if (!settings.badgeByTitle) {
+      const spacer = document.createElement('div');
+      spacer.className = 'alert-header-spacer';
+      header.appendChild(spacer);
+    }
 
     const sourceBadge = buildSourceBadge(model);
     if (sourceBadge) {
