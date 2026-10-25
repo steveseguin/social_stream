@@ -1,7 +1,7 @@
 (function () {
 	// The desktop app supplies the same chrome.runtime bridge as the extension.
 	function isChatPage() {
-		return location.hostname === "razo.tv" && /^\/(dashboard\/chat-popout\/?|overlay\/chat\/[^/]+\/?)$/.test(location.pathname);
+		return location.hostname === "razo.tv" && /^\/(dashboard\/chat-popout\/?|overlay\/chat\/[^/]+\/?|obs\/chat\/?)$/.test(location.pathname);
 	}
 	if (!isChatPage()) return;
 	if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.sendMessage) return;
