@@ -5595,9 +5595,10 @@
 
 				socketserverExtension.addEventListener("message", function (event) {
 					var resp = false;
-					if (event.data && server2) {
+					if (event.data) {
 						try {
 							var data = JSON.parse(event.data);
+							if (!server2 && data.action !== "twitchTimeoutResult") return;
 							if (!isDuplicateTransportDelivery(data, "server")) {
 								processInput(data);
 							}
@@ -9085,6 +9086,9 @@
 					} else if (data.action == "privateBotStatus") {
 						showDockActionNotice(data.message || "The AI bot could not process that request.");
 						return true;
+					} else if (data.action == "twitchTimeoutResult") {
+						handleTwitchTimeoutResult(data);
+						return true;
 					} else if (data.action == "resetleaderboard") {
 						return true;
 					} else if (data.action == "clearOverlay") {
@@ -10217,6 +10221,52 @@
 				}
 			}
 			
+			var pendingTwitchTimeouts = {};
+			var twitchTimeoutRequestCounter = 0;
+			var twitchTimeoutRequestPrefix = "dock_timeout_" + Date.now() + "_" + Math.random().toString(36).slice(2) + "_";
+
+			function syncTwitchTimeout(element, duration) {
+				if (element.getAttribute("data-source-type") !== "twitch") return;
+				if (blockMessageSelecting || blockMessageSelecting3) {
+					showDockActionNotice("Timed out in SSN only. View-only/helper mode cannot moderate Twitch.");
+					return;
+				}
+				var payload = buildSourceControlPayload(element);
+				if (!payload || !payload.tid) {
+					showDockActionNotice("Timed out in SSN only. The originating Twitch connection is unavailable.");
+					return;
+				}
+				payload.duration = duration;
+				payload.sourceName = (element.rawContents || {}).sourceName || "";
+				var requestId = twitchTimeoutRequestPrefix + (++twitchTimeoutRequestCounter);
+				pendingTwitchTimeouts[requestId] = {
+					name: payload.username || payload.chatname,
+					duration: duration,
+					timer: setTimeout(function () {
+						delete pendingTwitchTimeouts[requestId];
+						showDockActionNotice("SSN timeout applied. No Twitch confirmation received. Check Twitch before trying again.");
+					}, 15000)
+				};
+				if (!send2Extension({ action: "timeoutSourceUser", requestId: requestId, value: payload })) {
+					clearTimeout(pendingTwitchTimeouts[requestId].timer);
+					delete pendingTwitchTimeouts[requestId];
+					showDockActionNotice("Timed out in SSN only. Dock cannot reach Social Stream.");
+				}
+			}
+
+			function handleTwitchTimeoutResult(data) {
+				var pending = pendingTwitchTimeouts[data.requestId];
+				if (!pending) return;
+				clearTimeout(pending.timer);
+				delete pendingTwitchTimeouts[data.requestId];
+				var result = data.result || {};
+				if (result.ok === true) {
+					showDockActionNotice("Timed out " + pending.name + " on Twitch for " + pending.duration + " seconds.");
+				} else {
+					showDockActionNotice((result.unconfirmed ? "SSN timeout applied. " : "Timed out in SSN only. ") + (result.message || "Twitch timeout failed."));
+				}
+			}
+
 			function timeoutUser(element, duration) {
 				const userId = element.getAttribute("data-chatname");
 				const userType = element.getAttribute("data-source-type");
@@ -10252,6 +10302,7 @@
 					} catch (e) {
 						console.error(e);
 					}
+					syncTwitchTimeout(element, duration);
 				}
 			}
 

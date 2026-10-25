@@ -600,6 +600,11 @@
                         <input type="checkbox" id="sync-block-users">
                         <span>Sync dock blocks to Twitch bans</span>
                     </label>
+                    <label class="auth-method-option" style="display:flex; margin-bottom:8px;">
+                        <input type="checkbox" id="sync-timeout-users" aria-describedby="sync-timeout-hint">
+                        <span>Sync dock timeouts to Twitch</span>
+                    </label>
+                    <p id="sync-timeout-hint" class="moderation-requirements">Apply the dock's timeout duration on Twitch for messages from this channel. Requires broadcaster/moderator access. If Twitch rejects it, the SSN timeout still applies.</p>
                     <label class="auth-method-option" style="display:flex; margin-bottom:12px;">
                         <input type="checkbox" id="hide-metrics">
                         <span>Hide dashboard metrics</span>
@@ -628,6 +633,7 @@
 				return {
 					syncDeleteMessages: parsed.syncDeleteMessages !== false,
 					syncBlockUsers: !!parsed.syncBlockUsers,
+					syncTimeoutUsers: parsed.syncTimeoutUsers === true,
 					syncPinMessages: parsed.syncPinMessages === true,
 					hideMetrics: !!parsed.hideMetrics
 				};
@@ -635,6 +641,7 @@
 				return {
 					syncDeleteMessages: true,
 					syncBlockUsers: false,
+					syncTimeoutUsers: false,
 					syncPinMessages: false,
 					hideMetrics: false
 				};
@@ -645,6 +652,7 @@
 			const payload = {
 				syncDeleteMessages: !!document.getElementById('sync-delete-messages')?.checked,
 				syncBlockUsers: !!document.getElementById('sync-block-users')?.checked,
+				syncTimeoutUsers: !!document.getElementById('sync-timeout-users')?.checked,
 				syncPinMessages: !!document.getElementById('sync-pin-messages')?.checked,
 				hideMetrics: !!document.getElementById('hide-metrics')?.checked
 			};
@@ -710,6 +718,11 @@
 			const controlSettings = loadAdvancedControlSettings();
 			const syncDeleteMessages = document.getElementById('sync-delete-messages');
 			const syncBlockUsers = document.getElementById('sync-block-users');
+			const syncTimeoutUsers = document.getElementById('sync-timeout-users');
+			if (syncTimeoutUsers) {
+				syncTimeoutUsers.checked = controlSettings.syncTimeoutUsers;
+				syncTimeoutUsers.addEventListener('change', saveAdvancedControlSettings);
+			}
 			const syncPinMessages = document.getElementById('sync-pin-messages');
 			if (syncPinMessages) {
 				syncPinMessages.checked = controlSettings.syncPinMessages;

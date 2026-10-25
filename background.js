@@ -15803,6 +15803,16 @@ async function processIncomingRequest(request, UUID = false) {
 			}
 		} else if (request.action === "blockUser") {
 			blockUser(request.value);
+		} else if (request.action === "timeoutSourceUser") {
+			const result = isExtensionOn
+				? await forwardTwitchTimeout(request.value)
+				: { ok: false, message: "Social Stream is turned off." };
+			const response = { action: "twitchTimeoutResult", requestId: request.requestId, result: result };
+			if (!UUID && socketserverDock && socketserverDock.readyState === 1) {
+				socketserverDock.send(JSON.stringify(Object.assign({ out: 4 }, response)));
+			} else {
+				sendDataP2P(response, UUID);
+			}
 		} else if (request.action === "deleteSourceMessage") {
 			if (request.value) {
 				forwardSourceControlToWebsocketPages("deleteMessage", request.value);
@@ -16218,6 +16228,41 @@ function broadcastSourceControlMessageToWebsocketPages(message, platforms) {
 				});
 			} catch (e) {}
 		});
+	});
+}
+
+function forwardTwitchTimeout(payload) {
+	return new Promise(function (resolve) {
+		const tabId = Number(payload && payload.tid);
+		if (!payload || payload.type !== "twitch" || !Number.isInteger(tabId) || tabId <= 0) {
+			resolve({ ok: false, message: "The originating Twitch connection is unavailable." });
+			return;
+		}
+		// Query works in both the extension and SSApp. Never broadcast a timeout.
+		try {
+			chrome.tabs.query({}, function (tabs) {
+				const tab = (tabs || []).find(function (entry) { return entry && entry.id === tabId; });
+				if (chrome.runtime.lastError || !tab) {
+					resolve({ ok: false, message: "The originating Twitch connection is closed." });
+					return;
+				}
+				if (getWebsocketSourcePlatformFromUrl(tab.url) !== "twitch") {
+					resolve({ ok: false, message: "Twitch timeout sync requires a Twitch WebSocket connection. Standard capture only times out in SSN." });
+					return;
+				}
+				chrome.tabs.sendMessage(tabId, {
+					type: "SOURCE_CONTROL", control: "timeoutUser", platform: "twitch", payload: payload
+				}, function (result) {
+					if (chrome.runtime.lastError || !result || typeof result.ok !== "boolean") {
+						resolve({ ok: false, unconfirmed: true, message: "No confirmation received from the Twitch connection. Check Twitch before trying again." });
+					} else {
+						resolve(result);
+					}
+				});
+			});
+		} catch (error) {
+			resolve({ ok: false, unconfirmed: true, message: "Could not confirm the Twitch timeout. Check Twitch before trying again." });
+		}
 	});
 }
 

@@ -645,12 +645,14 @@ try{
 			return {
 				syncDeleteMessages: parsed.syncDeleteMessages !== false,
 				syncBlockUsers: !!parsed.syncBlockUsers,
+				syncTimeoutUsers: parsed.syncTimeoutUsers === true,
 				syncPinMessages: parsed.syncPinMessages === true
 			};
 		} catch (_) {
 			return {
 				syncDeleteMessages: true,
 				syncBlockUsers: false,
+				syncTimeoutUsers: false,
 				syncPinMessages: false
 			};
 		}
@@ -2801,6 +2803,9 @@ async function ensureChatClientInstance() {
 		const payload = request?.payload || {};
 		if (normalizeSourceControlPlatform(request?.platform || payload?.type) !== 'twitch') {
 			return false;
+		}
+		if (request.control === 'timeoutUser') {
+			return syncDockTimeoutToTwitch(payload);
 		}
 		if (request.control === 'pinMessage' || request.control === 'unpinMessage') {
 			if (!isAdvancedControlEnabled('syncPinMessages')) return false;
@@ -5385,6 +5390,57 @@ async function cleanupCurrentConnection() {
 		} catch (error) {
 			console.error('deleteChatMessage error', error);
 			return false;
+		}
+	}
+
+	async function syncDockTimeoutToTwitch(payload) {
+		if (!isAdvancedControlEnabled('syncTimeoutUsers')) {
+			return { ok: false, message: 'Twitch timeout sync is off in Advanced settings.' };
+		}
+		const duration = Number(payload.duration);
+		if (!Number.isInteger(duration) || duration < 1 || duration > 1209600) {
+			return { ok: false, message: 'Invalid Twitch timeout duration.' };
+		}
+		const token = getStoredToken();
+		const channelId = currentChannelId;
+		const channelLogin = normalizeTwitchLogin(channel);
+		if (!token || !channelId) {
+			return { ok: false, message: 'Sign in to the Twitch connection to moderate chat.' };
+		}
+		// sourceName retains the originating channel, including Shared Chat rows.
+		if (!payload.sourceName || normalizeTwitchLogin(payload.sourceName) !== channelLogin) {
+			return { ok: false, message: 'This message is not from the connected Twitch channel. Use a message from that channel.' };
+		}
+		try {
+			const moderator = await getCurrentModerator();
+			if (!moderator || !moderator.user_id || !hasTwitchScope(moderator, 'moderator:manage:banned_users')) {
+				return { ok: false, message: 'Reconnect Twitch with ban/timeout permission using a broadcaster or moderator account.' };
+			}
+			// Use the Twitch identity, never a display name or PluralMind alias.
+			const userId = payload.userid || (payload.username ? await getUserIdByLogin(payload.username) : '');
+			if (!userId) {
+				return { ok: false, message: 'Could not identify the Twitch user for this message.' };
+			}
+			if (!isAdvancedControlEnabled('syncTimeoutUsers') || token !== getStoredToken() || channelId !== currentChannelId || channelLogin !== normalizeTwitchLogin(channel)) {
+				return { ok: false, message: 'Twitch connection or timeout sync setting changed. Try again with a current message.' };
+			}
+			const response = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${encodeURIComponent(channelId)}&moderator_id=${encodeURIComponent(moderator.user_id)}`, {
+				method: 'POST',
+				headers: { 'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+				body: JSON.stringify({ data: { user_id: String(userId), duration: duration, reason: 'Timed out from Social Stream Ninja' } })
+			});
+			if (!response.ok) {
+				const error = await response.json().catch(() => ({}));
+				let message = typeof error.message === 'string' ? error.message : 'Twitch returned HTTP ' + response.status;
+				if (response.status === 401) message = 'Reconnect Twitch to grant ban/timeout permission.';
+				if (response.status === 403) message = 'Broadcaster or moderator access is required in this Twitch channel.';
+				if (response.status === 429) message = 'Twitch rate limit reached. Try again later.';
+				return { ok: false, message: message };
+			}
+			addEvent('Synced dock timeout to Twitch: ' + (payload.username || userId) + ' (' + duration + 's)');
+			return { ok: true };
+		} catch (error) {
+			return { ok: false, unconfirmed: true, message: 'No confirmation received from Twitch. Check Twitch before trying again.' };
 		}
 	}
 
