@@ -8,6 +8,21 @@ The deployment workflow runs the same preparation and drift check on its assembl
 Pages payload. Metadata is static HTML: crawlers and link previews do not need to
 execute browser JavaScript. No runtime scripts are added by the generator.
 
+For a separately hosted fork, set the GitHub Actions repository variable
+`SSN_SITE_URL` to its public URL, such as `https://example.org/chat`.
+The Pages workflow otherwise uses the fork's custom `CNAME`, or its GitHub Pages
+URL when the copied `CNAME` still names `socialstream.ninja`. It replaces the
+inherited domain claim in the deployment. Configure a custom domain in GitHub
+Pages before using it.
+
+For another static host, run both builders with `--site-url https://example.org/chat`
+(or set `SSN_SITE_URL` in the build environment). Use the same URL for every pass.
+This sets canonical URLs, language alternates, social previews, structured site
+identity and the sitemap address. Submit that site's `sitemap.xml` in its own
+Search Console property. Crawlers read `robots.txt` only at the domain root;
+for a subdirectory deployment, add its sitemap address to the host's root
+`robots.txt` if you control that file.
+
 - Public docs, Lite, Stream Deck setup, Event Flow guides and the explicit root
   pages in `PUBLIC_ROOT_PAGES` get descriptions, canonical URLs and social cards.
 - Existing descriptive titles and descriptions are retained. Editorial overrides

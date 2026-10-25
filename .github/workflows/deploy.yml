@@ -33,6 +33,47 @@ jobs:
           ref: beta
           path: beta-content
 
+      - name: Configure public website URL
+        env:
+          SSN_SITE_URL: ${{ vars.SSN_SITE_URL }}
+          SSN_REPOSITORY: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import importlib.util
+          import os
+          from pathlib import Path
+          from urllib.parse import urlsplit
+
+          spec = importlib.util.spec_from_file_location('seo', Path(os.environ['GITHUB_REF_NAME'] + '-content/scripts/prepare-pages-seo.py'))
+          seo = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(seo)
+          repository = os.environ['SSN_REPOSITORY']
+          owner, name = repository.split('/')
+          cname_path = Path('main-content/CNAME')
+          cname = cname_path.read_text().strip() if cname_path.is_file() else ''
+          url = os.environ.get('SSN_SITE_URL', '').strip()
+          if not url:
+              if repository == 'steveseguin/social_stream':
+                  url = 'https://socialstream.ninja'
+              elif cname and cname != 'socialstream.ninja':
+                  url = 'https://' + cname
+              else:
+                  url = 'https://' + owner.lower() + '.github.io'
+                  if name.lower() != owner.lower() + '.github.io':
+                      url += '/' + name
+          url = seo.site_url(url)
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              output.write('SSN_SITE_URL=' + url + '\n')
+          # A fork must not inherit the upstream site's custom-domain claim.
+          if repository != 'steveseguin/social_stream':
+              for checkout in ('main-content', 'beta-content'):
+                  target = Path(checkout) / 'CNAME'
+                  if urlsplit(url).hostname.endswith('.github.io'):
+                      target.unlink(missing_ok=True)
+                  else:
+                      target.write_text(urlsplit(url).hostname + '\n')
+          PY
+
       - name: Prepare content
         run: |
           python3 - <<'PY'

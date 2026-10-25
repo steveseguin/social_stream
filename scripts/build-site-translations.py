@@ -11,6 +11,7 @@ import html
 import hashlib
 import importlib.util
 import json
+import os
 import posixpath
 import re
 import sys
@@ -214,7 +215,7 @@ def clean_source(source):
     return LANGUAGE_BLOCK.sub("", source)
 
 
-def language_links(source, source_page, current_page, languages, language="en", base_path="/beta"):
+def language_links(source, source_page, current_page, languages, language="en", base_path="/beta", site_url=ORIGIN):
     """Add a static, keyboard-accessible language menu and reciprocal alternates."""
     source = clean_source(source)
     document = Document(source)
@@ -225,12 +226,12 @@ def language_links(source, source_page, current_page, languages, language="en", 
         relative = posixpath.relpath(page, posixpath.dirname(current_page) or ".")
         current = ' aria-current="true"' if code == language else ""
         links.append('<a class="site-language-link" href="' + relative + '" lang="' + code + '" hreflang="' + code + '"' + current + '>' + labels[code] + '</a>')
-        absolute = ORIGIN + base_path.rstrip("/") + "/" + page
+        absolute = site_url + base_path.rstrip("/") + "/" + page
         if absolute.endswith("/index.html"):
             absolute = absolute[:-len("index.html")]
-        alternates.append('<link rel="alternate" hreflang="' + code + '" href="' + absolute + '">')
+        alternates.append('<link rel="alternate" hreflang="' + code + '" href="' + html.escape(absolute, quote=True) + '">')
         if code == "en":
-            alternates.append('<link rel="alternate" hreflang="x-default" href="' + absolute + '">')
+            alternates.append('<link rel="alternate" hreflang="x-default" href="' + html.escape(absolute, quote=True) + '">')
     summary = '<summary title="' + labels[language] + '"><span aria-hidden="true">🌐 </span><span lang="' + language + '">' + labels[language] + '</span></summary>'
     menu = '<details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore>' + summary + '<div class="site-language-options">' + ''.join(links) + '</div></details>'
     asset = lambda path: posixpath.relpath(path, posixpath.dirname(current_page) or ".")
@@ -278,11 +279,11 @@ def relative_url(value, source_page, localized_page, navigation=False, pages=PAG
     return urlunsplit(("", "", path, url.query, url.fragment))
 
 
-def render(source_page, document, catalog, language=LANGUAGE, pages=PAGES, expanded=False, base_path="/beta", public=False, english_fallback=False):
+def render(source_page, document, catalog, language=LANGUAGE, pages=PAGES, expanded=False, base_path="/beta", public=False, english_fallback=False, site_url=ORIGIN):
     strings = catalog["strings"]
     localized_page = language + "/" + source_page
     english = posixpath.relpath(source_page, posixpath.dirname(localized_page))
-    canonical = ORIGIN + base_path.rstrip("/") + "/" + localized_page
+    canonical = site_url + base_path.rstrip("/") + "/" + localized_page
     if canonical.endswith("/index.html"):
         canonical = canonical[:-len("index.html")]
     changes = []
@@ -308,7 +309,7 @@ def render(source_page, document, catalog, language=LANGUAGE, pages=PAGES, expan
     for start, end, tag, attrs in document.tags:
         raw = document.source[start:end]
         if tag == "link" and attrs.get("rel") == "canonical":
-            changes.append((start, end, '<link rel="canonical" href="' + canonical + '">' if expanded else ""))
+            changes.append((start, end, '<link rel="canonical" href="' + html.escape(canonical, quote=True) + '">' if expanded else ""))
             continue
         if not expanded and tag == "meta" and (attrs.get("name") or attrs.get("property")) in {"og:url", "twitter:url"}:
             changes.append((start, end, ""))
@@ -377,7 +378,7 @@ def render(source_page, document, catalog, language=LANGUAGE, pages=PAGES, expan
     return output
 
 
-def build(root, check=False, extract=False, language=LANGUAGE, pages=None, expanded=False, base_path="/beta", public=False, languages=None, english_fallback=False):
+def build(root, check=False, extract=False, language=LANGUAGE, pages=None, expanded=False, base_path="/beta", public=False, languages=None, english_fallback=False, site_url=ORIGIN):
     pages = tuple(pages or PAGES)
     try:
         catalog = load_catalog(root, language)
@@ -405,9 +406,9 @@ def build(root, check=False, extract=False, language=LANGUAGE, pages=None, expan
     drift = []
     for page, document in documents.items():
         catalog["runtime"] = runtime_keys(root, page, english_fallback)
-        output = render(page, document, catalog, language, pages, expanded, base_path, public, english_fallback)
+        output = render(page, document, catalog, language, pages, expanded, base_path, public, english_fallback, site_url)
         if expanded:
-            output = language_links(output, page, language + "/" + page, languages or (language,), language, base_path)
+            output = language_links(output, page, language + "/" + page, languages or (language,), language, base_path, site_url)
         output = output.encode("utf-8")
         destination = root / language / page
         if not destination.exists() or destination.read_bytes() != output:
@@ -432,11 +433,11 @@ def build(root, check=False, extract=False, language=LANGUAGE, pages=None, expan
             path.write_bytes(data)
 
 
-def publish_english_links(root, pages, languages, base_path, check=False):
+def publish_english_links(root, pages, languages, base_path, check=False, site_url=ORIGIN):
     for page in pages:
         path = root / page
         source = path.read_text(encoding="utf-8")
-        output = language_links(source, page, page, languages, base_path=base_path)
+        output = language_links(source, page, page, languages, base_path=base_path, site_url=site_url)
         if check:
             if source != output:
                 raise ValueError("Language links need rebuilding: " + page)
@@ -453,6 +454,8 @@ if __name__ == "__main__":
     parser.add_argument("--all-pages", action="store_true")
     parser.add_argument("--pages", nargs="+", help="Build selected public pages while preparing a language.")
     parser.add_argument("--base-path", default="/beta", help="URL prefix of the deployment, empty for production.")
+    parser.add_argument("--site-url", default=os.environ.get("SSN_SITE_URL", ORIGIN),
+                        help="Public site URL, including any project subdirectory.")
     parser.add_argument("--public", action="store_true", help="Use production indexability; beta remains noindex by default.")
     parser.add_argument("--languages", nargs="+", choices=LANGUAGES, help="Build and link several complete language editions.")
     parser.add_argument("--publish-links", action="store_true", help="Also generate language menus in the English deployment pages.")
@@ -461,6 +464,11 @@ if __name__ == "__main__":
     parser.add_argument("--record-runtime-sources", action="store_true", help="Save reviewed source hashes after updating dynamic text manifests.")
     args = parser.parse_args()
     try:
+        # Share deployment URL validation with the final SEO pass.
+        seo_spec = importlib.util.spec_from_file_location("pages_seo", Path(__file__).with_name("prepare-pages-seo.py"))
+        seo = importlib.util.module_from_spec(seo_spec)
+        seo_spec.loader.exec_module(seo)
+        args.site_url = seo.site_url(args.site_url)
         root = args.root.resolve()
         if args.record_runtime_sources:
             record_runtime_sources(root)
@@ -477,8 +485,8 @@ if __name__ == "__main__":
                 languages = []
             selected = public_pages(root)
         for language in languages:
-            build(root, args.check, args.extract, language, selected, bool(selected), args.base_path, args.public, languages, args.allow_english_fallback)
+            build(root, args.check, args.extract, language, selected, bool(selected), args.base_path, args.public, languages, args.allow_english_fallback, args.site_url)
         if args.publish_links or args.published:
-            publish_english_links(root, selected or PAGES, languages, args.base_path, args.check)
+            publish_english_links(root, selected or PAGES, languages, args.base_path, args.check, args.site_url)
     except ValueError as error:
         parser.exit(1, str(error) + "\n")
