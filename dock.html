@@ -2838,6 +2838,44 @@
 			right: 100%;
 		}
 
+		#context-menu.context-menu--stacked {
+			box-sizing: border-box;
+			max-width: calc(100vw - 16px);
+			max-height: calc(100vh - 16px);
+			overflow-y: auto;
+			overflow-x: hidden;
+			transform: none;
+		}
+
+		.context-menu--stacked .context-menu__submenu {
+			position: static;
+			width: auto;
+			margin: 0 4px 0 12px;
+			box-shadow: none;
+		}
+
+		.context-menu--stacked .context-menu__item--has-submenu:hover > .context-menu__submenu {
+			display: none;
+		}
+
+		.context-menu--stacked .context-menu__item--expanded > .context-menu__submenu {
+			display: block !important;
+		}
+
+		.context-menu--stacked .context-menu__link {
+			white-space: normal;
+			overflow-wrap: break-word;
+		}
+
+		.context-menu--stacked .context-menu__link:focus {
+			outline: 2px solid #0066aa;
+			outline-offset: -2px;
+		}
+
+		.context-menu--stacked .context-menu__item--expanded > .context-menu__link > span:last-child {
+			transform: rotate(90deg);
+		}
+
 		</style>
 	<link rel="stylesheet" href="dock-questions.css">
 </head>
@@ -13798,12 +13836,19 @@
 					}
 
 					function toggleMenuOn() {
+						menu.classList.remove("context-menu--stacked");
+						menu.querySelectorAll(".context-menu__item--has-submenu").forEach(function (item) {
+							item.classList.remove("context-menu__item--expanded");
+							item.querySelector("a").removeAttribute("aria-expanded");
+						});
+						menu.scrollTop = 0;
 						if (menuState !== 1) {
 							updateBlockUserMenuState();
 							updateCohostContextMenuState();
 							menuState = 1;
 							menu.classList.add("context-menu--active");
 							document.addEventListener("click", menuClickListener);
+							window.addEventListener("resize", resizeMenu);
 							
 							const scale = Math.min(1, window.innerHeight / menu.scrollHeight);
 							if (scale){
@@ -13818,6 +13863,7 @@
 							menuState = 0;
 							menu.classList.remove("context-menu--active");
 							document.removeEventListener("click", menuClickListener);
+							window.removeEventListener("resize", resizeMenu);
 						}
 						lastMenu = false;
 					}
@@ -13832,6 +13878,7 @@
 					}
 
 					function positionMenu(e) {
+						menu.classList.remove("context-menu--stacked");
 						var clickCoords = getPosition(e);
 						clickCoordsX = clickCoords.x;
 						clickCoordsY = clickCoords.y;
@@ -13857,13 +13904,71 @@
 							offset = -10;
 						}
 						menu.style.bottom = offset + "px";
+
+						// Include nested flyouts when deciding whether the existing layout fits.
+						var submenuWidth = 0;
+						menu.querySelectorAll(".context-menu__submenu").forEach(function (submenu) {
+							if (submenu.closest(".hidden")) return;
+							var width = 0;
+							for (var current = submenu; current; current = current.parentElement.closest(".context-menu__submenu")) {
+								var style = getComputedStyle(current);
+								width += parseFloat(style.width) || 0;
+								if (style.boxSizing !== "border-box") {
+									width += (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0)
+										+ (parseFloat(style.borderLeftWidth) || 0) + (parseFloat(style.borderRightWidth) || 0);
+								}
+							}
+							submenuWidth = Math.max(submenuWidth, width);
+						});
+						var rect = menu.getBoundingClientRect();
+						var room = menu.classList.contains("context-menu--left") ? rect.left : windowWidth - rect.right;
+						if (rect.left < 0 || rect.right > windowWidth || room < submenuWidth * rect.width / menu.offsetWidth + 8) {
+							menu.classList.add("context-menu--stacked");
+							menu.style.left = Math.max(8, Math.min(clickCoordsX, windowWidth - menu.offsetWidth - 8)) + "px";
+							positionStackedMenu();
+							menu.querySelectorAll(".context-menu__item--has-submenu").forEach(function (item) {
+								item.querySelector("a").setAttribute("aria-expanded", item.classList.contains("context-menu__item--expanded") ? "true" : "false");
+							});
+						} else {
+							menu.querySelectorAll(".context-menu__item--has-submenu > a").forEach(function (link) {
+								link.removeAttribute("aria-expanded");
+							});
+						}
 					}
+
+					function positionStackedMenu() {
+						menu.style.bottom = "auto";
+						menu.style.top = Math.max(8, Math.min(clickCoordsY, window.innerHeight - menu.offsetHeight - 8)) + "px";
+					}
+
+					function resizeMenu() {
+						positionMenu({ pageX: clickCoordsX, pageY: clickCoordsY });
+					}
+
+					menu.addEventListener("keydown", function (e) {
+						if (!menu.classList.contains("context-menu--stacked")) return;
+						if (e.key === "Escape") {
+							toggleMenuOff();
+						} else if (e.key === "Enter" || e.key === " ") {
+							var item = e.target.closest(".context-menu__item");
+							if (!item) return;
+							e.preventDefault();
+							e.stopPropagation();
+							menuItemListener(item);
+						}
+					});
 
 					async function menuItemListener(link) {
 						var action = link.getAttribute("data-action");
 						var actionItem = link.classList && link.classList.contains("context-menu__item") ? link : link.parentNode;
 						if (actionItem && actionItem.classList && actionItem.classList.contains("context-menu__item--disabled")) {
 							showCohostSetupStatus();
+							return;
+						}
+						if (menu.classList.contains("context-menu--stacked") && actionItem && actionItem.classList.contains("context-menu__item--has-submenu")) {
+							var expanded = actionItem.classList.toggle("context-menu__item--expanded");
+							actionItem.querySelector("a").setAttribute("aria-expanded", expanded ? "true" : "false");
+							positionStackedMenu();
 							return;
 						}
 						if (action === "Delete") {
