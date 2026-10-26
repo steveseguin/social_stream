@@ -2704,6 +2704,23 @@
 		return "";
 	}
 
+	function getTikTokTeamMemberLevel(ele) {
+		try {
+			var level = null;
+			if (typeof window.__ssnReadTikTokTeamLevel === 'function') {
+				level = window.__ssnReadTikTokTeamLevel(ele);
+			} else {
+				ele.removeAttribute('data-ssn-tiktok-team-level');
+				ele.dispatchEvent(new CustomEvent('ssn-read-tiktok-team-level', { bubbles: true }));
+				level = ele.getAttribute('data-ssn-tiktok-team-level');
+				ele.removeAttribute('data-ssn-tiktok-team-level');
+			}
+			if (typeof level === 'string' && /^\d+$/.test(level.trim())) level = Number(level.trim());
+			if (typeof level === 'number' && Number.isSafeInteger(level) && level >= 0) return level;
+		} catch (e) {}
+		return null;
+	}
+
 	function processMessage(ele) {
 		// TikTok reuses DOM elements, so dataset.skip must never decide whether a chat message is new.
 		if (!ele || !ele.isConnected) return;
@@ -3075,7 +3092,11 @@
 		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "tiktok";
-		if (nativeMessageId) data.meta = { messageId: nativeMessageId };
+		if (nativeMessageId) {
+			data.meta = { messageId: nativeMessageId };
+			var teamMemberLevel = getTikTokTeamMemberLevel(ele);
+			if (teamMemberLevel !== null) data.meta.teamMemberLevel = teamMemberLevel;
+		}
 		data.event = ital;
 		if (data.event && typeof data.nameColor === "string") {
 			const normalizedColor = data.nameColor.trim().toLowerCase();

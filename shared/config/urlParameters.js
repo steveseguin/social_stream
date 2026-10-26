@@ -2324,6 +2324,16 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
         ]
       },
       {
+        "title": "Edge Natural TTS Parameters",
+        "slug": "edge-natural-tts-parameters",
+        "description": "Select ttsprovider=edge and keep the SSApp desktop app open in the same session. Speech text is sent to Microsoft.",
+        "items": [
+          { "key": "voiceedge", "displayName": "voiceedge", "aliases": ["voiceedge"], "values": "voice name", "description": "Edge voice, such as es-ES-ElviraNeural. Select a voice in SSApp to see the available names." },
+          { "key": "edgerate", "displayName": "edgerate", "aliases": ["edgerate"], "values": "0.5 to 2", "description": "Speech speed; default 1." },
+          { "key": "edgepitch", "displayName": "edgepitch", "aliases": ["edgepitch"], "values": "-100 to 100", "description": "Pitch adjustment in Hz; default 0." }
+        ]
+      },
+      {
         "title": "OpenAI-Compatible and Custom TTS Parameters",
         "slug": "openai-compatible-and-custom-tts-parameters",
         "description": "",

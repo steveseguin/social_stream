@@ -53,6 +53,13 @@
             overflow: hidden;
             pointer-events: none;
             z-index: -1;
+            /* Shards only appear behind a featured message unless &ambient is set. */
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        body.featured-active .glass-shards, body.ambient .glass-shards {
+            opacity: 1;
         }
 
         .shard {
@@ -565,6 +572,7 @@
         
         // Apply selected style
         document.body.className = `style-${style}`;
+        if (urlParams.has('ambient')) document.body.classList.add('ambient');
 
         // Create floating glass shards
         const shardsContainer = document.querySelector('.glass-shards');
@@ -784,6 +792,7 @@
                 // Trigger animation
                 requestAnimationFrame(() => {
                     wrapper.classList.add('show');
+                    document.body.classList.add('featured-active');
                 });
 
                 currentMessage = wrapper;
@@ -815,6 +824,7 @@
             if (currentMessage) {
                 currentMessage.classList.remove('show');
                 currentMessage.classList.add('hide');
+                document.body.classList.remove('featured-active');
                 setTimeout(() => {
                     if (currentMessage && currentMessage.parentNode) {
                         currentMessage.parentNode.removeChild(currentMessage);

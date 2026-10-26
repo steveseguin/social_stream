@@ -19,7 +19,7 @@ ORIGIN = "https://socialstream.ninja"
 BRAND = "Social Stream Ninja"
 LANGUAGE_LOCALES = {"es": "es_ES", "pt-br": "pt_BR", "ru": "ru_RU", "fr": "fr_FR", "de": "de_DE",
                     "ja": "ja_JP", "zh-cn": "zh_CN", "zh-tw": "zh_TW", "it": "it_IT", "pl": "pl_PL",
-                    "ko": "ko_KR", "uk": "uk_UA", "ar": "ar_AR", "tr": "tr_TR", "cs": "cs_CZ", "th": "th_TH"}
+                    "ko": "ko_KR", "uk": "uk_UA", "ar": "ar_AR", "tr": "tr_TR", "cs": "cs_CZ", "th": "th_TH", "et": "et_EE"}
 PUBLIC_ROOT_PAGES = {
     "index.html", "landing.html", "beta.html", "fonts.html", "privacy.html",
     "TOS.html", "streamelements-importer.html", "streamerbot.html",
@@ -42,6 +42,8 @@ class PageHead(HTMLParser):
         self.html_tag = self.head_start = self.head_end = None
         self.title = self.title_start = None
         self.tags = []
+        self.json_start = None
+        self.json_blocks = []
         self.feed(source)
 
     def source_position(self):
@@ -62,12 +64,17 @@ class PageHead(HTMLParser):
             self.tags.append((start, end, tag, attrs))
         elif tag == "title" and self.title_start is None:
             self.title_start = (start, end)
+        elif tag == "script" and attrs.get("type", "").lower() == "application/ld+json":
+            self.json_start = end
 
     def handle_endtag(self, tag):
         if self.head_start is None or self.head_end is not None:
             return
         if tag == "head":
             self.head_end = self.source_position()
+        elif tag == "script" and self.json_start is not None:
+            self.json_blocks.append((self.json_start, self.source_position()))
+            self.json_start = None
         elif tag == "title" and self.title_start is not None and self.title is None:
             start, content_start = self.title_start
             content_end = self.source_position()
@@ -97,13 +104,24 @@ def is_public(relative):
     return relative.parent.as_posix() == "actions" and relative.name.endswith("-guide.html")
 
 
-def canonical_url(relative):
+def site_url(value):
+    """Accept a deployment URL, including a GitHub Pages project subdirectory."""
+    url = urlsplit(value)
+    if (url.scheme not in {"https", "http"} or not url.hostname or url.username or
+            url.password or url.query or url.fragment or
+            re.search(r'[\s<>"\\]', value) or
+            any(part in {".", ".."} for part in unquote(url.path).split("/"))):
+        raise ValueError("Site URL must be an absolute HTTP(S) URL without credentials, query or fragment.")
+    return value.rstrip("/")
+
+
+def canonical_url(relative, base_url=ORIGIN):
     path = ALIASES.get(relative.as_posix(), relative.as_posix())
     if path == "index.html":
         path = ""
     elif path.endswith("/index.html"):
         path = path[:-len("index.html")]
-    return ORIGIN + "/" + quote(path, safe="/")
+    return base_url + "/" + quote(path, safe="/")
 
 
 def local_asset(root, page, href):
@@ -150,7 +168,7 @@ def description_for(relative, title, head):
     return f"{subject}. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions."
 
 
-def prepare_page(root, path):
+def prepare_page(root, path, base_url=ORIGIN):
     relative = path.relative_to(root)
     beta = relative.parts[0] == "beta"
     logical = Path(*relative.parts[1:]) if beta else relative
@@ -196,10 +214,26 @@ def prepare_page(root, path):
         meta("robots", ", ".join(dict.fromkeys(directives)))
     elif not head.meta("robots"):
         meta("robots", "index, follow, max-image-preview:large")
-    canonical = canonical_url(logical)
-    if language and head.links("canonical"):
-        canonical = head.links("canonical")[0][3]["href"]
+    canonical = canonical_url(logical, base_url)
+    if language and beta:
+        canonical = canonical_url(relative, base_url)
     replace_tags(head.links("canonical"), '<link rel="canonical" href="' + html.escape(canonical, quote=True) + '">' if public else "")
+
+    # Rebase site identity in structured data without changing application URLs.
+    if public and base_url != ORIGIN:
+        def rebase(value):
+            if isinstance(value, str) and (value == ORIGIN or value.startswith(ORIGIN + "/")):
+                return base_url + value[len(ORIGIN):]
+            if isinstance(value, list):
+                return [rebase(item) for item in value]
+            if isinstance(value, dict):
+                return {key: rebase(item) for key, item in value.items()}
+            return value
+        for start, end in head.json_blocks:
+            data = json.loads(source[start:end])
+            updated = rebase(data)
+            if updated != data:
+                changes.append((start, end, "\n" + json.dumps(updated, ensure_ascii=False, indent=4).replace("<", "\\u003c") + "\n"))
 
     icons = head.links("icon")
     for start, end, tag, attrs in icons:
@@ -222,7 +256,7 @@ def prepare_page(root, path):
         for key, value in {
             "og:type": "website", "og:site_name": BRAND, "og:locale": LANGUAGE_LOCALES.get(language, "en_US"),
             "og:url": canonical, "og:title": title, "og:description": description,
-            "og:image": ORIGIN + "/media/logo.png", "og:image:width": "1024",
+            "og:image": base_url + "/media/logo.png", "og:image:width": "1024",
             "og:image:height": "1024", "og:image:alt": head.meta("og:image:alt")[0][3]["content"] if language and head.meta("og:image:alt") else "Social Stream Ninja logo",
         }.items():
             meta(key, value, "property")
@@ -230,7 +264,7 @@ def prepare_page(root, path):
         for key, value in {
             "twitter:card": "summary", "twitter:url": canonical,
             "twitter:title": title, "twitter:description": description,
-            "twitter:image": ORIGIN + "/media/logo.png",
+            "twitter:image": base_url + "/media/logo.png",
             "twitter:image:alt": head.meta("twitter:image:alt")[0][3]["content"] if language and head.meta("twitter:image:alt") else "Social Stream Ninja logo",
         }.items():
             meta(key, value)
@@ -268,12 +302,13 @@ def sitemap(records):
     return "\n".join(lines + ["</urlset>", ""])
 
 
-def prepare(root, check=False):
+def prepare(root, check=False, base_url=ORIGIN):
+    base_url = site_url(base_url)
     records, changed = [], []
     for path in sorted(root.rglob("*.html")):
         if not eligible(path.relative_to(root)):
             continue
-        updated, record = prepare_page(root, path)
+        updated, record = prepare_page(root, path, base_url)
         if record:
             records.append(record)
         if updated.encode("utf-8") != path.read_bytes():
@@ -286,6 +321,17 @@ def prepare(root, check=False):
         changed.append("sitemap.xml")
         if not check:
             sitemap_path.write_bytes(output)
+    robots_path = root / "robots.txt"
+    if robots_path.is_file():
+        original = robots_path.read_bytes()
+        robots = original.decode("utf-8")
+        # Keep crawler rules and any additional sitemaps authored by the host.
+        robots = re.sub(r"(?im)^Sitemap:[ \t]*https?://[^\s]+/sitemap\.xml[ \t]*(\r?)$",
+                        lambda match: "Sitemap: " + base_url + "/sitemap.xml" + match[1], robots, count=1)
+        if robots.encode("utf-8") != original:
+            changed.append("robots.txt")
+            if not check:
+                robots_path.write_bytes(robots.encode("utf-8"))
     return changed, records
 
 
@@ -293,11 +339,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--check", action="store_true", help="Check for drift without modifying files.")
+    parser.add_argument("--site-url", default=os.environ.get("SSN_SITE_URL", ORIGIN),
+                        help="Public site URL, including any project subdirectory.")
     args = parser.parse_args()
     root = args.root.resolve()
     if not root.is_dir():
         parser.error(f"root does not exist: {root}")
-    changed, records = prepare(root, args.check)
+    try:
+        changed, records = prepare(root, args.check, args.site_url)
+    except ValueError as error:
+        parser.error(str(error))
     counts = Counter("indexable" if r["indexable"] else "noindex" for r in records)
     print(f"Checked {len(records)} pages: {counts['indexable']} indexable, {counts['noindex']} noindex.")
     print(f"{'Need updating' if args.check else 'Updated'}: {len(changed)} files (including sitemap).")

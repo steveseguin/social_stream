@@ -307,11 +307,13 @@ img.ssn-content-image { display: inline-block; width: 3em; height: 1.3em; margin
     // Content images are separate from chat text (including GIF-only messages).
     function appendContentImage(container, data) {
         if (typeof data.contentimg !== 'string' || !data.contentimg.trim()) return;
+        const src = sanitizeRelayUrl(data.contentimg, true);
+        if (!src) return;
         const img = document.createElement('img');
         img.className = 'ssn-content-image';
         img.alt = (data.meta && data.meta.gifLabel) || 'Content image';
         img.onerror = function () { this.style.display = 'none'; };
-        img.src = data.contentimg;
+        img.src = src;
         container.appendChild(img);
     }
 
@@ -325,7 +327,7 @@ img.ssn-content-image { display: inline-block; width: 3em; height: 1.3em; margin
         if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg) { return; }
         if (!data.chatname && data.meta && !data.chatmessage && !data.contentimg && !data.hasDonation && !data.donation && !data.contentimg) { return; }
 
-        var nameColor = data.nameColor;
+        var nameColor = sanitizeRelayCssColor(data.nameColor);
         if (!nameColor && typeof getColorFromType === "function" && data.type) {
             try { nameColor = getColorFromType(data.type); } catch (e) {}
         }
@@ -336,7 +338,7 @@ img.ssn-content-image { display: inline-block; width: 3em; height: 1.3em; margin
         if (data.event) { item.className += " event"; }
 
         var iconHtml = (!hideIcon && data.type)
-            ? "<img class='source-icon' src='https://socialstream.ninja/sources/images/" + data.type + ".png' alt='' onerror=\"this.style.display='none'\">" : "";
+            ? "<img class='source-icon' src='https://socialstream.ninja/sources/images/" + String(data.type).replace(/[^a-zA-Z0-9_-]/g, "") + ".png' alt='' onerror=\"this.style.display='none'\">" : "";
         var badgesHtml = buildBadges(data);
         var nameHtml = (!hideNames && data.chatname)
             ? "<span class='name' style='color:" + nameColor + "'>" + escapeHtml(data.chatname) + "</span>" : "";

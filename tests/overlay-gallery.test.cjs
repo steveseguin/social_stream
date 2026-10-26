@@ -12,9 +12,16 @@ for(const entry of catalog) {
     collections.get(entry.collection).add(entry.category);
   }
   assert(!ids.has(entry.id),'Duplicate gallery ID');ids.add(entry.id);
-  assert(['chat','featured','alerts'].includes(entry.category));
+  assert(['chat','featured','alerts','widgets'].includes(entry.category));
+  assert(!entry.tier||entry.tier==='community','Unknown tier: '+entry.tier);
   assert(fs.existsSync(path.join(root,entry.path.split('?')[0])),entry.path);
-  for(const image of [entry.image,entry.image.replace('.webp','-thumb.webp')]) {
+  const variants=entry.variants||[];
+  if(variants.length) {
+    assert(variants.length>1,'Single variant: '+entry.id);
+    assert.strictEqual(variants[0].path,entry.path,'First variant must match the card: '+entry.id);
+    variants.forEach(variant=>{assert(variant.label&&variant.path.split('?')[0]===entry.path.split('?')[0],'Variant page: '+entry.id);paths.add(variant.path);});
+  }
+  for(const image of [entry.image,...variants.map(v=>v.image)].flatMap(image=>[image,image.replace('.webp','-thumb.webp')])) {
     const file=path.join(root,'docs',image);
     assert(fs.existsSync(file),'Missing '+image);
     assert(fs.statSync(file).size>100,'Empty '+image);
@@ -34,5 +41,7 @@ for(const id of ['overlay-preset-select','featured-preset-select']) {
   }
 }
 assert.strictEqual((read('docs/overlay-gallery.html').match(/class="gallery-card"/g)||[]).length,catalog.length);
+assert.strictEqual((read('docs/overlay-gallery.html').match(/class="gallery-variant"/g)||[]).length,catalog.filter(e=>e.variants).length);
+for(const kind of new Set(catalog.map(e=>e.category)))assert(read('docs/overlay-gallery.html').includes('data-category="'+kind+'"'),'Missing filter: '+kind);
 for(const page of ['index.html','docs/index.html','docs/templates.html','themes/index.html'])assert(read(page).includes('overlay-gallery.html'),page+' discovery link');
 console.log('PASS '+catalog.length+' gallery entries, screenshot pairs, preset coverage and navigation');

@@ -359,12 +359,12 @@ img.ssn-content-image {
 			}
 			// Content images are separate from chat text (including GIF-only messages).
 			function appendContentImage(container, data) {
-				if (typeof data.contentimg !== 'string' || !data.contentimg.trim()) return;
+				if (typeof data.contentimg !== 'string' || !sanitizeRelayUrl(data.contentimg, true)) return;
 				const img = document.createElement('img');
 				img.className = 'ssn-content-image';
 				img.alt = (data.meta && data.meta.gifLabel) || 'Content image';
 				img.onerror = function () { this.style.display = 'none'; };
-				img.src = data.contentimg;
+				img.src = sanitizeRelayUrl(data.contentimg, true);
 				container.appendChild(img);
 			}
 
@@ -411,11 +411,12 @@ img.ssn-content-image {
 
 				let nameStyle = "";
 				if (data.nameColor) {
-					nameStyle = `style="color:${data.nameColor}"`;
+					nameStyle = sanitizeRelayCssColor(data.nameColor) ? `style="color:${sanitizeRelayCssColor(data.nameColor)}"` : "";
 				}
 
+				const avatarSrc = data.chatimg ? sanitizeRelayUrl(data.chatimg, true) : "";
 				usernameBox.innerHTML = `
-            ${data.chatimg ? `<img src="${escapeHtml(data.chatimg)}" class="avatar" alt="${escapeHtml(data.chatname)}'s avatar">` : ""}
+            ${avatarSrc ? `<img src="${escapeHtml(avatarSrc)}" class="avatar" alt="${escapeHtml(data.chatname)}'s avatar">` : ""}
             ${sourceIcon}
             <span class="username">${escapeHtml(data.chatname)}</span>
             <span class="badges">${chatbadges}</span>
@@ -433,7 +434,7 @@ img.ssn-content-image {
 
 					let textStyle = "";
 					if (data.textColor) {
-						textStyle = `style="color:${data.textColor}"`;
+						textStyle = `style="color:${sanitizeRelayCssColor(data.textColor)}"`;
 					}
 
 					// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.

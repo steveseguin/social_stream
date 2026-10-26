@@ -921,29 +921,36 @@ p a {
 }
 
 #importantChanges.beginner-welcome {
-    padding: 0.75em 1em;
+    padding: 10px 12px;
     background: var(--color-accent-subtle);
     color: var(--default-text-color);
     border-bottom: 1px solid rgba(0, 166, 255, 0.45);
 }
 
+/* Title, one line of explanation, then the action: stacked so nothing runs together. */
 #importantChanges.beginner-welcome .beginner-welcome-card {
     max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
 }
 
 #importantChanges.beginner-welcome strong {
     display: block;
-    margin-bottom: 2px;
+    font-size: 13px;
 }
 
 #importantChanges.beginner-welcome small {
-    display: inline;
+    display: block;
+    font-size: 12px;
+    line-height: 1.4;
     color: var(--default-text-color);
 }
 
 #importantChanges.beginner-welcome button {
-    margin-left: 8px;
-    padding: 2px 8px;
+    margin: 0;
+    padding: 4px 10px;
     border-radius: 4px;
     border: 1px solid #0969da;
     background: #0969da;
@@ -2537,6 +2544,15 @@ input:checked + .slider:before {
             <button type="button" id="customizePanel" class="popup-icon-button showalways" aria-haspopup="dialog" title="Customize panel" aria-label="Customize panel"><span aria-hidden="true">🔧</span></button>
             <button type="button" id="languageIcon" class="popup-icon-button showalways" title="Select language" aria-label="Select language">🌐</button>
             <div id="panelPreviewNotice" hidden role="status"><span id="panelPreviewText"></span> <button type="button" id="hidePanelPreview" class="popup-secondary-button showalways" data-translate="hide-again">Hide again</button></div>
+            <!-- Each tab lists the data-panel-section IDs it shows; unlisted sections fall back to the last tab. -->
+            <div id="popupTabs" role="tablist" aria-label="Feature categories">
+                <button type="button" role="tab" id="popup-tab-chat" class="popup-tab showalways" data-popup-tab-sections="dock chatoverlaytemplate overlay"><span class="popup-tab-icon" aria-hidden="true">💬</span><span data-translate="popup-tab-chat">Chat</span></button>
+                <button type="button" role="tab" id="popup-tab-alerts" class="popup-tab showalways" data-popup-tab-sections="multialerts eventsdashboard hypemeter reactions emoteswall ticker credits"><span class="popup-tab-icon" aria-hidden="true">🚨</span><span data-translate="popup-tab-alerts">Alerts</span></button>
+                <button type="button" role="tab" id="popup-tab-interactive" class="popup-tab showalways" data-popup-tab-sections="poll giveaway waitlist games wordcloud map leaderboard scoreboard custom-gif-commands timer spotify"><span class="popup-tab-icon" aria-hidden="true">🎮</span><span data-translate="popup-tab-interactive">Interactive</span></button>
+                <button type="button" role="tab" id="popup-tab-money" class="popup-tab showalways" data-popup-tab-sections="tipjar monetization meta"><span class="popup-tab-icon" aria-hidden="true">💰</span><span data-translate="popup-tab-money">Money</span></button>
+                <button type="button" role="tab" id="popup-tab-bots" class="popup-tab showalways" data-popup-tab-sections="ai flowactions"><span class="popup-tab-icon" aria-hidden="true">🤖</span><span data-translate="popup-tab-bots">Bots &amp; AI</span></button>
+                <button type="button" role="tab" id="popup-tab-settings" class="popup-tab showalways" data-popup-tab-sections="global"><span class="popup-tab-icon" aria-hidden="true">🧰</span><span data-translate="popup-tab-settings">Settings</span></button>
+            </div>
         </div>
         <dialog id="panelEditor" class="popup-settings-panel" aria-labelledby="panelEditorTitle" aria-describedby="panelEditorDescription">
             <h2 id="panelEditorTitle" data-translate="customize-panel">Customize panel</h2>
@@ -2580,6 +2596,7 @@ input:checked + .slider:before {
                 <option value="">Default</option>
                 <option value="de" title="German">German</option>
                 <option value="es" title="Spanish">Spanish</option>
+                <option value="et">Eesti</option>
                 <option value="fr" title="French">Français</option>
                 <option value="en-uk">English</option>
                 <option value="en-us">American</option>
@@ -2799,12 +2816,12 @@ input:checked + .slider:before {
                                     </label>
                                     <span>🎨 Custom viewer bar background color</span>
                                 </div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+								<div class="colorInputRow">
 									<div class="textInputContainer" style="width: 95%;" title="Examples: #0009, #1f2937cc, rgba(0,0,0,0.65)">
 										<input type="text" id="dock_viewerbarbg" class="textInput instant" autocomplete="off" placeholder="e.g. #0009 or rgba(0,0,0,0.65)" data-textparam1="viewerbarbg" data-palette="dock_viewerbarbg_palette" />
-										<label for="dock_viewerbarbg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Viewer bar background color</label>
+										<label id="dock_viewerbarbg_label" for="dock_viewerbarbg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Viewer bar background color</label>
 									</div>
-									<input type="color" data-color="dock_viewerbarbg" id="dock_viewerbarbg_palette" class="colorPicker" title="Pick a viewer bar background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="dock_viewerbarbg_label" data-color="dock_viewerbarbg" id="dock_viewerbarbg_palette" class="colorPicker" title="Pick a viewer bar background color" />
 								</div>
 
                                 <div title="Another Social Stream page MUST be added to OBS with page permissions set to 'Read access to user information' or higher." data-keywords="obs remote scene indicator status corner preview permissions">
@@ -3448,20 +3465,22 @@ input:checked + .slider:before {
 
 						<div class="tts-provider-selection" style="margin:0 10px 10px 10px">
 							<h3><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-service-provider">Text-to-Speech Service Provider</span></h3>
-							<select id="ttsProvider" data-optionparam1="ttsprovider" data-optionsetting="ttsProvider" class="textInput">
-								<option selected value="system">System TTS</option>
-								<option value="kokoro">Kokoro (webGPU/CPU)</option>
-								<option value="kitten">Kitten TTS (browser-based)</option>
-									<option value="elevenlabs">ElevenLabs</option>
-									<option value="google">Google Cloud</option>
-									<option value="gemini">Gemini (Preview TTS)</option>
-								<option value="fish">Fish Audio</option>
-								<option value="speechify">Speechify</option>
-								<option value="openai">OpenAI</option>
-								<option value="customtts">Custom / Local TTS Endpoint</option>
-								<option value="piper">Piper TTS</option>
-								<option value="espeak">eSpeak TTS</option>
+							<select aria-describedby="ttsProviderHelp" id="ttsProvider" data-optionparam1="ttsprovider" data-optionsetting="ttsProvider" class="textInput">
+								<option selected value="system" title="Voices and languages depend on your browser and installed system voices. Some browser voices use an online service.">System TTS &mdash; Free &middot; Device/browser &middot; Languages vary</option>
+								<option value="kokoro">Kokoro &mdash; Free &middot; Local &middot; Many languages</option>
+								<option value="kitten">Kitten TTS &mdash; Free &middot; Local &middot; English only</option>
+									<option value="elevenlabs" title="Requires an API key. Free usage is limited; voice access and languages depend on your plan and model.">ElevenLabs &mdash; Free tier / paid &middot; Online &middot; Many languages</option>
+									<option value="google" title="Requires an API key and billing setup. Free quotas depend on the voice type; usage above the quota is billed.">Google Cloud &mdash; Free quota / paid &middot; Online &middot; Many languages</option>
+									<option value="gemini" title="Requires an API key. Some TTS models have a limited free tier; other models require paid access.">Gemini TTS &mdash; Free tier / paid &middot; Online &middot; Many languages</option>
+								<option value="fish" title="Requires an API key. Choose s2.1-pro-free for free speech; other models may charge for usage.">Fish Audio &mdash; Free model / paid &middot; Online &middot; Many languages</option>
+								<option value="speechify" title="Requires an API key. Trial credits may be available; languages depend on the model.">Speechify &mdash; Paid &middot; Online &middot; Many languages</option>
+								<option value="openai" title="The OpenAI service charges for API usage. Languages depend on the model.">OpenAI &mdash; Paid &middot; Online &middot; Many languages</option>
+								<option value="customtts" title="Your server determines the cost, whether speech runs locally or online, and the supported languages.">Custom / Local TTS Endpoint &mdash; Depends on your server</option>
+								<option value="piper">Piper TTS &mdash; Free &middot; Local &middot; Many languages</option>
+								<option value="espeak">eSpeak TTS &mdash; Free &middot; Local &middot; Many languages</option>
+								<option value="edge" disabled title="Requires the SSApp desktop app and an internet connection. Choose a voice for your language.">Edge Natural (desktop app) &mdash; Free &middot; Online &middot; Many languages</option>
 							</select>
+							<p id="ttsProviderHelp" class="tts-provider-help"><small>Local: speech runs on your computer; models may download first. Many languages: choose a matching voice or model. Online free tiers have usage limits.</small></p>
 							<div class="tts-name-option" data-keywords="read sender name chatname message only simpletts2">
 								<input type="checkbox" data-param1="simpletts2" hidden />
 								<label class="switch">
@@ -3475,6 +3494,23 @@ input:checked + .slider:before {
 
 						<div id="ttsButton" class="hidden"></div>
 
+						<div class="tts-provider-options options_group hidden" id="edgeTTS">
+							<h4>Edge Natural voices</h4>
+							<p>Free online voices. Keep SSApp open. Speech text is sent to Microsoft; no API key or voice installation is needed.</p>
+							<div class="textInputContainer"><label for="edgeVoiceSelect">Voice</label>
+							<select id="edgeVoiceSelect" data-optionparam1="voiceedge" class="textInput popup-reviewed-control">
+							<option value="en-US-EmmaMultilingualNeural">English (US) — Emma</option>
+							<option value="es-ES-ElviraNeural">Spanish (Spain) — Elvira</option>
+							<option value="es-ES-AlvaroNeural">Spanish (Spain) — Alvaro</option>
+							<option value="es-MX-DaliaNeural">Spanish (Mexico) — Dalia</option>
+							<option value="es-MX-JorgeNeural">Spanish (Mexico) — Jorge</option>
+							</select></div>
+							<div class="textInputContainer"><label for="edgeRateSelect">Speed</label>
+							<select id="edgeRateSelect" data-optionparam1="edgerate" class="textInput popup-reviewed-control">
+							<option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div>
+							<button type="button" class="edge-voices-refresh" data-section="">Load all voices</button>
+							<p id="edgeVoiceStatus" role="status"></p>
+						</div>
 						<div class="tts-provider-options options_group" id="systemTTS">
 							<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-system-options">Built-in System TTS Options</span></h4>
 							<i>note: the free built-in TTS plays out via the default audio device. <a class="lightblue" target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
@@ -3699,6 +3735,7 @@ input:checked + .slider:before {
 								</label>
 								<select id="googleLanguageSelect" data-optionparam1="googlelang">
 									<option value="en-US">English (US)</option>
+									<option value="et-EE">Estonian (Eesti)</option>
 									<option value="en-GB">English (UK)</option>
 									<option value="en-AU">English (Australia)</option>
 									<option value="es-ES">Spanish (Spain)</option>
@@ -4083,6 +4120,7 @@ input:checked + .slider:before {
 								<select id="espeakVoiceSelect" data-optionparam1="espeakvoice" title="Select the eSpeak TTS Voice">
 									<option value="en" selected>English</option>
 									<option value="es">Spanish</option>
+									<option value="et">Estonian (Eesti)</option>
 									<option value="pt-br">Portuguese Brazil</option>
 									<option value="pt-pt">Portuguese Portugal</option>
 								</select>
@@ -4576,12 +4614,12 @@ input:checked + .slider:before {
 									</label>
 									<label for="dock_reply_color_enabled" id="dock_reply_color_label"><span class="popup-control-icon" aria-hidden="true">↩️</span>Custom quoted reply text color</label>
 								</div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-									<div class="textInputContainer" style="flex:1; margin-right:5px;">
+								<div class="colorInputRow">
+									<div class="textInputContainer">
 										<input type="text" id="dock_reply_color" class="textInput instant" autocomplete="off" placeholder="Default: #a8b3cf" data-textparam1="replycolor" data-palette="dock_reply_color_palette" />
 										<label for="dock_reply_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Quoted reply text color</label>
 									</div>
-									<input type="color" data-color="dock_reply_color" id="dock_reply_color_palette" value="#a8b3cf" class="colorPicker" title="Pick a quoted reply text color" aria-label="Pick a quoted reply text color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" data-color="dock_reply_color" id="dock_reply_color_palette" value="#a8b3cf" class="colorPicker" title="Pick a quoted reply text color" aria-label="Pick a quoted reply text color" />
 								</div>
 								<div class="popup-toggle-row" title="Give the 'Replying to name:' label its own color when the source identifies it. The quoted message keeps its separate color." data-keywords="reply replying to name author label header color white">
 									<label class="switch">
@@ -4590,43 +4628,44 @@ input:checked + .slider:before {
 									</label>
 									<label for="dock_reply_label_color_enabled" id="dock_reply_label_color_label"><span class="popup-control-icon" aria-hidden="true">↩️</span>Custom "Replying to name" color</label>
 								</div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-									<div class="textInputContainer" style="flex:1; margin-right:5px;">
+								<div class="colorInputRow">
+									<div class="textInputContainer">
 										<input type="text" id="dock_reply_label_color" class="textInput instant" autocomplete="off" placeholder="Default: #ffffff" data-textparam1="replylabelcolor" data-palette="dock_reply_label_color_palette" />
 										<label for="dock_reply_label_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; "Replying to name" color</label>
 									</div>
-									<input type="color" data-color="dock_reply_label_color" id="dock_reply_label_color_palette" value="#ffffff" class="colorPicker" title="Pick a replying-to name color" aria-label="Pick a replying-to name color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" data-color="dock_reply_label_color" id="dock_reply_label_color_palette" value="#ffffff" class="colorPicker" title="Pick a replying-to name color" aria-label="Pick a replying-to name color" />
 								</div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-									<div class="textInputContainer" style="flex:1; margin-right:5px;">
+								<div class="colorInputRow">
+									<div class="textInputContainer">
 										<input type="text" id="dock_font_color" class="textInput instant" autocomplete="off" placeholder="e.g. #ffffff" data-textparam1="fontcolor" data-palette="dock_font_color_palette" />
-										<label for="dock_font_color"><span class="popup-control-icon" aria-hidden="true">🔤</span>&gt; Message font color</label>
+										<label id="dock_font_color_label" for="dock_font_color"><span class="popup-control-icon" aria-hidden="true">🔤</span>&gt; Message font color</label>
 									</div>
-									<input type="color" data-color="dock_font_color" id="dock_font_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="dock_font_color_label" data-color="dock_font_color" id="dock_font_color_palette" class="colorPicker" />
 								</div>
 								<div class="textInputContainer" style="width: 95%;">
 									<input type="text" id="dock_font_weight" class="textInput instant" autocomplete="off" placeholder="e.g. 400, 600, bold" data-textparam1="fontweight" />
 									<label for="dock_font_weight"><span class="popup-control-icon" aria-hidden="true">🔤</span>&gt; Message font weight</label>
 								</div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-									<div class="textInputContainer" style="flex:1; margin-right:5px;">
+								<div class="colorInputRow">
+									<div class="textInputContainer">
 										<input type="text" id="dock_outline_color" class="textInput instant" autocomplete="off" placeholder="e.g. #000000" data-textparam1="outlinecolor" data-palette="dock_outline_color_palette" />
-										<label for="dock_outline_color"><span class="popup-control-icon" aria-hidden="true">🔤</span>&gt; Custom Outline color</label>
+										<label id="dock_outline_color_label" for="dock_outline_color"><span class="popup-control-icon" aria-hidden="true">🔤</span>&gt; Custom Outline color</label>
 									</div>
-									<input type="color" data-color="dock_outline_color" id="dock_outline_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="dock_outline_color_label" data-color="dock_outline_color" id="dock_outline_color_palette" class="colorPicker" />
 								</div>
 								<div class="textInputContainer" style="width: 95%;">
 									<input type="number" step="0.25" min="0" id="dock_outline_width" class="textInput instant" autocomplete="off" placeholder="e.g. 2" data-textparam1="outlinewidth" />
 									<label for="dock_outline_width"><span class="popup-control-icon" aria-hidden="true">🔤</span>&gt; Custom Outline size (px)</label>
 								</div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-									<div class="textInputContainer" style="flex:1; margin-right:5px;">
+								<div class="colorInputRow">
+									<div class="textInputContainer">
 										<input type="text" id="dock_stroke_color" class="textInput instant" autocomplete="off" placeholder="e.g. #000000CC" data-textparam1="strokecolor" data-palette="dock_stroke_color_palette" />
-										<label for="dock_stroke_color"><span class="popup-control-icon" aria-hidden="true">🔤</span>&gt; Stroke color</label>
+										<label id="dock_stroke_color_label" for="dock_stroke_color"><span class="popup-control-icon" aria-hidden="true">🔤</span>&gt; Stroke color</label>
 									</div>
-									<input type="color" data-color="dock_stroke_color" id="dock_stroke_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
-									<div class="alphaInput" style="display:flex; align-items:center; gap:6px; min-width: 120px;" title="Alpha channel; lower is more transparent">
-										<input type="range" id="dock_stroke_alpha" min="0" max="100" step="1" value="100" data-alpha-target="dock_stroke_color" data-range-display="dock_stroke_alpha_display" data-range-suffix="%" style="width: 90px;" aria-label="Stroke opacity" />
+									<input type="color" aria-labelledby="dock_stroke_color_label" data-color="dock_stroke_color" id="dock_stroke_color_palette" class="colorPicker" />
+									<div class="alphaInput" title="Alpha channel; lower is more transparent">
+										<label for="dock_stroke_alpha">Opacity</label>
+                                        <input type="range" id="dock_stroke_alpha" min="0" max="100" step="1" value="100" data-alpha-target="dock_stroke_color" data-range-display="dock_stroke_alpha_display" data-range-suffix="%" style="width: 90px;" aria-label="Stroke opacity" />
 										<span id="dock_stroke_alpha_display">100%</span>
 									</div>
 								</div>
@@ -4642,14 +4681,15 @@ input:checked + .slider:before {
                                     </label>
                                     ✨ Enable text glow halo (pair with "No text outlining" to use glow only)
                                 </div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-									<div class="textInputContainer" style="flex:1; margin-right:5px;">
+								<div class="colorInputRow">
+									<div class="textInputContainer">
 										<input type="text" id="dock_glow_color" class="textInput instant" autocomplete="off" placeholder="e.g. #00aaffcc" data-textparam1="glowcolor" data-palette="dock_glow_color_palette" />
-										<label for="dock_glow_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Glow color</label>
+										<label id="dock_glow_color_label" for="dock_glow_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Glow color</label>
 									</div>
-									<input type="color" data-color="dock_glow_color" id="dock_glow_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
-									<div class="alphaInput" style="display:flex; align-items:center; gap:6px; min-width: 120px;" title="Alpha channel; lower is softer">
-										<input type="range" id="dock_glow_alpha" min="0" max="100" step="1" value="80" data-alpha-target="dock_glow_color" data-range-display="dock_glow_alpha_display" data-range-suffix="%" style="width: 90px;" aria-label="Glow opacity" />
+									<input type="color" aria-labelledby="dock_glow_color_label" data-color="dock_glow_color" id="dock_glow_color_palette" class="colorPicker" />
+									<div class="alphaInput" title="Alpha channel; lower is softer">
+										<label for="dock_glow_alpha">Opacity</label>
+                                        <input type="range" id="dock_glow_alpha" min="0" max="100" step="1" value="80" data-alpha-target="dock_glow_color" data-range-display="dock_glow_alpha_display" data-range-suffix="%" style="width: 90px;" aria-label="Glow opacity" />
 										<span id="dock_glow_alpha_display">80%</span>
 									</div>
 								</div>
@@ -4713,19 +4753,19 @@ input:checked + .slider:before {
                                     </label>
                                     <span>🏷️ Add a rounded bubble behind the name</span>
                                 </div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-									<div class="textInputContainer" style="flex:1; margin-right:5px;">
+								<div class="colorInputRow">
+									<div class="textInputContainer">
 										<input type="text" id="dock_name_bubble_color" class="textInput instant" autocomplete="off" placeholder="e.g. #2a5bd7" data-textparam1="namebubblecolor" data-palette="dock_name_bubble_color_palette" />
-										<label for="dock_name_bubble_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Name bubble color</label>
+										<label id="dock_name_bubble_color_label" for="dock_name_bubble_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Name bubble color</label>
 									</div>
-									<input type="color" data-color="dock_name_bubble_color" id="dock_name_bubble_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="dock_name_bubble_color_label" data-color="dock_name_bubble_color" id="dock_name_bubble_color_palette" class="colorPicker" />
 								</div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-									<div class="textInputContainer" style="flex:1; margin-right:5px;">
+								<div class="colorInputRow">
+									<div class="textInputContainer">
 										<input type="text" id="dock_name_bubble_text_color" class="textInput instant" autocomplete="off" placeholder="e.g. #ffffff" data-textparam1="namebubbletext" data-palette="dock_name_bubble_text_color_palette" />
-										<label for="dock_name_bubble_text_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Name bubble text color</label>
+										<label id="dock_name_bubble_text_color_label" for="dock_name_bubble_text_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Name bubble text color</label>
 									</div>
-									<input type="color" data-color="dock_name_bubble_text_color" id="dock_name_bubble_text_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="dock_name_bubble_text_color_label" data-color="dock_name_bubble_text_color" id="dock_name_bubble_text_color_palette" class="colorPicker" />
 								</div>
 								<div class="textInputContainer" style="width: 95%;">
 									<input type="number" step="1" min="0" id="dock_name_bubble_radius" class="textInput instant" autocomplete="off" placeholder="e.g. 999" data-textparam1="namebubbleradius" />
@@ -4887,33 +4927,33 @@ input:checked + .slider:before {
                                 </div>
 								<div>
 									<h3><span class="popup-control-icon" aria-hidden="true">🎨</span>Highlight Colors</h3>
-									<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-										<div class="textInputContainer" style="flex:1; margin-right:5px;">
+									<div class="colorInputRow">
+										<div class="textInputContainer">
 											<input type="text" id="dock_donation_highlight_color" class="textInput instant" autocomplete="off" placeholder="e.g. #ffff00" data-textparam1="donationhighlightcolor" data-palette="dock_donation_highlight_color_palette" />
-											<label for="dock_donation_highlight_color"><span class="popup-control-icon" aria-hidden="true">💵</span>&gt; Donation highlight color</label>
+											<label id="dock_donation_highlight_color_label" for="dock_donation_highlight_color"><span class="popup-control-icon" aria-hidden="true">💵</span>&gt; Donation highlight color</label>
 										</div>
-										<input type="color" data-color="dock_donation_highlight_color" id="dock_donation_highlight_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+										<input type="color" aria-labelledby="dock_donation_highlight_color_label" data-color="dock_donation_highlight_color" id="dock_donation_highlight_color_palette" class="colorPicker" />
 									</div>
-									<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-										<div class="textInputContainer" style="flex:1; margin-right:5px;">
+									<div class="colorInputRow">
+										<div class="textInputContainer">
 											<input type="text" id="dock_member_highlight_color" class="textInput instant" autocomplete="off" placeholder="e.g. #00d5ff" data-textparam1="memberhighlightcolor" data-palette="dock_member_highlight_color_palette" />
-											<label for="dock_member_highlight_color"><span class="popup-control-icon" aria-hidden="true">⭐</span>&gt; Member highlight color</label>
+											<label id="dock_member_highlight_color_label" for="dock_member_highlight_color"><span class="popup-control-icon" aria-hidden="true">⭐</span>&gt; Member highlight color</label>
 										</div>
-										<input type="color" data-color="dock_member_highlight_color" id="dock_member_highlight_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+										<input type="color" aria-labelledby="dock_member_highlight_color_label" data-color="dock_member_highlight_color" id="dock_member_highlight_color_palette" class="colorPicker" />
 									</div>
-									<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-										<div class="textInputContainer" style="flex:1; margin-right:5px;">
+									<div class="colorInputRow">
+										<div class="textInputContainer">
 											<input type="text" id="dock_firsttime_highlight_color" class="textInput instant" autocomplete="off" placeholder="e.g. #ff7777" data-textparam1="firsttimehighlightcolor" data-palette="dock_firsttime_highlight_color_palette" />
-											<label for="dock_firsttime_highlight_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; First-time chatter highlight color</label>
+											<label id="dock_firsttime_highlight_color_label" for="dock_firsttime_highlight_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; First-time chatter highlight color</label>
 										</div>
-										<input type="color" data-color="dock_firsttime_highlight_color" id="dock_firsttime_highlight_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+										<input type="color" aria-labelledby="dock_firsttime_highlight_color_label" data-color="dock_firsttime_highlight_color" id="dock_firsttime_highlight_color_palette" class="colorPicker" />
 									</div>
-									<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-										<div class="textInputContainer" style="flex:1; margin-right:5px;">
+									<div class="colorInputRow">
+										<div class="textInputContainer">
 											<input type="text" id="dock_question_highlight_color" class="textInput instant" autocomplete="off" placeholder="e.g. #3355ff" data-textparam1="questionhighlightcolor" data-palette="dock_question_highlight_color_palette" />
-											<label for="dock_question_highlight_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Question highlight color</label>
+											<label id="dock_question_highlight_color_label" for="dock_question_highlight_color"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Question highlight color</label>
 										</div>
-										<input type="color" data-color="dock_question_highlight_color" id="dock_question_highlight_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+										<input type="color" aria-labelledby="dock_question_highlight_color_label" data-color="dock_question_highlight_color" id="dock_question_highlight_color_palette" class="colorPicker" />
 									</div>
 									<div class="colorInputRow" title="Requires Allow background shading for trivial events. Leave blank to use the default colors." data-keywords="trivial event @host mention highlight background color colour">
 										<div class="textInputContainer">
@@ -4925,32 +4965,44 @@ input:checked + .slider:before {
 								</div>
                                 <div>
                                     <h3><span class="popup-control-icon" aria-hidden="true">💵</span><span data-translate="donation-colors">Customize Donation Colors by Threshold</span></h3>
-                                    <div style="width: 100%; display:inline-block;">
-                                        <label class="switch">
-                                            <input type="checkbox" data-param1="t1" />
+                                    <div class="donationColorThreshold">
+                                        <div class="donationThresholdControls"><label class="switch">
+                                            <input type="checkbox" aria-label="Enable donation color threshold 1" data-param1="t1" />
                                             <span class="slider round"></span>
-                                        </label>
-                                        Threshold: $<input type="number" min="0" step="0.01" value="0" style="width: 45px;" id="dono_1_threshold" class="textInput" autocomplete="off" data-numbersetting="t1" />USD, Color:
-                                        <input type="text" style="width: 50px;" data-palette="dono_1_color_palette" id="dono_1_color" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam1="t1c" />
-                                        <input type="color" data-color="dono_1_color" id="dono_1_color_palette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+                                        </label><label for="dono_1_threshold">Threshold (USD)</label><input type="number" min="0" step="0.01" value="0" id="dono_1_threshold" class="textInput" autocomplete="off" data-numbersetting="t1" /></div>
+<div class="colorInputRow">
+                                        <div class="textInputContainer">
+                                            <input type="text" data-palette="dono_1_color_palette" id="dono_1_color" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam1="t1c" />
+                                            <label id="dono_1_color_label" for="dono_1_color">Donation color</label>
+                                        </div>
+                                        <input type="color" aria-labelledby="dono_1_color_label" data-color="dono_1_color" id="dono_1_color_palette" class="colorPicker">
                                     </div>
-                                    <div style="width: 100%; display:inline-block;">
-                                        <label class="switch">
-                                            <input type="checkbox" data-param1="t2" />
-                                            <span class="slider round"></span>
-                                        </label>
-                                        Threshold: $<input type="number" min="0" step="0.01" value="5" style="width: 45px;" id="dono_2_threshold" class="textInput" autocomplete="off" data-numbersetting="t2" />USD, Color:
-                                        <input type="text" style="width: 50px;" data-palette="dono_2_color_palette" id="dono_2_color" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam1="t2c" />
-                                        <input type="color" data-color="dono_2_color" id="dono_2_color_palette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
                                     </div>
-                                    <div style="width: 100%; display:inline-block;">
-                                        <label class="switch">
-                                            <input type="checkbox" data-param1="t3" />
+                                    <div class="donationColorThreshold">
+                                        <div class="donationThresholdControls"><label class="switch">
+                                            <input type="checkbox" aria-label="Enable donation color threshold 2" data-param1="t2" />
                                             <span class="slider round"></span>
-                                        </label>
-                                        Threshold: $<input type="number" min="0" step="0.01" value="50" style="width: 45px;" id="dono_3_threshold" class="textInput" autocomplete="off" data-numbersetting="t3" />USD, Color:
-                                        <input type="text" style="width: 50px;" data-palette="dono_3_color_palette" id="dono_3_color" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam1="t3c" />
-                                        <input type="color" data-color="dono_3_color" id="dono_3_color_palette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+                                        </label><label for="dono_2_threshold">Threshold (USD)</label><input type="number" min="0" step="0.01" value="5" id="dono_2_threshold" class="textInput" autocomplete="off" data-numbersetting="t2" /></div>
+<div class="colorInputRow">
+                                        <div class="textInputContainer">
+                                            <input type="text" data-palette="dono_2_color_palette" id="dono_2_color" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam1="t2c" />
+                                            <label id="dono_2_color_label" for="dono_2_color">Donation color</label>
+                                        </div>
+                                        <input type="color" aria-labelledby="dono_2_color_label" data-color="dono_2_color" id="dono_2_color_palette" class="colorPicker">
+                                    </div>
+                                    </div>
+                                    <div class="donationColorThreshold">
+                                        <div class="donationThresholdControls"><label class="switch">
+                                            <input type="checkbox" aria-label="Enable donation color threshold 3" data-param1="t3" />
+                                            <span class="slider round"></span>
+                                        </label><label for="dono_3_threshold">Threshold (USD)</label><input type="number" min="0" step="0.01" value="50" id="dono_3_threshold" class="textInput" autocomplete="off" data-numbersetting="t3" /></div>
+<div class="colorInputRow">
+                                        <div class="textInputContainer">
+                                            <input type="text" data-palette="dono_3_color_palette" id="dono_3_color" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam1="t3c" />
+                                            <label id="dono_3_color_label" for="dono_3_color">Donation color</label>
+                                        </div>
+                                        <input type="color" aria-labelledby="dono_3_color_label" data-color="dono_3_color" id="dono_3_color_palette" class="colorPicker">
+                                    </div>
                                     </div>
                                     <br />
                                 </div>
@@ -5230,12 +5282,12 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="override-all-name-colors-with-a-random-color">🌈🌈 Generate colors for every name</span>
                                 </div>
-                                <div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-                                    <div class="textInputContainer" style="flex:1; margin-right:5px;">
+                                <div class="colorInputRow">
+                                    <div class="textInputContainer">
                                         <input type="text" id="dock_name_color" class="textInput instant" autocomplete="off" placeholder="e.g. #ffffff" data-textparam1="namecolor" data-palette="dock_name_color_palette" />
-                                        <label for="dock_name_color"><span class="popup-control-icon" aria-hidden="true">🔤</span><span data-translate="default-name-font-color">&gt; Default name font color</span></label>
+                                        <label id="dock_name_color_label" for="dock_name_color"><span class="popup-control-icon" aria-hidden="true">🔤</span><span data-translate="default-name-font-color">&gt; Default name font color</span></label>
                                     </div>
-                                    <input type="color" data-color="dock_name_color" id="dock_name_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+                                    <input type="color" aria-labelledby="dock_name_color_label" data-color="dock_name_color" id="dock_name_color_palette" class="colorPicker" />
                                 </div>
                             </div>
                         </div>
@@ -5357,47 +5409,62 @@ input:checked + .slider:before {
 					</label>
 					<select id="overlay-preset-select" data-optionsetting="overlayPreset" style="padding: 5px 10px; border-radius: 4px; background: var(--color-accent-subtle); color: var(--default-text-color); border: 1px solid var(--collapsible-border-color);">
 						<option value="sampleoverlay.html">📄 Sample Overlay - Basic chat overlay</option>
-						<option value="themes/compact-classic.html">💬 Compact Classic - Dense Twitch/IRC-style chat</option>
-						<option value="themes/compact-classic.html?ultra">⚡ Compact Ultra - Super dense minimum-height chat</option>
-						                        <option value="themes/compact-clean.html?style=art-cat">🐱 Strawberry Cat — Illustrated</option>
-                        <option value="themes/compact-clean.html?style=art-dog">🐶 Good Company — Illustrated</option>
-                        <option value="themes/compact-clean.html?style=art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
-                        <option value="themes/compact-clean.html?style=art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
-                        <option value="themes/compact-clean.html?style=art-music">🎵 Midnight Mixtape — Illustrated</option>
-                        <option value="themes/compact-clean.html?style=art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
-                        <option value="themes/compact-clean.html?style=art-space">🌙 Moon Bunny — Illustrated</option>
-                        <option value="themes/compact-clean.html?style=art-dragon">🐉 Crystal Guardian — Illustrated</option>
-                        <option value="themes/compact-clean.html?style=cute">🍬 Pastel Pop</option>
-                        <option value="themes/compact-clean.html?style=cozy">☕ Cozy Cafe</option>
-                        <option value="themes/compact-clean.html?style=cats">🐱 Cat Cafe</option>
-                        <option value="themes/compact-clean.html?style=music">🎵 Studio Sessions</option>
-                        <option value="themes/compact-clean.html?style=arcade">🕹️ Pocket Arcade</option>
-                        <option value="themes/compact-clean.html?style=slate">🌑 Compact Slate</option>
-                        <option value="themes/compact-clean.html?style=paper">📄 Compact Paper</option>
-                        <option value="themes/compact-clean.html?style=micro">➖ Micro Line</option>
-						<option value="themes/compact-clean.html">🧼 Compact Clean - Tidy compact cards</option>
-						<option value="themes/compact-glass.html">🪟 Compact Glass - Frosted compact rows</option>
-						<option value="themes/overlay-comic-pop.html">💥 Comic Pop Dock - Stackable pop art chat</option>
-						<option value="themes/overlay-comic-classic.html">🗯️ Comic Pop Classic - Featured style chat</option>
-						<option value="themes/horizontal.html">➡️ Horizontal Scroll - Right-to-left ticker</option>
-						<option value="themes/overlay-ticker-news.html">📰 News Ticker - Breaking-news crawl bar</option>
-						<option value="themes/overlay-credits.html">🎬 Movie Credits - Continuous rolling credits</option>
-						<option value="themes/overlay-danmaku.html">🎯 Danmaku Bullet Chat - Messages fly across screen</option>
-						<option value="themes/overlay-neon-cyberpunk.html">⚡ Neon Cyberpunk - Futuristic glitch effects</option>
-						<option value="themes/overlay-particles.html">✨ Particle System - Floating message effects</option>
-						<option value="themes/overlay-typewriter.html">⌨️ Terminal Typewriter - Retro typing effects</option>
-						<option value="themes/overlay-bubbles.html">🫧 Bubble Chat - Floating speech bubbles</option>
-						<option value="themes/overlay-cards.html">🃏 Card Flip 3D - Interactive card animations</option>
-						<option value="themes/overlay-xacception.html">❎ Simple Alternative - Basic bubble message</option>
-						<option value="themes/pretty.html">✨ Pretty Theme - Holographic style</option>
-						<option value="themes/Neutron/chatOnly.html">⚛️ Neutron Chat - Sci-fi gaming theme</option>
-						<option value="themes/Neutron/stream.html">⚛️ Neutron Stream - Full stream layout</option>
-						<option value="themes/Windows3.1/index.html">🖥️ Windows 3.1 - Retro computing</option>
-						<option value="themes/deuks_overlay/overlay1.html">🎬 Deuks Overlay 1 - Custom streaming</option>
-						<option value="themes/deuks_overlay/overlay2.html">🎬 Deuks Overlay 2 - Alternative layout</option>
-						<option value="themes/rainbowpuke/index.html">🌈 Rainbow Puke - Colorful chaos</option>
-						<option value="themes/t3nk3y/index.html">🎮 T3nk3y Theme - Gaming style</option>
-                        <option value="themes/LuckyLootTube/luckyloottube.html">🎁 LuckyLootTube - Liquid Glass</option>
+						<optgroup label="Illustrated">
+							<option value="themes/compact-clean.html?style=art-cat">🐱 Strawberry Cat — Illustrated</option>
+							<option value="themes/compact-clean.html?style=art-dog">🐶 Good Company — Illustrated</option>
+							<option value="themes/compact-clean.html?style=art-halloween">🎃 Pumpkin Haunt — Illustrated</option>
+							<option value="themes/compact-clean.html?style=art-christmas">🎄 Merry Little Reindeer — Illustrated</option>
+							<option value="themes/compact-clean.html?style=art-music">🎵 Midnight Mixtape — Illustrated</option>
+							<option value="themes/compact-clean.html?style=art-forest">🍄 Moss &amp; Mushrooms — Illustrated</option>
+							<option value="themes/compact-clean.html?style=art-space">🌙 Moon Bunny — Illustrated</option>
+							<option value="themes/compact-clean.html?style=art-dragon">🐉 Crystal Guardian — Illustrated</option>
+						</optgroup>
+						<optgroup label="Matching collections">
+							<option value="themes/compact-clean.html?style=cute">🍬 Pastel Pop</option>
+							<option value="themes/compact-clean.html?style=cozy">☕ Cozy Cafe</option>
+							<option value="themes/compact-clean.html?style=cats">🐱 Cat Cafe</option>
+							<option value="themes/compact-clean.html?style=music">🎵 Studio Sessions</option>
+							<option value="themes/compact-clean.html?style=arcade">🕹️ Pocket Arcade</option>
+							<option value="themes/compact-clean.html?style=slate">🌑 Compact Slate</option>
+							<option value="themes/compact-clean.html?style=paper">📄 Compact Paper</option>
+							<option value="themes/compact-clean.html?style=micro">➖ Micro Line</option>
+							<option value="themes/compact-clean.html?style=spring">🌸 Spring Bloom</option>
+							<option value="themes/compact-clean.html?style=summer">🌊 Summer Splash</option>
+							<option value="themes/compact-clean.html?style=hearts">💖 Sweetheart</option>
+							<option value="themes/compact-clean.html?style=lunar">🏮 Lunar Lantern</option>
+						</optgroup>
+						<optgroup label="Compact">
+							<option value="themes/compact-clean.html">🧼 Compact Clean - Tidy compact cards</option>
+							<option value="themes/compact-glass.html">🪟 Compact Glass - Frosted compact rows</option>
+							<option value="themes/compact-classic.html">💬 Compact Classic - Dense Twitch/IRC-style chat</option>
+							<option value="themes/compact-classic.html?ultra">⚡ Compact Ultra - Super dense minimum-height chat</option>
+						</optgroup>
+						<optgroup label="Layouts &amp; effects">
+							<option value="themes/vertical-chat.html">📱 Vertical Chat - Portrait 9:16 for TikTok, Shorts and Reels</option>
+							<option value="themes/overlay-comic-pop.html">💥 Comic Pop Dock - Stackable pop art chat</option>
+							<option value="themes/overlay-comic-classic.html">🗯️ Comic Pop Classic - Featured style chat</option>
+							<option value="themes/overlay-bubbles.html">🫧 Bubble Chat - Floating speech bubbles</option>
+							<option value="themes/overlay-cards.html">🃏 Card Flip 3D - Interactive card animations</option>
+							<option value="themes/overlay-neon-cyberpunk.html">⚡ Neon Cyberpunk - Futuristic glitch effects</option>
+							<option value="themes/overlay-particles.html">✨ Particle System - Floating message effects</option>
+							<option value="themes/overlay-danmaku.html">🎯 Danmaku Bullet Chat - Messages fly across screen</option>
+							<option value="themes/horizontal.html">➡️ Horizontal Scroll - Right-to-left ticker</option>
+							<option value="themes/overlay-ticker-news.html">📰 News Ticker - Breaking-news crawl bar</option>
+							<option value="themes/overlay-credits.html">🎬 Movie Credits - Continuous rolling credits</option>
+							<option value="themes/overlay-typewriter.html">⌨️ Terminal Typewriter - Retro typing effects</option>
+						</optgroup>
+						<optgroup label="Community themes">
+							<option value="themes/LuckyLootTube/luckyloottube.html">🎁 LuckyLootTube - Liquid Glass</option>
+							<option value="themes/t3nk3y/index.html">🎮 T3nk3y Theme - Gaming style</option>
+							<option value="themes/Windows3.1/index.html">🖥️ Windows 3.1 - Retro computing</option>
+							<option value="themes/deuks_overlay/overlay2.html">🎬 Deuks Overlay 2 - Alternative layout</option>
+							<option value="themes/deuks_overlay/overlay1.html">🎬 Deuks Overlay 1 - Custom streaming</option>
+							<option value="themes/Neutron/chatOnly.html">⚛️ Neutron Chat - Sci-fi gaming theme</option>
+							<option value="themes/Neutron/stream.html">⚛️ Neutron Stream - Full stream layout</option>
+							<option value="themes/pretty.html">✨ Pretty Theme - Holographic style</option>
+							<option value="themes/rainbowpuke/index.html">🌈 Rainbow Puke - Colorful chaos</option>
+							<option value="themes/overlay-xacception.html">❎ Simple Alternative - Basic bubble message</option>
+						</optgroup>
 					</select>
 				</div>
             </div>
@@ -5450,6 +5517,10 @@ input:checked + .slider:before {
                         <option value="themes/featured-styles/featured-modern.html?style=slate">🌑 Compact Slate</option>
                         <option value="themes/featured-styles/featured-modern.html?style=paper">📄 Compact Paper</option>
                         <option value="themes/featured-styles/featured-modern.html?style=micro">➖ Micro Line</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=spring">🌸 Spring Bloom</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=summer">🌊 Summer Splash</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=hearts">💖 Sweetheart</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=lunar">🏮 Lunar Lantern</option>
                         <option value="themes/featured-styles/featured-modern.html?style=glass">Modern Glass</option>
                         <option value="themes/featured-styles/featured-modern.html?style=neon">Neon Glow</option>
                         <option value="themes/featured-styles/featured-modern.html?style=minimal">Minimal Clean</option>
@@ -5754,19 +5825,21 @@ input:checked + .slider:before {
                         <!-- TTS Provider Selection -->
                         <div class="tts-provider-selection" style="margin:0 10px 10px 10px">
                             <h3><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-service-provider">Text-to-Speech Service Provider</span></h3>
-                            <select id="ttsProvider2" data-optionparam2="ttsprovider" data-optionsetting2="ttsProvider" class="textInput">
-                                <option selected value="system">System TTS</option>
-                                <option value="kokoro">Kokoro (webGPU/CPU)</option>
-                                <option value="kitten">Kitten TTS (browser-based)</option>
-                                <option value="elevenlabs">ElevenLabs</option>
-                                <option value="google">Google Cloud</option>
-                                <option value="fish">Fish Audio</option>
-                                <option value="speechify">Speechify</option>
-                                <option value="openai">OpenAI</option>
-                                <option value="customtts">Custom / Local TTS Endpoint</option>
-                                <option value="piper">Piper TTS</option>
-                                <option value="espeak">eSpeak TTS</option>
+                            <select aria-describedby="ttsProvider2Help" id="ttsProvider2" data-optionparam2="ttsprovider" data-optionsetting2="ttsProvider" class="textInput">
+                                <option selected value="system" title="Voices and languages depend on your browser and installed system voices. Some browser voices use an online service.">System TTS &mdash; Free &middot; Device/browser &middot; Languages vary</option>
+                                <option value="kokoro">Kokoro &mdash; Free &middot; Local &middot; Many languages</option>
+                                <option value="kitten">Kitten TTS &mdash; Free &middot; Local &middot; English only</option>
+                                <option value="elevenlabs" title="Requires an API key. Free usage is limited; voice access and languages depend on your plan and model.">ElevenLabs &mdash; Free tier / paid &middot; Online &middot; Many languages</option>
+                                <option value="google" title="Requires an API key and billing setup. Free quotas depend on the voice type; usage above the quota is billed.">Google Cloud &mdash; Free quota / paid &middot; Online &middot; Many languages</option>
+                                <option value="fish" title="Requires an API key. Choose s2.1-pro-free for free speech; other models may charge for usage.">Fish Audio &mdash; Free model / paid &middot; Online &middot; Many languages</option>
+                                <option value="speechify" title="Requires an API key. Trial credits may be available; languages depend on the model.">Speechify &mdash; Paid &middot; Online &middot; Many languages</option>
+                                <option value="openai" title="The OpenAI service charges for API usage. Languages depend on the model.">OpenAI &mdash; Paid &middot; Online &middot; Many languages</option>
+                                <option value="customtts" title="Your server determines the cost, whether speech runs locally or online, and the supported languages.">Custom / Local TTS Endpoint &mdash; Depends on your server</option>
+                                <option value="piper">Piper TTS &mdash; Free &middot; Local &middot; Many languages</option>
+                                <option value="espeak">eSpeak TTS &mdash; Free &middot; Local &middot; Many languages</option>
+                                <option value="edge" disabled title="Requires the SSApp desktop app and an internet connection. Choose a voice for your language.">Edge Natural (desktop app) &mdash; Free &middot; Online &middot; Many languages</option>
                             </select>
+                            <p id="ttsProvider2Help" class="tts-provider-help"><small>Local: speech runs on your computer; models may download first. Many languages: choose a matching voice or model. Online free tiers have usage limits.</small></p>
                             <div class="tts-name-option" data-keywords="read sender name chatname message only simpletts2">
                                 <input type="checkbox" data-param2="simpletts2" hidden />
                                 <label class="switch">
@@ -5779,6 +5852,23 @@ input:checked + .slider:before {
                         </div>
 
                         <!-- System TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="edgeTTS2">
+                            <h4>Edge Natural voices</h4>
+                            <p>Free online voices. Keep SSApp open. Speech text is sent to Microsoft; no API key or voice installation is needed.</p>
+                            <div class="textInputContainer"><label for="edgeVoiceSelect2">Voice</label>
+                            <select id="edgeVoiceSelect2" data-optionparam2="voiceedge" class="textInput popup-reviewed-control">
+                            <option value="en-US-EmmaMultilingualNeural">English (US) — Emma</option>
+                            <option value="es-ES-ElviraNeural">Spanish (Spain) — Elvira</option>
+                            <option value="es-ES-AlvaroNeural">Spanish (Spain) — Alvaro</option>
+                            <option value="es-MX-DaliaNeural">Spanish (Mexico) — Dalia</option>
+                            <option value="es-MX-JorgeNeural">Spanish (Mexico) — Jorge</option>
+                            </select></div>
+                            <div class="textInputContainer"><label for="edgeRateSelect2">Speed</label>
+                            <select id="edgeRateSelect2" data-optionparam2="edgerate" class="textInput popup-reviewed-control">
+                            <option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div>
+                            <button type="button" class="edge-voices-refresh" data-section="2">Load all voices</button>
+                            <p id="edgeVoiceStatus2" role="status"></p>
+                        </div>
                         <div class="tts-provider-options options_group" id="systemTTS2">
                             <h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-system-options">Built-in System TTS Options</span></h4>
                             <i>note: the free built-in TTS plays out via the default audio device. <a class="lightblue" target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
@@ -6285,6 +6375,7 @@ input:checked + .slider:before {
                                 <select id="espeakVoiceSelect2" data-optionparam2="espeakvoice" title="Select the eSpeak TTS Voice">
                                     <option value="en" selected>English</option>
                                     <option value="es">Spanish</option>
+                                    <option value="et">Estonian (Eesti)</option>
                                     <option value="pt-br">Portuguese Brazil</option>
                                     <option value="pt-pt">Portuguese Portugal</option>
                                 </select>
@@ -6562,37 +6653,37 @@ input:checked + .slider:before {
 
                                 <h3><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="colors">Colors</span></h3>
 
-                                <div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-                                    <div class="textInputContainer" style="flex:1; margin-right:5px;">
+                                <div class="colorInputRow">
+                                    <div class="textInputContainer">
                                         <input type="text" data-palette="comment_color_palette" id="comment_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_color" />
 
-                                        <label for="comment_color"><span class="popup-control-icon" aria-hidden="true">🔤</span><span data-translate="comment-font-color">&gt; Comment font color</span></label>
+                                        <label id="comment_color_label" for="comment_color"><span class="popup-control-icon" aria-hidden="true">🔤</span><span data-translate="comment-font-color">&gt; Comment font color</span></label>
                                     </div>
-									<input type="color" data-color="comment_color" id="comment_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="comment_color_label" data-color="comment_color" id="comment_color_palette" class="colorPicker" />
                                 </div>
 
-                                <div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-                                    <div class="textInputContainer" style="flex:1; margin-right:5px;">
+                                <div class="colorInputRow">
+                                    <div class="textInputContainer">
                                         <input type="text" data-palette="comment_background_palette" id="comment_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_background" />
-                                        <label for="comment_background"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="comment-background-color">&gt; Comment background color</span></label>
+                                        <label id="comment_background_label" for="comment_background"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="comment-background-color">&gt; Comment background color</span></label>
                                     </div>
-									<input type="color" data-color="comment_background" id="comment_background_palette"  class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="comment_background_label" data-color="comment_background" id="comment_background_palette"  class="colorPicker" />
                                 </div>
 
-                                <div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-                                    <div class="textInputContainer" style="flex:1; margin-right:5px;">
+                                <div class="colorInputRow">
+                                    <div class="textInputContainer">
                                         <input type="text" data-palette="name_color_palette" id="name_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_color" />
-                                        <label for="name_color"><span class="popup-control-icon" aria-hidden="true">🔤</span><span data-translate="default-name-font-color">&gt; Default name font color</span></label>
+                                        <label id="name_color_label" for="name_color"><span class="popup-control-icon" aria-hidden="true">🔤</span><span data-translate="default-name-font-color">&gt; Default name font color</span></label>
                                     </div>
-									<input type="color" data-color="name_color" id="name_color_palette"  class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="name_color_label" data-color="name_color" id="name_color_palette"  class="colorPicker" />
                                 </div>
 
-                                <div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-                                    <div class="textInputContainer" style="flex:1; margin-right:5px;">
+                                <div class="colorInputRow">
+                                    <div class="textInputContainer">
                                         <input type="text" data-palette="name_background_palette" id="name_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_background" />
-                                        <label for="name_background"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="name-background-color">&gt; Name background color</span></label>
+                                        <label id="name_background_label" for="name_background"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="name-background-color">&gt; Name background color</span></label>
                                     </div>
-									<input type="color" data-color="name_background" id="name_background_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="name_background_label" data-color="name_background" id="name_background_palette" class="colorPicker" />
                                 </div>
 
 								<div class="textInputContainer" style="width: 95%;margin-top:10px;">
@@ -7007,6 +7098,10 @@ input:checked + .slider:before {
 <option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
 <option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
 <option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="spring" data-translate="popup-spring-bloom">🌸 Spring Bloom</option>
+<option value="summer" data-translate="popup-summer-splash">🌊 Summer Splash</option>
+<option value="hearts" data-translate="popup-sweetheart">💖 Sweetheart</option>
+<option value="lunar" data-translate="popup-lunar-lantern">🏮 Lunar Lantern</option>
 <option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
 								</div>
 								<div>
@@ -7032,6 +7127,10 @@ input:checked + .slider:before {
 <option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
 <option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
 <option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="spring" data-translate="popup-spring-bloom">🌸 Spring Bloom</option>
+<option value="summer" data-translate="popup-summer-splash">🌊 Summer Splash</option>
+<option value="hearts" data-translate="popup-sweetheart">💖 Sweetheart</option>
+<option value="lunar" data-translate="popup-lunar-lantern">🏮 Lunar Lantern</option>
 <option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
 								</div>
 								<div>
@@ -7057,6 +7156,10 @@ input:checked + .slider:before {
 <option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
 <option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
 <option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="spring" data-translate="popup-spring-bloom">🌸 Spring Bloom</option>
+<option value="summer" data-translate="popup-summer-splash">🌊 Summer Splash</option>
+<option value="hearts" data-translate="popup-sweetheart">💖 Sweetheart</option>
+<option value="lunar" data-translate="popup-lunar-lantern">🏮 Lunar Lantern</option>
 <option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
 								</div>
 								<div>
@@ -7082,6 +7185,10 @@ input:checked + .slider:before {
 <option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
 <option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
 <option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="spring" data-translate="popup-spring-bloom">🌸 Spring Bloom</option>
+<option value="summer" data-translate="popup-summer-splash">🌊 Summer Splash</option>
+<option value="hearts" data-translate="popup-sweetheart">💖 Sweetheart</option>
+<option value="lunar" data-translate="popup-lunar-lantern">🏮 Lunar Lantern</option>
 <option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
 								</div>
 								<div>
@@ -7107,6 +7214,10 @@ input:checked + .slider:before {
 <option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
 <option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
 <option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="spring" data-translate="popup-spring-bloom">🌸 Spring Bloom</option>
+<option value="summer" data-translate="popup-summer-splash">🌊 Summer Splash</option>
+<option value="hearts" data-translate="popup-sweetheart">💖 Sweetheart</option>
+<option value="lunar" data-translate="popup-lunar-lantern">🏮 Lunar Lantern</option>
 <option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
 								</div>
 								<div>
@@ -7132,6 +7243,10 @@ input:checked + .slider:before {
 <option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
 <option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
 <option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="spring" data-translate="popup-spring-bloom">🌸 Spring Bloom</option>
+<option value="summer" data-translate="popup-summer-splash">🌊 Summer Splash</option>
+<option value="hearts" data-translate="popup-sweetheart">💖 Sweetheart</option>
+<option value="lunar" data-translate="popup-lunar-lantern">🏮 Lunar Lantern</option>
 <option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
 								</div>
 								<div>
@@ -7157,6 +7272,10 @@ input:checked + .slider:before {
 <option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
 <option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
 <option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="spring" data-translate="popup-spring-bloom">🌸 Spring Bloom</option>
+<option value="summer" data-translate="popup-summer-splash">🌊 Summer Splash</option>
+<option value="hearts" data-translate="popup-sweetheart">💖 Sweetheart</option>
+<option value="lunar" data-translate="popup-lunar-lantern">🏮 Lunar Lantern</option>
 <option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
 								</div>
 								<div>
@@ -7194,17 +7313,26 @@ input:checked + .slider:before {
 									</label>
 									<span><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-color-alerts-by-platform-instead-of-alert-type">Color alerts by platform instead of alert type</span></span>
 								</div>
-								<div class="textInputContainer" style="width: 95%;" title="Overrides the accent color for every alert type when platform colors are disabled. Per-type URL params also exist: followaccent, subaccent, donoaccent, bitsaccent, raidaccent, auctionaccent, hypeaccent.">
-									<input type="text" id="multialertaccent" class="textInput instant" autocomplete="off" placeholder="#ff2d5e" data-textparam25="accent" />
-									<label for="multialertaccent"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-accent-color-all-alert-types">&gt; Accent color (all alert types)</span></label>
+								<div class="colorInputRow" title="Overrides the accent color for every alert type when platform colors are disabled. Per-type URL params also exist: followaccent, subaccent, donoaccent, bitsaccent, raidaccent, auctionaccent, hypeaccent.">
+								    <div class="textInputContainer">
+								        <input type="text" id="multialertaccent" class="textInput instant" autocomplete="off" placeholder="#ff2d5e" data-textparam25="accent" data-palette="multialertaccent-palette" />
+								        <label id="multialertaccent-label" for="multialertaccent"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-accent-color-all-alert-types">&gt; Accent color (all alert types)</span></label>
+								    </div>
+								    <input type="color" id="multialertaccent-palette" data-color="multialertaccent" class="colorPicker" value="#ff2d5e" aria-labelledby="multialertaccent-label" />
 								</div>
-								<div class="textInputContainer" style="width: 95%;" title="Solid background color for the alert card. Pairs well with flat cards.">
-									<input type="text" id="multialertcardbg" class="textInput instant" autocomplete="off" placeholder="#18122b" data-textparam25="cardbg" />
-									<label for="multialertcardbg"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-card-background-color">&gt; Card background color</span></label>
+								<div class="colorInputRow" title="Solid background color for the alert card. Pairs well with flat cards.">
+								    <div class="textInputContainer">
+								        <input type="text" id="multialertcardbg" class="textInput instant" autocomplete="off" placeholder="#18122b" data-textparam25="cardbg" data-palette="multialertcardbg-palette" />
+								        <label id="multialertcardbg-label" for="multialertcardbg"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-card-background-color">&gt; Card background color</span></label>
+								    </div>
+								    <input type="color" id="multialertcardbg-palette" data-color="multialertcardbg" class="colorPicker" value="#18122b" aria-labelledby="multialertcardbg-label" />
 								</div>
-								<div class="textInputContainer" style="width: 95%;" title="Overrides the main and muted text colors.">
-									<input type="text" id="multialerttextcolor" class="textInput instant" autocomplete="off" placeholder="#f8fafc" data-textparam25="textcolor" />
-									<label for="multialerttextcolor"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-text-color">&gt; Text color</span></label>
+								<div class="colorInputRow" title="Overrides the main and muted text colors.">
+								    <div class="textInputContainer">
+								        <input type="text" id="multialerttextcolor" class="textInput instant" autocomplete="off" placeholder="#f8fafc" data-textparam25="textcolor" data-palette="multialerttextcolor-palette" />
+								        <label id="multialerttextcolor-label" for="multialerttextcolor"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-text-color">&gt; Text color</span></label>
+								    </div>
+								    <input type="color" id="multialerttextcolor-palette" data-color="multialerttextcolor" class="colorPicker" value="#f8fafc" aria-labelledby="multialerttextcolor-label" />
 								</div>
 								<small style="opacity: 0.8;" data-translate="popup-by-default-each-alert-type-keeps-its-own-color-enable-platform-colors-to-us">By default, each alert type keeps its own color. Enable platform colors to use each source platform's standard color across every alert from that platform. The remaining options apply on top of every preset.</small>
 							</div>
@@ -7331,6 +7459,13 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
+										<input type="checkbox" data-param25="badgebytitle" aria-labelledby="multi-alert-badge-by-title-label" />
+										<span class="slider round"></span>
+									</label>
+									<span id="multi-alert-badge-by-title-label"><span class="popup-control-icon" aria-hidden="true">📐</span><span data-translate="popup-platform-badge-beside-alert-title">Place platform badge beside alert title</span></span>
+								</div>
+								<div>
+									<label class="switch">
 										<input type="checkbox" data-param25="hidesource" />
 										<span class="slider round"></span>
 									</label>
@@ -7385,9 +7520,12 @@ input:checked + .slider:before {
 									</label>
 									<span><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-solid-page-background">Solid page background</span></span>
 								</div>
-								<div class="textInputContainer" style="width: 95%;">
-									<input type="text" class="textInput instant" autocomplete="off" placeholder="rgba(7, 10, 16, 0.9)" data-textparam25="pagebg" />
-									<label><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-page-background-color">&gt; Page background color</span></label>
+								<div class="colorInputRow">
+								    <div class="textInputContainer">
+								        <input id="multialertpagebg" type="text" class="textInput instant" autocomplete="off" placeholder="rgba(7, 10, 16, 0.9)" data-textparam25="pagebg" data-palette="multialertpagebg-palette" />
+								        <label id="multialertpagebg-label" for="multialertpagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-page-background-color">&gt; Page background color</span></label>
+								    </div>
+								    <input type="color" id="multialertpagebg-palette" data-color="multialertpagebg" class="colorPicker" value="#070a10" aria-labelledby="multialertpagebg-label" />
 								</div>
 								<div title="Set a green screen background for chroma key workflows.">
 									<label class="switch">
@@ -9916,12 +10054,12 @@ input:checked + .slider:before {
                             <div class="options_group">
                                 <h3><span class="popup-control-icon" aria-hidden="true">💾</span><span data-translate="save-the-last-message-to-a-file">Save the last message to a file</span></h3>
                                 <span data-translate="an-alterative-method-of-saving-the"> An alterative method of saving the </span><b><span data-translate="last">last</span></b><span data-translate="message"> message </span>
-                                <div class="grid">
-                                    <button class="glowingButton" data-action="singlesave">
-                                        <span style="font-size: 0.8em;"><span data-translate="choose-location">💾 Choose location</span></span>
+                                <div class="popup-file-actions">
+                                    <button class="popup-secondary-button" data-action="singlesave">
+                                        <span data-translate="choose-location">💾 Choose location</span>
                                     </button>
-                                    <button class="glowingButton"  data-action="singlesaveStop">
-                                        <span style="font-size: 0.8em;"><span data-translate="stop-saving-if-active">Stop saving</span></span>
+                                    <button class="popup-secondary-button" data-action="singlesaveStop">
+                                        <span data-translate="stop-saving-if-active">Stop saving</span>
                                     </button>
                                 </div>
                                 <div class="file-handle-status" data-handle-status="chatLog" data-status="missing" data-persisted="false" role="status" aria-live="polite">
@@ -9934,12 +10072,12 @@ input:checked + .slider:before {
 
 								<h3><span data-translate="save-live-stats-snapshot-to-a-file">📊 Save live stats snapshot to a file</span></h3>
 								<span data-translate="continuously-save-current-live-stats-by-platform">Continuously save current viewers, likes, followers, subscribers, title, and live status by platform</span>
-								<div class="grid">
-									<button class="glowingButton" data-action="livestatssave">
-										<span style="font-size: 0.8em;"><span data-translate="choose-location">💾 Choose location</span></span>
+								<div class="popup-file-actions">
+									<button class="popup-secondary-button" data-action="livestatssave">
+										<span data-translate="choose-location">💾 Choose location</span>
 									</button>
-									<button class="glowingButton" data-action="livestatssaveStop">
-										<span style="font-size: 0.8em;"><span data-translate="stop-saving-if-active">Stop saving</span></span>
+									<button class="popup-secondary-button" data-action="livestatssaveStop">
+										<span data-translate="stop-saving-if-active">Stop saving</span>
 									</button>
 								</div>
 								<div class="file-handle-status" data-handle-status="liveStats" data-status="missing" data-persisted="false" role="status" aria-live="polite">
@@ -9954,12 +10092,12 @@ input:checked + .slider:before {
                                     <span data-translate="save-all-messages-to">Save all messages to 📗 </span><b><span data-translate="excel">Excel</span></b><span data-translate="file"> file</span>
                                 </h3>
                                 <span data-translate="an-alterative-method-of-saving"> An alterative method of saving </span><b><span data-translate="all">all</span></b><span data-translate="messages"> messages </span>
-                                <div class="grid">
-                                    <button class="glowingButton"   data-action="excelsave">
-                                        <span style="font-size: 0.8em;"><span data-translate="choose-location">💾 Choose location</span></span>
+                                <div class="popup-file-actions">
+                                    <button class="popup-secondary-button" data-action="excelsave">
+                                        <span data-translate="choose-location">💾 Choose location</span>
                                     </button>
-                                    <button class="glowingButton"  data-action="excelsaveStop">
-                                        <span style="font-size: 0.8em;"><span data-translate="stop-saving-if-active">Stop saving</span></span>
+                                    <button class="popup-secondary-button" data-action="excelsaveStop">
+                                        <span data-translate="stop-saving-if-active">Stop saving</span>
                                     </button>
                                 </div>
 
@@ -9967,15 +10105,15 @@ input:checked + .slider:before {
                                 <span data-translate="just-a-unique-list-of-names-seen-in-chat-no-messages">
                                     Just a unique list of names seen in chat; no messages
                                 </span>
-                                <div class="grid3">
-                                    <button class="glowingButton" style="min-width: 143px;" data-action="savenames">
-                                        <span style="font-size: 0.8em;"><span data-translate="choose-location">💾 Choose location</span></span>
+                                <div class="popup-file-actions">
+                                    <button class="popup-secondary-button" data-action="savenames">
+                                        <span data-translate="choose-location">💾 Choose location</span>
                                     </button>
-                                    <button class="glowingButton" data-action="savenamesStop">
-                                        <span style="font-size: 0.8em;"><span data-translate="stop-saving-if-active">Stop saving</span></span>
+                                    <button class="popup-secondary-button" data-action="savenamesStop">
+                                        <span data-translate="stop-saving-if-active">Stop saving</span>
                                     </button>
-									<button class="glowingButton"  data-action="savenamesClear">
-                                        <span style="font-size: 0.8em;"><span data-translate="reset-user-list">Reset list</span></span>
+									<button class="popup-secondary-button" data-action="savenamesClear">
+                                        <span data-translate="reset-user-list">Reset list</span>
                                     </button>
                                 </div>
                                 <div class="file-handle-status" data-handle-status="savedNames" data-status="missing" data-persisted="false" role="status" aria-live="polite">
@@ -9990,9 +10128,9 @@ input:checked + .slider:before {
                                 <span>
                                     Make sure to export your settings first or lose them
                                 </span>
-                                <div class="grid">
-                                    <button class="glowingButton" style="min-width: 140px;" data-action="bigwipe">
-                                        <span style="font-size: 0.8em;"><span data-translate="reset-settings">Reset all settings</span></span>
+                                <div class="popup-file-actions">
+                                    <button class="popup-secondary-button" data-action="bigwipe">
+                                        <span data-translate="reset-settings">Reset all settings</span>
                                     </button>
                                 </div>
 
@@ -10000,12 +10138,12 @@ input:checked + .slider:before {
                                 <span data-translate="backup-and-load-your-extension-settings">
                                     Backup and load your extension settings.
                                 </span>
-                                <div class="grid">
-                                    <button class="glowingButton" style="min-width: 140px;" data-action="export">
-                                        <span style="font-size: 0.8em;"><span data-translate="export-to-disk">💾 Export to disk</span></span>
+                                <div class="popup-file-actions">
+                                    <button class="popup-secondary-button" data-action="export">
+                                        <span data-translate="export-to-disk">💾 Export to disk</span>
                                     </button>
-                                    <button class="glowingButton" style="min-width: 140px;" data-action="import">
-                                        <span style="font-size: 0.8em;"><span data-translate="import-settings">Import settings</span></span>
+                                    <button class="popup-secondary-button" data-action="import">
+                                        <span data-translate="import-settings">Import settings</span>
                                     </button>
                                 </div>
                                 <div style="margin-top: 8px; font-size: 0.95em;">
@@ -10083,7 +10221,7 @@ input:checked + .slider:before {
 							<div class="options_group streaming_chat">
 
 								<p>Using this section requires a bot service to be made available.</p>
-								<p>You can install one for free with Ollama: <a href="https://socialstream.ninja/ai" class="lightblue"  target="_blank">Installation Guide Here</a></p>
+								<p>You can install one for free with Ollama: <a href="https://socialstream.ninja/ai.html" class="lightblue"  target="_blank">Installation Guide Here</a></p>
 
 								<h3 data-translate="configure-llm">Configure LLM API 🦙</h3>
 
@@ -10412,6 +10550,20 @@ input:checked + .slider:before {
 										📛 <span><span class="popup-control-icon" aria-hidden="true">💬</span><span data-translate="no-ollama-bot-name">Do not include the bot's name when responding</span></span>
 									</div>
 								</div>
+								<div title="Only post AI replies to the originating YouTube video. Separate bot accounts must be connected to that same video. If no destination matches, the reply is not posted into chat.">
+									<label class="switch">
+										<input type="checkbox" id="aiReplySameYouTubeStream" data-setting="aiReplySameYouTubeStream" aria-labelledby="aiReplySameYouTubeStreamLabel" />
+										<span class="slider round"></span>
+									</label>
+									<label for="aiReplySameYouTubeStream" id="aiReplySameYouTubeStreamLabel" data-translate="popup-ai-reply-originating-youtube">🎯 Reply only to the originating YouTube chat</label>
+								</div>
+								<div title="Add @name to AI replies posted into chat. Uses the viewer's handle when available, otherwise their displayed name.">
+									<label class="switch">
+										<input type="checkbox" id="aiReplyMentionUser" data-setting="aiReplyMentionUser" aria-labelledby="aiReplyMentionUserLabel" />
+										<span class="slider round"></span>
+									</label>
+									<label for="aiReplyMentionUser" id="aiReplyMentionUserLabel" data-translate="popup-ai-reply-mention-viewer">💬 Mention the viewer in replies</label>
+								</div>
 								<div title="By default the bot is told not if it doesn't see value in doing so. You can disable that instruction here though">
 									<div>
 										<label class="switch">
@@ -10704,20 +10856,22 @@ input:checked + .slider:before {
 
 						<div class="tts-provider-selection" style="margin:0 10px 10px 10px">
 							<h3><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-service-provider">Text-to-Speech Service Provider</span></h3>
-							<select id="ttsProvider10" data-optionparam10="ttsprovider" data-optionsetting10="ttsProvider" class="textInput">
-								<option selected value="system">System TTS</option>
-								<option value="kokoro">Kokoro (webGPU/CPU)</option>
-								<option value="kitten">Kitten TTS (browser-based)</option>
-								<option value="elevenlabs">ElevenLabs</option>
-								<option value="google">Google Cloud</option>
-								<option value="gemini">Gemini (Preview TTS)</option>
-								<option value="fish">Fish Audio</option>
-								<option value="speechify">Speechify</option>
-								<option value="openai">OpenAI</option>
-								<option value="customtts">Custom / Local TTS Endpoint</option>
-								<option value="piper">Piper TTS</option>
-								<option value="espeak">eSpeak TTS</option>
+							<select aria-describedby="ttsProvider10Help" id="ttsProvider10" data-optionparam10="ttsprovider" data-optionsetting10="ttsProvider" class="textInput">
+								<option selected value="system" title="Voices and languages depend on your browser and installed system voices. Some browser voices use an online service.">System TTS &mdash; Free &middot; Device/browser &middot; Languages vary</option>
+								<option value="kokoro">Kokoro &mdash; Free &middot; Local &middot; Many languages</option>
+								<option value="kitten">Kitten TTS &mdash; Free &middot; Local &middot; English only</option>
+								<option value="elevenlabs" title="Requires an API key. Free usage is limited; voice access and languages depend on your plan and model.">ElevenLabs &mdash; Free tier / paid &middot; Online &middot; Many languages</option>
+								<option value="google" title="Requires an API key and billing setup. Free quotas depend on the voice type; usage above the quota is billed.">Google Cloud &mdash; Free quota / paid &middot; Online &middot; Many languages</option>
+								<option value="gemini" title="Requires an API key. Some TTS models have a limited free tier; other models require paid access.">Gemini TTS &mdash; Free tier / paid &middot; Online &middot; Many languages</option>
+								<option value="fish" title="Requires an API key. Choose s2.1-pro-free for free speech; other models may charge for usage.">Fish Audio &mdash; Free model / paid &middot; Online &middot; Many languages</option>
+								<option value="speechify" title="Requires an API key. Trial credits may be available; languages depend on the model.">Speechify &mdash; Paid &middot; Online &middot; Many languages</option>
+								<option value="openai" title="The OpenAI service charges for API usage. Languages depend on the model.">OpenAI &mdash; Paid &middot; Online &middot; Many languages</option>
+								<option value="customtts" title="Your server determines the cost, whether speech runs locally or online, and the supported languages.">Custom / Local TTS Endpoint &mdash; Depends on your server</option>
+								<option value="piper">Piper TTS &mdash; Free &middot; Local &middot; Many languages</option>
+								<option value="espeak">eSpeak TTS &mdash; Free &middot; Local &middot; Many languages</option>
+								<option value="edge" disabled title="Requires the SSApp desktop app and an internet connection. Choose a voice for your language.">Edge Natural (desktop app) &mdash; Free &middot; Online &middot; Many languages</option>
 							</select>
+							<p id="ttsProvider10Help" class="tts-provider-help"><small>Local: speech runs on your computer; models may download first. Many languages: choose a matching voice or model. Online free tiers have usage limits.</small></p>
 							<div class="tts-name-option" data-keywords="read sender name chatname message only simpletts2">
 								<input type="checkbox" data-param10="simpletts2" hidden />
 								<label class="switch">
@@ -10731,6 +10885,23 @@ input:checked + .slider:before {
 
 						<div id="ttsButton10" class="hidden"></div>
 
+						<div class="tts-provider-options options_group hidden" id="edgeTTS10">
+							<h4>Edge Natural voices</h4>
+							<p>Free online voices. Keep SSApp open. Speech text is sent to Microsoft; no API key or voice installation is needed.</p>
+							<div class="textInputContainer"><label for="edgeVoiceSelect10">Voice</label>
+							<select id="edgeVoiceSelect10" data-optionparam10="voiceedge" class="textInput popup-reviewed-control">
+							<option value="en-US-EmmaMultilingualNeural">English (US) — Emma</option>
+							<option value="es-ES-ElviraNeural">Spanish (Spain) — Elvira</option>
+							<option value="es-ES-AlvaroNeural">Spanish (Spain) — Alvaro</option>
+							<option value="es-MX-DaliaNeural">Spanish (Mexico) — Dalia</option>
+							<option value="es-MX-JorgeNeural">Spanish (Mexico) — Jorge</option>
+							</select></div>
+							<div class="textInputContainer"><label for="edgeRateSelect10">Speed</label>
+							<select id="edgeRateSelect10" data-optionparam10="edgerate" class="textInput popup-reviewed-control">
+							<option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div>
+							<button type="button" class="edge-voices-refresh" data-section="10">Load all voices</button>
+							<p id="edgeVoiceStatus10" role="status"></p>
+						</div>
 						<div class="tts-provider-options options_group" id="systemTTS10">
 							<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-system-options">Built-in System TTS Options</span></h4>
 							<i>note: the free built-in TTS plays out via the default audio device. <a class="lightblue"  target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
@@ -10875,8 +11046,9 @@ input:checked + .slider:before {
 									<input type="checkbox" data-param10="googlelang" />
 									<span class="slider round"></span>
 								</label>
-								<select id="googleLanguageSelect10" data-optionparam10="googlelang10">
+								<select id="googleLanguageSelect10" data-optionparam10="googlelang">
 									<option value="en-US">English (US)</option>
+									<option value="et-EE">Estonian (Eesti)</option>
 									<option value="en-GB">English (UK)</option>
 									<option value="en-AU">English (Australia)</option>
 									<option value="es-ES">Spanish (Spain)</option>
@@ -11247,6 +11419,7 @@ input:checked + .slider:before {
 								<select id="espeakVoiceSelect10" data-optionparam10="espeakvoice" title="Select the eSpeak TTS Voice">
 									<option value="en" selected>English</option>
 									<option value="es">Spanish</option>
+									<option value="et">Estonian (Eesti)</option>
 									<option value="pt-br">Portuguese Brazil</option>
 									<option value="pt-pt">Portuguese Portugal</option>
 								</select>
@@ -11542,11 +11715,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong data-translate="popup-tip">Tip:</strong> <span data-translate="popup-great-for-keeping-track-of-supporter-activity-during-streams-or-for-creatin">Great for keeping track of supporter activity during streams or for creating an on-stream event ticker.</span></div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">💵</span>
-					<span data-translate="when-enabled-donation-events">
+				<p class="popup-section-description"><span data-translate="when-enabled-donation-events">
 						A real-time dashboard displaying donations and stream events. Create a customized view for monitoring.
 					</span>
-				</h3>
+				</p>
 			<div id="eventsdashboard" data-raw="" class="eventsdashboard"><a href="" id="eventsdashboardlink"></a></div>
 				<div id="eventsdashboard-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
@@ -11730,11 +11902,41 @@ input:checked + .slider:before {
                                     </details>
                                     <details class="popup-subsection">
                                         <summary data-translate="popup-customize-feed-appearance">Customize feed appearance</summary>
-                                        <div class="textInputContainer"><input id="events-accent" class="textInput" type="text" data-optionparam17="accent" placeholder="#bf94ff" /><label for="events-accent" data-translate="popup-accent-color">Accent color</label></div>
-                                        <div class="textInputContainer"><input id="events-pagebg" class="textInput" type="text" data-optionparam17="pagebg" placeholder="#18181b" /><label for="events-pagebg" data-translate="popup-page-background">Page background</label></div>
-                                        <div class="textInputContainer"><input id="events-cardbg" class="textInput" type="text" data-optionparam17="cardbg" placeholder="#242427 or rgba(24,24,27,0.8)" /><label for="events-cardbg" data-translate="popup-card-row-background">Card / row background</label></div>
-                                        <div class="textInputContainer"><input id="events-textcolor" class="textInput" type="text" data-optionparam17="textcolor" placeholder="#efeff1" /><label for="events-textcolor" data-translate="popup-text-color-1c7a30">Text color</label></div>
-                                        <div class="textInputContainer"><input id="events-mutedcolor" class="textInput" type="text" data-optionparam17="mutedcolor" placeholder="#b6b6c0" /><label for="events-mutedcolor" data-translate="popup-secondary-text-color">Secondary text color</label></div>
+                                        <div class="colorInputRow">
+                                            <div class="textInputContainer">
+                                                <input id="events-accent" class="textInput" type="text" data-optionparam17="accent" placeholder="#bf94ff" data-palette="events-accent-palette" />
+                                                <label id="events-accent-label" for="events-accent" data-translate="popup-accent-color">Accent color</label>
+                                            </div>
+                                            <input type="color" id="events-accent-palette" data-color="events-accent" class="colorPicker" value="#bf94ff" aria-labelledby="events-accent-label" />
+                                        </div>
+                                        <div class="colorInputRow">
+                                            <div class="textInputContainer">
+                                                <input id="events-pagebg" class="textInput" type="text" data-optionparam17="pagebg" placeholder="#18181b" data-palette="events-pagebg-palette" />
+                                                <label id="events-pagebg-label" for="events-pagebg" data-translate="popup-page-background">Page background</label>
+                                            </div>
+                                            <input type="color" id="events-pagebg-palette" data-color="events-pagebg" class="colorPicker" value="#18181b" aria-labelledby="events-pagebg-label" />
+                                        </div>
+                                        <div class="colorInputRow">
+                                            <div class="textInputContainer">
+                                                <input id="events-cardbg" class="textInput" type="text" data-optionparam17="cardbg" placeholder="#242427 or rgba(24,24,27,0.8)" data-palette="events-cardbg-palette" />
+                                                <label id="events-cardbg-label" for="events-cardbg" data-translate="popup-card-row-background">Card / row background</label>
+                                            </div>
+                                            <input type="color" id="events-cardbg-palette" data-color="events-cardbg" class="colorPicker" value="#242427" aria-labelledby="events-cardbg-label" />
+                                        </div>
+                                        <div class="colorInputRow">
+                                            <div class="textInputContainer">
+                                                <input id="events-textcolor" class="textInput" type="text" data-optionparam17="textcolor" placeholder="#efeff1" data-palette="events-textcolor-palette" />
+                                                <label id="events-textcolor-label" for="events-textcolor" data-translate="popup-text-color-1c7a30">Text color</label>
+                                            </div>
+                                            <input type="color" id="events-textcolor-palette" data-color="events-textcolor" class="colorPicker" value="#efeff1" aria-labelledby="events-textcolor-label" />
+                                        </div>
+                                        <div class="colorInputRow">
+                                            <div class="textInputContainer">
+                                                <input id="events-mutedcolor" class="textInput" type="text" data-optionparam17="mutedcolor" placeholder="#b6b6c0" data-palette="events-mutedcolor-palette" />
+                                                <label id="events-mutedcolor-label" for="events-mutedcolor" data-translate="popup-secondary-text-color">Secondary text color</label>
+                                            </div>
+                                            <input type="color" id="events-mutedcolor-palette" data-color="events-mutedcolor" class="colorPicker" value="#b6b6c0" aria-labelledby="events-mutedcolor-label" />
+                                        </div>
                                         <div class="textInputContainer"><input id="events-fontsize" class="textInput" type="number" min="10" max="40" data-optionparam17="fontsize" placeholder="Style default" /><label for="events-fontsize" data-translate="popup-text-size-px">Text size (px)</label></div>
                                         <div class="textInputContainer"><input id="events-padding" class="textInput" type="number" min="0" max="40" data-optionparam17="padding" placeholder="Style default" /><label for="events-padding" data-translate="popup-row-padding-px">Row padding (px)</label></div>
                                         <div class="textInputContainer"><input id="events-gap" class="textInput" type="number" min="0" max="40" data-optionparam17="gap" placeholder="Style default" /><label for="events-gap" data-translate="popup-space-between-events-px">Space between events (px)</label></div>
@@ -11811,12 +12013,12 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="popup-custom-viewer-bar-background-color">🎨 Custom viewer bar background color</span>
 								</div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+								<div class="colorInputRow">
 									<div class="textInputContainer" style="width: 95%;" title="Examples: #0009, #1f2937cc, rgba(0,0,0,0.65)">
 										<input type="text" id="events_viewerbarbg" class="textInput instant" autocomplete="off" placeholder="e.g. #0009 or rgba(0,0,0,0.65)" data-textparam17="viewerbarbg" data-palette="events_viewerbarbg_palette" />
-										<label for="events_viewerbarbg"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-viewer-bar-background-color">&gt; Viewer bar background color</span></label>
+										<label id="events_viewerbarbg_label" for="events_viewerbarbg"><span class="popup-control-icon" aria-hidden="true">🎨</span><span data-translate="popup-viewer-bar-background-color">&gt; Viewer bar background color</span></label>
 									</div>
-									<input type="color" data-color="events_viewerbarbg" id="events_viewerbarbg_palette" class="colorPicker" title="Pick a viewer bar background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="events_viewerbarbg_label" data-color="events_viewerbarbg" id="events_viewerbarbg_palette" class="colorPicker" title="Pick a viewer bar background color" />
 								</div>
 
 								<div>
@@ -12025,12 +12227,12 @@ input:checked + .slider:before {
 									</label>
 									<span>🎨 Custom page background color</span>
 								</div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+								<div class="colorInputRow">
 									<div class="textInputContainer" style="width: 95%;" title="Examples: #111111, #1f2937, rgba(20,20,20,0.95)">
 										<input type="text" id="reactions_pagebg" class="textInput instant" autocomplete="off" placeholder="e.g. #111111 or rgba(20,20,20,0.95)" data-textparam27="pagebg" data-palette="reactions_pagebg_palette" />
-										<label for="reactions_pagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Page background color</label>
+										<label id="reactions_pagebg_label" for="reactions_pagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Page background color</label>
 									</div>
-									<input type="color" data-color="reactions_pagebg" id="reactions_pagebg_palette" class="colorPicker" title="Pick a page background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="reactions_pagebg_label" data-color="reactions_pagebg" id="reactions_pagebg_palette" class="colorPicker" title="Pick a page background color" />
 								</div>
 								<div>
 									<small>Every enabled control here is added to the <code>reactions.html</code> URL as a matching parameter.</small>
@@ -12132,12 +12334,12 @@ input:checked + .slider:before {
 									</label>
 									<span>🎨 Custom page background color</span>
 								</div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+								<div class="colorInputRow">
 									<div class="textInputContainer" style="width: 95%;" title="Examples: #111111, #1f2937, rgba(20,20,20,0.95)">
 										<input type="text" id="emotes_pagebg" class="textInput instant" autocomplete="off" placeholder="e.g. #111111 or rgba(20,20,20,0.95)" data-textparam3="pagebg" data-palette="emotes_pagebg_palette" />
-										<label for="emotes_pagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Page background color</label>
+										<label id="emotes_pagebg_label" for="emotes_pagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Page background color</label>
 									</div>
-									<input type="color" data-color="emotes_pagebg" id="emotes_pagebg_palette" class="colorPicker" title="Pick a page background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="emotes_pagebg_label" data-color="emotes_pagebg" id="emotes_pagebg_palette" class="colorPicker" title="Pick a page background color" />
 								</div>
                                 <div>
                                     <label class="switch">
@@ -12202,11 +12404,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Use to encourage chat participation or create hype-based goals during streams.</div>
 				</div>
-                <h3><span class="popup-control-icon" aria-hidden="true">↺</span>
-                    <span data-translate="viewer-overlay-automatic-counts">
+                <p class="popup-section-description"><span data-translate="viewer-overlay-automatic-counts">
                         Viewer counts start automatically when this overlay is open. Enable Track active chatters to also count recent chat participants.
                     </span>
-                </h3>
+                </p>
                 <div id="hypemeter" data-raw="" class="hype_meter"></div>
 				<div id="hypemeter-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -12276,6 +12477,7 @@ input:checked + .slider:before {
 											<option value="scoreboard">Scoreboard</option>
 										</optgroup>
 										<optgroup label="Cards and lists">
+											<option value="sleek">Sleek cards</option>
 											<option value="cards">Cards</option>
 											<option value="vertical">Vertical list</option>
 											<option value="grid">Grid</option>
@@ -12346,12 +12548,12 @@ input:checked + .slider:before {
 									</label>
 									<span>🎨 Custom viewer bar background color</span>
 								</div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+								<div class="colorInputRow">
 									<div class="textInputContainer" style="width: 95%;" title="Examples: #0009, #1f2937cc, rgba(0,0,0,0.65)">
 										<input type="text" id="hype_viewerbarbg" class="textInput instant" autocomplete="off" placeholder="e.g. #0009 or rgba(0,0,0,0.65)" data-textparam4="viewerbarbg" data-palette="hype_viewerbarbg_palette" />
-										<label for="hype_viewerbarbg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Viewer bar background color</label>
+										<label id="hype_viewerbarbg_label" for="hype_viewerbarbg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Viewer bar background color</label>
 									</div>
-									<input type="color" data-color="hype_viewerbarbg" id="hype_viewerbarbg_palette" class="colorPicker" title="Pick a viewer bar background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="hype_viewerbarbg_label" data-color="hype_viewerbarbg" id="hype_viewerbarbg_palette" class="colorPicker" title="Pick a viewer bar background color" />
 								</div>
 								<div title="Set the overall page background color (useful for OBS docks so the page is not transparent/white). Supports hex, rgba, and named colors.">
 									<label class="switch">
@@ -12360,12 +12562,12 @@ input:checked + .slider:before {
 									</label>
 									<span>🎨 Custom page background color</span>
 								</div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+								<div class="colorInputRow">
 									<div class="textInputContainer" style="width: 95%;" title="Examples: #111111, #1f2937, rgba(20,20,20,0.95)">
 										<input type="text" id="hype_pagebg" class="textInput instant" autocomplete="off" placeholder="e.g. #111111 or rgba(20,20,20,0.95)" data-textparam4="pagebg" data-palette="hype_pagebg_palette" />
-										<label for="hype_pagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Page background color</label>
+										<label id="hype_pagebg_label" for="hype_pagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Page background color</label>
 									</div>
-									<input type="color" data-color="hype_pagebg" id="hype_pagebg_palette" class="colorPicker" title="Pick a page background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="hype_pagebg_label" data-color="hype_pagebg" id="hype_pagebg_palette" class="colorPicker" title="Pick a page background color" />
 								</div>
                                 <div>
                                     <label class="switch">
@@ -12539,12 +12741,12 @@ input:checked + .slider:before {
 									</label>
 									<span>🎨 Custom page background color</span>
 								</div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+								<div class="colorInputRow">
 									<div class="textInputContainer" style="width: 95%;" title="Examples: #111111, #1f2937, rgba(20,20,20,0.95)">
 										<input type="text" id="hypetrain_pagebg" class="textInput instant" autocomplete="off" placeholder="e.g. #111111 or rgba(20,20,20,0.95)" data-textparam29="pagebg" data-palette="hypetrain_pagebg_palette" />
-										<label for="hypetrain_pagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Page background color</label>
+										<label id="hypetrain_pagebg_label" for="hypetrain_pagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Page background color</label>
 									</div>
-									<input type="color" data-color="hypetrain_pagebg" id="hypetrain_pagebg_palette" class="colorPicker" title="Pick a page background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="hypetrain_pagebg_label" data-color="hypetrain_pagebg" id="hypetrain_pagebg_palette" class="colorPicker" title="Pick a page background color" />
 								</div>
 							</div>
 						</div>
@@ -12572,11 +12774,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> If no event filter is checked, the overlay defaults to auction + commerce + viewer + Hype Train meta.</div>
 				</div>
-					<h3><span class="popup-control-icon" aria-hidden="true">🏆</span>
-						<span>
+					<p class="popup-section-description"><span>
 							Displays metadata-only events (no chat message required), such as auction status and catalog summaries.
 						</span>
-					</h3>
+					</p>
 					<div id="meta" data-raw="" class="streaming_chat"><a href="" id="metalink"></a></div>
 				<div id="meta-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 					<div class="sticky-action-row top-67">
@@ -12794,12 +12995,12 @@ input:checked + .slider:before {
 									</label>
 									<span>🎨 Custom page background color</span>
 								</div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+								<div class="colorInputRow">
 									<div class="textInputContainer" style="width: 95%;" title="Examples: #111111, #1f2937, rgba(20,20,20,0.95)">
 										<input type="text" id="meta_pagebg" class="textInput instant" autocomplete="off" placeholder="e.g. #111111 or rgba(20,20,20,0.95)" data-textparam24="pagebg" data-palette="meta_pagebg_palette" />
-										<label for="meta_pagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Page background color</label>
+										<label id="meta_pagebg_label" for="meta_pagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Page background color</label>
 									</div>
-									<input type="color" data-color="meta_pagebg" id="meta_pagebg_palette" class="colorPicker" title="Pick a page background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="meta_pagebg_label" data-color="meta_pagebg" id="meta_pagebg_palette" class="colorPicker" title="Pick a page background color" />
 								</div>
 							</div>
 						</div>
@@ -12828,11 +13029,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Perfect for charity streams or setting up sub/donation goals for your community.</div>
 				</div>
-                <h3><span class="popup-control-icon" aria-hidden="true">💵</span>
-                    <span data-translate="when-enabled-a-tally-tipjar">
-                        When enabled, a tally of donations receieved is kept.
+                <p class="popup-section-description"><span data-translate="when-enabled-a-tally-tipjar">
+                        When enabled, a tally of donations received is kept.
                     </span>
-                </h3>
+                </p>
                 <div id="tipjar" data-raw="" class="tipjar"></div>
 				<div id="tipjar-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -13073,7 +13273,14 @@ input:checked + .slider:before {
                                 <details class="popup-settings-panel popup-subsection"><summary>🎨 Panel styling</summary>
                                 <small>These controls apply to Goal Card, Progress Ring, Lower Third, and Segmented Bar.</small>
                                 <div><label for="tipjar-panelopacity"><span class="popup-control-icon" aria-hidden="true">📐</span>Panel opacity (0–1)</label><input id="tipjar-panelopacity" type="number" data-optionparam12="panelopacity" class="textInput" min="0" max="1" step="0.05" placeholder="Default" /></div>
-                                <div><label for="tipjar-accent"><span class="popup-control-icon" aria-hidden="true">🎨</span>Accent color</label><input id="tipjar-accent" type="text" data-optionparam12="accent" class="textInput" placeholder="#66d9b2" /><small style="display:block;opacity:0.8">Use a six-digit hex color. Explicit fill start/end colors still control the progress fill.</small></div>
+                                <div class="colorInputRow">
+                                    <div class="textInputContainer">
+                                        <input id="tipjar-accent" type="text" data-optionparam12="accent" class="textInput" placeholder="#66d9b2" data-palette="tipjar-accent-palette" />
+                                        <label id="tipjar-accent-label" for="tipjar-accent"><span class="popup-control-icon" aria-hidden="true">🎨</span>Accent color</label>
+                                    </div>
+                                    <input type="color" id="tipjar-accent-palette" data-color="tipjar-accent" class="colorPicker" value="#66d9b2" aria-labelledby="tipjar-accent-label" />
+                                </div>
+                                <small style="display:block;opacity:0.8">Use a six-digit hex color. Explicit fill start/end colors still control the progress fill.</small>
                                 <div><label for="tipjar-amountsize"><span class="popup-control-icon" aria-hidden="true">🔤</span>Total text size (12–96 px)</label><input id="tipjar-amountsize" type="number" data-optionparam12="amountsize" class="textInput" min="12" max="96" placeholder="Default" /></div>
                                 <div><label class="switch"><input type="checkbox" data-param12="hidepercent" aria-label="Hide percentage" /><span class="slider round"></span></label><span><span class="popup-control-icon" aria-hidden="true">👁️</span>Hide percentage on new panel styles</span></div></details>
                                 <div>
@@ -13175,17 +13382,26 @@ input:checked + .slider:before {
                                 </div>
 
                                 <h3>📊 <span data-translate="goal-bar-style">Goal Bar Style</span></h3>
-                                <div>
-                                    <label><span class="popup-control-icon" aria-hidden="true">▶️</span>Fill start color (empty/low):</label>
-                                    <input type="text" data-optionparam12="fillstart" class="textInput" placeholder="#2196F3 (blue)" />
+                                <div class="colorInputRow">
+                                    <div class="textInputContainer">
+                                        <input id="tipjar-fillstart" type="text" data-optionparam12="fillstart" class="textInput" placeholder="#2196F3 (blue)" data-palette="tipjar-fillstart-palette" />
+                                        <label id="tipjar-fillstart-label" for="tipjar-fillstart"><span class="popup-control-icon" aria-hidden="true">▶️</span>Fill start color (empty/low):</label>
+                                    </div>
+                                    <input type="color" id="tipjar-fillstart-palette" data-color="tipjar-fillstart" class="colorPicker" value="#2196f3" aria-labelledby="tipjar-fillstart-label" />
                                 </div>
-                                <div>
-                                    <label><span class="popup-control-icon" aria-hidden="true">🎨</span>Fill end color (full):</label>
-                                    <input type="text" data-optionparam12="fillend" class="textInput" placeholder="#f44336 (red)" />
+                                <div class="colorInputRow">
+                                    <div class="textInputContainer">
+                                        <input id="tipjar-fillend" type="text" data-optionparam12="fillend" class="textInput" placeholder="#f44336 (red)" data-palette="tipjar-fillend-palette" />
+                                        <label id="tipjar-fillend-label" for="tipjar-fillend"><span class="popup-control-icon" aria-hidden="true">🎨</span>Fill end color (full):</label>
+                                    </div>
+                                    <input type="color" id="tipjar-fillend-palette" data-color="tipjar-fillend" class="colorPicker" value="#f44336" aria-labelledby="tipjar-fillend-label" />
                                 </div>
-                                <div>
-                                    <label><span class="popup-control-icon" aria-hidden="true">🎨</span>Track color (unfilled bar):</label>
-                                    <input type="text" data-optionparam12="trackcolor" class="textInput" placeholder="Leave blank for default" />
+                                <div class="colorInputRow">
+                                    <div class="textInputContainer">
+                                        <input id="tipjar-trackcolor" type="text" data-optionparam12="trackcolor" class="textInput" placeholder="Leave blank for default" data-palette="tipjar-trackcolor-palette" />
+                                        <label id="tipjar-trackcolor-label" for="tipjar-trackcolor"><span class="popup-control-icon" aria-hidden="true">🎨</span>Track color (unfilled bar):</label>
+                                    </div>
+                                    <input type="color" id="tipjar-trackcolor-palette" data-color="tipjar-trackcolor" class="colorPicker" value="#000000" aria-labelledby="tipjar-trackcolor-label" />
                                 </div>
                                 <div>
                                     <label><span class="popup-control-icon" aria-hidden="true">⚙️</span>Fill behavior:</label>
@@ -13265,13 +13481,12 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Great for viewer games, giveaways, or managing who gets to participate in activities.</div>
 				</div>
-                <h3><span class="popup-control-icon" aria-hidden="true">↺</span>
-                    <span data-translate="when-enabled-guests-can-type">When enabled, guests can type </span>
+                <p class="popup-section-description"><span data-translate="when-enabled-guests-can-type">When enabled, guests can type </span>
                     <i>
                         <b><span data-translate="join">!join</span></b>
                     </i>
                     <span data-translate="in-chat-to-be-added-to-an-ordered-list-of-users-stopstart-to-reset-the-queue"> (or a custom command) in chat to be added to an ordered list of users. Stop/start to reset the queue/draw.</span>
-                </h3>
+                </p>
                 <div id="waitlist" data-raw="" class="waitlist"></div>
 				<div id="waitlist-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -13309,10 +13524,9 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-setting="waitlistmode" />
                                         <span class="slider round"></span>
                                     </label>
-                                    🚦
                                     <div class="textInputContainer" style="display: inline-grid; width: 215px;">
                                         <input type="text" id="customwaitlistcommand" class="textInput" autocomplete="off" placeholder="Set a different !trigger command here" data-textsetting="customwaitlistcommand" />
-                                        <label for="customwaitlistcommand"><span class="popup-control-icon" aria-hidden="true">⚙️</span><span data-translate="enables-the-wait-list-feature">&gt; Enables this page</span></label>
+                                        <label for="customwaitlistcommand"><span class="popup-control-icon" aria-hidden="true">🚦</span><span data-translate="enables-the-wait-list-feature">&gt; Enables this page</span></label>
                                     </div>
                                 </div>
 
@@ -13433,12 +13647,12 @@ input:checked + .slider:before {
 									</label>
 									<span>🎨 Custom page background color</span>
 								</div>
-								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+								<div class="colorInputRow">
 									<div class="textInputContainer" style="width: 95%;" title="Examples: #111111, #1f2937, rgba(20,20,20,0.95)">
 										<input type="text" id="waitlist_pagebg" class="textInput instant" autocomplete="off" placeholder="e.g. #111111 or rgba(20,20,20,0.95)" data-textparam5="pagebg" data-palette="waitlist_pagebg_palette" />
-										<label for="waitlist_pagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Page background color</label>
+										<label id="waitlist_pagebg_label" for="waitlist_pagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Page background color</label>
 									</div>
-									<input type="color" data-color="waitlist_pagebg" id="waitlist_pagebg_palette" class="colorPicker" title="Pick a page background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<input type="color" aria-labelledby="waitlist_pagebg_label" data-color="waitlist_pagebg" id="waitlist_pagebg_palette" class="colorPicker" title="Pick a page background color" />
 								</div>
                                 <div>
                                     <label class="switch">
@@ -13505,6 +13719,13 @@ input:checked + .slider:before {
                                 </div>
 
                                 <div>
+                                    <span data-translate="display-style">Display Style</span>
+                                    <select data-optionparam5="style">
+                                        <option value="">Default</option>
+                                        <option value="sleek">Sleek (numbered card)</option>
+                                    </select>
+                                </div>
+                                <div>
                                     <span data-translate="font-family">
                                         Font Family
                                     </span>
@@ -13548,13 +13769,12 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-warning">⚠️ <strong>Requires setup:</strong> Use the Event Flow Editor (in the extension menu) to create your automations first.</div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">💬</span>
-                    <span data-translate="flowactions-description">This page is the output for actions triggered by the Flow Editor page.</span>
+				<p class="popup-section-description"><span data-translate="flowactions-description">This page is the output for actions triggered by the Flow Editor page.</span>
                     <br>
-                    <span style="font-size: 0.9em; font-weight: 400;">
+                    <span>
                        Note: To access the Event Flow Editor, <a href="#" id="open-event-flow-editor-link" class="lightblue">click here</a>.
                     </span>
-                </h3>
+                </p>
                 <div id="flowactions" data-raw="" class="flowactions_chat"><a href="" id="flowactionslink"></a></div>
 				<div id="flowactions-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -13648,23 +13868,42 @@ input:checked + .slider:before {
                         <!-- TTS Provider Selection -->
                         <div class="tts-provider-selection" style="margin:0 10px 10px 10px">
                             <h3><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-service-provider">Text-to-Speech Service Provider</span></h3>
-                            <select id="ttsProvider18" data-optionparam18="ttsprovider" data-optionsetting18="ttsProvider" class="textInput">
-                                <option selected value="system">System TTS</option>
-                                <option value="kokoro">Kokoro (webGPU/CPU)</option>
-                                <option value="kitten">Kitten TTS (browser-based)</option>
-                                <option value="elevenlabs">ElevenLabs</option>
-                                <option value="google">Google Cloud</option>
-                                <option value="gemini">Gemini (Preview TTS)</option>
-                                <option value="fish">Fish Audio</option>
-                                <option value="speechify">Speechify</option>
-                                <option value="openai">OpenAI</option>
-                                <option value="customtts">Custom / Local TTS Endpoint</option>
-                                <option value="piper">Piper TTS</option>
-                                <option value="espeak">eSpeak TTS</option>
+                            <select aria-describedby="ttsProvider18Help" id="ttsProvider18" data-optionparam18="ttsprovider" data-optionsetting18="ttsProvider" class="textInput">
+                                <option selected value="system" title="Voices and languages depend on your browser and installed system voices. Some browser voices use an online service.">System TTS &mdash; Free &middot; Device/browser &middot; Languages vary</option>
+                                <option value="kokoro">Kokoro &mdash; Free &middot; Local &middot; Many languages</option>
+                                <option value="kitten">Kitten TTS &mdash; Free &middot; Local &middot; English only</option>
+                                <option value="elevenlabs" title="Requires an API key. Free usage is limited; voice access and languages depend on your plan and model.">ElevenLabs &mdash; Free tier / paid &middot; Online &middot; Many languages</option>
+                                <option value="google" title="Requires an API key and billing setup. Free quotas depend on the voice type; usage above the quota is billed.">Google Cloud &mdash; Free quota / paid &middot; Online &middot; Many languages</option>
+                                <option value="gemini" title="Requires an API key. Some TTS models have a limited free tier; other models require paid access.">Gemini TTS &mdash; Free tier / paid &middot; Online &middot; Many languages</option>
+                                <option value="fish" title="Requires an API key. Choose s2.1-pro-free for free speech; other models may charge for usage.">Fish Audio &mdash; Free model / paid &middot; Online &middot; Many languages</option>
+                                <option value="speechify" title="Requires an API key. Trial credits may be available; languages depend on the model.">Speechify &mdash; Paid &middot; Online &middot; Many languages</option>
+                                <option value="openai" title="The OpenAI service charges for API usage. Languages depend on the model.">OpenAI &mdash; Paid &middot; Online &middot; Many languages</option>
+                                <option value="customtts" title="Your server determines the cost, whether speech runs locally or online, and the supported languages.">Custom / Local TTS Endpoint &mdash; Depends on your server</option>
+                                <option value="piper">Piper TTS &mdash; Free &middot; Local &middot; Many languages</option>
+                                <option value="espeak">eSpeak TTS &mdash; Free &middot; Local &middot; Many languages</option>
+                                <option value="edge" disabled title="Requires the SSApp desktop app and an internet connection. Choose a voice for your language.">Edge Natural (desktop app) &mdash; Free &middot; Online &middot; Many languages</option>
                             </select>
+                            <p id="ttsProvider18Help" class="tts-provider-help"><small>Local: speech runs on your computer; models may download first. Many languages: choose a matching voice or model. Online free tiers have usage limits.</small></p>
                         </div>
 
                         <!-- System TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="edgeTTS18">
+                            <h4>Edge Natural voices</h4>
+                            <p>Free online voices. Keep SSApp open. Speech text is sent to Microsoft; no API key or voice installation is needed.</p>
+                            <div class="textInputContainer"><label for="edgeVoiceSelect18">Voice</label>
+                            <select id="edgeVoiceSelect18" data-optionparam18="voiceedge" class="textInput popup-reviewed-control">
+                            <option value="en-US-EmmaMultilingualNeural">English (US) — Emma</option>
+                            <option value="es-ES-ElviraNeural">Spanish (Spain) — Elvira</option>
+                            <option value="es-ES-AlvaroNeural">Spanish (Spain) — Alvaro</option>
+                            <option value="es-MX-DaliaNeural">Spanish (Mexico) — Dalia</option>
+                            <option value="es-MX-JorgeNeural">Spanish (Mexico) — Jorge</option>
+                            </select></div>
+                            <div class="textInputContainer"><label for="edgeRateSelect18">Speed</label>
+                            <select id="edgeRateSelect18" data-optionparam18="edgerate" class="textInput popup-reviewed-control">
+                            <option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div>
+                            <button type="button" class="edge-voices-refresh" data-section="18">Load all voices</button>
+                            <p id="edgeVoiceStatus18" role="status"></p>
+                        </div>
                         <div class="tts-provider-options options_group" id="systemTTS18">
                             <h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-system-options">Built-in System TTS Options</span></h4>
                             <i>note: the free built-in TTS plays out via the default audio device.</i>
@@ -13877,6 +14116,7 @@ input:checked + .slider:before {
                                 </label>
                                 <select id="googleLanguageSelect18" data-optionparam18="googlelang">
                                     <option value="en-US">English (US)</option>
+                                    <option value="et-EE">Estonian (Eesti)</option>
                                     <option value="en-GB">English (UK)</option>
                                     <option value="en-AU">English (Australia)</option>
                                     <option value="es-ES">Spanish (Spain)</option>
@@ -14193,6 +14433,7 @@ input:checked + .slider:before {
                                 <select id="espeakVoiceSelect18" data-optionparam18="espeakvoice" title="Select the eSpeak TTS Voice">
                                     <option value="en" selected>English</option>
                                     <option value="es">Spanish</option>
+                                    <option value="et">Estonian (Eesti)</option>
                                     <option value="pt-br">Portuguese Brazil</option>
                                     <option value="pt-pt">Portuguese Portugal</option>
                                 </select>
@@ -14236,11 +14477,11 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-warning">⚠️ <strong>Note:</strong> Community-contributed feature - may have occasional bugs.</div>
 				</div>
-				<h3>
+				<p class="popup-section-description">
                     <span data-translate="giveaway-tools-description">
                        Run giveaways and point games with a winner card, name reel, or community wheel. Control them here or with the API / Stream Deck.
                     </span>
-                </h3>
+                </p>
                 <div id="giveaway" data-raw="" class="streaming_chat"><a href="" id="giveawaylink"></a></div>
 				<div id="giveaway-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -14329,11 +14570,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Great for audience decisions, game choices, or just fun community engagement.</div>
 				</div>
-                <h3><span class="popup-control-icon" aria-hidden="true">👤</span>
-                    <span data-translate="when-enabled-a-poll">
-                       A graphic poll. Users can enter a hash-tagged word to vote it it.
+                <p class="popup-section-description"><span data-translate="when-enabled-a-poll">
+                       A graphic poll. Users can enter a hash-tagged word to vote.
                     </span>
-                </h3>
+                </p>
 				<div id="poll" data-raw="" class="streaming_chat"><a href="" id="polllink"></a></div>
 				<div id="poll-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -14477,11 +14717,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Fun way to show your community how global your audience is!</div>
 				</div>
-                <h3><span class="popup-control-icon" aria-hidden="true">👤</span>
-                    <span data-translate="when-enabled-a-map">
+                <p class="popup-section-description"><span data-translate="when-enabled-a-map">
                        A graphical map. Users can enter their location to mark on it.
                     </span>
-                </h3>
+                </p>
 				<div id="map" data-raw="" class="streaming_chat"><a href="" id="maplink"></a></div>
 				<div id="map-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -14670,11 +14909,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Great for ending streams with a thank-you to your community!</div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">👁️</span>
-					<span data-translate="when-enabled-a-credits">
+				<p class="popup-section-description"><span data-translate="when-enabled-a-credits">
 					   A credits roll overlay. Show appreciation to your chat participants and donors.
 					</span>
-				</h3>
+				</p>
 				<div id="credits" data-raw="" class="streaming_chat"><a href="" id="creditslink"></a></div>
 				<div id="credits-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
@@ -14801,12 +15039,12 @@ input:checked + .slider:before {
 											</label>
 											<span>🎨 Custom page background color</span>
 										</div>
-										<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+										<div class="colorInputRow">
 											<div class="textInputContainer" style="width: 95%;" title="Examples: #111111, #1f2937, rgba(20,20,20,0.95)">
 												<input type="text" id="credits_pagebg" class="textInput instant" autocomplete="off" placeholder="e.g. #111111 or rgba(20,20,20,0.95)" data-textparam13="pagebg" data-palette="credits_pagebg_palette" />
-												<label for="credits_pagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Page background color</label>
+												<label id="credits_pagebg_label" for="credits_pagebg"><span class="popup-control-icon" aria-hidden="true">🎨</span>&gt; Page background color</label>
 											</div>
-											<input type="color" data-color="credits_pagebg" id="credits_pagebg_palette" class="colorPicker" title="Pick a page background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+											<input type="color" aria-labelledby="credits_pagebg_label" data-color="credits_pagebg" id="credits_pagebg_palette" class="colorPicker" title="Pick a page background color" />
 										</div>
 										<br>
 									<span data-translate="font-family">
@@ -14827,16 +15065,18 @@ input:checked + .slider:before {
 									<i>note: Install custom fonts on your system (Windows: right-click .ttf/.otf &rarr; Install, then restart browser). <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">Font detector &amp; help</a></i>
 								</div>
 								<br>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param13="textcolor" />
+								<div class="colorInputRow">
+								    <label class="switch">
+										<input type="checkbox" aria-labelledby="text_color_label" data-param13="textcolor" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="text-color">
+								    <div class="textInputContainer">
+								        <input type="text" data-palette="text_color_palette" id="text_color" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam13="textcolor" />
+								        <label id="text_color_label" for="text_color"><span data-translate="text-color">
 										🎨 Text color
-									</span>
-									<input type="text" style="width: 50px;" data-palette="text_color_palette" id="text_color" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam13="textcolor" />
-									<input type="color" data-color="text_color" id="text_color_palette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+									</span></label>
+								    </div>
+								    <input type="color" aria-labelledby="text_color_label" data-color="text_color" id="text_color_palette" class="colorPicker">
 								</div>
 								<div>
 									<label class="switch">
@@ -14906,11 +15146,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Encourages engagement by showing viewers how they rank in your community!</div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">🏆</span>
-					<span data-translate="when-enabled-a-leaderboard">
+				<p class="popup-section-description"><span data-translate="when-enabled-a-leaderboard">
 					   An interactive leaderboard overlay. Track and display top contributors, chatters, or custom scores.
 					</span>
-				</h3>
+				</p>
 				<div id="leaderboard" data-raw="" class="streaming_chat"><a href="" id="leaderboardlink"></a></div>
 				<div id="leaderboard-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
@@ -15131,11 +15370,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Enable the global Points System above to show persistent loyalty points, or use the local fallback options below for temporary chat activity scores.</div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">💵</span>
-					<span data-translate="when-enabled-a-scoreboard">
+				<p class="popup-section-description"><span data-translate="when-enabled-a-scoreboard">
 					   A real-time points tracking scoreboard for loyalty points, chat activity, donations, and custom Event Flow score payloads.
 					</span>
-				</h3>
+				</p>
 				<div id="scoreboard" data-raw="" class="streaming_chat"><a href="" id="scoreboardlink"></a></div>
 				<div id="scoreboard-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
@@ -15272,27 +15510,31 @@ input:checked + .slider:before {
 								</div>
 								<br>
 
-								<div>
-									<label class="switch">
-                                        <input type="checkbox" data-param21="bgcolor" />
+								<div class="colorInputRow">
+								    <label class="switch">
+                                        <input type="checkbox" aria-labelledby="bg_color20_label" data-param21="bgcolor" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="background-color">
+								    <div class="textInputContainer">
+								        <input type="text" data-palette="bg_color_palette20" id="bg_color20" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam21="bgcolor" />
+								        <label id="bg_color20_label" for="bg_color20"><span data-translate="background-color">
 										🎨 Background color
-									</span>
-                                    <input type="text" style="width: 50px;" data-palette="bg_color_palette20" id="bg_color20" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam21="bgcolor" />
-									<input type="color" data-color="bg_color20" id="bg_color_palette20" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+									</span></label>
+								    </div>
+								    <input type="color" aria-labelledby="bg_color20_label" data-color="bg_color20" id="bg_color_palette20" class="colorPicker">
 								</div>
-								<div>
-									<label class="switch">
-                                        <input type="checkbox" data-param21="textcolor" />
+								<div class="colorInputRow">
+								    <label class="switch">
+                                        <input type="checkbox" aria-labelledby="text_color20_label" data-param21="textcolor" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="text-color">
+								    <div class="textInputContainer">
+								        <input type="text" data-palette="text_color_palette20" id="text_color20" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam21="textcolor" />
+								        <label id="text_color20_label" for="text_color20"><span data-translate="text-color">
 										🎨 Text color
-									</span>
-                                    <input type="text" style="width: 50px;" data-palette="text_color_palette20" id="text_color20" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam21="textcolor" />
-									<input type="color" data-color="text_color20" id="text_color_palette20" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+									</span></label>
+								    </div>
+								    <input type="color" aria-labelledby="text_color20_label" data-color="text_color20" id="text_color_palette20" class="colorPicker">
 								</div>
 								<br>
 
@@ -15411,9 +15653,12 @@ input:checked + .slider:before {
 										🤖 Hide bot messages (dock still shows them)
 									</span>
 								</div>
-								<div class="textInputContainer" style="width: 95%;" title="Solid background colour for chroma keying in OBS, e.g. 00FF00 for green">
-									<input type="text" id="common-chroma" class="textInput instant" autocomplete="off" placeholder="e.g. 00FF00" data-textparam30="chroma" />
-									<label for="common-chroma"><span data-translate="common-chroma">&gt; 🟢 Chroma key background (hex)</span></label>
+								<div class="colorInputRow" title="Solid background colour for chroma keying in OBS, e.g. 00FF00 for green">
+								    <div class="textInputContainer">
+								        <input type="text" id="common-chroma" class="textInput instant" autocomplete="off" placeholder="e.g. 00FF00" data-textparam30="chroma" data-palette="common-chroma-palette" />
+								        <label id="common-chroma-label" for="common-chroma"><span data-translate="common-chroma">&gt; 🟢 Chroma key background (hex)</span></label>
+								    </div>
+								    <input type="color" id="common-chroma-palette" data-color="common-chroma" class="colorPicker" value="#00ff00" aria-labelledby="common-chroma-label" />
 								</div>
 								<div class="textInputContainer" style="width: 95%;" title="Base font size in pixels (e.g. 18)">
 									<input type="number" id="common-font-size" class="textInput instant" autocomplete="off" min="8" max="72" placeholder="e.g. 16" data-textparam30="font" />
@@ -15431,6 +15676,7 @@ input:checked + .slider:before {
 										<option value="Nunito">Nunito</option>
 										<option value="Oswald">Oswald</option>
 										<option value="Bebas Neue">Bebas Neue</option>
+										<option value="Archivo Black">Archivo Black (heavy)</option>
 										<option value="Comic Neue">Comic Neue</option>
 										<option value="Roboto Mono">Roboto Mono</option>
 										<option value="Source Code Pro">Source Code Pro</option>
@@ -15524,6 +15770,7 @@ input:checked + .slider:before {
 										<option value="Nunito">Nunito</option>
 										<option value="Oswald">Oswald</option>
 										<option value="Bebas Neue">Bebas Neue</option>
+										<option value="Archivo Black">Archivo Black (heavy)</option>
 										<option value="Comic Neue">Comic Neue</option>
 										<option value="Roboto Mono">Roboto Mono</option>
 										<option value="Source Code Pro">Source Code Pro</option>
@@ -15913,11 +16160,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Perfect for BRB screens or dedicated game segments!</div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">👤</span>
-					<span data-translate="interactive-chat-games">
+				<p class="popup-section-description"><span data-translate="interactive-chat-games">
 					   Interactive chat-based games for viewer engagement. Choose from various mini-games.
 					</span>
-				</h3>
+				</p>
 				<div id="games" data-raw="" class="streaming_chat"><a href="" id="gameslink"></a></div>
 
 				<!-- Games Preset Selector -->
@@ -16330,11 +16576,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Use for stream announcements, social media handles, or a scrolling chat feed.</div>
 				</div>
-                <h3><span class="popup-control-icon" aria-hidden="true">📡</span>
-                    <span data-translate="when-enabled-a-ticker">
+                <p class="popup-section-description"><span data-translate="when-enabled-a-ticker">
                        A ticker banner. Select the source for the ticker text messages
                     </span>
-                </h3>
+                </p>
 				<div id="ticker" data-raw="" class="streaming_chat"><a href="" id="tickerlink"></a></div>
 				<div id="ticker-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -16400,6 +16645,7 @@ input:checked + .slider:before {
 											<option value="stock">Stock Market</option>
 											<option value="cnn">CNN Style</option>
 											<option value="fox">FOX Style</option>
+											<option value="sleek">Sleek (floating bar)</option>
 										</select>
 									</div>
 									<br>
@@ -16514,11 +16760,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Ask your chat a question and watch the most popular answers grow in the cloud!</div>
 				</div>
-                <h3><span class="popup-control-icon" aria-hidden="true">💬</span>
-                    <span data-translate="when-enabled-a-wordcloud">
+                <p class="popup-section-description"><span data-translate="when-enabled-a-wordcloud">
                        A wordcloud overlay. Chat messages that contain a single word are counted by default.
                     </span>
-                </h3>
+                </p>
 				<div id="wordcloud" data-raw="" class="streaming_chat"><a href="" id="wordcloudlink"></a></div>
 				<div id="wordcloud-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
             </div>
@@ -16615,11 +16860,10 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Create fun reactions for your community - like a celebration GIF when someone says !party.</div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">🖼️</span>
-					<span data-translate="when-enabled-custom-commands">
+				<p class="popup-section-description"><span data-translate="when-enabled-custom-commands">
 						When enabled, custom commands will trigger specific GIFs or media in the overlay.
 					</span>
-				</h3>
+				</p>
 				<div id="custom-gif-commands" data-raw="" class="streaming_chat"><a href="" id="custom-gif-commandslink"></a></div>
 				<div id="custom-gif-commands-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
@@ -16684,7 +16928,7 @@ input:checked + .slider:before {
 						<li>Works with the <code>&amp;server</code> API path for remote control</li>
 					</ul>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">⏱️</span><span>A focused timer overlay for breaks, interviews, countdowns, and on-stream pacing.</span></h3>
+				<p class="popup-section-description"><span>A focused timer overlay for breaks, interviews, countdowns, and on-stream pacing.</span></p>
 				<div id="timer" data-raw="" class="streaming_chat"><a href="" id="timerlink"></a></div>
 				<div id="timer-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
@@ -16803,7 +17047,7 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-warning">⚠️ <strong>Requires setup:</strong> You need to authorize your Spotify account in the setup section below.</div>
 				</div>
-				<h3><span class="popup-control-icon" aria-hidden="true">🔌</span><span>Connect your Spotify account to create a widget overlay or announce to chat the current song.</span></h3>
+				<p class="popup-section-description"><span>Connect your Spotify account to create a widget overlay or announce to chat the current song.</span></p>
 				<div id="spotify" data-raw="" class="streaming_chat"><a href="" id="spotifylink"></a></div>
 				<div id="spotify-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
@@ -16880,9 +17124,12 @@ input:checked + .slider:before {
 										<option value="ticker">Ticker</option>
 									</select>
 								</div>
-								<div class="textInputContainer" style="width: 95%; margin-top: 10px;">
-									<input type="text" id="spotifyAccent" class="textInput" autocomplete="off" placeholder="#1DB954" data-textparam22="accent" />
-									<label for="spotifyAccent"><span class="popup-control-icon" aria-hidden="true">🎨</span>Accent color (hex or CSS color)</label>
+								<div class="colorInputRow">
+								    <div class="textInputContainer">
+								        <input type="text" id="spotifyAccent" class="textInput" autocomplete="off" placeholder="#1DB954" data-textparam22="accent" data-palette="spotifyAccent-palette" />
+								        <label id="spotifyAccent-label" for="spotifyAccent"><span class="popup-control-icon" aria-hidden="true">🎨</span>Accent color (hex or CSS color)</label>
+								    </div>
+								    <input type="color" id="spotifyAccent-palette" data-color="spotifyAccent" class="colorPicker" value="#1db954" aria-labelledby="spotifyAccent-label" />
 								</div>
 								<div>
 									<label class="switch">

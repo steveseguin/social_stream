@@ -921,59 +921,96 @@
 			return;
 		}
 		lastXRoute = currentRoute;
+		clearXViewerCount();
 		stopObservingXChat();
 		clearXChatOnlyLayout();
 	}
 
 	window.addEventListener("popstate", handleXRouteChange);
 	window.addEventListener("hashchange", handleXRouteChange);
+	window.addEventListener("pagehide", clearXViewerCount);
 	setInterval(handleXRouteChange, 250);
 	
 	
-	function findViewerSpan() {
-	  const spans = document.querySelectorAll('span');
-	  return Array.from(spans).find(span => {
-		const text = span.textContent.trim();
-		return text.includes('view') && !text.includes('LIVE') && /\d+\s*view/.test(text);
-	  });
+	var lastXViewerCountAt = 0;
+
+	function parseXViewerCount(text) {
+		text = String(text || "").replace(/\s+/g, " ").trim();
+		var match = text.match(/^(?:live\s+)?(\d[\d., ]*?)\s*([kmb])?\s+(?:views?|viewers?|watching(?:\s+now)?)(?:\s+live)?$/i);
+		if (!match) return null;
+		var number = match[1].trim();
+		var suffix = (match[2] || "").toLowerCase();
+		if (suffix) {
+			if (!/^\d+(?:[.,]\d+)?$/.test(number)) return null;
+			number = number.replace(",", ".");
+		} else {
+			if (!/^\d+$/.test(number) && !/^\d{1,3}(?:,\d{3})+$/.test(number) &&
+				!/^\d{1,3}(?:\.\d{3})+$/.test(number) && !/^\d{1,3}(?: \d{3})+$/.test(number)) return null;
+			number = number.replace(/[., ]/g, "");
+		}
+		var multiplier = suffix === "k" ? 1000 : suffix === "m" ? 1000000 : suffix === "b" ? 1000000000 : 1;
+		var count = Math.round(Number(number) * multiplier);
+		return Number.isSafeInteger(count) && count >= 0 ? count : null;
 	}
-	
-	function checkViewers(){
-		if (!isSupportedXLivePage()){
+
+	function findXViewerCount() {
+		// Read only the broadcast player, never chat text, post views or recommendations.
+		var videos = document.querySelectorAll("video");
+		for (var i = 0; i < videos.length; i++) {
+			if (videos[i].closest("article, aside, [data-testid='tweet']")) continue;
+			var player = videos[i].closest("[data-testid='videoPlayer']") || videos[i].parentElement;
+			if (!player) continue;
+			var nodes = player.querySelectorAll("span, div, [aria-label]");
+			for (var j = 0; j < nodes.length; j++) {
+				var node = nodes[j];
+				if (node.closest("button, a, [role='button']")) continue;
+				var text = (node.textContent || "").trim();
+				var label = (node.getAttribute("aria-label") || "").trim();
+				if (!/^live$/i.test(text) && !/^live$/i.test(label)) continue;
+				// The live badge and its count are siblings. Do not use a replay's title
+				// or the player's LIVE seek button as evidence that the broadcast is live.
+				var siblings = node.parentElement.children;
+				for (var k = 0; k < siblings.length; k++) {
+					if (siblings[k].matches("button, a, [role='button']")) continue;
+					var count = parseXViewerCount(siblings[k].getAttribute("aria-label"));
+					if (count === null) count = parseXViewerCount(siblings[k].textContent);
+					if (count !== null) return count;
+				}
+			}
+			return null;
+		}
+		return null;
+	}
+
+	function sendXViewerCount(count) {
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, {
+				message: { type: "x", event: "viewer_update", meta: count }
+			}, function () {});
+		} catch(e) {}
+	}
+
+	function clearXViewerCount() {
+		if (!lastXViewerCountAt) return;
+		sendXViewerCount(0);
+		lastXViewerCountAt = 0;
+	}
+
+	function checkViewers() {
+		if (!isSupportedXLivePage() || !isExtensionOn || !(settings.showviewercount || settings.hypemode)) {
+			clearXViewerCount();
 			return;
 		}
-		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
-			try {
-				let viewerSpan = findViewerSpan();
-				if (viewerSpan && viewerSpan.textContent){
-					let views = viewerSpan.textContent.toUpperCase();
-					let multiplier = 1;
-					if (views.includes("K")){
-						multiplier = 1000;
-						views = views.replace("K","");
-					} else if (views.includes("M")){
-						multiplier = 1000000;
-						views = views.replace("M","");
-					}
-					views = views.split(" ")[0];
-					if (views == parseFloat(views)){
-						views = parseFloat(views) * multiplier;
-						chrome.runtime.sendMessage(
-							chrome.runtime.id,
-							({message:{
-									type: 'x',
-									event: 'viewer_update',
-									meta: views
-								}
-							}),
-							function (e) {}
-						);
-					}
-				}
-			} catch (e) {
-				console.log(e);
+		try {
+			var count = findXViewerCount();
+			if (count !== null) {
+				sendXViewerCount(count);
+				lastXViewerCountAt = Date.now();
+			} else if (lastXViewerCountAt && Date.now() - lastXViewerCountAt >= 15000) {
+				// Allow short player rebuilds, but do not leave an ended stream's count behind.
+				clearXViewerCount();
 			}
-		}
+		} catch(e) {}
 	}
 
 	function isXLiveRetryUrl() {

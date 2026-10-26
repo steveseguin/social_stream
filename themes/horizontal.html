@@ -461,11 +461,13 @@ img.ssn-content-image { display: inline-block; width: 64px; height: 28px; margin
     // Content images are separate from chat text (including GIF-only messages).
     function appendContentImage(container, data) {
         if (typeof data.contentimg !== 'string' || !data.contentimg.trim()) return;
+        const contentSrc = sanitizeRelayUrl(data.contentimg, true);
+        if (!contentSrc) return;
         const img = document.createElement('img');
         img.className = 'ssn-content-image';
         img.alt = (data.meta && data.meta.gifLabel) || 'Content image';
         img.onerror = function () { this.style.display = 'none'; };
-        img.src = data.contentimg;
+        img.src = contentSrc;
         container.appendChild(img);
     }
 
@@ -488,10 +490,13 @@ img.ssn-content-image { display: inline-block; width: 64px; height: 28px; margin
         messageTimestamps.set(messageId, Date.now());
         
         var chatbadgesHtml = !hideBadges ? SocialStreamBadges.render(data.chatbadges) : "";
+        const safeNameColor = sanitizeRelayCssColor(data.nameColor);
+        const safeType = String(data.type || '').replace(/[^a-zA-Z0-9_-]/g, '');
+        const safeChatImg = sanitizeRelayUrl(data.chatimg, true);
         
         let avatarBorderColor = "linear-gradient(45deg, #4ab8f9, #4cd137)"; // Default gradient
-        if (data.nameColor) {
-            avatarBorderColor = `linear-gradient(45deg, ${data.nameColor}, ${data.nameColor}88)`;
+        if (safeNameColor) {
+            avatarBorderColor = `linear-gradient(45deg, ${safeNameColor}, ${safeNameColor}88)`;
         }
         
         let leftEdgeColor = null;
@@ -508,10 +513,10 @@ img.ssn-content-image { display: inline-block; width: 64px; height: 28px; margin
             messageDiv.style.paddingLeft = '12px';
         }
         
-        const sourceIconHtml = (!hideSource && data.type) ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : '';
-        const avatarHtml = (!hideAvatars && data.chatimg) ? 
-            `<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${escapeCssUrlAttribute(data.chatimg)}');"></div></div>` : '';
-        const nameHtml = (!hideNames && data.chatname) ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';
+        const sourceIconHtml = (!hideSource && safeType) ? `<img src="https://socialstream.ninja/sources/images/${safeType}.png" alt="Source" class="source-icon">` : '';
+        const avatarHtml = (!hideAvatars && safeChatImg) ? 
+            `<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${escapeCssUrlAttribute(safeChatImg)}');"></div></div>` : '';
+        const nameHtml = (!hideNames && data.chatname) ? `<div class="name-bg"><div class="name" ${safeNameColor ? `style="text-shadow: 0 0 3px ${safeNameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div></div>` : '';
         // Display-only textOnly URL option: hides extra decoration; data.textonly independently defines the chatmessage string format.
         const membershipHtml = (!textOnly && data.membership) ? `<span class="membership-status">${fallbackEscapeHtml(data.membership)}</span>` : '';
         // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.

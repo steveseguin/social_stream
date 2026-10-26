@@ -37,6 +37,12 @@ These themes include readme files, sample photos, and guides:
 - [Windows3.1 Theme](https://socialstream.ninja/themes/Windows3.1)
 - [Neutron Theme](https://socialstream.ninja/themes/Neutron)
 
+### Layout & Welcome Overlays
+Add `?session=XXXXXXX` to these URLs. Both accept `&style=` with any matching collection; the welcome card also accepts the illustrated `art-*` styles.
+
+- [Vertical Chat](https://socialstream.ninja/themes/vertical-chat.html) - portrait 9:16 chat for TikTok, Shorts and Reels, with safe zones for the platform UI (`&safe=0` turns them off, `&align=right` moves the cards).
+- [First-Time Chatter Welcome](https://socialstream.ninja/themes/first-chatters.html) - greets each first-time chatter with a welcome card (`&text=Welcome {name}!`, `&nomessage`).
+
 ### Simple Drop-in Themes
 Add `?session=XXXXXXX` to these URLs, replacing XXXXXXX with your session ID:
 

@@ -515,7 +515,9 @@
         }
 
         .style-esports .username {
-            background: linear-gradient(90deg, #ff0000, #00ff00, #0000ff);
+            background: linear-gradient(90deg, #ff4d4d, #4dff7a, #5c9dff);
+            /* The base outline shadow would paint over gradient-clipped text. */
+            text-shadow: none;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -668,6 +670,16 @@
                 opacity: 0;
             }
         }
+
+        /* Background effects only appear behind a featured message unless &ambient is set. */
+        .particles {
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        body.featured-active .particles, body.ambient .particles {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -687,6 +699,7 @@
         
         // Apply selected style
         document.body.className = `style-${style}`;
+        if (urlParams.has('ambient')) document.body.classList.add('ambient');
 
         // Create animated particles
         const particlesContainer = document.querySelector('.particles');
@@ -925,6 +938,7 @@
                 // Trigger animation
                 requestAnimationFrame(() => {
                     wrapper.classList.add('show');
+                    document.body.classList.add('featured-active');
                 });
 
                 currentMessage = wrapper;
@@ -956,6 +970,7 @@
             if (currentMessage) {
                 currentMessage.classList.remove('show');
                 currentMessage.classList.add('hide');
+                document.body.classList.remove('featured-active');
                 setTimeout(() => {
                     if (currentMessage && currentMessage.parentNode) {
                         currentMessage.parentNode.removeChild(currentMessage);

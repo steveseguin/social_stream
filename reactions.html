@@ -6,6 +6,8 @@
     <meta name="robots" content="noindex">
   <script type="text/javascript" src="./js/local-server-url.js"></script>
   <script src="./shared/overlay-control-transport.js"></script>
+  <script src="./libs/objects.js"></script>
+  <script src="./shared/utils/chatHtml.js"></script>
 
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>Social Stream - Reactions Overlay</title>
@@ -255,7 +257,7 @@ body {
 		if (typeof value !== "string" || !value) {
 			return "";
 		}
-		temp = document.createElement("div");
+		temp = document.createElement("template").content.appendChild(document.createElement("div"));
 		temp.innerHTML = value;
 		return (temp.textContent || temp.innerText || "").replace(/\s+/g, " ").trim();
 	}
@@ -568,6 +570,11 @@ body {
 			} else {
 				markup = fallbackReactionMarkup(payload);
 			}
+		} else if (payload.textonly) {
+			// textonly=true means a literal chatmessage string, never HTML.
+			markup = fallbackEscapeHtml(markup);
+		} else {
+			markup = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(markup) : fallbackEscapeHtml(markup);
 		}
 
 		for (i = 0; i < total; i++) {

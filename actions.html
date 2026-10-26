@@ -457,7 +457,7 @@
                 Object.values(overlayLayers).forEach(layer => {
                     if (layer) layer.innerHTML = '';
                 });
-            } else if (overlayLayers[layerName]) {
+            } else if (Object.prototype.hasOwnProperty.call(overlayLayers, layerName) && overlayLayers[layerName]) {
                 overlayLayers[layerName].innerHTML = '';
             }
         }

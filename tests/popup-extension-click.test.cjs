@@ -31,6 +31,11 @@ const path = require('path');
             if (!icon.isConnected || icon.getAttribute('aria-hidden') !== 'true') throw new Error('Translation removed the decorative icon');
             translated.innerHTML = text;
         });
+        // The alert box lives under the Alerts tab; open it like a user would.
+        await page.click('#popup-tab-alerts');
+        if (await page.locator('.link[data-panel-section="multialerts"]').evaluate(head => head.classList.contains('popup-feature-collapsed'))) {
+            await page.click('.link[data-panel-section="multialerts"] .popup-feature-toggle');
+        }
         for (const theme of ['light', 'dark']) {
             await page.emulateMedia({ colorScheme: theme });
             for (const width of [400, 600]) {

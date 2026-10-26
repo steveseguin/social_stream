@@ -570,6 +570,8 @@
 		// Modified addMessageToOverlay function, focusing on the ticker part
 		function addMessageToOverlay(data) {
 		  let messageElement;
+		  const nameColor = sanitizeRelayCssColor(data.nameColor);
+		  const textColor = sanitizeRelayCssColor(data.textColor);
 		  
 		  if (data.hasDonation) {
 			const amount = parseFloat(data.hasDonation.replace(/[^0-9.]/g, ""));
@@ -616,7 +618,7 @@
 			  <div id="header" style="background-color: ${color};">
 				<div id="author-photo" ${data.chatimg ? `style="background-image: url('${escapeCssUrlAttribute(data.chatimg)}')"` : ''}></div>
 				<div id="header-content">
-				  <div id="author-name" ${data.nameColor ? `style="color: ${data.nameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div>
+				  <div id="author-name" ${nameColor ? `style="color: ${nameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</div>
 				  <div id="purchase-amount">${fallbackEscapeHtml(data.hasDonation)}</div>
 				</div>
 			  </div>
@@ -649,8 +651,8 @@
 				<span id="timestamp">12:00</span>
 				${authorType ? `<span id="author-badges"><yt-live-chat-author-badge-renderer type="${authorType}"></yt-live-chat-author-badge-renderer></span>` : ''}
 				${SocialStreamBadges.render(data.chatbadges)}
-				<span id="author-name" ${authorType ? `type="${authorType}"` : ''} ${data.nameColor ? `style="color: ${data.nameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</span>
-				<span id="message" ${data.textColor ? `style="color: ${data.textColor}"` : ''}>${data.textonly ? '' : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage || '') : fallbackEscapeHtml(data.chatmessage || ''))}</span>
+				<span id="author-name" ${authorType ? `type="${authorType}"` : ''} ${nameColor ? `style="color: ${nameColor}"` : ''}>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : fallbackEscapeHtml(data.chatname))}</span>
+				<span id="message" ${textColor ? `style="color: ${textColor}"` : ''}>${data.textonly ? '' : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage || '') : fallbackEscapeHtml(data.chatmessage || ''))}</span>
 			  </div>`;
 		  }
 
@@ -660,12 +662,13 @@
 			if (messageText) messageText.textContent = data.chatmessage || '';
 		  }
 
-		  if (typeof data.contentimg === 'string' && data.contentimg.trim()) {
+		  var contentImageUrl = sanitizeRelayUrl(data.contentimg, true);
+		  if (contentImageUrl) {
 			var contentImage = document.createElement('img');
 			contentImage.className = 'content-image';
 			contentImage.alt = (data.meta && data.meta.gifLabel) || 'Chat attachment';
 			contentImage.onerror = function () { this.style.display = 'none'; };
-			contentImage.src = data.contentimg;
+			contentImage.src = contentImageUrl;
 			messageElement.querySelector('#content').appendChild(contentImage);
 		  }
 

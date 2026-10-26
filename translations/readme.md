@@ -1,5 +1,7 @@
 ## Social Stream now has translations..
 
+Choose **Eesti** in the menu’s language selector to use Estonian. Reopen the menu to apply the language change. Estonian uses `et` for interface translations and `et-EE` for speech providers that support it. Changing the interface language does not select a TTS voice; choose a matching voice in the [speech settings](../docs/tts-setup-guide.html).
+
 woo !
 ![image](https://github.com/steveseguin/social_stream/assets/2575698/5f5b3f89-e58c-44f4-9b09-8b798fff4c30)
 

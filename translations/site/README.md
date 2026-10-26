@@ -3,20 +3,24 @@
 English HTML remains the source. The builder creates separate language folders
 without relocating the site or its applications. It covers the homepage, all
 public HTML guides in `docs/`, and the linked legal, font, actions, Lite and
-Stream Deck guide pages (97 pages at the time of this expansion).
+Stream Deck guide pages (121 pages).
 
 Supported catalogs are Spanish (`es`), Brazilian Portuguese (`pt-br`), Russian
 (`ru`), French (`fr`), German (`de`), Japanese (`ja`), Simplified Chinese
 (`zh-cn`), Traditional Chinese (`zh-tw`), Italian (`it`), Polish (`pl`), Korean
 (`ko`), Ukrainian (`uk`), Arabic (`ar`), Turkish (`tr`), Czech (`cs`) and Thai
-(`th`). Arabic pages use right-to-left layout with left-to-right code examples.
+(`th`) and Estonian (`et`). Estonian covers 13 pages: the homepage, downloads,
+getting started, documentation directory, TTS and local TTS, OBS quick start,
+OBS Studio basics and troubleshooting, source types, desktop app modes, and
+Dock operation. Other pages, including the settings reference and supported
+platform directory, use English where a translation is unavailable. Arabic
+pages use right-to-left layout with left-to-right code examples.
 `publish.json` selects the editions to publish. Deployment keeps available
 translations and temporarily uses English for missing or invalid entries.
 Strict authoring checks still require every string to be translated.
 
-Translations are authored by Codex and same-model parallel agents, stored in
-this repository, and served as static files. No online translation service runs
-during builds or visits. Native-speaker review remains outstanding.
+Translation catalogs are stored in this repository and served as static files.
+No online translation service runs during builds or visits.
 
 ## Build and preview
 

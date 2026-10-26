@@ -1805,6 +1805,7 @@ function readSettings() {
     hideAvatar: urlParams.has('hideavatar'),
     hideMedia: urlParams.has('hidemedia'),
     hideSource: urlParams.has('hidesource'),
+    badgeByTitle: urlParams.has('badgebytitle'),
     hideAmount: urlParams.has('hideamount'),
     hideSubtitle: urlParams.has('hidesubtitle'),
     hideTitle: urlParams.has('hidetitle'),
@@ -2303,7 +2304,7 @@ function renderAlert(model) {
   const accentRgb = toAccentRgbTriplet(model.accent);
   const eventClass = normalizeCssToken(model.eventKey);
   article.className = `alert-card theme-${styleKey} category-${model.category} event-${eventClass}`;
-  if (['cute', 'cozy', 'cats', 'music', 'arcade', 'slate', 'paper', 'micro'].indexOf(styleKey) !== -1) {
+  if (['cute', 'cozy', 'cats', 'music', 'arcade', 'slate', 'paper', 'micro', 'spring', 'summer', 'hearts', 'lunar'].indexOf(styleKey) !== -1) {
     article.classList.add('collection');
     if (settings.accent || settings.categoryAccents[model.category] || settings.colorByPlatform) {
       article.classList.add('custom-accent');
@@ -2337,9 +2338,11 @@ function renderAlert(model) {
   }
 
   if (!settings.hideSource) {
-    const spacer = document.createElement('div');
-    spacer.className = 'alert-header-spacer';
-    header.appendChild(spacer);
+    if (!settings.badgeByTitle) {
+      const spacer = document.createElement('div');
+      spacer.className = 'alert-header-spacer';
+      header.appendChild(spacer);
+    }
 
     const sourceBadge = buildSourceBadge(model);
     if (sourceBadge) {

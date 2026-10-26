@@ -3,6 +3,9 @@
 
 // Create global TTS namespace
 window.TTS = {};
+TTS.edgeClientBaseUrl = document.currentScript && document.currentScript.src;
+TTS.edgeSettings = { voice: 'en-US-EmmaMultilingualNeural', rate: 1, pitch: 0 };
+TTS.edgeClientPromise = null;
 
 // Initialize variables
 TTS.speechLang = "en-US";
@@ -158,8 +161,8 @@ TTS.normalizeSpeakOptions = function(options) {
     if (typeof options.voice === "string" && options.voice.trim()) {
         normalized.voice = options.voice.trim();
     }
-    if (typeof options.piperIntro === "string" && options.piperIntro.trim()) {
-        normalized.piperIntro = options.piperIntro.trim();
+    if (typeof options.speechIntro === "string" && options.speechIntro.trim()) {
+        normalized.speechIntro = options.speechIntro.trim();
     }
     return normalized;
 };
@@ -1090,6 +1093,10 @@ TTS.configure = function(urlParams) {
         TTS.audio.onended = TTS.finishedAudio;
     }
 
+    // Edge Natural settings only affect the explicitly selected Edge provider.
+    TTS.edgeSettings.voice = urlParams.get('voiceedge') || 'en-US-EmmaMultilingualNeural';
+    TTS.edgeSettings.rate = urlParams.has('edgerate') ? Number(urlParams.get('edgerate')) : 1;
+    TTS.edgeSettings.pitch = urlParams.has('edgepitch') ? Number(urlParams.get('edgepitch')) : 0;
     // Kokoro settings
     TTS.kokoroSettings.speed = urlParams.has("kokorospeed")
         ? TTS.parseMinFloatParam(urlParams, "kokorospeed", 1.0, 0.1)
@@ -1196,9 +1203,13 @@ TTS.configure = function(urlParams) {
         }
     }
 
-    // Language settings
-    if (urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln")) {
-        TTS.speechLang = urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln");
+    // The interface language is only a fallback when no speech language was selected.
+    const explicitSpeechLanguage = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") ||
+        urlParams.get("ttsdonos") || urlParams.get("ttsnewmembers") || urlParams.get("ttsclicked");
+    const languageOverride = urlParams.get("language") || urlParams.get("lang") ||
+        (!explicitSpeechLanguage && urlParams.get("ln"));
+    if (languageOverride) {
+        TTS.speechLang = languageOverride;
         if (TTS.speechLang.split("-")[0].toLowerCase() == "en") {
             TTS.English = true;
         } else {
@@ -1515,7 +1526,8 @@ TTS.speak = function(text, allow = false, options = {}) {
 	
 	if (TTS.ttsQuick){
 		if (text.length > TTS.ttsQuick){
-			text = text.substring(0, TTS.ttsQuick);
+			// Count whole Unicode characters, not halves of supplementary letters.
+			text = Array.from(text).slice(0, Math.max(0, TTS.ttsQuick)).join("");
 		}
 	}
     
@@ -1536,6 +1548,10 @@ TTS.speak = function(text, allow = false, options = {}) {
 
     // Use the selected provider
 	switch (TTS.TTSProvider) {
+        case "edge":
+            if (!TTS.premiumQueueActive) TTS.edgeTTS(text, options);
+            else TTS.queuePremiumTTS(text, allow, options);
+            return;
 		case "piper":
 			if (!TTS.premiumQueueActive) {
 				TTS.piperTTS(text, options);
@@ -1712,6 +1728,14 @@ TTS.clearQueue = function() {
         }
     });
     TTS.pendingTikTokGiftSpeech.clear();
+    if (TTS.TTSProvider === "edge") {
+        TTS.premiumSerial++;
+        TTS.premiumQueueTTS = [];
+        if (TTS.audio) TTS.audio.pause();
+        TTS.revokeCurrentObjectUrl();
+        TTS.premiumQueueActive = false;
+        return;
+    }
 
     // clear but don't stop tts
     if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
@@ -2029,7 +2053,8 @@ TTS.speechMeta = function(data, allow = false) {
 
         msgPlain = msgPlain || "";
         msgPlain = msgPlain
-            .replace(/[\u2700-\u27BF\uE000-\uF8FF\uD83C\uD800-\uDFFF\uD83E\uD810-\uDFFF\u2011-\u26FF]/g, "")
+            // Match whole Unicode characters so emoji removal preserves supplementary letters.
+            .replace(/[\u2700-\u27BF\uE000-\uF8FF\uD800-\uDFFF\u{1F000}-\u{1FFFF}\u2011-\u26FF]/gu, "")
             .replace(/_/g, " ")
             .replace(/@/g, " ");
 
@@ -2065,7 +2090,7 @@ TTS.speechMeta = function(data, allow = false) {
         }
 
         function speakChat(text) {
-            var options = TTS.TTSProvider === "piper" && chatname ? { piperIntro: chatname } : {};
+            var options = (TTS.TTSProvider === "piper" || TTS.TTSProvider === "espeak") && chatname ? { speechIntro: chatname } : {};
             TTS.speak(text, allow, options);
         }
 
@@ -2098,8 +2123,8 @@ TTS.speechMeta = function(data, allow = false) {
                     }
                     if (giftVoice && giftVoice.lang) giftLanguage = giftVoice.lang;
                 } else if (giftProvider === "google" && TTS.googleSettings) {
-                    var googleGiftVoice = String(TTS.googleSettings.voiceName || "").match(/^([a-z]{2,3}-[a-z]{2})-/i);
-                    giftLanguage = TTS.googleSettings.lang || (googleGiftVoice && googleGiftVoice[1]) || giftLanguage;
+                    var googleGiftVoice = String(TTS.googleSettings.voiceName || "").match(/^([a-z]{2,3}-(?:[a-z]{2}|[0-9]{3}))-/i);
+                    giftLanguage = (googleGiftVoice && googleGiftVoice[1]) || TTS.googleSettings.lang || giftLanguage;
                 } else if (giftProvider === "gemini" && TTS.geminiSettings) {
                     giftLanguage = TTS.geminiSettings.lang || giftLanguage;
                 } else if (giftProvider === "speechify" && TTS.speechifySettings) {
@@ -2110,7 +2135,7 @@ TTS.speechMeta = function(data, allow = false) {
                 giftLanguage = String(giftLanguage).toLowerCase().split(/[-_]/)[0];
                 var giftVerbs = {
                     en: "sent", es: "envi\u00f3", pt: "enviou", fr: "a envoy\u00e9",
-                    de: "sendete", it: "ha inviato", nl: "stuurde"
+                    de: "sendete", it: "ha inviato", nl: "stuurde", et: "saatis"
                 };
                 var giftVerb = TTS.simpleGiftSpeech || (giftLanguage === "en" && !TTS.English) ? "" : giftVerbs[giftLanguage];
                 // Keep platform gift names intact; never guess translations from their IDs.
@@ -2522,17 +2547,13 @@ TTS.googleTTS = function(tts, options) {
     try {
         const url = "https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=" + TTS.GoogleAPIKey;
         
-        // Smart language code extraction from voice name
+        // A named voice determines its language, even when the link has a different language setting.
         let languageCode = TTS.googleSettings.lang || TTS.speechLang;
-        const voiceName = TTS.getVoiceOverride(options) || TTS.googleSettings.voiceName || "en-GB-Standard-A";
-        
-        // If no explicit language is set but we have a voice name, extract language from it
-        if (!TTS.googleSettings.lang && voiceName) {
-            // Voice names follow pattern: languageCode-variantName (e.g., en-GB-Chirp3-HD-Laomedeia)
-            const voiceMatch = voiceName.match(/^([a-z]{2}-[A-Z]{2})/);
-            if (voiceMatch) {
-                languageCode = voiceMatch[1];
-            }
+        const voiceName = TTS.getVoiceOverride(options) || TTS.googleSettings.voiceName ||
+            (TTS.googleSettings.lang ? undefined : "en-GB-Standard-A");
+        const voiceMatch = voiceName && voiceName.match(/^([a-z]{2,3}-(?:[a-z]{2}|[0-9]{3}))-/i);
+        if (voiceMatch) {
+            languageCode = voiceMatch[1];
         }
         
         var data = {
@@ -2545,11 +2566,15 @@ TTS.googleTTS = function(tts, options) {
                 ssmlGender: TTS.voiceGender ? TTS.voiceGender.toUpperCase() : "FEMALE"
             },
             audioConfig: {
-                audioEncoding: "MP3",
-                speakingRate: TTS.googleSettings.rate,
-                pitch: TTS.googleSettings.pitch
+                audioEncoding: "MP3"
             }
         };
+
+        // Chirp 3: HD rejects speaking rate and pitch, including their default values.
+        if (!/-Chirp3-HD-/i.test(voiceName || "")) {
+            data.audioConfig.speakingRate = TTS.googleSettings.rate;
+            data.audioConfig.pitch = TTS.googleSettings.pitch;
+        }
 
         if (TTS.googleSettings.audioProfile) {
             data.audioConfig.effectsProfileId = [TTS.googleSettings.audioProfile];
@@ -2804,6 +2829,47 @@ TTS.SpeechifyTTS = function(tts, options) {
     }
 };
 
+// Generate in SSApp and play in this overlay through the existing speech queue.
+TTS.edgeTTS = async function(text, options) {
+    TTS.premiumQueueActive = true;
+    const serial = ++TTS.premiumSerial;
+    if (!TTS.audio) TTS.audio = document.createElement('audio');
+    try {
+        const bridge = window.ninjafy || window.electronApi;
+        let result;
+        const settings = Object.assign({}, TTS.edgeSettings, { voice: TTS.getVoiceOverride(options) || TTS.edgeSettings.voice });
+        if (bridge && typeof bridge.edgeTts === 'function') result = await bridge.edgeTts(text, settings);
+        else {
+            if (!TTS.edgeClientPromise) {
+                TTS.edgeClientPromise = new Promise(function(resolve, reject) {
+                    const script = document.createElement('script');
+                    script.src = new URL('./shared/tts/edge-client.js', TTS.edgeClientBaseUrl || location.href).href;
+                    script.onload = resolve;
+                    script.onerror = function() { script.remove(); TTS.edgeClientPromise = null; reject(new Error('Could not load Edge Natural support.')); };
+                    document.head.appendChild(script);
+                });
+            }
+            await TTS.edgeClientPromise;
+            if (serial !== TTS.premiumSerial) return;
+            result = await window.SSNEdgeTts.synthesize(text, settings);
+        }
+        if (serial !== TTS.premiumSerial) return;
+        const bytes = Uint8Array.from(atob(result.audio), function(c) { return c.charCodeAt(0); });
+        const blob = new Blob([bytes], { type: 'audio/mpeg' });
+        TTS.audio.onended = function() { if (serial === TTS.premiumSerial) TTS.finishedAudio(); };
+        TTS.audio.onerror = function() { if (serial === TTS.premiumSerial) { console.error('Edge Natural audio could not play.'); TTS.finishedAudio(); } };
+        TTS.setAudioSource(URL.createObjectURL(blob), true);
+        TTS.applyVolume(TTS.audio);
+        await TTS.audio.play();
+        TTS.lastEdgeError = '';
+    } catch (error) {
+        if (serial !== TTS.premiumSerial) return;
+        TTS.lastEdgeError = error.message || 'Edge Natural failed.';
+        console.error('[Edge Natural]', TTS.lastEdgeError);
+        TTS.finishedAudio();
+    }
+};
+
 /**
  * Kokoro TTS implementation
  * @param {string} text - Text to speak
@@ -3041,17 +3107,25 @@ TTS.espeakTTS = async function(text, options) {
         // Initialize audio context if needed
         TTS.initAudioContext();
 
-        // Generate speech using real eSpeak-NG TTS
-        const wavArrayBuffer = await TTS.espeakInstance.speak(text, {
+        const espeakOptions = {
             voice: TTS.getVoiceOverride(options) || TTS.espeakSettings.voice,
             speed: options?.espeakSpeed ?? TTS.espeakSettings.speed,
             pitch: options?.espeakPitch ?? TTS.espeakSettings.pitch,
             amplitude: 100,  // Volume 0-200
             variant: TTS.espeakSettings.variant
-        });
+        };
+        const parts = TTS.splitSpeechIntro(text, options);
+        const clipId = TTS.getPhraseClipId(parts ? parts.message : text, espeakOptions.voice);
+        let audioBlob = clipId ? await TTS.speakPhraseClip(clipId, parts, 22050,
+            async intro => TTS.decodeSpeechSamples(await TTS.espeakInstance.speak(intro, espeakOptions), 22050)) : null;
 
-        // The real eSpeak returns WAV data directly
-        const audioBlob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
+        if (!audioBlob) {
+            // Generate speech using real eSpeak-NG TTS
+            const wavArrayBuffer = await TTS.espeakInstance.speak(text, espeakOptions);
+
+            // The real eSpeak returns WAV data directly
+            audioBlob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
+        }
 
         if (premiumSerial !== TTS.premiumSerial) {
             return; // skipped while the audio was being generated
@@ -3154,6 +3228,135 @@ TTS.initPiper = async function(voiceName) {
     }
 };
 
+// Prerecorded English chat phrases (audio/tts-phrases) for non-English Piper and eSpeak voices,
+// which read English by their own rules; Portuguese and Spanish voices drop the "h" in "hi".
+TTS.phraseClips = {
+    "hi": "Hi!",
+    "hello": "Hello!",
+    "hey": "Hey.",
+    "hi-everyone": "Hi everyone!",
+    "hello-everyone": "Hello everyone!",
+    "hey-everyone": "Hey everyone!",
+    "hi-all": "Hi all!",
+    "hello-all": "Hello all!",
+    "hey-all": "Hey all!",
+    "hi-guys": "Hi guys!",
+    "hello-guys": "Hello guys!",
+    "hey-guys": "Hey guys!",
+    "hi-chat": "Hi chat!",
+    "hello-chat": "Hello chat!",
+    "hey-chat": "Hey chat!",
+    "hi-there": "Hi there!",
+    "hello-there": "Hello there!",
+    "hey-there": "Hey there!",
+    "bye": "Bye!",
+    "bye-bye": "Bye bye!",
+    "goodbye": "Goodbye!",
+    "good-morning": "Good morning!",
+    "good-night": "Good night!",
+    "thanks": "Thanks!",
+    "thank-you": "Thank you!"
+};
+TTS.phraseClipCache = {};
+
+// Ignores case, spacing, punctuation, emoji and stretched letters ("Hiii!", "good night", "goodnight").
+TTS.normalizePhraseText = function(text) {
+    text = String(text || "").normalize("NFC");
+    // Other words or numbers must be synthesized, not discarded to match an English clip.
+    if (/[\p{L}\p{N}]/u.test(text.replace(/[a-z]/gi, ""))) return "";
+    return text.toLowerCase().replace(/[^a-z]/g, "").replace(/([a-z])\1+/g, "$1");
+};
+
+TTS.getPhraseClipId = function(text, voice) {
+    if (!voice || /^en(?:[-_]|$)/i.test(voice)) return "";
+    if (!TTS.phraseClipIndex) {
+        TTS.phraseClipIndex = {};
+        Object.keys(TTS.phraseClips).forEach(function(id) {
+            TTS.phraseClipIndex[TTS.normalizePhraseText(TTS.phraseClips[id])] = id;
+        });
+    }
+    const key = TTS.normalizePhraseText(text);
+    return key && Object.prototype.hasOwnProperty.call(TTS.phraseClipIndex, key) ? TTS.phraseClipIndex[key] : "";
+};
+
+// Decodes to mono samples at the voice's own rate so they can be joined with its speech.
+TTS.decodeSpeechSamples = function(data, sampleRate) {
+    const OfflineContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const context = new OfflineContext(1, 1, sampleRate);
+    return new Promise(function(resolve, reject) {
+        context.decodeAudioData(data, function(buffer) { resolve(buffer.getChannelData(0)); }, reject);
+    });
+};
+
+TTS.loadPhraseClip = function(id, sampleRate) {
+    const key = id + "|" + sampleRate;
+    if (!TTS.phraseClipCache[key]) {
+        TTS.phraseClipCache[key] = fetch("./audio/tts-phrases/" + id + ".ogg").then(function(response) {
+            if (!response.ok) throw new Error("Missing phrase clip: " + id);
+            return response.arrayBuffer();
+        }).then(function(data) {
+            return TTS.decodeSpeechSamples(data, sampleRate);
+        }).catch(function(error) {
+            delete TTS.phraseClipCache[key];
+            throw error;
+        });
+    }
+    return TTS.phraseClipCache[key];
+};
+
+// Average level of the voiced parts, so pauses don't skew the loudness match.
+TTS.speechLevel = function(samples) {
+    let sum = 0, frames = 0;
+    for (let i = 0; i + 256 <= samples.length; i += 256) {
+        let energy = 0;
+        for (let j = i; j < i + 256; j++) energy += samples[j] * samples[j];
+        energy /= 256;
+        if (energy > 0.0004) { sum += energy; frames++; }
+    }
+    return frames ? Math.sqrt(sum / frames) : 0;
+};
+
+// Sender, the usual short pause, then the clip at the sender's loudness.
+TTS.joinPhraseClip = function(intro, clip, sampleRate) {
+    const introLevel = TTS.speechLevel(intro), clipLevel = TTS.speechLevel(clip);
+    const gain = introLevel && clipLevel ? Math.min(2, Math.max(0.5, introLevel / clipLevel)) : 1;
+    const offset = intro.length + Math.round(sampleRate * 0.3);
+    const joined = new Float32Array(offset + clip.length);
+    joined.set(intro);
+    for (let i = 0; i < clip.length; i++) joined[offset + i] = Math.max(-1, Math.min(1, clip[i] * gain));
+    return joined;
+};
+
+TTS.samplesToWav = function(samples, sampleRate) {
+    const pcm = new Int16Array(samples.length);
+    for (let i = 0; i < samples.length; i++) pcm[i] = Math.round(Math.max(-1, Math.min(1, samples[i])) * 32767);
+    return TTS.pcm16ToWav(new Uint8Array(pcm.buffer), sampleRate);
+};
+
+// Returns a WAV blob, or null so the caller falls back to the voice when the clip can't be used.
+TTS.speakPhraseClip = async function(id, parts, sampleRate, synthesizeIntro) {
+    try {
+        const clip = await TTS.loadPhraseClip(id, sampleRate);
+        if (!parts) return TTS.samplesToWav(clip, sampleRate);
+        const intro = await synthesizeIntro(parts.intro);
+        return TTS.samplesToWav(TTS.joinPhraseClip(intro, clip, sampleRate), sampleRate);
+    } catch (error) {
+        console.warn("Phrase clip unavailable, using the voice instead:", error);
+        return null;
+    }
+};
+
+// Splits the known sender prefix from the message, after the normal URL/length filters.
+TTS.splitSpeechIntro = function(text, options) {
+    let intro = TTS.cleanPunctuation(options && options.speechIntro);
+    if (intro && TTS.replaceURLInLink) intro = TTS.replaceURLsWithSubstring(intro, "Link");
+    if (!intro || text.indexOf(intro) !== 0) return null;
+    const remainder = text.slice(intro.length);
+    if (!/^(?:\. | )/.test(remainder)) return null;
+    const message = remainder.replace(/^\.\s*/, "").trim();
+    return message ? { intro: intro, message: message } : null;
+};
+
 /**
  * Piper TTS implementation
  * @param {string} text - Text to speak
@@ -3183,19 +3386,18 @@ TTS.piperTTS = async function(text, options) {
         const piper = TTS.piperInstance;
         const speed = TTS.piperSettings.speed;
         const previous = piper.pendingSynthesis || Promise.resolve();
-        const pending = previous.catch(() => {}).then(() => {
+        const pending = previous.catch(() => {}).then(async () => {
             if (premiumSerial !== TTS.premiumSerial) return null;
-            // Split only the known sender prefix, after the normal URL/length filters.
-            let intro = TTS.cleanPunctuation(options && options.piperIntro);
-            if (intro && TTS.replaceURLInLink) intro = TTS.replaceURLsWithSubstring(intro, "Link");
-            if (intro && text.indexOf(intro) === 0) {
-                const remainder = text.slice(intro.length);
-                if (/^(?:\. | )/.test(remainder)) {
-                    const message = remainder.replace(/^\.\s*/, "").trim();
-                    if (message) return piper.synthesizeWithPause(intro, message, speed,
-                        () => premiumSerial !== TTS.premiumSerial);
-                }
+            const parts = TTS.splitSpeechIntro(text, options);
+            const clipId = TTS.getPhraseClipId(parts ? parts.message : text, requestedVoice);
+            if (clipId) {
+                const sampleRate = (piper.voiceConfig && piper.voiceConfig.audio && piper.voiceConfig.audio.sample_rate) || 22050;
+                const clipAudio = await TTS.speakPhraseClip(clipId, parts, sampleRate,
+                    intro => piper.synthesize(intro, speed, true));
+                if (clipAudio) return clipAudio;
             }
+            if (parts) return piper.synthesizeWithPause(parts.intro, parts.message, speed,
+                () => premiumSerial !== TTS.premiumSerial);
             return piper.synthesize(text, speed);
         });
         piper.pendingSynthesis = pending;

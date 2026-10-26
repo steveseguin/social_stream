@@ -13,6 +13,7 @@ function normalizePopupTranslationLanguage(lang) {
 	if (lower === "pt-br" || lower.startsWith("pt")) return "pt-br";
 	if (lower.startsWith("fr")) return "fr";
 	if (lower.startsWith("es")) return "es";
+	if (lower === "et" || lower.startsWith("et-")) return "et";
 	if (lower.startsWith("de")) return "de";
 	if (lower.startsWith("cs")) return "cs";
 	if (lower.startsWith("th")) return "th";
@@ -1218,6 +1219,9 @@ function applyImportedGeneratedLink(targetId, parsedUrl) {
 			if (element.dataset.optionsetting) {
 				saveImportedLinkControl(element, "optionsetting", element.dataset.optionsetting, imported.value);
 			}
+		}
+		if (element.dataset.palette) {
+			syncColorHelpers(element);
 		}
 		if (element.dataset.optionsetting) {
 			handleOptionSetting(element, false);
@@ -3921,7 +3925,7 @@ function applyChatOverlayTemplatePreset(presetValue, options) {
   // Pre-styled overlays have their own auto-hide timing.
   const templateParams = new URLSearchParams(params);
   // The selected collection owns its style; do not carry the previous preset forward.
-  if (templatePath.split("?")[0] === "themes/compact-clean.html") {
+  if (["themes/compact-clean.html", "themes/vertical-chat.html"].indexOf(templatePath.split("?")[0]) !== -1) {
     templateParams.delete("style");
     const selectedStyle = new URL(templatePath, baseURL).searchParams.get("style");
     if (selectedStyle) templateParams.set("style", selectedStyle);
@@ -4254,6 +4258,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
         gemini: ['geminikey', 'geminiapikey', 'geminiApiKey', 'geminimodel', 'voicegemini', 'geminilang', 'geministyle', 'geminiprompt'],
         fish: ['fishkey', 'voicefish', 'fishmodel', 'fishspeed', 'fishendpoint'],
         speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
+        edge: ['voiceedge', 'edgerate', 'edgepitch'],
         kokoro: ['kokoro', 'kokorotts', 'kokorokey', 'voicekokoro', 'kokorospeed', 'korospeed', 'kokorodevice', 'kokorobackend', 'kokorodtype', 'kokoroprecision', 'kokororuntime', 'kokoroplayback', 'kokorowasm', 'kokorowebgpu'],
         kitten: ['kitten', 'kittentts', 'kittenvoice', 'kittenspeed', 'kittensamplerate', 'kittenmodel', 'kittenplayback'],
         piper: ['piper', 'pipertts', 'pipervoice', 'piperspeed'],
@@ -5423,6 +5428,179 @@ function setupPopupPanelEditor() {
 	});
 }
 
+// Feature tabs: one category of sections at a time, each section collapsible to its heading row.
+var popupTabState = null;
+var popupTabSections = {};
+
+function getPopupTabButtons() {
+	return Array.from(document.querySelectorAll('#popupTabs [role="tab"]'));
+}
+
+function savePopupTabState() {
+	try {
+		localStorage.setItem('popupTabState', JSON.stringify(popupTabState));
+	} catch (e) {}
+}
+
+function loadPopupTabState() {
+	var state = null;
+	try {
+		state = JSON.parse(localStorage.getItem('popupTabState'));
+	} catch (e) {}
+	if (!state || typeof state.tab !== 'string' || !Array.isArray(state.open)) {
+		state = { tab: 'popup-tab-chat', open: ['dock'] };
+	}
+	return state;
+}
+
+function getPopupSectionTab(sectionId) {
+	var tabs = getPopupTabButtons();
+	return tabs.find(function(tab) { return popupTabSections[tab.id].indexOf(sectionId) !== -1; }) || tabs[tabs.length - 1];
+}
+
+function isPopupTabSectionVisible(section) {
+	return popupPanelPreview === section.id || isPopupPanelSectionShown(section);
+}
+
+function setPopupFeatureOpen(section, open) {
+	var index = popupTabState.open.indexOf(section.id);
+	if (open && index === -1) popupTabState.open.push(section.id);
+	if (!open && index !== -1) popupTabState.open.splice(index, 1);
+	showPopupFeatureOpen(section, open);
+}
+
+function showPopupFeatureOpen(section, open) {
+	if (!section.heading) return;
+	var head = section.heading.parentElement;
+	head.classList.toggle('popup-feature-collapsed', !open);
+	section.elements.forEach(function(element) {
+		if (element !== head) element.classList.toggle('popup-feature-hidden', !open);
+	});
+	var toggle = section.heading.querySelector('.popup-feature-toggle');
+	if (toggle) toggle.setAttribute('aria-expanded', String(open));
+}
+
+function applyPopupTabs() {
+	if (!popupTabState) return;
+	var bar = document.getElementById('popupTabs');
+	var sections = getPopupPanelSections();
+	var tabs = getPopupTabButtons();
+	var visibleTabs = tabs.filter(function(tab) {
+		tab.hidden = !sections.some(function(section) {
+			return getPopupSectionTab(section.id) === tab && isPopupTabSectionVisible(section);
+		});
+		return !tab.hidden;
+	});
+	var active = visibleTabs.find(function(tab) { return tab.id === popupTabState.tab; }) || visibleTabs[0];
+	// With one category left there is nothing to switch between, so show everything.
+	bar.hidden = visibleTabs.length < 2;
+	tabs.forEach(function(tab) {
+		tab.setAttribute('aria-selected', String(tab === active));
+		tab.tabIndex = tab === active ? 0 : -1;
+	});
+	if (active) document.querySelector('.container').setAttribute('aria-labelledby', active.id);
+	var inView = function(section) { return bar.hidden || getPopupSectionTab(section.id) === active; };
+	var shown = sections.filter(function(section) { return inView(section) && isPopupTabSectionVisible(section); });
+	sections.forEach(function(section) {
+		section.elements.forEach(function(element) { element.classList.toggle('popup-tab-hidden', !inView(section)); });
+		// The tab bar already draws a line above the first section.
+		if (section.heading) section.heading.parentElement.classList.toggle('popup-feature-first', section === shown[0]);
+		// A lone section opens by itself; a collapsed row would just be an extra click.
+		showPopupFeatureOpen(section, popupTabState.open.indexOf(section.id) !== -1 || (shown.length === 1 && shown[0] === section));
+	});
+}
+
+function selectPopupTab(tab, focus) {
+	popupTabState.tab = tab.id;
+	applyPopupTabs();
+	savePopupTabState();
+	if (focus) tab.focus();
+	// Start the new tab at its first section rather than partway down the page.
+	var offset = document.querySelector('.container').getBoundingClientRect().top - document.getElementById('popupSearchToolbar').getBoundingClientRect().bottom;
+	if (offset < 0) {
+		var scroller = document.documentElement.classList.contains('extension-popup-surface') ? document.body : (document.scrollingElement || document.documentElement);
+		scroller.scrollTop += offset;
+	}
+}
+
+function revealPopupFeature(element) {
+	var section = popupTabState && getPopupPanelSection(element);
+	if (!section) return;
+	popupTabState.tab = getPopupSectionTab(section.id).id;
+	setPopupFeatureOpen(section, true);
+	applyPopupTabs();
+	savePopupTabState();
+}
+
+function setupPopupTabs() {
+	var bar = document.getElementById('popupTabs');
+	var panel = document.querySelector('.container');
+	if (!bar || !panel) return;
+	popupTabState = loadPopupTabState();
+	bar.setAttribute('aria-label', getTranslation('popup-tabs-label', 'Feature categories'));
+	panel.id = panel.id || 'popupTabPanel';
+	panel.setAttribute('role', 'tabpanel');
+	getPopupTabButtons().forEach(function(tab) {
+		popupTabSections[tab.id] = (tab.dataset.popupTabSections || '').split(/\s+/).filter(Boolean);
+		tab.setAttribute('aria-controls', panel.id);
+		tab.addEventListener('click', function() { selectPopupTab(tab); });
+		// Labels are clipped in narrow panels and long translations; hovering shows the full name.
+		tab.addEventListener('mouseenter', function() { tab.title = tab.querySelector('.popup-tab-icon + span').textContent.trim(); });
+	});
+	bar.addEventListener('keydown', function(event) {
+		var tabs = getPopupTabButtons().filter(function(tab) { return !tab.hidden; });
+		var index = tabs.indexOf(document.activeElement);
+		var step = getComputedStyle(bar).direction === 'rtl' ? -1 : 1;
+		var next = { ArrowLeft: index - step, ArrowRight: index + step, Home: 0, End: tabs.length - 1 }[event.key];
+		if (index === -1 || next === undefined) return;
+		event.preventDefault();
+		selectPopupTab(tabs[(next + tabs.length) % tabs.length], true);
+	});
+	getPopupPanelSections().forEach(function(section) {
+		if (!section.heading) return;
+		var heading = section.heading;
+		var head = heading.parentElement;
+		var title = heading.querySelector(':scope > .title-group') || heading.firstElementChild;
+		var toggle = document.createElement('button');
+		toggle.type = 'button';
+		toggle.className = 'popup-feature-toggle showalways';
+		if (title) {
+			title.id = title.id || 'popup-feature-title-' + section.id;
+			toggle.setAttribute('aria-labelledby', title.id);
+		}
+		heading.insertBefore(toggle, heading.firstChild);
+		// Group the heading links so, when space runs out, they drop under the title together instead of squeezing it.
+		var actions = document.createElement('span');
+		actions.className = 'popup-feature-actions';
+		while (title && title.nextSibling) actions.appendChild(title.nextSibling);
+		if (actions.textContent.trim()) heading.appendChild(actions);
+		head.classList.add('popup-feature-head');
+		heading.addEventListener('click', function(event) {
+			var control = event.target.closest('a, button, label, input, select, textarea');
+			if (control && control !== toggle) {
+				// Copying works from the collapsed row; help, edit and jump links need the section open.
+				if (!control.matches('[data-copy], #copy-stream-id')) revealPopupFeature(heading);
+				return;
+			}
+			setPopupFeatureOpen(section, head.classList.contains('popup-feature-collapsed'));
+			savePopupTabState();
+		});
+	});
+	// In-page links (e.g. "#botnamesext") may point into another tab or a collapsed section.
+	document.addEventListener('click', function(event) {
+		var link = event.target.closest && event.target.closest('a[href^="#"]');
+		var target = link && link.getAttribute('href').length > 1 && document.getElementById(link.getAttribute('href').slice(1));
+		if (!target) return;
+		revealPopupFeature(target);
+		var group = target.closest('.wrapper');
+		var groupToggle = group && group.querySelector('input.collapsible-input');
+		if (groupToggle) groupToggle.checked = true;
+	}, true);
+	document.addEventListener('popup-beginner-mode-changed', applyPopupTabs);
+	document.addEventListener('popup-panel-visibility-changed', applyPopupTabs);
+	applyPopupTabs();
+}
+
 var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 	"wrapper-additional-chat-services-options": [
 		'[data-setting="xcapture"]',
@@ -6039,12 +6217,15 @@ function isOpenAITTSProvider(provider) {
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
     // Hide all TTS elements
-    ["systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "fishTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS", "piperTTS", "espeakTTS"].forEach(id => {
+    ["edgeTTS", "systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "fishTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS", "piperTTS", "espeakTTS"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
     // Show element based on selected provider
-    if (provider == "system") {
+    if (provider == "edge") {
+        document.getElementById("edgeTTS").classList.remove("hidden");
+        loadEdgeVoices("");
+    } else if (provider == "system") {
         document.getElementById("systemTTS").classList.remove("hidden");
     } else if (provider == "elevenlabs") {
         document.getElementById("elevenlabsTTS").classList.remove("hidden");
@@ -6072,12 +6253,15 @@ function handleTTSProviderVisibility(provider) {
 // Handle secondary TTS provider visibility
 function handleTTSProvider10Visibility(provider) {
     // Hide all TTS10 elements
-    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "fishTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10", "piperTTS10", "espeakTTS10"].forEach(id => {
+    ["edgeTTS10", "systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "fishTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10", "piperTTS10", "espeakTTS10"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
     // Show element based on selected provider
-    if (provider == "system") {
+    if (provider == "edge") {
+        document.getElementById("edgeTTS10").classList.remove("hidden");
+        loadEdgeVoices("10");
+    } else if (provider == "system") {
         document.getElementById("systemTTS10").classList.remove("hidden");
     } else if (provider == "elevenlabs") {
         document.getElementById("elevenlabsTTS10").classList.remove("hidden");
@@ -6105,12 +6289,15 @@ function handleTTSProvider10Visibility(provider) {
 // Handle featured TTS provider visibility (param2)
 function handleTTSProvider2Visibility(provider) {
     // Hide all TTS2 elements
-    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "geminiTTS2", "fishTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
+    ["edgeTTS2", "systemTTS2", "elevenlabsTTS2", "googleTTS2", "geminiTTS2", "fishTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
     // Show element based on selected provider
-    if (provider == "system") {
+    if (provider == "edge") {
+        document.getElementById("edgeTTS2").classList.remove("hidden");
+        loadEdgeVoices("2");
+    } else if (provider == "system") {
         document.getElementById("systemTTS2").classList.remove("hidden");
     } else if (provider == "elevenlabs") {
         document.getElementById("elevenlabsTTS2").classList.remove("hidden");
@@ -6138,12 +6325,15 @@ function handleTTSProvider2Visibility(provider) {
 // Handle Flow Actions TTS provider visibility (param18)
 function handleTTSProvider18Visibility(provider) {
     // Hide all TTS18 elements
-    ["systemTTS18", "elevenlabsTTS18", "googleTTS18", "geminiTTS18", "fishTTS18", "speechifyTTS18", "kokoroTTS18", "kittenTTS18", "openaiTTS18", "piperTTS18", "espeakTTS18"].forEach(id => {
+    ["edgeTTS18", "systemTTS18", "elevenlabsTTS18", "googleTTS18", "geminiTTS18", "fishTTS18", "speechifyTTS18", "kokoroTTS18", "kittenTTS18", "openaiTTS18", "piperTTS18", "espeakTTS18"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
 
     // Show element based on selected provider
-    if (provider == "system") {
+    if (provider == "edge") {
+        document.getElementById("edgeTTS18").classList.remove("hidden");
+        loadEdgeVoices("18");
+    } else if (provider == "system") {
         document.getElementById("systemTTS18")?.classList.remove("hidden");
     } else if (provider == "elevenlabs") {
         document.getElementById("elevenlabsTTS18")?.classList.remove("hidden");
@@ -6479,6 +6669,7 @@ function scrollToSetting(targetSection, targetSetting) {
     // Find the setting element
     const settingElement = document.querySelector(`[data-setting="${targetSetting}"]`);
     if (settingElement) {
+        revealPopupFeature(settingElement);
         // Scroll to the setting
         settingElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -6890,6 +7081,7 @@ function setupFirstTimerControls() {
             const databaseRow = document.getElementById("databaseSettingsRow");
             if (databaseRow) {
                 event.preventDefault();
+                revealPopupFeature(databaseRow);
                 databaseRow.scrollIntoView();
             }
         };
@@ -7409,6 +7601,9 @@ function handleOptionParam(ele, targetId, paramType, sync) {
         }, function (response) {});
     }
     
+    if (ele.dataset.palette) {
+        syncColorHelpers(ele);
+    }
     return true;
 }
 
@@ -7790,7 +7985,7 @@ function handleOptionSetting(ele, sync) {
         const suffix = settingType === 'optionsetting2' ? '2' : (settingType === 'optionsetting10' ? '10' : (settingType === 'optionsetting18' ? '18' : ''));
         const ttsProviderElements = [
             `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, `geminiTTS${suffix}`,
-            `fishTTS${suffix}`, `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `kittenTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
+            `edgeTTS${suffix}`, `fishTTS${suffix}`, `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `kittenTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
         ];
         
         ttsProviderElements.forEach(id => {
@@ -7802,6 +7997,7 @@ function handleOptionSetting(ele, sync) {
         // Show elements relevant to the selected TTS provider
         const providerKey = isOpenAITTSProvider(ele.value) ? "openai" : ele.value;
         const selectedProvider = `${providerKey}TTS${suffix}`;
+        if (providerKey === "edge") loadEdgeVoices(suffix);
         if (document.getElementById(selectedProvider)) {
             document.getElementById(selectedProvider).classList.remove("hidden");
         }
@@ -8092,7 +8288,8 @@ function handleColorAndPalette(ele) {
         const colorEle = document.getElementById(ele.dataset.color);
         if (colorEle) {
             const sliderEle = getAlphaSliderForInput(colorEle);
-            const alphaValue = sliderEle ? sliderEle.value : 100;
+            const currentColor = parseColorValue(colorEle.value);
+            const alphaValue = sliderEle ? sliderEle.value : (currentColor ? currentColor.a * 100 : 100);
             const mergedColor = mergeColorWithAlpha(ele.value, alphaValue);
             colorEle.value = mergedColor || ele.value;
             syncColorHelpers(colorEle);
@@ -9925,6 +10122,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         }
 
         this.updateKokoroCacheControls(section);
+        updateEdgeTtsAvailability(section);
     },
 
     getTestContainer(section = "") {
@@ -9945,7 +10143,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         const testButton = this.getTestButton(section);
         const cancelButton = this.getCancelButton(section);
         if (testButton) {
-            testButton.disabled = !!running;
+            testButton.disabled = !!running || (this.getProviderSelect(section)?.value === 'edge' && !getEdgeTtsBridge());
             testButton.textContent = running ? (label || "Testing...") : "Test";
         }
         if (cancelButton) {
@@ -10342,6 +10540,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             speech: getParam('speech'),
             volume: getParam('volume') ? getNumber('volume', 1.0) : 1.0,
 			service: this.getProviderSelect(section)?.value || "system",
+            edge: { voice: getOption("voiceedge", "en-US-EmmaMultilingualNeural"), rate: Number(getOption("edgerate", "1")) },
             
             // System TTS settings
             system: {
@@ -10382,10 +10581,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             google: {
                 key: getId('googleAPIKey')?.value || getText('ttskey') || document.getElementById('ttskey')?.value,
                 voice: getId('googleVoiceName')?.value || getText('voicegoogle'),
-                lang: getParam('googlelang') ? getOption('googlelang', 'en-US') : "en-US",
+                lang: getParam('googlelang') ? getOption('googlelang', 'en-US') : false,
                 rate: getParam('googlerate') ? getNumber('googlerate', 1.0) : 1.0,
                 pitch: getParam('googlepitch') ? getNumber('googlepitch', 0) : 0,
-                audioProfile: getParam('googlepitch') ? getOption('googleaudioprofile', false) : false
+                audioProfile: getParam('googleaudioprofile') ? getOption('googleaudioprofile', false) : false
             },
 
             // Gemini TTS settings
@@ -10494,9 +10693,17 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     
     testTTS(section = "") {
         const testPhrase = getLocalTtsSample(this.getProviderSelect(section)?.value,
-            document.getElementById('kokoroVoiceSelect' + section)?.value,
-            document.getElementById('piperVoiceSelect' + section)?.value);
+            document.getElementById((this.getProviderSelect(section)?.value === 'edge' ? 'edgeVoiceSelect' : 'kokoroVoiceSelect') + section)?.value,
+            document.getElementById('piperVoiceSelect' + section)?.value,
+            document.getElementById('espeakVoiceSelect' + section)?.value,
+            document.getElementById('googleVoiceName' + section)?.value ||
+                (document.querySelector('[data-param' + (section || '1') + '="googlelang"]')?.checked
+                    ? document.getElementById('googleLanguageSelect' + section)?.value : ''));
         const provider = this.getProviderSelect(section)?.value || "system";
+        if (provider === 'edge' && !getEdgeTtsBridge()) {
+            updateEdgeTtsAvailability(section);
+            return;
+        }
         if (window.location.protocol === "moz-extension:" && ["kokoro", "kitten", "piper"].includes(provider)) {
             this.showFeedback("This voice engine is not included in the Firefox extension. Select eSpeak, System TTS or a TTS service.", 'error', section, 0);
             return;
@@ -10602,7 +10809,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 if (!this.premiumQueueActive) {
                     await this.geminiTTS(text, settings, section);
                 }
-			} else if (settings.service == "kokoro") {
+			} else if (settings.service === "edge") {
+                if (!this.premiumQueueActive) await this.edgeTTS(text, settings, section);
+            } else if (settings.service == "kokoro") {
                 if (!this.premiumQueueActive) {
                     if (settings.kokoro.background || settings.kokoro.stream || settings.kokoro.dtype === 'fp32') await this.neuralTTS(text, settings, section);
                     else await this.kokoroTTS(text, settings, section);
@@ -10745,6 +10954,36 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         window.speechSynthesis.speak(utterance);
     },
 	
+    async edgeTTS(text, settings, section) {
+        const bridge = getEdgeTtsBridge();
+        if (!bridge) {
+            this.showFeedback("Edge Natural needs an updated SSApp desktop app.", "error", section, 0);
+            return;
+        }
+        const token = {};
+        this.audioFetchToken = token;
+        this.cancelRequested = false;
+        this.premiumQueueActive = true;
+        this.setTestRunning(section, true, "Generating...");
+        try {
+            const result = await bridge.edgeTts(text, settings.edge);
+            if (this.cancelRequested || this.audioFetchToken !== token) return;
+            const bytes = Uint8Array.from(atob(result.audio), c => c.charCodeAt(0));
+            const audio = document.createElement("audio");
+            this.activeAudioElement = audio;
+            this.activeAudioUrl = URL.createObjectURL(new Blob([bytes], { type: "audio/mpeg" }));
+            audio.src = this.activeAudioUrl;
+            audio.volume = Math.max(0, Math.min(1, settings.volume));
+            audio.onended = () => { this.showFeedback("Audio played here. Check OBS playback separately.", "success", section); this.finishedAudio(section); };
+            audio.onerror = () => { this.showFeedback("Edge audio could not play.", "error", section); this.finishedAudio(section); };
+            this.setTestRunning(section, true, "Playing...");
+            await audio.play();
+        } catch (error) {
+            if (this.audioFetchToken !== token) return;
+            this.showFeedback(error.message || "Edge Natural failed.", "error", section, 0);
+            this.finishedAudio(section);
+        }
+    },
 	async kokoroTTS(text, settings, section = this.currentTtsSection || "") {
 		try {
             this.premiumQueueActive = true;
@@ -11047,21 +11286,27 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         this.premiumQueueActive = true;
         const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${settings.google.key}`;
         
+        const voiceName = settings.google.voice || (settings.google.lang ? undefined : "en-GB-Standard-A");
+        const voiceMatch = voiceName && voiceName.match(/^([a-z]{2,3}-(?:[a-z]{2}|[0-9]{3}))-/i);
+        const languageCode = voiceMatch ? voiceMatch[1] : (settings.google.lang || "en-GB");
         const data = {
             input: { text },
             voice: {
-                languageCode: settings.google.lang.toLowerCase(),
-                name: settings.google.voice || "en-GB-Standard-A"
+                languageCode: languageCode,
+                name: voiceName
             },
             audioConfig: {
-                audioEncoding: "MP3",
-                speakingRate: settings.google.rate,
-                pitch: settings.google.pitch
+                audioEncoding: "MP3"
             }
         };
 
+        if (!/-Chirp3-HD-/i.test(voiceName || "")) {
+            data.audioConfig.speakingRate = settings.google.rate;
+            data.audioConfig.pitch = settings.google.pitch;
+        }
+
         if (settings.google.audioProfile) {
-            data.audioConfig.audioProfile = settings.google.audioProfile;
+            data.audioConfig.effectsProfileId = [settings.google.audioProfile];
         }
         
         this.fetchAudioContent(url, {
@@ -11942,6 +12187,7 @@ async function testThermalPrinterAlignment() {
 
 document.addEventListener("DOMContentLoaded", async function(event) {
     setupPopupPanelEditor();
+    setupPopupTabs();
     reorderGlobalSettingsSections();
     loadSourcesListFromRuntimeManifest();
 	setupDynamicCustomUrlControls();
@@ -12894,6 +13140,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		var panelSection = getPopupPanelSection(target);
 		popupPanelPreview = panelSection && !isPopupPanelSectionShown(panelSection) ? panelSection.id : '';
 		applyPopupPanelVisibility();
+		revealPopupFeature(target || wrapper);
 		if (wrapper) {
 			openPopupSearchSection(wrapper);
 		}
@@ -13435,6 +13682,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		activeToggle = enabled;
 		document.getElementById('activeIcon').setAttribute('aria-pressed', String(enabled));
+		// The enabled-only view spans every tab and expands every section.
+		document.body.classList.toggle('popup-enabled-filter', enabled);
 		if (activeToggle) {
 			// Remember open sections and scroll position so toggling off restores them
 			activeToggleOpenState = [];
@@ -14952,11 +15201,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 });
 
-function getLocalTtsSample(provider, kokoroVoice, piperVoice) {
-    const voice = provider === 'kokoro' ? kokoroVoice : provider === 'piper' ? piperVoice : '';
-    if (/^(e[fm]_|es_)/.test(voice || '')) return 'Hola, gracias por participar. ¿Qué jugamos hoy?';
-    if (/^(p[fm]_|pt_BR)/.test(voice || '')) return 'Olá, obrigado por participar. O que vamos jogar hoje?';
-    if (/^pt_PT/.test(voice || '')) return 'Olá, obrigado por participares. O que vamos jogar hoje?';
+function getLocalTtsSample(provider, kokoroVoice, piperVoice, espeakVoice, googleVoice) {
+    const voice = provider === 'edge' ? kokoroVoice : provider === 'kokoro' ? kokoroVoice : provider === 'piper' ? piperVoice : provider === 'espeak' ? espeakVoice : '';
+    if (/^(e[fm]_|es(?:$|[_-]))/i.test(voice || '')) return 'Hola, gracias por participar. ¿Qué jugamos hoy?';
+    if (/^(p[fm]_|pt(?:$|[_-]BR))/i.test(voice || '')) return 'Olá, obrigado por participar. O que vamos jogar hoje?';
+    if (/^pt[_-]PT/.test(voice || '')) return 'Olá, obrigado por participares. O que vamos jogar hoje?';
+    if (/^et(?:$|[_-])/i.test((provider === 'google' ? googleVoice : voice) || '')) return 'Tere! Aitäh, et liitusid vestlusega. Mida me täna mängime?';
     return 'The quick brown fox jumps over the lazy dog';
 }
 function setupLocalTtsLanguageFilters() {
@@ -15032,3 +15282,83 @@ function attachEventBoardControls() {
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', attachEventBoardControls);
 else attachEventBoardControls();
+
+var edgeVoiceListPromise = null;
+function getEdgeTtsBridge() {
+    const bridge = window.ninjafy || window.electronApi;
+    return ssapp && bridge && typeof bridge.edgeTts === 'function' && typeof bridge.edgeTtsVoices === 'function' ? bridge : null;
+}
+function updateEdgeTtsAvailability(section) {
+    const provider = document.getElementById('ttsProvider' + section);
+    const option = provider && provider.querySelector('option[value="edge"]');
+    if (!option) return;
+    const available = !!getEdgeTtsBridge();
+    const message = ssapp ? 'Update SSApp to use Edge Natural.' : 'Edge Natural requires the standalone SSApp desktop app.';
+    option.disabled = !available;
+    option.title = available ? 'Requires an internet connection. Choose a voice for your language.' : message;
+    let help = document.getElementById('edgeAvailability' + section);
+    if (!help) {
+        help = document.createElement('p');
+        help.id = 'edgeAvailability' + section;
+        help.className = 'tts-provider-help';
+        const text = document.createElement('small');
+        const link = document.createElement('a');
+        link.className = 'downloadLink';
+        link.href = 'https://github.com/steveseguin/social_stream/releases';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        text.appendChild(document.createTextNode(''));
+        text.appendChild(link);
+        help.appendChild(text);
+        provider.insertAdjacentElement('afterend', help);
+        const descriptions = (provider.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
+        if (!descriptions.includes(help.id)) descriptions.push(help.id);
+        provider.setAttribute('aria-describedby', descriptions.join(' '));
+    }
+    help.classList.toggle('hidden', available);
+    help.firstChild.firstChild.textContent = message + ' ';
+    help.querySelector('a').textContent = ssapp ? 'Download the updated app' : 'Download SSApp';
+    const panel = document.getElementById('edgeTTS' + section);
+    if (panel) panel.querySelectorAll('select, button').forEach(control => { control.disabled = !available; });
+    const test = document.querySelector('#ttsTestContainer' + section + ' .tts-test-button');
+    if (test && provider.value === 'edge') { test.disabled = !available || TTSManager.premiumQueueActive; test.dataset.edgeUnavailable = available ? '' : 'true'; }
+    else if (test && test.dataset.edgeUnavailable) { test.disabled = TTSManager.premiumQueueActive; delete test.dataset.edgeUnavailable; }
+}
+function setupEdgeTtsAvailability() {
+    ['', '2', '10', '18'].forEach(section => {
+        updateEdgeTtsAvailability(section);
+        const provider = document.getElementById('ttsProvider' + section);
+        if (provider) provider.addEventListener('change', () => updateEdgeTtsAvailability(section));
+    });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupEdgeTtsAvailability);
+else setupEdgeTtsAvailability();
+
+async function loadEdgeVoices(section, refresh) {
+    const select = document.getElementById('edgeVoiceSelect' + section);
+    const status = document.getElementById('edgeVoiceStatus' + section);
+    const bridge = getEdgeTtsBridge();
+    updateEdgeTtsAvailability(section);
+    if (!select || !status) return;
+    if (!bridge || typeof bridge.edgeTtsVoices !== 'function') { status.textContent = 'Voice discovery needs an updated SSApp desktop app.'; return; }
+    if (select.dataset.loaded && !refresh) return;
+    status.textContent = 'Loading voices...';
+    try {
+        if (!edgeVoiceListPromise || refresh) edgeVoiceListPromise = bridge.edgeTtsVoices(refresh === true).catch(error => { edgeVoiceListPromise = null; throw error; });
+        const voices = await edgeVoiceListPromise;
+        const selected = select.value;
+        // Preserve a saved voice even when it is temporarily absent from the service.
+        voices.sort((a, b) => a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
+        const old = Array.from(select.options).find(option => option.value === selected);
+        select.textContent = '';
+        if (selected && !voices.some(voice => voice.name === selected) && old) select.appendChild(old);
+        voices.forEach(voice => { const option = document.createElement('option'); option.value = voice.name; option.textContent = voice.lang + ' — ' + voice.label; select.appendChild(option); });
+        select.value = selected || 'en-US-EmmaMultilingualNeural';
+        select.dataset.loaded = 'true';
+        status.textContent = voices.length + ' voices available.';
+    } catch (error) { status.textContent = error.message || 'Could not load voices. Try again.'; }
+}
+document.addEventListener('click', function(event) {
+    const button = event.target.closest('.edge-voices-refresh');
+    if (button) loadEdgeVoices(button.dataset.section || '', true);
+});

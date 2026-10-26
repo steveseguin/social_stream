@@ -4,6 +4,11 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
+| 1.6.0 / MCP 1.5.0 | 0.4.40 | Adds opt-in private human viewing, instance-bound viewer grants, API/MCP pause during private input, disconnect suspension, explicit handback, and `getHumanControlStatus`. Browser screenshots add captured-page origin/title metadata. Private viewing keeps hidden Windows targets rendering; cleanup restores their original size and hidden state, including when off-screen placement uses a remembered size, and preserves manual resizing. Remote bridges must separately authorize and transport the human viewer. |
+| 1.5.0 / MCP 1.4.0 | 0.4.39 | Adds confirmed `exportSettingsBackup`, bounded `readSettingsExport`, and `releaseSettingsExport`. Check advertised commands before use. Ordinary exports keep their existing dialogs and destinations. |
+| 1.4.1 / MCP 1.3.1 | 0.4.38 | Released browser controls and instance-bound requests for remote Ninja MCP access. Enable Local AI / Automation in SSApp and configure the remote bridge separately; ordinary startup does not connect to remote agents or start frame capture. |
+| 1.4.1 / MCP 1.3.1 | 0.4.37 with instance binding | Adds renderer-independent `/api/v1/instance`, `instanceId` in API responses, and optional `X-SSApp-Instance-Id` / `SSAPP_EXPECTED_INSTANCE_ID` binding; stale requests fail before execution after app restart. Existing tool schemas and ordinary local clients are unchanged. |
+| 1.4.0 / MCP 1.3.0 | 0.4.37 with browser controls | Adds common browser targets, screenshots with coordinate mapping, native mouse/keyboard/touch batches, navigation, window control, menus, upload selection, and on-demand JPEG frame streams; requires the updated development build and advertised commands |
 | 1.3.1 / MCP 1.2.2 | 0.4.32 | Adds platforms.whatnot with live show URL/videoId input and default WebSocket public-chat capture; requires updated Whatnot page sources and settings; existing source commands and schemas unchanged |
 | 1.3.1 / MCP 1.2.2 | 0.4.25 | Fixes screenshots of never-shown source windows; shares capture-surface preparation with app-window screenshots, restores hidden state and opacity, and serializes screenshots of the same window; schemas unchanged |
 | 1.3.1 / MCP 1.2.2 | 0.4.24 | Bounds semantic page inspection so unresponsive subframes cannot consume the command timeout; main-page failures return SOURCE_PAGE_UNAVAILABLE; tool schemas unchanged |
@@ -21,6 +26,15 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.1.1 | 0.4.2 | Rejects connection-mode updates that are unsupported by the selected source platform |
 | 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
+
+## Browser controls in the updated 0.4.37 development build
+
+Minimum runtime: SSApp 0.4.37 advertising API 1.4.0 commands; MCP adapter 1.3.0.
+The application version alone does not distinguish older 0.4.37 builds.
+See [browser-control.md](browser-control.md) for tools, coordinate mapping, file selection,
+and the live-view endpoint. Existing source and element-reference commands remain available.
+Controls use the existing Local AI / Automation opt-in. Frame capture runs only while a
+stream client is connected, and browser input does not move the operating-system pointer.
 
 ## Unreleased diagnostic event memory correction
 
@@ -228,3 +242,7 @@ Windows x64 voice commands in this unreleased preview use a pinned local whisper
 - Documented operations, authenticated status events, confirmation requirements, and API 1.1.0.
 
 When an endpoint, command, schema, MCP tool, or compatibility requirement changes, update this log and the rest of this skill in the same change.
+
+## Edge Natural speech (updated 0.4.42 development build)
+
+Minimum runtime: SSApp 0.4.42 with the Edge Natural addition and matching Social Stream page sources. Check for the advertised provider in the TTS settings; older builds with the same version lack it. This adds no REST or MCP commands. Trusted page IPC exposes edgeTtsVoices and edgeTts; overlay links use ttsprovider=edge, voiceedge, edgerate, and optional edgepitch. The app generates audio in Node.js and replies to edgeTts requests through the existing session WebRTC or WebSocket relay. Edge Natural requires the desktop app and internet access.

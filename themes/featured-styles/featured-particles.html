@@ -478,6 +478,16 @@
             margin-top: 12px;
             border-radius: 8px;
         }
+
+        /* Background effects only appear behind a featured message unless &ambient is set. */
+        #particles-canvas {
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        body.featured-active #particles-canvas, body.ambient #particles-canvas {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -494,6 +504,7 @@
         const showtime = parseInt(urlParams.get('showtime') || '30000');
         
         document.body.className = `style-${style}`;
+        if (urlParams.has('ambient')) document.body.classList.add('ambient');
         
         let messageTimeout = null;
         let currentMessage = null;
@@ -827,6 +838,7 @@
 
                 requestAnimationFrame(() => {
                     container.classList.add('show');
+                    document.body.classList.add('featured-active');
                 });
 
                 // TTS
@@ -848,6 +860,7 @@
 
             if (currentMessage) {
                 currentMessage.classList.add('hide');
+                document.body.classList.remove('featured-active');
                 setTimeout(() => {
                     if (currentMessage && currentMessage.parentNode) {
                         currentMessage.parentNode.removeChild(currentMessage);

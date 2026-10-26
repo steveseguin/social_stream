@@ -33,6 +33,7 @@ const updateList = [
     "blank", // must be first
     "en-us",
     "de",
+    "et",
     "es",
     "fr",
     "cs",

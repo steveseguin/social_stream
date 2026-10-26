@@ -25,6 +25,7 @@
 		this.session = null;
 		this.paused = false;
 		this.inflight = 0;
+		this.publicationQueue = [];
 	}
 	Connector.prototype.status = function () {
 		return { state: this.state, warning: this.warning, paused: this.paused, room: this.config.room || null, paired: !!this.config.credential, code: this.pairing ? this.pairing.code : null, sources: this.config.sources || [], cheer: !!this.config.cheer };
@@ -116,6 +117,7 @@
 	};
 	Connector.prototype.stop = function () {
 		this.generation++;
+		this.publicationQueue.length = 0;
 		clearTimeout(this.timer);
 		if (this.ws) {
 			this.ws.onclose = null;
@@ -240,18 +242,28 @@
 		}
 	};
 	Connector.prototype.publish = async function (message) {
-		if (this.state !== "connected" || this.inflight >= 4 || !message || message.private || message.suppressRelay || message.event || message.bot || message.type === "socialstreamchat" || !this.config.sources.includes(message.type) || !message.chatmessage) return;
+		if (this.state !== "connected" || !message || message.private || message.suppressRelay || message.event || message.bot || message.type === "socialstreamchat" || !this.config.sources.includes(message.type) || !message.chatmessage) return;
 		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 		var text = message.textonly ? String(message.chatmessage) : this.options.cleanText(message.chatmessage);
 		if (!text.trim() || new TextEncoder().encode(text).length > 2048) return;
-		var gen = this.generation;
-		this.inflight++;
-		try {
-			await this.op("chat", { id: id(), text: text, name: String(message.chatname || "Viewer").slice(0, 80), source: message.type });
-		} catch (_) {
-			if (gen === this.generation) this.warn("publication_unknown");
-		} finally {
-			this.inflight--;
+		if (this.publicationQueue.length >= 20) {
+			this.warn("publication_queue_full");
+			return;
+		}
+		this.publicationQueue.push({ id: id(), text: text, name: String(message.chatname || "Viewer").slice(0, 80), source: message.type });
+		return this.flushPublications();
+	};
+	Connector.prototype.flushPublications = async function () {
+		while (this.state === "connected" && !this.paused && this.session && this.inflight < 4 && this.publicationQueue.length) {
+			var gen = this.generation;
+			this.inflight++;
+			try {
+				await this.op("chat", this.publicationQueue.shift());
+			} catch (_) {
+				if (gen === this.generation) this.warn("publication_unknown");
+			} finally {
+				this.inflight--;
+			}
 		}
 	};
 	global.NCAudienceConnector = Connector;

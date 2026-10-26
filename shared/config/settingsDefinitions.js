@@ -1184,6 +1184,16 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "chat_bot",
     description: "Do not relay bot messages"
   },
+  "aiReplySameYouTubeStream": {
+    type: "boolean",
+    category: "chat_bot",
+    description: "Only post AI replies to the originating YouTube video. Separate bot accounts must match that video; skip sending if no destination matches. Off by default."
+  },
+  "aiReplyMentionUser": {
+    type: "boolean",
+    category: "chat_bot",
+    description: "Add @name to AI replies posted into chat, using the viewer's handle or displayed name. Off by default."
+  },
   "ollamaprompt": {
     type: "text",
     category: "chat_bot",
