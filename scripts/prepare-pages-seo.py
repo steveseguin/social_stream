@@ -109,7 +109,7 @@ def site_url(value):
     url = urlsplit(value)
     if (url.scheme not in {"https", "http"} or not url.hostname or url.username or
             url.password or url.query or url.fragment or
-            re.search(r'[\s<>"\\\\]', value) or
+            re.search(r'[\s<>"\\]', value) or
             any(part in {".", ".."} for part in unquote(url.path).split("/"))):
         raise ValueError("Site URL must be an absolute HTTP(S) URL without credentials, query or fragment.")
     return value.rstrip("/")
@@ -215,6 +215,8 @@ def prepare_page(root, path, base_url=ORIGIN):
     elif not head.meta("robots"):
         meta("robots", "index, follow, max-image-preview:large")
     canonical = canonical_url(logical, base_url)
+    if language and beta:
+        canonical = canonical_url(relative, base_url)
     replace_tags(head.links("canonical"), '<link rel="canonical" href="' + html.escape(canonical, quote=True) + '">' if public else "")
 
     # Rebase site identity in structured data without changing application URLs.
@@ -324,8 +326,8 @@ def prepare(root, check=False, base_url=ORIGIN):
         original = robots_path.read_bytes()
         robots = original.decode("utf-8")
         # Keep crawler rules and any additional sitemaps authored by the host.
-        robots = re.sub(r"(?im)^Sitemap:\s*https?://[^\s]+/sitemap\.xml[ \t]*\r?$",
-                        "Sitemap: " + base_url + "/sitemap.xml", robots)
+        robots = re.sub(r"(?im)^Sitemap:[ \t]*https?://[^\s]+/sitemap\.xml[ \t]*(\r?)$",
+                        lambda match: "Sitemap: " + base_url + "/sitemap.xml" + match[1], robots, count=1)
         if robots.encode("utf-8") != original:
             changed.append("robots.txt")
             if not check:
