@@ -1421,6 +1421,85 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			break;
 	}
 		
+	// Only the overlay builder's direct Haiku connection uses this adapter.
+	// Other custom endpoints and ordinary chatbot requests keep their existing protocol.
+	if (options.overlayBuilder && provider === "custom" && /^claude-haiku-5-5(?:-|$)/i.test(model || "") &&
+		/^https:\/\/api\.anthropic\.com\/v1\/chat\/completions\/?$/.test(endpoint)) {
+		endpoint = "https://api.anthropic.com/v1/messages";
+		try {
+			const content = [{ type: "text", text: prompt }];
+			normalizeImagesForOpenAI(images).forEach(url => {
+				const dataImage = /^data:(image\/(?:png|jpeg|gif|webp));base64,([\s\S]+)$/i.exec(url);
+				if (dataImage) content.push({ type: "image", source: { type: "base64", media_type: dataImage[1].toLowerCase(), data: dataImage[2] } });
+				else if (/^https:\/\//i.test(url)) content.push({ type: "image", source: { type: "url", url } });
+			});
+			const fastEdit = options.overlayTask === "settings" || options.overlayTask === "style" || options.overlayTask === "summarize";
+			const body = {
+				model, messages: [{ role: "user", content }], stream: true,
+				max_tokens: fastEdit ? 4096 : 32768,
+				thinking: { type: fastEdit ? "disabled" : "adaptive" },
+				output_config: { effort: "low" }
+			};
+			if (options.systemPrompt) body.system = String(options.systemPrompt);
+			const headers = { "Content-Type": "application/json", "x-api-key": apiKey || "", "anthropic-version": "2023-06-01" };
+			let pending = "", answer = "", stopped = false;
+			const consume = chunk => {
+				pending += chunk;
+				const lines = pending.split("\n");
+				pending = lines.pop();
+				for (const line of lines) {
+					if (!line.startsWith("data:")) continue;
+					const event = JSON.parse(line.slice(5).trim());
+					if (event.type === "error") throw createLLMError(buildContext(), { code: event.error?.type, message: event.error?.message || "Anthropic stream failed." });
+					if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
+						answer += event.delta.text;
+						if (callback) callback(event.delta.text);
+					}
+					if (event.type === "message_delta" && event.delta?.stop_reason && event.delta.stop_reason !== "end_turn") {
+						throw createLLMError(buildContext(), { code: "overlay_response_incomplete", message: "The AI response was incomplete (" + event.delta.stop_reason + "). Your overlay was kept. Try a smaller edit." });
+					}
+					if (event.type === "message_stop") stopped = true;
+				}
+			};
+			if (typeof ipcRenderer !== "undefined" && !options.strictEndpoint) {
+				const result = await streamElectronLLMRequest({ url: endpoint, headers, body, diagnostics: { kind: "llm", provider, model } }, consume, abortController && abortController.signal);
+				if (result && result.error) throw createLLMError(buildContext(), { status: result.status, message: result.message || result.error?.message || "Anthropic request failed." });
+			} else {
+				headers["anthropic-dangerous-direct-browser-access"] = "true";
+				const response = await fetch(endpoint, { method: "POST", headers, body: JSON.stringify(body), signal: abortController && abortController.signal, credentials: "omit", redirect: "error" });
+				if (!response.ok) {
+					const data = await response.json().catch(() => ({}));
+					throw createLLMError(buildContext(), { status: response.status, code: data.error?.type, message: data.error?.message || "Anthropic request failed." });
+				}
+				const reader = response.body.getReader(), decoder = new TextDecoder();
+				try {
+					while (!stopped) {
+						const chunk = await reader.read();
+						if (chunk.done) { consume(decoder.decode()); break; }
+						consume(decoder.decode(chunk.value, { stream: true }));
+					}
+				} finally { await reader.cancel().catch(() => {}); }
+			}
+			if (pending.trim()) consume("\n");
+			if (!stopped || !answer.trim()) throw createLLMError(buildContext(), { code: "overlay_response_incomplete", message: "The AI stream ended without a complete response. Your overlay was kept." });
+			return answer;
+		} catch (error) {
+			if (error.name === "AbortError") return { aborted: true };
+			throw wrapLLMError(error);
+		}
+	}
+
+	function checkOverlayCompletion(data) {
+		if (!options.overlayBuilder) return;
+		const reason = data.choices?.[0]?.finish_reason || data.done_reason || data.candidates?.[0]?.finishReason;
+		if (["length", "max_tokens", "max_output_tokens", "content_filter", "safety", "recitation", "tool_calls", "function_call"].includes(String(reason || "").toLowerCase())) {
+			throw createLLMError(buildContext(), {
+				code: "overlay_response_incomplete",
+				message: "The AI response was incomplete (" + reason + "). Your overlay was kept. Try a smaller edit or a model with a larger output limit."
+			});
+		}
+	}
+
 	function handleChunk(chunk, emitContent) {
 		const lines = chunk.split('\n').filter(line => line.trim());
 		for (const line of lines) {
@@ -1431,6 +1510,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 				try {
 					const jsonStr = line.startsWith('data: ') ? line.slice(6) : line;
 					const data = JSON.parse(jsonStr);
+					checkOverlayCompletion(data);
 
 					if (data.response) { // Ollama format
 						emitContent(data.response);
@@ -1449,6 +1529,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						return true;
 					}
 				} catch (e) {
+					if (options.overlayBuilder && e instanceof LLMServiceError) throw e;
 					console.warn("Parse error:", e, line);
 					const match = line.match(/"response":"(.*?)"/);
 					if (match && match[1]) {
@@ -1846,6 +1927,15 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
         if (Number.isFinite(options.topP)) {
             message.top_p = options.topP;
         }
+		// The hosted builder's settings task returns data, not overlay code.
+		if (options.overlayBuilder && options.overlayTask === "settings" && provider === "hostedllm" &&
+			/^https:\/\/llm\.socialstream\.ninja\/v1\/chat\/completions\/?$/i.test(endpoint)) {
+			message.response_format = { type: "json_object" };
+			message.chat_template_kwargs = { enable_thinking: false };
+			message.reasoning_effort = "none";
+			message.temperature = 0.2;
+			message.max_tokens = 2048;
+		}
 
 		const headers = {
 			'Content-Type': 'application/json'
@@ -1919,11 +2009,41 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                     return stripLLMReasoningOutput(fullResponse);
 				} else {
 					const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
-					const response = await electronFetch(endpoint, headers, 'POST', message, {
-						kind: 'llm',
-						provider,
-						model: message.model
-					}, options.requestTimeoutMs);
+					let response;
+					if (options.overlayBuilder && abortController) {
+						// Reuse the cancellable desktop transport, keeping the provider's
+						// existing non-streaming JSON request and response format.
+						let body = '';
+						const result = await streamElectronLLMRequest({
+							url: endpoint, headers, body: message,
+							diagnostics: { kind: 'llm', provider, model: message.model }
+						}, chunk => { body += chunk; }, abortController.signal);
+						if (result && result.error) {
+							throw createLLMError(buildContext(), {
+								status: result.status || result.error?.status || null,
+								code: result.code || result.error?.code || null,
+								message: result.message || result.error?.message || (typeof result.error === 'string' ? result.error : 'The AI request failed before a complete response was received.'),
+								details: result,
+								...getLLMResponseMetadata(result.headers, result)
+							});
+						}
+						response = { status: 200, data: body };
+					} else {
+						response = await electronFetch(endpoint, headers, 'POST', message, {
+							kind: 'llm', provider, model: message.model
+						}, options.requestTimeoutMs);
+					}
+					if (response.error && response.data === undefined) {
+						// Electron uses status 500 for local fetch failures, even without an HTTP response.
+						const timedOut = response.type === 'request-timeout' || response.type === 'body-timeout';
+						throw createLLMError(buildContext(), {
+							code: response.code || response.type || 'network_error',
+							message: timedOut
+								? 'The AI request timed out before a response was received. Try again or use a faster model.'
+								: String(response.error),
+							details: response
+						});
+					}
 					
 					if (response.status !== 200) {
 						let errorMessage = '';
@@ -1945,6 +2065,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					}
 
 					const data = JSON.parse(response.data);
+					checkOverlayCompletion(data);
 					return stripLLMReasoningOutput(data.choices[0].message.content || '');
 				}
 			} else {
@@ -2028,6 +2149,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					}
 
 					const data = await response.json();
+					checkOverlayCompletion(data);
 					return stripLLMReasoningOutput(data.choices[0].message.content || '');
 				}
 			}
@@ -3856,6 +3978,18 @@ async function processMessageWithOllama(data, idx=null, queuedEntry=null) {
       return;
     }
 
+    // Keep the originating video fixed while the model generates its reply.
+    let youtubeReplyVideoId;
+    if (!botOverlayOnly && getAiSettingFlag('aiReplySameYouTubeStream') &&
+        (data.type === 'youtube' || data.type === 'youtubeshorts')) {
+      youtubeReplyVideoId = String(data.videoid || data.videoId || '').trim();
+      if (!youtubeReplyVideoId) {
+        const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
+        const sourceTab = tabs.find(tab => String(tab.id) === String(data.tid));
+        youtubeReplyVideoId = getYouTubeReplyVideoId(sourceTab && sourceTab.url) || '';
+      }
+    }
+
     // Get additional instructions
     let additionalInstructions = "";
     if (settings.ollamaprompt) {
@@ -3913,11 +4047,21 @@ async function processMessageWithOllama(data, idx=null, queuedEntry=null) {
 
       // Send to tabs if not overlay-only
       if (!botOverlayOnly) {
+        let replyText = response.trim();
+        if (getAiSettingFlag('aiReplyMentionUser')) {
+          const name = String(data.username || data.chatname || '').trim().replace(/^@+/, '');
+          const mention = name ? '@' + name : '';
+          const following = replyText.slice(mention.length, mention.length + 1);
+          const alreadyMentioned = mention && replyText.slice(0, mention.length).toLowerCase() === mention.toLowerCase() &&
+            (!following || /[\s,:.!?]/.test(following));
+          if (mention && !alreadyMentioned) replyText = mention + ' ' + replyText;
+        }
         const msg = {
           tid: data.tid,
-          response: settings.noollamabotname ? response.trim() : (botname + ": " + response.trim()),
+          response: settings.noollamabotname ? replyText : (botname + ": " + replyText),
           bot: true
         };
+        if (youtubeReplyVideoId !== undefined) msg.youtubeReplyVideoId = youtubeReplyVideoId;
         sendMessageToTabs(msg);
         lastResponseTime[data.tid] = Date.now();
         lastSentMessage = response;
