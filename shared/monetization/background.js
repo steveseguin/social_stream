@@ -46,6 +46,7 @@
 		if (!tip) throw new Error('Invalid receiver tip.');
 		await processIncomingMessage(tip);
 	} });
+    var patreonReceiver = SSNPatreonReceiver({ privateState: privateState, store: store, config: cfg, isOn: function () { return ready && isExtensionOn; }, deliver: function (data) { return processIncomingMessage(data); } });
     var shopifyReceiver = SSNShopifyReceiver({ privateState: privateState, store: store, config: cfg, isOn: function () { return ready && isExtensionOn; }, deliver: function (data) { return processIncomingMessage(data); } });
 	function store() {
 		return new Promise(function (resolve, reject) {
@@ -462,6 +463,11 @@
             }
             broadcast(); scheduleShop(); return snapshot();
         }
+        if (request.action === 'patreonReserve') { await patreonReceiver.reserve(); return snapshot(); }
+        if (request.action === 'patreonDisconnect') {
+            await patreonReceiver.disconnect(); c.patreon.enabled = false;
+            settings.monetization = { json: JSON.stringify(c) }; await store(); return snapshot();
+        }
         if (request.action === 'shopifyImport') return importShopify(request);
         if (request.action === 'shopifyDisconnect') {
             await shopifyReceiver.disconnect(); c.shopify = { enabled: false, shop: '' };
@@ -496,6 +502,7 @@
 			await ninjaReceiver.prepare(updated.ninja, c.ninja, token, request.ninjaSecret);
             if (request.config && request.config.shopify && request.config.shopify.shop && !updated.shopify.shop) throw new Error('Enter your store.myshopify.com domain.');
             await shopifyReceiver.prepare(updated.shopify, request.shopifySecret);
+            await patreonReceiver.prepare(updated.patreon, c.patreon, request.patreonSecret);
 			privateState.token = token;
 			settings.monetization = { json: JSON.stringify(updated) };
 			await store();
@@ -571,7 +578,7 @@
 		return snapshot();
 	}
 	function snapshot() {
-		return { commerceState: controlState(), publicShop: shopState(), commerceLive: liveCommerce, shopify: shopifyReceiver.snapshot(), receiver: { enabled: !!settings.socketserver, on: !!isExtensionOn, connected: !!(typeof socketserver !== 'undefined' && socketserver && socketserver.readyState === 1), providers: providerActivity }, ninjaReceiver: ninjaReceiver.snapshot(), ebay: ebay.snapshot(), throne: { status: throneStatus, gifts: thronePrivate().gifts, webhook: thronePrivate().hook ? 'https://api.socialstream.ninja/v1/throne/webhook/' + thronePrivate().hook : '' }, config: cfg(), list: list(), tokenSaved: !!privateState.token, status: cfg().ninja.reliable ? ninjaReceiver.snapshot().status : status, canUndo: !!lastPurchase };
+		return { commerceState: controlState(), publicShop: shopState(), commerceLive: liveCommerce, patreon: patreonReceiver.snapshot(), shopify: shopifyReceiver.snapshot(), receiver: { enabled: !!settings.socketserver, on: !!isExtensionOn, connected: !!(typeof socketserver !== 'undefined' && socketserver && socketserver.readyState === 1), providers: providerActivity }, ninjaReceiver: ninjaReceiver.snapshot(), ebay: ebay.snapshot(), throne: { status: throneStatus, gifts: thronePrivate().gifts, webhook: thronePrivate().hook ? 'https://api.socialstream.ninja/v1/throne/webhook/' + thronePrivate().hook : '' }, config: cfg(), list: list(), tokenSaved: !!privateState.token, status: cfg().ninja.reliable ? ninjaReceiver.snapshot().status : status, canUndo: !!lastPurchase };
 	}
 	window.handleMonetizationRequest = function (request, sender) {
 		if (sender && sender.tab && sender.tab.id !== null && sender.tab.id !== undefined) return Promise.resolve({ error: 'Use the SSN popup to configure monetization.' });
@@ -635,6 +642,7 @@
 				};
 			if (p.receiver && /^[a-f0-9]{64}$/.test(p.receiver.key || '')) privateState.receiver = { key: p.receiver.key, webhook: /^https:\/\/api\.socialstream\.ninja\/v1\/ninjabacker\/webhook\/[a-f0-9]{64}$/.test(p.receiver.webhook || '') ? p.receiver.webhook : '', username: String(p.receiver.username || ''), seen: Array.isArray(p.receiver.seen) ? p.receiver.seen.filter(function (id) { return typeof id === 'string'; }).slice(-2000) : [] };
             if (p.shopifyReceiver && /^[a-f0-9]{64}$/.test(p.shopifyReceiver.key || '')) privateState.shopifyReceiver = { key: p.shopifyReceiver.key, webhook: /^https:\/\/api\.socialstream\.ninja\/v1\/shopify\/webhook\/[a-f0-9]{64}$/.test(p.shopifyReceiver.webhook || '') ? p.shopifyReceiver.webhook : '', shop: M.shopifyDomain(p.shopifyReceiver.shop), seen: Array.isArray(p.shopifyReceiver.seen) ? p.shopifyReceiver.seen.filter(function (id) { return /^[a-f0-9]{64}$/.test(id); }).slice(-2000) : [] };
+            if (p.patreonReceiver && /^[a-f0-9]{64}$/.test(p.patreonReceiver.key || '')) privateState.patreonReceiver = { key: p.patreonReceiver.key, webhook: /^https:\/\/api\.socialstream\.ninja\/v1\/patreon\/webhook\/[a-f0-9]{64}$/.test(p.patreonReceiver.webhook || '') ? p.patreonReceiver.webhook : '', secretSaved: p.patreonReceiver.secretSaved === true, seen: Array.isArray(p.patreonReceiver.seen) ? p.patreonReceiver.seen.filter(function (id) { return /^[a-f0-9]{64}$/.test(id); }).slice(-2000) : [] };
 			privateState.token = typeof p.token === 'string' ? p.token : '';
 			privateState.list = p.list && typeof p.list === 'object' ? p.list : { url: '', items: [] };
 			privateState.seen = Array.isArray(p.seen)
@@ -652,6 +660,7 @@
 		ebay.poll();
 		ninjaReceiver.poll();
         shopifyReceiver.poll();
+        patreonReceiver.poll();
         if (privateState.publicShop && privateState.publicShop.published && Date.now() >= nextShopSync && (privateState.publicShop.removePending || JSON.stringify(commerceState()) !== lastShopPayload)) {
             nextShopSync = Date.now() + 60000;
             scheduleShop();

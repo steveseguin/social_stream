@@ -81,6 +81,7 @@ async function loadScriptsInOrder() {
         './shared/monetization/ebay-service.js',
         './shared/monetization/ninja-service.js',
         './shared/monetization/shopify-service.js',
+        './shared/monetization/patreon-service.js',
         './shared/monetization/background.js'
 
     ];

@@ -5722,8 +5722,8 @@ async function processIncomingMessage(message, sender = null) {
 
 		if (
 			settings.noduplicates && // filters echos if same TYPE, USERID, and MESSAGE
-			// Distinct anonymous Shopify orders share display text; compare their stable order IDs.
-			checkDuplicateSources.isDuplicate(message.type, message.userid || message.chatname, (message.type === "shopify" && message.event === "purchase" && /^shopify:[a-f0-9]{64}$/.test(message.id || "")) ? message.id : (message.chatmessage || message.hasDonation || (message.membership && message.event)))
+			// Distinct anonymous orders/pledges can share display text; compare their stable event IDs.
+			checkDuplicateSources.isDuplicate(message.type, message.userid || message.chatname, ((message.type === "shopify" && message.event === "purchase" && /^shopify:[a-f0-9]{64}$/.test(message.id || "")) || (message.type === "patreon" && message.event === "new_subscriber" && /^patreon:[a-f0-9]{64}$/.test(message.id || ""))) ? message.id : (message.chatmessage || message.hasDonation || (message.membership && message.event)))
 		) {
 			return;
 		}

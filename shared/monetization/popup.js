@@ -42,7 +42,7 @@
     function updateSaveLabel() {
         if (!ready || !current) return;
         var dirty = JSON.stringify(mergeDraft(current.config, current.config, values())) !== JSON.stringify(current.config);
-        dirty = dirty || ['ninja-token', 'ninja-secret', 'shopify-secret'].some(function (id) { return !!by(id).value.trim(); }) || by('ninja-clear-token').checked;
+        dirty = dirty || ['ninja-token', 'ninja-secret', 'shopify-secret', 'patreon-secret'].some(function (id) { return !!by(id).value.trim(); }) || by('ninja-clear-token').checked;
         saveLabel = '\uD83D\uDCBE ' + tr('money-save-setup', 'Save setup');
         by('save').textContent = dirty ? saveLabel + ' - ' + tr('commerce-draft', 'Unsaved') : saveLabel;
     }
@@ -51,7 +51,7 @@
     function feedbackTarget(element) {
         if (!element) return 'status';
         var id = element.id || '';
-        var targets = { 'shop-': 'shop-status', 'shopify-': 'shopify-status', 'provider-': 'provider-status', 'fourthwall-': 'fourthwall-status', 'ninja-': 'ninja-status', 'ebay-': 'ebay-status', 'throne-': 'throne-status' };
+        var targets = { 'shop-': 'shop-status', 'shopify-': 'shopify-status', 'provider-': 'provider-status', 'patreon-': 'provider-status', 'fourthwall-': 'fourthwall-status', 'ninja-': 'ninja-status', 'ebay-': 'ebay-status', 'throne-': 'throne-status' };
         var prefixes = Object.keys(targets);
         for (var i = 0; i < prefixes.length; i++) {
             if (id.indexOf('money-' + prefixes[i]) === 0) return targets[prefixes[i]];
@@ -185,15 +185,26 @@
             by('commerce-panel').open = true; by('commerce-name').focus();
         }).catch(function (error) { by('shopify-import-status').textContent = error.message; }).then(function () { button.disabled = false; by('shopify-token').value = ''; });
     };
-    var providerSnapshot = {};
+    var providerSnapshot = {}, patreonSnapshot = {};
     function providerLinks() {
         var provider = by('provider').value;
+        var isPatreon = provider === 'patreon';
+        by('patreon-setup').hidden = !isPatreon;
+        by('provider-setting').hidden = isPatreon;
         by('provider-url').value = typeof lastResponse !== 'undefined' && lastResponse && lastResponse.streamID ? 'https://io.socialstream.ninja/' + encodeURIComponent(lastResponse.streamID) + '/' + provider : '';
         by('provider-guide').href = 'docs/creator-store-setup.html#' + provider;
         var preview = new URL('monetization.html', location.href);
         preview.search = '?demo&mode=commerce&view=alerts&provider=' + provider;
         if (typeof getSelectedTranslationLinkParam === 'function') preview.search += getSelectedTranslationLinkParam();
         by('provider-preview').href = preview.href;
+        if (isPatreon) {
+            by('provider-url').value = patreonSnapshot.webhook || '';
+            by('patreon-secret').placeholder = moneyText(patreonSnapshot.secretSaved ? 'Saved on the SSN API' : 'From Patreon webhook settings');
+            by('patreon-disconnect').disabled = !patreonSnapshot.webhook;
+            setStatus('provider-status', patreonSnapshot.status || 'Set up Patreon alerts');
+            by('provider-seen').textContent = patreonSnapshot.received ? tr('commerce-last-event', 'Last event received:') + ' ' + new Date(patreonSnapshot.received).toLocaleString() : tr('commerce-no-event', 'No event received in this app session.');
+            return;
+        }
         var s = providerSnapshot;
         setStatus('provider-status', !s.enabled ? tr('commerce-receiver-off', 'Receiver off. Open Receiver setting to enable it.') : !s.on ? tr('commerce-ssn-off', 'Turn SSN on to receive alerts.') : s.connected ? tr('commerce-receiver-ready', 'Receiver connected. Provider delivery is confirmed only when an event arrives.') : tr('commerce-receiver-wait', 'Receiver disconnected. Check your connection.'));
         if (new URLSearchParams(location.search).has('localserver')) {
@@ -202,9 +213,30 @@
         var seen = s.providers && s.providers[provider];
         by('provider-seen').textContent = seen ? tr('commerce-last-event', 'Last event received:') + ' ' + new Date(seen.at).toLocaleTimeString() + ' (' + tr(seen.accepted ? 'commerce-event-accepted' : 'commerce-event-skipped', seen.accepted ? 'accepted' : 'test, private or unsupported event skipped') + ')' : tr('commerce-no-event', 'No event received in this app session.');
     }
-    function providerStatus(reply) { providerSnapshot = reply.receiver || {}; providerLinks(); }
+    function providerStatus(reply) { providerSnapshot = reply.receiver || {}; patreonSnapshot = reply.patreon || {}; providerLinks(); }
     by('provider').addEventListener('change', providerLinks);
+    by('patreon-disconnect').onclick = function () { run(function () { return request('patreonDisconnect'); }, ['patreon']); };
+    window.openPatreonAlertSettings = function () {
+        var filter = document.getElementById('activeIcon');
+        if (filter && filter.getAttribute('aria-pressed') === 'true') filter.click();
+        var search = document.getElementById('searchInput');
+        if (search) search.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', bubbles: true }));
+        if (typeof revealPopupFeature === 'function') revealPopupFeature(by('provider-panel'));
+        by('provider').value = 'patreon'; providerLinks();
+        for (var parent = by('provider-panel'); parent; parent = parent.parentElement) if (parent.tagName === 'DETAILS') parent.open = true;
+        by('provider-panel').scrollIntoView({ block: 'center' }); by('provider').focus();
+    };
     by('provider-copy').onclick = function () {
+        if (by('provider').value === 'patreon') {
+            run(async function () {
+                var reply = await request('patreonReserve');
+                var url = reply.patreon.webhook; by('provider-url').value = url;
+                try { await navigator.clipboard.writeText(url); reply.message = tr('commerce-webhook-copied', 'Private webhook URL copied.'); }
+                catch (_) { by('provider-url').type = 'text'; by('provider-url').focus(); by('provider-url').select(); reply.message = 'Copy the selected webhook URL.'; }
+                return reply;
+            });
+            return;
+        }
         if (!by('provider-url').value) return;
         navigator.clipboard.writeText(by('provider-url').value).then(function () { status(tr('commerce-webhook-copied', 'Private webhook URL copied.')); }).catch(function () { by('provider-url').type = 'text'; by('provider-url').focus(); by('provider-url').select(); });
     };
@@ -245,7 +277,7 @@
 		links();
 	}
 	function values() {
-		var config = { shopify: { enabled: by("shopify-enabled").checked, shop: by("shopify-shop").value }, wishlist: {}, ninja: {}, throne: {}, ebay: {}, commerce: { enabled: by("commerce-enabled").checked, qr: by("commerce-qr").checked, position: by("commerce-position").value, display: by("commerce-display").value, seconds: Number(by("commerce-seconds").value), items: products } };
+		var config = { patreon: { enabled: by("patreon-enabled").checked }, shopify: { enabled: by("shopify-enabled").checked, shop: by("shopify-shop").value }, wishlist: {}, ninja: {}, throne: {}, ebay: {}, commerce: { enabled: by("commerce-enabled").checked, qr: by("commerce-qr").checked, position: by("commerce-position").value, display: by("commerce-display").value, seconds: Number(by("commerce-seconds").value), items: products } };
 		['wishlist', 'ninja', 'throne', 'ebay'].forEach(function (mode) {
 			['enabled', 'qr', 'announce', 'interval'].forEach(function (key) {
 				config[mode][key] = by(mode + '-' + key).checked;
@@ -354,6 +386,7 @@
         });
 		current = reply;
         liveStatus(reply);
+        by('patreon-enabled').checked = displayConfig.patreon.enabled;
         by('shopify-enabled').checked = displayConfig.shopify.enabled; by('shopify-shop').value = displayConfig.shopify.shop; shopifyStatus(reply);
         providerStatus(reply); liveStatus(reply);
         ['view', 'style', 'scale', 'cardevery', 'cardfor', 'onlytype'].forEach(function (key) { by(key).value = displayConfig.presentation[key]; });
@@ -438,10 +471,10 @@
     async function save() {
         var submitted = JSON.parse(JSON.stringify(values()));
         var secrets = {};
-        ['ninja-token', 'ninja-secret', 'shopify-secret'].forEach(function (id) { secrets[id] = by(id).value; });
+        ['ninja-token', 'ninja-secret', 'shopify-secret', 'patreon-secret'].forEach(function (id) { secrets[id] = by(id).value; });
         var clearToken = by('ninja-clear-token').checked;
-        var response = await request('save', { config: submitted, token: secrets['ninja-token'].trim(), clearToken: clearToken, ninjaSecret: secrets['ninja-secret'].trim(), shopifySecret: secrets['shopify-secret'].trim() });
-        ['ninja-token', 'ninja-secret', 'shopify-secret'].forEach(function (id) { if (by(id).value === secrets[id]) by(id).value = ''; });
+        var response = await request('save', { config: submitted, token: secrets['ninja-token'].trim(), clearToken: clearToken, ninjaSecret: secrets['ninja-secret'].trim(), shopifySecret: secrets['shopify-secret'].trim(), patreonSecret: secrets['patreon-secret'].trim() });
+        ['ninja-token', 'ninja-secret', 'shopify-secret', 'patreon-secret'].forEach(function (id) { if (by(id).value === secrets[id]) by(id).value = ''; });
         if (by('ninja-clear-token').checked === clearToken) by('ninja-clear-token').checked = false;
         render(response, submitted);
         panel.querySelectorAll('button').forEach(function (button) { button.disabled = true; });
