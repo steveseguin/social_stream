@@ -116,6 +116,7 @@
 
 		rememberMessage(state, id);
 		pushMessage({
+			id: "patreon:chat:" + encodeURIComponent(activeKey) + ":" + encodeURIComponent(id),
 			chatname: name,
 			chatbadges: [],
 			chatmessage: msg,
@@ -140,40 +141,20 @@
 	function checkViewers(){
 		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
 			try {
-				let viewerSpan = [...document.querySelectorAll("number-flow-react.tabular-nums[role='img']")].pop().ariaLabel;
-				if (viewerSpan){
-					let views = viewerSpan.toUpperCase();
-					let multiplier = 1;
-					if (views.includes("K")){
-						multiplier = 1000;
-						views = views.replace("K","");
-					} else if (views.includes("M")){
-						multiplier = 1000000;
-						views = views.replace("M","");
-					}
-					views = views.split(" ")[0];
-					if (views == parseFloat(views)){
-						views = parseFloat(views) * multiplier;
-						chrome.runtime.sendMessage(
-							chrome.runtime.id,
-							({message:{
-									type: 'patreon',
-									event: 'viewer_update',
-									meta: views
-								}
-							}),
-							function (e) {}
-						);
-					}
-				}
+				var counter = document.querySelector('[class*="OnlineViewers_root"] number-flow-react[role="img"]');
+				if (!counter) return;
+				var label = (counter.getAttribute("aria-label") || "").trim();
+				var match = label.match(/^(\d+(?:,\d{3})*(?:\.\d+)?)\s*([KM])?$/i);
+				if (!match) return;
+				var multiplier = match[2] ? (match[2].toUpperCase() === "K" ? 1000 : 1000000) : 1;
+				var views = Math.round(parseFloat(match[1].replace(/,/g, "")) * multiplier);
+				if (Number.isFinite(views)) pushMessage({ type: "patreon", event: "viewer_update", meta: views });
 			} catch (e) {
 			}
 		}
 	}
 
 
-	// OnlineViewers_root_orkvv
-	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
 		response = response || {};
@@ -254,5 +235,7 @@
 	console.log("social stream injected");
 	// Polling also discovers a replacement panel, an initially empty chat, or SPA navigation.
 	setInterval(scanChat, 1000);
+	setTimeout(checkViewers, 2500);
+	setInterval(checkViewers, 30000);
 	scanChat();
 })();
