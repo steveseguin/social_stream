@@ -3146,6 +3146,11 @@ function checkIntervalState(intervalIndex) {
 
 function pushSettingChange() {
 	const settingsForSources = getEffectiveSettingsForSources();
+	if (isSSAPP) {
+		try {
+			ipcRenderer.send("ssapp:viewer-count-request", temporaryViewerCountUntil);
+		} catch (e) {}
+	}
 	chrome.tabs.query({}, function (tabs) {
 		chrome.runtime.lastError;
 		for (var i = 0; i < tabs.length; i++) {

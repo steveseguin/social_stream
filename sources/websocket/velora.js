@@ -2622,6 +2622,7 @@ function updateViewerCount(count, unavailableLabel) {
     } else {
         els.viewerCount.textContent = `Viewers: ${Number(count).toLocaleString()}`;
         els.viewerCount.className = 'status-chip ok';
+        if (!(state.settings.showviewercount || state.settings.hypemode)) return;
         try {
             relayToApp({
                 message: { type: 'velora', event: 'viewer_update', meta: count }

@@ -39,6 +39,7 @@ window.addEventListener('bilibiliMessage', function(e) {
 });
 
 function pushMessage(data) {
+    if (data && data.event === 'viewer_update' && !(settings.showviewercount || settings.hypemode)) return;
     try {
         chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e) {});
     } catch(e) {
