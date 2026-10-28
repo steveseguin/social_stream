@@ -1305,7 +1305,7 @@ try{
 		}
 	}
 
-	async function connectTwitchBotAccount() {
+	async function connectTwitchBotAccount(launchMode) {
 		const startOAuthFn = (window.ninjafy && typeof window.ninjafy.startTwitchOAuth === 'function')
 			? window.ninjafy.startTwitchOAuth
 			: (window.__ssapp && typeof window.__ssapp.startTwitchOAuth === 'function')
@@ -1326,7 +1326,8 @@ try{
 				state,
 				authBase: TWITCH_HOSTED_AUTH_BASE_URL,
 				authMode: 'hosted',
-				purpose: 'bot'
+				purpose: 'bot',
+				launchMode: launchMode === 'external' || launchMode === 'copy' ? launchMode : 'internal'
 			});
 			if (!result || !result.access_token) {
 				throw new Error('Twitch did not return a bot account authorization.');
@@ -2734,7 +2735,7 @@ async function ensureChatClientInstance() {
 					return;
 				}
 				if (request.type === 'TWITCH_BOT_ACCOUNT_CONNECT') {
-					connectTwitchBotAccount().catch(function(error) {
+					connectTwitchBotAccount(request.launchMode).catch(function(error) {
 						console.error('Twitch bot account connection failed', error);
 					});
 					sendResponse({ ok: true, pending: true });
@@ -4185,7 +4186,7 @@ async function ensureChatClientInstance() {
 				console.error('Twitch SEND_MESSAGE via postMessage failed', err);
 			});
 		} else if (request.type === 'TWITCH_BOT_ACCOUNT_CONNECT') {
-			connectTwitchBotAccount().catch(function(err) {
+			connectTwitchBotAccount(request.launchMode).catch(function(err) {
 				console.error('Twitch bot account connection via postMessage failed', err);
 			});
 		} else if (request.type === 'TWITCH_BOT_ACCOUNT_DISCONNECT') {
