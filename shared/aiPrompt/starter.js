@@ -108,6 +108,7 @@
 		}
 		function card(data, label, detail) {
 			var row = element("article", "ssn-card");
+			row.ssnMessage = data;
 			if (label) row.appendChild(element("div", "ssn-label", label));
 			var head = element("div", "ssn-card-head"), avatar = image(data.chatimg, "ssn-avatar");
 			if (avatar) head.appendChild(avatar);
@@ -134,8 +135,47 @@
 			queues.push({ data: data, label: label, detail: detail }); if (queues.length > 50) queues.shift();
 			if (!queueTimer) drain();
 		}
+		function hasValue(value) { return value !== undefined && value !== null && value !== ""; }
+		function matchesDelete(message, deletion) {
+			if (!message) return false;
+			if (deletion.type && String(message.type || "") !== String(deletion.type)) return false;
+			var nativeId = deletion.meta && deletion.meta.messageId;
+			if (hasValue(nativeId)) return !!message.meta && hasValue(message.meta.messageId) && String(message.meta.messageId) === String(nativeId);
+			if (hasValue(deletion.id)) return hasValue(message.id) && String(message.id) === String(deletion.id);
+			if (hasValue(deletion.userid)) return hasValue(message.userid) && String(message.userid) === String(deletion.userid);
+			if (deletion.chatname) return String(message.chatname || "") === String(deletion.chatname);
+			return !!deletion.type;
+		}
+		function deleteCards(deletion) {
+			if (!deletion || typeof deletion !== "object") return;
+			queues = queues.filter(function (item) { return !matchesDelete(item.data, deletion); });
+			var removedActiveAlert = false;
+			[chat, alerts, featured].forEach(function (container) {
+				Array.prototype.slice.call(container.children).forEach(function (row) {
+					if (!matchesDelete(row.ssnMessage, deletion)) return;
+					if (container === alerts) removedActiveAlert = true;
+					remove(row);
+				});
+			});
+			if (removedActiveAlert && config.alertMode === "queue") {
+				clearTimeout(queueTimer); queueTimer = null; drain();
+			}
+		}
+		function handleControl(data) {
+			if ("clearAll" in data || data.action === "clear" || data.action === "clearAll") {
+				clearTimeout(queueTimer); queueTimer = null; queues.length = 0;
+				[chat, alerts, featured].forEach(clear); return true;
+			}
+			if ("deleteMessage" in data) {
+				if (hasValue(data.deleteMessage)) deleteCards({ id: data.deleteMessage });
+				return true;
+			}
+			if ("delete" in data) { deleteCards(data.delete); return true; }
+			return false;
+		}
 		function handle(data) {
 			if (!data || typeof data !== "object") return;
+			if (handleControl(data)) return;
 			var meta = data.meta || {}, event = String(data.event || "").toLowerCase();
 			if (event === "viewer_updates") {
 				if (!types.viewer) return;

@@ -1512,6 +1512,10 @@
     }
 
     function maybeEmitCounterEvent(eventName, count, trackerName) {
+        if (eventName === 'viewer_update' && !(state.settings.showviewercount || state.settings.hypemode)) {
+            state[trackerName] = null;
+            return;
+        }
         if (!isFinite(count)) {
             return;
         }

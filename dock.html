@@ -10553,6 +10553,10 @@
 					ele.title = "Queue — 📑 Show only the messages in queue";
 				}
 				redoOdd();
+				if (historyMode && historyScrollContainer) {
+					// Filtering can collapse the list; its scroll event is not a request to browse history.
+					historyLastScrollTop = historyScrollContainer.scrollTop;
+				}
 			}
 
 			function updateQueueButton(relabel = false) {

@@ -43,7 +43,7 @@
 		<section class="page-hero">
 			<div class="container">
 				<h1>Connect your store. Show your products.</h1>
-				<p>Alerts from Fourthwall, Ko-fi, and Buy Me a Coffee, plus products with QR codes.</p>
+				<p>Alerts from Fourthwall, Ko-fi, Buy Me a Coffee, and Patreon, plus products with QR codes.</p>
 			</div>
 		</section>
 
@@ -55,6 +55,7 @@
 					<a href="#fourthwall">Fourthwall</a>
 					<a href="#kofi">Ko-fi</a>
 					<a href="#bmac">Buy Me a Coffee</a>
+					<a href="#patreon">Patreon</a>
 					<a href="#import">Import a product</a>
 					<a href="#obs">Show it on stream</a>
 					<a href="#troubleshooting">Fix problems</a>
@@ -62,9 +63,10 @@
 
 				<div class="guide-card" id="connect">
 					<h2 id="read-section-2">Connect alerts in 5 steps</h2>
+					<p>These steps connect Fourthwall, Ko-fi and Buy Me a Coffee. For signed membership alerts, follow the <a href="#patreon">Patreon steps below</a>.</p>
 					<div class="guide-step-layout">
 						<ol class="guide-steps">
-							<li>Open <strong>Monetization &rarr; Fourthwall, Ko-fi &amp; Buy Me a Coffee alerts</strong> and pick your <strong>Provider</strong>.</li>
+							<li>Open <strong>Monetization &rarr; Fourthwall, Ko-fi, Buy Me a Coffee &amp; Patreon alerts</strong> and pick your <strong>Provider</strong>.</li>
 							<li>Click <strong>Receiver setting</strong> and turn on <strong>remote API control of extension</strong>.</li>
 							<li>Go back to Monetization and click <strong>Copy webhook URL</strong>.</li>
 							<li>Paste it into your provider's webhook settings (steps below).</li>
@@ -76,7 +78,7 @@
 						</figure>
 					</div>
 					<div class="guide-note"><strong>Is it working?</strong> &ldquo;Receiver connected&rdquo; only means SSN is listening. The last-event line updates when a real event arrives (it resets on restart).</div>
-					<div class="warning-note"><strong>Keep the webhook URL private.</strong> It's the only lock on these alerts (no signing secret is checked). Fine for alerts, not proof of payment for shipping orders. Never post it or use it in a QR code.</div>
+					<div class="warning-note"><strong>Keep the webhook URL private.</strong> For Fourthwall, Ko-fi and Buy Me a Coffee, it is the only lock on these alerts (no signing secret is checked). Patreon uses a signing secret. Fine for alerts, not proof of payment for shipping orders. Never post it or use it in a QR code.</div>
 					<p><strong>Preview sample alert</strong> only shows the look. It doesn't touch totals, Event Flow, or your webhook.</p>
 					<p>NinjaBacker, Throne, Amazon, and eBay: see the <a href="monetization.html">monetization guide</a>. Shopify: see <a href="shopify-setup.html">Shopify setup</a>.</p>
 				</div>
@@ -136,6 +138,30 @@
 					<p><a href="https://help.buymeacoffee.com/en/articles/15743173-how-to-setup-and-use-buy-me-a-coffee-webhooks">Buy Me a Coffee webhook documentation</a> &middot; <a href="../monetization.html?demo&amp;mode=commerce&amp;view=alerts&amp;provider=bmac">Preview a sample contribution</a></p>
 				</div>
 
+                <div class="guide-card" id="patreon">
+                    <h2>Patreon chat and new pledges</h2>
+                    <p>Use Standard capture for chat and connect a webhook for new-pledge alerts. You can use either on its own or both together.</p>
+                    <h3>Capture chat</h3>
+                    <p>In SSApp, add a Patreon source in <strong>Standard</strong> mode, sign in with an account that can access the chat, and open the event or chat page. With the browser extension, enable Patreon capture and open that page in your browser. Keep the chat open and SSN on; new messages appear in your dock, while existing history is skipped.</p>
+                    <h3>Connect new-pledge alerts</h3>
+                    <ol class="guide-steps">
+                        <li>Open <strong>Monetization &rarr; Fourthwall, Ko-fi, Buy Me a Coffee &amp; Patreon alerts</strong>, select <strong>Patreon</strong>, and click <strong>Copy webhook URL</strong>. In SSApp, your Patreon source's <strong>Set up Patreon alerts</strong> menu item opens the same panel.</li>
+                        <li>Sign in to the creator account whose pledges you want to receive. Open <a href="https://www.patreon.com/portal/registration/register-webhooks">Patreon webhook settings</a>, create a webhook using the copied URL, and enable <strong>New pledge</strong> (<code>members:pledge:create</code>).</li>
+                        <li>Copy that webhook's signing secret into SSN's signing-secret field. Turn on <strong>Enable Patreon alerts</strong> and click <strong>Save setup</strong>. Keep SSN running and switched on to display incoming pledges; the Patreon chat page does not need to stay open for these alerts.</li>
+                        <li>Open your dock or multi-alerts overlay using the same SSN session and password. Keep subscriber alerts enabled and allow the Patreon source. For automation, use Event Flow's <strong>New Subscriber</strong> trigger with <strong>Patreon</strong> selected.</li>
+                    </ol>
+                    <p>Alerts show new pledges from the time you enable them. The tier and pledge amount appear when Patreon supplies them; hidden names remain Anonymous. Pledges do not increase donation totals. Free memberships, gifts, trials, declined/former memberships, upgrades, cancellations and recurring charges do not generate new-pledge alerts.</p>
+                    <p>Patreon alerts use their own receiver; you do not need to enable remote API control of the extension. To show them in OBS, use your multi-alerts link or the <a href="#obs">Monetization activity-alert view</a>. Patreon pledge alerts do not require an enabled product showcase.</p>
+                    <p>Closing SSN or turning SSN off keeps pending pledges for up to seven days. Disabling Patreon alerts and saving clears the backlog and stops queuing new pledges. Disconnect removes the receiver; also remove its old webhook in Patreon before creating another connection.</p>
+                    <details class="guide-extra">
+                        <summary>Check the connection</summary>
+                        <p><strong>Preview sample alert</strong> checks the appearance without sending a webhook or firing Event Flow actions. To check delivery from Patreon, use <strong>Send Test</strong> on your webhook in Patreon's dashboard, then check SSN's status and last-event time. Dashboard tests can trigger alerts and Event Flow actions when the sample qualifies as a new pledge.</p>
+                        <p><strong>Verified event received; no eligible new pledge</strong> means the signature was accepted, but the event did not qualify for an alert. A dashboard sample with an old pledge date is skipped. Keep the <code>members:pledge:create</code> trigger enabled to receive new pledges after setup.</p>
+                        <p>If Patreon reports <strong>401 / Invalid signature</strong>, copy the complete signing secret from that same webhook, paste it into SSN, and save again. If SSN remains waiting for an event, check the webhook URL and selected trigger in Patreon. Keep the webhook URL and signing secret private.</p>
+                    </details>
+                    <p><a href="../monetization.html?demo&amp;mode=commerce&amp;view=alerts&amp;provider=patreon">Preview a Patreon alert</a> &middot; <a href="https://docs.patreon.com/#webhooks">Patreon webhook documentation</a></p>
+                </div>
+
 				<div class="guide-card" id="import">
 					<h2 id="read-section-6">Import a Fourthwall product</h2>
 					<div class="guide-step-layout">
@@ -187,7 +213,7 @@
 						<ul>
 							<li>The showcase shows the product image. The smaller support card doesn't.</li>
 							<li>Activity alerts work on their own, and never show a QR code from an unrelated product.</li>
-							<li>Multi-alerts and the activity feed work with the same session, with no product list needed. The Monetization activity view needs the product list turned on.</li>
+							<li>Multi-alerts and the activity feed work with the same session, with no product list needed. The Monetization activity view needs the product list turned on for other providers; Patreon pledge alerts display independently.</li>
 							<li>In Event Flow, the Donation trigger still covers rows with <code>hasDonation</code>. Use Event Type for purchases or completed gifts. See the <a href="event-reference.html#creator-commerce-webhooks">event mapping</a>.</li>
 						</ul>
 					</details>
@@ -199,7 +225,7 @@
 					<table class="guide-table guide-table-stack">
 						<thead><tr><th>Problem</th><th>Try this</th></tr></thead>
 						<tbody>
-							<tr><td data-label="Problem">Receiver is off</td><td data-label="Try this">Turn on <strong>remote API control of extension</strong>. Other API switches do different things.</td></tr>
+							<tr><td data-label="Problem">Receiver is off</td><td data-label="Try this">For Patreon, turn on <strong>Enable Patreon alerts</strong> and click <strong>Save setup</strong>. For Fourthwall, Ko-fi and Buy Me a Coffee, turn on <strong>remote API control of extension</strong>.</td></tr>
 							<tr><td data-label="Problem">Disconnected</td><td data-label="Try this">Keep SSN on and check your internet. This is SSN's connection, not your provider's.</td></tr>
 							<tr><td data-label="Problem">No event received</td><td data-label="Try this">Check the provider you picked, the URL, and the provider's webhook settings.</td></tr>
 							<tr><td data-label="Problem">Event skipped</td><td data-label="Try this">Tests, private payments, unsupported events, and bad amounts are left out.</td></tr>
@@ -208,7 +234,7 @@
 							<tr><td data-label="Problem">Import failed</td><td data-label="Try this">Check the product link and Storefront token, and that the product is public and available. You can always type it in by hand.</td></tr>
 						</tbody>
 					</table>
-					<p>This is a live alert feed, not an order record. Use your provider's dashboard for payments, refunds, and shipping. Tiltify and Patreon alerts aren't supported yet.</p>
+					<p>This is a live alert feed, not an order record. Use your provider's dashboard for payments, refunds, and shipping. Tiltify alerts aren't supported yet.</p>
 				</div>
 			</div>
 		</section>

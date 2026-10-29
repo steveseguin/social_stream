@@ -3146,6 +3146,11 @@ function checkIntervalState(intervalIndex) {
 
 function pushSettingChange() {
 	const settingsForSources = getEffectiveSettingsForSources();
+	if (isSSAPP) {
+		try {
+			ipcRenderer.send("ssapp:viewer-count-request", temporaryViewerCountUntil);
+		} catch (e) {}
+	}
 	chrome.tabs.query({}, function (tabs) {
 		chrome.runtime.lastError;
 		for (var i = 0; i < tabs.length; i++) {
@@ -5722,8 +5727,14 @@ async function processIncomingMessage(message, sender = null) {
 
 		if (
 			settings.noduplicates && // filters echos if same TYPE, USERID, and MESSAGE
-			// Distinct anonymous Shopify orders share display text; compare their stable order IDs.
-			checkDuplicateSources.isDuplicate(message.type, message.userid || message.chatname, (message.type === "shopify" && message.event === "purchase" && /^shopify:[a-f0-9]{64}$/.test(message.id || "")) ? message.id : (message.chatmessage || message.hasDonation || (message.membership && message.event)))
+			// Distinct orders, pledges and Patreon chat messages can share display text.
+			checkDuplicateSources.isDuplicate(message.type, message.userid || message.chatname, (
+				(message.type === "shopify" && message.event === "purchase" && /^shopify:[a-f0-9]{64}$/.test(message.id || "")) ||
+				(message.type === "patreon" && (
+					(message.event === "new_subscriber" && /^patreon:[a-f0-9]{64}$/.test(message.id || "")) ||
+					(!message.event && /^patreon:chat:[^:]+:[^:]+$/.test(message.id || ""))
+				))
+			) ? message.id : (message.chatmessage || message.hasDonation || (message.membership && message.event)))
 		) {
 			return;
 		}
@@ -7185,7 +7196,12 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			overwriteLiveStatsFile("setup");
 		} else if (request.cmd && request.cmd === "excelsave") {
 			sendResponse({ state: isExtensionOn });
-			overwriteFileExcel("setup");
+			overwriteFileExcel("setup").catch(error => {
+				if (error && error.name === "AbortError") return;
+				newFileHandleExcel = false;
+				console.error("[Excel] Export setup failed:", error);
+				messagePopup({ alert: "Failed to start Excel export: " + (error.message || String(error)) });
+			});
 		} else if (request.cmd && request.cmd === "loadtickerfile") {
 			sendResponse({ state: isExtensionOn });
 			selectTickerFile();

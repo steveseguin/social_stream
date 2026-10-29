@@ -598,13 +598,20 @@ body.collection-chat.style-music .message::after { right: 0.7em; width: 2.4em; h
     function deleteMessages(data, onlyLast) {
         if (!data.delete || typeof data.delete !== "object") { return false; }
         const d = data.delete;
+        const nativeId = d.meta && d.meta.messageId;
         return removeMatchingMessages(function (message) {
+            if (d.type && message.dataset.sourceType !== String(d.type)) { return false; }
+            if (nativeId !== undefined && nativeId !== null && nativeId !== "") {
+                return message.dataset.nativeMessageId === String(nativeId);
+            }
             if (d.id !== undefined && d.id !== null && d.id !== "") {
                 const idString = String(d.id);
                 return message.dataset.mid === idString || message.id === idString;
             }
+            if (d.userid !== undefined && d.userid !== null && d.userid !== "") {
+                return message.dataset.userid === String(d.userid);
+            }
             if (d.chatname && message.dataset.chatname !== String(d.chatname)) { return false; }
-            if (d.type && message.dataset.sourceType !== String(d.type)) { return false; }
             return !!(d.chatname || d.type);
         }, onlyLast || d.onlyLast);
     }
@@ -772,6 +779,12 @@ body.collection-chat.style-music .message::after { right: 0.7em; width: 2.4em; h
         const messageId = getPayloadMessageId(data);
         messageDiv.id = messageId;
         messageDiv.dataset.mid = messageId;
+        if (data.meta && data.meta.messageId !== undefined && data.meta.messageId !== null && data.meta.messageId !== "") {
+            messageDiv.dataset.nativeMessageId = String(data.meta.messageId);
+        }
+        if (data.userid !== undefined && data.userid !== null && data.userid !== "") {
+            messageDiv.dataset.userid = String(data.userid);
+        }
         if (data.chatname) { messageDiv.dataset.chatname = data.chatname; }
         if (data.type) { messageDiv.dataset.sourceType = data.type; }
         messageTimestamps.set(messageId, Date.now());

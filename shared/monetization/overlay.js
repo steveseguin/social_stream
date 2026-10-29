@@ -101,10 +101,12 @@
 	function display() {
 		var c = state && state[mode];
 		if (!c || !c.enabled) {
-			card.hidden = true;
-			active = null;
-			pending = [];
-			return;
+			pending = pending.filter(function (item) { return mode === 'commerce' && item.patreonPledge; });
+			if (!c || mode !== 'commerce' || !active || !active.patreonPledge) {
+				card.hidden = true;
+				active = null;
+				return;
+			}
 		}
 		document.body.classList.toggle('tl', c.position === 'tl');
 		if (!active && (view === 'alerts' || (!demo && !(mode === 'commerce' && c.live && c.live.mode === 'show' && (!c.live.until || c.live.until > Date.now())) && cardEvery > 0 && (Date.now() / 1000) % Math.max(cardEvery, cardFor) >= cardFor))) { card.hidden = true; return; }
@@ -181,26 +183,27 @@
 		}
         fitCard();
 	}
-	function enqueue(id, title, detail, image) {
+	function enqueue(id, title, detail, image, patreonPledge) {
 		if (view === 'showcase' || view === 'card') return;
         if ((typeof id !== 'string' && typeof id !== 'number') || !String(id) || String(id).length > 1024) return;
         id = String(id);
 		if (seen.has(id)) return;
 		seen.add(id);
 		if (seen.size > 200) seen.delete(seen.values().next().value);
-		if (pending.length < 20) pending.push({ title: title, detail: detail, image: safeURL(image) });
+		if (pending.length < 20) pending.push({ title: title, detail: detail, image: safeURL(image), patreonPledge: patreonPledge === true });
 	}
 	function receive(payload) {
 		(Array.isArray(payload) ? payload.slice(0, 100) : [payload]).forEach(function (data) {
 			if (data && data.content) data = data.content;
 			if (!data || typeof data !== 'object' || Array.isArray(data) || data.private === true || ((data.isTest === true || data.testMode === true) && data.event !== 'monetization_test')) return;
-            if (mode === 'commerce' && data.event !== 'monetization_update' && state && state.commerce && state.commerce.enabled && (!sources.length || sources.indexOf(data.type) !== -1)) {
+            var patreonPledge = data.type === 'patreon' && data.event === 'new_subscriber';
+            if (mode === 'commerce' && data.event !== 'monetization_update' && (patreonPledge || (state && state.commerce && state.commerce.enabled)) && (!sources.length || sources.indexOf(data.type) !== -1)) {
                 var kind = typeof data.event === 'string' ? data.event : '';
                 var hasDonation = typeof data.hasDonation === 'string' && !!data.hasDonation.trim();
                 if (data.id && (hasDonation || ['purchase', 'gift', 'giftcontribution', 'giftfunded', 'new_subscriber', 'resub', 'subscription_gift', 'giftpurchase'].indexOf(kind) !== -1)) {
                     var actions = { purchase: 'Purchase', gift: 'Gift', giftcontribution: 'Gift contribution', giftfunded: 'Gift fully funded', new_subscriber: 'New member', resub: 'Renewed membership', subscription_gift: 'Gifted membership', giftpurchase: 'Gifted membership' };
                     var action = Object.prototype.hasOwnProperty.call(actions, kind) ? actions[kind] : 'Support received';
-                    enqueue(String(data.type) + ':' + String(data.id), tr('commerce-alert-' + (kind || 'support'), action) + ': ' + String(data.chatname || ot("anonymous", "Anonymous")).slice(0, 60), [typeof data.subtitle === 'string' ? data.subtitle : '', typeof data.hasDonation === 'string' ? data.hasDonation : '', messageText(data)].filter(Boolean).join(' - ').slice(0, 500), data.contentimg);
+                    enqueue(String(data.type) + ':' + String(data.id), tr('commerce-alert-' + (kind || 'support'), action) + ': ' + String(data.chatname || ot("anonymous", "Anonymous")).slice(0, 60), [typeof data.subtitle === 'string' ? data.subtitle : '', typeof data.hasDonation === 'string' ? data.hasDonation : '', messageText(data)].filter(Boolean).join(' - ').slice(0, 500), data.contentimg, patreonPledge);
                 }
             }
 			if (data.event === 'monetization_update' && data.meta && data.meta.monetization) {
@@ -246,6 +249,10 @@
 		display();
         if (mode === 'commerce' && view !== 'card' && view !== 'showcase') setTimeout(function () {
             var provider = params.get('provider') || 'fourthwall';
+            if (provider === 'patreon') {
+                enqueue('demo-patreon', tr('commerce-alert-new_subscriber', 'New member') + ': Juniper', 'Patreon - Studio member - New pledge: 5.00 USD');
+                return;
+            }
             var donation = provider === 'kofi', gift = provider === 'bmac';
             enqueue('demo-commerce', tr(donation ? 'commerce-alert-support' : gift ? 'commerce-alert-giftcontribution' : 'commerce-alert-purchase', donation ? 'Support' : gift ? 'Gift contribution' : 'Purchase') + ': Juniper', donation ? 'Ko-fi - $5.00 - Thank you for the stream!' : gift ? 'Buy Me a Coffee - Studio light - $10.00' : provider === 'shopify' ? 'Shopify - Creator T-shirt' : 'Fourthwall - Creator T-shirt');
         }, 600);
