@@ -7196,7 +7196,12 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			overwriteLiveStatsFile("setup");
 		} else if (request.cmd && request.cmd === "excelsave") {
 			sendResponse({ state: isExtensionOn });
-			overwriteFileExcel("setup");
+			overwriteFileExcel("setup").catch(error => {
+				if (error && error.name === "AbortError") return;
+				newFileHandleExcel = false;
+				console.error("[Excel] Export setup failed:", error);
+				messagePopup({ alert: "Failed to start Excel export: " + (error.message || String(error)) });
+			});
 		} else if (request.cmd && request.cmd === "loadtickerfile") {
 			sendResponse({ state: isExtensionOn });
 			selectTickerFile();
