@@ -10,9 +10,9 @@ const CAPTURE_REMINDER_SITES = [
 	{ setting: "telegram", name: "Telegram", hostSuffix: ".telegram.org", path: /^\/(a|k|z)\// },
 	{ setting: "whatsapp", name: "WhatsApp", hosts: ["web.whatsapp.com"] },
 	{ setting: "instagram", name: "Instagram non-live", hosts: ["www.instagram.com"], excludePath: /\/live(?:\/|$)|^\/stories\// },
-	{ setting: "xcapture", name: "X embedded page features", hosts: ["x.com", "www.x.com"],
+	{ setting: "xcapture", name: "X (Twitter) embedded page features", hosts: ["x.com", "www.x.com"],
 		excludePath: /^\/(?:i|messages|notifications|bookmarks|settings|compose)(?:\/|$)|\/(?:chat|live|livechat)\/?$/,
-		message: "Enable capture to use X's embedded post capture controls." }
+		message: "Enable capture to use X (Twitter)'s embedded post capture controls." }
 ];
 function getCaptureReminderSite(sender) {
 	if (!sender || !sender.tab) {
