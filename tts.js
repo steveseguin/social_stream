@@ -3269,6 +3269,12 @@ TTS.normalizePhraseText = function(text) {
 
 TTS.getPhraseClipId = function(text, voice) {
     if (!voice || /^en(?:[-_]|$)/i.test(voice)) return "";
+    // These Piper models can collapse isolated Portuguese greetings into very short sounds.
+    if (voice === "pt_PT-tugão-medium" || voice === "pt_BR-faber-medium") {
+        const greeting = String(text || "").normalize("NFC").trim().toLowerCase();
+        if (/^o+i+[.!?,\s]*$/.test(greeting)) return "pt-oi";
+        if (/^o+l+[aá]+[.!?,\s]*$/.test(greeting)) return "pt-ola";
+    }
     if (!TTS.phraseClipIndex) {
         TTS.phraseClipIndex = {};
         Object.keys(TTS.phraseClips).forEach(function(id) {
