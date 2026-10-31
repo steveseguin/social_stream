@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="et" data-site-root="../../" data-site-language="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/et/docs/tts-setup-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="et_EE">
+    <meta property="og:url" content="https://socialstream.ninja/beta/et/docs/tts-setup-guide.html">
+    <meta property="og:title" content="Kõne seadistamise juhend – Social Stream Ninja">
+    <meta property="og:description" content="Lihtne ingliskeelne häälestusjuhend Social Stream Ninja teksti kõneks muutmise, OBS-heli, brauseri häälte, kohalike häälte ja TTS-serveri režiimide jaoks.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/et/docs/tts-setup-guide.html">
+    <meta name="twitter:title" content="Kõne seadistamise juhend – Social Stream Ninja">
+    <meta name="twitter:description" content="Lihtne ingliskeelne häälestusjuhend Social Stream Ninja teksti kõneks muutmise, OBS-heli, brauseri häälte, kohalike häälte ja TTS-serveri režiimide jaoks.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kõne seadistamise juhend – Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <style>
+        .tts-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+        .tts-preview { border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.6rem; min-width: 0; }
+        .tts-preview h3 { margin-top: 0; }
+        .tts-preview audio { width: 100%; margin: .8rem 0; }
+        .tts-preview code { overflow-wrap: anywhere; }
+        .guide-card [id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 52rem; }
+        @media (max-width: 700px) { .tts-preview-grid { grid-template-columns: 1fr; } }
+    </style>
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Lihtne ingliskeelne häälestusjuhend Social Stream Ninja teksti kõneks muutmise, OBS-heli, brauseri häälte, kohalike häälte ja TTS-serveri režiimide jaoks.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="et">
+<script id="ssn-site-language" type="application/json">{"language":"et","page":"docs/tts-setup-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/channel-names-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/chatbot-knowledge-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-overlays.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/game-overlay-troubleshooting.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/meld-guide.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Lülitu heledale teemale","Switch to dark theme":"Lülitu tumedale teemale","Light mode":"Hele teema","Dark mode":"Tume teema","Open navigation menu":"Ava navigeerimismenüü","Close navigation menu":"Sulge navigeerimismenüü","Copy this document as Markdown to the clipboard":"Kopeeri dokument Markdownina lõikelauale","Copy Markdown":"Kopeeri Markdown","Copying…":"Kopeerimine…","Markdown copied":"Markdown kopeeritud","Copy failed":"Kopeerimine ebaõnnestus","Copy comprehensive Markdown for an AI assistant":"Kopeeri kogu sisu Markdownina tehisintellekti abilisele","Copy this documentation page as Markdown for an AI assistant":"Kopeeri see juhend Markdownina tehisintellekti abilisele"},"strings":{"(Node.js required). Run it on the OBS computer.":"(Node.js on nõutav). Käivitage see OBS-i arvutis.","(or":"(või","), optional":"), valikuline",", expand":", laiendada",", optional":", valikuline",", or":", või",", set that source to":", määrake selleks allikaks",", then a voice.":", siis hääl.",". Bigger download, more memory.":". Suurem allalaadimine, rohkem mälu.",". Chirp 3: HD voices do not use the rate and pitch controls.":". Chirp 3: HD hääled ei kasuta kõnekiiruse ega häälekõrguse juhtnuppe.",". Copy the voice's model ID, not its name or page link. Leave it blank for the default voice.":". Kopeerige hääle mudeli ID, mitte selle nimi või lehe link. Vaikehääle jaoks jätke see tühjaks.",". Fish Audio decides what's free and its fair-use terms. Paid models need account credit. SSN never switches to a paid model if a free request fails. Speed goes from 0.5 to 2. Fish Audio detects the language. Your chat text is sent to Fish Audio.":". Fish Audio otsustab, mis on tasuta ja selle õiglase kasutamise tingimused. Tasulised mudelid vajavad kontokrediiti. SSN ei lülitu kunagi tasulisele mudelile, kui tasuta taotlus ebaõnnestub. Kiirus muutub 0,5-lt 2-le. Fish Audio tuvastab keele. Teie vestlustekst saadetakse Fish Audiole.",". Leave it running.":". Jätke see tööle.",". Leave out":". Jäta välja",". Pick":". Vali",". Piper has Spain, Mexico, Brazil and Portugal voices. Kokoro has three Spanish and three Brazilian Portuguese voices.":". Piperil on Hispaania, Mehhiko, Brasiilia ja Portugali hääl. Kokorol on kolm hispaania ja kolm Brasiilia portugali häält.",". Plays each part as it's ready. Slow PCs may pause between parts.":". Mängib iga osa, kui see on valmis. Aeglased arvutid võivad osade vahel peatada.",". Streaming or FP32 turns on background generation automatically.":". Voogesitus või FP32 lülitab taustal genereerimise automaatselt sisse.",". The selected voice sets the request language, ahead of":". Valitud hääl määrab päringu keele enne",". These options make speech in the background so the page stays smooth.":". Need valikud muudavad kõne taustal, nii et leht jääb sujuvaks.",". Waits for the whole message first.":". Ootab kõigepealt ära kogu sõnumi.","A ChatGPT subscription doesn't include API credit.":"ChatGPT tellimus ei sisalda API krediiti.","A quick link to try:":"Kiire link proovimiseks:","API Key":"API võti","API billing":"API arveldamine","API charges may apply":"Rakenduda võivad API tasud","API terms apply":"Rakenduvad API tingimused","Account limits and network delay.":"Konto limiidid ja võrgu viivitus.","Actual SSN Custom / Local TTS provider settings":"Tegelikud SSN-i kohandatud / kohaliku TTS-i pakkuja seaded","Actual SSN ElevenLabs provider settings":"Tegelikud SSN ElevenLabsi pakkuja seaded","Actual SSN Gemini provider settings":"Tegelikud SSN Gemini pakkuja seaded","Actual SSN Google Cloud provider settings":"Tegelikud SSN-i Google Cloudi seaded","Actual SSN Kitten provider settings":"Tegelikud SSN Kitten pakkuja seaded","Actual SSN Kokoro provider settings":"Tegelikud SSN Kokoro pakkuja seaded","Actual SSN OpenAI provider settings":"Tegelikud SSN OpenAI pakkuja seaded","Actual SSN Piper provider settings":"Tegelikud SSN Piperi pakkuja seaded","Actual SSN Speechify provider settings":"Tegelikud SSN Speechify pakkuja seaded","Actual SSN System TTS provider settings":"Tegelikud SSN-süsteemi TTS-i pakkuja seaded","Actual SSN eSpeak provider settings":"Tegelikud SSN eSpeaki pakkuja seaded","Actual popup: Message: Text to Speech, with Enable TTS in dock switched on":"Tegelik hüpikaken: sõnum: tekst kõneks, kui TTS-i lubamine dokis on sisse lülitatud","Actual popup: Piper TTS selected, with English US Female HFC Medium voice":"Tegelik hüpikaken: valitud Piper TTS, USA naissoost ingliskeelse HFC keskmise häälega","Adam (American Male):":"Adam (Ameerika mees):","Add a":"Lisage a","Advanced Audio Properties":"Täpsemad heliomadused","Alex (Brazilian Portuguese):":"Alex (Brasiilia portugali keel):","Alex (Spanish):":"Alex (hispaania):","Alice (British Female):":"Alice (Briti naine):","All four are free and run on your computer. Press play to compare.":"Kõik neli on tasuta ja töötavad teie arvutis. Võrdlemiseks vajutage esitusklahvi.","Alloy (American Female):":"Sulam (Ameerika naissoost):","An OBS Custom Browser Dock is a control panel, not a scene source. For Featured Chat, turn on TTS in that overlay's own options and copy its link.":"OBS-i kohandatud brauseri dokk on juhtpaneel, mitte stseeniallikas. Esiletõstetud vestluse jaoks lülitage selle ülekatte valikutes sisse TTS ja kopeerige selle link.","Aoede (American Female):":"Aoede (Ameerika naine):","Automatic":"Automaatne","Avoid gaps":"Vältige lünki","Background generation":"Tausta genereerimine","Background processor":"Taustaprotsessor","Bella (American Female):":"Bella (Ameerika naine):","Bella, US English, female. Most natural, but slower on CPU.":"Bella, USA inglise keel, naine. Kõige loomulikum, kuid protsessoril aeglasem.","Best Kokoro quality":"Parim Kokoro kvaliteet","Billing and quotas apply":"Kehtivad arveldamine ja kvoodid","Blue switch = chat reading is on.":"Sinine lüliti = vestluse lugemine on sisse lülitatud.","Brazilian Portuguese (Edresson) - Low:":"Brasiilia portugali keel (Edresson) – madal:","Brazilian Portuguese (Faber) - Medium:":"Brasiilia portugali keel (Faber) – keskmine:","Bridge URL":"Silla URL","Browser Source":"Brauseri allikas","CPU":"CPU","Check mute and the recording tracks in OBS. Don't capture the monitoring output a second time. See the":"Kontrollige vaigistust ja salvestusradasid OBS-is. Ärge jäädvustage seireväljundit teist korda. Vaata","Check the dock shows chat. Then check the TTS switch, provider and filters. Use a freshly copied link. Let the first voice download finish.":"Kontrollige, kas dokk näitab vestlust. Seejärel kontrollige TTS-i lülitit, pakkujat ja filtreid. Kasutage värskelt kopeeritud linki. Laske esimene hääle allalaadimine lõppeda.","Check your Gemini limits":"Kontrolli oma Gemini kasutuspiiranguid","Chirp 3: HD voice, such as":"Chirp 3: HD hääl, näiteks","Click":"Klõpsake","Commands & API":"Käsud ja API","Control audio via OBS":"Heli juhtimine OBS-i kaudu","Cost":"Maksumus","Custom / Local":"Kohandatud / Kohalik","Custom / Local TTS":"Kohandatud / Kohalik TTS","Daniel (British Male):":"Daniel (Briti mees):","DaveFX":"DaveFX","Do this":"Tehke seda","Does my chat platform support TTS?":"Kas minu vestlusplatvorm toetab TTS-i?","Dora":"Dora","Dora (Brazilian Portuguese):":"Dora (Brasiilia portugali keel):","Dora (Spanish):":"Dora (hispaania):","Download":"Laadi alla","Download Kitten sample":"Laadi alla Kitteni näidis","Download Kokoro sample":"Laadige alla Kokoro näidis","Download Piper sample":"Laadige alla Piperi näidis","Download eSpeak sample":"Laadige alla eSpeaki näidis","Download sample":"Laadige näidis alla","Download sizes and OBS test notes":"Laadige alla suurused ja OBS-i testimärkmed","Echo (American Male):":"Kaja (Ameerika mees):","Edit my TTS link by hand, or see every option":"Muutke minu TTS-linki käsitsi või vaadake kõiki valikuid","Eight English voices: male and female versions of voices 2, 3, 4 and 5. The sample uses Voice 4 (Female).":"Kaheksa ingliskeelset häält: 2., 3., 4. ja 5. hääle mees- ja naisversioonid. Näidis kasutab häält 4 (naissoost).","ElevenLabs":"ElevenLabs","ElevenLabs reference":"ElevenLabsi viide","Emma (British Female):":"Emma (Briti naine):","English US Female (HFC) - Medium:":"USA naissoost inglise keel (HFC) – keskmine:","English only. Bundled model is about 24 MB.":"ainult inglise keeles. Komplekti kuuluv mudel on umbes 24 MB.","English. Robotic, but tiny and fast.":"inglise keel. Robotiline, aga pisike ja kiire.","English:":"inglise keel:","Enter a Google Cloud TTS API key, the exact voice name, and its matching language. For Estonian, select an":"Sisesta Google Cloud TTS-i API-võti, hääle täpne nimi ja sellele vastav keel. Eesti keele jaoks vali","Enter the API key and voice ID from your Speechify API account.":"Sisestage oma Speechify API kontolt API võti ja hääle ID.","Enter your API key. Then click":"Sisestage oma API võti. Seejärel klõpsake","Eric (American Male):":"Eric (Ameerika mees):","Every message is read twice":"Iga sõnumit loetakse kaks korda","Faber":"Faber","Fable (British Male):":"Fable (Briti mees):","Faster Kokoro and Kitten":"Kiirem Kokoro ja Kitten","Features":"Funktsioonid","Fenrir (American Male):":"Fenrir (Ameerika mees):","First time?":"Esimest korda?","Fish Audio":"Fish Audio","Fish Audio API key":"Fish Audio API võti","Fish Audio API reference":"Fish Audio API viide","Fish Audio blocks direct requests from web pages, so OBS needs SSN's":"Fish Audio blokeerib otsepäringud veebilehtedelt, seega vajab OBS SSN-e","Fix GPU problems (Kokoro)":"GPU probleemide lahendamine (Kokoro)","Fix problems":"Probleemide lahendamine","For OBS: run the local bridge":"OBS-i jaoks: käivitage kohalik sild","Free":"Tasuta","Free model announcement and terms":"Tasuta mudeliteade ja tingimused","Free model with your own key; voice IDs.":"Tasuta mudel oma võtmega; hääle ID-d.","Free tier set by Fish Audio":"Fish Audio seatud tasuta tase","Free, no key":"Tasuta, võtit pole","Full quality":"Täielik kvaliteet","Gemini":"Gemini","Generation and playback":"Genereerimine ja taasesitus","George (British Male):":"George (Briti mees):","Go further":"Mine kaugemale","Go here":"Mine siia","Good for":"Hea jaoks","Google Cloud":"Google Cloud","Guides":"Juhendid","Have your chat read aloud on stream. Free, with no account or API key.":"Laske oma vestlus voos ette lugeda. Tasuta, ilma konto või API võtmeta.","Hear speech sooner":"Kuulake kõnet varem","Hear the free voices":"Kuulake vaba häält","Hear the voices":"Kuulake hääli","Hearing every message twice?":"Kas kuulate iga sõnumit kaks korda?","Heart (American Female):":"Süda (Ameerika naine):","Heavier on the CPU. First speech can be slow. Faster with a supported GPU.":"Protsessoril raskem. Esimene kõne võib olla aeglane. Toetatud GPU-ga kiirem.","Hire":"Laenutus","Home":"Avaleht","How these samples were made":"Kuidas need proovid tehti","I want an OBS dock or Featured Chat to speak instead":"Soovin, et selle asemel räägiks OBS-i dokk või Featured Chat","I want to":"ma tahan","I want to…":"ma tahan…","In OBS":"OBS-is","In its properties, turn on":"Selle omadustes lülitage sisse","In the Fish Audio panel, set":"Seadistage paneelil Fish Audio","In the SSN folder, run":"SSN-kaustas käivitage","Inspiration":"Inspiratsioon","Isabella (British Female):":"Isabella (Briti naine):","Jessica (American Female):":"Jessica (Ameerika naine):","Keep in mind":"Pidage meeles","Kitten":"Kitten","Kitten 0.8":"Kitten 0.8","Kitten 0.8 runs on the CPU, English only. Each model downloads on first use. Each browser or OBS keeps its own copy. NeuroSync gets the complete audio file either way. Old links keep working as before unless you change these options.":"Kitten 0.8 töötab protsessoriga, ainult inglise keeles. Iga mudel laaditakse alla esimesel kasutamisel. Iga brauser või OBS säilitab oma koopia. NeuroSync saab kogu helifaili mõlemal viisil. Vanad lingid töötavad nagu varem, kui te neid valikuid ei muuda.","Kitten voice sample":"Kitteni häälenäidis","Kitten:":"Kitten:","Kokoro":"Kokoro","Kokoro - Portuguese (Brazil)":"Kokoro – portugali (Brasiilia)","Kokoro - Portuguese (Brazil) sample":"Kokoro – Portugali (Brasiilia) proov","Kokoro - Spanish":"Kokoro – hispaania keel","Kokoro - Spanish sample":"Kokoro – Hispaania näidis","Kokoro voice sample":"Kokoro häälenäidis","Kokoro:":"Kokoro:","Kore (American Female):":"Kore (Ameerika naissoost):","Lewis (British Male):":"Lewis (Briti mees):","Liam (American Male):":"Liam (Ameerika mees):","Lily (British Female):":"Lily (Briti naine):","Link settings for Fish Audio":"Fish Audio lingi seaded","List My Available Voices":"Loetlege minu saadaolevad hääled","Local AI TTS guide":"Kohalik AI TTS juhend","Main chat overlay & control dock":"Peamine vestluse ülekate ja juhtdokk","Main navigation":"Peamine navigeerimine","Make a short test recording and play it back.":"Tehke lühike testsalvestus ja esitage see.","Message – Text to Speech":"Sõnum – tekst kõneks","Meter moves, but the recording is silent":"Mõõdik liigub, kuid salvestus vaikib","Michael (American Male):":"Michael (Ameerika mees):","Monitor and Output":"Monitor ja väljund","More detail and link settings":"Täpsemalt ja linkide seaded","More fixes:":"Rohkem parandusi:","More than one page is speaking. Keep TTS on in one place only.":"Rohkem kui üks lehekülg räägib. Hoidke TTS-i sisse lülitatud ainult ühes kohas.","Most setup. See the":"Enamik seadistusi. Vaata","Name reading was off. The clips skip loading time.":"Nime lugemine oli välja lülitatud. Klipid jätavad laadimisaja vahele.","Named voices, model and format controls.":"Nimega hääled, mudeli ja vormingu juhtnupud.","Named voices; language, rate and pitch.":"Nimega hääled; keel, määr ja helikõrgus.","Natural voices; English, Spanish, Portuguese.":"Loomulikud hääled; inglise, hispaania, portugali.","Nicole (American Female):":"Nicole (Ameerika naine):","No chat connected yet?":"Kas vestlus pole veel ühendatud?","No speech at all":"Ei mingit kõnet","Not every voice supports every control. Cloud TTS API must be enabled.":"Mitte iga hääl ei toeta kõiki juhtelemente. Cloud TTS API peab olema lubatud.","Nova (American Female):":"Nova (Ameerika naissoost):","OBS audio guide":"OBS audiogiid","OBS has its own browser and voice list. System TTS often fails there. Switch to Piper, Kokoro, Kitten or eSpeak. A virtual audio cable can't fix missing speech.":"OBS-il on oma brauser ja häälloend. Süsteem TTS sageli ebaõnnestub seal. Lülituge Piperile, Kokorole, Kittenile või eSpeakile. Virtuaalne helikaabel ei saa puuduvat kõnet parandada.","OBS needs SSN's local bridge.":"OBS vajab SSN-i kohalikku silda.","Often silent in OBS. Some voices need internet.":"OBS-is sageli vaikne. Mõned hääled vajavad internetti.","On that PC, System TTS listed five voices but made no sound in the OBS recording. Your PC may differ, so always test your own link. Cloud voices weren't tested (no paid accounts).":"Sellel arvutil loetles System TTS viis häält, kuid OBS-i salvestusel heli ei tehtud. Teie arvuti võib erineda, seega testige alati oma linki. Pilvehääli ei testitud (tasulisi kontosid pole).","On this page":"Sellel lehel","Only one page should read chat. Turn TTS off everywhere else.":"Vestlust peaks lugema ainult ühel lehel. Lülitage TTS kõikjal mujal välja.","Onyx (American Male):":"Oonüks (Ameerika isane):","Open navigation menu":"Ava navigeerimismenüü","Open the":"Avage","OpenAI":"OpenAI","Optional: paste a":"Valikuline: kleepige a","Overlay Gallery":"Ülekattegalerii","Paste the bridge token shown in the terminal into the":"Kleepige terminalis näidatud sillamärk","Paste your":"Kleepige oma","Pick":"Vali","Pick a":"Vali a","Pick a TTS model and voice. Style instructions change how it's read. This uses the Gemini API, not Google Cloud TTS.":"Valige TTS-mudel ja hääl. Stiilijuhised muudavad selle lugemist. See kasutab Gemini API-t, mitte Google Cloud TTS-i.","Pick a language above the voice list in SSN, then press":"Valige SSN-i häälloendi kohalt keel ja vajutage","Pick a language voice. You can change the speaking rate. It sounds robotic by design.":"Valige keelehääl. Saate muuta kõne kiirust. See kõlab disainilt robotlikult.","Pick a provider":"Valige pakkuja","Pick a voice and model, and enter an API key. A ChatGPT subscription doesn't give you API credit. Keep the default endpoint.":"Valige hääl ja mudel ning sisestage API-võti. ChatGPT tellimus ei anna teile API krediiti. Säilitage vaikimisi lõpp-punkt.","Pick a voice that matches your language. Changing the language alone doesn't change the voice. The sample uses HFC medium.":"Valige oma keelele vastav hääl. Ainult keele muutmine ei muuda häält. Proovis kasutatakse HFC söödet.","Pick a voice. Use the language filter to find one, and":"Valige hääl. Kasutage keelefiltrit selle leidmiseks ja","Pick voices by ID; stability and style controls.":"Vali hääli ID järgi; stabiilsuse ja stiili juhtnupud.","Piper":"Piper","Piper - Portuguese (Brazil)":"Piper – portugali (Brasiilia)","Piper - Portuguese (Brazil) sample":"Piper – Portugali (Brasiilia) proov","Piper - Spanish (Spain)":"Piper – hispaania keel (Hispaania)","Piper - Spanish (Spain) sample":"Piper – Hispaania (Hispaania) näidis","Piper TTS":"Piper TTS","Piper downloads its voice on first use. Give it a moment.":"Piper laadib oma hääle alla esimesel kasutamisel. Anna hetk.","Piper is free. No account or API key.":"Piper on tasuta. Konto või API võti puudub.","Piper is the lighter choice. If Kokoro falls behind the chat, switch to Piper.":"Piper on kergem valik. Kui Kokoro jääb vestlusest maha, lülituge Piperile.","Piper voice sample":"Piperi häälenäidis","Piper, Kokoro, Kitten and eSpeak passed OBS Browser Source recording tests. Cloud and custom voices also play through the page, but weren't tested with live accounts. Test System TTS on its own, even if it lists voices.":"Piper, Kokoro, Kitten ja eSpeak läbisid OBS-i brauseri allika salvestustestid. Pilv ja kohandatud hääled mängivad ka läbi lehe, kuid neid ei testitud reaalajas kontodega. Testige süsteemi TTS-i eraldi, isegi kui see loetleb hääli.","Plain-English setup guide for Social Stream Ninja text-to-speech, OBS audio, browser voices, local voices, and TTS server modes.":"Lihtne ingliskeelne häälestusjuhend Social Stream Ninja teksti kõneks muutmise, OBS-heli, brauseri häälte, kohalike häälte ja TTS-serveri režiimide jaoks.","Play complete message":"Esita täielik sõnum","Play it in OBS":"Mängige seda OBS-is","Portuguese Brazil:":"Portugali Brasiilia:","Portuguese Portugal (Tugao) - Medium:":"Portugali Portugal (Tugao) – keskmine:","Portuguese Portugal:":"Portugali Portugal:","Press":"Vajutage","Preview models and quotas can change.":"Eelvaatemudelid ja kvoodid võivad muutuda.","Problem":"Probleem","Processing":"Töötlemine","Provider":"Teenusepakkuja","Provider settings":"Pakkuja seaded","Puck (American Male):":"Puck (Ameerika mees):","Quality varies by voice. HFC medium is about 63 MB.":"Kvaliteet on hääleti erinev. HFC-meedium on umbes 63 MB.","Real screenshots from the desktop app, with a fresh profile (key fields left empty). Open a provider to see its settings. Click a screenshot to enlarge it.":"Tõelised ekraanipildid töölauarakendusest värske profiiliga (võtmeväljad on tühjaks jäetud). Avage teenusepakkuja, et näha selle seadeid. Klõpsake ekraanipildil selle suurendamiseks.","River (American Female):":"River (Ameerika naissoost):","Run my own voice server, or clone a voice":"Käitage oma hääleserverit või kloonige hääl","SSN extension popup":"SSN-laienduse hüpikaken","Santa (American Male):":"Jõuluvana (Ameerika mees):","Santa (Brazilian Portuguese):":"Jõuluvana (Brasiilia portugali):","Santa (Spanish):":"Jõuluvana (hispaania):","Sarah (American Female):":"Sarah (Ameerika naine):","Scroll to":"Kerige valikuni","Send a chat message. The source's audio meter should move.":"Saatke vestlussõnum. Allika helimõõtur peaks liikuma.","Set":"Määra","Set it up":"Seadke see üles","Set it up in 5 steps":"Seadistage see 5 sammuga","Set the":"Määrake","Set up Speechify":"Seadistage Speechify","Settings and voices":"Seaded ja hääled","Sizes are model files only, not memory use. Free voices run on the computer playing the dock or overlay. First use is slower. OBS keeps its own download cache, separate from Chrome.":"Suurused on ainult mudelifailid, mitte mälukasutus. Dokki või ülekatet esitavas arvutis töötavad vabad hääled. Esimene kasutamine on aeglasem. OBS hoiab oma allalaadimise vahemälu Chrome'ist eraldi.","Sky (American Female):":"Sky (Ameerika naine):","Small English model, eight voices.":"Väike inglise mudel, kaheksa häält.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logo","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 litsents.","Sounds robotic on purpose.":"Kõlab meelega robotlikult.","Sources and Settings":"Allikad ja sätted","Spanish Mexico (Ald) - Medium:":"Hispaania Mehhiko (Ald) – keskmine:","Spanish Spain (DaveFX) - Medium:":"Hispaania Hispaania (DaveFX) – keskmine:","Spanish and Portuguese samples":"Hispaania ja Portugali näidised","Spanish:":"hispaania keel:","Speak Text":"Rääkige tekst","Speech falls behind chat":"Kõne jääb vestlusest maha","Speechify":"Speechify","Speechify guide":"Speechify juhend","Speechify setup":"Speechify seadistamine","Start as speech arrives":"Alustage kõne saabudes","Start here":"Alusta siit","Start with Piper.":"Alusta Piperiga.","Step-by-step Speechify guide":"Samm-sammuline Speechify juhend","Support":"Abi","Supported Sites":"Toetatud saidid","Switch from Kokoro to Piper, or try eSpeak.":"Vahetage Kokorolt ​​Piperile või proovige eSpeaki.","Switch theme":"Vaheta teemat","System TTS":"Süsteem TTS","TTS Setup Guide":"TTS-i häälestusjuhend","TTS Setup Guide - Social Stream Ninja":"Kõne seadistamise juhend – Social Stream Ninja","TTS reference":"TTS viide","TTS reference: provider options":"TTS-i viide: pakkuja valikud","Test":"Test","Test TTS":"Testige TTS-i","Test the voice, then add the overlay link to OBS. Turn on":"Testige häält ja lisage seejärel OBS-i ülekatte link. Lülitage sisse","Tested September 7, 2026 in OBS 32.2.2 on Windows 11. A real chat message reached the dock, spoke, moved the Browser Source meter, and showed up in a recording. Kokoro took noticeably longer to start on CPU.":"Testitud 7. septembril 2026 opsüsteemis OBS 32.2.2 operatsioonisüsteemis Windows 11. Dokki jõudis tõeline vestlussõnum, mis rääkis, liigutas brauseri allika mõõdikut ja ilmus salvestusel. Kokoro käivitamine protsessoris võttis märgatavalt kauem aega.","Text-to-Speech Service Provider":"Kõnesünteesi teenusepakkuja","Text-to-speech incoming messages":"Tekst-kõneks sissetulevad sõnumid","The English samples read:":"Ingliskeelsed näidised kõlavad järgmiselt:","The default model is":"Vaikimisi mudel on","The most natural free voices; English, Spanish, Brazilian Portuguese.":"Kõige loomulikumad vabad hääled; inglise, hispaania, brasiilia portugali keel.","The token changes each time the bridge restarts.":"Märk muutub iga kord, kui sild taaskäivitub.","The voice list depends on your browser or app and the voices installed. There's no fixed SSN list. This fresh profile showed an empty language list.":"Häälloend sõltub teie brauserist või rakendusest ja installitud häältest. Fikseeritud SSN-nimekirja pole. See värske profiil näitas tühja keelte loendit.","This reuses the OpenAI settings, so the heading still says OpenAI. Enter your server's address and a voice and model it supports. Whether you need a key depends on your server. See the":"See kasutab uuesti OpenAI sätteid, nii et pealkiri ütleb endiselt OpenAI. Sisestage oma serveri aadress ning hääl ja mudel, mida see toetab. See, kas vajate võtit, sõltub teie serverist. Vaata","To keep it the same, set":"Et see samaks jääks, määrake","Try Kokoro if you like its sound better. Free voices run on your computer. Cloud voices need an account and API key, and your chat text is sent to that company.":"Proovige Kokorot, kui teile meeldib selle heli parem. Tasuta hääled töötavad teie arvutis. Pilvehääled vajavad kontot ja API-võtit ning teie vestlustekst saadetakse sellele ettevõttele.","Try this":"Proovi seda","Turn it on for Kitten":"Lülitage see Kitteni jaoks sisse","Turn it on for Kokoro":"Lülitage see Kokoro jaoks sisse","Turn on":"Lülitage sisse","US English, female. Light and quick.":"USA inglise keel, naine. Kerge ja kiire.","Under":"Under","Under Kokoro or Kitten, open":"Avage Kokoro või Kitten all","Use Spanish or Portuguese voices in a link":"Kasutage lingis hispaania või portugali hääli","Very light, many languages, starts fast.":"Väga kerge, palju keeli, käivitub kiiresti.","Voice 2 (Female):":"2. hääl (naissoost):","Voice 2 (Male):":"2. hääl (mees):","Voice 3 (Female):":"3. hääl (naissoost):","Voice 3 (Male):":"3. hääl (mees):","Voice 4 (Female):":"4. hääl (naissoost):","Voice 4 (Male):":"4. hääl (mees):","Voice 4, female. Small English model.":"Hääl 4, naine. Väike inglise mudel.","Voice 5 (Female):":"5. hääl (naissoost):","Voice 5 (Male):":"5. hääl (mees):","Voice ID":"Hääl-ID","Voice ID with speed, language and model.":"Hääl-ID kiiruse, keele ja mudeliga.","Voice examples and requirements":"Häälnäited ja nõuded","Voice names and link values":"Häälnimed ja linkide väärtused","Voice names and supported controls":"Häälnimed ja toetatud juhtnupud","Voice styles and written delivery instructions.":"Häälestiilid ja kirjalikud tarnejuhised.","Voices already on your browser or PC.":"Hääled juba teie brauseris või arvutis.","Voices depend on your account.":"Hääled sõltuvad teie kontost.","Want to hear it yourself?":"Kas soovite seda ise kuulda?","Welcome to the stream! Thanks for joining us. Which game should we play next?":"Tere tulemast voogu! Täname, et meiega liitusite. Millist mängu peaksime järgmisena mängima?","With the bridge, add":"Sillaga lisa","Works in Chrome or Edge, not in OBS":"Töötab Chrome'is või Edge'is, mitte OBS-is","Works in the chat dock, featured overlay, TTS page and Flow Actions.":"Töötab vestlusdokis, esiletoodud ülekattes, TTS-i lehel ja vootoimingutes.","Yes, if SSN gets the chat as text. YouTube, Twitch, TikTok and the rest all work the same way. The platform doesn't need its own TTS.":"Jah, kui SSN saab vestluse tekstina. YouTube, Twitch, TikTok ja ülejäänud töötavad kõik samamoodi. Platvorm ei vaja oma TTS-i.","Your hardware or hosting":"Teie riistvara või hostimine","Your own voice server.":"Teie enda hääleserver.","and paste the link you copied.":"ja kleepige kopeeritud link.","as the TTS provider.":"TTS-i pakkujana.","beside":"kõrval","copy link":"kopeeri link","eSpeak":"eSpeak","eSpeak voice sample":"eSpeaki häälenäidis","environment variable to your Fish API key.":"keskkonnamuutuja teie Fish API võtmele.","field.":"valdkonnas.","first.":"esiteks.","from":"alates","if the bridge holds your key. Event Flow's":"kui sillal on teie võti. Sündmuste voog","in the desktop app.":"töölauarakenduses.","local bridge":"kohalik sild","local server guide":"kohaliku serveri juhend","local server problems":"kohaliku serveri probleemid","model: Nano (smallest), Micro or Mini.":"mudel: Nano (väikseim), Micro või Mini.","or":"või","to":"juurde","to a long random secret. Keep links with a token or key private.":"pikale juhuslikule saladusele. Hoidke märgi või võtmega lingid privaatsena.","to find a voice ID your account can use.":"hääl-ID leidmiseks, mida teie konto saab kasutada.","to hear it. The model loads on the page that speaks. Voices: US and UK English, Spanish, Brazilian Portuguese. Too slow? Try Piper.":"seda kuulda. Mudel laaditakse lehele, mis räägib. Hääled: USA ja Ühendkuningriigi inglise, hispaania, Brasiilia portugali keeles. Liiga aeglane? Proovi Piperit.","uses a supported GPU if there is one, otherwise the CPU. Automatic quality picks FP16 on compatible GPUs, full precision on other supported GPUs, and the compact model on CPU. If you force GPU and none is available, you'll get an error.":"kasutab toetatud GPU-d, kui see on olemas, vastasel juhul CPU-d. Automaatne kvaliteet valib ühilduvatel GPU-del FP16, teistel toetatud GPU-del täieliku täpsuse ja CPU-l kompaktse mudeli. Kui sunnite GPU-d ja ükski pole saadaval, kuvatakse veateade.","voice override accepts a Fish voice ID when the receiving page uses Fish Audio.":"voice override aktsepteerib Fish voice ID-d, kui vastuvõttev leht kasutab Fish Audiot."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="et" href="https://socialstream.ninja/beta/et/docs/tts-setup-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Peamine navigeerimine"><a href="../index.html">Avaleht</a><a href="features.html">Funktsioonid</a><a href="inspiration.html" class="site-priority-inspiration">Inspiratsioon</a><a href="download.html">Laadi alla</a><a href="guides.html">Juhendid</a><a href="commands.html">Käsud ja API</a><a href="supported-sites.html">Toetatud saidid</a><a href="overlay-gallery.html" class="site-priority-gallery">Ülekattegalerii</a><a href="services.html" class="site-priority-hire">Laenutus</a><a href="support.html">Abi</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Eesti"><span aria-hidden="true">🌐 </span><span lang="et">Eesti</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tts-setup-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tts-setup-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tts-setup-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tts-setup-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tts-setup-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tts-setup-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tts-setup-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tts-setup-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tts-setup-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tts-setup-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tts-setup-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tts-setup-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tts-setup-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tts-setup-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tts-setup-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tts-setup-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tts-setup-guide.html" lang="th" hreflang="th">ไทย</a><a class="site-language-link" href="tts-setup-guide.html" lang="et" hreflang="et" aria-current="true">Eesti</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Vaheta teemat"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Ava navigeerimismenüü" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>TTS-i häälestusjuhend</h1>
+            <p>Laske oma vestlus voos ette lugeda. Tasuta, ilma konto või API võtmeta.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Sellel lehel">
+                <a href="#setup">Seadke see üles</a>
+                <a href="#obs-voices">Mängige seda OBS-is</a>
+                <a href="#voice-samples">Kuulake hääli</a>
+                <a href="#voice-chooser">Valige pakkuja</a>
+                <a href="#problems">Probleemide lahendamine</a>
+                <a href="#provider-settings">Pakkuja seaded</a>
+                <a href="#more">Mine kaugemale</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="setup">Seadistage see 5 sammuga</h2>
+                <p><strong>Kas vestlus pole veel ühendatud?</strong> <a href="getting-started.html">Alusta siit</a> esiteks.</p>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>Avage <strong>SSN-laienduse hüpikaken</strong>, või <strong>Allikad ja sätted</strong> töölauarakenduses.</li>
+                        <li>Under <strong>Peamine vestluse ülekate ja juhtdokk</strong>, laiendada <strong>Sõnum – tekst kõneks</strong>.</li>
+                        <li>Lülitage sisse <strong>Tekst-kõneks sissetulevad sõnumid</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <a href="../../docs/images/guides/tts-enable-dock-popup.png"><img src="../../docs/images/guides/tts-enable-dock-popup.png" alt="Tegelik hüpikaken: sõnum: tekst kõneks, kui TTS-i lubamine dokis on sisse lülitatud" class="guide-image"></a>
+                        <figcaption>Sinine lüliti = vestluse lugemine on sisse lülitatud.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps" start="4">
+                        <li>Kerige valikuni <strong>Kõnesünteesi teenusepakkuja</strong>. Vali <strong>Piper TTS</strong>, siis hääl.</li>
+                        <li>Klõpsake <strong>kopeeri link</strong> kõrval <strong>Peamine vestluse ülekate ja juhtdokk</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <a href="../../docs/images/guides/tts-select-provider-popup.png"><img src="../../docs/images/guides/tts-select-provider-popup.png" alt="Tegelik hüpikaken: valitud Piper TTS, USA naissoost ingliskeelse HFC keskmise häälega" class="guide-image" loading="lazy"></a>
+                        <figcaption>Piper on tasuta. Konto või API võti puudub.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>Esimest korda?</strong> Piper laadib oma hääle alla esimesel kasutamisel. Anna hetk.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="obs-voices">Mängige seda OBS-is</h2>
+                <ol class="guide-steps">
+                    <li>Lisage a <strong>Brauseri allikas</strong> ja kleepige kopeeritud link.</li>
+                    <li>Selle omadustes lülitage sisse <strong>Heli juhtimine OBS-i kaudu</strong>.</li>
+                    <li>Saatke vestlussõnum. Allika helimõõtur peaks liikuma.</li>
+                    <li>Tehke lühike testsalvestus ja esitage see.</li>
+                </ol>
+                <div class="guide-note"><strong>Kas soovite seda ise kuulda?</strong> OBS-is <strong>Täpsemad heliomadused</strong>, määrake selleks allikaks <strong>Monitor ja väljund</strong>.</div>
+                <div class="warning-note"><strong>Kas kuulate iga sõnumit kaks korda?</strong> Vestlust peaks lugema ainult ühel lehel. Lülitage TTS kõikjal mujal välja.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-samples">Kuulake vaba häält</h2>
+                <p>Kõik neli on tasuta ja töötavad teie arvutis. Võrdlemiseks vajutage esitusklahvi.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper</h3><p>USA inglise keel, naine. Kerge ja kiire.<br><code>en_US-hfc_female-medium</code></p><audio controls preload="none" aria-label="Piperi häälenäidis"><source src="../../docs/audio/tts/piper-hfc.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-hfc.mp3">Laadige alla Piperi näidis</a></audio><p><a href="#settings-piper">Seaded ja hääled</a></p></div>
+<div class="tts-preview"><h3>Kokoro</h3><p>Bella, USA inglise keel, naine. Kõige loomulikum, kuid protsessoril aeglasem.<br><code>af_bella</code></p><audio controls preload="none" aria-label="Kokoro häälenäidis"><source src="../../docs/audio/tts/kokoro-bella.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-bella.mp3">Laadige alla Kokoro näidis</a></audio><p><a href="#settings-kokoro">Seaded ja hääled</a></p></div>
+<div class="tts-preview"><h3>Kitten</h3><p>Hääl 4, naine. Väike inglise mudel.<br><code>expr-voice-4-f</code></p><audio controls preload="none" aria-label="Kitteni häälenäidis"><source src="../../docs/audio/tts/kitten-4f.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kitten-4f.mp3">Laadi alla Kitteni näidis</a></audio><p><a href="#settings-kitten">Seaded ja hääled</a></p></div>
+<div class="tts-preview"><h3>eSpeak</h3><p>inglise keel. Robotiline, aga pisike ja kiire.<br><code>en</code></p><audio controls preload="none" aria-label="eSpeaki häälenäidis"><source src="../../docs/audio/tts/espeak-en.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/espeak-en.mp3">Laadige alla eSpeaki näidis</a></audio><p><a href="#settings-espeak">Seaded ja hääled</a></p></div>
+                </div>
+                <details class="guide-extra"><summary>Hispaania ja Portugali näidised</summary>
+                <p>Valige SSN-i häälloendi kohalt keel ja vajutage <strong>Test</strong>. Piperil on Hispaania, Mehhiko, Brasiilia ja Portugali hääl. Kokorol on kolm hispaania ja kolm Brasiilia portugali häält.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper – hispaania keel (Hispaania)</h3><p>DaveFX</p><audio controls preload="none" aria-label="Piper – Hispaania (Hispaania) näidis"><source src="../../docs/audio/tts/piper-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-spanish.mp3">Laadige näidis alla</a></audio></div>
+<div class="tts-preview"><h3>Kokoro – hispaania keel</h3><p>Dora</p><audio controls preload="none" aria-label="Kokoro – Hispaania näidis"><source src="../../docs/audio/tts/kokoro-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-spanish.mp3">Laadige näidis alla</a></audio></div>
+<div class="tts-preview"><h3>Piper – portugali (Brasiilia)</h3><p>Faber</p><audio controls preload="none" aria-label="Piper – Portugali (Brasiilia) proov"><source src="../../docs/audio/tts/piper-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-portuguese.mp3">Laadige näidis alla</a></audio></div>
+<div class="tts-preview"><h3>Kokoro – portugali (Brasiilia)</h3><p>Dora</p><audio controls preload="none" aria-label="Kokoro – Portugali (Brasiilia) proov"><source src="../../docs/audio/tts/kokoro-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-portuguese.mp3">Laadige näidis alla</a></audio></div>
+                </div>
+                <p>Piper on kergem valik. Kui Kokoro jääb vestlusest maha, lülituge Piperile.</p>
+                </details>
+                <details class="guide-extra"><summary>Kuidas need proovid tehti</summary>
+                <p>Ingliskeelsed näidised kõlavad järgmiselt: <em>Tere tulemast voogu! Täname, et meiega liitusite. Millist mängu peaksime järgmisena mängima?</em> Nime lugemine oli välja lülitatud. Klipid jätavad laadimisaja vahele.</p>
+                <p>Testitud 7. septembril 2026 opsüsteemis OBS 32.2.2 operatsioonisüsteemis Windows 11. Dokki jõudis tõeline vestlussõnum, mis rääkis, liigutas brauseri allika mõõdikut ja ilmus salvestusel. Kokoro käivitamine protsessoris võttis märgatavalt kauem aega.</p>
+                <p>Sellel arvutil loetles System TTS viis häält, kuid OBS-i salvestusel heli ei tehtud. Teie arvuti võib erineda, seega testige alati oma linki. Pilvehääli ei testitud (tasulisi kontosid pole).</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-chooser">Valige pakkuja</h2>
+                <p><strong>Alusta Piperiga.</strong> Proovige Kokorot, kui teile meeldib selle heli parem. Tasuta hääled töötavad teie arvutis. Pilvehääled vajavad kontot ja API-võtit ning teie vestlustekst saadetakse sellele ettevõttele.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Teenusepakkuja</th><th>Hea jaoks</th><th>Pidage meeles</th><th>Maksumus</th></tr></thead><tbody>
+<tr><td data-label="Teenusepakkuja"><a href="#settings-piper">Piper</a></td><td data-label="Hea jaoks">Loomulikud hääled; inglise, hispaania, portugali.</td><td data-label="Pidage meeles">Kvaliteet on hääleti erinev. HFC-meedium on umbes 63 MB.</td><td data-label="Maksumus">Tasuta, võtit pole</td></tr>
+<tr><td data-label="Teenusepakkuja"><a href="#settings-kokoro">Kokoro</a></td><td data-label="Hea jaoks">Kõige loomulikumad vabad hääled; inglise, hispaania, brasiilia portugali keel.</td><td data-label="Pidage meeles">Protsessoril raskem. Esimene kõne võib olla aeglane. Toetatud GPU-ga kiirem.</td><td data-label="Maksumus">Tasuta, võtit pole</td></tr>
+<tr><td data-label="Teenusepakkuja"><a href="#settings-kitten">Kitten</a></td><td data-label="Hea jaoks">Väike inglise mudel, kaheksa häält.</td><td data-label="Pidage meeles">ainult inglise keeles. Komplekti kuuluv mudel on umbes 24 MB.</td><td data-label="Maksumus">Tasuta, võtit pole</td></tr>
+<tr><td data-label="Teenusepakkuja"><a href="#settings-espeak">eSpeak</a></td><td data-label="Hea jaoks">Väga kerge, palju keeli, käivitub kiiresti.</td><td data-label="Pidage meeles">Kõlab meelega robotlikult.</td><td data-label="Maksumus">Tasuta, võtit pole</td></tr>
+<tr><td data-label="Teenusepakkuja"><a href="#settings-system">Süsteem TTS</a></td><td data-label="Hea jaoks">Hääled juba teie brauseris või arvutis.</td><td data-label="Pidage meeles">OBS-is sageli vaikne. Mõned hääled vajavad internetti.</td><td data-label="Maksumus">Tasuta</td></tr>
+<tr><td data-label="Teenusepakkuja"><a href="#settings-elevenlabs">ElevenLabs</a></td><td data-label="Hea jaoks">Vali hääli ID järgi; stabiilsuse ja stiili juhtnupud.</td><td data-label="Pidage meeles">Konto limiidid ja võrgu viivitus.</td><td data-label="Maksumus">Rakenduda võivad API tasud</td></tr>
+<tr><td data-label="Teenusepakkuja"><a href="#settings-google">Google Cloud</a></td><td data-label="Hea jaoks">Nimega hääled; keel, määr ja helikõrgus.</td><td data-label="Pidage meeles">Mitte iga hääl ei toeta kõiki juhtelemente. Cloud TTS API peab olema lubatud.</td><td data-label="Maksumus">Kehtivad arveldamine ja kvoodid</td></tr>
+<tr><td data-label="Teenusepakkuja"><a href="#settings-gemini">Gemini</a></td><td data-label="Hea jaoks">Häälestiilid ja kirjalikud tarnejuhised.</td><td data-label="Pidage meeles">Eelvaatemudelid ja kvoodid võivad muutuda.</td><td data-label="Maksumus">Kontrolli oma Gemini kasutuspiiranguid</td></tr>
+<tr><td data-label="Teenusepakkuja"><a href="#settings-fish">Fish Audio</a></td><td data-label="Hea jaoks">Tasuta mudel oma võtmega; hääle ID-d.</td><td data-label="Pidage meeles">OBS vajab SSN-i kohalikku silda.</td><td data-label="Maksumus">Fish Audio seatud tasuta tase</td></tr>
+<tr><td data-label="Teenusepakkuja"><a href="#settings-speechify">Speechify</a></td><td data-label="Hea jaoks">Hääl-ID kiiruse, keele ja mudeliga.</td><td data-label="Pidage meeles">Hääled sõltuvad teie kontost.</td><td data-label="Maksumus">Rakenduvad API tingimused</td></tr>
+<tr><td data-label="Teenusepakkuja"><a href="#settings-openai">OpenAI</a></td><td data-label="Hea jaoks">Nimega hääled, mudeli ja vormingu juhtnupud.</td><td data-label="Pidage meeles">ChatGPT tellimus ei sisalda API krediiti.</td><td data-label="Maksumus">API arveldamine</td></tr>
+<tr><td data-label="Teenusepakkuja"><a href="#settings-customtts">Kohandatud / Kohalik</a></td><td data-label="Hea jaoks">Teie enda hääleserver.</td><td data-label="Pidage meeles">Enamik seadistusi. Vaata <a href="local-tts.html">kohaliku serveri juhend</a>.</td><td data-label="Maksumus">Teie riistvara või hostimine</td></tr>
+</tbody></table>
+                <details class="guide-extra"><summary>Laadige alla suurused ja OBS-i testimärkmed</summary>
+                <p>Suurused on ainult mudelifailid, mitte mälukasutus. Dokki või ülekatet esitavas arvutis töötavad vabad hääled. Esimene kasutamine on aeglasem. OBS hoiab oma allalaadimise vahemälu Chrome'ist eraldi.</p>
+                <p>Piper, Kokoro, Kitten ja eSpeak läbisid OBS-i brauseri allika salvestustestid. Pilv ja kohandatud hääled mängivad ka läbi lehe, kuid neid ei testitud reaalajas kontodega. Testige süsteemi TTS-i eraldi, isegi kui see loetleb hääli.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">Probleemide lahendamine</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Probleem</th><th>Proovi seda</th></tr></thead>
+                    <tbody>
+                        <tr id="chat-platforms"><td data-label="Probleem">Kas minu vestlusplatvorm toetab TTS-i?</td><td data-label="Proovi seda">Jah, kui SSN saab vestluse tekstina. YouTube, Twitch, TikTok ja ülejäänud töötavad kõik samamoodi. Platvorm ei vaja oma TTS-i.</td></tr>
+                        <tr><td data-label="Probleem">Ei mingit kõnet</td><td data-label="Proovi seda">Kontrollige, kas dokk näitab vestlust. Seejärel kontrollige TTS-i lülitit, pakkujat ja filtreid. Kasutage värskelt kopeeritud linki. Laske esimene hääle allalaadimine lõppeda.</td></tr>
+                        <tr><td data-label="Probleem">Töötab Chrome'is või Edge'is, mitte OBS-is</td><td data-label="Proovi seda">OBS-il on oma brauser ja häälloend. Süsteem TTS sageli ebaõnnestub seal. Lülituge Piperile, Kokorole, Kittenile või eSpeakile. Virtuaalne helikaabel ei saa puuduvat kõnet parandada.</td></tr>
+                        <tr><td data-label="Probleem">Mõõdik liigub, kuid salvestus vaikib</td><td data-label="Proovi seda">Kontrollige vaigistust ja salvestusradasid OBS-is. Ärge jäädvustage seireväljundit teist korda. Vaata <a href="https://obsproject.com/kb/audio-mixer-guide">OBS audiogiid</a>.</td></tr>
+                        <tr><td data-label="Probleem">Kõne jääb vestlusest maha</td><td data-label="Proovi seda">Vahetage Kokorolt ​​Piperile või proovige eSpeaki.</td></tr>
+                        <tr><td data-label="Probleem">Iga sõnumit loetakse kaks korda</td><td data-label="Proovi seda">Rohkem kui üks lehekülg räägib. Hoidke TTS-i sisse lülitatud ainult ühes kohas.</td></tr>
+                        <tr><td data-label="Probleem">Soovin, et selle asemel räägiks OBS-i dokk või Featured Chat</td><td data-label="Proovi seda">OBS-i kohandatud brauseri dokk on juhtpaneel, mitte stseeniallikas. Esiletõstetud vestluse jaoks lülitage selle ülekatte valikutes sisse TTS ja kopeerige selle link.</td></tr>
+                    </tbody>
+                </table>
+                <p>Rohkem parandusi: <a href="tts.html#troubleshooting">TTS viide</a> &middot; <a href="local-tts.html#troubleshooting">kohaliku serveri probleemid</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="provider-settings">Pakkuja seaded</h2>
+                <p>Tõelised ekraanipildid töölauarakendusest värske profiiliga (võtmeväljad on tühjaks jäetud). Avage teenusepakkuja, et näha selle seadeid. Klõpsake ekraanipildil selle suurendamiseks.</p>
+<details class="guide-extra" id="settings-system"><summary>Süsteem TTS</summary><p>Häälloend sõltub teie brauserist või rakendusest ja installitud häältest. Fikseeritud SSN-nimekirja pole. See värske profiil näitas tühja keelte loendit.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-system.png"><img src="../../docs/images/guides/tts-settings-system.png" alt="Tegelikud SSN-süsteemi TTS-i pakkuja seaded" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-kokoro"><summary>Kokoro</summary><p>Valige hääl. Kasutage keelefiltrit selle leidmiseks ja <strong>Test</strong> seda kuulda. Mudel laaditakse lehele, mis räägib. Hääled: USA ja Ühendkuningriigi inglise, hispaania, Brasiilia portugali keeles. Liiga aeglane? Proovi Piperit.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kokoro.png"><img src="../../docs/images/guides/tts-settings-kokoro.png" alt="Tegelikud SSN Kokoro pakkuja seaded" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Häälnimed ja linkide väärtused</summary><ul class="guide-list">
+<li>Süda (Ameerika naine): <code>af_heart</code></li>
+<li>Sulam (Ameerika naissoost): <code>af_alloy</code></li>
+<li>Aoede (Ameerika naine): <code>af_aoede</code></li>
+<li>Bella (Ameerika naine): <code>af_bella</code></li>
+<li>Jessica (Ameerika naine): <code>af_jessica</code></li>
+<li>Kore (Ameerika naissoost): <code>af_kore</code></li>
+<li>Nicole (Ameerika naine): <code>af_nicole</code></li>
+<li>Nova (Ameerika naissoost): <code>af_nova</code></li>
+<li>River (Ameerika naissoost): <code>af_river</code></li>
+<li>Sarah (Ameerika naine): <code>af_sarah</code></li>
+<li>Sky (Ameerika naine): <code>af_sky</code></li>
+<li>Adam (Ameerika mees): <code>am_adam</code></li>
+<li>Kaja (Ameerika mees): <code>am_echo</code></li>
+<li>Eric (Ameerika mees): <code>am_eric</code></li>
+<li>Fenrir (Ameerika mees): <code>am_fenrir</code></li>
+<li>Liam (Ameerika mees): <code>am_liam</code></li>
+<li>Michael (Ameerika mees): <code>am_michael</code></li>
+<li>Oonüks (Ameerika isane): <code>am_onyx</code></li>
+<li>Puck (Ameerika mees): <code>am_puck</code></li>
+<li>Jõuluvana (Ameerika mees): <code>am_santa</code></li>
+<li>Emma (Briti naine): <code>bf_emma</code></li>
+<li>Isabella (Briti naine): <code>bf_isabella</code></li>
+<li>George (Briti mees): <code>bm_george</code></li>
+<li>Lewis (Briti mees): <code>bm_lewis</code></li>
+<li>Alice (Briti naine): <code>bf_alice</code></li>
+<li>Lily (Briti naine): <code>bf_lily</code></li>
+<li>Daniel (Briti mees): <code>bm_daniel</code></li>
+<li>Fable (Briti mees): <code>bm_fable</code></li>
+<li>Dora (hispaania): <code>ef_dora</code></li>
+<li>Alex (hispaania): <code>em_alex</code></li>
+<li>Jõuluvana (hispaania): <code>em_santa</code></li>
+<li>Dora (Brasiilia portugali keel): <code>pf_dora</code></li>
+<li>Alex (Brasiilia portugali keel): <code>pm_alex</code></li>
+<li>Jõuluvana (Brasiilia portugali): <code>pm_santa</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-kitten"><summary>Kitten</summary><p>Kaheksa ingliskeelset häält: 2., 3., 4. ja 5. hääle mees- ja naisversioonid. Näidis kasutab häält 4 (naissoost).</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kitten.png"><img src="../../docs/images/guides/tts-settings-kitten.png" alt="Tegelikud SSN Kitten pakkuja seaded" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Häälnimed ja linkide väärtused</summary><ul class="guide-list">
+<li>2. hääl (mees): <code>expr-voice-2-m</code></li>
+<li>2. hääl (naissoost): <code>expr-voice-2-f</code></li>
+<li>3. hääl (mees): <code>expr-voice-3-m</code></li>
+<li>3. hääl (naissoost): <code>expr-voice-3-f</code></li>
+<li>4. hääl (mees): <code>expr-voice-4-m</code></li>
+<li>4. hääl (naissoost): <code>expr-voice-4-f</code></li>
+<li>5. hääl (mees): <code>expr-voice-5-m</code></li>
+<li>5. hääl (naissoost): <code>expr-voice-5-f</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-piper"><summary>Piper</summary><p>Valige oma keelele vastav hääl. Ainult keele muutmine ei muuda häält. Proovis kasutatakse HFC söödet.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-piper.png"><img src="../../docs/images/guides/tts-settings-piper.png" alt="Tegelikud SSN Piperi pakkuja seaded" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Häälnimed ja linkide väärtused</summary><ul class="guide-list">
+<li>USA naissoost inglise keel (HFC) – keskmine: <code>en_US-hfc_female-medium</code></li>
+<li>Hispaania Hispaania (DaveFX) – keskmine: <code>es_ES-davefx-medium</code></li>
+<li>Hispaania Mehhiko (Ald) – keskmine: <code>es_MX-ald-medium</code></li>
+<li>Brasiilia portugali keel (Faber) – keskmine: <code>pt_BR-faber-medium</code></li>
+<li>Brasiilia portugali keel (Edresson) – madal: <code>pt_BR-edresson-low</code></li>
+<li>Portugali Portugal (Tugao) – keskmine: <code>pt_PT-tug&atilde;o-medium</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-espeak"><summary>eSpeak</summary><p>Valige keelehääl. Saate muuta kõne kiirust. See kõlab disainilt robotlikult.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-espeak.png"><img src="../../docs/images/guides/tts-settings-espeak.png" alt="Tegelikud SSN eSpeaki pakkuja seaded" class="guide-image" loading="lazy"></a></figure>
+<details class="guide-extra"><summary>Häälnimed ja linkide väärtused</summary><ul class="guide-list">
+<li>inglise keel: <code>en</code></li>
+<li>hispaania keel: <code>es</code></li>
+<li>Portugali Brasiilia: <code>pt-br</code></li>
+<li>Portugali Portugal: <code>pt-pt</code></li>
+</ul></details>
+</details>
+<details class="guide-extra" id="settings-elevenlabs"><summary>ElevenLabs</summary><p>Sisestage oma API võti. Seejärel klõpsake <strong>Loetlege minu saadaolevad hääled</strong> hääl-ID leidmiseks, mida teie konto saab kasutada. <a href="https://elevenlabs.io/docs/api-reference/text-to-speech/convert">ElevenLabsi viide</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-elevenlabs.png"><img src="../../docs/images/guides/tts-settings-elevenlabs.png" alt="Tegelikud SSN ElevenLabsi pakkuja seaded" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-google"><summary>Google Cloud</summary><p>Sisesta Google Cloud TTS-i API-võti, hääle täpne nimi ja sellele vastav keel. Eesti keele jaoks vali <code>et-EE</code> Chirp 3: HD hääl, näiteks <code>et-EE-Chirp3-HD-Aoede</code>. Valitud hääl määrab päringu keele enne <code>googlelang</code>, <code>speech</code>, või <code>ln</code>. Chirp 3: HD hääled ei kasuta kõnekiiruse ega häälekõrguse juhtnuppe. <a href="https://cloud.google.com/text-to-speech/docs/voices">Häälnimed ja toetatud juhtnupud</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-google.png"><img src="../../docs/images/guides/tts-settings-google.png" alt="Tegelikud SSN-i Google Cloudi seaded" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-gemini"><summary>Gemini</summary><p>Valige TTS-mudel ja hääl. Stiilijuhised muudavad selle lugemist. See kasutab Gemini API-t, mitte Google Cloud TTS-i. <a href="https://ai.google.dev/gemini-api/docs/speech-generation">Häälnäited ja nõuded</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-gemini.png"><img src="../../docs/images/guides/tts-settings-gemini.png" alt="Tegelikud SSN Gemini pakkuja seaded" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-fish"><summary>Fish Audio</summary>
+<p>Töötab vestlusdokis, esiletoodud ülekattes, TTS-i lehel ja vootoimingutes.</p>
+<ol class="guide-steps">
+<li>Vali <strong>Fish Audio</strong> TTS-i pakkujana.</li>
+<li>Kleepige oma <a href="https://fish.audio/app/api-keys">Fish Audio API võti</a>.</li>
+<li>Valikuline: kleepige a <strong>Hääl-ID</strong> alates <a href="https://fish.audio/">Fish Audio</a>. Kopeerige hääle mudeli ID, mitte selle nimi või lehe link. Vaikehääle jaoks jätke see tühjaks.</li>
+<li>Vajutage <strong>Testige TTS-i</strong>.</li>
+</ol>
+<p>Vaikimisi mudel on <code>s2.1-pro-free</code>. Fish Audio otsustab, mis on tasuta ja selle õiglase kasutamise tingimused. Tasulised mudelid vajavad kontokrediiti. SSN ei lülitu kunagi tasulisele mudelile, kui tasuta taotlus ebaõnnestub. Kiirus muutub 0,5-lt 2-le. Fish Audio tuvastab keele. Teie vestlustekst saadetakse Fish Audiole.</p>
+<h4>OBS-i jaoks: käivitage kohalik sild</h4>
+<p>Fish Audio blokeerib otsepäringud veebilehtedelt, seega vajab OBS SSN-e <a href="../../local-tts-bridge/README.md#fish-audio-for-obs">kohalik sild</a> (Node.js on nõutav). Käivitage see OBS-i arvutis.</p>
+<ol class="guide-steps">
+<li>Määrake <code>SSN_TTS_TARGET_BEARER</code> keskkonnamuutuja teie Fish API võtmele.</li>
+<li>SSN-kaustas käivitage <code>node scripts/local-tts-bridge.cjs --mode fish</code>. Jätke see tööle.</li>
+<li>Seadistage paneelil Fish Audio <strong>Silla URL</strong> juurde <code>http://127.0.0.1:8124/v1/audio/speech</code>.</li>
+<li>Kleepige terminalis näidatud sillamärk <strong>API võti</strong> valdkonnas.</li>
+<li>Testige häält ja lisage seejärel OBS-i ülekatte link. Lülitage sisse <strong>Heli juhtimine OBS-i kaudu</strong>.</li>
+</ol>
+<div class="warning-note"><strong>Märk muutub iga kord, kui sild taaskäivitub.</strong> Et see samaks jääks, määrake <code>SSN_TTS_BRIDGE_TOKEN</code> pikale juhuslikule saladusele. Hoidke märgi või võtmega lingid privaatsena.</div>
+<details class="guide-extra"><summary>Fish Audio lingi seaded</summary>
+<pre>&amp;ttsprovider=fish&amp;fishkey=YOUR_KEY&amp;voicefish=VOICE_ID&amp;fishmodel=s2.1-pro-free&amp;fishspeed=1</pre>
+<p>Sillaga lisa <code>&amp;fishendpoint=http%3A%2F%2F127.0.0.1%3A8124%2Fv1%2Faudio%2Fspeech</code>. Jäta välja <code>fishkey</code> kui sillal on teie võti. Sündmuste voog <strong>Rääkige tekst</strong> voice override aktsepteerib Fish voice ID-d, kui vastuvõttev leht kasutab Fish Audiot.</p>
+<p><a href="https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech">Fish Audio API viide</a> &middot; <a href="https://fish.audio/blog/s2-1-pro-free-api/">Tasuta mudeliteade ja tingimused</a></p>
+</details>
+</details>
+<details class="guide-extra" id="settings-speechify"><summary>Speechify</summary><p>Sisestage oma Speechify API kontolt API võti ja hääle ID. <a href="speechify-setup-guide.html"><strong>Samm-sammuline Speechify juhend</strong></a> &middot; <a href="https://docs.speechify.ai/docs/get-started/overview">Speechify seadistamine</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-speechify.png"><img src="../../docs/images/guides/tts-settings-speechify.png" alt="Tegelikud SSN Speechify pakkuja seaded" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-openai"><summary>OpenAI</summary><p>Valige hääl ja mudel ning sisestage API-võti. ChatGPT tellimus ei anna teile API krediiti. Säilitage vaikimisi lõpp-punkt.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-openai.png"><img src="../../docs/images/guides/tts-settings-openai.png" alt="Tegelikud SSN OpenAI pakkuja seaded" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="guide-extra" id="settings-customtts"><summary>Kohandatud / Kohalik TTS</summary><p>See kasutab uuesti OpenAI sätteid, nii et pealkiri ütleb endiselt OpenAI. Sisestage oma serveri aadress ning hääl ja mudel, mida see toetab. See, kas vajate võtit, sõltub teie serverist. Vaata <a href="local-tts.html">kohaliku serveri juhend</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-customtts.png"><img src="../../docs/images/guides/tts-settings-customtts.png" alt="Tegelikud SSN-i kohandatud / kohaliku TTS-i pakkuja seaded" class="guide-image" loading="lazy"></a></figure>
+</details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="background-speech">Kiirem Kokoro ja Kitten</h2>
+                <p>Avage Kokoro või Kitten all <strong>Genereerimine ja taasesitus</strong>. Need valikud muudavad kõne taustal, nii et leht jääb sujuvaks.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>ma tahan…</th><th>Tehke seda</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="ma tahan">Lülitage see Kokoro jaoks sisse</td><td data-label="Tehke seda">Määra <strong>Töötlemine</strong> juurde <strong>Tausta genereerimine</strong>.</td></tr>
+                        <tr><td data-label="ma tahan">Lülitage see Kitteni jaoks sisse</td><td data-label="Tehke seda">Vali a <strong>Kitten 0.8</strong> mudel: Nano (väikseim), Micro või Mini.</td></tr>
+                        <tr><td data-label="ma tahan">Kuulake kõnet varem</td><td data-label="Tehke seda"><strong>Alustage kõne saabudes</strong>. Mängib iga osa, kui see on valmis. Aeglased arvutid võivad osade vahel peatada.</td></tr>
+                        <tr><td data-label="ma tahan">Vältige lünki</td><td data-label="Tehke seda"><strong>Esita täielik sõnum</strong>. Ootab kõigepealt ära kogu sõnumi.</td></tr>
+                        <tr><td data-label="ma tahan">GPU probleemide lahendamine (Kokoro)</td><td data-label="Tehke seda">Määra <strong>Taustaprotsessor</strong> juurde <strong>CPU</strong>.</td></tr>
+                        <tr><td data-label="ma tahan">Parim Kokoro kvaliteet</td><td data-label="Tehke seda"><strong>Täielik kvaliteet</strong>. Suurem allalaadimine, rohkem mälu.</td></tr>
+                    </tbody>
+                </table>
+                <details class="guide-extra"><summary>Täpsemalt ja linkide seaded</summary>
+                <p><strong>Automaatne</strong> kasutab toetatud GPU-d, kui see on olemas, vastasel juhul CPU-d. Automaatne kvaliteet valib ühilduvatel GPU-del FP16, teistel toetatud GPU-del täieliku täpsuse ja CPU-l kompaktse mudeli. Kui sunnite GPU-d ja ükski pole saadaval, kuvatakse veateade.</p>
+                <p>Kitten 0.8 töötab protsessoriga, ainult inglise keeles. Iga mudel laaditakse alla esimesel kasutamisel. Iga brauser või OBS säilitab oma koopia. NeuroSync saab kogu helifaili mõlemal viisil. Vanad lingid töötavad nagu varem, kui te neid valikuid ei muuda.</p>
+                <p>Kokoro: <code>&amp;kokororuntime=worker</code>, valikuline <code>&amp;kokoroplayback=stream</code>, <code>&amp;kokorodevice=wasm</code> või <code>webgpu</code>, <code>&amp;kokorodtype=q8</code>, <code>fp16</code> või <code>fp32</code>. Voogesitus või FP32 lülitab taustal genereerimise automaatselt sisse.</p>
+                <p>Kitten: <code>&amp;kittenmodel=nano</code> (või <code>micro</code>, <code>mini</code>), valikuline <code>&amp;kittenplayback=stream</code>.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="more">Mine kaugemale</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>ma tahan…</th><th>Mine siia</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="ma tahan">Muutke minu TTS-linki käsitsi või vaadake kõiki valikuid</td><td data-label="Mine siia"><a href="tts.html">TTS viide</a></td></tr>
+                        <tr><td data-label="ma tahan">Kasutage lingis hispaania või portugali hääli</td><td data-label="Mine siia"><a href="tts.html#premium-options">TTS-i viide: pakkuja valikud</a></td></tr>
+                        <tr id="local-server"><td data-label="ma tahan">Käitage oma hääleserverit või kloonige hääl</td><td data-label="Mine siia"><a href="local-tts.html">Kohalik AI TTS juhend</a></td></tr>
+                        <tr><td data-label="ma tahan">Seadistage Speechify</td><td data-label="Mine siia"><a href="speechify-setup-guide.html">Speechify juhend</a></td></tr>
+                    </tbody>
+                </table>
+                <p>Kiire link proovimiseks: <code>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=piper</code></p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 litsents.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function revealGuideSection() {
+            var target;
+            try { target = document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { return; }
+            if (!target) return;
+            for (var node = target; node; node = node.parentElement) {
+                if (node.tagName === "DETAILS") node.open = true;
+            }
+            target.scrollIntoView();
+        }
+        window.addEventListener("hashchange", revealGuideSection);
+        revealGuideSection();
+    </script>
+</body>
+</html>

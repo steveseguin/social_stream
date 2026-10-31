@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="et" data-site-root="../../" data-site-language="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/et/docs/chatbot-basics-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="et_EE">
+    <meta property="og:url" content="https://socialstream.ninja/beta/et/docs/chatbot-basics-guide.html">
+    <meta property="og:title" content="AI Chat Bot Setup and Use - Social Stream Ninja">
+    <meta property="og:description" content="Set up and use the Social Stream Ninja AI chat bot, connect an AI provider, test safely, control live replies, and troubleshoot missing responses.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/et/docs/chatbot-basics-guide.html">
+    <meta name="twitter:title" content="AI Chat Bot Setup and Use - Social Stream Ninja">
+    <meta name="twitter:description" content="Set up and use the Social Stream Ninja AI chat bot, connect an AI provider, test safely, control live replies, and troubleshoot missing responses.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Bot Setup and Use - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Set up and use the Social Stream Ninja AI chat bot, connect an AI provider, test safely, control live replies, and troubleshoot missing responses.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="et">
+<script id="ssn-site-language" type="application/json">{"language":"et","page":"docs/chatbot-basics-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/channel-names-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/chatbot-knowledge-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-overlays.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/game-overlay-troubleshooting.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/meld-guide.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Lülitu heledale teemale","Switch to dark theme":"Lülitu tumedale teemale","Light mode":"Hele teema","Dark mode":"Tume teema","Open navigation menu":"Ava navigeerimismenüü","Close navigation menu":"Sulge navigeerimismenüü","Copy this document as Markdown to the clipboard":"Kopeeri dokument Markdownina lõikelauale","Copy Markdown":"Kopeeri Markdown","Copying…":"Kopeerimine…","Markdown copied":"Markdown kopeeritud","Copy failed":"Kopeerimine ebaõnnestus","Copy comprehensive Markdown for an AI assistant":"Kopeeri kogu sisu Markdownina tehisintellekti abilisele","Copy this documentation page as Markdown for an AI assistant":"Kopeeri see juhend Markdownina tehisintellekti abilisele"},"strings":{"(default 120000)":"(default 120000)","(default 500)":"(default 500)","(defaults 4000 and 30000)":"(defaults 4000 and 30000)","(milliseconds, so 10 seconds)":"(milliseconds, so 10 seconds)","(or":"(või",") and fill in the boxes it shows.":") and fill in the boxes it shows.","), not the featured chat overlay. The overlay options in settings cover the common ones.":"), not the featured chat overlay. The overlay options in settings cover the common ones.",", enable":", enable",", paste the whole key, enter a model your project can use, and click":", paste the whole key, enter a model your project can use, and click",", then":", then",", type a message in the real YouTube or Twitch chat. Check it shows up in the Dock.":", type a message in the real YouTube or Twitch chat. Check it shows up in the Dock.",". A real text reply should appear under the button.":". A real text reply should appear under the button.",". Don't use this for Ollama.":". Don't use this for Ollama.",". Follow its model download steps.":". Follow its model download steps.",". Full provider list:":". Full provider list:",". If no destination matches the video, the reply is not posted into chat.":". If no destination matches the video, the reply is not posted into chat.",". If the voice never starts,":". If the voice never starts,",". Not an Admin key.":". Not an Admin key.",". The usual address is":". The usual address is","A chat source that supports sending, logged in and allowed to post, still open, with host chat not disabled.":"A chat source that supports sending, logged in and allowed to post, still open, with host chat not disabled.","A paid service, like OpenAI or Gemini":"A paid service, like OpenAI or Gemini","A short, plain name viewers can type.":"A short, plain name viewers can type.","AI Chat Bot Setup and Use - Social Stream Ninja":"AI Chat Bot Setup and Use - Social Stream Ninja","AI Integration in Commands & API":"AI Integration in Commands & API","AI Modes Guide":"AI Modes Guide","Add a word if the bot shouldn't consider every message.":"Add a word if the bot shouldn't consider every message.","Add to the link":"Add to the link","Adding credit won't fix a 401.":"Adding credit won't fix a 401.","Additional Bot Instructions":"Additional Bot Instructions","Answers from your files":"Answers from your files","Blank":"Blank","Bot replies ONLY go to the bot overlay page":"Bot replies ONLY go to the bot overlay page","Chat Bot - Primary":"Chat Bot - Primary","Chat Bots and AI services → Configure LLM Service Provider":"Chat Bots and AI services → Configure LLM Service Provider","Chat isn't being captured. Check Social Stream is on, the chat window is open and logged in, the right live chat is open, and your source filters.":"Chat isn't being captured. Check Social Stream is on, the chat window is open and logged in, the right live chat is open, and your source filters.","ChatGPT API":"ChatGPT API","Check API billing and budget (separate from a ChatGPT subscription). Slow down or wait.":"Check API billing and budget (separate from a ChatGPT subscription). Slow down or wait.","Check it's a normal key in the right project with model requests allowed. If unsure, make a new key and replace the saved one.":"Check it's a normal key in the right project with model requests allowed. If unsure, make a new key and replace the saved one.","Choose where chat replies go":"Choose where chat replies go","Clear bot overlay now":"Clear bot overlay now","Clear it from the API, and custom styling":"Clear it from the API, and custom styling","Clear it right now":"Clear it right now","Click":"Klõpsake","Commands & API":"Käsud ja API","Configure LLM section with Ollama selected, local endpoint and model fields filled in, and the provider test showing Connected":"Configure LLM section with Ollama selected, local endpoint and model fields filled in, and the provider test showing Connected","Connected":"Connected","Connected means the AI answered. It doesn't turn the bot on.":"Connected means the AI answered. It doesn't turn the bot on.","Connected, but the viewer's message isn't in the Dock":"Connected, but the viewer's message isn't in the Dock","Copy the status, code, missing scope, and Request ID shown in Social Stream. Then send the in-app diagnostic report soon after. It leaves out API keys and prompts.":"Copy the status, code, missing scope, and Request ID shown in Social Stream. Then send the in-app diagnostic report soon after. It leaves out API keys and prompts.","Credit and permissions are separate. See OpenAI's":"Credit and permissions are separate. See OpenAI's","Custom API":"Custom API","Custom CSS on the normal":"Custom CSS on the normal","Customize bot name":"Customize bot name","Disable the host chat and block functions":"Disable the host chat and block functions","Do not screen out any of the bot's replies":"Do not screen out any of the bot's replies","Don't test from the Dock.":"Don't test from the Dock.","Download":"Laadi alla","Enable":"Enable","Enable the LLM AI chat bot":"Enable the LLM AI chat bot","Error":"Error","Features":"Funktsioonid","Find the last thing that worked, then check the next row.":"Find the last thing that worked, then check the next row.","First test":"First test","Fix problems":"Probleemide lahendamine","From a":"From a","From that account, send:":"From that account, send:","Give up waiting for a stuck voice":"Give up waiting for a stuck voice","Guides":"Juhendid","Hide after TTS, autohide, or a fixed time":"Hide after TTS, autohide, or a fixed time","Hide each reply after a set time":"Hide each reply after a set time","Hide it when the voice finishes":"Hide it when the voice finishes","Hide longer replies later, shorter ones sooner":"Hide longer replies later, shorter ones sooner","Hide old replies":"Hide old replies","Hire":"Laenutus","Home":"Avaleht","I use":"I use","I use…":"I use…","I want to":"ma tahan","I want to…":"ma tahan…","If you set a trigger word, the message must contain it.":"If you set a trigger word, the message must contain it.","If your browser auto-translates the OpenAI site and the key settings act strangely, switch to the original English page. This helped one user, but isn't a known cause of 401 errors.":"If your browser auto-translates the OpenAI site and the key settings act strangely, switch to the original English page. This helped one user, but isn't a known cause of 401 errors.","If your key and project look right, give OpenAI support the Request ID and time.":"If your key and project look right, give OpenAI support the Request ID and time.","In":"sisse","In Social Stream settings, open":"In Social Stream settings, open","In Social Stream, pick":"In Social Stream, pick","Inspiration":"Inspiratsioon","It answers one message at a time by default. When posting into chat, it also waits 5 seconds per source.":"It answers one message at a time by default. When posting into chat, it also waits 5 seconds per source.","It skips its own messages, empty messages, and messages too close to its last reply.":"It skips its own messages, empty messages, and messages too close to its last reply.","It's just added to the start of the reply. Replies post from the account you're logged in with, unless you set up account roles in the standalone app. For a separate Twitch bot account, see the":"It's just added to the start of the reply. Replies post from the account you're logged in with, unless you set up account roles in the standalone app. For a separate Twitch bot account, see the","Keep":"Hoidke","Keep low unless your AI can handle more.":"Keep low unless your AI can handle more.","Keep on while the bot should watch chat.":"Keep on while the bot should watch chat.","LM Studio, llama.cpp, vLLM, or similar":"LM Studio, llama.cpp, vLLM, or similar","Later":"Later","Let an AI answer your viewers in chat, on screen, or out loud.":"Let an AI answer your viewers in chat, on screen, or out loud.","Limit replies and":"Limit replies and","List of words to trigger bot":"List of words to trigger bot","Local Gemma":"Local Gemma","Local Qwen":"Local Qwen","Look for a missing character or extra space. Check it wasn't deleted, it's in the right project, and Social Stream isn't using an old saved key.":"Look for a missing character or extra space. Check it wasn't deleted, it's in the right project, and Social Stream isn't using an old saved key.","Main navigation":"Peamine navigeerimine","Make a normal project API key on the":"Make a normal project API key on the","Make sure it's in the project you want billed, and it's allowed to make model requests.":"Make sure it's in the project you want billed, and it's allowed to make model requests.","Max parallel bot replies":"Max parallel bot replies","Members-only mode requires a membership marker from the source. If both restrictions are on, the sender must be both a member and a moderator.":"Members-only mode requires a membership marker from the source. If both restrictions are on, the sender must be both a member and a moderator.","Mention the viewer in replies":"Mention the viewer in replies","Message is in the Dock, but no reply on the overlay":"Message is in the Dock, but no reply on the overlay","Messages typed in the Dock or host chat can be skipped on purpose, so the bot doesn't reply to itself.":"Messages typed in the Dock or host chat can be skipped on purpose, so the bot doesn't reply to itself.","Moderators-only mode skips everyone else.":"Moderators-only mode skips everyone else.","Need Ollama? Get it from the":"Need Ollama? Get it from the","Never paste your key":"Never paste your key","Nothing yet, and want it to run in the browser":"Nothing yet, and want it to run in the browser","Off":"Off","Ollama (Native Local API)":"Ollama (Native Local API)","Ollama download page":"Ollama download page","Ollama keep-alive set to 0?":"Ollama keep-alive set to 0?","Ollama on my computer":"Ollama on my computer","On":"On","On this page":"Sellel lehel","Once it works, turn":"Once it works, turn","Only if you want that.":"Only if you want that.","Only the first test gets a reply":"Only the first test gets a reply","Open":"Avatud","Open navigation menu":"Ava navigeerimismenüü","Open the":"Avage","OpenAI API keys page":"OpenAI API keys page","OpenAI error like":"OpenAI error like","OpenAI key errors":"OpenAI key errors","Or send":"Or send","Other AI bot pages":"Other AI bot pages","Other AI pages":"Other AI pages","Out of quota, or too many requests.":"Out of quota, or too many requests.","Overlay Gallery":"Ülekattegalerii","Overlay Page and TTS for Chat Bot":"Overlay Page and TTS for Chat Bot","Overlay-only setting":"Overlay-only setting","Pick an AI":"Pick an AI","Pick this":"Pick this","Pick your AI (":"Pick your AI (","Private":"Privaatne","Problem":"Probleem","Raise it if the bot posts too often. Only matters when posting into chat.":"Raise it if the bot posts too often. Only matters when posting into chat.","Rate limit for responses per tab / source":"Rate limit for responses per tab / source","Read the error under the button. Check the address, API key, model name, that your local AI is running, firewall, and your provider's limits.":"Read the error under the button. Check the address, API key, model name, that your local AI is running, firewall, and your provider's limits.","Reference table comparing the Primary bot overlay, private chatbot, censor bot, and AI cohost":"Reference table comparing the Primary bot overlay, private chatbot, censor bot, and AI cohost","Replies show on the bot overlay only. Nothing is posted to chat.":"Replies show on the bot overlay only. Nothing is posted to chat.","Replies still go to the overlay, and Social Stream also tries to post them in the chat they came from.":"Replies still go to the overlay, and Social Stream also tries to post them in the chat they came from.","Reply only to the originating YouTube chat":"Reply only to the originating YouTube chat","Reply shows on the overlay, but not in chat":"Reply shows on the overlay, but not in chat","Reply stays on screen after the voice":"Reply stays on screen after the voice","Reply to members only":"Reply to members only","Run the test":"Run the test","See":"Vt","See all AI features in the":"See all AI features in the","Send bot replies through these SSApp account roles":"Send bot replies through these SSApp account roles","Send it from the real platform chat, not the Dock. Then check the bot is on, the trigger word, moderators-only, the bot name, the rate limit, and your instructions. Turn on":"Send it from the real platform chat, not the Dock. Then check the bot is on, the trigger word, moderators-only, the bot name, the rate limit, and your instructions. Turn on","Send it once, then wait. A local AI may still be loading.":"Send it once, then wait. A local AI may still be loading.","Set Up the AI Chat Bot":"Set Up the AI Chat Bot","Set it up":"Seadke see üles","Set it up in 6 steps":"Set it up in 6 steps","Set the shortest and longest time for autohide":"Set the shortest and longest time for autohide","Set up and use the Social Stream Ninja AI chat bot, connect an AI provider, test safely, control live replies, and troubleshoot missing responses.":"Set up and use the Social Stream Ninja AI chat bot, connect an AI provider, test safely, control live replies, and troubleshoot missing responses.","Setting":"Seadistamine","Short messages like":"Short messages like","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logo","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 litsents.","Still stuck?":"Kas olete endiselt ummikus?","Support":"Abi","Supported Sites":"Toetatud saidid","Switch theme":"Vaheta teemat","Test button fails":"Test button fails","Test it":"Test it","Test selected chat bot":"Test selected chat bot","That service. Enter its API key and model. They set the prices, limits, and model names.":"That service. Enter its API key and model. They set the prices, limits, and model names.","That unloads the model after each request. The bot still works, but every reply may be slow while the model loads again.":"That unloads the model after each request. The bot still works, but every reply may be slow while the model loads again.","The Primary bot, private chat, censor bot, and AI co-host are separate tools. Each has its own settings and history.":"The Primary bot, private chat, censor bot, and AI co-host are separate tools. Each has its own settings and history.","The bot is picky by design. An empty trigger list means it":"The bot is picky by design. An empty trigger list means it","The bot name is not a new account.":"The bot name is not a new account.","The key is wrong or gone.":"The key is wrong or gone.","The key isn't allowed to make model requests.":"The key isn't allowed to make model requests.","The private bot can't stand in for testing the Primary bot.":"The private bot can't stand in for testing the Primary bot.","The reply should appear on the":"The reply should appear on the","These only affect the bot overlay (":"These only affect the bot overlay (","Three parts, all needed:":"Three parts, all needed:","Trigger starts with":"Trigger starts with","Try this":"Proovi seda","Turn Social Stream on and open your live chat source.":"Turn Social Stream on and open your live chat source.","Turn off overlay-only. Check that source can send, the account can post, the chat box is available, account roles, and":"Turn off overlay-only. Check that source can send, the account can post, the chat box is available, account roles, and","Turn off when you're ready to post into real chat.":"Turn off when you're ready to post into real chat.","Turn on":"Lülitage sisse","Turn on the private chat bot option and use its link with the same session. It's a separate bot, so it doesn't test the Primary bot.":"Turn on the private chat bot option and use its link with the same session. It's a separate bot, so it doesn't test the Primary bot.","Twitch Bot Account guide":"Twitch Bot Account guide","Use":"Kasuta","Use a plain-word trigger, or let that command through your command filter.":"Use a plain-word trigger, or let that command through your command filter.","Use these settings in":"Use these settings in","Using more than one?":"Using more than one?","Usually off, so the bot can skip pointless replies.":"Usually off, so the bot can skip pointless replies.","Wait a bit after the voice finishes":"Wait a bit after the voice finishes","Wait for the first reply and the rate limit. Keep-alive":"Wait for the first reply and the rate limit. Keep-alive","What happens":"What happens","What it means":"What it means","Where replies go":"Where replies go","Why it's quiet":"Why it's quiet","Why the bot is quiet":"Why the bot is quiet","Will respond to Moderators only":"Will respond to Moderators only","With Remote API Control on, open":"With Remote API Control on, open","You need":"You need","Your command filter setting may drop that message before the bot sees it. Use a plain word instead.":"Your command filter setting may drop that message before the bot sees it. Use a plain word instead.","and":"ja","and turn on":"and turn on","authentication reference":"authentication reference","back off. Then pick a trigger word and rate limit, and decide if replies should go into real chat.":"back off. Then pick a trigger word and rate limit, and decide if replies should go into real chat.","does nothing":"does nothing","error guide":"error guide","every message, not that it answers every one.":"every message, not that it answers every one.","falls back to a length-based time.":"falls back to a length-based time.","for now. This keeps replies off your real chat while you test.":"for now. This keeps replies off your real chat while you test.","for your first test.":"for your first test.","in settings. This removes the reply on screen and any waiting ones, but won't stop a voice that's already talking.":"in settings. This removes the reply on screen and any waiting ones, but won't stop a voice that's already talking.","into a support message or diagnostic report.":"into a support message or diagnostic report.","is an OpenAI permission, not something to type into Social Stream.":"is an OpenAI permission, not something to type into Social Stream.","is blank":"is blank","is optional.":"is optional.","link keeps all of these features. A copied or edited local":"link keeps all of these features. A copied or edited local","link under":"link under","looks at":"looks at","makes every reply slow to start.":"makes every reply slow to start.","may be skipped. Say the bot's name to be clear.":"may be skipped. Say the bot's name to be clear.","ms":"ms","only proves the first part.":"only proves the first part.","open with the same session. Also needed for TTS.":"open with the same session. Also needed for TTS.","or":"või","over the API WebSocket.":"over the API WebSocket.","page.":"page.","second account":"second account","see below":"see below","short at first, like:":"short at first, like:","the AI (writes the reply), the Primary bot (picks which chat messages to answer), and where replies go (overlay, chat, or both). A green":"the AI (writes the reply), the Primary bot (picks which chat messages to answer), and where replies go (overlay, chat, or both). A green","to add":"to add","to keep replies in the viewer's stream. If you use separate bot accounts, connect each bot source to the same video as the chat it should answer and select":"to keep replies in the viewer's stream. If you use separate bot accounts, connect each bot source to the same video as the chat it should answer and select","to replies posted into chat. This uses the viewer's handle when available, otherwise their displayed name. Both options are off by default.":"to replies posted into chat. This uses the viewer's handle when available, otherwise their displayed name. Both options are off by default.","to test.":"to test.","to users marked as members by their source. Other chat stays visible in the Dock and overlays.":"to users marked as members by their source. Other chat stays visible in the Dock and overlays.","under":"all","wins, then":"wins, then","won't get later fixes unless you update it.":"won't get later fixes unless you update it."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="et" href="https://socialstream.ninja/beta/et/docs/chatbot-basics-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Peamine navigeerimine"><a href="../index.html">Avaleht</a><a href="features.html">Funktsioonid</a><a href="inspiration.html" class="site-priority-inspiration">Inspiratsioon</a><a href="download.html">Laadi alla</a><a href="guides.html">Juhendid</a><a href="commands.html">Käsud ja API</a><a href="supported-sites.html">Toetatud saidid</a><a href="overlay-gallery.html" class="site-priority-gallery">Ülekattegalerii</a><a href="services.html" class="site-priority-hire">Laenutus</a><a href="support.html">Abi</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Eesti"><span aria-hidden="true">🌐 </span><span lang="et">Eesti</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/chatbot-basics-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/chatbot-basics-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/chatbot-basics-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/chatbot-basics-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/chatbot-basics-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/chatbot-basics-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/chatbot-basics-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/chatbot-basics-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/chatbot-basics-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/chatbot-basics-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/chatbot-basics-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/chatbot-basics-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/chatbot-basics-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/chatbot-basics-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/chatbot-basics-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/chatbot-basics-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/chatbot-basics-guide.html" lang="th" hreflang="th">ไทย</a><a class="site-language-link" href="chatbot-basics-guide.html" lang="et" hreflang="et" aria-current="true">Eesti</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Vaheta teemat"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Ava navigeerimismenüü" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Set Up the AI Chat Bot</h1>
+            <p>Let an AI answer your viewers in chat, on screen, or out loud.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Sellel lehel">
+                <a href="#setup">Seadke see üles</a>
+                <a href="#provider">Pick an AI</a>
+                <a href="#first-test">Test it</a>
+                <a href="#replies">Where replies go</a>
+                <a href="#quiet">Why it's quiet</a>
+                <a href="#hide">Hide old replies</a>
+                <a href="#problems">Probleemide lahendamine</a>
+                <a href="#openai">OpenAI key errors</a>
+                <a href="#other-pages">Other AI pages</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="setup">Set it up in 6 steps</h2>
+                <div class="guide-step-layout">
+                    <ol class="guide-steps">
+                        <li>In Social Stream settings, open <strong>Chat Bots and AI services &rarr; Configure LLM Service Provider</strong>.</li>
+                        <li>Pick your AI (<a href="#provider">see below</a>) and fill in the boxes it shows.</li>
+                        <li>Klõpsake <strong>Test selected chat bot</strong>. A real text reply should appear under the button.</li>
+                        <li>Avatud <strong>Chat Bot - Primary</strong> and turn on <strong>Enable the LLM AI chat bot</strong>.</li>
+                        <li>Lülitage sisse <strong>Bot replies ONLY go to the bot overlay page</strong> for now. This keeps replies off your real chat while you test.</li>
+                        <li>Avage <code>bot.html</code> link under <strong>Overlay Page and TTS for Chat Bot</strong>.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/guide-llm-provider-connected.png" alt="Configure LLM section with Ollama selected, local endpoint and model fields filled in, and the provider test showing Connected" class="guide-image">
+                        <figcaption>Connected means the AI answered. It doesn't turn the bot on.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>Three parts, all needed:</strong> the AI (writes the reply), the Primary bot (picks which chat messages to answer), and where replies go (overlay, chat, or both). A green <strong>Connected</strong> only proves the first part.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="provider">Pick an AI</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>I use&hellip;</th><th>Pick this</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="I use">Ollama on my computer</td><td data-label="Pick this"><strong>Ollama (Native Local API)</strong>. The usual address is <code>http://localhost:11434</code>.</td></tr>
+                        <tr><td data-label="I use">LM Studio, llama.cpp, vLLM, or similar</td><td data-label="Pick this"><strong>Custom API</strong>. Don't use this for Ollama.</td></tr>
+                        <tr><td data-label="I use">A paid service, like OpenAI or Gemini</td><td data-label="Pick this">That service. Enter its API key and model. They set the prices, limits, and model names.</td></tr>
+                        <tr><td data-label="I use">Nothing yet, and want it to run in the browser</td><td data-label="Pick this"><strong>Local Gemma</strong> või <strong>Local Qwen</strong>. Follow its model download steps.</td></tr>
+                    </tbody>
+                </table>
+                <p>Need Ollama? Get it from the <a href="https://ollama.com/download" target="_blank" rel="noopener">Ollama download page</a>. Full provider list: <a href="commands.html#ai-integration">AI Integration in Commands &amp; API</a>.</p>
+                <details class="guide-extra">
+                    <summary>Ollama keep-alive set to 0?</summary>
+                    <p>That unloads the model after each request. The bot still works, but every reply may be slow while the model loads again.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="first-test">Test it</h2>
+                <p>Use these settings in <strong>Chat Bot - Primary</strong> for your first test.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Seadistamine</th><th>First test</th><th>Later</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Seadistamine">Enable the LLM AI chat bot</td><td data-label="First test">On</td><td data-label="Later">Keep on while the bot should watch chat.</td></tr>
+                        <tr><td data-label="Seadistamine">Customize bot name</td><td data-label="First test"><code>NinjaBot</code></td><td data-label="Later">A short, plain name viewers can type.</td></tr>
+                        <tr><td data-label="Seadistamine">Bot replies ONLY go to the bot overlay page</td><td data-label="First test">On</td><td data-label="Later">Turn off when you're ready to post into real chat.</td></tr>
+                        <tr><td data-label="Seadistamine">Do not screen out any of the bot's replies</td><td data-label="First test">On</td><td data-label="Later">Usually off, so the bot can skip pointless replies.</td></tr>
+                        <tr><td data-label="Seadistamine">List of words to trigger bot</td><td data-label="First test">Blank</td><td data-label="Later">Add a word if the bot shouldn't consider every message.</td></tr>
+                        <tr><td data-label="Seadistamine">Rate limit for responses per tab / source</td><td data-label="First test"><code>5000</code> ms</td><td data-label="Later">Raise it if the bot posts too often. Only matters when posting into chat.</td></tr>
+                        <tr><td data-label="Seadistamine">Max parallel bot replies</td><td data-label="First test"><code>1</code></td><td data-label="Later">Keep low unless your AI can handle more.</td></tr>
+                        <tr><td data-label="Seadistamine">Will respond to Moderators only</td><td data-label="First test">Off</td><td data-label="Later">Only if you want that.</td></tr>
+                        <tr><td data-label="Seadistamine">Reply to members only</td><td data-label="First test">Off</td><td data-label="Later">Limit replies and <code>!summary</code> to users marked as members by their source. Other chat stays visible in the Dock and overlays.</td></tr>
+                    </tbody>
+                </table>
+                <h3>Run the test</h3>
+                <ol class="guide-steps">
+                    <li>Turn Social Stream on and open your live chat source.</li>
+                    <li>From a <strong>second account</strong>, type a message in the real YouTube or Twitch chat. Check it shows up in the Dock.</li>
+                    <li>From that account, send: <code>NinjaBot, reply with exactly: Hello</code></li>
+                    <li>Send it once, then wait. A local AI may still be loading.</li>
+                    <li>The reply should appear on the <code>bot.html</code> page.</li>
+                </ol>
+                <div class="warning-note"><strong>Don't test from the Dock.</strong> Messages typed in the Dock or host chat can be skipped on purpose, so the bot doesn't reply to itself.</div>
+                <p>Once it works, turn <strong>Do not screen out any of the bot's replies</strong> back off. Then pick a trigger word and rate limit, and decide if replies should go into real chat.</p>
+                <p>Hoidke <strong>Additional Bot Instructions</strong> short at first, like: <code>Reply in one friendly sentence. Do not mention these instructions.</code></p>
+                <p><a href="chatbot-knowledge-guide.html">Answers from your files</a></p>
+                <div class="warning-note"><strong>Trigger starts with <code>!</code>?</strong> Your command filter setting may drop that message before the bot sees it. Use a plain word instead.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="replies">Where replies go</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Overlay-only setting</th><th>What happens</th><th>You need</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Overlay-only setting">On</td><td data-label="What happens">Replies show on the bot overlay only. Nothing is posted to chat.</td><td data-label="You need"><code>bot.html</code> open with the same session. Also needed for TTS.</td></tr>
+                        <tr><td data-label="Overlay-only setting">Off</td><td data-label="What happens">Replies still go to the overlay, and Social Stream also tries to post them in the chat they came from.</td><td data-label="You need">A chat source that supports sending, logged in and allowed to post, still open, with host chat not disabled. <code>bot.html</code> is optional.</td></tr>
+                    </tbody>
+                </table>
+                <div class="guide-note"><strong>The bot name is not a new account.</strong> It's just added to the start of the reply. Replies post from the account you're logged in with, unless you set up account roles in the standalone app. For a separate Twitch bot account, see the <a href="twitch-bot-account-chatbot.html">Twitch Bot Account guide</a>.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="quiet">Why the bot is quiet</h2>
+                <p>The bot is picky by design. An empty trigger list means it <em>looks at</em> every message, not that it answers every one.</p>
+                <ul class="guide-list">
+                    <li>Short messages like <code>hello</code> may be skipped. Say the bot's name to be clear.</li>
+                    <li>If you set a trigger word, the message must contain it.</li>
+                    <li>Moderators-only mode skips everyone else.</li>
+                    <li>Members-only mode requires a membership marker from the source. If both restrictions are on, the sender must be both a member and a moderator.</li>
+                    <li>It answers one message at a time by default. When posting into chat, it also waits 5 seconds per source.</li>
+                    <li>It skips its own messages, empty messages, and messages too close to its last reply.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="reply-routing">Choose where chat replies go</h2>
+                <p>sisse <strong>Chat Bot - Primary</strong>, enable <strong>Reply only to the originating YouTube chat</strong> to keep replies in the viewer's stream. If you use separate bot accounts, connect each bot source to the same video as the chat it should answer and select <code>bot</code> all <strong>Send bot replies through these SSApp account roles</strong>. If no destination matches the video, the reply is not posted into chat.</p>
+                <p>Enable <strong>Mention the viewer in replies</strong> to add <code>@name</code> to replies posted into chat. This uses the viewer's handle when available, otherwise their displayed name. Both options are off by default.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="hide">Hide old replies</h2>
+                <p>These only affect the bot overlay (<code>bot.html</code>), not the featured chat overlay. The overlay options in settings cover the common ones.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>ma tahan…</th><th>Add to the link</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="ma tahan">Hide each reply after a set time</td><td data-label="Add to the link"><code>&amp;showtime=10000</code> (milliseconds, so 10 seconds)</td></tr>
+                        <tr><td data-label="ma tahan">Hide longer replies later, shorter ones sooner</td><td data-label="Add to the link"><code>&amp;autohide</code> (või <code>&amp;autotime</code>)</td></tr>
+                        <tr><td data-label="ma tahan">Set the shortest and longest time for autohide</td><td data-label="Add to the link"><code>&amp;mintime=5000&amp;maxtime=20000</code> (defaults 4000 and 30000)</td></tr>
+                        <tr><td data-label="ma tahan">Hide it when the voice finishes</td><td data-label="Add to the link"><code>&amp;hideaftertts</code></td></tr>
+                        <tr><td data-label="ma tahan">Wait a bit after the voice finishes</td><td data-label="Add to the link"><code>&amp;hidedelay=1000</code> (default 500)</td></tr>
+                        <tr><td data-label="ma tahan">Give up waiting for a stuck voice</td><td data-label="Add to the link"><code>&amp;ttstimeout=60000</code> (default 120000)</td></tr>
+                    </tbody>
+                </table>
+                <p>Using more than one? <code>hideaftertts</code> wins, then <code>autohide</code>, then <code>showtime</code>. If the voice never starts, <code>hideaftertts</code> falls back to a length-based time.</p>
+                <h3>Clear it right now</h3>
+                <p>Klõpsake <strong>Clear bot overlay now</strong> in settings. This removes the reply on screen and any waiting ones, but won't stop a voice that's already talking.</p>
+                <details class="guide-extra">
+                    <summary>Clear it from the API, and custom styling</summary>
+                    <ul>
+                        <li>With Remote API Control on, open <code>https://io.socialstream.ninja/SESSION_ID/clearBotOverlay</code>.</li>
+                        <li>Or send <code>{"action":"clearBotOverlay"}</code> over the API WebSocket.</li>
+                    </ul>
+                    <p>Custom CSS on the normal <code>bot.html</code> link keeps all of these features. A copied or edited local <code>bot.html</code> won't get later fixes unless you update it.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="problems">Probleemide lahendamine</h2>
+                <p>Find the last thing that worked, then check the next row.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Probleem</th><th>Proovi seda</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Probleem">Test button fails</td><td data-label="Proovi seda">Read the error under the button. Check the address, API key, model name, that your local AI is running, firewall, and your provider's limits.</td></tr>
+                        <tr><td data-label="Probleem">Connected, but the viewer's message isn't in the Dock</td><td data-label="Proovi seda">Chat isn't being captured. Check Social Stream is on, the chat window is open and logged in, the right live chat is open, and your source filters.</td></tr>
+                        <tr><td data-label="Probleem">Message is in the Dock, but no reply on the overlay</td><td data-label="Proovi seda">Send it from the real platform chat, not the Dock. Then check the bot is on, the trigger word, moderators-only, the bot name, the rate limit, and your instructions. Turn on <strong>Do not screen out any of the bot's replies</strong> to test.</td></tr>
+                        <tr><td data-label="Probleem">Reply shows on the overlay, but not in chat</td><td data-label="Proovi seda">Turn off overlay-only. Check that source can send, the account can post, the chat box is available, account roles, and <strong>Disable the host chat and block functions</strong>.</td></tr>
+                        <tr><td data-label="Probleem"><code>!bot</code> does nothing</td><td data-label="Proovi seda">Use a plain-word trigger, or let that command through your command filter.</td></tr>
+                        <tr><td data-label="Probleem">Only the first test gets a reply</td><td data-label="Proovi seda">Wait for the first reply and the rate limit. Keep-alive <code>0</code> makes every reply slow to start.</td></tr>
+                        <tr><td data-label="Probleem">Reply stays on screen after the voice</td><td data-label="Proovi seda">Kasuta <a href="#hide">Hide after TTS, autohide, or a fixed time</a>.</td></tr>
+                        <tr><td data-label="Probleem">OpenAI error like <code>401</code> või <code>429</code></td><td data-label="Proovi seda">Vt <a href="#openai">OpenAI key errors</a>.</td></tr>
+                        <tr><td data-label="Probleem">Privaatne <code>chatbot.html</code> is blank</td><td data-label="Proovi seda">Turn on the private chat bot option and use its link with the same session. It's a separate bot, so it doesn't test the Primary bot.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="openai">OpenAI key errors</h2>
+                <ol class="guide-steps">
+                    <li>Make a normal project API key on the <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI API keys page</a>. Not an Admin key.</li>
+                    <li>Make sure it's in the project you want billed, and it's allowed to make model requests.</li>
+                    <li>In Social Stream, pick <strong>ChatGPT API</strong>, paste the whole key, enter a model your project can use, and click <strong>Test selected chat bot</strong>.</li>
+                </ol>
+                <div class="warning-note"><strong>Never paste your key</strong> into a support message or diagnostic report.</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Error</th><th>What it means</th><th>Proovi seda</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Error"><code>401 missing_scope</code> / <code>model.request</code></td><td data-label="What it means">The key isn't allowed to make model requests. <code>model.request</code> is an OpenAI permission, not something to type into Social Stream.</td><td data-label="Proovi seda">Check it's a normal key in the right project with model requests allowed. If unsure, make a new key and replace the saved one.</td></tr>
+                        <tr><td data-label="Error"><code>401 invalid_api_key</code></td><td data-label="What it means">The key is wrong or gone.</td><td data-label="Proovi seda">Look for a missing character or extra space. Check it wasn't deleted, it's in the right project, and Social Stream isn't using an old saved key.</td></tr>
+                        <tr><td data-label="Error"><code>429</code></td><td data-label="What it means">Out of quota, or too many requests.</td><td data-label="Proovi seda">Check API billing and budget (separate from a ChatGPT subscription). Slow down or wait.</td></tr>
+                    </tbody>
+                </table>
+                <p><strong>Adding credit won't fix a 401.</strong> Credit and permissions are separate. See OpenAI's <a href="https://developers.openai.com/api/docs/guides/error-codes" target="_blank" rel="noopener">error guide</a> ja <a href="https://developers.openai.com/api/reference/overview#start-here" target="_blank" rel="noopener">authentication reference</a>.</p>
+                <details class="guide-extra">
+                    <summary>Kas olete endiselt ummikus?</summary>
+                    <ul>
+                        <li>If your browser auto-translates the OpenAI site and the key settings act strangely, switch to the original English page. This helped one user, but isn't a known cause of 401 errors.</li>
+                        <li>Copy the status, code, missing scope, and Request ID shown in Social Stream. Then send the in-app diagnostic report soon after. It leaves out API keys and prompts.</li>
+                        <li>If your key and project look right, give OpenAI support the Request ID and time.</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="other-pages">Other AI bot pages</h2>
+                <p>The Primary bot, private chat, censor bot, and AI co-host are separate tools. Each has its own settings and history.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-chatbot-pages-reference.png" alt="Reference table comparing the Primary bot overlay, private chatbot, censor bot, and AI cohost" class="guide-image">
+                    <figcaption>The private bot can't stand in for testing the Primary bot.</figcaption>
+                </figure>
+                <p>See all AI features in the <a href="ai-modes-guide.html">AI Modes Guide</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 litsents.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

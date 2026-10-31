@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="et" data-site-root="../../" data-site-language="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:locale" content="et_EE">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/et/docs/obs-studio-guide.html">
+    <meta name="twitter:title" content="OBS Studio algaja juhend – Social Stream Ninja">
+    <meta name="twitter:description" content="Seadistage OBS Studio, looge stseen, valige riistvarakooder ja platvormi bitikiirus, miksige ja jälgige heli ning lisage brauseriallikaid.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Studio algaja juhend – Social Stream Ninja</title>
+    <meta name="description" content="Seadistage OBS Studio, looge stseen, valige riistvarakooder ja platvormi bitikiirus, miksige ja jälgige heli ning lisage brauseriallikaid.">
+    <link rel="canonical" href="https://socialstream.ninja/beta/et/docs/obs-studio-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:title" content="OBS Studio algaja juhend – Social Stream Ninja">
+    <meta property="og:description" content="Seadistage OBS Studio, looge stseen, valige riistvarakooder ja platvormi bitikiirus, miksige ja jälgige heli ning lisage brauseriallikaid.">
+    <meta property="og:url" content="https://socialstream.ninja/beta/et/docs/obs-studio-guide.html">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="stylesheet" href="../../docs/css/site-shell.css">
+    <script src="../../docs/js/site-shell.js"></script>
+    <style>
+        body.obs-page { padding-top: 76px; background: var(--site-bg); color: var(--site-text); font-family: var(--site-font); }
+        .obs-page .obs-guide, .obs-page .obs-hero { max-width: 1160px; margin: auto; padding: 0 28px; }
+        .obs-page .obs-hero { padding-top: 52px; padding-bottom: 30px; }
+        .obs-page .obs-eyebrow { color: var(--site-muted); font-size: 13px; letter-spacing: .06em; margin-bottom: 20px; }
+        .obs-page .obs-hero h1 { font-size: 52px; line-height: 1.1; letter-spacing: -.045em; max-width: 750px; margin-bottom: 20px; }
+        .obs-page .obs-lead { max-width: 620px; color: var(--site-muted); font-size: 19px; line-height: 1.6; }
+        .obs-page a { color: var(--site-accent); text-underline-offset: 3px; }
+        .obs-guide a, .obs-hero a { text-decoration: underline; }
+        .obs-guide .obs-jumps { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 0 30px; }
+        .obs-guide .obs-jumps a { background: var(--site-surface); border: 1px solid var(--site-line); border-radius: 24px; padding: 8px 16px; color: var(--site-text); text-decoration: none; font-size: 14px; }
+        .obs-guide .obs-jumps a:hover { border-color: var(--site-accent); }
+        .obs-guide .obs-step { padding: 48px 0; border-top: 1px solid var(--site-line); scroll-margin-top: 94px; }
+        .obs-guide .obs-heading { display: flex; align-items: baseline; gap: 14px; margin-bottom: 24px; }
+        .obs-guide .obs-number { color: var(--site-accent); font-size: 14px; font-weight: 700; }
+        .obs-guide h2 { text-align: left; font-size: 28px; line-height: 1.25; letter-spacing: -.025em; margin: 0; padding: 0; }
+        .obs-guide h3 { font-size: 17px; line-height: 1.4; margin: 0 0 10px; color: var(--site-text); }
+        .obs-guide p, .obs-guide li, .obs-guide dd { font-size: 16px; line-height: 1.7; }
+        .obs-guide p { margin: 0 0 18px; }
+        .obs-guide .obs-copy > :last-child { margin-bottom: 0; }
+        .obs-guide .obs-split { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.3fr); gap: 40px; align-items: start; }
+        .obs-guide .obs-split > * { min-width: 0; }
+        .obs-guide .obs-split-small { grid-template-columns: minmax(0, 1.3fr) minmax(0, .85fr); }
+        .obs-guide ol { padding-left: 22px; margin: 0 0 20px; }
+        .obs-guide li { margin-bottom: 12px; padding-left: 3px; }
+        .obs-guide .obs-shot { margin: 0; }
+        .obs-guide .obs-image-link { display: block; overflow: hidden; border: 1px solid var(--site-line); border-radius: 14px; background: #20212b; }
+        .obs-guide .obs-shot img { display: block; width: 100%; height: auto; }
+        .obs-guide .obs-shot figcaption { color: var(--site-muted); font-size: 13px; line-height: 1.6; margin-top: 12px; }
+        .obs-guide .obs-compact .obs-image-link { display: flex; justify-content: center; padding: 24px; background: var(--site-surface); }
+        .obs-guide .obs-compact img { width: auto; max-width: 100%; max-height: 410px; object-fit: contain; }
+        .obs-guide .obs-facts { margin: 20px 0; }
+        .obs-guide .obs-facts > div { display: flex; justify-content: space-between; gap: 20px; padding: 10px 0; border-bottom: 1px solid var(--site-line); }
+        .obs-guide dt { font-size: 15px; font-weight: 650; }
+        .obs-guide dd { margin: 0; text-align: right; font-size: 15px; }
+        .obs-guide .obs-note { padding: 16px 20px; border: 1px solid var(--border-color); background: var(--site-surface); border-radius: 10px; }
+        .obs-guide .obs-muted, .obs-guide .obs-small { color: var(--site-muted); }
+        .obs-guide .obs-small { font-size: 13px; }
+        .obs-guide details { background: var(--site-surface); border: 1px solid var(--site-line); border-radius: 12px; padding: 16px 20px; margin-top: 18px; }
+        .obs-guide summary { cursor: pointer; color: var(--site-text); font-size: 15px; font-weight: 650; }
+        .obs-guide details[open] summary { margin-bottom: 18px; }
+        .obs-guide details > :last-child { margin-bottom: 0; }
+        .obs-guide .obs-platforms, .obs-guide .obs-routing { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 24px 0; align-items: start; }
+        .obs-guide .obs-platforms details { margin: 0; }
+        .obs-guide .obs-platforms summary { font-size: 19px; }
+        .obs-guide .obs-platforms summary span { display: block; padding: 7px 0 0 18px; font-size: 13px; color: var(--site-muted); font-weight: 400; }
+        .obs-guide .obs-platforms p { font-size: 14px; }
+        .obs-guide table { border-collapse: collapse; width: 100%; font-size: 14px; margin-bottom: 18px; }
+        .obs-guide th, .obs-guide td { text-align: left; padding: 10px 0; border-bottom: 1px solid var(--site-line); }
+        .obs-guide th:last-child, .obs-guide td:last-child { text-align: right; }
+        .obs-guide caption { text-align: left; font-size: 13px; color: var(--site-muted); margin-bottom: 6px; }
+        .obs-guide .obs-route { border: 1px solid var(--site-line); border-radius: 12px; background: var(--site-surface); padding: 22px; }
+        .obs-guide .obs-route p { font-size: 14px; margin-bottom: 12px; }
+        .obs-guide .obs-route p:last-child { margin: 0; color: var(--site-muted); }
+        .obs-guide .obs-routing strong { display: inline-block; min-width: 106px; }
+        .obs-guide .obs-route-icon { width: 28px; height: 28px; margin-bottom: 16px; color: var(--site-accent); }
+        .obs-guide .obs-fixes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; }
+        .obs-guide .obs-fixes p { font-size: 15px; }
+        .obs-guide a:focus, .obs-guide summary:focus { outline: 2px solid var(--site-accent); outline-offset: 4px; }
+        .obs-skip { position: absolute; left: 16px; top: -80px; z-index: 3000; padding: 12px; background: var(--site-surface); }
+        .obs-skip:focus { top: 16px; }
+        @media (max-width: 760px) {
+            .obs-page .obs-guide, .obs-page .obs-hero { padding-left: 20px; padding-right: 20px; }
+            .obs-page .obs-hero { padding-top: 36px; }
+            .obs-page .obs-hero h1 { font-size: 38px; }
+            .obs-guide .obs-step { padding: 32px 0; }
+            .obs-guide .obs-split, .obs-guide .obs-split-small, .obs-guide .obs-platforms, .obs-guide .obs-routing, .obs-guide .obs-fixes { grid-template-columns: 1fr; gap: 24px; }
+            .obs-guide .obs-heading { gap: 12px; }
+            .obs-guide h2 { font-size: 25px; }
+            .obs-guide .obs-platforms, .obs-guide .obs-routing { gap: 12px; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="et">
+<script id="ssn-site-language" type="application/json">{"language":"et","page":"docs/obs-studio-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/channel-names-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/chatbot-knowledge-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-overlays.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/game-overlay-troubleshooting.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/meld-guide.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Lülitu heledale teemale","Switch to dark theme":"Lülitu tumedale teemale","Light mode":"Hele teema","Dark mode":"Tume teema","Open navigation menu":"Ava navigeerimismenüü","Close navigation menu":"Sulge navigeerimismenüü","Copy this document as Markdown to the clipboard":"Kopeeri dokument Markdownina lõikelauale","Copy Markdown":"Kopeeri Markdown","Copying…":"Kopeerimine…","Markdown copied":"Markdown kopeeritud","Copy failed":"Kopeerimine ebaõnnestus","Copy comprehensive Markdown for an AI assistant":"Kopeeri kogu sisu Markdownina tehisintellekti abilisele","Copy this documentation page as Markdown for an AI assistant":"Kopeeri see juhend Markdownina tehisintellekti abilisele"},"strings":{", and":", ja",", choose a hardware":", valige riistvara",". Check its preview and stream health; some platforms also require":". Kontrollige selle eelvaadet ja voo seisundit; mõned platvormid nõuavad ka",". On macOS 13+, use OBS’s":". macOS 13 või uuema puhul kasutage OBS-i",". Open your platform below.":". Avage allpool oma platvorm.",". Shared source and audio changes can still affect the live output.":". Jagatud allika ja heli muudatused võivad reaalajas väljundit siiski mõjutada.",". Talk, play sound, and switch scenes.":". Rääkige, esitage heli ja vahetage stseene.",". Then open the mixer’s":". Seejärel avage mikseri","/ OBS STUDIO":"/ OBS STUDIO","1080p30":"1080p30","1080p60":"1080p60","1280 × 720 output":"1280 × 720 väljund","1920 × 1080 canvas":"1920 × 1080 lõuend","2-second keyframes":"2-sekundilised võtmekaadrid","30 FPS":"30 kaadrit sekundis","6,000 kbps uses about 6 Mbps, plus audio and overhead. Lower bitrate or resolution if your connection cannot keep up.":"6000 kbit/s vajab umbes 6 Mbit/s, millele lisanduvad heli ja protokolli lisakulu. Kui ühendusest ei piisa, vähendage bitikiirust või eraldusvõimet.","60 FPS":"60 kaadrit sekundis","720p30":"720p30","720p30 / 60":"720p30/60","720p60 / 1080p30":"720p60 / 1080p30","8,000 max.":"8000 max.",": try light noise suppression, then a compressor and limiter. Add one at a time and listen.":": proovige kerget mürasummutust, seejärel kompressorit ja piirajat. Lisage ükshaaval ja kuulake.","; avoid hitting 0.":"; vältige 0-ni jõudmist.","A":"Üks","A simple start:":"Lihtne algus:","AAC stereo":"AAC stereo","AMD":"AMD","AMD HW H.264 / AVC":"AMD HW H.264 / AVC","Add Existing":"Lisa olemasolev","Add a chat or alert overlay":"Lisage vestluse või märguande ülekate","Advanced Audio Properties":"Täpsemad heliomadused","All guides":"Kõik juhendid","Allow camera, microphone, and screen capture access when your computer asks.":"Lubage arvuti küsimise korral juurdepääs kaamerale, mikrofonile ja ekraani jäädvustamisele.","App / whole monitor":"Rakendus / terve monitor","App audio, macOS, and microphone filters":"Rakenduste heli-, macOS-i ja mikrofoni filtrid","Apple Silicon":"Apple Silicon","Apple VT H264 Hardware":"Apple VT H264 Hardware","Application Audio Capture":"Rakenduse helihõive","Assumes the source is unmuted and on your output track. “Monitor Off” does not mute the stream.":"Eeldusel, et allikas pole vaigistatud ja kuulub väljundrajale. „Monitor Off” ei vaigista otseülekannet.","Audio":"Heli","Audio: 128 kbps, 44.1 kHz stereo. These are recommendations, not minimums.":"Heli: 128 kbps, 44,1 kHz stereo. Need on soovitused, mitte miinimumid.","Audio: up to 160 kbps.":"Heli: kuni 160 kbps.","Avoid echo:":"Väldi kaja:","Bitrate":"Bitikiirus","Blank overlay or repeated audio?":"Tühi ülekate või korduv heli?","Bring your camera, screen, and sound together. Make a test recording, then go live.":"Ühendage kaamera, ekraan ja heli. Tehke testsalvestus ja seejärel tehke otseülekanne.","Browser":"Brauser","Browser Source properties with URL, Width, Height, and Control audio via OBS":"Brauseriallika atribuudid koos URL-i, laiuse, kõrguse ja heli juhtimisega OBS-i kaudu","Build one scene":"Ehitage üks stseen","CBR":"CBR","Camera / capture card":"Kaamera / videohõivekaart","Canvas":"Lõuend","Cap game FPS; simplify the scene.":"Piirake mängu kaadrisagedust; lihtsustage stseeni.","Capture each sound once.":"Jäädvustage iga heli üks kord.","Change Output to stream at a smaller size.":"Muutke väljund väiksema suurusega voogesituseks.","Chat or alerts":"Vestlus või märguanded","Check hardware support and update your graphics driver. OBS still needs GPU capacity to draw scenes; cap game FPS or lower output FPS if it falls behind.":"Kontrollige riistvaratuge ja värskendage graafikadraiverit. OBS vajab stseenide joonistamiseks endiselt GPU jõudlust; kui see jääb hätta, piirake mängu kaadrisagedust või vähendage väljundi kaadrisagedust.","Check mute, monitoring mode, and audio track.":"Kontrollige vaigistust, jälgimisrežiimi ja heliriba.","Check the session matches your chat source. Refresh the Browser Source. Keep only one copy playing TTS.":"Kontrollige, kas seanss ühtib teie vestlusallikaga. Värskendage brauseriallikat. Jätke TTS-i esitamiseks ainult üks koopia.","Choose":"Valige","Choose a recording folder in":"Valige salvestuskaust","Choose headphones in":"Valige kõrvaklapid","Choose what to capture.":"Valige, mida jäädvustada.","Choose what you hear":"Valige, mida kuulete","Choose what you want to do.":"Valige, mida soovite teha.","Choose your encoder here; use the platform bitrates below.":"Valige siit oma kodeerija; kasutage allolevaid platvormi bitikiirusi.","Choose your microphone in":"Valige oma mikrofon jaotises","Choose your video size":"Valige oma video suurus","Connect your platform":"Ühendage oma platvorm","Control audio via OBS":"Heli juhtimine OBS-i kaudu","Copy the overlay URL from Social Stream Ninja.":"Kopeerige ülekatte URL teenusest Social Stream Ninja.","Download":"Laadi alla","Drag corners to resize. Sources at the top cover those below. Use the eye to hide and the lock to prevent movement.":"Suuruse muutmiseks lohistage nurki. Loendi ülemised allikad katavad alumisi. Peitmiseks kasutage silmaikooni ja liigutamise takistamiseks lukku.","Encoder compatibility":"Kodeerija ühilduvus","Encoders":"Kodeerijad","Encoding lag":"Kodeerimise viivitus","Enhanced Broadcasting":"Enhanced Broadcasting","Features":"Funktsioonid","File → Remux Recordings":"Fail → Salvestiste ümberpakkimine","Filters":"Filtrid","For TTS or alerts, enable":"TTS-i või märguannete jaoks lubage","For manual output settings, choose":"Käsitsi väljundi sätete jaoks valige","For persistent chat, leave automatic shutdown and scene-activation refresh off initially.":"Pideva vestluse jaoks jätke automaatne väljalülitamine ja stseeni aktiveerimise värskendamine esialgu välja.","For portrait video, use a 1080 × 1920 canvas and rearrange your sources to fit.":"Portreevideo jaoks kasutage 1080 × 1920 lõuendit ja paigutage allikad ümber, et need sobiksid.","For separate editing tracks, keep a full mix on track 1, then assign mic/game to additional tracks in Advanced Audio Properties and enable them under Recording.":"Heliradade eraldi töötlemiseks jätke täielik miks rajale 1, määrake mikrofon ja mäng lisaheliradadele jaotises Advanced Audio Properties ning lubage need salvestamise seadetes.","GUIDES":"JUHENDID","Game Capture":"Mängu jäädvustamine","Game on Windows":"Mäng Windowsis","Give your CPU a break":"Andke oma protsessorile puhkust","Go Live":"Tehke otseülekanne","Guides":"Juhendid","H.264":"H.264","H.264 recommended targets":"H.264 soovituslikud väärtused","H.264 · CBR required":"H.264 · Nõutav CBR","Headphones":"Kõrvaklapid","Home":"Avaleht","If something looks wrong":"Kui midagi tundub valesti","If your Mac’s hardware encoder cannot provide CBR, use x264.":"Kui teie Maci riistvarakooder ei suuda CBR-i pakkuda, kasutage x264.","In":"sisse","In this guide":"Selles juhendis","Install":"Installige","Intel":"Intel","Kick":"Kick","Kick settings":"Kick seaded","Leave upload headroom.":"Jätke üleslaadimiskiirusele varu.","Let OBS do the first setup":"Laske OBS-il teha esimene seadistus","Listen without sending the source directly to output.":"Kuulake ilma allikat otse väljundisse saatmata.","Lower bitrate; try wired Ethernet.":"Vähendage bitikiirust; proovige juhtmega Etherneti.","Lower game, music, and alert sliders until speech is clear.":"Vähendage mängu, muusika ja märguannete helitugevust, kuni kõne on selge.","MKV tolerates an interrupted recording. Use":"MKV talub katkestatud salvestust. Kasutage","Main navigation":"Peamine navigeerimine","Make your voice easy to hear":"Muutke oma hääl kergesti kuuldavaks","Meters show signal level; sliders change the mix.":"Näidikud näitavad signaalitaset; liugurid muudavad miksi.","Microphone →":"Mikrofon →","Missing encoder or overloaded computer?":"Kodeerija puudub või arvuti on ülekoormatud?","Monitor Off":"Monitooring väljas","Monitor Only (mute output)":"Ainult monitooring (väljund vaigistatud)","Monitor and Output":"Monitor ja väljund","NVENC H.264":"NVENC H.264","NVIDIA":"NVIDIA","Network drops":"Võrgus kaotatud kaadrid","No":"Ei","No hardware option? Use":"Riistvaravalikut pole? Kasutage","OBS Audio Mixer with separate meters, volume sliders, and mute controls":"OBS-i helimikser eraldi tasemenäidikute, helitugevuse liugurite ja vaigistusnuppudega","OBS Auto-Configuration Wizard with streaming and recording choices":"OBS-i automaatse seadistamise viisard koos voogesituse ja salvestamise valikutega","OBS Controls with Start Streaming, Start Recording, Studio Mode, and Settings buttons":"OBS-i juhtnupud koos nuppudega Alusta voogesitust, Alusta salvestamist, stuudiorežiimi ja sätteid","OBS Output settings with the hardware NVENC H.264 encoder selected":"Riistvaralise NVENC H.264 kodeerijaga valitud OBS-i väljundseaded","OBS Studio":"OBS Studio","OBS Studio Beginner Guide - Social Stream Ninja":"OBS Studio algaja juhend – Social Stream Ninja","OBS Video settings with Base Canvas Resolution, Output Scaled Resolution, and FPS fields":"OBS-i videoseaded põhilõuendi eraldusvõime, väljundi skaleeritud eraldusvõime ja FPS-i väljadega","OBS performance help":"OBS-i jõudluse abi","OBS source menu listing Game Capture, Browser, and Video Capture Device":"OBS-i allikamenüü, mis sisaldab Game Capture, Browser ja Video Capture Device","October 2026 guidance. Follow your platform’s current requirements. For Facebook or TikTok, first confirm your account offers an external encoder connection.":"2026. aasta oktoobri juhis. Järgige oma platvormi praegusi nõudeid. Facebooki või TikToki puhul veenduge esmalt, et teie konto pakub välise kodeerija ühendust.","On macOS, use":"MacOS-is kasutage","Open":"Avatud","Open navigation menu":"Ava navigeerimismenüü","Output":"Väljund","Output → Advanced → Streaming":"Väljund → Täpsem → Voogesitus","Overlays":"Ülekatted","Place it above your game or camera. Send a test message; select one in the SSN dock if using the featured-message overlay.":"Paigutage see mängu või kaamera kohale. Saatke testsõnum; esiletõstetud sõnumi ülekatte kasutamisel valige sõnum SSN-i dokist.","Platform settings":"Platvormi seaded","Press":"Vajutage","QuickSync / QSV H.264":"QuickSync / QSV H.264","Record a minute. Then go live.":"Salvestage minut. Seejärel minge otseülekandesse.","Recording format and separate audio tracks":"Salvestusvorming ja eraldi helirajad","Recording saves a file; streaming sends to your platform.":"Salvestamine salvestab faili; voogesitus saadab teie platvormile.","Rendering lag":"Renderdusviivitus","Replace this default URL and size with your overlay’s settings.":"Asendage see vaike-URL ja suurus oma ülekatte seadetega.","SSN overlay help":"SSN-i ülekatte abi","SSN overlay setup":"SSN-i ülekatte seadistamine","Scene changes normally go straight to output.":"Stseeni muudatused lähevad tavaliselt otse väljundisse.","Scene switching and macOS":"Stseeni vahetamine ja macOS","Scenes":"Stseenid","Screenshot: OBS Project":"Ekraanipilt: OBS projekt","Screenshots open at full size when selected. Labels may vary slightly by OBS version.":"Valimisel avanevad ekraanipildid täissuuruses. Sildid võivad olenevalt OBS-i versioonist veidi erineda.","Select streaming or recording, follow the prompts, and apply the settings.":"Valige voogesitus või salvestamine, järgige juhiseid ja rakendage sätteid.","Set the overlay size; use":"Määrake ülekatte suurus; kasutage","Set up OBS Studio, build a scene, choose a hardware encoder and platform bitrate, mix and monitor audio, and add browser sources.":"Seadistage OBS Studio, looge stseen, valige riistvarakooder ja platvormi bitikiirus, miksige ja jälgige heli ning lisage brauseriallikaid.","Set your platform’s title and visibility, then":"Määrake platvormil ülekande pealkiri ja nähtavus ning seejärel","Settings → Audio":"Seaded → Heli","Settings → Audio → Advanced → Monitoring Device":"Seaded → Heli → Täpsem → Monitooringuseade","Settings → Output":"Seaded → Väljund","Settings → Stream:":"Seaded → Voog:","Settings → Video":"Seaded → Video","Silent output":"Vaikne väljund","Skip to guide":"Liigu juhendi juurde","Smoother fast motion":"Sujuv kiire liikumine","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logo","Social Stream Ninja ·":"Social Stream Ninja ·","Sources → + → Browser":"Allikad → + → Brauser","Speak normally. Aim for peaks around":"Rääkige tavaliselt. Püüdke hoida tipptaset vahemikus","Standard H.264":"Standard H.264","Start Recording":"Alustage salvestamist","Start Streaming":"Alusta voogesitust","Start Streaming can make you publicly live.":"Nupp Alusta voogesitust võib käivitada avaliku otseülekande.","Start here":"Alusta siit","Stop and watch the file. Check volume, framing, and lip sync.":"Peatage salvestus ja vaadake faili. Kontrollige helitugevust, kadreeringut ning pildi ja heli sünkroonsust.","Stream":"Voog","Studio Mode":"Stuudiorežiim","Support":"Abi","Switch theme":"Vaheta teemat","TTS setup":"TTS-i seadistamine","Talking / lighter workload":"Rääkimine / kergem töökoormus","The lower range is a suggested starting test. Try 160 kbps audio; use stereo at no more than 48 kHz.":"Vahemiku alumine ots sobib esimeseks katseks. Proovige heli bitikiirust 160 kbit/s; kasutage stereoheli kuni 48 kHz sagedusega.","The video you send":"Teie saadetud video","Tools → Auto-Configuration Wizard":"Tööriistad → Automaatse seadistamise viisard","Transition":"Üleminek","Try 720p30":"Proovige 720p30","Twitch":"Twitch","Twitch settings":"Twitchi seaded","Up to 1080p60":"Kuni 1080p60","Use Desktop Audio for the whole output device, or separate application capture. Capturing both can double the sound.":"Kasutage töölaua heli kogu väljundseadme jaoks või eraldi rakenduse jäädvustamist. Mõlema jäädvustamine võib heli kahekordistada.","Use a private test where available. When finished, stop streaming and confirm the platform event has ended.":"Võimaluse korral kasutage privaatset testi. Kui olete lõpetanud, peatage voogesitus ja kinnitage, et platvormi sündmus on lõppenud.","Use hardware encoding or lower output FPS.":"Kasutage riistvaralist kodeerimist või vähendage väljundi kaadrisagedust.","Useful for alerts or TTS you want to hear too.":"Kasulik märguannete või TTS-i puhul, mida soovite ka ise kuulda.","Usually right for your mic and games you already hear.":"Tavaliselt sobib teie mikrofoni ja juba kuuldavate mängude jaoks.","Video":"Video","Video Capture Device":"Videosalvestusseade","Video bitrate · kbps":"Video bitikiirus · kbps","View → Stats":"Vaade → Statistika","Window / Display Capture":"Akna/ekraani jäädvustamine","Windows: use":"Windows: kasutage","With supported AV1 / HEVC encoding, the corresponding targets are 6,000 / 10,000 / 12,000 kbps.":"Toetatud AV1 / HEVC kodeeringuga on vastavad sihtmärgid 6 000 / 10 000 / 12 000 kbps.","Yes":"Jah","YouTube":"YouTube","YouTube settings":"YouTube'i seaded","Your first OBS setup.":"Teie esimene OBS-i seadistus.","Your layout’s size":"Teie paigutuse suurus","and open it.":"ja avage see.","and paste it. Keep its session and password options.":"ja kleepige see. Hoidke oma seansi ja parooli valikud alles.","and start at 720p30.":"ja alustage eraldusvõimega 720p30.","connect your account, or paste the server URL and private stream key from its dashboard.":"ühendage oma konto või kleepige selle armatuurlaualt serveri URL ja privaatne voovõti.","don’t capture your monitoring device again through Desktop Audio. That can also send “Monitor Only” audio to viewers. Keep the platform’s live player muted.":"ärge jäädvustage monitooringuseadet uuesti töölauaheli kaudu. Nii võib ka „Ainult monitooring” heli vaatajateni jõuda. Hoidke platvormi otseülekandepleier vaigistatud.","encoder. Dedicated hardware handles video compression, reducing CPU use.":"kodeerija. Spetsiaalne riistvara tegeleb video tihendamisega, vähendades protsessori kasutamist.","for MP4 afterward. Current OBS also offers resilient Hybrid MP4/MOV.":"salvestise hiljem MP4-ks teisendamiseks. Uus OBS pakub ka katkestustele vastupidavat Hybrid MP4/MOV vormingut.","for a full-frame landscape overlay.":"kogu kaadrit katva rõhtsa ülekatte jaoks.","for a window or display.":"akna või ekraani jaoks.","in Scenes, name your layout, then press":"jaotises Stseenid andke oma paigutusele nimi ja vajutage seejärel","in Sources.":"jaotises Allikad.","is a layout. A":"on paigutus. Iga","is something inside it.":"on midagi selle sees.","lets you prepare a scene, then press":"võimaldab stseeni ette valmistada ja seejärel vajutada","macOS Screen Capture":"macOS Screen Capture","macOS audio/screen capture":"macOS-i heli/ekraani jäädvustamine","scene":"stseen","sends multiple qualities and needs a separate bandwidth budget.":"saadab mitu kvaliteedivarianti ja vajab eraldi ribalaiuse varu.","source":"allikas","to identify the bottleneck.":"kitsaskoha tuvastamiseks.","to reuse a source in another scene.":"allika taaskasutamiseks teises stseenis.","x264 → veryfast":"x264 → veryfast","−12 to −6 dBFS":"–12 kuni –6 dBFS"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/obs-studio-guide.html">
+<link rel="alternate" hreflang="et" href="https://socialstream.ninja/beta/et/docs/obs-studio-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="obs-page">
+    <a class="obs-skip" href="#obs-guide">Liigu juhendi juurde</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Peamine navigeerimine"><a href="../index.html">Avaleht</a><a href="features.html">Funktsioonid</a><a href="download.html">Laadi alla</a><a href="guides.html">Juhendid</a><a href="support.html">Abi</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Eesti"><span aria-hidden="true">🌐 </span><span lang="et">Eesti</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-studio-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-studio-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-studio-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-studio-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-studio-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-studio-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-studio-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-studio-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-studio-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-studio-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-studio-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/obs-studio-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/obs-studio-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/obs-studio-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/obs-studio-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/obs-studio-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/obs-studio-guide.html" lang="th" hreflang="th">ไทย</a><a class="site-language-link" href="obs-studio-guide.html" lang="et" hreflang="et" aria-current="true">Eesti</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Vaheta teemat"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Ava navigeerimismenüü" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="obs-hero">
+        <p class="obs-eyebrow"><a href="guides.html#guide-directory">JUHENDID</a> / OBS STUDIO</p>
+        <h1>Teie esimene OBS-i seadistus.</h1>
+        <p class="obs-lead">Ühendage kaamera, ekraan ja heli. Tehke testsalvestus ja seejärel tehke otseülekanne.</p>
+    </section>
+
+    <main id="obs-guide" class="obs-guide" tabindex="-1">
+        <div class="obs-jumps" role="navigation" aria-label="Selles juhendis">
+            <a href="#install">Alusta siit</a><a href="#scenes">Stseenid</a><a href="#encoders">Kodeerijad</a><a href="#platforms">Platvormi seaded</a><a href="#mixing">Heli</a><a href="#browser-sources">Ülekatted</a>
+        </div>
+
+        <section class="obs-step" id="install">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">01</span><h2>Laske OBS-il teha esimene seadistus</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Installige <a href="https://obsproject.com/download">OBS Studio</a> ja avage see.</li>
+                        <li>Valige <strong>Tööriistad → Automaatse seadistamise viisard</strong>.</li>
+                        <li>Valige voogesitus või salvestamine, järgige juhiseid ja rakendage sätteid.</li>
+                    </ol>
+                    <p class="obs-note">Lubage arvuti küsimise korral juurdepääs kaamerale, mikrofonile ja ekraani jäädvustamisele.</p>
+                    <p class="obs-small">Valimisel avanevad ekraanipildid täissuuruses. Sildid võivad olenevalt OBS-i versioonist veidi erineda.</p>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-auto-config.png"><img src="../../docs/images/guides/obs-studio-auto-config.png" width="1028" height="914" alt="OBS-i automaatse seadistamise viisard koos voogesituse ja salvestamise valikutega"></a>
+                    <figcaption>Valige, mida soovite teha. <a href="https://obsproject.com/kb/quick-start-guide">Ekraanipilt: OBS projekt</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="scenes">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">02</span><h2>Ehitage üks stseen</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <p>Üks <strong>stseen</strong> on paigutus. Iga <strong>allikas</strong> on midagi selle sees.</p>
+                    <p>Vajutage <strong>+</strong> jaotises Stseenid andke oma paigutusele nimi ja vajutage seejärel <strong>+</strong> jaotises Allikad.</p>
+                    <dl class="obs-facts">
+                        <div><dt>Kaamera / videohõivekaart</dt><dd>Videosalvestusseade</dd></div>
+                        <div><dt>Mäng Windowsis</dt><dd>Mängu jäädvustamine</dd></div>
+                        <div><dt>Rakendus / terve monitor</dt><dd>Akna/ekraani jäädvustamine</dd></div>
+                        <div><dt>Vestlus või märguanded</dt><dd>Brauser</dd></div>
+                    </dl>
+                    <p>Suuruse muutmiseks lohistage nurki. Loendi ülemised allikad katavad alumisi. Peitmiseks kasutage silmaikooni ja liigutamise takistamiseks lukku.</p>
+                    <details><summary>Stseeni vahetamine ja macOS</summary>
+                        <p>MacOS-is kasutage <strong>macOS Screen Capture</strong> akna või ekraani jaoks.</p>
+                        <p>Stseeni muudatused lähevad tavaliselt otse väljundisse. <strong>Stuudiorežiim</strong> võimaldab stseeni ette valmistada ja seejärel vajutada <strong>Üleminek</strong>. Jagatud allika ja heli muudatused võivad reaalajas väljundit siiski mõjutada.</p>
+                        <p>Valige <strong>Lisa olemasolev</strong> allika taaskasutamiseks teises stseenis.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-sources.png"><img src="../../docs/images/guides/obs-studio-sources.png" width="265" height="580" loading="lazy" alt="OBS-i allikamenüü, mis sisaldab Game Capture, Browser ja Video Capture Device"></a>
+                    <figcaption>Valige, mida jäädvustada. <a href="https://obsproject.com/kb/quick-start-guide">Ekraanipilt: OBS projekt</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="video">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">03</span><h2>Valige oma video suurus</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <p>Avatud <strong>Seaded → Video</strong>.</p>
+                    <dl class="obs-facts">
+                        <div><dt>Lõuend</dt><dd>Teie paigutuse suurus</dd></div>
+                        <div><dt>Väljund</dt><dd>Teie saadetud video</dd></div>
+                        <div><dt>30 kaadrit sekundis</dt><dd>Rääkimine / kergem töökoormus</dd></div>
+                        <div><dt>60 kaadrit sekundis</dt><dd>Sujuv kiire liikumine</dd></div>
+                    </dl>
+                    <p class="obs-note">Lihtne algus: <strong>1920 × 1080 lõuend</strong>, <strong>1280 × 720 väljund</strong>, <strong>30 kaadrit sekundis</strong>.</p>
+                    <p class="obs-small">Portreevideo jaoks kasutage 1080 × 1920 lõuendit ja paigutage allikad ümber, et need sobiksid.</p>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-video.png"><img src="../../docs/images/guides/obs-studio-video.png" width="983" height="758" loading="lazy" alt="OBS-i videoseaded põhilõuendi eraldusvõime, väljundi skaleeritud eraldusvõime ja FPS-i väljadega"></a>
+                    <figcaption>Muutke väljund väiksema suurusega voogesituseks. <a href="https://obsproject.com/kb/obs-studio-overview">Ekraanipilt: OBS projekt</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="encoders">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">04</span><h2>Andke oma protsessorile puhkust</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <p>sisse <strong>Seaded → Väljund</strong>, valige riistvara <strong>H.264</strong> kodeerija. Spetsiaalne riistvara tegeleb video tihendamisega, vähendades protsessori kasutamist.</p>
+                    <dl class="obs-facts">
+                        <div><dt>NVIDIA</dt><dd>NVENC H.264</dd></div>
+                        <div><dt>AMD</dt><dd>AMD HW H.264 / AVC</dd></div>
+                        <div><dt>Intel</dt><dd>QuickSync / QSV H.264</dd></div>
+                        <div><dt>Apple Silicon</dt><dd>Apple VT H264 Hardware</dd></div>
+                    </dl>
+                    <p>Riistvaravalikut pole? Kasutage <strong>x264 → veryfast</strong> ja alustage eraldusvõimega 720p30.</p>
+                    <details><summary>Kodeerija puudub või arvuti on ülekoormatud?</summary>
+                        <p>Kontrollige riistvaratuge ja värskendage graafikadraiverit. OBS vajab stseenide joonistamiseks endiselt GPU jõudlust; kui see jääb hätta, piirake mängu kaadrisagedust või vähendage väljundi kaadrisagedust.</p>
+                        <p>Kui teie Maci riistvarakooder ei suuda CBR-i pakkuda, kasutage x264. <a href="https://obsproject.com/kb/hardware-encoding">Kodeerija ühilduvus</a>.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-output.png"><img src="../../docs/images/guides/obs-studio-output.png" width="977" height="759" loading="lazy" alt="Riistvaralise NVENC H.264 kodeerijaga valitud OBS-i väljundseaded"></a>
+                    <figcaption>Valige siit oma kodeerija; kasutage allolevaid platvormi bitikiirusi. <a href="https://obsproject.com/kb/standard-recording-output-guide">Ekraanipilt: OBS projekt</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="platforms">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">05</span><h2>Ühendage oma platvorm</h2></div>
+            <p><strong>Seaded → Voog:</strong> ühendage oma konto või kleepige selle armatuurlaualt serveri URL ja privaatne voovõti.</p>
+            <p>Käsitsi väljundi sätete jaoks valige <strong>Väljund → Täpsem → Voogesitus</strong>: <strong>CBR</strong>, <strong>2-sekundilised võtmekaadrid</strong>, ja <strong>AAC stereo</strong>. Avage allpool oma platvorm.</p>
+            <div class="obs-platforms">
+                <details><summary>Twitch<span>Standard H.264</span></summary>
+                    <table><caption>Video bitikiirus · kbps</caption><thead><tr><th scope="col">Video</th><th scope="col">Bitikiirus</th></tr></thead><tbody>
+                        <tr><td>720p30</td><td>3,000</td></tr><tr><td>720p60 / 1080p30</td><td>4,500</td></tr><tr><td>1080p60</td><td>6,000</td></tr>
+                    </tbody></table>
+                    <p>Heli: kuni 160 kbps. <a href="https://help.twitch.tv/s/article/broadcasting-guidelines?language=en_US">Twitchi seaded</a>.</p>
+                    <p><a href="https://help.twitch.tv/s/article/enhanced-broadcasting?language=en_US">Enhanced Broadcasting</a> saadab mitu kvaliteedivarianti ja vajab eraldi ribalaiuse varu.</p>
+                </details>
+                <details><summary>YouTube<span>H.264 soovituslikud väärtused</span></summary>
+                    <table><caption>Video bitikiirus · kbps</caption><thead><tr><th scope="col">Video</th><th scope="col">Bitikiirus</th></tr></thead><tbody>
+                        <tr><td>720p30/60</td><td>8,000</td></tr><tr><td>1080p30</td><td>14,000</td></tr><tr><td>1080p60</td><td>17,000</td></tr>
+                    </tbody></table>
+                    <p>Heli: 128 kbps, 44,1 kHz stereo. Need on soovitused, mitte miinimumid. <a href="https://support.google.com/youtube/answer/2853702?hl=en">YouTube'i seaded</a>.</p>
+                    <p>Toetatud AV1 / HEVC kodeeringuga on vastavad sihtmärgid 6 000 / 10 000 / 12 000 kbps.</p>
+                </details>
+                <details><summary>Kick<span>H.264 · Nõutav CBR</span></summary>
+                    <table><caption>Video bitikiirus · kbps</caption><thead><tr><th scope="col">Video</th><th scope="col">Bitikiirus</th></tr></thead><tbody>
+                        <tr><td>Proovige 720p30</td><td>3,000–4,000</td></tr><tr><td>Kuni 1080p60</td><td>8000 max.</td></tr>
+                    </tbody></table>
+                    <p>Vahemiku alumine ots sobib esimeseks katseks. Proovige heli bitikiirust 160 kbit/s; kasutage stereoheli kuni 48 kHz sagedusega. <a href="https://help.kick.com/en/articles/7066931-how-to-stream-on-kick-com">Kick seaded</a>.</p>
+                </details>
+            </div>
+            <p class="obs-note"><strong>Jätke üleslaadimiskiirusele varu.</strong> 6000 kbit/s vajab umbes 6 Mbit/s, millele lisanduvad heli ja protokolli lisakulu. Kui ühendusest ei piisa, vähendage bitikiirust või eraldusvõimet.</p>
+            <p class="obs-small">2026. aasta oktoobri juhis. Järgige oma platvormi praegusi nõudeid. Facebooki või TikToki puhul veenduge esmalt, et teie konto pakub välise kodeerija ühendust.</p>
+        </section>
+
+        <section class="obs-step" id="mixing">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">06</span><h2>Muutke oma hääl kergesti kuuldavaks</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Valige oma mikrofon jaotises <strong>Seaded → Heli</strong>.</li>
+                        <li>Rääkige tavaliselt. Püüdke hoida tipptaset vahemikus <strong>–12 kuni –6 dBFS</strong>; vältige 0-ni jõudmist.</li>
+                        <li>Vähendage mängu, muusika ja märguannete helitugevust, kuni kõne on selge.</li>
+                    </ol>
+                    <p><strong>Jäädvustage iga heli üks kord.</strong> Kasutage töölaua heli kogu väljundseadme jaoks või eraldi rakenduse jäädvustamist. Mõlema jäädvustamine võib heli kahekordistada.</p>
+                    <details><summary>Rakenduste heli-, macOS-i ja mikrofoni filtrid</summary>
+                        <p>Windows: kasutage <a href="https://obsproject.com/kb/application-audio-capture-guide">Rakenduse helihõive</a>. macOS 13 või uuema puhul kasutage OBS-i <a href="https://obsproject.com/kb/macos-desktop-audio-capture-guide">macOS-i heli/ekraani jäädvustamine</a>.</p>
+                        <p>Mikrofon → <strong>Filtrid</strong>: proovige kerget mürasummutust, seejärel kompressorit ja piirajat. Lisage ükshaaval ja kuulake.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-mixer.png"><img src="../../docs/images/guides/obs-studio-mixer.png" width="265" height="378" loading="lazy" alt="OBS-i helimikser eraldi tasemenäidikute, helitugevuse liugurite ja vaigistusnuppudega"></a>
+                    <figcaption>Näidikud näitavad signaalitaset; liugurid muudavad miksi. <a href="https://obsproject.com/kb/quick-start-guide">Ekraanipilt: OBS projekt</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="monitoring">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">07</span><h2>Valige, mida kuulete</h2></div>
+            <p>Valige kõrvaklapid <strong>Seaded → Heli → Täpsem → Monitooringuseade</strong>. Seejärel avage mikseri <strong>Täpsemad heliomadused</strong>.</p>
+            <div class="obs-routing">
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 21h8m-4-5v5"/></svg>
+                    <h3>Monitooring väljas</h3><p><strong>Kõrvaklapid</strong> Ei<br><strong>Voog</strong> Jah</p><p>Tavaliselt sobib teie mikrofoni ja juba kuuldavate mängude jaoks.</p>
+                </div>
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 14V11a8 8 0 0 1 16 0v3"/><rect x="3" y="12" width="4" height="9" rx="2"/><rect x="17" y="12" width="4" height="9" rx="2"/></svg>
+                    <h3>Ainult monitooring (väljund vaigistatud)</h3><p><strong>Kõrvaklapid</strong> Jah<br><strong>Voog</strong> Ei</p><p>Kuulake ilma allikat otse väljundisse saatmata.</p>
+                </div>
+                <div class="obs-route">
+                    <svg class="obs-route-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M11 4 5 9H2v6h3l6 5Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg>
+                    <h3>Monitor ja väljund</h3><p><strong>Kõrvaklapid</strong> Jah<br><strong>Voog</strong> Jah</p><p>Kasulik märguannete või TTS-i puhul, mida soovite ka ise kuulda.</p>
+                </div>
+            </div>
+            <p class="obs-small">Eeldusel, et allikas pole vaigistatud ja kuulub väljundrajale. „Monitor Off” ei vaigista otseülekannet.</p>
+            <p class="obs-note"><strong>Väldi kaja:</strong> ärge jäädvustage monitooringuseadet uuesti töölauaheli kaudu. Nii võib ka „Ainult monitooring” heli vaatajateni jõuda. Hoidke platvormi otseülekandepleier vaigistatud.</p>
+        </section>
+
+        <section class="obs-step" id="browser-sources">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">08</span><h2>Lisage vestluse või märguande ülekate</h2></div>
+            <div class="obs-split">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Kopeerige ülekatte URL teenusest Social Stream Ninja.</li>
+                        <li>Valige <strong>Allikad → + → Brauser</strong> ja kleepige see. Hoidke oma seansi ja parooli valikud alles.</li>
+                        <li>Määrake ülekatte suurus; kasutage <strong>1920 × 1080</strong> kogu kaadrit katva rõhtsa ülekatte jaoks.</li>
+                        <li>TTS-i või märguannete jaoks lubage <strong>Heli juhtimine OBS-i kaudu</strong>.</li>
+                    </ol>
+                    <p>Paigutage see mängu või kaamera kohale. Saatke testsõnum; esiletõstetud sõnumi ülekatte kasutamisel valige sõnum SSN-i dokist.</p>
+                    <details><summary>Tühi ülekate või korduv heli?</summary>
+                        <p>Kontrollige, kas seanss ühtib teie vestlusallikaga. Värskendage brauseriallikat. Jätke TTS-i esitamiseks ainult üks koopia.</p>
+                        <p>Pideva vestluse jaoks jätke automaatne väljalülitamine ja stseeni aktiveerimise värskendamine esialgu välja. <a href="obs-quick-start.html">SSN-i ülekatte seadistamine</a> · <a href="tts-setup-guide.html">TTS-i seadistamine</a>.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-browser-source-properties.png"><img src="../../docs/images/guides/obs-browser-source-properties.png" width="1468" height="1232" loading="lazy" alt="Brauseriallika atribuudid koos URL-i, laiuse, kõrguse ja heli juhtimisega OBS-i kaudu"></a>
+                    <figcaption>Asendage see vaike-URL ja suurus oma ülekatte seadetega.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="recording">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">09</span><h2>Salvestage minut. Seejärel minge otseülekandesse.</h2></div>
+            <div class="obs-split obs-split-small">
+                <div class="obs-copy">
+                    <ol>
+                        <li>Valige salvestuskaust <strong>Seaded → Väljund</strong>.</li>
+                        <li>Vajutage <strong>Alustage salvestamist</strong>. Rääkige, esitage heli ja vahetage stseene.</li>
+                        <li>Peatage salvestus ja vaadake faili. Kontrollige helitugevust, kadreeringut ning pildi ja heli sünkroonsust.</li>
+                        <li>Määrake platvormil ülekande pealkiri ja nähtavus ning seejärel <strong>Alusta voogesitust</strong>. Kontrollige selle eelvaadet ja voo seisundit; mõned platvormid nõuavad ka <strong>Tehke otseülekanne</strong>.</li>
+                    </ol>
+                    <p><strong>Nupp Alusta voogesitust võib käivitada avaliku otseülekande.</strong> Võimaluse korral kasutage privaatset testi. Kui olete lõpetanud, peatage voogesitus ja kinnitage, et platvormi sündmus on lõppenud.</p>
+                    <details><summary>Salvestusvorming ja eraldi helirajad</summary>
+                        <p>MKV talub katkestatud salvestust. Kasutage <strong>Fail → Salvestiste ümberpakkimine</strong> salvestise hiljem MP4-ks teisendamiseks. Uus OBS pakub ka katkestustele vastupidavat Hybrid MP4/MOV vormingut.</p>
+                        <p>Heliradade eraldi töötlemiseks jätke täielik miks rajale 1, määrake mikrofon ja mäng lisaheliradadele jaotises Advanced Audio Properties ning lubage need salvestamise seadetes.</p>
+                    </details>
+                </div>
+                <figure class="obs-shot obs-compact">
+                    <a class="obs-image-link" href="../../docs/images/guides/obs-studio-controls.png"><img src="../../docs/images/guides/obs-studio-controls.png" width="265" height="262" loading="lazy" alt="OBS-i juhtnupud koos nuppudega Alusta voogesitust, Alusta salvestamist, stuudiorežiimi ja sätteid"></a>
+                    <figcaption>Salvestamine salvestab faili; voogesitus saadab teie platvormile. <a href="https://obsproject.com/kb/quick-start-guide">Ekraanipilt: OBS projekt</a>.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="obs-step" id="troubleshooting">
+            <div class="obs-heading"><span class="obs-number" aria-hidden="true">10</span><h2>Kui midagi tundub valesti</h2></div>
+            <p>Avatud <strong>Vaade → Statistika</strong> kitsaskoha tuvastamiseks.</p>
+            <div class="obs-fixes">
+                <p><strong>Võrgus kaotatud kaadrid</strong><br>Vähendage bitikiirust; proovige juhtmega Etherneti.</p>
+                <p><strong>Renderdusviivitus</strong><br>Piirake mängu kaadrisagedust; lihtsustage stseeni.</p>
+                <p><strong>Kodeerimise viivitus</strong><br>Kasutage riistvaralist kodeerimist või vähendage väljundi kaadrisagedust.</p>
+                <p><strong>Vaikne väljund</strong><br>Kontrollige vaigistust, jälgimisrežiimi ja heliriba.</p>
+            </div>
+            <p class="obs-small"><a href="https://obsproject.com/kb/encoding-performance-troubleshooting">OBS-i jõudluse abi</a> · <a href="obs-troubleshooting.html">SSN-i ülekatte abi</a> · <a href="guides.html#guide-directory">Kõik juhendid</a></p>
+        </section>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja · <a href="guides.html">Juhendid</a> · <a href="support.html">Abi</a></p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

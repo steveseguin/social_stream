@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="et" data-site-root="../../" data-site-language="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/et/docs/local-tts.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="et_EE">
+    <meta property="og:url" content="https://socialstream.ninja/et/docs/local-tts.html">
+    <meta property="og:title" content="Social Stream Ninja – kohaliku tehisintellekti kõnesünteesi juhend">
+    <meta property="og:description" content="Seadistage Social Stream Ninja jaoks privaatne kohalik tekst kõneks, sealhulgas sisseehitatud hääled, isehostitavad serverid, hääle kloonimine, OBS-heli ja tõrkeotsing.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/et/docs/local-tts.html">
+    <meta name="twitter:title" content="Social Stream Ninja – kohaliku tehisintellekti kõnesünteesi juhend">
+    <meta name="twitter:description" content="Seadistage Social Stream Ninja jaoks privaatne kohalik tekst kõneks, sealhulgas sisseehitatud hääled, isehostitavad serverid, hääle kloonimine, OBS-heli ja tõrkeotsing.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream Ninja – kohaliku tehisintellekti kõnesünteesi juhend</title>
+    <meta name="description" content="Seadistage Social Stream Ninja jaoks privaatne kohalik tekst kõneks, sealhulgas sisseehitatud hääled, isehostitavad serverid, hääle kloonimine, OBS-heli ja tõrkeotsing.">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="stylesheet" href="../../docs/css/site-shell.css">
+    <script src="../../docs/js/site-shell.js"></script>
+    <link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="et">
+<script id="ssn-site-language" type="application/json">{"language":"et","page":"docs/local-tts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/chatbot-knowledge-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-overlays.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/game-overlay-troubleshooting.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/meld-guide.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Lülitu heledale teemale","Switch to dark theme":"Lülitu tumedale teemale","Light mode":"Hele teema","Dark mode":"Tume teema","Open navigation menu":"Ava navigeerimismenüü","Close navigation menu":"Sulge navigeerimismenüü","Copy this document as Markdown to the clipboard":"Kopeeri dokument Markdownina lõikelauale","Copy Markdown":"Kopeeri Markdown","Copying…":"Kopeerimine…","Markdown copied":"Markdown kopeeritud","Copy failed":"Kopeerimine ebaõnnestus","Copy comprehensive Markdown for an AI assistant":"Kopeeri kogu sisu Markdownina tehisintellekti abilisele","Copy this documentation page as Markdown for an AI assistant":"Kopeeri see juhend Markdownina tehisintellekti abilisele"},"strings":{"(0.6B / 1.7B)":"(0.6B / 1.7B)","(Kokoro-FastAPI, or your server's port). From the OBS PC, open":"(Kokoro-FastAPI või teie serveri port). Avage OBS-arvutist","(Piper)":"(Piper)","(Piper): real CPU speech, direct and through the bridge.":"(Piper): tegelik kõnesüntees protsessoril, otse ja silla kaudu.","(recommended)":"(soovitatav)",") and refresh. While testing, also remove":") ja värskenda. Katsetamise ajal eemaldage ka",", SSN sends a JSON POST:":", saadab SSN JSON-vormingus POST-päringu:",", add it under the existing":", lisage see olemasoleva alla",", and the first":", ja esimene",", and the server uses Piper instead.":", ning server kasutab selle asemel Piperit.",", direct and through the bridge.":", otse ja silla kaudu.",", enter your server's address, like":", sisestage oma serveri aadress, näiteks",", even if the voice server is on another PC.":", isegi kui kõneserver asub teises arvutis.",", like":", nagu",", local AI voices make their own audio, so OBS can capture them.":", loovad kohalikud tehisintellekti hääled ise heli, mida OBS saab jäädvustada.",", nested":", pesastatud",", or any browser-playable type.":", või mis tahes brauseris esitatav tüüp.",", or one from its web page. openedai-speech:":", või üks selle veebilehelt. openedai-speech:",", then use:":", seejärel kasutage:",", with that PC's local IP":", selle arvuti kohaliku IP-ga",". All options:":". Kõik valikud:",". Docker needs GPU access. The model downloads on first use.":". Docker vajab GPU-juurdepääsu. Mudel laaditakse alla esimesel kasutamisel.",". If that fails, OBS can't reach it either. Check the server's firewall.":". Kui see ebaõnnestub, ei saa ka OBS seda kätte. Kontrollige serveri tulemüüri.",". Inside the":". Jaotises",". Leave it running.":". Jätke see tööle.",". Most people stop here.":". Enamikule sellest piisab.",". OpenAI names like":". OpenAI nimed nagu",". Plan on about 4 GB of GPU memory. CPU works but is slow.":". Planeerige umbes 4 GB GPU-mälu. CPU töötab, kuid on aeglane.",". Prefer clicking? Use the":". Kas eelistate klõpsamist? Kasutage",". Project is archived.":". Projekt on arhiveeritud.",". Reading options like":". Ettelugemisvalikud, näiteks",". Some servers care about upper/lower case.":". Mõned serverid eristavad suur- ja väiketähti.",". Still blocked? Run the bridge on the OBS PC.":". Kas endiselt blokeeritud? Käivitage sild OBS-arvutis.",". TTS now shows in the OBS mixer.":". TTS kuvatakse nüüd OBS-mikseris.",". That's the page that makes the sound.":". See on leht, mis teeb häält.",". The bridge translates for them.":". Sild teisendab nende päringud sobivaks.",". The hosted beta dock page is more likely to be blocked; the bridge or a local app window is easier.":". Veebis majutatud beetadoki leht blokeeritakse tõenäolisemalt; lihtsam on kasutada silda või kohalikku rakenduseakent.",". To keep TTS separate from other sounds, send the app to a virtual cable:":". TTS-i muudest helidest eraldamiseks suunake rakenduse heli virtuaalkaablisse:",". Watch the OBS mixer meter during a test. Make sure you set":". Jälgige katse ajal OBS-i mikseri tasemenäidikut. Määrake kindlasti",". You should see a page to test voices (67+ available).":". Peaksite nägema häälte testimise lehte (saadaval 67+).","24 GB GPU or remote host":"24 GB GPU või kaugserver","3-second clip":"3-sekundiline klipp","5 seconds; better with 1 minute":"5 sekundit; parem 1 minutiga","6 GB+ NVIDIA GPU, 16 GB RAM":"6 GB+ NVIDIA GPU, 16 GB muutmälu",": need a wrapper first (CLI, Gradio or library only).":": vajavad esmalt ühilduvuskihti (saadaval ainult CLI, Gradio või teegina).",": real CPU speech with":": tegelik kõnesüntees protsessoril, kasutades",": request format tested, direct and through the bridge.":": päringu vorming testitud, otse ja silla kaudu.",": through bridge modes only.":": ainult sillarežiimide kaudu.","; System TTS may need desktop audio or a virtual cable.":"; Süsteemi TTS võib vajada töölaua heli või virtuaalset kaablit.","\u003c1 GB":"\u003c1 GB","A cloned voice":"Kloonitud hääl","A server gives you more voices, voice cloning, or one voice you reuse across tools. SSN talks to it like an":"Server pakub rohkem hääli, häälte kloonimist või üht häält, mida saate eri tööriistades kasutada. SSN suhtleb sellega nagu","A small helper from SSN. It takes SSN's request, passes it to your voice server, and hands the audio back in a way browsers accept. Needs Node.js.":"Väike SSN-i abitööriist. See võtab vastu SSN-i päringu, edastab selle teie kõneserverile ja tagastab heli brauseritele sobival viisil. Vajab Node.js-i.","A wrapper, or bridge":"Ühilduvuskiht ehk sild","API key":"API võti","Add":"Lisa","Add a":"Lisage a","Add its virtual environment's":"Lisage selle virtuaalkeskkonna","Add that link to OBS as a":"Lisage see link OBS-i allikana","All Guides":"Kõik juhendid","Also accepted:":"Samuti aktsepteeritud:","Also check the firewall allows the port, and that Docker published it (":"Kontrollige ka, kas tulemüür lubab porti ja kas Docker on selle avaldanud (","Any PC":"Iga arvuti","App test works, OBS is silent":"Rakenduse test töötab, OBS vaikib","App windows are less strict about browser permissions (CORS) than Chrome. The bridge is still the safest choice for servers that refuse browser requests. For built-in Kokoro, the app can use its own":"Rakenduseakendes on brauseri juurdepääsupiirangud (CORS) leebemad kui Chrome’is. Brauseripäringutest keelduvate serverite jaoks on sild siiski kõige kindlam valik. Sisseehitatud Kokoro puhul saab rakendus kasutada oma","Archived project.":"Arhiveeritud projekt.","Audio Input Capture":"Helisisendi jäädvustamine","Audio file":"Helifail","Best.":"Parim.","Blocked by the browser?":"Kas brauser on blokeerinud?","Blocked by the browser? Run the":"Kas brauser on blokeerinud? Käivitage","Bridge":"Sild","Browser Source":"Brauseri allikas","Built-in Kitten":"Sisseehitatud Kitten","Built-in Kokoro":"Sisseehitatud Kokoro","Built-in Kokoro and Kokoro-FastAPI don't clone voices.":"Sisseehitatud Kokoro ja Kokoro-FastAPI ei klooni hääli.","Built-in Piper":"Sisseehitatud Piper","Built-in eSpeak":"Sisseehitatud eSpeak","Built-in voices":"Sisseehitatud hääled","Built-in voices (nothing to install)":"Sisseehitatud hääled (ei ole vaja installida)","CPU for testing, slow":"Protsessor testimiseks, aeglane","CPU on some builds, slow":"Mõne versiooni puhul CPU, aeglane","CPU only":"Ainult CPU","CPU, 4–8 GB RAM":"Protsessor, 4–8 GB muutmälu","CPU, 8 GB RAM":"Protsessor, 8 GB muutmälu","Change":"Muutke","Chatterbox":"Chatterbox","Chatterbox-TTS-Server":"Chatterbox-TTS-Server","Check Docker and the container are running. On the server PC, open":"Kontrollige, et Docker ja konteiner töötaksid. Avage serveriarvutis","Checked with both":"Kontrollitud mõlemaga","Checks":"Kontrollid","Click":"Klõpsake","Clip plus its transcript":"Klipp ja selle ärakiri","Clones from":"Kloonimise lähtematerjal","Cloning isn't an SSN setting. It's a feature of some voice servers. SSN sends the chat text; the server picks the cloned voice.":"Kloonimine ei ole SSN-i seade. See on mõne kõneserveri funktsioon. SSN saadab vestlusteksti; server valib kloonitud hääle.","Comfortable":"Mugav","Commands & API":"Käsud ja API","Compare providers and hear samples":"Võrrelge teenusepakkujaid ja kuulake näidiseid","Computer load":"Arvuti koormus","Connect a server":"Ühendage server","Connect your own TTS server":"Ühendage oma TTS-server","Control audio via OBS":"Heli juhtimine OBS-i kaudu","Copy the link into OBS and send a test chat.":"Kopeerige link OBS-i ja saatke testvestlussõnum.","Coqui Public Model License":"Coqui Public Model License","Cost":"Maksumus","Custom / Local API Endpoint":"Kohandatud / kohaliku API lõpp-punkt","Custom / Local TTS Endpoint":"Kohandatud / Kohalik TTS-i lõpp-punkt","Desktop Audio":"Töölauaheli","Diagram showing OBS calling the local bridge, and the bridge calling the TTS server":"Skeem: OBS pöördub kohaliku silla poole ja sild pöördub TTS-serveri poole","Diagram showing that localhost means the same computer, while another computer needs a LAN IP address":"Diagramm, mis näitab, et localhost tähendab sama arvutit, samas kui teine arvuti vajab LAN IP-aadressi","Direct or bridge. GPU runs smoother than CPU. Setup varies by fork.":"Otse või silla kaudu. GPU-ga töötab sujuvamalt kui CPU-ga. Seadistamine sõltub projekti harust.","Direct,":"Otse,","Disk":"Ketas","Do I need this?":"Kas mul on seda vaja?","Do this":"Tehke seda","Docker":"Docker","Docker Desktop":"Docker Desktop","Docker image not found":"Dockeri tõmmist ei leitud","Don't mix up the app test and OBS.":"Ärge ajage segamini rakenduse testi ja OBS-i.","Download":"Laadi alla","ElevenLabs":"ElevenLabs","Example":"Näide","Example links:":"Näidislingid:","Excellent":"Suurepärane","F5-TTS":"F5-TTS","F5-TTS official":"F5-TTS-i ametlik projekt","F5-TTS server mode":"F5-TTS-serveri režiim","F5-TTS_server":"F5-TTS_server","Features":"Funktsioonid","First use is slow.":"Esimene kasutamine on aeglane.","Fish Audio in OBS":"Fish Audio OBS-is","Fish Audio setup":"Fish Audio seadistamine","Fits 6 GB GPU?":"Kas piisab 6 GB GPU-st?","Fix problems":"Probleemide lahendamine","For server builders":"Serveriehitajatele","Formats:":"Vormingud:","Free":"Tasuta","Free voices with nothing to install":"Tasuta hääled, mida pole vaja installida","GPT-SoVITS":"GPT-SoVITS","GPT-SoVITS / F5-TTS / Qwen3-TTS":"GPT-SoVITS / F5-TTS / Qwen3-TTS","GPT-SoVITS mode":"GPT-SoVITS režiim","GPT-SoVITS uses its own":"GPT-SoVITS kasutab oma","GPU":"GPU","Get the audio into OBS":"Viige heli OBS-i","Get the server and start it:":"Hankige server ja käivitage see:","GitHub":"GitHub","Good":"Hea","Guides":"Juhendid","Hire":"Laenutus","Home":"Avaleht","How SSN talks to a custom server. You only need this if you're building or debugging one.":"Kuidas SSN suhtleb kohandatud serveriga. Teil on seda vaja ainult siis, kui ehitate või silute seda.","How to connect":"Kuidas ühendada","I want":"Ma tahan","I want…":"Ma tahan…","If OBS is on one PC and the voice server on another,":"Kui OBS on ühes arvutis ja kõneserver teises,","Image tags change. Check the current tag on":"Tõmmiste sildid muutuvad. Vaadake praegust silti siit:","In":"sisse","In SSN, open the TTS provider list and pick":"Avage SSN-is TTS-i pakkujate loend ja valige","In its properties, turn on":"Selle omadustes lülitage sisse","In the SSN folder, run":"SSN-kaustas käivitage","Inspiration":"Inspiratsioon","Its":"Selle","JSON with an audio URL":"JSON heli URL-iga","JSON with base64 audio":"Base64 heliga JSON","Kitten":"Kitten","Kokoro":"Kokoro","Kokoro 82M":"Kokoro 82M","Kokoro and Piper download their models first (about 50–200 MB). Later loads reuse them, but still take a moment to start. OBS keeps its own copy, separate from Chrome.":"Kokoro ja Piper laadivad esmalt alla oma mudelid (umbes 50–200 MB). Hilisemad laadimised kasutavad neid uuesti, kuid käivitamiseks kulub siiski veidi aega. OBS hoiab oma koopiat Chrome'ist eraldi.","Kokoro-FastAPI":"Kokoro-FastAPI","Kokoro-FastAPI:":"Kokoro-FastAPI:","Laptop CPU, 8 GB RAM":"Sülearvuti protsessor, 8 GB muutmälu","Leave the API key blank.":"Jätke API võti tühjaks.","Likely (0.6B Base)":"Tõenäoliselt (0.6B Base)","Likely with Turbo or small chunks":"Tõenäoliselt Turboga või väikeste tükkidega","Likely with fp16 / light install":"Tõenäoliselt fp16 / vähendatud paigaldusega","Link settings for your own server":"Teie enda serveri lingiseaded","Link value":"Lingi väärtus","Local AI TTS Guide":"Kohalik AI TTS-juhend","Low-end CPU, 4 GB RAM":"Nõrgem protsessor, 4 GB muutmälu","Low. CPU only.":"Väike. Ainult CPU.","Main navigation":"Peamine navigeerimine","Make a clean reference clip of a voice you have permission to use. Mono, 22050 Hz, 6–30 seconds:":"Tehke puhas näidisklipp häälest, mida teil on luba kasutada. Mono, 22050 Hz, 6–30 sekundit:","Maybe":"Võib-olla","Medium. Faster with a GPU.":"Keskmine. GPU-ga kiirem.","Minimal. CPU only.":"Minimaalne. Ainult CPU.","Minimum":"Minimaalne","MisoTTS 8B":"MisoTTS 8B","Model":"Mudel","Model name. Default":"Mudeli nimi. Vaikimisi","Modern CPU, 4–8 GB RAM":"Moodne protsessor, 4–8 GB muutmälu","Modern CPU, 8 GB RAM":"Moodne protsessor, 8 GB muutmälu","More desktop app details":"Rohkem teavet töölauarakenduse kohta","NVIDIA GPU (faster):":"NVIDIA GPU (kiirem):","NVIDIA GPU ~4 GB, 8–16 GB RAM":"NVIDIA GPU ~4 GB, 8–16 GB muutmälu","Needs an OpenAI-compatible wrapper.":"Vajab OpenAI-ga ühilduvat liidest.","Needs audio routing":"Vajab heli suunamist","Needs the full server, not":"Vajab täisserverit, mitte","No":"Ei","No streaming yet.":"Voogedastust veel ei toetata.","No; 24 GB recommended":"Ei; Soovitatav 24 GB","None":"Puudub","Not at 6 GB":"Mitte 6 GB juures","Notes":"Märkmed","OBS Browser Source (recommended)":"OBS-i brauseriallikas (soovitatav)","OBS and the server on the same PC":"OBS ja server samas arvutis","OBS audio":"OBS-heli","OBS must reach the server itself. Server on another PC? Replace":"OBS peab ise serveriga ühenduse saama. Kas server asub teises arvutis? Asendage","OBS needs its own working address. The app test doesn't prove OBS can reach the server.":"OBS vajab aadressi, mis töötab OBS-i arvutist. Rakenduse õnnestunud test ei tõenda, et OBS serverini jõuab.","OBS on a different computer?":"OBS teises arvutis?","OK":"OK","On macOS or Linux, use":"Kasutage macOS-is või Linuxis","On this page":"Sellel lehel","Only clone voices you own or have permission to use.":"Kloonige ainult hääli, mis teile kuuluvad või teil on luba kasutada.","Only if wrapped":"Ainult ühilduvuskihiga","Only the first letter or words are read":"Loetakse ainult esimest tähte või sõnu","Open":"Avatud","Open a terminal (Command Prompt, PowerShell or Terminal) and run one of these:":"Avage terminal (käsuviip, PowerShell või terminal) ja käivitage üks järgmistest:","Open navigation menu":"Ava navigeerimismenüü","OpenAI-compatible":"OpenAI-ga ühilduv","Option":"Valik","Option A: Light Piper server (CPU)":"Valik A: kerge Piper-server (CPU)","Option B: XTTS-v2 voice cloning (GPU)":"Valik B: XTTS-v2 hääle kloonimine (GPU)","Optional":"Valikuline","Optional NVIDIA GPU, 8–16 GB RAM":"Valikuline NVIDIA GPU, 8–16 GB muutmälu","Overlay Gallery":"Ülekattegalerii","Paid cloud voices":"Tasulised pilvehääled","Paid tiers":"Tasulised tasemed","Pick a voice your server knows:":"Valige hääl, mida teie server tunneb:","Piper":"Piper","Plays, but OBS doesn't capture it":"Heli mängib, kuid OBS ei jäädvusta seda","Point SSN at the bridge:":"Suunake SSN sillale:","Port":"Port","Pressing Test in the app tests from the app. With a link in OBS, OBS must reach the server and play the audio.":"Rakenduse nupuga Test katsetatakse ühendust rakendusest. Kui link on OBS-is, peab OBS serveriga ühenduse saama ja heli esitama.","Private":"Privaatne","Problem":"Probleem","Prompt audio":"Näidisheli","Quality":"Kvaliteet","Qwen3-TTS":"Qwen3-TTS","Raw PCM":"Töötlemata PCM","Read the":"Lugege","Record a clean clip of one speaker, usually 3–30 seconds, with little background noise.":"Salvestage ühe kõneleja puhas, tavaliselt 3–30 sekundi pikkune klipp vähese taustamüraga.","Reference clip":"Võrdlusklipp","Remote hosting only. No local REST endpoint in the repo.":"Ainult kaughostimine. Repos pole kohalikku REST-i lõpp-punkti.","Remove":"Eemalda","Response":"Vastus","Robotic":"Robotlik","Rough starting points, not promises. Model size, text length and other apps all change memory use.":"Ligikaudsed lähtekohad, mitte lubadused. Mälukasutust mõjutavad mudeli suurus, teksti pikkus ja muud rakendused.","Run":"Käivitage","Run chat voices on your own computer. Most streamers only need the built-in voices.":"Käivitage vestlushääli oma arvutis. Enamik striimijaid vajab ainult sisseehitatud hääli.","Running it from source on Windows (HTTP 500 errors)":"Selle käitamine lähtekoodist Windowsis (HTTP 500 vead)","SSN app test works, OBS is silent":"SSN-i rakenduse test töötab, OBS vaikib","SSN desktop app":"SSN-i töölauarakendus","SSN sends chat text with":"SSN saadab vestlusteksti koos","SSN waits for the whole response, then plays it. Keep chat messages short.":"SSN ootab kogu vastuse ja esitab selle siis. Hoidke vestlussõnumid lühikesed.","Screenshot-style checklist for local TTS troubleshooting":"Ekraanipildi stiilis kontroll-loend kohaliku TTS-i tõrkeotsinguks","Screenshot-style map of the local TTS fields in Social Stream Ninja":"Social Stream Ninja kohalike TTS-väljade ekraanipildi stiilis kaart","See":"Vt","See the":"Vt","Send a short test chat, like":"Saatke lühike testvestlussõnum, näiteks","Send it as a WAV file or base64 WAV.":"Saada see WAV-failina või base64 WAV-ina.","Server":"Server","Server not responding":"Server ei reageeri","Server on another PC at home":"Server kodus teises arvutis","Server on another PC? Use its local IP, like":"Server teises arvutis? Kasutage selle kohalikku IP-d, näiteks","Set it up in 4 steps":"Seadistage see neljas etapis","Set up XTTS-v2 in 4 steps":"Seadistage XTTS-v2 neljas etapis","Set up private local text-to-speech for Social Stream Ninja, including built-in voices, self-hosted servers, voice cloning, OBS audio, and troubleshooting.":"Seadistage Social Stream Ninja jaoks privaatne kohalik tekst kõneks, sealhulgas sisseehitatud hääled, isehostitavad serverid, hääle kloonimine, OBS-heli ja tõrkeotsing.","Setting":"Seadistamine","Setup":"Seadistamine","Short WAV clip":"Lühike WAV-klipp","Side-by-side":"Kõrvuti","Simplest rule:":"Lihtsaim reegel:","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja - Local AI TTS Guide":"Social Stream Ninja – kohaliku tehisintellekti kõnesünteesi juhend","Social Stream Ninja logo":"Social Stream Ninja logo","Social Stream Ninja: Local AI TTS Guide ·":"Social Stream Ninja: kohaliku tehisintellekti kõnesünteesi juhend ·","Some F5-TTS wrappers use":"Mõned F5-TTS-i ühilduvuskihid kasutavad","Some servers also need the exact words spoken in the clip.":"Mõned serverid vajavad ka klipis öeldud täpseid sõnu.","Sound":"Heli","Speaking speed (0.5–2.0).":"Kõnekiirus (0,5–2,0).","Start it with Docker automatically:":"Käivitage see automaatselt Dockeriga:","Start your server.":"Käivitage oma server.","Support":"Abi","Supported Sites":"Toetatud saidid","Switch theme":"Vaheta teemat","System TTS":"Süsteem TTS","System TTS / eSpeak":"Süsteemi TTS / eSpeak","TTS Voice Guide":"TTS hääljuht","TTS link.":"TTS link.","TTS reference":"TTS viide","TTS setup guide":"TTS-i seadistamise juhend","Tell the bridge where your server is. PowerShell:":"Öelge sillale, kus teie server asub. PowerShell:","The bridge":"Sild","The browser blocked it before the server saw it. Run":"Brauser blokeeris päringu enne selle serverisse jõudmist. Käivitage","The desktop app uses the same link settings. But the sound plays from the app, not OBS. Capture it with":"Töölauarakendus kasutab samu lingiseadeid, kuid heli tuleb rakendusest, mitte OBS-ist. Jäädvustage see, kasutades","The endpoint is the field that matters.":"Kõige tähtsam väli on lõpp-punkt.","The first run downloads about 1.5–2 GB, once.":"Esimesel käivitamisel laaditakse ühekordselt alla umbes 1,5–2 GB.","The local TTS bridge":"Kohalik TTS-sild","The localhost rule":"localhost-aadressi reegel","The server returns audio (usually WAV or MP3) and SSN plays it.":"Server tagastab heli (tavaliselt WAV või MP3) ja SSN esitab selle.","The server turns the clip into a voice profile.":"Server muudab klipi hääleprofiiliks.","These need":"Need vajavad","These run inside SSN in your browser. No server, Docker, or API key.":"Need töötavad SSN-is teie brauseris. Serverit, Dockerit ega API-võtit pole vaja.","This is the most common mistake.":"See on kõige levinum viga.","This works with any chat SSN captures. The voice belongs to SSN's player, not YouTube or Twitch. Unlike":"See töötab kõigi SSN-i jäädvustatud vestlustega. Häält esitab SSN-i pleier, mitte YouTube ega Twitch. Erinevalt","To use a voice server I already run":"Kasutada juba töötavat kõneserverit","Try this":"Proovi seda","Turn on":"Lülitage sisse","Turns on TTS, in English.":"Lülitab inglise keeles TTS-i sisse.","Under 1 GB. No voice cloning.":"Alla 1 GB. Hääli ei klooni.","Use Kokoro voice names":"Kasutage Kokoro häälnimesid","Use the":"Kasutage","Use this address":"Kasutage seda aadressi","Use this link (change the address if the server is on another PC):":"Kasutage seda linki (muutke aadressi, kui server asub teises arvutis):","Use your own server. (":"Kasutage oma serverit. (","Very good":"Väga hea","Very low. CPU only.":"Väga väike. Ainult CPU.","Voice":"Hääl","Voice cloning":"Hääle kloonimine","Voice name. Depends on the server.":"Häälnimi. Oleneb serverist.","Voices, speed, and other languages:":"Hääled, kiirus ja muud keeled:","Voices:":"Hääled:","WebGPU GPU or fast CPU, 8–16 GB RAM":"WebGPU GPU või kiire CPU, 8–16 GB muutmälu","What SSN can play back":"Mida SSN saab taasesitada","What SSN sends":"Mida SSN saadab","What computer do I need?":"Millist arvutit ma vajan?","What it does":"Mida see teeb","What was tested with SSN":"Mida testiti SSN-iga","With":"Koos","With 6 GB of GPU memory or less, start with small models on OpenAI-compatible servers. Bigger models work too if hosted elsewhere.":"Kui GPU-mälu on 6 GB või vähem, alustage OpenAI-ga ühilduvate serverite väikeste mudelitega. Suuremad mudelid töötavad ka siis, kui neid majutatakse mujal.","With no API key set, SSN sends no Authorization header.":"Kui API-võtit pole määratud, ei saada SSN Authorization-päist.","Without it SSN sends":"Ilma selleta saadab SSN","Works in OBS":"Töötab OBS-is","Works in one place but not another? Check in order: which computer, address, voice, browser permission, OBS audio.":"Töötab ühes kohas, aga mitte teises? Kontrollige järjekorras: milline arvuti, aadress, hääl, brauseri luba, OBS-heli.","Works with built-in voices and your own server.":"Töötab sisseehitatud häälte ja teie enda serveriga.","Works?":"Töötab?","Wrong voice, or voice not found":"Vale hääl või häält ei leitud","XTTS-v2 / openedai-speech":"XTTS-v2 / openedai-speech","XTTS-v2 is non-commercial by default.":"XTTS-v2 on vaikimisi mitteäriline.","Yes":"Jah","Yes, about 4 GB":"Jah, umbes 4 GB","Your server's address. Change the port to match.":"Teie serveri aadress. Muutke porti sobivaks.","Your setup":"Teie seadistus","all link settings":"kõik lingi seaded","allows non-commercial use only. A monetized stream may not qualify. Check the license or get permission first.":"lubab ainult mitteärilist kasutamist. Rahaks muudetud otseülekanne ei pruugi selle alla kuuluda. Kontrollige esmalt litsentsi või küsige luba.","also works.)":"töötab ka.)","always mean “this same computer.”":"tähendab alati \"sama arvutit\".","and":"ja","and change only":"ja muutke ainult","bridge":"sild","bridge README":"silla README","built-in voices":"sisseehitatud hääled","chatterbox-tts-api":"chatterbox-tts-api","does the same. Change the port with":"teeb sama. Muutke porti kasutades","eSpeak-NG":"eSpeak-NG","fields, and data URLs.":"väljad ja andmete URL-id.","first.":"esiteks.","first. Otherwise it can't find":"esmalt. Muidu ei leia see","folder to":"kaust asukohta","folder,":"kaust,","for Kokoro,":"Kokoro jaoks,","for openedai-speech.":"openedai-speechi jaoks.","format. The bridge translates for it.":"vormingut. Sild teisendab päringud selle jaoks sobivaks.","from the OBS link (for example":"OBS-i lingilt (näiteks","in OBS points at the OBS PC.":"OBS-is viitab OBS-i arvutile.","installed and running. It's free for personal use.":"olema installitud ja töötama. See on isiklikuks kasutamiseks tasuta.","is required.":"on nõutav.","is small and widely supported.":"on väike ja laialdaselt toetatud.","is the easiest.":"on kõige lihtsam.","item.":"üksus.","kokoro-web":"kokoro-web","link. (Or":"link. (Või","localhost rule":"kohaliku hosti reegel","macOS/Linux, in one line:":"macOS/Linux, ühel real:","may not work.":"ei pruugi töötada.","mp3, wav, opus or flac.":"mp3, wav, opus või flac.","must match your voice name in the YAML file.":"peab ühtima teie häälenimega YAML-failis.","on the OBS PC and use":"OBS-arvutis ja kasutage","only if server and browser both support it.":"ainult siis, kui nii server kui ka brauser seda toetavad.","openedai-speech":"openedai-speech","openedai-speech (Piper and XTTS-v2)":"openedai-speech (Piper ja XTTS-v2)","openedai-speech Piper":"openedai-speech Piper","openedai-speech XTTS":"openedai-speech XTTS","openedai-speech was archived in January 2026 and calls itself mostly obsolete. It still works as an example, but gets no updates. Keep it local. Never expose its port to the internet; it has no login.":"openedai-speech arhiveeriti 2026. aasta jaanuaris ja projekt peab end suuresti aegunuks. See sobib endiselt näiteks, kuid ei saa uuendusi. Hoidke see kohalikus võrgus. Ärge kunagi avage selle porti internetile, sest sisselogimine puudub.","or":"või","path instead of loading the model in the browser.":"teed, selle asemel et mudelit brauserisse laadida.","provider settings":"pakkuja seaded","routing steps":"heli suunamise juhised","run the bridge on the OBS computer. Then OBS always uses":"käivitage sild OBS-i arvutis. Siis kasutab OBS alati","runs Kokoro as a local server. Works on CPU; no GPU needed.":"käitab Kokorot kohaliku serverina. Töötab protsessoril; GPU-d pole vaja.","section (keep the voices already there):":"jaotisesse (säilitage seal juba olevad hääled):","setup guide":"seadistusjuhend","speech server. No API key needed.":"kõneserver. API-võtit pole vaja.","suits cloning servers and bridge testing. Use":"sobib kloonimisserveritele ja sildade testimiseks. Kasutage","to":"juurde","to rule out timing issues.":"ajastusprobleemide välistamiseks.","to the name SSN will send.":"nimele, mille SSN saadab.","to your":"oma","voice cloning":"hääle kloonimine","with":"koos","with its local IP. Check":"kohaliku IP-ga. Kontrollige","with no provider) depends on the voices OBS has. Often none, or voices that make no capturable sound. Use a provider above instead.":"ilma teenusepakkujata) sõltub OBS-ile saadaolevatest häältest. Sageli pole neid üldse või ei tekita need jäädvustatavat heli. Kasutage selle asemel mõnda ülaltoodud teenusepakkujat.","with your":"oma","work with any provider:":"töötavad kõigi teenusepakkujatega:","~2 GB":"~2 GB","“Blocked by CORS”, “private network”, or “failed fetch”":"„Blocked by CORS”, „private network” või „failed fetch”","“Local” means one of two things: a voice built into SSN that runs in your browser, or a voice server you run yourself.":"„Kohalik” tähendab kas SSN-i sisseehitatud häält, mis töötab brauseris, või teie enda käitatavat kõneserverit."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/local-tts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/local-tts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/local-tts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/local-tts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/local-tts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/local-tts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/local-tts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/local-tts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/local-tts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/local-tts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/local-tts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/local-tts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/local-tts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/local-tts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/local-tts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/local-tts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/local-tts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/local-tts.html">
+<link rel="alternate" hreflang="et" href="https://socialstream.ninja/et/docs/local-tts.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Peamine navigeerimine"><a href="../index.html">Avaleht</a><a href="features.html">Funktsioonid</a><a href="inspiration.html" class="site-priority-inspiration">Inspiratsioon</a><a href="download.html">Laadi alla</a><a href="guides.html">Juhendid</a><a href="commands.html">Käsud ja API</a><a href="supported-sites.html">Toetatud saidid</a><a href="overlay-gallery.html" class="site-priority-gallery">Ülekattegalerii</a><a href="services.html" class="site-priority-hire">Laenutus</a><a href="support.html">Abi</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Eesti"><span aria-hidden="true">🌐 </span><span lang="et">Eesti</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/local-tts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/local-tts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/local-tts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/local-tts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/local-tts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/local-tts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/local-tts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/local-tts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/local-tts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/local-tts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/local-tts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/local-tts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/local-tts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/local-tts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/local-tts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/local-tts.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/local-tts.html" lang="th" hreflang="th">ไทย</a><a class="site-language-link" href="local-tts.html" lang="et" hreflang="et" aria-current="true">Eesti</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Vaheta teemat"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Ava navigeerimismenüü" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Kohalik AI TTS-juhend</h1>
+            <p>Käivitage vestlushääli oma arvutis. Enamik striimijaid vajab ainult sisseehitatud hääli.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Sellel lehel">
+                <a href="#overview">Kas mul on seda vaja?</a>
+                <a href="#builtin">Sisseehitatud hääled</a>
+                <a href="#server">Ühendage server</a>
+                <a href="#which-computer">localhost-aadressi reegel</a>
+                <a href="#kokoro-fastapi">Kokoro-FastAPI</a>
+                <a href="#openedai">openedai-speech</a>
+                <a href="#bridge">Sild</a>
+                <a href="#voice-cloning">Hääle kloonimine</a>
+                <a href="#obs">OBS-heli</a>
+                <a href="#troubleshooting">Probleemide lahendamine</a>
+                <a href="#flow">Serveriehitajatele</a>
+            </nav>
+
+            <div class="guide-card">
+                <h2 id="overview">Kas mul on seda vaja?</h2>
+                <p>„Kohalik” tähendab kas SSN-i sisseehitatud häält, mis töötab brauseris, või teie enda käitatavat kõneserverit.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Ma tahan…</th><th>Tehke seda</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Ma tahan">Tasuta hääled, mida pole vaja installida</td><td data-label="Tehke seda">Kasutage <a href="#builtin">sisseehitatud hääled</a>. Enamikule sellest piisab.</td></tr>
+                        <tr><td data-label="Ma tahan">Kasutada juba töötavat kõneserverit</td><td data-label="Tehke seda"><a href="#server">Ühendage server</a>.</td></tr>
+                        <tr><td data-label="Ma tahan">Kloonitud hääl</td><td data-label="Tehke seda">Vt <a href="#voice-cloning">hääle kloonimine</a>.</td></tr>
+                        <tr><td data-label="Ma tahan">Fish Audio OBS-is</td><td data-label="Tehke seda">Vt <a href="tts-setup-guide.html#settings-fish">Fish Audio seadistamine</a>.</td></tr>
+                        <tr><td data-label="Ma tahan">Tasulised pilvehääled</td><td data-label="Tehke seda">Vt <a href="tts.html#providers">TTS viide</a>.</td></tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">See töötab kõigi SSN-i jäädvustatud vestlustega. Häält esitab SSN-i pleier, mitte YouTube ega Twitch. Erinevalt <em>Süsteem TTS</em>, loovad kohalikud tehisintellekti hääled ise heli, mida OBS saab jäädvustada. <a href="tts-setup-guide.html#voice-chooser">Võrrelge teenusepakkujaid ja kuulake näidiseid</a>.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="builtin">Sisseehitatud hääled (ei ole vaja installida)</h2>
+                <p>Need töötavad SSN-is teie brauseris. Serverit, Dockerit ega API-võtit pole vaja.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Hääl</th><th>Heli</th><th>Arvuti koormus</th><th>Lingi väärtus</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Hääl">Kokoro</td><td data-label="Heli">Suurepärane</td><td data-label="Arvuti koormus">Keskmine. GPU-ga kiirem.</td><td data-label="Lingi väärtus"><code>ttsprovider=kokoro</code></td></tr>
+                        <tr><td data-label="Hääl">Piper</td><td data-label="Heli">Väga hea</td><td data-label="Arvuti koormus">Väike. Ainult CPU.</td><td data-label="Lingi väärtus"><code>ttsprovider=piper</code></td></tr>
+                        <tr><td data-label="Hääl">Kitten</td><td data-label="Heli">Hea</td><td data-label="Arvuti koormus">Väga väike. Ainult CPU.</td><td data-label="Lingi väärtus"><code>ttsprovider=kitten</code></td></tr>
+                        <tr><td data-label="Hääl">eSpeak-NG</td><td data-label="Heli">Robotlik</td><td data-label="Arvuti koormus">Minimaalne. Ainult CPU.</td><td data-label="Lingi väärtus"><code>ttsprovider=espeak</code></td></tr>
+                    </tbody>
+                </table>
+                <h3 id="quick-setup">Seadistage see neljas etapis</h3>
+                <ol class="guide-steps">
+                    <li>Lisa <code>&amp;speech=en-US&amp;ttsprovider=kokoro</code> oma <code>dock.html</code> link. (Või <code>piper</code>, <code>kitten</code>, <code>espeak</code>.)</li>
+                    <li>Lisage see link OBS-i allikana <strong>Brauseri allikas</strong>. See on leht, mis teeb häält.</li>
+                    <li>Selle omadustes lülitage sisse <strong>Heli juhtimine OBS-i kaudu</strong>.</li>
+                    <li>Saatke lühike testvestlussõnum, näiteks <code>Testing local TTS</code>.</li>
+                </ol>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=kokoro</pre>
+                <div class="warning-note"><strong>Esimene kasutamine on aeglane.</strong> Kokoro ja Piper laadivad esmalt alla oma mudelid (umbes 50–200 MB). Hilisemad laadimised kasutavad neid uuesti, kuid käivitamiseks kulub siiski veidi aega. OBS hoiab oma koopiat Chrome'ist eraldi.</div>
+                <p>Hääled, kiirus ja muud keeled: <a href="tts.html#premium-options">pakkuja seaded</a>. Kas eelistate klõpsamist? Kasutage <a href="tts-setup-guide.html">seadistusjuhend</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="server">Ühendage oma TTS-server</h2>
+                <p>Server pakub rohkem hääli, häälte kloonimist või üht häält, mida saate eri tööriistades kasutada. SSN suhtleb sellega nagu <strong>OpenAI-ga ühilduv</strong> kõneserver. API-võtit pole vaja.</p>
+                <div class="guide-step-layout" id="where-to-click">
+                    <ol class="guide-steps">
+                        <li>Käivitage oma server. <a href="#kokoro-fastapi">Kokoro-FastAPI</a> on kõige lihtsam.</li>
+                        <li>Avage SSN-is TTS-i pakkujate loend ja valige <strong>Kohandatud / Kohalik TTS-i lõpp-punkt</strong>.</li>
+                        <li>sisse <strong>Kohandatud / kohaliku API lõpp-punkt</strong>, sisestage oma serveri aadress, näiteks <code>http://127.0.0.1:8880/v1/audio/speech</code>.</li>
+                        <li>Jätke API võti tühjaks.</li>
+                        <li>Valige hääl, mida teie server tunneb: <code>af_bella</code> Kokoro jaoks, <code>nova</code> openedai-speechi jaoks.</li>
+                        <li>Kopeerige link OBS-i ja saatke testvestlussõnum.</li>
+                    </ol>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/local-tts/tts-custom-endpoint-fields.png" alt="Social Stream Ninja kohalike TTS-väljade ekraanipildi stiilis kaart" class="guide-image" loading="lazy">
+                        <figcaption>Kõige tähtsam väli on lõpp-punkt.</figcaption>
+                    </figure>
+                </div>
+                <div class="guide-note"><strong>OBS teises arvutis?</strong> Lugege <a href="#which-computer">kohaliku hosti reegel</a> esiteks. <strong>Kas brauser on blokeerinud?</strong> Kasutage <a href="#bridge">sild</a>.</div>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Server</th><th>Mudel</th><th>GPU</th><th>Ketas</th><th>Port</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Server"><a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> (soovitatav)</td><td data-label="Mudel">Kokoro 82M</td><td data-label="GPU">Valikuline</td><td data-label="Ketas">~2 GB</td><td data-label="Port">8880</td></tr>
+                        <tr><td data-label="Server"><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a> (Piper)</td><td data-label="Mudel">Piper</td><td data-label="GPU">Ainult CPU</td><td data-label="Ketas">&lt;1 GB</td><td data-label="Port">8000</td></tr>
+                        <tr><td data-label="Server"><a href="https://github.com/eduardolat/kokoro-web" target="_blank">kokoro-web</a></td><td data-label="Mudel">Kokoro 82M</td><td data-label="GPU">Valikuline</td><td data-label="Ketas">~2 GB</td><td data-label="Port">3000</td></tr>
+                    </tbody>
+                </table>
+                <p>Need vajavad <a href="https://www.docker.com/products/docker-desktop/" target="_blank">Docker Desktop</a> olema installitud ja töötama. See on isiklikuks kasutamiseks tasuta.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="which-computer">localhost-aadressi reegel</h2>
+                <p>See on kõige levinum viga.</p>
+                <div class="warning-note"><strong><code>localhost</code> ja <code>127.0.0.1</code> tähendab alati "sama arvutit".</strong> Kui OBS on ühes arvutis ja kõneserver teises, <code>127.0.0.1</code> OBS-is viitab OBS-i arvutile.</div>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/local-tts/tts-localhost-map.png" alt="Diagramm, mis näitab, et localhost tähendab sama arvutit, samas kui teine arvuti vajab LAN IP-aadressi" class="guide-image guide-image-medium" loading="lazy">
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Teie seadistus</th><th>Kasutage seda aadressi</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Teie seadistus">OBS ja server samas arvutis</td><td data-label="Kasutage seda aadressi"><code>http://127.0.0.1:8880/v1/audio/speech</code></td></tr>
+                        <tr><td data-label="Teie seadistus">Server kodus teises arvutis</td><td data-label="Kasutage seda aadressi"><code>http://192.168.x.x:8880/v1/audio/speech</code>, selle arvuti kohaliku IP-ga</td></tr>
+                        <tr><td data-label="Teie seadistus">SSN-i rakenduse test töötab, OBS vaikib</td><td data-label="Kasutage seda aadressi">OBS vajab aadressi, mis töötab OBS-i arvutist. Rakenduse õnnestunud test ei tõenda, et OBS serverini jõuab.</td></tr>
+                    </tbody>
+                </table>
+                <p>Kontrollige ka, kas tulemüür lubab porti ja kas Docker on selle avaldanud (<code>-p 8880:8880</code>).</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="kokoro-fastapi">Kokoro-FastAPI</h2>
+                <p><a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> käitab Kokorot kohaliku serverina. Töötab protsessoril; GPU-d pole vaja.</p>
+                <ol class="guide-steps">
+                    <li>Avage terminal (käsuviip, PowerShell või terminal) ja käivitage üks järgmistest:
+                        <pre>docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</pre>
+                        <p>NVIDIA GPU (kiirem):</p>
+                        <pre>docker run --gpus all -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-gpu:v0.2.0post4</pre>
+                        Esimesel käivitamisel laaditakse ühekordselt alla umbes 1,5–2 GB.</li>
+                    <li>Avatud <code>http://localhost:8880/web/</code>. Peaksite nägema häälte testimise lehte (saadaval 67+).</li>
+                    <li>Kasutage seda linki (muutke aadressi, kui server asub teises arvutis):
+                        <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8880/v1/audio/speech&amp;voiceopenai=af_bella</pre></li>
+                </ol>
+                <div class="guide-note"><strong>Kasutage Kokoro häälnimesid</strong>, nagu <code>af_bella</code>, <code>af_sarah</code>, <code>am_adam</code> või <code>bf_emma</code>. OpenAI nimed nagu <code>nova</code> või <code>alloy</code> ei pruugi töötada.</div>
+                <p><strong>Käivitage see automaatselt Dockeriga:</strong></p>
+                <pre>docker run -d --restart unless-stopped -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</pre>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="openedai">openedai-speech (Piper ja XTTS-v2)</h2>
+                <div class="warning-note"><strong>Arhiveeritud projekt.</strong> openedai-speech arhiveeriti 2026. aasta jaanuaris ja projekt peab end suuresti aegunuks. See sobib endiselt näiteks, kuid ei saa uuendusi. Hoidke see kohalikus võrgus. Ärge kunagi avage selle porti internetile, sest sisselogimine puudub.</div>
+                <h3>Valik A: kerge Piper-server (CPU)</h3>
+                <p>Alla 1 GB. Hääli ei klooni.</p>
+                <pre>docker run -d --restart unless-stopped -p 8000:8000 ghcr.io/matatonic/openedai-speech-min</pre>
+                <p>Hääled: <code>alloy</code>, <code>echo</code>, <code>fable</code>, <code>onyx</code>, <code>nova</code>, <code>shimmer</code>.</p>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=openai&amp;openaiendpoint=http://localhost:8000/v1/audio/speech&amp;voiceopenai=nova</pre>
+                <details class="guide-extra"><summary>Selle käitamine lähtekoodist Windowsis (HTTP 500 vead)</summary>
+                    <p>Lisage selle virtuaalkeskkonna <code>Scripts</code> kaust asukohta <code>PATH</code> esmalt. Muidu ei leia see <code>piper.exe</code> või <code>ffmpeg.exe</code>.</p>
+                    <pre>cd openedai-speech
+$env:Path = "$PWD\.venv\Scripts;$env:Path"
+.\.venv\Scripts\python.exe speech.py --xtts_device none -H 127.0.0.1 -P 8000</pre>
+                </details>
+                <h3>Valik B: XTTS-v2 hääle kloonimine (GPU)</h3>
+                <p>Vajab täisserverit, mitte <code>openedai-speech-min</code>. Planeerige umbes 4 GB GPU-mälu. CPU töötab, kuid on aeglane.</p>
+                <details class="guide-extra"><summary>Seadistage XTTS-v2 neljas etapis</summary>
+                    <ol class="guide-steps">
+                        <li>Hankige server ja käivitage see:
+                            <pre>git clone https://github.com/matatonic/openedai-speech.git
+cd openedai-speech
+Copy-Item sample.env speech.env
+docker compose up -d</pre>
+                            Kasutage macOS-is või Linuxis <code>cp sample.env speech.env</code>. Docker vajab GPU-juurdepääsu. Mudel laaditakse alla esimesel kasutamisel.</li>
+                        <li>Tehke puhas näidisklipp häälest, mida teil on luba kasutada. Mono, 22050 Hz, 6–30 sekundit:
+                            <pre>ffmpeg -i input.mp3 -ac 1 -ar 22050 -t 6 -y voices/me.wav</pre></li>
+                        <li>sisse <code>config/voice_to_speaker.yaml</code>, lisage see olemasoleva alla <code>tts-1-hd</code> jaotisesse (säilitage seal juba olevad hääled):
+                            <pre>tts-1-hd:
+  me:
+    model: xtts
+    speaker: voices/me.wav
+    language: en</pre>
+                            Muutke <code>me</code> nimele, mille SSN saadab.</li>
+                        <li>Käivitage <code>docker compose restart</code>, seejärel kasutage:
+                            <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8000/v1/audio/speech&amp;openaimodel=tts-1-hd&amp;voiceopenai=me&amp;openaiformat=wav</pre></li>
+                    </ol>
+                    <div class="guide-note"><strong><code>openaimodel=tts-1-hd</code> on nõutav.</strong> Ilma selleta saadab SSN <code>tts-1</code>, ning server kasutab selle asemel Piperit. <code>voiceopenai</code> peab ühtima teie häälenimega YAML-failis.</div>
+                    <p>Kas brauser on blokeerinud? Käivitage <a href="#bridge">sild</a> ja muutke ainult <code>openaiendpoint</code> juurde <code>http://127.0.0.1:8124/v1/audio/speech</code>.</p>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="bridge">Kohalik TTS-sild</h2>
+                <p>Väike SSN-i abitööriist. See võtab vastu SSN-i päringu, edastab selle teie kõneserverile ja tagastab heli brauseritele sobival viisil. Vajab Node.js-i.</p>
+                <div class="guide-note"><strong>Lihtsaim reegel:</strong> käivitage sild OBS-i arvutis. Siis kasutab OBS alati <code>http://127.0.0.1:8124/v1/audio/speech</code>, isegi kui kõneserver asub teises arvutis.</div>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/local-tts/tts-bridge-flow.png" alt="Skeem: OBS pöördub kohaliku silla poole ja sild pöördub TTS-serveri poole" class="guide-image guide-image-medium" loading="lazy">
+                </figure>
+                <ol class="guide-steps">
+                    <li>Öelge sillale, kus teie server asub. PowerShell:
+                        <pre>$env:SSN_TTS_TARGET="http://127.0.0.1:8880/v1/audio/speech"</pre>
+                        Server teises arvutis? Kasutage selle kohalikku IP-d, näiteks <code>http://192.168.x.x:8880/v1/audio/speech</code>.</li>
+                    <li>SSN-kaustas käivitage <code>node scripts/local-tts-bridge.cjs</code>. Jätke see tööle.</li>
+                    <li>Suunake SSN sillale:
+                        <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;voiceopenai=af_bella</pre></li>
+                </ol>
+                <p>macOS/Linux, ühel real: <code>SSN_TTS_TARGET="http://127.0.0.1:8880/v1/audio/speech" node scripts/local-tts-bridge.cjs</code>. Jaotises <code>local-tts-bridge</code> kaust, <code>node server.cjs</code> teeb sama. Muutke porti kasutades <code>SSN_TTS_BRIDGE_PORT=8125</code>. Kõik valikud: <a href="../../local-tts-bridge/README.md" target="_blank">silla README</a>.</p>
+                <details class="guide-extra"><summary>GPT-SoVITS režiim</summary>
+                    <p>GPT-SoVITS kasutab oma <code>/tts</code> vormingut. Sild teisendab päringud selle jaoks sobivaks.</p>
+                    <pre>$env:SSN_TTS_REF_AUDIO_PATH="C:\voices\speaker.wav"
+$env:SSN_TTS_REF_TEXT="Reference audio transcript here."
+$env:SSN_TTS_TARGET="http://127.0.0.1:9880/tts"
+node scripts/local-tts-bridge.cjs --mode gptsovits</pre>
+                    <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;openaiformat=wav</pre>
+                </details>
+                <details class="guide-extra"><summary>F5-TTS-serveri režiim</summary>
+                    <p>Mõned F5-TTS-i ühilduvuskihid kasutavad <code>/synthesize_speech/?text=...&amp;voice=...</code>. Sild teisendab nende päringud sobivaks.</p>
+                    <pre>$env:SSN_TTS_TARGET="http://127.0.0.1:7860/synthesize_speech/"
+node scripts/local-tts-bridge.cjs --mode f5</pre>
+                    <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;voiceopenai=default_en&amp;openaiformat=wav</pre>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-cloning">Hääle kloonimine</h2>
+                <p>Kloonimine ei ole SSN-i seade. See on mõne kõneserveri funktsioon. SSN saadab vestlusteksti; server valib kloonitud hääle.</p>
+                <ol class="guide-steps">
+                    <li>Salvestage ühe kõneleja puhas, tavaliselt 3–30 sekundi pikkune klipp vähese taustamüraga.</li>
+                    <li>Mõned serverid vajavad ka klipis öeldud täpseid sõnu.</li>
+                    <li>Server muudab klipi hääleprofiiliks.</li>
+                    <li>SSN saadab vestlusteksti koos <code>ttsprovider=customtts</code>.</li>
+                    <li>Server tagastab heli (tavaliselt WAV või MP3) ja SSN esitab selle.</li>
+                </ol>
+                <div class="warning-note"><strong>Kloonige ainult hääli, mis teile kuuluvad või teil on luba kasutada.</strong></div>
+                <div class="warning-note"><strong>XTTS-v2 on vaikimisi mitteäriline.</strong> Selle <a href="https://huggingface.co/coqui/XTTS-v2/blob/main/LICENSE.txt" target="_blank">Coqui Public Model License</a> lubab ainult mitteärilist kasutamist. Rahaks muudetud otseülekanne ei pruugi selle alla kuuluda. Kontrollige esmalt litsentsi või küsige luba.</div>
+                <p>Kui GPU-mälu on 6 GB või vähem, alustage OpenAI-ga ühilduvate serverite väikeste mudelitega. Suuremad mudelid töötavad ka siis, kui neid majutatakse mujal.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Valik</th><th>Kloonimise lähtematerjal</th><th>Kas piisab 6 GB GPU-st?</th><th>Kuidas ühendada</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Valik"><a href="https://github.com/matatonic/openedai-speech" target="_blank">XTTS-v2 / openedai-speech</a></td><td data-label="Kloonimise lähtematerjal">Lühike WAV-klipp</td><td data-label="Kas piisab 6 GB GPU-st?">Jah, umbes 4 GB</td><td data-label="Kuidas ühendada">Otse, <code>/v1/audio/speech</code>. Projekt on arhiveeritud.</td></tr>
+                        <tr><td data-label="Valik"><a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">chatterbox-tts-api</a> / <a href="https://github.com/devnen/Chatterbox-TTS-Server" target="_blank">Chatterbox-TTS-Server</a></td><td data-label="Kloonimise lähtematerjal">Võrdlusklipp</td><td data-label="Kas piisab 6 GB GPU-st?">Tõenäoliselt Turboga või väikeste tükkidega</td><td data-label="Kuidas ühendada">Otse või silla kaudu. GPU-ga töötab sujuvamalt kui CPU-ga. Seadistamine sõltub projekti harust.</td></tr>
+                        <tr><td data-label="Valik"><a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">Qwen3-TTS</a> (0.6B / 1.7B)</td><td data-label="Kloonimise lähtematerjal">3-sekundiline klipp</td><td data-label="Kas piisab 6 GB GPU-st?">Tõenäoliselt (0.6B Base)</td><td data-label="Kuidas ühendada">Vajab OpenAI-ga ühilduvat liidest.</td></tr>
+                        <tr><td data-label="Valik"><a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">GPT-SoVITS</a></td><td data-label="Kloonimise lähtematerjal">5 sekundit; parem 1 minutiga</td><td data-label="Kas piisab 6 GB GPU-st?">Tõenäoliselt fp16 / vähendatud paigaldusega</td><td data-label="Kuidas ühendada">Sild <code>--mode gptsovits</code>.</td></tr>
+                        <tr><td data-label="Valik"><a href="https://github.com/SWivid/F5-TTS" target="_blank">F5-TTS</a></td><td data-label="Kloonimise lähtematerjal">Klipp ja selle ärakiri</td><td data-label="Kas piisab 6 GB GPU-st?">Võib-olla</td><td data-label="Kuidas ühendada">Ühilduvuskiht ehk sild <code>--mode f5</code> koos <a href="https://github.com/ValyrianTech/F5-TTS_server" target="_blank">F5-TTS_server</a>.</td></tr>
+                        <tr><td data-label="Valik"><a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">MisoTTS 8B</a></td><td data-label="Kloonimise lähtematerjal">Näidisheli</td><td data-label="Kas piisab 6 GB GPU-st?">Ei; Soovitatav 24 GB</td><td data-label="Kuidas ühendada">Ainult kaughostimine. Repos pole kohalikku REST-i lõpp-punkti.</td></tr>
+                    </tbody>
+                </table>
+                <p>Sisseehitatud Kokoro ja Kokoro-FastAPI ei klooni hääli.</p>
+                <details class="guide-extra" id="tested-servers"><summary>Mida testiti SSN-iga</summary>
+                    <p>Kontrollitud mõlemaga <code>dock.html</code> ja <code>featured.html</code>:</p>
+                    <ul class="guide-list">
+                        <li><strong>openedai-speech</strong> (Piper): tegelik kõnesüntees protsessoril, otse ja silla kaudu.</li>
+                        <li><strong>Chatterbox-TTS-Server</strong>: tegelik kõnesüntees protsessoril, kasutades <code>Emily.wav</code>, otse ja silla kaudu.</li>
+                        <li><strong>chatterbox-tts-api</strong>: päringu vorming testitud, otse ja silla kaudu.</li>
+                        <li><strong>GPT-SoVITS</strong> ja <strong>F5-TTS_server</strong>: ainult sillarežiimide kaudu.</li>
+                        <li><strong>F5-TTS-i ametlik projekt</strong> ja <strong>Qwen3-TTS</strong>: vajavad esmalt ühilduvuskihti (saadaval ainult CLI, Gradio või teegina).</li>
+                    </ul>
+                </details>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="hardware">Millist arvutit ma vajan?</h2>
+                <p>Ligikaudsed lähtekohad, mitte lubadused. Mälukasutust mõjutavad mudeli suurus, teksti pikkus ja muud rakendused.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Valik</th><th>Minimaalne</th><th>Mugav</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Valik">Süsteemi TTS / eSpeak</td><td data-label="Minimaalne">Iga arvuti</td><td data-label="Mugav">Iga arvuti</td></tr>
+                        <tr><td data-label="Valik">Sisseehitatud Kitten</td><td data-label="Minimaalne">Nõrgem protsessor, 4 GB muutmälu</td><td data-label="Mugav">Sülearvuti protsessor, 8 GB muutmälu</td></tr>
+                        <tr><td data-label="Valik">Sisseehitatud Piper</td><td data-label="Minimaalne">Moodne protsessor, 4–8 GB muutmälu</td><td data-label="Mugav">Moodne protsessor, 8 GB muutmälu</td></tr>
+                        <tr><td data-label="Valik">Sisseehitatud Kokoro</td><td data-label="Minimaalne">Moodne protsessor, 8 GB muutmälu</td><td data-label="Mugav">WebGPU GPU või kiire CPU, 8–16 GB muutmälu</td></tr>
+                        <tr><td data-label="Valik">Kokoro-FastAPI</td><td data-label="Minimaalne">Protsessor, 8 GB muutmälu</td><td data-label="Mugav">Valikuline NVIDIA GPU, 8–16 GB muutmälu</td></tr>
+                        <tr><td data-label="Valik">openedai-speech Piper</td><td data-label="Minimaalne">Protsessor, 4–8 GB muutmälu</td><td data-label="Mugav">Protsessor, 8 GB muutmälu</td></tr>
+                        <tr><td data-label="Valik">openedai-speech XTTS</td><td data-label="Minimaalne">NVIDIA GPU ~4 GB, 8–16 GB muutmälu</td><td data-label="Mugav">6 GB+ NVIDIA GPU, 16 GB muutmälu</td></tr>
+                        <tr><td data-label="Valik">Chatterbox</td><td data-label="Minimaalne">Mõne versiooni puhul CPU, aeglane</td><td data-label="Mugav">6 GB+ NVIDIA GPU, 16 GB muutmälu</td></tr>
+                        <tr><td data-label="Valik">GPT-SoVITS / F5-TTS / Qwen3-TTS</td><td data-label="Minimaalne">Protsessor testimiseks, aeglane</td><td data-label="Mugav">6 GB+ NVIDIA GPU, 16 GB muutmälu</td></tr>
+                        <tr><td data-label="Valik">MisoTTS 8B</td><td data-label="Minimaalne">Mitte 6 GB juures</td><td data-label="Mugav">24 GB GPU või kaugserver</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="obs">Viige heli OBS-i</h2>
+                <h3>OBS-i brauseriallikas (soovitatav)</h3>
+                <p>Töötab sisseehitatud häälte ja teie enda serveriga.</p>
+                <ol class="guide-steps">
+                    <li>Lisage a <strong>Brauseri allikas</strong> oma <code>dock.html</code> TTS link.</li>
+                    <li>Lülitage sisse <strong>Heli juhtimine OBS-i kaudu</strong>.</li>
+                    <li>Klõpsake <strong>OK</strong>. TTS kuvatakse nüüd OBS-mikseris.</li>
+                </ol>
+                <h3 id="desktop-app">SSN-i töölauarakendus</h3>
+                <p>Töölauarakendus kasutab samu lingiseadeid, kuid heli tuleb rakendusest, mitte OBS-ist. Jäädvustage see, kasutades <strong>Töölauaheli</strong> või <strong>Helisisendi jäädvustamine</strong>. TTS-i muudest helidest eraldamiseks suunake rakenduse heli virtuaalkaablisse: <a href="tts.html#audio-capture">heli suunamise juhised</a>.</p>
+                <div class="warning-note"><strong>Ärge ajage segamini rakenduse testi ja OBS-i.</strong> Rakenduse nupuga Test katsetatakse ühendust rakendusest. Kui link on OBS-is, peab OBS serveriga ühenduse saama ja heli esitama.</div>
+                <details class="guide-extra"><summary>Rohkem teavet töölauarakenduse kohta</summary>
+                    <p>Rakenduseakendes on brauseri juurdepääsupiirangud (CORS) leebemad kui Chrome’is. Brauseripäringutest keelduvate serverite jaoks on sild siiski kõige kindlam valik. Sisseehitatud Kokoro puhul saab rakendus kasutada oma <code>ninjafy.tts</code> teed, selle asemel et mudelit brauserisse laadida.</p>
+                </details>
+                <div class="warning-note"><strong>Süsteem TTS</strong> (<code>&amp;speech=en-US</code> ilma teenusepakkujata) sõltub OBS-ile saadaolevatest häältest. Sageli pole neid üldse või ei tekita need jäädvustatavat heli. Kasutage selle asemel mõnda ülaltoodud teenusepakkujat.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="comparison">Kõrvuti</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Valik</th><th>Seadistamine</th><th>Kvaliteet</th><th>Privaatne</th><th>Töötab OBS-is</th><th>Maksumus</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Valik">Sisseehitatud Kokoro</td><td data-label="Seadistamine">Puudub</td><td data-label="Kvaliteet">5/5</td><td data-label="Privaatne">Jah</td><td data-label="Töötab OBS-is">Jah</td><td data-label="Maksumus">Tasuta</td></tr>
+                        <tr><td data-label="Valik">Sisseehitatud Piper</td><td data-label="Seadistamine">Puudub</td><td data-label="Kvaliteet">4/5</td><td data-label="Privaatne">Jah</td><td data-label="Töötab OBS-is">Jah</td><td data-label="Maksumus">Tasuta</td></tr>
+                        <tr><td data-label="Valik">Sisseehitatud Kitten</td><td data-label="Seadistamine">Puudub</td><td data-label="Kvaliteet">3/5</td><td data-label="Privaatne">Jah</td><td data-label="Töötab OBS-is">Jah</td><td data-label="Maksumus">Tasuta</td></tr>
+                        <tr><td data-label="Valik">Sisseehitatud eSpeak</td><td data-label="Seadistamine">Puudub</td><td data-label="Kvaliteet">2/5</td><td data-label="Privaatne">Jah</td><td data-label="Töötab OBS-is">Jah</td><td data-label="Maksumus">Tasuta</td></tr>
+                        <tr><td data-label="Valik">Kokoro-FastAPI</td><td data-label="Seadistamine">Docker</td><td data-label="Kvaliteet">5/5</td><td data-label="Privaatne">Jah</td><td data-label="Töötab OBS-is">Jah</td><td data-label="Maksumus">Tasuta</td></tr>
+                        <tr><td data-label="Valik">openedai-speech</td><td data-label="Seadistamine">Docker</td><td data-label="Kvaliteet">4/5</td><td data-label="Privaatne">Jah</td><td data-label="Töötab OBS-is">Jah</td><td data-label="Maksumus">Tasuta</td></tr>
+                        <tr><td data-label="Valik">ElevenLabs</td><td data-label="Seadistamine">API võti</td><td data-label="Kvaliteet">5/5</td><td data-label="Privaatne">Ei</td><td data-label="Töötab OBS-is">Jah</td><td data-label="Maksumus">Tasulised tasemed</td></tr>
+                        <tr><td data-label="Valik">Süsteem TTS</td><td data-label="Seadistamine">Puudub</td><td data-label="Kvaliteet">2/5</td><td data-label="Privaatne">Jah</td><td data-label="Töötab OBS-is">Vajab heli suunamist</td><td data-label="Maksumus">Tasuta</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="troubleshooting">Probleemide lahendamine</h2>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/local-tts/tts-troubleshooting-checklist.png" alt="Ekraanipildi stiilis kontroll-loend kohaliku TTS-i tõrkeotsinguks" class="guide-image guide-image-medium" loading="lazy">
+                    <figcaption>Töötab ühes kohas, aga mitte teises? Kontrollige järjekorras: milline arvuti, aadress, hääl, brauseri luba, OBS-heli.</figcaption>
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Probleem</th><th>Proovi seda</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Probleem">Rakenduse test töötab, OBS vaikib</td><td data-label="Proovi seda">OBS peab ise serveriga ühenduse saama. Kas server asub teises arvutis? Asendage <code>127.0.0.1</code> kohaliku IP-ga. Kontrollige <strong>Heli juhtimine OBS-i kaudu</strong>. Kas endiselt blokeeritud? Käivitage sild OBS-arvutis.</td></tr>
+                        <tr><td data-label="Probleem">Loetakse ainult esimest tähte või sõnu</td><td data-label="Proovi seda">Eemalda <code>ttsquick</code> OBS-i lingilt (näiteks <code>&amp;ttsquick=14</code>) ja värskenda. Katsetamise ajal eemaldage ka <code>typewriter=</code> ajastusprobleemide välistamiseks.</td></tr>
+                        <tr><td data-label="Probleem">Server ei reageeri</td><td data-label="Proovi seda">Kontrollige, et Docker ja konteiner töötaksid. Avage serveriarvutis <code>http://127.0.0.1:8880/web/</code> (Kokoro-FastAPI või teie serveri port). Avage OBS-arvutist <code>http://SERVER_LAN_IP:8880/web/</code>. Kui see ebaõnnestub, ei saa ka OBS seda kätte. Kontrollige serveri tulemüüri.</td></tr>
+                        <tr><td data-label="Probleem">„Blocked by CORS”, „private network” või „failed fetch”</td><td data-label="Proovi seda">Brauser blokeeris päringu enne selle serverisse jõudmist. Käivitage <code>node scripts/local-tts-bridge.cjs</code> OBS-arvutis ja kasutage <code>http://127.0.0.1:8124/v1/audio/speech</code>. Veebis majutatud beetadoki leht blokeeritakse tõenäolisemalt; lihtsam on kasutada silda või kohalikku rakenduseakent.</td></tr>
+                        <tr><td data-label="Probleem">Vale hääl või häält ei leitud</td><td data-label="Proovi seda">Kokoro-FastAPI: <code>af_bella</code>, <code>af_sarah</code>, <code>am_adam</code>, või üks selle veebilehelt. openedai-speech: <code>nova</code>, <code>echo</code>, <code>alloy</code>. Mõned serverid eristavad suur- ja väiketähti.</td></tr>
+                        <tr><td data-label="Probleem">Heli mängib, kuid OBS ei jäädvusta seda</td><td data-label="Proovi seda">Lülitage sisse <strong>Heli juhtimine OBS-i kaudu</strong>. Jälgige katse ajal OBS-i mikseri tasemenäidikut. Määrake kindlasti <code>&amp;ttsprovider=</code>; Süsteemi TTS võib vajada töölaua heli või virtuaalset kaablit.</td></tr>
+                        <tr><td data-label="Probleem">Dockeri tõmmist ei leitud</td><td data-label="Proovi seda">Tõmmiste sildid muutuvad. Vaadake praegust silti siit: <a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> või <a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a>.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="flow">Serveriehitajatele</h2>
+                <p>Kuidas SSN suhtleb kohandatud serveriga. Teil on seda vaja ainult siis, kui ehitate või silute seda.</p>
+                <pre>chat text -&gt; SSN -&gt; your endpoint (or the bridge) -&gt; TTS server -&gt; audio -&gt; SSN plays it</pre>
+                <details class="guide-extra"><summary>Mida SSN saadab</summary>
+                    <p>Koos <code>ttsprovider=customtts</code>, <code>localtts</code> või <code>openai</code>, saadab SSN JSON-vormingus POST-päringu:</p>
+                    <pre>POST /v1/audio/speech
+{
+  "model": "tts-1",
+  "input": "Chat message text",
+  "voice": "af_bella",
+  "response_format": "mp3",
+  "speed": 1.0
+}</pre>
+                    <p>Kui API-võtit pole määratud, ei saada SSN Authorization-päist.</p>
+                </details>
+                <details class="guide-extra"><summary>Mida SSN saab taasesitada</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Vastus</th><th>Töötab?</th><th>Märkmed</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Vastus">Helifail</td><td data-label="Töötab?">Jah</td><td data-label="Märkmed">Parim. <code>audio/mpeg</code>, <code>audio/wav</code>, <code>audio/ogg</code>, <code>audio/aac</code>, või mis tahes brauseris esitatav tüüp.</td></tr>
+                            <tr><td data-label="Vastus">JSON heli URL-iga</td><td data-label="Töötab?">Jah</td><td data-label="Märkmed">Kontrollid <code>url</code>, <code>audio_url</code>, <code>output_url</code>, <code>data.url</code>, ja esimene <code>data[]</code> üksus.</td></tr>
+                            <tr><td data-label="Vastus">Base64 heliga JSON</td><td data-label="Töötab?">Jah</td><td data-label="Märkmed">Kontrollid <code>audio</code>, <code>audio_data</code>, <code>audioContent</code>, <code>b64_json</code>, pesastatud <code>data</code> väljad ja andmete URL-id.</td></tr>
+                            <tr><td data-label="Vastus">Töötlemata PCM</td><td data-label="Töötab?">Ainult ühilduvuskihiga</td><td data-label="Märkmed">Saada see WAV-failina või base64 WAV-ina.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>Vormingud: <code>mp3</code> on väike ja laialdaselt toetatud. <code>wav</code> sobib kloonimisserveritele ja sildade testimiseks. Kasutage <code>opus</code> ainult siis, kui nii server kui ka brauser seda toetavad.</p>
+                    <p><strong>Voogedastust veel ei toetata.</strong> SSN ootab kogu vastuse ja esitab selle siis. Hoidke vestlussõnumid lühikesed.</p>
+                </details>
+                <details class="guide-extra" id="connect" open><summary>Teie enda serveri lingiseaded</summary>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>Seadistamine</th><th>Näide</th><th>Mida see teeb</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Seadistamine"><code>ttsprovider</code></td><td data-label="Näide"><code>customtts</code></td><td data-label="Mida see teeb">Kasutage oma serverit. (<code>openai</code> töötab ka.)</td></tr>
+                            <tr><td data-label="Seadistamine"><code>openaiendpoint</code></td><td data-label="Näide"><code>http://localhost:8880/v1/audio/speech</code></td><td data-label="Mida see teeb">Teie serveri aadress. Muutke porti sobivaks.</td></tr>
+                            <tr><td data-label="Seadistamine"><code>speech</code></td><td data-label="Näide"><code>en-US</code></td><td data-label="Mida see teeb">Lülitab inglise keeles TTS-i sisse.</td></tr>
+                            <tr><td data-label="Seadistamine"><code>voiceopenai</code></td><td data-label="Näide"><code>af_bella</code></td><td data-label="Mida see teeb">Häälnimi. Oleneb serverist.</td></tr>
+                            <tr><td data-label="Seadistamine"><code>openaimodel</code></td><td data-label="Näide"><code>tts-1-hd</code></td><td data-label="Mida see teeb">Mudeli nimi. Vaikimisi <code>tts-1</code>.</td></tr>
+                            <tr><td data-label="Seadistamine"><code>openaiformat</code></td><td data-label="Näide"><code>mp3</code></td><td data-label="Mida see teeb">mp3, wav, opus või flac.</td></tr>
+                            <tr><td data-label="Seadistamine"><code>openaispeed</code></td><td data-label="Näide"><code>1.0</code></td><td data-label="Mida see teeb">Kõnekiirus (0,5–2,0).</td></tr>
+                        </tbody>
+                    </table>
+                    <p>Samuti aktsepteeritud: <code>customttsendpoint</code>, <code>localttsendpoint</code>, <code>customttsvoice</code>, <code>localttsvoice</code>, <code>customttsmodel</code>, <code>localttsmodel</code>, <code>customttsformat</code>, <code>localttsformat</code>. Ettelugemisvalikud, näiteks <code>simpletts</code>, <code>skipmessages</code> ja <code>ttsquick</code> töötavad kõigi teenusepakkujatega: <a href="tts.html#parameters">kõik lingi seaded</a>.</p>
+                    <p>Näidislingid:</p>
+                    <pre>Kokoro-FastAPI:  dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://localhost:8880/v1/audio/speech&amp;voiceopenai=af_bella&amp;openaispeed=1.1
+openedai-speech: dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://localhost:8000/v1/audio/speech&amp;voiceopenai=nova
+kokoro-web:      dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://localhost:3000/api/v1/audio/speech&amp;voiceopenai=af_bella</pre>
+                </details>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>Social Stream Ninja: kohaliku tehisintellekti kõnesünteesi juhend · <a href="tts-setup-guide.html">TTS-i seadistamise juhend</a> &middot; <a href="tts.html">TTS hääljuht</a> &middot; <a href="guides.html">Kõik juhendid</a> &middot; <a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

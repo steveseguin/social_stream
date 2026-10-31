@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="et" data-site-root="../../" data-site-language="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/et/docs/safe-updates-backups.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="et_EE">
+    <meta property="og:url" content="https://socialstream.ninja/beta/et/docs/safe-updates-backups.html">
+    <meta property="og:title" content="Safe Updates, Backups, and Settings Recovery - Social Stream Ninja">
+    <meta property="og:description" content="Safely update Social Stream Ninja, export extension or desktop app settings, and recover a session without making data loss worse.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/et/docs/safe-updates-backups.html">
+    <meta name="twitter:title" content="Safe Updates, Backups, and Settings Recovery - Social Stream Ninja">
+    <meta name="twitter:description" content="Safely update Social Stream Ninja, export extension or desktop app settings, and recover a session without making data loss worse.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safe Updates, Backups, and Settings Recovery - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Safely update Social Stream Ninja, export extension or desktop app settings, and recover a session without making data loss worse.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="et">
+<script id="ssn-site-language" type="application/json">{"language":"et","page":"docs/safe-updates-backups.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/channel-names-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/chatbot-knowledge-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-overlays.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/game-overlay-troubleshooting.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/meld-guide.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Lülitu heledale teemale","Switch to dark theme":"Lülitu tumedale teemale","Light mode":"Hele teema","Dark mode":"Tume teema","Open navigation menu":"Ava navigeerimismenüü","Close navigation menu":"Sulge navigeerimismenüü","Copy this document as Markdown to the clipboard":"Kopeeri dokument Markdownina lõikelauale","Copy Markdown":"Kopeeri Markdown","Copying…":"Kopeerimine…","Markdown copied":"Markdown kopeeritud","Copy failed":"Kopeerimine ebaõnnestus","Copy comprehensive Markdown for an AI assistant":"Kopeeri kogu sisu Markdownina tehisintellekti abilisele","Copy this documentation page as Markdown for an AI assistant":"Kopeeri see juhend Markdownina tehisintellekti abilisele"},"strings":{"## Verified maintainer context - Desktop app verification: `npm run test:settings-transfer` passed against SSApp 0.4.7. It confirmed the Settings Backup menu, Advanced Full Session Transfer menu, settings export/import round trip, encrypted `.ssappbk` round trip, and creation of a `pre-restore-*` directory. - Current desktop normal backup recognizes cached `streamID`, `password`, `state`, and `settings`, plus selected app-local settings such as `socialStreamState`, `settings`, `betaMode`, language, and supported YouTube/TikTok mode flags. - Desktop cached-state recovery also maintains guarded copies such as `savedSync.json` and backup/mirror state. Do not tell a user to delete the profile while attempting recovery. - `Clear All Sources` is intentionally narrower than Full Reset. It removes configured sources/groups while preserving sessions, cookies, and settings. - The dock-link recovery helper reconstructs only the session/password and URL parameters present in the pasted URL.":"## Verified maintainer context - Desktop app verification: `npm run test:settings-transfer` passed against SSApp 0.4.7. It confirmed the Settings Backup menu, Advanced Full Session Transfer menu, settings export/import round trip, encrypted `.ssappbk` round trip, and creation of a `pre-restore-*` directory. - Current desktop normal backup recognizes cached `streamID`, `password`, `state`, and `settings`, plus selected app-local settings such as `socialStreamState`, `settings`, `betaMode`, language, and supported YouTube/TikTok mode flags. - Desktop cached-state recovery also maintains guarded copies such as `savedSync.json` and backup/mirror state. Do not tell a user to delete the profile while attempting recovery. - `Clear All Sources` is intentionally narrower than Full Reset. It removes configured sources/groups while preserving sessions, cookies, and settings. - The dock-link recovery helper reconstructs only the session/password and URL parameters present in the pasted URL.",", choose a safe location, and keep the":", choose a safe location, and keep the",". It is narrower than Full Reset and is designed to preserve sessions, cookies, and settings.":". It is narrower than Full Reset and is designed to preserve sessions, cookies, and settings.",". Keep the unpacked folder in place and reload open chat tabs. See":". Keep the unpacked folder in place and reload open chat tabs. See","A browser-extension":"A browser-extension","A settings export can contain a session password, webhook or source URLs, and other private configuration. Do not post it publicly.":"A settings export can contain a session password, webhook or source URLs, and other private configuration. Do not post it publicly.","Advanced Full Session Transfer":"Advanced Full Session Transfer","After updating, reload the source pages.":"After updating, reload the source pages.","Backup":"Backup","Browser Extension Backup (Chrome, Edge, Firefox)":"Browser Extension Backup (Chrome, Edge, Firefox)","Chrome Web Store and other store-installed extensions:":"Chrome Web Store and other store-installed extensions:","Clear All Sources":"Clear All Sources","Commands & API":"Käsud ja API","Confirm that the saved":"Confirm that the saved","Desktop App Backup":"Desktop App Backup","Do not overwrite your only backup while troubleshooting a damaged setup.":"Do not overwrite your only backup while troubleshooting a damaged setup.","Do not uninstall the browser extension just to update it.":"Do not uninstall the browser extension just to update it.","Download":"Laadi alla","Export / import":"Export / import","Export settings first.":"Export settings first.","Export to disk":"Export to disk","Features":"Funktsioonid","File → Advanced Full Session Transfer":"File → Advanced Full Session Transfer","File → Settings Backup → Export Settings…":"File → Settings Backup → Export Settings…","For a desktop whole-profile backup, use":"For a desktop whole-profile backup, use","Full Session Transfer":"Full Session Transfer","Global settings and tools":"Global settings and tools","Guides":"Juhendid","Hire":"Laenutus","Home":"Avaleht","If Settings Already Disappeared":"If Settings Already Disappeared","If only the desktop source list is damaged, try":"If only the desktop source list is damaged, try","If the app or extension still has useful state, export it before doing anything else.":"If the app or extension still has useful state, export it before doing anything else.","If you have no export but still have an old dock URL, the":"If you have no export but still have an old dock URL, the","Import Settings…":"Import Settings…","Import settings":"Import settings","Import the newest known-good":"Import the newest known-good","Inspiration":"Inspiratsioon","Installing a newer version over the existing installation should preserve the existing profile. Still export first, especially before reinstalling, moving between portable and installed builds, changing channels, or trying a reset.":"Installing a newer version over the existing installation should preserve the existing profile. Still export first, especially before reinstalling, moving between portable and installed builds, changing channels, or trying a reset.","Keep backup files private.":"Keep backup files private.","Keep one working copy.":"Keep one working copy.","Keep the exported file somewhere outside the app or unpacked-extension folder.":"Keep the exported file somewhere outside the app or unpacked-extension folder.","Main navigation":"Peamine navigeerimine","Make one usable backup before updating, reinstalling, resetting, or changing release channels.":"Make one usable backup before updating, reinstalling, resetting, or changing release channels.","Manual unpacked update:":"Manual unpacked update:","Menu":"Menüü","More changes can overwrite the best recovery copy.":"More changes can overwrite the best recovery copy.","Moving or preserving the whole desktop profile, including local sessions and sign-in state. It creates an encrypted":"Moving or preserving the whole desktop profile, including local sessions and sign-in state. It creates an encrypted","Normal updates, settings moves, and first-line recovery. Imports through":"Normal updates, settings moves, and first-line recovery. Imports through","On this page":"Sellel lehel","Open":"Avatud","Open navigation menu":"Ava navigeerimismenüü","Open the Social Stream Ninja control panel and scroll to":"Open the Social Stream Ninja control panel and scroll to","Overlay Gallery":"Ülekattegalerii","Reload":"Reload","Reopen generated dock/overlay links and refresh saved OBS Browser Sources when their URLs changed.":"Reopen generated dock/overlay links and refresh saved OBS Browser Sources when their URLs changed.","Safe Updates, Backups, and Recovery":"Safe Updates, Backups, and Recovery","Safe Updates, Backups, and Settings Recovery - Social Stream Ninja":"Safe Updates, Backups, and Settings Recovery - Social Stream Ninja","Safely update Social Stream Ninja, export extension or desktop app settings, and recover a session without making data loss worse.":"Safely update Social Stream Ninja, export extension or desktop app settings, and recover a session without making data loss worse.","Select":"Select","Selected desktop preferences used by the app.":"Selected desktop preferences used by the app.","Settings Backup":"Settings Backup","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Export and import section showing Reset all settings, Export to disk, Import settings, and the dock-link recovery helper":"Social Stream Ninja Export and import section showing Reset all settings, Export to disk, Import settings, and the dock-link recovery helper","Social Stream Ninja logo":"Social Stream Ninja logo","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 litsents.","Source and global settings represented in the saved state.":"Source and global settings represented in the saved state.","Stop resetting and reinstalling.":"Stop resetting and reinstalling.","Support":"Abi","Supported Sites":"Toetatud saidid","Switch theme":"Vaheta teemat","The Safe Rule":"The Safe Rule","The Social Stream session ID and optional session password.":"The Social Stream session ID and optional session password.","The current Export / import panel. Export before using Reset all settings.":"The current Export / import panel. Export before using Reset all settings.","The current desktop settings-transfer test verifies a round trip for the cached Social Stream state and selected app settings. The browser extension export includes its session ID, optional password, state, and settings object.":"The current desktop settings-transfer test verifies a round trip for the cached Social Stream state and selected app settings. The browser extension export includes its session ID, optional password, state, and settings object.","The desktop app does not update itself automatically.":"The desktop app does not update itself automatically.","The normal settings export is the right choice for most updates. Full Session Transfer is available only in the desktop app; it is larger and replaces the target profile during restore. The app first keeps a":"The normal settings export is the right choice for most updates. Full Session Transfer is available only in the desktop app; it is larger and replaces the target profile during restore. The app first keeps a","Uninstalling removes that extension installation's stored settings.":"Uninstalling removes that extension installation's stored settings.","Use":"Kasuta","Use Full Reset only after making a backup or after accepting a complete local cleanup.":"Use Full Reset only after making a backup or after accepting a complete local cleanup.","Use It For":"Use It For","What A Normal Settings Backup Covers":"What A Normal Settings Backup Covers","backup does not include browser cookies or site login sessions. In the desktop app, a normal settings export also does not copy every cookie or site login; use the desktop-only Full Session Transfer when the entire app profile must move.":"backup does not include browser cookies or site login sessions. In the desktop app, a normal settings export also does not copy every cookie or site login; use the desktop-only Full Session Transfer when the entire app profile must move.","can rebuild the session ID, password, and URL-driven settings found in that link. It cannot recreate settings or source accounts that were never present in the URL.":"can rebuild the session ID, password, and URL-driven settings found in that link. It cannot recreate settings or source accounts that were never present in the URL.","copy of the current profile.":"copy of the current profile.","dock-link recovery helper":"dock-link recovery helper","download and extract the new build, replace the old extension files, then select":"download and extract the new build, replace the old extension files, then select","extension on the filename.":"extension on the filename.","file is present before updating, uninstalling, or resetting anything.":"file is present before updating, uninstalling, or resetting anything.","file.":"file.","manual installation":"manual installation","on":"on","or":"või","settings backup.":"settings backup.","to restore that file later.":"to restore that file later.","updates normally install in place and preserve settings. Do not uninstall and reinstall the extension just to force an update.":"updates normally install in place and preserve settings. Do not uninstall and reinstall the extension just to force an update."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="et" href="https://socialstream.ninja/beta/et/docs/safe-updates-backups.html">
+<!-- ssn-languages:end --></head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Peamine navigeerimine"><a href="../index.html">Avaleht</a><a href="features.html">Funktsioonid</a><a href="inspiration.html" class="site-priority-inspiration">Inspiratsioon</a><a href="download.html">Laadi alla</a><a href="guides.html">Juhendid</a><a href="commands.html">Käsud ja API</a><a href="supported-sites.html">Toetatud saidid</a><a href="overlay-gallery.html" class="site-priority-gallery">Ülekattegalerii</a><a href="services.html" class="site-priority-hire">Laenutus</a><a href="support.html">Abi</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Eesti"><span aria-hidden="true">🌐 </span><span lang="et">Eesti</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/safe-updates-backups.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/safe-updates-backups.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/safe-updates-backups.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/safe-updates-backups.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/safe-updates-backups.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/safe-updates-backups.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/safe-updates-backups.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/safe-updates-backups.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/safe-updates-backups.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/safe-updates-backups.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/safe-updates-backups.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/safe-updates-backups.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/safe-updates-backups.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/safe-updates-backups.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/safe-updates-backups.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/safe-updates-backups.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/safe-updates-backups.html" lang="th" hreflang="th">ไทย</a><a class="site-language-link" href="safe-updates-backups.html" lang="et" hreflang="et" aria-current="true">Eesti</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Vaheta teemat"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Ava navigeerimismenüü" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Safe Updates, Backups, and Recovery</h1>
+            <p>Make one usable backup before updating, reinstalling, resetting, or changing release channels.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <nav class="guide-jump-links" aria-label="Sellel lehel"><a href="#read-section-1">The Safe Rule</a><a href="#read-section-2">Browser Extension Backup (Chrome, Edge, Firefox)</a><a href="#read-section-3">Desktop App Backup</a><a href="#read-section-4">If Settings Already Disappeared</a><a href="#read-section-5">What A Normal Settings Backup Covers</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">The Safe Rule</h2>
+                <ol class="guide-steps">
+                    <li><strong>Export settings first.</strong> Keep the exported file somewhere outside the app or unpacked-extension folder.</li>
+                    <li><strong>Do not uninstall the browser extension just to update it.</strong> Uninstalling removes that extension installation's stored settings.</li>
+                    <li><strong>Keep one working copy.</strong> Do not overwrite your only backup while troubleshooting a damaged setup.</li>
+                    <li><strong>After updating, reload the source pages.</strong> Reopen generated dock/overlay links and refresh saved OBS Browser Sources when their URLs changed.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-2">Browser Extension Backup (Chrome, Edge, Firefox)</h2>
+                <ol class="guide-steps">
+                    <li>Open the Social Stream Ninja control panel and scroll to <strong>Global settings and tools</strong>.</li>
+                    <li>Avatud <strong>Export / import</strong>.</li>
+                    <li>Select <strong>Export to disk</strong>, choose a safe location, and keep the <code>.data</code> extension on the filename.</li>
+                    <li>Confirm that the saved <code>.data</code> file is present before updating, uninstalling, or resetting anything.</li>
+                    <li>Kasuta <strong>Import settings</strong> to restore that file later.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/settings-backup-export-recovery.png" alt="Social Stream Ninja Export and import section showing Reset all settings, Export to disk, Import settings, and the dock-link recovery helper" class="guide-image">
+                    <figcaption>The current Export / import panel. Export before using Reset all settings.</figcaption>
+                </figure>
+                <div class="guide-note">
+                    <p><strong>Chrome Web Store and other store-installed extensions:</strong> updates normally install in place and preserve settings. Do not uninstall and reinstall the extension just to force an update.</p>
+                </div>
+                <div class="guide-note">
+                    <p><strong>Manual unpacked update:</strong> download and extract the new build, replace the old extension files, then select <strong>Reload</strong> on <code>chrome://extensions</code>. Keep the unpacked folder in place and reload open chat tabs. See <a href="download.html#manual-install">manual installation</a>.</p>
+                </div>
+                <div class="warning-note"><strong>Keep backup files private.</strong> A settings export can contain a session password, webhook or source URLs, and other private configuration. Do not post it publicly.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-3">Desktop App Backup</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Backup</th><th>Menüü</th><th>Use It For</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Backup">Settings Backup</td>
+                            <td data-label="Menüü"><strong>File → Settings Backup → Export Settings…</strong></td>
+                            <td data-label="Use It For">Normal updates, settings moves, and first-line recovery. Imports through <strong>Import Settings…</strong>.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Backup">Full Session Transfer</td>
+                            <td data-label="Menüü"><strong>File → Advanced Full Session Transfer</strong></td>
+                            <td data-label="Use It For">Moving or preserving the whole desktop profile, including local sessions and sign-in state. It creates an encrypted <code>.ssappbk</code> file.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>The normal settings export is the right choice for most updates. Full Session Transfer is available only in the desktop app; it is larger and replaces the target profile during restore. The app first keeps a <code>pre-restore-*</code> copy of the current profile.</p>
+                <div class="guide-note">
+                    <p><strong>The desktop app does not update itself automatically.</strong> Installing a newer version over the existing installation should preserve the existing profile. Still export first, especially before reinstalling, moving between portable and installed builds, changing channels, or trying a reset.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-4">If Settings Already Disappeared</h2>
+                <ol class="guide-steps">
+                    <li><strong>Stop resetting and reinstalling.</strong> More changes can overwrite the best recovery copy.</li>
+                    <li>If the app or extension still has useful state, export it before doing anything else.</li>
+                    <li>Import the newest known-good <code>.data</code> või <code>.json</code> settings backup.</li>
+                    <li>For a desktop whole-profile backup, use <strong>Advanced Full Session Transfer</strong>.</li>
+                    <li>If only the desktop source list is damaged, try <strong>Clear All Sources</strong>. It is narrower than Full Reset and is designed to preserve sessions, cookies, and settings.</li>
+                    <li>Use Full Reset only after making a backup or after accepting a complete local cleanup.</li>
+                </ol>
+                <p>If you have no export but still have an old dock URL, the <a href="../../recover.html">dock-link recovery helper</a> can rebuild the session ID, password, and URL-driven settings found in that link. It cannot recreate settings or source accounts that were never present in the URL.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="read-section-5">What A Normal Settings Backup Covers</h2>
+                <p>The current desktop settings-transfer test verifies a round trip for the cached Social Stream state and selected app settings. The browser extension export includes its session ID, optional password, state, and settings object.</p>
+                <ul class="guide-list">
+                    <li>Source and global settings represented in the saved state.</li>
+                    <li>The Social Stream session ID and optional session password.</li>
+                    <li>Selected desktop preferences used by the app.</li>
+                </ul>
+                <p>A browser-extension <code>.data</code> backup does not include browser cookies or site login sessions. In the desktop app, a normal settings export also does not copy every cookie or site login; use the desktop-only Full Session Transfer when the entire app profile must move.</p>
+            </div>
+
+            <template data-copy-markdown-extra>
+## Verified maintainer context
+
+- Desktop app verification: `npm run test:settings-transfer` passed against SSApp 0.4.7. It confirmed the Settings Backup menu, Advanced Full Session Transfer menu, settings export/import round trip, encrypted `.ssappbk` round trip, and creation of a `pre-restore-*` directory.
+- Current desktop normal backup recognizes cached `streamID`, `password`, `state`, and `settings`, plus selected app-local settings such as `socialStreamState`, `settings`, `betaMode`, language, and supported YouTube/TikTok mode flags.
+- Desktop cached-state recovery also maintains guarded copies such as `savedSync.json` and backup/mirror state. Do not tell a user to delete the profile while attempting recovery.
+- `Clear All Sources` is intentionally narrower than Full Reset. It removes configured sources/groups while preserving sessions, cookies, and settings.
+- The dock-link recovery helper reconstructs only the session/password and URL parameters present in the pasted URL.
+            </template>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 litsents.</p></div></div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
