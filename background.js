@@ -18720,6 +18720,10 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		if (data.mod && settings.hidemodsext) {
+			console.debug('[Message filter] Hidden by "Hide moderator messages" (hidemodsext).', {
+				chatname: data.chatname || data.username || data.userid || "unknown",
+				type: data.type || "unknown"
+			});
 			return false;
 		}
 		if (data.mod && data.chatname && settings.hidemodnamesext) {
