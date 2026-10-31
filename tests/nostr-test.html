@@ -505,8 +505,8 @@ function processEvent(event) {
 
     // Fetch profile for the event author (async like nostr.js)
     fetchProfile(event.pubkey, function(profile) {
-        data.chatname = profile.name || hexToNpub(event.pubkey);
-        data.chatimg = profile.picture || '';
+        data.chatname = escapeHtml(profile.name) || hexToNpub(event.pubkey);
+        data.chatimg = escapeHtml(profile.picture) || '';
         
         if (data.chatmessage || data.hasDonation) {
             addMessage(data);
