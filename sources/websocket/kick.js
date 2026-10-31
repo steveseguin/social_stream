@@ -236,6 +236,8 @@ const state = {
     chatMessageCache: new Map(),
     recentGiftEventIds: new Map(),
     recentGiftSignatures: new Map(),
+    rewardCaptureStartedAt: Date.now(),
+    seenRewardRedemptions: new Set(),
     profileCache: new Map(),
     profileFetches: new Map(),
     eventTypesUnavailable: false,
@@ -2545,6 +2547,10 @@ function setChannelSlug(value, options = {}) {
 
     const changed = !sameValue || force;
     if (changed) {
+        if (!sameValue) {
+            state.rewardCaptureStartedAt = Date.now();
+            state.seenRewardRedemptions.clear();
+        }
         state.channelSlug = slug;
         state.channelId = null;
         state.socket.chatroomId = null;
@@ -8052,6 +8058,30 @@ function formatKickAmountLabel(amount, currency) {
     return currencyText ? `${amountText} ${currencyText}` : amountText;
 }
 
+function shouldSkipKickRewardRedemption(redemptionId, status, redeemedAt, bridgeMeta) {
+    const normalizedStatus = status.trim().toLowerCase();
+    // Use redemption identity, not delivery identity or text: updates can have
+    // different webhook IDs, and two genuine redemptions can have identical text.
+    const key = redemptionId ? 'redemption:' + redemptionId
+        : bridgeMeta?.messageId ? 'delivery:' + bridgeMeta.messageId : '';
+    if (key && state.seenRewardRedemptions.has(key)) return true;
+    if (normalizedStatus === 'rejected') {
+        // Also suppress a delayed pending notification arriving after rejection.
+        if (key) state.seenRewardRedemptions.add(key);
+        return true;
+    }
+    if (normalizedStatus && normalizedStatus !== 'pending' && normalizedStatus !== 'accepted') return true;
+    const redeemedTime = Date.parse(redeemedAt);
+    if (Number.isFinite(redeemedTime) && redeemedTime < state.rewardCaptureStartedAt) return true;
+    // Queue-skipping rewards may arrive already accepted. Require their original
+    // redemption time so an approval of an old request cannot become a new alert.
+    if (normalizedStatus === 'accepted' && !Number.isFinite(redeemedTime)) return true;
+    // Keep identities for this channel's capture lifetime, including reconnects.
+    // Expiring them after a short interval would replay later approvals.
+    if (key) state.seenRewardRedemptions.add(key);
+    return false;
+}
+
 function forwardRewardRedemption(eventType, evt, bridgeMeta) {
     const reward = evt?.reward || evt?.channel_reward || evt?.reward_detail || {};
     const redeemerSources = [
@@ -8107,6 +8137,7 @@ function forwardRewardRedemption(eventType, evt, bridgeMeta) {
     const cost = takeNumber(reward?.cost ?? evt?.cost ?? evt?.reward_cost);
     const description = pickFirstString([reward?.description, evt?.description], '');
     const redeemedAt = pickFirstString([evt?.redeemed_at, evt?.redeemedAt, evt?.created_at], '');
+    if (shouldSkipKickRewardRedemption(redemptionId, status, redeemedAt, bridgeMeta)) return;
     const messageSegments = [];
     if (rewardTitle) {
         messageSegments.push(rewardTitle);

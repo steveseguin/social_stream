@@ -10928,11 +10928,19 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         if (!voices || !voices.length) {
             throw new Error("No system voices are available yet. Retry, or choose another TTS provider.");
         }
-        if (voices && settings.system.voice) {
-            const matchingVoice = resolvePopupSystemVoice(voices, settings.system.voice, settings.system.lang);
-            if (matchingVoice) {
-                utterance.voice = matchingVoice.voice || matchingVoice;
-            }
+        let matchingVoice = resolvePopupSystemVoice(voices, settings.system.voice, settings.system.lang);
+        if (!matchingVoice) {
+            // Match TTS.findFallbackSystemVoice: use browser order, not the dropdown's default-first order.
+            const availableVoices = window.speechSynthesis.getVoices().filter(voice =>
+                voice && voice.name && !voice.name.includes("Siri"));
+            const language = String(settings.system.lang || "").toLowerCase();
+            const languageBase = language.split("-")[0];
+            matchingVoice = availableVoices.find(voice => String(voice.lang || "").toLowerCase() === language) ||
+                availableVoices.find(voice => languageBase && String(voice.lang || "").toLowerCase().split("-")[0] === languageBase) ||
+                availableVoices.find(voice => voice.default) || availableVoices[0];
+        }
+        if (matchingVoice) {
+            utterance.voice = matchingVoice.voice || matchingVoice;
         }
         
         this.activeSystemUtterance = utterance;

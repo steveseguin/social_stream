@@ -1378,7 +1378,7 @@
                             <tr>
                                 <td class="membership-event"><code>reward</code></td>
                                 <td><code>channel.reward.redemption.updated</code>, plus bridge chat/system payloads that look like redemptions.</td>
-                                <td><code>meta</code> includes reward/redemption id, title, cost, status, user input, and redeemer.</td>
+                                <td><code>meta</code> includes reward/redemption id, title, cost, status, user input, and redeemer. Structured redemptions are shown once per redemption id during capture; rejected updates and redemptions from before capture started are ignored. New redemptions that arrive already accepted are supported when their original redemption time is supplied.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>new_subscriber</code></td>
