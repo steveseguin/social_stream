@@ -914,6 +914,20 @@
         ].join('::');
     }
 
+    function toTimestampMs(value) {
+        if (typeof value !== "string" && typeof value !== "number") return null;
+        if (typeof value === "string") {
+            value = value.trim();
+            if (!value) return null;
+        }
+        var numeric = typeof value === "number" || /^[+-]?\d+(?:\.\d+)?$/.test(value);
+        var timestamp = numeric ? Number(value) : Date.parse(value);
+        // Incoming epoch numbers may be seconds or milliseconds; never parse them as date text.
+        if (numeric && Math.abs(timestamp) < 100000000000) timestamp *= 1000;
+        return Number.isFinite(timestamp) && Math.abs(timestamp) <= 8640000000000000
+            ? Math.trunc(timestamp) : null;
+    }
+
     function buildChatPayload(item, stream, snapshot) {
         const payload = buildBasePayload();
         const username = normalizeText(item && (item.username || item.user)) || 'Rumble User';
@@ -929,7 +943,7 @@
             apiType: snapshot && snapshot.type ? String(snapshot.type) : '',
             streamId: stream && stream.id ? String(stream.id) : '',
             streamTitle: stream && stream.title ? String(stream.title) : '',
-            createdAt: item && item.created_on ? String(item.created_on) : '',
+            createdAt: toTimestampMs(item && item.created_on),
             badges: Array.isArray(item && item.badges) ? item.badges.slice() : [],
             plainText: message.plainText
         };
@@ -954,8 +968,8 @@
             apiType: snapshot && snapshot.type ? String(snapshot.type) : '',
             streamId: stream && stream.id ? String(stream.id) : '',
             streamTitle: stream && stream.title ? String(stream.title) : '',
-            createdAt: item && item.created_on ? String(item.created_on) : '',
-            expiresOn: item && item.expires_on ? String(item.expires_on) : '',
+            createdAt: toTimestampMs(item && item.created_on),
+            expiresOn: toTimestampMs(item && item.expires_on),
             amount_cents: coerceInteger(item && item.amount_cents),
             amount_dollars: numberOrNull(item && item.amount_dollars),
             currency: 'USD',
@@ -975,7 +989,7 @@
         payload.meta = {
             source: 'live_stream_api',
             apiType: snapshot && snapshot.type ? String(snapshot.type) : '',
-            followedOn: item && item.followed_on ? String(item.followed_on) : ''
+            followedOn: toTimestampMs(item && item.followed_on)
         };
         payload.timestamp = payload.meta.followedOn;
         return payload;
@@ -993,7 +1007,7 @@
         payload.meta = {
             source: 'live_stream_api',
             apiType: snapshot && snapshot.type ? String(snapshot.type) : '',
-            subscribedOn: item && item.subscribed_on ? String(item.subscribed_on) : '',
+            subscribedOn: toTimestampMs(item && item.subscribed_on),
             amount_cents: coerceInteger(item && item.amount_cents),
             amount_dollars: numberOrNull(item && item.amount_dollars),
             currency: amountLabel ? 'USD' : ''
@@ -1089,7 +1103,7 @@
             streamId: normalizeText(streamId),
             messageId: normalizeText(item && item.id),
             requestId: normalizeText(eventPayload && eventPayload.request_id),
-            createdAt: normalizeText(item && item.time),
+            createdAt: toTimestampMs(item && item.time),
             userId: userId,
             userLink: normalizeText(user.link),
             isFollower: !!user.is_follower,

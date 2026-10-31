@@ -1841,8 +1841,8 @@ function ensureClientFactory() {
 			reason: details.reason || '',
 			durationSeconds,
 			permanent,
-			bannedAt: details.bannedAt || '',
-			endsAt: details.endsAt || ''
+			bannedAt: toTimestampMs(details.bannedAt),
+			endsAt: toTimestampMs(details.endsAt)
 		};
 
 		if (login && !meta.avatarUrl) {
@@ -3864,7 +3864,7 @@ async function ensureChatClientInstance() {
 			data.chatimg = normalizedPayload?.chatimg || "";
 		}
 		if (normalizedPayload?.timestamp) {
-			data.timestamp = normalizedPayload.timestamp;
+			data.timestamp = toTimestampMs(normalizedPayload.timestamp);
 		}
 		data.hasDonation = hasDonation;
 		if (hasDonation) {
@@ -4821,6 +4821,20 @@ async function cleanupCurrentConnection() {
 			.filter(Boolean);
 	}
 
+	function toTimestampMs(value) {
+		if (typeof value !== "string" && typeof value !== "number") return null;
+		if (typeof value === "string") {
+			value = value.trim();
+			if (!value) return null;
+		}
+		var numeric = typeof value === "number" || /^[+-]?\d+(?:\.\d+)?$/.test(value);
+		var timestamp = numeric ? Number(value) : Date.parse(value);
+		// Incoming epoch numbers may be seconds or milliseconds; never parse them as date text.
+		if (numeric && Math.abs(timestamp) < 100000000000) timestamp *= 1000;
+		return Number.isFinite(timestamp) && Math.abs(timestamp) <= 8640000000000000
+			? Math.trunc(timestamp) : null;
+	}
+
 	function buildHypeTrainMeta(event, eventSubType) {
 		const phase = eventSubType === 'channel.hype_train.begin'
 			? 'begin'
@@ -4840,10 +4854,10 @@ async function cleanupCurrentConnection() {
 			topContributions: normalizeHypeTrainContributions(event.top_contributions),
 			lastContribution: normalizeHypeTrainContribution(event.last_contribution),
 			sharedTrainParticipants: Array.isArray(event.shared_train_participants) ? event.shared_train_participants : [],
-			startedAt: event.started_at || '',
-			expiresAt: event.expires_at || '',
-			endedAt: event.ended_at || '',
-			cooldownEndsAt: event.cooldown_ends_at || '',
+			startedAt: toTimestampMs(event.started_at),
+			expiresAt: toTimestampMs(event.expires_at),
+			endedAt: toTimestampMs(event.ended_at),
+			cooldownEndsAt: toTimestampMs(event.cooldown_ends_at),
 			isSharedTrain: event.is_shared_train === true,
 			trainType: event.type || 'regular',
 			allTimeHighLevel: normalizeHypeTrainNumber(event.all_time_high_level),
@@ -4978,8 +4992,8 @@ async function cleanupCurrentConnection() {
 				chatmessage: followMessage,
 				chatname: event.user_name,
 				userid: event.user_id,
-				timestamp: event.followed_at,
-				meta: { userId: event.user_id, followedAt: event.followed_at },
+				timestamp: toTimestampMs(event.followed_at),
+				meta: { userId: event.user_id, followedAt: toTimestampMs(event.followed_at) },
 				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false
 			});
@@ -5091,7 +5105,7 @@ async function cleanupCurrentConnection() {
 					chatname: event.user_name,
 					userid: event.user_id,
 					chatmessage: rewardMessage,
-					timestamp: event.redeemed_at,
+					timestamp: toTimestampMs(event.redeemed_at),
 					meta: {
 						userId: event.user_id,
 						rewardId: event.reward.id,
@@ -5155,7 +5169,7 @@ async function cleanupCurrentConnection() {
 				break;
 
 			case 'stream.online':
-				pushMessage({ type: 'twitch', event: 'stream_online', meta: { startedAt: event.started_at } });
+				pushMessage({ type: 'twitch', event: 'stream_online', meta: { startedAt: toTimestampMs(event.started_at) } });
 				addEvent('Stream Online');
 				break;
 			case 'stream.offline':

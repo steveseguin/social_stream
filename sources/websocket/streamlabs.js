@@ -310,7 +310,7 @@
         viewers: entry.viewers || entry.raiders || entry.raider_viewers || null,
         isTest: !!(payload.isTest || entry.isTest || entry.is_test),
         alertId: entry.id || entry._id || payload.event_id || null,
-        createdAt: payload.created_at || entry.created_at || null
+        createdAt: toTimestampMs(payload.created_at || entry.created_at)
       });
 
       const normalized = {
@@ -342,6 +342,20 @@
     });
 
     return events;
+  }
+
+  function toTimestampMs(value) {
+      if (typeof value !== "string" && typeof value !== "number") return null;
+      if (typeof value === "string") {
+          value = value.trim();
+          if (!value) return null;
+      }
+      var numeric = typeof value === "number" || /^[+-]?\d+(?:\.\d+)?$/.test(value);
+      var timestamp = numeric ? Number(value) : Date.parse(value);
+      // Incoming epoch numbers may be seconds or milliseconds; never parse them as date text.
+      if (numeric && Math.abs(timestamp) < 100000000000) timestamp *= 1000;
+      return Number.isFinite(timestamp) && Math.abs(timestamp) <= 8640000000000000
+          ? Math.trunc(timestamp) : null;
   }
 
   function cleanMeta(meta) {

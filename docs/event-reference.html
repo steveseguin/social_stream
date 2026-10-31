@@ -457,6 +457,11 @@
                             <td>Use plain integers for single counters (viewer, follower, subscriber) and objects for richer context. Some older events, such as Twitch DOM <code>community_highlight</code>, carry a string. Check the event-specific shape before reading object properties; new structured details belong in an object.</td>
                         </tr>
                         <tr>
+                            <td><code>data.timestamp</code></td>
+                            <td>number (optional)</td>
+                            <td>Unix milliseconds. Sources convert supplied event times before sending the message; SSN supplies receipt time when no valid timestamp is available. Structured event times in <code>meta</code> also use Unix milliseconds, with missing or invalid times omitted or null. Duration fields keep their documented units.</td>
+                        </tr>
+                        <tr>
                             <td><code>data.firsttime</code></td>
                             <td>boolean</td>
                             <td>Set to <code>true</code> when First-time chatter detection is enabled, the local database is enabled, and this is the first stored chat message for that user/source. The dock uses it for first-time highlighting and first-time beep filters; the optional first-time badge setting prepends a leaf badge to <code>chatbadges</code>.</td>
@@ -935,10 +940,10 @@
                             <tr><td><code>meta.topContributions</code></td><td>array</td><td>Top contributors. Each entry includes <code>userId</code>, <code>userLogin</code>, <code>userName</code>, <code>type</code>, and numeric <code>total</code>.</td></tr>
                             <tr><td><code>meta.lastContribution</code></td><td>object | null</td><td>Most recent contribution, using the same contribution shape as <code>topContributions</code>.</td></tr>
                             <tr><td><code>meta.sharedTrainParticipants</code></td><td>array</td><td>Raw shared-train participant data from Twitch when provided.</td></tr>
-                            <tr><td><code>meta.startedAt</code></td><td>string</td><td>ISO timestamp for train start.</td></tr>
-                            <tr><td><code>meta.expiresAt</code></td><td>string</td><td>ISO timestamp for current train expiry.</td></tr>
-                            <tr><td><code>meta.endedAt</code></td><td>string</td><td>ISO timestamp for train end, or empty before end.</td></tr>
-                            <tr><td><code>meta.cooldownEndsAt</code></td><td>string</td><td>ISO timestamp for cooldown end, or empty before end.</td></tr>
+                            <tr><td><code>meta.startedAt</code></td><td>number | null</td><td>Train start in Unix milliseconds, or null when unavailable.</td></tr>
+                            <tr><td><code>meta.expiresAt</code></td><td>number | null</td><td>Current train expiry in Unix milliseconds, or null when unavailable.</td></tr>
+                            <tr><td><code>meta.endedAt</code></td><td>number | null</td><td>Train end in Unix milliseconds, or null when unavailable.</td></tr>
+                            <tr><td><code>meta.cooldownEndsAt</code></td><td>number | null</td><td>Cooldown end in Unix milliseconds, or null when unavailable.</td></tr>
                             <tr><td><code>meta.isSharedTrain</code></td><td>boolean</td><td>True when Twitch marks the train as shared.</td></tr>
                             <tr><td><code>meta.trainType</code></td><td>string</td><td>Usually <code>regular</code>; treasure trains are surfaced here when Twitch labels them.</td></tr>
                             <tr><td><code>meta.allTimeHighLevel</code></td><td>number | null</td><td>All-time high train level when Twitch provides it.</td></tr>

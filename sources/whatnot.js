@@ -838,6 +838,20 @@
 		return "";
 	}
 
+	function toTimestampMs(value) {
+		if (typeof value !== "string" && typeof value !== "number") return null;
+		if (typeof value === "string") {
+			value = value.trim();
+			if (!value) return null;
+		}
+		var numeric = typeof value === "number" || /^[+-]?\d+(?:\.\d+)?$/.test(value);
+		var timestamp = numeric ? Number(value) : Date.parse(value);
+		// Incoming epoch numbers may be seconds or milliseconds; never parse them as date text.
+		if (numeric && Math.abs(timestamp) < 100000000000) timestamp *= 1000;
+		return Number.isFinite(timestamp) && Math.abs(timestamp) <= 8640000000000000
+			? Math.trunc(timestamp) : null;
+	}
+
 	function buildWebSocketMeta(wsChannel, eventType, payload, user) {
 		var meta = {
 			transport: "websocket",
@@ -857,7 +871,7 @@
 			meta.activityEvent = payload.eventName;
 		}
 		if (payload && typeof payload.timestamp === "number") {
-			meta.timestamp = payload.timestamp;
+			meta.timestamp = toTimestampMs(payload.timestamp);
 		}
 		if (payload && payload.livestreamId) {
 			meta.livestreamId = payload.livestreamId;

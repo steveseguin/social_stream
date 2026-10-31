@@ -85,6 +85,20 @@
 		return resp;
 	}
 
+	function toTimestampMs(value) {
+		if (typeof value !== "string" && typeof value !== "number") return null;
+		if (typeof value === "string") {
+			value = value.trim();
+			if (!value) return null;
+		}
+		var numeric = typeof value === "number" || /^[+-]?\d+(?:\.\d+)?$/.test(value);
+		var timestamp = numeric ? Number(value) : Date.parse(value);
+		// Incoming epoch numbers may be seconds or milliseconds; never parse them as date text.
+		if (numeric && Math.abs(timestamp) < 100000000000) timestamp *= 1000;
+		return Number.isFinite(timestamp) && Math.abs(timestamp) <= 8640000000000000
+			? Math.trunc(timestamp) : null;
+	}
+
 	function pushMessage(data) {
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function () {
@@ -513,7 +527,7 @@
 		}
 		if (payload.createTime) {
 			try {
-				meta.timestamp = new Date(parseInt(payload.createTime, 10)).toISOString();
+				meta.timestamp = toTimestampMs(payload.createTime);
 			} catch (e) {}
 		}
 
