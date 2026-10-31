@@ -83,6 +83,7 @@
 <main class="guide-section">
 <div class="container">
 <nav class="guide-jump-links" aria-label="On this page">
+<a href="#supported">Supported overlays</a>
 <a href="#dock">Chat and queue</a>
 <a href="#featured">Featured Chat</a>
 <a href="#links">Existing links</a>
@@ -90,25 +91,65 @@
 <a href="guides.html">All guides</a>
 </nav>
 <section class="guide-card">
+<h2 id="supported">Which overlays support channel names?</h2>
+<p>The same viewer can comment on several streams. The channel label tells you which creator received the message, while the viewer's name still identifies who sent it. Select any screenshot to view it at full size.</p>
+<figure class="guide-shot">
+<a href="images/channel-names/rolling-example.png"><img src="images/channel-names/rolling-example.png" width="1102" height="280" alt="YouTube messages from River Studio and Hilltop Live, with a channel name beside each viewer." loading="lazy" decoding="async"></a>
+<figcaption>Example rolling chat with channel names enabled: Alex and Morgan are on <strong>River Studio</strong>; Jamie and Casey are on <strong>Hilltop Live</strong>. These are sample messages.</figcaption>
+</figure>
+<table class="guide-table guide-table-stack">
+<thead><tr><th>View</th><th>Supported?</th><th>Where to enable it</th></tr></thead>
+<tbody>
+<tr><td data-label="View">Main chat / control Dock</td><td data-label="Supported?">Yes</td><td data-label="Where to enable it">Main chat overlay &amp; control dock ? Message ? Visibility</td></tr>
+<tr><td data-label="View">Queued messages in the Dock</td><td data-label="Supported?">Yes</td><td data-label="Where to enable it">Uses the same Dock setting; no separate queue toggle.</td></tr>
+<tr><td data-label="View">Rolling chat in OBS</td><td data-label="Supported?">Yes, with the main chat overlay (<code>dock.html</code>)</td><td data-label="Where to enable it">Use the updated Dock link in that Browser Source.</td></tr>
+<tr><td data-label="View">Featured Chat</td><td data-label="Supported?">Yes</td><td data-label="Where to enable it">Featured chat overlay ? Visibility; enable its own toggle.</td></tr>
+<tr><td data-label="View">Other overlays, including Multi-Alerts</td><td data-label="Supported?">This toggle is not available</td><td data-label="Where to enable it">Use the main chat or Featured Chat overlay when you need these channel labels.</td></tr>
+</tbody>
+</table>
+<p>The toggle applies to ordinary messages, Super Chats, memberships, and gifts displayed in these views. It labels all messages with an available channel name; there is no paid-items-only switch.</p>
+</section>
+<section class="guide-card">
 <h2 id="dock">Show channel names in chat and the queue</h2>
 <ol class="guide-steps">
 <li>Open your Social Stream Ninja settings in the desktop app or browser extension.</li>
-<li>Open the <strong>Streaming Chat</strong> settings, then <strong>Message - Visibility</strong>.</li>
-<li>Enable <strong>Show originating channel name</strong>. You can also search settings for <strong>originating channel</strong> to find the toggle.</li>
+<li>In the <strong>Chat</strong> tab, open <strong>Main chat overlay &amp; control dock</strong> (Streaming Chat), then <strong>Message ? Visibility</strong>. If you are in beginner mode and cannot see this section, choose <strong>Switch to full mode</strong> in the welcome panel.</li>
+<li>Enable <strong>Show originating channel name</strong>. Or search settings for <strong>originating channel</strong> and select the result under <strong>Main chat overlay &amp; control dock</strong>.</li>
 <li>Open the updated Streaming Chat Dock link. If you already have the Dock open in OBS or a browser, update its URL using the steps below.</li>
 </ol>
-<p>The label identifies the creator's channel alongside the viewer's message. For example, when Alex sends a Super Chat on River Studio's stream, the channel label is <strong>River Studio</strong>; Alex remains the sender.</p>
-<p>Queued messages use the same Dock display, so there is no separate queue toggle. The setting labels ordinary chat messages too, including questions you want to queue; it is not limited to paid items.</p>
+<figure class="guide-shot guide-shot-compact">
+<a href="images/channel-names/settings-search.png"><img src="images/channel-names/settings-search.png" width="593" height="335" alt="Settings search for originating channel shows separate results for the main chat Dock and Featured Chat." loading="lazy" decoding="async"></a>
+<figcaption>Search for <strong>originating channel</strong>. Choose the first result for the Dock or the second for Featured Chat.</figcaption>
+</figure>
+<figure class="guide-shot guide-shot-compact">
+<a href="images/channel-names/dock-menu.png"><img src="images/channel-names/dock-menu.png" width="593" height="493" alt="Message Visibility menu with Show originating channel name switched on." loading="lazy" decoding="async"></a>
+<figcaption>In the main chat settings, turn on <strong>Show originating channel name</strong>. The blue switch indicates it is enabled.</figcaption>
+</figure>
+<h3>The queue keeps the channel label</h3>
+<p>Queue messages as usual. The Dock's channel-name setting also applies when viewing queued items.</p>
+<figure class="guide-shot">
+<a href="images/channel-names/queue-example.png"><img src="images/channel-names/queue-example.png" width="1102" height="403" alt="Queue entries numbered 1 and 2 show an Alex Super Chat from River Studio and a Casey question from Hilltop Live." loading="lazy" decoding="async"></a>
+<figcaption>Example queue: the $20 Super Chat came from <strong>River Studio</strong>; the question came from <strong>Hilltop Live</strong>.</figcaption>
+</figure>
 </section>
 <section class="guide-card">
 <h2 id="featured">Show channel names on the Featured Chat overlay</h2>
 <ol class="guide-steps">
-<li>Open the <strong>Featured Chat</strong> settings, then <strong>Visibility</strong>.</li>
+<li>In the <strong>Chat</strong> tab, open <strong>Featured chat overlay</strong>, then <strong>Visibility</strong>.</li>
 <li>Enable <strong>Show originating channel name</strong> there as well.</li>
 <li>Copy the updated Featured Chat link into your OBS Browser Source's <strong>URL</strong> field.</li>
 <li>Select a message in the Dock to feature it. Its channel label appears on the overlay when a channel name is available.</li>
 </ol>
 <p>The Dock and Featured Chat have separate settings. Enable both if you want your hosts and your audience to see channel names.</p>
+<figure class="guide-shot guide-shot-compact">
+<a href="images/channel-names/featured-menu.png"><img src="images/channel-names/featured-menu.png" width="593" height="343" alt="Featured Chat Visibility menu with Show originating channel name enabled." loading="lazy" decoding="async"></a>
+<figcaption>Enable the separate <strong>Show originating channel name</strong> switch for Featured Chat.</figcaption>
+</figure>
+<figure class="guide-shot">
+<a href="images/channel-names/featured-example.png"><img src="images/channel-names/featured-example.png" width="1252" height="430" alt="Featured $20 Super Chat showing viewer Alex beside the originating channel River Studio." loading="lazy" decoding="async"></a>
+<figcaption>Example Featured Chat overlay: <strong>Alex</strong> is the viewer, <strong>River Studio</strong> is the channel, and <strong>$20.00</strong> is the Super Chat amount.</figcaption>
+</figure>
+
 </section>
 <section class="guide-card">
 <h2 id="links">Update an existing browser or OBS link</h2>
@@ -121,6 +162,7 @@ https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID&amp;showchannel
 <section class="guide-card">
 <h2 id="help">If a channel name is missing</h2>
 <ul>
+<li><strong>Only one search result?</strong> Beginner mode can hide the main chat visibility section. Choose <strong>Switch to full mode</strong>, then search again. You can also use the <a href="#links">URL option</a> without changing menu modes.</li>
 <li><strong>Check the exact option.</strong> Use <strong>Show originating channel name</strong>. <strong>Show source name as text next to icon</strong> shows the platform, such as YouTube, rather than the creator's channel.</li>
 <li><strong>Check the page you are viewing.</strong> Its URL should contain <code>showchannelname</code>. Updating the Dock does not update a separate Featured Chat Browser Source.</li>
 <li><strong>Check a new message.</strong> Channel details may still be loading when a source first opens. Wait for a new message from each connected channel, then queue or feature it to check the label.</li>
