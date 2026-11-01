@@ -11292,6 +11292,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     
     googleTTS(text, settings) {
         this.premiumQueueActive = true;
+        this.setTestRunning(this.currentTtsSection || "", true);
         const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${settings.google.key}`;
         
         const voiceName = settings.google.voice || (settings.google.lang ? undefined : "en-GB-Standard-A");
