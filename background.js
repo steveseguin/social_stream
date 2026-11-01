@@ -12371,6 +12371,7 @@ async function fetchRumbleSseBatch(request = {}) {
 	return {
 		status: rumbleResponse ? rumbleResponse.status : 0,
 		chatId: streamId,
+		serverTime: rumbleResponse ? Date.parse(rumbleResponse.headers.get("Date")) || null : null,
 		events
 	};
 }

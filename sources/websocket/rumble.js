@@ -60,6 +60,7 @@
         sseEmoteCatalogRetryAfter: 0,
         sseFailedStreamId: '',
         sseLoggedConnected: false,
+        sseStartedAt: null,
         consecutiveErrors: 0
     };
     const websocketProxy = {
@@ -1136,7 +1137,9 @@
             if (!payload || !rememberEventId(key)) {
                 return;
             }
-            if (seedOnly) {
+            const oldSnapshotMessage = !state.cfg.replayHistory && eventPayload && eventPayload.type === 'init' &&
+                payload.timestamp !== null && state.sseStartedAt !== null && payload.timestamp < state.sseStartedAt;
+            if (seedOnly || oldSnapshotMessage) {
                 appendFeedEntry(payload, { seeded: true });
                 seeded += 1;
                 return;
@@ -1343,6 +1346,7 @@
         let timeoutId = null;
         let timedOut = false;
         let response;
+        let serverTime = null;
         let reader;
         let buffer = '';
         const decoder = new TextDecoder();
@@ -1369,9 +1373,10 @@
             if (!response.ok) {
                 throw new Error('HTTP ' + response.status);
             }
+            serverTime = toTimestampMs(response.headers.get('Date'));
             if (!response.body || typeof response.body.getReader !== 'function') {
                 const text = await response.text();
-                return collectSseEventsFromBuffer(text, SSE_BATCH_MAX_EVENTS).events;
+                return { events: collectSseEventsFromBuffer(text, SSE_BATCH_MAX_EVENTS).events, serverTime: serverTime };
             }
             reader = response.body.getReader();
             while (events.length < SSE_BATCH_MAX_EVENTS) {
@@ -1410,7 +1415,7 @@
                 try { await reader.cancel(); } catch (error) {}
             }
         }
-        return events;
+        return { events: events, serverTime: serverTime };
     }
 
     function fetchSseBatch(streamId, includeInit) {
@@ -1435,7 +1440,7 @@
                             reject(new Error((response && response.error) || 'Rumble SSE background fetch failed'));
                             return;
                         }
-                        resolve(Array.isArray(response.events) ? response.events : []);
+                        resolve({ events: Array.isArray(response.events) ? response.events : [], serverTime: toTimestampMs(response.serverTime) });
                     });
                 } catch (error) {
                     reject(error);
@@ -1610,6 +1615,7 @@
         state.sseEmoteCatalogFailedStreamId = '';
         state.sseEmoteCatalogRetryAfter = 0;
         state.sseLoggedConnected = false;
+        state.sseStartedAt = null;
         if (state.sseTimer) {
             clearTimeout(state.sseTimer);
             state.sseTimer = null;
@@ -1630,12 +1636,17 @@
         if (!state.active || !state.sseActive || token !== state.sseToken || state.sseStreamId !== streamId) {
             return;
         }
-        fetchSseBatch(streamId, includeInit).then(function (events) {
+        const requestedAt = Math.floor(Date.now() / 1000) * 1000;
+        fetchSseBatch(streamId, includeInit).then(function (batch) {
             if (!state.active || !state.sseActive || token !== state.sseToken || state.sseStreamId !== streamId) {
                 return;
             }
+            if (state.sseStartedAt === null) {
+                // Use Rumble's clock so a fast local clock cannot discard new snapshot messages.
+                state.sseStartedAt = batch.serverTime || requestedAt;
+            }
             return ensureRumbleEmoteCatalog(streamId).then(function () {
-                return events;
+                return batch.events;
             });
         }).then(function (events) {
             if (!state.active || !state.sseActive || token !== state.sseToken || state.sseStreamId !== streamId) {

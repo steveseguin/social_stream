@@ -63,6 +63,7 @@ function service(initialDisk = {}) {
 	vm.runInContext(fs.readFileSync(path.join(root, 'shared/monetization/ebay-service.js'), 'utf8'), c);
 	vm.runInContext(fs.readFileSync(path.join(root, 'shared/monetization/ninja-service.js'), 'utf8'), c);
 	vm.runInContext(fs.readFileSync(path.join(root, 'shared/monetization/shopify-service.js'), 'utf8'), c);
+	vm.runInContext(fs.readFileSync(path.join(root, 'shared/monetization/patreon-service.js'), 'utf8'), c);
 	vm.runInContext(fs.readFileSync(path.join(root, 'shared/monetization/background.js'), 'utf8'), c);
 	return {
 		c,
