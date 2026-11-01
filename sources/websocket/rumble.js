@@ -1148,9 +1148,9 @@
         return { forwarded: forwarded, seeded: seeded };
     }
 
-    function processSseEvent(eventPayload, streamId) {
+    function processSseEvent(eventPayload, streamId, initialBatch) {
         const eventData = eventPayload && eventPayload.data ? eventPayload.data : {};
-        const seedOnly = eventPayload && eventPayload.type === 'init' && !state.cfg.replayHistory;
+        const seedOnly = initialBatch && eventPayload && eventPayload.type === 'init' && !state.cfg.replayHistory;
         let results;
         rememberSseUsers(eventData.users);
         results = processSseMessages(eventData.messages, streamId, eventPayload, seedOnly);
@@ -1320,7 +1320,7 @@
         }
     }
 
-    function collectSseEventsFromBuffer(buffer, includeInit, maxEvents) {
+    function collectSseEventsFromBuffer(buffer, maxEvents) {
         const events = [];
         let boundary;
         while ((boundary = findSseBoundary(buffer)) && events.length < maxEvents) {
@@ -1330,9 +1330,7 @@
             if (!parsed) {
                 continue;
             }
-            if (parsed.type === 'init' && !includeInit) {
-                continue;
-            }
+            // Reconnect snapshots can contain messages received between batches.
             events.push(parsed);
         }
         return { events: events, buffer: buffer };
@@ -1373,7 +1371,7 @@
             }
             if (!response.body || typeof response.body.getReader !== 'function') {
                 const text = await response.text();
-                return collectSseEventsFromBuffer(text, includeInit, SSE_BATCH_MAX_EVENTS).events;
+                return collectSseEventsFromBuffer(text, SSE_BATCH_MAX_EVENTS).events;
             }
             reader = response.body.getReader();
             while (events.length < SSE_BATCH_MAX_EVENTS) {
@@ -1390,13 +1388,13 @@
                     break;
                 }
                 buffer += decoder.decode(result.value, { stream: true });
-                const collected = collectSseEventsFromBuffer(buffer, includeInit, SSE_BATCH_MAX_EVENTS - events.length);
+                const collected = collectSseEventsFromBuffer(buffer, SSE_BATCH_MAX_EVENTS - events.length);
                 buffer = collected.buffer;
                 Array.prototype.push.apply(events, collected.events);
                 if (includeInit && events.length) {
                     break;
                 }
-                if (!includeInit && collected.events.length) {
+                if (!includeInit && collected.events.some(function (event) { return event.type !== 'init'; })) {
                     break;
                 }
             }
@@ -1648,7 +1646,7 @@
                 log('Connected to Rumble SSE chat for avatars.', 'success');
             }
             (Array.isArray(events) ? events : []).forEach(function (eventPayload) {
-                processSseEvent(eventPayload, streamId);
+                processSseEvent(eventPayload, streamId, includeInit);
             });
             scheduleSseLoop(token, streamId, false, 250);
         }).catch(function (error) {

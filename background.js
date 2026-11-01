@@ -12273,7 +12273,7 @@ function parseRumbleSseBlock(block) {
 	}
 }
 
-function collectRumbleSseEventsFromBuffer(buffer, includeInit, maxEvents) {
+function collectRumbleSseEventsFromBuffer(buffer, maxEvents) {
 	const events = [];
 	let boundary;
 	while ((boundary = findRumbleSseBoundary(buffer)) && events.length < maxEvents) {
@@ -12282,9 +12282,7 @@ function collectRumbleSseEventsFromBuffer(buffer, includeInit, maxEvents) {
 		if (!parsed) {
 			continue;
 		}
-		if (parsed.type === "init" && !includeInit) {
-			continue;
-		}
+		// Reconnect snapshots can contain messages received between batches.
 		events.push(parsed);
 	}
 	return { events, buffer };
@@ -12345,13 +12343,13 @@ async function fetchRumbleSseBatch(request = {}) {
 				break;
 			}
 			buffer += decoder.decode(readResult.value, { stream: true });
-			const collected = collectRumbleSseEventsFromBuffer(buffer, includeInit, maxEvents - events.length);
+			const collected = collectRumbleSseEventsFromBuffer(buffer, maxEvents - events.length);
 			buffer = collected.buffer;
 			events.push(...collected.events);
 			if (includeInit && events.length) {
 				break;
 			}
-			if (!includeInit && collected.events.length) {
+			if (!includeInit && collected.events.some(event => event.type !== "init")) {
 				break;
 			}
 		}
