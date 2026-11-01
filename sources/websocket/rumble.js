@@ -40,6 +40,7 @@
         lastStreamId: '',
         lastStreamLive: null,
         lastViewerCount: null,
+        lastViewerCountAt: 0,
         lastFollowerCount: null,
         lastSubscriberCount: null,
         lastSocketState: '',
@@ -842,7 +843,7 @@
         };
     }
 
-    function combineLatestAndRecent(latest, recent, keyBuilder) {
+    function combineLatestAndRecent(latest, recent, keyBuilder, preserveOccurrences) {
         const output = [];
         const seen = new Set();
         const pushIfNew = function (entry) {
@@ -853,7 +854,14 @@
             seen.add(key);
             output.push(entry);
         };
-        (Array.isArray(recent) ? recent : []).forEach(pushIfNew);
+        (Array.isArray(recent) ? recent : []).forEach(function (entry) {
+            if (preserveOccurrences && entry) {
+                seen.add(keyBuilder(entry));
+                output.push(entry);
+            } else {
+                pushIfNew(entry);
+            }
+        });
         pushIfNew(latest);
         return output;
     }
@@ -1526,17 +1534,22 @@
     }
 
     function maybeEmitCounterEvent(eventName, count, trackerName) {
-        if (eventName === 'viewer_update' && !(state.settings.showviewercount || state.settings.hypemode)) {
+        const isViewerCount = eventName === 'viewer_update';
+        if (isViewerCount && (!state.isExtensionOn || !(state.settings.showviewercount || state.settings.hypemode))) {
             state[trackerName] = null;
             return;
         }
+        // Desktop counts need a source ID so startup and later updates share one entry.
+        if (isViewerCount && window.ninjafy && typeof window.__SSAPP_TAB_ID__ === 'undefined') return;
         if (!isFinite(count)) {
             return;
         }
-        if (state[trackerName] === count) {
+        // Keep a steady count visible in docks, which expire updates after 130 seconds.
+        if (state[trackerName] === count && (!isViewerCount || Date.now() - state.lastViewerCountAt < 60000)) {
             return;
         }
         state[trackerName] = count;
+        if (isViewerCount) state.lastViewerCountAt = Date.now();
         pushMessage({
             type: 'rumble',
             event: eventName,
@@ -1708,7 +1721,7 @@
         const viewers = stream ? coerceInteger(stream.watching_now) : null;
         const recentMessages = !useSseChat && stream && stream.chat ? combineLatestAndRecent(stream.chat.latest_message, stream.chat.recent_messages, function (item) {
             return buildChatKey(stream && stream.id ? stream.id : '', item);
-        }) : [];
+        }, true) : [];
         const recentRants = stream && stream.chat ? combineLatestAndRecent(stream.chat.latest_rant, stream.chat.recent_rants, function (item) {
             return buildRantKey(stream && stream.id ? stream.id : '', item);
         }) : [];
@@ -1776,9 +1789,14 @@
                 }
             });
         });
+        // The API has no chat IDs and timestamps can share a second. Keep each row
+        // in a snapshot, while recognizing the same occurrences on later polls.
+        const chatOccurrences = Object.create(null);
         sortByDate(recentMessages, 'created_on').forEach(function (item) {
+            const key = buildChatKey(stream && stream.id ? stream.id : '', item);
+            chatOccurrences[key] = (chatOccurrences[key] || 0) + 1;
             entries.push({
-                key: buildChatKey(stream && stream.id ? stream.id : '', item),
+                key: key + '::' + chatOccurrences[key],
                 build: function () {
                     return buildChatPayload(item, stream, snapshot);
                 }
@@ -2060,10 +2078,23 @@
         await pollOnce(false);
     }
 
+    function applySourceSettings(request) {
+        if (!request || typeof request !== 'object') return;
+        const wasEnabled = state.isExtensionOn && (state.settings.showviewercount || state.settings.hypemode);
+        if ('settings' in request) state.settings = request.settings || {};
+        if ('state' in request) state.isExtensionOn = !!request.state;
+        if (!wasEnabled && state.isExtensionOn && (state.settings.showviewercount || state.settings.hypemode)) {
+            state.lastViewerCount = null;
+        }
+    }
+
     function bridge() {
-        if (extAvailable()) {
+        const appBridge = window.ninjafy;
+        const useAppBridge = appBridge && typeof appBridge.sendMessage === 'function' &&
+            typeof appBridge.exposeDoSomethingInWebApp === 'function';
+        if (useAppBridge || extAvailable()) {
             try {
-                chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+                const onMessage = function (request, sender, sendResponse) {
                     try {
                         if (request === 'getSource') {
                             // Rumble websocket mode is read-only, so keep it out of relay targets.
@@ -2075,13 +2106,8 @@
                             return;
                         }
                         if (request && typeof request === 'object') {
-                            if ('settings' in request) {
-                                state.settings = request.settings || {};
-                                sendResponse(true);
-                                return;
-                            }
-                            if ('state' in request) {
-                                state.isExtensionOn = !!request.state;
+                            if ('settings' in request || 'state' in request) {
+                                applySourceSettings(request);
                                 sendResponse(true);
                                 return;
                             }
@@ -2095,24 +2121,22 @@
                         log('Extension bridge error: ' + ((error && error.message) || error), 'error');
                     }
                     sendResponse(false);
-                });
+                };
+                if (useAppBridge) appBridge.exposeDoSomethingInWebApp(onMessage);
+                else chrome.runtime.onMessage.addListener(onMessage);
             } catch (error) {
                 log('Failed wiring extension bridge: ' + ((error && error.message) || error), 'warn');
             }
 
             try {
-                chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
-                    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
+                const onSettings = function (response) {
+                    if (!useAppBridge && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
                         return;
                     }
-                    response = response || {};
-                    if ('settings' in response) {
-                        state.settings = response.settings || {};
-                    }
-                    if ('state' in response) {
-                        state.isExtensionOn = !!response.state;
-                    }
-                });
+                    applySourceSettings(response);
+                };
+                if (useAppBridge) appBridge.sendMessage(null, { getSettings: true }, onSettings, window.__SSAPP_TAB_ID__);
+                else chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, onSettings);
             } catch (error) {}
         }
 

@@ -2347,12 +2347,25 @@ function notifyBridgeStatus() {
 }
 
 function wireExtensionBridge() {
-    if (!(typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id)) {
+    const appBridge = window.ninjafy;
+    const useAppBridge = appBridge && typeof appBridge.sendMessage === 'function' &&
+        typeof appBridge.exposeDoSomethingInWebApp === 'function';
+    if (!useAppBridge && !(typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id)) {
         return;
     }
 
+    function applySourceSettings(request) {
+        if (!request || typeof request !== 'object') return;
+        const wasEnabled = state.settings.showviewercount || state.settings.hypemode;
+        if ('settings' in request) state.settings = request.settings || {};
+        if ('state' in request) state.isExtensionOn = !!request.state;
+        if (!wasEnabled && (state.settings.showviewercount || state.settings.hypemode)) {
+            pollViewerCount();
+        }
+    }
+
     try {
-        chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+        const onMessage = function (request, sender, sendResponse) {
             try {
                 if (request === 'getSource') {
                     sendResponse('velora');
@@ -2368,13 +2381,8 @@ function wireExtensionBridge() {
                     return;
                 }
                 if (request && typeof request === 'object') {
-                    if ('settings' in request) {
-                        state.settings = request.settings || {};
-                        sendResponse(true);
-                        return;
-                    }
-                    if ('state' in request) {
-                        state.isExtensionOn = !!request.state;
+                    if ('settings' in request || 'state' in request) {
+                        applySourceSettings(request);
                         sendResponse(true);
                         return;
                     }
@@ -2389,22 +2397,20 @@ function wireExtensionBridge() {
                 }
             } catch (e) {}
             sendResponse(false);
-        });
+        };
+        if (useAppBridge) appBridge.exposeDoSomethingInWebApp(onMessage);
+        else chrome.runtime.onMessage.addListener(onMessage);
     } catch (e) {}
 
     try {
-        chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
-            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
+        const onSettings = function (response) {
+            if (!useAppBridge && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
                 return;
             }
-            response = response || {};
-            if ('settings' in response) {
-                state.settings = response.settings || {};
-            }
-            if ('state' in response) {
-                state.isExtensionOn = !!response.state;
-            }
-        });
+            applySourceSettings(response);
+        };
+        if (useAppBridge) appBridge.sendMessage(null, { getSettings: true }, onSettings, window.__SSAPP_TAB_ID__);
+        else chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, onSettings);
     } catch (e) {}
 }
 
@@ -2623,6 +2629,8 @@ function updateViewerCount(count, unavailableLabel) {
         els.viewerCount.textContent = `Viewers: ${Number(count).toLocaleString()}`;
         els.viewerCount.className = 'status-chip ok';
         if (!(state.settings.showviewercount || state.settings.hypemode)) return;
+        // Desktop counts need a source ID so startup and later updates share one entry.
+        if (window.ninjafy && typeof window.__SSAPP_TAB_ID__ === 'undefined') return;
         try {
             relayToApp({
                 message: { type: 'velora', event: 'viewer_update', meta: count }
