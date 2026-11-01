@@ -11308,7 +11308,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             }
         };
 
-        if (!/-Chirp3-HD-/i.test(voiceName || "")) {
+        if (/-Chirp3-HD-/i.test(voiceName || "")) {
+            data.audioConfig.speakingRate = Math.max(0.25, Math.min(2, Number(settings.google.rate) || 1));
+        } else {
             data.audioConfig.speakingRate = settings.google.rate;
             data.audioConfig.pitch = settings.google.pitch;
         }

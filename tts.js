@@ -2570,8 +2570,10 @@ TTS.googleTTS = function(tts, options) {
             }
         };
 
-        // Chirp 3: HD rejects speaking rate and pitch, including their default values.
-        if (!/-Chirp3-HD-/i.test(voiceName || "")) {
+        // Chirp 3: HD supports pace from 0.25x to 2x, but not the pitch parameter.
+        if (/-Chirp3-HD-/i.test(voiceName || "")) {
+            data.audioConfig.speakingRate = Math.max(0.25, Math.min(2, Number(TTS.googleSettings.rate) || 1));
+        } else {
             data.audioConfig.speakingRate = TTS.googleSettings.rate;
             data.audioConfig.pitch = TTS.googleSettings.pitch;
         }
