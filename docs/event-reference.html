@@ -2068,10 +2068,10 @@
                 </article>
 
                 <article class="platform-card" id="razo">
-                    <h3>Razo - Popout Chat Capture</h3>
+                    <h3>Razo - Live Chat Capture</h3>
                     <p class="source-note">Implementation: <code>sources/razo.js</code></p>
                     <ul class="requirements">
-                        <li>Open <code>https://razo.tv/dashboard/chat-popout</code> while signed in, or use <code>https://razo.tv/overlay/chat/USERNAME</code> for read-only capture.</li>
+                        <li>Open <code>https://razo.tv/watch/USERNAME</code>. In the desktop app, paste that URL into <strong>Add other source</strong> and activate it. The signed-in dashboard chat popout and complete Chat overlay link from Creator Studio also work as source URLs.</li>
                         <li>Captures ordinary Razo chat, including loaded history, once per native message ID during the page session. Messages received while capture is off are skipped.</li>
                         <li>Chat uses <code>type: "razo"</code> and <code>platform: "razo"</code>, with display name, username, name color, image badges and message text or emotes. Text-only mode uses emote alt text.</li>
                         <li>Visible &ldquo;Message removed&rdquo; updates remove the corresponding captured message. Paid cards, activity notices, private staff/bot notices and imported multichat rows are excluded; use Razo for those features.</li>

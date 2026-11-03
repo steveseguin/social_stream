@@ -1525,11 +1525,11 @@ document.addEventListener('DOMContentLoaded', function() {
 			name: 'Razo.tv',
 			icon: 'razo.png',
 			description: 'Razo live chat.',
-			type: 'popout',
+			type: 'standard',
 			instructions: `
 				<ul>
-					<li>Open https://razo.tv/dashboard/chat-popout while signed in, or https://razo.tv/overlay/chat/USERNAME for read-only capture.</li>
-					<li>In the desktop app, add that URL as an Other source.</li>
+					<li>Open https://razo.tv/watch/USERNAME. In the desktop app, paste that URL into Add other source and activate it.</li>
+					<li>You can also use the signed-in dashboard chat popout or the complete Chat overlay link from Creator Studio.</li>
 				</ul>
 			`
 		},

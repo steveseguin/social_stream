@@ -1,7 +1,7 @@
 (function () {
 	// The desktop app supplies the same chrome.runtime bridge as the extension.
 	function isChatPage() {
-		return location.hostname === "razo.tv" && /^\/(dashboard\/chat-popout\/?|overlay\/chat\/[^/]+\/?|obs\/chat\/?)$/.test(location.pathname);
+		return location.hostname === "razo.tv" && /^\/(watch\/[^/]+\/?|dashboard\/chat-popout\/?|overlay\/chat\/[^/]+\/?|obs\/chat\/?)$/.test(location.pathname);
 	}
 	if (!isChatPage()) return;
 	if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.sendMessage) return;
@@ -53,6 +53,7 @@
 		var key = location.pathname + ":" + row.id;
 		var entry = messages.get(key);
 		var text = row.querySelector('[data-chat-text]');
+		if (!text && row.hasAttribute("data-chat-emote")) text = row.querySelector("p");
 		if (!text) return; // Paid cards, activity and private staff/bot notices are not chat rows.
 		var name = text.querySelector('a[href^="/u/"]');
 		if (!name || !name.textContent.trim()) return;
@@ -122,7 +123,7 @@
 			mutation.addedNodes.forEach(scan);
 		});
 	});
-	observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["id", "data-chat-line", "data-chat-text", "class"] });
+	observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["id", "data-chat-line", "data-chat-text", "data-chat-emote", "src", "alt", "class"] });
 
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		if (request === "getSource") { sendResponse("razo"); return; }
