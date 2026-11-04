@@ -151,8 +151,8 @@ Category key: `configure_llm_api`. Settings: 36.
 
 | Key | Type | Short Description |
 | --- | --- | --- |
-| `aiAutoTranslate` | boolean | Translate incoming chat messages to the target language using the selected AI provider. |
-| `aiAutoTranslateBlockMode` | boolean | Wait for translation before showing messages; drop messages if the translator is busy, times out, or fails. |
+| `aiAutoTranslate` | boolean | Translate incoming chat to the target language. English targets first use local phrase lookup and language detection to preserve English and uncertain text; remaining translations use the selected AI provider. See the [translation guide](../../ai-modes-guide.html#english-translation). |
+| `aiAutoTranslateBlockMode` | boolean | Drop messages requiring AI translation if the translator is busy, times out, or fails. English-target passthrough and local phrase translations still appear; language detector failures preserve the original message. |
 | `aiAutoTranslateContext` | boolean | Include the last 10 chat messages as context for AI translation. |
 | `aiAutoTranslateOutgoing` | boolean | Translate outgoing host messages before sending them to chat sources. |
 | `aiAutoTranslateOutgoingTargetLanguage` | text | Target language for AI-translated outgoing host messages. Defaults to the incoming translation target. |

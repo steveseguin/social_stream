@@ -3157,6 +3157,10 @@
 	}
 
 	function processEvent(ele) {
+		// The chat observer can also see typing counters and drafts in the composer.
+		if (ele.closest('[data-e2e="live-chat-input-container"]')) {
+			return;
+		}
 		if (ele.querySelector("[class*='DivTopGiverContainer']")) {
 			return;
 		}
