@@ -128,7 +128,7 @@
 			initialized = false;
 		}
 		var row = document.querySelector(rowSelector);
-		var next = row && row.parentElement;
+		var next = (row && row.parentElement) || document.querySelector(".flex-1.space-y-1.overflow-y-auto");
 		if (container && container.isConnected) return;
 		if (observer) observer.disconnect();
 		container = next;
