@@ -108,6 +108,23 @@ try {
         }
     }
 
+    // The local preview sink is fed by other room participants via the relay,
+    // not by locally constructed markup, so it must always receive escaped text.
+    // Keep this separate from escapeHtml(), which intentionally returns raw text
+    // in textonlymode for the forwarded wire payload.
+    function escapePreviewHtml(unsafe) {
+        try {
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        } catch (e) {
+            return "";
+        }
+    }
+
     async function mintGuestToken(roomId, apiBase) {
         try {
             const response = await fetch(`${apiBase}/rooms/${roomId}/tokens`, {
@@ -174,7 +191,7 @@ try {
             messageDiv.style.fontStyle = 'italic';
             messageDiv.textContent = message;
         } else {
-            messageDiv.innerHTML = `<strong>${escapeHtml(authorName)}</strong>: ${escapeHtml(message)}`;
+            messageDiv.innerHTML = `<strong>${escapePreviewHtml(authorName)}</strong>: ${escapePreviewHtml(message)}`;
         }
 
         textarea.appendChild(messageDiv);
