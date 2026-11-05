@@ -57,7 +57,7 @@
           reset button sends {cmd:"resetmetastats"}. &demo shows sample values.
           Rename any stat with &<key>label=, for example &biggestlabel=Biggest%20D.
         - &counters=Deaths|!death,Owed%20Pushups|!pushup|sub:15|gift:15   named tallies. Mods, hosts and
-          admins change them from chat: !death, !death -1, !death =5, !death reset. &counterall lets anyone.
+          admins change them from chat: !death, !death -1, !death =5, !death reset. &counterall lets anyone add 1.
           Optional rules add on events: sub, gift (per sub), bits (per 100), tip (per $1), follow, raid.
           goal:25 shows 3/25 with a bar, so a list of them makes a stacked goal panel, and daily:1 resets at midnight.
         - &subathon=6h&subathonsub=10&subathonbits=4&subathontip=1&subathonfollow=0&subathonraid=30&subathonmax=72h
@@ -283,10 +283,6 @@
             vertical-align: middle;
         }
 
-        .chat-text br {
-            display: none;
-        }
-
         .stat-clock.bump .value {
             animation: none;
         }
@@ -301,6 +297,51 @@
 
         .stat-counter {
             position: relative;
+        }
+
+        .stat.category-stats .label,
+        .stat.category-stats .value {
+            flex: 0 1 auto;
+            min-width: 0;
+        }
+
+        .stat.category-stats .label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .stat-counter .value,
+        .stat-subs .value,
+        .stat-bits .value,
+        .stat-donations .value,
+        .stat-follows .value,
+        .stat-totalsubs .value,
+        .stat-totalfollows .value,
+        .stat-subathon .value,
+        .stat-clock .value {
+            flex: 0 0 auto;
+            overflow: visible;
+        }
+
+        .stat-subathonrules {
+            max-width: min(94vw, 900px);
+        }
+
+        .stat-subathonrules .icon {
+            display: none;
+        }
+
+        .stat-subathonrules .value {
+            white-space: normal;
+            line-height: 1.25;
+        }
+
+        body.style-strip .stat-subathonrules .value {
+            white-space: nowrap;
+        }
+
+        body.layout-grid.has-stats #bar {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         }
 
         .stat.has-progress {
@@ -828,6 +869,8 @@
         body.style-strip .stat-latestsub,
         body.style-strip .stat-latesttip,
         body.style-strip .stat-latestbits,
+        body.style-strip .stat-latestraid,
+        body.style-strip .stat-subathonrules,
         body.style-strip .stat-topgifter,
         body.style-strip .stat-topbits {
             flex: 0 1 auto;
@@ -835,18 +878,8 @@
             overflow: hidden;
         }
 
-        body.style-strip .stat-biggest .value,
-        body.style-strip .stat-latestfollow .value,
-        body.style-strip .stat-latestsub .value,
-        body.style-strip .stat-latesttip .value,
-        body.style-strip .stat-latestbits .value,
-        body.style-strip .stat-topgifter .value,
-        body.style-strip .stat-topbits .value {
-            flex: 0 1 auto;
-            min-width: 0;
-        }
-
-        body.style-strip .label {
+        /* On the one-line bar a name gives way before its label does. */
+        body.style-strip .stat.category-stats .label {
             flex-shrink: 0;
         }
 
@@ -1790,6 +1823,7 @@
                         entry.icon = STAT_ICONS[key];
                         entry.statKey = key;
                         entry.paused = key === "subathon" && !!subathon && !subathon.isRunning();
+                        if (key === "subathonrules") entry.value = statValue(key, totals);
                     }
                 });
                 if (counters) {
@@ -1812,6 +1846,8 @@
 
             // Mods, hosts and admins only: a viewer must not be able to change a counter or the subathon clock.
             function handleChatCommand(data) {
+                // The same rule giveaways use, so a command relayed to several platforms only counts once.
+                if (data.event || data.bot || data.private || data.reflection) return false;
                 var text = String(data.chatmessage || "").trim();
                 if (text.charAt(0) !== "!") return false;
                 var trusted = !!(data.mod || data.host || data.admin);
@@ -1822,7 +1858,9 @@
                         return true;
                     }
                 }
-                return !!counters && (trusted || urlParams.has("counterall")) && counters.command(text);
+                if (!counters) return false;
+                if (trusted) return counters.command(text);
+                return urlParams.has("counterall") && counters.viewerAdd(text, data.userid || data.chatname);
             }
 
             function trackStats(data, allowCommands) {
@@ -1861,6 +1899,9 @@
                 text.className = "chat-text";
                 if (chat.isHtml && window.SocialStreamChatHTML) {
                     text.innerHTML = SocialStreamChatHTML.sanitize(chat.message);
+                    Array.prototype.forEach.call(text.querySelectorAll("br"), function (lineBreak) {
+                        lineBreak.parentNode.replaceChild(document.createTextNode(" "), lineBreak);
+                    });
                 } else {
                     text.textContent = chat.message;
                 }
@@ -2266,7 +2307,10 @@
                 });
             });
 
-            if (statsActive) startStats();
+            if (statsActive) {
+                document.body.classList.add("has-stats");
+                startStats();
+            }
             render();
             if (!statsDemo) {
                 connectServerModes();

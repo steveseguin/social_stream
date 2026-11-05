@@ -297,7 +297,7 @@
 				first.innerHTML = items;
 				while (track.children.length > 1) { track.removeChild(track.lastChild); }
 				var once = first.offsetWidth;
-				if (!once) { return; }
+				if (!once) { watch(); return; }
 				var wanted = Math.ceil((view.offsetWidth || 1) / once);
 				for (var n = 1; n < wanted; n++) { first.insertAdjacentHTML("beforeend", items); }
 				track.appendChild(first.cloneNode(true));

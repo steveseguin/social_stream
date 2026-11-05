@@ -490,6 +490,13 @@
 					parts.push(SSO.formatTime(SSO.zonedParts(new Date(), tz), c.h12, false));
 				}
 				line.textContent = parts.filter(Boolean).join(" \u00b7 ");
+				// Conditions change length through the day, so fit the line to the source rather than cut the clock off.
+				var size = c.fontsize;
+				line.style.fontSize = size + "px";
+				while (size > 12 && line.scrollWidth > line.clientWidth) {
+					size -= 1;
+					line.style.fontSize = size + "px";
+				}
 			}
 			function fetchWeather() {
 				if (!place) { return; }

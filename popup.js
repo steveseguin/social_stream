@@ -3085,7 +3085,7 @@ function setupLazySourceInput(input) {
 }
 
 function ensureSelectValueOption(select, value, label) {
-    if (!select || value === undefined || value === null || value === "") return;
+    if (!select || !select.options || value === undefined || value === null || value === "") return;
     value = String(value);
     for (let i = 0; i < select.options.length; i++) {
         if (select.options[i].value === value) return;

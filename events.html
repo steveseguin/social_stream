@@ -889,6 +889,8 @@ body.event-style-spotlight #chat-container {
 }
 body.spotlight-left #chat-container { align-items: flex-start; }
 body.event-style-spotlight #chat-container .message {
+    display: flex;
+    align-items: center;
     flex: 0 0 auto;
     box-sizing: border-box;
     max-width: 100%;
@@ -906,7 +908,16 @@ body.event-style-spotlight #chat-container .message {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    text-shadow: 0 1px 3px #000, 0 0 2px #000;
+    text-shadow: 0 0 2px #000, 0 0 2px #000, 0 1px 3px #000;
+}
+/* Dark rows on a light halo for bright scenes, with the highlight inverted. */
+body.event-style-spotlight.light-mode {
+    --feed-card: #111;
+    --feed-ink: #111;
+    --feed-accent: #fff;
+}
+body.event-style-spotlight.light-mode #chat-container .message {
+    text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 1px 3px #fff;
 }
 body.event-style-spotlight #chat-container.board-oldest > .message:last-child,
 body.event-style-spotlight #chat-container:not(.board-oldest) > .message:first-child {
@@ -914,14 +925,35 @@ body.event-style-spotlight #chat-container:not(.board-oldest) > .message:first-c
     color: var(--feed-accent);
     text-shadow: none;
 }
+/* A long name shortens first. The count and amount are never cut. */
+body.event-style-spotlight .spotlight-line {
+    display: flex;
+    align-items: baseline;
+    min-width: 0;
+}
 body.event-style-spotlight .spotlight-line span {
-    margin: 0;
+    display: block;
+    flex: 0 0 auto;
+    margin: 0 0 0 .6em;
     padding: 0;
     color: inherit;
     font: inherit;
     letter-spacing: inherit;
+    white-space: nowrap;
 }
-body.event-style-spotlight .board-avatar { float: none; width: 1.1em; height: 1.1em; margin: 0 .35em 0 0; vertical-align: -.15em; }
+body.event-style-spotlight .spotlight-line span:first-child { margin-left: 0; }
+body.event-style-spotlight .spotlight-line .name,
+body.event-style-spotlight .spotlight-line .event-specific {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+body.event-style-spotlight .spotlight-line .name {
+    flex-shrink: 1000000;
+    min-width: 4em;
+}
+body.event-style-spotlight .board-avatar { flex: 0 0 auto; float: none; width: 1.1em; height: 1.1em; margin: 0 .35em 0 0; }
 
 /* Explicit URL overrides also work with the original layout. */
 body.feed-custom-card .message, body.feed-custom-card #header { background: var(--feed-card) !important; }

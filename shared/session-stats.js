@@ -3,9 +3,10 @@
     // Running stream totals, tally counters and a subathon clock for overlays.
     // No DOM access: storage, the clock and USD conversion are passed in so this stays testable.
     var GIFT_EVENTS = ['subscription_gift', 'giftpurchase', 'gift_subscription'];
-    var SUB_EVENTS = ['new_subscriber', 'sponsorship', 'subscription', 'newmember', 'new_member', 'resub', 'membershiprenewal', 'renewed_member'];
+    var SUB_EVENTS = ['new_subscriber', 'subscribe', 'subscribed', 'sponsorship', 'subscription', 'newmember', 'new_member', 'resub', 'membershiprenewal', 'renewed_member', 'membermilestone', 'member_milestone'];
     var FOLLOW_EVENTS = ['new_follower', 'follow', 'followed'];
     var DEDUPE_MS = 8000;
+    var VIEWER_ADD_COOLDOWN_MS = 5000;
     var MAX_TALLY_NAMES = 300;
     var MAX_COUNT = 1e12;
 
@@ -16,6 +17,10 @@
     function total(value) {
         var number = Number(value);
         return Number.isFinite(number) && number > 0 ? number : 0;
+    }
+    // Some sources spell these with hyphens, such as StreamElements' new-subscriber.
+    function eventOf(data) {
+        return data.event ? String(data.event).toLowerCase().replace(/-/g, '_') : '';
     }
     function metaOf(data) {
         return data.meta && typeof data.meta === 'object' ? data.meta : {};
@@ -38,9 +43,20 @@
         var text = [data.hasDonation, data.chatmessage, data.subtitle].filter(Boolean).join(' ');
         // Twitch IRC follows a mass-gift notice with one notice per recipient, and those are what get counted.
         if (/\bis gifting\s+\d+/i.test(text)) return 0;
-        var match = text.match(/(?:gifted|sent|bought|purchased)\s+(\d+)/i) ||
-            text.match(/(\d+)\s*(?:x|gifted|gifts|gift|subs|memberships|members)\b/i);
+        // Digits in a name ("Bob2000 gifted"), a sub tier, or the gifter's lifetime total say nothing about this gift.
+        var name = String(data.chatname || '');
+        if (name) text = text.split(name).join(' ');
+        text = text.replace(/\bthey(?:'ve| have)\b[^.!]*[.!]?/ig, ' ').replace(/\btier\s*\d+/ig, ' ');
+        var match = text.match(/\b(?:gifted|sent|bought|purchased)\s+(\d+)\b/i) ||
+            text.match(/\b(\d+)\s*(?:x|gifted|gifts|gift|subs|memberships|members)\b/i);
         return match && parseInt(match[1], 10) > 0 ? parseInt(match[1], 10) : 1;
+    }
+    function raiderCount(data, meta) {
+        var direct = total(meta.viewers || meta.numRaiders || data.viewers);
+        if (direct) return direct;
+        // Twitch IRC only states the size in its notice text.
+        var match = String(data.chatmessage || '').match(/\b(\d[\d,]*)\s+(?:viewers|raiders)\b/i);
+        return match ? total(match[1].replace(/,/g, '')) : 0;
     }
     function bitCount(data, meta) {
         var direct = total(meta.bits);
@@ -52,15 +68,20 @@
         var raw = String(data.tier || meta.tier || '').toLowerCase();
         if (/^(3|3000|tier ?3)$/.test(raw)) return 3;
         if (/^(2|2000|tier ?2)$/.test(raw)) return 2;
+        if (!raw) {
+            // Twitch IRC only states the tier in its notice text.
+            var notice = String(data.chatmessage || '').match(/\btier\s*([23])\b/i);
+            if (notice) return Number(notice[1]);
+        }
         return 1;
     }
     // What a payload is worth, whichever overlay feature is asking.
     function classify(data) {
-        var meta = metaOf(data), event = data.event ? String(data.event).toLowerCase() : '';
+        var meta = metaOf(data), event = eventOf(data);
         var membership = String(data.membership || '').toLowerCase();
         var result = {
             event: event, meta: meta, subs: 0, gifted: 0, bits: bitCount(data, meta), follow: FOLLOW_EVENTS.indexOf(event) !== -1, label: '', tier: tierOf(data, meta),
-            raid: event === 'raid', raiders: total(meta.viewers || meta.numRaiders || data.viewers)
+            raid: event === 'raid', raiders: raiderCount(data, meta)
         };
         // A gift counts once, on the purchase. Twitch EventSub also sends a notice for each recipient.
         var isRecipient = event === 'giftredemption' || membership === 'gift_recipient' || data.isGift === true || meta.isGift === true;
@@ -68,10 +89,11 @@
             if (GIFT_EVENTS.indexOf(event) !== -1 || membership === 'gift_giver') result.gifted = giftCount(data, meta);
             else if (SUB_EVENTS.indexOf(event) !== -1 || (event === 'true' && membership)) result.subs = 1;
         }
-        // Same rule as the tip jar: YouTube gift events carry a value that is not a cash donation.
-        if (event !== 'giftpurchase' && event !== 'giftredemption') {
-            result.label = data.hasDonation || data.donation || data.donationAmount || '';
-        }
+        var label = data.hasDonation || data.donation || data.donationAmount || '';
+        // Channel points, reward redemptions and gift counts are in the donation field but are not money.
+        var notMoney = event === 'giftpurchase' || event === 'giftredemption' || event === 'channel_points' || event === 'reward' ||
+            !!data.reward || /\b(?:points?|gifted)\b/i.test(String(label));
+        if (!notMoney) result.label = label;
         return result;
     }
     // Replayed history must not count again, and control packets are not stream events.
@@ -81,18 +103,18 @@
 
     function blankStats(day, previous) {
         return {
-            day: day, subs: 0, bits: 0, donations: 0, follows: 0, biggest: null, gifters: {}, cheerers: {},
+            day: day, subs: 0, bits: 0, donations: 0, follows: 0, biggest: null, gifters: Object.create(null), cheerers: Object.create(null),
             // "Latest" and platform totals describe the channel, not the day, so they survive the midnight reset.
             latest: previous ? previous.latest : { follow: null, sub: null, tip: null, bits: null, raid: null },
-            platformSubs: previous ? previous.platformSubs : {},
-            platformFollows: previous ? previous.platformFollows : {}
+            platformSubs: previous ? previous.platformSubs : Object.create(null),
+            platformFollows: previous ? previous.platformFollows : Object.create(null)
         };
     }
     function cleanPerson(entry) {
         return entry && typeof entry === 'object' && entry.name ? { name: String(entry.name), amount: String(entry.amount || '') } : null;
     }
     function cleanTally(map) {
-        var clean = {};
+        var clean = Object.create(null);
         if (map && typeof map === 'object') {
             Object.keys(map).slice(0, MAX_TALLY_NAMES).forEach(function (name) {
                 if (total(map[name])) clean[name] = total(map[name]);
@@ -164,8 +186,10 @@
         }
         function recordPlatformTotal(data, event) {
             var field = event === 'subscriber_update' ? 'platformSubs' : (event === 'follower_update' ? 'platformFollows' : '');
-            if (!field || typeof data.meta !== 'number' || !(data.meta >= 0)) return false;
-            state[field][String(data.type || 'unknown')] = data.meta;
+            if (!field || data.meta === null || typeof data.meta === 'object' || data.meta === '') return false;
+            var count = Number(String(data.meta).replace(/,/g, ''));
+            if (!(count >= 0)) return false;
+            state[field][String(data.type || 'unknown')] = count;
             save();
             return true;
         }
@@ -173,7 +197,7 @@
         function record(data) {
             if (!isCountable(data)) return null;
             rollover();
-            var event = data.event ? String(data.event).toLowerCase() : '';
+            var event = eventOf(data);
             if (recordPlatformTotal(data, event)) return { changedOnly: true };
             var worth = classify(data);
             if ((!worth.subs && !worth.gifted && !worth.bits && !worth.follow && !worth.raid && !worth.label) || isRepeat(data, worth.meta)) return null;
@@ -203,7 +227,8 @@
             return worth;
         }
         function reset() {
-            state = blankStats(localDay(now()));
+            var kept = { latest: blankStats('').latest, platformSubs: state.platformSubs, platformFollows: state.platformFollows };
+            state = blankStats(localDay(now()), kept);
             save();
         }
         function read() {
@@ -267,13 +292,17 @@
         var storage = options.storage, key = options.key, defs = options.counters, now = options.now || Date.now;
         var saved = readJson(storage, key) || {};
         var savedValues = saved.values && typeof saved.values === 'object' ? saved.values : {};
-        var days = saved.days && typeof saved.days === 'object' ? saved.days : {};
-        var values = {};
+        var days = Object.assign(Object.create(null), saved.days && typeof saved.days === 'object' ? saved.days : {});
+        var values = Object.create(null);
         defs.forEach(function (def) {
             var value = Number(savedValues[def.label]);
             values[def.label] = Number.isFinite(value) ? clampCount(value) : 0;
         });
-        function save() { writeJson(storage, key, { values: values, days: days }); }
+        // Other sources may keep different counters under this key, so add to the record rather than replace it.
+        function save() {
+            var current = readJson(storage, key) || {};
+            writeJson(storage, key, { values: Object.assign({}, current.values, values), days: Object.assign({}, current.days, days) });
+        }
         // True when a daily counter just started a new day, including one that was closed at midnight.
         function rollover() {
             var today = localDay(now()), reset = false, touched = false;
@@ -319,6 +348,21 @@
             }
             return false;
         }
+        // For &counterall: a viewer gets the bare command only, so nobody can reset a count or jump it by a million.
+        var viewerTimes = {};
+        function viewerAdd(text, who) {
+            var lower = String(text || '').trim().toLowerCase();
+            var def = defs.filter(function (item) { return item.command && item.command === lower; })[0];
+            if (!def) return false;
+            var time = now(), person = String(who || '').toLowerCase() + '|' + def.label;
+            Object.keys(viewerTimes).forEach(function (seen) {
+                if (time - viewerTimes[seen] > VIEWER_ADD_COOLDOWN_MS) delete viewerTimes[seen];
+            });
+            // A person spamming the command is still treated as handled, so it stays off the chat line.
+            if (viewerTimes[person]) return true;
+            viewerTimes[person] = time;
+            return change(def, '');
+        }
         function onEvent(worth) {
             var changed = false;
             defs.forEach(function (def) {
@@ -338,7 +382,7 @@
                     return { label: def.label, value: values[def.label], goal: def.goal, money: onlyTips };
                 });
             },
-            command: command, onEvent: onEvent, rollover: rollover,
+            command: command, viewerAdd: viewerAdd, onEvent: onEvent, rollover: rollover,
             control: function (label, action) { var def = find(label); return def ? change(def, action) : false; }
         };
     }
@@ -350,6 +394,7 @@
         var perSub = options.perSubMinutes || [], perBits = options.perBitsMinutes || 0;
         var perTip = options.perTipMinutes || 0, perFollow = options.perFollowMinutes || 0, perRaid = options.perRaidMinutes || 0;
         var state = load();
+        if (!readJson(storage, key)) save();
 
         function load() {
             var saved = readJson(storage, key);
@@ -363,9 +408,9 @@
             return state.running ? Math.max(0, state.endsAt - now()) : state.remainingMs;
         }
         function setRemaining(ms) {
-            var capped = Math.max(0, maxMs ? Math.min(maxMs, ms) : ms);
-            state.remainingMs = capped;
-            if (state.running) state.endsAt = now() + capped;
+            var next = Math.max(0, ms);
+            state.remainingMs = next;
+            if (state.running) state.endsAt = now() + next;
             save();
         }
         // Call once a second. Returns true at the moment the clock reaches zero.
@@ -424,7 +469,10 @@
             if (state.ended) return false;
             var minutes = minutesFor(worth);
             if (!minutes) return false;
-            setRemaining(remaining() + minutes * 60000);
+            // The cap limits what support can add. A mod can still set the clock higher, and support never shrinks it.
+            var current = remaining(), next = current + minutes * 60000;
+            if (maxMs) next = Math.min(next, Math.max(maxMs, current));
+            setRemaining(next);
             return true;
         }
         // Handles start, pause, resume, reset, "add 30m", "remove 10m", "set 6h".

@@ -834,11 +834,15 @@ function setStatus(status, message) {
     ? 'Connected'
     : status === 'signed-in'
       ? 'Signed in'
-      : status === 'connecting'
-        ? 'Connecting'
-        : status === 'error'
-          ? 'Error'
-          : 'Disconnected';
+      : status === 'no-live'
+        ? 'No live video'
+        : status === 'ready'
+          ? 'Ready'
+          : status === 'connecting'
+            ? 'Connecting'
+            : status === 'error'
+              ? 'Error'
+              : 'Disconnected';
   els.statusChip.textContent = statusText;
   els.statusText.textContent = statusText;
   els.statusChip.classList.remove('connected', 'connecting', 'error');
@@ -1256,23 +1260,32 @@ async function resolveLiveVideo({ connectAfter = false } = {}) {
       broadcast_status: JSON.stringify(['LIVE']),
       access_token: state.accessToken
     });
-    const entry = Array.isArray(data.data) && data.data.length ? data.data[0] : null;
-    if (!entry || !entry.id) {
-      setStatus('error', 'No live video found for this Page.');
+    if (!data || !Array.isArray(data.data) || data.error) {
+      throw new Error(data && data.error && data.error.message
+        ? data.error.message
+        : 'Facebook returned an invalid live-video response. Please try again.');
+    }
+    if (!data.data.length) {
+      const signedIn = state.authUser ? 'You are still signed in. ' : '';
+      setStatus('no-live', `${signedIn}Facebook returned no active live videos for this Page. Start a broadcast and retry, or paste a video URL under Advanced / manual setup.`);
       return;
+    }
+    const entry = data.data[0];
+    if (!entry || !entry.id) {
+      throw new Error('Facebook returned a live video without an ID. Please try again.');
     }
     state.videoId = String(entry.id);
     state.videoTitle = entry.title || '';
     updateInputs();
     saveConfig();
-    setStatus('connected', `Resolved live video ${state.videoId}.`);
+    setStatus(state.connected ? 'connected' : state.authUser ? 'signed-in' : 'ready', `Live video ${state.videoId} found. Click Connect to load comments.`);
     if (connectAfter) {
       connect();
     }
   } catch (err) {
     const details = err && err.details ? err.details : null;
-    const msg = details && details.message ? details.message : 'Failed to resolve live video.';
-    setStatus('error', msg);
+    const msg = details && details.message ? details.message : err.message || 'Please try again.';
+    setStatus('error', `Could not check live videos: ${msg}`);
     state.errorCount += 1;
     updateStats();
   }

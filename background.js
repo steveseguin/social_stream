@@ -8318,6 +8318,9 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 		if (hasTargetedMetaPayload(message)) {
 			sendTargetP2P(message, "meta");
 			sendTargetP2P(message, "aioverlay");
+		} else if (excludeFromDockAsAlert) {
+			// Stream stats on the meta overlay count this event, and the dock feed no longer carries it.
+			sendTargetP2P(message, "meta");
 		}
 	} catch (e) {
 		console.error(e);

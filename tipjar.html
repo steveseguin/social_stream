@@ -440,7 +440,14 @@
     }
 
     .banner-goal {
+        min-width: max-content;
         text-align: right;
+    }
+
+    body.goal-long-title .text-line {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        line-height: 1.25;
     }
 
     #bar-style {
@@ -3001,11 +3008,16 @@
         }
 
         // True once per new day, so a daily goal starts over even if the overlay was closed at midnight.
+        let goalDayInUse = null;
         function goalDayChanged() {
             if (!goalResetDaily) return false;
             const today = new Date().toDateString();
-            let saved = null;
-            try { saved = localStorage.getItem(amountStorageKey + '_day'); } catch (e) {}
+            if (goalDayInUse === today) return false;
+            let saved = goalDayInUse;
+            if (saved === null) {
+                try { saved = localStorage.getItem(amountStorageKey + '_day'); } catch (e) {}
+            }
+            goalDayInUse = today;
             try { localStorage.setItem(amountStorageKey + '_day', today); } catch (e) {}
             return saved !== null && saved !== today;
         }
@@ -3736,7 +3748,7 @@
         function formatProgressText() {
             const state = getProgressState();
             const progress = formatProgressPair(state);
-            if (style === 'jar' && (hypeMode || countMode || hasCustomTitle || state.isLevel)) {
+            if (style === 'jar' && (hypeMode || countMode || hasCustomTitle || state.isLevel || customTitle !== baseGoalTitle)) {
                 const titleText = state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle;
                 return `${titleText}: ${progress}`;
             }
@@ -4386,7 +4398,7 @@ function processData(data) {
         // Initialize display
         renderAmount();
         if (urlParams.has('notoast') || style === 'banner') document.body.classList.add('no-toast');
-        if (style === 'banner' && (goalEndDate || goalRewards.length)) document.body.classList.add('banner-long-title');
+        if (goalEndDate || goalRewards.length) document.body.classList.add(style === 'banner' ? 'banner-long-title' : 'goal-long-title');
         if (goalResetDaily || goalEndDate) {
             const refreshGoalDay = function() {
                 if (goalDayChanged()) resetTipJarAmount(false);

@@ -490,8 +490,8 @@
 			{ key: "style", label: "Frame style", type: "select", group: "Style", default: "solid", options: [["solid", "Solid"], ["double", "Double line"], ["corners", "Corner brackets"], ["neon", "Neon glow"], ["gradient", "Gradient"], ["rgb", "Gamer RGB (animated)"], ["fire", "Fire glow"], ["pixel", "Blocky pixel"], ["tape", "Taped on (punk)"], ["kawaii", "Kawaii hearts"], ["polaroid", "Photo print"], ["window", "Retro app window"], ["browser", "Browser window"]] },
 			{ key: "color", label: "Frame colour", type: "color", group: "Style", default: "ffffff" },
 			{ key: "color2", label: "Second colour (gradient)", type: "color", group: "Style", default: "8b5cf6" },
-			{ key: "wintitle", label: "Title or address (window and browser styles)", type: "text", group: "Style", default: "LIVE.EXE" },
-			{ key: "winfg", label: "Title bar text (window and browser styles)", type: "color", group: "Style", default: "111111" },
+			{ key: "wintitle", label: "Title or address", type: "text", group: "Style", default: "LIVE.EXE", show: { style: ["window", "browser"] } },
+			{ key: "winfg", label: "Title bar text", type: "color", group: "Style", default: "111111", show: { style: ["window", "browser"] } },
 			{ key: "width", label: "Thickness", type: "range", group: "Style", default: 6, min: 1, max: 40, step: 1 },
 			{ key: "radius", label: "Corner radius", type: "range", group: "Style", default: 14, min: 0, max: 200, step: 1 },
 			{ key: "inset", label: "Space around the frame", type: "range", group: "Style", default: 12, min: 0, max: 80, step: 1 },
@@ -626,6 +626,9 @@
 				var off = c.inset + "px";
 				if (c.style === "polaroid" && p[0] === "bottom") {
 					tag.style.cssText += "background:transparent;box-shadow:none;bottom:" + (c.inset + 8) + "px;";
+				} else if ((c.style === "window" || c.style === "browser") && p[0] === "top") {
+					// Below the title bar, so it does not cover the title or the buttons.
+					tag.style.top = "calc(" + off + " + 2.3em)";
 				} else {
 					tag.style[p[0]] = "calc(" + off + " - .9em)";
 				}
