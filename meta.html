@@ -64,9 +64,9 @@
           a countdown that support pushes back, in minutes (subathonsub=6,15,40 for tiers 1, 2, 3).
           It waits for "!subathon start" or the popup button unless &subathonstart is set. Mods also get
           pause, add 30m, remove 10m, set 6h and reset. &subathoncmd renames the command.
-        - Feed: stats need every chat, tip and sub, but the host only sends the "meta" label payloads
-          with a meta field. So stats add a second hidden bridge labelled "dock" (or use the &server2
-          socket). The dock bridge only counts; it never draws chips, so nothing renders twice.
+        - Feed: stats use the existing dock feed and its host filters. They add a hidden bridge
+          labelled "dock" (or use the &server2 socket). The meta bridge only supplies channel totals
+          and metadata chips; it does not bypass dock filters for counting support.
         - &demo needs &stats, &counters or &subathon and stays offline.
         - &layout=column|grid              chip flow (default: wrapping row)
         - &position=top-left|top-center|top-right|middle-left|center|middle-right|
@@ -2089,9 +2089,11 @@
 
                 if (statsActive) {
                     if (handleStatsControl(data)) return;
-                    // A message with a meta field reaches both bridges. Same id, so the second copy adds nothing.
+                    // Count support from the dock feed only, respecting the host's existing filters.
+                    // The meta bridge supplies channel totals, not an alternate support feed.
                     var fullFeed = source === "feed" || source === "socketFeed" || source === "local";
-                    var countable = fullFeed || (source === "metaLabel" && data.id !== undefined && data.id !== null);
+                    var channelTotal = data.event === "subscriber_update" || data.event === "follower_update";
+                    var countable = fullFeed || (source === "metaLabel" && channelTotal);
                     if (countable && trackStats(data, fullFeed)) {
                         syncStatEntries();
                         render();

@@ -127,7 +127,7 @@
         var names = Object.keys(map);
         if (names.length <= MAX_TALLY_NAMES) return;
         var smallest = names.reduce(function (low, next) { return map[next] < map[low] ? next : low; }, names[0]);
-        if (smallest !== name) delete map[smallest];
+        delete map[smallest];
     }
     function leader(map) {
         var names = Object.keys(map);
@@ -292,11 +292,13 @@
         var storage = options.storage, key = options.key, defs = options.counters, now = options.now || Date.now;
         var saved = readJson(storage, key) || {};
         var savedValues = saved.values && typeof saved.values === 'object' ? saved.values : {};
-        var days = Object.assign(Object.create(null), saved.days && typeof saved.days === 'object' ? saved.days : {});
+        var savedDays = saved.days && typeof saved.days === 'object' ? saved.days : {};
+        var days = Object.create(null);
         var values = Object.create(null);
         defs.forEach(function (def) {
             var value = Number(savedValues[def.label]);
             values[def.label] = Number.isFinite(value) ? clampCount(value) : 0;
+            if (Object.prototype.hasOwnProperty.call(savedDays, def.label)) days[def.label] = savedDays[def.label];
         });
         // Other sources may keep different counters under this key, so add to the record rather than replace it.
         function save() {
@@ -317,6 +319,7 @@
         }
         rollover();
         function change(def, action) {
+            rollover();
             var text = String(action === undefined || action === null ? '' : action).trim().toLowerCase();
             var current = values[def.label];
             if (!text) current += 1;
@@ -364,7 +367,7 @@
             return change(def, '');
         }
         function onEvent(worth) {
-            var changed = false;
+            var changed = rollover();
             defs.forEach(function (def) {
                 var amount = eventAmount(def.rules, worth);
                 if (amount) {
@@ -466,6 +469,7 @@
         }
         // Supporters extend a clock that is still going; once it has ended only a mod can bring it back.
         function onEvent(worth) {
+            tick();
             if (state.ended) return false;
             var minutes = minutesFor(worth);
             if (!minutes) return false;
@@ -477,6 +481,7 @@
         }
         // Handles start, pause, resume, reset, "add 30m", "remove 10m", "set 6h".
         function control(text) {
+            tick();
             var parts = String(text || '').trim().toLowerCase().split(/\s+/);
             var word = parts[0], amount = parseDuration(parts.slice(1).join(' '));
             if (word === 'start' || word === 'resume') return start();

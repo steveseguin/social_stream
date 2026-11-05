@@ -3933,13 +3933,20 @@
             ]);
             if (direct) return Math.max(1, Math.round(direct));
 
-            const text = [
+            let text = [
                 data.hasDonation,
                 data.chatmessage,
                 data.subtitle
             ].filter(Boolean).join(' ');
-            const match = text.match(/(?:gifted|sent|bought|purchased)\s+(\d+)/i) ||
-                text.match(/(\d+)\s*(?:x|gifted|gifts|gift|subs|memberships|members)/i);
+            // Legacy Twitch IRC sends a batch announcement followed by each gifted sub.
+            // Structured purchase totals above still count; only the redundant text summary is skipped.
+            if (data.type === 'twitch' && data.event === 'subscription_gift' && /\bis gifting\s+\d+/i.test(String(data.chatmessage || ''))) return 0;
+            // Names, subscription tiers and lifetime totals are not the size of this gift.
+            const name = String(data.chatname || '');
+            if (name) text = text.split(name).join(' ');
+            text = text.replace(/\bthey(?:'ve| have)\b[^.!]*[.!]?/ig, ' ').replace(/\btier\s*\d+/ig, ' ');
+            const match = text.match(/\b(?:gifted|sent|bought|purchased)\s+(\d+)\b/i) ||
+                text.match(/\b(\d+)\s*(?:x|gifted|gifts|gift|subs|memberships|members)\b/i);
             if (match) {
                 const parsed = parseInt(match[1], 10);
                 if (!isNaN(parsed) && parsed > 0) return parsed;
@@ -4030,7 +4037,9 @@
             const legacyMembershipEvent = eventName === 'true' && !!membership;
             const legacyResubEvent = legacyMembershipEvent && /\bresub(?:scribed)?\b/i.test(String(data.chatmessage || ''));
 
-            if (isGiftRedemptionEvent(eventName, membership)) {
+            const giftedTwitchSub = source === 'twitch' && eventName === 'new_subscriber' &&
+                (data.isGift === true || getMeta(data).isGift === true);
+            if (isGiftRedemptionEvent(eventName, membership) || giftedTwitchSub) {
                 const giver = extractGiftGiver(data);
                 return {
                     kind: 'gift_recipient',
@@ -4199,6 +4208,7 @@
         function processHypeContribution(data) {
             const contribution = buildHypeContribution(data);
             if (!contribution) return;
+            if (contribution.kind === 'gift' && contribution.count === 0) return;
             if (donationTypeFilter && contribution.kind !== 'donation') return;
             if (isDuplicateContribution(data, contribution)) return;
 
