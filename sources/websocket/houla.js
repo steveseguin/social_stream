@@ -78,6 +78,8 @@
             testMessage: 'Test message from Hou.la 👋',
             testSent: 'Test message sent — it should appear in your dock.',
             followed: 'Started following',
+            forgotten: 'Key forgotten on this computer.',
+            linkCopied: 'Source link copied. It contains your key: keep it private.',
             copy: 'Copy',
             copied: 'Copied',
         },
@@ -106,6 +108,8 @@
             testMessage: 'Message de test depuis Hou.la 👋',
             testSent: 'Message de test envoyé — il doit apparaître dans ton dock.',
             followed: 'S’est abonné',
+            forgotten: 'Clé oubliée sur cet ordinateur.',
+            linkCopied: 'Lien de source copié. Il contient ta clé : garde-le pour toi.',
             copy: 'Copier',
             copied: 'Copié',
         },
@@ -218,7 +222,9 @@
 
     function log(message) {
         try {
-            console.log('[houla] ' + message);
+            // Belt and braces: whatever reaches the console, an event key never does.
+            var safe = String(message).replace(/hle_[A-Za-z0-9_\-]+/g, 'hle_***');
+            console.log('[houla] ' + safe);
         } catch (e) {
             /* noop */
         }
@@ -463,9 +469,36 @@
 
     // ───────────────────────────── config ────────────────────────────────────
 
-    var options = { comments: true, gifts: true, follows: true };
+    var options = { comments: true, gifts: true, follows: true, auto: true };
 
-    function loadConfig() {
+    /*
+     * PERSISTENCE — the creator pastes the key ONCE.
+     *
+     * Three places, read in this order (first one carrying a key wins):
+     *   1. the URL fragment `#key=hle_…` (optionally `&autoconnect=0`). A
+     *      fragment is never sent to any server, and the SSN desktop app keeps the
+     *      source URL it was given — the only store that survives an app profile
+     *      that forgets page storage. Stripped from the address bar once read.
+     *   2. chrome.storage.local — the extension's own storage, when we run as its
+     *      content script. Survives clearing the site's data.
+     *   3. window.localStorage of the page.
+     * A successful Connect writes 2 and 3. "Forget my key" clears both.
+     *
+     * The key is a secret: it is NEVER passed to log() nor shown in a status.
+     */
+
+    function hasExtensionStorage() {
+        try {
+            return (
+                transport === 'extension' &&
+                !!(chrome.storage && chrome.storage.local && chrome.storage.local.get)
+            );
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function readLocal() {
         try {
             return JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '{}') || {};
         } catch (e) {
@@ -473,12 +506,97 @@
         }
     }
 
+    /** `#key=…&autoconnect=0` → partial config, then remove it from the address bar. */
+    function readFragment() {
+        var out = {};
+        try {
+            var hash = String(location.hash || '').replace(/^#/, '');
+            if (!hash) return out;
+            var params = new URLSearchParams(hash);
+            var key = params.get('key');
+            if (!key) return out;
+            out.key = key.trim();
+            var auto = params.get('autoconnect');
+            if (auto !== null) out.options = { auto: auto !== '0' && auto !== 'false' };
+            if (window.history && history.replaceState) {
+                params.delete('key');
+                params.delete('autoconnect');
+                var rest = params.toString();
+                history.replaceState(
+                    null,
+                    '',
+                    location.pathname + location.search + (rest ? '#' + rest : '')
+                );
+            }
+        } catch (e) {
+            /* malformed fragment — ignore it */
+        }
+        return out;
+    }
+
+    /** Calls back with the merged config (sync without the extension, async with it). */
+    function loadConfig(done) {
+        var fragment = readFragment();
+        var local = readLocal();
+        var finish = function (stored) {
+            var config = fragment.key ? fragment : stored && stored.key ? stored : local;
+            // Options (ticked events, auto-connect) follow the store that had them.
+            if (!config.options) config.options = local.options || (stored && stored.options);
+            if (fragment.options && config !== fragment) config.options = fragment.options;
+            if (!config.session && local.session) config.session = local.session;
+            done(config || {});
+        };
+        if (!hasExtensionStorage()) return finish(null);
+        try {
+            chrome.storage.local.get(STORAGE_KEY, function (items) {
+                finish((items && items[STORAGE_KEY]) || null);
+            });
+        } catch (e) {
+            finish(null);
+        }
+    }
+
     function saveConfig(config) {
         try {
             window.localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
         } catch (e) {
-            /* private mode — the session simply won't be remembered */
+            /* private mode — the page store is simply skipped */
         }
+        if (hasExtensionStorage()) {
+            try {
+                var item = {};
+                item[STORAGE_KEY] = config;
+                chrome.storage.local.set(item);
+            } catch (e) {
+                log('extension storage unavailable');
+            }
+        }
+    }
+
+    function clearConfig() {
+        try {
+            window.localStorage.removeItem(STORAGE_KEY);
+        } catch (e) {
+            /* nothing stored */
+        }
+        if (hasExtensionStorage()) {
+            try {
+                chrome.storage.local.remove(STORAGE_KEY);
+            } catch (e) {
+                /* nothing stored */
+            }
+        }
+    }
+
+    /** This page's address with the key in the fragment, for the SSN desktop app. */
+    function sourceLink(key) {
+        return (
+            location.origin +
+            location.pathname +
+            location.search +
+            '#key=' +
+            encodeURIComponent(key)
+        );
     }
 
     // ───────────────────────────── UI ────────────────────────────────────────
@@ -498,7 +616,7 @@
         field.value = session ? SSN_DOCK + '?session=' + encodeURIComponent(session) + '&server&branded' : '';
     }
 
-    function copyToClipboard(text, button) {
+    function copyToClipboard(text, button, fallbackField) {
         if (!text) return;
         var done = function () {
             if (!button) return;
@@ -516,7 +634,7 @@
         } catch (e) {
             /* fall through to the legacy path */
         }
-        var field = $('dockUrl');
+        var field = fallbackField;
         if (field) {
             field.removeAttribute('readonly');
             field.select();
@@ -562,6 +680,21 @@
         options.comments = !$('optComments') || $('optComments').checked;
         options.gifts = !!($('optGifts') && $('optGifts').checked);
         options.follows = !!($('optFollows') && $('optFollows').checked);
+        options.auto = !$('optAuto') || $('optAuto').checked;
+    }
+
+    function forget() {
+        stop();
+        clearConfig();
+        if ($('key')) $('key').value = '';
+        setStatus('', t('forgotten'));
+    }
+
+    function copySourceLink() {
+        var key = ($('key') && $('key').value.trim()) || '';
+        if (key.indexOf('hle_') !== 0) return setStatus('error', t('needKey'));
+        copyToClipboard(sourceLink(key), $('copySourceLink'));
+        setStatus('ok', t('linkCopied'));
     }
 
     function start() {
@@ -646,15 +779,25 @@
         if ($('disconnect')) $('disconnect').disabled = !active;
     }
 
-    function boot() {
-        var config = loadConfig();
+    /** Fill the form from the stored config, then reconnect on our own if allowed. */
+    function applyConfig(config) {
         if ($('key') && config.key) $('key').value = config.key;
         if ($('session') && config.session) $('session').value = config.session;
         if (config.options) {
             if ($('optComments')) $('optComments').checked = config.options.comments !== false;
             if ($('optGifts')) $('optGifts').checked = config.options.gifts !== false;
             if ($('optFollows')) $('optFollows').checked = config.options.follows !== false;
+            if ($('optAuto')) $('optAuto').checked = config.options.auto !== false;
         }
+        updateDockUrl();
+        var auto = !config.options || config.options.auto !== false;
+        if (config.key && auto && !running) {
+            log('stored key found — connecting automatically');
+            start();
+        }
+    }
+
+    function boot() {
         // The session ID — and therefore the dock address built from it — are
         // only meaningful when we talk to SSN's server directly. Through the
         // app or the extension, they route the messages themselves.
@@ -666,7 +809,7 @@
         if ($('copyDock')) {
             $('copyDock').textContent = t('copy');
             $('copyDock').addEventListener('click', function () {
-                copyToClipboard($('dockUrl') && $('dockUrl').value, $('copyDock'));
+                copyToClipboard($('dockUrl') && $('dockUrl').value, $('copyDock'), $('dockUrl'));
             });
         }
         updateDockUrl();
@@ -679,10 +822,13 @@
             $('test').addEventListener('click', function () {
                 sendTest(false);
             });
+        if ($('forget')) $('forget').addEventListener('click', forget);
+        if ($('copySourceLink')) $('copySourceLink').addEventListener('click', copySourceLink);
         toggleButtons(false);
         renderCounters();
         setStatus('', t('waiting'));
         log('source ready — transport: ' + transport);
+        loadConfig(applyConfig);
     }
 
     if (document.readyState === 'loading') {
