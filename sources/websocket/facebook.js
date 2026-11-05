@@ -77,6 +77,7 @@ const AUTH_ERROR_KEY = 'facebook_auth_error';
 const AUTH_POPUP_PARAM = 'ssn_auth_popup';
 const AUTH_RELAY_CHANNEL = 'ssn-facebook-auth-relay';
 const AUTH_RELAY_TIMEOUT_MS = 2000;
+const AUTH_POPUP_TIMEOUT_MS = 120000;
 const FACEBOOK_AUTH_SCOPES = [
   'pages_show_list',
   'pages_read_engagement',
@@ -129,8 +130,10 @@ const state = {
   videoTitle: '',
   authUser: null,
   authPages: [],
+  authPagesError: '',
   selectedPageId: '',
   authPopup: null,
+  authPopupTimer: null,
   authPopupNonce: '',
   authRelayChannel: null,
   authInFlight: false
@@ -204,11 +207,18 @@ function canConnectNow() {
 
 function updateActionButtons() {
   if (!els.connectBtn || !els.disconnectBtn || !els.resolveBtn) return;
+  const signedIn = !!state.authUser || state.authPages.length > 0;
   if (els.signinBtn) {
     els.signinBtn.disabled = !!state.authInFlight;
+    els.signinBtn.textContent = state.authInFlight ? 'Signing in...' : signedIn ? 'Manage Pages' : 'Sign in with Facebook';
+    els.signinBtn.classList.toggle('button-secondary', signedIn);
   }
   if (els.clearAuthBtn) {
-    els.clearAuthBtn.disabled = !!state.authInFlight || (!state.accessToken && !state.authPages.length);
+    els.clearAuthBtn.hidden = !signedIn && !state.accessToken && (!state.authInFlight || isElectronFacebookContext());
+    els.clearAuthBtn.disabled = !!state.authInFlight && isElectronFacebookContext();
+    els.clearAuthBtn.textContent = signedIn ? 'Sign out' : state.authInFlight ? 'Cancel sign-in' : 'Clear token';
+    els.clearAuthBtn.title = signedIn ? 'Sign out of Social Stream. Your Facebook account stays signed in.' : '';
+    els.clearAuthBtn.classList.toggle('button-secondary', !signedIn);
   }
   els.connectBtn.disabled = state.connected || !canConnectNow();
   els.disconnectBtn.disabled = !state.connected;
@@ -279,7 +289,7 @@ function hasRuntimeFlag(key) {
 }
 
 function isFacebookSocketPage(pathname) {
-  return /\/facebook\.html$/i.test(String(pathname || ''));
+  return /\/facebook(?:\.html)?\/?$/i.test(String(pathname || ''));
 }
 
 function buildFacebookReturnUrlFromBase(base) {
@@ -465,7 +475,11 @@ function finishAuthRelay(payload, popupNonce) {
       loadAuthState();
       updateInputs();
       updatePageOptions();
-      setStatus('connected', 'Signed in. Social Stream received your Facebook Pages; you can close this window.');
+      if (payload.type === AUTH_MESSAGE_ERROR) {
+        handleAuthError(payload);
+      } else {
+        showAuthStatus();
+      }
     }, 300);
   });
 }
@@ -476,7 +490,8 @@ function base64UrlToJson(value) {
     const normalized = String(value).replace(/-/g, '+').replace(/_/g, '/');
     const padded = normalized + '==='.slice((normalized.length + 3) % 4);
     const decoded = atob(padded);
-    return JSON.parse(decoded);
+    const bytes = Uint8Array.from(decoded, (character) => character.charCodeAt(0));
+    return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   } catch (err) {
     return null;
   }
@@ -559,6 +574,7 @@ function saveAuthState() {
     oauthBase: state.oauthBase,
     authUser: state.authUser,
     authPages: state.authPages,
+    authPagesError: state.authPagesError,
     selectedPageId: state.selectedPageId
   };
   try {
@@ -578,6 +594,7 @@ function loadAuthState() {
   state.oauthBase = normalizeOauthBase(saved.oauthBase || state.oauthBase || DEFAULT_OAUTH_BASE);
   state.authUser = saved.authUser || null;
   state.authPages = Array.isArray(saved.authPages) ? saved.authPages.filter((page) => page && page.id && page.accessToken) : [];
+  state.authPagesError = typeof saved.authPagesError === 'string' ? saved.authPagesError : '';
   state.selectedPageId = saved.selectedPageId || (state.pageId && getPageById(state.pageId) ? state.pageId : '');
   if (!state.selectedPageId && state.authPages.length === 1) {
     state.selectedPageId = String(state.authPages[0].id || '');
@@ -596,6 +613,7 @@ function loadAuthState() {
 function clearAuthState() {
   state.authUser = null;
   state.authPages = [];
+  state.authPagesError = '';
   state.selectedPageId = '';
   state.accessToken = '';
   if (!getUrlParam('pageId') && !getUrlParam('page_id') && !getUrlParam('channel')) {
@@ -673,7 +691,7 @@ function updatePageOptions() {
   els.pageSelect.innerHTML = '';
   const placeholder = document.createElement('option');
   placeholder.value = '';
-  placeholder.textContent = state.authPages.length ? 'Choose a managed Page' : 'Sign in to load your Pages';
+  placeholder.textContent = state.authPages.length ? 'Choose a managed Page' : state.authUser ? 'No Pages available' : 'Sign in to load your Pages';
   els.pageSelect.appendChild(placeholder);
   for (let i = 0; i < state.authPages.length; i += 1) {
     const page = state.authPages[i];
@@ -709,6 +727,9 @@ function updatePageOptions() {
     } else if (selectedPage) {
       const userName = state.authUser && state.authUser.name ? `Signed in as ${state.authUser.name}. ` : '';
       els.pageSelectHint.textContent = `${userName}Using ${selectedPage.name || selectedPage.id} for chat capture.`;
+    } else if (state.authUser) {
+      const userName = state.authUser.name ? `Signed in as ${state.authUser.name}.` : 'Signed in with Facebook.';
+      els.pageSelectHint.textContent = `${userName} No authorized Pages available.`;
     } else {
       els.pageSelectHint.textContent = 'Sign in to load your Facebook Pages.';
     }
@@ -741,8 +762,10 @@ function isViewerTrackingEnabled(settingsOverride) {
 }
 
 function handleAuthSuccess(payload) {
+  finishAuthAttempt();
   const pages = Array.isArray(payload && payload.pages) ? payload.pages : [];
   state.authUser = payload && payload.user ? payload.user : null;
+  state.authPagesError = payload && typeof payload.pagesError === 'string' ? payload.pagesError : '';
   state.authPages = pages
     .filter((page) => page && page.id && page.accessToken)
     .map((page) => ({
@@ -753,23 +776,49 @@ function handleAuthSuccess(payload) {
       tasks: Array.isArray(page.tasks) ? page.tasks : []
     }));
   if (!state.authPages.length) {
-    updatePageOptions();
+    // A new login must not keep using a Page token from the previous account.
+    disconnect();
+    state.selectedPageId = '';
+    state.pageId = '';
+    state.accessToken = '';
+    updateInputs();
+    saveConfig();
     saveAuthState();
-    setStatus('error', 'Facebook sign-in succeeded, but no managed Pages were returned for this account.');
+    showAuthStatus();
     return;
   }
 
   const preferredPage = getPageById(state.selectedPageId) || state.authPages[0];
   applySelectedPage(preferredPage.id);
   updatePageOptions();
-  const authName = state.authUser && state.authUser.name ? ` as ${state.authUser.name}` : '';
-  setStatus('connected', `Signed in${authName}. Selected Page ${preferredPage.name || preferredPage.id}.`);
+  showAuthStatus();
   autoConnectIfReady();
 }
 
+function showAuthStatus() {
+  const authName = state.authUser && state.authUser.name ? ` as ${state.authUser.name}` : '';
+  const selectedPage = getPageById(state.selectedPageId);
+  if (selectedPage) {
+    setStatus(state.connected ? 'connected' : 'signed-in', `Signed in${authName}. Selected Page ${selectedPage.name || selectedPage.id}.`);
+  } else {
+    const detail = state.authPagesError
+      ? `Page access failed: ${state.authPagesError} Use Manage Pages to retry.`
+      : 'No authorized Pages returned. Use Manage Pages to allow access to a Page you manage.';
+    setStatus('signed-in', `Signed in${authName}. ${detail}`);
+  }
+}
+
 function handleAuthError(payload) {
+  finishAuthAttempt();
   const message = payload && payload.message ? payload.message : 'Facebook sign-in failed.';
   setStatus('error', message);
+}
+
+function finishAuthAttempt() {
+  clearTimeout(state.authPopupTimer);
+  state.authPopupTimer = null;
+  state.authInFlight = false;
+  updateActionButtons();
 }
 
 function updateStats() {
@@ -783,11 +832,17 @@ function updateStats() {
 function setStatus(status, message) {
   const statusText = status === 'connected'
     ? 'Connected'
-    : status === 'connecting'
-      ? 'Connecting'
-      : status === 'error'
-        ? 'Error'
-        : 'Disconnected';
+    : status === 'signed-in'
+      ? 'Signed in'
+      : status === 'no-live'
+        ? 'No live video'
+        : status === 'ready'
+          ? 'Ready'
+          : status === 'connecting'
+            ? 'Connecting'
+            : status === 'error'
+              ? 'Error'
+              : 'Disconnected';
   els.statusChip.textContent = statusText;
   els.statusText.textContent = statusText;
   els.statusChip.classList.remove('connected', 'connecting', 'error');
@@ -814,32 +869,33 @@ function handleAuthPayload(payload) {
 
 function consumeAuthResultFromHash() {
   let changed = false;
+  let hasAuthResult = false;
   try {
     const hash = new URLSearchParams(window.location.hash.slice(1));
     const search = new URLSearchParams(window.location.search);
     const popupNonce = search.get(AUTH_POPUP_PARAM) || '';
     const encodedResult = hash.get(AUTH_RESULT_KEY);
     const encodedError = hash.get(AUTH_ERROR_KEY);
+    hasAuthResult = hash.has(AUTH_RESULT_KEY) || hash.has(AUTH_ERROR_KEY);
     const applyPayload = (payload) => {
+      if (!payload || (payload.type !== AUTH_MESSAGE_SUCCESS && payload.type !== AUTH_MESSAGE_ERROR)) {
+        payload = { type: AUTH_MESSAGE_ERROR, message: 'Facebook returned an invalid sign-in response. Please try again.' };
+      }
       if (popupNonce) {
         finishAuthRelay(payload, popupNonce);
       } else {
         handleAuthPayload(payload);
       }
     };
-    if (encodedResult) {
+    if (hash.has(AUTH_RESULT_KEY)) {
       const payload = base64UrlToJson(encodedResult);
-      if (payload) {
-        applyPayload(payload);
-      }
+      applyPayload(payload);
       hash.delete(AUTH_RESULT_KEY);
       changed = true;
     }
-    if (encodedError) {
+    if (hash.has(AUTH_ERROR_KEY)) {
       const payload = base64UrlToJson(encodedError);
-      if (payload) {
-        applyPayload(payload);
-      }
+      applyPayload(payload);
       hash.delete(AUTH_ERROR_KEY);
       changed = true;
     }
@@ -854,7 +910,9 @@ function consumeAuthResultFromHash() {
     }
   } catch (err) {
     console.warn('Failed to consume Facebook auth callback payload', err);
+    if (hasAuthResult) handleAuthError({ message: 'Unable to finish Facebook sign-in. Please try again.' });
   }
+  return hasAuthResult;
 }
 
 function getExpectedAuthMessageOrigin() {
@@ -955,6 +1013,7 @@ async function startExternalFacebookAuthFlow() {
 }
 
 function openAuthPopup() {
+  if (state.authInFlight) return;
   if (isElectronFacebookContext()) {
     startExternalFacebookAuthFlow().catch((err) => {
       setStatus('error', `Facebook sign-in failed: ${err.message || err}`);
@@ -974,6 +1033,13 @@ function openAuthPopup() {
     }
     state.authPopup = popup;
     state.authPopupNonce = popupNonce;
+    state.authInFlight = true;
+    updateActionButtons();
+    state.authPopupTimer = setTimeout(() => {
+      state.authPopupNonce = '';
+      state.authPopup = null;
+      handleAuthError({ message: 'Facebook sign-in did not finish. Please try again and complete the Facebook popup.' });
+    }, AUTH_POPUP_TIMEOUT_MS);
     setStatus('connecting', 'Opening Facebook sign-in...');
   } catch (err) {
     setStatus('error', `Facebook sign-in failed to start: ${err.message || err}`);
@@ -981,12 +1047,18 @@ function openAuthPopup() {
 }
 
 function clearAuthSelection() {
+  if (state.authPopup) {
+    try { state.authPopup.close(); } catch (err) {}
+  }
+  state.authPopup = null;
+  state.authPopupNonce = '';
+  finishAuthAttempt();
   disconnect();
   clearAuthState();
   updateInputs();
   updatePageOptions();
   saveConfig();
-  setStatus('disconnected', 'Facebook sign-in cleared. Paste a Page token manually or sign in again.');
+  setStatus('disconnected', 'Signed out of Social Stream.');
   updateActionButtons();
 }
 
@@ -1188,23 +1260,32 @@ async function resolveLiveVideo({ connectAfter = false } = {}) {
       broadcast_status: JSON.stringify(['LIVE']),
       access_token: state.accessToken
     });
-    const entry = Array.isArray(data.data) && data.data.length ? data.data[0] : null;
-    if (!entry || !entry.id) {
-      setStatus('error', 'No live video found for this Page.');
+    if (!data || !Array.isArray(data.data) || data.error) {
+      throw new Error(data && data.error && data.error.message
+        ? data.error.message
+        : 'Facebook returned an invalid live-video response. Please try again.');
+    }
+    if (!data.data.length) {
+      const signedIn = state.authUser ? 'You are still signed in. ' : '';
+      setStatus('no-live', `${signedIn}Facebook returned no active live videos for this Page. Start a broadcast and retry, or paste a video URL under Advanced / manual setup.`);
       return;
+    }
+    const entry = data.data[0];
+    if (!entry || !entry.id) {
+      throw new Error('Facebook returned a live video without an ID. Please try again.');
     }
     state.videoId = String(entry.id);
     state.videoTitle = entry.title || '';
     updateInputs();
     saveConfig();
-    setStatus('connected', `Resolved live video ${state.videoId}.`);
+    setStatus(state.connected ? 'connected' : state.authUser ? 'signed-in' : 'ready', `Live video ${state.videoId} found. Click Connect to load comments.`);
     if (connectAfter) {
       connect();
     }
   } catch (err) {
     const details = err && err.details ? err.details : null;
-    const msg = details && details.message ? details.message : 'Failed to resolve live video.';
-    setStatus('error', msg);
+    const msg = details && details.message ? details.message : err.message || 'Please try again.';
+    setStatus('error', `Could not check live videos: ${msg}`);
     state.errorCount += 1;
     updateStats();
   }
@@ -1510,7 +1591,7 @@ function bindEvents() {
     const selectedPageId = els.pageSelect.value || '';
     if (!selectedPageId) return;
     if (applySelectedPage(selectedPageId)) {
-      setStatus('connected', `Selected Page ${getPageById(selectedPageId)?.name || selectedPageId}.`);
+      showAuthStatus();
     }
   });
   els.showToken.addEventListener('change', () => {
@@ -1553,21 +1634,20 @@ function init() {
   loadConfig();
   loadAuthState();
   updateInputs();
-  consumeAuthResultFromHash();
   bindEvents();
   bindAuthMessages();
   initExtension();
   updateStats();
-  if (!state.authPages.length && !state.accessToken) {
+  if (state.authUser || state.authPages.length) {
+    showAuthStatus();
+  } else if (!state.authPages.length && !state.accessToken) {
     setStatus('disconnected', 'Sign in with Facebook to load your Page.');
-  } else if (state.authPages.length && !state.connected) {
-    const selectedPage = getPageById(state.selectedPageId);
-    setStatus('connected', `Facebook Pages loaded. ${selectedPage ? `Selected Page ${selectedPage.name || selectedPage.id}. ` : ''}Resolve or connect when ready.`);
   } else if (!state.connected) {
     setStatus('disconnected', 'Facebook Page token loaded. Resolve or connect when ready.');
   }
   updateActionButtons();
-  autoConnectIfReady();
+  // Apply the callback last so startup cannot hide its result or start capture twice.
+  if (!consumeAuthResultFromHash()) autoConnectIfReady();
 }
 
 init();

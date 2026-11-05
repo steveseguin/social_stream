@@ -164,6 +164,9 @@
       background: #2c86fb;
     }
     button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+    #clear-auth-btn[hidden] {
+      display: none;
+    }
     .button-secondary {
       background: transparent;
       color: var(--fb-text);
@@ -327,7 +330,7 @@
             </div>
             <div class="row">
               <button id="signin-btn" type="button">Sign in with Facebook</button>
-              <button id="clear-auth-btn" type="button" class="button-secondary">Clear sign-in</button>
+              <button id="clear-auth-btn" type="button" hidden>Sign out</button>
             </div>
             <div class="row">
               <label><input type="checkbox" id="auto-connect" checked> Auto-connect</label>
@@ -423,6 +426,6 @@
 
   <!-- Page-world capture/UI. The extension also injects facebook.js in its
        isolated world to relay ssnFacebookRelay events to the background. -->
-  <script src="facebook.js?v=20261018-auth-relay"></script>
+  <script src="facebook.js?v=20261105-live-status"></script>
 </body>
 </html>
