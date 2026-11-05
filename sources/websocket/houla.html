@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="noindex" />
+        <title>Hou.la - Social Stream Ninja</title>
+        <link rel="icon" href="https://hou.la/assets/brand/houla-favicon.png" />
+        <style>
+            :root {
+                --blue: #2f8eef;
+            }
+
+            body {
+                background: #171717;
+                color: #e8e8e8;
+                font-family: Arial, Helvetica, sans-serif;
+                margin: 0 auto;
+                max-width: 720px;
+                padding: 24px 20px 48px;
+            }
+
+            h1 {
+                align-items: center;
+                display: flex;
+                font-size: 21px;
+                gap: 10px;
+                margin: 0 0 6px;
+            }
+
+            h1 img {
+                height: 28px;
+                width: 28px;
+            }
+
+            p.lead {
+                color: #a9a9a9;
+                font-size: 13px;
+                line-height: 1.55;
+                margin: 0 0 20px;
+            }
+
+            a {
+                color: var(--blue);
+            }
+
+            .panel {
+                background: #202020;
+                border: 1px solid #333;
+                border-radius: 4px;
+                margin-bottom: 16px;
+                padding: 16px;
+            }
+
+            label {
+                display: block;
+                font-size: 13px;
+                margin: 0 0 5px;
+            }
+
+            input[type='text'],
+            input[type='password'] {
+                background: #252525;
+                border: 1px solid #444;
+                box-sizing: border-box;
+                color: #f4f4f4;
+                font: inherit;
+                padding: 8px;
+                width: 100%;
+            }
+
+            input:focus {
+                border-color: var(--blue);
+                outline: none;
+            }
+
+            .hint {
+                color: #8a8a8a;
+                font-size: 12px;
+                margin: 6px 0 0;
+            }
+
+            .row-field + .row-field {
+                margin-top: 14px;
+            }
+
+            .copyline {
+                display: flex;
+                gap: 8px;
+            }
+
+            .copyline input {
+                color: #cfcfcf;
+            }
+
+            .copyline button {
+                flex: none;
+                margin: 0;
+                white-space: nowrap;
+            }
+
+            .options {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 16px;
+                margin-top: 14px;
+            }
+
+            .options label {
+                align-items: center;
+                display: flex;
+                gap: 6px;
+                margin: 0;
+            }
+
+            button {
+                background: var(--blue);
+                border: 0;
+                border-radius: 3px;
+                color: #fff;
+                cursor: pointer;
+                font: inherit;
+                margin: 16px 8px 0 0;
+                padding: 9px 16px;
+            }
+
+            button.secondary {
+                background: #444;
+            }
+
+            button:disabled {
+                cursor: default;
+                opacity: 0.45;
+            }
+
+            .status {
+                border-left: 3px solid #555;
+                font-size: 13px;
+                margin-top: 16px;
+                padding: 8px 12px;
+            }
+
+            .status.ok {
+                border-color: #2ecc71;
+            }
+
+            .status.warn {
+                border-color: #f0ad4e;
+            }
+
+            .status.error {
+                border-color: #e05c5c;
+            }
+
+            #counters {
+                color: #8a8a8a;
+                font-size: 12px;
+                margin-top: 10px;
+            }
+
+            #feed {
+                font-size: 13px;
+                margin-top: 12px;
+                max-height: 220px;
+                overflow-y: auto;
+            }
+
+            #feed .row {
+                border-bottom: 1px solid #2b2b2b;
+                padding: 6px 0;
+                word-break: break-word;
+            }
+
+            #feed b {
+                color: var(--blue);
+            }
+
+            code {
+                background: #2a2a2a;
+                border-radius: 3px;
+                font-size: 12px;
+                padding: 1px 5px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>
+            <img
+                src="https://hou.la/assets/brand/houla-app-icon-128.png"
+                alt=""
+            />
+            Hou.la
+        </h1>
+        <p class="lead">
+            Forwards your Hou.la live chat into Social Stream Ninja. Create a
+            read-only event key in your
+            <a
+                id="studioLink"
+                href="https://hou.la/studio/event-keys"
+                target="_blank"
+                rel="noopener"
+                >Hou.la studio</a
+            >
+            (tick <em>Comments</em>), paste it below, and keep this page open
+            while you stream. The key cannot post, spend or change anything.
+        </p>
+
+        <div class="panel">
+            <div class="row-field">
+                <label for="key">Hou.la event key</label>
+                <input
+                    id="key"
+                    type="password"
+                    placeholder="hle_…"
+                    autocomplete="off"
+                    spellcheck="false"
+                />
+                <p class="hint">
+                    Stored locally in this browser only. Never share it.
+                </p>
+            </div>
+
+            <div class="row-field" id="sessionRow">
+                <label for="session">Social Stream session ID</label>
+                <input
+                    id="session"
+                    type="password"
+                    placeholder="your session ID"
+                    autocomplete="off"
+                    spellcheck="false"
+                />
+                <p class="hint">
+                    Only needed when this page runs on its own (a normal tab or
+                    an OBS browser source). It is in your dock link, right after
+                    <code>?session=</code>.
+                </p>
+            </div>
+
+            <!-- Built from the session ID above, with the two parameters that
+                 are easy to forget and impossible to diagnose: without &server
+                 the dock ignores us, without &branded the Hou.la icon is
+                 hidden. Handing the finished address removes both traps. -->
+            <div class="row-field" id="dockRow">
+                <label for="dockUrl">Your dock address</label>
+                <div class="copyline">
+                    <input
+                        id="dockUrl"
+                        type="text"
+                        readonly
+                        placeholder="fill in the session ID above"
+                    />
+                    <button id="copyDock" type="button" class="secondary">
+                        Copy
+                    </button>
+                </div>
+                <p class="hint">
+                    Open it in a tab, or add it to OBS as a browser source. Both
+                    required parameters are already included.
+                </p>
+            </div>
+
+            <div class="options">
+                <label
+                    ><input id="optComments" type="checkbox" checked />
+                    Comments</label
+                >
+                <label
+                    ><input id="optGifts" type="checkbox" checked />
+                    Gifts</label
+                >
+                <label
+                    ><input id="optFollows" type="checkbox" checked /> New
+                    followers</label
+                >
+            </div>
+
+            <button id="connect" type="button">Connect</button>
+            <button id="disconnect" type="button" class="secondary">
+                Disconnect
+            </button>
+            <button
+                id="test"
+                type="button"
+                class="secondary"
+                title="Sends one fake comment — checks the Social Stream side on its own"
+            >
+                Send a test message
+            </button>
+
+            <div id="status" class="status">Loading…</div>
+            <div id="counters"></div>
+            <div id="feed"></div>
+        </div>
+
+        <p class="hint">
+            Transport: <code id="transport">…</code> &middot; API:
+            <code id="apiBase">…</code> &middot;
+            <a
+                href="https://hou.la/guides/live-events"
+                target="_blank"
+                rel="noopener"
+                >Hou.la events documentation</a
+            >
+        </p>
+
+        <script>
+            /*
+             * On Social Stream's own hosts the manifest injects houla.js as a content
+             * script, so we must NOT load it again here — it would run twice and send
+             * every comment twice. This list mirrors the `matches` of that manifest
+             * entry; anywhere else (this page hosted by Hou.la, a local copy) we load
+             * the socket client and the source script ourselves.
+             */
+            ;(function () {
+                var host = location.hostname.toLowerCase()
+                var injected =
+                    /(^|\.)socialstream\.ninja$/.test(host) ||
+                    location.protocol === 'file:' ||
+                    (/^(127\.0\.0\.1|localhost)$/.test(host) &&
+                        /^(8080|8181)$/.test(location.port))
+                if (injected) {
+                    // Nothing else will happen until the extension injects the source
+                    // script — say so, rather than sitting on "Loading…" forever.
+                    document.getElementById('status').textContent =
+                        'Waiting for the Social Stream extension to inject the Hou.la source…'
+                    return
+                }
+
+                var io = document.createElement('script')
+                io.src = 'socket.io.min.js'
+                io.onload = function () {
+                    var source = document.createElement('script')
+                    source.src = 'houla.js'
+                    document.head.appendChild(source)
+                }
+                io.onerror = function () {
+                    document.getElementById('status').textContent =
+                        'Socket.IO client failed to load.'
+                }
+                document.head.appendChild(io)
+            })()
+        </script>
+    </body>
+</html>

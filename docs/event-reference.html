@@ -93,6 +93,7 @@
                                     <li><a href="#kick-dom">Kick DOM</a></li>
                                     <li><a href="#kick-ws">Kick WebSocket</a></li>
                                     <li><a href="#vpzone-ws">VPZone</a></li>
+                                    <li><a href="#houla-ws">Hou.la</a></li>
                                     <li><a href="#joystick-ws">Joystick</a></li>
                                     <li><a href="#xpsync">XP Sync</a></li>
                                     <li><a href="#facebook">Facebook</a></li>
@@ -1550,6 +1551,48 @@
                                 <td class="status-event"><code>joined</code></td>
                                 <td>VPZone join/presence-style websocket events, when <em>Capture "joined" stream events</em> is enabled.</td>
                                 <td>Mapped into a chat-style system event with VPZone actor metadata under <code>meta</code>.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                </article>
+
+                <article class="platform-card" id="houla-ws">
+                    <h3>Hou.la - WebSocket</h3>
+                    <p class="source-note">Implementation: <code>sources/websocket/houla.js</code></p>
+                    <ul class="requirements">
+                        <li>Connects with Socket.IO to the Hou.la event channel (<code>https://api.hou.la/events</code>, path <code>/ws</code>) using a read-only event key (<code>hle_</code>) the creator generates in the Hou.la Studio. The key only receives the events of the creator's own lives.</li>
+                        <li>Read-only: no chat send-back and no deletion sync.</li>
+                    </ul>
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Hou.la - WebSocket table">
+<table class="event-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>Hou.la <code>comment</code> event (an approved live comment).</td>
+                                <td><code>chatname</code>, <code>chatimg</code> and <code>userid</code> come from the commenter's public profile; <code>chatmessage</code> is raw text (<code>textonly: true</code>). <code>mod: true</code> for a channel moderator, <code>bot: true</code> for a message written by a Hou.la bot. A paid comment (priority message or paid command) also carries <code>hasDonation</code> (<code>100 coins</code>) and <code>donoValue</code>; <code>event</code> stays blank.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>gift</code></td>
+                                <td>Hou.la <code>gift</code> event (a virtual gift sent during the live).</td>
+                                <td><code>chatmessage</code> is the gift name with its quantity (<code>Dragon ×3</code>), <code>hasDonation</code> the coin total (<code>150 coins</code>), <code>donoValue</code> a USD estimate, <code>contentimg</code> the gift image. <code>meta</code> carries <code>giftId</code>, <code>giftSlug</code>, <code>giftName</code>, <code>quantity</code>, <code>coins</code> and <code>transactionId</code>. Replays after a reconnect are dropped on the transaction ID.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>new_follower</code></td>
+                                <td>Hou.la <code>follow</code> event (a new follower during the live, deduplicated server-side).</td>
+                                <td><code>chatname</code> / <code>chatimg</code> identify the follower.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Viewer count stamped on Hou.la event envelopes, when it changes.</td>
+                                <td><code>meta</code> is the viewer integer. Sent only when viewer counts or hype mode are enabled.</td>
                             </tr>
                         </tbody>
                     </table>
