@@ -238,6 +238,87 @@
 		}
 	});
 
+	// ---------------------------------------------------------------- sponsor logo strip
+	SSO.register({
+		id: "logostrip",
+		name: "Sponsor logo strip",
+		category: "socials",
+		description: "A slow, seamless row of logos for sponsors, partners or your crew. Paste image links, one per line.",
+		size: [1280, 80],
+		fields: [
+			{ key: "images", label: "Logo links (one per line)", type: "textarea", image: true, group: "Content", default: ["user1.jpg", "user2.jpg", "user3.jpg", "user5.jpg"].map(function (file) { return SSO.assetBase() + "media/" + file; }).join("\n") },
+			{ key: "captions", label: "Names beside each logo (one per line, optional)", type: "textarea", group: "Content", default: "" },
+			{ key: "title", label: "Label at the left (optional)", type: "text", group: "Content", default: "" },
+			{ key: "speed", label: "Scroll speed (pixels per second, 0 = still)", type: "range", group: "Motion", default: 40, min: 0, max: 200, step: 5 },
+			{ key: "direction", label: "Direction", type: "select", group: "Motion", default: "left", options: [["left", "Right to left"], ["right", "Left to right"]] },
+			{ key: "logoheight", label: "Logo height", type: "range", group: "Style", default: 48, min: 16, max: 200, step: 1 },
+			{ key: "gap", label: "Space between logos", type: "range", group: "Style", default: 56, min: 0, max: 300, step: 2 },
+			{ key: "bg", label: "Background", type: "color", group: "Style", default: "000000" },
+			{ key: "bgopacity", label: "Background opacity", type: "range", group: "Style", default: 0.6, min: 0, max: 1, step: 0.05 },
+			{ key: "fg", label: "Text colour", type: "color", group: "Style", default: "ffffff" },
+			SSO.f.font("Rajdhani"),
+			{ key: "fontsize", label: "Text size", type: "range", group: "Text", default: 24, min: 10, max: 80, step: 1 }
+		],
+		presets: [
+			{ name: "Dark strip", tags: ["pro", "simple"], values: {} },
+			{ name: "No background", tags: ["simple"], values: { bgopacity: 0 } },
+			{ name: "Thanks to our sponsors", tags: ["pro"], values: { title: "Thanks to", speed: 30, logoheight: 40 } },
+			{ name: "Still row", tags: ["simple"], values: { speed: 0, gap: 32 } }
+		],
+		css: [
+			".ls{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;overflow:hidden;}",
+			".ls-title{flex:0 0 auto;padding:0 1em;font-weight:700;white-space:nowrap;}",
+			".ls-view{flex:1 1 auto;min-width:0;overflow:hidden;}",
+			".ls-track{display:flex;width:max-content;}",
+			".ls-group{display:flex;align-items:center;flex:0 0 auto;}",
+			".ls-item{display:flex;align-items:center;flex:0 0 auto;white-space:nowrap;}",
+			".ls-item img{display:block;width:auto;}",
+			".ls-item span{margin-left:.5em;}",
+			"@keyframes ls-roll{from{transform:translateX(0);}to{transform:translateX(-50%);}}"
+		].join("\n"),
+		render: function (root, c) {
+			SSO.loadFont(c.font);
+			var imgs = SSO.lines(c.images), caps = SSO.lines(c.captions);
+			var el = document.createElement("div");
+			el.className = "ls";
+			el.style.cssText = "color:" + SSO.color(c.fg) + ";font-family:" + SSO.fontStack(c.font) + ";font-size:" + c.fontsize + "px;" +
+				(c.bgopacity > 0 ? "background:" + SSO.rgba(c.bg, c.bgopacity) + ";" : "");
+			var items = imgs.map(function (src, i) {
+				return '<div class="ls-item" style="padding-right:' + c.gap + 'px"><img alt="" style="height:' + c.logoheight + 'px" src="' + esc(src) + '">' +
+					(caps[i] ? "<span>" + esc(caps[i]) + "</span>" : "") + "</div>";
+			}).join("");
+			el.innerHTML = (c.title ? '<div class="ls-title">' + esc(c.title) + "</div>" : "") +
+				'<div class="ls-view"><div class="ls-track"><div class="ls-group">' + items + "</div></div></div>";
+			root.appendChild(el);
+			var view = el.querySelector(".ls-view"), track = el.querySelector(".ls-track"), first = el.querySelector(".ls-group");
+			if (!items || !(c.speed > 0)) { return; }
+			// Repeat the logos until one group covers the strip, then roll two identical groups so the loop has no seam.
+			function fit() {
+				first.innerHTML = items;
+				while (track.children.length > 1) { track.removeChild(track.lastChild); }
+				var once = first.offsetWidth;
+				if (!once) { return; }
+				var wanted = Math.ceil((view.offsetWidth || 1) / once);
+				for (var n = 1; n < wanted; n++) { first.insertAdjacentHTML("beforeend", items); }
+				track.appendChild(first.cloneNode(true));
+				watch();
+				var seconds = first.offsetWidth / c.speed;
+				track.style.animation = "ls-roll " + seconds + "s linear infinite" + (c.direction === "right" ? " reverse" : "");
+			}
+			// Widths are only known once the images arrive.
+			var pending = null;
+			function refit() { clearTimeout(pending); pending = setTimeout(fit, 150); }
+			function watch() {
+				Array.prototype.forEach.call(first.querySelectorAll("img"), function (img) {
+					if (!img.complete) { img.addEventListener("load", refit, { once: true }); }
+				});
+			}
+			fit();
+			window.addEventListener("resize", refit);
+			if (SSO.onCleanup) { SSO.onCleanup(root, function () { clearTimeout(pending); window.removeEventListener("resize", refit); }); }
+		}
+	});
+
 	// ---------------------------------------------------------------- QR card
 	SSO.register({
 		id: "qrcard",

@@ -108,6 +108,9 @@ jobs:
               test -f "$checkout/shared/monetization/board-overlay.css"
               test -f "$checkout/shared/monetization/board-controls.js"
               test -f "$checkout/shared/monetization/board-controls.css"
+              for asset in breaks-core.js breaks-access.js breaks-overlay.js breaks-overlay.css breaks-workspace.js breaks.css; do
+                test -f "$checkout/shared/monetization/$asset"
+              done
             fi
             # Local censor models and shared controls must also ship on the site.
             if [ -f "$checkout/shared/ai/censorModels.js" ]; then

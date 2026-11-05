@@ -11866,7 +11866,7 @@ input:checked + .slider:before {
                                         <option value="timeline" data-translate="popup-timeline-connected-events">Timeline - connected events</option>
                                         <option value="glass" data-translate="popup-glass-floating-cards">Glass - floating cards</option>
                                         <option value="minimal" data-translate="popup-minimal-text-only-no-boxes">Minimal - text only, no boxes</option>
-                                        <option value="ticker" data-translate="popup-ticker-horizontal-strip">Ticker - horizontal strip</option><option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined-rows">Outlined rows</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option><option value="paper" data-translate="popup-warm-paper">Warm paper</option>
+                                        <option value="spotlight">Spotlight - one-line rows, newest highlighted</option><option value="ticker" data-translate="popup-ticker-horizontal-strip">Ticker - horizontal strip</option><option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined-rows">Outlined rows</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option><option value="paper" data-translate="popup-warm-paper">Warm paper</option>
                                     </select>
                                     <details class="popup-subsection" id="events-category-options">
                                         <summary><span aria-hidden="true">&#128065;</span> <span data-translate="popup-choose-which-events-appear">Choose which events appear</span></summary>
@@ -12775,7 +12775,7 @@ input:checked + .slider:before {
 					<div class="help-tip">💡 <strong>Tip:</strong> If no event filter is checked, the overlay defaults to auction + commerce + viewer + Hype Train meta.</div>
 				</div>
 					<p class="popup-section-description"><span>
-							Displays metadata-only events (no chat message required), such as auction status and catalog summaries.
+							Displays metadata-only events (no chat message required), such as auction status and catalog summaries, plus optional running stream stats.
 						</span>
 					</p>
 					<div id="meta" data-raw="" class="streaming_chat"><a href="" id="metalink"></a></div>
@@ -12919,6 +12919,105 @@ input:checked + .slider:before {
 										<label for="meta_title_text"><span class="popup-control-icon" aria-hidden="true">✏️</span>&gt; Optional header title</label>
 									</div>
 									<br>
+									<h3><span class="popup-control-icon" aria-hidden="true">📈</span>Stream Stats</h3>
+									<p>Totals this overlay counts from the events it receives, saved in the browser showing it. Pick the Strip style below for a full-width bar along the bottom; set Placement to Top center to move it to the top.</p>
+									<div>
+										<label><span class="popup-control-icon" aria-hidden="true">📈</span>Stats to show</label>
+										<select data-optionparam24="stats" class="textInput">
+											<option value="" selected>Off</option>
+											<option value="biggest,subs,bits,clock">Biggest donation, subs, bits, clock</option>
+											<option value="lastchat,biggest,subs,bits,clock">Latest chat, biggest donation, subs, bits, clock</option>
+											<option value="biggest,donations,subs,follows,clock">Biggest donation, total donations, subs, follows, clock</option>
+											<option value="latestfollow,latestsub,latesttip,latestbits,clock">Latest follower, sub, tip, bits, clock</option>
+											<option value="topgifter,topbits,latestsub,latestfollow,clock">Top gifter, top bits, latest sub, latest follower, clock</option>
+											<option value="totalsubs,totalfollows,subs,bits,clock">Total subs, followers, subs today, bits, clock</option>
+										</select>
+									</div>
+									<div>
+										<label><span class="popup-control-icon" aria-hidden="true">📅</span>Reset totals</label>
+										<select data-optionparam24="statsreset" class="textInput">
+											<option value="" selected>Every day at midnight</option>
+											<option value="manual">Only with the reset button</option>
+										</select>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="meta_biggestlabel" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="biggestlabel" />
+										<label for="meta_biggestlabel"><span class="popup-control-icon" aria-hidden="true">🏆</span>&gt; Biggest donation label (default: Biggest Donation)</label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="meta_subslabel" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subslabel" />
+										<label for="meta_subslabel"><span class="popup-control-icon" aria-hidden="true">👥</span>&gt; Subs label (default: Subs Today)</label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="meta_bitslabel" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="bitslabel" />
+										<label for="meta_bitslabel"><span class="popup-control-icon" aria-hidden="true">💎</span>&gt; Bits label (default: Bits)</label>
+									</div>
+									<div>
+										<button class="glowingButton" style="width: 220px; border: 1px solid #000; padding: 2px;" data-action="resetmetastats" data-target="meta">
+											<span style="font-size: 0.8em;">Reset stream stats</span>
+										</button>
+									</div>
+									<br>
+									<h3><span class="popup-control-icon" aria-hidden="true">🎯</span>Counters</h3>
+									<p>Named tallies such as deaths, wins or owed pushups. List them as Name|!command, separated by commas. Mods change them in chat with !death, !death -1, !death =5 or !death reset. Add rules to count events too, such as Pushups|!pushup|sub:15|gift:15 (also bits per 100, tip per $1, follow, raid). For stacked goals, add goal: and pick the Column layout, such as Sub Goal|!subgoal|sub:1|goal:25,Bits Goal|!bitsgoal|bits:100|goal:20000. Add daily:1 to start over at midnight.</p>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="meta_counters" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="counters" />
+										<label for="meta_counters"><span class="popup-control-icon" aria-hidden="true">🎯</span>&gt; Counters, e.g. Deaths|!death,Wins|!win</label>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param24="counterall" />
+											<span class="slider round"></span>
+										</label>
+										<span>👥 Let anyone in chat use counter commands</span>
+									</div>
+									<br>
+									<h3><span class="popup-control-icon" aria-hidden="true">🕒</span>Subathon Timer</h3>
+									<p>A countdown that support pushes back. It waits for the Start button or !subathon start from a mod, who can also use pause, add 30m, remove 10m, set 6h and reset. Time values are minutes.</p>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="meta_subathon" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathon" />
+										<label for="meta_subathon"><span class="popup-control-icon" aria-hidden="true">🕒</span>&gt; Starting time, e.g. 6h (blank = off)</label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="meta_subathonsub" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonsub" />
+										<label for="meta_subathonsub"><span class="popup-control-icon" aria-hidden="true">👥</span>&gt; Minutes per sub, e.g. 10, or 6,15,40 for tiers 1, 2, 3</label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="meta_subathonbits" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonbits" />
+										<label for="meta_subathonbits"><span class="popup-control-icon" aria-hidden="true">💎</span>&gt; Minutes per 100 bits</label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="meta_subathontip" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathontip" />
+										<label for="meta_subathontip"><span class="popup-control-icon" aria-hidden="true">💵</span>&gt; Minutes per $1 tipped</label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="meta_subathonfollow" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonfollow" />
+										<label for="meta_subathonfollow"><span class="popup-control-icon" aria-hidden="true">👤</span>&gt; Minutes per follow</label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="meta_subathonraid" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonraid" />
+										<label for="meta_subathonraid"><span class="popup-control-icon" aria-hidden="true">🚀</span>&gt; Minutes per raid</label>
+									</div>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="meta_subathonmax" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonmax" />
+										<label for="meta_subathonmax"><span class="popup-control-icon" aria-hidden="true">🛑</span>&gt; Longest the clock can reach, e.g. 72h (blank = no limit)</label>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param24="subathonrules" />
+											<span class="slider round"></span>
+										</label>
+										<span>📜 Show the rules beside the clock</span>
+									</div>
+									<div>
+										<button class="glowingButton" style="width: 105px; border: 1px solid #000; padding: 2px;" data-action="metastats" data-target="meta" data-value="subathon:start">
+											<span style="font-size: 0.8em;">Start</span>
+										</button>
+										<button class="glowingButton" style="width: 105px; border: 1px solid #000; padding: 2px;" data-action="metastats" data-target="meta" data-value="subathon:pause">
+											<span style="font-size: 0.8em;">Pause</span>
+										</button>
+									</div>
+									<br>
 									<h3><span class="popup-control-icon" aria-hidden="true">🎨</span>Layout and Appearance</h3>
 								<div title="Visual theme for the stat chips.">
 									<label>🎨 Style preset</label>
@@ -12928,6 +13027,7 @@ input:checked + .slider:before {
 										<option value="neon">Neon (glowing accents)</option>
 										<option value="minimal">Minimal (text only)</option>
 										<option value="card">Cards (label over big value)</option>
+										<option value="strip">Strip (flat full-width bar)</option>
 									</select>
 								</div>
 								<div title="How the stat chips flow: a wrapping row, a vertical stack, or an even grid.">
@@ -13209,6 +13309,7 @@ input:checked + .slider:before {
                                         <option value="jar" selected><span data-translate="jar-style">Jar (Default)</span></option>
                                         <option value="meter"><span data-translate="meter-style">Goal Meter</span></option>
                                         <option value="bar"><span data-translate="bar-style">Fluid Goal Bar</span></option>
+                                        <option value="banner">Fundraiser Banner</option>
                                         <option value="compact"><span data-translate="compact-style">Compact Bar (corner)</span></option>
                                         <option value="vertical"><span data-translate="vertical-style">Vertical Bar</span></option>
                                         <option value="minimal"><span data-translate="minimal-style">Minimal</span></option>
@@ -13412,11 +13513,26 @@ input:checked + .slider:before {
                                     </select>
                                 </div>
                                 <div>
+                                    <label><span class="popup-control-icon" aria-hidden="true">📅</span>Reset the goal:</label>
+                                    <select data-optionparam12="goalreset" class="textInput">
+                                        <option value="" selected>Never</option>
+                                        <option value="daily">Every day at midnight (daily sub goal)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label><span class="popup-control-icon" aria-hidden="true">🕒</span>Last day of the goal (shows days left):</label>
+                                    <input type="date" data-optionparam12="goalend" class="textInput" />
+                                </div>
+                                <div>
+                                    <label><span class="popup-control-icon" aria-hidden="true">🎁</span>Named rewards, e.g. 2700:Paint a table,3000:Shave my head</label>
+                                    <input type="text" data-optionparam12="goalrewards" class="textInput" />
+                                </div>
+                                <div>
                                     <label><span class="popup-control-icon" aria-hidden="true">🎯</span>Recurring goal increment:</label>
                                     <input type="number" data-optionparam12="levelsize" class="textInput" placeholder="0 = single goal (e.g. 1000 stars, 50 $)" min="0" step="1" />
                                 </div>
                                 <div>
-                                    <label><span class="popup-control-icon" aria-hidden="true">🔤</span>Fluid Goal Bar text size (px):</label>
+                                    <label><span class="popup-control-icon" aria-hidden="true">🔤</span>Fluid Goal Bar / Banner text size (px):</label>
                                     <input type="number" data-optionparam12="bartextsize" class="textInput" placeholder="26" min="1" step="1" />
                                 </div>
                                 <div>

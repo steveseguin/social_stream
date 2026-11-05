@@ -24,6 +24,7 @@
         ['gauge', 'Dial', 'A sweeping needle dial with a percentage.', '420 × 400'],
         ['meter', 'Goal Meter', 'A progress meter with recent supporters.', '800 × 400'],
         ['bar', 'Fluid Goal Bar', 'A wide animated bar with the total inside.', '900 × 200'],
+        ['banner', 'Fundraiser Banner', 'A flat edge-to-edge bar with title, raised amount and goal.', '900 × 40'],
         ['compact', 'Compact Bar', 'A small bar suited to a corner.', '460 × 120'],
         ['vertical', 'Vertical Bar', 'A thermometer for a side column.', '300 × 500'],
         ['minimal', 'Minimal', 'Large totals and a percentage without a panel.', '400 × 300'],

@@ -16,6 +16,43 @@
 		throneSourceKey = '',
 		throneStatus = 'Disabled';
     var auctionDraft = null;
+    function isBreakCommand(command) { return typeof SSNBreaks !== 'undefined' && SSNBreaks.commands.indexOf(command) !== -1; }
+    async function runBreakCommand(command, data) {
+        if (command !== 'breakGet') {
+            var previousBreaks = privateState.breaks;
+            privateState.breaks = SSNBreaks.apply(previousBreaks, command, data);
+            try { await store(); } catch (error) { privateState.breaks = previousBreaks; throw error; }
+            broadcast();
+        }
+        var breakState = SSNBreaks.controlState(privateState.breaks, data);
+        if (breakState.unchanged) return {commerceState:{unchanged:true, hostOn:!!isExtensionOn}};
+        return {commerceState:{breaks:breakState, ebayStock:ebay.snapshot(), hostOn:!!isExtensionOn}};
+    }
+    // Only the private link's key opens a request, and app errors stay inside the sealed reply because they can name buyers or spots.
+    async function runSecureBreakCommand(sealed) {
+        var key = privateState.breaksKey, message = await SSNBreaksAccess.open(key, 'request', sealed), reply;
+        try {
+            if (!message || !isBreakCommand(message.command)) throw new Error('Unknown break command.');
+            reply = await runBreakCommand(message.command, message.data);
+        } catch (error) { reply = {error:error.message || 'Breaks command failed.'}; }
+        var sealedReply = await SSNBreaksAccess.seal(key, 'reply', {id:message && message.id, reply:reply});
+        // Above the relay's frame limit this would close the host's connection, so send what fits.
+        if (sealedReply.box.length > SSNBreaksAccess.maxSealed && reply.commerceState && reply.commerceState.breaks) {
+            reply.commerceState.breaks.opened = null;
+            reply.commerceState.breaks.openedTooLarge = true;
+            sealedReply = await SSNBreaksAccess.seal(key, 'reply', {id:message.id, reply:reply});
+        }
+        if (sealedReply.box.length > SSNBreaksAccess.maxSealed) sealedReply = await SSNBreaksAccess.seal(key, 'reply', {id:message && message.id, reply:{error:'Breaks is holding too much to send to this workspace.'}});
+        return {commerceState:{sealed:sealedReply}};
+    }
+    async function breaksKey(reset) {
+        if (reset || !SSNBreaksAccess.validKey(privateState.breaksKey)) {
+            var previousKey = privateState.breaksKey;
+            privateState.breaksKey = SSNBreaksAccess.newKey();
+            try { await store(); } catch (error) { privateState.breaksKey = previousKey; throw error; }
+        }
+        return {key:privateState.breaksKey};
+    }
 	var ebay = SSNEbayService({
 		privateState: function () {
 			return privateState;
@@ -65,7 +102,9 @@
 	function publicState() {
 		var c = cfg(),
 			l = list();
-		return { boards: SSNCommerceBoards.publicState(privateState.boards), commerce: commerceState(), ebay: ebay.publicState(), throne: { enabled: c.throne.enabled, username: c.throne.username, qr: c.throne.qr, position: c.throne.position, url: c.throne.username ? 'https://throne.com/' + encodeURIComponent(c.throne.username) : '', rank: thronePrivate().gifts + 1, gifts: thronePrivate().gifts }, wishlist: { enabled: c.wishlist.enabled, qr: c.wishlist.qr, position: c.wishlist.position, rank: l.rank, total: l.total, item: l.current ? { name: l.current.name, amount: l.current.amount, currency: l.current.currency, image: l.current.image, url: M.purchaseURL(l.current, l.url) } : null, url: l.url }, ninja: { enabled: c.ninja.enabled, qr: c.ninja.qr, position: c.ninja.position, username: c.ninja.username, url: c.ninja.username ? 'https://ninjabacker.com/' + encodeURIComponent(c.ninja.username) : '' } };
+		var result = { boards: SSNCommerceBoards.publicState(privateState.boards), commerce: commerceState(), ebay: ebay.publicState(), throne: { enabled: c.throne.enabled, username: c.throne.username, qr: c.throne.qr, position: c.throne.position, url: c.throne.username ? 'https://throne.com/' + encodeURIComponent(c.throne.username) : '', rank: thronePrivate().gifts + 1, gifts: thronePrivate().gifts }, wishlist: { enabled: c.wishlist.enabled, qr: c.wishlist.qr, position: c.wishlist.position, rank: l.rank, total: l.total, item: l.current ? { name: l.current.name, amount: l.current.amount, currency: l.current.currency, image: l.current.image, url: M.purchaseURL(l.current, l.url) } : null, url: l.url }, ninja: { enabled: c.ninja.enabled, qr: c.ninja.qr, position: c.ninja.position, username: c.ninja.username, url: c.ninja.username ? 'https://ninjabacker.com/' + encodeURIComponent(c.ninja.username) : '' } };
+        if (privateState.breaks && typeof SSNBreaks !== 'undefined') result.breaks = SSNBreaks.publicState(privateState.breaks);
+        return result;
 	}
 	function broadcast(purchase) {
 		if (!ready || !isExtensionOn) return;
@@ -438,8 +477,12 @@
         if (request.action === 'publishShop' || request.action === 'unpublishShop') {
             await enqueueShop(request.action === 'unpublishShop'); broadcast(); return snapshot();
         }
+        if (request.action === 'breaksAccess') return breaksKey(false);
+        if (request.action === 'breaksAccessReset') return breaksKey(true);
         if (request.action === 'commerceControl') {
             var command = request.command, items = c.commerce.items;
+            if (command === 'breakSecure') return runSecureBreakCommand(request.data);
+            if (isBreakCommand(command)) throw new Error('Open Breaks from its private link.');
             if (SSNCommerceBoards.commands.indexOf(command) !== -1) {
                 var previous = privateState.boards;
                 privateState.boards = SSNCommerceBoards.apply(previous, command, request.data);
@@ -583,7 +626,7 @@
 	window.handleMonetizationRequest = function (request, sender) {
 		if (sender && sender.tab && sender.tab.id !== null && sender.tab.id !== undefined) return Promise.resolve({ error: 'Use the SSN popup to configure monetization.' });
         if (request.action === 'getCommerceState') return Promise.resolve({ commerce: controlState() });
-        if (request.action === 'commerceControl' && SSNCommerceBoards.commands.indexOf(request.command) === -1) return action(request).catch(function (e) { return { error: e.message }; });
+        if (request.action === 'commerceControl' && SSNCommerceBoards.commands.indexOf(request.command) === -1 && !isBreakCommand(request.command) && request.command !== 'breakSecure') return action(request).catch(function (e) { return { error: e.message }; });
 		var job = queue.then(function () {
 			return request.action === 'get' ? snapshot() : action(request);
 		});
@@ -592,6 +635,16 @@
 			return { error: e.message || 'Monetization action failed.' };
 		});
 	};
+    // In-process only, for Event Flow on the host. No message or relay route calls this directly.
+    window.handleBreaksLocalRequest = function (command, data) {
+        var job = queue.then(async function () {
+            var request = SSNBreaks.flowRequest(command, data);
+            if (command !== 'breakGet') await runBreakCommand(command, request);
+            return {commerceState:{breaks:SSNBreaks.flowState(privateState.breaks)}};
+        });
+        queue = job.catch(function () {});
+        return job.catch(function (e) { return { error: e.message || 'Breaks command failed.' }; });
+    };
     window.recordCommerceAuction = function (event) {
         if (!ready || !isExtensionOn || !privateState.boards || !privateState.boards.auctionSource || event.type !== privateState.boards.auctionSource) return;
         var draft = SSNCommerceBoards.auction(event, Date.now());
@@ -619,6 +672,8 @@
 				return { key: value.key, environment: value.environment === 'sandbox' ? 'sandbox' : 'production', items: value.items.slice(0, 20), seen: value.seen.slice(-10000), cursor: Number(value.cursor) || 0 };
 			}
 			privateState.boards = SSNCommerceBoards.normalize(p.boards);
+            if (p.breaks) privateState.breaks = typeof SSNBreaks !== 'undefined' ? SSNBreaks.normalize(p.breaks) : p.breaks;
+            if (/^[a-f0-9]{64}$/.test(p.breaksKey || '')) privateState.breaksKey = p.breaksKey;
 			var savedEbay = ebayProfile(p.ebay);
 			if (savedEbay) privateState.ebay = savedEbay;
 			privateState.ebayProfiles = {};
@@ -691,7 +746,8 @@
 		}
 		var boards = privateState.boards;
 		var boardVisible = boards && ((boards.board && boards.board.visible && boards.board.spots.length) || (boards.salesVisible && boards.sales.length));
-		if ((c.commerce.enabled || c.wishlist.enabled || c.ninja.enabled || c.throne.enabled || c.ebay.enabled || c.patreon.enabled || boardVisible) && now - lastBroadcast > 10000) broadcast();
+        var breakVisible = privateState.breaks && privateState.breaks.active && privateState.breaks.active.visible;
+		if ((c.commerce.enabled || c.wishlist.enabled || c.ninja.enabled || c.throne.enabled || c.ebay.enabled || c.patreon.enabled || boardVisible || breakVisible) && now - lastBroadcast > 10000) broadcast();
 		['wishlist', 'ninja', 'throne', 'ebay'].forEach(function (mode) {
 			if (c[mode].enabled && c[mode].interval && now >= next[mode]) {
 				next[mode] = now + c[mode].minutes * 60000;

@@ -2,6 +2,10 @@
 
 Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command list is authoritative, including when development builds share an application version.
 
+## Breaks workspace with updated Social Stream sources
+
+Minimum supported runtime for this addition: SSApp 0.4.48 with the Breaks page sources. There are no new SSApp REST or MCP commands, and session commands cannot read or change Breaks. The workspace uses its own private link, and Event Flow's Commerce control action adds display-only `breakHighlight`, `breakStage`, and `breakSettings` on the host. See the [control API reference](control-api.md#breaks-workspace).
+
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
 | 1.6.0 / MCP 1.5.0 | 0.4.40 | Adds opt-in private human viewing, instance-bound viewer grants, API/MCP pause during private input, disconnect suspension, explicit handback, and `getHumanControlStatus`. Browser screenshots add captured-page origin/title metadata. Private viewing keeps hidden Windows targets rendering; cleanup restores their original size and hidden state, including when off-screen placement uses a remembered size, and preserves manual resizing. Remote bridges must separately authorize and transport the human viewer. |

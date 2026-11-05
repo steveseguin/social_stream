@@ -15013,6 +15013,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						},100);
 					});
 				}
+			} else if (msg.cmd == "resetmetastats"){
+				if (confirm("Reset the connected stream stats to 0?")){
+					chrome.runtime.sendMessage(msg, function (response) {
+						log("ignore callback for this action");
+					});
+				}
 			} else if (msg.cmd == "resettipjar"){
 				var confirmResetTipJar = confirm("Reset the connected Tip Jar/Goal to 0?");
 				if (confirmResetTipJar){

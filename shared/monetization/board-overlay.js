@@ -1,6 +1,10 @@
 (function () {
     'use strict';
     var params = new URLSearchParams(location.search), demo = params.has('demo'), view = params.get('view') || 'board';
+    if (view === 'breaks') {
+        var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'shared/monetization/breaks-overlay.css'; document.head.appendChild(css);
+        var script = document.createElement('script'); script.src = 'shared/monetization/breaks-overlay.js'; document.body.appendChild(script); return;
+    }
     var display = document.getElementById('commerce-display'), grid = document.getElementById('board-grid'), lastAt = 0, signature = '';
     var limit = Math.max(1, Math.min(24, Number(params.get('limit')) || (view === 'ticker' ? 3 : view === 'wall' ? 6 : 5)));
     var filters = (params.get('onlytype') || '').split(',').filter(Boolean);

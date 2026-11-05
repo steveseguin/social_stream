@@ -7386,6 +7386,12 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if (request.cmd && request.cmd === "resettipjar") {
 			sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "resetmetastats") {
+			sendTargetP2P({ cmd: "resetmetastats" }, "meta");
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "metastats") {
+			sendTargetP2P({ cmd: "metastats", value: request.value }, "meta");
+			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "settipjaramount") {
 			sendTargetP2P(
 				{
@@ -11634,6 +11640,9 @@ function setupSocket() {
 			} else if (data.action && data.action === "resetleaderboard") {
 				broadcastLeaderboardReset();
 				resp = true;
+			} else if (data.action && (data.action === "metastats" || data.action === "resetmetastats")) {
+				sendTargetP2P({ cmd: data.action, value: data.value }, "meta");
+				resp = true;
 			} else if (data.action && data.action === "resettipjar") {
 				sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
 				resp = true;
@@ -13550,6 +13559,7 @@ function prepareOverlayControl(data, target) {
         (target === "map" && (data.settings || data.setting || ["startmap", "pausemap", "resetmap"].includes(data.cmd))) ||
         (target === "timer" && data.timer) || (target === "ticker" && data.ticker) || (target === "spotify" && data.spotify) ||
         (target === "tipjar" && ["resettipjar", "settipjaramount"].includes(data.cmd)) ||
+        (target === "meta" && ["resetmetastats", "metastats"].includes(data.cmd)) ||
         ((target === "alerts" || target === "dock") && data.action === "eventOverlayControl" && data.surface === (target === "alerts" ? "alerts" : "events")) || (target === "alerts" && data.action === "clearAlerts") || (target === "bot" && data.action === "clearBotOverlay") ||
         (target === "wordcloud" && (data.chatmessage || "state" in data)) || (target === "gif" && data.contentimg) ||
         (target === "reactions" && ["reaction", "liked", "like"].includes(data.event)) ||
