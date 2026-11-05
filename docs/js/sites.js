@@ -319,11 +319,11 @@ document.addEventListener('DOMContentLoaded', function() {
             instructions: `
                 <ul>
                     <li>URL: https://socialstream.ninja/sources/websocket/houla.html</li>
-                    <li>In the Hou.la Studio, create a read-only event key (it starts with hle_) and tick Comments, Gifts and Followers</li>
+                    <li>In the Hou.la Studio, create a dedicated event key (it starts with hle_), without an interactive pack, and tick Comments, Gifts and Followers</li>
                     <li>Paste the key into the page and click Connect</li>
                 </ul>
             `,
-            notes: 'The event key is read-only and scoped to your own lives. Never paste your stream key (sk_) there.'
+            notes: 'The event key only receives the events of your own lives and cannot post in chat or spend coins. Never paste your stream key (sk_) there.'
         },
         {
             name: 'Kick.com',

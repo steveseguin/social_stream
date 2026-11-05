@@ -1,7 +1,7 @@
 /*
  * Hou.la source for Social Stream Ninja.
  *
- * Hou.la exposes a read-only event channel (Socket.IO) that a creator opens with
+ * Hou.la exposes a receive-only event channel (Socket.IO) that a creator opens with
  * an event key generated in their Hou.la studio. This script subscribes to that
  * channel and forwards live chat comments — plus gifts and new followers — as
  * ordinary Social Stream messages.
@@ -15,9 +15,11 @@
  * In (1) the manifest injects this file, so houla.html deliberately does NOT
  * load it itself — running twice would send every comment twice.
  *
- * The key is read-only and self-scoped: it only ever receives the events of the
- * workspace it belongs to. It cannot post, spend or change anything, which is
- * why pasting it into a source page is safe.
+ * The key is self-scoped: it only ever receives the events of the workspace it
+ * belongs to, and cannot post in chat or spend coins. It is still a SECRET: it
+ * is only ever sent to Hou.la's own API (see API_ALLOWED), never logged.
+ * Without the `commands:ack` scope (only granted to the key Hou.la Connect
+ * declares its paid commands with) it cannot acknowledge paid commands either.
  *
  * Requires a Socket.IO v4 client on the same world (`io`). Upstream that is
  * ./shared/vendor/socket.io.min.js loaded by the manifest entry, exactly like
@@ -78,7 +80,13 @@
             testMessage: 'Test message from Hou.la 👋',
             testSent: 'Test message sent — it should appear in your dock.',
             followed: 'Started following',
-            forgotten: 'Key forgotten on this computer.',
+            apiRefused:
+                'This link points the page at an unknown server. It was ignored: the page stays on Hou.la and will not connect on its own.',
+            apiLocal: 'Local test API: click Connect to start.',
+            confirmKey:
+                'This link carries another event key ({0}). Check it is yours, then click Connect.',
+            forgotten:
+                'Key forgotten on this computer. If you put it in a source link (desktop app), remove it from that link too.',
             linkCopied: 'Source link copied. It contains your key: keep it private.',
             copy: 'Copy',
             copied: 'Copied',
@@ -108,7 +116,13 @@
             testMessage: 'Message de test depuis Hou.la 👋',
             testSent: 'Message de test envoyé — il doit apparaître dans ton dock.',
             followed: 'S’est abonné',
-            forgotten: 'Clé oubliée sur cet ordinateur.',
+            apiRefused:
+                'Ce lien envoie la page vers un serveur inconnu. Il a été ignoré : la page reste sur Hou.la et ne se connectera pas toute seule.',
+            apiLocal: 'API de test locale : clique sur Connecter pour démarrer.',
+            confirmKey:
+                'Ce lien contient une autre clé d’événements ({0}). Vérifie que c’est bien la tienne, puis clique sur Connecter.',
+            forgotten:
+                'Clé oubliée sur cet ordinateur. Si tu l’as mise dans un lien de source (app de bureau), retire-la aussi de ce lien.',
             linkCopied: 'Lien de source copié. Il contient ta clé : garde-le pour toi.',
             copy: 'Copier',
             copied: 'Copié',
@@ -165,22 +179,48 @@
     var transport = detectTransport();
 
     /**
-     * Dev override: `?api=http://127.0.0.1:53001` points the page at a local
-     * Hou.la API instead of production. http(s) only — and on the page we host,
-     * the CSP confines connect-src to hou.la hosts anyway, so this is a developer
-     * switch rather than a way to send someone's key elsewhere.
+     * `?api=` override, for testing against a development API.
+     *
+     * SECURITY. The stored key is sent to API_BASE, with no click when
+     * auto-connect is on. An arbitrary `?api=` would therefore hand the key to
+     * whoever crafted the link, and on socialstream.ninja no CSP stops it. So:
+     *   - only Hou.la's own APIs (HTTPS) and a local API (localhost / 127.0.0.1)
+     *     are accepted;
+     *   - anything else is REFUSED: the page stays on production, never
+     *     connects on its own, and says so;
+     *   - a local API never auto-connects either: the creator clicks Connect.
      */
+    var API_ALLOWED = ['api.hou.la', 'devapi.hou.la'];
+
     function resolveApiBase() {
+        var out = { base: HOULA_API, refused: false, local: false };
+        var raw = null;
         try {
-            var raw = new URLSearchParams(location.search).get('api');
-            if (raw && /^https?:\/\//i.test(raw)) return raw.replace(/\/+$/, '');
+            raw = new URLSearchParams(location.search).get('api');
         } catch (e) {
-            /* no URLSearchParams / opaque location — fall through to prod */
+            return out;
         }
-        return HOULA_API;
+        if (!raw) return out;
+        var m = /^(https?):\/\/([^\/?#:@]+)(:\d{1,5})?\/*$/i.exec(String(raw).trim());
+        if (m) {
+            var scheme = m[1].toLowerCase();
+            var host = m[2].toLowerCase();
+            if (scheme === 'https' && !m[3] && API_ALLOWED.indexOf(host) !== -1) {
+                out.base = 'https://' + host;
+                return out;
+            }
+            if (host === 'localhost' || host === '127.0.0.1') {
+                out.base = scheme + '://' + host + (m[3] || '');
+                out.local = true;
+                return out;
+            }
+        }
+        out.refused = true;
+        return out;
     }
 
-    var API_BASE = resolveApiBase();
+    var API = resolveApiBase();
+    var API_BASE = API.base;
 
     /**
      * Only decorate with our logo when SSN has no icon of its own for this type.
@@ -247,6 +287,36 @@
 
     // ───────────────────────────── mapping ───────────────────────────────────
 
+    /**
+     * Normal text fields are PLAIN TEXT for SSN, yet several overlays render
+     * them as HTML, and a Hou.la display name may contain `<`. Escape at
+     * capture, like velora.js does for chatname. `chatmessage` stays raw:
+     * `textonly: true` already tells SSN to render it as text.
+     */
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    /** Images: http(s) only, never `javascript:` or `data:` from a payload. */
+    function safeUrl(url) {
+        url = String(url || '').trim();
+        return /^https?:\/\//i.test(url) ? url : '';
+    }
+
+    /** Whole, positive, finite counts only (coins, quantities). */
+    function coinCount(value) {
+        var n = Number(value);
+        if (!isFinite(n) || n <= 0) return 0;
+        n = Math.floor(n);
+        return n > 1e9 ? 0 : n;
+    }
+
     function baseMessage() {
         var data = {
             chatname: '',
@@ -274,7 +344,7 @@
 
     /** `N coins` label + numeric USD estimate, the SSN donation pair. */
     function setCoins(data, coins) {
-        coins = Number(coins) || 0;
+        coins = coinCount(coins);
         if (coins <= 0) return;
         data.hasDonation = coins + ' coins';
         data.donoValue = Math.round(coins * USD_PER_COIN * 100) / 100;
@@ -290,10 +360,10 @@
         var author = payload.author || {};
         if (isDuplicate(comment.id)) return null;
         var data = baseMessage();
-        data.chatname = author.name || 'anonymous';
-        data.chatmessage = comment.content || '';
-        data.chatimg = author.avatarUrl || '';
-        data.userid = author.workspaceId || '';
+        data.chatname = escapeHtml(author.name || 'anonymous');
+        data.chatmessage = typeof comment.content === 'string' ? comment.content : '';
+        data.chatimg = safeUrl(author.avatarUrl);
+        data.userid = escapeHtml(author.workspaceId || '');
         setRoles(data, author);
         // Messages written by a Hou.la bot (an interactive pack replying in
         // chat). Flagged, not dropped: SSN's own bot filters then apply.
@@ -310,23 +380,23 @@
         var sender = payload.sender || {};
         if (isDuplicate(payload.transactionId)) return null;
         var data = baseMessage();
-        data.chatname = sender.name || 'anonymous';
-        data.chatimg = sender.avatarUrl || '';
-        data.userid = sender.workspaceId || '';
+        data.chatname = escapeHtml(sender.name || 'anonymous');
+        data.chatimg = safeUrl(sender.avatarUrl);
+        data.userid = escapeHtml(sender.workspaceId || '');
         setRoles(data, sender);
-        data.chatmessage =
-            gift.quantity > 1 ? (gift.name || '') + ' ×' + gift.quantity : gift.name || '';
+        var quantity = coinCount(gift.quantity) || 1;
+        data.chatmessage = quantity > 1 ? String(gift.name || '') + ' ×' + quantity : String(gift.name || '');
         // A virtual gift is a distinct paid item type: SSN names it `gift`
         // (Kick, TikFinity, MeetMe do the same) and hasDonation carries the value.
         data.event = 'gift';
         setCoins(data, gift.totalCoins);
-        data.contentimg = gift.thumbnailUrl || '';
+        data.contentimg = safeUrl(gift.thumbnailUrl);
         data.meta = {
             giftId: gift.id || null,
             giftSlug: gift.slug || null,
             giftName: gift.name || null,
-            quantity: gift.quantity || 1,
-            coins: gift.totalCoins || 0,
+            quantity: quantity,
+            coins: coinCount(gift.totalCoins),
             transactionId: payload.transactionId || null,
         };
         return data;
@@ -335,9 +405,9 @@
     function fromFollow(payload) {
         var follower = payload.follower || {};
         var data = baseMessage();
-        data.chatname = follower.name || 'anonymous';
-        data.chatimg = follower.avatarUrl || '';
-        data.userid = follower.workspaceId || '';
+        data.chatname = escapeHtml(follower.name || 'anonymous');
+        data.chatimg = safeUrl(follower.avatarUrl);
+        data.userid = escapeHtml(follower.workspaceId || '');
         data.chatmessage = t('followed');
         // SSN's canonical follow event (multi-alerts, Event Flow, dock filters).
         data.event = 'new_follower';
@@ -539,11 +609,26 @@
         var fragment = readFragment();
         var local = readLocal();
         var finish = function (stored) {
-            var config = fragment.key ? fragment : stored && stored.key ? stored : local;
-            // Options (ticked events, auto-connect) follow the store that had them.
-            if (!config.options) config.options = local.options || (stored && stored.options);
-            if (fragment.options && config !== fragment) config.options = fragment.options;
-            if (!config.session && local.session) config.session = local.session;
+            var saved = stored && stored.key ? stored : local;
+            if (!saved.options && local.options) saved.options = local.options;
+            var config = saved;
+            if (fragment.key && fragment.key !== saved.key) {
+                // A link can carry SOMEONE ELSE's key: connecting it would push
+                // another live into this creator's dock, with their session. So a
+                // fragment key that is not the stored one is only PROPOSED: field
+                // filled, no auto-connect, no stored session, nothing saved until
+                // the creator clicks Connect.
+                config = {
+                    key: fragment.key,
+                    options: saved.options || {},
+                    pendingConfirmation: true,
+                };
+            } else if (fragment.options) {
+                config.options = fragment.options;
+            }
+            if (!config.pendingConfirmation && !config.session && local.session) {
+                config.session = local.session;
+            }
             done(config || {});
         };
         if (!hasExtensionStorage()) return finish(null);
@@ -590,13 +675,27 @@
 
     /** This page's address with the key in the fragment, for the SSN desktop app. */
     function sourceLink(key) {
+        var search = '';
+        try {
+            var params = new URLSearchParams(location.search);
+            // Never copy a refused (foreign) `?api=` into a link that carries the key.
+            if (API.refused) params.delete('api');
+            search = params.toString();
+        } catch (e) {
+            search = '';
+        }
         return (
             location.origin +
             location.pathname +
-            location.search +
+            (search ? '?' + search : '') +
             '#key=' +
             encodeURIComponent(key)
         );
+    }
+
+    /** `hle_abcd…`: enough to recognise a key, never enough to use it. */
+    function maskKey(key) {
+        return String(key || '').slice(0, 8) + '…';
     }
 
     // ───────────────────────────── UI ────────────────────────────────────────
@@ -790,6 +889,9 @@
             if ($('optAuto')) $('optAuto').checked = config.options.auto !== false;
         }
         updateDockUrl();
+        if (API.refused) return setStatus('error', t('apiRefused'));
+        if (config.pendingConfirmation) return setStatus('warn', t('confirmKey', maskKey(config.key)));
+        if (API.local) return setStatus('', t('apiLocal'));
         var auto = !config.options || config.options.auto !== false;
         if (config.key && auto && !running) {
             log('stored key found — connecting automatically');

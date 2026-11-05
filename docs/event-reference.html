@@ -1561,8 +1561,8 @@
                     <h3>Hou.la - WebSocket</h3>
                     <p class="source-note">Implementation: <code>sources/websocket/houla.js</code></p>
                     <ul class="requirements">
-                        <li>Connects with Socket.IO to the Hou.la event channel (<code>https://api.hou.la/events</code>, path <code>/ws</code>) using a read-only event key (<code>hle_</code>) the creator generates in the Hou.la Studio. The key only receives the events of the creator's own lives.</li>
-                        <li>Read-only: no chat send-back and no deletion sync.</li>
+                        <li>Connects with Socket.IO to the Hou.la event channel (<code>https://api.hou.la/events</code>, path <code>/ws</code>) using an event key (<code>hle_</code>) the creator generates in the Hou.la Studio. The key only receives the events of the creator&#039;s own lives; it cannot post in chat or spend coins. The page only sends it to Hou.la APIs (<code>?api=</code> is limited to Hou.la hosts and localhost).</li>
+                        <li>No chat send-back and no deletion sync. Text fields other than <code>chatmessage</code> are HTML-escaped; <code>chatmessage</code> is raw text with <code>textonly: true</code>.</li>
                     </ul>
                     <div class="table-scroll" role="region" tabindex="0" aria-label="Hou.la - WebSocket table">
 <table class="event-table">
