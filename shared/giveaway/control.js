@@ -178,7 +178,12 @@
             run(refresh);
         }
         var reply = data.dataReceived && data.dataReceived.overlayNinja;
-        if (reply && reply.get && pending.has(reply.get))
+        if (reply && reply.callback && pending.has(reply.callback.get)) {
+            var result = reply.callback.result;
+            if (result && typeof result.ok === 'boolean')
+                pending.get(reply.callback.get)(result.payload || result);
+        }
+        else if (reply && reply.get && pending.has(reply.get))
             pending.get(reply.get)(reply.payload || reply);
     });
     document.body.appendChild(bridge);

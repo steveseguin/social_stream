@@ -4428,6 +4428,7 @@ function enableBackgroundKeepAlive() {
 						const giftDetails = item.snippet.giftMembershipReceivedDetails;
 						if (!isBacklogMessage) {
 							processGiftRedemption({
+								videoId: richChatVideoId,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								gifterChannelId: giftDetails.gifterChannelId,
 								memberLevelName: giftDetails.memberLevelName,
@@ -4442,6 +4443,7 @@ function enableBackgroundKeepAlive() {
 					if (item.snippet.type === 'newSponsorEvent' && item.snippet.newSponsorDetails) {
 						if (!isBacklogMessage) {
 							processNewSponsorship({
+								videoId: richChatVideoId,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								memberLevelName: item.snippet.newSponsorDetails.memberLevelName,
 								profileImageUrl: item.authorDetails.profileImageUrl,
@@ -4455,6 +4457,7 @@ function enableBackgroundKeepAlive() {
 						const giftingDetails = item.snippet.membershipGiftingDetails;
 						if (!isBacklogMessage) {
 							processGiftPurchase({
+								videoId: richChatVideoId,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								giftCount: giftingDetails.giftMembershipsCount || 1,
 								memberLevelName: giftingDetails.giftMembershipsLevelName,
@@ -4470,6 +4473,7 @@ function enableBackgroundKeepAlive() {
 						const milestoneDetails = item.snippet.memberMilestoneChatDetails;
 						if (!isBacklogMessage) {
 							processMemberMilestone({
+								videoId: richChatVideoId,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								memberMonth: milestoneDetails.memberMonth,
 								memberLevelName: milestoneDetails.memberLevelName,
@@ -4492,6 +4496,7 @@ function enableBackgroundKeepAlive() {
 							if (item.authorDetails.isChatSponsor) stickerBadges.push({"type": "text", "text": "⭐"});
 
 							processSuperSticker({
+								videoId: richChatVideoId,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								amount: stickerDetails.amountDisplayString,
 								stickerId: stickerDetails.superStickerMetadata?.stickerId,
@@ -4513,6 +4518,7 @@ function enableBackgroundKeepAlive() {
 							if (item.authorDetails.isChatSponsor) giftBadges.push({"type": "text", "text": "⭐"});
 
 							processYouTubeGift({
+								videoId: richChatVideoId,
 								messageId: item.id,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								profileImageUrl: item.authorDetails.profileImageUrl,
@@ -4540,6 +4546,7 @@ function enableBackgroundKeepAlive() {
 							if (item.authorDetails.isChatSponsor) superChatBadges.push({"type": "text", "text": "⭐"});
 
 							processSuperChat({
+								videoId: richChatVideoId,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								amount: item.snippet.superChatDetails.amountDisplayString,
 								message: item.snippet.superChatDetails.userComment,
@@ -4586,6 +4593,7 @@ function enableBackgroundKeepAlive() {
 								membershipBadges.push({"type": "text", "text": "⭐"});
 
 								processMembership({
+										videoId: richChatVideoId,
 										authorName: item.authorDetails.displayName.replace(/^@/, ''),
 										level: item.snippet.membershipDetails.memberLevelName,
 										profileImageUrl: item.authorDetails.profileImageUrl,
@@ -6869,6 +6877,7 @@ function enableBackgroundKeepAlive() {
 				textColor: "#111",
 				chatmessage: superChatData.message || '',
 				chatimg: superChatData.profileImageUrl || "",
+				videoid: superChatData.videoId || "",
 				hasDonation: superChatData.amount,
 				membership: "",
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
@@ -6934,6 +6943,7 @@ function enableBackgroundKeepAlive() {
 				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: giftData.profileImageUrl || "",
+				videoid: giftData.videoId || "",
 				hasDonation: donationText,
 				membership: "",
 				subtitle: giftLabel,
@@ -7067,6 +7077,7 @@ function enableBackgroundKeepAlive() {
 				textColor: "",
 				chatmessage: displayMessage,
 				chatimg: membershipData.profileImageUrl || "",
+				videoid: membershipData.videoId || "",
 				hasDonation: "",
 				membership: eventType === "renewal" ? "renewed_member" : eventType === "upgrade" ? "upgraded_member" : "new_member",
 				subtitle: resolvedLevel,
@@ -7119,6 +7130,7 @@ function enableBackgroundKeepAlive() {
 				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: giftData.profileImageUrl || "",
+				videoid: giftData.videoId || "",
 				hasDonation: "",
 				membership: "gift_recipient",
 				subtitle: giftData.memberLevelName,
@@ -7176,6 +7188,7 @@ function enableBackgroundKeepAlive() {
 				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: giftData.profileImageUrl || "",
+				videoid: giftData.videoId || "",
 				hasDonation: "",
 				membership: "gift_giver",
 				subtitle: levelDescriptor,
@@ -7227,6 +7240,7 @@ function enableBackgroundKeepAlive() {
 				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: sponsorData.profileImageUrl || "",
+				videoid: sponsorData.videoId || "",
 				hasDonation: "",
 				membership: "new_sponsor",
 				subtitle: sponsorData.memberLevelName,
@@ -7296,6 +7310,7 @@ function enableBackgroundKeepAlive() {
 				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: milestoneData.profileImageUrl || "",
+				videoid: milestoneData.videoId || "",
 				hasDonation: "",
 				membership: "member_milestone",
 				subtitle: levelDescriptor,
@@ -7704,6 +7719,7 @@ function enableBackgroundKeepAlive() {
 				chatmessage: stickerUrl ? "" : (settings.textonlymode ? stickerMessage : escapeHtml(stickerMessage)),
 				contentimg: stickerUrl,
 				chatimg: stickerData.profileImageUrl || "",
+				videoid: stickerData.videoId || "",
 				hasDonation: stickerData.amount,
 				membership: "",
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
