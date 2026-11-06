@@ -326,6 +326,17 @@
     </div>
 
     <script>
+        // Escape HTML to prevent injection from chat data (chat fields come from unauthenticated remote viewers)
+        function escapeHtml(unsafe) {
+            if (unsafe === null || unsafe === undefined) return '';
+            return String(unsafe)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         const App = {
             eventSource: null,
             config: {
@@ -479,15 +490,15 @@
                     messageEl.classList.add('donation');
                 }
                 
-                // Build message HTML
-                const avatar = message.chatimg || this.getDefaultAvatar(message.type);
-                const platform = message.type || 'unknown';
-                const username = message.chatname || 'Anonymous';
-                const messageContent = message.chatmessage || '';
+                // Build message HTML (chat-supplied fields escaped; data comes from remote viewers)
+                const avatar = escapeHtml(message.chatimg || this.getDefaultAvatar(message.type));
+                const platform = escapeHtml(message.type || 'unknown');
+                const username = escapeHtml(message.chatname || 'Anonymous');
+                const messageContent = escapeHtml(message.chatmessage || '');
                 
                 let donationHtml = '';
                 if (message.hasDonation || message.donation) {
-                    donationHtml = `<span class="donation-amount">${message.hasDonation || message.donation}</span>`;
+                    donationHtml = `<span class="donation-amount">${escapeHtml(message.hasDonation || message.donation)}</span>`;
                 }
                 
                 messageEl.innerHTML = `
