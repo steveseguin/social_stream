@@ -26,7 +26,7 @@ body.breaks-workspace {
 	font-size: 20px;
 	margin: 0 0 14px;
 }
-.breaks-panel label {
+.breaks-workspace #commerce-controls label {
 	display: flex;
 	flex-direction: column;
 	gap: 7px;
@@ -119,6 +119,52 @@ body.breaks-workspace {
 	color: #8ce0ba;
 	margin: 10px 0 18px;
 	overflow-wrap: anywhere;
+}
+.br-feedback:empty {
+	display: none;
+}
+.breaks-workspace #commandStatus,
+.breaks-workspace .dock-footer {
+	display: none;
+}
+.br-connection {
+	margin-bottom: 16px;
+}
+.br-connection summary {
+	cursor: pointer;
+	color: var(--muted);
+}
+.br-connection .session-panel {
+	margin-top: 10px;
+}
+.br-draft {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	color: #ffcb66;
+	margin-top: 12px;
+}
+.br-back {
+	display: none;
+}
+.br-preview {
+	width: min(1200px, 94vw);
+	height: 85vh;
+	color: var(--text);
+	background: var(--bg);
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	padding: 14px;
+}
+.br-preview::backdrop {
+	background: #000a;
+}
+.br-preview iframe {
+	display: block;
+	border: 0;
+	width: 100%;
+	height: calc(100% - 52px);
+	margin-top: 10px;
 }
 .br-feedback.br-error,
 .br-failed {
@@ -286,11 +332,29 @@ body.breaks-workspace {
 		gap: 18px;
 	}
 	.br-live {
-		grid-template-columns: minmax(0, 1fr) 280px;
+		grid-template-columns: minmax(0, 1fr);
 		gap: 14px;
 	}
 	.br-editor {
 		padding: 14px;
+		position: static;
+		max-height: none;
+		display: none;
+	}
+	.br-editing .br-editor:not([hidden]) {
+		display: block;
+	}
+	.br-editing .br-live > div,
+	.br-editing .br-toolbar {
+		display: none;
+	}
+	.br-back {
+		display: inline-block;
+		margin-bottom: 12px;
+	}
+	.br-grid .br-spot {
+		min-height: 72px;
+		padding: 10px;
 	}
 }
 @media (max-width: 560px) {

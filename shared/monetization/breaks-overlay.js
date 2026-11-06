@@ -27,7 +27,12 @@
 			return;
 		}
 		// Ignore packets that arrive just after a newer one. The time limit means a bogus high revision cannot freeze the board.
-		if (b.version !== 1 || !Array.isArray(b.spots) || (b.id === boardId && b.revision < revision && Date.now() - acceptedAt < 3000)) return;
+		if (
+			b.version !== 1 ||
+			!Array.isArray(b.spots) ||
+			(b.id === boardId && b.revision < revision && Date.now() - acceptedAt < 3000)
+		)
+			return;
 		revision = b.revision;
 		acceptedAt = Date.now();
 		display.hidden = !b.visible || !b.spots.length;
@@ -38,7 +43,8 @@
 			animate = !newBoard && b.highlightAt !== highlightAt && Date.now() - b.highlightAt < 10000;
 		boardId = b.id;
 		highlightAt = b.highlightAt;
-		display.className = "br-output " + (["grid", "strip", "column"].indexOf(b.layout) !== -1 ? "br-" + b.layout : "br-grid");
+		display.className =
+			"br-output " + (["grid", "strip", "column"].indexOf(b.layout) !== -1 ? "br-" + b.layout : "br-grid");
 		display.style.setProperty("--columns", Math.max(1, Math.min(12, Number(b.columns) || 4)));
 		display.style.setProperty("--accent", /^#[0-9a-f]{6}$/i.test(b.accent || "") ? b.accent : "#8ce0ba");
 		text("eyebrow", b.stage === "breaking" ? "BREAKING NOW" : b.stage === "finished" ? "BREAK COMPLETE" : "FILLING");
@@ -60,7 +66,11 @@
 				return !b.availableOnly || s.status === "available";
 			})
 			.forEach(function (s) {
-				var tile = node("article", undefined, "br-tile " + (["claimed", "revealed"].indexOf(s.status) !== -1 ? s.status : "available"));
+				var tile = node(
+					"article",
+					undefined,
+					"br-tile " + (["claimed", "revealed"].indexOf(s.status) !== -1 ? s.status : "available")
+				);
 				if (s.id === b.highlight) {
 					tile.classList.add("highlight");
 					if (animate) tile.classList.add("celebrate");
@@ -93,7 +103,9 @@
 					}
 					tile.appendChild(node("span", amount, "br-price"));
 				}
-				tile.appendChild(node("small", s.status === "revealed" ? "Revealed" : s.status === "claimed" ? "Claimed" : "Available"));
+				tile.appendChild(
+					node("small", s.status === "revealed" ? "Revealed" : s.status === "claimed" ? "Claimed" : "Available")
+				);
 				grid.appendChild(tile);
 			});
 	}
@@ -105,11 +117,60 @@
 			if (m && Object.prototype.hasOwnProperty.call(m, "breaks")) render(m.breaks);
 		});
 	}
+	if (params.has("preview")) {
+		window.addEventListener("message", function (e) {
+			if (
+				e.source === window.parent &&
+				(e.origin === location.origin || (location.protocol === "file:" && e.origin === "null")) &&
+				e.data &&
+				Object.prototype.hasOwnProperty.call(e.data, "breakPreview")
+			)
+				render(e.data.breakPreview);
+		});
+		window.parent.postMessage({ breakPreviewReady: true }, location.protocol === "file:" ? "*" : location.origin);
+		return;
+	}
 	if (params.has("demo")) {
 		document.body.classList.add("demo");
-		var b = { version: 1, revision: 1, id: "sample", title: "Friday team break", stage: "filling", visible: true, layout: params.get("layout") || "grid", columns: 4, accent: "#8ce0ba", showBuyers: true, showPrices: true, currency: "USD", highlight: "3", highlightAt: 1, spots: [] };
-		["Atlanta", "Boston", "Chicago", "Dallas", "Denver", "Los Angeles", "Miami", "New York", "Phoenix", "Portland", "Sacramento", "Toronto"].forEach(function (name, i) {
-			b.spots.push({ id: String(i + 1), label: name, buyer: i % 3 ? "" : "collector" + (i + 1), price: 25 + i, status: i === 2 ? "revealed" : i % 3 ? "available" : "claimed", result: i === 2 ? "Signed rookie" : "" });
+		var b = {
+			version: 1,
+			revision: 1,
+			id: "sample",
+			title: "Friday team break",
+			stage: "filling",
+			visible: true,
+			layout: params.get("layout") || "grid",
+			columns: 4,
+			accent: "#8ce0ba",
+			showBuyers: true,
+			showPrices: true,
+			currency: "USD",
+			highlight: "3",
+			highlightAt: 1,
+			spots: [],
+		};
+		[
+			"Atlanta",
+			"Boston",
+			"Chicago",
+			"Dallas",
+			"Denver",
+			"Los Angeles",
+			"Miami",
+			"New York",
+			"Phoenix",
+			"Portland",
+			"Sacramento",
+			"Toronto",
+		].forEach(function (name, i) {
+			b.spots.push({
+				id: String(i + 1),
+				label: name,
+				buyer: i % 3 ? "" : "collector" + (i + 1),
+				price: 25 + i,
+				status: i === 2 ? "revealed" : i % 3 ? "available" : "claimed",
+				result: i === 2 ? "Signed rookie" : "",
+			});
 		});
 		render(b);
 		document.getElementById("demo-label").hidden = false;
@@ -163,7 +224,13 @@
 	var bridge = document.createElement("iframe");
 	bridge.title = "SSN connection";
 	bridge.style.cssText = "position:fixed;width:0;height:0;border:0;left:-100px;top:-100px";
-	bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=" + encodeURIComponent(params.get("password") || "false") + "&solo&view=" + encodeURIComponent(session) + "&novideo&noaudio&label=dock&cleanoutput&room=" + encodeURIComponent(session);
+	bridge.src =
+		"https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=" +
+		encodeURIComponent(params.get("password") || "false") +
+		"&solo&view=" +
+		encodeURIComponent(session) +
+		"&novideo&noaudio&label=dock&cleanoutput&room=" +
+		encodeURIComponent(session);
 	window.addEventListener("message", function (e) {
 		if (e.source === bridge.contentWindow && e.data && e.data.dataReceived) receive(e.data.dataReceived.overlayNinja);
 	});

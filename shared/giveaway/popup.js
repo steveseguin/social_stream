@@ -2,7 +2,7 @@
     'use strict';
     document.addEventListener('DOMContentLoaded', function() {
         var status = document.getElementById('giveaway-control-status');
-        var state = null, busy = false;
+        var state = null, busy = false, refreshing = false, actionVersion = 0;
         function giveawayId() { return document.getElementById('giveaway-id').value.trim() || 'default'; }
         function show(response) {
             if (!response || !response.ok) { status.textContent = response && response.error || 'Giveaway host is unavailable. Refresh before retrying.'; return; }
@@ -12,10 +12,25 @@
                 (state.ticketCount ? ' ' + state.ticketCount + ' tickets.' : '') + (state.winners.length ? ' Latest winner: ' + state.winners[0].name : '') +
                 (state.status === 'cancelled' ? ' Cancelled; reserved points refunded.' : '');
         }
+        function refreshStatus() {
+            if (busy || refreshing || document.hidden || !status.getClientRects().length) return;
+            var requestedId = giveawayId(), version = actionVersion;
+            refreshing = true;
+            chrome.runtime.sendMessage({cmd:'listgiveaways'}, function(response) {
+                refreshing = false;
+                if (busy || version !== actionVersion || requestedId !== giveawayId() || !response || !response.ok) return;
+                var current = response.giveaways.find(function(round) { return round.giveawayId === requestedId; });
+                if (current && (!state || state.roundId !== current.roundId || state.revision !== current.revision)) show({ok:true,giveaway:current});
+            });
+        }
+        var refreshTimer = setInterval(refreshStatus, 1000);
+        document.addEventListener('visibilitychange', refreshStatus);
+        window.addEventListener('beforeunload', function() { clearInterval(refreshTimer); });
         document.querySelectorAll('[data-giveaway-action]').forEach(function(button) {
             button.addEventListener('click', function() {
                 var action = button.dataset.giveawayAction;
                 if (busy) return;
+                actionVersion++;
                 var value = {giveawayId:giveawayId(), operationId:Date.now().toString(36) + '-' + Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-')};
                 if (state && state.giveawayId === value.giveawayId) value.roundId = state.roundId;
                 if (action === 'startgiveaway') value.config = {
@@ -65,6 +80,6 @@
             }catch(_) {}}
             window.open(url.href,'_blank','noopener');
         });
-        document.getElementById('giveaway-id').addEventListener('input',function() {state=null;status.textContent='Refresh to inspect this giveaway.';});
+        document.getElementById('giveaway-id').addEventListener('input',function() {actionVersion++;state=null;status.textContent='Refresh to inspect this giveaway.';refreshStatus();});
     });
 })();

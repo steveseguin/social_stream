@@ -3,6 +3,7 @@
     var params = new URLSearchParams(location.search), field = document.getElementById('giveaway'), status = document.getElementById('status');
     field.value = params.get('giveaway') || 'default';
     var native = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage, bridge, peer, pending = new Map(), state = null, history = [], entryPage = 1;
+    var busy = false, refreshing = false, actionVersion = 0, entriesLoaded = false;
     // Extension feeds do not return manager command replies; keep their P2P bridge.
     var relayMode = params.has('server') || (params.has('localserver') && !params.has('server2') && !params.has('server3')), socket, retry, refreshRetry, stopped = false;
     function id() { return Date.now().toString(36) + '-' + Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-'); }
@@ -36,6 +37,7 @@
         });
     }
     function describe(s) {
+        if (s.giveawayId !== (field.value.trim() || 'default')) return;
         state = s;
         status.textContent = s.giveawayId + ': ' + s.status + ' — ' + s.count + ' viewers, ' + s.ticketCount + ' tickets.' + (s.outcome ? ' ' + s.outcome + ' wins.' : '');
         document.getElementById('rules').textContent = s.config.kind === 'number' ? '!guess ' + s.giveawayId + ' NUMBER — guess ' + (s.number ? s.number.low + '–' + s.number.high : '1–100') + '; one guess per viewer every 5 seconds; ' + s.config.prizePoints + ' point prize. The first correct guess wins automatically.' :
@@ -60,20 +62,24 @@
         target.appendChild(table);
     }
     async function loadEntries() {
-        var reply = await call('getgiveawayentries', { giveawayId: field.value, page: entryPage }), area = document.getElementById('entries');
+        var requestedId = field.value, requestedPage = entryPage, version = actionVersion;
+        var reply = await call('getgiveawayentries', { giveawayId: requestedId, page: requestedPage }), area = document.getElementById('entries');
+        if (requestedId !== field.value || requestedPage !== entryPage || version !== actionVersion) return;
+        entriesLoaded = true;
         area.textContent = 'Page ' + entryPage + ' · ' + reply.total + ' participants';
         var list = document.createElement('ul');
         reply.entries.forEach(function (e) { var item = document.createElement('li'); item.textContent = e.name + ' (' + e.platform + ') — ' + e.tickets + ' tickets, ' + e.reserved + ' points reserved. '; var remove = document.createElement('button'); remove.textContent = 'Remove and refund'; remove.onclick = function () { run(async function () { await call('removegiveawayentry', { giveawayId: field.value, roundId: reply.roundId, entryId: e.id, operationId: id() }); await loadEntries(); await refresh(); }); }; item.appendChild(remove); list.appendChild(item); });
         area.appendChild(list);
     }
     function download(name, text) { var url = URL.createObjectURL(new Blob([text], { type: 'application/json' })), a = document.createElement('a'); a.href = url; a.download = name; a.click(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000); }
-    async function run(work) { document.querySelectorAll('button').forEach(function (b) { b.disabled = true; }); try {
+    async function run(work) { busy = true; actionVersion++; document.querySelectorAll('button').forEach(function (b) { b.disabled = true; }); try {
         await work();
     }
     catch (e) {
         status.textContent = e.message;
     }
     finally {
+        busy = false;
         document.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
     } }
     document.getElementById('refresh').onclick = function () { run(refresh); };
@@ -96,8 +102,26 @@
     };
     document.querySelectorAll('[data-action]').forEach(function (b) { b.onclick = function () { run(async function () { var value = { giveawayId: field.value, operationId: id() }; if (state && state.giveawayId === field.value)
         value.roundId = state.roundId; if (b.dataset.action === 'startgiveaway' && state)
-        value.config = state.config; describe((await call(b.dataset.action, value)).giveaway); await loadHistory(); }); }; });
-    field.oninput = function () { state = null; status.textContent = 'Refresh to inspect this giveaway.'; };
+        value.config = state.config; describe((await call(b.dataset.action, value)).giveaway); if (entriesLoaded) await loadEntries(); await loadHistory(); }); }; });
+    field.oninput = function () { actionVersion++; state = null; entriesLoaded = false; entryPage = 1; document.getElementById('entries').textContent = ''; status.textContent = 'Refresh to inspect this giveaway.'; };
+    async function refreshStatus() {
+        if (busy || refreshing || document.hidden || (!native && (relayMode ? !socket || socket.readyState !== WebSocket.OPEN : !peer))) return;
+        var requestedId = field.value.trim() || 'default', version = actionVersion;
+        refreshing = true;
+        try {
+            var rounds = (await call('listgiveaways', {})).giveaways;
+            if (busy || version !== actionVersion || requestedId !== (field.value.trim() || 'default')) return;
+            var current = rounds.find(function(round) { return round.giveawayId === requestedId; });
+            if (current && (!state || state.roundId !== current.roundId || state.revision !== current.revision)) {
+                describe(current);
+                if (entriesLoaded) await loadEntries();
+            }
+        } catch (_) { /* Keep action errors visible; connection handlers report disconnects. */ }
+        finally { refreshing = false; }
+    }
+    var refreshTimer = setInterval(refreshStatus, 1000);
+    document.addEventListener('visibilitychange', refreshStatus);
+    window.addEventListener('beforeunload', function() { clearInterval(refreshTimer); });
     document.getElementById('recover').onchange = function (event) { var file = event.target.files[0]; if (!file)
         return; if (!native) {
         status.textContent = 'Complete recovery must run on the host.';

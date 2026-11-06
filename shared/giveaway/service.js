@@ -126,6 +126,7 @@
                 fail('The round changed. Refresh before trying again.');
             if (action === 'getgiveawaystate')
                 return { ok: true, giveaway: snapshot(round) };
+            var previousStatus = round.status, previousDraw = round.winners.length;
             if (action === 'startgiveaway') {
                 if (['completed', 'cancelled'].indexOf(round.status) >= 0 || round.winners.length)
                     fail('Create a new round before opening entries again.');
@@ -340,7 +341,7 @@
             round.updatedAt = Date.now();
             tx.records.put(round);
             tx.records.put(summary(round));
-            var result = { ok: true, operationId: operationId, giveaway: snapshot(round) };
+            var result = { ok: true, operationId: operationId, giveaway: snapshot(round), previousStatus: previousStatus, previousDraw: previousDraw };
             tx.records.put({ id: receiptKey, version: 1, fingerprint: fingerprint, roundKey: key, roundId: round.roundId, createdAt: Date.now() });
             return result;
         });

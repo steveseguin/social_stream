@@ -11866,7 +11866,7 @@ input:checked + .slider:before {
                                         <option value="timeline" data-translate="popup-timeline-connected-events">Timeline - connected events</option>
                                         <option value="glass" data-translate="popup-glass-floating-cards">Glass - floating cards</option>
                                         <option value="minimal" data-translate="popup-minimal-text-only-no-boxes">Minimal - text only, no boxes</option>
-                                        <option value="spotlight">Spotlight - one-line rows, newest highlighted</option><option value="ticker" data-translate="popup-ticker-horizontal-strip">Ticker - horizontal strip</option><option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined-rows">Outlined rows</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option><option value="paper" data-translate="popup-warm-paper">Warm paper</option>
+                                        <option value="spotlight" data-translate="popup-stream-spotlight">Spotlight</option><option value="ticker" data-translate="popup-ticker-horizontal-strip">Ticker - horizontal strip</option><option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined-rows">Outlined rows</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option><option value="paper" data-translate="popup-warm-paper">Warm paper</option>
                                     </select>
                                     <details class="popup-subsection" id="events-category-options">
                                         <summary><span aria-hidden="true">&#128065;</span> <span data-translate="popup-choose-which-events-appear">Choose which events appear</span></summary>
@@ -12919,104 +12919,97 @@ input:checked + .slider:before {
 										<label for="meta_title_text"><span class="popup-control-icon" aria-hidden="true">✏️</span>&gt; Optional header title</label>
 									</div>
 									<br>
-									<h3><span class="popup-control-icon" aria-hidden="true">📈</span>Stream Stats</h3>
-									<p>Totals this overlay counts from the events it receives, saved in the browser showing it. Pick the Strip style below for a full-width bar along the bottom; set Placement to Top center to move it to the top.</p>
-									<div>
-										<label><span class="popup-control-icon" aria-hidden="true">📈</span>Stats to show</label>
-										<select data-optionparam24="stats" class="textInput">
-											<option value="" selected>Off</option>
-											<option value="biggest,subs,bits,clock">Biggest donation, subs, bits, clock</option>
-											<option value="lastchat,biggest,subs,bits,clock">Latest chat, biggest donation, subs, bits, clock</option>
-											<option value="biggest,donations,subs,follows,clock">Biggest donation, total donations, subs, follows, clock</option>
-											<option value="latestfollow,latestsub,latesttip,latestbits,clock">Latest follower, sub, tip, bits, clock</option>
-											<option value="topgifter,topbits,latestsub,latestfollow,clock">Top gifter, top bits, latest sub, latest follower, clock</option>
-											<option value="totalsubs,totalfollows,subs,bits,clock">Total subs, followers, subs today, bits, clock</option>
-										</select>
-									</div>
-									<div>
-										<label><span class="popup-control-icon" aria-hidden="true">📅</span>Reset totals</label>
-										<select data-optionparam24="statsreset" class="textInput">
-											<option value="" selected>Every day at midnight</option>
-											<option value="manual">Only with the reset button</option>
-										</select>
-									</div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="meta_biggestlabel" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="biggestlabel" />
-										<label for="meta_biggestlabel"><span class="popup-control-icon" aria-hidden="true">🏆</span>&gt; Biggest donation label (default: Biggest Donation)</label>
-									</div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="meta_subslabel" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subslabel" />
-										<label for="meta_subslabel"><span class="popup-control-icon" aria-hidden="true">👥</span>&gt; Subs label (default: Subs Today)</label>
-									</div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="meta_bitslabel" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="bitslabel" />
-										<label for="meta_bitslabel"><span class="popup-control-icon" aria-hidden="true">💎</span>&gt; Bits label (default: Bits)</label>
-									</div>
-									<div>
-										<button class="glowingButton" style="width: 220px; border: 1px solid #000; padding: 2px;" data-action="resetmetastats" data-target="meta">
-											<span style="font-size: 0.8em;">Reset stream stats</span>
-										</button>
-									</div>
-									<br>
-									<h3><span class="popup-control-icon" aria-hidden="true">🎯</span>Counters</h3>
-									<p>Named tallies such as deaths, wins or owed pushups. List them as Name|!command, separated by commas. Mods change them in chat with !death, !death -1, !death =5 or !death reset. Add rules to count events too, such as Pushups|!pushup|sub:15|gift:15 (also bits per 100, tip per $1, follow, raid). For stacked goals, add goal: and pick the Column layout, such as Sub Goal|!subgoal|sub:1|goal:25,Bits Goal|!bitsgoal|bits:100|goal:20000. Add daily:1 to start over at midnight.</p>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="meta_counters" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="counters" />
-										<label for="meta_counters"><span class="popup-control-icon" aria-hidden="true">🎯</span>&gt; Counters, e.g. Deaths|!death,Wins|!win</label>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param24="counterall" />
-											<span class="slider round"></span>
-										</label>
-										<span>👥 Let anyone in chat add 1 with a counter command</span>
-									</div>
-									<br>
-									<h3><span class="popup-control-icon" aria-hidden="true">🕒</span>Subathon Timer</h3>
-									<p>A countdown that support pushes back. It waits for the Start button or !subathon start from a mod, who can also use pause, add 30m, remove 10m, set 6h and reset. Time values are minutes.</p>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="meta_subathon" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathon" />
-										<label for="meta_subathon"><span class="popup-control-icon" aria-hidden="true">🕒</span>&gt; Starting time, e.g. 6h (blank = off)</label>
-									</div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="meta_subathonsub" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonsub" />
-										<label for="meta_subathonsub"><span class="popup-control-icon" aria-hidden="true">👥</span>&gt; Minutes per sub, e.g. 10, or 6,15,40 for tiers 1, 2, 3</label>
-									</div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="meta_subathonbits" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonbits" />
-										<label for="meta_subathonbits"><span class="popup-control-icon" aria-hidden="true">💎</span>&gt; Minutes per 100 bits</label>
-									</div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="meta_subathontip" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathontip" />
-										<label for="meta_subathontip"><span class="popup-control-icon" aria-hidden="true">💵</span>&gt; Minutes per $1 tipped</label>
-									</div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="meta_subathonfollow" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonfollow" />
-										<label for="meta_subathonfollow"><span class="popup-control-icon" aria-hidden="true">👤</span>&gt; Minutes per follow</label>
-									</div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="meta_subathonraid" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonraid" />
-										<label for="meta_subathonraid"><span class="popup-control-icon" aria-hidden="true">🚀</span>&gt; Minutes per raid</label>
-									</div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="meta_subathonmax" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonmax" />
-										<label for="meta_subathonmax"><span class="popup-control-icon" aria-hidden="true">🛑</span>&gt; Longest support can push the clock, e.g. 72h (blank = no limit)</label>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param24="subathonrules" />
-											<span class="slider round"></span>
-										</label>
-										<span>📜 Show the rules beside the clock</span>
-									</div>
-									<div>
-										<button class="glowingButton" style="width: 105px; border: 1px solid #000; padding: 2px;" data-action="metastats" data-target="meta" data-value="subathon:start">
-											<span style="font-size: 0.8em;">Start</span>
-										</button>
-										<button class="glowingButton" style="width: 105px; border: 1px solid #000; padding: 2px;" data-action="metastats" data-target="meta" data-value="subathon:pause">
-											<span style="font-size: 0.8em;">Pause</span>
-										</button>
-									</div>
+									<details id="meta-stats-options" class="popup-subsection popup-settings-panel">
+										<summary><span class="popup-control-icon" aria-hidden="true">📈</span><span data-translate="popup-stream-stats">Stream stats</span></summary>
+										<div class="textInputContainer">
+											<select id="meta_stats" class="textInput" data-optionparam24="stats">
+												<option value="" selected data-translate="popup-stream-off">Off</option>
+												<option value="biggest,subs,bits,clock" data-translate="popup-stream-preset1">Subs and Bits</option>
+												<option value="lastchat,biggest,subs,bits,clock" data-translate="popup-stream-preset2">Chat and support</option>
+												<option value="biggest,donations,subs,follows,clock" data-translate="popup-stream-preset3">Donations and follows</option>
+												<option value="latestfollow,latestsub,latesttip,latestbits,clock" data-translate="popup-stream-preset4">Latest supporters</option>
+												<option value="topgifter,topbits,latestsub,latestfollow,clock" data-translate="popup-stream-preset5">Top supporters</option>
+												<option value="totalsubs,totalfollows,subs,bits,clock" data-translate="popup-stream-preset6">Channel totals</option>
+											</select>
+											<label for="meta_stats"><span data-translate="popup-stream-show">Stats to show</span></label>
+										</div>
+										<div class="textInputContainer">
+											<select id="meta_statsreset" class="textInput" data-optionparam24="statsreset">
+												<option value="" selected data-translate="popup-stream-daily">Every day at midnight</option>
+												<option value="manual" data-translate="popup-stream-manual">Only with the reset button</option>
+											</select>
+											<label for="meta_statsreset"><span data-translate="popup-stream-reset">Reset totals</span></label>
+										</div>
+										<div class="popup-subsection">
+											<h4><span data-translate="popup-stream-labels">Custom labels</span></h4>
+											<div class="textInputContainer">
+												<input type="text" id="meta_biggestlabel" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="biggestlabel" />
+												<label for="meta_biggestlabel"><span data-translate="popup-stream-biggest">Biggest donation label</span></label>
+											</div>
+											<div class="textInputContainer">
+												<input type="text" id="meta_subslabel" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subslabel" />
+												<label for="meta_subslabel"><span data-translate="popup-stream-subs">Subs label</span></label>
+											</div>
+											<div class="textInputContainer">
+												<input type="text" id="meta_bitslabel" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="bitslabel" />
+												<label for="meta_bitslabel"><span data-translate="popup-stream-bits">Bits label</span></label>
+											</div>
+										</div>
+										<button type="button" class="popup-secondary-button" data-action="resetmetastats" data-target="meta"><span data-translate="popup-stream-resetstats">Reset stream stats</span></button>
+										<a class="popup-guide-link" href="https://socialstream.ninja/docs/event-overlays.html#stream-bar" target="_blank" rel="noopener" data-translate="commerce-setup-guide">Setup guide</a>
+									</details>
+									<details id="meta-counter-options" class="popup-subsection popup-settings-panel">
+										<summary><span class="popup-control-icon" aria-hidden="true">🎯</span><span data-translate="popup-stream-counters">Counters</span></summary>
+										<div class="textInputContainer" style="width: 95%;">
+											<input type="text" id="meta_counters" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="counters" />
+											<label for="meta_counters"><span data-translate="popup-stream-definitions">Counter definitions</span></label>
+										</div>
+										<div class="popup-toggle-row" title="Anyone can add 1 per counter every five seconds. Only moderators, hosts and admins can set or reset counts.">
+											<label class="switch"><input type="checkbox" id="meta_counterall" data-param24="counterall" /><span class="slider round"></span></label>
+											<label for="meta_counterall"><span data-translate="popup-stream-anyone">Allow viewer adds</span></label>
+										</div>
+										<a class="popup-guide-link" href="https://socialstream.ninja/docs/event-overlays.html#counters" target="_blank" rel="noopener" data-translate="commerce-setup-guide">Setup guide</a>
+									</details>
+									<details id="meta-subathon-options" class="popup-subsection popup-settings-panel">
+										<summary><span class="popup-control-icon" aria-hidden="true">🕒</span><span data-translate="popup-stream-timer">Subathon timer</span></summary>
+										<div class="textInputContainer">
+											<input type="text" id="meta_subathon" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathon" />
+											<label for="meta_subathon"><span data-translate="popup-stream-duration">Starting time (blank = off)</span></label>
+										</div>
+										<div class="textInputContainer">
+											<input type="text" id="meta_subathonsub" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonsub" />
+											<label for="meta_subathonsub"><span data-translate="popup-stream-persub">Minutes per sub</span></label>
+										</div>
+										<div class="textInputContainer">
+											<input type="text" id="meta_subathonbits" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonbits" />
+											<label for="meta_subathonbits"><span data-translate="popup-stream-perbits">Minutes per 100 Bits</span></label>
+										</div>
+										<div class="textInputContainer">
+											<input type="text" id="meta_subathontip" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathontip" />
+											<label for="meta_subathontip"><span data-translate="popup-stream-pertip">Minutes per $1 tipped</span></label>
+										</div>
+										<div class="textInputContainer">
+											<input type="text" id="meta_subathonfollow" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonfollow" />
+											<label for="meta_subathonfollow"><span data-translate="popup-stream-perfollow">Minutes per follow</span></label>
+										</div>
+										<div class="textInputContainer">
+											<input type="text" id="meta_subathonraid" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonraid" />
+											<label for="meta_subathonraid"><span data-translate="popup-stream-perraid">Minutes per raid</span></label>
+										</div>
+										<div class="textInputContainer">
+											<input type="text" id="meta_subathonmax" class="textInput instant" autocomplete="off" placeholder=" " data-textparam24="subathonmax" />
+											<label for="meta_subathonmax"><span data-translate="popup-stream-maximum">Maximum time (optional)</span></label>
+										</div>
+										<div class="popup-toggle-row" title="Show how much time each support event adds beside the timer.">
+											<label class="switch"><input type="checkbox" id="meta_subathonrules" data-param24="subathonrules" /><span class="slider round"></span></label>
+											<label for="meta_subathonrules"><span data-translate="popup-stream-rules">Show rules</span></label>
+										</div>
+										<div>
+											<button type="button" class="popup-secondary-button" data-action="metastats" data-target="meta" data-value="subathon:start"><span data-translate="popup-stream-start">Start</span></button>
+											<button type="button" class="popup-secondary-button" data-action="metastats" data-target="meta" data-value="subathon:pause" data-translate="nc-audience-pause">Pause</button>
+										</div>
+										<a class="popup-guide-link" href="https://socialstream.ninja/docs/event-overlays.html#subathon" target="_blank" rel="noopener" data-translate="commerce-setup-guide">Setup guide</a>
+									</details>
 									<br>
 									<h3><span class="popup-control-icon" aria-hidden="true">🎨</span>Layout and Appearance</h3>
 								<div title="Visual theme for the stat chips.">
@@ -13027,7 +13020,7 @@ input:checked + .slider:before {
 										<option value="neon">Neon (glowing accents)</option>
 										<option value="minimal">Minimal (text only)</option>
 										<option value="card">Cards (label over big value)</option>
-										<option value="strip">Strip (flat full-width bar)</option>
+										<option value="strip" data-translate="popup-stream-strip">Strip</option>
 									</select>
 								</div>
 								<div title="How the stat chips flow: a wrapping row, a vertical stack, or an even grid.">
@@ -13309,7 +13302,7 @@ input:checked + .slider:before {
                                         <option value="jar" selected><span data-translate="jar-style">Jar (Default)</span></option>
                                         <option value="meter"><span data-translate="meter-style">Goal Meter</span></option>
                                         <option value="bar"><span data-translate="bar-style">Fluid Goal Bar</span></option>
-                                        <option value="banner">Fundraiser Banner</option>
+                                        <option value="banner" data-translate="popup-stream-banner">Fundraiser Banner</option>
                                         <option value="compact"><span data-translate="compact-style">Compact Bar (corner)</span></option>
                                         <option value="vertical"><span data-translate="vertical-style">Vertical Bar</span></option>
                                         <option value="minimal"><span data-translate="minimal-style">Minimal</span></option>
@@ -13512,21 +13505,25 @@ input:checked + .slider:before {
                                         <option value="solid">Solid (start color only)</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label><span class="popup-control-icon" aria-hidden="true">📅</span>Reset the goal:</label>
-                                    <select data-optionparam12="goalreset" class="textInput">
-                                        <option value="" selected>Never</option>
-                                        <option value="daily">Every day at midnight (daily sub goal)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label><span class="popup-control-icon" aria-hidden="true">🕒</span>Last day of the goal, as YYYY-MM-DD (shows days left):</label>
-                                    <input type="text" data-optionparam12="goalend" class="textInput" />
-                                </div>
-                                <div>
-                                    <label><span class="popup-control-icon" aria-hidden="true">🎁</span>Named rewards, e.g. 2700:Paint a table,3000:Shave my head</label>
-                                    <input type="text" data-optionparam12="goalrewards" class="textInput" />
-                                </div>
+                                <details id="tipjar-goal-options" class="popup-subsection popup-settings-panel">
+                                    <summary><span class="popup-control-icon" aria-hidden="true">🎯</span><span data-translate="popup-stream-goals">Goal schedule and rewards</span></summary>
+                                    <div class="textInputContainer">
+                                        <select id="tipjar_goalreset" class="textInput" data-optionparam12="goalreset">
+                                            <option value="" selected data-translate="popup-stream-never">Never</option>
+                                            <option value="daily" data-translate="popup-stream-daily">Every day at midnight</option>
+                                        </select>
+                                        <label for="tipjar_goalreset"><span data-translate="popup-stream-resetgoal">Reset goal</span></label>
+                                    </div>
+                                    <div class="textInputContainer">
+                                        <input type="text" id="tipjar_goalend" class="textInput" data-optionparam12="goalend" />
+                                        <label for="tipjar_goalend"><span data-translate="popup-stream-end">End date (YYYY-MM-DD)</span></label>
+                                    </div>
+                                    <div class="textInputContainer" style="width: 95%;">
+                                        <input type="text" id="tipjar_goalrewards" class="textInput" data-optionparam12="goalrewards" />
+                                        <label for="tipjar_goalrewards"><span data-translate="popup-stream-rewards">Named rewards</span></label>
+                                    </div>
+                                    <a class="popup-guide-link" href="https://socialstream.ninja/docs/tip-jar-goal-meter.html#goal-reached" target="_blank" rel="noopener" data-translate="commerce-setup-guide">Setup guide</a>
+                                </details>
                                 <div>
                                     <label><span class="popup-control-icon" aria-hidden="true">🎯</span>Recurring goal increment:</label>
                                     <input type="number" data-optionparam12="levelsize" class="textInput" placeholder="0 = single goal (e.g. 1000 stars, 50 $)" min="0" step="1" />
@@ -14630,6 +14627,7 @@ input:checked + .slider:before {
                                     <p>Tickets reserve SSN points. Drawing spends them; cancellation refunds them. Point prizes add new points. Coin Flip Pot requires 1 point per stake, 1 outcome and no extra prize.</p>
                                 </details>
                                 <h3><span class="popup-control-icon" aria-hidden="true">&#127918;</span>Run giveaway</h3>
+                                <div title="Send giveaway start, close, cancellation, and winner messages to connected chats that support replies."><label class="switch"><input type="checkbox" data-setting="giveawayAnnounce" aria-label="Announce in chat" /><span class="slider round"></span></label><span>Announce in chat</span></div>
                                 <div class="giveaway-actions">
                                     <button type="button" data-giveaway-action="startgiveaway">&#9654; Open entries</button>
                                     <button type="button" data-giveaway-action="closegiveaway">&#9208; Close entries</button>

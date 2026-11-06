@@ -3153,7 +3153,7 @@
             } else if (style === 'meter') {
                 document.getElementById('meter-fill').style.width = percentage + '%';
                 document.getElementById('meter-text').textContent = formatProgressText();
-                if (state.isLevel || state.isRolling || customTitle !== baseGoalTitle) updateMeterChrome(state);
+                if (state.isLevel || state.isRolling || goalEndDate || goalRewards.length) updateMeterChrome(state);
             } else if (style === 'minimal') {
                 document.getElementById('minimal-amount').textContent = formatGoalValue(state.current, true);
                 document.getElementById('minimal-percentage').textContent = `${Math.round(percentage)}%`;

@@ -9,9 +9,13 @@
             function failed() { status('Breaks could not load. Update Social Stream and reload this page.', 'error'); }
             var access = document.createElement('script'); access.src = 'shared/monetization/breaks-access.js'; access.onerror = failed;
             access.onload = function () {
+                var core = document.createElement('script'); core.src = 'shared/monetization/breaks-core.js'; core.onerror = failed;
+                core.onload = function () {
                 var script = document.createElement('script'); script.src = 'shared/monetization/breaks-workspace.js'; script.onerror = failed;
                 script.onload = function () { workspace = window.SSNBreaksWorkspace(section, request); workspace.refresh(); };
                 document.body.appendChild(script);
+                };
+                document.body.appendChild(core);
             };
             document.body.appendChild(access);
             return {refresh:function () { if (workspace) workspace.refresh(); }, disconnected:function () { if (workspace) workspace.disconnected(); }};

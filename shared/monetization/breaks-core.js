@@ -1,7 +1,24 @@
 (function (root) {
 	"use strict";
 	// Breaks use the commerce command path, but never mutate the older spot board or sales wall.
-	var commands = ["breakGet", "breakCreate", "breakSpot", "breakSwap", "breakUndo", "breakSettings", "breakStage", "breakHighlight", "breakPreset", "breakRemovePreset", "breakArchive", "breakRemoveArchive", "breakStock", "breakRemoveStock", "breakStockUse", "breakStockReturn"];
+	var commands = [
+		"breakGet",
+		"breakCreate",
+		"breakSpot",
+		"breakSwap",
+		"breakUndo",
+		"breakSettings",
+		"breakStage",
+		"breakHighlight",
+		"breakPreset",
+		"breakRemovePreset",
+		"breakArchive",
+		"breakRemoveArchive",
+		"breakStock",
+		"breakRemoveStock",
+		"breakStockUse",
+		"breakStockReturn",
+	];
 	var platforms = ["whatnot", "ebay", "tiktok", "other"];
 	var historyLimit = 30,
 		logLimit = 500;
@@ -13,7 +30,9 @@
 		return Number.isFinite(n) && n >= 0 && n <= max ? n : fallback;
 	}
 	function money(value) {
-		return value === "" || value == null || ["string", "number"].indexOf(typeof value) === -1 ? null : number(value, 9999999, null);
+		return value === "" || value == null || ["string", "number"].indexOf(typeof value) === -1
+			? null
+			: number(value, 9999999, null);
 	}
 	// Spreadsheet cells often carry symbols and separators: $25.00, 1,250, 25,50, 1.250,50.
 	function pastedPrice(value, label) {
@@ -38,7 +57,20 @@
 	}
 	function spot(raw, i) {
 		raw = raw || {};
-		return { id: text(raw.id, 40) || String(i + 1), label: text(raw.label, 80) || String(i + 1), buyer: text(raw.buyer, 80), platform: platforms.indexOf(raw.platform) !== -1 ? raw.platform : "", price: money(raw.price), paid: money(raw.paid), status: ["available", "claimed", "revealed"].indexOf(raw.status) !== -1 ? raw.status : "available", payment: ["unknown", "paid", "failed", "refunded"].indexOf(raw.payment) !== -1 ? raw.payment : "unknown", result: text(raw.result, 160), note: text(raw.note, 500), description: text(raw.description, 160), image: image(raw.image) };
+		return {
+			id: text(raw.id, 40) || String(i + 1),
+			label: text(raw.label, 80) || String(i + 1),
+			buyer: text(raw.buyer, 80),
+			platform: platforms.indexOf(raw.platform) !== -1 ? raw.platform : "",
+			price: money(raw.price),
+			paid: money(raw.paid),
+			status: ["available", "claimed", "revealed"].indexOf(raw.status) !== -1 ? raw.status : "available",
+			payment: ["unknown", "paid", "failed", "refunded"].indexOf(raw.payment) !== -1 ? raw.payment : "unknown",
+			result: text(raw.result, 160),
+			note: text(raw.note, 500),
+			description: text(raw.description, 160),
+			image: image(raw.image),
+		};
 	}
 	function board(raw) {
 		if (!raw || !raw.id) return null;
@@ -80,17 +112,33 @@
 			log: (Array.isArray(raw.log) ? raw.log : []).slice(-logLimit).map(function (l) {
 				l = l || {};
 				return { at: number(l.at, Number.MAX_SAFE_INTEGER, 0), action: text(l.action, 250) };
-			})
+			}),
 		};
 	}
 	function stock(raw) {
 		raw = raw || {};
-		return { id: text(raw.id, 80), name: text(raw.name, 160), quantity: Math.round(number(raw.quantity, 100000, 0)), cost: money(raw.cost), currency: /^[A-Z]{3}$/.test(raw.currency || "") ? raw.currency : "USD", note: text(raw.note, 500), ebayId: text(raw.ebayId, 80) };
+		return {
+			id: text(raw.id, 80),
+			name: text(raw.name, 160),
+			quantity: Math.round(number(raw.quantity, 100000, 0)),
+			cost: money(raw.cost),
+			currency: /^[A-Z]{3}$/.test(raw.currency || "") ? raw.currency : "USD",
+			note: text(raw.note, 500),
+			ebayId: text(raw.ebayId, 80),
+		};
 	}
 	// A snapshot, so a record stays accurate and reversible if the item is later edited or removed.
 	function stockUse(raw) {
 		raw = raw || {};
-		return { id: text(raw.id, 80), stockId: text(raw.stockId, 80), name: text(raw.name, 160), quantity: Math.round(number(raw.quantity, 100000, 0)), unitCost: money(raw.unitCost), currency: /^[A-Z]{3}$/.test(raw.currency || "") ? raw.currency : "USD", at: number(raw.at, Number.MAX_SAFE_INTEGER, 0) };
+		return {
+			id: text(raw.id, 80),
+			stockId: text(raw.stockId, 80),
+			name: text(raw.name, 160),
+			quantity: Math.round(number(raw.quantity, 100000, 0)),
+			unitCost: money(raw.unitCost),
+			currency: /^[A-Z]{3}$/.test(raw.currency || "") ? raw.currency : "USD",
+			at: number(raw.at, Number.MAX_SAFE_INTEGER, 0),
+		};
 	}
 	function normalize(raw) {
 		raw = raw || {};
@@ -107,7 +155,7 @@
 				.map(stock)
 				.filter(function (s) {
 					return s.id && s.name;
-				})
+				}),
 		};
 	}
 	function publicState(raw) {
@@ -131,8 +179,17 @@
 			highlight: b.highlight,
 			highlightAt: b.highlightAt,
 			spots: b.spots.map(function (s) {
-				return { id: s.id, label: s.label, buyer: b.showBuyers ? s.buyer : "", price: b.showPrices ? s.price : null, status: s.status, result: s.status === "revealed" ? s.result : "", description: s.description, image: s.image };
-			})
+				return {
+					id: s.id,
+					label: s.label,
+					buyer: b.showBuyers ? s.buyer : "",
+					price: b.showPrices ? s.price : null,
+					status: s.status,
+					result: s.status === "revealed" ? s.result : "",
+					description: s.description,
+					image: s.image,
+				};
+			}),
 		};
 	}
 	// Polls ask only for changes, and past breaks stay summaries until one is opened.
@@ -171,8 +228,15 @@
 	var replyLimit = 135000;
 	function finish(s, command) {
 		s.revision++;
-		if (JSON.stringify(s).length > 2000000) throw new Error("Breaks storage is full. Export and remove older breaks or saved setups.");
-		if (!/Remove|Archive/.test(command) && new TextEncoder().encode(JSON.stringify(controlState(s))).length > replyLimit) throw new Error("Breaks is holding too much to send to this workspace. Remove saved setups or stock items, or shorten long notes.");
+		if (JSON.stringify(s).length > 2000000)
+			throw new Error("Breaks storage is full. Export and remove older breaks or saved setups.");
+		if (
+			!/Remove|Archive/.test(command) &&
+			new TextEncoder().encode(JSON.stringify(controlState(s))).length > replyLimit
+		)
+			throw new Error(
+				"Breaks is holding too much to send to this workspace. Remove saved setups or stock items, or shorten long notes."
+			);
 		return s;
 	}
 	function archive(s, now) {
@@ -188,7 +252,10 @@
 				return p.note;
 			});
 		if (used) {
-			if (s.history.length >= historyLimit) throw new Error("Export and remove an older break before archiving another (" + historyLimit + " saved breaks).");
+			if (s.history.length >= historyLimit)
+				throw new Error(
+					"Export and remove an older break before archiving another (" + historyLimit + " saved breaks)."
+				);
 			var b = copy(s.active);
 			b.stage = "finished";
 			b.finishedAt = now;
@@ -205,9 +272,18 @@
 		data = data || {};
 		now = now || Date.now();
 		if (commands.indexOf(command) === -1 || command === "breakGet") throw new Error("Unknown break command.");
-		if (typeof data.revision !== "number" || data.revision !== s.revision) throw new Error("This break changed elsewhere. Refresh to load the latest, then try again.");
+		if (typeof data.revision !== "number" || data.revision !== s.revision)
+			throw new Error("This break changed elsewhere. Refresh to load the latest, then try again.");
 		var b, item;
 		if (command === "breakCreate") {
+			var template =
+				data.templateId &&
+				(s.active && s.active.id === data.templateId
+					? s.active
+					: s.history.filter(function (saved) {
+							return saved.id === data.templateId;
+						})[0]);
+			if (data.templateId && !template) throw new Error("That saved break is no longer available.");
 			if (s.active && data.replace !== true) throw new Error("Archive the current break before starting another.");
 			if (s.active) archive(s, now);
 			var preset =
@@ -215,7 +291,14 @@
 				s.presets.filter(function (p) {
 					return p.id === data.presetId;
 				})[0];
-			if (typeof data.labels === "string" && data.labels.length > 60000) throw new Error("That spot list is too long. Use up to 120 spots with shorter notes.");
+			if (!preset && template) {
+				preset = copy(template);
+				preset.spots.forEach(function (s) {
+					s.note = "";
+				});
+			}
+			if (typeof data.labels === "string" && data.labels.length > 60000)
+				throw new Error("That spot list is too long. Use up to 120 spots with shorter notes.");
 			var labels = text(data.labels, 60000)
 				.split(/\r?\n/)
 				.filter(function (x) {
@@ -227,7 +310,12 @@
 					? labels.map(function (l, i) {
 							var cells = l.split("\t"),
 								original = preset && preset.spots[i];
-							return Object.assign({}, original && original.label === cells[0].trim() ? original : {}, { label: cells[0], price: pastedPrice(cells[1], cells[0].trim()), description: cells[2], note: cells[3] });
+							return Object.assign({}, original && original.label === cells[0].trim() ? original : {}, {
+								label: cells[0],
+								price: pastedPrice(cells[1], cells[0].trim()),
+								description: cells[2],
+								note: cells[3],
+							});
 						})
 					: preset
 						? preset.spots
@@ -243,15 +331,23 @@
 					createdAt: now,
 					finishedAt: 0,
 					stage: "filling",
-					visible: true,
+					visible: false,
 					locked: false,
 					log: [],
 					stockUse: [],
 					highlight: "",
 					highlightAt: 0,
 					spots: slots.map(function (r, i) {
-						return Object.assign({}, r, { id: String(i + 1), buyer: "", platform: "", status: "available", payment: "unknown", paid: null, result: "" });
-					})
+						return Object.assign({}, r, {
+							id: String(i + 1),
+							buyer: "",
+							platform: "",
+							status: "available",
+							payment: "unknown",
+							paid: null,
+							result: "",
+						});
+					}),
 				})
 			);
 			s.active = b;
@@ -293,8 +389,14 @@
 				return p.id === data.id;
 			})[0];
 			if (!old && s.stock.length >= 100) throw new Error("Use up to 100 stock items.");
-			if (data.quantity === "" || !Number.isInteger(Number(data.quantity)) || number(data.quantity, 100000, null) === null) throw new Error("Enter a whole stock quantity from 0 to 100000.");
-			if (data.cost != null && data.cost !== "" && money(data.cost) === null) throw new Error("Enter a valid unit cost.");
+			if (
+				data.quantity === "" ||
+				!Number.isInteger(Number(data.quantity)) ||
+				number(data.quantity, 100000, null) === null
+			)
+				throw new Error("Enter a whole stock quantity from 0 to 100000.");
+			if (data.cost != null && data.cost !== "" && money(data.cost) === null)
+				throw new Error("Enter a valid unit cost.");
 			item = stock(Object.assign({}, data, { id: old ? old.id : "stock-" + now + "-" + (s.revision + 1) }));
 			if (!item.name) throw new Error("Enter a stock item name.");
 			if (old) s.stock[s.stock.indexOf(old)] = item;
@@ -347,7 +449,8 @@
 				s.undo = null;
 				s.undoLabel = "";
 			} else {
-				if (b.locked && command !== "breakSettings" && command !== "breakHighlight") throw new Error("Unlock this break before changing assignments.");
+				if (b.locked && command !== "breakSettings" && command !== "breakHighlight")
+					throw new Error("Unlock this break before changing assignments.");
 				var undoable = command === "breakSpot" || command === "breakSwap",
 					before = undoable ? copy(b) : null;
 				if (command === "breakSpot") {
@@ -359,7 +462,14 @@
 						log(b, "Added " + item.label, now);
 					} else if (data.remove) {
 						item = find(b, String(data.id));
-						if (b.stage !== "filling" || item.status !== "available" || item.buyer || item.payment !== "unknown" || item.result) throw new Error("Only empty, available spots can be removed while filling.");
+						if (
+							b.stage !== "filling" ||
+							item.status !== "available" ||
+							item.buyer ||
+							item.payment !== "unknown" ||
+							item.result
+						)
+							throw new Error("Only empty, available spots can be removed while filling.");
 						if (b.spots.length === 1) throw new Error("Keep at least one spot.");
 						b.spots = b.spots.filter(function (p) {
 							return p !== item;
@@ -367,7 +477,8 @@
 						log(b, "Removed " + item.label, now);
 					} else {
 						["price", "paid"].forEach(function (key) {
-							if (data[key] !== undefined && data[key] !== "" && data[key] !== null && money(data[key]) === null) throw new Error("Enter a valid " + key + " amount.");
+							if (data[key] !== undefined && data[key] !== "" && data[key] !== null && money(data[key]) === null)
+								throw new Error("Enter a valid " + key + " amount.");
 						});
 						item = find(b, String(data.id));
 						var updated = spot(Object.assign({}, item, data, { id: item.id }), 0);
@@ -381,8 +492,28 @@
 							updated.result = "";
 							log(b, updated.label + ": reopened" + (item.buyer ? " (was " + item.buyer + ")" : ""), now);
 						} else {
+							if (updated.payment === "paid" && updated.paid === null)
+								throw new Error("Enter the paid amount, including 0 for a free spot.");
 							if (updated.buyer && updated.status === "available") updated.status = "claimed";
-							log(b, updated.label + ": " + updated.status + (updated.buyer ? " / " + updated.buyer : "") + " / " + updated.payment, now);
+							log(
+								b,
+								updated.label +
+									": " +
+									updated.status +
+									(updated.buyer ? " / " + updated.buyer : "") +
+									" / " +
+									updated.payment,
+								now
+							);
+							if (updated.result !== item.result)
+								log(
+									b,
+									updated.label +
+										": latest pull " +
+										(updated.result || "cleared") +
+										(item.result ? " (was " + item.result + ")" : ""),
+									now
+								);
 						}
 						b.spots[b.spots.indexOf(item)] = updated;
 					}
@@ -391,7 +522,16 @@
 						c = find(b, String(data.otherId));
 					if (a === c) throw new Error("Choose two different spots.");
 					if (!a.buyer && !c.buyer) throw new Error("Choose a spot with a buyer to swap.");
-					var swapped = "Swapped buyers: " + a.label + " (" + (a.buyer || "empty") + ") / " + c.label + " (" + (c.buyer || "empty") + ")";
+					var swapped =
+						"Swapped buyers: " +
+						a.label +
+						" (" +
+						(a.buyer || "empty") +
+						") / " +
+						c.label +
+						" (" +
+						(c.buyer || "empty") +
+						")";
 					// A payment and private note belong to the buyer's order, so they move with the buyer.
 					["buyer", "platform", "payment", "paid", "note"].forEach(function (key) {
 						var held = a[key];
@@ -409,10 +549,21 @@
 					if (!source) throw new Error("Select a stock item.");
 					var count = Number(data.quantity);
 					if (!Number.isInteger(count) || count < 1) throw new Error("Enter a whole quantity of 1 or more.");
-					if (count > source.quantity) throw new Error("Only " + source.quantity + " of " + source.name + " left in stock.");
+					if (count > source.quantity)
+						throw new Error("Only " + source.quantity + " of " + source.name + " left in stock.");
 					if (b.stockUse.length >= 50) throw new Error("This break already has 50 stock records.");
 					source.quantity -= count;
-					b.stockUse.push(stockUse({ id: "use-" + now + "-" + (s.revision + 1), stockId: source.id, name: source.name, quantity: count, unitCost: source.cost, currency: source.currency, at: now }));
+					b.stockUse.push(
+						stockUse({
+							id: "use-" + now + "-" + (s.revision + 1),
+							stockId: source.id,
+							name: source.name,
+							quantity: count,
+							unitCost: source.cost,
+							currency: source.currency,
+							at: now,
+						})
+					);
 					log(b, "Used " + count + " x " + source.name + " from stock (" + source.quantity + " left)", now);
 				} else if (command === "breakHighlight") {
 					b.highlight = data.id ? find(b, String(data.id)).id : "";
@@ -422,14 +573,32 @@
 					b.stage = data.stage;
 					if (!data.fromFlow) log(b, "Stage: " + b.stage, now);
 				} else if (command === "breakSettings") {
-					var fields = ["title", "platform", "currency", "locked", "visible", "showBuyers", "showPrices", "availableOnly", "layout", "columns", "accent", "cost", "feePercent", "fees"];
+					var fields = [
+						"title",
+						"platform",
+						"currency",
+						"locked",
+						"visible",
+						"showBuyers",
+						"showPrices",
+						"availableOnly",
+						"layout",
+						"columns",
+						"accent",
+						"cost",
+						"feePercent",
+						"fees",
+					];
 					var patch = {};
 					fields.forEach(function (key) {
 						if (data[key] !== undefined) patch[key] = data[key];
 					});
-					if (patch.cost != null && patch.cost !== "" && money(patch.cost) === null) throw new Error("Enter a valid break cost.");
-					if (patch.feePercent !== undefined && number(patch.feePercent, 100, null) === null) throw new Error("Enter a fee percentage from 0 to 100.");
-					if (patch.fees !== undefined && number(patch.fees, 9999999, null) === null) throw new Error("Enter valid additional costs.");
+					if (patch.cost != null && patch.cost !== "" && money(patch.cost) === null)
+						throw new Error("Enter a valid break cost.");
+					if (patch.feePercent !== undefined && number(patch.feePercent, 100, null) === null)
+						throw new Error("Enter a fee percentage from 0 to 100.");
+					if (patch.fees !== undefined && number(patch.fees, 9999999, null) === null)
+						throw new Error("Enter valid additional costs.");
 					s.active = board(Object.assign({}, b, patch));
 					if (!data.fromFlow) log(s.active, "Break settings updated", now);
 				}
@@ -446,7 +615,8 @@
 	// So flows only reach the display: they cannot read records or change buyers, payments, costs or what is public.
 	var flowFields = { breakGet: [], breakHighlight: ["id"], breakStage: ["stage"], breakSettings: ["visible"] };
 	function flowRequest(command, data) {
-		if (!Object.prototype.hasOwnProperty.call(flowFields, command)) throw new Error("Event Flow can only change the Breaks display.");
+		if (!Object.prototype.hasOwnProperty.call(flowFields, command))
+			throw new Error("Event Flow can only change the Breaks display.");
 		data = data || {};
 		// Flows can be repeated at will, so they must not push real entries out of the capped activity log.
 		var out = { revision: data.revision, boardId: data.boardId, fromFlow: true };
@@ -459,7 +629,15 @@
 		var s = normalize(raw);
 		return { revision: s.revision, active: s.active ? { id: s.active.id, stage: s.active.stage } : null };
 	}
-	var api = { commands: commands, normalize: normalize, apply: apply, publicState: publicState, controlState: controlState, flowRequest: flowRequest, flowState: flowState };
+	var api = {
+		commands: commands,
+		normalize: normalize,
+		apply: apply,
+		publicState: publicState,
+		controlState: controlState,
+		flowRequest: flowRequest,
+		flowState: flowState,
+	};
 	root.SSNBreaks = api;
 	if (typeof module === "object" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : this);

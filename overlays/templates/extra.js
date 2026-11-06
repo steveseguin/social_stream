@@ -292,30 +292,43 @@
 			root.appendChild(el);
 			var view = el.querySelector(".ls-view"), track = el.querySelector(".ls-track"), first = el.querySelector(".ls-group");
 			if (!items || !(c.speed > 0)) { return; }
+			var originals = Array.prototype.slice.call(first.children);
+			var images = Array.prototype.slice.call(first.querySelectorAll("img"));
 			// Repeat the logos until one group covers the strip, then roll two identical groups so the loop has no seam.
 			function fit() {
-				first.innerHTML = items;
+				if (images.some(function (img) { return !img.complete; })) { return; }
+				while (first.children.length > originals.length) { first.removeChild(first.lastChild); }
 				while (track.children.length > 1) { track.removeChild(track.lastChild); }
 				var once = first.offsetWidth;
-				if (!once) { watch(); return; }
+				if (!once) { return; }
 				var wanted = Math.ceil((view.offsetWidth || 1) / once);
-				for (var n = 1; n < wanted; n++) { first.insertAdjacentHTML("beforeend", items); }
+				for (var n = 1; n < wanted; n++) {
+					originals.forEach(function (item) { first.appendChild(item.cloneNode(true)); });
+				}
 				track.appendChild(first.cloneNode(true));
-				watch();
-				var seconds = first.offsetWidth / c.speed;
+				// New image copies may not have dimensions yet; use the loaded originals.
+				var seconds = once * wanted / c.speed;
 				track.style.animation = "ls-roll " + seconds + "s linear infinite" + (c.direction === "right" ? " reverse" : "");
 			}
 			// Widths are only known once the images arrive.
 			var pending = null;
 			function refit() { clearTimeout(pending); pending = setTimeout(fit, 150); }
-			function watch() {
-				Array.prototype.forEach.call(first.querySelectorAll("img"), function (img) {
-					if (!img.complete) { img.addEventListener("load", refit, { once: true }); }
-				});
-			}
+			images.forEach(function (img) {
+				if (!img.complete) {
+					img.addEventListener("load", refit, { once: true });
+					img.addEventListener("error", refit, { once: true });
+				}
+			});
 			fit();
 			window.addEventListener("resize", refit);
-			if (SSO.onCleanup) { SSO.onCleanup(root, function () { clearTimeout(pending); window.removeEventListener("resize", refit); }); }
+			if (SSO.onCleanup) { SSO.onCleanup(root, function () {
+				clearTimeout(pending);
+				window.removeEventListener("resize", refit);
+				images.forEach(function (img) {
+					img.removeEventListener("load", refit);
+					img.removeEventListener("error", refit);
+				});
+			}); }
 		}
 	});
 

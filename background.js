@@ -13809,6 +13809,24 @@ async function publishGiveawayState(state) {
 function isGiveawayAction(action) {
     return ["startgiveaway", "closegiveaway", "drawgiveaway", "resetgiveaway", "getgiveawaystate", "cancelgiveaway", "listgiveaways", "getgiveawayhistory", "entergiveaway", "buygiveawaytickets", "grantgiveawaytickets", "guessgiveaway", "getgiveawayentries", "removegiveawayentry"].indexOf(action) !== -1;
 }
+function announceGiveawayResult(action, result) {
+    if (!getSettingFlag('giveawayAnnounce') || !result || !result.ok || result.duplicate || !result.giveaway) return;
+    var round = result.giveaway, text = '', prefix = 'Giveaway ' + round.giveawayId + ': ';
+    if (action === 'startgiveaway' && result.previousStatus !== 'open') {
+        var command = round.config.kind === 'number' ? '!guess ' + round.giveawayId + ' NUMBER' :
+            round.config.ticketCost ? '!ticket ' + round.giveawayId + ' 1' + (round.config.kind === 'coin' ? ' heads (or tails)' : '') : round.keyword;
+        text = 'Entries open! Type ' + command + ' to enter.';
+        if (round.config.ticketCost) text += ' ' + round.config.ticketCost + ' SSN points per ticket.';
+        if (round.config.membersOnly) text += ' Members only.';
+    } else if (action === 'closegiveaway' && result.previousStatus === 'open') {
+        text = 'Entries closed.';
+    } else if (action === 'cancelgiveaway' && result.previousStatus !== 'cancelled') {
+        text = 'Cancelled. Reserved points refunded.';
+    } else if ((action === 'drawgiveaway' || action === 'guessgiveaway') && round.draw > result.previousDraw) {
+        text = round.outcome ? round.outcome + ' wins!' : 'Winner: ' + round.winners.slice(0, round.draw - result.previousDraw).map(function(winner) { return winner.name; }).join(', ') + '!';
+    }
+    if (text) sendMessageToTabs({response:prefix + text,bot:true},false,null,false,false,false).catch(function(error) { console.warn('Giveaway committed; announcement failed', error); });
+}
 async function handleGiveawayAction(action, value, actor) {
     if (settings.disablehost) return { ok: false, error: "Host controls are disabled." };
     try {
@@ -13837,6 +13855,7 @@ async function handleGiveawayAction(action, value, actor) {
         }
         var result = await host.run(action, value, actor || value.actor);
         if(host.session!==String(streamID))return result;
+        announceGiveawayResult(action, result);
         if(result.giveaway)giveawayRouting.set(result.giveaway.giveawayId,result.giveaway);
         if (['entergiveaway','buygiveawaytickets','grantgiveawaytickets','guessgiveaway'].includes(action)) {
             giveawayPendingStates.set(result.giveaway.giveawayId,result.giveaway);
