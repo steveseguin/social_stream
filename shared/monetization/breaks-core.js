@@ -38,9 +38,14 @@
 	// Spreadsheet cells often carry symbols and separators: $25.00, 1,250, 25,50, 1.250,50.
 	function pastedPrice(value, label) {
 		var raw = text(value, 40),
-			cell = raw.replace(/[^\d.,-]/g, "");
+			cell = raw.replace(/^(?:[A-Z]{0,3}\s*\p{Sc}|[A-Z]{3})\s*/iu, "")
+				.replace(/\s*(?:\p{Sc}|[A-Z]{3})$/iu, "").replace(/\s/g, "");
 		if (!raw) return null;
-		cell = /,\d{1,2}$/.test(cell) ? cell.replace(/\./g, "").replace(",", ".") : cell.replace(/,/g, "");
+		// Strip currency labels only at the edges; never turn "1e3" or "2 x $25" into another price.
+		if (/^[+-]?(?:\d+(?:\.\d{3})*)?,\d{1,2}$/.test(cell))
+			cell = cell.replace(/\./g, "").replace(",", ".");
+		else if (/^[+-]?(?:\d+(?:,\d{3})*(?:\.\d*)?|\.\d+)$/.test(cell)) cell = cell.replace(/,/g, "");
+		else cell = "";
 		var amount = cell ? money(cell) : null;
 		if (amount === null) throw new Error("Check the price for " + (label || "this spot") + ". Remove any header row.");
 		return amount;

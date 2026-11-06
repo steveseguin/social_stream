@@ -1540,6 +1540,7 @@
 			}
 			if (action === "asking-paid") {
 				f("paid").value = f("price").value;
+				f("paid").setCustomValidity("");
 				rememberDraft("spot");
 				return;
 			}
