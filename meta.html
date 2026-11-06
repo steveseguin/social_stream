@@ -310,6 +310,19 @@
             text-overflow: ellipsis;
         }
 
+        .stat.category-stats .value.person-value {
+            display: inline-grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            column-gap: 0.25em;
+            min-width: min-content;
+        }
+
+        .stat-person-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         .stat-counter .value,
         .stat-subs .value,
         .stat-bits .value,
@@ -321,6 +334,11 @@
         .stat-clock .value {
             flex: 0 0 auto;
             overflow: visible;
+        }
+
+        .stat-counter .value {
+            direction: ltr;
+            unicode-bidi: isolate-override;
         }
 
         .stat-subathonrules {
@@ -387,6 +405,17 @@
             100% {
                 transform: scale(1);
             }
+        }
+
+        .stat.category-stats.bump .value { animation-name: statHighlight; }
+
+        @keyframes statHighlight {
+            from { color: #aef4c2; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .stat.category-stats.bump .value { animation: none; }
+            .stat.category-stats .stat-progress span { transition: none; }
         }
 
         .stat.category-auction {
@@ -841,7 +870,7 @@
 
         body.style-strip .stat-lastchat {
             flex: 1 1 0;
-            min-width: 0;
+            min-width: 10em;
         }
 
         body.style-strip .icon {
@@ -863,7 +892,7 @@
             font-weight: 600;
         }
 
-        /* A crowded strip shortens names. Numbers never shrink: "Total Subs: 1" for 1,601 would be wrong. */
+        /* Shorten names before fitting the strip; keep amounts complete. */
         body.style-strip .stat-biggest,
         body.style-strip .stat-latestfollow,
         body.style-strip .stat-latestsub,
@@ -881,6 +910,15 @@
         /* On the one-line bar a name gives way before its label does. */
         body.style-strip .stat.category-stats .label {
             flex-shrink: 0;
+        }
+
+        body.style-strip .stat.has-person {
+            flex: 1 1 min-content;
+            min-width: min-content;
+        }
+
+        body.style-strip .stat.category-stats .value.person-value {
+            grid-template-columns: minmax(3ch, 1fr) auto;
         }
 
         body.layout-column #bar {
@@ -1823,6 +1861,10 @@
                         entry.icon = STAT_ICONS[key];
                         entry.statKey = key;
                         entry.paused = key === "subathon" && !!subathon && !subathon.isRunning();
+                        entry.person = key === "biggest" ? totals.biggest :
+                            key === "topgifter" ? totals.topGifter :
+                            key === "topbits" ? totals.topBits :
+                            key.indexOf("latest") === 0 ? totals.latest[key.slice(6)] : null;
                         if (key === "subathonrules") entry.value = statValue(key, totals);
                     }
                 });
@@ -1967,7 +2009,7 @@
                         key: "ssn-meta-subathon:" + statsSession,
                         durationMs: SSNSessionStats.parseDuration(urlParams.get("subathon")) || 3600000,
                         maxMs: SSNSessionStats.parseDuration(urlParams.get("subathonmax")),
-                        perSubMinutes: String(urlParams.get("subathonsub") || "").split(",").map(Number).filter(function (value) { return value >= 0; }),
+                        perSubMinutes: String(urlParams.get("subathonsub") || "").split(",").map(Number),
                         perBitsMinutes: Math.max(0, Number(urlParams.get("subathonbits")) || 0),
                         perTipMinutes: Math.max(0, Number(urlParams.get("subathontip")) || 0),
                         perFollowMinutes: Math.max(0, Number(urlParams.get("subathonfollow")) || 0),
@@ -1991,6 +2033,29 @@
                     ].forEach(function (sample) { processPayload(sample, "local"); });
                 } else {
                     SSNOverlayControl.connect(urlParams, urlParams.get("session"), "meta", function (data) { processPayload(data); });
+                }
+            }
+
+            // Strip sources are often only 42px tall. Fit the complete row after names shorten.
+            function fitStrip() {
+                if (styleName !== "strip" || !barNode.children.length) return;
+                barNode.style.fontSize = "";
+                var size = parseFloat(getComputedStyle(barNode).fontSize);
+                for (var attempt = 0; attempt < 3; attempt++) {
+                    var box = barNode.getBoundingClientRect();
+                    var style = getComputedStyle(barNode);
+                    var left = box.right, right = box.left;
+                    Array.prototype.forEach.call(barNode.children, function (child) {
+                        var bounds = child.getBoundingClientRect();
+                        left = Math.min(left, bounds.left);
+                        right = Math.max(right, bounds.right);
+                    });
+                    var width = box.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+                    var height = window.innerHeight - (barNode.parentElement.getBoundingClientRect().height - box.height);
+                    var ratio = Math.min(1, (width - 1) / Math.max(1, right - left), (height - 1) / Math.max(1, box.height));
+                    if (ratio >= 0.999 || size <= 1) break;
+                    size = Math.max(1, Math.floor(size * ratio * 10) / 10);
+                    barNode.style.fontSize = size + "px";
                 }
             }
 
@@ -2059,7 +2124,20 @@
                     if (showValue) {
                         var valueNode = document.createElement("span");
                         valueNode.className = "value";
-                        valueNode.textContent = entry.value;
+                        if (entry.person && (entry.person.amount || entry.person.count)) {
+                            valueNode.className += " person-value";
+                            chip.className += " has-person";
+                            var personName = document.createElement("span");
+                            personName.className = "stat-person-name";
+                            personName.textContent = entry.person.name + (entry.statKey === "biggest" ? ":" : "");
+                            var personAmount = document.createElement("span");
+                            personAmount.className = "stat-person-amount";
+                            personAmount.textContent = entry.person.amount || entry.person.count.toLocaleString();
+                            valueNode.appendChild(personName);
+                            valueNode.appendChild(personAmount);
+                        } else {
+                            valueNode.textContent = entry.value;
+                        }
                         chip.appendChild(valueNode);
                     }
 
@@ -2076,6 +2154,7 @@
 
                     barNode.appendChild(chip);
                 }
+                fitStrip();
             }
 
             // source: "feed" = the dock bridge, "socketFeed" = the &server2 socket, "metaLabel" = the meta bridge,
@@ -2314,6 +2393,10 @@
                 startStats();
             }
             render();
+            if (styleName === "strip") {
+                window.addEventListener("resize", fitStrip);
+                if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitStrip);
+            }
             if (!statsDemo) {
                 connectServerModes();
                 connectIframe();

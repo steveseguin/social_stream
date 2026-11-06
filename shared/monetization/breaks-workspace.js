@@ -1,11 +1,24 @@
 (function (root) {
 	"use strict";
+	// Name;code;main color;second color. Colors are display defaults that the host can change per spot.
 	var teams = {
-		NFL: "Arizona Cardinals|Atlanta Falcons|Baltimore Ravens|Buffalo Bills|Carolina Panthers|Chicago Bears|Cincinnati Bengals|Cleveland Browns|Dallas Cowboys|Denver Broncos|Detroit Lions|Green Bay Packers|Houston Texans|Indianapolis Colts|Jacksonville Jaguars|Kansas City Chiefs|Las Vegas Raiders|Los Angeles Chargers|Los Angeles Rams|Miami Dolphins|Minnesota Vikings|New England Patriots|New Orleans Saints|New York Giants|New York Jets|Philadelphia Eagles|Pittsburgh Steelers|San Francisco 49ers|Seattle Seahawks|Tampa Bay Buccaneers|Tennessee Titans|Washington Commanders",
-		NBA: "Atlanta Hawks|Boston Celtics|Brooklyn Nets|Charlotte Hornets|Chicago Bulls|Cleveland Cavaliers|Dallas Mavericks|Denver Nuggets|Detroit Pistons|Golden State Warriors|Houston Rockets|Indiana Pacers|Los Angeles Clippers|Los Angeles Lakers|Memphis Grizzlies|Miami Heat|Milwaukee Bucks|Minnesota Timberwolves|New Orleans Pelicans|New York Knicks|Oklahoma City Thunder|Orlando Magic|Philadelphia 76ers|Phoenix Suns|Portland Trail Blazers|Sacramento Kings|San Antonio Spurs|Toronto Raptors|Utah Jazz|Washington Wizards",
-		MLB: "Arizona Diamondbacks|Atlanta Braves|Baltimore Orioles|Boston Red Sox|Chicago Cubs|Chicago White Sox|Cincinnati Reds|Cleveland Guardians|Colorado Rockies|Detroit Tigers|Houston Astros|Kansas City Royals|Los Angeles Angels|Los Angeles Dodgers|Miami Marlins|Milwaukee Brewers|Minnesota Twins|New York Mets|New York Yankees|Athletics|Philadelphia Phillies|Pittsburgh Pirates|San Diego Padres|San Francisco Giants|Seattle Mariners|St. Louis Cardinals|Tampa Bay Rays|Texas Rangers|Toronto Blue Jays|Washington Nationals",
-		NHL: "Anaheim Ducks|Boston Bruins|Buffalo Sabres|Calgary Flames|Carolina Hurricanes|Chicago Blackhawks|Colorado Avalanche|Columbus Blue Jackets|Dallas Stars|Detroit Red Wings|Edmonton Oilers|Florida Panthers|Los Angeles Kings|Minnesota Wild|Montreal Canadiens|Nashville Predators|New Jersey Devils|New York Islanders|New York Rangers|Ottawa Senators|Philadelphia Flyers|Pittsburgh Penguins|San Jose Sharks|Seattle Kraken|St. Louis Blues|Tampa Bay Lightning|Toronto Maple Leafs|Utah Mammoth|Vancouver Canucks|Vegas Golden Knights|Washington Capitals|Winnipeg Jets",
+		NFL: "Arizona Cardinals;ARI;97233F;FFB612|Atlanta Falcons;ATL;A71930;000000|Baltimore Ravens;BAL;241773;9E7C0C|Buffalo Bills;BUF;00338D;C60C30|Carolina Panthers;CAR;0085CA;101820|Chicago Bears;CHI;0B162A;C83803|Cincinnati Bengals;CIN;FB4F14;000000|Cleveland Browns;CLE;311D00;FF3C00|Dallas Cowboys;DAL;041E42;869397|Denver Broncos;DEN;FB4F14;002244|Detroit Lions;DET;0076B6;B0B7BC|Green Bay Packers;GB;203731;FFB612|Houston Texans;HOU;03202F;A71930|Indianapolis Colts;IND;002C5F;A2AAAD|Jacksonville Jaguars;JAX;006778;D7A22A|Kansas City Chiefs;KC;E31837;FFB81C|Las Vegas Raiders;LV;000000;A5ACAF|Los Angeles Chargers;LAC;0080C6;FFC20E|Los Angeles Rams;LAR;003594;FFA300|Miami Dolphins;MIA;008E97;FC4C02|Minnesota Vikings;MIN;4F2683;FFC62F|New England Patriots;NE;002244;C60C30|New Orleans Saints;NO;101820;D3BC8D|New York Giants;NYG;0B2265;A71930|New York Jets;NYJ;125740;FFFFFF|Philadelphia Eagles;PHI;004C54;A5ACAF|Pittsburgh Steelers;PIT;101820;FFB612|San Francisco 49ers;SF;AA0000;B3995D|Seattle Seahawks;SEA;002244;69BE28|Tampa Bay Buccaneers;TB;D50A0A;34302B|Tennessee Titans;TEN;0C2340;4B92DB|Washington Commanders;WAS;5A1414;FFB612",
+		NBA: "Atlanta Hawks;ATL;E03A3E;C1D32F|Boston Celtics;BOS;007A33;BA9653|Brooklyn Nets;BKN;000000;FFFFFF|Charlotte Hornets;CHA;1D1160;00788C|Chicago Bulls;CHI;CE1141;000000|Cleveland Cavaliers;CLE;860038;FDBB30|Dallas Mavericks;DAL;00538C;B8C4CA|Denver Nuggets;DEN;0E2240;FEC524|Detroit Pistons;DET;C8102E;1D42BA|Golden State Warriors;GSW;1D428A;FFC72C|Houston Rockets;HOU;CE1141;C4CED4|Indiana Pacers;IND;002D62;FDBB30|Los Angeles Clippers;LAC;C8102E;1D428A|Los Angeles Lakers;LAL;552583;FDB927|Memphis Grizzlies;MEM;5D76A9;12173F|Miami Heat;MIA;98002E;F9A01B|Milwaukee Bucks;MIL;00471B;EEE1C6|Minnesota Timberwolves;MIN;0C2340;78BE20|New Orleans Pelicans;NOP;0C2340;C8102E|New York Knicks;NYK;006BB6;F58426|Oklahoma City Thunder;OKC;007AC1;EF3B24|Orlando Magic;ORL;0077C0;C4CED4|Philadelphia 76ers;PHI;006BB6;ED174C|Phoenix Suns;PHX;1D1160;E56020|Portland Trail Blazers;POR;E03A3E;000000|Sacramento Kings;SAC;5A2D81;63727A|San Antonio Spurs;SAS;000000;C4CED4|Toronto Raptors;TOR;CE1141;000000|Utah Jazz;UTA;002B5C;F9A01B|Washington Wizards;WAS;002B5C;E31837",
+		MLB: "Arizona Diamondbacks;ARI;A71930;E3D4AD|Atlanta Braves;ATL;13274F;CE1141|Baltimore Orioles;BAL;DF4601;000000|Boston Red Sox;BOS;BD3039;0C2340|Chicago Cubs;CHC;0E3386;CC3433|Chicago White Sox;CWS;27251F;C4CED4|Cincinnati Reds;CIN;C6011F;000000|Cleveland Guardians;CLE;00385D;E50022|Colorado Rockies;COL;333366;C4CED4|Detroit Tigers;DET;0C2340;FA4616|Houston Astros;HOU;002D62;EB6E1F|Kansas City Royals;KC;004687;BD9B60|Los Angeles Angels;LAA;BA0021;003263|Los Angeles Dodgers;LAD;005A9C;EF3E42|Miami Marlins;MIA;00A3E0;EF3340|Milwaukee Brewers;MIL;12284B;FFC52F|Minnesota Twins;MIN;002B5C;D31145|New York Mets;NYM;002D72;FF5910|New York Yankees;NYY;0C2340;C4CED3|Athletics;ATH;003831;EFB21E|Philadelphia Phillies;PHI;E81828;002D72|Pittsburgh Pirates;PIT;27251F;FDB827|San Diego Padres;SD;2F241D;FFC425|San Francisco Giants;SF;FD5A1E;27251F|Seattle Mariners;SEA;0C2C56;005C5C|St. Louis Cardinals;STL;C41E3A;0C2340|Tampa Bay Rays;TB;092C5C;8FBCE6|Texas Rangers;TEX;003278;C0111F|Toronto Blue Jays;TOR;134A8E;E8291C|Washington Nationals;WSH;AB0003;14225A",
+		NHL: "Anaheim Ducks;ANA;F47A38;000000|Boston Bruins;BOS;000000;FFB81C|Buffalo Sabres;BUF;003087;FFB81C|Calgary Flames;CGY;C8102E;F1BE48|Carolina Hurricanes;CAR;CE1126;000000|Chicago Blackhawks;CHI;CF0A2C;000000|Colorado Avalanche;COL;6F263D;236192|Columbus Blue Jackets;CBJ;002654;CE1126|Dallas Stars;DAL;006847;8F8F8C|Detroit Red Wings;DET;CE1126;FFFFFF|Edmonton Oilers;EDM;041E42;FF4C00|Florida Panthers;FLA;041E42;C8102E|Los Angeles Kings;LAK;111111;A2AAAD|Minnesota Wild;MIN;154734;A6192E|Montreal Canadiens;MTL;AF1E2D;192168|Nashville Predators;NSH;FFB81C;041E42|New Jersey Devils;NJD;CE1126;000000|New York Islanders;NYI;00539B;F47D30|New York Rangers;NYR;0038A8;CE1126|Ottawa Senators;OTT;C52032;C2912C|Philadelphia Flyers;PHI;F74902;000000|Pittsburgh Penguins;PIT;000000;FCB514|San Jose Sharks;SJS;006D75;EA7200|Seattle Kraken;SEA;001628;99D9D9|St. Louis Blues;STL;002F87;FCB514|Tampa Bay Lightning;TBL;002868;FFFFFF|Toronto Maple Leafs;TOR;00205B;FFFFFF|Utah Mammoth;UTA;010101;6CACE4|Vancouver Canucks;VAN;00205B;00843D|Vegas Golden Knights;VGK;333F42;B4975A|Washington Capitals;WSH;041E42;C8102E|Winnipeg Jets;WPG;041E42;A2AAAD",
 	};
+	function league(name) {
+		return teams[name].split("|").map(function (row) {
+			var c = row.split(";");
+			return { label: c[0], code: c[1], color: "#" + c[2].toLowerCase(), color2: "#" + c[3].toLowerCase() };
+		});
+	}
+	var teamStyles = {};
+	Object.keys(teams).forEach(function (name) {
+		league(name).forEach(function (t) {
+			teamStyles[t.label] = { code: t.code, color: t.color, color2: t.color2 };
+		});
+	});
 	function node(tag, text, className) {
 		var e = document.createElement(tag);
 		if (text !== undefined) e.textContent = text;
@@ -127,9 +140,15 @@
 			'</div><button type="button" data-do="asking-paid">Use asking price</button></details>' +
 			"<details><summary>Description and private note</summary>" +
 			field("label", "Spot name", "text", 'maxlength="80" required') +
-			field("image", "Card image URL", "url", 'placeholder="https://..." maxlength="2048"') +
+			field("image", "Image URL (card or team logo)", "url", 'placeholder="https://..." maxlength="2048"') +
 			field("description", "Description", "text", 'maxlength="160"') +
-			'<label>Private note<textarea data-field="note" maxlength="500" rows="3"></textarea></label></details></form>' +
+			'<label>Private note<textarea data-field="note" maxlength="500" rows="3"></textarea></label></details>' +
+			"<details><summary>Team code and colors</summary>" +
+			field("code", "Short code", "text", 'maxlength="4" autocomplete="off"') +
+			'<label class="br-check"><input type="checkbox" data-field="use-colors">Use spot colors</label><div class="br-row">' +
+			field("color", "Main color", "color") +
+			field("color2", "Second color", "color") +
+			'</div><p class="br-muted">Shown by the Team colors theme. League presets fill these in.</p></details></form>' +
 			"<details><summary>Swap or remove</summary>" +
 			select("swap", "Swap buyers with", []) +
 			'<button type="button" data-do="swap">Swap buyers</button><p class="br-muted">Each buyer keeps their payment record and private note.</p><button type="button" data-do="remove-spot">Remove empty spot</button></details></aside></div>' +
@@ -156,8 +175,12 @@
 			field("create-cost", "Product cost outside stock (optional)", "number", 'min="0" max="9999999" step="0.01"') +
 			select("create-stock", "Use stock (optional)", [["", "None"]]) +
 			field("count", "Numbered spots", "number", 'min="1" max="120" value="32"') +
-			'<label>Spot names<textarea data-field="labels" rows="4" placeholder="One per line, or paste spreadsheet columns: name, asking price, description, private note"></textarea></label><p class="br-muted">Leave blank for numbers. Up to 120 spots.</p><button type="submit" class="br-primary">Create break</button></form><div class="br-actions"><button type="button" data-do="repeat">Use current setup</button><button type="button" data-do="preset">Save current setup</button><button type="button" data-do="remove-preset">Delete selected setup</button></div></div>' +
+			'<label>Spot names<textarea data-field="labels" rows="4" placeholder="One per line, or paste spreadsheet columns: name, asking price, description, private note"></textarea></label><p class="br-muted">Leave blank for numbers. Up to 120 spots.</p><button type="submit" class="br-primary">Create break</button></form><div class="br-actions"><button type="button" data-do="repeat">Use current setup</button><button type="button" data-do="remove-preset">Delete selected setup</button></div></div>' +
 			'</div></section><section data-view="display" hidden><div class="br-two"><div><h2>Overlay appearance</h2><form data-form="appearance">' +
+			select("theme", "Theme", [
+				["standard", "Standard"],
+				["teams", "Team colors"],
+			]) +
 			select("layout", "Layout", [
 				["grid", "Grid"],
 				["strip", "Compact strip"],
@@ -166,7 +189,7 @@
 			'<div class="br-row">' +
 			field("columns", "Columns", "number", 'min="1" max="12" value="4"') +
 			field("accent", "Accent", "color", 'value="#8ce0ba"') +
-			'</div><label class="br-check" title="Show buyer display names on the viewer overlay"><input type="checkbox" data-field="showBuyers" checked>Buyer names</label><label class="br-check" title="Show asking prices, not private payment amounts"><input type="checkbox" data-field="showPrices">Asking prices</label><label class="br-check" title="Hide claimed and revealed tiles without removing assignments"><input type="checkbox" data-field="availableOnly">Available only</label><button type="submit">Save appearance</button></form>' +
+			'</div><label class="br-check" title="Show buyer display names on the viewer overlay"><input type="checkbox" data-field="showBuyers" checked>Buyer names</label><label class="br-check" title="Show asking prices, not private payment amounts"><input type="checkbox" data-field="showPrices">Asking prices</label><label class="br-check" title="Hide claimed and revealed tiles without removing assignments"><input type="checkbox" data-field="availableOnly">Available only</label><button type="submit">Save appearance</button></form><button type="button" data-do="preset">Save this setup</button>' +
 			'</div><div><h2>Private break estimate</h2><form data-form="costs">' +
 			field("cost", "Product cost outside stock", "number", 'min="0" max="9999999" step="0.01"') +
 			'<div class="br-row">' +
@@ -264,16 +287,18 @@
 			delete drafts[draftKey(form)];
 			draftStatus(form);
 		}
-		function discardBoardDrafts() {
+		function confirmBoardDrafts() {
 			var id = state && state.active && state.active.id;
 			var keys = Object.keys(drafts).filter(function (k) {
 				return id && k.indexOf(":" + id) !== -1;
 			});
 			if (keys.length && !confirm("Discard unsaved edits to this break?")) return false;
+			return keys;
+		}
+		function discardDrafts(keys) {
 			keys.forEach(function (k) {
 				delete drafts[k];
 			});
-			return true;
 		}
 		["spot", "appearance", "costs", "stock"].forEach(function (name) {
 			var form = el('[data-form="' + name + '"]'),
@@ -416,7 +441,10 @@
 				e.hidden = e.dataset.view !== tab;
 			});
 			panel.querySelectorAll("[data-tab]").forEach(function (e) {
-				e.setAttribute("aria-pressed", String(e.dataset.tab === tab));
+				e.setAttribute(
+					"aria-pressed",
+					String(e.dataset.tab === tab || (tab === "display" && e.dataset.tab === "live"))
+				);
 			});
 			if (tab === "display") fillSettings();
 			panel.classList.remove("br-editing");
@@ -440,6 +468,10 @@
 				}
 			);
 			f("buyer-platform").value = s.platform || b.platform;
+			f("code").value = s.code || "";
+			f("use-colors").checked = !!s.color;
+			f("color").value = s.color || b.accent;
+			f("color2").value = s.color2 || "#ffffff";
 			f("swap").textContent = "";
 			b.spots
 				.filter(function (x) {
@@ -503,7 +535,7 @@
 			var b = state && state.active;
 			if (!b) return;
 			settingsRevision = state.revision;
-			["layout", "columns", "accent", "cost", "feePercent", "fees"].forEach(function (k) {
+			["theme", "layout", "columns", "accent", "cost", "feePercent", "fees"].forEach(function (k) {
 				f(k).value = b[k] == null ? "" : b[k];
 			});
 			["showBuyers", "showPrices", "availableOnly"].forEach(function (k) {
@@ -649,6 +681,15 @@
 				}
 			});
 			f("create-stock").value = choiceForNew;
+			if (choiceForNew && !f("create-stock").value) {
+				var unavailable = state.stock.filter(function (s) {
+					return s.id === choiceForNew;
+				})[0];
+				var missing = node("option", (unavailable ? "1 x " + unavailable.name : "Selected item") + " (unavailable)");
+				missing.value = choiceForNew;
+				f("create-stock").appendChild(missing);
+				f("create-stock").value = choiceForNew;
+			}
 			var b = state.active,
 				pick = f("stock-use-item"),
 				choice = pendingStock || pick.value,
@@ -679,22 +720,26 @@
 					return s.payment === "paid" && s.paid === null;
 				}).length,
 				stockCost = 0,
+				countedStock = 0,
 				uncounted = 0;
 			b.stockUse.forEach(function (u) {
 				if (u.unitCost === null || u.currency !== b.currency) uncounted++;
-				else stockCost += u.unitCost * u.quantity;
+				else {
+					stockCost += u.unitCost * u.quantity;
+					countedStock++;
+				}
 			});
 			var money = function (n) {
 					return b.currency + " " + n.toFixed(2);
 				},
-				known = b.cost !== null || stockCost > 0,
+				known = b.cost !== null || countedStock > 0,
 				net = paid * (1 - b.feePercent / 100) - (b.cost || 0) - b.fees - stockCost;
 			return (
 				"Confirmed amounts: " +
 				money(paid) +
 				(missingPaid ? " / " + missingPaid + " paid amounts missing" : "") +
 				(b.cost !== null ? " / Products outside stock: " + money(b.cost) : "") +
-				(stockCost ? " / Stock cost: " + money(stockCost) : "") +
+				(countedStock ? " / Stock cost: " + money(stockCost) : "") +
 				(b.cost && stockCost ? " (added to manual cost)" : "") +
 				" / Fees and other costs: " +
 				money((paid * b.feePercent) / 100 + b.fees) +
@@ -794,11 +839,25 @@
 		}
 		function appearance(b) {
 			return (
-				b && [b.layout, b.columns, b.accent, b.showBuyers, b.showPrices, b.availableOnly, b.cost, b.feePercent, b.fees]
+				b && [
+					b.theme,
+					b.layout,
+					b.columns,
+					b.accent,
+					b.showBuyers,
+					b.showPrices,
+					b.availableOnly,
+					b.cost,
+					b.feePercent,
+					b.fees,
+				]
 			);
 		}
 		function render(next) {
-			if (next) document.getElementById("connectionText").textContent = "Connected to host";
+			if (next) {
+				document.getElementById("connectionText").textContent = "Connected to host";
+				document.getElementById("connectionStatus").className = "connection connected";
+			}
 			if (next && connectionError) {
 				say("");
 				connectionError = false;
@@ -827,7 +886,21 @@
 					editRevision = state.revision;
 				if (settingsRevision === prior.revision && sameBoard && same(appearance(prior.active), appearance(b)))
 					settingsRevision = state.revision;
-				if (stockRevision === prior.revision && same(prior.stock, state.stock)) stockRevision = state.revision;
+				var stockId = f("stock-id").value,
+					stockDraft = drafts[draftKey("stock")];
+				if (
+					same(
+						prior.stock.filter(function (item) {
+							return item.id === stockId;
+						}),
+						state.stock.filter(function (item) {
+							return item.id === stockId;
+						})
+					)
+				) {
+					if (stockRevision === prior.revision) stockRevision = state.revision;
+					if (stockDraft && stockDraft.revision === prior.revision) stockDraft.revision = state.revision;
+				}
 			}
 			if (
 				archiveId &&
@@ -883,6 +956,13 @@
 				el(".br-editor").hidden = true;
 			}
 			if (changed) {
+				if (
+					!newBoard &&
+					selected &&
+					!drafts[draftKey("spot")] &&
+					!same(spotIn(prior.active, selected), spotIn(b, selected))
+				)
+					pick(selected);
 				drawGrid();
 				if (!newBoard) fillSettings();
 			}
@@ -924,6 +1004,7 @@
 		}
 		function lock(message) {
 			locked = true;
+			document.body.classList.add("br-access-locked");
 			previewDialog.close();
 			previewFrame.src = "about:blank";
 			generation++;
@@ -974,6 +1055,10 @@
 			if (e.message === SSNBreaksAccess.invalid) lock(e.message);
 			else {
 				connectionError = /connect|response/i.test(e.message);
+				if (connectionError) {
+					document.getElementById("connectionText").textContent = "Waiting for host";
+					document.getElementById("connectionStatus").className = "connection connecting";
+				}
 				say(e.message, true);
 			}
 		}
@@ -984,17 +1069,29 @@
 				.then(function (sealed) {
 					if (sealed.box.length > SSNBreaksAccess.maxSealed)
 						throw new Error("That is too much to send at once. Shorten the spot list or its notes.");
-					return request("commerceControl", { command: "breakSecure", data: sealed });
-				})
-				.then(function (reply) {
-					var result = unwrap(reply);
-					if (!result.sealed) throw new Error("Breaks requires updated Social Stream sources.");
-					return SSNBreaksAccess.open(key, "reply", result.sealed);
+					return request("commerceControl", { command: "breakSecure", data: sealed }, function (reply) {
+						var result = unwrap(reply);
+						return SSNBreaksAccess.open(key, "reply", result.sealed).then(function (opened) {
+							if (opened.id !== id || !opened.reply) throw new Error("Unrelated Breaks reply.");
+							return opened;
+						});
+					});
 				})
 				.then(function (opened) {
 					if (opened.id !== id) throw new Error("Breaks received an out-of-date reply. Try again.");
 					if (opened.reply.error) throw new Error(opened.reply.error);
-					return opened.reply.commerceState;
+					var result = opened.reply.commerceState;
+					if (result.breaks && result.breaks.archiveDeferred && data && data.archiveId) {
+						return secure("breakGet", { archiveId: data.archiveId, archiveOnly: true }).then(function (archive) {
+							if (!archive.breaks || archive.breaks.revision !== result.breaks.revision)
+								throw new Error("This break changed elsewhere. Refresh to load the latest, then try again.");
+							result.breaks.opened = archive.breaks.opened;
+							result.breaks.openedTooLarge = archive.breaks.openedTooLarge === true;
+							delete result.breaks.archiveDeferred;
+							return result;
+						});
+					}
+					return result;
 				});
 		}
 		function refresh(full) {
@@ -1148,8 +1245,13 @@
 			repeatSettings = null;
 			var value = f("preset").value;
 			if (teams[value]) {
-				f("labels").value = teams[value].split("|").join("\n");
-				f("count").value = teams[value].split("|").length;
+				var list = league(value);
+				f("labels").value = list
+					.map(function (t) {
+						return t.label;
+					})
+					.join("\n");
+				f("count").value = list.length;
 			} else if (state) {
 				var p = state.presets.filter(function (p) {
 					return p.id === value;
@@ -1168,6 +1270,15 @@
 					f("count").value = p.spots.length;
 				} else f("labels").value = "";
 			}
+		}
+		// Any spot named after a league team gets its colors, so edited or pasted team lists keep them.
+		function spotStyles(labels) {
+			var out = {};
+			labels.split(/\r?\n/).forEach(function (line) {
+				var name = line.split("\t")[0].trim();
+				if (teamStyles[name]) out[name] = teamStyles[name];
+			});
+			return out;
 		}
 		f("preset").onchange = presetSelected;
 		f("search").oninput = drawGrid;
@@ -1216,6 +1327,9 @@
 				}
 			);
 			data.platform = f("buyer-platform").value;
+			data.code = f("code").value;
+			data.color = f("use-colors").checked ? f("color").value : "";
+			data.color2 = f("use-colors").checked ? f("color2").value : "";
 			if (status) data.status = status;
 			send("breakSpot", data).then(function (ok) {
 				if (!ok) return;
@@ -1260,8 +1374,18 @@
 		};
 		el('[data-form="create"]').onsubmit = function (e) {
 			e.preventDefault();
+			var stockId = f("create-stock").value;
+			if (
+				stockId &&
+				state &&
+				!state.stock.some(function (s) {
+					return s.id === stockId && s.quantity > 0;
+				})
+			)
+				return say("Selected stock is unavailable. Choose another item or None.", true);
 			if (state && state.active && !confirm("Archive the current break and create a new one?")) return;
-			if (!discardBoardDrafts()) return;
+			var discard = confirmBoardDrafts();
+			if (!discard) return;
 			send("breakCreate", {
 				replace: !!(state && state.active),
 				title: f("title").value,
@@ -1270,8 +1394,10 @@
 				presetId: f("preset").value,
 				templateId: repeatSettings && !f("preset").value ? repeatSettings.id : undefined,
 				labels: f("labels").value,
+				styles: spotStyles(f("labels").value),
 				count: Number(f("count").value),
 				cost: f("create-cost").value,
+				theme: repeatSettings ? repeatSettings.theme : "standard",
 				layout: repeatSettings ? repeatSettings.layout : "grid",
 				columns: repeatSettings ? repeatSettings.columns : 4,
 				accent: repeatSettings ? repeatSettings.accent : "#8ce0ba",
@@ -1280,9 +1406,9 @@
 				availableOnly: repeatSettings ? repeatSettings.availableOnly : false,
 			}).then(function (ok) {
 				if (ok) {
+					discardDrafts(discard);
 					repeatSettings = null;
 					show("live");
-					var stockId = f("create-stock").value;
 					if (stockId)
 						send("breakStockUse", { stockId: stockId, quantity: 1 }).then(function (used) {
 							if (used) {
@@ -1302,6 +1428,7 @@
 			e.preventDefault();
 			send("breakSettings", {
 				revision: draftRevision("appearance", settingsRevision),
+				theme: f("theme").value,
 				layout: f("layout").value,
 				columns: Number(f("columns").value),
 				accent: f("accent").value,
@@ -1332,7 +1459,7 @@
 		el('[data-form="stock"]').onsubmit = function (e) {
 			e.preventDefault();
 			send("breakStock", {
-				revision: stockRevision,
+				revision: draftRevision("stock", stockRevision),
 				id: f("stock-id").value,
 				name: f("stock-name").value,
 				quantity: Number(f("stock-quantity").value),
@@ -1480,7 +1607,12 @@
 			if (action === "reveal") return saveSpot("revealed");
 			if (action === "export") return exportBoard(b);
 			if (action === "archive") {
-				if (confirm("Finish and archive " + b.title + "?") && discardBoardDrafts()) send("breakArchive");
+				if (!confirm("Finish and archive " + b.title + "?")) return;
+				var discard = confirmBoardDrafts();
+				if (discard)
+					send("breakArchive").then(function (ok) {
+						if (ok) discardDrafts(discard);
+					});
 				return;
 			}
 			if (action === "highlight") return send("breakHighlight", { id: selected });
@@ -1498,6 +1630,8 @@
 				return;
 			}
 			if (action === "preset") {
+				if (drafts[draftKey("appearance")] || drafts[draftKey("costs")])
+					return say("Save your appearance and cost changes first.", true);
 				askName("Name this saved setup", b.title, function (name) {
 					send("breakPreset", { name: name });
 				});

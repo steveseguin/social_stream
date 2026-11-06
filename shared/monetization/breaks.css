@@ -7,6 +7,7 @@ body.breaks-workspace {
 	padding: 0;
 	border: 0;
 	background: none;
+	overflow: visible;
 }
 .breaks-panel > summary {
 	display: none;
@@ -15,6 +16,7 @@ body.breaks-workspace {
 .br-locked .br-top {
 	display: none !important;
 }
+.breaks-workspace.br-access-locked #connectionStatus { display: none; }
 .breaks-panel [hidden] {
 	display: none !important;
 }
@@ -122,6 +124,15 @@ body.breaks-workspace {
 }
 .br-feedback:empty {
 	display: none;
+}
+.br-feedback.br-error {
+	position: sticky;
+	top: 8px;
+	z-index: 2;
+	padding: 10px 12px;
+	background: var(--bg);
+	border: 1px solid var(--border);
+	border-radius: 8px;
 }
 .breaks-workspace #commandStatus,
 .breaks-workspace .dock-footer {
@@ -252,6 +263,14 @@ body.breaks-workspace {
 	border-radius: 12px;
 	min-width: 0;
 }
+.breaks-panel [data-view="setup"] > .br-two {
+	display: block;
+	max-width: 760px;
+	margin: 0 auto;
+}
+.breaks-panel [data-view="history"] > .br-two {
+	grid-template-columns: 260px minmax(0, 1fr);
+}
 .br-two h2:not(:first-child) {
 	margin-top: 32px;
 }
@@ -324,6 +343,9 @@ body.breaks-workspace {
 	justify-content: flex-end;
 }
 @media (max-width: 800px) {
+	.breaks-panel [data-view="history"] > .br-two {
+		grid-template-columns: 1fr;
+	}
 	body.breaks-workspace {
 		padding: 14px;
 	}

@@ -9,6 +9,8 @@
     var VIEWER_ADD_COOLDOWN_MS = 5000;
     var MAX_TALLY_NAMES = 300;
     var MAX_COUNT = 1e12;
+    var GIFT_STREAK_MS = 30 * 60 * 1000;
+    var MAX_GIFT_STREAKS = 1024;
 
     function localDay(ms) {
         var date = new Date(ms);
@@ -49,7 +51,8 @@
         text = text.replace(/\bthey(?:'ve| have)\b[^.!]*[.!]?/ig, ' ').replace(/\btier\s*\d+/ig, ' ');
         var match = text.match(/\b(?:gifted|sent|bought|purchased)\s+(\d+)\b/i) ||
             text.match(/\b(\d+)\s*(?:x|gifted|gifts|gift|subs|memberships|members)\b/i);
-        return match && parseInt(match[1], 10) > 0 ? parseInt(match[1], 10) : 1;
+        var count = match && parseInt(match[1], 10) > 0 ? parseInt(match[1], 10) : 1;
+        return Number.isFinite(count) ? count : 0;
     }
     function raiderCount(data, meta) {
         var direct = total(meta.viewers || meta.numRaiders || data.viewers);
@@ -60,12 +63,14 @@
     }
     function bitCount(data, meta) {
         var direct = total(meta.bits);
+        // Streamlabs socket alerts carry the bit count as amount, and subscription tiers as plan.
+        if (!direct && data.platform === 'streamlabs' && eventOf(data) === 'bits') direct = total(meta.amount);
         if (direct) return Math.round(direct);
         var match = String(data.hasDonation || '').match(/(\d[\d,.]*)\s*bits?\b/i);
         return match ? Math.round(total(match[1].replace(/,/g, ''))) : 0;
     }
     function tierOf(data, meta) {
-        var raw = String(data.tier || meta.tier || '').toLowerCase();
+        var raw = String(data.tier || meta.tier || (data.platform === 'streamlabs' ? meta.plan : '') || '').toLowerCase();
         if (/^(3|3000|tier ?3)$/.test(raw)) return 3;
         if (/^(2|2000|tier ?2)$/.test(raw)) return 2;
         if (!raw) {
@@ -86,7 +91,7 @@
         // A gift counts once, on the purchase. Twitch EventSub also sends a notice for each recipient.
         var isRecipient = event === 'giftredemption' || membership === 'gift_recipient' || data.isGift === true || meta.isGift === true;
         if (!isRecipient) {
-            if (GIFT_EVENTS.indexOf(event) !== -1 || membership === 'gift_giver') result.gifted = giftCount(data, meta);
+            if (GIFT_EVENTS.indexOf(event) !== -1 || membership === 'gift_giver' || (data.platform === 'streamlabs' && event === 'gift')) result.gifted = giftCount(data, meta);
             else if (SUB_EVENTS.indexOf(event) !== -1 || (event === 'true' && membership)) result.subs = 1;
         }
         var label = data.hasDonation || data.donation || data.donationAmount || '';
@@ -107,7 +112,8 @@
             // "Latest" and platform totals describe the channel, not the day, so they survive the midnight reset.
             latest: previous ? previous.latest : { follow: null, sub: null, tip: null, bits: null, raid: null },
             platformSubs: previous ? previous.platformSubs : Object.create(null),
-            platformFollows: previous ? previous.platformFollows : Object.create(null)
+            platformFollows: previous ? previous.platformFollows : Object.create(null),
+            giftStreaks: previous ? previous.giftStreaks : []
         };
     }
     function cleanPerson(entry) {
@@ -153,6 +159,7 @@
             loaded.latest = { follow: cleanPerson(latest.follow), sub: cleanPerson(latest.sub), tip: cleanPerson(latest.tip), bits: cleanPerson(latest.bits), raid: cleanPerson(latest.raid) };
             loaded.platformSubs = cleanTally(saved.platformSubs);
             loaded.platformFollows = cleanTally(saved.platformFollows);
+            loaded.giftStreaks = cleanGiftStreaks(saved.giftStreaks);
             if (daily && saved.day !== today) return blankStats(today, loaded);
             ['subs', 'bits', 'donations', 'follows'].forEach(function (field) { loaded[field] = total(saved[field]); });
             loaded.gifters = cleanTally(saved.gifters);
@@ -164,6 +171,31 @@
         }
         function save() {
             writeJson(storage, key, state);
+        }
+        function cleanGiftStreaks(entries) {
+            var time = now();
+            return (Array.isArray(entries) ? entries : []).filter(function (entry) {
+                return entry && typeof entry.id === 'string' && entry.id && entry.id.length <= 256 &&
+                    Number.isFinite(entry.total) && entry.total >= 0 && Number.isFinite(entry.at) &&
+                    entry.at > time - GIFT_STREAK_MS && entry.at <= time + 60000;
+            }).slice(-MAX_GIFT_STREAKS);
+        }
+        function giftStreakId(data, meta) {
+            return data.type === 'tiktok' && typeof meta.tiktokGiftStreakId === 'string' &&
+                meta.tiktokGiftStreakId.length <= 256 && total(meta.tiktokGiftCount)
+                ? meta.tiktokGiftStreakId : '';
+        }
+        // TikTok updates carry the whole streak value. Persist its high-water mark so reloads and resets do not recount it.
+        function giftIncrement(id, amount) {
+            var entries = cleanGiftStreaks(state.giftStreaks), previous = 0;
+            state.giftStreaks = entries.filter(function (entry) {
+                if (entry.id !== id) return true;
+                previous = Math.max(previous, entry.total);
+                return false;
+            });
+            state.giftStreaks.push({ id: id, total: Math.max(previous, amount), at: now() });
+            state.giftStreaks = state.giftStreaks.slice(-MAX_GIFT_STREAKS);
+            return Math.max(0, amount - previous);
         }
         function rollover() {
             var today = localDay(now());
@@ -188,7 +220,7 @@
             var field = event === 'subscriber_update' ? 'platformSubs' : (event === 'follower_update' ? 'platformFollows' : '');
             if (!field || data.meta === null || typeof data.meta === 'object' || data.meta === '') return false;
             var count = Number(String(data.meta).replace(/,/g, ''));
-            if (!(count >= 0)) return false;
+            if (!Number.isFinite(count) || count < 0) return false;
             state[field][String(data.type || 'unknown')] = count;
             save();
             return true;
@@ -200,7 +232,11 @@
             var event = eventOf(data);
             if (recordPlatformTotal(data, event)) return { changedOnly: true };
             var worth = classify(data);
-            if ((!worth.subs && !worth.gifted && !worth.bits && !worth.follow && !worth.raid && !worth.label) || isRepeat(data, worth.meta)) return null;
+            var streakId = giftStreakId(data, worth.meta);
+            if ((!worth.subs && !worth.gifted && !worth.bits && !worth.follow && !worth.raid && !worth.label) || (!streakId && isRepeat(data, worth.meta))) return null;
+            var donationTotal = worth.label ? total(getUSD(data)) : 0;
+            worth.usd = streakId ? giftIncrement(streakId, donationTotal) : donationTotal;
+            if (streakId && !worth.usd) { save(); return null; }
             var name = String(data.chatname || 'Anonymous');
             state.subs += worth.subs + worth.gifted;
             state.bits += worth.bits;
@@ -215,19 +251,18 @@
                 bump(state.cheerers, name, worth.bits);
                 state.latest.bits = { name: name, amount: String(worth.bits) };
             }
-            worth.usd = worth.label ? total(getUSD(data)) : 0;
             if (worth.label && !worth.bits) state.latest.tip = { name: name, amount: String(worth.label) };
             if (worth.usd) {
                 state.donations += worth.usd;
-                if (!state.biggest || worth.usd > state.biggest.usd) {
-                    state.biggest = { name: name, amount: String(worth.label), usd: worth.usd };
+                if (!state.biggest || donationTotal > state.biggest.usd) {
+                    state.biggest = { name: name, amount: String(worth.label), usd: donationTotal };
                 }
             }
             save();
             return worth;
         }
         function reset() {
-            var kept = { latest: blankStats('').latest, platformSubs: state.platformSubs, platformFollows: state.platformFollows };
+            var kept = { latest: blankStats('').latest, platformSubs: state.platformSubs, platformFollows: state.platformFollows, giftStreaks: state.giftStreaks };
             state = blankStats(localDay(now()), kept);
             save();
         }
@@ -246,14 +281,18 @@
         var text = String(value === undefined || value === null ? '' : value).trim().toLowerCase();
         if (!text) return 0;
         if (/:/.test(text)) {
-            var parts = text.split(':').map(Number);
+            var fields = text.split(':');
+            if (fields.length > 3 || fields.some(function (part) { return !/^\d+(?:\.\d+)?$/.test(part); })) return 0;
+            var parts = fields.map(Number);
             if (parts.some(function (part) { return !Number.isFinite(part) || part < 0; })) return 0;
-            return parts.reduce(function (seconds, part) { return seconds * 60 + part; }, 0) * 1000;
+            var milliseconds = parts.reduce(function (seconds, part) { return seconds * 60 + part; }, 0) * 1000;
+            return Number.isFinite(milliseconds) ? milliseconds : 0;
         }
         var match = text.match(/^(\d+(?:\.\d+)?)\s*(h|hr|hrs|hour|hours|m|min|mins|minute|minutes|s|sec|secs|second|seconds)?$/);
         if (!match) return 0;
         var unit = (match[2] || 'm').charAt(0);
-        return Number(match[1]) * (unit === 'h' ? 3600000 : unit === 's' ? 1000 : 60000);
+        var duration = Number(match[1]) * (unit === 'h' ? 3600000 : unit === 's' ? 1000 : 60000);
+        return Number.isFinite(duration) ? duration : 0;
     }
 
     // "Deaths|!death,Sub Goal|!subgoal|sub:1|goal:25|daily:1" -> [{label, command, rules, goal, daily}]
@@ -303,7 +342,7 @@
         // Other sources may keep different counters under this key, so add to the record rather than replace it.
         function save() {
             var current = readJson(storage, key) || {};
-            writeJson(storage, key, { values: Object.assign({}, current.values, values), days: Object.assign({}, current.days, days) });
+            writeJson(storage, key, { values: Object.assign(Object.create(null), current.values, values), days: Object.assign(Object.create(null), current.days, days) });
         }
         // True when a daily counter just started a new day, including one that was closed at midnight.
         function rollover() {
@@ -393,16 +432,27 @@
     // A countdown that subs, bits and tips push back. It keeps running against the wall clock across reloads.
     function createSubathon(options) {
         var storage = options.storage, key = options.key, now = options.now || Date.now;
-        var startMs = options.durationMs, maxMs = options.maxMs || 0;
-        var perSub = options.perSubMinutes || [], perBits = options.perBitsMinutes || 0;
-        var perTip = options.perTipMinutes || 0, perFollow = options.perFollowMinutes || 0, perRaid = options.perRaidMinutes || 0;
+        function supportMinutes(value) {
+            var number = total(value);
+            return Number.isFinite(number * 60000) ? number : 0;
+        }
+        var startMs = total(options.durationMs), maxMs = total(options.maxMs);
+        // Keep invalid tier entries in place so tier 3 never becomes tier 2.
+        var perSub = (options.perSubMinutes || []).map(supportMinutes), perBits = supportMinutes(options.perBitsMinutes);
+        var perTip = supportMinutes(options.perTipMinutes), perFollow = supportMinutes(options.perFollowMinutes), perRaid = supportMinutes(options.perRaidMinutes);
         var state = load();
         if (!readJson(storage, key)) save();
 
         function load() {
             var saved = readJson(storage, key);
             if (saved && typeof saved === 'object' && Number.isFinite(saved.remainingMs)) {
-                return { remainingMs: Math.max(0, saved.remainingMs), endsAt: Number(saved.endsAt) || 0, running: !!saved.running, ended: !!saved.ended };
+                var endsAt = Number(saved.endsAt);
+                return {
+                    remainingMs: Math.max(0, saved.remainingMs),
+                    endsAt: Number.isFinite(endsAt) ? endsAt : 0,
+                    running: !!saved.running && Number.isFinite(endsAt) && endsAt > 0,
+                    ended: !!saved.ended
+                };
             }
             return { remainingMs: startMs, endsAt: options.autostart ? now() + startMs : 0, running: !!options.autostart, ended: false };
         }
@@ -411,10 +461,12 @@
             return state.running ? Math.max(0, state.endsAt - now()) : state.remainingMs;
         }
         function setRemaining(ms) {
+            if (!Number.isFinite(ms)) return false;
             var next = Math.max(0, ms);
             state.remainingMs = next;
             if (state.running) state.endsAt = now() + next;
             save();
+            return true;
         }
         // Call once a second. Returns true at the moment the clock reaches zero.
         function tick() {
@@ -443,16 +495,16 @@
         }
         function add(ms) {
             if (!ms) return false;
-            setRemaining(remaining() + ms);
+            if (!setRemaining(remaining() + ms)) return false;
             // A manual top-up can revive a finished clock; it stays stopped until started again.
             if (state.remainingMs > 0) state.ended = false;
             save();
             return true;
         }
         function set(ms) {
+            if (!Number.isFinite(ms)) return false;
             state.ended = false;
-            setRemaining(ms);
-            return true;
+            return setRemaining(ms);
         }
         function reset() {
             state = { remainingMs: startMs, endsAt: 0, running: false, ended: false };
@@ -472,12 +524,11 @@
             tick();
             if (state.ended) return false;
             var minutes = minutesFor(worth);
-            if (!minutes) return false;
+            if (!minutes || !Number.isFinite(minutes)) return false;
             // The cap limits what support can add. A mod can still set the clock higher, and support never shrinks it.
             var current = remaining(), next = current + minutes * 60000;
             if (maxMs) next = Math.min(next, Math.max(maxMs, current));
-            setRemaining(next);
-            return true;
+            return setRemaining(next);
         }
         // Handles start, pause, resume, reset, "add 30m", "remove 10m", "set 6h".
         function control(text) {

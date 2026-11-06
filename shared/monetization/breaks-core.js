@@ -19,7 +19,8 @@
 		"breakStockUse",
 		"breakStockReturn",
 	];
-	var platforms = ["whatnot", "ebay", "tiktok", "other"];
+	var platforms = ["whatnot", "ebay", "tiktok", "other"],
+		themes = ["standard", "teams"];
 	var historyLimit = 30,
 		logLimit = 500;
 	function text(value, max) {
@@ -47,6 +48,9 @@
 	function copy(value) {
 		return JSON.parse(JSON.stringify(value));
 	}
+	function hex(value) {
+		return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : "";
+	}
 	function image(value) {
 		try {
 			var u = new URL(value);
@@ -70,6 +74,13 @@
 			note: text(raw.note, 500),
 			description: text(raw.description, 160),
 			image: image(raw.image),
+			// Display only. The Team colors theme shows them; other themes ignore them.
+			code: text(raw.code, 12)
+				.toUpperCase()
+				.replace(/[^\p{L}\p{N}]/gu, "")
+				.slice(0, 4),
+			color: hex(raw.color),
+			color2: hex(raw.color2),
 		};
 	}
 	function board(raw) {
@@ -93,6 +104,8 @@
 			showPrices: raw.showPrices === true,
 			availableOnly: raw.availableOnly === true,
 			layout: ["grid", "strip", "column"].indexOf(raw.layout) !== -1 ? raw.layout : "grid",
+			// Breaks saved before themes existed keep the standard look.
+			theme: themes.indexOf(raw.theme) !== -1 ? raw.theme : "standard",
 			columns: Math.round(number(raw.columns, 12, 4)) || 4,
 			accent: /^#[0-9a-f]{6}$/i.test(raw.accent || "") ? raw.accent : "#8ce0ba",
 			cost: money(raw.cost),
@@ -170,6 +183,7 @@
 			stage: b.stage,
 			visible: b.visible,
 			layout: b.layout,
+			theme: b.theme,
 			columns: b.columns,
 			accent: b.accent,
 			showBuyers: b.showBuyers,
@@ -188,6 +202,9 @@
 					result: s.status === "revealed" ? s.result : "",
 					description: s.description,
 					image: s.image,
+					code: s.code,
+					color: s.color,
+					color2: s.color2,
 				};
 			}),
 		};
@@ -196,11 +213,13 @@
 	function controlState(raw, data) {
 		var s = normalize(raw);
 		data = data || {};
-		if (data.since === s.revision) return { unchanged: true };
 		s.opened =
 			s.history.filter(function (b) {
 				return b.id === data.archiveId;
 			})[0] || null;
+		// A large archive travels separately from the active board and stock.
+		if (data.archiveOnly === true) return { revision: s.revision, opened: s.opened };
+		if (data.since === s.revision) return { unchanged: true };
 		s.history = s.history.map(function (b) {
 			return { id: b.id, title: b.title, finishedAt: b.finishedAt, spots: b.spots.length };
 		});
@@ -299,6 +318,7 @@
 			}
 			if (typeof data.labels === "string" && data.labels.length > 60000)
 				throw new Error("That spot list is too long. Use up to 120 spots with shorter notes.");
+			var styles = data.styles && typeof data.styles === "object" ? data.styles : {};
 			var labels = text(data.labels, 60000)
 				.split(/\r?\n/)
 				.filter(function (x) {
@@ -309,8 +329,16 @@
 				: labels.length
 					? labels.map(function (l, i) {
 							var cells = l.split("\t"),
-								original = preset && preset.spots[i];
-							return Object.assign({}, original && original.label === cells[0].trim() ? original : {}, {
+								name = cells[0].trim(),
+								original = preset && preset.spots[i],
+								base = Object.assign({}, original && original.label === name ? original : {}),
+								style = Object.prototype.hasOwnProperty.call(styles, name) ? styles[name] : null;
+							// League presets send team codes and colors by spot name. A saved setup's own values win.
+							if (style && typeof style === "object")
+								["code", "color", "color2"].forEach(function (key) {
+									if (!base[key]) base[key] = style[key];
+								});
+							return Object.assign(base, {
 								label: cells[0],
 								price: pastedPrice(cells[1], cells[0].trim()),
 								description: cells[2],
@@ -490,6 +518,7 @@
 							updated.payment = "unknown";
 							updated.paid = null;
 							updated.result = "";
+							updated.note = "";
 							log(b, updated.label + ": reopened" + (item.buyer ? " (was " + item.buyer + ")" : ""), now);
 						} else {
 							if (updated.payment === "paid" && updated.paid === null)
@@ -583,6 +612,7 @@
 						"showPrices",
 						"availableOnly",
 						"layout",
+						"theme",
 						"columns",
 						"accent",
 						"cost",

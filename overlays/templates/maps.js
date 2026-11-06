@@ -485,7 +485,7 @@
 					parts.push(c.units === "c" ? celsius : c.units === "f" ? fahrenheit : celsius + " | " + fahrenheit);
 				}
 				if (c.conditions && wx) { parts.push(wx.text); }
-				if (c.time) {
+				if (c.time && ((place && place.tz) || c.tz)) {
 					var tz = (place && place.tz) || c.tz || "";
 					parts.push(SSO.formatTime(SSO.zonedParts(new Date(), tz), c.h12, false));
 				}
@@ -500,10 +500,11 @@
 			}
 			function fetchWeather() {
 				if (!place) { return; }
-				fetch("https://api.open-meteo.com/v1/forecast?current_weather=true&latitude=" + encodeURIComponent(place.lat) + "&longitude=" + encodeURIComponent(place.lon))
+				fetch("https://api.open-meteo.com/v1/forecast?current_weather=true&latitude=" + encodeURIComponent(place.lat) + "&longitude=" + encodeURIComponent(place.lon) + "&timezone=" + encodeURIComponent(place.tz || "auto"))
 					.then(function (r) { return r.json(); })
 					.then(function (d) {
 						if (!d || !d.current_weather) { return; }
+						if (!place.tz && typeof d.timezone === "string") place.tz = d.timezone;
 						wx = WEATHER(d.current_weather.weathercode);
 						temp = d.current_weather.temperature;
 						paint();

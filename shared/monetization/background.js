@@ -24,9 +24,16 @@
             try { await store(); } catch (error) { privateState.breaks = previousBreaks; throw error; }
             broadcast();
         }
-        var breakState = SSNBreaks.controlState(privateState.breaks, data);
+        var archiveOnly = command === 'breakGet' && data && data.archiveOnly === true;
+        var breakState = SSNBreaks.controlState(privateState.breaks, Object.assign({}, data, {archiveOnly:!!archiveOnly}));
         if (breakState.unchanged) return {commerceState:{unchanged:true, hostOn:!!isExtensionOn}};
-        return {commerceState:{breaks:breakState, ebayStock:ebay.snapshot(), hostOn:!!isExtensionOn}};
+        if (archiveOnly) return {commerceState:{breaks:breakState, hostOn:!!isExtensionOn}};
+        var listings = ebay.snapshot();
+        // The workspace only needs stock draft fields, not product artwork or listing URLs.
+        var ebayStock = {status:listings.status, environment:listings.environment, items:listings.items.map(function (item) {
+            return {id:item.id, name:item.name, amount:item.amount, currency:item.currency, available:item.available};
+        })};
+        return {commerceState:{breaks:breakState, ebayStock:ebayStock, hostOn:!!isExtensionOn}};
     }
     // Only the private link's key opens a request, and app errors stay inside the sealed reply because they can name buyers or spots.
     async function runSecureBreakCommand(sealed) {
@@ -37,9 +44,14 @@
         } catch (error) { reply = {error:error.message || 'Breaks command failed.'}; }
         var sealedReply = await SSNBreaksAccess.seal(key, 'reply', {id:message && message.id, reply:reply});
         // Above the relay's frame limit this would close the host's connection, so send what fits.
-        if (sealedReply.box.length > SSNBreaksAccess.maxSealed && reply.commerceState && reply.commerceState.breaks) {
+        if (sealedReply.box.length > SSNBreaksAccess.maxSealed && reply.commerceState && reply.commerceState.breaks && reply.commerceState.breaks.opened) {
+            if (reply.commerceState.breaks.opened && !(message.data && message.data.archiveOnly)) reply.commerceState.breaks.archiveDeferred = true;
             reply.commerceState.breaks.opened = null;
             reply.commerceState.breaks.openedTooLarge = true;
+            sealedReply = await SSNBreaksAccess.seal(key, 'reply', {id:message.id, reply:reply});
+        }
+        if (sealedReply.box.length > SSNBreaksAccess.maxSealed && reply.commerceState && reply.commerceState.ebayStock) {
+            reply.commerceState.ebayStock = {items:[], status:'Listing details are too large. Manage listings in Monetization.'};
             sealedReply = await SSNBreaksAccess.seal(key, 'reply', {id:message.id, reply:reply});
         }
         if (sealedReply.box.length > SSNBreaksAccess.maxSealed) sealedReply = await SSNBreaksAccess.seal(key, 'reply', {id:message && message.id, reply:{error:'Breaks is holding too much to send to this workspace.'}});

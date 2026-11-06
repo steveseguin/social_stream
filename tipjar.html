@@ -1904,13 +1904,13 @@
         const historyStorageKey = (hypeMode ? 'tipjar_hype_history' : 'tipjar_history') + storageSuffix;
         const completionsStorageKey = 'tipjar_hype_completions' + storageSuffix;
         let currentAmount = getInitialAmount();
-        let completionCount = persistent ? (parseInt(localStorage.getItem(completionsStorageKey) || '0', 10) || 0) : 0;
+        let completionCount = persistent ? (parseInt(readStoredValue(completionsStorageKey) || '0', 10) || 0) : 0;
         let completionResetTimer = null;
         let levelRolloverTimer = null;
         let levelCompletionState = null;
         const recentTips = [];
         const maxRecentTips = 4; // .recent-tips (max-height 200px) fits four rows
-        const donationHistory = persistent ? (JSON.parse(localStorage.getItem(historyStorageKey) || '[]')) : [];
+        const donationHistory = persistent ? readStoredHistory() : [];
         const processedContributions = {};
         
         // Socket server variables
@@ -2964,7 +2964,7 @@
             if (hypeMode) {
                 completionCount = 0;
                 if (persistent) {
-                    localStorage.setItem(completionsStorageKey, completionCount.toString());
+                    writeStoredValue(completionsStorageKey, completionCount.toString());
                 }
             }
             renderAmount();
@@ -2979,21 +2979,26 @@
             const match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(String(raw || '').trim());
             if (!match) return null;
             const end = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 23, 59, 59);
-            return isNaN(end.getTime()) ? null : end;
+            if (end.getFullYear() !== Number(match[1]) || end.getMonth() !== Number(match[2]) - 1 || end.getDate() !== Number(match[3])) return null;
+            return end;
         }
 
         // "2700:Paint a table,3000:Shave my head" -> rewards in the order they are reached.
         function parseGoalRewards(raw) {
             return String(raw || '').split(',').map(function(item) {
                 const split = item.indexOf(':');
-                const value = split > 0 ? parseFloat(item.slice(0, split)) : NaN;
+                const value = split > 0 ? Number(item.slice(0, split)) : NaN;
                 const label = split > 0 ? item.slice(split + 1).trim() : '';
-                return !isNaN(value) && label ? { value: value, label: label } : null;
+                return Number.isFinite(value) && value >= 0 && label ? { value: value, label: label } : null;
             }).filter(Boolean).sort(function(a, b) { return a.value - b.value; });
         }
 
         function formatGoalDaysLeft() {
-            const days = Math.ceil((goalEndDate.getTime() - Date.now()) / 86400000);
+            const today = new Date();
+            // Calendar days can contain 23 or 25 hours when daylight saving changes.
+            const endDay = Date.UTC(goalEndDate.getFullYear(), goalEndDate.getMonth(), goalEndDate.getDate());
+            const todayDay = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+            const days = Math.round((endDay - todayDay) / 86400000) + 1;
             if (days < 1) return 'ended';
             return days === 1 ? 'last day' : days + ' days left';
         }
@@ -3015,19 +3020,37 @@
             if (goalDayInUse === today) return false;
             let saved = goalDayInUse;
             if (saved === null) {
-                try { saved = localStorage.getItem(amountStorageKey + '_day'); } catch (e) {}
+                saved = readStoredValue(amountStorageKey + '_day');
             }
             goalDayInUse = today;
-            try { localStorage.setItem(amountStorageKey + '_day', today); } catch (e) {}
+            writeStoredValue(amountStorageKey + '_day', today);
             return saved !== null && saved !== today;
+        }
+
+        // Browser storage can be unavailable or full; keep the live overlay running in memory.
+        function readStoredValue(key) {
+            try { return localStorage.getItem(key); } catch (e) { return null; }
+        }
+
+        function writeStoredValue(key, value) {
+            try { localStorage.setItem(key, value); } catch (e) {}
+        }
+
+        function readStoredHistory() {
+            try {
+                const saved = JSON.parse(readStoredValue(historyStorageKey) || '[]');
+                return Array.isArray(saved) ? saved.filter(function(entry) {
+                    return entry && typeof entry === 'object' && !Array.isArray(entry);
+                }) : [];
+            } catch (e) { return []; }
         }
 
         function getInitialAmount() {
             if (persistent) {
-                const saved = localStorage.getItem(amountStorageKey);
+                const saved = readStoredValue(amountStorageKey);
                 if (saved !== null && saved !== '') {
                     const savedAmount = parseFloat(saved);
-                    if (!isNaN(savedAmount)) return savedAmount;
+                    if (Number.isFinite(savedAmount) && savedAmount >= 0) return savedAmount;
                 }
             }
             return startAmount !== null ? startAmount : 0;
@@ -3104,7 +3127,7 @@
 
         function saveAmount() {
             if (persistent) {
-                localStorage.setItem(amountStorageKey, currentAmount.toString());
+                writeStoredValue(amountStorageKey, currentAmount.toString());
             }
         }
 
@@ -3222,6 +3245,7 @@
         }
 
         function updateAmount(amount) {
+            if (goalDayChanged()) resetTipJarAmount(false);
             const previousAmount = currentAmount;
             currentAmount += amount;
 
@@ -3278,7 +3302,7 @@
             const completedAmount = goal * completions;
             completionCount += completions;
             if (persistent) {
-                localStorage.setItem(completionsStorageKey, completionCount.toString());
+                writeStoredValue(completionsStorageKey, completionCount.toString());
             }
             updateCompletionDisplay();
             triggerMilestone(100);
@@ -3895,7 +3919,7 @@
 
         function saveHistory() {
             if (persistent) {
-                localStorage.setItem(historyStorageKey, JSON.stringify(donationHistory));
+                writeStoredValue(historyStorageKey, JSON.stringify(donationHistory));
             }
         }
 
@@ -4490,7 +4514,7 @@ function processData(data) {
         
         // Load custom image from localStorage if available
         if (persistent && style === 'jar' && !customJarUrl) {
-            const savedImage = localStorage.getItem('tipjar_custom_image');
+            const savedImage = readStoredValue('tipjar_custom_image');
             if (savedImage) {
                 document.getElementById('cup-overlay').src = savedImage;
             }

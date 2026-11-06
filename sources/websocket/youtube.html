@@ -3869,7 +3869,7 @@ function enableBackgroundKeepAlive() {
 		}
 		if (error && error.ytStatus === 401) {
 			await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
-			if (!isCurrentLiveChatConnection(connection)) return;
+			if (!isCurrentLiveChatConnection(connection) || liveChatStreamAbortController || liveChatStreamActive) return;
 			scheduleAuthRetry();
 			return;
 		}
@@ -3936,6 +3936,7 @@ function enableBackgroundKeepAlive() {
 
 	async function readLiveChatStream(controller, token) {
 		const connection = getLiveChatConnection(controller);
+		let streamError = null;
 		try {
 			const response = await fetch(buildLiveChatStreamUrl(), {
 				signal: controller.signal,
@@ -3968,11 +3969,7 @@ function enableBackgroundKeepAlive() {
 			liveChatStreamReadBuffer += decoder.decode();
 			await processLiveChatStreamBuffer(true, connection);
 		} catch (error) {
-			if (!isCurrentLiveChatConnection(connection)) return;
-			liveChatStreamActive = false;
-			if (!liveChatStreamStopping) {
-				await handleLiveChatStreamError(error, connection);
-			}
+			streamError = error;
 		} finally {
 			if (!isCurrentLiveChatConnection(connection)) return;
 			liveChatStreamAbortController = null;
@@ -3982,6 +3979,10 @@ function enableBackgroundKeepAlive() {
 				liveChatStreamStopping = false;
 				return;
 			}
+			// Retry schedulers require the old connection to be released first.
+			connection.controller = null;
+			if (streamError) await handleLiveChatStreamError(streamError, connection);
+			if (!isCurrentLiveChatConnection(connection)) return;
 			if (!liveChatStreamStopping && liveChatId && !fetchTimeout) {
 				if (liveChatPollingFallbackActive) {
 					scheduleLiveChatPolling(Math.max(1000, youtubeRecommendedInterval || 5000));
@@ -4456,6 +4457,7 @@ function enableBackgroundKeepAlive() {
 						const giftDetails = item.snippet.giftMembershipReceivedDetails;
 						if (!isBacklogMessage) {
 							processGiftRedemption({
+								messageId: item.id,
 								videoId: richChatVideoId,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								gifterChannelId: giftDetails.gifterChannelId,
@@ -4471,6 +4473,7 @@ function enableBackgroundKeepAlive() {
 					if (item.snippet.type === 'newSponsorEvent' && item.snippet.newSponsorDetails) {
 						if (!isBacklogMessage) {
 							processNewSponsorship({
+								messageId: item.id,
 								videoId: richChatVideoId,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								memberLevelName: item.snippet.newSponsorDetails.memberLevelName,
@@ -4485,6 +4488,7 @@ function enableBackgroundKeepAlive() {
 						const giftingDetails = item.snippet.membershipGiftingDetails;
 						if (!isBacklogMessage) {
 							processGiftPurchase({
+								messageId: item.id,
 								videoId: richChatVideoId,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								giftCount: giftingDetails.giftMembershipsCount || 1,
@@ -4501,6 +4505,7 @@ function enableBackgroundKeepAlive() {
 						const milestoneDetails = item.snippet.memberMilestoneChatDetails;
 						if (!isBacklogMessage) {
 							processMemberMilestone({
+								messageId: item.id,
 								videoId: richChatVideoId,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								memberMonth: milestoneDetails.memberMonth,
@@ -4524,6 +4529,7 @@ function enableBackgroundKeepAlive() {
 							if (item.authorDetails.isChatSponsor) stickerBadges.push({"type": "text", "text": "⭐"});
 
 							processSuperSticker({
+								messageId: item.id,
 								videoId: richChatVideoId,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								amount: stickerDetails.amountDisplayString,
@@ -4574,6 +4580,7 @@ function enableBackgroundKeepAlive() {
 							if (item.authorDetails.isChatSponsor) superChatBadges.push({"type": "text", "text": "⭐"});
 
 							processSuperChat({
+								messageId: item.id,
 								videoId: richChatVideoId,
 								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								amount: item.snippet.superChatDetails.amountDisplayString,
@@ -4621,6 +4628,7 @@ function enableBackgroundKeepAlive() {
 								membershipBadges.push({"type": "text", "text": "⭐"});
 
 								processMembership({
+										messageId: item.id,
 										videoId: richChatVideoId,
 										authorName: item.authorDetails.displayName.replace(/^@/, ''),
 										level: item.snippet.membershipDetails.memberLevelName,
@@ -5921,9 +5929,13 @@ function enableBackgroundKeepAlive() {
 		}
 	}
 
+	let currentVideoMetadataGeneration = null;
 	async function refreshCurrentVideoMetadata() {
-		const videoDetails = await fetchCurrentVideoSnippet();
-		if (!videoDetails || !videoDetails.snippet) {
+		const connectionGeneration = liveChatConnectionGeneration;
+		const targetVideoId = (currentStream && currentStream.id) || videoId;
+		const videoDetails = await fetchCurrentVideoSnippet(targetVideoId);
+		if (connectionGeneration !== liveChatConnectionGeneration || !videoDetails || videoDetails.id !== targetVideoId) return null;
+		if (!videoDetails.snippet) {
 			return null;
 		}
 		const titleInput = document.getElementById('stream-title');
@@ -5938,6 +5950,7 @@ function enableBackgroundKeepAlive() {
 		if (categoryInput) {
 			categoryInput.value = videoDetails.snippet.categoryId || '';
 		}
+		currentVideoMetadataGeneration = connectionGeneration;
 		return videoDetails;
 	}
 
@@ -6151,6 +6164,7 @@ function enableBackgroundKeepAlive() {
 	}
 
 	async function maybeFetchViewerCountFallback(stats) {
+		const connectionGeneration = liveChatConnectionGeneration;
 		const videoIdForStats = currentStream && currentStream.id;
 		ensureViewerCountFallbackVideo(videoIdForStats);
 		if (!shouldTryViewerCountFallback(stats)) {
@@ -6175,11 +6189,13 @@ function enableBackgroundKeepAlive() {
 		viewerCountFallbackLastAttempt = now;
 		try {
 			const count = await fetchViewerCountFallback(videoIdForStats);
+			if (connectionGeneration !== liveChatConnectionGeneration) return null;
 			viewerCountFallbackHadSuccess = true;
 			viewerCountFallbackLastValue = count;
 			viewerCountFallbackBlockedUntil = 0;
 			return count;
 		} catch (error) {
+			if (connectionGeneration !== liveChatConnectionGeneration) return null;
 			viewerCountFallbackHadSuccess = false;
 			viewerCountFallbackLastValue = null;
 			viewerCountFallbackBlockedUntil = now + VIEWER_COUNT_FALLBACK_FAILURE_COOLDOWN_MS;
@@ -6189,6 +6205,7 @@ function enableBackgroundKeepAlive() {
 	}
 
     async function getStreamStats() {
+		const connectionGeneration = liveChatConnectionGeneration;
         if (!currentStream || !currentStream.id) return;
 		ensureViewerCountFallbackVideo(currentStream.id);
         const token = getStoredToken();
@@ -6201,6 +6218,7 @@ function enableBackgroundKeepAlive() {
             );
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
+			if (connectionGeneration !== liveChatConnectionGeneration) return;
             if (data.items && data.items.length > 0) {
                 const stats = data.items[0];
                 const concurrentViewers = stats?.liveStreamingDetails?.concurrentViewers;
@@ -6214,6 +6232,7 @@ function enableBackgroundKeepAlive() {
 					shouldEmitViewerUpdate = true;
                 } else {
 					const fallbackViewers = await maybeFetchViewerCountFallback(stats);
+					if (connectionGeneration !== liveChatConnectionGeneration) return;
 					if (fallbackViewers !== null) {
 						lastKnownViewers = fallbackViewers;
 						shouldEmitViewerUpdate = true;
@@ -6224,6 +6243,7 @@ function enableBackgroundKeepAlive() {
                 }
             }
         } catch (error) {
+			if (connectionGeneration !== liveChatConnectionGeneration) return;
             console.error('Error fetching stream stats:', error);
         }
 		if (shouldEmitViewerUpdate && lastKnownViewers !== null) {
@@ -6274,6 +6294,7 @@ function enableBackgroundKeepAlive() {
     }
 
     async function getSubscriberCount(channelIdForSubs) {
+		const connectionGeneration = liveChatConnectionGeneration;
         const token = getStoredToken();
         if (!token) return;
         try {
@@ -6283,10 +6304,12 @@ function enableBackgroundKeepAlive() {
             );
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
+			if (connectionGeneration !== liveChatConnectionGeneration) return;
             if (data.items && data.items.length > 0 && data.items[0].statistics) {
                 updateStats('subscriber_update', { meta: data.items[0].statistics.subscriberCount });
             }
         } catch (error) {
+			if (connectionGeneration !== liveChatConnectionGeneration) return;
             console.error('Error fetching subscriber count:', error);
         }
     }
@@ -6398,6 +6421,7 @@ function enableBackgroundKeepAlive() {
 		updateLookForYouTubeStreamsButton();
 	}
 	async function getChannelStats(channelIdForStats) {
+		const connectionGeneration = liveChatConnectionGeneration;
 		const token = getStoredToken();
 		if (!token) return;
 		try {
@@ -6407,6 +6431,7 @@ function enableBackgroundKeepAlive() {
 			);
 			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 			const data = await response.json();
+			if (connectionGeneration !== liveChatConnectionGeneration) return;
 			if (data.items && data.items.length > 0 && data.items[0].statistics) {
 				const stats = data.items[0].statistics;
 				if (stats.subscriberCount) {
@@ -6425,6 +6450,7 @@ function enableBackgroundKeepAlive() {
 				}
 			}
 		} catch (error) {
+			if (connectionGeneration !== liveChatConnectionGeneration) return;
 			console.error('Error fetching channel stats:', error);
 		}
 	}
@@ -6438,6 +6464,7 @@ function enableBackgroundKeepAlive() {
 		const preserveBroadcastMonitorLease = !!(monitorOptions && monitorOptions.preserveBroadcastMonitorLease);
 		hideLookForYouTubeStreamsButton();
 		clearPolling({ preserveBroadcastMonitorLease: preserveBroadcastMonitorLease });
+		const connectionGeneration = liveChatConnectionGeneration;
 		initialBacklogProcessing = true;
 		initialBacklogTimestamp = null;
 		const token = getStoredToken();
@@ -6474,8 +6501,10 @@ function enableBackgroundKeepAlive() {
 					`https://www.googleapis.com/youtube/v3/videos?part=snippet,liveStreamingDetails,statistics&id=${videoIdToUse}`,
 					5000, { 'Authorization': `Bearer ${token}` }
 				);
+				if (connectionGeneration !== liveChatConnectionGeneration) return;
 				if (!videoDetailsResponse.ok) throw new Error(`Failed to fetch video details for ${videoIdToUse}: ${videoDetailsResponse.status}`);
 				const videoDetailsData = await videoDetailsResponse.json();
+				if (connectionGeneration !== liveChatConnectionGeneration) return;
 				if (!videoDetailsData.items || videoDetailsData.items.length === 0) {
 					throw new Error(`Video not found or not accessible: ${videoIdToUse}`);
 				}
@@ -6490,6 +6519,7 @@ function enableBackgroundKeepAlive() {
 					effectiveChannelIdToUse = streamInfoToUse.snippet.channelId;
 					streamTitleToUse = streamInfoToUse.snippet.title;
 					channelInfoForHeaderAndStats = await getChannelInfo(effectiveChannelIdToUse);
+					if (connectionGeneration !== liveChatConnectionGeneration) return;
 					channelDisplayNameToUse = channelInfoForHeaderAndStats ? channelInfoForHeaderAndStats.snippet.title : streamInfoToUse.snippet.channelTitle;
 					updateHeaderInfo(username, `${channelDisplayNameToUse} (Video: ${streamTitleToUse.substring(0,20)}...)`);
 					const notLiveMessage = `This video is not currently live. Showing stats for: ${streamTitleToUse}`;
@@ -6503,6 +6533,7 @@ function enableBackgroundKeepAlive() {
 						updateStats('subscriber_update', { meta: channelInfoForHeaderAndStats.statistics.subscriberCount });
 					} else if (effectiveChannelIdToUse) {
 						await getSubscriberCount(effectiveChannelIdToUse);
+						if (connectionGeneration !== liveChatConnectionGeneration) return;
 					}
 					const endedSourceImage = channelInfoForHeaderAndStats
 						? resolveThumbnailUrl(channelInfoForHeaderAndStats?.snippet?.thumbnails)
@@ -6518,6 +6549,7 @@ function enableBackgroundKeepAlive() {
 					effectiveChannelIdToUse = streamInfoToUse.snippet.channelId;
 					streamTitleToUse = streamInfoToUse.snippet.title;
 					channelInfoForHeaderAndStats = await getChannelInfo(effectiveChannelIdToUse);
+					if (connectionGeneration !== liveChatConnectionGeneration) return;
 					channelDisplayNameToUse = channelInfoForHeaderAndStats ? channelInfoForHeaderAndStats.snippet.title : streamInfoToUse.snippet.channelTitle;
 					updateHeaderInfo(username, `${channelDisplayNameToUse} (Upcoming: ${streamTitleToUse.substring(0,20)}...)`);
 					if (!liveChatId) {
@@ -6534,6 +6566,7 @@ function enableBackgroundKeepAlive() {
 					effectiveChannelIdToUse = streamInfoToUse.snippet.channelId;
 					streamTitleToUse = streamInfoToUse.snippet.title;
 					channelInfoForHeaderAndStats = await getChannelInfo(effectiveChannelIdToUse);
+					if (connectionGeneration !== liveChatConnectionGeneration) return;
 					channelDisplayNameToUse = channelInfoForHeaderAndStats ? channelInfoForHeaderAndStats.snippet.title : streamInfoToUse.snippet.channelTitle;
 					updateHeaderInfo(username, `${channelDisplayNameToUse} (Live: ${streamTitleToUse.substring(0,20)}...)`);
 				}
@@ -6542,6 +6575,7 @@ function enableBackgroundKeepAlive() {
 
 			} else if (channelToUse) {
                 channelInfoForHeaderAndStats = await getChannelInfo(channelToUse);
+                if (connectionGeneration !== liveChatConnectionGeneration) return;
                 if (!channelInfoForHeaderAndStats) {
                     throw new Error(`Channel not found: ${channelToUse}`);
                 }
@@ -6549,6 +6583,7 @@ function enableBackgroundKeepAlive() {
                 effectiveChannelIdToUse = channelInfoForHeaderAndStats.id;
                 updateHeaderInfo(username, channelDisplayNameToUse);
                 streamInfoToUse = await getLiveStreamInfo(effectiveChannelIdToUse);
+                if (connectionGeneration !== liveChatConnectionGeneration) return;
                 if (!streamInfoToUse) {
                     if (channelInfoForHeaderAndStats.statistics && channelInfoForHeaderAndStats.statistics.subscriberCount) {
                         updateStats('subscriber_update', { meta: channelInfoForHeaderAndStats.statistics.subscriberCount });
@@ -6556,7 +6591,9 @@ function enableBackgroundKeepAlive() {
                     throw new Error(`No active live stream found for channel: ${channelDisplayNameToUse}`);
                 }
                 streamTitleToUse = streamInfoToUse.snippet.title;
-                liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId || await getLiveChatId(streamInfoToUse.id);
+                const resolvedChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId || await getLiveChatId(streamInfoToUse.id);
+                if (connectionGeneration !== liveChatConnectionGeneration) return;
+                liveChatId = resolvedChatId;
                  if (!liveChatId && streamInfoToUse.snippet.liveBroadcastContent === 'upcoming') {
                     console.log(`Stream "${streamTitleToUse}" is upcoming. Chat may not be available yet.`);
                 } else if (!liveChatId) {
@@ -6599,6 +6636,7 @@ function enableBackgroundKeepAlive() {
                 updateStats('subscriber_update', { meta: channelInfoForHeaderAndStats.statistics.subscriberCount });
             } else if (effectiveChannelIdToUse) {
                 await getSubscriberCount(effectiveChannelIdToUse);
+                if (connectionGeneration !== liveChatConnectionGeneration) return;
             }
 		   if (liveChatId) {
 				const chatAvailableMessage = document.createElement("div");
@@ -6661,6 +6699,7 @@ function enableBackgroundKeepAlive() {
             if (channelInput.value && channelToUse) channelInput.value = '';
 			updateLookForYouTubeStreamsButton();
         } catch (error) {
+			if (connectionGeneration !== liveChatConnectionGeneration) return;
 			releaseYouTubeBroadcastMonitorLease();
             console.error('Error connecting to YouTube:', error);
 			notifyYouTubeWssStatus('error', error && error.message ? error.message : 'YouTube connection failed', { code: 'youtube_connect_error' });
@@ -6883,6 +6922,7 @@ function enableBackgroundKeepAlive() {
 				if (textarea) {
 					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
+					if (superChatData.messageId) span.dataset.youtubeMessageId = String(superChatData.messageId);
 					const safeAuthor = strictEscapeHtml(superChatData.authorName || '');
 					const safeAmount = strictEscapeHtml(superChatData.amount || '');
 					const safeMessage = strictEscapeHtml(superChatData.message || '');
@@ -6908,6 +6948,7 @@ function enableBackgroundKeepAlive() {
 				chatmessage: superChatData.message || '',
 				chatimg: superChatData.profileImageUrl || "",
 				videoid: superChatData.videoId || "",
+				meta: superChatData.messageId ? { messageId: String(superChatData.messageId) } : undefined,
 				hasDonation: superChatData.amount,
 				membership: "",
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
@@ -6939,6 +6980,7 @@ function enableBackgroundKeepAlive() {
 				if (textarea) {
 					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
+					if (giftData.messageId) span.dataset.youtubeMessageId = String(giftData.messageId);
 					const safeAuthor = strictEscapeHtml(giftData.authorName || '');
 					const safeGiftLabel = strictEscapeHtml(giftLabel);
 					const safeJewels = strictEscapeHtml(jewelText);
@@ -6981,7 +7023,7 @@ function enableBackgroundKeepAlive() {
 				event: "jeweldonation",
 				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false,
-				meta: { youtubeGift: metaGift }
+				meta: { youtubeGift: metaGift, messageId: giftData.messageId ? String(giftData.messageId) : undefined }
 			};
 			if (giftData.giftUrl) {
 				payload.contentimg = giftData.giftUrl;
@@ -7041,6 +7083,7 @@ function enableBackgroundKeepAlive() {
 				let nameColor = !settings.nosubcolor ? "#107516" : "";
 				let eventName = "sponsorship";
 				const membershipMeta = {};
+				if (membershipData.messageId) membershipMeta.messageId = String(membershipData.messageId);
 
 				if (providedEventType) {
 					membershipMeta.originalEventType = providedEventType;
@@ -7083,6 +7126,7 @@ function enableBackgroundKeepAlive() {
 					if (textarea) {
 						const shouldStick = shouldStickToBottom(textarea);
 						var span = document.createElement("div");
+						if (membershipData.messageId) span.dataset.youtubeMessageId = String(membershipData.messageId);
 						span.innerHTML = `<strong>${strictEscapeHtml(membershipData.authorName || '')}</strong> <span>${strictEscapeHtml(displayMessage)}</span>`;
 						textarea.appendChild(span);
 						
@@ -7136,6 +7180,7 @@ function enableBackgroundKeepAlive() {
 				if (textarea) {
 					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
+					if (giftData.messageId) span.dataset.youtubeMessageId = String(giftData.messageId);
 					span.innerHTML = `<strong>${strictEscapeHtml(giftData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
@@ -7161,6 +7206,7 @@ function enableBackgroundKeepAlive() {
 				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: giftData.profileImageUrl || "",
 				videoid: giftData.videoId || "",
+				meta: giftData.messageId ? { messageId: String(giftData.messageId) } : undefined,
 				hasDonation: "",
 				membership: "gift_recipient",
 				subtitle: giftData.memberLevelName,
@@ -7194,6 +7240,7 @@ function enableBackgroundKeepAlive() {
 				if (textarea) {
 					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
+					if (giftData.messageId) span.dataset.youtubeMessageId = String(giftData.messageId);
 					span.innerHTML = `<strong>${strictEscapeHtml(giftData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
@@ -7219,6 +7266,7 @@ function enableBackgroundKeepAlive() {
 				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: giftData.profileImageUrl || "",
 				videoid: giftData.videoId || "",
+				meta: giftData.messageId ? { messageId: String(giftData.messageId) } : undefined,
 				hasDonation: "",
 				membership: "gift_giver",
 				subtitle: levelDescriptor,
@@ -7246,6 +7294,7 @@ function enableBackgroundKeepAlive() {
 				if (textarea) {
 					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
+					if (sponsorData.messageId) span.dataset.youtubeMessageId = String(sponsorData.messageId);
 					span.innerHTML = `<strong>${strictEscapeHtml(sponsorData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
@@ -7271,6 +7320,7 @@ function enableBackgroundKeepAlive() {
 				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: sponsorData.profileImageUrl || "",
 				videoid: sponsorData.videoId || "",
+				meta: sponsorData.messageId ? { messageId: String(sponsorData.messageId) } : undefined,
 				hasDonation: "",
 				membership: "new_sponsor",
 				subtitle: sponsorData.memberLevelName,
@@ -7316,6 +7366,7 @@ function enableBackgroundKeepAlive() {
 				if (textarea) {
 					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
+					if (milestoneData.messageId) span.dataset.youtubeMessageId = String(milestoneData.messageId);
 					span.innerHTML = `<strong>${strictEscapeHtml(milestoneData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
@@ -7341,6 +7392,7 @@ function enableBackgroundKeepAlive() {
 				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: milestoneData.profileImageUrl || "",
 				videoid: milestoneData.videoId || "",
+				meta: milestoneData.messageId ? { messageId: String(milestoneData.messageId) } : undefined,
 				hasDonation: "",
 				membership: "member_milestone",
 				subtitle: levelDescriptor,
@@ -7715,6 +7767,7 @@ function enableBackgroundKeepAlive() {
 				if (textarea) {
 					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
+					if (stickerData.messageId) span.dataset.youtubeMessageId = String(stickerData.messageId);
 					// Use the actual message or alt text for display
 					const stickerText = actualMessage || stickerData.altText || getTranslation("super-sticker-text", "Super Sticker");
 					const safeStickerAuthor = strictEscapeHtml(stickerData.authorName || '');
@@ -7750,6 +7803,7 @@ function enableBackgroundKeepAlive() {
 				contentimg: stickerUrl,
 				chatimg: stickerData.profileImageUrl || "",
 				videoid: stickerData.videoId || "",
+				meta: stickerData.messageId ? { messageId: String(stickerData.messageId) } : undefined,
 				hasDonation: stickerData.amount,
 				membership: "",
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
@@ -7955,6 +8009,10 @@ function enableBackgroundKeepAlive() {
 			const updateStreamInfoHandler = function() {
 				if (!hasYouTubeWriteAccess()) {
 					addEvent(getWriteAccessRequiredMessage());
+					return;
+				}
+				if (currentVideoMetadataGeneration !== liveChatConnectionGeneration) {
+					addEvent('Load current YouTube metadata before updating');
 					return;
 				}
 				updateCurrentVideoMetadata({

@@ -3,7 +3,21 @@
     var params = new URLSearchParams(location.search), field = document.getElementById('giveaway'), status = document.getElementById('status');
     field.value = params.get('giveaway') || 'default';
     var native = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage, bridge, peer, pending = new Map(), state = null, history = [], entryPage = 1;
-    var busy = false, refreshing = false, actionVersion = 0, entriesLoaded = false;
+    var busy = false, refreshing = false, actionVersion = 0, entriesLoaded = false, statusError = false;
+    function updateButtons() {
+        var current = state && state.giveawayId === (field.value.trim() || 'default') ? state : null;
+        var labels = {
+            startgiveaway: [current && current.open, 'Open entries', '\u25cf Entries open'],
+            closegiveaway: [current && current.status === 'locked', 'Close entries', '\u23f8 Entries closed'],
+            drawgiveaway: [current && current.status === 'completed', 'Draw winner', '\u2713 Draw complete'],
+            cancelgiveaway: [current && current.status === 'cancelled', 'Cancel and refund', '\u25a0 Cancelled']
+        };
+        document.querySelectorAll('[data-action]').forEach(function(button) {
+            var label = labels[button.dataset.action];
+            button.classList.toggle('giveaway-current', !!(label && label[0]));
+            if (label) button.textContent = label[label[0] ? 2 : 1];
+        });
+    }
     // Extension feeds do not return manager command replies; keep their P2P bridge.
     var relayMode = params.has('server') || (params.has('localserver') && !params.has('server2') && !params.has('server3')), socket, retry, refreshRetry, stopped = false;
     function id() { return Date.now().toString(36) + '-' + Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-'); }
@@ -39,8 +53,11 @@
     function describe(s) {
         if (s.giveawayId !== (field.value.trim() || 'default')) return;
         state = s;
+        updateButtons();
+        statusError = false;
         status.textContent = s.giveawayId + ': ' + s.status + ' — ' + s.count + ' viewers, ' + s.ticketCount + ' tickets.' + (s.outcome ? ' ' + s.outcome + ' wins.' : '');
-        document.getElementById('rules').textContent = s.config.kind === 'number' ? '!guess ' + s.giveawayId + ' NUMBER — guess ' + (s.number ? s.number.low + '–' + s.number.high : '1–100') + '; one guess per viewer every 5 seconds; ' + s.config.prizePoints + ' point prize. The first correct guess wins automatically.' :
+        if (s.open && s.endsAt) status.textContent += ' Draw in ' + Math.max(0, Math.ceil((s.endsAt - Date.now()) / 1000)) + 's.';
+        document.getElementById('rules').textContent = s.config.kind === 'trivia' ? s.config.triviaQuestion + ' Answer with !answer ' + s.giveawayId + ' YOUR ANSWER. Correct answers earn one entry per viewer.' : s.config.kind === 'number' ? '!guess ' + s.giveawayId + ' NUMBER — guess ' + (s.number ? s.number.low + '–' + s.number.high : '1–100') + '; one guess per viewer every 5 seconds; ' + s.config.prizePoints + ' point prize. The first correct guess wins automatically.' :
             s.config.kind === 'coin' ? '!ticket ' + s.giveawayId + ' COUNT heads (or tails) — 1 point per stake. Winners split the pot.' :
             s.config.ticketCost ? '!ticket ' + s.giveawayId + ' COUNT — ' + s.config.ticketCost + ' points per ticket; maximum ' + s.config.maxTickets + ' per viewer; ' + s.config.prizePoints + ' point prize per winner.' :
                 s.keyword + ' — one free entry per viewer; ' + s.config.prizePoints + ' point prize per winner.';
@@ -76,6 +93,7 @@
         await work();
     }
     catch (e) {
+        statusError = true;
         status.textContent = e.message;
     }
     finally {
@@ -103,9 +121,10 @@
     document.querySelectorAll('[data-action]').forEach(function (b) { b.onclick = function () { run(async function () { var value = { giveawayId: field.value, operationId: id() }; if (state && state.giveawayId === field.value)
         value.roundId = state.roundId; if (b.dataset.action === 'startgiveaway' && state)
         value.config = state.config; describe((await call(b.dataset.action, value)).giveaway); if (entriesLoaded) await loadEntries(); await loadHistory(); }); }; });
-    field.oninput = function () { actionVersion++; state = null; entriesLoaded = false; entryPage = 1; document.getElementById('entries').textContent = ''; status.textContent = 'Refresh to inspect this giveaway.'; };
+    field.oninput = function () { actionVersion++; state = null; updateButtons(); entriesLoaded = false; entryPage = 1; document.getElementById('entries').textContent = ''; status.textContent = 'Refresh to inspect this giveaway.'; };
     async function refreshStatus() {
         if (busy || refreshing || document.hidden || (!native && (relayMode ? !socket || socket.readyState !== WebSocket.OPEN : !peer))) return;
+        if (!statusError && state && state.open && state.endsAt) describe(state);
         var requestedId = field.value.trim() || 'default', version = actionVersion;
         refreshing = true;
         try {

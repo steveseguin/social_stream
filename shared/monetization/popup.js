@@ -345,6 +345,7 @@
             if (serverValue && /^wss?:\/\//i.test(serverValue)) control.searchParams.set('server', serverValue);
             by('control-dock').href = control.href;
             var breaksURL = new URL(control.href); breaksURL.searchParams.delete('commerce'); breaksURL.searchParams.set('breaks', ''); if (connectionParams.has('server2')) breaksURL.searchParams.set('server2', connectionParams.get('server2')); breaksURL.hash = breaksKey ? 'breakKey=' + breaksKey : ''; breaksLink.href = breaksURL.href;
+            if (lastResponse.password) { breaksURL.searchParams.set('password', lastResponse.password); breaksLink.href = breaksURL.href; }
             loadBreaksKey();
             by('overlay').href = u.href;
 			by('overlay').textContent = tr('money-open-overlay', 'Open overlay') + ': ' + by('mode').options[by('mode').selectedIndex].textContent;
