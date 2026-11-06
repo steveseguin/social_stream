@@ -4107,7 +4107,7 @@ async function processMessageWithOllama(data, idx=null, queuedEntry=null) {
       if (!youtubeReplyVideoId) {
         const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
         const sourceTab = tabs.find(tab => String(tab.id) === String(data.tid));
-        youtubeReplyVideoId = getYouTubeReplyVideoId(sourceTab && sourceTab.url) || '';
+        youtubeReplyVideoId = await getYouTubeReplyVideoIdForTab(sourceTab) || '';
       }
     }
 

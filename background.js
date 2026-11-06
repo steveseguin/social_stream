@@ -809,6 +809,7 @@ if (typeof chrome.runtime == "undefined") {
 	};
 
 	chrome.tabs = {};
+	const ssappTabUrls = new Map();
 	ipcRenderer.on("youtube-source-closed", (event, tabId) => {
 		if (!Number.isInteger(tabId) || tabId <= 0) return;
 		// SSApp has no tabs.onRemoved event; clear only the YouTube source gate.
@@ -818,6 +819,19 @@ if (typeof chrome.runtime == "undefined") {
 	});
 	chrome.tabs.query = async function (a, callback) {
 		var response = await ipcRenderer.sendSync("getTabs", {});
+		// Electron has no tabs.onUpdated/onRemoved events to invalidate this cache.
+		const currentIds = new Set();
+		for (const tab of response) {
+			currentIds.add(tab.id);
+			if (ssappTabUrls.get(tab.id) !== tab.url) tabSourceCache.delete(tab.id);
+			ssappTabUrls.set(tab.id, tab.url);
+		}
+		for (const id of ssappTabUrls.keys()) {
+			if (!currentIds.has(id)) {
+				ssappTabUrls.delete(id);
+				tabSourceCache.delete(id);
+			}
+		}
 
 		log("chrome.tabs.query");
 		log(response);
@@ -17044,7 +17058,8 @@ function createRelayTabContext(tab, data, now, relayMode, messageOrigin, shouldC
 	const throttleOptions = {
 		origin: messageOrigin || "relay",
 		dropProtected: messageOrigin === "host",
-		priority: messageOrigin === "host" ? 1 : 0
+		priority: messageOrigin === "host" ? 1 : 0,
+		youtubeReplyVideoId: data.youtubeReplyVideoId
 	};
 
 	return {
@@ -17086,14 +17101,15 @@ function isWebsocketSourceTabUrl(url) {
 	return !!(url && url.includes("/sources/websocket/") && (url.includes("socialstream.ninja") || url.startsWith("file://") || url.startsWith("chrome-extension://")));
 }
 
-function relayMessageToWebsocketSourceTab(tabId, message, messageOrigin = "relay") {
+function relayMessageToWebsocketSourceTab(tabId, message, messageOrigin = "relay", youtubeReplyVideoId) {
 	try {
 		chrome.tabs.sendMessage(
 			tabId,
 			{
 				type: "SEND_MESSAGE",
 				message: message,
-				messageOrigin: messageOrigin
+				messageOrigin: messageOrigin,
+				...(youtubeReplyVideoId !== undefined ? { youtubeReplyVideoId } : {})
 			},
 			function () {
 				chrome.runtime.lastError;
@@ -17237,7 +17253,7 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 	}
 
 	if (isWebsocketSourceTabUrl(url) || (isSSAPP && tab.virtualSourceTarget === "discord")) {
-		if (relayMessageToWebsocketSourceTab(tab.id, data.response, messageOrigin)) {
+		if (relayMessageToWebsocketSourceTab(tab.id, data.response, messageOrigin, data.youtubeReplyVideoId)) {
 			relayTabContext.storeMessage(data.response);
 			lastSentMessage = sanitizeMessageForTracking(data.response, false);
 			lastSentTimestamp = now;
@@ -17320,6 +17336,35 @@ function getYouTubeReplyVideoId(url) {
 		}
 	} catch (e) {}
 	return null;
+}
+
+async function getYouTubeReplyVideoIdForTab(tab) {
+	if (!tab || !tab.url) return null;
+	if (isWebsocketSourceTabUrl(tab.url) && getWebsocketSourcePlatformFromUrl(tab.url) === "youtube") {
+		// API sources can discover or switch streams without navigating the page.
+		return new Promise(resolve => {
+			const timer = setTimeout(() => resolve(null), 1000);
+			try {
+				chrome.tabs.sendMessage(tab.id, "getYouTubeVideoId", videoId => {
+					clearTimeout(timer);
+					chrome.runtime.lastError;
+					resolve(typeof videoId === "string" && videoId ? videoId : null);
+				});
+			} catch (e) {
+				clearTimeout(timer);
+				resolve(null);
+			}
+		});
+	}
+	return getYouTubeReplyVideoId(tab.url);
+}
+
+async function isCurrentYouTubeReplyTarget(tabId, videoId) {
+	if (videoId === undefined) return true;
+	if (!videoId) return false;
+	const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
+	const tab = tabs.find(entry => String(entry.id) === String(tabId));
+	return await getYouTubeReplyVideoIdForTab(tab) === videoId;
 }
 
 async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 0) {
@@ -17405,7 +17450,8 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		// Filter before either dispatch pass so URL fallback cannot broaden it.
 		if (messageOrigin === "chatbot" && data.youtubeReplyVideoId !== undefined) {
 			if (!data.youtubeReplyVideoId) return false;
-			tabs = tabs.filter(tab => getYouTubeReplyVideoId(tab.url) === data.youtubeReplyVideoId);
+			const videoIds = await Promise.all(tabs.map(tab => getYouTubeReplyVideoIdForTab(tab)));
+			tabs = tabs.filter((tab, index) => videoIds[index] === data.youtubeReplyVideoId);
 		}
 
 		const roleRoutingReverse = reverse || !!chatbotDestinationRoles.length;
@@ -18172,6 +18218,7 @@ async function generalFakeChat(
 	pointerFocusSelectors = null
 ) {
 	const normalizedTimeout = typeof overrideTimeout === "number" ? overrideTimeout : 0;
+	const youtubeReplyVideoId = throttleOptions ? throttleOptions.youtubeReplyVideoId : undefined;
 	const resolvedProfile = resolveThrottleProfile(tabId, throttleProfile, normalizedTimeout);
 	const queueOptions = throttleOptions
 		? {
@@ -18194,7 +18241,8 @@ async function generalFakeChat(
 				delayedPress,
 				modifierKey,
 				primingEnter,
-				pointerFocusSelectors
+				pointerFocusSelectors,
+				youtubeReplyVideoId
 			},
 			queueOptions
 		);
@@ -18208,12 +18256,15 @@ async function generalFakeChat(
 		delayedPress,
 		modifierKey,
 		primingEnter,
-		pointerFocusSelectors
+		pointerFocusSelectors,
+		youtubeReplyVideoId
 	});
 }
 
-async function performGeneralFakeChatSend(tabId, { message, middle = true, keypress = true, backspace = false, delayedPress = false, modifierKey = null, primingEnter = false, pointerFocusSelectors = null }) {
+async function performGeneralFakeChatSend(tabId, { message, middle = true, keypress = true, backspace = false, delayedPress = false, modifierKey = null, primingEnter = false, pointerFocusSelectors = null, youtubeReplyVideoId }) {
 	try {
+		// A queued reply must not follow a window to a different stream.
+		if (youtubeReplyVideoId !== undefined && !(await isCurrentYouTubeReplyTarget(tabId, youtubeReplyVideoId))) return;
 		await new Promise((resolve, reject) => {
 			safeDebuggerAttach(tabId, "1.3", error => {
 				if (error) {
@@ -18278,7 +18329,15 @@ async function performGeneralFakeChatSend(tabId, { message, middle = true, keypr
 			await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.BACKSPACE);
 		}
 
+		if (youtubeReplyVideoId !== undefined && !(await isCurrentYouTubeReplyTarget(tabId, youtubeReplyVideoId))) {
+			await delayedDetach(tabId);
+			return;
+		}
 		await insertText(tabId, message);
+		if (youtubeReplyVideoId !== undefined && !(await isCurrentYouTubeReplyTarget(tabId, youtubeReplyVideoId))) {
+			await delayedDetach(tabId);
+			return;
+		}
 
 		// Build Enter key event with optional modifier (e.g., Ctrl+Enter for X.com)
 		const enterKeyEvent = modifierKey && MODIFIER_KEYS[modifierKey] ? { ...KEY_EVENTS.ENTER, modifiers: MODIFIER_KEYS[modifierKey] } : KEY_EVENTS.ENTER;

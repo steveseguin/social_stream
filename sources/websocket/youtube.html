@@ -4406,6 +4406,7 @@ function enableBackgroundKeepAlive() {
 							: null;
 						queueMessage({
 							messageId: item.id,
+							videoId: richChatVideoId,
 							authorName: item.authorDetails.displayName.replace(/^@/, ''),
 							message: item.snippet.displayMessage || item.snippet.textMessageDetails?.messageText || '',
 							plainTextMessage: textMessageDetails.messageText || '',
@@ -4558,6 +4559,7 @@ function enableBackgroundKeepAlive() {
 								const membershipDetailsCopy = item.snippet.membershipDetails ? { ...item.snippet.membershipDetails } : null;
 								const membershipPayload = {
 									messageId: item.id,
+									videoId: richChatVideoId,
 									authorName: item.authorDetails.displayName.replace(/^@/, ''),
 									message: membershipMessage,
 									plainTextMessage: membershipMessage,
@@ -5816,7 +5818,8 @@ function enableBackgroundKeepAlive() {
 	}
 		
 	
-    async function sendChatMessage(message) {
+    async function sendChatMessage(message, expectedVideoId) {
+		if (expectedVideoId !== undefined && (!expectedVideoId || !currentStream || currentStream.id !== expectedVideoId)) return null;
 		const token = getStoredToken();
 		if (!token || !liveChatId || !hasYouTubeWriteAccess()) return null;
 		try {
@@ -6049,6 +6052,7 @@ function enableBackgroundKeepAlive() {
 	}
 
 	function notifyVideoChange(videoId, channelId) {
+		document.documentElement.dataset.youtubeVideoId = liveChatId ? (videoId || '') : '';
 		window.dispatchEvent(new CustomEvent('youtubeVideoChanged', {
 			detail: {
 				videoId: videoId || null,
@@ -6298,6 +6302,7 @@ function enableBackgroundKeepAlive() {
 		lastMessageTime = null;
 		lastMessageTimeIds.clear();
 		currentStream = null;
+		delete document.documentElement.dataset.youtubeVideoId;
 		channelEmojiFetchToken++;
 		channelEmojiAssetsReady = true;
 		clearChannelEmojiEntries();
@@ -6791,7 +6796,7 @@ function enableBackgroundKeepAlive() {
 						chatmessage: finalChatMessage,
 						chatimg: messageData.profileImageUrl || "",
 						hasDonation: "",
-						videoid: videoId,
+						videoid: messageData.videoId || (currentStream && currentStream.id) || "",
 						membership: membershipStatus,
 						mod: messageData.isChatModerator || false,
 						type: youtubeShorts ? "youtubeshorts" : "youtube",
@@ -8118,7 +8123,7 @@ function enableBackgroundKeepAlive() {
 				reportOutboundChatFailure(getWriteAccessRequiredMessage());
 				return;
 			}
-			sendChatMessage(e.detail.message).catch(error => {
+			sendChatMessage(e.detail.message, e.detail.youtubeReplyVideoId).catch(error => {
 				console.error('Failed to send extension message:', error);
 				reportOutboundChatFailure('YouTube host chat failed to send: ' + (error && error.message ? error.message : error));
 			});
