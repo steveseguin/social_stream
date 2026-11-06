@@ -4335,6 +4335,7 @@ function enableBackgroundKeepAlive() {
 			youtubeApiMessageIds.set(getYouTubeMessageKey(item.id), item.id);
 			if (youtubeApiMessageIds.size > 5000) youtubeApiMessageIds.delete(youtubeApiMessageIds.keys().next().value);
 		});
+		// Snapshot the origin before enrichment can wait while the connection changes.
 		const richChatVideoId = (currentStream && currentStream.id) || videoId;
 		if (normalizedItems.length > 0 && richChatVideoId) {
 			const richChatPromise = syncYouTubeRichChatData(richChatVideoId).catch(function(error) {
