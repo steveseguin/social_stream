@@ -301,6 +301,14 @@
                     ><input id="optFollows" type="checkbox" checked /> New
                     followers</label
                 >
+                <!-- Standalone only: through the extension or the desktop app,
+                     the viewer count follows Social Stream's own
+                     "showviewercount" / "hypemode" settings instead. Can also be
+                     turned on from the address with ?viewers=1. -->
+                <label id="viewersRow"
+                    ><input id="optViewers" type="checkbox" /> Viewer
+                    count</label
+                >
             </div>
 
             <button id="connect" type="button">Connect</button>
@@ -334,39 +342,60 @@
 
         <script>
             /*
-             * On Social Stream's own hosts the manifest injects houla.js as a content
-             * script, so we must NOT load it again here — it would run twice and send
-             * every comment twice. This list mirrors the `matches` of that manifest
-             * entry; anywhere else (this page hosted by Hou.la, a local copy) we load
-             * the socket client and the source script ourselves.
+             * On Social Stream's own hosts the manifest MAY inject houla.js as a
+             * content script; loading it again here would run it twice and send
+             * every comment twice. But a host match alone proves nothing: the same
+             * page also opens in a normal browser or in OBS, with no extension at
+             * all. So we wait for the injected copy to announce itself (houla.js
+             * sets data-houla-source on <html> and fires "houla-source-ready";
+             * both cross the content-script boundary) and load our own copy only
+             * if nothing did. houla.js keeps its own single-initialization guard
+             * on that same attribute, so a late injection can never run twice.
              */
             ;(function () {
+                var root = document.documentElement
+                var loaded = false
+                var injected = function () {
+                    return root.hasAttribute('data-houla-source')
+                }
+
+                function loadFallback() {
+                    if (loaded || injected()) return
+                    loaded = true
+                    var io = document.createElement('script')
+                    // Same shared client the manifest injects (shared/vendor).
+                    io.src = '../../shared/vendor/socket.io.min.js'
+                    io.onload = function () {
+                        if (injected()) return
+                        var source = document.createElement('script')
+                        source.src = 'houla.js'
+                        document.head.appendChild(source)
+                    }
+                    io.onerror = function () {
+                        document.getElementById('status').textContent =
+                            'Socket.IO client failed to load.'
+                    }
+                    document.head.appendChild(io)
+                }
+
                 var host = location.hostname.toLowerCase()
-                var injected =
+                var mayInject =
                     /(^|\.)socialstream\.ninja$/.test(host) ||
                     location.protocol === 'file:' ||
                     (/^(127\.0\.0\.1|localhost)$/.test(host) &&
                         /^(8080|8181)$/.test(location.port))
-                if (injected) {
-                    // Nothing else will happen until the extension injects the source
-                    // script — say so, rather than sitting on "Loading…" forever.
-                    document.getElementById('status').textContent =
-                        'Waiting for the Social Stream extension to inject the Hou.la source…'
-                    return
-                }
+                if (!mayInject) return loadFallback()
 
-                var io = document.createElement('script')
-                io.src = 'socket.io.min.js'
-                io.onload = function () {
-                    var source = document.createElement('script')
-                    source.src = 'houla.js'
-                    document.head.appendChild(source)
+                document.getElementById('status').textContent =
+                    'Waiting for the Social Stream extension…'
+                // The manifest entry runs at document_idle, i.e. around the load
+                // event: give it a short grace period after that, then fall back.
+                var GRACE_MS = 1500
+                var arm = function () {
+                    setTimeout(loadFallback, GRACE_MS)
                 }
-                io.onerror = function () {
-                    document.getElementById('status').textContent =
-                        'Socket.IO client failed to load.'
-                }
-                document.head.appendChild(io)
+                if (document.readyState === 'complete') arm()
+                else window.addEventListener('load', arm, { once: true })
             })()
         </script>
     </body>

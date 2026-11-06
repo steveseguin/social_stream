@@ -12,8 +12,9 @@
  *   2. standalone app source window (page world)  -> window.ninjafy.sendMessage
  *   3. plain browser tab / OBS browser source     -> wss://io.socialstream.ninja
  *
- * In (1) the manifest injects this file, so houla.html deliberately does NOT
- * load it itself — running twice would send every comment twice.
+ * In (1) the manifest injects this file. houla.html only loads its own copy
+ * when no injected copy announced itself (see INIT_ATTR): running twice would
+ * send every comment twice.
  *
  * The key is self-scoped: it only ever receives the events of the workspace it
  * belongs to, and cannot post in chat or spend coins. It is still a SECRET: it
@@ -22,11 +23,28 @@
  * declares its paid commands with) it cannot acknowledge paid commands either.
  *
  * Requires a Socket.IO v4 client on the same world (`io`). Upstream that is
- * ./shared/vendor/socket.io.min.js loaded by the manifest entry, exactly like
- * the Velora source does; self-hosted it is the sibling socket.io.min.js.
+ * ./shared/vendor/socket.io.min.js, loaded by the manifest entry or, without
+ * the extension, by houla.html itself — exactly like the Velora source does.
  */
 (function () {
     'use strict';
+
+    /*
+     * Single-initialization guard. The extension runs us in an isolated world
+     * and houla.html may load a page-world copy as a fallback: the two do not
+     * share `window`, but they do share the DOM. Whichever copy starts first
+     * claims <html data-houla-source> and announces it ("houla-source-ready"),
+     * which is also the handshake houla.html waits for; any later copy bails.
+     */
+    var INIT_ATTR = 'data-houla-source';
+    var INIT_EVENT = 'houla-source-ready';
+    if (window.__SSN_HOULA_SOURCE_INITIALIZED__) return;
+    try {
+        if (document.documentElement.hasAttribute(INIT_ATTR)) return;
+    } catch (e) {
+        /* no DOM yet — nothing to guard against */
+    }
+    window.__SSN_HOULA_SOURCE_INITIALIZED__ = true;
 
     // ───────────────────────────── constants ─────────────────────────────────
 
@@ -178,6 +196,13 @@
 
     var transport = detectTransport();
 
+    try {
+        document.documentElement.setAttribute(INIT_ATTR, transport);
+        document.dispatchEvent(new CustomEvent(INIT_EVENT, { detail: transport }));
+    } catch (e) {
+        /* the attribute alone is enough for the handshake */
+    }
+
     /**
      * `?api=` override, for testing against a development API.
      *
@@ -229,19 +254,68 @@
      */
     var useSourceImg = transport !== 'extension';
 
-    function sendToSsn(data) {
+    /**
+     * Hand one message to SSN. Returns true once it has actually left.
+     *
+     * On the standalone WebSocket a message that arrives while the link is
+     * (re)connecting is QUEUED rather than dropped, unless `noQueue` is set
+     * (viewer counts: a stale count is worse than none). `dedupKey` is the
+     * business id isDuplicate() recorded: it stays "seen" while the message
+     * waits, and is forgotten again if the message is ever dropped, so a replay
+     * after a reconnect can still deliver it.
+     */
+    function sendToSsn(data, dedupKey, noQueue) {
         try {
             if (transport === 'extension') {
                 chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function () {});
-            } else if (transport === 'ninjafy') {
+                return true;
+            }
+            if (transport === 'ninjafy') {
                 // Signature mirrors chrome.runtime.sendMessage — first arg unused.
                 window.ninjafy.sendMessage(null, { message: data });
-            } else if (ssnSocket && ssnSocket.readyState === 1) {
+                return true;
+            }
+            if (ssnJoined && ssnSocket && ssnSocket.readyState === 1) {
                 ssnSocket.send(JSON.stringify(data));
+                return true;
             }
         } catch (e) {
             log('send failed: ' + (e && e.message));
         }
+        if (transport === 'wss' && !noQueue && running) {
+            enqueueSsn(data, dedupKey);
+        } else {
+            forgetSeen(dedupKey);
+        }
+        return false;
+    }
+
+    function enqueueSsn(data, dedupKey) {
+        ssnQueue.push({ data: data, key: dedupKey || null });
+        while (ssnQueue.length > SSN_QUEUE_MAX) {
+            var dropped = ssnQueue.shift();
+            forgetSeen(dropped.key);
+            log('outgoing queue full — dropped the oldest message');
+        }
+    }
+
+    /** Called once the join went out: deliver what waited, oldest first. */
+    function flushSsnQueue() {
+        while (ssnQueue.length && ssnJoined && ssnSocket && ssnSocket.readyState === 1) {
+            try {
+                ssnSocket.send(JSON.stringify(ssnQueue[0].data));
+            } catch (e) {
+                log('send failed: ' + (e && e.message));
+                return; // keep it: the next join retries
+            }
+            ssnQueue.shift();
+        }
+    }
+
+    /** Stop or session change: what waited was meant for the old session. */
+    function clearSsnQueue() {
+        for (var i = 0; i < ssnQueue.length; i++) forgetSeen(ssnQueue[i].key);
+        ssnQueue = [];
     }
 
     // ───────────────────────────── state ─────────────────────────────────────
@@ -249,6 +323,22 @@
     var houlaSocket = null;
     var ssnSocket = null;
     var ssnRetry = 0;
+    /** Pending reconnect of the SSN link, cleared whenever the link is replaced. */
+    var ssnReconnectTimer = null;
+    /**
+     * Bumped every time the SSN link is opened or closed on purpose. Callbacks
+     * of a socket from an older generation are ignored, so a replaced socket can
+     * never reopen the link towards the session it was serving.
+     */
+    var ssnGeneration = 0;
+    /** Session the current SSN link joined (or is joining). */
+    var ssnSession = '';
+    /** True once the join for the current socket has been sent. */
+    var ssnJoined = false;
+    /** Messages waiting for the SSN link; see sendToSsn(). */
+    var ssnQueue = [];
+    /** Explicit cap on that queue: beyond it, the oldest message is dropped. */
+    var SSN_QUEUE_MAX = 200;
     var running = false;
     /**
      * Last rejection reason sent by the gateway. The server emits `error` and
@@ -283,6 +373,21 @@
         seenOrder.push(key);
         if (seenOrder.length > SEEN_MAX) delete seen[seenOrder.shift()];
         return false;
+    }
+
+    /** Undo isDuplicate() for a message that was never delivered. */
+    function forgetSeen(key) {
+        if (!key || !seen[key]) return;
+        delete seen[key];
+        var index = seenOrder.indexOf(key);
+        if (index !== -1) seenOrder.splice(index, 1);
+    }
+
+    /** The business id fromComment()/fromGift() dedup on, if any. */
+    function dedupKeyOf(type, payload) {
+        if (type === 'comment') return (payload.comment && payload.comment.id) || null;
+        if (type === 'gift') return payload.transactionId || null;
+        return null;
     }
 
     // ───────────────────────────── mapping ───────────────────────────────────
@@ -417,19 +522,45 @@
     /**
      * Viewer count. The gateway stamps the current count on every envelope
      * (`envelope.viewers`, best-effort); we forward it as SSN's `viewer_update`
-     * only when it changes, and only when the creator turned viewer counts on in
-     * SSN (`showviewercount` / `hypemode`), like every other source does.
+     * only when it changes, and only when viewer counts are turned on:
+     *   - extension / desktop app: SSN's own `showviewercount` / `hypemode`
+     *     settings, requested at start and pushed on change (see the bridge);
+     *   - standalone page: the "Viewer count" box, or `?viewers=1`.
+     * `lastViewers` is the last count SSN actually RECEIVED, so a count that
+     * could not be sent (setting off, link down) is retried on the next one.
      */
     var lastViewers = null;
+    var latestViewers = null;
     var ssnSettings = {};
+
+    function viewerCountEnabled() {
+        if (transport === 'wss') return !!options.viewers;
+        return !!(ssnSettings.showviewercount || ssnSettings.hypemode);
+    }
 
     function maybeViewerUpdate(viewers) {
         if (typeof viewers !== 'number' || !isFinite(viewers) || viewers < 0) return;
         viewers = Math.floor(viewers);
+        latestViewers = viewers;
         if (viewers === lastViewers) return;
-        lastViewers = viewers;
-        if (!(ssnSettings.showviewercount || ssnSettings.hypemode)) return;
-        sendToSsn({ type: SOURCE_TYPE, event: 'viewer_update', meta: viewers });
+        if (!viewerCountEnabled()) return;
+        // Desktop counts need a source ID so startup and later updates share one entry.
+        if (transport === 'ninjafy' && typeof window.__SSAPP_TAB_ID__ === 'undefined') return;
+        if (sendToSsn({ type: SOURCE_TYPE, event: 'viewer_update', meta: viewers }, null, true)) {
+            lastViewers = viewers;
+        }
+    }
+
+    /** Settings from SSN (extension or desktop app), at start or on change. */
+    function applySsnSettings(response) {
+        if (!response || typeof response !== 'object' || !('settings' in response)) return;
+        var wasEnabled = viewerCountEnabled();
+        ssnSettings = response.settings || {};
+        if (!viewerCountEnabled()) {
+            lastViewers = null;
+        } else if (!wasEnabled && latestViewers !== null) {
+            maybeViewerUpdate(latestViewers);
+        }
     }
 
     // ───────────────────────────── Hou.la socket ─────────────────────────────
@@ -503,7 +634,7 @@
         else if (type === 'follow' && options.follows) data = fromFollow(payload);
         if (!data) return;
         counters[type] = (counters[type] || 0) + 1;
-        sendToSsn(data);
+        sendToSsn(data, dedupKeyOf(type, payload));
         pushPreview(data);
         renderCounters();
     }
@@ -514,32 +645,86 @@
 
     function openSsnSocket(session) {
         if (!session) return;
+        // Opening a new link always retires the previous one first, together
+        // with its pending reconnect — and, for another session, its queue.
+        closeSsnSocket(session !== ssnSession);
+        ssnSession = session;
+        var generation = ssnGeneration;
+        var socket;
         try {
-            ssnSocket = new WebSocket(SSN_WSS);
+            socket = new WebSocket(SSN_WSS);
         } catch (e) {
             log('ssn socket failed: ' + (e && e.message));
+            scheduleSsnReconnect(session, generation);
             return;
         }
-        ssnSocket.onopen = function () {
+        ssnSocket = socket;
+        var current = function () {
+            return generation === ssnGeneration && socket === ssnSocket;
+        };
+        socket.onopen = function () {
+            if (!current()) return;
             ssnRetry = 0;
-            ssnSocket.send(
-                JSON.stringify({ join: session, out: SSN_OUT_CHANNEL, in: SSN_IN_CHANNEL })
-            );
+            socket.send(JSON.stringify({ join: session, out: SSN_OUT_CHANNEL, in: SSN_IN_CHANNEL }));
+            ssnJoined = true;
             log(t('ssnOpen'));
+            flushSsnQueue();
         };
-        ssnSocket.onclose = function () {
+        socket.onclose = function () {
+            if (!current()) return;
             ssnSocket = null;
-            if (!running) return;
-            ssnRetry = Math.min(ssnRetry + 1, 10);
-            setTimeout(function () {
-                if (running) openSsnSocket(session);
-            }, 200 * ssnRetry);
+            ssnJoined = false;
+            scheduleSsnReconnect(session, generation);
         };
+    }
+
+    function scheduleSsnReconnect(session, generation) {
+        if (!running || generation !== ssnGeneration) return;
+        clearTimeout(ssnReconnectTimer);
+        ssnRetry = Math.min(ssnRetry + 1, 10);
+        ssnReconnectTimer = setTimeout(function () {
+            ssnReconnectTimer = null;
+            if (running && generation === ssnGeneration) openSsnSocket(session);
+        }, 200 * ssnRetry);
+    }
+
+    /**
+     * Retire the SSN link: cancel its pending reconnect, invalidate its
+     * callbacks and close it. `dropQueue` discards what waited for it (stop,
+     * or a different session); a plain reconnect keeps the queue.
+     */
+    function closeSsnSocket(dropQueue) {
+        ssnGeneration++;
+        clearTimeout(ssnReconnectTimer);
+        ssnReconnectTimer = null;
+        ssnJoined = false;
+        var socket = ssnSocket;
+        ssnSocket = null;
+        if (socket) {
+            socket.onopen = socket.onclose = socket.onmessage = socket.onerror = null;
+            try {
+                socket.close();
+            } catch (e) {
+                /* already closed */
+            }
+        }
+        if (dropQueue) clearSsnQueue();
     }
 
     // ───────────────────────────── config ────────────────────────────────────
 
-    var options = { comments: true, gifts: true, follows: true, auto: true };
+    var options = { comments: true, gifts: true, follows: true, auto: true, viewers: false };
+
+    /** `?viewers=1` (or `?viewers`) turns the standalone viewer count on. */
+    function viewersFromUrl() {
+        try {
+            var raw = new URLSearchParams(location.search).get('viewers');
+            if (raw === null) return null;
+            return raw !== '0' && raw.toLowerCase() !== 'false';
+        } catch (e) {
+            return null;
+        }
+    }
 
     /*
      * PERSISTENCE — the creator pastes the key ONCE.
@@ -780,6 +965,7 @@
         options.gifts = !!($('optGifts') && $('optGifts').checked);
         options.follows = !!($('optFollows') && $('optFollows').checked);
         options.auto = !$('optAuto') || $('optAuto').checked;
+        options.viewers = !!($('optViewers') && $('optViewers').checked);
     }
 
     function forget() {
@@ -815,6 +1001,7 @@
         saveConfig({ key: key, session: session, options: options });
 
         running = true;
+        lastViewers = null;
         setStatus('warn', t('connecting'));
         if (transport === 'wss') openSsnSocket(session);
         openHoulaSocket({ key: key, url: API_BASE });
@@ -832,7 +1019,7 @@
             var session = ($('session') && $('session').value.trim()) || '';
             if (!session) return setStatus('error', t('needSession'));
             running = true;
-            if (!ssnSocket) openSsnSocket(session);
+            if (!ssnSocket || session !== ssnSession) openSsnSocket(session);
             return setTimeout(function () {
                 sendTest(true);
             }, 800);
@@ -843,7 +1030,7 @@
             author: { workspaceId: 'test', name: 'Hou.la', avatarUrl: SOURCE_IMG },
         });
         if (!data) return;
-        sendToSsn(data);
+        sendToSsn(data, null, true);
         pushPreview(data);
         setStatus('ok', t('testSent'));
     }
@@ -866,10 +1053,9 @@
             houlaSocket.close();
             houlaSocket = null;
         }
-        if (ssnSocket) {
-            ssnSocket.close();
-            ssnSocket = null;
-        }
+        closeSsnSocket(true);
+        ssnSession = '';
+        lastViewers = null;
         toggleButtons(false);
     }
 
@@ -887,7 +1073,11 @@
             if ($('optGifts')) $('optGifts').checked = config.options.gifts !== false;
             if ($('optFollows')) $('optFollows').checked = config.options.follows !== false;
             if ($('optAuto')) $('optAuto').checked = config.options.auto !== false;
+            if ($('optViewers')) $('optViewers').checked = config.options.viewers === true;
         }
+        var urlViewers = viewersFromUrl();
+        if (urlViewers !== null && $('optViewers')) $('optViewers').checked = urlViewers;
+        readOptions();
         updateDockUrl();
         if (API.refused) return setStatus('error', t('apiRefused'));
         if (config.pendingConfirmation) return setStatus('warn', t('confirmKey', maskKey(config.key)));
@@ -906,7 +1096,14 @@
         if (transport !== 'wss') {
             if ($('sessionRow')) $('sessionRow').style.display = 'none';
             if ($('dockRow')) $('dockRow').style.display = 'none';
+            if ($('viewersRow')) $('viewersRow').style.display = 'none';
         }
+        if ($('optViewers'))
+            $('optViewers').addEventListener('change', function () {
+                readOptions();
+                if (!options.viewers) lastViewers = null;
+                else if (latestViewers !== null) maybeViewerUpdate(latestViewers);
+            });
         if ($('session')) $('session').addEventListener('input', updateDockUrl);
         if ($('copyDock')) {
             $('copyDock').textContent = t('copy');
@@ -939,43 +1136,68 @@
         boot();
     }
 
-    // ───────────────────── extension bridge (content script only) ────────────
+    // ───────────────────── settings bridge (extension / desktop app) ────────
     // Same contract as the other source scripts: identify ourselves for
-    // send-back routing and accept settings pushes.
+    // send-back routing, ask for the settings once and accept settings pushes.
+    // The desktop app's own bridge (window.ninjafy) is used like velora.js does.
 
-    if (transport === 'extension') {
-        try {
-            chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-                try {
-                    if (request === 'getSource') {
-                        sendResponse(SOURCE_TYPE);
-                        return;
-                    }
-                    if (request === 'focusChat') {
-                        // Read-only source: there is no chat input to focus.
-                        sendResponse(false);
-                        return;
-                    }
-                    if (typeof request === 'object' && request && 'settings' in request) {
-                        ssnSettings = request.settings || {};
-                        sendResponse(true);
-                        return;
-                    }
-                } catch (e) {
-                    log('bridge error: ' + (e && e.message));
+    function wireSettingsBridge() {
+        var appBridge = transport === 'ninjafy' ? window.ninjafy : null;
+        var useAppBridge = !!(
+            appBridge &&
+            typeof appBridge.sendMessage === 'function' &&
+            typeof appBridge.exposeDoSomethingInWebApp === 'function'
+        );
+        if (transport !== 'extension' && !useAppBridge) return;
+
+        var onMessage = function (request, sender, sendResponse) {
+            var respond = typeof sendResponse === 'function' ? sendResponse : function () {};
+            try {
+                if (request === 'getSource') {
+                    respond(SOURCE_TYPE);
+                    return;
                 }
-                sendResponse(false);
-            });
+                if (request === 'focusChat') {
+                    // Read-only source: there is no chat input to focus.
+                    respond(false);
+                    return;
+                }
+                if (typeof request === 'object' && request && 'settings' in request) {
+                    applySsnSettings(request);
+                    respond(true);
+                    return;
+                }
+            } catch (e) {
+                log('bridge error: ' + (e && e.message));
+            }
+            respond(false);
+        };
+        try {
+            if (useAppBridge) appBridge.exposeDoSomethingInWebApp(onMessage);
+            else chrome.runtime.onMessage.addListener(onMessage);
         } catch (e) {
             log('listener unavailable: ' + (e && e.message));
         }
-        // Initial settings (viewer-count toggle), same call as every DOM source.
+
+        // Initial settings (viewer-count toggle), same call as every source.
+        var onSettings = function (response) {
+            try {
+                if (!useAppBridge && chrome.runtime.lastError) return;
+            } catch (e) {
+                /* no lastError to read */
+            }
+            applySsnSettings(response);
+        };
         try {
-            chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
-                if (response && response.settings) ssnSettings = response.settings;
-            });
+            if (useAppBridge) {
+                appBridge.sendMessage(null, { getSettings: true }, onSettings, window.__SSAPP_TAB_ID__);
+            } else {
+                chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, onSettings);
+            }
         } catch (e) {
             log('getSettings failed: ' + (e && e.message));
         }
     }
+
+    wireSettingsBridge();
 })();
