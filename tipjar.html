@@ -3109,6 +3109,7 @@
         }
 
         function setTipJarAmount(amount, showNotice) {
+            if (goalDayChanged()) resetTipJarAmount(false);
             if (completionResetTimer) {
                 clearTimeout(completionResetTimer);
                 completionResetTimer = null;

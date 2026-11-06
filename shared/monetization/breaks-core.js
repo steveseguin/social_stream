@@ -324,19 +324,27 @@
 				.filter(function (x) {
 					return x.trim();
 				});
+			// Match by name and occurrence so reordering keeps saved styles and images,
+			// including deliberately empty values and distinct spots with the same name.
+			var savedSpots = Object.create(null);
+			if (preset)
+				preset.spots.forEach(function (p) {
+					if (!savedSpots[p.label]) savedSpots[p.label] = [];
+					savedSpots[p.label].push(p);
+				});
 			var slots = Array.isArray(data.spots)
 				? data.spots
 				: labels.length
-					? labels.map(function (l, i) {
+					? labels.map(function (l) {
 							var cells = l.split("\t"),
 								name = cells[0].trim(),
-								original = preset && preset.spots[i],
-								base = Object.assign({}, original && original.label === name ? original : {}),
+								original = savedSpots[name] && savedSpots[name].shift(),
+								base = Object.assign({}, original || {}),
 								style = Object.prototype.hasOwnProperty.call(styles, name) ? styles[name] : null;
 							// League presets send team codes and colors by spot name. A saved setup's own values win.
 							if (style && typeof style === "object")
 								["code", "color", "color2"].forEach(function (key) {
-									if (!base[key]) base[key] = style[key];
+									if (base[key] === undefined) base[key] = style[key];
 								});
 							return Object.assign(base, {
 								label: cells[0],

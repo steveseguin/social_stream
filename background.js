@@ -13798,34 +13798,52 @@ async function getGiveawayHost() {
     }
     return giveawayHost;
 }
-function scheduleGiveawayDraw(state, retryDelay) {
+function scheduleGiveawayDraw(state, action) {
     if (!state) return;
     var previous = giveawayDrawTimers.get(state.giveawayId);
-    if (previous && previous.endsAt === state.endsAt && previous.roundId === state.roundId && state.open) return;
+    if (previous && previous.roundId === state.roundId) {
+        if (previous.endsAt === state.endsAt && state.open) return;
+        // Keep the timer through its own close and intermediate draws, including status refreshes.
+        if (previous.drawing && action !== 'closegiveaway' && state.status === 'locked' &&
+            state.count && state.draw < state.config.winnerCount) return;
+    }
     if (previous) clearTimeout(previous.handle);
     giveawayDrawTimers.delete(state.giveawayId);
     if (!state.open || !state.endsAt) return;
     var session = streamID, host = giveawayHost;
-    var handle = setTimeout(async function() {
-        giveawayDrawTimers.delete(state.giveawayId);
-        if (session !== streamID || !giveawayHost || giveawayHost !== host || giveawayHost.session !== String(session)) return;
-        var operation = 'timer:' + state.roundId + ':' + state.endsAt;
-        var result = await handleGiveawayAction('expiregiveaway', {giveawayId:state.giveawayId,roundId:state.roundId,endsAt:state.endsAt,operationId:operation});
-        if (!result.ok) {
-            // A transient storage failure must not abandon an open round at its deadline.
-            var current = giveawayRouting.get(state.giveawayId);
-            if (session === streamID && giveawayHost === host && current && current.open &&
-                current.roundId === state.roundId && current.endsAt === state.endsAt) {
-                scheduleGiveawayDraw(current, Math.min((retryDelay || 2500) * 2, 60000));
+    var operation = 'timer:' + state.roundId + ':' + state.endsAt;
+    var timer = {handle:null,endsAt:state.endsAt,roundId:state.roundId,drawing:false};
+    var command = 'expiregiveaway', retryDelay = 2500;
+    var request = {giveawayId:state.giveawayId,roundId:state.roundId,endsAt:state.endsAt,operationId:operation};
+    function current() {
+        return giveawayDrawTimers.get(state.giveawayId) === timer && session === streamID &&
+            giveawayHost === host && host && host.session === String(session);
+    }
+    async function run() {
+        while (current()) {
+            timer.drawing = true;
+            var result = await handleGiveawayAction(command, request);
+            if (!current()) return;
+            if (!result.ok) {
+                // Retry the exact operation: a reply lost after commit must not award another prize.
+                retryDelay = Math.min(retryDelay * 2, 60000);
+                timer.handle = setTimeout(run, retryDelay);
+                return;
             }
-            return;
+            var round = result.giveaway;
+            // A receipt has an operation ID; a stale deadline guard returns a duplicate without one.
+            if ((result.duplicate && !result.operationId) || !round || round.roundId !== state.roundId ||
+                round.status !== 'locked' || !round.count || round.draw >= round.config.winnerCount) {
+                giveawayDrawTimers.delete(state.giveawayId);
+                return;
+            }
+            command = 'drawgiveaway';
+            request = {giveawayId:state.giveawayId,roundId:state.roundId,endsAt:state.endsAt,operationId:operation + ':draw:' + round.draw};
+            retryDelay = 2500;
         }
-        if (result.duplicate) return;
-        while (session === streamID && result.ok && !result.duplicate && result.giveaway.status === 'locked' && result.giveaway.count && result.giveaway.draw < result.giveaway.config.winnerCount) {
-            result = await handleGiveawayAction('drawgiveaway', {giveawayId:state.giveawayId,roundId:state.roundId,endsAt:state.endsAt,operationId:operation + ':draw:' + result.giveaway.draw});
-        }
-    }, Math.max(retryDelay || 0, state.endsAt - Date.now()));
-    giveawayDrawTimers.set(state.giveawayId, {handle:handle,endsAt:state.endsAt,roundId:state.roundId});
+    }
+    timer.handle = setTimeout(run, Math.max(0, state.endsAt - Date.now()));
+    giveawayDrawTimers.set(state.giveawayId, timer);
 }
 async function publishGiveawayState(state) {
     try {
@@ -13891,7 +13909,7 @@ async function handleGiveawayAction(action, value, actor) {
         if(host.session!==String(streamID))return result;
         announceGiveawayResult(action, result);
         if(result.giveaway)giveawayRouting.set(result.giveaway.giveawayId,result.giveaway);
-        scheduleGiveawayDraw(result.giveaway);
+        scheduleGiveawayDraw(result.giveaway, action);
         if (['entergiveaway','buygiveawaytickets','grantgiveawaytickets','guessgiveaway'].includes(action)) {
             giveawayPendingStates.set(result.giveaway.giveawayId,result.giveaway);
             if(!giveawayBroadcastTimer)giveawayBroadcastTimer=setTimeout(function(){giveawayBroadcastTimer=null;var pending=Array.from(giveawayPendingStates.values());giveawayPendingStates.clear();pending.forEach(s=>publishGiveawayState(s));},150);

@@ -134,6 +134,13 @@
 		if (s.description) e.appendChild(node("small", s.description, "br-description"));
 		return e;
 	}
+	function fitColumn() {
+		if (!display.classList.contains("br-column")) return;
+		display.classList.remove("br-compact-column");
+		if (display.getBoundingClientRect().bottom > window.innerHeight)
+			display.classList.add("br-compact-column");
+	}
+	window.addEventListener("resize", fitColumn);
 	function render(b) {
 		lastAt = Date.now();
 		if (!b) {
@@ -195,6 +202,7 @@
 		shown.forEach(function (s) {
 			grid.appendChild(tile(b, s, theme, animate));
 		});
+		fitColumn();
 	}
 	function receive(payload) {
 		(Array.isArray(payload) ? payload : [payload]).forEach(function (d) {

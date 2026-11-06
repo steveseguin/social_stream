@@ -305,6 +305,7 @@
 }
 .br-column .br-status {
 	flex: 0 1 auto;
+	max-width: 45%;
 	flex-wrap: nowrap;
 	font-size: 15px;
 }
@@ -314,16 +315,33 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-/* One line per spot: a revealed spot shows its result where the buyer would be. */
-.br-column .br-has-result .br-status {
-	display: none;
+/* Results get their own row so the buyer and team remain visible. */
+.br-column .br-has-result {
+	flex-wrap: wrap;
+	row-gap: 3px;
 }
 .br-column .br-result {
-	flex: 0 1 auto;
-	max-width: 60%;
+	flex: 1 0 100%;
+	max-width: 100%;
 	margin: 0;
 	padding: 1px 7px;
 	font-size: 14px;
+}
+/* When the column outgrows the source, keep team, buyer and pull on one row. */
+.br-compact-column .br-has-result {
+	flex-wrap: nowrap;
+	gap: 6px;
+}
+.br-compact-column .br-has-result .br-head {
+	flex: 1 1 35%;
+}
+.br-compact-column .br-has-result .br-status {
+	flex: 1 1 30%;
+	max-width: 30%;
+}
+.br-compact-column .br-result {
+	flex: 1 1 35%;
+	max-width: 35%;
 }
 .br-column .br-mark {
 	min-width: 3.2em;
