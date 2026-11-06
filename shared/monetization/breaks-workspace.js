@@ -248,11 +248,16 @@
 		function rememberDraft(form) {
 			var key = draftKey(form),
 				current = values(form),
-				prior = drafts[key];
-			if (same(current, baselines[key])) delete drafts[key];
+				prior = drafts[key],
+				invalid = [];
+			el('[data-form="' + form + '"]').querySelectorAll("[data-field]").forEach(function (input) {
+				if (input.validity && (input.validity.badInput || input.validity.customError)) invalid.push(input.dataset.field);
+			});
+			if (same(current, baselines[key]) && !invalid.length) delete drafts[key];
 			else
 				drafts[key] = {
 					values: current,
+					invalid: invalid,
 					base: prior ? prior.base : baselines[key],
 					revision: prior
 						? prior.revision
@@ -267,6 +272,12 @@
 		function restoreDraft(form) {
 			var key = draftKey(form),
 				draft = drafts[key];
+			// Number inputs expose incomplete text such as "1e" as an empty value.
+			// Keep it invalid after restoring a draft rather than silently saving it as blank.
+			el('[data-form="' + form + '"]').querySelectorAll("[data-field]").forEach(function (input) {
+				input.setCustomValidity(draft && draft.invalid && draft.invalid.indexOf(input.dataset.field) !== -1
+					? "Enter a valid number, or clear this field." : "");
+			});
 			baselines[key] = values(form);
 			if (draft) {
 				if (same(draft.base, baselines[key])) draft.revision = state.revision;
@@ -321,11 +332,15 @@
 				})
 			);
 			form.appendChild(status);
-			form.addEventListener("input", function () {
+			function edited(e) {
+				if (e.target.setCustomValidity) e.target.setCustomValidity("");
 				rememberDraft(name);
-			});
-			form.addEventListener("change", function () {
-				rememberDraft(name);
+			}
+			form.addEventListener("input", edited);
+			form.addEventListener("change", edited);
+			form.addEventListener("keydown", function (e) {
+				if ((e.key === "Backspace" || e.key === "Delete") && e.target.value === "" &&
+					e.target.validity && e.target.validity.customError) edited(e);
 			});
 		});
 		function controls() {
