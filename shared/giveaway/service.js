@@ -132,6 +132,17 @@
                 var next = config(value.config || round.config);
                 if (round.entries.length && JSON.stringify(next) !== JSON.stringify(round.config))
                     fail('Entry rules are locked. Cancel this round or keep its existing rules.');
+                if (next.kind === 'giveaway' && !next.ticketCost) {
+                    // Check in this transaction so simultaneous starts cannot share a keyword.
+                    var prefix = 'summary:giveaway:' + JSON.stringify([self.session]).slice(0, -1) + ',';
+                    var rounds = await tx.get(tx.records.getAll(IDBKeyRange.bound(prefix, prefix + '\uffff')));
+                    for (var i = 0; i < rounds.length; i++) {
+                        var other = rounds[i].state;
+                        if (other.giveawayId !== id && other.open && other.config.kind === 'giveaway' && !other.config.ticketCost &&
+                            other.keyword.toLowerCase() === next.keyword.toLowerCase())
+                            fail('Giveaway "' + other.giveawayId + '" already uses this keyword. Close its entries or choose another keyword.');
+                    }
+                }
                 if (next.kind === 'coin' && (next.ticketCost !== 1 || next.prizePoints || next.winnerCount !== 1))
                     fail('Coin Flip Pot uses one point per stake, no extra prize, and one outcome.');
                 if (next.kind === 'number' && (next.ticketCost || next.winnerCount !== 1))

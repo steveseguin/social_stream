@@ -1116,7 +1116,11 @@
 		var paymentStatus = payload.paymentStatus || product.paymentStatus;
 		if (eventType === "payment_failed") paymentStatus = "failed";
 		if (eventType === "payment_succeeded") paymentStatus = "succeeded";
+		var breakInfo = product.breakInfo && typeof product.breakInfo === "object" && !Array.isArray(product.breakInfo) ? product.breakInfo : {};
 		var details = {
+			breakId: breakInfo.breakId,
+			breakSpotId: breakInfo.breakSpotId,
+			breakFormat: breakInfo.breakFormat,
 			productId: payload.productId || product.id,
 			catalogProductId: product.productId,
 			parentProductId: product.parentId,

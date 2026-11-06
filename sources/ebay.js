@@ -694,9 +694,9 @@ fragment ListingV2Discount on ListingV2 {
 				graphqlRefreshNeeded = true;
 			}
 			var details = Object.assign({}, item.saleInfo && item.saleInfo.details);
-			if (kind === "AuctionStarted") details = Object.assign({}, payload, { typename: "RunningAuctionDetails", bidRound: 0 });
-			else if (kind === "AuctionReset" || kind === "AuctionWillStart") details = Object.assign({}, payload, { typename: "ReadyAuctionDetails", bidRound: 0 });
-			else if (kind === "AuctionEnded") details = Object.assign({}, details, payload, { typename: "EndedAuctionDetails", endingAt: null });
+			if (kind === "AuctionStarted" || kind === "AuctionStartedV2") details = Object.assign({}, payload, { typename: "RunningAuctionDetails", bidRound: 0 });
+			else if (kind === "AuctionReset" || kind === "AuctionWillStart" || kind === "AuctionWillStartV2") details = Object.assign({}, payload, { typename: "ReadyAuctionDetails", bidRound: 0 });
+			else if (kind === "AuctionEnded" || kind === "AuctionEndedV2") details = Object.assign({}, details, payload, { typename: "EndedAuctionDetails", endingAt: null });
 			else if (kind === "AuctionBiddingClosed") details.typename = "ClosedAuctionDetails";
 			else if (kind === "AuctionNewBidLeader") Object.assign(details, { winningBid: payload.winningBid, bidder: payload.bidder, bidRound: payload.bidRound, recommendedBid: payload.recommendedBid });
 			else if (kind === "BidTimeExtended") details.endingAt = payload.endingAt;
