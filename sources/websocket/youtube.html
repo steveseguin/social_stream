@@ -589,6 +589,7 @@ try {
     var lastMessageTime = null;
 	const lastMessageTimeIds = new Set();
     var liveChatId = null;
+	var liveChatConnectionGeneration = 0;
     var nextPageToken = null;
     var userDetails = {};
 	var currentStream = null;
@@ -3767,7 +3768,18 @@ function enableBackgroundKeepAlive() {
 		return values;
 	}
 
-	async function handleLiveChatStreamPayload(payload) {
+	function getLiveChatConnection(controller) {
+		return { generation: liveChatConnectionGeneration, chatId: liveChatId,
+			videoId: (currentStream && currentStream.id) || videoId, controller: controller };
+	}
+
+	function isCurrentLiveChatConnection(connection) {
+		return connection.generation === liveChatConnectionGeneration && connection.chatId === liveChatId &&
+			(!connection.controller || (connection.controller === liveChatStreamAbortController && !connection.controller.signal.aborted));
+	}
+
+	async function handleLiveChatStreamPayload(payload, connection = getLiveChatConnection()) {
+		if (!isCurrentLiveChatConnection(connection)) return;
 		if (!payload || typeof payload !== 'object') return;
 		if (payload.error) {
 			const error = new Error(payload.error.message || 'YouTube live chat stream error');
@@ -3777,16 +3789,19 @@ function enableBackgroundKeepAlive() {
 			throw error;
 		}
 		const data = normalizeLiveChatStreamPayload(payload);
-		await processLiveChatResponseData(data, { scheduleNextPoll: false });
+		await processLiveChatResponseData(data, { scheduleNextPoll: false, connection: connection });
+		if (!isCurrentLiveChatConnection(connection)) return;
 		if (data.offlineAt) {
 			handleLiveChatEnded();
 		}
 	}
 
-	async function processLiveChatStreamBuffer(final = false) {
+	async function processLiveChatStreamBuffer(final = false, connection = getLiveChatConnection()) {
+		if (!isCurrentLiveChatConnection(connection)) return;
 		const payloads = extractCompleteJsonFromBuffer(final);
 		for (const payload of payloads) {
-			await handleLiveChatStreamPayload(payload);
+			await handleLiveChatStreamPayload(payload, connection);
+			if (!isCurrentLiveChatConnection(connection)) return;
 		}
 	}
 
@@ -3842,7 +3857,8 @@ function enableBackgroundKeepAlive() {
 		}
 	}
 
-	async function handleLiveChatStreamError(error) {
+	async function handleLiveChatStreamError(error, connection = getLiveChatConnection()) {
+		if (!isCurrentLiveChatConnection(connection)) return;
 		if (error && error.name === 'AbortError') {
 			return;
 		}
@@ -3853,6 +3869,7 @@ function enableBackgroundKeepAlive() {
 		}
 		if (error && error.ytStatus === 401) {
 			await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
+			if (!isCurrentLiveChatConnection(connection)) return;
 			scheduleAuthRetry();
 			return;
 		}
@@ -3880,7 +3897,8 @@ function enableBackgroundKeepAlive() {
 		switchLiveChatStreamToPollingFallback(error, backoffTime);
 	}
 
-	async function handleLiveChatPollingError(error) {
+	async function handleLiveChatPollingError(error, connection = getLiveChatConnection()) {
+		if (!isCurrentLiveChatConnection(connection)) return;
 		if (isLiveChatEndedStreamError(error)) {
 			console.log('YouTube reported live chat ended; stopping polling.');
 			handleLiveChatEnded();
@@ -3888,6 +3906,7 @@ function enableBackgroundKeepAlive() {
 		}
 		if (error && error.ytStatus === 401) {
 			await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
+			if (!isCurrentLiveChatConnection(connection)) return;
 			scheduleAuthRetry();
 			return;
 		}
@@ -3916,6 +3935,7 @@ function enableBackgroundKeepAlive() {
 	}
 
 	async function readLiveChatStream(controller, token) {
+		const connection = getLiveChatConnection(controller);
 		try {
 			const response = await fetch(buildLiveChatStreamUrl(), {
 				signal: controller.signal,
@@ -3924,6 +3944,7 @@ function enableBackgroundKeepAlive() {
 					'Accept': 'application/json'
 				}
 			});
+			if (!isCurrentLiveChatConnection(connection)) return;
 			if (!response.ok) {
 				throw await buildLiveChatStreamHttpError(response);
 			}
@@ -3937,25 +3958,24 @@ function enableBackgroundKeepAlive() {
 			const decoder = new TextDecoder();
 			while (true) {
 				const result = await reader.read();
+				if (!isCurrentLiveChatConnection(connection)) return;
 				if (result.done) break;
 				if (!result.value) continue;
 				liveChatStreamReadBuffer += decoder.decode(result.value, { stream: true });
-				await processLiveChatStreamBuffer(false);
+				await processLiveChatStreamBuffer(false, connection);
+				if (!isCurrentLiveChatConnection(connection)) return;
 			}
 			liveChatStreamReadBuffer += decoder.decode();
-			await processLiveChatStreamBuffer(true);
+			await processLiveChatStreamBuffer(true, connection);
 		} catch (error) {
-			if (liveChatStreamAbortController === controller) {
-				liveChatStreamAbortController = null;
-			}
+			if (!isCurrentLiveChatConnection(connection)) return;
 			liveChatStreamActive = false;
 			if (!liveChatStreamStopping) {
-				await handleLiveChatStreamError(error);
+				await handleLiveChatStreamError(error, connection);
 			}
 		} finally {
-			if (liveChatStreamAbortController === controller) {
-				liveChatStreamAbortController = null;
-			}
+			if (!isCurrentLiveChatConnection(connection)) return;
+			liveChatStreamAbortController = null;
 			liveChatStreamActive = false;
 			liveChatStreamReadBuffer = '';
 			if (liveChatStreamStopping) {
@@ -3979,10 +3999,11 @@ function enableBackgroundKeepAlive() {
 		if (!liveChatId || liveChatStreamActive || liveChatStreamAbortController) {
 			return false;
 		}
+		const connection = getLiveChatConnection();
 		const token = getStoredToken();
 		if (!token) {
 			const refreshed = await refreshToken();
-			if (refreshed) {
+			if (refreshed && isCurrentLiveChatConnection(connection)) {
 				scheduleAuthRetry();
 			}
 			return false;
@@ -4009,13 +4030,14 @@ function enableBackgroundKeepAlive() {
 		if (!liveChatId || liveChatStreamActive || liveChatStreamAbortController || liveChatPollingActive) {
 			return false;
 		}
+		const connection = getLiveChatConnection();
 		liveChatPollingActive = true;
 		syncYouTubeRichChatData((currentStream && currentStream.id) || videoId);
 		try {
 			const token = getStoredToken();
 			if (!token) {
 				const refreshed = await refreshToken();
-				if (refreshed) {
+				if (refreshed && isCurrentLiveChatConnection(connection)) {
 					scheduleAuthRetry();
 				}
 				return false;
@@ -4033,14 +4055,16 @@ function enableBackgroundKeepAlive() {
 				'Accept': 'application/json'
 			});
 			const data = await response.json();
-			await processLiveChatResponseData(data, { scheduleNextPoll: true });
+			if (!isCurrentLiveChatConnection(connection)) return false;
+			await processLiveChatResponseData(data, { scheduleNextPoll: true, connection: connection });
 			return true;
 		} catch (error) {
+			if (!isCurrentLiveChatConnection(connection)) return false;
 			liveChatPollingActive = false;
-			await handleLiveChatPollingError(error);
+			await handleLiveChatPollingError(error, connection);
 			return false;
 		} finally {
-			liveChatPollingActive = false;
+			if (isCurrentLiveChatConnection(connection)) liveChatPollingActive = false;
 		}
 	}
 
@@ -4321,6 +4345,8 @@ function enableBackgroundKeepAlive() {
 	}
 
 	async function processLiveChatResponseData(data, options = {}) {
+		const connection = options.connection || getLiveChatConnection();
+		if (!isCurrentLiveChatConnection(connection)) return;
 		data = data && typeof data === 'object' ? data : {};
 		const shouldScheduleNextPoll = options.scheduleNextPoll === true;
 		const awaitRichChatSync = options.awaitRichChatSync === true;
@@ -4335,8 +4361,8 @@ function enableBackgroundKeepAlive() {
 			youtubeApiMessageIds.set(getYouTubeMessageKey(item.id), item.id);
 			if (youtubeApiMessageIds.size > 5000) youtubeApiMessageIds.delete(youtubeApiMessageIds.keys().next().value);
 		});
-		// Snapshot the origin before enrichment can wait while the connection changes.
-		const richChatVideoId = (currentStream && currentStream.id) || videoId;
+		// Use the connection that issued the request, not the stream active at response time.
+		const richChatVideoId = connection.videoId;
 		if (normalizedItems.length > 0 && richChatVideoId) {
 			const richChatPromise = syncYouTubeRichChatData(richChatVideoId).catch(function(error) {
 				console.log('YouTube rich chat prefetch failed:', error && error.message ? error.message : error);
@@ -4345,6 +4371,7 @@ function enableBackgroundKeepAlive() {
 				await richChatPromise;
 			}
 		}
+		if (!isCurrentLiveChatConnection(connection)) return;
 
 		if (normalizedItems.length > 0) {
 			if (initialBacklogProcessing && !initialBacklogTimestamp) {
@@ -6264,6 +6291,8 @@ function enableBackgroundKeepAlive() {
         }
     }
 	function clearPolling(options) {
+		// Reconnecting to the same video also invalidates requests from the previous connection.
+		liveChatConnectionGeneration++;
 		const preserveBroadcastMonitorLease = !!(options && options.preserveBroadcastMonitorLease);
 		if (!preserveBroadcastMonitorLease) {
 			releaseYouTubeBroadcastMonitorLease();
