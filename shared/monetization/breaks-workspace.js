@@ -717,7 +717,13 @@
 				pick.appendChild(o);
 			});
 			pick.value = choice;
-			if (pick.selectedIndex < 0 && pick.options.length) pick.selectedIndex = 0;
+			if (pick.selectedIndex < 0 && choice) {
+				var unavailableStock = state.stock.filter(function (s) { return s.id === choice; })[0];
+				var unavailableOption = node("option", (unavailableStock ? unavailableStock.name : "Selected item") + " (unavailable)");
+				unavailableOption.value = choice;
+				pick.appendChild(unavailableOption);
+				pick.value = choice;
+			} else if (pick.selectedIndex < 0 && pick.options.length) pick.selectedIndex = 0;
 			list.textContent = "";
 			if (b)
 				b.stockUse.forEach(function (u) {
@@ -1296,6 +1302,7 @@
 			return out;
 		}
 		f("preset").onchange = presetSelected;
+		f("stock-use-item").onchange = function () { pendingStock = ""; };
 		f("search").oninput = drawGrid;
 		f("filter").onchange = drawGrid;
 		f("stage").onchange = function () {
