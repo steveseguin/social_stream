@@ -312,6 +312,20 @@ document.addEventListener('DOMContentLoaded', function() {
             `
         },
         {
+            name: 'Hou.la',
+            icon: 'houla.png',
+            description: 'French live streaming and live shopping app (comments, virtual gifts, followers).',
+            type: 'websocket',
+            instructions: `
+                <ul>
+                    <li>URL: https://socialstream.ninja/sources/websocket/houla.html</li>
+                    <li>In the Hou.la Studio, create a dedicated event key (it starts with hle_), without an interactive pack, and tick Comments, Gifts and Followers</li>
+                    <li>Paste the key into the page and click Connect</li>
+                </ul>
+            `,
+            notes: 'The event key only receives the events of your own lives and cannot post in chat or spend coins. Never paste your stream key (sk_) there.'
+        },
+        {
             name: 'Kick.com',
             icon: 'kick.png',
             description: 'Emerging live streaming platform.',
