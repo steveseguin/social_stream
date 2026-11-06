@@ -2268,7 +2268,7 @@ function ensureCustomUrlSlot(index) {
         </div>
         <div class="textInputContainer" style="width: 95%;">
             <input type="text" id="custom${index}_url" class="textInput" autocomplete="off" placeholder="eg: https://somedomain/chat/popup" data-textsetting="custom${index}_url" />
-            <label for="custom${index}_url"><span>&gt; Custom URL ${index}</span></label>
+            <label for="custom${index}_url"><span>Custom URL ${index}</span></label>
         </div>
         <center>
             <button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom${index}">
@@ -2492,19 +2492,19 @@ const eventTemplates = {
       <div style="display:inline-block">
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="botReplyMessageCommand${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="!discord, !ds, !disc" data-textsetting="botReplyMessageCommand${id}">
-          <label for="botReplyMessageCommand${id}">&gt; Triggering command(s)</label>
+          <label for="botReplyMessageCommand${id}">Triggering command(s)</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="botReplyMessageValue${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="Message to respond with" data-textsetting="botReplyMessageValue${id}">
-          <label for="botReplyMessageValue${id}">&gt; Message to respond with.</label>
+          <label for="botReplyMessageValue${id}">Message to respond with.</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="number" id="botReplyMessageTimeout${id}" class="textInput" min="0" autocomplete="off" placeholder="Timeout needed between responses" data-numbersetting="botReplyMessageTimeout${id}">
-          <label for="botReplyMessageTimeout${id}">&gt; Trigger timeout (ms)</label>
+          <label for="botReplyMessageTimeout${id}">Trigger timeout (ms)</label>
         </div>
         <div class="textInputContainer" style="width: 235px" title="If a source is provided, limit the response to this source. Comma-separated">
           <input type="text" id="botReplyMessageSource${id}" class="textInput" min="0" autocomplete="off" placeholder="ie: youtube,twitch (comma separated)" data-textsetting="botReplyMessageSource${id}">
-          <label for="botReplyMessageSource${id}">&gt; Limit to specific sites</label>
+          <label for="botReplyMessageSource${id}">Limit to specific sites</label>
         </div>
         <span data-translate="reply-to-all">Reply to all instead of just the source</span>
         <label class="switch">
@@ -2524,15 +2524,15 @@ const eventTemplates = {
       <div style="display:inline-block">
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="chatcommand${id}" class="textInput" autocomplete="off" placeholder="!someevent${id}, !alias${id}" data-textsetting="chatcommand${id}">
-          <label for="chatcommand${id}">&gt; Chat Command(s)</label>
+          <label for="chatcommand${id}">Chat Command(s)</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="chatwebhook${id}" class="textInput" autocomplete="off" placeholder="Provide full URL" data-textsetting="chatwebhook${id}">
-          <label for="chatwebhook${id}">&gt; Webhook URL</label>
+          <label for="chatwebhook${id}">Webhook URL</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="number" id="chatcommandtimeout${id}" class="textInput" min="0" autocomplete="off" placeholder="Timeout between triggers" data-numbersetting="chatcommandtimeout${id}">
-          <label for="chatcommandtimeout${id}">&gt; Trigger Timeout (ms)</label>
+          <label for="chatcommandtimeout${id}">Trigger Timeout (ms)</label>
         </div>
       </div>
     </div>
@@ -2547,7 +2547,7 @@ const eventTemplates = {
     <div class="event-container">
       <div class="textInputContainer" style="width: 235px">
         <input type="text" id="${inputId}" class="textInput" autocomplete="off" placeholder="https://thirdparty.com/api" data-textsetting="${settingKey}">
-        <label for="${inputId}">&gt; Webhook URL</label>
+        <label for="${inputId}">Webhook URL</label>
       </div>
     </div>
   `;
@@ -2562,15 +2562,15 @@ const eventTemplates = {
       <div style="display:inline-block">
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="timemessagecommand${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="Message to send to chat at an interval" data-textsetting="timemessagecommand${id}">
-          <label for="timemessagecommand${id}">&gt; Message to broadcast</label>
+          <label for="timemessagecommand${id}">Message to broadcast</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="number" id="timemessageinterval${id}" class="textInput" value="15" min="0" autocomplete="off" title="Interval offset in minutes; 0 to issue just once." data-numbersetting="timemessageinterval${id}">
-          <label for="timemessageinterval${id}">&gt; Interval between broadcasts in minutes</label>
+          <label for="timemessageinterval${id}">Interval between broadcasts in minutes</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="number" min="0" max="127" id="timemessageoffset${id}" value="0" min="0" class="textInput" autocomplete="off" title="Starting offset in minutes" data-numbersetting="timemessageoffset${id}">
-          <label for="timemessageoffset${id}">&gt; Starting time offset</label>
+          <label for="timemessageoffset${id}">Starting time offset</label>
         </div>
       </div>
     </div>
@@ -2585,7 +2585,7 @@ const eventTemplates = {
       <div style="display:inline-block">
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="midicommand${id}" class="textInput" autocomplete="off" placeholder="!someevent${id}" data-textsetting="midicommand${id}">
-          <label for="midicommand${id}">&gt; Triggering !command</label>
+          <label for="midicommand${id}">Triggering !command</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="number" id="midinote${id}" class="textInput" autocomplete="off" placeholder="MIDI Note that will be triggered; 127-velocity" data-numbersetting="midinote${id}">
@@ -9789,11 +9789,11 @@ function createCommandEntry(command = '', url = '', id = '') {
     entry.innerHTML = `
         <div class="textInputContainer" style="width: 90%;">
             <input type="text" class="textInput custom-command" value="${encodeHTML(command)}" autocomplete="off" placeholder="!command, !alias" data-textsetting="customGifCommand" />
-            <label><span data-translate="chat-command">&gt; Chat Command(s)</span></label>
+            <label><span data-translate="chat-command">Chat Command(s)</span></label>
         </div>
         <div class="textInputContainer" style="width: 90%;">
             <input type="text" class="textInput custom-media-url" value="${encodeHTML(url)}" autocomplete="off" placeholder="https://media.giphy.com/media/..." data-textsetting="customGifUrl" />
-            <label><span data-translate="media-url">&gt; Media URL (GIF, image, or video)</span></label>
+            <label><span data-translate="media-url">Media URL (GIF, image, or video)</span></label>
         </div>
         <div class="custom-gif-command-actions">
             <button class="uploadCustomGifMedia" type="button" title="Upload your own GIF, image, or video file">

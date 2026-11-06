@@ -5864,9 +5864,22 @@ function enableBackgroundKeepAlive() {
 	
     async function sendChatMessage(message, expectedVideoId) {
 		if (expectedVideoId !== undefined && (!expectedVideoId || !currentStream || currentStream.id !== expectedVideoId)) return null;
-		const token = getStoredToken();
-		if (!token || !liveChatId || !hasYouTubeWriteAccess()) return null;
+		if (!liveChatId || !hasYouTubeWriteAccess()) return null;
+		const connection = getLiveChatConnection();
 		try {
+			let token = getStoredToken();
+			if (!token && tokenRefreshPromise) {
+				await tokenRefreshPromise;
+				token = getStoredToken();
+			}
+			// A pending reply belongs to the chat that requested it, even during token refresh.
+			if (!isCurrentLiveChatConnection(connection) || connection.videoId !== ((currentStream && currentStream.id) || videoId)) return null;
+			if (!token) {
+				throw new Error('Sign in to YouTube again, then retry.');
+			}
+			if (!hasYouTubeWriteAccess()) {
+				throw new Error(getWriteAccessRequiredMessage());
+			}
 			const baseUrl = 'https://www.googleapis.com/youtube/v3/liveChat/messages';
 			const url = `${baseUrl}?part=snippet,authorDetails`;
 			const response = await fetch(url, {
@@ -5877,7 +5890,7 @@ function enableBackgroundKeepAlive() {
 				},
 				body: JSON.stringify({
 					snippet: {
-						liveChatId: liveChatId,
+						liveChatId: connection.chatId,
 						type: 'textMessageEvent',
 						textMessageDetails: { messageText: message }
 					}
@@ -5885,9 +5898,8 @@ function enableBackgroundKeepAlive() {
 			});
 			
 			if (!response.ok) {
-				const errorData = await response.json();
-				console.error('YouTube API error response:', errorData);
-				return null;
+				const errorData = await response.json().catch(() => null);
+				throw new Error(errorData && errorData.error && errorData.error.message || ('YouTube rejected the message (HTTP ' + response.status + ').'));
 			}
 			
 			const data = await response.json();
@@ -5895,13 +5907,13 @@ function enableBackgroundKeepAlive() {
 			
 			// Check if the response has an error
 			if (data.error) {
-				console.error('YouTube API error:', data.error);
-				return null;
+				throw new Error(data.error.message || 'YouTube rejected the message.');
 			}
 			
 			return data;
 		} catch (error) {
 			console.error('Error sending chat message:', error);
+			reportOutboundChatFailure('YouTube chat was not sent: ' + (error && error.message ? error.message : error));
 			return null;
 		}
 	}
