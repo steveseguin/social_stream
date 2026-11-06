@@ -327,21 +327,20 @@
 	padding: 1px 7px;
 	font-size: 14px;
 }
-/* When the column outgrows the source, keep team, buyer and pull on one row. */
+/* Crowded columns keep the full spot name above the buyer and pull. */
 .br-compact-column .br-has-result {
-	flex-wrap: nowrap;
-	gap: 6px;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 3px 8px;
 }
 .br-compact-column .br-has-result .br-head {
-	flex: 1 1 35%;
+	grid-column: 1 / -1;
 }
 .br-compact-column .br-has-result .br-status {
-	flex: 1 1 30%;
-	max-width: 30%;
+	max-width: 100%;
 }
 .br-compact-column .br-result {
-	flex: 1 1 35%;
-	max-width: 35%;
+	max-width: 100%;
 }
 .br-column .br-mark {
 	min-width: 3.2em;
