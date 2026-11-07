@@ -11,8 +11,8 @@
     var breaksReset = by('breaks-reset');
     var breaksHint = by('breaks-status');
     breaksReset.onclick = function () {
-        if (!window.confirm('Reset the private Breaks link? Every open workspace and OBS dock using the old link stops working.')) return;
-        request('breaksAccessReset').then(function (reply) { breaksKey = reply.key || ''; links(); breaksHint.textContent = 'Private link reset. Open Breaks again to use the new one.'; }).catch(function (error) { breaksHint.textContent = error.message; });
+        if (!window.confirm('Reset the workspace link? Existing control windows and OBS docks will disconnect. Your breaks and stock are kept.')) return;
+        request('breaksAccessReset').then(function (reply) { breaksKey = reply.key || ''; links(); breaksHint.textContent = 'Workspace link reset. Open Breaks again to reconnect.'; }).catch(function (error) { breaksHint.textContent = error.message; });
     };
     var breaksKey = '', breaksKeyRequested = false;
     // The key goes in the fragment: browsers never send that part of a link to a web server.
