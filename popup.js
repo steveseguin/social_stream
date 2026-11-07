@@ -11543,9 +11543,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 				voiceItem.style.transition = 'background-color 0.2s';
 				
 				voiceItem.innerHTML = `
-					<div style="font-weight:bold">${voice.name}</div>
-					<div style="font-size:0.9em;opacity:0.8">ID: ${voice.voice_id}</div>
-					<div style="font-size:0.9em;opacity:0.8">Category: ${voice.category || 'Unknown'}</div>
+					<div style="font-weight:bold">${escapeHtml(voice.name)}</div>
+					<div style="font-size:0.9em;opacity:0.8">ID: ${escapeHtml(voice.voice_id)}</div>
+					<div style="font-size:0.9em;opacity:0.8">Category: ${escapeHtml(voice.category || 'Unknown')}</div>
 				`;
 				
 				voiceItem.addEventListener('mouseover', () => {
@@ -11565,7 +11565,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 				voicesList.appendChild(voiceItem);
 			});
 		}).catch(err => {
-			voicesList.innerHTML = `<div style="text-align:center;color:#f8d7da">Error: ${err.message}</div>`;
+			voicesList.innerHTML = `<div style="text-align:center;color:#f8d7da">Error: ${escapeHtml(err.message)}</div>`;
 			console.error("Error fetching voices:", err);
 		});
 	},
