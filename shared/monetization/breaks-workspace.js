@@ -1594,7 +1594,6 @@
 			if (action === "preview") return preview();
 			if (action === "display") return show("display");
 			if (action === "new") {
-				repeatSettings = null;
 				show("setup");
 				return;
 			}
