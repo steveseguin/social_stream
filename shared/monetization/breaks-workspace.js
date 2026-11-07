@@ -1177,6 +1177,10 @@
 				.then(function (r) {
 					if (epoch !== generation) return false;
 					render(r);
+					if (command === "breakRemoveStock" && f("stock-id").value === data.id) {
+						clearDraft("stock");
+						stockForm();
+					}
 					// A stock form left open would otherwise save its old quantity over this change.
 					if ((command === "breakStockUse" || command === "breakStockReturn") && !drafts[draftKey("stock")]) {
 						var editing = state.stock.filter(function (item) {

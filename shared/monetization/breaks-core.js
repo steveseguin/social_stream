@@ -460,6 +460,7 @@
 			var old = s.stock.filter(function (p) {
 				return p.id === data.id;
 			})[0];
+			if (data.id && !old) throw new Error("That stock item was removed. Use New item to add stock.");
 			if (!old && s.stock.length >= 100) throw new Error("Use up to 100 stock items.");
 			if (
 				data.quantity === "" ||
