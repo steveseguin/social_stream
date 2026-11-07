@@ -482,7 +482,9 @@
 		now = now || Date.now();
 		if (commands.indexOf(command) === -1 || command === "breakGet") throw new Error("Unknown break command.");
 		if (typeof data.revision !== "number" || data.revision !== s.revision)
-			throw new Error("This break changed elsewhere. Refresh to load the latest, then try again.");
+			throw new Error(command === "breakStock"
+				? "Stock changed elsewhere. Discard edits to reload, then reapply your changes."
+				: "This break changed elsewhere. Refresh to load the latest, then try again.");
 		var b, item;
 		if (command === "breakCreate") {
 			var template =

@@ -1165,7 +1165,9 @@
 				changed = !prior || prior.revision !== next.breaks.revision;
 			state = next.breaks;
 			ebay = next.ebayStock || ebay;
-			if (!prior) stockForm();
+			if (!prior) stockForm(state.stock.filter(function (item) {
+				return item.id === f("stock-id").value;
+			})[0]);
 			var stamp = JSON.stringify([state.revision, ebay, next.hostOn, state.opened && state.opened.id]);
 			if (stamp === signature) return;
 			signature = stamp;
