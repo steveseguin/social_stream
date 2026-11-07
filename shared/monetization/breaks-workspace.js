@@ -319,6 +319,7 @@
 			status.appendChild(node("span", "Unsaved"));
 			status.appendChild(
 				button("Discard edits", function () {
+					if (!state) return say("Connect to Social Stream first.", true);
 					clearDraft(name);
 					say("Edits discarded.");
 					if (name === "spot") pick(selected);
@@ -665,6 +666,7 @@
 			controls();
 		}
 		function stockForm(item) {
+			if (!state) return say("Connect to Social Stream first.", true);
 			item = item || {};
 			stockRevision = state.revision;
 			["id", "name", "quantity", "cost", "currency", "note"].forEach(function (k) {
@@ -805,6 +807,7 @@
 				);
 				actions.appendChild(
 					button("Use 1 in this break", function () {
+						if (!state) return say("Connect to Social Stream first.", true);
 						if (!state.active) return say("Start a break first.", true);
 						if (s.quantity < 1) return say("No stock remaining.", true);
 						send("breakStockUse", { stockId: s.id, quantity: 1 });
