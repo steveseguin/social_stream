@@ -1,0 +1,46 @@
+fastText language identification
+
+lid.176.ftz is the unchanged compressed language-identification model published
+by Facebook's fastText project. It is licensed under Creative Commons
+Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0), not MIT or GPL.
+License: LICENSE-model.txt
+https://creativecommons.org/licenses/by-sa/3.0/
+Model information and attribution:
+https://fasttext.cc/docs/en/language-identification.html
+Original download:
+https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.ftz
+The model was trained on Wikipedia, Tatoeba and SETimes data.
+
+Authors and publications credited by the fastText project:
+Armand Joulin, Edouard Grave, Piotr Bojanowski and Tomas Mikolov.
+Bag of Tricks for Efficient Text Classification (2016).
+https://arxiv.org/abs/1607.01759
+Armand Joulin, Edouard Grave, Piotr Bojanowski, Matthijs Douze, Herve Jegou
+and Tomas Mikolov. FastText.zip: Compressing text classification models (2016).
+https://arxiv.org/abs/1612.03651
+
+fasttext.js and fasttext.wasm contain the fastText runtime, distributed under
+MIT. Copyright (c) 2016-present, Facebook, Inc.
+License: LICENSE-fasttext.txt
+https://github.com/facebookresearch/fastText
+
+Runtime binaries originate from fasttext.wasm 1.0.1 by DreamOfIce, under MIT.
+License: LICENSE-wasm-wrapper.txt (original copyright notice retained)
+https://github.com/DreamOfIce/fastText.wasm
+https://registry.npmjs.org/fasttext.wasm/-/fasttext.wasm-1.0.1.tgz
+The package builds the upstream fastText core with Emscripten. Emscripten and
+runtime component notices are retained in LICENSE-emscripten.txt,
+LICENSE-musl.txt, LICENSE-libcxx.txt and LICENSE-compiler-rt.txt.
+
+Changes to the runtime loader: converted fasttext.mjs to a classic worker
+script by replacing import.meta.url with self.location.href, removing the
+ES module export, and disabling Node.js environment detection. The generated
+Embind invoker was replaced with the synchronous DYNAMIC_EXECUTION=0 path
+from Emscripten 3.1.45 so it does not require JavaScript string evaluation:
+https://github.com/emscripten-core/emscripten/blob/3.1.45/src/embind/embind_shared.js
+Copyright 2012 The Emscripten Authors; see LICENSE-emscripten.txt.
+The WASM binary and model are unmodified. No upstream TypeScript wrapper is
+included.
+
+Each component retains its own license. The application's GPLv3 license does
+not replace these licenses. Preserve these notices when redistributing.

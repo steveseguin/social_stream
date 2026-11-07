@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="et" data-site-root="../../" data-site-language="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/et/docs/moderation-filtering-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="et_EE">
+    <meta property="og:url" content="https://socialstream.ninja/et/docs/moderation-filtering-guide.html">
+    <meta property="og:title" content="Moderation and message filtering - Social Stream Ninja">
+    <meta property="og:description" content="Choose what reaches SSN outputs and what appears in an individual Dock or overlay.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/et/docs/moderation-filtering-guide.html">
+    <meta name="twitter:title" content="Moderation and message filtering - Social Stream Ninja">
+    <meta name="twitter:description" content="Choose what reaches SSN outputs and what appears in an individual Dock or overlay.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Moderation and message filtering - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Choose what reaches SSN outputs and what appears in an individual Dock or overlay.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="et">
+<script id="ssn-site-language" type="application/json">{"language":"et","page":"docs/moderation-filtering-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/chatbot-knowledge-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-overlays.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/game-overlay-troubleshooting.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/meld-guide.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Lülitu heledale teemale","Switch to dark theme":"Lülitu tumedale teemale","Light mode":"Hele teema","Dark mode":"Tume teema","Open navigation menu":"Ava navigeerimismenüü","Close navigation menu":"Sulge navigeerimismenüü","Copy this document as Markdown to the clipboard":"Kopeeri dokument Markdownina lõikelauale","Copy Markdown":"Kopeeri Markdown","Copying…":"Kopeerimine…","Markdown copied":"Markdown kopeeritud","Copy failed":"Kopeerimine ebaõnnestus","Copy comprehensive Markdown for an AI assistant":"Kopeeri kogu sisu Markdownina tehisintellekti abilisele","Copy this documentation page as Markdown for an AI assistant":"Kopeeri see juhend Markdownina tehisintellekti abilisele"},"strings":{", use":", use",". A platform suffix limits classification to that source type.":". A platform suffix limits classification to that source type.",". Censoring replaces matched text; blocking removes the whole message. Choose the behavior you want before testing.":". Censoring replaces matched text; blocking removes the whole message. Choose the behavior you want before testing.",". Enter, for example,":". Enter, for example,",". For example:":". For example:",". Matching is case-insensitive and checks both message text and the chatter’s name. A short fragment can match inside a longer word. If blur mode is enabled, matches can be blurred instead of removed.":". Matching is case-insensitive and checks both message text and the chatter’s name. A short fragment can match inside a longer word. If blur mode is enabled, matches can be blurred instead of removed.",". This removes that user’s messages and adds them to the SSN hide-user list.":". This removes that user’s messages and adds them to the SSN hide-user list.",". Use menu search to find the exact labels below.":". Use menu search to find the exact labels below.",". Use this on your personal Dock; a separate OBS Dock without the option uses the existing behavior of removing deleted messages. This cannot show messages that were blocked before SSN captured them.":". Use this on your personal Dock; a separate OBS Dock without the option uses the existing behavior of removing deleted messages. This cannot show messages that were blocked before SSN captured them.","1. Choose where to filter":"1. Choose where to filter","2. Block or restore a user":"2. Block or restore a user","3. Filter words and commands":"3. Filter words and commands","4. Handle bots and trusted links":"4. Handle bots and trusted links","5. Verify the boundary":"5. Verify the boundary",": a normal line, a blocked phrase, a command, and a bot message. Local filters should affect only the configured page; global filters should affect downstream outputs. Test manual and automatic featuring separately.":": a normal line, a blocked phrase, a command, and a bot message. Local filters should affect only the configured page; global filters should affect downstream outputs. Test manual and automatic featuring separately.","Add":"Lisa","All guides":"Kõik juhendid","Block messages that contain swear words":"Block messages that contain swear words","Blocked users":"Blocked users","Browse all guides":"Sirvige kõiki juhendeid","Captured source messages":"Captured source messages","Censor":"Censor","Changes that generated Dock URL. Other open Docks and overlays keep their own options.":"Changes that generated Dock URL. Other open Docks and overlays keep their own options.","Choose what reaches SSN outputs and what appears in an individual Dock or overlay.":"Choose what reaches SSN outputs and what appears in an individual Dock or overlay.","Commands & API":"Käsud ja API","Contains text or name":"Contains text or name","Controls the original platform chat. Hiding someone inside SSN does not establish a native platform ban.":"Controls the original platform chat. Hiding someone inside SSN does not establish a native platform ban.","Copy the updated Dock link and replace the URL wherever that Dock is open. For command clutter, the Dock supports":"Copy the updated Dock link and replace the URL wherever that Dock is open. For command clutter, the Dock supports","Deleted":"Deleted","Download":"Laadi alla","Drops or changes captured messages for downstream SSN outputs. Use when something should not reach any output.":"Drops or changes captured messages for downstream SSN outputs. Use when something should not reach any output.","Each page applies its own URL options":"Each page applies its own URL options","Effect":"Effect","Features":"Funktsioonid","Filter before distribution":"Filter before distribution","Find command filtering in settings.":"Find command filtering in settings.","For a custom Dock-only phrase list, find":"For a custom Dock-only phrase list, find","For a message already in the Dock, right-click and open":"For a message already in the Dock, right-click and open","For a prepared list, find":"For a prepared list, find","For global profanity handling, search for":"For global profanity handling, search for","Global filtering happens before distribution. A Dock URL filter affects only that Dock.":"Global filtering happens before distribution. A Dock URL filter affects only that Dock.","Global settings":"Global settings","Global settings and tools → Message - Visibility":"Global settings and tools → Message - Visibility","Guides":"Juhendid","Hire":"Laenutus","Home":"Avaleht","Identify by name who are bots":"Identify by name who are bots","If too much disappears, turn off the last filter you added, check the blocked-user list, and check donation/member/queue-only toolbar modes. Old OBS URLs retain old options. For a reviewed-message workflow, see":"If too much disappears, turn off the last filter you added, check the blocked-user list, and check donation/member/queue-only toolbar modes. Old OBS URLs retain old options. For a reviewed-message workflow, see","Incoming chat":"Incoming chat","Individual pages":"Individual pages","Inspiration":"Inspiratsioon","Main navigation":"Peamine navigeerimine","Message - Visibility → Assign roles/classes to certain users":"Message - Visibility → Assign roles/classes to certain users","Moderation and message filtering":"Moderation and message filtering","Moderation and message filtering - Social Stream Ninja":"Moderation and message filtering - Social Stream Ninja","Native platform moderation":"Native platform moderation","On this page":"Sellel lehel","Open SSN’s popup or desktop":"Open SSN’s popup or desktop","Open navigation menu":"Ava navigeerimismenüü","Open one unfiltered Dock and one filtered Dock on the same session. Send fictional":"Open one unfiltered Dock and one filtered Dock on the same session. Send fictional","Overlay Gallery":"Ülekattegalerii","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logo","Social Stream Ninja ·":"Social Stream Ninja ·","Sources and Settings":"Allikad ja sätted","Streaming Chat Dock link options":"Streaming Chat Dock link options","Support":"Abi","Supported Sites":"Toetatud saidid","Switch theme":"Vaheta teemat","The bot must be identified first. Assigning an SSN role does not grant privileges on Twitch or another platform. See the":"The bot must be identified first. Assigning an SSN role does not grant privileges on Twitch or another platform. See the","Then choose a global bot-hiding option if no output needs those messages, or add":"Then choose a global bot-hiding option if no output needs those messages, or add","This example changes a Dock’s presentation. It does not disable commands in Points, Waitlist, or Event Flow.":"This example changes a Dock’s presentation. It does not disable commands in Points, Waitlist, or Event Flow.","To keep messages visible after the Dock receives a deletion, add":"To keep messages visible after the Dock receives a deletion, add","To unblock, remove the username from that list. Test with a new message; previously removed rows do not automatically return.":"To unblock, remove the username from that list. Test with a new message; previously removed rows do not automatically return.","Under global":"Under global","Use the platform’s own moderation tools when you need to ban or time out someone on the source platform. SSN’s visibility and role lists are not a substitute for platform permissions.":"Use the platform’s own moderation tools when you need to ban or time out someone on the source platform. SSN’s visibility and role lists are not a substitute for platform permissions.","User Actions → Block User":"User Actions → Block User","Using the Dock":"Using the Dock","Where":"Where","in the Streaming Chat Dock options. Turn it on, enter a word or phrase, and select":"in the Streaming Chat Dock options. Turn it on, enter a word or phrase, and select","label and dimmed text. For example:":"label and dimmed text. For example:","or":"või","role controls reference":"role controls reference","test messages":"testsõnumid","to a Dock URL to hide them only there. To replace ordinary links while allowing bot links, use:":"to a Dock URL to hide them only there. To replace ordinary links while allowing bot links, use:","to that Dock’s URL. Deleted messages stay readable with a":"to that Dock’s URL. Deleted messages stay readable with a","under global Message - Visibility. Enable its switch and enter comma-separated usernames.":"under global Message - Visibility. Enable its switch and enter comma-separated usernames."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="et" href="https://socialstream.ninja/et/docs/moderation-filtering-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide visual-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="Peamine navigeerimine">
+<a href="../index.html">Avaleht</a>
+<a href="features.html">Funktsioonid</a>
+<a href="inspiration.html" class="site-priority-inspiration">Inspiratsioon</a>
+<a href="download.html">Laadi alla</a>
+<a href="guides.html">Juhendid</a>
+<a href="commands.html">Käsud ja API</a>
+<a href="supported-sites.html">Toetatud saidid</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">Ülekattegalerii</a>
+<a href="services.html" class="site-priority-hire">Laenutus</a>
+<a href="support.html">Abi</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Eesti"><span aria-hidden="true">🌐 </span><span lang="et">Eesti</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/moderation-filtering-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/moderation-filtering-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/moderation-filtering-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/moderation-filtering-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/moderation-filtering-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/moderation-filtering-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/moderation-filtering-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/moderation-filtering-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/moderation-filtering-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/moderation-filtering-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/moderation-filtering-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/moderation-filtering-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/moderation-filtering-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/moderation-filtering-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/moderation-filtering-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/moderation-filtering-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/moderation-filtering-guide.html" lang="th" hreflang="th">ไทย</a><a class="site-language-link" href="moderation-filtering-guide.html" lang="et" hreflang="et" aria-current="true">Eesti</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="Vaheta teemat">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="Ava navigeerimismenüü" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>Moderation and message filtering</h1>
+<p>Choose what reaches SSN outputs and what appears in an individual Dock or overlay.</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="Sellel lehel">
+<a href="guides.html">Kõik juhendid</a>
+<a href="#scope">1. Choose where to filter</a>
+<a href="#users">2. Block or restore a user</a>
+<a href="#words">3. Filter words and commands</a>
+<a href="#roles">4. Handle bots and trusted links</a>
+<a href="#check">5. Verify the boundary</a>
+</nav>
+<section class="guide-card" id="scope">
+<h2 id="read-section-1">1. Choose where to filter</h2>
+<p>Open SSN’s popup or desktop <strong>Allikad ja sätted</strong>. Use menu search to find the exact labels below.</p>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>Incoming chat</strong>
+<span>Captured source messages</span>
+</li>
+<li>
+<strong>Global settings</strong>
+<span>Filter before distribution</span>
+</li>
+<li>
+<strong>Individual pages</strong>
+<span>Each page applies its own URL options</span>
+</li>
+</ol>
+<figcaption>Global filtering happens before distribution. A Dock URL filter affects only that Dock.</figcaption>
+</figure>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">Where</th>
+<th scope="col">Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td data-label="Where">
+<strong>Global settings and tools → Message - Visibility</strong>
+</td>
+<td data-label="Effect">Drops or changes captured messages for downstream SSN outputs. Use when something should not reach any output.</td>
+</tr>
+<tr>
+<td data-label="Where">
+<strong>Streaming Chat Dock link options</strong>
+</td>
+<td data-label="Effect">Changes that generated Dock URL. Other open Docks and overlays keep their own options.</td>
+</tr>
+<tr>
+<td data-label="Where">
+<strong>Native platform moderation</strong>
+</td>
+<td data-label="Effect">Controls the original platform chat. Hiding someone inside SSN does not establish a native platform ban.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="guide-card" id="users">
+<h2 id="read-section-2">2. Block or restore a user</h2>
+<ol class="guide-steps">
+<li>For a message already in the Dock, right-click and open <strong>User Actions → Block User</strong>. This removes that user’s messages and adds them to the SSN hide-user list.</li>
+<li>For a prepared list, find <strong>Blocked users</strong> under global Message - Visibility. Enable its switch and enter comma-separated usernames.</li>
+<li>To unblock, remove the username from that list. Test with a new message; previously removed rows do not automatically return.</li>
+</ol>
+<p>Use the platform’s own moderation tools when you need to ban or time out someone on the source platform. SSN’s visibility and role lists are not a substitute for platform permissions.</p>
+<p>To keep messages visible after the Dock receives a deletion, add <code>&amp;showdeleted</code> to that Dock’s URL. Deleted messages stay readable with a <strong>Deleted</strong> label and dimmed text. For example: <code>dock.html?session=YOUR_SESSION_ID&amp;showdeleted</code>. Use this on your personal Dock; a separate OBS Dock without the option uses the existing behavior of removing deleted messages. This cannot show messages that were blocked before SSN captured them.</p>
+</section>
+<section class="guide-card" id="words">
+<h2 id="read-section-3">3. Filter words and commands</h2>
+<p>For global profanity handling, search for <strong>Censor</strong> või <strong>Block messages that contain swear words</strong>. Censoring replaces matched text; blocking removes the whole message. Choose the behavior you want before testing.</p>
+<figure class="guide-shot"><a href="../../docs/images/guides/visual/find-filters.webp"><img src="../../docs/images/guides/visual/find-filters.webp" width="519" height="192" alt="Find command filtering in settings." loading="lazy" decoding="async"></a><figcaption>Find command filtering in settings.</figcaption></figure>
+
+<p>For a custom Dock-only phrase list, find <strong>Contains text or name</strong> in the Streaming Chat Dock options. Turn it on, enter a word or phrase, and select <strong>Lisa</strong>. Matching is case-insensitive and checks both message text and the chatter’s name. A short fragment can match inside a longer word. If blur mode is enabled, matches can be blurred instead of removed.</p>
+<p>Copy the updated Dock link and replace the URL wherever that Dock is open. For command clutter, the Dock supports <code>&amp;hidecommands</code>. For example:</p>
+<pre>
+<code>dock.html?session=YOUR_SESSION_ID&amp;hidecommands&amp;blockedwords=spoiler</code>
+</pre>
+<p>This example changes a Dock’s presentation. It does not disable commands in Points, Waitlist, or Event Flow.</p>
+</section>
+<section class="guide-card" id="roles">
+<h2 id="read-section-4">4. Handle bots and trusted links</h2>
+<p>Under global <strong>Message - Visibility → Assign roles/classes to certain users</strong>, use <strong>Identify by name who are bots</strong>. Enter, for example, <code>moobot:twitch,nightbot:twitch</code>. A platform suffix limits classification to that source type.</p>
+<p>Then choose a global bot-hiding option if no output needs those messages, or add <code>&amp;hidebots</code> to a Dock URL to hide them only there. To replace ordinary links while allowing bot links, use:</p>
+<pre>
+<code>dock.html?session=YOUR_SESSION_ID&amp;striplinks&amp;allowbotlinks</code>
+</pre>
+<p>The bot must be identified first. Assigning an SSN role does not grant privileges on Twitch or another platform. See the <a href="../../docs/index.html?file=role-based-controls.md">role controls reference</a>.</p>
+</section>
+<section class="guide-card" id="check">
+<h2 id="read-section-5">5. Verify the boundary</h2>
+<p>Open one unfiltered Dock and one filtered Dock on the same session. Send fictional <a href="test-message-guide.html">testsõnumid</a>: a normal line, a blocked phrase, a command, and a bot message. Local filters should affect only the configured page; global filters should affect downstream outputs. Test manual and automatic featuring separately.</p>
+<p>If too much disappears, turn off the last filter you added, check the blocked-user list, and check donation/member/queue-only toolbar modes. Old OBS URLs retain old options. For a reviewed-message workflow, see <a href="dock-live-guide.html">Using the Dock</a>.</p>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">Sirvige kõiki juhendeid</a>
+</p>
+</div>
+</div>
+</footer>
+<script data-copy-markdown src="../../docs/js/main.js">
+</script>
+</body>
+</html>

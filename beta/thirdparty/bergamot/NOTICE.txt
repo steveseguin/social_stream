@@ -1,0 +1,20 @@
+Mozilla / Bergamot local translation
+
+bergamot-translator-worker.js and bergamot-translator-worker.wasm are the
+unchanged runtime distributed by CaptionNinja, based on Mozilla Translate.
+Source: https://github.com/mozilla/translate/tree/main/js
+Engine source: https://github.com/browsermt/bergamot-translator
+License: Mozilla Public License 2.0, included in LICENSE.
+
+registry.json uses the Mozilla Firefox Translations 0.3.4 model registry, with
+English/Spanish and English/French in both directions upgraded to Mozilla's
+released version 3.0 base-memory models. All models are MPL 2.0.
+Sources: https://github.com/mozilla/firefox-translations-models/tree/0.3.4
+https://github.com/mozilla/translations
+https://mozilla.github.io/translations/firefox-models/
+Models download on demand from Mozilla's Google Cloud Storage buckets, are
+verified against pinned SHA-256 hashes, and are cached on the user's device.
+Gzip downloads use the separately licensed ../pako.min.js (../pako.LICENSE).
+
+shared/ai/local-translation-worker.js adapts Mozilla Translate's worker API usage
+for Social Stream Ninja and is distributed under the same MPL 2.0 license.
