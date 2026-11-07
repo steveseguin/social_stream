@@ -324,7 +324,8 @@
 			if (typeof data.labels === "string" && data.labels.length > 60000)
 				throw new Error("That spot list is too long. Use up to 120 spots with shorter notes.");
 			var styles = data.styles && typeof data.styles === "object" ? data.styles : {};
-			var labels = text(data.labels, 60000)
+			// Keep empty leading cells: trimming the whole paste would shift private notes into public columns.
+			var labels = (typeof data.labels === "string" ? data.labels : "")
 				.split(/\r?\n/)
 				.filter(function (x) {
 					return x.trim();
