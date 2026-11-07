@@ -983,7 +983,7 @@
 			if (!a) return;
 			el("[data-sales-enabled]").checked = a.enabled;
 			el("[data-sales-count]").textContent = (a.pending.length ? "(" + a.pending.length + ")" : "") + (a.warning ? " - Check eBay" : "");
-			el("[data-sales-status]").textContent = a.enabled ? ebay && ebay.enabled === false ? "Enable the eBay showcase in Connected platforms to receive sales." : a.pending.length ? "" : "Waiting for new sales from linked listings." : "Review is paused. Existing sales can still be reviewed.";
+			el("[data-sales-status]").textContent = a.enabled ? ebay && ebay.enabled === false ? "Enable the eBay showcase in Connected platforms to receive sales." : ebay && ebay.status || "Waiting for new sales from linked listings." : "Review is paused. Existing sales can still be reviewed.";
 			el("[data-sales-warning]").textContent = a.warning;
 			el("[data-sales-warning]").hidden = !a.warning;
 			el("[data-sales-reviewed]").hidden = !a.warning;
