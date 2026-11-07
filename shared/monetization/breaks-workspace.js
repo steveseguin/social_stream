@@ -234,8 +234,11 @@
 		boardColumn.insertBefore(auctionPanel, el(".br-grid"));
 		auctionPanel.querySelector("form").onsubmit = function (event) {
 			event.preventDefault();
-			if (state.auctions.pending.length && !confirm("Changing shows clears these suggestions. Continue?")) return;
-			send("breakAuctionSettings", { enabled: true, source: f("auction-source").value, stream: f("auction-stream").value });
+			var source = f("auction-source").value, stream = SSNBreaks.auctionStream(source, f("auction-stream").value);
+			if (!stream) return say("Paste the Whatnot or eBay Live show URL.", true);
+			var changed = source !== state.auctions.source || stream !== state.auctions.stream;
+			if (changed && state.auctions.pending.length && !confirm("Changing shows clears these suggestions. Continue?")) return;
+			send("breakAuctionSettings", { enabled: true, source: source, stream: stream });
 		};
 		el("[data-auction-stop]").onclick = function () { send("breakAuctionSettings", { enabled: false }); };
 		el("[data-auction-review]").onclick = function () { send("breakAuctionReview"); };
@@ -248,7 +251,7 @@
 			if (auctionConfig !== config) {
 				el("[data-auction-setup]").open = !a.enabled;
 				f("auction-source").value = a.source || (b.platform === "ebay" ? "ebay" : "whatnot");
-				f("auction-stream").value = a.stream || "";
+				f("auction-stream").value = a.stream ? (a.source === "whatnot" ? "https://www.whatnot.com/live/" : "https://www.ebay.com/ebaylive/events/") + a.stream : "";
 				auctionConfig = config;
 			}
 			el("[data-auction-start]").textContent = a.enabled ? "Update show" : "Start suggestions";

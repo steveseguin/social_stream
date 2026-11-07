@@ -697,7 +697,17 @@
             try { await store(); } catch (error) { privateState.breaks = previous; throw error; }
             // Suggestions are private. Workspaces read them through sealed breakGet replies.
         });
-        queue = job.catch(function (error) { console.warn('[Breaks] Could not save auction suggestion:', error.message); });
+        queue = job.catch(async function (error) {
+            var state = privateState.breaks;
+            if (state && state.auctions && state.auctions.enabled) {
+                // Preserve the last usable record and make an intake failure visible
+                // through the private poll, even when no new suggestion could fit.
+                state.auctions.warning = 'Could not save a suggestion. Check the platform for missed assignments.';
+                state.revision++;
+                try { await store(); } catch (_) {}
+            }
+            console.warn('[Breaks] Could not save auction suggestion:', error.message);
+        });
         return queue;
     };
     window.recordCommercePurchase = function (event) {

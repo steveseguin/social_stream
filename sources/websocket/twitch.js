@@ -5851,11 +5851,23 @@ async function cleanupCurrentConnection() {
               lastAt = now;
             }
           };
+          var reportRequestError = function(msg){
+            // An API request can fail while joined chat continues receiving messages.
+            // EventSub alone is not evidence that the chat connection is healthy.
+            if (window.websocket && window.websocket.readyState === 1) {
+              console.warn('Twitch API request failed while chat remains connected:', msg);
+            } else {
+              emit('error', msg);
+            }
+          };
           window.fetch = async function(input, init){
+            var url = (typeof input === 'string') ? input : (input && (input.url || input.href)) || '';
+            var host = '';
+            try { host = new URL(url, window.location.href).hostname; } catch(_){}
+            var isTwitchRequest = host === 'api.twitch.tv' || host === 'id.twitch.tv' || host === 'gql.twitch.tv';
             try {
               var res = await _origFetch(input, init);
-              var url = (typeof input === 'string') ? input : (input && input.url) || '';
-              if (url.indexOf('api.twitch.tv') !== -1 || url.indexOf('id.twitch.tv') !== -1 || url.indexOf('gql.twitch.tv') !== -1) {
+              if (isTwitchRequest) {
                 if (!res.ok) {
                   var msg = 'Twitch API ' + res.status;
                   try {
@@ -5870,24 +5882,24 @@ async function cleanupCurrentConnection() {
                   // - OAuth (id.twitch.tv) 401 => auth expired / sign-in required
                   // - Optional Helix/EventSub 401/403 => log only; chat can still be connected
                   // - Other Helix/GQL 401/403 => non-scary optional feature warning
-                  // - Otherwise, generic error
-                  var isOAuth = url.indexOf('id.twitch.tv') !== -1;
-                  var isHelixOrGql = url.indexOf('api.twitch.tv') !== -1 || url.indexOf('gql.twitch.tv') !== -1;
+                  // - Other failures must not override a healthy chat connection
+                  var isOAuth = host === 'id.twitch.tv';
+                  var isHelixOrGql = host === 'api.twitch.tv' || host === 'gql.twitch.tv';
                   var isEventSubSubscription = url.indexOf('api.twitch.tv/helix/eventsub/subscriptions') !== -1;
                   if (isOAuth && res.status === 401) {
                     __tw_maybeNotifySigninRequired('Twitch auth expired', { ignoreAccessToken: true });
                   } else if (isEventSubSubscription && (res.status === 401 || res.status === 403)) {
                     console.warn('Optional Twitch EventSub feature unavailable:', msg);
                   } else if (isHelixOrGql && (res.status === 401 || res.status === 403)) {
-                    emit('warn', 'Optional Twitch API feature unavailable');
+                    console.warn('Optional Twitch API feature unavailable:', msg);
                   } else {
-                    emit('error', msg);
+                    reportRequestError(msg);
                   }
                 }
               }
               return res;
             } catch(e) {
-              emit('error', e && e.message ? e.message : 'Network error');
+              if (isTwitchRequest) reportRequestError(e && e.message ? e.message : 'Network error');
               throw e;
             }
           };
