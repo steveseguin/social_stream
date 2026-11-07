@@ -7664,6 +7664,8 @@ function handleBothParam(ele, sync) {
         Object.keys(getTargetMap()).forEach(id => {
             syncSupportedServerParamsForTarget(id, document.getElementById(id), sourceElement, null, sourceTokens);
         });
+		// Shops/Breaks links derive their connection parameters from the updated Dock URL.
+		if (window.updateMonetizationLinks) window.updateMonetizationLinks();
 
         if (sync) {
             chrome.runtime.sendMessage({

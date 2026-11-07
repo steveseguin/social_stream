@@ -1,5 +1,6 @@
 (function() {
 	"use strict";
+	if (new URLSearchParams(location.search).has("breaks")) { window.SSNBreaksConnection(); return; }
 
 	var STORAGE_KEY = "ssn-obs-control-session-v1";
 	var WEBSOCKET_URL = SocialStreamLocalServer.getRelayUrl(new URLSearchParams(location.search), null, "wss://io.socialstream.ninja:443");

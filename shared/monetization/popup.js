@@ -356,7 +356,12 @@
             }
             breaksURL.searchParams.delete('commerce');
             breaksURL.searchParams.set('breaks', '');
-            if (connectionParams.has('server2')) breaksURL.searchParams.set('server2', connectionParams.get('server2'));
+            // Dock's server flag forwards Featured selections; it does not enable the host API.
+            // Breaks uses the host routes, otherwise P2P. Explicit hand-made API links still work.
+            breaksURL.searchParams.delete('server');
+            ['server2', 'server3', 'localserver', 'localserverport'].forEach(function (name) {
+                if (connectionParams.has(name)) breaksURL.searchParams.set(name, connectionParams.get(name));
+            });
             breaksURL.hash = breaksKey ? 'breakKey=' + breaksKey : '';
             breaksLink.href = breaksURL.href;
             if (lastResponse.password) { breaksURL.searchParams.set('password', lastResponse.password); breaksLink.href = breaksURL.href; }

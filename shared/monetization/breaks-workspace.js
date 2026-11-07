@@ -456,11 +456,8 @@
 			show("setup");
 			say("Setup copied. Buyer assignments and stock usage will start empty.");
 		}
-		var connectionPanel = document.querySelector(".session-panel"),
-			connectionDetails = node("details", undefined, "br-connection");
-		connectionDetails.appendChild(node("summary", "Connection"));
-		connectionPanel.parentNode.insertBefore(connectionDetails, connectionPanel);
-		connectionDetails.appendChild(connectionPanel);
+		// The menu-issued link selects the session and transport; there is no second setup form.
+		document.querySelector(".session-panel").hidden = true;
 		var previewDialog = node("dialog", undefined, "br-preview"),
 			previewFrame = node("iframe");
 		previewFrame.title = "Audience preview";

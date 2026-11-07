@@ -10494,6 +10494,7 @@ function setupSocketDock() {
 			return;
 		}
 
+		if (window.handleBreaksRelayRequest && window.handleBreaksRelayRequest(data, joinedDockSocket)) return;
 		// Give managed audience displays the same snapshot they can already receive.
 		if (handleOverlayControlRequest(data, socketserverDock, 3, !!settings.server2)) return;
 		const edgeReplySocket = socketserverDock;
@@ -11432,7 +11433,9 @@ function sendStreamDeckPeerResult(request, routed, UUID) {
 	const packet = routed.kind === "capabilities" && !request.get
 		? routed.result
 		: buildStreamDeckCommandResultPacket(request, routed.result);
-	sendDataP2P(packet, UUID);
+	// Breaks histories can exceed a WebRTC data-channel message. Use the existing bridge chunks.
+	if (request.action === "commerceControl" && request.value && request.value.command === "breakSecure") sendDataP2PChunked(packet, UUID);
+	else sendDataP2P(packet, UUID);
 	return true;
 }
 

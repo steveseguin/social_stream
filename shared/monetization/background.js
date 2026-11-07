@@ -636,7 +636,16 @@
 		return { commerceState: controlState(), publicShop: shopState(), commerceLive: liveCommerce, patreon: patreonReceiver.snapshot(), shopify: shopifyReceiver.snapshot(), receiver: { enabled: !!settings.socketserver, on: !!isExtensionOn, connected: !!(typeof socketserver !== 'undefined' && socketserver && socketserver.readyState === 1), providers: providerActivity }, ninjaReceiver: ninjaReceiver.snapshot(), ebay: ebay.snapshot(), throne: { status: throneStatus, gifts: thronePrivate().gifts, webhook: thronePrivate().hook ? 'https://api.socialstream.ninja/v1/throne/webhook/' + thronePrivate().hook : '' }, config: cfg(), list: list(), tokenSaved: !!privateState.token, status: cfg().ninja.reliable ? ninjaReceiver.snapshot().status : status, canUndo: !!lastPurchase };
 	}
 	window.handleMonetizationRequest = function (request, sender) {
-		if (sender && sender.tab && sender.tab.id !== null && sender.tab.id !== undefined) return Promise.resolve({ error: 'Use the SSN popup to configure monetization.' });
+		var localBreaks = request.action === 'commerceControl' && request.command === 'breakSecure' && typeof request.session === 'string';
+		if (localBreaks && (request.session !== streamID || !isExtensionOn)) return Promise.resolve({ error: 'Open Breaks from the active Social Stream session.' });
+		if (sender && sender.tab && sender.tab.id !== null && sender.tab.id !== undefined) {
+			var workspace = false;
+			try {
+				var page = new URL(sender.url), expected = new URL(chrome.runtime.getURL('obs-control-dock.html'));
+				workspace = localBreaks && sender.id === chrome.runtime.id && page.origin === expected.origin && page.pathname === expected.pathname && page.searchParams.has('breaks');
+			} catch (_) {}
+			if (!workspace) return Promise.resolve({ error: 'Use the SSN popup to configure monetization.' });
+		}
         if (request.action === 'getCommerceState') return Promise.resolve({ commerce: controlState() });
         if (request.action === 'commerceControl' && SSNCommerceBoards.commands.indexOf(request.command) === -1 && !isBreakCommand(request.command) && request.command !== 'breakSecure') return action(request).catch(function (e) { return { error: e.message }; });
 		var job = queue.then(function () {
@@ -647,6 +656,19 @@
 			return { error: e.message || 'Monetization action failed.' };
 		});
 	};
+    // Reuse the configured host relay. Channel 15 carries only sealed Breaks replies.
+    // This narrow authenticated route does not grant channel-3 clients general API access.
+    window.handleBreaksRelayRequest = function (packet, socket) {
+        if (!packet || packet.breaksRelay !== true) return false;
+        if (!isExtensionOn || settings.disablehost || !(settings.server2 || settings.server3) || packet.action !== 'commerceControl' ||
+            !packet.value || packet.value.command !== 'breakSecure' || typeof packet.get !== 'string' || packet.get.length > 200) return true;
+        var session = streamID;
+        window.handleMonetizationRequest({ action: 'commerceControl', command: 'breakSecure', data: packet.value.data }).then(function (reply) {
+            if (session !== streamID || !isExtensionOn || settings.disablehost || !(settings.server2 || settings.server3) || socket.readyState !== 1 || !reply.commerceState || !reply.commerceState.sealed) return;
+            socket.send(JSON.stringify({ out: 15, type: 'commandResult', get: packet.get, result: reply }));
+        }).catch(function () {});
+        return true;
+    };
     // In-process only, for Event Flow on the host. No message or relay route calls this directly.
     window.handleBreaksLocalRequest = function (command, data) {
         var job = queue.then(async function () {
