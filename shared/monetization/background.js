@@ -40,7 +40,7 @@
         if (archiveOnly) return {commerceState:{breaks:breakState, hostOn:!!isExtensionOn}};
         var listings = ebay.snapshot();
         // The workspace only needs stock draft fields, not product artwork or listing URLs.
-        var ebayStock = {status:listings.status, environment:listings.environment, items:listings.items.map(function (item) {
+        var ebayStock = {status:listings.status, enabled:cfg().ebay.enabled, environment:listings.environment, items:listings.items.map(function (item) {
             return {id:item.id, name:item.name, amount:item.amount, currency:item.currency, available:item.available};
         })};
         return {commerceState:{breaks:breakState, ebayStock:ebayStock, hostOn:!!isExtensionOn}};
@@ -80,6 +80,12 @@
 			return privateState;
 		},
 		store: store,
+		storeSales: async function (sales, environment, listings) {
+            var previous = privateState.breaks;
+            var next = typeof SSNBreaks !== 'undefined' ? SSNBreaks.ingestSales(previous, sales, environment, listings, Date.now()) : null;
+            if (next) privateState.breaks = next;
+            try { await store(); } catch (error) { if (next) privateState.breaks = previous; throw error; }
+        },
 		config: function () {
 			return cfg().ebay;
 		},

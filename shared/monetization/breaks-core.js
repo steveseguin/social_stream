@@ -21,6 +21,9 @@
 		"breakAuctionSettings",
 		"breakSuggestion",
 		"breakAuctionReview",
+		"breakSalesSettings",
+		"breakSaleReview",
+		"breakSaleUndo",
 	];
 	var platforms = ["whatnot", "ebay", "tiktok", "other"],
 		themes = ["standard", "teams"];
@@ -210,6 +213,7 @@
 			version: 1,
 			revision: number(raw.revision, Number.MAX_SAFE_INTEGER, 0),
 			auctions: auctionState(raw.auctions),
+			sales: salesState(raw.sales),
 			active: board(raw.active),
 			undo: board(raw.undo),
 			undoLabel: raw.undo ? text(raw.undoLabel, 250) : "",
@@ -222,6 +226,63 @@
 					return s.id && s.name;
 				}),
 		};
+	}
+	function saleRecord(raw) {
+		raw = raw || {};
+		return { id: text(raw.id, 80), stockId: text(raw.stockId, 80), itemId: text(raw.itemId, 80),
+			name: text(raw.name, 160), environment: raw.environment === "sandbox" ? "sandbox" : "production",
+			quantity: number(raw.quantity, 100000, 0), at: number(raw.at, Number.MAX_SAFE_INTEGER, 0),
+			status: ["deducted", "accounted", "dismissed"].indexOf(raw.status) !== -1 ? raw.status : "pending",
+			reviewedAt: number(raw.reviewedAt, Number.MAX_SAFE_INTEGER, 0) };
+	}
+	function salesState(raw) {
+		raw = raw || {};
+		return { enabled: raw.enabled === true, since: number(raw.since, Number.MAX_SAFE_INTEGER, 0), warning: text(raw.warning, 200),
+			pending: (Array.isArray(raw.pending) ? raw.pending : []).slice(0, 50).map(saleRecord),
+			history: (Array.isArray(raw.history) ? raw.history : []).slice(-50).map(saleRecord),
+			seen: (Array.isArray(raw.seen) ? raw.seen : []).slice(-5000).map(function (r) { return { id: text(r.id, 80), at: number(r.at, Number.MAX_SAFE_INTEGER, 0) }; }) };
+	}
+	// Called only by the seller service, before the same storage write as its sales cursor.
+	// Public chat and auction results must never enter this stock queue.
+	function ingestSales(raw, sales, environment, listings, now) {
+		if (!raw || !raw.sales || !raw.sales.enabled || !Array.isArray(sales) || ["production", "sandbox"].indexOf(environment) === -1) return null;
+		now = now || Date.now();
+		var s = normalize(raw), a = s.sales, changed = false, cutoff = Math.max(a.since, now - 29 * 86400000);
+		a.seen = a.seen.filter(function (r) { return r.at >= now - 30 * 86400000; });
+		var seen = Object.create(null);
+		a.seen.concat(a.pending, a.history).forEach(function (r) { seen[r.id] = true; });
+		function warn(message) { if (a.warning !== message) { a.warning = message; changed = true; } }
+		sales.forEach(function (sale) {
+			if (!sale || !/^[a-f0-9]{64}$/.test(sale.id || "")) return;
+			var id = environment + ":" + sale.id, at = Number(sale.paidAt || sale.createdAt);
+			if (seen[id]) return;
+			var listing = (listings || []).filter(function (i) { return i.id === sale.itemId; })[0];
+			var matches = s.stock.filter(function (i) { return i.ebayId === sale.itemId && i.ebayEnvironment === environment; });
+			if (!listing || !matches.length) return;
+			if (!Number.isFinite(at) || at <= 0 || at > now + 300000) { warn("An eBay sale has an unusable date. Check its stock change on eBay."); return; }
+			if (at <= cutoff || at < listing.addedAt) return;
+			if (matches.length !== 1) { warn("An eBay listing has duplicate stock links. Check its sales on eBay and fix the links."); return; }
+			var quantity = Number(sale.quantity);
+			if (["number", "string"].indexOf(typeof sale.quantity) === -1 || !Number.isInteger(quantity) || quantity < 1 || quantity > 100000) { warn("An eBay sale has no usable quantity. Check its stock change on eBay."); return; }
+			if (a.seen.length >= 5000) { warn("Sales review reached its 30-day receipt limit. Check new sales on eBay."); return; }
+			if (a.pending.length >= 50) { warn("Sales review is full. Review the queue, then check eBay for missing sales."); return; }
+			a.pending.push(saleRecord({ id: id, stockId: matches[0].id, itemId: sale.itemId, name: matches[0].name, environment: environment, quantity: quantity, at: at }));
+			a.seen.push({ id: id, at: at }); seen[id] = true; changed = true;
+		});
+		if (!changed) return null;
+		try { return finish(s, "breakSaleReview"); }
+		catch (_) {
+			// Keep ordinary sale alerts usable even when the private workspace has no room.
+			s = normalize(raw);
+			var warning = "Sales review could not fit more records. Free space and check eBay for missing sales.";
+			if (s.sales.warning === warning) return null;
+			s.sales.warning = warning; s.revision++; return s;
+		}
+	}
+	function saleStock(s, sale) {
+		var item = s.stock.filter(function (i) { return i.id === sale.stockId && i.ebayId === sale.itemId && i.ebayEnvironment === sale.environment; })[0];
+		if (!item) throw new Error("The original stock link changed. Adjust stock manually and mark the sale already counted.");
+		return item;
 	}
 	function auctionStream(source, value) {
 		if (["whatnot", "ebay"].indexOf(source) === -1) return "";
@@ -351,6 +412,7 @@
 		delete s.undo;
 		delete s.auctions.seen;
 		delete s.auctions.captures;
+		delete s.sales.seen;
 		return s;
 	}
 	function active(state, data) {
@@ -577,7 +639,32 @@
 			s.history = s.history.filter(function (p) {
 				return p.id !== data.id;
 			});
-		else if (command === "breakStock") {
+		else if (command === "breakSalesSettings") {
+			if (data.enabled === true && !s.sales.enabled) { s.sales.enabled = true; s.sales.since = now; }
+			else if (data.enabled === false) s.sales.enabled = false;
+			if (data.reviewed === true) s.sales.warning = "";
+		} else if (command === "breakSaleReview") {
+			var sale = s.sales.pending.filter(function (r) { return r.id === data.id; })[0];
+			if (!sale) throw new Error("That sale was already reviewed. Refresh the list.");
+			if (["deducted", "accounted", "dismissed"].indexOf(data.status) === -1) throw new Error("Choose how to handle this sale.");
+			if (data.status === "deducted") {
+				item = saleStock(s, sale);
+				if (item.quantity < sale.quantity) throw new Error("Not enough local stock. Adjust it or mark the sale already counted.");
+				item.quantity -= sale.quantity;
+			}
+			sale.status = data.status; sale.reviewedAt = now;
+			s.sales.pending = s.sales.pending.filter(function (r) { return r.id !== sale.id; });
+			s.sales.history.push(sale); s.sales.history = s.sales.history.slice(-50);
+		} else if (command === "breakSaleUndo") {
+			var reviewed = s.sales.history.filter(function (r) { return r.id === data.id; })[0];
+			if (!reviewed || reviewed.status !== "deducted") throw new Error("That deduction is no longer available to undo.");
+			if (s.sales.pending.length >= 50) throw new Error("Review a pending sale first to make room.");
+			item = saleStock(s, reviewed);
+			if (item.quantity + reviewed.quantity > 100000) throw new Error("That would put more than 100000 in stock.");
+			item.quantity += reviewed.quantity; reviewed.status = "pending"; reviewed.reviewedAt = 0;
+			s.sales.history = s.sales.history.filter(function (r) { return r.id !== reviewed.id; });
+			s.sales.pending.push(reviewed);
+		} else if (command === "breakStock") {
 			var old = s.stock.filter(function (p) {
 				return p.id === data.id;
 			})[0];
@@ -851,6 +938,7 @@
 		ingestAuction: ingestAuction,
 		auctionEvent: auctionEvent,
 		auctionStream: auctionStream,
+		ingestSales: ingestSales,
 	};
 	root.SSNBreaks = api;
 	if (typeof module === "object" && module.exports) module.exports = api;

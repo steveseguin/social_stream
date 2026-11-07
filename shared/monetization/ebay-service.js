@@ -164,7 +164,9 @@
 					p.cursor = result.through;
 					p.seen = p.seen.slice(-10000);
 					try {
-						await hooks.store();
+						// Stage private stock reviews in the same write as the cursor and receipt IDs.
+						if (hooks.storeSales) await hooks.storeSales(result.sales, p.environment || 'production', p.items);
+						else await hooks.store();
 					} catch (e) {
 						hooks.privateState().ebay = JSON.parse(before);
 						throw e;

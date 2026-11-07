@@ -325,6 +325,14 @@
 		ebayDetails.querySelector("h2").remove();
 		ebayCard.remove(); el('[data-view="stock"]').appendChild(ebayDetails);
 		stockCard.insertBefore(el('[data-do="new-stock"]'), inventory);
+		var salesPanel = node("details", undefined, "br-sales");
+		salesPanel.innerHTML = '<summary><span aria-hidden="true">&#36;</span> eBay sales <span data-sales-count></span></summary>' +
+			'<div class="br-actions"><label class="br-check" title="Review new seller-feed sales for linked stock. Requires the eBay showcase to be enabled."><input type="checkbox" data-sales-enabled>Review new sales</label><a href="docs/breaks.html#sales" target="_blank" rel="noopener">Guide</a></div>' +
+			'<p data-sales-status class="br-muted"></p><p data-sales-warning class="br-muted" role="status" hidden></p><button type="button" data-sales-reviewed hidden>Reviewed on eBay</button>' +
+			'<div class="br-sales-list"></div><details><summary>Recently reviewed</summary><div class="br-sales-history"></div></details>';
+		stockColumns.parentElement.insertBefore(salesPanel, stockColumns);
+		el("[data-sales-enabled]").onchange = function () { send("breakSalesSettings", { enabled: this.checked }); };
+		el("[data-sales-reviewed]").onclick = function () { send("breakSalesSettings", { reviewed: true }); };
 		var icons = {live:"\u25a6",setup:"+",stock:"\u25a3",display:"\u25a4",costs:"$",history:"\u21ba",
 			refresh:"\u21bb",preview:"\u25b7",copy:"\u2398",visibility:"\u25c9",lock:"\u26bf",undo:"\u21b6",export:"\u2193",
 			"add-spot":"+",new:"+",finish:"\u2713",reveal:"\u2726",highlight:"\u2606","clear-highlight":"\u00d7","save-next":"\u2192"};
@@ -502,6 +510,8 @@
 			el('[data-do="archive"]').hidden = !!archiveId || !b;
 			auctionPanel.querySelectorAll("input, select, [data-auction-start]").forEach(function (input) { input.disabled = busy || !editable || b.stage === "finished"; });
 			auctionPanel.querySelectorAll("[data-auction-assign]").forEach(function (button) { button.disabled = busy || !editable || b.stage === "finished" || !button.parentElement.querySelector("select").value; });
+			el("[data-sales-enabled]").checked = !!(state && state.sales && state.sales.enabled);
+			salesPanel.querySelectorAll("[data-sale-deduct], [data-sale-undo]").forEach(function (button) { button.disabled = busy || button.dataset.unavailable === "true"; });
 		}
 		function repeat(b) {
 			if (!b) return say("Select a saved break first.", true);
@@ -968,7 +978,56 @@
 				(uncounted ? " / " + uncounted + " stock records not counted: missing cost or another currency." : "")
 			);
 		}
+		function renderSales() {
+			var a = state.sales;
+			if (!a) return;
+			el("[data-sales-enabled]").checked = a.enabled;
+			el("[data-sales-count]").textContent = (a.pending.length ? "(" + a.pending.length + ")" : "") + (a.warning ? " - Check eBay" : "");
+			el("[data-sales-status]").textContent = a.enabled ? ebay && ebay.enabled === false ? "Enable the eBay showcase in Connected platforms to receive sales." : a.pending.length ? "" : "Waiting for new sales from linked listings." : "Review is paused. Existing sales can still be reviewed.";
+			el("[data-sales-warning]").textContent = a.warning;
+			el("[data-sales-warning]").hidden = !a.warning;
+			el("[data-sales-reviewed]").hidden = !a.warning;
+			function rowFor(sale) {
+				var row = node("article", undefined, "br-record"); row.dataset.sale = sale.id;
+				row.appendChild(node("strong", sale.quantity + " x " + sale.name));
+				row.appendChild(node("span", (sale.environment === "sandbox" ? "Sandbox / " : "") + new Date(sale.at).toLocaleString() + " / " + sale.id.slice(-8), "br-muted"));
+				return row;
+			}
+			function matchingStock(sale) { return state.stock.filter(function (i) { return i.id === sale.stockId && i.ebayId === sale.itemId && i.ebayEnvironment === sale.environment; })[0]; }
+			function review(sale, status) {
+				if (status === "deducted" && drafts["stock:" + sale.stockId]) return say("Save or discard that stock item's unsaved edits first.", true);
+				send("breakSaleReview", { id: sale.id, status: status });
+			}
+			var list = el(".br-sales-list"); list.textContent = "";
+			a.pending.forEach(function (sale) {
+				var row = rowFor(sale), stock = matchingStock(sale), actions = node("div", undefined, "br-actions");
+				row.appendChild(node("span", stock ? stock.quantity + " in local stock" : "Stock link changed. Adjust manually, then mark already counted.", "br-muted"));
+				var deduct = button("Deduct " + sale.quantity, function () { review(sale, "deducted"); });
+				deduct.dataset.saleDeduct = ""; deduct.dataset.unavailable = String(!stock || stock.quantity < sale.quantity);
+				deduct.title = "Reduce local stock only. If already used in a break or deducted manually, choose Already counted.";
+				deduct.disabled = busy || deduct.dataset.unavailable === "true";
+				actions.appendChild(deduct);
+				actions.appendChild(button("Already counted", function () { review(sale, "accounted"); }));
+				actions.appendChild(button("Dismiss", function () { review(sale, "dismissed"); }));
+				row.appendChild(actions); list.appendChild(row);
+			});
+			var history = el(".br-sales-history"); history.textContent = "";
+			a.history.slice().reverse().forEach(function (sale) {
+				var row = rowFor(sale);
+				row.appendChild(node("span", sale.status === "deducted" ? "Deducted from local stock" : sale.status === "accounted" ? "Already counted" : "Dismissed"));
+				if (sale.status === "deducted") {
+					var undo = button("Undo deduction", function () {
+						if (drafts["stock:" + sale.stockId]) return say("Save or discard that stock item's unsaved edits first.", true);
+						send("breakSaleUndo", { id: sale.id });
+					}), stock = matchingStock(sale);
+					undo.dataset.saleUndo = ""; undo.dataset.unavailable = String(!stock || stock.quantity + sale.quantity > 100000 || a.pending.length >= 50);
+					undo.disabled = busy || undo.dataset.unavailable === "true"; row.appendChild(undo);
+				}
+				history.appendChild(row);
+			});
+		}
 		function renderStock() {
+			renderSales();
 			stockListingOptions(f("stock-ebay").value);
 			stockListingDetail();
 			var list = el(".br-stock-list");
@@ -1261,6 +1320,12 @@
 			[
 				".br-grid",
 				".br-auction-list",
+				".br-sales-list",
+				".br-sales-history",
+				"[data-sales-count]",
+				"[data-sales-warning]",
+				"[data-sales-status]",
+				"[data-stock-listing]",
 				".br-stock-list",
 				".br-ebay-list",
 				".br-history-list",
@@ -1282,6 +1347,8 @@
 			el('[data-do="undo"]').title = "";
 			f("swap").textContent = "";
 			f("stock-use-item").textContent = "";
+			f("stock-ebay").textContent = "";
+			el("[data-sales-enabled]").checked = false;
 			f("board-id").value = "";
 			f("private-link").value = "";
 			f("private-link").parentElement.hidden = true;
@@ -1380,7 +1447,7 @@
 						stockForm();
 					}
 					// A stock form left open would otherwise save its old quantity over this change.
-					if ((command === "breakStockUse" || command === "breakStockReturn") && !drafts[draftKey("stock")]) {
+					if (["breakStockUse", "breakStockReturn", "breakSaleReview", "breakSaleUndo"].indexOf(command) !== -1 && !drafts[draftKey("stock")]) {
 						var editing = state.stock.filter(function (item) {
 							return item.id === f("stock-id").value;
 						})[0];
