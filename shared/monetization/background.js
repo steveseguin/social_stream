@@ -19,13 +19,17 @@
     var breakAuctionTracker = Object.create(null);
     function isBreakCommand(command) { return typeof SSNBreaks !== 'undefined' && SSNBreaks.commands.indexOf(command) !== -1; }
     async function runBreakCommand(command, data) {
-        if (command !== 'breakGet') {
+        var sellerResult;
+        if (command === 'breakEbay') {
+            sellerResult = await ebay.seller(data || {});
+            data = {};
+        } else if (command !== 'breakGet') {
             var previousBreaks = privateState.breaks;
             if (command === 'breakStock' && data && data.ebayId) {
                 var oldStock = (previousBreaks && previousBreaks.stock || []).filter(function (item) { return item.id === data.id; })[0];
-                if (!oldStock || oldStock.ebayId !== data.ebayId || oldStock.ebayEnvironment !== data.ebayEnvironment) {
-                    var savedListings = ebay.snapshot();
-                    if (savedListings.environment !== data.ebayEnvironment || !savedListings.items.some(function (item) { return item.id === data.ebayId; }))
+                if (!oldStock || oldStock.ebayId !== data.ebayId || oldStock.ebayEnvironment !== data.ebayEnvironment || (oldStock.ebayVariant || '') !== (data.ebayVariant || '')) {
+                    var savedListings = ebay.stockSnapshot();
+                    if (savedListings.environment !== data.ebayEnvironment || !savedListings.items.some(function (item) { return item.id === data.ebayId && (item.variant || '') === (data.ebayVariant || ''); }))
                         throw new Error('This listing is no longer in the connected eBay list. Refresh and choose a listing again.');
                 }
             }
@@ -38,12 +42,12 @@
         var breakState = SSNBreaks.controlState(privateState.breaks, Object.assign({}, data, {archiveOnly:!!archiveOnly}));
         if (breakState.unchanged) return {commerceState:{unchanged:true, hostOn:!!isExtensionOn}};
         if (archiveOnly) return {commerceState:{breaks:breakState, hostOn:!!isExtensionOn}};
-        var listings = ebay.snapshot();
+        var listings = ebay.stockSnapshot();
         // The workspace only needs stock draft fields, not product artwork or listing URLs.
-        var ebayStock = {status:listings.status, enabled:cfg().ebay.enabled, environment:listings.environment, items:listings.items.map(function (item) {
-            return {id:item.id, name:item.name, amount:item.amount, currency:item.currency, available:item.available};
+        var ebayStock = {status:listings.status, enabled:cfg().ebay.enabled, environment:listings.environment, sellerSupported:listings.sellerSupported, sellerScopes:listings.sellerScopes, notifications:listings.notifications, items:listings.items.map(function (item) {
+            return {id:item.id, name:item.name, amount:item.amount, currency:item.currency, available:item.available, quantity:item.quantity, variant:item.variant || '', sku:item.sku || ''};
         })};
-        return {commerceState:{breaks:breakState, ebayStock:ebayStock, hostOn:!!isExtensionOn}};
+        return {commerceState:{breaks:breakState, ebayStock:ebayStock, ebayResult:sellerResult, hostOn:!!isExtensionOn}};
     }
     // Only the private link's key opens a request, and app errors stay inside the sealed reply because they can name buyers or spots.
     async function runSecureBreakCommand(sealed) {
@@ -80,6 +84,14 @@
 			return privateState;
 		},
 		store: store,
+        stockEnabled: function () { return !!(privateState.breaks && privateState.breaks.sales && privateState.breaks.sales.enabled); },
+        stockLinks: function () { return privateState.breaks && privateState.breaks.stock || []; },
+        storeOrders: async function (changes, environment) {
+            var previous = privateState.breaks, next = SSNBreaks.ingestOrders(previous, changes, environment);
+            if (!next) return;
+            privateState.breaks = next;
+            try { await store(); } catch (error) { privateState.breaks = previous; throw error; }
+        },
 		storeSales: async function (sales, environment, listings) {
             var previous = privateState.breaks;
             var next = typeof SSNBreaks !== 'undefined' ? SSNBreaks.ingestSales(previous, sales, environment, listings, Date.now()) : null;
@@ -743,7 +755,9 @@
             if (p.publicShop && /^[a-f0-9]{64}$/.test(p.publicShop.key || '')) privateState.publicShop = { key: p.publicShop.key, id: /^[a-f0-9]{64}$/.test(p.publicShop.id || '') ? p.publicShop.id : '', published: p.publicShop.published === true, removePending: p.publicShop.removePending === true };
 			function ebayProfile(value) {
 				if (!value || !(value.key === '' || /^[a-f0-9]{64}$/.test(value.key || '')) || !Array.isArray(value.items) || !Array.isArray(value.seen)) return null;
-				return { key: value.key, environment: value.environment === 'sandbox' ? 'sandbox' : 'production', items: value.items.slice(0, 20), seen: value.seen.slice(-10000), cursor: Number(value.cursor) || 0 };
+				return { key: value.key, environment: value.environment === 'sandbox' ? 'sandbox' : 'production', items: value.items.slice(0, 20), seen: value.seen.slice(-10000), cursor: Number(value.cursor) || 0,
+                    sellerListings:Array.isArray(value.sellerListings) ? value.sellerListings.slice(0,200) : [], notifications:value.notifications === true,
+                    orderCursor:Number(value.orderCursor) || 0, orderPage:0 };
 			}
 			privateState.boards = SSNCommerceBoards.normalize(p.boards);
             if (p.breaks) privateState.breaks = typeof SSNBreaks !== 'undefined' ? SSNBreaks.normalize(p.breaks) : p.breaks;

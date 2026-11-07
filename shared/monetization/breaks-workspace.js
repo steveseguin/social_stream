@@ -65,7 +65,7 @@
 			requestCount = 0,
 			pendingStock = "",
 			state = null,
-			ebay = null,
+			ebay = null, ebayResult = null,
 			selected = "",
 			editRevision = 0,
 			settingsRevision = 0,
@@ -324,10 +324,32 @@
 		while (ebayCard.children.length) ebayDetails.appendChild(ebayCard.firstElementChild);
 		ebayDetails.querySelector("h2").remove();
 		ebayCard.remove(); el('[data-view="stock"]').appendChild(ebayDetails);
+		var sellerControls = node('div', undefined, 'br-actions');
+		sellerControls.appendChild(button('Connect seller tools', function () { send('breakEbay', {operation:'connect', feature:'seller'}); }));
+		sellerControls.appendChild(button('Load my listings', function () { send('breakEbay', {operation:'listings', page:1}); }));
+		sellerControls.appendChild(button('Import listing URL', function () { var url=prompt('Paste your eBay listing URL'); if(url) send('breakEbay', {operation:'listings', url:url}); }));
+		var notificationLabel=node('label',undefined,'br-check'), notificationToggle=node('input');notificationToggle.type='checkbox';notificationToggle.dataset.ebayNotifications='';
+		notificationLabel.title='Check for new orders sooner when eBay sends a notification. Regular polling continues.';
+		notificationLabel.appendChild(notificationToggle);notificationLabel.appendChild(document.createTextNode('Order notifications'));sellerControls.appendChild(notificationLabel);
+		notificationToggle.onchange=function(){send('breakEbay',{operation:'notifications',enabled:this.checked}).then(function(ok){if(!ok)notificationToggle.checked=!!(ebay&&ebay.notifications);});};
+		ebayDetails.insertBefore(sellerControls, el('.br-ebay-list'));
+		var sellerFeedback = node('div', undefined, 'br-record'); sellerFeedback.dataset.ebayResult=''; sellerFeedback.hidden=true;
+		ebayDetails.insertBefore(sellerFeedback, el('.br-ebay-list'));
+		var stockPreview = node('div', undefined, 'br-record'); stockPreview.dataset.ebayPreview=''; stockPreview.hidden=true; stockEditor.appendChild(stockPreview);
+		var financesPanel = node('details'); financesPanel.innerHTML='<summary>eBay transactions</summary><div class="br-actions">'+field('finance-from','From','date')+field('finance-to','Through','date')+'</div><div data-finance-actions class="br-actions"></div><div data-ebay-finances></div>';
+		costsColumns.appendChild(financesPanel);
+		function localDate(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+		f('finance-from').value=localDate(new Date(Date.now()-7*86400000)); f('finance-to').value=localDate(new Date());
+		el('[data-finance-actions]').appendChild(button('Connect finances',function(){send('breakEbay',{operation:'connect',feature:'finances'});}));
+		el('[data-finance-actions]').appendChild(button('Load transactions',function(){
+			var since=new Date(f('finance-from').value+'T00:00:00').getTime(), until=Math.min(Date.now(),new Date(f('finance-to').value+'T23:59:59.999').getTime());
+			if(!Number.isFinite(since)||!Number.isFinite(until)||since>=until||until-since>31*86400000)return say('Choose up to 31 days.',true);
+			send('breakEbay',{operation:'finances',since:since,until:until,page:0});
+		}));
 		stockCard.insertBefore(el('[data-do="new-stock"]'), inventory);
 		var salesPanel = node("details", undefined, "br-sales");
 		salesPanel.innerHTML = '<summary><span aria-hidden="true">&#36;</span> eBay sales <span data-sales-count></span></summary>' +
-			'<div class="br-actions"><label class="br-check" title="Review new seller-feed sales for linked stock. Requires the eBay showcase to be enabled."><input type="checkbox" data-sales-enabled>Review new sales</label><a href="docs/breaks.html#sales" target="_blank" rel="noopener">Guide</a></div>' +
+			'<div class="br-actions"><label class="br-check" title="Review new seller-feed sales for linked stock."><input type="checkbox" data-sales-enabled>Review new sales</label><a href="docs/breaks.html#sales" target="_blank" rel="noopener">Guide</a></div>' +
 			'<p data-sales-status class="br-muted"></p><p data-sales-warning class="br-muted" role="status" hidden></p><button type="button" data-sales-reviewed hidden>Reviewed on eBay</button>' +
 			'<div class="br-sales-list"></div><details><summary>Recently reviewed</summary><div class="br-sales-history"></div></details>';
 		stockColumns.parentElement.insertBefore(salesPanel, stockColumns);
@@ -485,8 +507,9 @@
 			var b = state && state.active,
 				editable = !!b && !b.locked;
 			panel.querySelectorAll('[data-tab="display"], [data-tab="costs"]').forEach(function (tab) {
-				tab.disabled = busy || !b;
-				tab.title = b ? "" : "Create a break first.";
+				var available = b || tab.dataset.tab === 'costs' && ebay && ebay.sellerSupported;
+				tab.disabled = busy || !available;
+				tab.title = available ? "" : "Create a break first.";
 			});
 			["visibility", "lock", "export", "display", "preview", "finish"].forEach(function (name) {
 				el('[data-do="' + name + '"]').disabled = busy || !b;
@@ -823,9 +846,48 @@
 			restoreDraft("stock");
 			stockListingDetail();
 		}
-		function listingKey(item) {
-			return item && item.ebayId ? (item.ebayEnvironment || "unknown") + ":" + item.ebayId : "";
+		function renderEbayResult(result) {
+			if(!result)return;
+			ebayResult=result;
+			var target=sellerFeedback;
+			if(result.operation==='finances' || result.operation==='connect' && !el('[data-view="costs"]').hidden)target=el('[data-ebay-finances]');
+			if(result.operation==='preview' || result.operation==='apply')target=stockPreview;
+			target.textContent=''; target.hidden=false;
+			if(target===sellerFeedback)ebayDetails.open=true;
+			if(result.operation==='connect'){
+				var link=node('a','Continue on eBay');link.href=result.url;link.target='_blank';link.rel='noopener';target.appendChild(link);
+			}else if(result.operation==='listings'){
+				target.appendChild(node('span',result.count+' listing variations / Page '+result.page));
+				if(result.page>1)target.appendChild(button('Previous',function(){send('breakEbay',{operation:'listings',page:result.page-1});}));
+				if(result.more)target.appendChild(button('Next listings',function(){send('breakEbay',{operation:'listings',page:result.page+1});}));
+			}else if(result.operation==='preview'){
+				target.tabIndex=-1;
+				target.appendChild(node('strong',result.name));
+				target.appendChild(node('span',(result.environment==='sandbox'?'Sandbox / ':'')+'eBay available quantity: '+result.before+' to '+result.quantity));
+				var apply=button('Apply to eBay',function(){if(Date.now()>result.expires)return say('This preview expired. Preview the quantity again.',true);send('breakEbay',{operation:'apply',id:result.id});});
+				apply.title='Changes the listing on eBay. New sales can change its quantity while you review.';target.appendChild(apply);
+				target.appendChild(button('Cancel',function(){target.hidden=true;target.textContent='';ebayResult=null;}));
+				target.scrollIntoView({block:'nearest'});target.focus({preventScroll:true});
+			}else if(result.operation==='apply')target.appendChild(node('span','eBay accepted the quantity update. Local stock was not changed.'));
+			else if(result.operation==='notifications')target.appendChild(node('span',result.enabled?'Order notifications enabled.':'Order notifications disabled.'));
+			else if(result.operation==='finances'){
+				financesPanel.open=true;
+				target.appendChild(node('strong',(result.environment==='sandbox'?'Sandbox / ':'')+'Transactions / Page '+(result.page+1)));
+				if(!result.transactions.length)target.appendChild(node('p','No posted transactions in this period.','br-muted'));
+				result.transactions.forEach(function(t){
+					var row=node('article',undefined,'br-record');row.appendChild(node('strong',t.type.replace(/_/g,' ')+' / '+t.amount.currency+' '+(t.direction==='DEBIT'?'-':t.direction==='CREDIT'?'+':'')+t.amount.value));
+					if(!t.direction)row.appendChild(node('span','Credit or debit not provided','br-muted'));
+					row.appendChild(node('span',new Date(t.at).toLocaleString()+' / '+t.status.replace(/_/g,' '),'br-muted'));
+					if(t.fees)row.appendChild(node('span','Fees: '+t.fees.currency+' '+t.fees.value,'br-muted'));target.appendChild(row);
+				});
+				if(result.page>0)target.appendChild(button('Previous transactions',function(){send('breakEbay',{operation:'finances',since:result.since,until:result.until,page:result.page-1});}));
+				if(result.more)target.appendChild(button('Next transactions',function(){send('breakEbay',{operation:'finances',since:result.since,until:result.until,page:result.page+1});}));
+			}
 		}
+		function listingKey(item) {
+			return item && item.ebayId ? (item.ebayEnvironment || "unknown") + ":" + item.ebayId + (item.ebayVariant ? ':'+encodeURIComponent(item.ebayVariant) : '') : "";
+		}
+		function sellerListingKey(item) { return listingKey({ebayId:item.id,ebayEnvironment:ebay.environment,ebayVariant:item.variant}); }
 		function listingURL(id, environment) {
 			return /^\d{9,15}$/.test(id) && ["sandbox", "production"].indexOf(environment) !== -1 ?
 				"https://" + (environment === "sandbox" ? "www.sandbox.ebay.com" : "www.ebay.com") + "/itm/" + id : "";
@@ -842,7 +904,7 @@
 			select.textContent = "";
 			var empty = node("option", "None"); empty.value = ""; select.appendChild(empty);
 			(ebay && ebay.items || []).forEach(function (item) {
-				var key = ebay.environment + ":" + item.id;
+				var key = sellerListingKey(item);
 				var linked = state.stock.some(function (s) { return s.id !== f("stock-id").value && listingKey(s) === key; });
 				var option = node("option", (ebay.environment === "sandbox" ? "Sandbox / " : "") + item.name + (linked ? " (already linked)" : ""));
 				option.value = key; option.disabled = linked && key !== value; select.appendChild(option);
@@ -858,7 +920,7 @@
 			detail.textContent = "";
 			if (!parts[1]) return;
 			detail.appendChild(listingLink(parts[1], parts[0]));
-			if (ebay && ebay.environment === parts[0]) item = ebay.items.filter(function (i) { return i.id === parts[1]; })[0];
+			if (ebay && ebay.environment === parts[0]) item = ebay.items.filter(function (i) { return sellerListingKey(i) === f('stock-ebay').value; })[0];
 			if (item) {
 				detail.appendChild(node("span", item.available === false ? "Unavailable" : item.available === true ? "Available" : "Availability unknown", "br-muted"));
 				detail.appendChild(button("Use listing name", function () { f("stock-name").value = item.name; rememberDraft("stock"); }));
@@ -983,7 +1045,7 @@
 			if (!a) return;
 			el("[data-sales-enabled]").checked = a.enabled;
 			el("[data-sales-count]").textContent = (a.pending.length ? "(" + a.pending.length + ")" : "") + (a.warning ? " - Check eBay" : "");
-			el("[data-sales-status]").textContent = a.enabled ? ebay && ebay.enabled === false ? "Enable the eBay showcase in Connected platforms to receive sales." : ebay && ebay.status || "Waiting for new sales from linked listings." : "Review is paused. Existing sales can still be reviewed.";
+			el("[data-sales-status]").textContent = a.enabled ? ebay && ebay.status || "Waiting for new sales from linked listings." : "Review is paused. Existing sales can still be reviewed.";
 			el("[data-sales-warning]").textContent = a.warning;
 			el("[data-sales-warning]").hidden = !a.warning;
 			el("[data-sales-reviewed]").hidden = !a.warning;
@@ -991,9 +1053,12 @@
 				var row = node("article", undefined, "br-record"); row.dataset.sale = sale.id;
 				row.appendChild(node("strong", sale.quantity + " x " + sale.name));
 				row.appendChild(node("span", (sale.environment === "sandbox" ? "Sandbox / " : "") + new Date(sale.at).toLocaleString() + " / " + sale.id.slice(-8), "br-muted"));
+				var detail=[sale.payment,sale.fulfillment,sale.cancellation && ['NONE_REQUESTED','CANCEL_REJECTED'].indexOf(sale.cancellation)===-1 ? sale.cancellation : '',sale.refund].filter(Boolean).join(' / ');
+				if(detail)row.appendChild(node('span',detail.replace(/_/g,' '),'br-muted'));
+				if(sale.reviewNeeded){row.appendChild(node('strong','Order changed. Check stock before adjusting it.'));row.appendChild(button('Reviewed on eBay',function(){send('breakOrderReview',{id:sale.id});}));}
 				return row;
 			}
-			function matchingStock(sale) { return state.stock.filter(function (i) { return i.id === sale.stockId && i.ebayId === sale.itemId && i.ebayEnvironment === sale.environment; })[0]; }
+			function matchingStock(sale) { return state.stock.filter(function (i) { return i.id === sale.stockId && i.ebayId === sale.itemId && i.ebayEnvironment === sale.environment && (i.ebayVariant || '') === (sale.variant || ''); })[0]; }
 			function review(sale, status) {
 				if (status === "deducted" && drafts["stock:" + sale.stockId]) return say("Save or discard that stock item's unsaved edits first.", true);
 				send("breakSaleReview", { id: sale.id, status: status });
@@ -1003,7 +1068,7 @@
 				var row = rowFor(sale), stock = matchingStock(sale), actions = node("div", undefined, "br-actions");
 				row.appendChild(node("span", stock ? stock.quantity + " in local stock" : "Stock link changed. Adjust manually, then mark already counted.", "br-muted"));
 				var deduct = button("Deduct " + sale.quantity, function () { review(sale, "deducted"); });
-				deduct.dataset.saleDeduct = ""; deduct.dataset.unavailable = String(!stock || stock.quantity < sale.quantity);
+				deduct.dataset.saleDeduct = ""; deduct.dataset.unavailable = String(!stock || stock.quantity < sale.quantity || sale.reviewNeeded);
 				deduct.title = "Reduce local stock only. If already used in a break or deducted manually, choose Already counted.";
 				deduct.disabled = busy || deduct.dataset.unavailable === "true";
 				actions.appendChild(deduct);
@@ -1075,6 +1140,11 @@
 						if (confirm("Remove " + s.name + " from local stock?")) send("breakRemoveStock", { id: s.id });
 					})
 				);
+				if(s.ebayId && ebay && ebay.sellerSupported && s.ebayEnvironment===ebay.environment) actions.appendChild(button('Update eBay quantity',function(){
+					if(drafts['stock:'+s.id])return say('Save or discard this stock edit first.',true);
+					stockForm(s);
+					send('breakEbay',{operation:'preview',itemId:s.ebayId,variant:s.ebayVariant || '',quantity:s.quantity});
+				}));
 				row.appendChild(actions);
 				list.appendChild(row);
 			});
@@ -1098,7 +1168,8 @@
 								(i.available === true ? "available" : i.available === false ? "unavailable" : i.available == null ? "unknown" : i.available)
 						)
 					);
-					var linked = state.stock.filter(function (s) { return s.ebayId === i.id && s.ebayEnvironment === ebay.environment; })[0];
+					if(Number.isInteger(i.quantity))row.appendChild(node('span',i.quantity+' available on eBay','br-muted'));
+					var linked = state.stock.filter(function (s) { return listingKey(s) === sellerListingKey(i); })[0];
 					row.appendChild(
 						button(linked ? "Edit linked stock" : "Add to stock", function () {
 							if (!state) return say("Connect to Social Stream first.", true);
@@ -1108,9 +1179,9 @@
 							stockForm();
 							f("stock-name").value = i.name;
 							// Availability is usually a boolean, not a warehouse count.
-							f("stock-quantity").value = typeof i.available === "number" && Number.isInteger(i.available) && i.available >= 0 && i.available <= 100000 ? i.available : "";
+							f("stock-quantity").value = Number.isInteger(i.quantity) && i.quantity >= 0 && i.quantity <= 100000 ? i.quantity : "";
 							f("stock-currency").value = i.currency || "USD";
-							f("stock-ebay").value = ebay.environment + ":" + i.id;
+							f("stock-ebay").value = sellerListingKey(i);
 							stockListingDetail();
 							rememberDraft("stock");
 							f("stock-quantity").focus();
@@ -1164,7 +1235,11 @@
 			var prior = state,
 				changed = !prior || prior.revision !== next.breaks.revision;
 			state = next.breaks;
+			if(ebay && next.ebayStock && ebay.environment!==next.ebayStock.environment){ebayResult=null;[sellerFeedback,stockPreview,el('[data-ebay-finances]')].forEach(function(n){n.textContent='';});stockPreview.hidden=true;}
 			ebay = next.ebayStock || ebay;
+			notificationToggle.checked=!!(ebay&&ebay.notifications);
+			if(next.ebayResult)renderEbayResult(next.ebayResult);
+			costsCard.hidden=!state.active;
 			if (!prior) stockForm(state.stock.filter(function (item) {
 				return item.id === f("stock-id").value;
 			})[0]);
@@ -1311,6 +1386,7 @@
 			previewFrame.src = "about:blank";
 			generation++;
 			state = null;
+			ebay = null; ebayResult = null;
 			drafts = {};
 			baselines = {};
 			signature = "";
@@ -1343,6 +1419,9 @@
 				"[data-history-finance]",
 				".br-recap",
 				"[data-ebay-status]",
+				"[data-ebay-result]",
+				"[data-ebay-preview]",
+				"[data-ebay-finances]",
 			].forEach(function (s) {
 				el(s).textContent = "";
 			});
@@ -1805,6 +1884,7 @@
 				currency: f("stock-currency").value.toUpperCase(),
 				note: f("stock-note").value,
 				ebayId: link[1] || "",
+				ebayVariant: link[2] ? decodeURIComponent(link[2]) : "",
 				ebayEnvironment: link[0] === "unknown" ? "" : link[0] || "",
 			}).then(function (ok) {
 				if (ok) {

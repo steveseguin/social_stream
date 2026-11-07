@@ -24,6 +24,8 @@
 		"breakSalesSettings",
 		"breakSaleReview",
 		"breakSaleUndo",
+		"breakEbay",
+		"breakOrderReview",
 	];
 	var platforms = ["whatnot", "ebay", "tiktok", "other"],
 		themes = ["standard", "teams"];
@@ -36,6 +38,10 @@
 		if (typeof value !== "string" && !(typeof value === "number" && Number.isFinite(value))) return "";
 		var id = String(value).trim();
 		return id.length <= max ? id : "";
+	}
+	function variantId(value) {
+		// SKU whitespace is significant. Never trim or truncate a stock identity.
+		return typeof value === "string" && value.length <= 100 ? value : "";
 	}
 	function number(value, max, fallback) {
 		var n = Number(value);
@@ -189,6 +195,7 @@
 			currency: /^[A-Z]{3}$/.test(raw.currency || "") ? raw.currency : "USD",
 			note: text(raw.note, 500),
 			ebayId: text(raw.ebayId, 80),
+			ebayVariant: raw.ebayId ? variantId(raw.ebayVariant) : "",
 			ebayEnvironment: raw.ebayId && ["production", "sandbox"].indexOf(raw.ebayEnvironment) !== -1 ? raw.ebayEnvironment : "",
 		};
 	}
@@ -202,6 +209,7 @@
 			quantity: Math.round(number(raw.quantity, 100000, 0)),
 			unitCost: money(raw.unitCost),
 			ebayId: text(raw.ebayId, 80),
+			ebayVariant: raw.ebayId ? variantId(raw.ebayVariant) : "",
 			ebayEnvironment: raw.ebayId && ["production", "sandbox"].indexOf(raw.ebayEnvironment) !== -1 ? raw.ebayEnvironment : "",
 			currency: /^[A-Z]{3}$/.test(raw.currency || "") ? raw.currency : "USD",
 			at: number(raw.at, Number.MAX_SAFE_INTEGER, 0),
@@ -229,7 +237,9 @@
 	}
 	function saleRecord(raw) {
 		raw = raw || {};
-		return { id: text(raw.id, 80), stockId: text(raw.stockId, 80), itemId: text(raw.itemId, 80),
+		return { id: text(raw.id, 80), stockId: text(raw.stockId, 80), itemId: text(raw.itemId, 80), variant:variantId(raw.variant),
+			payment:text(raw.payment,40), cancellation:text(raw.cancellation,40), fulfillment:text(raw.fulfillment,40), refund:text(raw.refund,300),
+			modifiedAt:number(raw.modifiedAt,Number.MAX_SAFE_INTEGER,0), reviewNeeded:raw.reviewNeeded === true,
 			name: text(raw.name, 160), environment: raw.environment === "sandbox" ? "sandbox" : "production",
 			quantity: number(raw.quantity, 100000, 0), at: number(raw.at, Number.MAX_SAFE_INTEGER, 0),
 			status: ["deducted", "accounted", "dismissed"].indexOf(raw.status) !== -1 ? raw.status : "pending",
@@ -256,9 +266,13 @@
 			if (!sale || !/^[a-f0-9]{64}$/.test(sale.id || "")) return;
 			var id = environment + ":" + sale.id, at = Number(sale.paidAt || sale.createdAt);
 			if (seen[id]) return;
-			var listing = (listings || []).filter(function (i) { return i.id === sale.itemId; })[0];
-			var matches = s.stock.filter(function (i) { return i.ebayId === sale.itemId && i.ebayEnvironment === environment; });
-			if (!listing || !matches.length) return;
+			if (Number.isFinite(at) && at > 0 && at <= cutoff) return;
+			var listing = (listings || []).filter(function (i) { return i.id === sale.itemId && (i.variant || '') === (sale.variant || ''); })[0];
+			var matches = s.stock.filter(function (i) { return i.ebayId === sale.itemId && i.ebayEnvironment === environment && (i.ebayVariant || '') === (sale.variant || ''); });
+			if (!listing || !matches.length) {
+				if (s.stock.some(function (i) { return i.ebayId === sale.itemId && i.ebayEnvironment === environment; })) warn("An eBay sale could not match its variation. Import the seller listing and check its stock link.");
+				return;
+			}
 			if (!Number.isFinite(at) || at <= 0 || at > now + 300000) { warn("An eBay sale has an unusable date. Check its stock change on eBay."); return; }
 			if (at <= cutoff || at < listing.addedAt) return;
 			if (matches.length !== 1) { warn("An eBay listing has duplicate stock links. Check its sales on eBay and fix the links."); return; }
@@ -266,7 +280,7 @@
 			if (["number", "string"].indexOf(typeof sale.quantity) === -1 || !Number.isInteger(quantity) || quantity < 1 || quantity > 100000) { warn("An eBay sale has no usable quantity. Check its stock change on eBay."); return; }
 			if (a.seen.length >= 5000) { warn("Sales review reached its 30-day receipt limit. Check new sales on eBay."); return; }
 			if (a.pending.length >= 50) { warn("Sales review is full. Review the queue, then check eBay for missing sales."); return; }
-			a.pending.push(saleRecord({ id: id, stockId: matches[0].id, itemId: sale.itemId, name: matches[0].name, environment: environment, quantity: quantity, at: at }));
+			a.pending.push(saleRecord({ id: id, stockId: matches[0].id, itemId: sale.itemId, variant:sale.variant || '', name: matches[0].name, environment: environment, quantity: quantity, at: at }));
 			a.seen.push({ id: id, at: at }); seen[id] = true; changed = true;
 		});
 		if (!changed) return null;
@@ -280,9 +294,30 @@
 		}
 	}
 	function saleStock(s, sale) {
-		var item = s.stock.filter(function (i) { return i.id === sale.stockId && i.ebayId === sale.itemId && i.ebayEnvironment === sale.environment; })[0];
+		var item = s.stock.filter(function (i) { return i.id === sale.stockId && i.ebayId === sale.itemId && i.ebayEnvironment === sale.environment && (i.ebayVariant || '') === (sale.variant || ''); })[0];
 		if (!item) throw new Error("The original stock link changed. Adjust stock manually and mark the sale already counted.");
 		return item;
+	}
+	function ingestOrders(raw, changes, environment) {
+		// Revisit a receipt when its order changes. A refund amount never establishes returned units.
+		if (!raw || !raw.sales || !raw.sales.enabled || !Array.isArray(changes)) return null;
+		var s = normalize(raw), changed = false;
+		s.sales.pending.concat(s.sales.history).forEach(function (sale) {
+			var update = changes.filter(function (c) { return environment + ':' + c.id === sale.id && c.itemId === sale.itemId; })[0];
+			if (!update || !Number.isFinite(update.modifiedAt) || update.modifiedAt < sale.modifiedAt) return;
+			var refunds = (update.refunds || []).map(function (r) { return r.status + (r.amount ? ' ' + r.amount.currency + ' ' + r.amount.value : ''); });
+			if ((update.orderRefunds || []).length) refunds.push('Order refund: ' + update.orderRefunds.map(function (r) { return r.status + (r.amount ? ' ' + r.amount.currency + ' ' + r.amount.value : ''); }).join(', '));
+			var next = {payment:text(update.payment,40), cancellation:text(update.cancellation,40), fulfillment:text(update.fulfillment,40), refund:text(refunds.join('; '),300)};
+			if (Object.keys(next).some(function (k) { return sale[k] !== next[k]; })) {
+				Object.assign(sale,next);
+				if (sale.refund || sale.cancellation && ['NONE_REQUESTED','CANCEL_REJECTED'].indexOf(sale.cancellation) === -1 || /REFUND|FAIL/.test(sale.payment)) sale.reviewNeeded=true;
+				changed=true;
+			}
+			// Advance the timestamp even when the visible status stayed the same.
+			if (update.modifiedAt > sale.modifiedAt) { sale.modifiedAt=update.modifiedAt; changed=true; }
+		});
+		if (!changed) return null;
+		return finish(s, 'breakOrderUpdate');
 	}
 	function auctionStream(source, value) {
 		if (["whatnot", "ebay"].indexOf(source) === -1) return "";
@@ -650,6 +685,7 @@
 			if (!sale) throw new Error("That sale was already reviewed. Refresh the list.");
 			if (["deducted", "accounted", "dismissed"].indexOf(data.status) === -1) throw new Error("Choose how to handle this sale.");
 			if (data.status === "deducted") {
+				if (sale.reviewNeeded) throw new Error("Review this order change on eBay before adjusting stock.");
 				item = saleStock(s, sale);
 				if (item.quantity < sale.quantity) throw new Error("Not enough local stock. Adjust it or mark the sale already counted.");
 				item.quantity -= sale.quantity;
@@ -657,6 +693,10 @@
 			sale.status = data.status; sale.reviewedAt = now;
 			s.sales.pending = s.sales.pending.filter(function (r) { return r.id !== sale.id; });
 			s.sales.history.push(sale); s.sales.history = s.sales.history.slice(-50);
+		} else if (command === "breakOrderReview") {
+			var order = s.sales.pending.concat(s.sales.history).filter(function (r) { return r.id === data.id; })[0];
+			if (!order) throw new Error("This sale is no longer in history.");
+			order.reviewNeeded = false;
 		} else if (command === "breakSaleUndo") {
 			var reviewed = s.sales.history.filter(function (r) { return r.id === data.id; })[0];
 			if (!reviewed || reviewed.status !== "deducted") throw new Error("That deduction is no longer available to undo.");
@@ -682,10 +722,10 @@
 				throw new Error("Enter a valid unit cost.");
 			item = stock(Object.assign({}, data, { id: old ? old.id : "stock-" + now + "-" + (s.revision + 1) }));
 			if (!item.name) throw new Error("Enter a stock item name.");
-			var linkChanged = !old || old.ebayId !== item.ebayId || old.ebayEnvironment !== item.ebayEnvironment;
+			var linkChanged = !old || old.ebayId !== item.ebayId || old.ebayEnvironment !== item.ebayEnvironment || old.ebayVariant !== item.ebayVariant;
 			if (item.ebayId && linkChanged &&
 				(!/^\d{9,15}$/.test(item.ebayId) || !item.ebayEnvironment)) throw new Error("Choose an eBay listing from the list.");
-			if (item.ebayId && linkChanged && s.stock.some(function (p) { return p.id !== item.id && p.ebayId === item.ebayId && p.ebayEnvironment === item.ebayEnvironment; }))
+			if (item.ebayId && linkChanged && s.stock.some(function (p) { return p.id !== item.id && p.ebayId === item.ebayId && p.ebayEnvironment === item.ebayEnvironment && p.ebayVariant === item.ebayVariant; }))
 				throw new Error("This eBay listing is already linked to another stock item. Edit that item or unlink it first.");
 			if (old) s.stock[s.stock.indexOf(old)] = item;
 			else s.stock.push(item);
@@ -706,17 +746,18 @@
 			})[0];
 			if (!item) throw new Error("That stock record is gone. Refresh to see the latest.");
 			var home = s.stock.filter(function (p) {
-				return p.id === item.stockId;
+				return p.id === item.stockId && p.ebayId === item.ebayId && p.ebayEnvironment === item.ebayEnvironment && p.ebayVariant === item.ebayVariant;
 			})[0];
 			if (!home) {
 				// A removed item may have been imported again. Return it to that link instead of duplicating it.
 				if (item.ebayId && item.ebayEnvironment) home = s.stock.filter(function (p) {
-					return p.ebayId === item.ebayId && p.ebayEnvironment === item.ebayEnvironment;
+					return p.ebayId === item.ebayId && p.ebayEnvironment === item.ebayEnvironment && p.ebayVariant === item.ebayVariant;
 				})[0];
 			}
 			if (!home) {
 				if (s.stock.length >= 100) throw new Error("Use up to 100 stock items.");
-				home = stock({ id: item.stockId, name: item.name, quantity: 0, cost: item.unitCost, currency: item.currency, ebayId: item.ebayId, ebayEnvironment: item.ebayEnvironment });
+				var restoredId = s.stock.some(function (p) { return p.id === item.stockId; }) ? 'stock-' + now + '-' + (s.revision + 1) : item.stockId;
+				home = stock({ id: restoredId, name: item.name, quantity: 0, cost: item.unitCost, currency: item.currency, ebayId: item.ebayId, ebayVariant:item.ebayVariant, ebayEnvironment: item.ebayEnvironment });
 				s.stock.push(home);
 			}
 			if (home.quantity + item.quantity > 100000) throw new Error("That would put more than 100000 in stock.");
@@ -856,6 +897,7 @@
 							quantity: count,
 							unitCost: source.cost,
 							ebayId: source.ebayId,
+							ebayVariant: source.ebayVariant,
 							ebayEnvironment: source.ebayEnvironment,
 							currency: source.currency,
 							at: now,
@@ -941,6 +983,7 @@
 		auctionEvent: auctionEvent,
 		auctionStream: auctionStream,
 		ingestSales: ingestSales,
+		ingestOrders: ingestOrders,
 	};
 	root.SSNBreaks = api;
 	if (typeof module === "object" && module.exports) module.exports = api;
