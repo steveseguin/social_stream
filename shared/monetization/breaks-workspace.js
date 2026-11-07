@@ -855,12 +855,15 @@
 					);
 					row.appendChild(
 						button("Copy to stock draft", function () {
-							stockForm({
-								name: i.name,
-								quantity: Number.isInteger(i.available) ? i.available : 0,
-								currency: i.currency || "USD",
-								ebayId: i.id,
-							});
+							if (!state) return say("Connect to Social Stream first.", true);
+							if (drafts["stock:"] && !confirm("Replace the unsaved new stock item?")) return;
+							delete drafts["stock:"];
+							stockForm();
+							f("stock-name").value = i.name;
+							f("stock-quantity").value = Number.isInteger(i.available) ? i.available : 0;
+							f("stock-currency").value = i.currency || "USD";
+							f("ebay-id").value = i.id;
+							rememberDraft("stock");
 							say("Review quantity and enter your cost, then save.");
 						})
 					);
