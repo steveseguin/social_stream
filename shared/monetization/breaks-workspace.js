@@ -1287,7 +1287,7 @@
 			history();
 			links();
 			controls();
-			if (!prior && !b) show("setup");
+			if (!prior && !b && currentTab === "live") show("setup");
 			if (next.hostOn === false) {
 				say("Social Stream is off. Turn it on to send the overlay.", true);
 				connectionError = true;
@@ -2006,6 +2006,7 @@
 			refresh: refresh,
 			disconnected: function () {
 				generation++;
+				connectionError = true;
 				state = null;
 				signature = "";
 				selected = "";
