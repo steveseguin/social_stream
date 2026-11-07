@@ -178,7 +178,10 @@ try {
             messageDiv.style.fontStyle = 'italic';
             messageDiv.textContent = message;
         } else {
-            messageDiv.innerHTML = `<strong>${escapeHtml(authorName)}</strong>: ${escapeHtml(message)}`;
+            const author = document.createElement('strong');
+            author.textContent = authorName;
+            messageDiv.appendChild(author);
+            messageDiv.appendChild(document.createTextNode(': ' + message));
         }
 
         textarea.appendChild(messageDiv);

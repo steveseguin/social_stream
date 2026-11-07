@@ -881,6 +881,7 @@ async function copyStreamId(event) {
 }
 
 function copyToClipboard(event) {
+	var button = event.currentTarget || event.target.closest("[data-copy]");
 	
 	// if (event.target.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
 	// Find the closest link container
@@ -894,10 +895,16 @@ function copyToClipboard(event) {
 	const linkOwnerDiv = linkContainer.querySelector('[data-raw]');
 	if (linkOwnerDiv && linkOwnerDiv.raw) {
 		navigator.clipboard.writeText(linkOwnerDiv.raw).then(function() {
-			event.target.classList.add("flashing");
-			setTimeout(()=>{
-				event.target.classList.remove("flashing");
-			}, 500);
+			var originalLabel = button.innerHTML;
+			var originalMinWidth = button.style.minWidth;
+			button.style.minWidth = button.offsetWidth + "px";
+			button.textContent = getTranslation("nc-audience-copied", "Copied.");
+			button.disabled = true;
+			setTimeout(function() {
+				button.innerHTML = originalLabel;
+				button.style.minWidth = originalMinWidth;
+				button.disabled = false;
+			}, 1200);
 		}, function(err) {
 			console.error('Could not copy text: ', err);
 		});
@@ -1266,6 +1273,7 @@ function showImportedLinkStatus(targetId, loadedControlCount) {
 function openEditGeneratedLinkDialog(targetId) {
 	var config = getEditableGeneratedLinkConfig(targetId);
 	if (!config) return;
+	var previousFocus = document.activeElement;
 	var modal = document.createElement("div");
 	modal.className = "arc-modal";
 	modal.setAttribute("role", "dialog");
@@ -1312,6 +1320,7 @@ function openEditGeneratedLinkDialog(targetId) {
 		if (modal.parentNode) {
 			modal.parentNode.removeChild(modal);
 		}
+		if (previousFocus && document.contains(previousFocus)) previousFocus.focus();
 	}
 
 	cancelButton.onclick = closeDialog;
@@ -1328,12 +1337,21 @@ function openEditGeneratedLinkDialog(targetId) {
 		}
 	};
 
-	input.addEventListener("keydown", function(event) {
-		if (event.key === "Enter") {
+	modal.addEventListener("keydown", function(event) {
+		if (event.key === "Enter" && event.target === input) {
 			event.preventDefault();
 			loadButton.click();
 		} else if (event.key === "Escape") {
+			event.preventDefault();
 			closeDialog();
+		} else if (event.key === "Tab") {
+			if (event.shiftKey && document.activeElement === input) {
+				event.preventDefault();
+				loadButton.focus();
+			} else if (!event.shiftKey && document.activeElement === loadButton) {
+				event.preventDefault();
+				input.focus();
+			}
 		}
 	});
 
@@ -2268,7 +2286,7 @@ function ensureCustomUrlSlot(index) {
         </div>
         <div class="textInputContainer" style="width: 95%;">
             <input type="text" id="custom${index}_url" class="textInput" autocomplete="off" placeholder="eg: https://somedomain/chat/popup" data-textsetting="custom${index}_url" />
-            <label for="custom${index}_url"><span>&gt; Custom URL ${index}</span></label>
+            <label for="custom${index}_url"><span>Custom URL ${index}</span></label>
         </div>
         <center>
             <button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom${index}">
@@ -2492,19 +2510,19 @@ const eventTemplates = {
       <div style="display:inline-block">
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="botReplyMessageCommand${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="!discord, !ds, !disc" data-textsetting="botReplyMessageCommand${id}">
-          <label for="botReplyMessageCommand${id}">&gt; Triggering command(s)</label>
+          <label for="botReplyMessageCommand${id}">Triggering command(s)</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="botReplyMessageValue${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="Message to respond with" data-textsetting="botReplyMessageValue${id}">
-          <label for="botReplyMessageValue${id}">&gt; Message to respond with.</label>
+          <label for="botReplyMessageValue${id}">Message to respond with.</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="number" id="botReplyMessageTimeout${id}" class="textInput" min="0" autocomplete="off" placeholder="Timeout needed between responses" data-numbersetting="botReplyMessageTimeout${id}">
-          <label for="botReplyMessageTimeout${id}">&gt; Trigger timeout (ms)</label>
+          <label for="botReplyMessageTimeout${id}">Trigger timeout (ms)</label>
         </div>
         <div class="textInputContainer" style="width: 235px" title="If a source is provided, limit the response to this source. Comma-separated">
           <input type="text" id="botReplyMessageSource${id}" class="textInput" min="0" autocomplete="off" placeholder="ie: youtube,twitch (comma separated)" data-textsetting="botReplyMessageSource${id}">
-          <label for="botReplyMessageSource${id}">&gt; Limit to specific sites</label>
+          <label for="botReplyMessageSource${id}">Limit to specific sites</label>
         </div>
         <span data-translate="reply-to-all">Reply to all instead of just the source</span>
         <label class="switch">
@@ -2524,15 +2542,15 @@ const eventTemplates = {
       <div style="display:inline-block">
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="chatcommand${id}" class="textInput" autocomplete="off" placeholder="!someevent${id}, !alias${id}" data-textsetting="chatcommand${id}">
-          <label for="chatcommand${id}">&gt; Chat Command(s)</label>
+          <label for="chatcommand${id}">Chat Command(s)</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="chatwebhook${id}" class="textInput" autocomplete="off" placeholder="Provide full URL" data-textsetting="chatwebhook${id}">
-          <label for="chatwebhook${id}">&gt; Webhook URL</label>
+          <label for="chatwebhook${id}">Webhook URL</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="number" id="chatcommandtimeout${id}" class="textInput" min="0" autocomplete="off" placeholder="Timeout between triggers" data-numbersetting="chatcommandtimeout${id}">
-          <label for="chatcommandtimeout${id}">&gt; Trigger Timeout (ms)</label>
+          <label for="chatcommandtimeout${id}">Trigger Timeout (ms)</label>
         </div>
       </div>
     </div>
@@ -2547,7 +2565,7 @@ const eventTemplates = {
     <div class="event-container">
       <div class="textInputContainer" style="width: 235px">
         <input type="text" id="${inputId}" class="textInput" autocomplete="off" placeholder="https://thirdparty.com/api" data-textsetting="${settingKey}">
-        <label for="${inputId}">&gt; Webhook URL</label>
+        <label for="${inputId}">Webhook URL</label>
       </div>
     </div>
   `;
@@ -2562,15 +2580,15 @@ const eventTemplates = {
       <div style="display:inline-block">
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="timemessagecommand${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="Message to send to chat at an interval" data-textsetting="timemessagecommand${id}">
-          <label for="timemessagecommand${id}">&gt; Message to broadcast</label>
+          <label for="timemessagecommand${id}">Message to broadcast</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="number" id="timemessageinterval${id}" class="textInput" value="15" min="0" autocomplete="off" title="Interval offset in minutes; 0 to issue just once." data-numbersetting="timemessageinterval${id}">
-          <label for="timemessageinterval${id}">&gt; Interval between broadcasts in minutes</label>
+          <label for="timemessageinterval${id}">Interval between broadcasts in minutes</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="number" min="0" max="127" id="timemessageoffset${id}" value="0" min="0" class="textInput" autocomplete="off" title="Starting offset in minutes" data-numbersetting="timemessageoffset${id}">
-          <label for="timemessageoffset${id}">&gt; Starting time offset</label>
+          <label for="timemessageoffset${id}">Starting time offset</label>
         </div>
       </div>
     </div>
@@ -2585,7 +2603,7 @@ const eventTemplates = {
       <div style="display:inline-block">
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="midicommand${id}" class="textInput" autocomplete="off" placeholder="!someevent${id}" data-textsetting="midicommand${id}">
-          <label for="midicommand${id}">&gt; Triggering !command</label>
+          <label for="midicommand${id}">Triggering !command</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="number" id="midinote${id}" class="textInput" autocomplete="off" placeholder="MIDI Note that will be triggered; 127-velocity" data-numbersetting="midinote${id}">
@@ -3085,7 +3103,7 @@ function setupLazySourceInput(input) {
 }
 
 function ensureSelectValueOption(select, value, label) {
-    if (!select || value === undefined || value === null || value === "") return;
+    if (!select || !select.options || value === undefined || value === null || value === "") return;
     value = String(value);
     for (let i = 0; i < select.options.length; i++) {
         if (select.options[i].value === value) return;
@@ -7875,6 +7893,12 @@ function handleOptionSetting(ele, sync) {
                        (ele.dataset.optionsetting10 ? 'optionsetting10' : 'optionsetting18'));
     const settingValue = ele.dataset[settingType];
     if (settingValue === 'censorModel') updateCensorModelHelp();
+    if (settingValue === "aiTranslateEngine") {
+        const sourceField = document.getElementById("localTranslateSourceField");
+        if (sourceField) sourceField.classList.toggle("hidden", ele.value !== "local");
+        const contextToggle = document.getElementById("aiAutoTranslateContext");
+        if (contextToggle) contextToggle.disabled = ele.value === "local";
+    }
     
     // Handle poll type
     if (settingValue === "pollType") {
@@ -9789,11 +9813,11 @@ function createCommandEntry(command = '', url = '', id = '') {
     entry.innerHTML = `
         <div class="textInputContainer" style="width: 90%;">
             <input type="text" class="textInput custom-command" value="${encodeHTML(command)}" autocomplete="off" placeholder="!command, !alias" data-textsetting="customGifCommand" />
-            <label><span data-translate="chat-command">&gt; Chat Command(s)</span></label>
+            <label><span data-translate="chat-command">Chat Command(s)</span></label>
         </div>
         <div class="textInputContainer" style="width: 90%;">
             <input type="text" class="textInput custom-media-url" value="${encodeHTML(url)}" autocomplete="off" placeholder="https://media.giphy.com/media/..." data-textsetting="customGifUrl" />
-            <label><span data-translate="media-url">&gt; Media URL (GIF, image, or video)</span></label>
+            <label><span data-translate="media-url">Media URL (GIF, image, or video)</span></label>
         </div>
         <div class="custom-gif-command-actions">
             <button class="uploadCustomGifMedia" type="button" title="Upload your own GIF, image, or video file">
@@ -10928,11 +10952,19 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         if (!voices || !voices.length) {
             throw new Error("No system voices are available yet. Retry, or choose another TTS provider.");
         }
-        if (voices && settings.system.voice) {
-            const matchingVoice = resolvePopupSystemVoice(voices, settings.system.voice, settings.system.lang);
-            if (matchingVoice) {
-                utterance.voice = matchingVoice.voice || matchingVoice;
-            }
+        let matchingVoice = resolvePopupSystemVoice(voices, settings.system.voice, settings.system.lang);
+        if (!matchingVoice) {
+            // Match TTS.findFallbackSystemVoice: use browser order, not the dropdown's default-first order.
+            const availableVoices = window.speechSynthesis.getVoices().filter(voice =>
+                voice && voice.name && !voice.name.includes("Siri"));
+            const language = String(settings.system.lang || "").toLowerCase();
+            const languageBase = language.split("-")[0];
+            matchingVoice = availableVoices.find(voice => String(voice.lang || "").toLowerCase() === language) ||
+                availableVoices.find(voice => languageBase && String(voice.lang || "").toLowerCase().split("-")[0] === languageBase) ||
+                availableVoices.find(voice => voice.default) || availableVoices[0];
+        }
+        if (matchingVoice) {
+            utterance.voice = matchingVoice.voice || matchingVoice;
         }
         
         this.activeSystemUtterance = utterance;
@@ -11284,6 +11316,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     
     googleTTS(text, settings) {
         this.premiumQueueActive = true;
+        this.setTestRunning(this.currentTtsSection || "", true);
         const url = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${settings.google.key}`;
         
         const voiceName = settings.google.voice || (settings.google.lang ? undefined : "en-GB-Standard-A");
@@ -11300,7 +11333,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             }
         };
 
-        if (!/-Chirp3-HD-/i.test(voiceName || "")) {
+        if (/-Chirp3-HD-/i.test(voiceName || "")) {
+            data.audioConfig.speakingRate = Math.max(0.25, Math.min(2, Number(settings.google.rate) || 1));
+        } else {
             data.audioConfig.speakingRate = settings.google.rate;
             data.audioConfig.pitch = settings.google.pitch;
         }
@@ -12492,6 +12527,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	document.querySelectorAll("[data-copy]").forEach(ele=>{
 		ele.onclick = copyToClipboard;
+	});
+
+	document.querySelectorAll(".help-link[for]").forEach(function(element) {
+		element.onkeydown = function(event) {
+			if (event.key === "Enter" || event.key === " ") {
+				event.preventDefault();
+				element.click();
+			}
+		};
 	});
 
 	document.querySelectorAll("[data-edit-link]").forEach(function(element) {
@@ -15000,6 +15044,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						setTimeout(function(){
 							window.location.reload();
 						},100);
+					});
+				}
+			} else if (msg.cmd == "resetmetastats"){
+				if (confirm("Reset the connected stream stats to 0?")){
+					chrome.runtime.sendMessage(msg, function (response) {
+						log("ignore callback for this action");
 					});
 				}
 			} else if (msg.cmd == "resettipjar"){

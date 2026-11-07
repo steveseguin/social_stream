@@ -39,21 +39,23 @@
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
 		
-		if (!element){return resp;}
+		if (!element || (element.nodeType === 1 && element.getAttribute("aria-hidden") === "true")){return resp;}
 		
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.textContent){
-				return escapeHtml(element.textContent) || "";
+				return settings.textonlymode ? element.textContent : escapeHtml(element.textContent);
 			} else {
 				return "";
 			}
 		}
 		
 		element.childNodes.forEach(node=>{
-			if (node.childNodes.length){
+			if (node.nodeType === 1 && node.getAttribute("aria-hidden") === "true"){
+				return;
+			} else if (node.childNodes.length){
 				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent)+" ";
+			} else if (node.nodeType === 3 && node.textContent){
+				resp += settings.textonlymode ? node.textContent : escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				// Capture contract: textonly=true means a literal chatmessage string, not HTML.
 				// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
@@ -67,7 +69,7 @@
 				}
 			}
 		});
-		return resp.replaceAll("&nbsp;"," ").replaceAll("  "," ");
+		return resp;
 	}
 	
 	var settings = {};
@@ -86,7 +88,8 @@
 			return;
 		}
 		
-		if (ele.skip){
+		var messageId = ele.getAttribute("data-message-id");
+		if (!messageId || seenMessages.has(messageId)){
 			return;
 		}
 
@@ -106,8 +109,9 @@
 		var name="";
 		var namecolor="";
 		try {
-			name = escapeHtml(ele.querySelector("a.font-semibold.text-xs").textContent);
-			namecolor = ele.querySelector("a.font-semibold.text-xs").style.color;
+			var author = ele.querySelector('a[href^="/profile/"].font-semibold, a.font-semibold.text-xs');
+			name = author.textContent.trim();
+			namecolor = author.style.color;
 		} catch(e){
 		//	console.error(e);
 		}
@@ -142,7 +146,7 @@
 			
 			
 		try {
-			msg = getAllContentNodes(ele.querySelector("p.break-words")).trim();
+			msg = getAllContentNodes(ele.querySelector("span.break-words.text-text-primary, p.break-words")).trim();
 		} catch(e){
 			
 		}
@@ -163,7 +167,7 @@
 			return;
 		}
 		
-		ele.skip = true;
+		seenMessages.add(messageId);
 		
 		var data = {};
 		data.chatname = name;
@@ -286,6 +290,7 @@
 	console.log("social stream injected");
 
 	var firstRun = 0;
+	var seenMessages = new Set();
 	function startCheck(){
 		if (isExtensionOn && checking){return;}
 
@@ -297,12 +302,20 @@
 		
 		checking = setInterval(function(){
 			try {
-				document.querySelectorAll("[data-message-id]:not([data-skip])").forEach(msg=>{
+				var channel = location.pathname.match(/^\/(?:coin|livechat)\/([^/]+)/);
+				channel = channel ? channel[1] : location.pathname;
+				if (channel !== channelName){
+					channelName = channel;
+					seenMessages.clear();
+					firstRun = 0;
+				}
+				document.querySelectorAll("[data-message-id]").forEach(msg=>{
 					
 					if (firstRun>4){
 						processMessage(msg);
+					} else {
+						seenMessages.add(msg.getAttribute("data-message-id"));
 					}
-					msg.dataset.skip = "true";
 				});
 				
 				

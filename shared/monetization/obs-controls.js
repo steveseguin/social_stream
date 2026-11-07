@@ -3,6 +3,23 @@
     function t(key, fallback, values) { return window.SSNPageI18n ? window.SSNPageI18n.t('commerce-dock-' + key, fallback, values) : fallback; }
     window.SSNCommerceDock = function (request, status) {
         var section = document.getElementById('commerce-controls');
+        if (new URLSearchParams(location.search).has('breaks')) {
+            var workspace = null;
+            var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'shared/monetization/breaks.css'; document.head.appendChild(css);
+            function failed() { status('Breaks could not load. Update Social Stream and reload this page.', 'error'); }
+            var access = document.createElement('script'); access.src = 'shared/monetization/breaks-access.js'; access.onerror = failed;
+            access.onload = function () {
+                var core = document.createElement('script'); core.src = 'shared/monetization/breaks-core.js'; core.onerror = failed;
+                core.onload = function () {
+                var script = document.createElement('script'); script.src = 'shared/monetization/breaks-workspace.js'; script.onerror = failed;
+                script.onload = function () { workspace = window.SSNBreaksWorkspace(section, request); workspace.refresh(); };
+                document.body.appendChild(script);
+                };
+                document.body.appendChild(core);
+            };
+            document.body.appendChild(access);
+            return {refresh:function () { if (workspace) workspace.refresh(); }, disconnected:function () { if (workspace) workspace.disconnected(); }};
+        }
         var select = document.getElementById('commerce-product');
         var stateText = document.getElementById('commerce-state');
         var buttons = section.querySelectorAll('[data-commerce]');

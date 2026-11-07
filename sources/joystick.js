@@ -215,6 +215,20 @@
 		return ["message", data.chatname || "", stripHtml(data.chatmessage || ""), data.private ? "private" : "public"].join("::").toLowerCase();
 	}
 
+	function toTimestampMs(value) {
+		if (typeof value !== "string" && typeof value !== "number") return null;
+		if (typeof value === "string") {
+			value = value.trim();
+			if (!value) return null;
+		}
+		var numeric = typeof value === "number" || /^[+-]?\d+(?:\.\d+)?$/.test(value);
+		var timestamp = numeric ? Number(value) : Date.parse(value);
+		// Incoming epoch numbers may be seconds or milliseconds; never parse them as date text.
+		if (numeric && Math.abs(timestamp) < 100000000000) timestamp *= 1000;
+		return Number.isFinite(timestamp) && Math.abs(timestamp) <= 8640000000000000
+			? Math.trunc(timestamp) : null;
+	}
+
 	function pushMessage(data, force) {
 		if (!isExtensionOn || !data) return;
 		pruneCaches();
@@ -297,7 +311,7 @@
 			data.userid = String(author.id || author.userId || author.user_id || author.slug || username);
 		}
 		if (messageId) data.id = String(messageId);
-		if (message.createdAt || message.sent_at) data.timestamp = message.createdAt || message.sent_at;
+		if (message.createdAt || message.sent_at) data.timestamp = toTimestampMs(message.createdAt || message.sent_at);
 		if (visibility === "private" || whisper) data.private = true;
 		if (roles.moderator) data.mod = true;
 		if (roles.bot) data.bot = true;
@@ -413,7 +427,7 @@
 		var platformUserId = metadata.user_id || metadata.userId || message.userId || message.user_id || "";
 		if (platformUserId) data.userid = String(platformUserId);
 		if (message.messageId || message.id) data.id = String(message.messageId || message.id);
-		if (message.createdAt || message.sent_at) data.timestamp = message.createdAt || message.sent_at;
+		if (message.createdAt || message.sent_at) data.timestamp = toTimestampMs(message.createdAt || message.sent_at);
 		if (eventName === "donation" && details.amount != null) {
 			data.hasDonation = String(details.amount) + " " + details.currency;
 		}
@@ -443,10 +457,10 @@
 		} else if (eventName === "new_follower") {
 			var followerMeta = {};
 			if (platformUserId) followerMeta.userId = String(platformUserId);
-			if (message.createdAt || message.sent_at) followerMeta.followedAt = message.createdAt || message.sent_at;
+			if (message.createdAt || message.sent_at) followerMeta.followedAt = toTimestampMs(message.createdAt || message.sent_at);
 			if (Object.keys(followerMeta).length) data.meta = followerMeta;
 		} else if (eventName === "stream_online" && (message.createdAt || message.sent_at)) {
-			data.meta = { startedAt: message.createdAt || message.sent_at };
+			data.meta = { startedAt: toTimestampMs(message.createdAt || message.sent_at) };
 		}
 		return data;
 	}

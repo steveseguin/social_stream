@@ -1626,6 +1626,56 @@
     "image": "images/overlay-gallery/events-paper.webp"
   },
   {
+    "id": "events-spotlight",
+    "path": "events.html?style=spotlight",
+    "name": "Recent Events - Spotlight",
+    "category": "alerts",
+    "description": "One-line event rows on a transparent background, with the newest event highlighted.",
+    "tags": "activity event list recent transparent persistent twitch streamlabs spotlight highlight monospace resub bits",
+    "image": "images/overlay-gallery/events-spotlight.webp",
+    "width": 960,
+    "height": 260,
+    "fixtures": [
+      {
+        "id": "g1",
+        "type": "twitch",
+        "event": "resub",
+        "chatname": "Maple",
+        "chatmessage": "Maple resubscribed",
+        "textonly": true,
+        "meta": {
+          "cumulativeMonths": 77
+        }
+      },
+      {
+        "id": "g2",
+        "type": "twitch",
+        "event": "resub",
+        "chatname": "Juniper",
+        "chatmessage": "Juniper resubscribed",
+        "textonly": true,
+        "meta": {
+          "cumulativeMonths": 22
+        }
+      },
+      {
+        "id": "g3",
+        "type": "twitch",
+        "event": "powerup",
+        "chatname": "River",
+        "chatmessage": "",
+        "textonly": true,
+        "meta": {
+          "bits": 200,
+          "powerUp": {
+            "type": "power_up",
+            "powerUpType": "gigantify_an_emote"
+          }
+        }
+      }
+    ]
+  },
+  {
     "id": "events-layout-horizontal",
     "path": "events.html?audience&maxevents=3&style=broadcast&layout=horizontal&rowwidth=300",
     "name": "Recent Events - Horizontal cards",
@@ -1660,6 +1710,264 @@
     "description": "Scrolling strip with your latest supporter events.",
     "tags": "activity event list layout marquee",
     "image": "images/overlay-gallery/events-layout-marquee.webp"
+  },
+  {
+    "id": "tipjar-html-style-banner",
+    "path": "tipjar.html?style=banner",
+    "name": "Fundraiser Banner",
+    "category": "widgets",
+    "description": "Flat edge-to-edge goal bar with the title, raised amount and goal on one line",
+    "tags": "Fundraiser Banner goal bar flat top bar donations progress tip jar funds",
+    "image": "images/overlay-gallery/tipjar-html-style-banner.webp",
+    "width": 960,
+    "height": 120,
+    "expect": "Studio upgrade fund",
+    "params": {
+      "goal": "1500",
+      "startamount": "1150",
+      "title": "Studio upgrade fund",
+      "celebration": "none"
+    }
+  },
+  {
+    "id": "meta-stats-strip",
+    "path": "meta.html?stats=lastchat,biggest,subs,bits,clock&style=strip",
+    "name": "Stream Stats Strip",
+    "category": "widgets",
+    "description": "Full-width bar with the biggest donation, subs today, bits, the time and the latest chat line",
+    "tags": "stats bar strip biggest donation top donor subs today total bits clock time latest chat lower bar ticker",
+    "image": "images/overlay-gallery/meta-stats-strip.webp",
+    "width": 1280,
+    "height": 120,
+    "expect": "Biggest",
+    "fixtures": [
+      {
+        "id": "g1",
+        "type": "twitch",
+        "chatname": "Maple",
+        "hasDonation": "$123.64",
+        "donoValue": 123.64
+      },
+      {
+        "id": "g2",
+        "type": "twitch",
+        "event": "subscription_gift",
+        "chatname": "River",
+        "total": 20,
+        "meta": {
+          "total": 20
+        }
+      },
+      {
+        "id": "g3",
+        "type": "twitch",
+        "event": "resub",
+        "chatname": "Luna",
+        "chatmessage": "Luna resubscribed",
+        "textonly": true
+      },
+      {
+        "id": "g4",
+        "type": "twitch",
+        "event": "new_subscriber",
+        "chatname": "Robin",
+        "chatmessage": "Robin subscribed",
+        "textonly": true
+      },
+      {
+        "id": "g5",
+        "type": "twitch",
+        "chatname": "Robin",
+        "hasDonation": "4670 bits",
+        "donoValue": 46.7,
+        "meta": {
+          "bits": 4670
+        }
+      },
+      {
+        "id": "g6",
+        "type": "twitch",
+        "chatname": "Juniper",
+        "chatmessage": "Looking good!",
+        "nameColor": "#ff8fb1",
+        "textonly": true
+      }
+    ]
+  },
+  {
+    "id": "meta-latest-top",
+    "path": "meta.html?stats=latestfollow,latestsub,latesttip,topgifter,topbits,totalsubs&layout=column",
+    "name": "Latest & Top Supporters",
+    "category": "widgets",
+    "description": "Latest follower, sub and tip, top gifter, top Bits and total subs, filled in from your events",
+    "tags": "latest follower latest sub recent subscriber recent donation top donor top gifter top bits total subs labels stats list",
+    "image": "images/overlay-gallery/meta-latest-top.webp",
+    "width": 520,
+    "height": 300,
+    "expect": "Latest",
+    "fixtures": [
+      {
+        "id": "g1",
+        "type": "twitch",
+        "event": "new_follower",
+        "chatname": "Maple",
+        "meta": {
+          "userId": "1"
+        }
+      },
+      {
+        "id": "g2",
+        "type": "twitch",
+        "event": "subscription_gift",
+        "chatname": "River",
+        "total": 5,
+        "meta": {
+          "total": 5
+        }
+      },
+      {
+        "id": "g3",
+        "type": "twitch",
+        "chatname": "Luna",
+        "hasDonation": "$40.00",
+        "donoValue": 40
+      },
+      {
+        "id": "g4",
+        "type": "twitch",
+        "chatname": "Robin",
+        "hasDonation": "1080 bits",
+        "donoValue": 10.8,
+        "meta": {
+          "bits": 1080
+        }
+      },
+      {
+        "id": "g5",
+        "type": "twitch",
+        "event": "subscriber_update",
+        "meta": 1601
+      }
+    ]
+  },
+  {
+    "id": "meta-counters",
+    "path": "meta.html?counters=Deaths|!death,Wins|!win,Owed Pushups|!pushup",
+    "name": "Death & Win Counters",
+    "category": "widgets",
+    "description": "Named tallies your mods change from chat, and that subs or Bits can raise automatically",
+    "tags": "death counter win counter wins losses tally pushups challenge chat command mods gaming score",
+    "image": "images/overlay-gallery/meta-counters.webp",
+    "width": 720,
+    "height": 120,
+    "expect": "Deaths",
+    "fixtures": [
+      {
+        "id": "g1",
+        "type": "twitch",
+        "chatname": "Robin",
+        "chatmessage": "!death =7",
+        "mod": true,
+        "textonly": true
+      },
+      {
+        "id": "g2",
+        "type": "twitch",
+        "chatname": "Robin",
+        "chatmessage": "!win =2",
+        "mod": true,
+        "textonly": true
+      },
+      {
+        "id": "g3",
+        "type": "twitch",
+        "chatname": "Robin",
+        "chatmessage": "!pushup =310",
+        "mod": true,
+        "textonly": true
+      }
+    ]
+  },
+  {
+    "id": "meta-subathon",
+    "path": "meta.html?style=card&subathon=6h&subathonsub=10&subathonbits=4&subathonrules",
+    "name": "Subathon Timer",
+    "category": "widgets",
+    "description": "A countdown that subs, Bits and tips push back, with the rules beside it",
+    "tags": "subathon timer countdown extend time remaining marathon subs bits tips clock",
+    "image": "images/overlay-gallery/meta-subathon.webp",
+    "width": 720,
+    "height": 200,
+    "expect": "Time Remaining",
+    "params": {
+      "subathonstart": ""
+    },
+    "fixtures": [
+      {
+        "id": "g1",
+        "type": "twitch",
+        "event": "new_subscriber",
+        "chatname": "Maple",
+        "chatmessage": "Maple subscribed",
+        "textonly": true
+      },
+      {
+        "id": "g2",
+        "type": "twitch",
+        "event": "subscription_gift",
+        "chatname": "River",
+        "total": 5,
+        "meta": {
+          "total": 5
+        }
+      }
+    ]
+  },
+  {
+    "id": "meta-goal-panel",
+    "path": "meta.html?layout=column&counters=Sub Goal|!subgoal|sub:1|goal:25,Bits Goal|!bitsgoal|bits:100|goal:20000,Follower Goal|!followgoal|follow:1|goal:150,New Mic|!mic|tip:1|goal:200",
+    "name": "Stacked Goal Panel",
+    "category": "widgets",
+    "description": "Sub, Bits, follower and money goals together in one source, each with its own bar",
+    "tags": "stacked goals multiple goals sub goal bits goal follower goal daily goal goal panel progress bars",
+    "image": "images/overlay-gallery/meta-goal-panel.webp",
+    "width": 520,
+    "height": 240,
+    "expect": "Sub Goal",
+    "fixtures": [
+      {
+        "id": "g1",
+        "type": "twitch",
+        "chatname": "Robin",
+        "chatmessage": "!subgoal =17",
+        "mod": true,
+        "textonly": true
+      },
+      {
+        "id": "g2",
+        "type": "twitch",
+        "chatname": "Robin",
+        "chatmessage": "!bitsgoal =8933",
+        "mod": true,
+        "textonly": true
+      },
+      {
+        "id": "g3",
+        "type": "twitch",
+        "chatname": "Robin",
+        "chatmessage": "!followgoal =144",
+        "mod": true,
+        "textonly": true
+      },
+      {
+        "id": "g4",
+        "type": "twitch",
+        "chatname": "Robin",
+        "chatmessage": "!mic =69",
+        "mod": true,
+        "textonly": true
+      }
+    ]
   },
   {
     "id": "tipjar-html-style-meter",

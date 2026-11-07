@@ -62,6 +62,8 @@ async function loadScriptsInOrder() {
         './js/streamdeck-remote-control.js?v=3',
         './shared/monetization/core.js',
         './shared/monetization/boards.js',
+        './shared/monetization/breaks-core.js',
+        './shared/monetization/breaks-access.js',
         './shared/giveaway/core.js',
         './background.js?v=5',
         './shared/audience-room/connector.js',

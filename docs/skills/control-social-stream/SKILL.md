@@ -7,6 +7,8 @@ description: Control Social Stream Ninja sources, app windows, sign-in windows, 
 
 Use SSApp's declarative control API. Do not use renderer execution or UI automation when a supported command exists.
 
+For the optional card-break workspace, see [Breaks controls](references/control-api.md#breaks-workspace). Its records are private to the operator's link, and session commands cannot read or change them.
+
 SSApp 0.4.40 / API 1.6.0 / MCP 1.5.0 adds a private human viewer and
 `ssapp_get_human_control_status`. When `HUMAN_CONTROL_ACTIVE` is returned, stop
 automation and poll only that status tool until the person explicitly returns

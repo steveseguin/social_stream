@@ -5,6 +5,11 @@
     <meta name="description" content="Meta Overlay. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
     <meta name="robots" content="noindex">
   <script type="text/javascript" src="./js/local-server-url.js"></script>
+  <script src="./shared/overlay-control-transport.js"></script>
+  <script src="./libs/objects.js"></script>
+  <script src="./shared/utils/chatHtml.js"></script>
+  <script src="./currency.js"></script>
+  <script src="./shared/session-stats.js"></script>
     <!--
         ================================================================================
         META OVERLAY CONTEXT FOR FUTURE CONTRIBUTORS / AI AGENTS
@@ -43,7 +48,26 @@
           and `data-textparam24` in popup.html.
 
         Presentation URL params (all optional):
-        - &style=glass|neon|minimal|card   visual theme for the stat chips (default: pill chips)
+        - &style=glass|neon|minimal|card|strip   visual theme for the stat chips (default: pill chips).
+          strip is a flat full-width bar, at the bottom unless &position says otherwise.
+        - &stats=biggest,donations,subs,bits,follows,lastchat,latestfollow,latestsub,latesttip,latestbits,
+          topgifter,topbits,totalsubs,totalfollows,subathon,subathonrules,clock   running values this page
+          works out itself from the feed, shown in the order listed (bare &stats = biggest,subs,bits,clock).
+          Saved in this browser. &statsreset=manual keeps the day's totals past midnight; the popup's
+          reset button sends {cmd:"resetmetastats"}. &demo shows sample values.
+          Rename any stat with &<key>label=, for example &biggestlabel=Biggest%20D.
+        - &counters=Deaths|!death,Owed%20Pushups|!pushup|sub:15|gift:15   named tallies. Mods, hosts and
+          admins change them from chat: !death, !death -1, !death =5, !death reset. &counterall lets anyone add 1.
+          Optional rules add on events: sub, gift (per sub), bits (per 100), tip (per $1), follow, raid.
+          goal:25 shows 3/25 with a bar, so a list of them makes a stacked goal panel, and daily:1 resets at midnight.
+        - &subathon=6h&subathonsub=10&subathonbits=4&subathontip=1&subathonfollow=0&subathonraid=30&subathonmax=72h
+          a countdown that support pushes back, in minutes (subathonsub=6,15,40 for tiers 1, 2, 3).
+          It waits for "!subathon start" or the popup button unless &subathonstart is set. Mods also get
+          pause, add 30m, remove 10m, set 6h and reset. &subathoncmd renames the command.
+        - Feed: stats use the existing dock feed and its host filters. They add a hidden bridge
+          labelled "dock" (or use the &server2 socket). The meta bridge only supplies channel totals
+          and metadata chips; it does not bypass dock filters for counting support.
+        - &demo needs &stats, &counters or &subathon and stays offline.
         - &layout=column|grid              chip flow (default: wrapping row)
         - &position=top-left|top-center|top-right|middle-left|center|middle-right|
                     bottom-left|bottom-center|bottom-right
@@ -240,6 +264,134 @@
             }
         }
 
+        .chat-line {
+            display: block;
+            min-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .chat-name {
+            margin-right: 0.35em;
+            font-weight: 700;
+        }
+
+        .chat-text img {
+            width: auto;
+            height: 1.2em;
+            vertical-align: middle;
+        }
+
+        .stat-clock.bump .value {
+            animation: none;
+        }
+
+        .stat-subathon .value {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat.is-paused .value {
+            opacity: 0.6;
+        }
+
+        .stat-counter {
+            position: relative;
+        }
+
+        .stat.category-stats .label,
+        .stat.category-stats .value {
+            flex: 0 1 auto;
+            min-width: 0;
+        }
+
+        .stat.category-stats .label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .stat.category-stats .value.person-value {
+            display: inline-grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            column-gap: 0.25em;
+            min-width: min-content;
+        }
+
+        .stat-person-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .stat-counter .value,
+        .stat-subs .value,
+        .stat-bits .value,
+        .stat-donations .value,
+        .stat-follows .value,
+        .stat-totalsubs .value,
+        .stat-totalfollows .value,
+        .stat-subathon .value,
+        .stat-clock .value {
+            flex: 0 0 auto;
+            overflow: visible;
+        }
+
+        .stat-counter .value {
+            direction: ltr;
+            unicode-bidi: isolate-override;
+        }
+
+        .stat-subathonrules {
+            max-width: min(94vw, 900px);
+        }
+
+        .stat-subathonrules .icon {
+            display: none;
+        }
+
+        .stat-subathonrules .value {
+            white-space: normal;
+            line-height: 1.25;
+        }
+
+        body.style-strip .stat-subathonrules .value {
+            white-space: nowrap;
+        }
+
+        body.layout-grid.has-stats #bar {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .stat.has-progress {
+            padding-bottom: 11px;
+        }
+
+        body.style-strip .stat.has-progress {
+            padding-bottom: 0;
+        }
+
+        .stat-progress {
+            position: absolute;
+            left: 11px;
+            right: 11px;
+            bottom: 2px;
+            height: 3px;
+            border-radius: 2px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-progress span {
+            display: block;
+            height: 100%;
+            background: var(--text-color);
+            transition: width 0.4s ease;
+        }
+
+        body.style-strip .stat-progress {
+            display: none;
+        }
+
         .stat.bump .value {
             display: inline-block;
             animation: valueBump 0.55s ease;
@@ -253,6 +405,17 @@
             100% {
                 transform: scale(1);
             }
+        }
+
+        .stat.category-stats.bump .value { animation-name: statHighlight; }
+
+        @keyframes statHighlight {
+            from { color: #aef4c2; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .stat.category-stats.bump .value { animation: none; }
+            .stat.category-stats .stat-progress span { transition: none; }
         }
 
         .stat.category-auction {
@@ -663,6 +826,101 @@
         }
 
         /* ---------------- Layout: column ---------------- */
+        body.style-strip #root {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            gap: 0;
+            transform: none;
+            font-size: calc(24px * var(--scale));
+        }
+
+        body.style-strip #bar {
+            box-sizing: border-box;
+            width: 100%;
+            min-height: 0;
+            flex-wrap: nowrap;
+            justify-content: flex-end;
+            gap: 0;
+            padding: 0.25em 0.3em;
+            background: rgba(0, 0, 0, 0.72);
+        }
+
+        body.style-strip.no-bg #bar {
+            background: transparent;
+        }
+
+        body.style-strip .stat {
+            flex: 0 0 auto;
+            max-width: none;
+            padding: 0 0.7em;
+            border: 0;
+            border-left: 1px solid rgba(255, 255, 255, 0.55);
+            border-radius: 0;
+            background: none;
+            box-shadow: none;
+            backdrop-filter: none;
+            font-size: 1em;
+            line-height: 1.2;
+        }
+
+        body.style-strip .stat:first-child {
+            border-left: 0;
+        }
+
+        body.style-strip .stat-lastchat {
+            flex: 1 1 0;
+            min-width: 10em;
+        }
+
+        body.style-strip .icon {
+            display: none;
+        }
+
+        body.style-strip .label {
+            color: #fff;
+            font-size: 1em;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
+        body.style-strip .label::after {
+            content: ":";
+        }
+
+        body.style-strip .value {
+            font-weight: 600;
+        }
+
+        /* Shorten names before fitting the strip; keep amounts complete. */
+        body.style-strip .stat-biggest,
+        body.style-strip .stat-latestfollow,
+        body.style-strip .stat-latestsub,
+        body.style-strip .stat-latesttip,
+        body.style-strip .stat-latestbits,
+        body.style-strip .stat-latestraid,
+        body.style-strip .stat-subathonrules,
+        body.style-strip .stat-topgifter,
+        body.style-strip .stat-topbits {
+            flex: 0 1 auto;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        /* On the one-line bar a name gives way before its label does. */
+        body.style-strip .stat.category-stats .label {
+            flex-shrink: 0;
+        }
+
+        body.style-strip .stat.has-person {
+            flex: 1 1 min-content;
+            min-width: min-content;
+        }
+
+        body.style-strip .stat.category-stats .value.person-value {
+            grid-template-columns: minmax(3ch, 1fr) auto;
+        }
+
         body.layout-column #bar {
             flex-direction: column;
             align-items: stretch;
@@ -718,6 +976,37 @@
                 showValue = true;
             }
 
+            var STAT_LABELS = {
+                lastchat: "", biggest: "Biggest Donation", donations: "Donations", subs: "Subs", bits: "Bits", follows: "Follows",
+                latestfollow: "Latest Follower", latestsub: "Latest Sub", latesttip: "Latest Tip", latestbits: "Latest Bits", latestraid: "Latest Raid",
+                topgifter: "Top Gifter", topbits: "Top Bits", totalsubs: "Total Subs", totalfollows: "Followers",
+                subathon: "Time Remaining", subathonrules: "", clock: ""
+            };
+            var STAT_ICONS = {
+                biggest: "trophy", donations: "money", subs: "user", bits: "gift", follows: "user", clock: "clock",
+                latestfollow: "user", latestsub: "user", latesttip: "money", latestbits: "gift", latestraid: "user",
+                topgifter: "trophy", topbits: "trophy", totalsubs: "user", totalfollows: "user", subathon: "clock", subathonrules: "activity"
+            };
+            var statKeys = !urlParams.has("stats") ? [] : (urlParams.get("stats") || "biggest,subs,bits,clock")
+                .split(",")
+                .map(function (key) { return key.trim().toLowerCase(); })
+                .filter(function (key) { return Object.prototype.hasOwnProperty.call(STAT_LABELS, key); });
+            ["subathon", "subathonrules"].forEach(function (key) {
+                if (urlParams.has(key) && statKeys.indexOf(key) === -1) statKeys.push(key);
+            });
+            var counterDefs = SSNSessionStats.parseCounters(urlParams.get("counters"));
+            var statsActive = statKeys.length > 0 || counterDefs.length > 0;
+            var statsDaily = urlParams.get("statsreset") !== "manual";
+            var statsDemo = statsActive && (urlParams.has("demo") || urlParams.has("preview"));
+            var statsSession = String(urlParams.get("session") || "").split(",")[0];
+            var sessionStats = null;
+            var counters = null;
+            var subathon = null;
+            var subathonCommand = String(urlParams.get("subathoncmd") || "!subathon").trim().toLowerCase();
+            var lastChat = null;
+            var clockText = "";
+            var feedIframe = null;
+
             var explicitFilter = {
                 auction: urlParams.has("auction"),
                 commerce: urlParams.has("commerce"),
@@ -725,7 +1014,7 @@
                 hype: urlParams.has("hype"),
                 othermeta: urlParams.has("othermeta")
             };
-            var hasExplicitFilter = explicitFilter.auction || explicitFilter.commerce || explicitFilter.viewers || explicitFilter.hype || explicitFilter.othermeta;
+            var hasExplicitFilter = explicitFilter.auction || explicitFilter.commerce || explicitFilter.viewers || explicitFilter.hype || explicitFilter.othermeta || statsActive;
             var hideAuctionExtras = urlParams.has("hideauctionextras");
             var hideCommerceExtras = urlParams.has("hidecommerceextras");
             var hideViewerPlatforms = urlParams.has("hideviewerplatforms");
@@ -778,7 +1067,7 @@
             }
 
             var styleName = (urlParams.get("style") || urlParams.get("theme") || "").toLowerCase();
-            if (["glass", "neon", "minimal", "card"].indexOf(styleName) > -1) {
+            if (["glass", "neon", "minimal", "card", "strip"].indexOf(styleName) > -1) {
                 document.body.classList.add("style-" + styleName);
             }
 
@@ -792,7 +1081,7 @@
             // Placement: &position=top-left|top-center|top-right|middle-left|center|middle-right|bottom-left|bottom-center|bottom-right
             var posX = "left";
             var posY = "top";
-            var positionValue = (urlParams.get("position") || "").toLowerCase().replace(/[^a-z]+/g, "-");
+            var positionValue = (urlParams.get("position") || (styleName === "strip" ? "bottom" : "")).toLowerCase().replace(/[^a-z]+/g, "-");
             if (positionValue) {
                 var tokens = positionValue.split("-").filter(Boolean);
                 var sawCenter = false;
@@ -1520,6 +1809,256 @@
                 });
             }
 
+            function getStatLabel(key) {
+                if (key === "subathon" && subathon) {
+                    if (subathon.isEnded()) return "Ended";
+                    if (!subathon.isRunning()) return "Paused";
+                }
+                var custom = String(urlParams.get(key + "label") || "").trim();
+                if (custom) return custom;
+                return statsDaily && (key === "subs" || key === "follows") ? STAT_LABELS[key] + " Today" : STAT_LABELS[key];
+            }
+
+            function personText(person) {
+                if (!person) return "-";
+                return person.amount ? person.name + " " + person.amount : person.name;
+            }
+
+            function statValue(key, totals) {
+                switch (key) {
+                    case "biggest": return totals.biggest ? totals.biggest.name + ": " + totals.biggest.amount : "-";
+                    case "donations": return "$" + totals.donations.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    case "clock": return clockText;
+                    case "latestfollow": return personText(totals.latest.follow);
+                    case "latestsub": return personText(totals.latest.sub);
+                    case "latesttip": return personText(totals.latest.tip);
+                    case "latestbits": return personText(totals.latest.bits);
+                    case "latestraid": return personText(totals.latest.raid);
+                    case "topgifter": return totals.topGifter ? totals.topGifter.name + " " + totals.topGifter.count.toLocaleString() : "-";
+                    case "topbits": return totals.topBits ? totals.topBits.name + " " + totals.topBits.count.toLocaleString() : "-";
+                    case "totalsubs": return totals.totalSubs;
+                    case "totalfollows": return totals.totalFollows;
+                    case "subathon": return subathon ? SSNSessionStats.formatClock(subathon.remaining()) : "-";
+                    case "subathonrules": return subathon ? subathon.rules() || "-" : "-";
+                    default: return totals[key];
+                }
+            }
+
+            function syncStatEntries() {
+                var totals = sessionStats.read();
+                statKeys.forEach(function (key, index) {
+                    var id = "stats-" + key;
+                    // The clock stays at the end of a bar, wherever it was listed.
+                    var order = key === "clock" ? 900 : 100 + index;
+                    if (key === "lastchat") {
+                        state.set(id, { id: id, label: "", value: "", icon: "", category: "stats", order: order, sequence: 0, changedAt: 0, statKey: key, chat: lastChat });
+                        return;
+                    }
+                    setEntry(id, getStatLabel(key), statValue(key, totals), key, "stats", order);
+                    var entry = state.get(id);
+                    if (entry) {
+                        entry.label = getStatLabel(key);
+                        entry.icon = STAT_ICONS[key];
+                        entry.statKey = key;
+                        entry.paused = key === "subathon" && !!subathon && !subathon.isRunning();
+                        entry.person = key === "biggest" ? totals.biggest :
+                            key === "topgifter" ? totals.topGifter :
+                            key === "topbits" ? totals.topBits :
+                            key.indexOf("latest") === 0 ? totals.latest[key.slice(6)] : null;
+                        if (key === "subathonrules") entry.value = statValue(key, totals);
+                    }
+                });
+                if (counters) {
+                    counters.list().forEach(function (counter, index) {
+                        var id = "counter-" + index;
+                        var count = Math.floor(counter.value);
+                        var unit = counter.money ? "$" : "";
+                        var shown = counter.goal ? unit + count.toLocaleString() + "/" + unit + counter.goal.toLocaleString() : count;
+                        setEntry(id, counter.label, shown, "counter", "stats", 300 + index);
+                        var entry = state.get(id);
+                        if (entry) {
+                            entry.label = counter.label;
+                            entry.icon = "target";
+                            entry.statKey = "counter";
+                            entry.progress = counter.goal ? Math.max(0, Math.min(1, counter.value / counter.goal)) : null;
+                        }
+                    });
+                }
+            }
+
+            // Mods, hosts and admins only: a viewer must not be able to change a counter or the subathon clock.
+            function handleChatCommand(data) {
+                // The same rule giveaways use, so a command relayed to several platforms only counts once.
+                if (data.event || data.bot || data.private || data.reflection) return false;
+                var text = String(data.chatmessage || "").trim();
+                if (text.charAt(0) !== "!") return false;
+                var trusted = !!(data.mod || data.host || data.admin);
+                if (subathon && trusted) {
+                    var lower = text.toLowerCase();
+                    if (lower === subathonCommand || lower.indexOf(subathonCommand + " ") === 0) {
+                        subathon.control(text.slice(subathonCommand.length));
+                        return true;
+                    }
+                }
+                if (!counters) return false;
+                if (trusted) return counters.command(text);
+                return urlParams.has("counterall") && counters.viewerAdd(text, data.userid || data.chatname);
+            }
+
+            function trackStats(data, allowCommands) {
+                if (!SSNSessionStats.isCountable(data)) return false;
+                var changed = false;
+                var worth = sessionStats.record(data);
+                if (worth) {
+                    changed = true;
+                    if (!worth.changedOnly) {
+                        if (counters) counters.onEvent(worth);
+                        if (subathon) subathon.onEvent(worth);
+                    }
+                }
+                if (allowCommands && handleChatCommand(data)) return true;
+                if (statKeys.indexOf("lastchat") > -1 && data.chatname && data.chatmessage && !data.event && !data.private) {
+                    lastChat = {
+                        name: String(data.chatname),
+                        color: typeof data.nameColor === "string" ? data.nameColor : "",
+                        message: String(data.chatmessage),
+                        isHtml: !data.textonly
+                    };
+                    changed = true;
+                }
+                return changed;
+            }
+
+            function buildChatLine(chat) {
+                var line = document.createElement("span");
+                line.className = "chat-line";
+                if (!chat) return line;
+                var name = document.createElement("span");
+                name.className = "chat-name";
+                name.textContent = chat.name + ":";
+                if (chat.color) name.style.color = chat.color;
+                var text = document.createElement("span");
+                text.className = "chat-text";
+                if (chat.isHtml && window.SocialStreamChatHTML) {
+                    text.innerHTML = SocialStreamChatHTML.sanitize(chat.message);
+                    Array.prototype.forEach.call(text.querySelectorAll("br"), function (lineBreak) {
+                        lineBreak.parentNode.replaceChild(document.createTextNode(" "), lineBreak);
+                    });
+                } else {
+                    text.textContent = chat.message;
+                }
+                line.appendChild(name);
+                line.appendChild(text);
+                return line;
+            }
+
+            // The countdown changes every second, so it skips the full redraw the other chips use.
+            function updateSubathonChip() {
+                var entry = state.get("stats-subathon");
+                if (!entry) return;
+                var value = SSNSessionStats.formatClock(subathon.remaining());
+                if (entry.value === value) return;
+                entry.value = value;
+                var node = barNode.querySelector(".stat-subathon .value");
+                if (node) node.textContent = value;
+            }
+
+            function updateClock() {
+                var text = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+                var rolledOver = sessionStats.rollover();
+                var subathonEnded = !!subathon && subathon.tick();
+                var countersRolledOver = !!counters && counters.rollover();
+                if (subathon && !subathonEnded) updateSubathonChip();
+                if (text === clockText && !rolledOver && !subathonEnded && !countersRolledOver) return;
+                clockText = text;
+                syncStatEntries();
+                render();
+            }
+
+            function handleStatsControl(data) {
+                if (data.cmd === "resetmetastats") {
+                    sessionStats.reset();
+                    lastChat = null;
+                } else if (data.cmd === "metastats" && typeof data.value === "string") {
+                    var parts = data.value.split(":");
+                    if (parts[0] === "subathon" && subathon) subathon.control(parts[1] + " " + parts.slice(2).join(":"));
+                    if (parts[0] === "counter" && counters) counters.control(parts[1], parts.slice(2).join(":"));
+                } else {
+                    return false;
+                }
+                syncStatEntries();
+                render();
+                return true;
+            }
+
+            function startStats() {
+                var storage = null;
+                try { storage = statsDemo ? null : window.localStorage; } catch (e) {}
+                sessionStats = SSNSessionStats.create({
+                    storage: storage,
+                    key: "ssn-meta-stats:" + statsSession + ":" + (statsDaily ? "daily" : "manual"),
+                    daily: statsDaily,
+                    getUSD: getDonationValueUSD
+                });
+                if (counterDefs.length) {
+                    counters = SSNSessionStats.createCounters({ storage: storage, key: "ssn-meta-counters:" + statsSession, counters: counterDefs });
+                }
+                if (statKeys.indexOf("subathon") > -1 || statKeys.indexOf("subathonrules") > -1) {
+                    subathon = SSNSessionStats.createSubathon({
+                        storage: storage,
+                        key: "ssn-meta-subathon:" + statsSession,
+                        durationMs: SSNSessionStats.parseDuration(urlParams.get("subathon")) || 3600000,
+                        maxMs: SSNSessionStats.parseDuration(urlParams.get("subathonmax")),
+                        perSubMinutes: String(urlParams.get("subathonsub") || "").split(",").map(Number),
+                        perBitsMinutes: Math.max(0, Number(urlParams.get("subathonbits")) || 0),
+                        perTipMinutes: Math.max(0, Number(urlParams.get("subathontip")) || 0),
+                        perFollowMinutes: Math.max(0, Number(urlParams.get("subathonfollow")) || 0),
+                        perRaidMinutes: Math.max(0, Number(urlParams.get("subathonraid")) || 0),
+                        autostart: urlParams.has("subathonstart") || statsDemo
+                    });
+                }
+                updateClock();
+                setInterval(updateClock, 1000);
+                if (statsDemo) {
+                    [
+                        { type: "twitch", chatname: "Weakskills", hasDonation: "$123.64", donoValue: 123.64 },
+                        { type: "twitch", event: "subscription_gift", chatname: "Maple", total: 20 },
+                        { type: "twitch", event: "resub", chatname: "River" },
+                        { type: "twitch", event: "new_subscriber", chatname: "Juniper" },
+                        { type: "twitch", event: "new_follower", chatname: "Sage" },
+                        { type: "twitch", chatname: "Rowan", hasDonation: "4670 bits", donoValue: 46.7, meta: { bits: 4670 } },
+                        { type: "twitch", chatname: "Sage", chatmessage: "Looking good!", nameColor: "#ff8fb1", textonly: true },
+                        { type: "twitch", event: "subscriber_update", meta: 1601 },
+                        { type: "twitch", event: "follower_update", meta: 16617 }
+                    ].forEach(function (sample) { processPayload(sample, "local"); });
+                } else {
+                    SSNOverlayControl.connect(urlParams, urlParams.get("session"), "meta", function (data) { processPayload(data); });
+                }
+            }
+
+            // Strip sources are often only 42px tall. Fit the complete row after names shorten.
+            function fitStrip() {
+                if (styleName !== "strip" || !barNode.children.length) return;
+                barNode.style.fontSize = "";
+                var size = parseFloat(getComputedStyle(barNode).fontSize);
+                for (var attempt = 0; attempt < 3; attempt++) {
+                    var box = barNode.getBoundingClientRect();
+                    var style = getComputedStyle(barNode);
+                    var left = box.right, right = box.left;
+                    Array.prototype.forEach.call(barNode.children, function (child) {
+                        var bounds = child.getBoundingClientRect();
+                        left = Math.min(left, bounds.left);
+                        right = Math.max(right, bounds.right);
+                    });
+                    var width = box.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+                    var height = window.innerHeight - (barNode.parentElement.getBoundingClientRect().height - box.height);
+                    var ratio = Math.min(1, (width - 1) / Math.max(1, right - left), (height - 1) / Math.max(1, box.height));
+                    if (ratio >= 0.999 || size <= 1) break;
+                    size = Math.max(1, Math.floor(size * ratio * 10) / 10);
+                    barNode.style.fontSize = size + "px";
+                }
+            }
+
             function render() {
                 var entries = Array.from(state.values()).sort(function (a, b) {
                     if (a.order !== b.order) return a.order - b.order;
@@ -1548,6 +2087,17 @@
                     if (entry.changedAt && Date.now() - entry.changedAt < 900) {
                         chip.className += " bump";
                     }
+                    if (entry.statKey) {
+                        chip.className += " stat-" + entry.statKey;
+                    }
+                    if (entry.paused) {
+                        chip.className += " is-paused";
+                    }
+                    if (entry.statKey === "lastchat") {
+                        chip.appendChild(buildChatLine(entry.chat));
+                        barNode.appendChild(chip);
+                        continue;
+                    }
 
                     if (showIcon) {
                         var iconNode = document.createElement("span");
@@ -1564,7 +2114,7 @@
                         chip.appendChild(iconNode);
                     }
 
-                    if (showLabel) {
+                    if (showLabel && entry.label) {
                         var labelNode = document.createElement("span");
                         labelNode.className = "label";
                         labelNode.textContent = entry.label;
@@ -1574,19 +2124,61 @@
                     if (showValue) {
                         var valueNode = document.createElement("span");
                         valueNode.className = "value";
-                        valueNode.textContent = entry.value;
+                        if (entry.person && (entry.person.amount || entry.person.count)) {
+                            valueNode.className += " person-value";
+                            chip.className += " has-person";
+                            var personName = document.createElement("span");
+                            personName.className = "stat-person-name";
+                            personName.textContent = entry.person.name + (entry.statKey === "biggest" ? ":" : "");
+                            var personAmount = document.createElement("span");
+                            personAmount.className = "stat-person-amount";
+                            personAmount.textContent = entry.person.amount || entry.person.count.toLocaleString();
+                            valueNode.appendChild(personName);
+                            valueNode.appendChild(personAmount);
+                        } else {
+                            valueNode.textContent = entry.value;
+                        }
                         chip.appendChild(valueNode);
+                    }
+
+                    if (typeof entry.progress === "number") {
+                        var track = document.createElement("span");
+                        track.className = "stat-progress";
+                        var fill = document.createElement("span");
+                        fill.style.width = (entry.progress * 100) + "%";
+                        track.appendChild(fill);
+                        chip.appendChild(track);
+                        chip.className += " has-progress";
+                        if (entry.progress >= 1) chip.className += " is-complete";
                     }
 
                     barNode.appendChild(chip);
                 }
+                fitStrip();
             }
 
-            function processPayload(data) {
+            // source: "feed" = the dock bridge, "socketFeed" = the &server2 socket, "metaLabel" = the meta bridge,
+            // "local" = a direct postMessage. Anything else (the &server command socket, relay controls) never counts.
+            function processPayload(data, source) {
                 if (!data || typeof data !== "object") return;
                 if (data.content && typeof data.content === "object") {
                     data = data.content;
                 }
+                if (!SSNOverlayControl.accept(data, "meta")) return;
+
+                if (statsActive) {
+                    if (handleStatsControl(data)) return;
+                    // Count support from the dock feed only, respecting the host's existing filters.
+                    // The meta bridge supplies channel totals, not an alternate support feed.
+                    var fullFeed = source === "feed" || source === "socketFeed" || source === "local";
+                    var channelTotal = data.event === "subscriber_update" || data.event === "follower_update";
+                    var countable = fullFeed || (source === "metaLabel" && channelTotal);
+                    if (countable && trackStats(data, fullFeed)) {
+                        syncStatEntries();
+                        render();
+                    }
+                }
+                if (source === "feed") return;
 
                 var normalizedEventName = normalizeEventName(data.event || data.type || "");
                 if (!normalizedEventName || typeof data.meta === "undefined" || data.meta === null) return;
@@ -1624,17 +2216,17 @@
                 render();
             }
 
-            function processIncomingData(raw) {
+            function processIncomingData(raw, source) {
                 if (!raw || typeof raw !== "object") return;
                 if (raw.dataReceived && raw.dataReceived.overlayNinja) {
-                    processPayload(raw.dataReceived.overlayNinja);
+                    processPayload(raw.dataReceived.overlayNinja, source);
                     return;
                 }
                 if (raw.overlayNinja) {
-                    processPayload(raw.overlayNinja);
+                    processPayload(raw.overlayNinja, source);
                     return;
                 }
-                processPayload(raw);
+                processPayload(raw, source);
             }
 
             function connectIframe() {
@@ -1655,7 +2247,20 @@
                 document.body.appendChild(iframe);
             }
 
-            function connectSocket(serverURL, roomId, outChannel, inChannel) {
+            // Stats need the whole feed. &server2 and &server3 carry it by socket; otherwise it comes over a dock bridge.
+            function connectFeedIframe() {
+                var sessionId = urlParams.get("session");
+                if (!sessionId || urlParams.has("server2") || urlParams.has("server3")) return;
+                var password = encodeURIComponent(urlParams.get("password") || "false");
+                var lanonly = urlParams.has("lanonly") ? "&lanonly" : "";
+                feedIframe = document.createElement("iframe");
+                feedIframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=" + password + lanonly + "&solo&view=" + encodeURIComponent(sessionId) + "&novideo&noaudio&label=dock&cleanoutput&room=" + encodeURIComponent(sessionId);
+                feedIframe.style.cssText = "width:0;height:0;position:fixed;left:-100px;top:-100px;";
+                feedIframe.setAttribute("aria-hidden", "true");
+                document.body.appendChild(feedIframe);
+            }
+
+            function connectSocket(serverURL, roomId, outChannel, inChannel, source) {
                 if (!serverURL || !roomId) return;
 
                 var connection = {
@@ -1702,7 +2307,7 @@
                         if (!event || !event.data) return;
                         try {
                             var parsed = JSON.parse(event.data);
-                            processIncomingData(parsed);
+                            processIncomingData(parsed, source);
                             if (parsed && parsed.get) {
                                 connection.socket.send(JSON.stringify({
                                     callback: {
@@ -1734,31 +2339,37 @@
 
                 if (urlParams.has("server")) {
                     var apiServerURL = urlParams.get("server") || (urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api");
-                    connectSocket(apiServerURL, roomId, 2, 1);
+                    connectSocket(apiServerURL, roomId, 2, 1, "commands");
                 }
 
                 if (urlParams.has("server2") || urlParams.has("server3")) {
                     var extensionServerURL = urlParams.has("server2")
                         ? (SocialStreamLocalServer.getRelayUrl(urlParams, "server2", "wss://io.socialstream.ninja/extension"))
                         : (SocialStreamLocalServer.getRelayUrl(urlParams, "server3", "wss://io.socialstream.ninja/extension"));
-                    connectSocket(extensionServerURL, roomId, 3, 4);
+                    connectSocket(extensionServerURL, roomId, 3, 4, "socketFeed");
                 }
             }
 
             window.addEventListener("message", function (event) {
                 var payload = null;
+                var source = "local";
 
                 if (event && event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+                    if (feedIframe && event.source === feedIframe.contentWindow) {
+                        processIncomingData(event.data.dataReceived.overlayNinja, "feed");
+                        return;
+                    }
                     if (iframe && event.source !== iframe.contentWindow) {
                         return;
                     }
                     payload = event.data.dataReceived.overlayNinja;
+                    source = "metaLabel";
                 } else if (event && event.data && event.data.overlayNinja) {
                     payload = event.data.overlayNinja;
                 }
 
                 if (payload) {
-                    processIncomingData(payload);
+                    processIncomingData(payload, source);
                 }
             });
 
@@ -1777,9 +2388,20 @@
                 });
             });
 
+            if (statsActive) {
+                document.body.classList.add("has-stats");
+                startStats();
+            }
             render();
-            connectServerModes();
-            connectIframe();
+            if (styleName === "strip") {
+                window.addEventListener("resize", fitStrip);
+                if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitStrip);
+            }
+            if (!statsDemo) {
+                connectServerModes();
+                connectIframe();
+                if (statsActive) connectFeedIframe();
+            }
         })();
     </script>
 </body>

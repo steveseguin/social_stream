@@ -441,6 +441,9 @@
 				chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function () {});
 			} catch (e) {}
 		}
+		if (data && data.meta && "timestamp" in data.meta) {
+			data.meta.timestamp = normalizeTimestampMs(data.meta.timestamp) || null;
+		}
 		refreshSourceBranding();
 		send();
 	}

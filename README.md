@@ -164,6 +164,8 @@ Please follow each platform’s terms when capturing or relaying messages. Autom
 
 SSN is licensed under [GPL-3.0](LICENSE). See the [Terms of Service](https://socialstream.ninja/TOS.html) and [Privacy Policy](https://socialstream.ninja/privacy.html). YouTube use is also subject to [YouTube’s Terms of Service](https://www.youtube.com/t/terms).
 
+Incoming AI translation to English uses Facebook's fastText language-identification model under CC BY-SA 3.0. The fastText runtime is MIT licensed. See [third-party licenses and attribution](thirdparty/fasttext/NOTICE.txt).
+
 ## 💙 Donations
 
 I condemn Russia’s brutal invasion of Ukraine. 💙💛 Please consider [supporting Ukraine](https://war.ukraine.ua/support-ukraine/).

@@ -22,7 +22,16 @@
         result.className = 'giveaway-result';
         result.textContent = 'Good luck!';
         var count = document.createElement('p');
-        stage.appendChild(title); stage.appendChild(stateLabel); stage.appendChild(result); stage.appendChild(count);
+        var countdown = document.createElement('p'), endsAt = null;
+        countdown.setAttribute('aria-live', 'off');
+        countdown.hidden = true;
+        stage.appendChild(title); stage.appendChild(stateLabel); stage.appendChild(result); stage.appendChild(count); stage.appendChild(countdown);
+        function updateCountdown() {
+            countdown.hidden = !endsAt;
+            if (endsAt) countdown.textContent = 'Draw in ' + Math.max(0, Math.ceil((endsAt - Date.now()) / 1000)) + 's';
+        }
+        var countdownTimer = setInterval(updateCountdown, 1000);
+        window.addEventListener('beforeunload', function() { clearInterval(countdownTimer); });
         document.querySelector('.col-left').insertBefore(stage, document.querySelector('.col-left').firstChild);
         function fitWheel() {
             if (mode !== 'wheel') return;
@@ -53,8 +62,11 @@
             if (state.epoch !== lastEpoch) { lastEpoch = state.epoch; lastRevision = -1; lastDraw = null; }
             if (state.revision <= lastRevision) return;
             lastRevision = state.revision;
+            endsAt = state.open ? state.endsAt : null;
+            updateCountdown();
             stateLabel.textContent = state.open ? (state.config && state.config.ticketCost ? 'Enter: !ticket ' + giveawayId + ' 1' + (state.config.kind === 'coin' ? ' heads (or tails)' : '') : 'Type ' + state.keyword + ' to enter') : 'Entries closed';
             count.textContent = state.count + (state.count === 1 ? ' eligible entry' : ' eligible entries');
+            if (state.config && state.config.kind === 'trivia') stateLabel.textContent = state.config.triviaQuestion + (state.open ? ' Answer with !answer ' + giveawayId + ' YOUR ANSWER' : ' - Entries closed');
             if(state.number){stateLabel.textContent=state.open?'Guess '+state.number.low+'–'+state.number.high+': !guess '+giveawayId+' NUMBER':'Round closed';count.textContent=state.number.guesses.map(function(g){return g.name+': '+g.guess+' ('+g.hint+')';}).join(' · ') || 'One guess per viewer every 5 seconds.';}
             var winner = state.winners[0];
             if (state.outcome) winner = {id:state.outcome,name:state.outcome.charAt(0).toUpperCase()+state.outcome.slice(1)};

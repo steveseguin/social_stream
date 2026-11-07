@@ -152,6 +152,10 @@ Sample payloads based on the fake test data in [background.js](./background.js):
 
 ## Accessibility, UI, UX, and Integrations
 
+- Treat added UI text as a cognitive cost. Extra wording can overwhelm users and bloat an already heavy interface. Before any UI, UX, or guide change, consider whether wording is needed at all, whether it can be simpler, and whether images, screenshots, icons, layout, or other clear visual cues would work better.
+- Keep toggle labels short. Put additional toggle explanations in native hover tooltips using the title attribute. Do not add explanatory text after or below toggles in the popup menu.
+- When users need deeper explanations or screenshot examples, prefer a concise inline link to a dedicated guide or documentation page over adding prose to the main UI. Give each addition deliberate consideration; do not default to more text.
+
 - Prioritize accessibility and a clear, consistent user experience when designing or changing features.
 - Popup menus must reuse the existing theme colors, styled buttons, switches, section hierarchy, and meaningful icons/emotes with text labels. Put basic setup first and advanced controls in subsections. Verify input contrast in light and dark modes. Keep menus terse; put longer instructions in `docs/` and link to them from the menu.
 - Shared popup control styling lives in `popup-ui.css`. Reuse its field, focus, action-button, and subsection rules across old and new panels; avoid provider-specific colors or inline styles for equivalent actions. Keep labels above fields, use `.switch` for on/off settings, and reserve `.tts-test-button` for test/play actions rather than reset/clear actions.

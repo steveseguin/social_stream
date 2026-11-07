@@ -76,7 +76,7 @@ async function testPreviewIsolation(browser, baseUrl) {
         assert.strictEqual(await page.evaluate(() => window.previewStorageAccesses), 0);
         assert.deepStrictEqual(errors, []);
         await page.goto(baseUrl + '/tipjar-preview.html');
-        await page.waitForFunction(() => document.querySelectorAll('iframe').length === 27);
+        await page.waitForFunction(() => document.querySelectorAll('iframe').length === 28);
         for (const frameEl of await page.locator('iframe').elementHandles()) {
             const frame = await frameEl.contentFrame();
             await frame.waitForFunction(() => typeof processData === 'function');

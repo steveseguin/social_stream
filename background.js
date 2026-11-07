@@ -809,6 +809,7 @@ if (typeof chrome.runtime == "undefined") {
 	};
 
 	chrome.tabs = {};
+	const ssappTabUrls = new Map();
 	ipcRenderer.on("youtube-source-closed", (event, tabId) => {
 		if (!Number.isInteger(tabId) || tabId <= 0) return;
 		// SSApp has no tabs.onRemoved event; clear only the YouTube source gate.
@@ -818,6 +819,19 @@ if (typeof chrome.runtime == "undefined") {
 	});
 	chrome.tabs.query = async function (a, callback) {
 		var response = await ipcRenderer.sendSync("getTabs", {});
+		// Electron has no tabs.onUpdated/onRemoved events to invalidate this cache.
+		const currentIds = new Set();
+		for (const tab of response) {
+			currentIds.add(tab.id);
+			if (ssappTabUrls.get(tab.id) !== tab.url) tabSourceCache.delete(tab.id);
+			ssappTabUrls.set(tab.id, tab.url);
+		}
+		for (const id of ssappTabUrls.keys()) {
+			if (!currentIds.has(id)) {
+				ssappTabUrls.delete(id);
+				tabSourceCache.delete(id);
+			}
+		}
 
 		log("chrome.tabs.query");
 		log(response);
@@ -5675,6 +5689,9 @@ async function processIncomingMessage(message, sender = null) {
 		if (!checkIfAllowed(message.type)) {
 			return;
 		}
+		if (message.type === "houla" && message.event === "new_follower" && getSettingFlag("hideevents")) {
+			return;
+		}
 
         if (message.event === 'purchase' && window.recordCommercePurchase) window.recordCommercePurchase(message);
         if (message.event === 'auction_update' && (message.type === 'whatnot' || message.type === 'ebay') && window.recordCommerceAuction) window.recordCommerceAuction(message);
@@ -7385,6 +7402,12 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			sendResponse({ state: isExtensionOn, success: true });
 		} else if (request.cmd && request.cmd === "resettipjar") {
 			sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "resetmetastats") {
+			sendTargetP2P({ cmd: "resetmetastats" }, "meta");
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "metastats") {
+			sendTargetP2P({ cmd: "metastats", value: request.value }, "meta");
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "settipjaramount") {
 			sendTargetP2P(
@@ -11634,6 +11657,9 @@ function setupSocket() {
 			} else if (data.action && data.action === "resetleaderboard") {
 				broadcastLeaderboardReset();
 				resp = true;
+			} else if (data.action && (data.action === "metastats" || data.action === "resetmetastats")) {
+				sendTargetP2P({ cmd: data.action, value: data.value }, "meta");
+				resp = true;
 			} else if (data.action && data.action === "resettipjar") {
 				sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
 				resp = true;
@@ -12273,7 +12299,7 @@ function parseRumbleSseBlock(block) {
 	}
 }
 
-function collectRumbleSseEventsFromBuffer(buffer, includeInit, maxEvents) {
+function collectRumbleSseEventsFromBuffer(buffer, maxEvents) {
 	const events = [];
 	let boundary;
 	while ((boundary = findRumbleSseBoundary(buffer)) && events.length < maxEvents) {
@@ -12282,9 +12308,7 @@ function collectRumbleSseEventsFromBuffer(buffer, includeInit, maxEvents) {
 		if (!parsed) {
 			continue;
 		}
-		if (parsed.type === "init" && !includeInit) {
-			continue;
-		}
+		// Reconnect snapshots can contain messages received between batches.
 		events.push(parsed);
 	}
 	return { events, buffer };
@@ -12345,13 +12369,13 @@ async function fetchRumbleSseBatch(request = {}) {
 				break;
 			}
 			buffer += decoder.decode(readResult.value, { stream: true });
-			const collected = collectRumbleSseEventsFromBuffer(buffer, includeInit, maxEvents - events.length);
+			const collected = collectRumbleSseEventsFromBuffer(buffer, maxEvents - events.length);
 			buffer = collected.buffer;
 			events.push(...collected.events);
 			if (includeInit && events.length) {
 				break;
 			}
-			if (!includeInit && collected.events.length) {
+			if (!includeInit && collected.events.some(event => event.type !== "init")) {
 				break;
 			}
 		}
@@ -12373,6 +12397,7 @@ async function fetchRumbleSseBatch(request = {}) {
 	return {
 		status: rumbleResponse ? rumbleResponse.status : 0,
 		chatId: streamId,
+		serverTime: rumbleResponse ? Date.parse(rumbleResponse.headers.get("Date")) || null : null,
 		events
 	};
 }
@@ -13551,6 +13576,7 @@ function prepareOverlayControl(data, target) {
         (target === "map" && (data.settings || data.setting || ["startmap", "pausemap", "resetmap"].includes(data.cmd))) ||
         (target === "timer" && data.timer) || (target === "ticker" && data.ticker) || (target === "spotify" && data.spotify) ||
         (target === "tipjar" && ["resettipjar", "settipjaramount"].includes(data.cmd)) ||
+        (target === "meta" && ["resetmetastats", "metastats"].includes(data.cmd)) ||
         ((target === "alerts" || target === "dock") && data.action === "eventOverlayControl" && data.surface === (target === "alerts" ? "alerts" : "events")) || (target === "alerts" && data.action === "clearAlerts") || (target === "bot" && data.action === "clearBotOverlay") ||
         (target === "wordcloud" && (data.chatmessage || "state" in data)) || (target === "gif" && data.contentimg) ||
         (target === "reactions" && ["reaction", "liked", "like"].includes(data.event)) ||
@@ -13759,18 +13785,68 @@ var giveawayHostSession = null;
 var giveawayBroadcastTimer = null;
 var giveawayPendingStates = new Map();
 var giveawayRouting = new Map();
+var giveawayDrawTimers = new Map();
 var giveawayCaptureEpoch = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
 async function getGiveawayHost() {
     await window.pointsSystemReady();
     if (!giveawayHost || giveawayHostSession !== streamID) {
         if(giveawayBroadcastTimer)clearTimeout(giveawayBroadcastTimer);
         giveawayBroadcastTimer=null;giveawayPendingStates.clear();giveawayRouting.clear();
+        giveawayDrawTimers.forEach(function(timer) { clearTimeout(timer.handle); });
+        giveawayDrawTimers.clear();
         giveawayHostSession = streamID;
         giveawayHost = new SSNGiveawayService(window.pointsSystem, streamID);
         await giveawayHost.recoverRounds();
         (await giveawayHost.list()).forEach(state=>giveawayRouting.set(state.giveawayId,state));
     }
     return giveawayHost;
+}
+function scheduleGiveawayDraw(state, action) {
+    if (!state) return;
+    var previous = giveawayDrawTimers.get(state.giveawayId);
+    if (previous && previous.roundId === state.roundId) {
+        if (previous.endsAt === state.endsAt && state.open) return;
+        // Keep the timer through its own close and intermediate draws, including status refreshes.
+        if (previous.drawing && action !== 'closegiveaway' && state.status === 'locked' &&
+            state.count && state.draw < state.config.winnerCount) return;
+    }
+    if (previous) clearTimeout(previous.handle);
+    giveawayDrawTimers.delete(state.giveawayId);
+    if (!state.open || !state.endsAt) return;
+    var session = streamID, host = giveawayHost;
+    var operation = 'timer:' + state.roundId + ':' + state.endsAt;
+    var timer = {handle:null,endsAt:state.endsAt,roundId:state.roundId,drawing:false};
+    var command = 'expiregiveaway', retryDelay = 2500;
+    var request = {giveawayId:state.giveawayId,roundId:state.roundId,endsAt:state.endsAt,operationId:operation};
+    function current() {
+        return giveawayDrawTimers.get(state.giveawayId) === timer && session === streamID &&
+            giveawayHost === host && host && host.session === String(session);
+    }
+    async function run() {
+        while (current()) {
+            timer.drawing = true;
+            var result = await handleGiveawayAction(command, request);
+            if (!current()) return;
+            if (!result.ok) {
+                // Retry the exact operation: a reply lost after commit must not award another prize.
+                retryDelay = Math.min(retryDelay * 2, 60000);
+                timer.handle = setTimeout(run, retryDelay);
+                return;
+            }
+            var round = result.giveaway;
+            // A receipt has an operation ID; a stale deadline guard returns a duplicate without one.
+            if ((result.duplicate && !result.operationId) || !round || round.roundId !== state.roundId ||
+                round.status !== 'locked' || !round.count || round.draw >= round.config.winnerCount) {
+                giveawayDrawTimers.delete(state.giveawayId);
+                return;
+            }
+            command = 'drawgiveaway';
+            request = {giveawayId:state.giveawayId,roundId:state.roundId,endsAt:state.endsAt,operationId:operation + ':draw:' + round.draw};
+            retryDelay = 2500;
+        }
+    }
+    timer.handle = setTimeout(run, Math.max(0, state.endsAt - Date.now()));
+    giveawayDrawTimers.set(state.giveawayId, timer);
 }
 async function publishGiveawayState(state) {
     try {
@@ -13785,6 +13861,25 @@ async function publishGiveawayState(state) {
 }
 function isGiveawayAction(action) {
     return ["startgiveaway", "closegiveaway", "drawgiveaway", "resetgiveaway", "getgiveawaystate", "cancelgiveaway", "listgiveaways", "getgiveawayhistory", "entergiveaway", "buygiveawaytickets", "grantgiveawaytickets", "guessgiveaway", "getgiveawayentries", "removegiveawayentry"].indexOf(action) !== -1;
+}
+function announceGiveawayResult(action, result) {
+    if (!getSettingFlag('giveawayAnnounce') || !result || !result.ok || result.duplicate || !result.giveaway) return;
+    var round = result.giveaway, text = '', prefix = 'Giveaway ' + round.giveawayId + ': ';
+    if (action === 'startgiveaway' && result.previousStatus !== 'open') {
+        var command = round.config.kind === 'number' ? '!guess ' + round.giveawayId + ' NUMBER' :
+            round.config.ticketCost ? '!ticket ' + round.giveawayId + ' 1' + (round.config.kind === 'coin' ? ' heads (or tails)' : '') : round.keyword;
+        text = round.config.kind === 'trivia' ? round.config.triviaQuestion + ' Answer with !answer ' + round.giveawayId + ' YOUR ANSWER. Correct answers enter the draw.' : 'Entries open! Type ' + command + ' to enter.';
+        if (round.endsAt) text += ' Draw in ' + round.config.durationSeconds + ' seconds.';
+        if (round.config.ticketCost) text += ' ' + round.config.ticketCost + ' SSN points per ticket.';
+        if (round.config.membersOnly) text += ' Members only.';
+    } else if ((action === 'closegiveaway' || action === 'expiregiveaway') && result.previousStatus === 'open') {
+        text = 'Entries closed.';
+    } else if (action === 'cancelgiveaway' && result.previousStatus !== 'cancelled') {
+        text = 'Cancelled. Reserved points refunded.';
+    } else if ((action === 'drawgiveaway' || action === 'guessgiveaway') && round.draw > result.previousDraw) {
+        text = round.outcome ? round.outcome + ' wins!' : 'Winner: ' + round.winners.slice(0, round.draw - result.previousDraw).map(function(winner) { return winner.name; }).join(', ') + '!';
+    }
+    if (text) sendMessageToTabs({response:prefix + text,bot:true},false,null,false,false,false).catch(function(error) { console.warn('Giveaway committed; announcement failed', error); });
 }
 async function handleGiveawayAction(action, value, actor) {
     if (settings.disablehost) return { ok: false, error: "Host controls are disabled." };
@@ -13803,18 +13898,21 @@ async function handleGiveawayAction(action, value, actor) {
         if(useStoredRules){
             var current=(await host.run('getgiveawaystate',{giveawayId:value.giveawayId})).giveaway;
             if(current.roundId)value.config=current.config;
-            else Object.assign(value.config,{ticketCost:getNumericSettingValue('giveawayCost',0),maxTickets:getNumericSettingValue('giveawayLimit',100),prizePoints:getNumericSettingValue('giveawayPrize',0),winnerCount:getNumericSettingValue('giveawayWinners',1),kind:settings.giveawayKind ? settings.giveawayKind.optionsetting : 'giveaway'});
+            else Object.assign(value.config,{ticketCost:getNumericSettingValue('giveawayCost',0),maxTickets:getNumericSettingValue('giveawayLimit',100),prizePoints:getNumericSettingValue('giveawayPrize',0),winnerCount:getNumericSettingValue('giveawayWinners',1),kind:settings.giveawayKind ? settings.giveawayKind.optionsetting : 'giveaway',durationSeconds:getNumericSettingValue('giveawayDuration',0),triviaQuestion:settings.giveawayQuestion ? settings.giveawayQuestion.textsetting : '',triviaAnswer:settings.giveawayAnswer ? settings.giveawayAnswer.textsetting : ''});
         }
         if (action === 'listgiveaways') return {ok:true, giveaways:await host.list()};
         if (action === 'getgiveawayhistory') return {ok:true, history:await host.history()};
         if (action === 'getgiveawayentries') return await host.entries(value.giveawayId,value.page);
+        if (useStoredRules && (value.config.kind === 'coin' || value.config.kind === 'number')) value.config.durationSeconds = 0;
         var rules = value.config;
         if ((rules && (rules.ticketCost || rules.prizePoints || rules.kind === 'coin') || action === 'buygiveawaytickets') && !isPointsSystemEnabled()) {
             throw new Error('Enable SSN loyalty points before using paid tickets or point prizes.');
         }
         var result = await host.run(action, value, actor || value.actor);
         if(host.session!==String(streamID))return result;
+        announceGiveawayResult(action, result);
         if(result.giveaway)giveawayRouting.set(result.giveaway.giveawayId,result.giveaway);
+        scheduleGiveawayDraw(result.giveaway, action);
         if (['entergiveaway','buygiveawaytickets','grantgiveawaytickets','guessgiveaway'].includes(action)) {
             giveawayPendingStates.set(result.giveaway.giveawayId,result.giveaway);
             if(!giveawayBroadcastTimer)giveawayBroadcastTimer=setTimeout(function(){giveawayBroadcastTimer=null;var pending=Array.from(giveawayPendingStates.values());giveawayPendingStates.clear();pending.forEach(s=>publishGiveawayState(s));},150);
@@ -13832,7 +13930,8 @@ async function processGiveawayEntry(message) {
         var text = String(message.chatmessage || '').trim();
         var ticket = text.match(/^!ticket\s+([a-zA-Z0-9_-]+)\s+(\d+)(?:\s+(heads|tails))?$/i);
         var guess = text.match(/^!guess\s+([a-zA-Z0-9_-]+)\s+(\d+)$/i);
-        var matches = guess ? rounds.filter(r=>r.giveawayId===guess[1] && r.config.kind==='number') : ticket ? rounds.filter(r => r.giveawayId === ticket[1]) : rounds.filter(r => r.open && r.config.kind==='giveaway' && !r.config.ticketCost &&
+        var answer = text.match(/^!answer\s+([a-zA-Z0-9_-]+)\s+([\s\S]+)$/i);
+        var matches = answer ? rounds.filter(r=>r.open && r.giveawayId===answer[1] && r.config.kind==='trivia') : guess ? rounds.filter(r=>r.giveawayId===guess[1] && r.config.kind==='number') : ticket ? rounds.filter(r => r.giveawayId === ticket[1]) : rounds.filter(r => r.open && r.config.kind==='giveaway' && !r.config.ticketCost &&
             (r.config.match === 'exact' ? text.toLowerCase() === r.keyword.toLowerCase() : text.toLowerCase().split(/\s+/).includes(r.keyword.toLowerCase())));
         if (matches.length !== 1) return;
         var round = matches[0];
@@ -13840,7 +13939,7 @@ async function processGiveawayEntry(message) {
         var nativeId = message.meta && message.meta.messageId;
         var sourceKey=nativeId ? 'native:'+nativeId : message.id!=null ? 'capture:'+giveawayCaptureEpoch+':'+message.id : null;
         var operationId = sourceKey ? 'chat:' + JSON.stringify([message.type,message.userid || message.chatname,sourceKey,round.roundId]) : undefined;
-        var result = ticket && !sourceKey ? {ok:false,error:'This source did not provide a message ID. No points spent.'} : await handleGiveawayAction(guess ? 'guessgiveaway' : ticket ? 'buygiveawaytickets' : 'entergiveaway', {giveawayId:round.giveawayId,roundId:round.roundId,guess:guess ? Number(guess[2]) : undefined,count:ticket ? Number(ticket[2]) : 1,side:ticket && ticket[3] ? ticket[3].toLowerCase() : undefined,operationId:operationId}, message);
+        var result = ticket && !sourceKey ? {ok:false,error:'This source did not provide a message ID. No points spent.'} : await handleGiveawayAction(guess ? 'guessgiveaway' : ticket ? 'buygiveawaytickets' : 'entergiveaway', {giveawayId:round.giveawayId,roundId:round.roundId,answer:answer ? answer[2] : undefined,guess:guess ? Number(guess[2]) : undefined,count:ticket ? Number(ticket[2]) : 1,side:ticket && ticket[3] ? ticket[3].toLowerCase() : undefined,operationId:operationId}, message);
         if (ticket && typeof sendMessageToTabs === 'function') sendMessageToTabs({response:'@' + message.chatname + ' ' + (result.ok ? 'Tickets accepted for ' + round.giveawayId + '.' : result.error),type:message.type,tid:message.tid,bot:true},false,null,false,false,false);
     } catch (error) { console.warn('Giveaway entry failed', error); }
 }
@@ -17035,7 +17134,8 @@ function createRelayTabContext(tab, data, now, relayMode, messageOrigin, shouldC
 	const throttleOptions = {
 		origin: messageOrigin || "relay",
 		dropProtected: messageOrigin === "host",
-		priority: messageOrigin === "host" ? 1 : 0
+		priority: messageOrigin === "host" ? 1 : 0,
+		youtubeReplyVideoId: data.youtubeReplyVideoId
 	};
 
 	return {
@@ -17077,14 +17177,15 @@ function isWebsocketSourceTabUrl(url) {
 	return !!(url && url.includes("/sources/websocket/") && (url.includes("socialstream.ninja") || url.startsWith("file://") || url.startsWith("chrome-extension://")));
 }
 
-function relayMessageToWebsocketSourceTab(tabId, message, messageOrigin = "relay") {
+function relayMessageToWebsocketSourceTab(tabId, message, messageOrigin = "relay", youtubeReplyVideoId) {
 	try {
 		chrome.tabs.sendMessage(
 			tabId,
 			{
 				type: "SEND_MESSAGE",
 				message: message,
-				messageOrigin: messageOrigin
+				messageOrigin: messageOrigin,
+				...(youtubeReplyVideoId !== undefined ? { youtubeReplyVideoId } : {})
 			},
 			function () {
 				chrome.runtime.lastError;
@@ -17228,7 +17329,7 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 	}
 
 	if (isWebsocketSourceTabUrl(url) || (isSSAPP && tab.virtualSourceTarget === "discord")) {
-		if (relayMessageToWebsocketSourceTab(tab.id, data.response, messageOrigin)) {
+		if (relayMessageToWebsocketSourceTab(tab.id, data.response, messageOrigin, data.youtubeReplyVideoId)) {
 			relayTabContext.storeMessage(data.response);
 			lastSentMessage = sanitizeMessageForTracking(data.response, false);
 			lastSentTimestamp = now;
@@ -17311,6 +17412,35 @@ function getYouTubeReplyVideoId(url) {
 		}
 	} catch (e) {}
 	return null;
+}
+
+async function getYouTubeReplyVideoIdForTab(tab) {
+	if (!tab || !tab.url) return null;
+	if (isWebsocketSourceTabUrl(tab.url) && getWebsocketSourcePlatformFromUrl(tab.url) === "youtube") {
+		// API sources can discover or switch streams without navigating the page.
+		return new Promise(resolve => {
+			const timer = setTimeout(() => resolve(null), 1000);
+			try {
+				chrome.tabs.sendMessage(tab.id, "getYouTubeVideoId", videoId => {
+					clearTimeout(timer);
+					chrome.runtime.lastError;
+					resolve(typeof videoId === "string" && videoId ? videoId : null);
+				});
+			} catch (e) {
+				clearTimeout(timer);
+				resolve(null);
+			}
+		});
+	}
+	return getYouTubeReplyVideoId(tab.url);
+}
+
+async function isCurrentYouTubeReplyTarget(tabId, videoId) {
+	if (videoId === undefined) return true;
+	if (!videoId) return false;
+	const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
+	const tab = tabs.find(entry => String(entry.id) === String(tabId));
+	return await getYouTubeReplyVideoIdForTab(tab) === videoId;
 }
 
 async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 0) {
@@ -17396,7 +17526,8 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		// Filter before either dispatch pass so URL fallback cannot broaden it.
 		if (messageOrigin === "chatbot" && data.youtubeReplyVideoId !== undefined) {
 			if (!data.youtubeReplyVideoId) return false;
-			tabs = tabs.filter(tab => getYouTubeReplyVideoId(tab.url) === data.youtubeReplyVideoId);
+			const videoIds = await Promise.all(tabs.map(tab => getYouTubeReplyVideoIdForTab(tab)));
+			tabs = tabs.filter((tab, index) => videoIds[index] === data.youtubeReplyVideoId);
 		}
 
 		const roleRoutingReverse = reverse || !!chatbotDestinationRoles.length;
@@ -18163,6 +18294,7 @@ async function generalFakeChat(
 	pointerFocusSelectors = null
 ) {
 	const normalizedTimeout = typeof overrideTimeout === "number" ? overrideTimeout : 0;
+	const youtubeReplyVideoId = throttleOptions ? throttleOptions.youtubeReplyVideoId : undefined;
 	const resolvedProfile = resolveThrottleProfile(tabId, throttleProfile, normalizedTimeout);
 	const queueOptions = throttleOptions
 		? {
@@ -18185,7 +18317,8 @@ async function generalFakeChat(
 				delayedPress,
 				modifierKey,
 				primingEnter,
-				pointerFocusSelectors
+				pointerFocusSelectors,
+				youtubeReplyVideoId
 			},
 			queueOptions
 		);
@@ -18199,12 +18332,18 @@ async function generalFakeChat(
 		delayedPress,
 		modifierKey,
 		primingEnter,
-		pointerFocusSelectors
+		pointerFocusSelectors,
+		youtubeReplyVideoId
 	});
 }
 
-async function performGeneralFakeChatSend(tabId, { message, middle = true, keypress = true, backspace = false, delayedPress = false, modifierKey = null, primingEnter = false, pointerFocusSelectors = null }) {
+async function performGeneralFakeChatSend(tabId, { message, middle = true, keypress = true, backspace = false, delayedPress = false, modifierKey = null, primingEnter = false, pointerFocusSelectors = null, youtubeReplyVideoId }) {
 	try {
+		// A queued reply must not follow a window to a different stream.
+		if (youtubeReplyVideoId !== undefined && !(await isCurrentYouTubeReplyTarget(tabId, youtubeReplyVideoId))) {
+			await delayedDetach(tabId);
+			return;
+		}
 		await new Promise((resolve, reject) => {
 			safeDebuggerAttach(tabId, "1.3", error => {
 				if (error) {
@@ -18269,7 +18408,15 @@ async function performGeneralFakeChatSend(tabId, { message, middle = true, keypr
 			await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.BACKSPACE);
 		}
 
+		if (youtubeReplyVideoId !== undefined && !(await isCurrentYouTubeReplyTarget(tabId, youtubeReplyVideoId))) {
+			await delayedDetach(tabId);
+			return;
+		}
 		await insertText(tabId, message);
+		if (youtubeReplyVideoId !== undefined && !(await isCurrentYouTubeReplyTarget(tabId, youtubeReplyVideoId))) {
+			await delayedDetach(tabId);
+			return;
+		}
 
 		// Build Enter key event with optional modifier (e.g., Ctrl+Enter for X.com)
 		const enterKeyEvent = modifierKey && MODIFIER_KEYS[modifierKey] ? { ...KEY_EVENTS.ENTER, modifiers: MODIFIER_KEYS[modifierKey] } : KEY_EVENTS.ENTER;
@@ -18720,6 +18867,10 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		if (data.mod && settings.hidemodsext) {
+			console.debug('[Message filter] Hidden by "Hide moderator messages" (hidemodsext).', {
+				chatname: data.chatname || data.username || data.userid || "unknown",
+				type: data.type || "unknown"
+			});
 			return false;
 		}
 		if (data.mod && data.chatname && settings.hidemodnamesext) {
@@ -20500,10 +20651,10 @@ function buildFakeHypeTrainMeta() {
 			total: 100
 		},
 		sharedTrainParticipants: [],
-		startedAt: now.toISOString(),
-		expiresAt: expiresAt.toISOString(),
-		endedAt: "",
-		cooldownEndsAt: "",
+		startedAt: now.getTime(),
+		expiresAt: expiresAt.getTime(),
+		endedAt: null,
+		cooldownEndsAt: null,
 		isSharedTrain: false,
 		trainType: "regular",
 		allTimeHighLevel: 2,

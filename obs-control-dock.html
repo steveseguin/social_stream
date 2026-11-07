@@ -462,7 +462,7 @@
 				return { message: "Command sent: " + action, type: "success" };
 			}
 
-			function handleSocketMessage(event) {
+			async function handleSocketMessage(event) {
 				var data;
 				try {
 					data = JSON.parse(event.data);
@@ -474,10 +474,17 @@
 				var requestId = String(data.callback.get);
 				var pending = pendingRequests[requestId];
 				if (!pending) return;
+				var result = data.callback.result;
+				if (pending.verify) {
+					try { result = await pending.verify(result); }
+					catch (_) { return; }
+					// An untrusted relay reply must not consume the real host's pending request.
+					if (pendingRequests[requestId] !== pending) return;
+				}
 				clearTimeout(pending.timer);
 				if (pending.button) pending.button.disabled = false;
 				delete pendingRequests[requestId];
-				if (pending.resolve) { pending.resolve(data.callback.result); return; }
+				if (pending.resolve) { pending.resolve(result); return; }
 				var status = resultMessage(pending.action, data.callback.result);
 				setCommandStatus(status.message, status.type);
 			}
@@ -621,12 +628,12 @@
 				clearReconnectTimer();
 			});
 
-			var commerceDock = window.SSNCommerceDock(function(action, value) {
+			var commerceDock = window.SSNCommerceDock(function(action, value, verify) {
 				return new Promise(function(resolve, reject) {
 					if (!socket || socket.readyState !== WebSocket.OPEN) { reject(new Error("Not connected")); return; }
 					var id = "obs-commerce-" + Date.now() + "-" + (++requestCounter);
-					pendingRequests[id] = {resolve:resolve, reject:reject, timer:setTimeout(function() {
-						delete pendingRequests[id]; reject(new Error("No response. Enable remote API control in Social Stream."));
+					pendingRequests[id] = {resolve:resolve, reject:reject, verify:verify, timer:setTimeout(function() {
+						delete pendingRequests[id]; reject(new Error(verify ? "No verified response. Check the host connection or reopen Breaks from Social Stream." : "No response. Enable remote API control in Social Stream."));
 					}, 5000)};
 					try { socket.send(JSON.stringify({action:action, value:value, protocol:2, apiid:sessionId, get:id, replyFormat:"commandResult"})); }
 					catch (error) { clearTimeout(pendingRequests[id].timer); delete pendingRequests[id]; reject(error); }

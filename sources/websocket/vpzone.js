@@ -1279,6 +1279,20 @@
 		return state.sourceBrandPromise;
 	}
 
+	function toTimestampMs(value) {
+		if (typeof value !== "string" && typeof value !== "number") return null;
+		if (typeof value === "string") {
+			value = value.trim();
+			if (!value) return null;
+		}
+		var numeric = typeof value === "number" || /^[+-]?\d+(?:\.\d+)?$/.test(value);
+		var timestamp = numeric ? Number(value) : Date.parse(value);
+		// Incoming epoch numbers may be seconds or milliseconds; never parse them as date text.
+		if (numeric && Math.abs(timestamp) < 100000000000) timestamp *= 1000;
+		return Number.isFinite(timestamp) && Math.abs(timestamp) <= 8640000000000000
+			? Math.trunc(timestamp) : null;
+	}
+
 	function eventTime(ev) {
 		return ev && (ev.createdAt || ev.timestamp || ev.sentAt || ev.ts) ? (ev.createdAt || ev.timestamp || ev.sentAt || ev.ts) : "";
 	}
@@ -1385,8 +1399,8 @@
 		if (isModerator) data.mod = true;
 		if (isVip) data.vip = true;
 		if (isSubscriber) data.member = true;
-		data.timestamp = eventTime(ev);
-		data.meta = { streamUsername: ev.streamUsername || state.currentChannel || state.cfg.channel, createdAt: eventTime(ev), actorUsername: ev.actorUsername || ev.username || "", actorRank: ev.metadata && ev.metadata.actorRank ? ev.metadata.actorRank : "", rawEventType: ev.eventType || ev.type || "chat_message", transport: "websocket", isSubscriber: isSubscriber, subMonths: Number(ev.sub_months || ev.subMonths || 0), isOwner: isOwner, isModerator: isModerator, isVip: isVip };
+		data.timestamp = toTimestampMs(eventTime(ev));
+		data.meta = { streamUsername: ev.streamUsername || state.currentChannel || state.cfg.channel, createdAt: toTimestampMs(eventTime(ev)), actorUsername: ev.actorUsername || ev.username || "", actorRank: ev.metadata && ev.metadata.actorRank ? ev.metadata.actorRank : "", rawEventType: ev.eventType || ev.type || "chat_message", transport: "websocket", isSubscriber: isSubscriber, subMonths: Number(ev.sub_months || ev.subMonths || 0), isOwner: isOwner, isModerator: isModerator, isVip: isVip };
 		if (messageId) data.meta.messageId = messageId;
 		// Reply threading — VPZone denormalizes the target into
 		// metadata.reply_to {message_id, username, excerpt}, so unlike Kick no
@@ -1436,11 +1450,11 @@
 		if (isModerator) data.mod = true;
 		if (isVip) data.vip = true;
 		if (isSubscriber) data.member = true;
-		data.timestamp = eventTime(ev);
-		data.meta = { streamUsername: ev.streamUsername || state.currentChannel || state.cfg.channel, createdAt: eventTime(ev), actorUsername: ev.actorUsername || ev.username || "", actorRank: ev.metadata && ev.metadata.actorRank ? ev.metadata.actorRank : "", rawEventType: ev.eventType || ev.type || "", transport: "websocket", isSubscriber: isSubscriber, isOwner: isOwner, isModerator: isModerator, isVip: isVip };
+		data.timestamp = toTimestampMs(eventTime(ev));
+		data.meta = { streamUsername: ev.streamUsername || state.currentChannel || state.cfg.channel, createdAt: toTimestampMs(eventTime(ev)), actorUsername: ev.actorUsername || ev.username || "", actorRank: ev.metadata && ev.metadata.actorRank ? ev.metadata.actorRank : "", rawEventType: ev.eventType || ev.type || "", transport: "websocket", isSubscriber: isSubscriber, isOwner: isOwner, isModerator: isModerator, isVip: isVip };
 		if (messageId) data.meta.messageId = messageId;
-		if (mapped === "new_follower") data.meta.followedOn = eventTime(ev);
-		if (mapped === "new_subscriber") data.meta.subscribedOn = eventTime(ev);
+		if (mapped === "new_follower") data.meta.followedOn = toTimestampMs(eventTime(ev));
+		if (mapped === "new_subscriber") data.meta.subscribedOn = toTimestampMs(eventTime(ev));
 		if (mapped === "subscription_gift") {
 			var giftMeta = ev.metadata && typeof ev.metadata === "object" ? ev.metadata : {};
 			if (giftMeta.gift_count && Number(giftMeta.gift_count) > 1) data.subtitle = "x" + giftMeta.gift_count;
@@ -1560,7 +1574,7 @@
 			data.chatimg = absUrl(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || ev.avatar_url || "");
 			data.nameColor = ev.actorNameColor || ev.nameColor || ev.color || "#c084fc";
 			data.userid = ev.actorUsername || ev.username || "";
-			data.timestamp = eventTime(ev);
+			data.timestamp = toTimestampMs(eventTime(ev));
 			data.meta = { streamUsername: state.currentChannel || state.cfg.channel, transport: "websocket" };
 		}
 		data.hasDonation = label;

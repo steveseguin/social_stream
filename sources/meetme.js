@@ -547,6 +547,20 @@ function toDataURL(url, callback) {
 		return out;
 	}
 
+	function toTimestampMs(value) {
+		if (typeof value !== "string" && typeof value !== "number") return null;
+		if (typeof value === "string") {
+			value = value.trim();
+			if (!value) return null;
+		}
+		var numeric = typeof value === "number" || /^[+-]?\d+(?:\.\d+)?$/.test(value);
+		var timestamp = numeric ? Number(value) : Date.parse(value);
+		// Incoming epoch numbers may be seconds or milliseconds; never parse them as date text.
+		if (numeric && Math.abs(timestamp) < 100000000000) timestamp *= 1000;
+		return Number.isFinite(timestamp) && Math.abs(timestamp) <= 8640000000000000
+			? Math.trunc(timestamp) : null;
+	}
+
 	function buildWsMeta(frame, className, obj) {
 		return cleanMeta({
 			source: "websocket",
@@ -556,8 +570,8 @@ function toDataURL(url, callback) {
 			objectId: getWsObjectId(obj),
 			chatName: obj && obj.chatName,
 			userId: getWsUserId(obj),
-			createdAt: obj && obj.createdAt && (obj.createdAt.iso || obj.createdAt),
-			updatedAt: obj && obj.updatedAt && (obj.updatedAt.iso || obj.updatedAt),
+			createdAt: toTimestampMs(obj && obj.createdAt && (obj.createdAt.iso || obj.createdAt)),
+			updatedAt: toTimestampMs(obj && obj.updatedAt && (obj.updatedAt.iso || obj.updatedAt)),
 			viewerLevelId: obj && obj.viewerLevelId,
 			isBouncer: obj && obj.isBouncer,
 			liveAdmin: obj && obj.liveAdmin,

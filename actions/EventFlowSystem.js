@@ -3463,7 +3463,10 @@ class EventFlowSystem {
             };
             const timer = setTimeout(() => finish({ error: 'Product control timed out. Check SSN before retrying.' }), 8000);
             try {
-                if (typeof window.handleMonetizationRequest === 'function') {
+                if (String(request.command || '').startsWith('break') && typeof window.handleBreaksLocalRequest === 'function') {
+                    // Flows run on the host, so they reach Breaks directly rather than through its private link.
+                    Promise.resolve(window.handleBreaksLocalRequest(request.command, request.data)).then(finish, error => finish({ error: error && error.message || String(error) }));
+                } else if (typeof window.handleMonetizationRequest === 'function') {
                     Promise.resolve(window.handleMonetizationRequest(request)).then(finish, error => finish({ error: error && error.message || String(error) }));
                 } else if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
                     chrome.runtime.sendMessage(request, reply => {
@@ -4281,7 +4284,7 @@ class EventFlowSystem {
             case 'commerceControl': {
                 const request = { cmd: 'monetization', action: 'commerceControl', command: config.command || 'show', url: config.url || '', seconds: Number(config.seconds || 0) };
                 let reply;
-                if (['boardSave','boardSpot','boardVisibility','saleAdd','saleRemove','salesClear','salesSettings'].includes(request.command)) {
+                if (['boardSave','boardSpot','boardVisibility','saleAdd','saleRemove','salesClear','salesSettings','breakHighlight','breakStage','breakSettings'].includes(request.command)) {
                     try {
                         const data = typeof config.data === 'string' ? JSON.parse(config.data || '{}') : (config.data || {});
                         if (!data || typeof data !== 'object' || Array.isArray(data) || JSON.stringify(data).length > 16000) throw new Error('Use a JSON object for board and sales fields.');
@@ -4292,10 +4295,30 @@ class EventFlowSystem {
                         }
                     } catch (error) { reply = { error:error.message }; }
                 }
+                if (!reply && ['breakHighlight','breakStage','breakSettings'].includes(request.command)) {
+                    // Flows only control the Breaks display, so boardId "active" keeps one working from break to break.
+                    const followsActive = request.data.boardId === 'active';
+                    if (!request.data.boardId) reply = {error:'Set the boardId from Breaks before enabling this flow.'};
+                    else if (request.data.revision === undefined || followsActive) {
+                        const current = await this.requestCommerceControl({cmd:'monetization', action:'commerceControl', command:'breakGet', data:{}});
+                        const breaks = current.commerceState && current.commerceState.breaks;
+                        if (current.error || !breaks || !breaks.active || (!followsActive && breaks.active.id !== request.data.boardId)) reply = {error:'The configured break is not active.'};
+                        else {
+                            if (followsActive) request.data.boardId = breaks.active.id;
+                            if (request.data.revision === undefined) request.data.revision = breaks.revision;
+                        }
+                    }
+                }
                 if (!reply) reply = await this.requestCommerceControl(request);
+                // Flow results can become chat/overlay payloads. Breaks control replies contain private records.
+                let flowCommerce = reply.commerceState;
+                if (request.command.startsWith('break') && flowCommerce && flowCommerce.breaks) {
+                    const state = flowCommerce.breaks;
+                    flowCommerce = {breaks:{revision:state.revision, id:state.active ? state.active.id : '', stage:state.active ? state.active.stage : ''}};
+                }
                 const controlResult = reply.error || !reply.commerceState || typeof reply.commerceState !== 'object' || Array.isArray(reply.commerceState)
                     ? { success: false, error: String(reply.error || 'Product control did not return its state.') }
-                    : { success: true, commerce: reply.commerceState };
+                    : { success: true, commerce: flowCommerce };
                 if (message?.meta != null && (typeof message.meta !== 'object' || Array.isArray(message.meta))) {
                     result.commerceControlResult = controlResult;
                 } else {

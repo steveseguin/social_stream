@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Hou.la - Social Stream Ninja</title>
+    <link rel="icon" href="../images/houla.png">
+    <style>
+        body { margin: 0 auto; padding: 24px; max-width: 640px; background: #171717; color: #e8e8e8; font: 14px Arial, sans-serif; }
+        h1 { display: flex; align-items: center; gap: 10px; font-size: 22px; }
+        h1 img { width: 28px; height: 28px; }
+        a { color: #79b8ff; }
+        p { line-height: 1.5; }
+        .panel { padding: 20px; background: #222; border: 1px solid #444; border-radius: 6px; }
+        label { display: block; margin-bottom: 8px; }
+        input[type="password"] { box-sizing: border-box; width: 100%; padding: 10px; border: 1px solid #777; border-radius: 4px; background: #171717; color: #fff; font: inherit; }
+        .toggle { display: flex; align-items: center; gap: 6px; margin: 16px 0; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        button { border: 1px solid #777; border-radius: 4px; padding: 9px 14px; background: #333; color: #fff; font: inherit; cursor: pointer; }
+        #connect { background: #205b91; }
+        button:disabled { opacity: .5; cursor: default; }
+        :focus-visible { outline: 2px solid #79b8ff; outline-offset: 3px; }
+        .status { margin-top: 16px; }
+        .status.error { color: #ffb4b4; }
+    </style>
+</head>
+<body>
+    <h1><img src="../images/houla.png" alt="">Hou.la</h1>
+    <p>Create an event key in <a href="https://hou.la/studio/event-keys" target="_blank" rel="noopener noreferrer">Hou.la Studio</a> with Comments, Gifts and Followers enabled.</p>
+    <div class="panel">
+        <label for="key">Event key</label>
+        <input id="key" type="password" placeholder="hle_..." autocomplete="off" spellcheck="false" aria-describedby="keyHint">
+        <p id="keyHint">Saved on this computer. Keep your key private.</p>
+        <label class="toggle" title="Connect automatically when this source opens."><input id="optAuto" type="checkbox" checked>Auto-connect</label>
+        <div class="actions">
+            <button id="connect" type="button" disabled>Connect</button>
+            <button id="disconnect" type="button" disabled>Disconnect</button>
+            <button id="forget" type="button">Forget key</button>
+        </div>
+        <div id="status" class="status" role="status" aria-live="polite">Loading...</div>
+    </div>
+    <script src="../../shared/vendor/socket.io.min.js"></script>
+    <script src="houla.js"></script>
+</body>
+</html>

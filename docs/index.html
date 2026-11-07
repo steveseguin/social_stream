@@ -1111,6 +1111,18 @@
       });
     }
 
+    function localMarkdownUrl(path) {
+      const base = new URL('.', window.location.href);
+      const url = new URL(path, base);
+      // Validate the final fetch target after all path decoding and resolution.
+      if (url.protocol !== base.protocol || url.origin !== base.origin || url.host !== base.host ||
+          !url.pathname.startsWith(base.pathname) || !/\.md$/i.test(url.pathname) ||
+          url.username || url.password) {
+        throw new Error('Choose a Markdown file from this documentation folder.');
+      }
+      return url.href;
+    }
+
     async function loadDoc(path, push) {
       if (window.SSNSiteLanguage) {
         const english = new URL(window.SSNSiteSourceURL('index.html'));
@@ -1133,12 +1145,16 @@
       elements.content.textContent = "Loading documentation...";
       elements.currentPath.className = "toolbar-path is-path";
       elements.currentPath.textContent = cleanPath;
-      elements.rawLink.href = /^(mailto:|tel:)/i.test(cleanPath) ? cleanPath : "./" + cleanPath;
-      elements.rawLink.style.display = "";
+      elements.rawLink.removeAttribute("href");
+      elements.rawLink.style.display = "none";
       setActiveLink(cleanPath);
       if (push) updateUrl(cleanPath + hash);
       try {
-        const response = await fetch(cleanPath, { cache: "no-cache" });
+        const documentUrl = localMarkdownUrl(cleanPath);
+        elements.rawLink.href = documentUrl;
+        elements.rawLink.style.display = "";
+        const response = await fetch(documentUrl, { cache: "no-cache" });
+        localMarkdownUrl(response.url);
         if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
         const markdown = await response.text();
         state.currentMarkdown = markdown;

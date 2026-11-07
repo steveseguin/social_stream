@@ -21,7 +21,7 @@ function fixture(fallback) {
     const context = vm.createContext({
         console, Date,
         document: { getElementById: id => id === 'poll-time' ? status : { setAttribute() {} } },
-        liveChatId: 'fixture-chat', fetchTimeout: null,
+        liveChatId: 'fixture-chat', liveChatConnectionGeneration: 0, fetchTimeout: null,
         liveChatStreamActive: false, liveChatStreamAbortController: null,
         liveChatPollingFallbackActive: fallback, isPageVisible: true,
         setTrackedTimeout(callback, delay) { timers.push({ callback, delay }); return timers.length; },
@@ -36,7 +36,8 @@ function fixture(fallback) {
         QUIET_CHAT_BACKOFF_THRESHOLD: 3, QUIET_CHAT_BACKOFF_INTERVAL_MS: 10000, QUIET_CHAT_MIN_INTERVAL_MS: 5000
     });
     vm.runInContext(
-        section('function updateLiveChatStreamIndicator(', 'function scheduleLiveChatPolling(')
+        section('function getLiveChatConnection(', 'async function handleLiveChatStreamPayload(')
+        + section('function updateLiveChatStreamIndicator(', 'function scheduleLiveChatPolling(')
         + section('async function startLiveChatStream(', 'async function startLiveChatPolling(')
         + section('async function processLiveChatResponseData(', 'function normalizeYouTubeSignInTargetValue('), context);
     return { context, status, timers, polls: () => polls };

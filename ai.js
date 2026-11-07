@@ -2829,10 +2829,45 @@ const AI_TRANSLATE_SHORT_TEXT_LIMIT = 10;
 const AI_TRANSLATE_DEFAULT_TARGET_LANGUAGE = "en-US";
 const AI_TRANSLATE_MIN_OUTPUT_CHARS = 255;
 const AI_TRANSLATE_OUTPUT_MULTIPLIER = 3;
+// Whole-message matches only. Keep moderation's multilingual safe list separate.
+const AI_ENGLISH_TRANSLATE_PASSTHROUGH = new Set([
+    "yes", "lol", "w", "gg", "nice", "ty", "ok", "thank you", "thanks", "wow",
+    "no", "y", "yeah", "yep", "lmao", "yup", "hi", "haha", "cool", "hello",
+    "thx", "gl", "yea", "congrats", "damn", "hahaha", "sweet", "omg", "sure",
+    "ggs", "nope", "me", "good", "yes sir", "please", "beautiful", "dang", "l",
+    "right", "sick", "all good", "yo", "awesome", "yes please", "sorry", "ok thanks",
+    "ya", "okay", "yessir", "same", "ready", "gotcha", "oh", "done", "no worries",
+    "me too", "love it", "k", "brb", "afk", "np", "ggwp", "gg ez", "rofl",
+    "lmfao", "bruh", "xd", "o7", "kekw", "omegalul", "lulw", "pog", "pogchamp",
+    "kappa", "pepehands", "monkas", "ez clap", "well played", "good game",
+    "good luck", "good job", "let's go", "lets go", "good morning", "good night",
+    "goodnight", "happy birthday", "congratulations", "welcome", "hi everyone"
+]);
+const AI_ENGLISH_TRANSLATE_PHRASES = new Map([
+    ["hola", "Hello"], ["bonjour", "Hello"], ["buenos días", "Good morning"],
+    ["buenos dias", "Good morning"], ["buenas tardes", "Good afternoon"],
+    ["gracias", "Thank you"], ["muchas gracias", "Thank you very much"],
+    ["merci", "Thank you"], ["merci beaucoup", "Thank you very much"],
+    ["danke", "Thank you"], ["danke schön", "Thank you very much"],
+    ["dankeschön", "Thank you very much"], ["vielen dank", "Thank you very much"],
+    ["obrigado", "Thank you"], ["obrigada", "Thank you"],
+    ["こんにちは", "Hello"], ["ありがとう", "Thank you"], ["ありがとうございます", "Thank you"],
+    ["你好", "Hello"], ["谢谢", "Thank you"], ["謝謝", "Thank you"],
+    ["привет", "Hello"], ["спасибо", "Thank you"],
+    ["안녕하세요", "Hello"], ["감사합니다", "Thank you"], ["고마워요", "Thank you"],
+    ["guten morgen", "Good morning"], ["guten abend", "Good evening"],
+    ["gute nacht", "Good night"], ["bonsoir", "Good evening"], ["bonne nuit", "Good night"],
+    ["dziękuję", "Thank you"], ["dziekuje", "Thank you"],
+    ["teşekkürler", "Thank you"], ["tesekkurler", "Thank you"]
+]);
 const AI_OUTGOING_TRANSLATE_RETRY_MS = 250;
 const AI_OUTGOING_TRANSLATE_MAX_WAIT_MS = 5000;
 let aiTranslateProcessingSlots = [false];
 let aiTranslateCache = new Map();
+let aiEnglishTranslateWorker = null;
+let aiEnglishTranslateWorkerFailed = false;
+let aiEnglishTranslateRequestId = 0;
+const aiEnglishTranslatePending = new Map();
 let aiOutgoingTranslateQueue = [];
 let aiOutgoingTranslateQueueActive = false;
 
@@ -2840,10 +2875,162 @@ function getActiveAITranslateProviderKey() {
     return settings?.aiProvider?.optionsetting || "ollama";
 }
 
+let localTranslateWorker = null;
+let localTranslateRequestId = 0;
+let localTranslateRetryAfter = 0;
+const localTranslatePending = new Map();
+
+function usesLocalTranslation() {
+    return settings?.aiTranslateEngine?.optionsetting === "local";
+}
+
+function requestLocalTranslation(texts, targetLanguage, timeoutMs, outgoing) {
+    if (Date.now() < localTranslateRetryAfter || localTranslatePending.size >= 16) return Promise.resolve(null);
+    if (!localTranslateWorker) {
+        try {
+            const workerPath = "shared/ai/local-translation-worker.js";
+            const workerUrl = typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.getURL
+                ? chrome.runtime.getURL(workerPath) : workerPath;
+            localTranslateWorker = new Worker(workerUrl);
+            localTranslateWorker.onmessage = function (event) {
+                const message = event.data || {};
+                const pending = localTranslatePending.get(message.id);
+                if (!pending) return;
+                clearTimeout(pending.timer);
+                localTranslatePending.delete(message.id);
+                if (message.error) console.warn("[Local Translate]", message.error);
+                pending.resolve(message.translations || null);
+            };
+            const stop = function () {
+                localTranslateWorker.terminate();
+                localTranslateWorker = null;
+                localTranslateRetryAfter = Date.now() + 60000;
+                localTranslatePending.forEach(function (pending) {
+                    clearTimeout(pending.timer);
+                    pending.resolve(null);
+                });
+                localTranslatePending.clear();
+            };
+            localTranslateWorker.onerror = stop;
+            localTranslateWorker.onmessageerror = stop;
+        } catch (error) {
+            localTranslateRetryAfter = Date.now() + 60000;
+            console.warn("[Local Translate]", error);
+            return Promise.resolve(null);
+        }
+    }
+    return new Promise(function (resolve) {
+        const id = ++localTranslateRequestId;
+        const timer = setTimeout(function () {
+            localTranslatePending.delete(id);
+            resolve(null);
+        }, timeoutMs);
+        localTranslatePending.set(id, { resolve, timer });
+        try {
+            localTranslateWorker.postMessage({
+                id,
+                texts,
+                from: outgoing ? "" : String(settings?.localTranslateSourceLanguage?.textsetting || "").trim().toLowerCase().split(/[-_]/)[0],
+                to: String(targetLanguage).trim().toLowerCase().split(/[-_]/)[0],
+                deadline: Date.now() + timeoutMs
+            });
+        } catch (_) {
+            clearTimeout(timer);
+            localTranslatePending.delete(id);
+            resolve(null);
+        }
+    });
+}
+
+async function translateMessageLocally(data, prepared, targetLanguage, enabledSetting, options) {
+    const originalMessage = data.chatmessage;
+    const sourceLanguage = settings?.localTranslateSourceLanguage?.textsetting || "";
+    const translations = await requestLocalTranslation(prepared.parts.map(function (part) { return part.text; }), targetLanguage, getAITranslateRequestTimeoutMs(options), options.direction === "outgoing");
+    const currentTarget = options.targetLanguage || getAITranslateTargetLanguage(options.targetLanguageSetting || "aiAutoTranslateTargetLanguage", options.fallbackTargetLanguageSetting || null);
+    if (!usesLocalTranslation() || !getAiSettingFlag(enabledSetting) || currentTarget !== targetLanguage || sourceLanguage !== (settings?.localTranslateSourceLanguage?.textsetting || "") || data.chatmessage !== originalMessage) return true;
+    if (!Array.isArray(translations) || translations.length !== prepared.parts.length || translations.some(function (text) { return typeof text !== "string" || !text.trim(); })) {
+        return !(options.blockOnFailure === true || getAiSettingFlag("aiAutoTranslateBlockMode"));
+    }
+    if (translations.every(function (text, index) { return text === prepared.parts[index].text; })) return true;
+    applyAITranslatedMessage(data, prepared, translations, targetLanguage, options, "bergamot");
+    return true;
+}
+
 function getAITranslateTargetLanguage(settingKey = "aiAutoTranslateTargetLanguage", fallbackSettingKey = null) {
     const primary = settings?.[settingKey]?.textsetting;
     const fallback = fallbackSettingKey ? settings?.[fallbackSettingKey]?.textsetting : "";
     return String(primary || fallback || AI_TRANSLATE_DEFAULT_TARGET_LANGUAGE).trim() || AI_TRANSLATE_DEFAULT_TARGET_LANGUAGE;
+}
+
+function isAITranslateEnglishTarget(targetLanguage) {
+    return /^(?:en(?:[-_][a-z0-9]{2,8})*|eng|english(?:\s*\([^()]+\))?)$/i.test(String(targetLanguage || "").trim());
+}
+
+function getAIEnglishPhraseTranslation(prepared) {
+    if (prepared.parts.length !== 1) return null;
+    // Match the original text segment, not the sanitized prompt copy. Rebuilding
+    // through the existing segments preserves surrounding emotes and markup.
+    const text = prepared.segments[prepared.parts[0].segmentIndex].value;
+    // This small phrase table cannot match long chat. Bound punctuation matching
+    // so large whitespace runs cannot cause excessive regular-expression work.
+    if (text.length > 128) return null;
+    const match = text.trim().match(/^([¡¿]*\s*)([\s\S]*?)(\s*[!?.。！？]*)$/);
+    if (!match) return null;
+    const key = match[2].normalize("NFC").toLowerCase().replace(/\s+/g, " ").trim();
+    if (AI_ENGLISH_TRANSLATE_PASSTHROUGH.has(key)) return "";
+    if (!AI_ENGLISH_TRANSLATE_PHRASES.has(key)) return null;
+    return match[1] + AI_ENGLISH_TRANSLATE_PHRASES.get(key) + match[3];
+}
+
+function stopAIEnglishTranslateWorker(error) {
+    if (aiEnglishTranslateWorker) aiEnglishTranslateWorker.terminate();
+    aiEnglishTranslateWorker = null;
+    aiEnglishTranslateWorkerFailed = true;
+    aiEnglishTranslatePending.forEach(function (pending) {
+        clearTimeout(pending.timer);
+        pending.resolve(false);
+    });
+    aiEnglishTranslatePending.clear();
+    console.warn("[AI Translate] Language detection unavailable; preserving incoming English-target messages:", error);
+}
+
+function needsAIEnglishTranslation(text) {
+    if (aiEnglishTranslateWorkerFailed || aiEnglishTranslatePending.size >= 64) return Promise.resolve(false);
+    if (!aiEnglishTranslateWorker) {
+        try {
+            const workerPath = "shared/ai/english-translation-worker.js";
+            const workerUrl = typeof chrome !== "undefined" && chrome.runtime?.getURL
+                ? chrome.runtime.getURL(workerPath) : workerPath;
+            aiEnglishTranslateWorker = new Worker(workerUrl);
+            aiEnglishTranslateWorker.onmessage = function (event) {
+                const message = event.data || {};
+                const pending = aiEnglishTranslatePending.get(message.id);
+                if (!pending) return;
+                if (message.error) {
+                    stopAIEnglishTranslateWorker(message.error);
+                    return;
+                }
+                aiEnglishTranslatePending.delete(message.id);
+                clearTimeout(pending.timer);
+                pending.resolve(message.translate === true);
+            };
+            aiEnglishTranslateWorker.onerror = function (event) { stopAIEnglishTranslateWorker(event.message || "Worker failed"); };
+            aiEnglishTranslateWorker.onmessageerror = function () { stopAIEnglishTranslateWorker("Unreadable worker response"); };
+        } catch (error) {
+            stopAIEnglishTranslateWorker(error.message || error);
+            return Promise.resolve(false);
+        }
+    }
+    return new Promise(function (resolve) {
+        const id = ++aiEnglishTranslateRequestId;
+        const timer = setTimeout(function () { stopAIEnglishTranslateWorker("Language detection timed out"); }, 10000);
+        aiEnglishTranslatePending.set(id, { resolve, timer });
+        try {
+            aiEnglishTranslateWorker.postMessage({ id, text });
+        } catch (error) {
+            stopAIEnglishTranslateWorker(error.message || error);
+        }
+    });
 }
 
 function getAITranslateTimeoutMs() {
@@ -3290,17 +3477,57 @@ function ensureAITranslateMeta(data) {
     return data.meta;
 }
 
+function applyAITranslatedMessage(data, prepared, translations, targetLanguage, options, provider) {
+    const originalMessage = String(data.chatmessage || "");
+    const translatedMessage = rebuildAITranslatedMessage(prepared, translations);
+    const originalPlainText = prepared.parts.map(function (part) { return part.text; }).join("\n");
+    if (translatedMessage && translatedMessage !== originalMessage) {
+        data.chatmessage = translatedMessage;
+        if (Object.prototype.hasOwnProperty.call(data, "textContent")) {
+            data.textContent = stripAITranslateHtmlToText(translatedMessage, prepared.textonly);
+        }
+        const meta = ensureAITranslateMeta(data);
+        if (meta.preTranslated === undefined) {
+            meta.preTranslated = originalPlainText;
+        }
+        meta.aiTranslation = { provider, targetLanguage };
+        if (options.direction) {
+            meta.aiTranslation.direction = options.direction;
+        }
+    }
+}
+
 async function translateMessageWithLLM(data, options = {}) {
     const enabledSetting = options.enabledSetting || "aiAutoTranslate";
     if (!getAiSettingFlag(enabledSetting) || !data || data.bot || !data.chatmessage) {
         return true;
     }
 
-    const hadTextContent = Object.prototype.hasOwnProperty.call(data, "textContent");
     const targetLanguage = options.targetLanguage || getAITranslateTargetLanguage(options.targetLanguageSetting || "aiAutoTranslateTargetLanguage", options.fallbackTargetLanguageSetting || null);
     const prepared = prepareMessageForAITranslation(data);
     if (!prepared.parts.length) {
         return true;
+    }
+
+    if (usesLocalTranslation()) {
+        return translateMessageLocally(data, prepared, targetLanguage, enabledSetting, options);
+    }
+
+    // Only incoming translation to English uses language detection. Return the
+    // original payload before cache/output cleanup can change English or slang.
+    if (enabledSetting === "aiAutoTranslate" && options.direction !== "outgoing" && isAITranslateEnglishTarget(targetLanguage)) {
+        const phraseTranslation = getAIEnglishPhraseTranslation(prepared);
+        if (phraseTranslation !== null) {
+            if (phraseTranslation) {
+                applyAITranslatedMessage(data, prepared, [phraseTranslation], targetLanguage, options, "lookup");
+            }
+            return true;
+        }
+        const detectionText = prepared.parts.map(function (part) { return part.text; }).join(" ");
+        if (!await needsAIEnglishTranslation(detectionText)) return true;
+        // Settings can change while the worker loads or classifies a message.
+        const currentTargetLanguage = options.targetLanguage || getAITranslateTargetLanguage(options.targetLanguageSetting || "aiAutoTranslateTargetLanguage", options.fallbackTargetLanguageSetting || null);
+        if (!getAiSettingFlag(enabledSetting) || currentTargetLanguage !== targetLanguage) return true;
     }
 
     const blockOnBusy = options.blockOnFailure === true || getAiSettingFlag("aiAutoTranslateBlockMode");
@@ -3373,28 +3600,7 @@ async function translateMessageWithLLM(data, options = {}) {
             return blockOnBusy ? false : true;
         }
 
-        const originalMessage = String(data.chatmessage || "");
-        const translatedMessage = rebuildAITranslatedMessage(prepared, translations);
-        const originalPlainText = prepared.parts.map(function (part) { return part.text; }).join("\n");
-
-        if (translatedMessage && translatedMessage !== originalMessage) {
-            data.chatmessage = translatedMessage;
-            if (hadTextContent) {
-                // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
-                data.textContent = stripAITranslateHtmlToText(translatedMessage, prepared.textonly);
-            }
-            const meta = ensureAITranslateMeta(data);
-            if (meta.preTranslated === undefined) {
-                meta.preTranslated = originalPlainText;
-            }
-            meta.aiTranslation = {
-                provider: getActiveAITranslateProviderKey(),
-                targetLanguage
-            };
-            if (options.direction) {
-                meta.aiTranslation.direction = options.direction;
-            }
-        }
+        applyAITranslatedMessage(data, prepared, translations, targetLanguage, options, getActiveAITranslateProviderKey());
         return true;
     } catch (error) {
         console.warn("AI auto translate failed:", error);
@@ -3986,7 +4192,7 @@ async function processMessageWithOllama(data, idx=null, queuedEntry=null) {
       if (!youtubeReplyVideoId) {
         const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
         const sourceTab = tabs.find(tab => String(tab.id) === String(data.tid));
-        youtubeReplyVideoId = getYouTubeReplyVideoId(sourceTab && sourceTab.url) || '';
+        youtubeReplyVideoId = await getYouTubeReplyVideoIdForTab(sourceTab) || '';
       }
     }
 

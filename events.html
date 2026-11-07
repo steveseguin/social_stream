@@ -868,6 +868,89 @@ body.event-style-ticker .hype-train-progress { flex: 0 0 90px; margin: 0 0 0 10p
 body.event-style-ticker .hype-train-details { flex: 0 0 auto; flex-wrap: nowrap; margin: 0 0 0 10px; }
 body.event-style-ticker .no-events { margin: 0; padding: calc(var(--feed-padding) * .75) 0; }
 
+/* Spotlight: one-line rows, with the newest event on a solid highlight. */
+body.event-style-spotlight {
+    --feed-card: #fff;
+    --feed-ink: #fff;
+    --feed-accent: #000;
+    --feed-radius: 0;
+    --feed-gap: 5px;
+    --feed-padding: .1em .4em;
+    font-family: 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 26px;
+}
+body.event-style-spotlight #chat-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-end;
+    overflow: hidden;
+    padding: 8px 12px;
+}
+body.spotlight-left #chat-container { align-items: flex-start; }
+body.event-style-spotlight #chat-container .message {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    max-width: 100%;
+    margin: var(--feed-gap) 0 0;
+    padding: var(--feed-padding);
+    background: transparent !important;
+    border: 0;
+    border-radius: var(--feed-radius);
+    box-shadow: none;
+    color: var(--feed-ink);
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 0 2px #000, 0 0 2px #000, 0 1px 3px #000;
+}
+/* Dark rows on a light halo for bright scenes, with the highlight inverted. */
+body.event-style-spotlight.light-mode {
+    --feed-card: #111;
+    --feed-ink: #111;
+    --feed-accent: #fff;
+}
+body.event-style-spotlight.light-mode #chat-container .message {
+    text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 1px 3px #fff;
+}
+body.event-style-spotlight #chat-container.board-oldest > .message:last-child,
+body.event-style-spotlight #chat-container:not(.board-oldest) > .message:first-child {
+    background: var(--feed-card) !important;
+    color: var(--feed-accent);
+    text-shadow: none;
+}
+/* A long name shortens first. The count and amount are never cut. */
+body.event-style-spotlight .spotlight-line {
+    display: flex;
+    align-items: baseline;
+    min-width: 0;
+}
+body.event-style-spotlight .spotlight-line span {
+    display: block;
+    flex: 0 0 auto;
+    margin: 0 0 0 .6em;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    white-space: nowrap;
+}
+body.event-style-spotlight .spotlight-line span:first-child { margin-left: 0; }
+body.event-style-spotlight .spotlight-line .name,
+body.event-style-spotlight .spotlight-line .event-specific {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+body.event-style-spotlight .board-avatar { flex: 0 0 auto; float: none; width: 1.1em; height: 1.1em; margin: 0 .35em 0 0; }
+
 /* Explicit URL overrides also work with the original layout. */
 body.feed-custom-card .message, body.feed-custom-card #header { background: var(--feed-card) !important; }
 body.feed-custom-ink .message, body.feed-custom-ink .name, body.feed-custom-ink #header, body.feed-custom-ink .meta-value, body.feed-custom-ink .hype-train-title { color: var(--feed-ink); }
@@ -920,10 +1003,12 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 <script type="text/javascript" src="currency.js"></script>
 <script>
     var urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('audience')) {
+    var requestedFeedStyle = String(urlParams.get('style') || '').toLowerCase();
+    if (urlParams.has('audience') || requestedFeedStyle === 'spotlight') {
         ['transparent', 'noheader', 'hidemeta', 'nofeature', 'hideempty', 'notime', 'hidestatus', 'hideads', 'hideactivity', 'hidehypetrain'].forEach(function (key) { urlParams.set(key, ''); });
         if (!urlParams.has('maxevents')) urlParams.set('maxevents', '3');
         if (!urlParams.has('style')) urlParams.set('style', 'compact');
+        if (requestedFeedStyle === 'spotlight' && !urlParams.has('order')) urlParams.set('order', 'oldest');
     }
     var eventBoard = null;
     var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
@@ -1148,7 +1233,7 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 
     // Presentation only: every layout uses the same event renderer and filters.
     var eventStyle = (urlParams.get('style') || 'default').toLowerCase();
-    if (['compact', 'twitch', 'timeline', 'glass', 'minimal', 'ticker', 'broadcast', 'outline', 'pills', 'neon', 'paper'].indexOf(eventStyle) !== -1) {
+    if (['compact', 'twitch', 'timeline', 'glass', 'minimal', 'ticker', 'broadcast', 'outline', 'pills', 'neon', 'paper', 'spotlight'].indexOf(eventStyle) !== -1) {
         document.body.classList.add('events-styled', 'event-style-' + eventStyle);
         document.documentElement.classList.add('events-styled');
     }
@@ -1187,6 +1272,15 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
     }
     if (urlParams.has('noheader')) document.body.classList.add('feed-noheader');
     if (urlParams.has('noanimation')) document.body.classList.add('feed-noanimation');
+    if (eventStyle === 'spotlight') {
+        if (urlParams.get('textalign') === 'left') document.body.classList.add('spotlight-left');
+        if (!googleFont) {
+            var spotlightFont = document.createElement('link');
+            spotlightFont.rel = 'stylesheet';
+            spotlightFont.href = 'https://fonts.googleapis.com/css?family=Roboto+Mono:500&display=swap';
+            document.head.appendChild(spotlightFont);
+        }
+    }
     if (transparentMode) document.documentElement.classList.add('feed-transparent');
 
 	updateCompactHeightMode();
@@ -2310,6 +2404,9 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
             forceShow = true;
         }
 
+		// A Power-up has no chat text, so only this one-line style has something to show for it.
+		if (eventStyle === 'spotlight' && normalizedEvent === 'powerup') forceShow = true;
+
 		if (!message && normalizedEvent === 'new_follower') {
 			const followVerb = data.type === 'youtube' || data.type === 'youtubeshorts'
 				? getTranslation('alert-just-subscribed', 'just subscribed')
@@ -2372,6 +2469,37 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
     	}
     	recentTransportDeliveries.set(key, now);
     	return false;
+    }
+    // One plain-text line per event: NAME EVENT X77 (200 BITS). Keeps the shared class names so the hide-labels and hide-amounts options still apply.
+    function buildSpotlightLine(data, display, name) {
+        const line = document.createElement('span');
+        line.className = 'spotlight-line';
+        function add(className, text) {
+            if (!text) return;
+            if (line.childNodes.length) line.appendChild(document.createTextNode(' '));
+            const part = document.createElement('span');
+            part.className = className;
+            part.textContent = text;
+            line.appendChild(part);
+        }
+        const meta = data.meta && typeof data.meta === 'object' ? data.meta : {};
+        const event = display.normalizedEvent;
+        const powerUp = event === 'powerup' && meta.powerUp && typeof meta.powerUp === 'object' ? meta.powerUp : null;
+        let label = display.eventSpecificText;
+        if (powerUp) {
+            label = powerUp.title || (powerUp.powerUpType ? humanizeEventKey(powerUp.powerUpType) : 'Power-up');
+        } else if (!label && data.hasDonation) {
+            label = getFriendlyEventLabel(/\bbits?\b/i.test(data.hasDonation) ? 'cheer' : 'donation');
+        }
+        const count = event === 'resub'
+            ? (meta.cumulativeMonths || meta.months || meta.streakMonths)
+            : (GIFT_EVENT_TYPES.has(event) ? (data.total || meta.total || meta.count || meta.quantity) : 0);
+        const amount = data.hasDonation || (Number(meta.bits) > 0 ? meta.bits + ' bits' : '');
+        add('name', name);
+        add('event-specific', label);
+        add('spotlight-count', Number(count) > 1 ? 'x' + Number(count) : '');
+        add('donation', amount ? '(' + amount + ')' : '');
+        return line;
     }
     function addMessageToOverlay(data) {
         if (!data || typeof data !== 'object') return;
@@ -2588,6 +2716,13 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 			messageDiv.appendChild(metaDetailsNode);
 		}
 		
+		if (eventStyle === 'spotlight') {
+			Array.from(messageDiv.children).forEach(function(child) {
+				if (!child.classList.contains('board-avatar')) child.remove();
+			});
+			messageDiv.appendChild(buildSpotlightLine(data, display, displayName));
+		}
+
 		chatContainer.prepend(messageDiv);
 		if (eventDuration) messageDiv.__feedUpdatedAt = Date.now();
 		

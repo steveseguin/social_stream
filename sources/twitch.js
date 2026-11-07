@@ -188,9 +188,9 @@
 		lastHypeTrainDomSignature = signature;
 		lastHypeTrainDomSentAt = now;
 
-		var expiresAt = "";
+		var expiresAt = null;
 		if (secondsLeft !== null) {
-			expiresAt = new Date(now + (secondsLeft * 1000)).toISOString();
+			expiresAt = now + (secondsLeft * 1000);
 		}
 
 		var meta = {
@@ -207,10 +207,10 @@
 			topContributions: [],
 			lastContribution: null,
 			sharedTrainParticipants: [],
-			startedAt: "",
+			startedAt: null,
 			expiresAt: expiresAt,
-			endedAt: "",
-			cooldownEndsAt: "",
+			endedAt: null,
+			cooldownEndsAt: null,
 			isSharedTrain: false,
 			trainType: /\bTreasure Train\b/i.test(text) ? "treasure" : "regular",
 			allTimeHighLevel: null,

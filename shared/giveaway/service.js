@@ -47,19 +47,28 @@
             fail('Choose exact or word matching.');
         var kind = value.kind || 'giveaway';
         ['membersOnly','removeWinner'].forEach(function(key){if(value[key]!==undefined && typeof value[key]!=='boolean')fail(key+' must be true or false.');});
-        if (['giveaway', 'coin', 'number'].indexOf(kind) < 0)
+        if (['giveaway', 'coin', 'number', 'trivia'].indexOf(kind) < 0)
             fail('Unknown game type.');
+        var question = String(value.triviaQuestion || '').trim(), answer = String(value.triviaAnswer || '').trim();
+        if (kind === 'trivia' && (!question || question.length > 300 || !answer || answer.length > 160))
+            fail('Trivia needs a question (up to 300 characters) and an answer (up to 160 characters).');
+        var duration = integer(value.durationSeconds === undefined ? 0 : value.durationSeconds, 0, 86400, 'Draw timer');
+        if (duration && kind !== 'giveaway' && kind !== 'trivia') fail('Auto-draw is available for giveaways and trivia.');
+        if (kind === 'trivia' && value.ticketCost) fail('Trivia entries are free. Set points per ticket to 0.');
         return { keyword: keyword, match: match, membersOnly: value.membersOnly === true, removeWinner: value.removeWinner !== false,
             title: String(value.title || 'Giveaway').slice(0, 160), ticketCost: integer(value.ticketCost === undefined ? 0 : value.ticketCost, 0, 10000, 'Ticket cost'),
             maxTickets: integer(value.maxTickets === undefined ? 100 : value.maxTickets, 1, 10000, 'Ticket limit'),
             prizePoints: integer(value.prizePoints === undefined ? 0 : value.prizePoints, 0, LIMIT, 'Point prize'),
-            winnerCount: integer(value.winnerCount === undefined ? 1 : value.winnerCount, 1, 20, 'Winner count'), kind: kind };
+            winnerCount: integer(value.winnerCount === undefined ? 1 : value.winnerCount, 1, 20, 'Winner count'), kind: kind,
+            durationSeconds: duration, triviaQuestion: kind === 'trivia' ? question : '', triviaAnswer: kind === 'trivia' ? answer : '' };
     }
     function snapshot(round) {
+        var publicConfig = Object.assign({}, round.config);
+        delete publicConfig.triviaAnswer;
         return { version: 2, giveawayId: round.giveawayId, roundId: round.roundId, epoch: round.roundId, generation:round.generation || (round.roundId ? 1 : 0),
             revision: round.revision, draw: round.winners.length, open: round.status === 'open', status: round.status,
             keyword: round.config.keyword, count: round.entries.length, ticketCount: round.entries.reduce(function (n, e) { return n + e.tickets; }, 0),
-            config: round.config, entrants: round.entries.slice(0, 120).map(function (e) { return { id: e.id, name: e.name, platform: e.platform, tickets: e.tickets }; }),
+            config: publicConfig, endsAt: round.endsAt || null, entrants: round.entries.slice(0, 120).map(function (e) { return { id: e.id, name: e.name, platform: e.platform, tickets: e.tickets }; }),
             winners: round.winners.slice().reverse().slice(0, 20), outcome: round.outcome || null,
             number: round.config.kind === 'number' ? { low: round.low || 1, high: round.high || 100, guesses: round.guesses || [] } : null };
     }
@@ -105,8 +114,10 @@
         if (operationId.length > 400)
             fail('Operation ID is too long.');
         var receiptKey = 'operation:' + JSON.stringify([this.session, operationId]);
-        var fingerprint = JSON.stringify([action, id, value.roundId || null, value.config || null, value.count || null, value.side || null, value.guess === undefined ? null : value.guess, value.entryId || null,
-            actor ? [actor.type, actor.userid || actor.username || actor.chatname, actor.chatname] : null]);
+        var fingerprintParts = [action, id, value.roundId || null, value.config || null, value.count || null, value.side || null, value.guess === undefined ? null : value.guess, value.entryId || null,
+            actor ? [actor.type, actor.userid || actor.username || actor.chatname, actor.chatname] : null];
+        if (value.answer !== undefined || value.endsAt !== undefined) fingerprintParts.push(value.answer || null, value.endsAt || null);
+        var fingerprint = JSON.stringify(fingerprintParts);
         return this.transaction(async function (tx) {
             var prior = await tx.get(tx.records.get(receiptKey));
             if (prior) {
@@ -126,12 +137,32 @@
                 fail('The round changed. Refresh before trying again.');
             if (action === 'getgiveawaystate')
                 return { ok: true, giveaway: snapshot(round) };
+            var previousStatus = round.status, previousDraw = round.winners.length;
+            if (action === 'expiregiveaway') {
+                if (round.status !== 'open' || !round.endsAt || round.endsAt !== value.endsAt || Date.now() < round.endsAt)
+                    return {ok:true, duplicate:true, giveaway:snapshot(round)};
+                round.expiredAt = round.endsAt;
+                action = 'closegiveaway';
+            }
             if (action === 'startgiveaway') {
                 if (['completed', 'cancelled'].indexOf(round.status) >= 0 || round.winners.length)
                     fail('Create a new round before opening entries again.');
-                var next = config(value.config || round.config);
-                if (round.entries.length && JSON.stringify(next) !== JSON.stringify(round.config))
+                var nextInput = Object.assign({}, value.config || round.config);
+                if (nextInput.kind === 'trivia' && nextInput.triviaAnswer === undefined) nextInput.triviaAnswer = round.config.triviaAnswer;
+                var next = config(nextInput);
+                if (round.entries.length && JSON.stringify(next) !== JSON.stringify(config(round.config)))
                     fail('Entry rules are locked. Cancel this round or keep its existing rules.');
+                if (next.kind === 'giveaway' && !next.ticketCost) {
+                    // Check in this transaction so simultaneous starts cannot share a keyword.
+                    var prefix = 'summary:giveaway:' + JSON.stringify([self.session]).slice(0, -1) + ',';
+                    var rounds = await tx.get(tx.records.getAll(IDBKeyRange.bound(prefix, prefix + '\uffff')));
+                    for (var i = 0; i < rounds.length; i++) {
+                        var other = rounds[i].state;
+                        if (other.giveawayId !== id && other.open && other.config.kind === 'giveaway' && !other.config.ticketCost &&
+                            other.keyword.toLowerCase() === next.keyword.toLowerCase())
+                            fail('Giveaway "' + other.giveawayId + '" already uses this keyword. Close its entries or choose another keyword.');
+                    }
+                }
                 if (next.kind === 'coin' && (next.ticketCost !== 1 || next.prizePoints || next.winnerCount !== 1))
                     fail('Coin Flip Pot uses one point per stake, no extra prize, and one outcome.');
                 if (next.kind === 'number' && (next.ticketCost || next.winnerCount !== 1))
@@ -142,10 +173,15 @@
                     round.high = 100;
                     round.guesses = [];
                 }
+                if (round.status !== 'open' || next.durationSeconds !== round.config.durationSeconds) {
+                    round.endsAt = next.durationSeconds ? Date.now() + next.durationSeconds * 1000 : null;
+                    round.expiredAt = null;
+                }
                 round.config = next;
                 round.status = 'open';
             }
             else if (action === 'closegiveaway') {
+                round.endsAt = null;
                 if (round.status === 'open')
                     round.status = 'locked';
             }
@@ -170,6 +206,7 @@
                 round.entries = round.entries.filter(function (e) { return e.id !== value.entryId; });
             }
             else if (action === 'cancelgiveaway') {
+                round.endsAt = null;
                 if (round.winners.length || round.status === 'completed')
                     fail('The result is committed. A completed draw cannot be cancelled.');
                 for (var e of round.entries) {
@@ -187,6 +224,10 @@
             else if (action === 'entergiveaway' || action === 'buygiveawaytickets' || action === 'grantgiveawaytickets' || action === 'guessgiveaway') {
                 if (round.status !== 'open')
                     fail('Entries are closed.');
+                if (round.endsAt && Date.now() >= round.endsAt) fail('The entry deadline has passed.');
+                if (round.config.kind === 'trivia' && (action !== 'entergiveaway' ||
+                    String(value.answer || '').trim().replace(/\s+/g, ' ').toLowerCase() !== round.config.triviaAnswer.trim().replace(/\s+/g, ' ').toLowerCase()))
+                    fail('That answer does not qualify for this trivia draw.');
                 if (!actor || typeof actor.chatname !== 'string' || !actor.chatname.trim() || !actor.type)
                     fail('A captured viewer identity is required.');
                 if (actor.bot || actor.private || actor.history || actor.replay || actor.reflection || actor.reload || actor.meta && actor.meta.economyTest)
@@ -268,6 +309,9 @@
                 }
             }
             else if (action === 'drawgiveaway') {
+                if (value.endsAt && (round.status !== 'locked' || round.expiredAt !== value.endsAt))
+                    return {ok:true, duplicate:true, giveaway:snapshot(round)};
+                round.endsAt = null;
                 if (round.config.kind === 'number')
                     fail('Number Hunt awards its prize automatically to the first correct guess.');
                 if (round.status !== 'open' && round.status !== 'locked')
@@ -329,7 +373,7 @@
             round.updatedAt = Date.now();
             tx.records.put(round);
             tx.records.put(summary(round));
-            var result = { ok: true, operationId: operationId, giveaway: snapshot(round) };
+            var result = { ok: true, operationId: operationId, giveaway: snapshot(round), previousStatus: previousStatus, previousDraw: previousDraw };
             tx.records.put({ id: receiptKey, version: 1, fingerprint: fingerprint, roundKey: key, roundId: round.roundId, createdAt: Date.now() });
             return result;
         });
@@ -345,6 +389,7 @@
         var prefix = 'giveaway:' + JSON.stringify([this.session]).slice(0, -1) + ',';
         return this.transaction(async function (tx) { var rounds = await tx.get(tx.records.getAll(IDBKeyRange.bound(prefix, prefix + '\uffff'))); rounds.forEach(function (r) { if (r.status === 'open') {
             r.status = 'locked';
+            r.endsAt = null;
             r.revision++;
             tx.records.put(r);
         } tx.records.put(summary(r)); }); });
