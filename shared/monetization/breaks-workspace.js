@@ -90,13 +90,13 @@
 		panel.classList.add("breaks-panel");
 		panel.innerHTML =
 			'<summary>Break workspace</summary><div class="br-top"><nav aria-label="Breaks views">' +
-			["live", "setup", "stock", "history"]
+			["live", "setup", "stock", "display", "costs", "history"]
 				.map(function (x) {
 					return (
 						'<button type="button" data-tab="' +
 						x +
 						'">' +
-						{ live: "Run break", setup: "Set up", stock: "Stock", history: "History" }[x] +
+						{ live: "Run break", setup: "Set up", stock: "Stock", display: "OBS", costs: "Costs", history: "History" }[x] +
 						"</button>"
 					);
 				})
@@ -156,7 +156,7 @@
 			select("stock-use-item", "Item", []) +
 			field("stock-use-quantity", "Quantity", "number", 'min="1" max="100000" step="1" value="1" required') +
 			'</div><button type="submit">Use stock</button></form><div class="br-use-list"></div><p class="br-muted">Takes the quantity out of your local stock and records it on this break. Return it any time. This never changes eBay or other selling platforms.</p></details>' +
-			'<details><summary>OBS and audience tools</summary><div class="br-actions"><a data-overlay target="_blank" rel="noopener">Open audience overlay</a><a data-tool="games.html" target="_blank" rel="noopener">Games</a><a data-tool="poll.html" target="_blank" rel="noopener">Poll</a><a data-tool="timer.html" target="_blank" rel="noopener">Timer</a><a data-tool="waitlist.html" target="_blank" rel="noopener">Waitlist</a></div><input data-field="obs-link" readonly aria-label="OBS browser source URL"><p class="br-muted">The overlay link shows viewers only the public board.</p><button type="button" data-do="copy-private">Copy private control link</button><p class="br-muted">For an OBS dock or a second screen. It can read payments and notes, so never share it or use it as a Browser Source.</p><label>Break ID<input data-field="board-id" readonly title="Use this boardId for Event Flow and remote controls"></label></details></section>' +
+			'<details><summary>OBS and audience tools</summary><div class="br-actions"><a data-overlay target="_blank" rel="noopener">Open audience overlay</a><a data-tool="games.html" target="_blank" rel="noopener">Games</a><a data-tool="poll.html" target="_blank" rel="noopener">Poll</a><a data-tool="timer.html" target="_blank" rel="noopener">Timer</a><a data-tool="waitlist.html" target="_blank" rel="noopener">Waitlist</a></div><input data-field="obs-link" readonly aria-label="OBS browser source URL"><p class="br-muted">The overlay link shows viewers only the public board.</p><button type="button" data-do="copy-private">Copy private control link</button><label hidden>Private control link<input data-field="private-link" readonly></label><p class="br-muted">For an OBS dock or a second screen. It can read payments and notes, so never share it or use it as a Browser Source.</p><label>Break ID<input data-field="board-id" readonly title="Use this boardId for Event Flow and remote controls"></label></details></section>' +
 			'<section data-view="setup" hidden><div class="br-two"><div><h2>Create a break</h2><form data-form="create">' +
 			select(
 				"preset",
@@ -206,6 +206,71 @@
 			field("stock-note", "Private note", "text", 'maxlength="500"') +
 			'<div class="br-actions"><button type="submit">Save stock</button><button type="button" data-do="new-stock">New item</button></div></form><div class="br-stock-list"></div></div><div><h2>Connected eBay listings</h2><p data-ebay-status class="br-muted"></p><a href="docs/breaks.html#stock" target="_blank" rel="noopener">eBay setup</a><div class="br-ebay-list"></div><p class="br-muted">Copies saved listing details into a draft. Local stock changes do not change eBay inventory. Listing price is not your cost.</p></div></div></section>' +
 			'<section data-view="history" hidden><div class="br-two"><div><h2>Saved breaks</h2><p class="br-muted">Up to 30 completed breaks. Export before removing older records.</p><div class="br-history-list"></div></div><div><h2 data-history-title>Break recap</h2><div class="br-actions"><button type="button" data-do="history-repeat">Run again</button><button type="button" data-do="history-recap">Buyer recap CSV</button><button type="button" data-do="history-export">Private CSV</button><button type="button" data-do="history-record">Export full record</button><button type="button" data-do="history-remove">Remove saved break</button></div><p data-history-finance class="br-muted"></p><div class="br-recap"></div><div class="br-history-stock"></div><details><summary>Activity</summary><ol class="br-log"></ol></details><button type="button" data-do="archive">Archive current break</button></div></div></section>';
+
+		// Keep each task's controls together without changing their command or draft handling.
+		var liveHeading = el(".br-heading"),
+			boardTools = el(".br-heading > .br-actions"),
+			obsCard = el('[data-view="display"] .br-two > div'),
+			costsCard = el('[data-form="costs"]').parentElement,
+			costsView = node("section"), costsColumns = node("div", undefined, "br-two");
+		costsView.dataset.view = "costs"; costsView.hidden = true;
+		costsColumns.appendChild(costsCard); costsView.appendChild(costsColumns); panel.appendChild(costsView);
+		var obsActions = node("div", undefined, "br-actions br-obs-actions");
+		["preview", "copy", "visibility"].forEach(function (action) { obsActions.appendChild(el('[data-do="' + action + '"]')); });
+		obsCard.insertBefore(obsActions, el('[data-form="appearance"]'));
+		el('[data-do="display"]').textContent = "OBS";
+		boardTools.appendChild(el('[data-do="new"]'));
+		var stageTools = node("div", undefined, "br-actions br-stage-actions");
+		stageTools.appendChild(f("stage").parentElement);
+		stageTools.appendChild(el('[data-do="finish"]'));
+		liveHeading.appendChild(stageTools);
+		var boardColumn = el(".br-live > div");
+		boardColumn.insertBefore(el(".br-toolbar"), boardColumn.firstChild);
+		boardColumn.insertBefore(liveHeading, boardColumn.firstChild);
+		costsCard.appendChild(el("[data-stock-use]"));
+		var audienceTools = f("obs-link").closest("details");
+		el('[data-view="display"] .br-two').appendChild(audienceTools);
+		audienceTools.classList.add("br-obs-tools");
+		audienceTools.querySelector("summary").textContent = "Links and audience tools";
+		audienceTools.open = true;
+		var paymentGroup = f("payment").closest("details"), spotForm = el('[data-form="spot"]'),
+			spotActions = spotForm.querySelector(".br-actions"), pull = f("result").parentElement;
+		paymentGroup.open = true;
+		paymentGroup.classList.add("br-payment-group");
+		spotForm.insertBefore(paymentGroup, pull);
+		var buyerRow = node("div", undefined, "br-row");
+		spotForm.insertBefore(buyerRow, f("buyer-platform").parentElement);
+		buyerRow.appendChild(f("buyer-platform").parentElement); buyerRow.appendChild(f("status").parentElement);
+		spotActions.classList.add("br-save-actions");
+		var pullActions = node("div", undefined, "br-actions br-pull-actions");
+		["reveal", "highlight", "clear-highlight"].forEach(function (action) { pullActions.appendChild(el('[data-do="' + action + '"]')); });
+		spotForm.insertBefore(pullActions, spotActions);
+		var createForm = el('[data-form="create"]'), createSubmit = createForm.querySelector('[type="submit"]'),
+			extras = node("details", undefined, "br-setup-extras");
+		extras.appendChild(node("summary", "Stock and costs (optional)"));
+		extras.appendChild(f("create-stock").parentElement); extras.appendChild(f("create-cost").parentElement);
+		createForm.insertBefore(extras, createSubmit);
+		f("currency").parentElement.classList.add("br-short-field");
+		f("count").parentElement.classList.add("br-count-field");
+		var stockColumns = el('[data-view="stock"] .br-two'), stockCard = stockColumns.firstElementChild,
+			stockFormElement = el('[data-form="stock"]'), inventory = el(".br-stock-list"),
+			stockEditor = node("div"), ebayCard = stockColumns.lastElementChild,
+			ebayDetails = node("details", undefined, "br-ebay-import");
+		stockEditor.appendChild(node("h2", "Item details")); stockEditor.appendChild(stockFormElement);
+		stockColumns.insertBefore(stockEditor, ebayCard);
+		ebayDetails.appendChild(node("summary", "Import from eBay"));
+		while (ebayCard.children.length) ebayDetails.appendChild(ebayCard.firstElementChild);
+		ebayDetails.querySelector("h2").remove();
+		ebayCard.remove(); el('[data-view="stock"]').appendChild(ebayDetails);
+		stockCard.insertBefore(el('[data-do="new-stock"]'), inventory);
+		var icons = {live:"\u25a6",setup:"+",stock:"\u25a3",display:"\u25a4",costs:"$",history:"\u21ba",
+			refresh:"\u21bb",preview:"\u25b7",copy:"\u2398",visibility:"\u25c9",lock:"\u26bf",undo:"\u21b6",export:"\u2193",
+			"add-spot":"+",new:"+",finish:"\u2713",reveal:"\u2726",highlight:"\u2606","clear-highlight":"\u00d7","save-next":"\u2192"};
+		panel.querySelectorAll("[data-tab], [data-do]").forEach(function (button) {
+			var icon = icons[button.dataset.tab || button.dataset.do];
+			if (icon) { button.dataset.icon = icon; button.setAttribute("aria-label", button.textContent); }
+		});
+
 		var nameDialog = document.createElement("dialog");
 		nameDialog.className = "br-name-dialog";
 		nameDialog.innerHTML =
@@ -346,8 +411,13 @@
 			});
 		});
 		function controls() {
+			panel.querySelectorAll("[data-icon]").forEach(function (button) { button.setAttribute("aria-label", button.textContent); });
 			var b = state && state.active,
 				editable = !!b && !b.locked;
+			panel.querySelectorAll('[data-tab="display"], [data-tab="costs"]').forEach(function (tab) {
+				tab.disabled = busy || !b;
+				tab.title = b ? "" : "Create a break first.";
+			});
 			["visibility", "lock", "export", "display", "preview", "finish"].forEach(function (name) {
 				el('[data-do="' + name + '"]').disabled = busy || !b;
 			});
@@ -428,7 +498,8 @@
 			e.classList.toggle("br-error", !!error);
 		}
 		function url(page) {
-			var u = new URL(page, location.href),
+			var packaged = location.protocol === "chrome-extension:" || location.protocol === "moz-extension:",
+				u = new URL(page, packaged ? "https://socialstream.ninja/beta/" : location.href),
 				p = new URLSearchParams(location.search),
 				input = document.getElementById("sessionInput"),
 				// The dock can connect from a saved session that never appears in the address bar.
@@ -458,10 +529,11 @@
 			panel.querySelectorAll("[data-tab]").forEach(function (e) {
 				e.setAttribute(
 					"aria-pressed",
-					String(e.dataset.tab === tab || (tab === "display" && e.dataset.tab === "live"))
+					String(e.dataset.tab === tab)
 				);
 			});
-			if (tab === "display") fillSettings();
+			if (tab === "display" || tab === "costs") fillSettings();
+			if (tab === "setup" && (f("create-stock").value || f("create-cost").value !== "")) extras.open = true;
 			panel.classList.remove("br-editing");
 			if (tab === "history") history();
 		}
@@ -477,7 +549,7 @@
 			el(".br-editor").hidden = !s;
 			if (!s) return;
 			editRevision = state.revision;
-			el("[data-spot-title]").textContent = s.label;
+			el("[data-spot-title]").textContent = "Spot " + s.label;
 			["label", "buyer", "price", "paid", "status", "payment", "result", "image", "note", "description"].forEach(
 				function (key) {
 					f(key).value = s[key] == null ? "" : s[key];
@@ -494,7 +566,7 @@
 			controls();
 			drawGrid();
 			// Ready to type: the buyer on an open spot, the pull on a sold one. Skipped on phones, where it opens the keyboard.
-			if (focus && window.innerWidth > 560) f(s.buyer ? "result" : "buyer").focus();
+			if (focus && window.innerWidth > 560) f(s.buyer && s.payment === "failed" ? "payment" : s.buyer ? "result" : "buyer").focus();
 		}
 		function fillSwap(choice) {
 			var b = state.active,
@@ -520,6 +592,7 @@
 			}
 		}
 		function drawGrid() {
+			el(".br-live").classList.toggle("br-no-selection", el(".br-editor").hidden);
 			var grid = el(".br-grid"),
 				b = state && state.active,
 				query = f("search").value.toLowerCase();
@@ -539,6 +612,7 @@
 					var button = node("button", undefined, "br-spot br-" + s.status);
 					button.type = "button";
 					button.dataset.spot = s.id;
+					button.dataset.payment = s.buyer ? s.payment : "none";
 					button.setAttribute("aria-pressed", String(selected === s.id));
 					button.appendChild(node("strong", s.label));
 					button.appendChild(
@@ -548,10 +622,12 @@
 						)
 					);
 					if (s.result) button.appendChild(node("small", s.result));
-					if (s.payment === "failed") button.appendChild(node("small", "Payment failed", "br-failed"));
-					else if (s.payment === "refunded") button.appendChild(node("small", "Refunded", "br-failed"));
+					if (s.status === "revealed") button.appendChild(node("small", "Revealed"));
+					if (s.payment === "failed") button.appendChild(node("small", "Payment failed", "br-badge br-failed"));
+					else if (s.payment === "refunded") button.appendChild(node("small", "Refunded", "br-badge br-refunded"));
 					else if (s.payment === "paid")
-						button.appendChild(node("small", s.paid === null ? "Paid / amount missing" : "Paid"));
+						button.appendChild(node("small", s.paid === null ? "Paid / amount missing" : "Paid", "br-badge br-paid"));
+					else if (s.buyer) button.appendChild(node("small", "Not checked", "br-badge br-unchecked"));
 					if (drafts["spot:" + b.id + ":" + s.id]) button.appendChild(node("small", "Unsaved"));
 					button.onclick = function () {
 						pick(s.id, true);
@@ -1090,6 +1166,8 @@
 			f("swap").textContent = "";
 			f("stock-use-item").textContent = "";
 			f("board-id").value = "";
+			f("private-link").value = "";
+			f("private-link").parentElement.hidden = true;
 			f("search").value = "";
 			f("preset")
 				.querySelectorAll("[data-saved]")
@@ -1488,6 +1566,7 @@
 								pendingStock = "";
 								say("Break created and stock used. Preview before showing the overlay.");
 							} else {
+								show("costs");
 								el("[data-stock-use]").open = true;
 								say("Break created, but stock was not used. Review Stock used before continuing.", true);
 							}
@@ -1627,11 +1706,21 @@
 				return;
 			}
 			if (action === "copy-private") {
+				var privateLink = new URL(location.href);
+				if (location.protocol === "chrome-extension:" || location.protocol === "moz-extension:") {
+					privateLink = url("obs-control-dock.html");
+					privateLink.searchParams.set("breaks", "");
+					privateLink.hash = location.hash;
+				}
 				var manual = function () {
-					say("Copy the address of this page, and keep it private.");
+					var input = f("private-link");
+					input.parentElement.hidden = false;
+					input.value = privateLink.href;
+					input.focus(); input.select();
+					say("Copy the selected private link. Keep it private.");
 				};
 				if (navigator.clipboard)
-					navigator.clipboard.writeText(location.href).then(function () {
+					navigator.clipboard.writeText(privateLink.href).then(function () {
 						say("Private control link copied. Keep it private.");
 					}, manual);
 				else manual();

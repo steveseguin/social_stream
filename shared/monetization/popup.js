@@ -341,7 +341,18 @@
             if (language) control.searchParams.set('ln', language);
             if (serverValue && /^wss?:\/\//i.test(serverValue)) control.searchParams.set('server', serverValue);
             by('control-dock').href = control.href;
-            var breaksURL = new URL(control.href); breaksURL.searchParams.delete('commerce'); breaksURL.searchParams.set('breaks', ''); if (connectionParams.has('server2')) breaksURL.searchParams.set('server2', connectionParams.get('server2')); breaksURL.hash = breaksKey ? 'breakKey=' + breaksKey : ''; breaksLink.href = breaksURL.href;
+            var breaksURL = new URL(control.href);
+            // Use the installed workspace rather than a potentially older hosted dock.
+            if (location.protocol === 'chrome-extension:' || location.protocol === 'moz-extension:') {
+                var bundledBreaks = new URL(chrome.runtime.getURL('obs-control-dock.html'));
+                bundledBreaks.search = breaksURL.search;
+                breaksURL = bundledBreaks;
+            }
+            breaksURL.searchParams.delete('commerce');
+            breaksURL.searchParams.set('breaks', '');
+            if (connectionParams.has('server2')) breaksURL.searchParams.set('server2', connectionParams.get('server2'));
+            breaksURL.hash = breaksKey ? 'breakKey=' + breaksKey : '';
+            breaksLink.href = breaksURL.href;
             if (lastResponse.password) { breaksURL.searchParams.set('password', lastResponse.password); breaksLink.href = breaksURL.href; }
             loadBreaksKey();
             by('overlay').href = u.href;
