@@ -10,6 +10,22 @@
     if (params.get('motion') === 'off') stage.dataset.motion = 'off';
     document.body.appendChild(stage);
     var bridge, socket, busy = false, queue = [], seen = new Set();
+    var obsVisible = true, obsActive = true, clearCurrent;
+    function canDisplay() { return !window.obsstudio || (obsVisible && obsActive); }
+    // OBS can keep a hidden source running with document.hidden === false.
+    // Its source events describe visibility changes; ordinary browser tabs keep
+    // their existing behavior. OBS does not send an initial state on page reload.
+    function visibilityChanged() {
+        if (!canDisplay() && clearCurrent) clearCurrent();
+    }
+    window.addEventListener('obsSourceVisibleChanged', function (event) {
+        if (!window.obsstudio || !event.detail || typeof event.detail.visible !== 'boolean') return;
+        obsVisible = event.detail.visible; visibilityChanged();
+    });
+    window.addEventListener('obsSourceActiveChanged', function (event) {
+        if (!window.obsstudio || !event.detail || typeof event.detail.active !== 'boolean') return;
+        obsActive = event.detail.active; visibilityChanged();
+    });
     var client = 'sticker-' + Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-');
     var catalog = SSNStickers;
     function receipt(item, uuid, success) {
@@ -26,7 +42,7 @@
         if (!payload || payload.event !== 'sticker' || !payload.meta || !payload.meta.sticker) return;
         var item = payload.meta.sticker;
         if (typeof item.redemptionId !== 'string' || seen.has(item.redemptionId)) return;
-        if (!Number.isFinite(item.expiresAt) || item.expiresAt < Date.now() || busy || queue.length) { receipt(item, uuid, false); return; }
+        if (!canDisplay() || !Number.isFinite(item.expiresAt) || item.expiresAt < Date.now() || busy || queue.length) { receipt(item, uuid, false); return; }
         var reward = catalog.rewards({ packs: catalog.packs.map(function (pack) { return pack.id; }) }).find(function (r) { return r.id === item.id; });
         var url = reward ? new URL('media/stickers/' + reward.image, rootUrl).href : catalog.mediaUrl(payload.contentimg);
         if (!url) { receipt(item, uuid, false); return; }
@@ -47,13 +63,14 @@
         caption.textContent = data.name ? data.name + ' · ' + img.alt : img.alt;
         card.appendChild(img); if (!params.has('hidecaption')) card.appendChild(caption); stage.appendChild(card);
         var finished = false, confirmed = false, timer = setTimeout(clear, 5000);
+        clearCurrent = clear;
         function clear() {
             if (finished) return; finished = true; clearTimeout(timer); img.onload = img.onerror = null;
             if (!confirmed) receipt(data.item, data.uuid, false);
-            card.remove(); busy = false; next();
+            clearCurrent = null; card.remove(); busy = false; next();
         }
         img.onload = function () {
-            if (data.item.expiresAt < Date.now()) { clear(); return; }
+            if (!canDisplay() || data.item.expiresAt < Date.now()) { clear(); return; }
             clearTimeout(timer); card.classList.add('is-visible');
             confirmed = true; receipt(data.item, data.uuid, true);
             timer = setTimeout(clear, catalog.number(data.item.duration, 6, 2, 15) * 1000);

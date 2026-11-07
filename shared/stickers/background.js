@@ -42,7 +42,10 @@
         var receipt = request && request.meta && request.meta.sticker;
         if (!receipt || peers()[uuid] !== 'stickers') return;
         var done = pending.get(receipt.redemptionId);
-        if (done && !done.clients) done(receipt.success === true);
+        if (done && done.peers && done.peers.has(uuid)) {
+            done.peers.delete(uuid);
+            if (receipt.success === true || !done.peers.size) done(receipt.success === true);
+        }
     };
     function deliver(payload) {
         return new Promise(function (resolve) {
@@ -67,6 +70,9 @@
                 if (!done.clients.size) done(false);
                 return;
             }
+            var connected = peers();
+            // A hidden/busy OBS source must not reject another source's display.
+            done.peers = new Set(Object.keys(connected).filter(function (key) { return connected[key] === 'stickers'; }));
             Promise.resolve().then(function () { return sendTargetP2P(payload, 'stickers'); }).then(function (sent) { if (!sent) done(false); }, function () { done(false); });
         });
     }
