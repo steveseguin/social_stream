@@ -2925,6 +2925,8 @@
 			    <button class="imgButton imgSmallButton" id="tts" data-state="0" style="background-image: url(./icons/tts_incoming_messages_off.png)" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
 			</div>
 
+			<button type="button" class="imgButton imgSmallButton hidden" id="tts_pause" data-state="0" aria-pressed="false" aria-label="Pause text-to-speech and clear queued speech" style="background-image: url(./icons/main_msg_pause.png)" title="Pause text-to-speech and clear queued speech"></button>
+
 			<!-- Scroll button -->
 			<button class="imgButton imgSmallButton" id="jumpto" data-state="0" onclick="jumptoBottom();" style="background-image: url(./icons/scroll_to_bottom_off.png)" title="Scroll to bottom"></button>
 		</div>
@@ -8217,10 +8219,19 @@
 				return false;
 			}
 
+			// Keep speech pause state with buffered chat without changing message payloads.
+			var dockTtsArrivals = new WeakMap();
+			function rememberDockTtsArrival(data) {
+				if (TTS.ttscommand && data && typeof data === "object" && !dockTtsArrivals.has(data)) {
+					dockTtsArrivals.set(data, TTS.paused ? -1 : TTS.pauseSerial);
+				}
+			}
+
 			function processInput(data, force=false, allowRawDonationFallback=false) {
 				if (!data) {
 					return featuredMode ? true : false;
 				}
+				rememberDockTtsArrival(data.content || data);
 				// Prefer background.js normalization, but retain a delayed direct-server fallback for
 				// users whose saved Dock URL predates the remote API requirement.
 				if (!allowRawDonationFallback && shouldDeferRawDonationWebhook(data)) {
@@ -9185,6 +9196,7 @@
 						if (data.value) {
 							//let content = decodeURI(data.value);
 							let content = JSON.parse(data.value);
+							rememberDockTtsArrival(content);
 							if (!pauseState) {
 								if (smoothMessageBuffer) {
 									// Track platform burst patterns
@@ -13285,7 +13297,8 @@
 						}
 						
 						
-						if (!suppressLiveSideEffects) {
+						var ttsPauseSerial = dockTtsArrivals.has(data) ? dockTtsArrivals.get(data) : TTS.pauseSerial;
+						if (!suppressLiveSideEffects && !TTS.paused && ttsPauseSerial === TTS.pauseSerial) {
 							if (data.command && doNotTTSBeep){
 								// skipp TTS
 							} else if (TTS.ttscommand && data.chatmessage && (data.textContent || data.chatmessage).includes(TTS.ttscommand+" ") && (!TTS.ttscommandmembersonly || (TTS.ttscommandmembersonly && data.membership))){
@@ -13293,7 +13306,7 @@
 									if (waitToReveal) {
 										setTimeout(function() {
 											// Check if node still exists and is connected to DOM
-											if (node && node.isConnected && !node.classList.contains("hide")) {
+											if (ttsPauseSerial === TTS.pauseSerial && node && node.isConnected && !node.classList.contains("hide")) {
 												TTS.speechMeta(data);
 											}
 										}, waitToReveal);
@@ -13306,7 +13319,7 @@
 									if (waitToReveal) {
 										setTimeout(function() {
 											// Check if node still exists and is connected to DOM
-											if (node && node.isConnected && !node.classList.contains("hide")) {
+											if (ttsPauseSerial === TTS.pauseSerial && node && node.isConnected && !node.classList.contains("hide")) {
 												TTS.speechMeta(data);
 											}
 										}, waitToReveal);
