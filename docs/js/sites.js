@@ -312,6 +312,19 @@ document.addEventListener('DOMContentLoaded', function() {
             `
         },
         {
+            name: 'Hou.la',
+            icon: 'houla.png',
+            description: 'Live streaming and live shopping.',
+            type: 'standard',
+            instructions: `
+                <ul>
+                    <li>Standard capture: open https://hou.la/a/live and select a live stream, or open https://hou.la/studio/live/comments for your own chat. In the desktop app, choose Hou.la, select Standard and paste that page's URL.</li>
+                    <li>For gifts, followers and viewer counts in the desktop app, choose Hou.la and select WebSocket. Add and activate the source, then enter your event key from Hou.la Studio in its window. Extension users can open https://socialstream.ninja/sources/websocket/houla.html to enter their key.</li>
+                </ul>
+            `,
+            notes: 'Use one capture mode per live to avoid duplicate chat. Event keys start with hle_; do not use your stream key.'
+        },
+        {
             name: 'Kick.com',
             icon: 'kick.png',
             description: 'Emerging live streaming platform.',

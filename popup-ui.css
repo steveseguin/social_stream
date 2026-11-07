@@ -6,6 +6,8 @@ body.ssapp { min-width:0; }
 .timer-actions { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:12px; }
 body .timer-actions .glowingButton { min-width:0; margin:0; }
 body .timer-actions .glowingButton span { padding:4px; }
+body .glowingButton.popup-wrap-button { max-width:calc(100% - 4px); height:auto; }
+body .glowingButton.popup-wrap-button > span { height:auto; min-height:24px; white-space:normal; overflow-wrap:anywhere; }
 body [data-panel-section="meta"] .sticky-action-row { flex-wrap:wrap; gap:4px; max-height:none; }
 body [data-panel-section="meta"] .sticky-action-row .glowingButton { min-width:max-content; }
 /* Korean labels should wrap between words, including in narrow SSApp panels. */
@@ -156,7 +158,8 @@ body .slider { box-shadow:inset 0 0 0 1px var(--settings-control-border); }
 
 /* Decorative cues remain outside translated text and screen-reader names. */
 .popup-control-icon { display:inline-block; min-width:1.15em; margin-right:.3em; font-size:1em; line-height:1; text-align:center; vertical-align:baseline; }
-body .textInputWithUpload .textInput { padding-right:96px; }
+body .textInputContainer.textInputWithUpload { column-gap:6px; }
+body .textInputContainer.textInputWithUpload .textInput { grid-area:2 / 1; min-width:0; padding-right:8px; }
 
 /* Audience setup uses the standard accordion, fields, and theme tokens. */
 #nc-audience-room .nc-audience-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0; }
@@ -254,7 +257,13 @@ body .container > .popup-feature-head > h2 { flex-wrap:wrap; gap:3px 6px; margin
 .popup-feature-head > h2 > .popup-feature-toggle + * { flex:1 1 0; min-width:0; }
 .popup-feature-actions { display:flex; flex-basis:100%; flex-wrap:wrap; align-items:center; gap:4px; padding-inline-start:26px; }
 body .container .popup-feature-actions > * { margin:0; }
-body .container .popup-feature-actions .rounded_area { padding:1px 6px; font-size:.7rem; }
+body .container .popup-feature-actions .heading-actions { display:contents; }
+body .container .popup-feature-actions .rounded_area { display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; min-height:24px; padding:2px 6px; border:1px solid transparent; font:inherit; font-size:12px; line-height:18px; color:var(--text-secondary); background:transparent; cursor:pointer !important; }
+body .container .popup-feature-actions [data-copy] { border-color:var(--color-accent); background:var(--color-accent-subtle); color:var(--default-text-color); font-weight:600; }
+body .container .popup-feature-actions .rounded_area:hover { background:var(--button-background); color:var(--default-text-color); }
+body .container .popup-feature-actions .rounded_area:focus-visible { outline:2px solid var(--color-accent); outline-offset:2px; }
+body .container .popup-feature-actions .help-link { min-width:24px; border-radius:50%; }
+body .container .popup-feature-actions [data-copy]:disabled { opacity:1; }
 /* A clipboard marks copy link so it reads at a glance. */
 .popup-feature-actions .copy-link[data-copy]::before { content:"\1F4CB"; margin-inline-end:3px; }
 .popup-feature-head > h2 .rounded_area { white-space:nowrap; }

@@ -881,6 +881,7 @@ async function copyStreamId(event) {
 }
 
 function copyToClipboard(event) {
+	var button = event.currentTarget || event.target.closest("[data-copy]");
 	
 	// if (event.target.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
 	// Find the closest link container
@@ -894,10 +895,16 @@ function copyToClipboard(event) {
 	const linkOwnerDiv = linkContainer.querySelector('[data-raw]');
 	if (linkOwnerDiv && linkOwnerDiv.raw) {
 		navigator.clipboard.writeText(linkOwnerDiv.raw).then(function() {
-			event.target.classList.add("flashing");
-			setTimeout(()=>{
-				event.target.classList.remove("flashing");
-			}, 500);
+			var originalLabel = button.innerHTML;
+			var originalMinWidth = button.style.minWidth;
+			button.style.minWidth = button.offsetWidth + "px";
+			button.textContent = getTranslation("nc-audience-copied", "Copied.");
+			button.disabled = true;
+			setTimeout(function() {
+				button.innerHTML = originalLabel;
+				button.style.minWidth = originalMinWidth;
+				button.disabled = false;
+			}, 1200);
 		}, function(err) {
 			console.error('Could not copy text: ', err);
 		});
@@ -1266,6 +1273,7 @@ function showImportedLinkStatus(targetId, loadedControlCount) {
 function openEditGeneratedLinkDialog(targetId) {
 	var config = getEditableGeneratedLinkConfig(targetId);
 	if (!config) return;
+	var previousFocus = document.activeElement;
 	var modal = document.createElement("div");
 	modal.className = "arc-modal";
 	modal.setAttribute("role", "dialog");
@@ -1312,6 +1320,7 @@ function openEditGeneratedLinkDialog(targetId) {
 		if (modal.parentNode) {
 			modal.parentNode.removeChild(modal);
 		}
+		if (previousFocus && document.contains(previousFocus)) previousFocus.focus();
 	}
 
 	cancelButton.onclick = closeDialog;
@@ -1328,12 +1337,21 @@ function openEditGeneratedLinkDialog(targetId) {
 		}
 	};
 
-	input.addEventListener("keydown", function(event) {
-		if (event.key === "Enter") {
+	modal.addEventListener("keydown", function(event) {
+		if (event.key === "Enter" && event.target === input) {
 			event.preventDefault();
 			loadButton.click();
 		} else if (event.key === "Escape") {
+			event.preventDefault();
 			closeDialog();
+		} else if (event.key === "Tab") {
+			if (event.shiftKey && document.activeElement === input) {
+				event.preventDefault();
+				loadButton.focus();
+			} else if (!event.shiftKey && document.activeElement === loadButton) {
+				event.preventDefault();
+				input.focus();
+			}
 		}
 	});
 
@@ -7875,6 +7893,12 @@ function handleOptionSetting(ele, sync) {
                        (ele.dataset.optionsetting10 ? 'optionsetting10' : 'optionsetting18'));
     const settingValue = ele.dataset[settingType];
     if (settingValue === 'censorModel') updateCensorModelHelp();
+    if (settingValue === "aiTranslateEngine") {
+        const sourceField = document.getElementById("localTranslateSourceField");
+        if (sourceField) sourceField.classList.toggle("hidden", ele.value !== "local");
+        const contextToggle = document.getElementById("aiAutoTranslateContext");
+        if (contextToggle) contextToggle.disabled = ele.value === "local";
+    }
     
     // Handle poll type
     if (settingValue === "pollType") {
@@ -12503,6 +12527,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	document.querySelectorAll("[data-copy]").forEach(ele=>{
 		ele.onclick = copyToClipboard;
+	});
+
+	document.querySelectorAll(".help-link[for]").forEach(function(element) {
+		element.onkeydown = function(event) {
+			if (event.key === "Enter" || event.key === " ") {
+				event.preventDefault();
+				element.click();
+			}
+		};
 	});
 
 	document.querySelectorAll("[data-edit-link]").forEach(function(element) {

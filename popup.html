@@ -2287,9 +2287,6 @@ input:checked + .slider:before {
 		padding: 8px; /* More padding in text inputs */
 	}
 
-	body.ssapp .textInputContainer.textInputWithUpload input[type="text"].textInput {
-		padding-right: 78px;
-	}
 
 	body.ssapp .textInput + label {
 		font-size: 1.1em; /* Adjust label font size */
@@ -2622,10 +2619,10 @@ input:checked + .slider:before {
                 <h2 class="streaming_chat_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">💬</span><span data-translate="main-chat-overlay-control-dock">Main chat overlay &amp; control dock</span> </span>
 					<span class="heading-actions">
-						<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-						<a class="edit-link rounded_area" title="Load an existing Main Chat link for editing" data-edit-link="dock" data-translate="popup-edit-link">[edit link]</a>
-						<button type="button" id="copy-stream-id" class="copy-link rounded_area" title="Copy your stream ID (session ID) to the clipboard" aria-live="polite"><span data-translate="copy-stream-id">[copy stream ID]</span></button>
-						<label for="help-dock" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+						<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+						<button type="button" class="edit-link rounded_area" title="Load an existing Main Chat link for editing" data-edit-link="dock" data-translate="popup-edit-link">Edit link</button>
+						<button type="button" id="copy-stream-id" class="copy-link rounded_area" title="Copy your stream ID (session ID) to the clipboard" aria-live="polite"><span data-translate="streamdeck-copy-session">Copy ID</span></button>
+						<label for="help-dock" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
 					</span>
                 </h2>
 				<small class="beginner-section-note" data-translate="main-chat-beginner-note">Use this as your main chat view, OBS overlay, or dock for controlling featured messages and TTS.</small>
@@ -2861,7 +2858,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="hide-messages-after-20s">
-                                        ⏲️ Auto-hide message after <input type="number" style="max-width: 8ch;" max="999999" min="1" value="30000" size="6" data-numbersetting="showtime" />ms
+                                        ⏲️ Auto-hide message after <input type="number" style="max-width: calc(8ch + 34px);" max="999999" min="1" value="30000" size="6" data-numbersetting="showtime" />ms
                                     </span>
                                 </div>
 								<div title="This option gives you time to delete a message with another dock that doesn't have the delay; censorship-friendly then" data-keywords="delay buffer moderation safety hold timed release">
@@ -2870,7 +2867,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="show-messages-after-10s">
-                                        🚫🤬️ Delay showing messages for <input type="number" style="max-width: 8ch;" max="999999" min="1" value="10000" size="6" data-numbersetting="delaytime" />ms
+                                        🚫🤬️ Delay showing messages for <input type="number" style="max-width: calc(8ch + 34px);" max="999999" min="1" value="10000" size="6" data-numbersetting="delaytime" />ms
                                     </span>
                                 </div>
 								<div title="If deleting a message, such as if syncing with Youtube Delete, only delete the last message from that user, and not all of theirs" data-keywords="delete removal last message safe cleanup moderation youtube">
@@ -3053,7 +3050,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="auto-show-time">
-                                        ⌚ Custom auto-select show time <input type="number" style="max-width: 8ch;" max="999999" min="1" value="30000" size="6" data-numbersetting="autoshowtime" />ms
+                                        ⌚ Custom auto-select show time <input type="number" style="max-width: calc(8ch + 34px);" max="999999" min="1" value="30000" size="6" data-numbersetting="autoshowtime" />ms
                                     </span>
                                 </div>
                                 <div data-keywords="filter moderation blacklist blocklist safe clean exclude flagged">
@@ -3457,7 +3454,7 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="system-tts-volume">🔉 Volume of speech</span>
-									<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="1.0" size="5" data-numbersetting="volume" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.01" max="1" min="0" value="1.0" size="5" data-numbersetting="volume" />
 								</div>
 							</div>
 						</div>
@@ -3529,7 +3526,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="system-tts-rate">
 									⏩ Speaking rate
-									<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0"
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="10" min="0.1" value="1.0"
 										size="5" data-numbersetting="rate" />
 								</span>
 							</div>
@@ -3540,7 +3537,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="system-tts-pitch">
 									🎵 Pitch
-									<input type="number" style="max-width: 6ch;" step="0.1" max="2" min="0.1" value="1.0"
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="2" min="0.1" value="1.0"
 										size="5" data-numbersetting="pitch" />
 								</span>
 							</div>
@@ -3569,7 +3566,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="kokoro-tts-speed">
 									⏩ Speaking rate
-									<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0"
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="10" min="0.1" value="1.0"
 										size="5" data-numbersetting="kokorospeed" />
 								</span>
 							</div>
@@ -3609,7 +3606,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="kitten-tts-speed">
 									⏩ Speaking rate
-									<input type="number" style="max-width: 6ch;" step="0.1" max="2.0" min="0.5" value="1.0"
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="2.0" min="0.5" value="1.0"
 										size="5" data-numbersetting="kittenspeed" />
 								</span>
 							</div>
@@ -3665,7 +3662,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="elevenlabs-rate">
 									🔊 Speaking Rate
-									<input type="number" style="max-width: 6ch;" step="0.25" max="5.0" min="0.25" value="1.0" size="5" data-numbersetting="elevenrate" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.25" max="5.0" min="0.25" value="1.0" size="5" data-numbersetting="elevenrate" />
 								</span>
 							</div>
 							<div>
@@ -3675,7 +3672,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="elevenlabs-latency">
 									🚀 ElevenLabs Latency Optimization
-									<input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="4" size="5" data-numbersetting="elevenlatency" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="1" max="4" min="0" value="4" size="5" data-numbersetting="elevenlatency" />
 								</span>
 							</div>
 							<div>
@@ -3685,7 +3682,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="elevenlabs-stability">
 									🎯 Stability
-									<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting="elevenstability" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting="elevenstability" />
 								</span>
 							</div>
 							<div>
@@ -3695,7 +3692,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="elevenlabs-similarity">
 									🎭 Similarity Boost
-									<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.75" size="5" data-numbersetting="elevensimilarity" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.01" max="1" min="0" value="0.75" size="5" data-numbersetting="elevensimilarity" />
 								</span>
 							</div>
 							<div>
@@ -3705,7 +3702,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="elevenlabs-style">
 									🎨 Style
-									<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting="elevenstyle" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting="elevenstyle" />
 								</span>
 							</div>
 							<div>
@@ -3796,7 +3793,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="google-tts-rate">
 									⏩ Speaking rate
-									<input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.25" value="1.0"
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="4" min="0.25" value="1.0"
 										size="5" data-numbersetting="googlerate" />
 								</span>
 							</div>
@@ -3807,7 +3804,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="google-pitch">
 									🎵 Pitch
-									<input type="number" style="max-width: 6ch;" step="0.1" max="20" min="-20" value="0" size="5" data-numbersetting="googlepitch" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="20" min="-20" value="0" size="5" data-numbersetting="googlepitch" />
 								</span>
 							</div>
 							<div>
@@ -3970,7 +3967,7 @@ input:checked + .slider:before {
 									<span class="slider round"></span>
 								</label>
 								<span data-translate="speechify-speed">⚡ Speed</span>
-								<input type="number" style="width: 10ch; max-width: 10ch;" step="0.1" max="3" min="0.5" value="1.0" size="5" data-numbersetting="speechifyspeed" />
+								<input type="number" style="width: 10ch; max-width: calc(10ch + 34px);" step="0.1" max="3" min="0.5" value="1.0" size="5" data-numbersetting="speechifyspeed" />
 							</div>
 							<div>
 								<label class="switch">
@@ -4056,7 +4053,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="openai-tts-speed">
 									⏩ Speaking rate
-									<input type="number" style="max-width: 6ch;" step="0.05" max="4.0" min="0.25" value="1.0"
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.05" max="4.0" min="0.25" value="1.0"
 										size="5" data-numbersetting="openaispeed" />
 								</span>
 							</div>
@@ -4133,7 +4130,7 @@ input:checked + .slider:before {
 								</label>
 								<span><span class="popup-control-icon" aria-hidden="true">🔊</span>
 									Speaking rate
-									<input type="number" style="max-width: 6ch;" step="5" max="450" min="80" value="140" size="5" data-numbersetting="espeakspeed" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="5" max="450" min="80" value="140" size="5" data-numbersetting="espeakspeed" />
 								</span>
 							</div>
 						</div>
@@ -4342,7 +4339,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="limit-messages-to">
                                         🗃️ Limit total messages to
-                                        <input type="number" style="max-width: 6ch;" max="99999" min="1" value="200" size="5" data-numbersetting="limit" />
+                                        <input type="number" style="max-width: calc(6ch + 34px);" max="99999" min="1" value="200" size="5" data-numbersetting="limit" />
                                     </span>
                                 </div>
                                 <div title="This will enable the 'add sentiment scores to messages' option also">
@@ -4444,7 +4441,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="hide-short-messages">
-                                        🗃️ Hide basic messages shorter than <input type="number" style="max-width: 6ch;" max="99" min="1" value="5" size="2" data-numbersetting="hideshortmessages" />chars
+                                        🗃️ Hide basic messages shorter than <input type="number" style="max-width: calc(6ch + 34px);" max="99" min="1" value="5" size="2" data-numbersetting="hideshortmessages" />chars
                                     </span>
                                 </div>
                                 <div title="HTML is removed from messages, donations, and names for this dock only.">
@@ -4565,7 +4562,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     🤏 <span><span class="popup-control-icon" aria-hidden="true">📐</span><span data-translate="padding-to-add">Padding between messages</span></span>
-									<input type="number" style="max-width: 4ch;" max="99" min="0" value="3" size="3" data-numbersetting="padding" />px
+									<input type="number" style="max-width: calc(4ch + 34px);" max="99" min="0" value="3" size="3" data-numbersetting="padding" />px
                                 </div>
                                 <div title="Add space at the left and right edges of the dock chat.">
                                     <label class="switch">
@@ -4781,7 +4778,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span>💧 Bubble opacity
-										<input type="number" style="max-width: 7ch;" min="0" max="1" step="0.05" value="1" data-numbersetting="bubbleopacity" />
+										<input type="number" style="max-width: calc(7ch + 34px);" min="0" max="1" step="0.05" value="1" data-numbersetting="bubbleopacity" />
 										(0-1)
 									</span>
                                 </div>
@@ -4812,7 +4809,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     ✂️ <span><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="trim-names-to-8">Trim names longer than</span></span>
-									<input type="number" style="max-width: 4ch;" max="99" min="1" value="8" size="3" data-numbersetting="trimname" />chars...
+									<input type="number" style="max-width: calc(4ch + 34px);" max="99" min="1" value="8" size="3" data-numbersetting="trimname" />chars...
                                 </div>
 								<div>
                                     <label class="switch">
@@ -5399,7 +5396,7 @@ input:checked + .slider:before {
             <div class="link beginner-basic" title="Ready-made OBS browser-source chat overlays." data-panel-section="chatoverlaytemplate">
                 <h2 class="chat_overlay_template_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🎨</span><span data-translate="pre-styled-chat-overlays">Pre-styled chat overlays</span> </span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
                 </h2>
 				<small class="beginner-section-note" data-translate="pre-styled-chat-timing-note">Ready-made chat looks for OBS. Set auto-hide timing below in Overlay Theme Options. Switch to full mode for deeper styling controls.</small>
                 <div id="chatoverlaytemplate" data-raw="" class="streaming_chat"></div>
@@ -5478,9 +5475,9 @@ input:checked + .slider:before {
             <div class="link beginner-basic" title="This link will only show selected messages, one at a time. Requires the dock to select messages." data-panel-section="overlay">
                 <h2 class="featured_chat_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🌟</span><span data-translate="featured-chat-overlay">Featured chat overlay </span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="overlay" title="Load an existing link for this overlay" data-translate="popup-edit-link">[edit link]</button>
-					<label for="help-featured" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="overlay" title="Load an existing link for this overlay" data-translate="popup-edit-link">Edit link</button>
+					<label for="help-featured" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
                 </h2>
 				<small class="beginner-section-note">Shows one selected message at a time. Select messages from the control dock, or enable automatic featuring in the Overlay section below.</small>
                 <div id="overlay" data-raw="" class="single_message"></div>
@@ -5631,7 +5628,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="hide-overlay-after-20s">
-                                        ⏲️ Auto-hide message after <input type="number" style="max-width: 8ch;" max="999999" min="1" value="30000" size="6" data-numbersetting2="showtime" />ms
+                                        ⏲️ Auto-hide message after <input type="number" style="max-width: calc(8ch + 34px);" max="999999" min="1" value="30000" size="6" data-numbersetting2="showtime" />ms
                                     </span>
                                 </div>
 
@@ -5641,7 +5638,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="queue-time">
-                                        ⌚ Queue + Show messages for at least <input type="number" style="max-width: 8ch;" max="999999" min="1" value="10000" size="6" data-numbersetting2="queuetime" />ms
+                                        ⌚ Queue + Show messages for at least <input type="number" style="max-width: calc(8ch + 34px);" max="999999" min="1" value="10000" size="6" data-numbersetting2="queuetime" />ms
                                     </span>
                                 </div>
                                 <div title="Rotate through the last N highlighted messages endlessly, showing each for the specified duration.">
@@ -5650,7 +5647,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="rotate-featured-messages">
-                                        🔄 Rotate last <input type="number" style="max-width: 4ch;" max="10" min="1" value="5" size="2" data-numbersetting2="rotatecount" /> messages every <input type="number" style="max-width: 8ch;" max="999999" min="1000" value="10000" size="6" data-numbersetting2="rotatetime" />ms
+                                        🔄 Rotate last <input type="number" style="max-width: calc(4ch + 34px);" max="10" min="1" value="5" size="2" data-numbersetting2="rotatecount" /> messages every <input type="number" style="max-width: calc(8ch + 34px);" max="999999" min="1000" value="10000" size="6" data-numbersetting2="rotatetime" />ms
                                     </span>
                                 </div>
                                 <div title="Console prints featured message payloads so developers can inspect live data updates.">
@@ -5817,7 +5814,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="system-tts-volume">🔉 Volume of speech</span>
-                                    <input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="1.0" size="5" data-numbersetting2="volume" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.01" max="1" min="0" value="1.0" size="5" data-numbersetting2="volume" />
                                 </div>
                             </div>
                         </div>
@@ -5886,7 +5883,7 @@ input:checked + .slider:before {
                                     <span class="slider round"></span>
                                 </label>
                                 <span data-translate="pitch">📯 Pitch:
-                                    <input type="number" style="max-width: 6ch;" step="0.01" max="2" min="0" value="1.0" size="5" data-numbersetting2="pitch" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.01" max="2" min="0" value="1.0" size="5" data-numbersetting2="pitch" />
                                 </span>
                             </div>
                             <div>
@@ -5896,7 +5893,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="custom-tts-rate">
                                     ⏩ Custom speaking rate for the TTS
-                                    <input type="number" style="max-width: 6ch;" step="0.01" max="10" min="0.1" value="1.0" size="5" data-numbersetting2="rate" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.01" max="10" min="0.1" value="1.0" size="5" data-numbersetting2="rate" />
                                 </span>
                             </div>
                         </div>
@@ -5963,7 +5960,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="kitten-tts-speed">
                                     ⏩ Speaking rate
-                                    <input type="number" style="max-width: 6ch;" step="0.1" max="2.0" min="0.5" value="1.0"
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="2.0" min="0.5" value="1.0"
                                         size="5" data-numbersetting2="kittenspeed" />
                                 </span>
                             </div>
@@ -6010,7 +6007,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="elevenlabs-latency">
                                     🚀 ElevenLabs Latency Optimization
-                                    <input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="0" size="5" data-numbersetting2="latency" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="1" max="4" min="0" value="0" size="5" data-numbersetting2="latency" />
                                 </span>
                             </div>
                         </div>
@@ -6309,7 +6306,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="openai-tts-speed">
                                     ⏩ Speaking rate
-                                    <input type="number" style="max-width: 6ch;" step="0.05" max="4.0" min="0.25" value="1.0"
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.05" max="4.0" min="0.25" value="1.0"
                                         size="5" data-numbersetting2="openaispeed" />
                                 </span>
                             </div>
@@ -6388,7 +6385,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span><span class="popup-control-icon" aria-hidden="true">🔊</span>
                                     Speaking rate
-                                    <input type="number" style="max-width: 6ch;" step="5" max="450" min="80" value="140" size="5" data-numbersetting2="espeakspeed" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="5" max="450" min="80" value="140" size="5" data-numbersetting2="espeakspeed" />
                                 </span>
                             </div>
                         </div>
@@ -6747,7 +6744,7 @@ input:checked + .slider:before {
 											<input type="checkbox" data-param2="showtime" />
 											<span class="slider round"></span>
 										</label>
-										<span>⏲️ Custom display time <input type="number" style="max-width: 8ch;" max="999999" min="1000" value="30000" size="6" data-numbersetting2="showtime" />ms</span>
+										<span>⏲️ Custom display time <input type="number" style="max-width: calc(8ch + 34px);" max="999999" min="1000" value="30000" size="6" data-numbersetting2="showtime" />ms</span>
 									</div>
 								</div>
 							</div>
@@ -6771,7 +6768,7 @@ input:checked + .slider:before {
 											<input type="checkbox" data-param2="showtime" />
 											<span class="slider round"></span>
 										</label>
-										<span>⏲️ Custom display time <input type="number" style="max-width: 8ch;" max="999999" min="1000" value="30000" size="6" data-numbersetting2="showtime" />ms</span>
+										<span>⏲️ Custom display time <input type="number" style="max-width: calc(8ch + 34px);" max="999999" min="1000" value="30000" size="6" data-numbersetting2="showtime" />ms</span>
 									</div>
 									<div>
 										<label><span class="popup-control-icon" aria-hidden="true">✨</span>Exit Animation:</label>
@@ -6804,7 +6801,7 @@ input:checked + .slider:before {
 											<input type="checkbox" data-param2="showtime" />
 											<span class="slider round"></span>
 										</label>
-										<span>⏲️ Custom display time <input type="number" style="max-width: 8ch;" max="999999" min="1000" value="30000" size="6" data-numbersetting2="showtime" />ms</span>
+										<span>⏲️ Custom display time <input type="number" style="max-width: calc(8ch + 34px);" max="999999" min="1000" value="30000" size="6" data-numbersetting2="showtime" />ms</span>
 									</div>
 								</div>
 							</div>
@@ -6828,7 +6825,7 @@ input:checked + .slider:before {
 											<input type="checkbox" data-param2="showtime" />
 											<span class="slider round"></span>
 										</label>
-										<span>⏲️ Custom display time <input type="number" style="max-width: 8ch;" max="999999" min="1000" value="30000" size="6" data-numbersetting2="showtime" />ms</span>
+										<span>⏲️ Custom display time <input type="number" style="max-width: calc(8ch + 34px);" max="999999" min="1000" value="30000" size="6" data-numbersetting2="showtime" />ms</span>
 									</div>
 								</div>
 							</div>
@@ -6840,8 +6837,8 @@ input:checked + .slider:before {
 			<div class="link beginner-basic" title="Dedicated multi-stream alert overlay for follows, subscriptions, donations, cheers, and raids." data-panel-section="multialerts">
 				<h2 class="multi_alert_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🚨</span><span data-translate="popup-multi-stream-alert-box">Multi-Stream Alert Box</span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="multialerts" title="Load an existing link for this overlay" data-translate="popup-edit-link">[edit link]</button>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="multialerts" title="Load an existing link for this overlay" data-translate="popup-edit-link">Edit link</button>
 				</h2>
 				<small class="beginner-section-note" data-translate="popup-shows-follows-subs-donations-bits-and-raids-as-alert-popups-plus-optional-a">Shows follows, subs, donations, bits, and raids as alert popups, plus optional auction winner and hype train alerts. Use the sections below for common alert controls.</small>
 				<div id="multialerts" data-raw="" class="single_message"><a href="" id="multialertslink"></a></div>
@@ -7616,14 +7613,14 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param25="showtime" />
 										<span class="slider round"></span>
 									</label>
-									<span><span data-translate="popup-show-each-alert-for">⏲️ Show each alert for</span> <input type="number" style="max-width: 8ch;" min="1000" max="60000" value="8000" data-numbersetting25="showtime" />ms</span>
+									<span><span data-translate="popup-show-each-alert-for">⏲️ Show each alert for</span> <input type="number" style="max-width: calc(8ch + 34px);" min="1000" max="60000" value="8000" data-numbersetting25="showtime" />ms</span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="cooldown" />
 										<span class="slider round"></span>
 									</label>
-									<span><span data-translate="popup-cooldown-between-alerts">⏳ Cooldown between alerts</span> <input type="number" style="max-width: 8ch;" min="0" max="30000" value="900" data-numbersetting25="cooldown" />ms</span>
+									<span><span data-translate="popup-cooldown-between-alerts">⏳ Cooldown between alerts</span> <input type="number" style="max-width: calc(8ch + 34px);" min="0" max="30000" value="900" data-numbersetting25="cooldown" />ms</span>
 								</div>
 								<div title="Keep overlapping alerts in a queue instead of ignoring them while another alert is already visible.">
 									<label class="switch">
@@ -9026,7 +9023,6 @@ input:checked + .slider:before {
                                         placeholder="Trim down the max length of dock/relayed chat sent to chat source locations (eg:youtube)"
                                         data-numbersetting="limitcharacters"
                                     />
-                                    
                                 </div>
 
                                 <div style="display: inline-block;" data-keywords="bot command funny humor comedy laugh fun entertainment">
@@ -10447,20 +10443,31 @@ input:checked + .slider:before {
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-ai-auto-translate-options" />
 					<label class="collapsible-label" for="wrapper-ai-auto-translate-options">
-						<span data-translate="ai-auto-translate">&#127760; AI Auto Translate</span>
+						<span>&#127760; Auto Translate</span>
 					</label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat">
-								<h3 style="margin-bottom: 6px;"><span data-translate="ai-auto-translate">&#127760; AI Auto Translate</span></h3>
-								<i>Uses the selected AI provider above. Text is translated while emotes, images, and HTML are preserved. Default target language is en-US.</i><br/><br/>
+								<h3 style="margin-bottom: 6px;"><span>&#127760; Auto Translate</span></h3>
+								<div class="textInputContainer popup-inset-field">
+                                    <label for="aiTranslateEngine">Translator</label>
+                                    <select id="aiTranslateEngine" class="textInput" data-optionsetting="aiTranslateEngine" title="Free built-in runs on your device without an API key. Language packs download on first use and are cached. Unsupported languages stay unchanged unless dropping untranslated messages is enabled.">
+                                        <option value="">Selected AI provider</option>
+                                        <option value="local">Free built-in (Mozilla)</option>
+                                    </select>
+                                </div>
+                                <div id="localTranslateSourceField" class="textInputContainer popup-inset-field hidden" title="For incoming messages with the free built-in translator. Leave blank to detect each message's language, or enter a language code such as es, fr, or de. Outgoing messages always use auto-detection.">
+                                    <label for="localTranslateSourceLanguage">Incoming source language</label>
+                                    <input type="text" id="localTranslateSourceLanguage" class="textInput" autocomplete="off" placeholder="Auto-detect" data-textsetting="localTranslateSourceLanguage" />
+                                    <a class="lightblue" style="margin-left: 8px;" href="docs/chatbot-basics-guide.html#translation" target="_blank" rel="noopener">Supported languages</a>
+                                </div>
 								<div>
-									<div style="display: inline-block;" title="Translate incoming chat messages to the target language using the selected AI provider.">
+									<div style="display: inline-block;" title="Translate incoming chat messages to the target language using the selected translator.">
 										<label class="switch">
 											<input type="checkbox" id="aiAutoTranslate" data-setting="aiAutoTranslate" />
 											<span class="slider round"></span>
 										</label>
-										<span><span class="popup-control-icon" aria-hidden="true">🤖</span>Enable AI auto translate</span>
+										<span><span class="popup-control-icon" aria-hidden="true">🤖</span>Enable auto translate</span>
 									</div>
 								</div>
 								<div class="textInputContainer popup-inset-field" title="Target language for translated incoming chat messages.">
@@ -10494,12 +10501,12 @@ input:checked + .slider:before {
 										<input type="checkbox" id="aiAutoTranslateContext" data-setting="aiAutoTranslateContext" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">💬</span>Include last 10 messages as translation context</span>
+									<span><span class="popup-control-icon" aria-hidden="true">💬</span>Include context (AI provider only)</span>
 								</div>
 								<div style="margin-top: 8px;" title="Maximum time to wait for each translation request.">
 									<span>
 										Translation timeout
-										<input type="number" style="max-width: 8ch;" max="30000" min="1000" value="10000" size="6" data-numbersetting="aiAutoTranslateTimeout" />ms
+										<input type="number" style="max-width: calc(8ch + 34px);" max="30000" min="1000" value="10000" size="6" data-numbersetting="aiAutoTranslateTimeout" />ms
 									</span>
 								</div>
 							</div>
@@ -10581,12 +10588,12 @@ input:checked + .slider:before {
 								</div>
 								<div title="There's a minimum of 5-seconds by default" style="margin:5px 0">
 									🐢 <span data-translate="response-rate-limit-label">Rate limit for responses per tab / source</span>
-										<input type="number" style="max-width: 7ch;" step="1000" max="9999999" min="5000" value="5000" size="6" data-numbersetting="ollamaRateLimitPerTab" />ms
+										<input type="number" style="max-width: calc(7ch + 34px);" step="1000" max="9999999" min="5000" value="5000" size="6" data-numbersetting="ollamaRateLimitPerTab" />ms
 
 								</div>
 								<div title="Maximum number of primary chat bot LLM replies that can run at the same time." style="margin:5px 0">
 									<span>Max parallel bot replies</span>
-										<input type="number" style="max-width: 5ch;" step="1" max="10" min="1" value="1" size="3" data-numbersetting="ollamaMaxParallelAgents" />
+										<input type="number" style="max-width: calc(5ch + 34px);" step="1" max="10" min="1" value="1" size="3" data-numbersetting="ollamaMaxParallelAgents" />
 								</div>
 
 								<div style="display: inline-block;" title="Include chat summaries with past context">
@@ -10608,7 +10615,7 @@ input:checked + .slider:before {
 
 								<div title="There's 10 included by default; this is user, not entire, chat history." style="margin:5px 0">
 									📃 <span data-translate="chatbotHistoryTotal"> Number of past user messages to include:</span>
-										<input type="number" style="max-width: 5ch;" step="1" max="500" min="0" value="10" size="6" data-numbersetting="chatbotHistoryTotal" />
+										<input type="number" style="max-width: calc(5ch + 34px);" step="1" max="500" min="0" value="10" size="6" data-numbersetting="chatbotHistoryTotal" />
 								</div>
 
 								<div style="display: inline-block;" title="Include timestamp in chat history (toLocaleString).">
@@ -10784,7 +10791,7 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param10="showtime" />
 										<span class="slider round"></span>
 									</label>
-									<span>⏲️ Auto-hide after <input type="number" style="max-width: 8ch;" min="1" max="999999" value="10000" data-numbersetting10="showtime" />ms</span>
+									<span>⏲️ Auto-hide after <input type="number" style="max-width: calc(8ch + 34px);" min="1" max="999999" value="10000" data-numbersetting10="showtime" />ms</span>
 								</div>
 								<div title="Hide the bot reply after its TTS audio finishes. If playback cannot start, a length-based fallback is used.">
 									<label class="switch">
@@ -10805,14 +10812,14 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param10="mintime" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">⏱️</span>Minimum length-based time <input type="number" style="max-width: 8ch;" min="0" max="999999" value="4000" data-numbersetting10="mintime" />ms</span>
+									<span><span class="popup-control-icon" aria-hidden="true">⏱️</span>Minimum length-based time <input type="number" style="max-width: calc(8ch + 34px);" min="0" max="999999" value="4000" data-numbersetting10="mintime" />ms</span>
 								</div>
 								<div title="Optional maximum for length-based auto-hide.">
 									<label class="switch">
 										<input type="checkbox" data-param10="maxtime" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">⏱️</span>Maximum length-based time <input type="number" style="max-width: 8ch;" min="1000" max="999999" value="30000" data-numbersetting10="maxtime" />ms</span>
+									<span><span class="popup-control-icon" aria-hidden="true">⏱️</span>Maximum length-based time <input type="number" style="max-width: calc(8ch + 34px);" min="1000" max="999999" value="30000" data-numbersetting10="maxtime" />ms</span>
 								</div>
 								<i>If multiple hide modes are enabled, Hide after TTS takes priority, followed by reply length, then the fixed time.</i>
 								<div title="For the purpose of using this with neurosync. WILL NOT WORK WITH SYSTEM TTS">
@@ -10848,7 +10855,7 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="system-tts-volume">🔉 Volume of speech</span>
-									<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="1.0" size="5" data-numbersetting10="volume" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.01" max="1" min="0" value="1.0" size="5" data-numbersetting10="volume" />
 								</div>
 							</div>
 						</div>
@@ -10920,7 +10927,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="system-tts-rate">
 									⏩ Speaking rate
-									<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0"
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="10" min="0.1" value="1.0"
 										size="5" data-numbersetting10="rate" />
 								</span>
 							</div>
@@ -10931,7 +10938,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="system-tts-pitch">
 									🎵 Pitch
-									<input type="number" style="max-width: 6ch;" step="0.1" max="2" min="0.1" value="1.0"
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="2" min="0.1" value="1.0"
 										size="5" data-numbersetting10="pitch" />
 								</span>
 							</div>
@@ -10978,7 +10985,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="elevenlabs-rate">
 									🔊 Speaking Rate
-									<input type="number" style="max-width: 6ch;" step="0.25" max="5.0" min="0.25" value="1.0" size="5" data-numbersetting10="elevenrate" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.25" max="5.0" min="0.25" value="1.0" size="5" data-numbersetting10="elevenrate" />
 								</span>
 							</div>
 							<div>
@@ -10988,7 +10995,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="elevenlabs-latency">
 									🚀 ElevenLabs Latency Optimization
-									<input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="4" size="5" data-numbersetting10="elevenlatency" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="1" max="4" min="0" value="4" size="5" data-numbersetting10="elevenlatency" />
 								</span>
 							</div>
 							<div>
@@ -10998,7 +11005,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="elevenlabs-stability">
 									🎯 Stability
-									<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting10="elevenstability" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting10="elevenstability" />
 								</span>
 							</div>
 							<div>
@@ -11008,7 +11015,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="elevenlabs-similarity">
 									🎭 Similarity Boost
-									<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.75" size="5" data-numbersetting10="elevensimilarity" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.01" max="1" min="0" value="0.75" size="5" data-numbersetting10="elevensimilarity" />
 								</span>
 							</div>
 							<div>
@@ -11018,7 +11025,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="elevenlabs-style">
 									🎨 Style
-									<input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting10="elevenstyle" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting10="elevenstyle" />
 								</span>
 							</div>
 							<div>
@@ -11109,7 +11116,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="google-tts-rate">
 									⏩ Speaking rate
-									<input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.25" value="1.0"
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="4" min="0.25" value="1.0"
 										size="5" data-numbersetting="googlerate" />
 								</span>
 							</div>
@@ -11120,7 +11127,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="google-pitch">
 									🎵 Pitch
-									<input type="number" style="max-width: 6ch;" step="0.1" max="20" min="-20" value="0" size="5" data-numbersetting="googlepitch" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="20" min="-20" value="0" size="5" data-numbersetting="googlepitch" />
 								</span>
 							</div>
 							<div>
@@ -11195,7 +11202,7 @@ input:checked + .slider:before {
 									<span class="slider round"></span>
 								</label>
 								<span data-translate="speechify-speed">⚡ Speed</span>
-								<input type="number" style="width: 10ch; max-width: 10ch;" step="0.1" max="3" min="0.5" value="1.0" size="5" data-numbersetting10="speechifyspeed" />
+								<input type="number" style="width: 10ch; max-width: calc(10ch + 34px);" step="0.1" max="3" min="0.5" value="1.0" size="5" data-numbersetting10="speechifyspeed" />
 							</div>
 							<div>
 								<label class="switch">
@@ -11281,7 +11288,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="openai-tts-speed">
 									⏩ Speaking rate
-									<input type="number" style="max-width: 6ch;" step="0.05" max="4.0" min="0.25" value="1.0"
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.05" max="4.0" min="0.25" value="1.0"
 										size="5" data-numbersetting10="openaispeed" />
 								</span>
 							</div>
@@ -11326,7 +11333,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="kokoro-tts-speed">
 									⏩ Speaking rate
-									<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0"
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="10" min="0.1" value="1.0"
 										size="5" data-numbersetting10="kokorospeed" />
 								</span>
 							</div>
@@ -11366,7 +11373,7 @@ input:checked + .slider:before {
 								</label>
 								<span data-translate="kitten-tts-speed">
 									⏩ Speaking rate
-									<input type="number" style="max-width: 6ch;" step="0.1" max="2.0" min="0.5" value="1.0"
+									<input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="2.0" min="0.5" value="1.0"
 										size="5" data-numbersetting10="kittenspeed" />
 								</span>
 							</div>
@@ -11432,7 +11439,7 @@ input:checked + .slider:before {
 								</label>
 								<span><span class="popup-control-icon" aria-hidden="true">🔊</span>
 									Speaking rate
-									<input type="number" style="max-width: 6ch;" step="5" max="450" min="80" value="140" size="5" data-numbersetting10="espeakspeed" />
+									<input type="number" style="max-width: calc(6ch + 34px);" step="5" max="450" min="80" value="140" size="5" data-numbersetting10="espeakspeed" />
 								</span>
 							</div>
 						</div>
@@ -11687,7 +11694,7 @@ input:checked + .slider:before {
 								</div>
 								<div title="AI stage overlay scale.">
 									<span>Scale</span>
-									<input type="number" id="aiOverlayScale" style="max-width: 6ch;" step="0.05" max="4" min="0.25" value="1" data-numbersetting="aiOverlayScale" />
+									<input type="number" id="aiOverlayScale" style="max-width: calc(6ch + 34px);" step="0.05" max="4" min="0.25" value="1" data-numbersetting="aiOverlayScale" />
 								</div>
 								<p class="ai-tool-copy">The SSN Hosted Trial LLM uses llm.socialstream.ninja as a free simple option for testing while the trial is available.</p>
 							</div>
@@ -11699,9 +11706,9 @@ input:checked + .slider:before {
 			<div class="link" title="Monitor donation events and activity in real-time" data-panel-section="eventsdashboard">
 				<h2 class="events_dashboard_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">📊</span><span data-translate="eventsdashboard">Activity Feed / Events</span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="eventsdashboard" title="Load an existing link for this overlay" data-translate="popup-edit-link">[edit link]</button>
-					<label for="help-events" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="eventsdashboard" title="Load an existing link for this overlay" data-translate="popup-edit-link">Edit link</button>
+					<label for="help-events" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
 				</h2>
 				<input type="checkbox" id="help-events" class="link-help-toggle">
 				<div class="link-help-content">
@@ -12103,9 +12110,9 @@ input:checked + .slider:before {
 			<div class="link" title="Reaction-only overlay for floating hearts, thumbs, and similar live reactions." data-panel-section="reactions">
 				<h2 class="reactions_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">💖</span><span data-translate="popup-reactions-overlay">Reactions Overlay</span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="reactions" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-reactions" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="reactions" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-reactions" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
 				</h2>
 				<input type="checkbox" id="help-reactions" class="link-help-toggle">
 				<div class="link-help-content">
@@ -12247,9 +12254,9 @@ input:checked + .slider:before {
             <div class="link" title="This link will only show the inbound emotes, bouncing them around the full page." data-panel-section="emoteswall">
                 <h2 class="emotes_wall_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">😄</span><span data-translate="emotes-wall">Emotes wall </span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="emoteswall" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-emotes" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="emoteswall" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-emotes" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
                 </h2>
                 <div id="emoteswall" data-raw="" class="emotes_wall"></div>
 				<div id="emoteswall-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
@@ -12289,7 +12296,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span>
                                         <span data-translate="limit-emotes-count">🔢 Limit emotes shown:</span>
-                                        <input type="number" style="max-width: 5ch;" min="1" max="50" value="5" size="3" data-numbersetting3="limit" />
+                                        <input type="number" style="max-width: calc(5ch + 34px);" min="1" max="50" value="5" size="3" data-numbersetting3="limit" />
                                     </span>
                                 </div>
 								<div>
@@ -12299,7 +12306,7 @@ input:checked + .slider:before {
 									</label>
 									<span>
 										<span>🎉 Minimum emotes per message:</span>
-										<input type="number" style="max-width: 5ch;" min="2" max="100" value="15" size="3" data-numbersetting3="burst" />
+										<input type="number" style="max-width: calc(5ch + 34px);" min="2" max="100" value="15" size="3" data-numbersetting3="burst" />
 									</span>
 								</div>
                                 <div>
@@ -12388,9 +12395,9 @@ input:checked + .slider:before {
             <div class="link" title="This link shows a score for recent chat activity per chat source" data-panel-section="hypemeter">
 				<h2 class="hype_mode_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🔥</span><span data-translate="viewer-count-and-chat-activity-overlay">Viewer Count &amp; Chat Activity Overlay</span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="hypemeter" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-hype" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="hypemeter" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-hype" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
                 </h2>
 				<input type="checkbox" id="help-hype" class="link-help-toggle">
 				<div class="link-help-content">
@@ -12757,9 +12764,9 @@ input:checked + .slider:before {
 			<div class="link" title="Meta data bar for auction, commerce, and giveaway-style status updates" data-panel-section="meta">
 				<h2 class="meta_mode_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">📦</span><span data-translate="popup-meta-data-bar">Meta Data Bar</span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="meta" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-meta" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="meta" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-meta" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
 				</h2>
 				<input type="checkbox" id="help-meta" class="link-help-toggle">
 				<div class="link-help-content">
@@ -13105,9 +13112,9 @@ input:checked + .slider:before {
 			<div class="link" title="This link shows a tally of donations recieved" data-panel-section="tipjar">
 				<h2 class="tipjar_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">💰</span><span data-translate="tipjar">Tip Jar and Goal Meter</span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="tipjar" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-tipjar" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="tipjar" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-tipjar" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
                 </h2>
 				<input type="checkbox" id="help-tipjar" class="link-help-toggle">
 				<div class="link-help-content">
@@ -13578,9 +13585,9 @@ input:checked + .slider:before {
             <div class="link" title="This link shows a list of names representing users in a waiting list" data-panel-section="waitlist">
                 <h2 class="waitlist_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🏆</span><span data-translate="wait-list">Wait List / Winner Draw</span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="waitlist" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-waitlist" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="waitlist" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-waitlist" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
                 </h2>
 				<input type="checkbox" id="help-waitlist" class="link-help-toggle">
 				<div class="link-help-content">
@@ -13866,9 +13873,9 @@ input:checked + .slider:before {
 			<div class="link" title="Flow Actions Overlay Page" data-panel-section="flowactions">
                 <h2 class="flowactions_mode_title">
                     <span data-translate="flowactions">🔄 Flow actions</span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="flowactions" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-flowactions" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="flowactions" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-flowactions" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
                 </h2>
 				<input type="checkbox" id="help-flowactions" class="link-help-toggle">
 				<div class="link-help-content">
@@ -13917,7 +13924,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span>
                                         ⏱️ Default media duration (ms)
-                                        <input type="number" style="max-width: 8ch;" step="1000" max="300000" min="1000" value="10000" size="6" data-numbersetting18="duration" />
+                                        <input type="number" style="max-width: calc(8ch + 34px);" step="1000" max="300000" min="1000" value="10000" size="6" data-numbersetting18="duration" />
                                     </span>
                                 </div>
                                 <div>
@@ -14035,7 +14042,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="system-tts-rate">
                                     ⏩ Speaking rate
-                                    <input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" size="5" data-numbersetting18="rate" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="10" min="0.1" value="1.0" size="5" data-numbersetting18="rate" />
                                 </span>
                             </div>
                             <div>
@@ -14045,7 +14052,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="system-tts-pitch">
                                     🎵 Pitch
-                                    <input type="number" style="max-width: 6ch;" step="0.1" max="2" min="0.1" value="1.0" size="5" data-numbersetting18="pitch" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="2" min="0.1" value="1.0" size="5" data-numbersetting18="pitch" />
                                 </span>
                             </div>
                         </div>
@@ -14074,7 +14081,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="kokoro-tts-speed">
                                     ⏩ Speaking rate
-                                    <input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" size="5" data-numbersetting18="kokorospeed" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="10" min="0.1" value="1.0" size="5" data-numbersetting18="kokorospeed" />
                                 </span>
                             </div>
                         <details class="popup-subsection"><summary data-translate="tts-neural-generation">Generation and playback</summary>
@@ -14114,7 +14121,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="kitten-tts-speed">
                                     ⏩ Speaking rate
-                                    <input type="number" style="max-width: 6ch;" step="0.1" max="2.0" min="0.5" value="1.0" size="5" data-numbersetting18="kittenspeed" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="2.0" min="0.5" value="1.0" size="5" data-numbersetting18="kittenspeed" />
                                 </span>
                             </div>
                         <details class="popup-subsection"><summary data-translate="tts-neural-generation">Generation and playback</summary>
@@ -14159,7 +14166,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="elevenlabs-rate">
                                     🔊 Speaking Rate
-                                    <input type="number" style="max-width: 6ch;" step="0.25" max="5.0" min="0.25" value="1.0" size="5" data-numbersetting18="elevenrate" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.25" max="5.0" min="0.25" value="1.0" size="5" data-numbersetting18="elevenrate" />
                                 </span>
                             </div>
                             <div>
@@ -14169,7 +14176,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="elevenlabs-latency">
                                     🚀 ElevenLabs Latency Optimization
-                                    <input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="4" size="5" data-numbersetting18="elevenlatency" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="1" max="4" min="0" value="4" size="5" data-numbersetting18="elevenlatency" />
                                 </span>
                             </div>
                             <div>
@@ -14179,7 +14186,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="elevenlabs-stability">
                                     🎯 Stability
-                                    <input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting18="elevenstability" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting18="elevenstability" />
                                 </span>
                             </div>
                             <div>
@@ -14189,7 +14196,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="elevenlabs-similarity">
                                     🎭 Similarity Boost
-                                    <input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.75" size="5" data-numbersetting18="elevensimilarity" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.01" max="1" min="0" value="0.75" size="5" data-numbersetting18="elevensimilarity" />
                                 </span>
                             </div>
                             <div>
@@ -14199,7 +14206,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="elevenlabs-style">
                                     🎨 Style
-                                    <input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting18="elevenstyle" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting18="elevenstyle" />
                                 </span>
                             </div>
                             <div>
@@ -14259,7 +14266,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="google-tts-rate">
                                     ⏩ Speaking rate
-                                    <input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.25" value="1.0" size="5" data-numbersetting18="googlerate" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="4" min="0.25" value="1.0" size="5" data-numbersetting18="googlerate" />
                                 </span>
                             </div>
                             <div>
@@ -14269,7 +14276,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="google-pitch">
                                     🎵 Pitch
-                                    <input type="number" style="max-width: 6ch;" step="0.1" max="20" min="-20" value="0" size="5" data-numbersetting18="googlepitch" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.1" max="20" min="-20" value="0" size="5" data-numbersetting18="googlepitch" />
                                 </span>
                             </div>
                         </div>
@@ -14414,7 +14421,7 @@ input:checked + .slider:before {
                                     <span class="slider round"></span>
                                 </label>
                                 <span data-translate="speechify-speed">⚡ Speed</span>
-                                <input type="number" style="width: 10ch; max-width: 10ch;" step="0.1" max="3" min="0.5" value="1.0" size="5" data-numbersetting18="speechifyspeed" />
+                                <input type="number" style="width: 10ch; max-width: calc(10ch + 34px);" step="0.1" max="3" min="0.5" value="1.0" size="5" data-numbersetting18="speechifyspeed" />
                             </div>
                             <div>
                                 <label class="switch">
@@ -14481,7 +14488,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span data-translate="openai-tts-speed">
                                     ⏩ Speaking rate
-                                    <input type="number" style="max-width: 6ch;" step="0.05" max="4.0" min="0.25" value="1.0" size="5" data-numbersetting18="openaispeed" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="0.05" max="4.0" min="0.25" value="1.0" size="5" data-numbersetting18="openaispeed" />
                                 </span>
                             </div>
                             <div>
@@ -14559,7 +14566,7 @@ input:checked + .slider:before {
                                 </label>
                                 <span><span class="popup-control-icon" aria-hidden="true">🔊</span>
                                     Speaking rate
-                                    <input type="number" style="max-width: 6ch;" step="5" max="450" min="80" value="140" size="5" data-numbersetting18="espeakspeed" />
+                                    <input type="number" style="max-width: calc(6ch + 34px);" step="5" max="450" min="80" value="140" size="5" data-numbersetting18="espeakspeed" />
                                 </span>
                             </div>
                         </div>
@@ -14574,9 +14581,9 @@ input:checked + .slider:before {
 			<div class="link" title="Giveaway Tool" data-panel-section="giveaway">
                 <h2 class="giveaway_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🎁</span><span data-translate="giveaway">Giveaway Tool</span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="giveaway" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-giveaway" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="giveaway" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-giveaway" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
                 </h2>
 				<input type="checkbox" id="help-giveaway" class="link-help-toggle">
 				<div class="link-help-content">
@@ -14673,9 +14680,9 @@ input:checked + .slider:before {
 			<div class="link" title="Polling system" data-panel-section="poll">
                 <h2 class="poll_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🗳️</span><span data-translate="pollmeter">Graphical Poll </span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="poll" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-poll" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="poll" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-poll" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
                 </h2>
 				<input type="checkbox" id="help-poll" class="link-help-toggle">
 				<div class="link-help-content">
@@ -14789,7 +14796,7 @@ input:checked + .slider:before {
 										<input type="checkbox" data-setting="pollTimerState" />
 										<span class="slider round"></span>
 									</label>
-									Timer (seconds): <input type="number" style="max-width: 5ch;" max="999999" min="1" value="60" size="4" data-numbersetting="pollTimer" />
+									Timer (seconds): <input type="number" style="max-width: calc(6ch + 34px);" max="999999" min="1" value="60" size="4" data-numbersetting="pollTimer" />
 								</span>
 								<br>
 								<div style="display:flex">
@@ -14799,10 +14806,10 @@ input:checked + .slider:before {
 
 								<h3><span class="popup-control-icon" aria-hidden="true">🗳️</span>Poll Presets</h3>
 								<div style="display:flex; flex-wrap:wrap;">
-									<button class="glowingButton" style="flex:1 1 160px" data-action="savePoll">
+									<button class="glowingButton popup-wrap-button" style="flex:1 1 160px" data-action="savePoll">
 										<span data-translate="save-current-poll">Save Current Poll</span>
 									</button>
-									<button class="glowingButton" style="flex:1 1 160px" data-action="createNewPoll">
+									<button class="glowingButton popup-wrap-button" style="flex:1 1 160px" data-action="createNewPoll">
 										<span data-translate="create-new-poll">Create New Poll</span>
 									</button>
 								</div>
@@ -14820,9 +14827,9 @@ input:checked + .slider:before {
 			<div class="link" title="Mapping system" data-panel-section="map">
                 <h2 class="map_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🗺️</span><span data-translate="mapmeter">User Map </span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="map" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-map" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="map" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-map" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
                 </h2>
 				<input type="checkbox" id="help-map" class="link-help-toggle">
 				<div class="link-help-content">
@@ -15012,9 +15019,9 @@ input:checked + .slider:before {
 			<div class="link" title="End credits roll" data-panel-section="credits">
                 <h2 class="credits_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🎬</span><span data-translate="creditsmeter">Credits roll</span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="credits" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-credits" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="credits" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-credits" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
 				</h2>
 				<input type="checkbox" id="help-credits" class="link-help-toggle">
 				<div class="link-help-content">
@@ -15109,7 +15116,7 @@ input:checked + .slider:before {
 											<span class="slider round"></span>
 										</label>
 										<span data-translate="credits-speed">
-											⏲️ Scroll speed <input type="number" style="max-width: 8ch;" max="10" min="0.1" value="2" size="3" data-numbersetting13="speed" />x
+											⏲️ Scroll speed <input type="number" style="max-width: calc(8ch + 34px);" max="10" min="0.1" value="2" size="3" data-numbersetting13="speed" />x
 										</span>
 									</div>
 									<div title="Duration takes priority over speed in most cases; Star Wars has a fixed speed.">
@@ -15118,7 +15125,7 @@ input:checked + .slider:before {
 											<span class="slider round"></span>
 										</label>
 										<span data-translate="duration-speed">
-											⌚ Duration <input type="number" style="max-width: 8ch;" max="1200" min="1" value="60" size="3" data-numbersetting13="duration" />x
+											⌚ Duration <input type="number" style="max-width: calc(8ch + 34px);" max="1200" min="1" value="60" size="3" data-numbersetting13="duration" />x
 										</span>
 									</div>
 									<br>
@@ -15248,9 +15255,9 @@ input:checked + .slider:before {
 			<div class="link" title="Interactive leaderboard display" data-panel-section="leaderboard">
                 <h2 class="leaderboard_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🏅</span><span data-translate="leaderboardmeter">Leaderboard</span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="leaderboard" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-leaderboard" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="leaderboard" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-leaderboard" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
 				</h2>
 				<input type="checkbox" id="help-leaderboard" class="link-help-toggle">
 				<div class="link-help-content">
@@ -15326,13 +15333,13 @@ input:checked + .slider:before {
                                     <span><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="max-entries">
                                         Maximum entries to show
                                     </span></span>
-                                    <input type="number" style="max-width: 8ch;" max="100" min="3" value="10" size="3" data-numbersetting19="maxentries" />
+                                    <input type="number" style="max-width: calc(8ch + 34px);" max="100" min="3" value="10" size="3" data-numbersetting19="maxentries" />
                                 </div>
 									<br>
 
 									<div>
                                     <span data-translate="update-interval">
-                                        ⏱️ Update interval <input type="number" style="max-width: 8ch;" max="60" min="0" value="0" size="3" data-numbersetting19="updateinterval" /> seconds (0 = disabled)
+                                        ⏱️ Update interval <input type="number" style="max-width: calc(8ch + 34px);" max="60" min="0" value="0" size="3" data-numbersetting19="updateinterval" /> seconds (0 = disabled)
                                     </span>
 									</div>
 								</div>
@@ -15374,7 +15381,7 @@ input:checked + .slider:before {
 
 								<div>
 									<span data-translate="rotation-interval">
-										🔄 Rotation interval <input type="number" style="max-width: 8ch;" max="60" min="3" value="10" size="3" data-numbersetting19="rotateinterval" /> seconds
+										🔄 Rotation interval <input type="number" style="max-width: calc(8ch + 34px);" max="60" min="3" value="10" size="3" data-numbersetting19="rotateinterval" /> seconds
 									</span>
 								</div>
 
@@ -15473,9 +15480,9 @@ input:checked + .slider:before {
                                 <div class="link" title="Points system scoreboard display" data-panel-section="scoreboard">
 				<h2 class="scoreboard_mode_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🧮</span><span data-translate="scoreboard">Scoreboard</span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="scoreboard" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-scoreboard" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="scoreboard" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-scoreboard" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
 				</h2>
 				<input type="checkbox" id="help-scoreboard" class="link-help-toggle">
 				<div class="link-help-content">
@@ -15521,7 +15528,7 @@ input:checked + .slider:before {
 									<span data-translate="max-users-display">
 										Maximum users to display
 									</span>
-                                    <input type="number" style="max-width: 8ch;" max="50" min="3" value="10" size="3" data-numbersetting21="maxusers" />
+                                    <input type="number" style="max-width: calc(8ch + 34px);" max="50" min="3" value="10" size="3" data-numbersetting21="maxusers" />
 								</div>
 								<br>
 
@@ -16271,8 +16278,8 @@ input:checked + .slider:before {
 			<div class="link" title="Interactive Games" data-panel-section="games">
 				<h2 class="games_mode_title">
 					<span data-translate="interactive-games">🎮 Interactive Games</span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<label for="help-games" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<label for="help-games" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
 				</h2>
 				<input type="checkbox" id="help-games" class="link-help-toggle">
 				<div class="link-help-content">
@@ -16686,9 +16693,9 @@ input:checked + .slider:before {
 			<div class="link" title="Customizable ticker banner bar" data-panel-section="ticker">
                 <h2 class="ticker_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">📰</span><span data-translate="tickermeter">Ticker </span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="ticker" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-ticker" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="ticker" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-ticker" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
                 </h2>
 				<input type="checkbox" id="help-ticker" class="link-help-toggle">
 				<div class="link-help-content">
@@ -16724,8 +16731,8 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="enable-the-ticker">🚦 Enable </span>
 									<div>
-										<button class="glowingButton" data-action="loadtickerfile">
-											<span style="height:20px"><span data-translate="select-ticker-source-file">📄 Select the ticker source file</span></span>
+										<button class="glowingButton popup-wrap-button" data-action="loadtickerfile">
+											<span data-translate="select-ticker-source-file">📄 Select the ticker source file</span>
 										</button>
 									</div>
 									<div class="file-handle-status" data-handle-status="ticker" data-status="missing" data-persisted="false" role="status" aria-live="polite">
@@ -16745,7 +16752,7 @@ input:checked + .slider:before {
 											<span class="slider round"></span>
 										</label>
 										<span data-translate="ticker-speed">
-											⏲️ Speed (relative) <input type="number" style="max-width: 8ch;" max="10" min="0.01" value="1" size="3" data-numbersetting6="speed" />x
+											⏲️ Speed (relative) <input type="number" style="max-width: calc(8ch + 34px);" max="10" min="0.01" value="1" size="3" data-numbersetting6="speed" />x
 										</span>
 									</div>
 									<div>
@@ -16808,7 +16815,7 @@ input:checked + .slider:before {
 										</label>
 										<span data-translate="ticker-rotate-interval">
 											⏱️ Hold each line for
-											<input type="number" style="max-width: 8ch;" min="1000" max="60000" step="250" value="4000" data-numbersetting6="rotateinterval" />
+											<input type="number" style="max-width: calc(8ch + 34px);" min="1000" max="60000" step="250" value="4000" data-numbersetting6="rotateinterval" />
 											ms (rotate mode)
 										</span>
 									</div>
@@ -16819,7 +16826,7 @@ input:checked + .slider:before {
 										</label>
 										<span data-translate="ticker-rotate-pause">
 											⏸️ Pause after a full loop for
-											<input type="number" style="max-width: 8ch;" min="0" max="60000" step="250" value="0" data-numbersetting6="rotatepause" />
+											<input type="number" style="max-width: calc(8ch + 34px);" min="0" max="60000" step="250" value="0" data-numbersetting6="rotatepause" />
 											ms
 										</span>
 									</div>
@@ -16843,7 +16850,7 @@ input:checked + .slider:before {
 										</label>
 										<span data-translate="ticker-gap-label">
 											↔️ Extra padding per item
-											<input type="number" style="max-width: 8ch;" min="0" max="1000" step="5" value="150" data-numbersetting6="gap" />
+											<input type="number" style="max-width: calc(8ch + 34px);" min="0" max="1000" step="5" value="150" data-numbersetting6="gap" />
 											px
 										</span>
 									</div>
@@ -16870,9 +16877,9 @@ input:checked + .slider:before {
 			<div class="link" title="Word cloud overlay" data-panel-section="wordcloud">
                 <h2 class="wordcloud_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">☁️</span><span data-translate="wordcloudmeter">Word Cloud </span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="wordcloud" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-wordcloud" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="wordcloud" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-wordcloud" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
                 </h2>
 				<input type="checkbox" id="help-wordcloud" class="link-help-toggle">
 				<div class="link-help-content">
@@ -16970,9 +16977,9 @@ input:checked + .slider:before {
 			<div class="link" title="Custom GIF Commands" data-panel-section="custom-gif-commands">
                 <h2 class="custom_gif_commands_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🖼️</span><span data-translate="custom-gif-commands">Custom GIF Commands </span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="custom-gif-commands" title="Load an existing link for this overlay">[edit link]</button>
-					<label for="help-gif" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="custom-gif-commands" title="Load an existing link for this overlay">Edit link</button>
+					<label for="help-gif" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
 				</h2>
 				<input type="checkbox" id="help-gif" class="link-help-toggle">
 				<div class="link-help-content">
@@ -17016,7 +17023,7 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="minimum-playout-time">
-										⏲️ Minimum default playout time <input type="number" style="max-width: 8ch;" max="999999" min="1" value="3000" size="6" data-numbersetting9="showtime" />ms
+										⏲️ Minimum default playout time <input type="number" style="max-width: calc(8ch + 34px);" max="999999" min="1" value="3000" size="6" data-numbersetting9="showtime" />ms
 									</span>
 								</div>
 
@@ -17038,9 +17045,9 @@ input:checked + .slider:before {
 				<h2 class="timer_section_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">⏳</span><span data-translate="popup-timer">Timer</span></span>
 					<span class="options-link-group" style="float: right; display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
-						<a class="copy-link rounded_area" title="Copy timer link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="timer" title="Load an existing link for this overlay">[edit link]</button>
-						<label for="help-timer" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+						<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy timer link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="timer" title="Load an existing link for this overlay">Edit link</button>
+						<label for="help-timer" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
 					</span>
 				</h2>
 				<input type="checkbox" id="help-timer" class="link-help-toggle">
@@ -17107,21 +17114,21 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param26="duration" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">⏱️</span>Default time <input type="number" style="max-width: 8ch;" min="0" max="999999" value="300" data-numbersetting26="duration" />s</span>
+									<span><span class="popup-control-icon" aria-hidden="true">⏱️</span>Default time <input type="number" style="max-width: calc(8ch + 34px);" min="0" max="999999" value="300" data-numbersetting26="duration" />s</span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param26="warn" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">⏱️</span>Warn at <input type="number" style="max-width: 8ch;" min="0" max="999999" value="60" data-numbersetting26="warn" />s</span>
+									<span><span class="popup-control-icon" aria-hidden="true">⏱️</span>Warn at <input type="number" style="max-width: calc(8ch + 34px);" min="0" max="999999" value="60" data-numbersetting26="warn" />s</span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param26="danger" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">⏱️</span>Danger at <input type="number" style="max-width: 8ch;" min="0" max="999999" value="15" data-numbersetting26="danger" />s</span>
+									<span><span class="popup-control-icon" aria-hidden="true">⏱️</span>Danger at <input type="number" style="max-width: calc(8ch + 34px);" min="0" max="999999" value="15" data-numbersetting26="danger" />s</span>
 								</div>
 								<div>
 									<label class="switch">
@@ -17163,9 +17170,9 @@ input:checked + .slider:before {
 				<h2 class="spotify_section_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🎵</span><span data-translate="popup-spotify-integration">Spotify Integration</span></span>
 					<span class="options-link-group" style="float: right; display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
-						<a class="copy-link rounded_area" title="Copy overlay link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<button type="button" class="edit-link rounded_area" data-edit-link="spotify" title="Load an existing link for this overlay">[edit link]</button>
-						<label for="help-spotify" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+						<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy overlay link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+					<button type="button" class="edit-link rounded_area" data-edit-link="spotify" title="Load an existing link for this overlay">Edit link</button>
+						<label for="help-spotify" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
 					</span>
 				</h2>
 				<input type="checkbox" id="help-spotify" class="link-help-toggle">

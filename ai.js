@@ -2875,6 +2875,87 @@ function getActiveAITranslateProviderKey() {
     return settings?.aiProvider?.optionsetting || "ollama";
 }
 
+let localTranslateWorker = null;
+let localTranslateRequestId = 0;
+let localTranslateRetryAfter = 0;
+const localTranslatePending = new Map();
+
+function usesLocalTranslation() {
+    return settings?.aiTranslateEngine?.optionsetting === "local";
+}
+
+function requestLocalTranslation(texts, targetLanguage, timeoutMs, outgoing) {
+    if (Date.now() < localTranslateRetryAfter || localTranslatePending.size >= 16) return Promise.resolve(null);
+    if (!localTranslateWorker) {
+        try {
+            const workerPath = "shared/ai/local-translation-worker.js";
+            const workerUrl = typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.getURL
+                ? chrome.runtime.getURL(workerPath) : workerPath;
+            localTranslateWorker = new Worker(workerUrl);
+            localTranslateWorker.onmessage = function (event) {
+                const message = event.data || {};
+                const pending = localTranslatePending.get(message.id);
+                if (!pending) return;
+                clearTimeout(pending.timer);
+                localTranslatePending.delete(message.id);
+                if (message.error) console.warn("[Local Translate]", message.error);
+                pending.resolve(message.translations || null);
+            };
+            const stop = function () {
+                localTranslateWorker.terminate();
+                localTranslateWorker = null;
+                localTranslateRetryAfter = Date.now() + 60000;
+                localTranslatePending.forEach(function (pending) {
+                    clearTimeout(pending.timer);
+                    pending.resolve(null);
+                });
+                localTranslatePending.clear();
+            };
+            localTranslateWorker.onerror = stop;
+            localTranslateWorker.onmessageerror = stop;
+        } catch (error) {
+            localTranslateRetryAfter = Date.now() + 60000;
+            console.warn("[Local Translate]", error);
+            return Promise.resolve(null);
+        }
+    }
+    return new Promise(function (resolve) {
+        const id = ++localTranslateRequestId;
+        const timer = setTimeout(function () {
+            localTranslatePending.delete(id);
+            resolve(null);
+        }, timeoutMs);
+        localTranslatePending.set(id, { resolve, timer });
+        try {
+            localTranslateWorker.postMessage({
+                id,
+                texts,
+                from: outgoing ? "" : String(settings?.localTranslateSourceLanguage?.textsetting || "").trim().toLowerCase().split(/[-_]/)[0],
+                to: String(targetLanguage).trim().toLowerCase().split(/[-_]/)[0],
+                deadline: Date.now() + timeoutMs
+            });
+        } catch (_) {
+            clearTimeout(timer);
+            localTranslatePending.delete(id);
+            resolve(null);
+        }
+    });
+}
+
+async function translateMessageLocally(data, prepared, targetLanguage, enabledSetting, options) {
+    const originalMessage = data.chatmessage;
+    const sourceLanguage = settings?.localTranslateSourceLanguage?.textsetting || "";
+    const translations = await requestLocalTranslation(prepared.parts.map(function (part) { return part.text; }), targetLanguage, getAITranslateRequestTimeoutMs(options), options.direction === "outgoing");
+    const currentTarget = options.targetLanguage || getAITranslateTargetLanguage(options.targetLanguageSetting || "aiAutoTranslateTargetLanguage", options.fallbackTargetLanguageSetting || null);
+    if (!usesLocalTranslation() || !getAiSettingFlag(enabledSetting) || currentTarget !== targetLanguage || sourceLanguage !== (settings?.localTranslateSourceLanguage?.textsetting || "") || data.chatmessage !== originalMessage) return true;
+    if (!Array.isArray(translations) || translations.length !== prepared.parts.length || translations.some(function (text) { return typeof text !== "string" || !text.trim(); })) {
+        return !(options.blockOnFailure === true || getAiSettingFlag("aiAutoTranslateBlockMode"));
+    }
+    if (translations.every(function (text, index) { return text === prepared.parts[index].text; })) return true;
+    applyAITranslatedMessage(data, prepared, translations, targetLanguage, options, "bergamot");
+    return true;
+}
+
 function getAITranslateTargetLanguage(settingKey = "aiAutoTranslateTargetLanguage", fallbackSettingKey = null) {
     const primary = settings?.[settingKey]?.textsetting;
     const fallback = fallbackSettingKey ? settings?.[fallbackSettingKey]?.textsetting : "";
@@ -3426,6 +3507,10 @@ async function translateMessageWithLLM(data, options = {}) {
     const prepared = prepareMessageForAITranslation(data);
     if (!prepared.parts.length) {
         return true;
+    }
+
+    if (usesLocalTranslation()) {
+        return translateMessageLocally(data, prepared, targetLanguage, enabledSetting, options);
     }
 
     // Only incoming translation to English uses language detection. Return the

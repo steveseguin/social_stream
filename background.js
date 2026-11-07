@@ -5689,6 +5689,9 @@ async function processIncomingMessage(message, sender = null) {
 		if (!checkIfAllowed(message.type)) {
 			return;
 		}
+		if (message.type === "houla" && message.event === "new_follower" && getSettingFlag("hideevents")) {
+			return;
+		}
 
         if (message.event === 'purchase' && window.recordCommercePurchase) window.recordCommercePurchase(message);
         if (message.event === 'auction_update' && (message.type === 'whatnot' || message.type === 'ebay') && window.recordCommerceAuction) window.recordCommerceAuction(message);
