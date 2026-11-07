@@ -466,6 +466,7 @@
 			if (tab === "history") history();
 		}
 		function pick(id, focus) {
+			var swapChoice = selected === id ? f("swap").value : "";
 			selected = id;
 			var b = state && state.active,
 				s =
@@ -487,22 +488,36 @@
 			f("use-colors").checked = !!s.color;
 			f("color").value = s.color || b.accent;
 			f("color2").value = s.color2 || "#ffffff";
-			f("swap").textContent = "";
-			b.spots
-				.filter(function (x) {
-					return x.id !== id;
-				})
-				.forEach(function (x) {
-					var o = node("option", x.label + (x.buyer ? " / " + x.buyer : ""));
-					o.value = x.id;
-					f("swap").appendChild(o);
-				});
+			fillSwap(swapChoice);
 			restoreDraft("spot");
 			if (focus) panel.classList.add("br-editing");
 			controls();
 			drawGrid();
 			// Ready to type: the buyer on an open spot, the pull on a sold one. Skipped on phones, where it opens the keyboard.
 			if (focus && window.innerWidth > 560) f(s.buyer ? "result" : "buyer").focus();
+		}
+		function fillSwap(choice) {
+			var b = state.active,
+				picker = f("swap");
+			picker.textContent = "";
+			b.spots
+				.filter(function (x) {
+					return x.id !== selected;
+				})
+				.forEach(function (x) {
+					var o = node("option", x.label + (x.buyer ? " / " + x.buyer : ""));
+					o.value = x.id;
+					picker.appendChild(o);
+				});
+			if (choice) {
+				picker.value = choice;
+				if (picker.selectedIndex < 0) {
+					var missing = node("option", "Selected spot (unavailable)");
+					missing.value = choice;
+					picker.appendChild(missing);
+					picker.value = choice;
+				}
+			}
 		}
 		function drawGrid() {
 			var grid = el(".br-grid"),
@@ -797,6 +812,7 @@
 				);
 				actions.appendChild(
 					button("Set up break", function () {
+						if (s.quantity < 1) return say("No stock remaining.", true);
 						f("title").value = s.name;
 						f("currency").value = s.currency;
 						// Cost comes from the stock record once it is used, so it must not be counted here as well.
@@ -984,6 +1000,7 @@
 					!same(spotIn(prior.active, selected), spotIn(b, selected))
 				)
 					pick(selected);
+				if (selected && b) fillSwap(f("swap").value);
 				drawGrid();
 				if (!newBoard) fillSettings();
 			}
