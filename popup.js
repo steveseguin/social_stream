@@ -13478,7 +13478,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			topLevel: []
 		};
 
-		document.querySelectorAll('.link').forEach(function(link) {
+		document.querySelectorAll('.link, #money-breaks').forEach(function(link) {
 			if (!isPopupSearchExplicitlyHidden(link)) {
 				index.links.push({
 					element: link,
