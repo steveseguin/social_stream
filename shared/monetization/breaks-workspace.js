@@ -1657,7 +1657,7 @@
 			if (!b) return say("Create a break first.", true);
 			if (action === "add-spot") {
 				askName("Spot name", "", function (label) {
-					send("breakSpot", { add: true, label: label });
+					send("breakSpot", { boardId: b.id, add: true, label: label });
 				});
 				return;
 			}
@@ -1700,7 +1700,7 @@
 				if (drafts[draftKey("appearance")] || drafts[draftKey("costs")])
 					return say("Save your appearance and cost changes first.", true);
 				askName("Name this saved setup", b.title, function (name) {
-					send("breakPreset", { name: name });
+					send("breakPreset", { boardId: b.id, name: name });
 				});
 				return;
 			}
