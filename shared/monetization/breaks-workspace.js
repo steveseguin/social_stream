@@ -837,7 +837,7 @@
 			products.textContent = "";
 			el("[data-ebay-status]").textContent = ebay
 				? ebay.status
-				: "Connect eBay in Monetization to see saved listings here.";
+				: "Connect eBay under Money > Shops & support > Connected platforms to see saved listings here.";
 			if (ebay)
 				(ebay.items || []).forEach(function (i) {
 					var row = node("article", undefined, "br-record");
@@ -1726,7 +1726,7 @@
 		links();
 		show("live");
 		if (!SSNBreaksAccess.validKey(key))
-			lock("Open Breaks from Social Stream's Monetization section to use its private link.");
+			lock("Open Breaks from Social Stream's Money tab to use its private link.");
 		return {
 			refresh: refresh,
 			disconnected: function () {

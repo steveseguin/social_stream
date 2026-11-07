@@ -7,16 +7,13 @@
 	var products = [], editingProduct = -1;
     var boardsPanel = document.createElement('details'); boardsPanel.className = 'popup-subsection commerce-board-controls';
     panel.appendChild(boardsPanel);
-    var breaksLink = document.createElement('a'); breaksLink.id = 'money-breaks'; breaksLink.textContent = 'Open Breaks'; breaksLink.target = '_blank'; breaksLink.rel = 'noopener';
-    breaksLink.title = 'Run a card break. This link is private: do not share it or use it as a Browser Source.';
-    var breaksReset = document.createElement('button'); breaksReset.type = 'button'; breaksReset.id = 'money-breaks-reset'; breaksReset.textContent = 'Reset private link';
-    breaksReset.title = 'Stops every existing private Breaks link from working.';
+    var breaksLink = by('breaks');
+    var breaksReset = by('breaks-reset');
+    var breaksHint = by('breaks-status');
     breaksReset.onclick = function () {
         if (!window.confirm('Reset the private Breaks link? Every open workspace and OBS dock using the old link stops working.')) return;
         request('breaksAccessReset').then(function (reply) { breaksKey = reply.key || ''; links(); breaksHint.textContent = 'Private link reset. Open Breaks again to use the new one.'; }).catch(function (error) { breaksHint.textContent = error.message; });
     };
-    var breaksHint = document.createElement('small'); breaksHint.textContent = 'Needs remote API control in settings.';
-    var breaksActions = document.createElement('div'); breaksActions.className = 'money-actions'; breaksActions.appendChild(breaksLink); breaksActions.appendChild(breaksReset); breaksActions.appendChild(breaksHint); panel.appendChild(breaksActions);
     var breaksKey = '', breaksKeyRequested = false;
     // The key goes in the fragment: browsers never send that part of a link to a web server.
     function loadBreaksKey() {
@@ -623,7 +620,7 @@
         if (current && !panel.hasAttribute('aria-busy')) render(current);
     };
 	setInterval(function () {
-		if (ready && panel.open && !panel.hasAttribute('aria-busy'))
+		if (ready && panel.getClientRects().length && !document.hidden && !panel.hasAttribute('aria-busy'))
 			request('get').then(
 				function (reply) {
                     if (panel.hasAttribute('aria-busy')) return;
