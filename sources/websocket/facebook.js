@@ -77,7 +77,7 @@ const AUTH_ERROR_KEY = 'facebook_auth_error';
 const AUTH_POPUP_PARAM = 'ssn_auth_popup';
 const AUTH_RELAY_CHANNEL = 'ssn-facebook-auth-relay';
 const AUTH_RELAY_TIMEOUT_MS = 2000;
-const AUTH_POPUP_TIMEOUT_MS = 120000;
+const AUTH_POPUP_REMINDER_MS = 120000;
 const FACEBOOK_AUTH_SCOPES = [
   'pages_show_list',
   'pages_read_engagement',
@@ -1036,10 +1036,10 @@ function openAuthPopup() {
     state.authInFlight = true;
     updateActionButtons();
     state.authPopupTimer = setTimeout(() => {
-      state.authPopupNonce = '';
-      state.authPopup = null;
-      handleAuthError({ message: 'Facebook sign-in did not finish. Please try again and complete the Facebook popup.' });
-    }, AUTH_POPUP_TIMEOUT_MS);
+      state.authPopupTimer = null;
+      // Keep this attempt active: Facebook sign-in can take longer than two minutes.
+      setStatus('connecting', 'Complete Facebook sign-in in the popup, or cancel to try again.');
+    }, AUTH_POPUP_REMINDER_MS);
     setStatus('connecting', 'Opening Facebook sign-in...');
   } catch (err) {
     setStatus('error', `Facebook sign-in failed to start: ${err.message || err}`);
