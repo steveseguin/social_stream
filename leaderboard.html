@@ -3066,13 +3066,11 @@
             const existingUserMap = new Map();
             
             existingItems.forEach(item => {
-                const userNameEl = item.querySelector('.user-name');
-                if (userNameEl) {
-                    // Get only the text content, not including the source icon
-                    const userName = userNameEl.childNodes[0]?.textContent?.trim();
-                    if (userName) {
-                        existingUserMap.set(userName, item);
-                    }
+                const userKey = item.dataset.userKey;
+                if (!userKey || existingUserMap.has(userKey)) {
+                    item.remove();
+                } else {
+                    existingUserMap.set(userKey, item);
                 }
             });
 
@@ -3091,11 +3089,12 @@
                 sortedUsers.forEach((user, index) => {
                     const rank = index + 1;
                     const badges = user.getBadges();
-                    let listItem = existingUserMap.get(user.name);
+                    const userKey = JSON.stringify([user.name, user.type]);
+                    let listItem = existingUserMap.get(userKey);
                     
                     if (listItem) {
                         // Update existing item
-                        existingUserMap.delete(user.name);
+                        existingUserMap.delete(userKey);
                         
                         // Update rank
                         const rankEl = listItem.querySelector('.rank-number');
@@ -3149,6 +3148,7 @@
                 } else {
                     // Create new item
                     const newItem = document.createElement('li');
+                    newItem.dataset.userKey = userKey;
                     newItem.className = `leaderboard-item rank-${rank} new-entry`;
                     
                     newItem.innerHTML = `
