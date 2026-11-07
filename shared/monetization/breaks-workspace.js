@@ -979,6 +979,13 @@
 				f("preset").appendChild(o);
 			});
 			f("preset").value = saved;
+			if (saved && !f("preset").value) {
+				var missingSetup = node("option", "Selected setup (unavailable)");
+				missingSetup.value = saved;
+				missingSetup.dataset.saved = "1";
+				f("preset").appendChild(missingSetup);
+				f("preset").value = saved;
+			}
 			if (newBoard) {
 				panel.classList.remove("br-editing");
 				selected = "";
@@ -1427,9 +1434,13 @@
 		el('[data-form="create"]').onsubmit = function (e) {
 			e.preventDefault();
 			var stockId = f("create-stock").value,
+				presetId = f("preset").value,
 				setup = (state && state.presets.filter(function (p) {
-					return p.id === f("preset").value;
-				})[0]) || repeatSettings;
+					return p.id === presetId;
+				})[0]);
+			if (state && presetId && !teams[presetId] && !setup)
+				return say("Selected setup is unavailable. Choose another setup.", true);
+			if (!presetId) setup = repeatSettings;
 			if (
 				stockId &&
 				state &&
@@ -1446,8 +1457,8 @@
 				title: f("title").value,
 				platform: f("platform").value,
 				currency: f("currency").value.toUpperCase(),
-				presetId: f("preset").value,
-				templateId: setup && !f("preset").value ? setup.id : undefined,
+				presetId: presetId,
+				templateId: setup && !presetId ? setup.id : undefined,
 				labels: f("labels").value,
 				styles: spotStyles(f("labels").value),
 				count: Number(f("count").value),
