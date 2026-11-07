@@ -112,6 +112,10 @@
       font-size: 0.84rem;
       margin: 4px 0 0;
     }
+    .video-details {
+      color: var(--fb-text);
+      overflow-wrap: break-word;
+    }
     .page-readout {
       display: none;
       width: 100%;
@@ -313,6 +317,7 @@
           <span class="status-chip" id="status-chip">Disconnected</span>
         </div>
         <div class="hint" id="status-detail">Waiting for a Page access token and live video ID.</div>
+        <a class="hint video-details" id="video-details" target="_blank" rel="noopener noreferrer" title="Open video on Facebook" hidden></a>
       </section>
       <div class="layout-main">
         <div class="stack">
@@ -426,6 +431,6 @@
 
   <!-- Page-world capture/UI. The extension also injects facebook.js in its
        isolated world to relay ssnFacebookRelay events to the background. -->
-  <script src="facebook.js?v=20261107-login-wait"></script>
+  <script src="facebook.js?v=20261107-video-details"></script>
 </body>
 </html>

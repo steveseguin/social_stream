@@ -127,7 +127,6 @@ const state = {
   // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
   textOnly: false,
   viewerValue: null,
-  videoTitle: '',
   authUser: null,
   authPages: [],
   authPagesError: '',
@@ -163,6 +162,7 @@ function cacheElements() {
   els.statusChip = document.getElementById('status-chip');
   els.statusText = document.getElementById('status-text');
   els.statusDetail = document.getElementById('status-detail');
+  els.videoDetails = document.getElementById('video-details');
   els.messageCount = document.getElementById('message-count');
   els.errorCount = document.getElementById('error-count');
   els.lastPoll = document.getElementById('last-poll');
@@ -611,6 +611,7 @@ function loadAuthState() {
 }
 
 function clearAuthState() {
+  showVideoDetails(null);
   state.authUser = null;
   state.authPages = [];
   state.authPagesError = '';
@@ -642,10 +643,16 @@ function updateInputs() {
 }
 
 function syncStateFromInputs() {
+  const previousVideoId = state.videoId;
+  const previousPageId = state.pageId;
+  const previousAccessToken = state.accessToken;
   state.oauthBase = normalizeOauthBase((els.oauthBase && els.oauthBase.value) || DEFAULT_OAUTH_BASE);
   state.accessToken = ((els.accessToken && els.accessToken.value) || '').trim();
   state.videoId = normalizeVideoId((els.videoId && els.videoId.value) || '');
   state.pageId = normalizePageId((els.pageId && els.pageId.value) || '');
+  if (state.videoId !== previousVideoId || state.pageId !== previousPageId || state.accessToken !== previousAccessToken) {
+    showVideoDetails(null);
+  }
   state.pollInterval = clamp((els.pollInterval && els.pollInterval.value) || DEFAULT_POLL_INTERVAL, MIN_POLL_INTERVAL, MAX_POLL_INTERVAL);
   state.autoConnect = !!(els.autoConnect && els.autoConnect.checked);
   state.liveFilter = !!(els.liveFilter && els.liveFilter.checked);
@@ -739,6 +746,9 @@ function updatePageOptions() {
 function applySelectedPage(pageId) {
   const page = getPageById(pageId);
   if (!page) return false;
+  if (String(page.id) !== state.pageId || String(page.accessToken || '') !== state.accessToken) {
+    showVideoDetails(null);
+  }
   state.selectedPageId = String(page.id || '');
   state.pageId = String(page.id || '');
   state.accessToken = String(page.accessToken || '');
@@ -777,6 +787,7 @@ function handleAuthSuccess(payload) {
     }));
   if (!state.authPages.length) {
     // A new login must not keep using a Page token from the previous account.
+    showVideoDetails(null);
     disconnect();
     state.selectedPageId = '';
     state.pageId = '';
@@ -1243,6 +1254,44 @@ async function graphRequest(path, params) {
   return data;
 }
 
+function showVideoDetails(video) {
+  if (!els.videoDetails) return;
+  els.videoDetails.hidden = true;
+  els.videoDetails.textContent = '';
+  els.videoDetails.removeAttribute('href');
+  if (!video || !video.id || String(video.id) !== state.videoId) return;
+  const title = String(video.title || video.description || '').replace(/\s+/g, ' ').trim();
+  let href = `https://www.facebook.com/watch/?v=${encodeURIComponent(state.videoId)}`;
+  try {
+    const permalink = new URL(video.permalink_url, 'https://www.facebook.com');
+    if (video.permalink_url && permalink.protocol === 'https:' && !permalink.username && !permalink.password &&
+        (permalink.hostname === 'facebook.com' || permalink.hostname.endsWith('.facebook.com'))) {
+      href = permalink.href;
+    }
+  } catch (err) {}
+  els.videoDetails.href = href;
+  els.videoDetails.textContent = title.length > 160 ? `${title.slice(0, 157)}...` : title || `Video ${state.videoId}`;
+  els.videoDetails.hidden = false;
+}
+
+async function loadVideoDetails() {
+  const videoId = state.videoId;
+  const pageId = state.pageId;
+  const accessToken = state.accessToken;
+  const generation = state.captureGeneration;
+  try {
+    const video = await graphRequest(encodeURIComponent(videoId), {
+      fields: 'id,title,description,permalink_url',
+      access_token: accessToken
+    });
+    if (generation !== state.captureGeneration || videoId !== state.videoId ||
+        pageId !== state.pageId || accessToken !== state.accessToken) return;
+    showVideoDetails(video);
+  } catch (err) {
+    // Video details are optional; their availability must not interrupt comments.
+  }
+}
+
 async function resolveLiveVideo({ connectAfter = false } = {}) {
   syncStateFromInputs();
   if (!state.accessToken) {
@@ -1254,12 +1303,16 @@ async function resolveLiveVideo({ connectAfter = false } = {}) {
     return;
   }
   setStatus('connecting', 'Resolving Page live video...');
+  const pageId = state.pageId;
+  const videoId = state.videoId;
+  const accessToken = state.accessToken;
   try {
     const data = await graphRequest(`${encodeURIComponent(state.pageId)}/live_videos`, {
       fields: 'id,title,permalink_url,status,creation_time',
       broadcast_status: JSON.stringify(['LIVE']),
       access_token: state.accessToken
     });
+    if (pageId !== state.pageId || videoId !== state.videoId || accessToken !== state.accessToken) return;
     if (!data || !Array.isArray(data.data) || data.error) {
       throw new Error(data && data.error && data.error.message
         ? data.error.message
@@ -1275,7 +1328,7 @@ async function resolveLiveVideo({ connectAfter = false } = {}) {
       throw new Error('Facebook returned a live video without an ID. Please try again.');
     }
     state.videoId = String(entry.id);
-    state.videoTitle = entry.title || '';
+    showVideoDetails(entry);
     updateInputs();
     saveConfig();
     setStatus(state.connected ? 'connected' : state.authUser ? 'signed-in' : 'ready', `Live video ${state.videoId} found. Click Connect to load comments.`);
@@ -1283,6 +1336,7 @@ async function resolveLiveVideo({ connectAfter = false } = {}) {
       connect();
     }
   } catch (err) {
+    if (pageId !== state.pageId || videoId !== state.videoId || accessToken !== state.accessToken) return;
     const details = err && err.details ? err.details : null;
     const msg = details && details.message ? details.message : err.message || 'Please try again.';
     setStatus('error', `Could not check live videos: ${msg}`);
@@ -1566,6 +1620,7 @@ function connect() {
   state.polling = false;
   setStatus('connecting', 'Connecting to Facebook Page live chat...');
   updateActionButtons();
+  loadVideoDetails();
   pollOnce();
 }
 
@@ -1592,6 +1647,7 @@ function bindEvents() {
     if (!selectedPageId) return;
     if (applySelectedPage(selectedPageId)) {
       showAuthStatus();
+      if (state.connected) loadVideoDetails();
     }
   });
   els.showToken.addEventListener('change', () => {
@@ -1603,6 +1659,7 @@ function bindEvents() {
       saveConfig();
       saveAuthState();
       if (state.connected) {
+        if (input === els.videoId || input === els.pageId || input === els.accessToken) loadVideoDetails();
         schedulePoll();
       }
     });
