@@ -822,7 +822,6 @@
 						f("create-cost").value = "";
 						pendingStock = s.id;
 						f("create-stock").value = s.id;
-						repeatSettings = null;
 						show("setup");
 						say("Create this break to use one item from stock.");
 					})
@@ -1427,7 +1426,10 @@
 		};
 		el('[data-form="create"]').onsubmit = function (e) {
 			e.preventDefault();
-			var stockId = f("create-stock").value;
+			var stockId = f("create-stock").value,
+				setup = (state && state.presets.filter(function (p) {
+					return p.id === f("preset").value;
+				})[0]) || repeatSettings;
 			if (
 				stockId &&
 				state &&
@@ -1445,18 +1447,18 @@
 				platform: f("platform").value,
 				currency: f("currency").value.toUpperCase(),
 				presetId: f("preset").value,
-				templateId: repeatSettings && !f("preset").value ? repeatSettings.id : undefined,
+				templateId: setup && !f("preset").value ? setup.id : undefined,
 				labels: f("labels").value,
 				styles: spotStyles(f("labels").value),
 				count: Number(f("count").value),
 				cost: f("create-cost").value,
-				theme: repeatSettings ? repeatSettings.theme : "standard",
-				layout: repeatSettings ? repeatSettings.layout : "grid",
-				columns: repeatSettings ? repeatSettings.columns : 4,
-				accent: repeatSettings ? repeatSettings.accent : "#8ce0ba",
-				showBuyers: repeatSettings ? repeatSettings.showBuyers : true,
-				showPrices: repeatSettings ? repeatSettings.showPrices : false,
-				availableOnly: repeatSettings ? repeatSettings.availableOnly : false,
+				theme: setup ? setup.theme : "standard",
+				layout: setup ? setup.layout : "grid",
+				columns: setup ? setup.columns : 4,
+				accent: setup ? setup.accent : "#8ce0ba",
+				showBuyers: setup ? setup.showBuyers : true,
+				showPrices: setup ? setup.showPrices : false,
+				availableOnly: setup ? setup.availableOnly : false,
 			}).then(function (ok) {
 				if (ok) {
 					discardDrafts(discard);
