@@ -5,8 +5,10 @@
 	var NativeWebSocket = window.WebSocket;
 	var pending = [];
 	var ready = false;
+	var connectionState = null;
 	function deliver(data) {
 		if (!ready) {
+			if (data && data.connection) { connectionState = data; return; }
 			pending.push(data);
 			if (pending.length > 250) pending.shift();
 			return;
@@ -16,6 +18,7 @@
 	window.addEventListener("message", function (event) {
 		if (event.source !== window || event.origin !== location.origin || !event.data || event.data.source !== "ebay-ws-ready") return;
 		ready = true;
+		if (connectionState) { deliver(connectionState); connectionState = null; }
 		pending.splice(0).forEach(deliver);
 	});
 	window.postMessage({ source: "ebay-ws-available" }, location.origin);
@@ -24,6 +27,8 @@
 			var socket = Reflect.construct(target, args);
 			try {
 				if (new URL(socket.url).hostname !== "fanout.ebay.com") return socket;
+				socket.addEventListener("open", function () { deliver({ connection: "open" }); });
+				socket.addEventListener("close", function () { deliver({ connection: "close" }); });
 				socket.addEventListener("message", function (event) {
 					if (typeof event.data === "string") deliver(event.data);
 				});

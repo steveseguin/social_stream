@@ -225,6 +225,64 @@
 		stageTools.appendChild(el('[data-do="finish"]'));
 		liveHeading.appendChild(stageTools);
 		var boardColumn = el(".br-live > div");
+		var auctionChoices = {}, auctionBoard = "", auctionConfig = "";
+		var auctionPanel = node("details", undefined, "br-auctions");
+		auctionPanel.innerHTML = '<summary><span aria-hidden="true">&#9881;</span> Auction suggestions <span data-auction-count></span></summary>' +
+			'<details data-auction-setup><summary>Show settings</summary><form data-form="auctions"><div class="br-row">' + select("auction-source", "Platform", [["whatnot", "Whatnot"], ["ebay", "eBay Live"]]) +
+			field("auction-stream", "Show URL", "text", 'maxlength="300" required') + '</div><div class="br-actions"><button type="submit" data-auction-start>Start suggestions</button><a href="docs/breaks.html#auction-suggestions" target="_blank" rel="noopener">Guide</a></div></form></details><button type="button" data-auction-stop>Pause suggestions</button>' +
+			'<p data-auction-warning class="br-muted" role="status" hidden></p><button type="button" data-auction-review hidden>Reviewed on platform</button><div class="br-auction-list"></div>';
+		boardColumn.insertBefore(auctionPanel, el(".br-grid"));
+		auctionPanel.querySelector("form").onsubmit = function (event) {
+			event.preventDefault();
+			if (state.auctions.pending.length && !confirm("Changing shows clears these suggestions. Continue?")) return;
+			send("breakAuctionSettings", { enabled: true, source: f("auction-source").value, stream: f("auction-stream").value });
+		};
+		el("[data-auction-stop]").onclick = function () { send("breakAuctionSettings", { enabled: false }); };
+		el("[data-auction-review]").onclick = function () { send("breakAuctionReview"); };
+		function renderAuctions() {
+			var b = state && state.active, a = state && state.auctions;
+			auctionPanel.hidden = !b;
+			if (!b || !a) return;
+			if (auctionBoard !== b.id) { auctionChoices = {}; auctionConfig = ""; auctionBoard = b.id; }
+			var config = JSON.stringify([a.source, a.stream, a.enabled]);
+			if (auctionConfig !== config) {
+				el("[data-auction-setup]").open = !a.enabled;
+				f("auction-source").value = a.source || (b.platform === "ebay" ? "ebay" : "whatnot");
+				f("auction-stream").value = a.stream || "";
+				auctionConfig = config;
+			}
+			el("[data-auction-start]").textContent = a.enabled ? "Update show" : "Start suggestions";
+			el("[data-auction-stop]").hidden = !a.enabled;
+			el("[data-auction-count]").textContent = (a.pending.length ? "(" + a.pending.length + ")" : a.enabled ? "(watching)" : "") + (a.warning ? " - Review capture" : "");
+			el("[data-auction-warning]").textContent = a.warning;
+			el("[data-auction-warning]").hidden = !a.warning;
+			el("[data-auction-review]").hidden = !a.warning;
+			var list = el(".br-auction-list"); list.textContent = "";
+			a.pending.forEach(function (p) {
+				var row = node("div", undefined, "br-auction-item"), title = node("strong", p.buyer), detail = node("p", p.title + (p.priceText ? " / " + p.priceText : ""), "br-muted");
+				row.dataset.suggestion = p.id;
+				row.appendChild(title); row.appendChild(detail);
+				var actions = node("div", undefined, "br-row"), choose = node("select"), label = node("label", "Spot");
+				choose.setAttribute("aria-label", "Spot for " + p.buyer); choose.appendChild(node("option", "Choose a spot")); choose.options[0].value = "";
+				b.spots.filter(function (spot) { return !spot.buyer && spot.status === "available" && spot.payment === "unknown" && spot.paid === null && !spot.result; }).forEach(function (spot) {
+					var option = node("option", spot.label); option.value = spot.id; choose.appendChild(option);
+				});
+				var binding = a.bindings.filter(function (m) { return m.native === p.nativeSpot; })[0];
+				choose.value = auctionChoices[p.id] || (binding && binding.spot) || "";
+				label.appendChild(choose); actions.appendChild(label);
+				var accept = node("button", "Assign buyer", "br-primary"), dismiss = node("button", "Dismiss"); accept.type = dismiss.type = "button";
+				accept.dataset.auctionAssign = "";
+				function available() { accept.disabled = busy || b.locked || b.stage === "finished" || !choose.value; }
+				choose.onchange = function () { auctionChoices[p.id] = choose.value; available(); };
+				accept.onclick = function () {
+					if (drafts["spot:" + b.id + ":" + choose.value]) return say("Save or discard that spot's unsaved changes first.", true);
+					send("breakSuggestion", { suggestionId: p.id, spotId: choose.value });
+				};
+				dismiss.onclick = function () { send("breakSuggestion", { suggestionId: p.id, dismiss: true }); };
+				actions.appendChild(accept); actions.appendChild(dismiss); row.appendChild(actions); available(); list.appendChild(row);
+			});
+			if (a.enabled && !a.pending.length) list.appendChild(node("p", "Waiting for a live auction result. Payment stays unchecked.", "br-muted"));
+		}
 		boardColumn.insertBefore(el(".br-toolbar"), boardColumn.firstChild);
 		boardColumn.insertBefore(liveHeading, boardColumn.firstChild);
 		costsCard.appendChild(el("[data-stock-use]"));
@@ -438,6 +496,8 @@
 			el('[data-do="history-repeat"]').disabled = busy || !(archiveId ? openedBreak() : b);
 			el('[data-do="history-remove"]').disabled = busy || !openedBreak();
 			el('[data-do="archive"]').hidden = !!archiveId || !b;
+			auctionPanel.querySelectorAll("input, select, [data-auction-start]").forEach(function (input) { input.disabled = busy || !editable || b.stage === "finished"; });
+			auctionPanel.querySelectorAll("[data-auction-assign]").forEach(function (button) { button.disabled = busy || !editable || b.stage === "finished" || !button.parentElement.querySelector("select").value; });
 		}
 		function repeat(b) {
 			if (!b) return say("Select a saved break first.", true);
@@ -1105,6 +1165,7 @@
 				el("[data-finance]").textContent = estimate(b);
 			}
 			renderStock();
+			renderAuctions();
 			renderUses();
 			history();
 			links();
@@ -1141,6 +1202,7 @@
 			});
 			[
 				".br-grid",
+				".br-auction-list",
 				".br-stock-list",
 				".br-ebay-list",
 				".br-history-list",

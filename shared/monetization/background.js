@@ -16,12 +16,14 @@
 		throneSourceKey = '',
 		throneStatus = 'Disabled';
     var auctionDraft = null;
+    var breakAuctionTracker = Object.create(null);
     function isBreakCommand(command) { return typeof SSNBreaks !== 'undefined' && SSNBreaks.commands.indexOf(command) !== -1; }
     async function runBreakCommand(command, data) {
         if (command !== 'breakGet') {
             var previousBreaks = privateState.breaks;
             privateState.breaks = SSNBreaks.apply(previousBreaks, command, data);
             try { await store(); } catch (error) { privateState.breaks = previousBreaks; throw error; }
+            if (command === 'breakCreate' || command === 'breakArchive' || command === 'breakAuctionSettings') breakAuctionTracker = Object.create(null);
             broadcast();
         }
         var archiveOnly = command === 'breakGet' && data && data.archiveOnly === true;
@@ -684,6 +686,20 @@
         var draft = SSNCommerceBoards.auction(event, Date.now());
         if (draft) auctionDraft = draft.title && draft.status !== 'idle' ? draft : null;
     };
+    window.recordBreaksAuction = function (event) {
+        if (!ready || !isExtensionOn || !privateState.breaks || !privateState.breaks.auctions || !privateState.breaks.auctions.enabled) return;
+        if (!SSNBreaks.auctionEvent(event)) return;
+        var job = queue.then(async function () {
+            var previous = privateState.breaks;
+            var next = SSNBreaks.ingestAuction(previous, event, breakAuctionTracker, Date.now());
+            if (!next) return;
+            privateState.breaks = next;
+            try { await store(); } catch (error) { privateState.breaks = previous; throw error; }
+            // Suggestions are private. Workspaces read them through sealed breakGet replies.
+        });
+        queue = job.catch(function (error) { console.warn('[Breaks] Could not save auction suggestion:', error.message); });
+        return queue;
+    };
     window.recordCommercePurchase = function (event) {
         if (!ready || !isExtensionOn || !privateState.boards || !privateState.boards.automatic) return;
         event = Object.assign({}, event); // Retain the provider ID before normal chat routing can replace it.
@@ -707,6 +723,10 @@
 			}
 			privateState.boards = SSNCommerceBoards.normalize(p.boards);
             if (p.breaks) privateState.breaks = typeof SSNBreaks !== 'undefined' ? SSNBreaks.normalize(p.breaks) : p.breaks;
+            if (privateState.breaks && privateState.breaks.auctions && privateState.breaks.auctions.enabled) {
+                privateState.breaks.auctions.warning = 'Host restarted. Check the platform for missed assignments.';
+                privateState.breaks.revision++;
+            }
             if (/^[a-f0-9]{64}$/.test(p.breaksKey || '')) privateState.breaksKey = p.breaksKey;
 			var savedEbay = ebayProfile(p.ebay);
 			if (savedEbay) privateState.ebay = savedEbay;

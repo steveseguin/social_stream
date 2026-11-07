@@ -507,6 +507,7 @@
                     <li>AI stage overlay commands use <code>{ action: "aiOverlay", target, meta }</code> or dock-controlled co-host playout uses <code>{ action: "cohostOverlay", target, meta }</code>; keep all command details such as <code>command</code>, <code>text</code>, <code>emotion</code>, <code>avatar</code>, and <code>tts</code> inside <code>meta</code>.</li>
                     <li>If a platform exposes multiple counters together, prefer a structured object with explicit keys (<code>meta.viewer_count</code>, <code>meta.follower_count</code>) instead of overloading strings.</li>
                     <li>Commerce overlays should use snapshot objects under <code>meta</code> (for example <code>auction_update</code> and <code>commerce_update</code>) and avoid ad-hoc top-level fields.</li>
+                    <li>Network auction events from Whatnot and eBay include <code>meta.captureId</code>, an opaque page/connection marker. A change means consumers should review capture continuity. It is not an auction ID or proof of payment; it is reported with the next auction event.</li>
                 </ul>
             </section>
 

@@ -572,6 +572,7 @@ fragment ListingV2Discount on ListingV2 {
 		catch (e) { return String(price.amount) + (price.currency ? " " + price.currency : ""); }
 	}
 
+	var auctionCapturePage = Date.now().toString(36) + Math.random().toString(36).slice(2), auctionCaptureEpoch = 0;
 	function networkAuctionSnapshot(id) {
 		var item = networkListings[id] || {};
 		var graph = graphqlListings[id] || {};
@@ -592,6 +593,7 @@ fragment ListingV2Discount on ListingV2 {
 		var winnerName = winner && (winner.userName || winner.userAccountName) || "";
 		var bids = hasSocketAuction ? (details.bidRound == null ? null : details.bidRound) : listing.bidCount;
 		return {
+			captureId: auctionCapturePage + "." + auctionCaptureEpoch,
 			title: item.title || listing.title || "", status: winnerName ? "sold" : status,
 			statusText: winnerName ? winnerName + " won" : bidder && status === "active" ? bidder + " is winning" : status,
 			bidder: bidder, winnerName: winnerName, currentPrice: price ? price.amount : null,
@@ -724,12 +726,16 @@ fragment ListingV2Discount on ListingV2 {
 			window.ninjafy.onWebSocketMessage(function (event) {
 				try { if (new URL(event.url).hostname !== "fanout.ebay.com") return; } catch (e) { return; }
 				if (event.type === "message") handleEbaySocketFrame(event.data);
-				if (event.type === "open") graphqlRefreshNeeded = true;
+					if (event.type === "open") { graphqlRefreshNeeded = true; auctionCaptureEpoch++; }
+					if (event.type === "close") auctionCaptureEpoch++;
 			});
 		} else {
 			window.addEventListener("message", function (event) {
 				if (event.source !== window || event.origin !== location.origin || !event.data) return;
-				if (event.data.source === "ebay-ws-observer") handleEbaySocketFrame(event.data.data);
+				if (event.data.source === "ebay-ws-observer") {
+					if (event.data.data && event.data.data.connection) auctionCaptureEpoch++;
+					else handleEbaySocketFrame(event.data.data);
+				}
 				if (event.data.source === "ebay-ws-available") window.postMessage({ source: "ebay-ws-ready" }, location.origin);
 			});
 			window.postMessage({ source: "ebay-ws-ready" }, location.origin);

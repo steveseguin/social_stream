@@ -73,6 +73,17 @@ body.breaks-workspace {
 	outline: 2px solid #8ce0ba;
 	outline-offset: 3px;
 }
+.br-auctions { margin: 12px 0; }
+.br-auctions > summary { cursor: pointer; }
+.br-auctions form { margin-top: 12px; }
+.br-auction-item { padding: 12px 0; border-top: 1px solid var(--border); overflow-wrap: anywhere; }
+.br-auction-item p { margin: 4px 0 8px; }
+.br-auction-item .br-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: end; }
+.br-auction-item label { flex: 1; }
+@media (max-width: 600px) {
+	.br-auction-item .br-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.br-auction-item label { grid-column: 1 / -1; }
+}
 .breaks-panel a {
 	color: #9dcfff;
 }

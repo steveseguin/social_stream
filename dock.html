@@ -8221,9 +8221,10 @@
 
 			// Keep speech pause state with buffered chat without changing message payloads.
 			var dockTtsArrivals = new WeakMap();
-			function rememberDockTtsArrival(data) {
+			function rememberDockTtsArrival(data, original) {
 				if (TTS.ttscommand && data && typeof data === "object" && !dockTtsArrivals.has(data)) {
-					dockTtsArrivals.set(data, TTS.paused ? -1 : TTS.pauseSerial);
+					var serial = original && dockTtsArrivals.has(original) ? dockTtsArrivals.get(original) : (TTS.paused ? -1 : TTS.pauseSerial);
+					dockTtsArrivals.set(data, serial);
 				}
 			}
 
@@ -8231,7 +8232,8 @@
 				if (!data) {
 					return featuredMode ? true : false;
 				}
-				rememberDockTtsArrival(data.content || data);
+				var ttsOriginalMessage = data.content || data;
+				rememberDockTtsArrival(ttsOriginalMessage);
 				// Prefer background.js normalization, but retain a delayed direct-server fallback for
 				// users whose saved Dock URL predates the remote API requirement.
 				if (!allowRawDonationFallback && shouldDeferRawDonationWebhook(data)) {
@@ -9112,6 +9114,7 @@
 				if (isDuplicateWebhookDelivery(data)) {
 					return false;
 				}
+				rememberDockTtsArrival(data.content || data, ttsOriginalMessage);
 
 				if (data.action) {
 				
@@ -9196,7 +9199,7 @@
 						if (data.value) {
 							//let content = decodeURI(data.value);
 							let content = JSON.parse(data.value);
-							rememberDockTtsArrival(content);
+							rememberDockTtsArrival(content, ttsOriginalMessage);
 							if (!pauseState) {
 								if (smoothMessageBuffer) {
 									// Track platform burst patterns
@@ -12018,6 +12021,7 @@
 				}
 				if (data.contents) {
 					data = data.contents;
+					var ttsPauseSerial = dockTtsArrivals.has(data) ? dockTtsArrivals.get(data) : TTS.pauseSerial;
 
 					// Temporary Web Store ad-announcement workaround; remove on 2026-10-07 (one week).
 					if (data.type === "twitch" && ["ad_break", "adbreak", "ad_request", "ad_schedule"].includes(data.event)) {
@@ -13297,7 +13301,6 @@
 						}
 						
 						
-						var ttsPauseSerial = dockTtsArrivals.has(data) ? dockTtsArrivals.get(data) : TTS.pauseSerial;
 						if (!suppressLiveSideEffects && !TTS.paused && ttsPauseSerial === TTS.pauseSerial) {
 							if (data.command && doNotTTSBeep){
 								// skipp TTS

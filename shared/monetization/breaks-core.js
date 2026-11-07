@@ -18,6 +18,9 @@
 		"breakRemoveStock",
 		"breakStockUse",
 		"breakStockReturn",
+		"breakAuctionSettings",
+		"breakSuggestion",
+		"breakAuctionReview",
 	];
 	var platforms = ["whatnot", "ebay", "tiktok", "other"],
 		themes = ["standard", "teams"];
@@ -25,6 +28,11 @@
 		logLimit = 500;
 	function text(value, max) {
 		return typeof value === "string" ? value.trim().slice(0, max) : "";
+	}
+	function nativeId(value, max) {
+		if (typeof value !== "string" && !(typeof value === "number" && Number.isFinite(value))) return "";
+		var id = String(value).trim();
+		return id.length <= max ? id : "";
 	}
 	function number(value, max, fallback) {
 		var n = Number(value);
@@ -198,6 +206,7 @@
 		return {
 			version: 1,
 			revision: number(raw.revision, Number.MAX_SAFE_INTEGER, 0),
+			auctions: auctionState(raw.auctions),
 			active: board(raw.active),
 			undo: board(raw.undo),
 			undoLabel: raw.undo ? text(raw.undoLabel, 250) : "",
@@ -210,6 +219,67 @@
 					return s.id && s.name;
 				}),
 		};
+	}
+	function auctionState(raw) {
+		raw = raw || {};
+		return {
+			enabled: raw.enabled === true, source: text(raw.source, 20), stream: text(raw.stream, 100),
+			since: number(raw.since, Number.MAX_SAFE_INTEGER, 0), breakId: text(raw.breakId, 100),
+			warning: text(raw.warning, 200),
+			captures: (Array.isArray(raw.captures) ? raw.captures : []).slice(-8).map(function (c) { return { producer: text(c.producer, 100), id: text(c.id, 120) }; }),
+			seen: (Array.isArray(raw.seen) ? raw.seen : []).slice(-240).map(function (id) { return text(id, 220); }),
+			bindings: (Array.isArray(raw.bindings) ? raw.bindings : []).slice(-120).map(function (b) { return { native: text(b.native, 100), spot: text(b.spot, 40) }; }),
+			pending: (Array.isArray(raw.pending) ? raw.pending : []).slice(0, 20).map(function (p) {
+				return { id: text(p.id, 220), buyer: text(p.buyer, 80), title: text(p.title, 180), priceText: text(p.priceText, 60),
+					breakId: text(p.breakId, 100), nativeSpot: text(p.nativeSpot, 100), at: number(p.at, Number.MAX_SAFE_INTEGER, 0) };
+			}).filter(function (p) { return p.id && p.buyer; })
+		};
+	}
+	// Only structured network events qualify. A sold snapshot alone may be history.
+	function auctionEvent(event) {
+		if (!event || event.private || event.history || event.replay || event.isTest || event.testMode) return null;
+		var m = event.meta || {}, out;
+		if (event.type === "whatnot" && m.transport === "websocket" && ["auction_started", "new_bid", "auction_ended"].indexOf(event.event) !== -1) {
+			out = { source: "whatnot", stream: text(m.livestreamId || String(m.topic || "").replace(/^[^:]+:/, ""), 100),
+				id: nativeId(m.auctionId, 220) || nativeId(m.productId, 220), live: event.event !== "auction_ended", sold: event.event === "auction_ended" && String(m.status).toUpperCase() === "SOLD",
+				buyer: text(event.chatname, 80), title: text(event.subtitle, 180), priceText: text(m.priceText, 60),
+				breakId: nativeId(m.breakId, 100), nativeSpot: nativeId(m.breakSpotId, 100), capture: text(m.captureId, 120) };
+			if (!out.breakId || !out.nativeSpot) return null;
+		} else if (event.type === "ebay" && event.event === "auction_update" && m.sourceMode === "network" && m.ebay) {
+			var update = m.ebay.update || {}, details = m.ebay.eventListing && m.ebay.eventListing.saleInfo && m.ebay.eventListing.saleInfo.details || {};
+			out = { source: "ebay", stream: text(m.ebay.eventId, 100), id: text(update.auctionId || details.auctionId, 220), live: m.status === "active", sold: m.status === "sold",
+				buyer: text(m.winnerName, 80), title: text(m.title, 180), priceText: text(m.priceText, 60), breakId: "", nativeSpot: "", capture: text(m.captureId, 120) };
+		} else return null;
+		if (!out.stream || !out.id || !out.capture) return null;
+		out.producer = out.capture.split(".")[0];
+		return out;
+	}
+	function ingestAuction(raw, event, tracker, now) {
+		var e = auctionEvent(event), b = raw && raw.active, a = raw && raw.auctions;
+		if (!e || !b || !a || !a.enabled || b.stage === "finished" || e.source !== a.source || e.stream !== a.stream) return null;
+		now = now || Date.now();
+		var s = normalize(raw); a = s.auctions;
+		if (a.breakId && e.breakId && a.breakId !== e.breakId) return null;
+		var key = b.id + ":" + a.since + ":" + e.producer;
+		var previous = a.captures.filter(function (c) { return c.producer === e.producer; })[0], changed = false;
+		if (!previous || previous.id !== e.capture) {
+			if (a.captures.length) a.warning = "Capture changed. Check the platform for missed assignments.";
+			a.captures = a.captures.filter(function (c) { return c.producer !== e.producer; });
+			a.captures.push({ producer: e.producer, id: e.capture }); a.captures = a.captures.slice(-8);
+			tracker[key] = { capture: e.capture, live: [] }; changed = true;
+		}
+		var run = tracker[key];
+		if (!run || run.capture !== e.capture) run = tracker[key] = { capture: e.capture, live: [] };
+		Object.keys(tracker).slice(0, -16).forEach(function (old) { delete tracker[old]; });
+		if (e.live && run.live.indexOf(e.id) === -1) { run.live.push(e.id); run.live = run.live.slice(-120); }
+		if (e.sold && e.buyer && a.seen.indexOf(e.id) === -1 && run.live.indexOf(e.id) !== -1) {
+			if (a.pending.length >= 20) a.warning = "Suggestions are full. Review them, then check the platform for missed assignments.";
+			else {
+				a.pending.push({ id: e.id, buyer: e.buyer, title: e.title, priceText: e.priceText, breakId: e.breakId, nativeSpot: e.nativeSpot, at: now });
+			}
+			a.seen.push(e.id); a.seen = a.seen.slice(-240); changed = true;
+		}
+		return changed ? finish(s, "breakSuggestion") : null;
 	}
 	function publicState(raw) {
 		if (!raw || !raw.active) return null;
@@ -264,6 +334,8 @@
 			return { id: b.id, title: b.title, finishedAt: b.finishedAt, spots: b.spots.length };
 		});
 		delete s.undo;
+		delete s.auctions.seen;
+		delete s.auctions.captures;
 		return s;
 	}
 	function active(state, data) {
@@ -323,6 +395,7 @@
 			s.history.unshift(b);
 		}
 		s.active = null;
+		s.auctions = auctionState();
 		s.undo = null;
 		s.undoLabel = "";
 	}
@@ -423,9 +496,43 @@
 				})
 			);
 			s.active = b;
+			s.auctions = auctionState();
 			s.undo = null;
 			s.undoLabel = "";
 			log(b, "Break created", now);
+		} else if (command === "breakAuctionSettings") {
+			b = active(s, data);
+			if (b.locked || b.stage === "finished") throw new Error("Unlock an unfinished break first.");
+			if (data.enabled === false) s.auctions.enabled = false;
+			else {
+				var stream = text(data.stream, 300), source = data.source;
+				try { var u = new URL(stream); stream = source === "whatnot" && /(^|\.)whatnot\.com$/.test(u.hostname) ? u.pathname.split("/live/")[1] : source === "ebay" && /(^|\.)ebay\.com$/.test(u.hostname) ? u.pathname.split("/events/")[1] : ""; stream = (stream || "").split("/")[0]; } catch (_) {}
+				if (["whatnot", "ebay"].indexOf(source) === -1 || !/^[a-zA-Z0-9_-]{1,100}$/.test(stream)) throw new Error("Paste the Whatnot or eBay Live show URL.");
+				if (s.auctions.source !== source || s.auctions.stream !== stream) s.auctions = auctionState({ source: source, stream: stream });
+				s.auctions.enabled = true; s.auctions.since = now;
+			}
+		} else if (command === "breakAuctionReview") {
+			active(s, data); s.auctions.warning = "";
+		} else if (command === "breakSuggestion") {
+			b = active(s, data);
+			var suggestion = s.auctions.pending.filter(function (p) { return p.id === data.suggestionId; })[0];
+			if (!suggestion) throw new Error("That suggestion was already reviewed. Refresh the list.");
+			if (!data.dismiss) {
+				if (b.locked || b.stage === "finished") throw new Error("Unlock an unfinished break before assigning buyers.");
+				item = find(b, data.spotId);
+				if (item.buyer || item.status !== "available" || item.payment !== "unknown" || item.paid !== null || item.result) throw new Error("Choose an empty spot. Existing assignments are never replaced.");
+				if (s.auctions.breakId && suggestion.breakId && s.auctions.breakId !== suggestion.breakId) throw new Error("This auction belongs to another Whatnot break.");
+				s.undo = copy(b); s.undoLabel = "Assigned " + suggestion.buyer + " to " + item.label;
+				item.buyer = suggestion.buyer; item.platform = s.auctions.source; item.status = "claimed";
+				// An auction result never sets a paid amount or confirms payment.
+				if (suggestion.breakId) s.auctions.breakId = suggestion.breakId;
+				if (suggestion.nativeSpot) {
+					s.auctions.bindings = s.auctions.bindings.filter(function (p) { return p.native !== suggestion.nativeSpot && p.spot !== item.id; });
+					s.auctions.bindings.push({ native: suggestion.nativeSpot, spot: item.id });
+				}
+				log(b, s.undoLabel + " (" + s.auctions.source + " auction " + suggestion.id + ")", now);
+			}
+			s.auctions.pending = s.auctions.pending.filter(function (p) { return p.id !== suggestion.id; });
 		} else if (command === "breakPreset") {
 			b = active(s, data);
 			if (s.presets.length >= 12) throw new Error("Remove a saved setup first (12 setups).");
@@ -714,6 +821,8 @@
 		flowState: flowState,
 		parseSpotRows: parseSpotRows,
 		formatSpotRows: formatSpotRows,
+		ingestAuction: ingestAuction,
+		auctionEvent: auctionEvent,
 	};
 	root.SSNBreaks = api;
 	if (typeof module === "object" && module.exports) module.exports = api;

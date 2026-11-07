@@ -1050,6 +1050,7 @@
 		scheduleWebSocketSnapshotRefresh();
 	}
 
+	var auctionCapturePage = Date.now().toString(36) + Math.random().toString(36).slice(2), auctionCaptureEpoch = 0;
 	function handleWebSocketCommerceEvent(payload, wsChannel, eventType) {
 		if (!isExtensionOn || !payload || typeof payload !== "object" || Array.isArray(payload)) {
 			return;
@@ -1111,6 +1112,7 @@
 		data.textonly = true;
 		data.subtitle = title;
 		data.meta = buildWebSocketMeta(wsChannel, eventType, payload, user);
+		data.meta.captureId = auctionCapturePage + "." + auctionCaptureEpoch;
 
 		// Keep structured details small; do not forward raw order/payment objects.
 		var paymentStatus = payload.paymentStatus || product.paymentStatus;
@@ -1416,6 +1418,7 @@
 			return;
 		}
 		if (event.data.type !== "receive") {
+			if (event.data.type === "open" || event.data.type === "close") auctionCaptureEpoch++;
 			return;
 		}
 		handleWhatnotWebSocketFrame(event.data.data, event.data.receivedAt);
@@ -1445,6 +1448,7 @@
 			}
 		}
 		function reconnect() {
+			auctionCaptureEpoch++;
 			clearSocket();
 			clearTimeout(retry);
 			if (stopped) return;
@@ -1521,6 +1525,7 @@
 				return;
 			}
 			window.ninjafy.onWebSocketMessage(function (payload) {
+				if (payload && (payload.type === "open" || payload.type === "close") && /^wss:\/\/www\.whatnot\.com\//.test(payload.url || "")) auctionCaptureEpoch++;
 				if (!payload || payload.type !== "message") {
 					return;
 				}

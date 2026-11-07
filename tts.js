@@ -2528,6 +2528,7 @@ TTS.desktopSystemTTS = async function(text, options) {
             return;
         }
         await TTS.playAudioBlob(new Blob([wavBuffer], { type: "audio/wav" }));
+        if (premiumSerial !== TTS.premiumSerial) return;
         TTS.updateButtonState("speaking");
     } catch (error) {
         if (premiumSerial !== TTS.premiumSerial) return;
@@ -2678,6 +2679,7 @@ TTS.googleTTS = function(tts, options) {
                     if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
                         await TTS.audioContext.resume();
                     }
+                    if (premiumSerial !== TTS.premiumSerial) return;
                     await TTS.audio.play();
                 } catch (e) {
                     if (premiumSerial === TTS.premiumSerial) {
@@ -2769,6 +2771,7 @@ TTS.geminiTTS = async function(tts, options) {
             if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
                 await TTS.audioContext.resume();
             }
+            if (premiumSerial !== TTS.premiumSerial) return;
             await TTS.audio.play();
         } catch (e) {
             if (premiumSerial === TTS.premiumSerial) {
@@ -2842,6 +2845,7 @@ TTS.SpeechifyTTS = function(tts, options) {
                     if (TTS.audioContext.state === 'suspended') {
                         await TTS.audioContext.resume();
                     }
+                    if (premiumSerial !== TTS.premiumSerial) return;
                     TTS.audio.play().catch(err => {
                         console.error("Audio play failed, user interaction required", err);
                         if (premiumSerial === TTS.premiumSerial) {
@@ -3201,6 +3205,7 @@ TTS.espeakTTS = async function(text, options) {
         }
         
         // Play the audio
+        if (premiumSerial !== TTS.premiumSerial) return;
         TTS.audio.play().catch(err => {
             console.error("Audio play failed, user interaction required", err);
             if (premiumSerial === TTS.premiumSerial) {
@@ -3616,6 +3621,7 @@ TTS.kittenTTS = async function(text, options) {
         }
         
         // Play the audio
+        if (premiumSerial !== TTS.premiumSerial) return;
         TTS.audio.play().catch(err => {
             console.error("Audio play failed, user interaction required", err);
             if (premiumSerial === TTS.premiumSerial) {

@@ -5696,6 +5696,8 @@ async function processIncomingMessage(message, sender = null) {
 
         if (message.event === 'purchase' && window.recordCommercePurchase) window.recordCommercePurchase(message);
         if (message.event === 'auction_update' && (message.type === 'whatnot' || message.type === 'ebay') && window.recordCommerceAuction) window.recordCommerceAuction(message);
+        if ((message.type === 'whatnot' || message.type === 'ebay') && window.recordBreaksAuction &&
+            ['auction_started', 'new_bid', 'auction_ended', 'auction_update'].indexOf(message.event) !== -1) window.recordBreaksAuction(message);
 
 		if (settings.filtercommands && message.chatmessage && message.chatmessage.startsWith("!")) {
 			return;
