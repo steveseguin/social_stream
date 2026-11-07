@@ -21,6 +21,14 @@
     async function runBreakCommand(command, data) {
         if (command !== 'breakGet') {
             var previousBreaks = privateState.breaks;
+            if (command === 'breakStock' && data && data.ebayId) {
+                var oldStock = (previousBreaks && previousBreaks.stock || []).filter(function (item) { return item.id === data.id; })[0];
+                if (!oldStock || oldStock.ebayId !== data.ebayId || oldStock.ebayEnvironment !== data.ebayEnvironment) {
+                    var savedListings = ebay.snapshot();
+                    if (savedListings.environment !== data.ebayEnvironment || !savedListings.items.some(function (item) { return item.id === data.ebayId; }))
+                        throw new Error('This listing is no longer in the connected eBay list. Refresh and choose a listing again.');
+                }
+            }
             privateState.breaks = SSNBreaks.apply(previousBreaks, command, data);
             try { await store(); } catch (error) { privateState.breaks = previousBreaks; throw error; }
             if (command === 'breakCreate' || command === 'breakArchive' || command === 'breakAuctionSettings') breakAuctionTracker = Object.create(null);

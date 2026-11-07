@@ -196,15 +196,16 @@
 			field("feePercent", "Fee percentage", "number", 'min="0" max="100" step="0.01" value="0"') +
 			field("fees", "Other costs", "number", 'min="0" max="9999999" step="0.01" value="0"') +
 			'</div><button type="submit">Save costs</button></form><p data-finance class="br-muted"></p><p class="br-muted">Uses host-confirmed paid amounts and your entered fees.</p></div></div></section>' +
-			'<section data-view="stock" hidden><div class="br-two"><div><h2>Local stock</h2><form data-form="stock"><input type="hidden" data-field="stock-id"><input type="hidden" data-field="ebay-id">' +
+			'<section data-view="stock" hidden><div class="br-two"><div><h2>Local stock</h2><form data-form="stock"><input type="hidden" data-field="stock-id">' +
 			field("stock-name", "Item", "text", 'maxlength="160" required') +
+			select("stock-ebay", "eBay listing", [["", "None"]]) + '<div data-stock-listing class="br-actions"></div>' +
 			'<div class="br-row">' +
 			field("stock-quantity", "Quantity", "number", 'min="0" max="100000" step="1" value="1" required') +
 			field("stock-cost", "Unit cost", "number", 'min="0" max="9999999" step="0.01"') +
 			field("stock-currency", "Currency", "text", 'value="USD" pattern="[A-Za-z]{3}" maxlength="3" required') +
 			"</div>" +
 			field("stock-note", "Private note", "text", 'maxlength="500"') +
-			'<div class="br-actions"><button type="submit">Save stock</button><button type="button" data-do="new-stock">New item</button></div></form><div class="br-stock-list"></div></div><div><h2>Connected eBay listings</h2><p data-ebay-status class="br-muted"></p><a href="docs/breaks.html#stock" target="_blank" rel="noopener">eBay setup</a><div class="br-ebay-list"></div><p class="br-muted">Copies saved listing details into a draft. Local stock changes do not change eBay inventory. Listing price is not your cost.</p></div></div></section>' +
+			'<div class="br-actions"><button type="submit">Save stock</button><button type="button" data-do="new-stock">New item</button></div></form><div class="br-stock-list"></div></div><div><h2>Connected eBay listings</h2><p data-ebay-status class="br-muted"></p><a href="docs/breaks.html#stock" target="_blank" rel="noopener">eBay setup</a><div class="br-ebay-list"></div><p class="br-muted">Local quantities stay separate from eBay. Enter your own unit cost.</p></div></div></section>' +
 			'<section data-view="history" hidden><div class="br-two"><div><h2>Saved breaks</h2><p class="br-muted">Up to 30 completed breaks. Export before removing older records.</p><div class="br-history-list"></div></div><div><h2 data-history-title>Break recap</h2><div class="br-actions"><button type="button" data-do="history-repeat">Run again</button><button type="button" data-do="history-recap">Buyer recap CSV</button><button type="button" data-do="history-export">Private CSV</button><button type="button" data-do="history-record">Export full record</button><button type="button" data-do="history-remove">Remove saved break</button></div><p data-history-finance class="br-muted"></p><div class="br-recap"></div><div class="br-history-stock"></div><details><summary>Activity</summary><ol class="br-log"></ol></details><button type="button" data-do="archive">Archive current break</button></div></div></section>';
 
 		// Keep each task's controls together without changing their command or draft handling.
@@ -807,9 +808,53 @@
 			["id", "name", "quantity", "cost", "currency", "note"].forEach(function (k) {
 				f("stock-" + k).value = item[k] == null ? (k === "quantity" ? 1 : k === "currency" ? "USD" : "") : item[k];
 			});
-			f("ebay-id").value = item.ebayId || "";
+			var draft = drafts[draftKey("stock")];
+			stockListingOptions(draft ? draft.values["stock-ebay"] : listingKey(item));
 			restoreDraft("stock");
+			stockListingDetail();
 		}
+		function listingKey(item) {
+			return item && item.ebayId ? (item.ebayEnvironment || "unknown") + ":" + item.ebayId : "";
+		}
+		function listingURL(id, environment) {
+			return /^\d{9,15}$/.test(id) && ["sandbox", "production"].indexOf(environment) !== -1 ?
+				"https://" + (environment === "sandbox" ? "www.sandbox.ebay.com" : "www.ebay.com") + "/itm/" + id : "";
+		}
+		function listingLink(id, environment) {
+			var url = listingURL(id, environment);
+			if (!url) return node("span", "eBay link needs review", "br-muted");
+			var link = node("a", environment === "sandbox" ? "eBay Sandbox listing" : "eBay listing");
+			link.href = url; link.target = "_blank"; link.rel = "noopener";
+			return link;
+		}
+		function stockListingOptions(value) {
+			var select = f("stock-ebay");
+			select.textContent = "";
+			var empty = node("option", "None"); empty.value = ""; select.appendChild(empty);
+			(ebay && ebay.items || []).forEach(function (item) {
+				var key = ebay.environment + ":" + item.id;
+				var linked = state.stock.some(function (s) { return s.id !== f("stock-id").value && listingKey(s) === key; });
+				var option = node("option", (ebay.environment === "sandbox" ? "Sandbox / " : "") + item.name + (linked ? " (already linked)" : ""));
+				option.value = key; option.disabled = linked && key !== value; select.appendChild(option);
+			});
+			if (value && !Array.from(select.options).some(function (option) { return option.value === value; })) {
+				var missing = node("option", value.indexOf("unknown:") === 0 ? "Choose this listing again" : "Saved listing (not in current eBay list)");
+				missing.value = value; select.appendChild(missing);
+			}
+			select.value = value || "";
+		}
+		function stockListingDetail() {
+			var detail = el("[data-stock-listing]"), parts = f("stock-ebay").value.split(":"), item;
+			detail.textContent = "";
+			if (!parts[1]) return;
+			detail.appendChild(listingLink(parts[1], parts[0]));
+			if (ebay && ebay.environment === parts[0]) item = ebay.items.filter(function (i) { return i.id === parts[1]; })[0];
+			if (item) {
+				detail.appendChild(node("span", item.available === false ? "Unavailable" : item.available === true ? "Available" : "Availability unknown", "br-muted"));
+				detail.appendChild(button("Use listing name", function () { f("stock-name").value = item.name; rememberDraft("stock"); }));
+			}
+		}
+		f("stock-ebay").onchange = stockListingDetail;
 		function button(text, fn) {
 			var b = node("button", text);
 			b.type = "button";
@@ -819,6 +864,7 @@
 		function useRow(u, fromArchive) {
 			var row = node("article", undefined, "br-record");
 			row.appendChild(node("strong", u.quantity + " x " + u.name));
+			if (u.ebayId) row.appendChild(listingLink(u.ebayId, u.ebayEnvironment));
 			row.appendChild(
 				node(
 					"span",
@@ -923,11 +969,14 @@
 			);
 		}
 		function renderStock() {
+			stockListingOptions(f("stock-ebay").value);
+			stockListingDetail();
 			var list = el(".br-stock-list");
 			list.textContent = "";
 			state.stock.forEach(function (s) {
 				var row = node("article", undefined, "br-record");
 				row.appendChild(node("strong", s.name));
+				if (s.ebayId) row.appendChild(listingLink(s.ebayId, s.ebayEnvironment));
 				row.appendChild(
 					node(
 						"span",
@@ -938,6 +987,7 @@
 				actions.appendChild(
 					button("Edit", function () {
 						stockForm(s);
+						f("stock-name").focus();
 					})
 				);
 				actions.appendChild(
@@ -986,21 +1036,26 @@
 								" " +
 								(i.amount == null ? "" : i.amount) +
 								" / Availability: " +
-								(i.available == null ? "unknown" : i.available)
+								(i.available === true ? "available" : i.available === false ? "unavailable" : i.available == null ? "unknown" : i.available)
 						)
 					);
+					var linked = state.stock.filter(function (s) { return s.ebayId === i.id && s.ebayEnvironment === ebay.environment; })[0];
 					row.appendChild(
-						button("Copy to stock draft", function () {
+						button(linked ? "Edit linked stock" : "Add to stock", function () {
 							if (!state) return say("Connect to Social Stream first.", true);
+							if (linked) { stockForm(linked); f("stock-name").focus(); return; }
 							if (drafts["stock:"] && !confirm("Replace the unsaved new stock item?")) return;
 							delete drafts["stock:"];
 							stockForm();
 							f("stock-name").value = i.name;
-							f("stock-quantity").value = Number.isInteger(i.available) ? i.available : 0;
+							// Availability is usually a boolean, not a warehouse count.
+							f("stock-quantity").value = typeof i.available === "number" && Number.isInteger(i.available) && i.available >= 0 && i.available <= 100000 ? i.available : "";
 							f("stock-currency").value = i.currency || "USD";
-							f("ebay-id").value = i.id;
+							f("stock-ebay").value = ebay.environment + ":" + i.id;
+							stockListingDetail();
 							rememberDraft("stock");
-							say("Review quantity and enter your cost, then save.");
+							f("stock-quantity").focus();
+							say("Enter your quantity and unit cost, then save.");
 						})
 					);
 					products.appendChild(row);
@@ -1050,8 +1105,8 @@
 			var prior = state,
 				changed = !prior || prior.revision !== next.breaks.revision;
 			state = next.breaks;
-			if (!prior) stockForm();
 			ebay = next.ebayStock || ebay;
+			if (!prior) stockForm();
 			var stamp = JSON.stringify([state.revision, ebay, next.hostOn, state.opened && state.opened.id]);
 			if (stamp === signature) return;
 			signature = stamp;
@@ -1671,6 +1726,7 @@
 		};
 		el('[data-form="stock"]').onsubmit = function (e) {
 			e.preventDefault();
+			var link = f("stock-ebay").value.split(":");
 			send("breakStock", {
 				revision: draftRevision("stock", stockRevision),
 				id: f("stock-id").value,
@@ -1679,7 +1735,8 @@
 				cost: f("stock-cost").value,
 				currency: f("stock-currency").value.toUpperCase(),
 				note: f("stock-note").value,
-				ebayId: f("ebay-id").value,
+				ebayId: link[1] || "",
+				ebayEnvironment: link[0] === "unknown" ? "" : link[0] || "",
 			}).then(function (ok) {
 				if (ok) {
 					clearDraft("stock");
@@ -1789,7 +1846,7 @@
 				return;
 			}
 			if (!state) return say("Connect to Social Stream first.", true);
-			if (action === "new-stock") return stockForm();
+			if (action === "new-stock") { stockForm(); f("stock-name").focus(); return; }
 			if (action === "history-export") return exportBoard(archiveId ? openedBreak() : b);
 			if (action === "history-record") return exportRecord(archiveId ? openedBreak() : b);
 			if (action === "history-remove") {

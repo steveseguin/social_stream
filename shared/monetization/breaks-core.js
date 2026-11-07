@@ -186,6 +186,7 @@
 			currency: /^[A-Z]{3}$/.test(raw.currency || "") ? raw.currency : "USD",
 			note: text(raw.note, 500),
 			ebayId: text(raw.ebayId, 80),
+			ebayEnvironment: raw.ebayId && ["production", "sandbox"].indexOf(raw.ebayEnvironment) !== -1 ? raw.ebayEnvironment : "",
 		};
 	}
 	// A snapshot, so a record stays accurate and reversible if the item is later edited or removed.
@@ -197,6 +198,8 @@
 			name: text(raw.name, 160),
 			quantity: Math.round(number(raw.quantity, 100000, 0)),
 			unitCost: money(raw.unitCost),
+			ebayId: text(raw.ebayId, 80),
+			ebayEnvironment: raw.ebayId && ["production", "sandbox"].indexOf(raw.ebayEnvironment) !== -1 ? raw.ebayEnvironment : "",
 			currency: /^[A-Z]{3}$/.test(raw.currency || "") ? raw.currency : "USD",
 			at: number(raw.at, Number.MAX_SAFE_INTEGER, 0),
 		};
@@ -590,6 +593,11 @@
 				throw new Error("Enter a valid unit cost.");
 			item = stock(Object.assign({}, data, { id: old ? old.id : "stock-" + now + "-" + (s.revision + 1) }));
 			if (!item.name) throw new Error("Enter a stock item name.");
+			var linkChanged = !old || old.ebayId !== item.ebayId || old.ebayEnvironment !== item.ebayEnvironment;
+			if (item.ebayId && linkChanged &&
+				(!/^\d{9,15}$/.test(item.ebayId) || !item.ebayEnvironment)) throw new Error("Choose an eBay listing from the list.");
+			if (item.ebayId && linkChanged && s.stock.some(function (p) { return p.id !== item.id && p.ebayId === item.ebayId && p.ebayEnvironment === item.ebayEnvironment; }))
+				throw new Error("This eBay listing is already linked to another stock item. Edit that item or unlink it first.");
 			if (old) s.stock[s.stock.indexOf(old)] = item;
 			else s.stock.push(item);
 		} else if (command === "breakRemoveStock")
@@ -612,8 +620,14 @@
 				return p.id === item.stockId;
 			})[0];
 			if (!home) {
+				// A removed item may have been imported again. Return it to that link instead of duplicating it.
+				if (item.ebayId && item.ebayEnvironment) home = s.stock.filter(function (p) {
+					return p.ebayId === item.ebayId && p.ebayEnvironment === item.ebayEnvironment;
+				})[0];
+			}
+			if (!home) {
 				if (s.stock.length >= 100) throw new Error("Use up to 100 stock items.");
-				home = stock({ id: item.stockId, name: item.name, quantity: 0, cost: item.unitCost, currency: item.currency });
+				home = stock({ id: item.stockId, name: item.name, quantity: 0, cost: item.unitCost, currency: item.currency, ebayId: item.ebayId, ebayEnvironment: item.ebayEnvironment });
 				s.stock.push(home);
 			}
 			if (home.quantity + item.quantity > 100000) throw new Error("That would put more than 100000 in stock.");
@@ -752,6 +766,8 @@
 							name: source.name,
 							quantity: count,
 							unitCost: source.cost,
+							ebayId: source.ebayId,
+							ebayEnvironment: source.ebayEnvironment,
 							currency: source.currency,
 							at: now,
 						})
