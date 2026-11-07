@@ -53,6 +53,41 @@
 	function copy(value) {
 		return JSON.parse(JSON.stringify(value));
 	}
+	function parseSpotRows(value) {
+		var input = typeof value === "string" ? value : "",
+			rows = [], row = [], cell = "", quoted = false, closed = false;
+		for (var i = 0; i <= input.length; i++) {
+			var ch = input[i];
+			if (quoted) {
+				if (ch === undefined) throw new Error("Close the quoted cell in the spot list.");
+				if (ch === '"') {
+					if (input[i + 1] === '"') { cell += '"'; i++; }
+					else { quoted = false; closed = true; }
+				} else cell += ch;
+			} else if (ch === undefined || ch === "\t" || ch === "\n" || ch === "\r") {
+				row.push(cell);
+				cell = "";
+				closed = false;
+				if (ch !== "\t") {
+					if (row.some(function (v) { return v.trim(); })) rows.push(row);
+					row = [];
+					if (ch === "\r" && input[i + 1] === "\n") i++;
+				}
+			} else if (closed) {
+				if (ch !== " ") throw new Error("Check the quoted cells in the spot list.");
+			} else if (ch === '"' && !cell) quoted = true;
+			else cell += ch;
+		}
+		return rows;
+	}
+	function formatSpotRows(rows) {
+		return rows.map(function (row) {
+			return row.map(function (value) {
+				var cell = value == null ? "" : String(value);
+				return /["\t\r\n]/.test(cell) ? '"' + cell.replace(/"/g, '""') + '"' : cell;
+			}).join("\t");
+		}).join("\n");
+	}
 	function hex(value) {
 		return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : "";
 	}
@@ -324,12 +359,8 @@
 			if (typeof data.labels === "string" && data.labels.length > 60000)
 				throw new Error("That spot list is too long. Use up to 120 spots with shorter notes.");
 			var styles = data.styles && typeof data.styles === "object" ? data.styles : {};
-			// Keep empty leading cells: trimming the whole paste would shift private notes into public columns.
-			var labels = (typeof data.labels === "string" ? data.labels : "")
-				.split(/\r?\n/)
-				.filter(function (x) {
-					return x.trim();
-				});
+			// Parse cell boundaries before trimming fields, including quoted spreadsheet notes.
+			var labels = parseSpotRows(data.labels);
 			// Match by name and occurrence so reordering keeps saved styles and images,
 			// including deliberately empty values and distinct spots with the same name.
 			var savedSpots = Object.create(null);
@@ -341,9 +372,8 @@
 			var slots = Array.isArray(data.spots)
 				? data.spots
 				: labels.length
-					? labels.map(function (l) {
-							var cells = l.split("\t"),
-								name = cells[0].trim(),
+					? labels.map(function (cells) {
+							var name = cells[0].trim(),
 								original = savedSpots[name] && savedSpots[name].shift(),
 								base = Object.assign({}, original || {}),
 								style = Object.prototype.hasOwnProperty.call(styles, name) ? styles[name] : null;
@@ -681,6 +711,8 @@
 		controlState: controlState,
 		flowRequest: flowRequest,
 		flowState: flowState,
+		parseSpotRows: parseSpotRows,
+		formatSpotRows: formatSpotRows,
 	};
 	root.SSNBreaks = api;
 	if (typeof module === "object" && module.exports) module.exports = api;

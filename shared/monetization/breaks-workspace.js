@@ -379,11 +379,9 @@
 			f("platform").value = b.platform;
 			f("currency").value = b.currency;
 			f("create-cost").value = b.cost === null ? "" : b.cost;
-			f("labels").value = b.spots
-				.map(function (s) {
-					return [s.label, s.price === null ? "" : s.price, s.description].join("\t");
-				})
-				.join("\n");
+			f("labels").value = SSNBreaks.formatSpotRows(b.spots.map(function (s) {
+				return [s.label, s.price, s.description];
+			}));
 			f("count").value = b.spots.length;
 			show("setup");
 			say("Setup copied. Buyer assignments and stock usage will start empty.");
@@ -1310,20 +1308,20 @@
 					f("platform").value = p.platform;
 					f("currency").value = p.currency;
 					f("create-cost").value = p.cost === null ? "" : p.cost;
-					f("labels").value = p.spots
-						.map(function (s) {
-							return [s.label, s.price == null ? "" : s.price, s.description].join("\t");
-						})
-						.join("\n");
+					f("labels").value = SSNBreaks.formatSpotRows(p.spots.map(function (s) {
+						return [s.label, s.price, s.description];
+					}));
 					f("count").value = p.spots.length;
 				} else f("labels").value = "";
 			}
 		}
 		// Any spot named after a league team gets its colors, so edited or pasted team lists keep them.
 		function spotStyles(labels) {
-			var out = {};
-			labels.split(/\r?\n/).forEach(function (line) {
-				var name = line.split("\t")[0].trim();
+			var out = {}, rows;
+			try { rows = SSNBreaks.parseSpotRows(labels); }
+			catch (_) { return out; } // The host reports invalid input without creating the break.
+			rows.forEach(function (cells) {
+				var name = cells[0].trim();
 				if (teamStyles[name]) out[name] = teamStyles[name];
 			});
 			return out;
