@@ -273,3 +273,8 @@ body .container .popup-feature-actions [data-copy]:disabled { opacity:1; }
 .popup-feature-toggle[aria-expanded="true"]::before { transform:rotate(90deg); }
 [dir="rtl"] .popup-feature-toggle[aria-expanded="false"]::before { transform:scaleX(-1); }
 .popup-feature-toggle:focus-visible { outline:2px solid var(--color-accent); outline-offset:1px; }
+
+/* Native accordions share the existing popup header and content components. */
+details.wrapper { display:block; }
+details.wrapper > summary.collapsible-label { list-style:none; }
+details.wrapper > summary.collapsible-label::-webkit-details-marker { display:none; }

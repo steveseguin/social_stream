@@ -5,8 +5,8 @@
 	var ready = false,
 		current = null;
 	var products = [], editingProduct = -1;
-    var boardsPanel = document.createElement('details'); boardsPanel.className = 'popup-subsection commerce-board-controls';
-    panel.appendChild(boardsPanel);
+    var boardsPanel = document.createElement('details'); boardsPanel.className = 'wrapper commerce-board-controls';
+    panel.insertBefore(boardsPanel, document.getElementById('money-breaks-panel'));
     var breaksLink = by('breaks');
     var breaksReset = by('breaks-reset');
     var breaksHint = by('breaks-status');
@@ -24,6 +24,12 @@
     window.SSNCommerceBoardControls(boardsPanel, request, function () {
         links(); return by('overlay').href;
     });
+    boardsPanel.querySelector('summary').className = 'collapsible-label';
+    var boardContent = boardsPanel.querySelector('.cb-content');
+    boardContent.classList.add('options_group', 'popup-settings-panel');
+    var boardBody = document.createElement('div'), boardOptions = document.createElement('div');
+    boardBody.className = 'collapsible-text'; boardOptions.className = 'options';
+    boardOptions.appendChild(boardContent); boardBody.appendChild(boardOptions); boardsPanel.appendChild(boardBody);
 	var feedbackUntil = {};
 	var saveLabel = by('save').textContent;
 	function tr(key, fallback) { return typeof getTranslation === 'function' ? getTranslation(key, fallback) : fallback; }
