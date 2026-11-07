@@ -1838,6 +1838,7 @@ function loadSettings(item, resave = false) {
 
 	if (item && item.settings) {
 		settings = item.settings;
+        if (typeof prepareLocalTranslation === "function") prepareLocalTranslation();
 		if (Object.prototype.hasOwnProperty.call(settings, "twitchshowusername")) {
 			if (!Object.prototype.hasOwnProperty.call(settings, "showdisplaynameusername")) {
 				settings.showdisplaynameusername = settings.twitchshowusername;
@@ -6087,6 +6088,8 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			}
 
 			pruneSettingsObjects(settings);
+
+            if (["aiTranslateEngine", "aiAutoTranslate", "aiAutoTranslateOutgoing", "localTranslateSourceLanguage"].includes(request.setting) && typeof prepareLocalTranslation === "function") prepareLocalTranslation();
 
             if ((request.setting === 'ragSearchMode' || request.setting === 'ollamaRagEnabled') && typeof resetRAGSemanticSearch === 'function') resetRAGSemanticSearch(true);
 
@@ -17214,6 +17217,24 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 		return;
 	}
 
+	if (isSSAPP && tab.youtubeOwnerSender) {
+		const message = limitMessageForPlatform(data.response, "youtube");
+		const payload = {
+			message,
+			youtubeOwnerSender: tab.youtubeOwnerSender,
+			youtubeReplyVideoId: data.youtubeReplyVideoId !== undefined ? data.youtubeReplyVideoId : tab.youtubeOwnerSender.videoId
+		};
+		const profile = resolveThrottleProfile(tab.id, relayTabContext.throttleProfile, overrideTimeout);
+		relayTabContext.storeMessage(message);
+		if (profile) {
+			await scheduleThrottledSend(tab.id, profile, payload, relayTabContext.throttleOptions);
+		} else {
+			await performGeneralFakeChatSend(tab.id, payload);
+		}
+		relayTabContext.markAutoIfNeeded();
+		return;
+	}
+
 	if (url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
 		relayStoreOnlyForTab(relayTabContext, data.response);
 		return;
@@ -18337,8 +18358,14 @@ async function generalFakeChat(
 	});
 }
 
-async function performGeneralFakeChatSend(tabId, { message, middle = true, keypress = true, backspace = false, delayedPress = false, modifierKey = null, primingEnter = false, pointerFocusSelectors = null, youtubeReplyVideoId }) {
+async function performGeneralFakeChatSend(tabId, { message, middle = true, keypress = true, backspace = false, delayedPress = false, modifierKey = null, primingEnter = false, pointerFocusSelectors = null, youtubeReplyVideoId, youtubeOwnerSender }) {
 	try {
+		if (isSSAPP && youtubeOwnerSender) {
+			// Resolve credentials in the app for this exact source generation. Never fall back after an API send.
+			return await ipcRenderer.invoke("youtube-owner-send", {
+				tabId, message, revision: youtubeOwnerSender.revision, videoId: youtubeReplyVideoId
+			});
+		}
 		// A queued reply must not follow a window to a different stream.
 		if (youtubeReplyVideoId !== undefined && !(await isCurrentYouTubeReplyTarget(tabId, youtubeReplyVideoId))) {
 			await delayedDetach(tabId);

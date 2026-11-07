@@ -10451,14 +10451,14 @@ input:checked + .slider:before {
 								<h3 style="margin-bottom: 6px;"><span>&#127760; Auto Translate</span></h3>
 								<div class="textInputContainer popup-inset-field">
                                     <label for="aiTranslateEngine">Translator</label>
-                                    <select id="aiTranslateEngine" class="textInput" data-optionsetting="aiTranslateEngine" title="Free built-in runs on your device without an API key. Language packs download on first use and are cached. Unsupported languages stay unchanged unless dropping untranslated messages is enabled.">
+                                    <select id="aiTranslateEngine" class="textInput" data-optionsetting="aiTranslateEngine" title="Free built-in runs on your device without an API key. Auto-detection downloads a 126 MB model. The detector and language packs are cached. Unsupported languages stay unchanged unless dropping untranslated messages is enabled.">
                                         <option value="">Selected AI provider</option>
                                         <option value="local">Free built-in (Mozilla)</option>
                                     </select>
                                 </div>
                                 <div id="localTranslateSourceField" class="textInputContainer popup-inset-field hidden" title="For incoming messages with the free built-in translator. Leave blank to detect each message's language, or enter a language code such as es, fr, or de. Outgoing messages always use auto-detection.">
                                     <label for="localTranslateSourceLanguage">Incoming source language</label>
-                                    <input type="text" id="localTranslateSourceLanguage" class="textInput" autocomplete="off" placeholder="Auto-detect" data-textsetting="localTranslateSourceLanguage" />
+                                    <input type="text" id="localTranslateSourceLanguage" class="textInput" autocomplete="off" placeholder="Auto-detect" title="Leave blank to detect each message. Short or uncertain messages stay unchanged. Enter a language code for a known source." data-textsetting="localTranslateSourceLanguage" />
                                     <a class="lightblue" style="margin-left: 8px;" href="docs/chatbot-basics-guide.html#translation" target="_blank" rel="noopener">Supported languages</a>
                                 </div>
 								<div>

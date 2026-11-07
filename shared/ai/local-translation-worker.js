@@ -2,9 +2,6 @@
 
 // Bergamot API usage adapted from Mozilla Translate (MPL 2.0).
 // Runtime, models and license: ../../thirdparty/bergamot/NOTICE.txt.
-// Reuse the packaged language classifier without changing the AI detector.
-importScripts("english-translation-worker.js");
-
 var modelRoot = "https://storage.googleapis.com/bergamot-models-sandbox/0.3.4/";
 var runtimeBase = new URL("../../thirdparty/bergamot/", self.location.href).href;
 var registry;
@@ -14,22 +11,47 @@ var initialization;
 var queue = [];
 var processing = false;
 var retryAfter = 0;
-var Module = {
-    locateFile: function (file) { return runtimeBase + file; }
-};
+var Module;
+var modernEngine = false;
+var classifier;
+var classifierLoading;
+
+function loadLanguageClassifier() {
+    if (!classifierLoading) {
+        classifierLoading = (async function () {
+            importScripts("../../thirdparty/fasttext/fasttext.js");
+            var base = new URL("../../thirdparty/fasttext/", self.location.href).href;
+            var buffer = await download("language-identification", {
+                url: "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin",
+                size: 131266198,
+                expectedSha256Hash: "7e69ec5451bc261cc7844e49e4792a85d7f09c06789ec800fc4a44aec362764e"
+            });
+            var runtime = await FastTextModule({ locateFile: function (file) { return base + file; } });
+            runtime.FS.writeFile("/lid.176.bin", new Uint8Array(buffer));
+            try {
+                classifier = new runtime.FastText();
+                classifier.loadModel("/lid.176.bin");
+            } finally { runtime.FS.unlink("/lid.176.bin"); }
+        }()).catch(function (error) {
+            classifierLoading = null;
+            throw error;
+        });
+    }
+    return classifierLoading;
+}
 
 function initialize() {
     if (!initialization) {
-        initialization = new Promise(function (resolve, reject) {
-            Module.onRuntimeInitialized = resolve;
-            Module.onAbort = function (reason) { reject(new Error(String(reason))); };
-            try { importScripts(runtimeBase + "bergamot-translator-worker.js"); }
-            catch (error) { reject(error); }
-        }).then(async function () {
+        initialization = Promise.resolve().then(function () {
+            importScripts(runtimeBase + "runtime-loader.js");
+            return loadBergamotRuntime(runtimeBase + "v0.6.0/", runtimeBase);
+        }).then(async function (engine) {
+            Module = engine.module;
+            modernEngine = engine.modern;
             var response = await fetch(runtimeBase + "registry.json");
             if (!response.ok) throw new Error("Translation language list could not be loaded.");
             registry = await response.json();
-            service = new Module.BlockingService({});
+            service = new Module.BlockingService(modernEngine ? { cacheSize: 0 } : {});
         });
     }
     return initialization;
@@ -102,7 +124,11 @@ async function loadModel(pair) {
             list.push_back(vocab);
         }
         var config = "beam-size: 1\nnormalize: 1.0\nword-penalty: 0\nmax-length-break: 128\nmini-batch-words: 1024\nworkspace: 128\nmax-length-factor: 2.0\nskip-cost: true\ncpu-threads: 0\nquiet: true\nquiet-translation: true\ngemm-precision: int8shiftAll\n";
-        var translationModel = new Module.TranslationModel(config, model, lex, list);
+        var from = pair.slice(0, 2);
+        var to = pair.slice(2);
+        var translationModel = modernEngine
+            ? new Module.TranslationModel(from, to, config, model, lex, list, null)
+            : new Module.TranslationModel(config, model, lex, list);
         models.set(pair, { model: translationModel, owned: owned, list: list });
         return translationModel;
     } catch (error) {
@@ -124,10 +150,13 @@ function releaseUnusedModels(pairs) {
 
 function translateParts(pair, texts) {
     var input = new Module.VectorString();
-    var options = new Module.ResponseOptions();
+    var options = modernEngine ? new Module.VectorResponseOptions() : new Module.ResponseOptions();
     var output;
     try {
-        texts.forEach(function (text) { input.push_back(text); });
+        texts.forEach(function (text) {
+            input.push_back(text);
+            if (modernEngine) options.push_back({ qualityScores: false, alignment: false, html: false });
+        });
         output = service.translate(models.get(pair).model, input, options);
         var translated = [];
         for (var i = 0; i < output.size(); i++) {
@@ -145,15 +174,18 @@ function translateParts(pair, texts) {
 
 async function detectLanguage(text) {
     text = text.replace(/https?:\/\/\S+|www\.\S+|@[\p{L}\p{N}_]+/gu, " ").replace(/\s+/g, " ").trim();
-    if ((text.match(/\p{L}/gu) || []).length < 2) return "";
+    // Short shared words (for example English "die" / German "die") are ambiguous.
+    var letters = text.match(/\p{L}/gu) || [];
+    if (letters.length < 8) return "";
     await loadLanguageClassifier();
     var predictions = classifier.predict(text, 2, 0);
     try {
         if (!predictions.size()) return "";
         var best = predictions.get(0);
         var second = predictions.size() > 1 ? predictions.get(1) : [0, ""];
-        if (best[0] < 0.8 || best[0] - second[0] < 0.2) return "";
-        return best[1].replace("__label__", "");
+        if (best[0] < 0.7 || best[0] - second[0] < 0.2) return "";
+        var language = best[1].replace("__label__", "");
+        return language === "no" ? "nb" : language;
     } finally { predictions.delete(); }
 }
 
@@ -161,24 +193,52 @@ async function processRequest(message) {
     if (Date.now() > message.deadline) return null;
     var texts = message.texts;
     if (!Array.isArray(texts) || !texts.length || texts.length > 64 || texts.some(function (text) { return typeof text !== "string" || !text.trim(); }) || texts.join(" ").length > 16000) return null;
-    var from = message.from || await detectLanguage(texts.join(" "));
     var to = message.to;
-    if (!from || from === to) return texts;
+    var parts = [];
+    var groups = new Map();
+    // HTML can split a sentence into short text nodes around formatting/emotes.
+    var contextLanguage = !message.from && texts.length > 1 ? await detectLanguage(texts.join(" ")) : "";
+    var segmenter = !message.from && typeof Intl.Segmenter === "function" ? new Intl.Segmenter(undefined, { granularity: "sentence" }) : null;
+    for (var i = 0; i < texts.length; i++) {
+        var sentences = message.from ? [texts[i]] : segmenter
+            ? Array.from(segmenter.segment(texts[i]), function (entry) { return entry.segment; })
+            : texts[i].match(/[^.!?\n]+[.!?]*(?:\s+|$)|[\s\S]/g);
+        for (var j = 0; j < sentences.length; j++) {
+            var sentence = sentences[j];
+            var part = { index: i, text: sentence };
+            parts.push(part);
+            var from = message.from || await detectLanguage(sentence) || contextLanguage;
+            if (!from || from === to) continue;
+            if (!groups.has(from)) groups.set(from, []);
+            groups.get(from).push(part);
+        }
+    }
+    if (!groups.size) return texts;
     if (Date.now() < retryAfter) return null;
     await initialize();
-    var pairs = from === "en" || to === "en" ? [from + to] : [from + "en", "en" + to];
-    if (pairs.some(function (pair) { return !registry[pair]; })) return null;
-    releaseUnusedModels(pairs);
-    try {
-        for (var i = 0; i < pairs.length; i++) await loadModel(pairs[i]);
-    } catch (error) {
-        retryAfter = Date.now() + 60000;
-        throw error;
+    for (var entry of groups) {
+        var source = entry[0];
+        var group = entry[1];
+        var pairs = source === "en" || to === "en" ? [source + to] : [source + "en", "en" + to];
+        if (pairs.some(function (pair) { return !registry[pair]; })) return null;
+        releaseUnusedModels(pairs);
+        try {
+            for (var k = 0; k < pairs.length; k++) await loadModel(pairs[k]);
+        } catch (error) {
+            retryAfter = Date.now() + 60000;
+            throw error;
+        }
+        // Keep completed downloads even when this message's deadline has passed.
+        if (Date.now() > message.deadline) return null;
+        var translated = group.map(function (part) { return part.text.trim(); });
+        for (var n = 0; n < pairs.length; n++) translated = translateParts(pairs[n], translated);
+        group.forEach(function (part, index) {
+            part.text = part.text.match(/^\s*/)[0] + translated[index] + part.text.match(/\s*$/)[0];
+        });
     }
-    // Keep a completed download for the next message, even if this one timed out.
-    if (Date.now() > message.deadline) return null;
-    for (var j = 0; j < pairs.length; j++) texts = translateParts(pairs[j], texts);
-    return texts;
+    var result = texts.map(function () { return ""; });
+    parts.forEach(function (part) { result[part.index] += part.text; });
+    return result;
 }
 
 async function drain() {
@@ -195,6 +255,12 @@ async function drain() {
 
 self.onmessage = function (event) {
     var message = event.data || {};
+    if (message.action === "prepare") {
+        Promise.all([initialize(), message.detect ? loadLanguageClassifier() : Promise.resolve()]).catch(function (error) {
+            self.postMessage({ error: String(error.message || error) });
+        });
+        return;
+    }
     if (queue.length >= 16) {
         self.postMessage({ id: message.id, translations: null });
         return;

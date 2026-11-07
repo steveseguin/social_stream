@@ -1,20 +1,21 @@
 Mozilla / Bergamot local translation
 
-bergamot-translator-worker.js and bergamot-translator-worker.wasm are the
-unchanged runtime distributed by CaptionNinja, based on Mozilla Translate.
-Source: https://github.com/mozilla/translate/tree/main/js
-Engine source: https://github.com/browsermt/bergamot-translator
-License: Mozilla Public License 2.0, included in LICENSE.
+v0.6.0/bergamot-translator.js and v0.6.0/bergamot-translator.wasm are the
+unchanged Firefox Bergamot v0.6.0+1de4a085d runtime, distributed under MPL 2.0.
+JavaScript source (Firefox revision 2c8de06acae0):
+https://github.com/mozilla-firefox/firefox/tree/2c8de06acae0/toolkit/components/translations/bergamot-translator
+Engine source: https://github.com/mozilla/translations/tree/1de4a085d
+WASM source:
+https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/translations-wasm/05082c31-aee8-4249-9e01-c1865afd7520.wasm
+WASM SHA-256: a3a89d9ad0a4ed8f27bf3e403701b23f5709816f6376438503f2fa5b0182c2dc
 
-registry.json uses the Mozilla Firefox Translations 0.3.4 model registry, with
-English/Spanish and English/French in both directions upgraded to Mozilla's
-released version 3.0 base-memory models. All models are MPL 2.0.
-Sources: https://github.com/mozilla/firefox-translations-models/tree/0.3.4
-https://github.com/mozilla/translations
-https://mozilla.github.io/translations/firefox-models/
-Models download on demand from Mozilla's Google Cloud Storage buckets, are
-verified against pinned SHA-256 hashes, and are cached on the user's device.
-Gzip downloads use the separately licensed ../pako.min.js (../pako.LICENSE).
+runtime-loader.js selects this runtime when WebAssembly SIMD and Intl.Segmenter
+are available. The original Mozilla Translate runtime remains the compatibility
+fallback. Source: https://github.com/mozilla/translate/tree/main/js
 
-shared/ai/local-translation-worker.js adapts Mozilla Translate's worker API usage
-for Social Stream Ninja and is distributed under the same MPL 2.0 license.
+Language packs retain the Mozilla Firefox Translations 0.3.4 registry and MPL 2.0
+license. Source: https://github.com/mozilla/firefox-translations-models/tree/0.3.4
+Packs download on demand, are checked against pinned SHA-256 hashes, and are
+cached on the user's device.
+
+License: LICENSE. Worker adaptation: shared/ai/local-translation-worker.js (MPL 2.0).

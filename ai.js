@@ -2843,23 +2843,32 @@ const AI_ENGLISH_TRANSLATE_PASSTHROUGH = new Set([
     "good luck", "good job", "let's go", "lets go", "good morning", "good night",
     "goodnight", "happy birthday", "congratulations", "welcome", "hi everyone"
 ]);
-const AI_ENGLISH_TRANSLATE_PHRASES = new Map([
-    ["hola", "Hello"], ["bonjour", "Hello"], ["buenos días", "Good morning"],
-    ["buenos dias", "Good morning"], ["buenas tardes", "Good afternoon"],
-    ["gracias", "Thank you"], ["muchas gracias", "Thank you very much"],
-    ["merci", "Thank you"], ["merci beaucoup", "Thank you very much"],
-    ["danke", "Thank you"], ["danke schön", "Thank you very much"],
-    ["dankeschön", "Thank you very much"], ["vielen dank", "Thank you very much"],
-    ["obrigado", "Thank you"], ["obrigada", "Thank you"],
-    ["こんにちは", "Hello"], ["ありがとう", "Thank you"], ["ありがとうございます", "Thank you"],
-    ["你好", "Hello"], ["谢谢", "Thank you"], ["謝謝", "Thank you"],
-    ["привет", "Hello"], ["спасибо", "Thank you"],
-    ["안녕하세요", "Hello"], ["감사합니다", "Thank you"], ["고마워요", "Thank you"],
-    ["guten morgen", "Good morning"], ["guten abend", "Good evening"],
-    ["gute nacht", "Good night"], ["bonsoir", "Good evening"], ["bonne nuit", "Good night"],
-    ["dziękuję", "Thank you"], ["dziekuje", "Thank you"],
-    ["teşekkürler", "Thank you"], ["tesekkurler", "Thank you"]
+const AI_TRANSLATE_PHRASES = [
+    ["hola", "Hello", "es"], ["bonjour", "Hello", "fr"], ["buenos días", "Good morning", "es"],
+    ["buenos dias", "Good morning", "es"], ["buenas tardes", "Good afternoon", "es"],
+    ["gracias", "Thank you", "es"], ["muchas gracias", "Thank you very much", "es"],
+    ["merci", "Thank you", "fr"], ["merci beaucoup", "Thank you very much", "fr"],
+    ["danke", "Thank you", "de"], ["danke schön", "Thank you very much", "de"],
+    ["dankeschön", "Thank you very much", "de"], ["vielen dank", "Thank you very much", "de"],
+    ["obrigado", "Thank you", "pt"], ["obrigada", "Thank you", "pt"],
+    ["こんにちは", "Hello", "ja"], ["ありがとう", "Thank you", "ja"], ["ありがとうございます", "Thank you", "ja"],
+    ["你好", "Hello", "zh"], ["谢谢", "Thank you", "zh"], ["謝謝", "Thank you", "zh"],
+    ["привет", "Hello", "ru"], ["спасибо", "Thank you", "ru"],
+    ["안녕하세요", "Hello", "ko"], ["감사합니다", "Thank you", "ko"], ["고마워요", "Thank you", "ko"],
+    ["guten morgen", "Good morning", "de"], ["guten abend", "Good evening", "de"],
+    ["gute nacht", "Good night", "de"], ["bonsoir", "Good evening", "fr"], ["bonne nuit", "Good night", "fr"],
+    ["dziękuję", "Thank you", "pl"], ["dziekuje", "Thank you", "pl"],
+    ["teşekkürler", "Thank you", "tr"], ["tesekkurler", "Thank you", "tr"],
+];
+const AI_ENGLISH_TRANSLATE_PHRASES = new Map(AI_TRANSLATE_PHRASES);
+const LOCAL_TRANSLATE_PHRASES = AI_TRANSLATE_PHRASES.concat([
+    ["hello", "Hello", "en"], ["hi", "Hello", "en"], ["thanks", "Thank you", "en"],
+    ["thank you", "Thank you", "en"], ["good morning", "Good morning", "en"],
+    ["good afternoon", "Good afternoon", "en"], ["good evening", "Good evening", "en"],
+    ["good night", "Good night", "en"], ["hallo", "Hello", "de"],
+    ["grazie", "Thank you", "it"], ["salve", "Hello", "it"]
 ]);
+const LOCAL_TRANSLATE_PHRASE_LANGUAGES = new Map(LOCAL_TRANSLATE_PHRASES.map(function (entry) { return [entry[0], entry[2]]; }));
 const AI_OUTGOING_TRANSLATE_RETRY_MS = 250;
 const AI_OUTGOING_TRANSLATE_MAX_WAIT_MS = 5000;
 let aiTranslateProcessingSlots = [false];
@@ -2884,8 +2893,8 @@ function usesLocalTranslation() {
     return settings?.aiTranslateEngine?.optionsetting === "local";
 }
 
-function requestLocalTranslation(texts, targetLanguage, timeoutMs, outgoing) {
-    if (Date.now() < localTranslateRetryAfter || localTranslatePending.size >= 16) return Promise.resolve(null);
+function ensureLocalTranslationWorker() {
+    if (Date.now() < localTranslateRetryAfter) return false;
     if (!localTranslateWorker) {
         try {
             const workerPath = "shared/ai/local-translation-worker.js";
@@ -2894,11 +2903,11 @@ function requestLocalTranslation(texts, targetLanguage, timeoutMs, outgoing) {
             localTranslateWorker = new Worker(workerUrl);
             localTranslateWorker.onmessage = function (event) {
                 const message = event.data || {};
+                if (message.error) console.warn("[Local Translate]", message.error);
                 const pending = localTranslatePending.get(message.id);
                 if (!pending) return;
                 clearTimeout(pending.timer);
                 localTranslatePending.delete(message.id);
-                if (message.error) console.warn("[Local Translate]", message.error);
                 pending.resolve(message.translations || null);
             };
             const stop = function () {
@@ -2916,9 +2925,20 @@ function requestLocalTranslation(texts, targetLanguage, timeoutMs, outgoing) {
         } catch (error) {
             localTranslateRetryAfter = Date.now() + 60000;
             console.warn("[Local Translate]", error);
-            return Promise.resolve(null);
+            return false;
         }
     }
+    return true;
+}
+
+function prepareLocalTranslation() {
+    if (!usesLocalTranslation() || (!getAiSettingFlag("aiAutoTranslate") && !getAiSettingFlag("aiAutoTranslateOutgoing"))) return;
+    if (!ensureLocalTranslationWorker()) return;
+    localTranslateWorker.postMessage({ action: "prepare", detect: getAiSettingFlag("aiAutoTranslateOutgoing") || !String(settings?.localTranslateSourceLanguage?.textsetting || "").trim() });
+}
+
+function requestLocalTranslation(texts, targetLanguage, timeoutMs, outgoing, phraseLanguage) {
+    if (localTranslatePending.size >= 16 || !ensureLocalTranslationWorker()) return Promise.resolve(null);
     return new Promise(function (resolve) {
         const id = ++localTranslateRequestId;
         const timer = setTimeout(function () {
@@ -2930,7 +2950,7 @@ function requestLocalTranslation(texts, targetLanguage, timeoutMs, outgoing) {
             localTranslateWorker.postMessage({
                 id,
                 texts,
-                from: outgoing ? "" : String(settings?.localTranslateSourceLanguage?.textsetting || "").trim().toLowerCase().split(/[-_]/)[0],
+                from: phraseLanguage || (outgoing ? "" : String(settings?.localTranslateSourceLanguage?.textsetting || "").trim().toLowerCase().split(/[-_]/)[0]),
                 to: String(targetLanguage).trim().toLowerCase().split(/[-_]/)[0],
                 deadline: Date.now() + timeoutMs
             });
@@ -2945,7 +2965,20 @@ function requestLocalTranslation(texts, targetLanguage, timeoutMs, outgoing) {
 async function translateMessageLocally(data, prepared, targetLanguage, enabledSetting, options) {
     const originalMessage = data.chatmessage;
     const sourceLanguage = settings?.localTranslateSourceLanguage?.textsetting || "";
-    const translations = await requestLocalTranslation(prepared.parts.map(function (part) { return part.text; }), targetLanguage, getAITranslateRequestTimeoutMs(options), options.direction === "outgoing");
+    const outgoing = options.direction === "outgoing";
+    const phrase = outgoing || !String(sourceLanguage).trim() ? getAITranslationPhrase(prepared) : null;
+    const phraseLanguage = phrase ? LOCAL_TRANSLATE_PHRASE_LANGUAGES.get(phrase.key) : "";
+    if (phraseLanguage) {
+        const target = String(targetLanguage).trim().toLowerCase().split(/[-_]/)[0];
+        if (phraseLanguage === target) return true;
+        const originalPhrase = LOCAL_TRANSLATE_PHRASES.find(function (entry) { return entry[0] === phrase.key; });
+        const translatedPhrase = LOCAL_TRANSLATE_PHRASES.find(function (entry) { return entry[1] === originalPhrase[1] && entry[2] === target; });
+        if (translatedPhrase) {
+            applyAITranslatedMessage(data, prepared, [phrase.prefix + translatedPhrase[0] + phrase.suffix], targetLanguage, options, "lookup");
+            return true;
+        }
+    }
+    const translations = await requestLocalTranslation(prepared.parts.map(function (part) { return part.text; }), targetLanguage, getAITranslateRequestTimeoutMs(options), outgoing, phraseLanguage);
     const currentTarget = options.targetLanguage || getAITranslateTargetLanguage(options.targetLanguageSetting || "aiAutoTranslateTargetLanguage", options.fallbackTargetLanguageSetting || null);
     if (!usesLocalTranslation() || !getAiSettingFlag(enabledSetting) || currentTarget !== targetLanguage || sourceLanguage !== (settings?.localTranslateSourceLanguage?.textsetting || "") || data.chatmessage !== originalMessage) return true;
     if (!Array.isArray(translations) || translations.length !== prepared.parts.length || translations.some(function (text) { return typeof text !== "string" || !text.trim(); })) {
@@ -2966,7 +2999,7 @@ function isAITranslateEnglishTarget(targetLanguage) {
     return /^(?:en(?:[-_][a-z0-9]{2,8})*|eng|english(?:\s*\([^()]+\))?)$/i.test(String(targetLanguage || "").trim());
 }
 
-function getAIEnglishPhraseTranslation(prepared) {
+function getAITranslationPhrase(prepared) {
     if (prepared.parts.length !== 1) return null;
     // Match the original text segment, not the sanitized prompt copy. Rebuilding
     // through the existing segments preserves surrounding emotes and markup.
@@ -2977,9 +3010,15 @@ function getAIEnglishPhraseTranslation(prepared) {
     const match = text.trim().match(/^([¡¿]*\s*)([\s\S]*?)(\s*[!?.。！？]*)$/);
     if (!match) return null;
     const key = match[2].normalize("NFC").toLowerCase().replace(/\s+/g, " ").trim();
-    if (AI_ENGLISH_TRANSLATE_PASSTHROUGH.has(key)) return "";
-    if (!AI_ENGLISH_TRANSLATE_PHRASES.has(key)) return null;
-    return match[1] + AI_ENGLISH_TRANSLATE_PHRASES.get(key) + match[3];
+    return { key, prefix: match[1], suffix: match[3] };
+}
+
+function getAIEnglishPhraseTranslation(prepared) {
+    const phrase = getAITranslationPhrase(prepared);
+    if (!phrase) return null;
+    if (AI_ENGLISH_TRANSLATE_PASSTHROUGH.has(phrase.key)) return "";
+    if (!AI_ENGLISH_TRANSLATE_PHRASES.has(phrase.key)) return null;
+    return phrase.prefix + AI_ENGLISH_TRANSLATE_PHRASES.get(phrase.key) + phrase.suffix;
 }
 
 function stopAIEnglishTranslateWorker(error) {
@@ -3510,6 +3549,14 @@ async function translateMessageWithLLM(data, options = {}) {
     }
 
     if (usesLocalTranslation()) {
+        if (enabledSetting === "aiAutoTranslate" && options.direction !== "outgoing" &&
+            !String(settings?.localTranslateSourceLanguage?.textsetting || "").trim() && isAITranslateEnglishTarget(targetLanguage)) {
+            const phraseTranslation = getAIEnglishPhraseTranslation(prepared);
+            if (phraseTranslation !== null) {
+                if (phraseTranslation) applyAITranslatedMessage(data, prepared, [phraseTranslation], targetLanguage, options, "lookup");
+                return true;
+            }
+        }
         return translateMessageLocally(data, prepared, targetLanguage, enabledSetting, options);
     }
 

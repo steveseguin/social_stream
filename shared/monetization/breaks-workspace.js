@@ -229,9 +229,10 @@
 			return el('[data-field="' + name + '"]');
 		}
 		function draftKey(form) {
+			// The displayed break ID survives a disconnect, so offline edits keep their draft context.
 			return form === "stock"
 				? "stock:" + f("stock-id").value
-				: form + ":" + (state && state.active ? state.active.id : "") + (form === "spot" ? ":" + selected : "");
+				: form + ":" + f("board-id").value + (form === "spot" ? ":" + selected : "");
 		}
 		function values(form) {
 			var out = {};

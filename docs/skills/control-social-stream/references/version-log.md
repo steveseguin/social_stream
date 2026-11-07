@@ -6,6 +6,10 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 
 The updated SSApp 0.4.48 build skips destroyed source windows when listing browser targets. After a window closes, list targets again before choosing another window. Command names and schemas are unchanged.
 
+## Starting saved sources during startup
+
+SSApp 0.4.48 builds containing the source readiness fix let `startSource` wait up to 15 seconds for the source controls to load. The command checks the latest source state before activation, including sources that auto-activated while it waited. Command names and schemas are unchanged.
+
 ## Breaks workspace with updated Social Stream sources
 
 Minimum supported runtime for this addition: SSApp 0.4.48 with the Breaks page sources. There are no new SSApp REST or MCP commands, and session commands cannot read or change Breaks. The workspace uses its own private link, and Event Flow's Commerce control action adds display-only `breakHighlight`, `breakStage`, and `breakSettings` on the host. See the [control API reference](control-api.md#breaks-workspace).
