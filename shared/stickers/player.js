@@ -9,9 +9,15 @@
     var stage = document.createElement('div'); stage.className = 'ssn-sticker-stage';
     if (params.get('motion') === 'off') stage.dataset.motion = 'off';
     document.body.appendChild(stage);
-    var bridge, busy = false, queue = [], seen = new Set();
+    var bridge, socket, busy = false, queue = [], seen = new Set();
+    var client = 'sticker-' + Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-');
     var catalog = SSNStickers;
     function receipt(item, uuid, success) {
+        if (uuid === client) {
+            if (socket && socket.readyState === 1) socket.send(JSON.stringify({ action: 'stickerReceipt', stickerClient: client,
+                meta: { sticker: { redemptionId: item.redemptionId, success: success } } }));
+            return;
+        }
         if (!bridge || !uuid) return;
         bridge.contentWindow.postMessage({ sendData: { overlayNinja: { action: 'stickerReceipt',
             meta: { sticker: { redemptionId: item.redemptionId, success: success } } } }, type: 'rpcs', UUID: uuid }, '*');
@@ -66,6 +72,29 @@
             var help = document.createElement('p'); help.textContent = 'Add the session link from SSN → Points System → Sticker rewards.';
             help.style.cssText = 'font:18px system-ui;color:white;background:#111827;padding:24px'; document.body.appendChild(help);
         }
+        return;
+    }
+    // Embedded stickers cannot infer host API permission from their parent display's server flag.
+    var parameter = params.has('server2') ? 'server2' : params.has('server3') ? 'server3' : standalone && params.has('server') ? 'server' : null;
+    if (parameter) {
+        var retry, heartbeat, stopped = false;
+        function connect() {
+            if (stopped) return;
+            var endpoint = SocialStreamLocalServer.getRelayUrl(params, parameter, parameter === 'server' ? 'wss://io.socialstream.ninja/api' : 'wss://io.socialstream.ninja/extension');
+            try { socket = new WebSocket(endpoint); } catch (_) { return; }
+            function presence() { if (socket.readyState === 1) socket.send(JSON.stringify({ action: 'stickerPresence', stickerClient: client })); }
+            socket.onopen = function () {
+                socket.send(JSON.stringify({ join: session.split(',')[0], out: parameter === 'server' ? 1 : 3, in: 17 }));
+                presence(); heartbeat = setInterval(presence, 5000);
+            };
+            socket.onmessage = function (event) {
+                try { var data = JSON.parse(event.data); if (data.stickerClient === client) show(data, client); } catch (_) {}
+            };
+            socket.onerror = function () { socket.close(); };
+            socket.onclose = function () { clearInterval(heartbeat); if (!stopped) retry = setTimeout(connect, 2000); };
+        }
+        window.addEventListener('beforeunload', function () { stopped = true; clearTimeout(retry); clearInterval(heartbeat); if (socket) socket.close(); });
+        connect();
         return;
     }
     bridge = document.createElement('iframe');

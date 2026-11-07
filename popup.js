@@ -3578,6 +3578,7 @@ const SERVER_PARAM_SUPPORT_BY_TARGET = {
   giveaway: { server: true, server2: true, server3: false },
   credits: { server: false, server2: true, server3: true },
   leaderboard: { server: false, server2: true, server3: true },
+  stickeroverlay: { server: false, server2: true, server3: true },
   waitlist: { server: true, server2: true, server3: false },
   wordcloud: { server: true, server2: true, server3: false },
   "custom-gif-commands": { server: true, server2: true, server3: false },
@@ -4107,6 +4108,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
 		streamElementsImporterUrl.href = buildGeneratedUrl("streamelements-importer.html", `session=${encodeURIComponent(streamID)}${password}`, baseURL);
 	}
 
+  if (window.updateMonetizationLinks) window.updateMonetizationLinks();
   syncAllOverlayPreviews();
 }
 
@@ -7022,6 +7024,7 @@ function getTargetMap() {
         'hypetrain': 29,
         'aiprompt': 31,
         'aievent': 32,
+        'stickeroverlay': 33,
     };
 }
 
@@ -9409,6 +9412,7 @@ function refreshLinks(){
       'chatoverlaytemplatelink': 'chatoverlaytemplate',
       'overlaylink': 'overlay',
       'multialertslink': 'multialerts',
+      'stickeroverlaylink': 'stickeroverlay',
       'emoteswalllink': 'emoteswall',
       'hypemeterlink': 'hypemeter',
       'hypetrainlink': 'hypetrain',
@@ -9470,6 +9474,7 @@ function refreshLinks(){
     console.error("Error cleaning TTS params from links:", e);
   }
 
+  if (window.updateMonetizationLinks) window.updateMonetizationLinks();
   syncAllOverlayPreviews();
 }
 

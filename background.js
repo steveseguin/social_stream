@@ -10495,6 +10495,21 @@ function setupSocketDock() {
 		}
 
 		if (window.handleBreaksRelayRequest && window.handleBreaksRelayRequest(data, joinedDockSocket)) return;
+		if (window.handleStickerRelayRequest && window.handleStickerRelayRequest(data, joinedDockSocket)) return;
+		// Operator pages use upstream permission (server3), not the separate API switch.
+		// Replies stay off the captured-chat feed. Channel 16 is reserved for these pages.
+		if (data && data.operatorRelay === true) {
+			if (!settings.server3 || !isExtensionOn || settings.disablehost) return;
+			const reply = result => {
+				if (streamID === joinedDockSession && socketserverDock === joinedDockSocket && joinedDockSocket.readyState === 1)
+					joinedDockSocket.send(JSON.stringify(Object.assign({ out: 16 }, buildStreamDeckCommandResultPacket(data, result))));
+			};
+			try {
+				const routed = await routeStreamDeckRemoteRequest(data, { transport: "operator", UUID: "operator:" + data.get, reply });
+				if (routed && routed.kind !== "deferred") reply(routed.result);
+			} catch (error) { console.warn("Operator command failed", error); }
+			return;
+		}
 		// Give managed audience displays the same snapshot they can already receive.
 		if (handleOverlayControlRequest(data, socketserverDock, 3, !!settings.server2)) return;
 		const edgeReplySocket = socketserverDock;
@@ -10842,6 +10857,7 @@ function sendStreamDeckDockResultToOrigin(pending, result) {
 		return false;
 	}
 	var packet = buildStreamDeckCommandResultPacket(pending.request, result);
+	if (pending.reply) { pending.reply(result); return true; }
 	if (pending.transport === "webrtc" && pending.UUID) {
 		sendDataP2P(packet, pending.UUID);
 		return true;
@@ -11372,6 +11388,17 @@ async function routeStreamDeckRemoteRequest(request, context) {
 			};
 		}
 	}
+	// These existing OBS buttons predate the versioned Stream Deck action list.
+	// Keep their ordinary host behavior, scoped to operator-page requests.
+	if (request.operatorRelay === true && ["startentries", "stopentries", "selectwinner", "resetwaitlist", "clearDock"].includes(request.action)) {
+		if (!isExtensionOn || settings.disablehost) return { kind: "command", result: router.makeError(request, "CONTROL_UNAVAILABLE", "Social Stream is off.") };
+		if (request.action === "startentries") toggleEntries(true);
+		else if (request.action === "stopentries") toggleEntries(false);
+		else if (request.action === "resetwaitlist") resetWaitlist();
+		else if (request.action === "selectwinner") selectRandomWaitlist(parseInt(request.value) || 1);
+		else sendDataP2P({ action: "clearDock" });
+		return { kind: "command", result: router.makeResponse(request, { accepted: true }, "accepted") };
+	}
 	if (router.isCapabilityRequest(request)) {
 		const capabilities = await getStreamDeckCapabilities();
 		return {
@@ -11397,7 +11424,7 @@ async function routeStreamDeckRemoteRequest(request, context) {
 			// control client's channel-1 request directly on channel 2.
 			return { kind: "deferred" };
 		}
-		if (context.transport === "webrtc" && context.UUID) {
+		if ((context.transport === "webrtc" || context.transport === "operator") && context.UUID) {
 			const registration = registerPendingStreamDeckDockRequest(request, context.UUID);
 			if (!registration || registration.ok !== true) {
 				return {
@@ -11412,6 +11439,7 @@ async function routeStreamDeckRemoteRequest(request, context) {
 			if (registration.duplicate) {
 				return { kind: "deferred" };
 			}
+			if (context.reply) registration.pending.reply = context.reply;
 			const sent = await sendStreamDeckDockRequestP2P(request, context.UUID);
 			if (!sent) {
 				clearPendingStreamDeckDockRequest(String(request.get || ""));
@@ -11515,6 +11543,7 @@ function setupSocket() {
 				return;
 			}
 
+			if (window.handleStickerRelayRequest && window.handleStickerRelayRequest(data, socketserver)) return;
 			if (handleOverlayControlRequest(data, socketserver, 1, !!settings.socketserver)) return;
 			const edgeReplySocket = socketserver;
 			if (settings.socketserver && handleEdgeTtsRequest(data, packet => {

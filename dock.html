@@ -5638,6 +5638,11 @@
 							var data = JSON.parse(event.data);
 							if (!server2 && data.action !== "twitchTimeoutResult") return;
 							if (!isDuplicateTransportDelivery(data, "server")) {
+								if (data.operatorRelay === true && isVersionedRemoteControlRequest(data) && data.get) {
+									var operatorResult = executeRemoteControlDockRequest(data);
+									if (!operatorResult.skip) sendExtensionDataToServer({ callback: { get: data.get, result: operatorResult.result } });
+									return;
+								}
 								processInput(data);
 							}
 						} catch (e) {
@@ -6752,13 +6757,14 @@
 				//  todo -- make broadcast channel based.
 				
 				setTimeout(function(){ // timeout to avoid middle+click causing override.
-					let pass = "";
-					if (urlParams.has("password")) {
-						pass = "&password="+encodeURIComponent(password);
-					}
-
-					const uniqueName = "popup_" + Date.now();
-					const popup = window.open("./input.html?session=" + roomID + pass, uniqueName, "width=600,height=60,toolbar=no,menubar=no,resizable=yes");
+                    const inputURL = new URL('./input.html', location.href);
+                    inputURL.searchParams.set('session', roomID);
+                    ['password', 'server2', 'server3', 'localserver', 'localserverport'].forEach(function (key) {
+                        if (urlParams.has(key)) inputURL.searchParams.set(key, urlParams.get(key));
+                    });
+                    const uniqueName = "popup_" + Date.now();
+                    const popup = window.open(inputURL.href, uniqueName, "width=600,height=60,toolbar=no,menubar=no,resizable=yes");
+                    if (!popup) return;
 					popup.document.body.style.margin = "0";
 					popup.document.body.style.padding = "0";
 				},0);

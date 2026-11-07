@@ -19,8 +19,8 @@ for (const match of dockHtml.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/
 
 assert.ok(dockHtml.includes('src="shared/monetization/control-dock.js"'));
 new vm.Script(dockScript, { filename: "control-dock.js" });
-assert.ok(dockScript.includes('new WebSocket(WEBSOCKET_URL)'));
-assert.ok(dockScript.includes('{ join: sessionId, out: 1, in: 2 }'));
+assert.ok(dockScript.includes('SSNOperatorConnection(getUrlParams(), sessionId'));
+assert.ok(dockHtml.includes('src="shared/operator-connection.js"'));
 assert.ok(dockScript.includes('params.get("session") || params.get("s") || params.get("id")'));
 assert.ok(dockScript.includes('localStorage.setItem(STORAGE_KEY, value)'));
 assert.ok(dockScript.includes("apiUrl.searchParams.set('session', sessionId)"));
@@ -51,7 +51,7 @@ assert.ok(!/<script[^>]+type=["']module["']/i.test(dockHtml), "control dock must
 assert.ok(guideHtml.includes("Docks</strong> &rarr; <strong>Custom Browser Docks"));
 assert.ok(guideHtml.includes("https://socialstream.ninja/obs-control-dock.html?session=YOUR_SESSION_ID"));
 assert.ok(guideHtml.includes("remote API control of extension"));
-assert.ok(guideHtml.includes("<code>&amp;server</code> is not required on the control-dock or Credits URLs"));
+assert.ok(guideHtml.includes("Normal links use P2P"));
 assert.ok(guideHtml.includes("OBS's <strong>WebSocket Server Settings</strong> are unrelated"));
 assert.ok(guideHtml.includes("Background collection"));
 assert.ok(guideHtml.includes("Test uses built-in names"));

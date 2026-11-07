@@ -345,7 +345,10 @@
             control.searchParams.set('session', lastResponse.streamID);
             control.searchParams.set('commerce', '');
             if (language) control.searchParams.set('ln', language);
-            if (serverValue && /^wss?:\/\//i.test(serverValue)) control.searchParams.set('server', serverValue);
+            ['server2', 'server3', 'localserver', 'localserverport'].forEach(function (key) { if (connectionParams.has(key)) control.searchParams.set(key, connectionParams.get(key)); });
+            if (lastResponse.password) control.searchParams.set('password', lastResponse.password);
+            var mainControls = document.getElementById('obs_control_dock_url');
+            if (mainControls) { var mainURL = new URL(control.href); mainURL.searchParams.delete('commerce'); mainControls.href = mainURL.href; }
             by('control-dock').href = control.href;
             var breaksURL = new URL(control.href);
             // Use the installed workspace rather than a potentially older hosted dock.

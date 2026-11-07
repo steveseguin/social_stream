@@ -18,12 +18,12 @@
             if (label) button.textContent = label[label[0] ? 2 : 1];
         });
     }
-    // Extension feeds do not return manager command replies; keep their P2P bridge.
-    var relayMode = params.has('server') || (params.has('localserver') && !params.has('server2') && !params.has('server3')), socket, retry, refreshRetry, stopped = false;
+    // server3 authorizes upstream commands. server2 alone keeps the P2P command path.
+    var upstream = params.has('server3'), relayMode = upstream || params.has('server'), socket, retry, refreshRetry, stopped = false;
     function id() { return Date.now().toString(36) + '-' + Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-'); }
     function call(action, value) {
         return new Promise(function (resolve, reject) {
-            var key = id(), timer = setTimeout(function () { pending.delete(key); reject(new Error('Host did not answer. ' + (relayMode && !native ? 'Enable remote API control of extension in the SSN popup. ' : '') + 'Refresh to check whether the action committed.')); }, 10000);
+            var key = id(), timer = setTimeout(function () { pending.delete(key); reject(new Error('Host did not answer. ' + (relayMode && !upstream && !native ? 'Enable remote API control of extension in the SSN popup. ' : '') + 'Refresh to check whether the action committed.')); }, 10000);
             function done(reply) { clearTimeout(timer); pending.delete(key); if (!reply || !reply.ok)
                 reject(new Error(reply && (reply.error && reply.error.message || reply.error) || 'Host unavailable.'));
             else
@@ -38,7 +38,7 @@
                     return;
                 }
                 pending.set(key, done);
-                socket.send(JSON.stringify({ protocol: 2, action: action, value: value, get: key, replyFormat: 'commandResult' }));
+                socket.send(JSON.stringify({ protocol: 2, action: action, value: value, get: key, replyFormat: 'commandResult', operatorRelay: upstream }));
                 return;
             }
             if (!peer) {
@@ -169,10 +169,10 @@
         }
         function connect() {
             if (stopped) return;
-            try { socket = new WebSocket(SocialStreamLocalServer.getRelayUrl(params, 'server', 'wss://io.socialstream.ninja/api')); }
+            try { socket = new WebSocket(SocialStreamLocalServer.getRelayUrl(params, upstream ? (params.has('server2') ? 'server2' : 'server3') : 'server', upstream ? 'wss://io.socialstream.ninja/extension' : 'wss://io.socialstream.ninja/api')); }
             catch (error) { status.textContent = 'Invalid relay address.'; return; }
             socket.onopen = function () {
-                socket.send(JSON.stringify({ join: params.get('session').split(',')[0], out: 1, in: 2 }));
+                socket.send(JSON.stringify({ join: params.get('session').split(',')[0], out: upstream ? 3 : 1, in: upstream ? 16 : 2 }));
                 clearTimeout(refreshRetry);
                 refreshRelay();
             };

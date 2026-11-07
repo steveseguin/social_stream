@@ -3,14 +3,8 @@
 	if (new URLSearchParams(location.search).has("breaks")) { window.SSNBreaksConnection(); return; }
 
 	var STORAGE_KEY = "ssn-obs-control-session-v1";
-	var WEBSOCKET_URL = SocialStreamLocalServer.getRelayUrl(new URLSearchParams(location.search), null, "wss://io.socialstream.ninja:443");
-	var customServer = new URLSearchParams(location.search).get("server");
-	if (customServer && /^wss?:\/\//i.test(customServer)) WEBSOCKET_URL = customServer;
-	var socket = null;
+	var connection = null;
 	var sessionId = "";
-	var reconnectTimer = null;
-	var reconnectDelay = 1000;
-	var shouldReconnect = true;
 	var requestCounter = 0;
 	var pendingRequests = {};
 	var sessionForm = document.getElementById("sessionForm");
@@ -62,23 +56,6 @@
 		commandStatus.className = "command-status" + (type ? " " + type : "");
 	}
 
-	function clearReconnectTimer() {
-		if (reconnectTimer) {
-			clearTimeout(reconnectTimer);
-			reconnectTimer = null;
-		}
-	}
-
-	function scheduleReconnect() {
-		if (!shouldReconnect || !sessionId || reconnectTimer) return;
-		setConnectionState("connecting", "Reconnecting");
-		reconnectTimer = setTimeout(function() {
-			reconnectTimer = null;
-			connect(sessionId);
-		}, reconnectDelay);
-		reconnectDelay = Math.min(reconnectDelay * 2, 15000);
-	}
-
 	function failPendingRequests(message) {
 		Object.keys(pendingRequests).forEach(function(requestId) {
 			var pending = pendingRequests[requestId];
@@ -108,13 +85,7 @@
 		return { message: "Command sent: " + action, type: "success" };
 	}
 
-	async function handleSocketMessage(event) {
-		var data;
-		try {
-			data = JSON.parse(event.data);
-		} catch (error) {
-			return;
-		}
+	async function handleSocketMessage(data) {
 		if (data && data.type === "commandResult") data = { callback: { get: data.get || (data.result && data.result.request), result: data.result } };
 		if (!data || !data.callback || !data.callback.get) return;
 		var requestId = String(data.callback.get);
@@ -153,51 +124,15 @@
 			if (getUrlParams().has(key)) apiUrl.searchParams.set(key, getUrlParams().get(key));
 		});
 		fullApiLink.href = apiUrl.href;
-		shouldReconnect = true;
-		clearReconnectTimer();
-		if (socket) {
-			socket.onclose = null;
-			try { socket.close(); } catch (error) {}
-			socket = null;
-		}
-
-		setConnectionState("connecting", "Connecting");
-		setCommandStatus("Connecting to Social Stream...", "");
-		var currentSocket;
-		try {
-			currentSocket = new WebSocket(WEBSOCKET_URL);
-		} catch (error) {
-			setConnectionState("disconnected", "Connection failed");
-			scheduleReconnect();
-			return;
-		}
-		socket = currentSocket;
-
-		currentSocket.onopen = function() {
-			if (socket !== currentSocket) return;
-			currentSocket.send(JSON.stringify({ join: sessionId, out: 1, in: 2 }));
-			reconnectDelay = 1000;
-			setConnectionState("connected", "Connected");
-			setCommandStatus("Ready.", "success");
-			commerceDock.refresh();
-		};
-
-		currentSocket.onmessage = handleSocketMessage;
-
-		currentSocket.onerror = function() {
-			if (socket !== currentSocket) return;
-			setConnectionState("disconnected", "Connection error");
-		};
-
-		currentSocket.onclose = function() {
-			if (socket !== currentSocket) return;
-			socket = null;
-			commerceDock.disconnected();
-			failPendingRequests("Connection lost; command status is unknown.");
-			setConnectionState("disconnected", "Disconnected");
-			scheduleReconnect();
-		};
-	}
+        if (connection) connection.close();
+        setConnectionState("connecting", "Connecting");
+        setCommandStatus("Connecting to Social Stream...", "");
+        connection = SSNOperatorConnection(getUrlParams(), sessionId, handleSocketMessage, function (connected) {
+            setConnectionState(connected ? "connected" : "disconnected", connected ? "Connected" : "Reconnecting");
+            if (connected) { setCommandStatus("Ready.", "success"); commerceDock.refresh(); }
+            else { commerceDock.disconnected(); failPendingRequests("Connection lost; command status is unknown."); }
+        });
+    }
 
 	function parseButtonValue(button) {
 		var raw = button.getAttribute("data-value");
@@ -213,7 +148,7 @@
 		var action = button.getAttribute("data-action");
 		var confirmation = button.getAttribute("data-confirm");
 		if (confirmation && !window.confirm(confirmation)) return;
-		if (!sessionId || !socket || socket.readyState !== WebSocket.OPEN) {
+		if (!sessionId || !connection || !connection.ready()) {
 			setCommandStatus("Not connected. Save the correct Session ID and try again.", "error");
 			return;
 		}
@@ -222,6 +157,7 @@
 		var requestId = "obs-dock-" + Date.now() + "-" + requestCounter;
 		var message = {
 			action: action,
+			protocol: 2,
 			apiid: sessionId,
 			get: requestId, replyFormat: "commandResult"
 		};
@@ -239,11 +175,11 @@
 				if (pending.button) pending.button.disabled = false;
 				delete pendingRequests[requestId];
 				setCommandStatus("Command sent, but no confirmation returned.", "");
-			}, 5000)
+			}, 10000)
 		};
 
 		try {
-			socket.send(JSON.stringify(message));
+			connection.send(message);
 		} catch (error) {
 			clearTimeout(pendingRequests[requestId].timer);
 			delete pendingRequests[requestId];
@@ -270,18 +206,17 @@
 	});
 
 	window.addEventListener("beforeunload", function() {
-		shouldReconnect = false;
-		clearReconnectTimer();
+		if (connection) connection.close();
 	});
 
 	var commerceDock = window.SSNCommerceDock(function(action, value, verify) {
 		return new Promise(function(resolve, reject) {
-			if (!socket || socket.readyState !== WebSocket.OPEN) { reject(new Error("Not connected")); return; }
+			if (!connection || !connection.ready()) { reject(new Error("Not connected")); return; }
 			var id = "obs-commerce-" + Date.now() + "-" + (++requestCounter);
 			pendingRequests[id] = {resolve:resolve, reject:reject, verify:verify, timer:setTimeout(function() {
-				delete pendingRequests[id]; reject(new Error(verify ? "No verified response. Check the host connection or reopen Breaks from Social Stream." : "No response. Enable remote API control in Social Stream."));
-			}, 5000)};
-			try { socket.send(JSON.stringify({action:action, value:value, protocol:2, apiid:sessionId, get:id, replyFormat:"commandResult"})); }
+				delete pendingRequests[id]; reject(new Error(verify ? "No verified response. Check the host connection or reopen Breaks from Social Stream." : "No response from the host. Check the session and connection in Social Stream."));
+			}, 10000)};
+			try { connection.send({action:action, value:value, protocol:2, apiid:sessionId, get:id, replyFormat:"commandResult"}); }
 			catch (error) { clearTimeout(pendingRequests[id].timer); delete pendingRequests[id]; reject(error); }
 		});
 	}, setCommandStatus);

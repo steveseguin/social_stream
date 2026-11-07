@@ -3,6 +3,32 @@
     var service;
     var replies = new Map();
     var pending = new Map();
+    var receivers = new Map();
+    function relayReceivers() {
+        receivers.forEach(function (entry, key) {
+            if (entry.session !== streamID || entry.until < Date.now() || entry.socket.readyState !== 1) receivers.delete(key);
+        });
+        return Array.from(receivers.values());
+    }
+    // Presence and image-load receipts only. This route cannot spend points or run commands.
+    window.handleStickerRelayRequest = function (request, socket) {
+        if (!request || (request.action !== 'stickerPresence' && request.action !== 'stickerReceipt')) return false;
+        if (!isExtensionOn || settings.disablehost) return true;
+        var client = request.stickerClient;
+        if (typeof client !== 'string' || !client || client.length > 100) return true;
+        relayReceivers();
+        if (request.action === 'stickerPresence') {
+            if (receivers.size < 100 || receivers.has(client)) receivers.set(client, { client: client, socket: socket, session: streamID, until: Date.now() + 15000 });
+        } else {
+            var receipt = request.meta && request.meta.sticker;
+            var done = receipt && pending.get(receipt.redemptionId);
+            if (done && done.clients && done.clients.get(client) === socket && done.session === streamID) {
+                done.clients.delete(client);
+                if (receipt.success === true || !done.clients.size) done(receipt.success === true);
+            }
+        }
+        return true;
+    };
     function peers() {
         var result = typeof connectedPeers === 'object' && connectedPeers || {};
         if (typeof ninjaBridge !== 'undefined' && ninjaBridge && ninjaBridge.isReady()) result = Object.assign({}, result, ninjaBridge.getPeers());
@@ -10,13 +36,13 @@
     }
     function hasReceiver() {
         var connected = peers();
-        return Object.keys(connected).some(function (key) { return connected[key] === 'stickers'; });
+        return Object.keys(connected).some(function (key) { return connected[key] === 'stickers'; }) || relayReceivers().length > 0;
     }
     window.receiveStickerReceipt = function (request, uuid) {
         var receipt = request && request.meta && request.meta.sticker;
         if (!receipt || peers()[uuid] !== 'stickers') return;
         var done = pending.get(receipt.redemptionId);
-        if (done) done(receipt.success === true);
+        if (done && !done.clients) done(receipt.success === true);
     };
     function deliver(payload) {
         return new Promise(function (resolve) {
@@ -28,6 +54,19 @@
             }
             pending.set(id, done);
             payload.meta.sticker.expiresAt = Date.now() + 7000;
+            var displays = relayReceivers();
+            // Deliver to each display as P2P does. A busy or stale display must not
+            // reject another display's successful image-load receipt.
+            if (displays.length) {
+                done.clients = new Map(displays.map(function (entry) { return [entry.client, entry.socket]; }));
+                done.session = streamID;
+                displays.forEach(function (entry) {
+                    try { entry.socket.send(JSON.stringify(Object.assign({}, payload, { out: 17, stickerClient: entry.client }))); }
+                    catch (_) { done.clients.delete(entry.client); }
+                });
+                if (!done.clients.size) done(false);
+                return;
+            }
             Promise.resolve().then(function () { return sendTargetP2P(payload, 'stickers'); }).then(function (sent) { if (!sent) done(false); }, function () { done(false); });
         });
     }

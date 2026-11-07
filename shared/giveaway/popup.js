@@ -99,17 +99,14 @@
             var url = new URL('giveaway-control.html',location.href); url.searchParams.set('giveaway',giveawayId());
             var raw=document.getElementById('giveaway').raw;
             if(raw){try{
-                var source=new URL(raw);
+                var dock = document.getElementById('dock');
+                var source=new URL(dock && dock.raw || raw);
                 ['session','password','localserver','localserverport','server','server2','server3'].forEach(function(key){
                     if(source.searchParams.has(key))url.searchParams.set(key,source.searchParams.get(key));
                 });
-                // The manager needs command replies, not the viewer's chat feed.
-                // Keep explicit command endpoints; hosted/P2P links are unchanged.
-                if (source.searchParams.has('localserver')) {
-                    if (!url.searchParams.has('server')) url.searchParams.set('server', '');
-                    url.searchParams.delete('server2');
-                    url.searchParams.delete('server3');
-                }
+                // The audience's server flag does not grant host API permission.
+                url.searchParams.delete('server');
+                if (typeof lastResponse !== 'undefined' && lastResponse && lastResponse.password) url.searchParams.set('password', lastResponse.password);
             }catch(_) {}}
             window.open(url.href,'_blank','noopener');
         });
