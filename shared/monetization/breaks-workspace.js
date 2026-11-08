@@ -1594,10 +1594,9 @@
 						})[0];
 						if (editing) stockForm(editing);
 					}
-					// render() advances spot edits only when their saved spot is unchanged.
-					// A successful packing correction must not authorize an older spot draft.
+					// render() rebases spot/stock edits only when their saved record is unchanged.
+					// A successful read or unrelated action must not authorize an older form.
 					if (settingsRevision === priorRevision) settingsRevision = state.revision;
-					if (stockRevision === priorRevision) stockRevision = state.revision;
 					say("Saved.");
 					return true;
 				})
