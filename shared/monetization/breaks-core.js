@@ -615,6 +615,11 @@
 			match.spot.payment = data.payment;
 			if (data.payment === "paid") match.spot.paid = money(data.paid);
 			match.spot.fulfillment = "pending";
+			// Spot undo restores a whole board snapshot, which must not undo a later payment check.
+			if (s.undo && s.undo.id === match.board.id) {
+				s.undo = null;
+				s.undoLabel = "";
+			}
 			log(match.board, "Packing payment check: " + match.spot.label + " / " + data.payment, now);
 		} else if (command === "breakPack") {
 			if (["pending", "packed", "shipped"].indexOf(data.status) === -1) throw new Error("Choose a packing status.");

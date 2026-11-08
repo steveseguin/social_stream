@@ -47,7 +47,10 @@
 			'">' +
 			options
 				.map(function (o) {
-					return '<option value="' + o[0] + '">' + o[1] + "</option>";
+					// Packing choices include seller-entered titles and IDs. Keep both as text.
+					var option = node("option", o[1]);
+					option.value = o[0];
+					return option.outerHTML;
 				})
 				.join("") +
 			"</select></label>"
