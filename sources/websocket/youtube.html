@@ -133,6 +133,11 @@
 					</div>
 				</div>
 
+                <div id="youtube-private-stream-warning" class="quota-warning youtube-private-warning hidden" role="status">
+                    <span>Private stream: viewers need an invitation to watch.</span>
+                    <a href="https://studio.youtube.com/" target="_blank" rel="noopener noreferrer" title="Change this stream's visibility in YouTube Studio.">Open YouTube Studio</a>
+                </div>
+
                 <div class="stats-container">
                     <h3>Channel Statistics</h3>
                     <div class="stats-grid">
@@ -4865,9 +4870,12 @@ function enableBackgroundKeepAlive() {
 		if (!writeYouTubeBroadcastMonitorLease(normalizedAccountId, normalizedVideoId, 'auto', 'claiming')) {
 			return true;
 		}
+		const connectionGeneration = liveChatConnectionGeneration;
+		const claimingLease = activeYouTubeBroadcastMonitorLease;
 		await new Promise(function(resolve) {
 			setTimeout(resolve, YT_BROADCAST_MONITOR_CLAIM_SETTLE_MS);
 		});
+		if (connectionGeneration !== liveChatConnectionGeneration || activeYouTubeBroadcastMonitorLease !== claimingLease) return false;
 		const contenders = readActiveYouTubeBroadcastMonitorLeases(normalizedAccountId, normalizedVideoId);
 		contenders.sort(function(first, second) {
 			return first.monitorId.localeCompare(second.monitorId);
@@ -5006,11 +5014,14 @@ function enableBackgroundKeepAlive() {
 	}
 
 	async function selectAvailableOwnYouTubeBroadcast(items, channelId) {
+		const connectionGeneration = liveChatConnectionGeneration;
 		const excludedVideoIds = getYouTubeBroadcastsMonitoredByOtherPages(channelId);
 		while (true) {
 			const candidate = selectOwnYouTubeBroadcast(items, channelId, Date.now(), excludedVideoIds);
 			if (!candidate) return null;
-			if (await tryClaimYouTubeBroadcastForAutomaticMonitoring(channelId, candidate.id)) {
+			const claimed = await tryClaimYouTubeBroadcastForAutomaticMonitoring(channelId, candidate.id);
+			if (connectionGeneration !== liveChatConnectionGeneration) return null;
+			if (claimed) {
 				return candidate;
 			}
 			excludedVideoIds[candidate.id] = true;
@@ -5102,6 +5113,10 @@ function enableBackgroundKeepAlive() {
 			updateLookForYouTubeStreamsButton();
 			return false;
 		}
+		const connectionGeneration = liveChatConnectionGeneration;
+		const lookupChannelId = authenticatedChannelId;
+		const isCurrentLookup = () => connectionGeneration === liveChatConnectionGeneration
+			&& lookupChannelId === authenticatedChannelId;
 		const cooldownRemaining = bypassCooldown ? 0 : getYouTubeOwnBroadcastCheckCooldownRemaining(authenticatedChannelId);
 		if (cooldownRemaining > 0) {
 			const waitSeconds = Math.max(1, Math.ceil(cooldownRemaining / 1000));
@@ -5124,9 +5139,11 @@ function enableBackgroundKeepAlive() {
 			ownBroadcastLookupPromise = null;
 		}
 		try {
-			const ownBroadcastCandidates = await getOwnYouTubeBroadcastCandidatesOnce(token, authenticatedChannelId);
-			const anyOwnBroadcast = selectOwnYouTubeBroadcast(ownBroadcastCandidates, authenticatedChannelId);
-			const ownBroadcast = await selectAvailableOwnYouTubeBroadcast(ownBroadcastCandidates, authenticatedChannelId);
+			const ownBroadcastCandidates = await getOwnYouTubeBroadcastCandidatesOnce(token, lookupChannelId);
+			if (!isCurrentLookup()) return false;
+			const anyOwnBroadcast = selectOwnYouTubeBroadcast(ownBroadcastCandidates, lookupChannelId);
+			const ownBroadcast = await selectAvailableOwnYouTubeBroadcast(ownBroadcastCandidates, lookupChannelId);
+			if (!isCurrentLookup()) return false;
 			if (ownBroadcast && ownBroadcast.id) {
 				videoId = ownBroadcast.id;
 				channel = '';
@@ -5135,7 +5152,8 @@ function enableBackgroundKeepAlive() {
 				}
 				await connect(videoId, {
 					monitorMode: 'auto',
-					preserveBroadcastMonitorLease: true
+					preserveBroadcastMonitorLease: true,
+					privacyStatus: ownBroadcast.status && ownBroadcast.status.privacyStatus
 				});
 				return true;
 			}
@@ -5149,6 +5167,7 @@ function enableBackgroundKeepAlive() {
 			document.getElementById('likes-count').textContent = '-';
 			return false;
 		} catch (error) {
+			if (!isCurrentLookup()) return false;
 			console.error('Unable to check your YouTube broadcasts:', error);
 			updateHeaderInfo(username, 'Broadcast check failed');
 			document.getElementById('textarea').innerHTML = '<div>Signed in, but your live broadcasts could not be checked.</div>';
@@ -6325,7 +6344,13 @@ function enableBackgroundKeepAlive() {
             console.error('Error fetching subscriber count:', error);
         }
     }
+	function updateYouTubePrivacyWarning(privacyStatus) {
+		const warning = document.getElementById('youtube-private-stream-warning');
+		if (warning) warning.classList.toggle('hidden', privacyStatus !== 'private');
+	}
+
 	function clearPolling(options) {
+		updateYouTubePrivacyWarning('');
 		// Reconnecting to the same video also invalidates requests from the previous connection.
 		liveChatConnectionGeneration++;
 		const preserveBroadcastMonitorLease = !!(options && options.preserveBroadcastMonitorLease);
@@ -6476,6 +6501,7 @@ function enableBackgroundKeepAlive() {
 		const preserveBroadcastMonitorLease = !!(monitorOptions && monitorOptions.preserveBroadcastMonitorLease);
 		hideLookForYouTubeStreamsButton();
 		clearPolling({ preserveBroadcastMonitorLease: preserveBroadcastMonitorLease });
+		updateYouTubePrivacyWarning(monitorOptions && monitorOptions.privacyStatus);
 		const connectionGeneration = liveChatConnectionGeneration;
 		initialBacklogProcessing = true;
 		initialBacklogTimestamp = null;

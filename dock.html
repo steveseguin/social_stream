@@ -5601,6 +5601,41 @@
 			var server2 = false;
 			var server3 = false;
 			var reconnectionTimeoutExtension = null;
+			var cloudReceiptPositions = null;
+			if (urlParams.has("cloudack")) {
+				try { cloudReceiptPositions = JSON.parse(localStorage.getItem("ssn-cloud-receipts:" + roomID) || "{}"); } catch (error) {}
+			}
+			function receiveCloudMessage(data, socket) {
+				if (!data || !data.ssnCloudDelivery) return false;
+				// Only Cloud's opt-in link consumes these envelopes. Ordinary source
+				// messages and existing overlay links retain their usual behavior.
+				if (!urlParams.has("cloudack")) return true;
+				var receipt = data.ssnCloudDelivery;
+				var payload = data.ssnCloudMessage;
+				if (receipt.v !== 1 || !/^[a-f0-9]{32}$/.test(receipt.stream || "") ||
+					!/^[a-f0-9]{32}$/.test(receipt.token || "") || !Number.isSafeInteger(receipt.seq) || receipt.seq < 1 ||
+					!payload || (payload.type !== "kick" && (!payload.delete || payload.delete.type !== "kick"))) return true;
+				try {
+					var storageKey = "ssn-cloud-receipts:" + roomID;
+					if (!cloudReceiptPositions || typeof cloudReceiptPositions !== "object" || Array.isArray(cloudReceiptPositions)) return true;
+					var previous = cloudReceiptPositions[receipt.stream] || 0;
+					if (!Number.isSafeInteger(previous) || previous < 0) return true;
+					if (receipt.seq > previous) {
+						if (!previous && Object.keys(cloudReceiptPositions).length >= 128) return true;
+						// Check storage availability before handing the message to the dock.
+						localStorage.setItem(storageKey, JSON.stringify(cloudReceiptPositions));
+						if (!isDuplicateTransportDelivery(payload, "server")) processInput(payload);
+						cloudReceiptPositions[receipt.stream] = receipt.seq;
+					}
+					var persisted = JSON.parse(localStorage.getItem(storageKey) || "{}");
+					persisted[receipt.stream] = Math.max(persisted[receipt.stream] || 0, receipt.seq);
+					localStorage.setItem(storageKey, JSON.stringify(persisted));
+					if (socket.readyState === 1) socket.send(JSON.stringify({ssnCloudReceipt: receipt}));
+				} catch (error) {
+					console.warn("Cloud message confirmation is unavailable.");
+				}
+				return true;
+			}
 
 			function setupSocketExtension() {
 				if (reconnectionTimeoutExtension) {
@@ -5639,6 +5674,7 @@
 						try {
 							var data = JSON.parse(event.data);
 							if (!server2 && data.action !== "twitchTimeoutResult") return;
+							if (receiveCloudMessage(data, socketserverExtension)) return;
 							if (!isDuplicateTransportDelivery(data, "server")) {
 								if (data.operatorRelay === true && isVersionedRemoteControlRequest(data) && data.get) {
 									var operatorResult = executeRemoteControlDockRequest(data);
