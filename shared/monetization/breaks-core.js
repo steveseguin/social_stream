@@ -586,9 +586,13 @@
 					})[0];
 				if (!home) {
 					if (s.stock.length >= 100) throw new Error("Make room in stock before returning this prize.");
+					// Restore the original identity so other returns and queued breaks can find it.
+					var restoredId = prize.stock.stockId;
+					if (!restoredId || s.stock.some(function (p) { return p.id === restoredId; }))
+						restoredId = "stock-" + now + "-" + s.revision;
 					home = stock(
 						Object.assign({}, prize.stock, {
-							id: "stock-" + now + "-" + s.revision,
+							id: restoredId,
 							cost: prize.stock.unitCost,
 							quantity: 0
 						})
