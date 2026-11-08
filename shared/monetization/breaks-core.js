@@ -427,11 +427,12 @@
 						'<div style="border-top:1px solid #888;padding:8px 0"><strong>' +
 						escape(l.title) +
 						"</strong>" +
+						(l.fulfillment === "shipped" ? "<div><strong>Already shipped</strong></div>" : "") +
 						(l.orderRef ? "<div>Order: " + escape(l.orderRef) + "</div>" : "") +
 						(l.issue ? "<div>CHECK: " + escape(l.issue) + "</div>" : "") +
 						l.hits
 							.map(function (h) {
-								return "<div>[ ] " + escape(h) + "</div>";
+								return "<div>" + (l.fulfillment === "shipped" ? "[x] " : "[ ] ") + escape(h) + "</div>";
 							})
 							.join("") +
 						"</div>"
@@ -629,14 +630,18 @@
 				throw new Error("Pack and check these items first.");
 			if (data.status !== "pending" && group.issues && !data.reviewed)
 				throw new Error("Check unresolved payments before packing.");
+			function markPacked(p) {
+				// Later purchases share this buyer's record. Packing them must not reopen prior shipments.
+				if (data.status !== "packed" || p.fulfillment !== "shipped") p.fulfillment = data.status;
+			}
 			showBoards(s, show.id).forEach(function (b) {
 				b.spots.forEach(function (p) {
 					if (p.buyer && buyerKey(p.platform || b.platform, p.buyer) === data.buyerKey)
-						p.fulfillment = data.status;
+						markPacked(p);
 				});
 			});
 			show.prizes.forEach(function (p) {
-				if (p.buyer && buyerKey(p.platform, p.buyer) === data.buyerKey) p.fulfillment = data.status;
+				if (p.buyer && buyerKey(p.platform, p.buyer) === data.buyerKey) markPacked(p);
 			});
 		}
 		return finish(s, command);
