@@ -872,6 +872,11 @@
 		if (!s) throw new Error("Select a spot.");
 		return s;
 	}
+	function emptySpot(s) {
+		// A blank buyer/latest pull does not erase saved pulls or an order's payment record.
+		return !s.buyer && s.status === "available" && s.payment === "unknown" && s.paid === null &&
+			!s.result && !s.hits.length && !s.orderRef;
+	}
 	function log(b, action, now) {
 		b.log.push({ at: now, action: action });
 		b.log = b.log.slice(-logLimit);
@@ -1045,7 +1050,7 @@
 			if (!data.dismiss) {
 				if (b.locked || b.stage === "finished") throw new Error("Unlock an unfinished break before assigning buyers.");
 				item = find(b, data.spotId);
-				if (item.buyer || item.status !== "available" || item.payment !== "unknown" || item.paid !== null || item.result) throw new Error("Choose an empty spot. Existing assignments are never replaced.");
+				if (!emptySpot(item)) throw new Error("Choose an empty spot. Existing assignments are never replaced.");
 				if (s.auctions.breakId && suggestion.breakId && s.auctions.breakId !== suggestion.breakId) throw new Error("This auction belongs to another Whatnot break.");
 				s.undo = copy(b); s.undoLabel = "Assigned " + suggestion.buyer + " to " + item.label;
 				item.buyer = suggestion.buyer; item.platform = s.auctions.source; item.status = "claimed";
@@ -1211,13 +1216,7 @@
 						log(b, "Added " + item.label, now);
 					} else if (data.remove) {
 						item = find(b, String(data.id));
-						if (
-							b.stage !== "filling" ||
-							item.status !== "available" ||
-							item.buyer ||
-							item.payment !== "unknown" ||
-							item.result
-						)
+						if (b.stage !== "filling" || !emptySpot(item))
 							throw new Error("Only empty, available spots can be removed while filling.");
 						if (b.spots.length === 1) throw new Error("Keep at least one spot.");
 						b.spots = b.spots.filter(function (p) {
@@ -1394,6 +1393,7 @@
 		commands: commands,
         packing: packing, slip: slip, packingHTML: packingHTML,
 		normalize: normalize,
+		emptySpot: emptySpot,
 		apply: apply,
 		publicState: publicState,
 		controlState: controlState,

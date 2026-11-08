@@ -285,7 +285,7 @@
 				row.appendChild(title); row.appendChild(detail);
 				var actions = node("div", undefined, "br-row"), choose = node("select"), label = node("label", "Spot");
 				choose.setAttribute("aria-label", "Spot for " + p.buyer); choose.appendChild(node("option", "Choose a spot")); choose.options[0].value = "";
-				b.spots.filter(function (spot) { return !spot.buyer && spot.status === "available" && spot.payment === "unknown" && spot.paid === null && !spot.result; }).forEach(function (spot) {
+				b.spots.filter(SSNBreaks.emptySpot).forEach(function (spot) {
 					var option = node("option", spot.label); option.value = spot.id; choose.appendChild(option);
 				});
 				var binding = a.bindings.filter(function (m) { return m.native === p.nativeSpot; })[0];
