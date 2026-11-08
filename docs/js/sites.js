@@ -375,6 +375,20 @@ document.addEventListener('DOMContentLoaded', function() {
             notes: 'Read-only mode. The API URL is secret and includes your live stream key; Rumble currently documents no separate OAuth requirement for reading it. The page can also resolve the normal <code>https://rumble.com/chat/popup/&lt;stream-id&gt;</code> URL so you can open the injected popup directly without first scraping the <code>/live</code> page.'
         },
         {
+            name: 'Lumni',
+            icon: 'lumni.png',
+            description: 'Lumni live channels: chat, gifts, joins and guest requests, with replies from the dock posted to Lumni chat as the streamer.',
+            type: 'websocket',
+            instructions: `
+                <ul>
+                    <li>URL: https://socialstream.ninja/sources/websocket/lumni.html</li>
+                    <li>In Lumni, open Settings › Social Stream Ninja, turn the connection on and copy the connection key</li>
+                    <li>Paste the key into the page and press Connect</li>
+                </ul>
+            `,
+            notes: 'The connection key only reads that channel\'s public chat and posts plain text there as the streamer; it is stored in the page\'s local storage, never in the URL. Refresh or turn off the key in Lumni settings to revoke it at once.'
+        },
+        {
             name: 'Odysee',
             icon: 'odysee.png',
             description: 'Blockchain-based media platform.',

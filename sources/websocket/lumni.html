@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="description" content="Lumni: a chat source connection page for Social Stream Ninja. Brings Lumni chat, gifts and join requests into your session and sends your replies back to Lumni.">
+	<meta name="robots" content="noindex">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Lumni - Social Stream Ninja</title>
+	<link rel="stylesheet" href="websocket-responsive.css">
+	<style>
+		body { background: #171717; color: #e8e8e8; font-family: Arial, sans-serif; margin: 0 auto; max-width: 760px; padding: 20px; }
+		h1 { font-size: 22px; margin: 0 0 6px; }
+		p { margin: 6px 0; line-height: 1.45; }
+		label { display: block; font-size: 13px; margin: 14px 0 4px; }
+		input { background: #252525; border: 1px solid #444; box-sizing: border-box; color: #f4f4f4; font: inherit; padding: 8px; width: 100%; }
+		button { background: #3b82f6; border: 0; border-radius: 4px; color: #fff; cursor: pointer; font: inherit; margin: 12px 8px 0 0; padding: 8px 14px; }
+		button.ghost { background: #333; }
+		button:disabled { opacity: .5; cursor: default; }
+		.chip { display: inline-block; background: #252525; border: 1px solid #444; border-radius: 12px; font-size: 12px; margin: 8px 6px 0 0; padding: 3px 9px; }
+		.chip.ok { border-color: #2f9e44; color: #8ce99a; }
+		.chip.bad { border-color: #c92a2a; color: #ffa8a8; }
+		.hint { color: #9a9a9a; font-size: 12px; }
+		form { display: flex; gap: 8px; align-items: flex-end; }
+		form input { flex: 1; }
+		form button { margin: 0; }
+	</style>
+</head>
+<body data-compact-source="lumni">
+	<h1>Lumni</h1>
+	<p id="status-text">Paste your Lumni connection key and connect.</p>
+	<span id="socket-chip" class="chip bad">Connection: disconnected</span>
+	<span id="last-event-chip" class="chip">Last event: waiting</span>
+
+	<label for="key-input">Lumni connection key</label>
+	<input id="key-input" type="password" autocomplete="off" spellcheck="false" placeholder="lumni_ssn_…" />
+	<p class="hint">Lumni › Settings › Social Stream Ninja › Copy. The key is stored only in this browser. Anyone with it can post in your Lumni chat as you, so keep it off screen.</p>
+	<button id="connect-btn">Connect</button>
+	<button id="disconnect-btn" class="ghost" disabled>Disconnect</button>
+	<button id="forget-btn" class="ghost">Forget key</button>
+
+	<label for="chat-message">Send to Lumni chat</label>
+	<form id="chat-compose">
+		<input id="chat-message" type="text" maxlength="300" autocomplete="off" placeholder="Message" />
+		<button type="submit">Send</button>
+	</form>
+	<script src="lumni.js"></script>
+</body>
+</html>
