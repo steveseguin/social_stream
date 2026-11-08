@@ -904,7 +904,7 @@
 	}
 	function archive(s, now) {
 		if (!s.active) return;
-		// A break nobody has touched has nothing to keep, and must not use up a history slot.
+		// Skip blank unused breaks, but keep spot records entered during setup as well as later activity.
 		var used =
 			s.active.log.length > 1 ||
 			s.active.stockUse.length ||
@@ -912,7 +912,7 @@
 			s.active.fees ||
 			s.active.feePercent ||
 			s.active.spots.some(function (p) {
-				return p.note;
+				return !emptySpot(p) || p.price !== null || p.description || p.image || p.note;
 			});
 		if (used) {
 			if (s.history.length >= historyLimit)
