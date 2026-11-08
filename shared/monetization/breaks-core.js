@@ -1192,8 +1192,15 @@
 				if (b.locked) throw new Error("Unlock the break before undoing a change.");
 				log(b, "Undid: " + s.undoLabel, now);
 				// Only assignments rewind. Stage, visibility, lock and appearance stay as they are.
+				s.undo.spots.forEach(function (p) {
+					var current = b.spots.filter(function (v) { return v.id === p.id; })[0];
+					// Keep later packing checks for unchanged spots. Reversed contents need review.
+					var unchanged = current && Object.keys(p).every(function (key) {
+						return key === "fulfillment" || JSON.stringify(p[key]) === JSON.stringify(current[key]);
+					});
+					p.fulfillment = unchanged ? current.fulfillment : "pending";
+				});
 				b.spots = s.undo.spots;
-                b.spots.forEach(function(p){p.fulfillment="pending";});
 				if (
 					!b.spots.some(function (p) {
 						return p.id === b.highlight;
