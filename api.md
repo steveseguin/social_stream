@@ -100,6 +100,7 @@ Capability-driven control clients should use the versioned [Social Stream Remote
     - [Product showcase controls (Stream Deck / remote API)](#product-showcase-controls-stream-deck--remote-api)
     - [Read product display state](#read-product-display-state)
     - [Managed giveaways](#managed-giveaways)
+  - [Breaks display keys](#breaks-display-keys)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
