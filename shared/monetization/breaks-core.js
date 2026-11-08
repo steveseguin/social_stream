@@ -613,9 +613,11 @@
 				throw new Error("Choose a payment status.");
 			if (data.payment === "paid" && money(data.paid) === null)
 				throw new Error("Enter the confirmed paid amount, including zero for a free spot.");
+			var paid = data.payment === "paid" ? money(data.paid) : match.spot.paid;
+			if (match.spot.payment !== data.payment || match.spot.paid !== paid)
+				match.spot.fulfillment = "pending";
 			match.spot.payment = data.payment;
-			if (data.payment === "paid") match.spot.paid = money(data.paid);
-			match.spot.fulfillment = "pending";
+			match.spot.paid = paid;
 			// Spot undo restores a whole board snapshot, which must not undo a later payment check.
 			if (s.undo && s.undo.id === match.board.id) {
 				s.undo = null;
