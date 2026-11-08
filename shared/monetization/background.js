@@ -834,6 +834,31 @@
         }).catch(function () {});
         return true;
     };
+    // Public remote keys use the existing display-only whitelist. Never accept a private patch here.
+    window.handleBreaksDisplayRequest = function (action) {
+        var job = queue.then(async function () {
+            var b = privateState.breaks && privateState.breaks.active;
+            if (!b) throw new Error('Create a break in the Breaks workspace first.');
+            var data = {revision:privateState.breaks.revision, boardId:b.id}, command;
+            if (action === 'breaksShow' || action === 'breaksHide') {
+                command = 'breakSettings'; data.visible = action === 'breaksShow';
+            } else if (action === 'breaksClearHighlight') {
+                command = 'breakHighlight'; data.id = '';
+            } else if (action === 'breaksNextSpot' || action === 'breaksPreviousSpot') {
+                var spots = b.spots.filter(function (spot) { return !b.availableOnly || spot.status === 'available'; });
+                if (!spots.length) throw new Error('No spots match the overlay display filter.');
+                var index = spots.findIndex(function (spot) { return spot.id === b.highlight; });
+                var step = action === 'breaksNextSpot' ? 1 : -1;
+                index = index < 0 ? (step > 0 ? 0 : spots.length - 1) : (index + step + spots.length) % spots.length;
+                command = 'breakHighlight'; data.id = spots[index].id;
+            } else throw new Error('Unknown Breaks display command.');
+            await runBreakCommand(command, SSNBreaks.flowRequest(command, data));
+            b = privateState.breaks.active;
+            return {breaksDisplay:{visible:b.visible, highlight:b.highlight, stage:b.stage}};
+        });
+        queue = job.catch(function () {});
+        return job.catch(function (e) { return {error:e.message || 'Breaks display command failed.'}; });
+    };
     // In-process only, for Event Flow on the host. No message or relay route calls this directly.
     window.handleBreaksLocalRequest = function (command, data) {
         var job = queue.then(async function () {

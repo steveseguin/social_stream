@@ -1403,3 +1403,21 @@ All commands accept `value.giveawayId` (default `default`). Mutations accept `op
 | `guessgiveaway` | `actor`, integer `guess` in the current range; Number Hunt awards the first correct solver. |
 
 Actors use captured `chatname`, `type`, optional native `userid`/`username`, and membership fields. Do not expose operator API access to arbitrary viewers. Ticket/prize features require SSN points enabled. Balances remain local to a profile; changing sessions does not create another wallet. Recovered open rounds are closed for review. See the [complete giveaway/points guide](docs/giveaway-points-guide.html) for funding, limits, refunds, game rules, Event Flow, Stream Deck, and recovery.
+
+## Breaks display keys
+
+These version 2 SSN commands target the active break in the host, in both the extension and SSApp. They use the plugin's shared P2P connection or its explicitly configured API relay (default send 1, receive 2), with the existing session/password and API permissions. No private workspace link or new connection settings are needed. Require the action in `getCapabilities` before using it.
+
+| Action | Effect |
+| --- | --- |
+| `breaksShow` | Enable the current break's overlay feed. |
+| `breaksHide` | Hide the break overlay feed. |
+| `breaksNextSpot` | Highlight the next spot in board order. |
+| `breaksPreviousSpot` | Highlight the previous spot in board order. |
+| `breaksClearHighlight` | Remove the highlight. |
+
+No value is required. Next/previous wrap and honor the overlay's Available only filter; they do not change the workspace selection, reveal a pull, or enable a hidden overlay. The confirmed callback contains `payload.breaksDisplay` with `visible`, `highlight` (spot ID), and `stage`. It does not establish OBS scene visibility. The keys cannot read or edit buyers, payments, stock, notes, packing, or print jobs. Keep those operations in the private workspace. Missing active breaks return `TARGET_UNAVAILABLE`; a disabled host returns `CONTROL_UNAVAILABLE`. Do not automatically retry an uncertain next/previous command.
+
+```json
+{"protocol":2,"action":"breaksNextSpot","get":"break-key-1"}
+```

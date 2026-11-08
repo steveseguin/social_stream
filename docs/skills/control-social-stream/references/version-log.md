@@ -2,6 +2,11 @@
 
 Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command list is authoritative, including when development builds share an application version.
 
+## 2026-11-07: Breaks display keys
+
+- Breaks minimum remains SSApp 0.4.48 with updated Social Stream sources; no SSApp binary/API version change. Check advertised SSN remote-control actions before using the five Breaks display keys.
+- The same keys support the extension through the existing plugin P2P or configured API relay. Private records and printing still require the workspace.
+
 ## Closed browser windows
 
 The updated SSApp 0.4.48 build skips destroyed source windows when listing browser targets. After a window closes, list targets again before choosing another window. Command names and schemas are unchanged.
@@ -12,7 +17,7 @@ SSApp 0.4.48 builds containing the source readiness fix let `startSource` wait u
 
 ## Breaks workspace with updated Social Stream sources
 
-Minimum supported runtime for this addition: SSApp 0.4.48 with the Breaks page sources. There are no new SSApp REST or MCP commands, and session commands cannot read or change Breaks. The workspace uses its own private link, and Event Flow's Commerce control action adds display-only `breakHighlight`, `breakStage`, and `breakSettings` on the host. See the [control API reference](control-api.md#breaks-workspace).
+Minimum supported runtime for this addition: SSApp 0.4.48 with the Breaks page sources. There are no new SSApp REST or MCP commands, and session commands cannot read or change private Breaks records. The workspace uses its own private link, and Event Flow's Commerce control action adds display-only `breakHighlight`, `breakStage`, and `breakSettings` on the host. See the [control API reference](control-api.md#breaks-workspace).
 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |

@@ -90,7 +90,7 @@
 		panel.classList.add("breaks-panel");
 		panel.innerHTML =
 			'<summary>Break workspace</summary><div class="br-top"><nav aria-label="Breaks views">' +
-			["show", "live", "setup", "stock", "display", "costs", "history"]
+			["live", "show", "setup", "stock", "display", "costs", "history"]
 				.map(function (x) {
 					return (
 						'<button type="button" data-tab="' +
@@ -221,7 +221,20 @@
 		["preview", "copy", "visibility"].forEach(function (action) { obsActions.appendChild(el('[data-do="' + action + '"]')); });
 		obsCard.insertBefore(obsActions, el('[data-form="appearance"]'));
 		el('[data-do="display"]').textContent = "OBS";
-		boardTools.appendChild(el('[data-do="new"]'));
+		var moreTools = node("details", undefined, "br-more-tools");
+		moreTools.appendChild(node("summary", "More"));
+		moreTools.appendChild(el('[data-do="export"]'));
+		moreTools.appendChild(el('[data-do="new"]'));
+		boardTools.appendChild(moreTools);
+		var overlayStatus = node("span", undefined, "br-muted");
+		overlayStatus.dataset.overlayStatus = "";
+		var liveVisibility = button("Show overlay", function () { el('[data-do="visibility"]').click(); });
+		liveVisibility.title = "Enable the Breaks overlay feed. OBS scene visibility is controlled in OBS.";
+		liveVisibility.dataset.liveVisibility = "";
+		boardTools.insertBefore(liveVisibility, boardTools.firstChild);
+		liveHeading.firstElementChild.appendChild(overlayStatus);
+		var editorContext = node("p", undefined, "br-muted br-editor-context");
+		el(".br-editor").insertBefore(editorContext, el("[data-spot-title]"));
 		var stageTools = node("div", undefined, "br-actions br-stage-actions");
 		stageTools.appendChild(f("stage").parentElement);
 		stageTools.appendChild(el('[data-do="finish"]'));
@@ -301,6 +314,7 @@
 		paymentGroup.open = true;
 		paymentGroup.classList.add("br-payment-group");
 		spotForm.insertBefore(paymentGroup, pull);
+		paymentGroup.appendChild(f("orderRef").parentElement);
 		var buyerRow = node("div", undefined, "br-row");
 		spotForm.insertBefore(buyerRow, f("buyer-platform").parentElement);
 		buyerRow.appendChild(f("buyer-platform").parentElement); buyerRow.appendChild(f("status").parentElement);
@@ -511,6 +525,7 @@
 			});
 		});
 		function controls() {
+			liveVisibility.disabled = busy || !state || !state.active;
             showView.controls(busy);
 			panel.querySelectorAll("[data-icon]").forEach(function (button) { button.setAttribute("aria-label", button.textContent); });
 			var b = state && state.active,
@@ -530,6 +545,7 @@
 			el('[data-do="undo"]').disabled = busy || !editable || !state.undoLabel;
 			el('[data-do="add-spot"]').disabled = busy || !editable || b.stage !== "filling";
 			f("stage").disabled = busy || !editable;
+			el('[data-do="save-next"]').textContent = b && b.stage === "filling" ? "Save / next open" : "Save and next";
 			el("[data-editor-lock]").hidden = !b || !b.locked;
 			el(".br-editor")
 				.querySelectorAll("input, select, textarea, button")
@@ -668,6 +684,7 @@
 			fillSwap(swapChoice);
 			restoreDraft("spot");
 			if (focus) panel.classList.add("br-editing");
+			if (focus) paymentGroup.open = b.stage !== "breaking" || s.payment !== "paid" || s.paid === null;
 			controls();
 			drawGrid();
 			// Ready to type: the buyer on an open spot, the pull on a sold one. Skipped on phones, where it opens the keyboard.
@@ -720,6 +737,10 @@
 					button.dataset.payment = s.buyer ? s.payment : "none";
 					button.setAttribute("aria-pressed", String(selected === s.id));
 					button.appendChild(node("strong", s.label));
+					if (b.highlight === s.id) {
+						button.dataset.highlighted = "true";
+						button.appendChild(node("small", "Highlighted", "br-badge br-highlighted"));
+					}
 					button.appendChild(
 						node(
 							"span",
@@ -1292,6 +1313,11 @@
 			f("board-id").value = b ? b.id : "";
 			var newBoard = !prior || (prior.active && prior.active.id) !== (b && b.id);
 			el("[data-title]").textContent = b ? b.title : "No break yet";
+			var displayLabel = b ? (b.visible ? "Overlay enabled" : "Overlay hidden") : "";
+			overlayStatus.textContent = displayLabel;
+			liveVisibility.textContent = b && b.visible ? "Hide overlay" : "Show overlay";
+			liveVisibility.setAttribute("aria-pressed", String(!!(b && b.visible)));
+			editorContext.textContent = b ? b.title + " / " + b.stage + " / " + displayLabel : "";
 			el("[data-empty]").hidden = !!b;
 			var failed = b ? countSpots(b, "payment", "failed") : 0;
 			el("[data-count]").textContent = b
@@ -1503,7 +1529,7 @@
                             });
                         }
                         return nextPackingPart();
-                    }
+					}
 					if (result.breaks && result.breaks.archiveDeferred && data && data.archiveId) {
 						return secure("breakGet", { archiveId: data.archiveId, archiveOnly: true }).then(function (archive) {
 							if (!archive.breaks || archive.breaks.revision !== result.breaks.revision)
@@ -1781,7 +1807,7 @@
 						.slice(index + 1)
 						.concat(spots.slice(0, index))
 						.filter(function (s) {
-							return s.status === "available";
+							return state.active.stage !== "filling" || s.status === "available";
 						})[0];
 				pick(nextSpot ? nextSpot.id : selected, !!nextSpot);
 				// On a phone or narrow dock the editor sits below the grid, so return to the spot just saved.
@@ -2103,6 +2129,22 @@
 				return;
 			}
 			if (action === "repeat") repeat(b);
+		});
+		// Shortcuts belong to the focused spot editor, never to the whole desktop or a typing field elsewhere.
+		var saveButton = spotForm.querySelector('[type="submit"]');
+		saveButton.title = "Save spot (Ctrl+Enter / Command+Enter)";
+		el('[data-do="save-next"]').title = "Save and next (Ctrl+Shift+Enter / Command+Shift+Enter)";
+		spotForm.addEventListener("keydown", function (event) {
+			if (event.defaultPrevented || event.isComposing || event.repeat || locked || busy || connectionError || currentTab !== "live") return;
+			if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key === "Enter") {
+				var action = event.shiftKey ? el('[data-do="save-next"]') : saveButton;
+				if (action.disabled) return;
+				event.preventDefault();
+				action.click();
+			} else if (event.key === "Escape" && !event.ctrlKey && !event.altKey && !event.metaKey && event.target.tagName !== "SELECT") {
+				event.preventDefault();
+				el('[data-do="back"]').click();
+			}
 		});
 		var timer = setInterval(function () {
 			if (!document.hidden) refresh();

@@ -664,3 +664,21 @@ body.breaks-workspace {
 		min-width: 90px;
 	}
 }
+
+/* Live operation: make display state distinct from editing and keep related actions compact. */
+.br-more-tools { position: relative; }
+.breaks-panel .br-more-tools { margin: 0; padding: 6px 10px; }
+.breaks-panel .br-more-tools summary { margin: 0; }
+.br-more-tools[open] { display: flex; gap: 6px; }
+.br-more-tools button { margin-top: 6px; }
+.br-editor-context { display: none; }
+.br-record > .br-badge { align-self: flex-start; border-radius: 4px; padding: 1px 5px; }
+.br-badge.br-highlighted { color: #b7d9ff; background: #263f59; }
+.br-badge.br-highlighted::before { content: '\2606 '; }
+.br-grid [data-highlighted=true] { box-shadow: inset 0 0 0 2px #9dcfff; }
+.breaks-panel [data-live-visibility][aria-pressed=true] { color: #b1efc4; border-color: #46745a; }
+@media (max-width: 800px) {
+    .br-editor-context { display: block; margin: 0 0 8px; overflow-wrap: anywhere; }
+    .br-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+    .br-top > .br-actions { flex-direction: column; gap: 6px; }
+}

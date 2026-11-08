@@ -73,6 +73,12 @@
 	};
 
 	const SSN_ACTIONS = {
+		breaksShow: true,
+		breaksHide: true,
+		breaksNextSpot: true,
+		breaksPreviousSpot: true,
+		breaksClearHighlight: true,
+
 		getWorkflowTriggers: true,
 		triggerWorkflow: true,
         getCommerceState: true,
@@ -169,6 +175,11 @@
 		getgiveawaystate: { owner: "background", phase: 2, category: "giveaway", label: "Get giveaway state", risk: "read-only", callback: "guaranteed" },
 
         getCommerceState: { owner: "background", phase: 2, category: "commerce", label: "Get product display state", risk: "read-only", callback: "guaranteed" },
+		breaksShow: { owner: "background", phase: 2, category: "breaks", label: "Show break overlay", risk: "mutating", callback: "guaranteed" },
+		breaksHide: { owner: "background", phase: 2, category: "breaks", label: "Hide break overlay", risk: "mutating", callback: "guaranteed" },
+		breaksNextSpot: { owner: "background", phase: 2, category: "breaks", label: "Highlight next spot", risk: "mutating", callback: "guaranteed" },
+		breaksPreviousSpot: { owner: "background", phase: 2, category: "breaks", label: "Highlight previous spot", risk: "mutating", callback: "guaranteed" },
+		breaksClearHighlight: { owner: "background", phase: 2, category: "breaks", label: "Clear break highlight", risk: "mutating", callback: "guaranteed" },
 		commerceShow: { owner: "background", phase: 2, category: "commerce", label: "Show product", risk: "mutating", callback: "guaranteed" },
 		commerceNext: { owner: "background", phase: 2, category: "commerce", label: "Next product", risk: "mutating", callback: "guaranteed" },
 		commerceHide: { owner: "background", phase: 2, category: "commerce", label: "Hide products", risk: "mutating", callback: "guaranteed" },

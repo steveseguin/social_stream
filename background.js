@@ -11276,6 +11276,12 @@ async function handleStreamDeckBackgroundRequest(request) {
         if (!result.ok) return router.makeError(request, result.code, result.message);
         return router.makeResponse(request, { trigger: result.trigger, matchedFlows: result.matchedFlows, flows: result.flows }, "accepted");
     }
+    if (["breaksShow", "breaksHide", "breaksNextSpot", "breaksPreviousSpot", "breaksClearHighlight"].indexOf(action) !== -1) {
+        if (!window.handleBreaksDisplayRequest) return router.makeError(request, "TARGET_UNAVAILABLE", "Breaks controls are still loading.");
+        const result = await window.handleBreaksDisplayRequest(action);
+        if (result.error) return router.makeError(request, "TARGET_UNAVAILABLE", result.error);
+        return router.makeResponse(request, result);
+    }
     if (action === "getCommerceState") {
         if (!window.handleMonetizationRequest) return router.makeError(request, "TARGET_UNAVAILABLE", "Product controls are still loading.");
         const result = await window.handleMonetizationRequest({ action: "getCommerceState" });

@@ -67,7 +67,9 @@
 <p>Event Flow's <strong>Commerce control</strong> action can highlight a spot, change the stage, and show or hide the overlay. It cannot read Breaks records or change buyers, payments, costs, or what the overlay shows publicly, because flows can be started through your session. Use <code>"boardId":"active"</code> so a flow keeps working from break to break.</p>
 <pre><code>{"boardId":"active","id":"1"}</code></pre>
 <p>Use that example with <code>breakHighlight</code>. For <code>breakStage</code>, use <code>stage</code> with <code>filling</code>, <code>breaking</code>, or <code>finished</code>. For <code>breakSettings</code>, use <code>visible</code> with <code>true</code> or <code>false</code>. Use existing Flow Actions for sounds and celebrations.</p></section>
-<section><h2>Remote commands</h2>
-<p>The session API does not accept Breaks commands, because the session ID also appears in overlay links.</p>
+<section id="shortcuts"><h2>Live shortcuts</h2>
+<p>With a field in the spot editor focused, use <strong>Ctrl+Enter</strong> to save or <strong>Ctrl+Shift+Enter</strong> to save and move on. On Mac, use Command instead of Ctrl. While filling, the next spot is an open one; while breaking, it follows board order. <strong>Escape</strong> returns focus to the spot grid and keeps your draft.</p>
+<p>In Stream Deck, add a <strong>Preset Command</strong> key and choose <strong>Breaks display</strong>: show, hide, next spot, previous spot, or clear highlight. Use the plugin's normal shared connection. Next and previous wrap through spots allowed by the overlay filter. Highlighting does not reveal a pull or select a spot for editing.</p>
+<p>The keys wait for a host reply. Show/hide controls the overlay feed, not OBS scene visibility. Buyer, payment, stock, packing and printing controls stay in the private workspace. <a href="../api.md#breaks-display-keys">API commands</a>.</p>
 <p>Records stay on the SSN installation hosting the session. Keep that host running for controls and overlays. Export completed breaks before changing installations or clearing app data. The workspace contains private records; do not use its URL as a viewer overlay.</p>
 </section></main></body></html>

@@ -16,7 +16,7 @@
 		section.hidden = true;
 		section.innerHTML =
 			'<div class="br-actions"><label>Show<select data-show-select></select></label><button type="button" data-show-new>New show</button><button type="button" data-show-attach>Add current break</button><button type="button" data-show-export>Export full show</button></div>' +
-			'<div class="br-two"><div><h2>Running order</h2><div data-show-queue></div><button type="button" data-show-setup>Prepare a break</button><details><summary>Giveaway prizes</summary><div data-show-prizes></div><form data-prize-form>' +
+			'<div class="br-two"><div><h2>Running order</h2><div data-show-queue></div><button type="button" data-show-setup>Prepare a break</button><details><summary>Giveaway prizes</summary><div data-show-prizes></div><details data-prize-editor><summary>Add prize</summary><form data-prize-form>' +
 			helpers.field("prize-name", "Prize", "text", 'maxlength="160" required') +
 			"<label>Use stock<select data-prize-stock></select></label>" +
 			helpers.field("prize-buyer", "Winner account", "text", 'maxlength="80"') +
@@ -29,7 +29,7 @@
 				["youtube", "YouTube"]
 			]) +
 			helpers.field("prize-order", "Order reference", "text", 'maxlength="100"') +
-			'<div class="br-actions"><button type="submit">Save prize</button><button type="button" data-prize-new>New prize</button></div></form><details><summary>Use an SSN giveaway winner</summary><button type="button" data-prize-load>Load recent winners</button><div data-prize-winners></div></details><div class="br-actions"><a data-tool="giveaway-control.html" target="_blank" rel="noopener">SSN giveaways</a><a href="docs/breaks.html#show" target="_blank" rel="noopener">Giveaway guide</a></div></details></div>' +
+			'<div class="br-actions"><button type="submit">Save prize</button><button type="button" data-prize-new>New prize</button></div></form></details><details><summary>Use an SSN giveaway winner</summary><button type="button" data-prize-load>Load recent winners</button><div data-prize-winners></div></details><div class="br-actions"><a data-tool="giveaway-control.html" target="_blank" rel="noopener">SSN giveaways</a><a href="docs/breaks.html#show" target="_blank" rel="noopener">Giveaway guide</a></div></details></div>' +
 			'<div><h2>Pack orders</h2><div class="br-actions"><button type="button" data-show-refresh>Refresh packing</button><button type="button" data-show-csv>Export packing CSV</button></div><p data-show-issues class="br-muted"></p><div data-show-buyers></div><div data-show-pages class="br-actions"></div><details><summary>Show estimate</summary><div data-show-totals></div></details></div></div>' +
 			'<section data-packing-slip hidden><h2>Packing slip</h2><div data-slip-content class="br-record"></div><div data-slip-actions class="br-actions"></div></section>';
 		panel.appendChild(section);
@@ -75,6 +75,8 @@
 			return helpers.send(command, Object.assign({ showId: showId() }, data));
 		}
 		function resetPrize() {
+			el("[data-prize-editor]").open = false;
+			el("[data-prize-editor] summary").textContent = "Add prize";
 			selectedPrize = "";
 			prizeRevision = state ? state.revision : 0;
 			["prize-name", "prize-buyer", "prize-platform", "prize-order"].forEach(function (k) {
@@ -227,7 +229,9 @@
 		}
 		function renderPacking(r, nativePrinter) {
 			result = r;
-			var list = el("[data-show-buyers]");
+			var list = el("[data-show-buyers]"), selectedRow = null;
+			var slip = el("[data-packing-slip]");
+			section.appendChild(slip); // Keep the selected preview while rebuilding buyer rows.
 			list.textContent = "";
 			el("[data-show-issues]").textContent = r.unresolvedCount
 				? r.unresolvedCount + " unresolved: " + r.unresolved.slice(0, 3).join("; ")
@@ -253,11 +257,13 @@
 						g.issues
 							? "br-badge br-failed"
 							: g.status === "pending"
-								? "br-badge br-unchecked"
+								? "br-badge"
 								: "br-badge br-paid"
 					)
 				);
-				row.appendChild(
+				var reviewActions = node("div", undefined, "br-actions");
+				row.appendChild(reviewActions);
+				reviewActions.appendChild(
 					button("Review & print", function () {
 						buyer = g.key;
 						el("[data-packing-slip]").hidden = true;
@@ -267,6 +273,7 @@
 					})
 				);
 				list.appendChild(row);
+				if (r.selected && r.selected.key === g.key) selectedRow = row;
 			});
 			var pages = el("[data-show-pages]");
 			pages.textContent = "";
@@ -298,7 +305,8 @@
 					)
 				);
 			});
-			var slip = el("[data-packing-slip]");
+			if (selectedRow) selectedRow.insertAdjacentElement("afterend", slip);
+			else list.appendChild(slip);
 			slip.hidden = !r.selected;
 			if (!r.selected) return;
 			el("[data-slip-content]").innerHTML = root.SSNBreaks.packingHTML(r);
@@ -474,6 +482,8 @@
 				row.appendChild(
 					button("Record winner", function () {
 						selectedPrize = p.id;
+						el("[data-prize-editor]").open = true;
+						el("[data-prize-editor] summary").textContent = "Record winner";
 						prizeRevision = state.revision;
 						field("prize-name").value = p.name;
 						field("prize-name").readOnly = true;
@@ -532,6 +542,7 @@
 			else if (result && result.revision !== state.revision) {
 				result = null;
 				el("[data-packing-slip]").hidden = true;
+				section.appendChild(el("[data-packing-slip]"));
 				el("[data-show-buyers]").textContent = "";
 				el("[data-show-issues]").textContent = "Refresh packing to load the latest changes.";
 			}
@@ -550,6 +561,7 @@
 				el("[data-packing-slip]").hidden = true;
 				var correction = el("[data-payment-correction]");
 				if (correction) correction.remove();
+				section.appendChild(el("[data-packing-slip]"));
 				el("[data-show-buyers]").textContent = "";
 				el("[data-show-queue]").textContent = "";
 				el("[data-show-prizes]").textContent = "";
