@@ -377,7 +377,7 @@
 		stockColumns.parentElement.insertBefore(salesPanel, stockColumns);
 		el("[data-sales-enabled]").onchange = function () { send("breakSalesSettings", { enabled: this.checked }); };
 		el("[data-sales-reviewed]").onclick = function () { send("breakSalesSettings", { reviewed: true }); };
-		var showView = root.SSNBreaksShowWorkspace(panel,{node:node,button:button,field:field,select:select,send:send,read:secure,show:show,say:say});
+		var showView = root.SSNBreaksShowWorkspace(panel,{node:node,button:button,field:field,select:select,send:send,read:secure,show:show,say:say,confirmBoardDrafts:confirmBoardDrafts,discardDrafts:discardDrafts});
         var queueButton=button('Add to show queue',function(){if(!state || !state.showId)return say('Create a show in the Show tab first.',true);queueing=true;el('[data-form="create"]').requestSubmit();queueing=false;});
         var queueing=false;el('[data-form="create"]').appendChild(queueButton);
         var icons = {show:"\u2637",live:"\u25a6",setup:"+",stock:"\u25a3",display:"\u25a4",costs:"$",history:"\u21ba",
@@ -1594,7 +1594,8 @@
 						})[0];
 						if (editing) stockForm(editing);
 					}
-					if (editRevision === priorRevision) editRevision = state.revision;
+					// render() advances spot edits only when their saved spot is unchanged.
+					// A successful packing correction must not authorize an older spot draft.
 					if (settingsRevision === priorRevision) settingsRevision = state.revision;
 					if (stockRevision === priorRevision) stockRevision = state.revision;
 					say("Saved.");

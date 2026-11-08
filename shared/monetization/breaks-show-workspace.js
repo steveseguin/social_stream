@@ -459,8 +459,13 @@
 				row.appendChild(
 					button("Start break", function () {
 						if (state.active && !confirm("Archive the current break and start this one?")) return;
+						var discard = helpers.confirmBoardDrafts();
+						if (!discard) return;
 						run("breakQueueStart", { id: q.id, replace: !!state.active }).then(function (ok) {
-							if (ok) helpers.show("live");
+							if (ok) {
+								helpers.discardDrafts(discard);
+								helpers.show("live");
+							}
 						});
 					})
 				);
