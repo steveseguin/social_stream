@@ -443,6 +443,9 @@
 			state.stock.forEach(function (s) {
 				stock.appendChild(new Option(s.name + " (" + s.quantity + ")", s.id));
 			});
+			// Preserve a removed selection so saving cannot silently turn it into a separate prize.
+			if (value && !state.stock.some(function (s) { return s.id === value; }))
+				stock.appendChild(new Option("Selected item (unavailable)", value));
 			stock.value = value;
 			stock.disabled = !!selectedPrize;
 			var queue = el("[data-show-queue]");
