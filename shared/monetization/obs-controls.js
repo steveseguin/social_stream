@@ -12,7 +12,16 @@
                 var core = document.createElement('script'); core.src = 'shared/monetization/breaks-core.js'; core.onerror = failed;
                 core.onload = function () {
                 var script = document.createElement('script'); script.src = 'shared/monetization/breaks-workspace.js'; script.onerror = failed;
-                script.onload = function () { workspace = window.SSNBreaksWorkspace(section, request); workspace.refresh(); };
+                script.onload = function () {
+                    var show = document.createElement('script');
+                    show.src = 'shared/monetization/breaks-show-workspace.js';
+                    show.onerror = failed;
+                    show.onload = function () {
+                        workspace = window.SSNBreaksWorkspace(section, request);
+                        workspace.refresh();
+                    };
+                    document.body.appendChild(show);
+                };
                 document.body.appendChild(script);
                 };
                 document.body.appendChild(core);

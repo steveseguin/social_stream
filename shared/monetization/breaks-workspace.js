@@ -90,13 +90,13 @@
 		panel.classList.add("breaks-panel");
 		panel.innerHTML =
 			'<summary>Break workspace</summary><div class="br-top"><nav aria-label="Breaks views">' +
-			["live", "setup", "stock", "display", "costs", "history"]
+			["show", "live", "setup", "stock", "display", "costs", "history"]
 				.map(function (x) {
 					return (
 						'<button type="button" data-tab="' +
 						x +
 						'">' +
-						{ live: "Run break", setup: "Set up", stock: "Stock", display: "OBS", costs: "Costs", history: "History" }[x] +
+						{ show:"Show", live: "Run break", setup: "Set up", stock: "Stock", display: "OBS", costs: "Costs", history: "History" }[x] +
 						"</button>"
 					);
 				})
@@ -127,6 +127,7 @@
 				["revealed", "Revealed"],
 			]) +
 			field("result", "Latest pull", "text", 'maxlength="160"') +
+            '<details><summary>Recorded pulls</summary><label>One pull per line<textarea data-field="hits" rows="4" maxlength="4830"></textarea></label></details>' +
 			'<div class="br-actions"><button type="submit" class="br-primary">Save spot</button><button type="button" data-do="save-next">Save and next</button><button type="button" data-do="reveal">Reveal</button><button type="button" data-do="highlight">Highlight</button><button type="button" data-do="clear-highlight">Clear highlight</button></div><details><summary>Payment and price</summary>' +
 			select("payment", "Payment", [
 				["unknown", "Not checked"],
@@ -136,7 +137,7 @@
 			]) +
 			'<div class="br-row">' +
 			field("price", "Asking price", "number", 'min="0" max="9999999" step="0.01"') +
-			field("paid", "Paid amount", "number", 'min="0" max="9999999" step="0.01"') +
+			field("paid", "Paid amount", "number", 'min="0" max="9999999" step="0.01"') + field("orderRef", "Order reference", "text", 'maxlength="100"') +
 			'</div><button type="button" data-do="asking-paid">Use asking price</button></details>' +
 			"<details><summary>Description and private note</summary>" +
 			field("label", "Spot name", "text", 'maxlength="80" required') +
@@ -327,12 +328,16 @@
 		var sellerControls = node('div', undefined, 'br-actions');
 		sellerControls.appendChild(button('Connect seller tools', function () { send('breakEbay', {operation:'connect', feature:'seller'}); }));
 		sellerControls.appendChild(button('Load my listings', function () { send('breakEbay', {operation:'listings', page:1}); }));
-		sellerControls.appendChild(button('Import listing URL', function () { var url=prompt('Paste your eBay listing URL'); if(url) send('breakEbay', {operation:'listings', url:url}); }));
+		var importForm=node('form',undefined,'br-actions');importForm.hidden=true;
+        importForm.innerHTML=field('seller-url','Your eBay listing URL','url','required maxlength="2048" placeholder="https://..."')+'<button type="submit">Import listing</button>';
+        sellerControls.appendChild(button('Import listing URL',function(){importForm.hidden=!importForm.hidden;if(!importForm.hidden)f('seller-url').focus();}));
+        importForm.onsubmit=function(e){e.preventDefault();send('breakEbay',{operation:'listings',url:f('seller-url').value}).then(function(ok){if(ok)importForm.hidden=true;});};
 		var notificationLabel=node('label',undefined,'br-check'), notificationToggle=node('input');notificationToggle.type='checkbox';notificationToggle.dataset.ebayNotifications='';
 		notificationLabel.title='Check for new orders sooner when eBay sends a notification. Regular polling continues.';
 		notificationLabel.appendChild(notificationToggle);notificationLabel.appendChild(document.createTextNode('Order notifications'));sellerControls.appendChild(notificationLabel);
 		notificationToggle.onchange=function(){send('breakEbay',{operation:'notifications',enabled:this.checked}).then(function(ok){if(!ok)notificationToggle.checked=!!(ebay&&ebay.notifications);});};
 		ebayDetails.insertBefore(sellerControls, el('.br-ebay-list'));
+        ebayDetails.insertBefore(importForm, el('.br-ebay-list'));
 		var sellerFeedback = node('div', undefined, 'br-record'); sellerFeedback.dataset.ebayResult=''; sellerFeedback.hidden=true;
 		ebayDetails.insertBefore(sellerFeedback, el('.br-ebay-list'));
 		var stockPreview = node('div', undefined, 'br-record'); stockPreview.dataset.ebayPreview=''; stockPreview.hidden=true; stockEditor.appendChild(stockPreview);
@@ -355,7 +360,10 @@
 		stockColumns.parentElement.insertBefore(salesPanel, stockColumns);
 		el("[data-sales-enabled]").onchange = function () { send("breakSalesSettings", { enabled: this.checked }); };
 		el("[data-sales-reviewed]").onclick = function () { send("breakSalesSettings", { reviewed: true }); };
-		var icons = {live:"\u25a6",setup:"+",stock:"\u25a3",display:"\u25a4",costs:"$",history:"\u21ba",
+		var showView = root.SSNBreaksShowWorkspace(panel,{node:node,button:button,field:field,select:select,send:send,read:secure,show:show,say:say});
+        var queueButton=button('Add to show queue',function(){if(!state || !state.showId)return say('Create a show in the Show tab first.',true);queueing=true;el('[data-form="create"]').requestSubmit();queueing=false;});
+        var queueing=false;el('[data-form="create"]').appendChild(queueButton);
+        var icons = {show:"\u2637",live:"\u25a6",setup:"+",stock:"\u25a3",display:"\u25a4",costs:"$",history:"\u21ba",
 			refresh:"\u21bb",preview:"\u25b7",copy:"\u2398",visibility:"\u25c9",lock:"\u26bf",undo:"\u21b6",export:"\u2193",
 			"add-spot":"+",new:"+",finish:"\u2713",reveal:"\u2726",highlight:"\u2606","clear-highlight":"\u00d7","save-next":"\u2192"};
 		panel.querySelectorAll("[data-tab], [data-do]").forEach(function (button) {
@@ -503,6 +511,7 @@
 			});
 		});
 		function controls() {
+            showView.controls(busy);
 			panel.querySelectorAll("[data-icon]").forEach(function (button) { button.setAttribute("aria-label", button.textContent); });
 			var b = state && state.active,
 				editable = !!b && !b.locked;
@@ -630,6 +639,7 @@
 			if (tab === "setup" && (f("create-stock").value || f("create-cost").value !== "")) extras.open = true;
 			panel.classList.remove("br-editing");
 			if (tab === "history") history();
+            if (tab === "show") showView.refresh();
 		}
 		function pick(id, focus) {
 			var swapChoice = selected === id ? f("swap").value : "";
@@ -644,12 +654,13 @@
 			if (!s) return;
 			editRevision = state.revision;
 			el("[data-spot-title]").textContent = "Spot " + s.label;
-			["label", "buyer", "price", "paid", "status", "payment", "result", "image", "note", "description"].forEach(
+			["label", "buyer", "price", "paid", "status", "payment", "result", "image", "note", "description", "orderRef"].forEach(
 				function (key) {
 					f(key).value = s[key] == null ? "" : s[key];
 				}
 			);
 			f("buyer-platform").value = s.platform || b.platform;
+            f("hits").value = (s.hits || []).join("\n");
 			f("code").value = s.code || "";
 			f("use-colors").checked = !!s.color;
 			f("color").value = s.color || b.accent;
@@ -1235,6 +1246,7 @@
 			var prior = state,
 				changed = !prior || prior.revision !== next.breaks.revision;
 			state = next.breaks;
+            showView.render(next);
 			if(ebay && next.ebayStock && ebay.environment!==next.ebayStock.environment){ebayResult=null;[sellerFeedback,stockPreview,el('[data-ebay-finances]')].forEach(function(n){n.textContent='';});stockPreview.hidden=true;}
 			ebay = next.ebayStock || ebay;
 			notificationToggle.checked=!!(ebay&&ebay.notifications);
@@ -1386,6 +1398,7 @@
 			previewFrame.src = "about:blank";
 			generation++;
 			state = null;
+            showView.clear();
 			ebay = null; ebayResult = null;
 			drafts = {};
 			baselines = {};
@@ -1473,6 +1486,24 @@
 					if (opened.id !== id) throw new Error("Breaks received an out-of-date reply. Try again.");
 					if (opened.reply.error) throw new Error(opened.reply.error);
 					var result = opened.reply.commerceState;
+                    if (result.packingDeferred && result.breaks) {
+                        var parts = '', revision = result.breaks.revision;
+                        function nextPackingPart() {
+                            return secure('breakShowGet', Object.assign({}, data, {
+                                packing:true, revision:revision, offset:parts.length
+                            })).then(function (part) {
+                                if (part.revision !== revision || typeof part.exportChunk !== 'string' ||
+                                    (!part.exportChunk && parts.length < part.total))
+                                    throw new Error('Packing changed. Refresh the slip before continuing.');
+                                parts += part.exportChunk;
+                                if (parts.length < part.total) return nextPackingPart();
+                                result.showResult = JSON.parse(parts);
+                                delete result.packingDeferred;
+                                return result;
+                            });
+                        }
+                        return nextPackingPart();
+                    }
 					if (result.breaks && result.breaks.archiveDeferred && data && data.archiveId) {
 						return secure("breakGet", { archiveId: data.archiveId, archiveOnly: true }).then(function (archive) {
 							if (!archive.breaks || archive.breaks.revision !== result.breaks.revision)
@@ -1528,7 +1559,7 @@
 						stockForm();
 					}
 					// A stock form left open would otherwise save its old quantity over this change.
-					if (["breakStockUse", "breakStockReturn", "breakSaleReview", "breakSaleUndo"].indexOf(command) !== -1 && !drafts[draftKey("stock")]) {
+					if (["breakStockUse", "breakStockReturn", "breakSaleReview", "breakSaleUndo", "breakQueueStart", "breakPrize", "breakPrizeRemove"].indexOf(command) !== -1 && !drafts[draftKey("stock")]) {
 						var editing = state.stock.filter(function (item) {
 							return item.id === f("stock-id").value;
 						})[0];
@@ -1725,12 +1756,14 @@
 				return say("Enter the paid amount, including 0 for a free spot.", true);
 			}
 			var data = { id: selected, revision: editRevision };
-			["label", "buyer", "price", "paid", "status", "payment", "result", "image", "note", "description"].forEach(
+			["label", "buyer", "price", "paid", "status", "payment", "result", "image", "note", "description", "orderRef"].forEach(
 				function (k) {
 					data[k] = f(k).value;
 				}
 			);
 			data.platform = f("buyer-platform").value;
+            data.hits = f("hits").value.split(/\r?\n/).map(function(v){return v.trim();}).filter(Boolean);
+            if(data.hits.length>30)return say("Keep up to 30 pulls per spot.",true);
 			data.code = f("code").value;
 			data.color = f("use-colors").checked ? f("color").value : "";
 			data.color2 = f("use-colors").checked ? f("color2").value : "";
@@ -1798,10 +1831,12 @@
 				})
 			)
 				return say("Selected stock is unavailable. Choose another item or None.", true);
-			if (state && state.active && !confirm("Archive the current break and create a new one?")) return;
+			var queued=queueing;
+            if (!queued && state && state.active && !confirm("Archive the current break and create a new one?")) return;
 			var discard = confirmBoardDrafts();
 			if (!discard) return;
-			send("breakCreate", {
+			send(queued ? "breakQueue" : "breakCreate", {
+                showId:state.showId,stockId:stockId,
 				replace: !!(state && state.active),
 				title: f("title").value,
 				platform: f("platform").value,
@@ -1821,6 +1856,7 @@
 				availableOnly: setup ? setup.availableOnly : false,
 			}).then(function (ok) {
 				if (ok) {
+                    if(queued){show("show");say("Added to show queue. Stock is used when the break starts.");return;}
 					discardDrafts(discard);
 					repeatSettings = null;
 					show("live");
@@ -2087,6 +2123,8 @@
 		return {
 			refresh: refresh,
 			disconnected: function () {
+                document.getElementById("connectionText").textContent = "Reconnecting to host";
+                document.getElementById("connectionStatus").className = "connection";
 				generation++;
 				connectionError = true;
 				state = null;

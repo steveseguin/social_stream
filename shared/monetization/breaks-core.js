@@ -26,6 +26,8 @@
 		"breakSaleUndo",
 		"breakEbay",
 		"breakOrderReview",
+        "breakShow", "breakShowGet", "breakQueue", "breakQueueStart", "breakQueueRemove",
+        "breakPrize", "breakPrizeRemove", "breakPack", "breakPackingPayment", "breakPrint", "breakGiveawayResults",
 	];
 	var platforms = ["whatnot", "ebay", "tiktok", "other"],
 		themes = ["standard", "teams"];
@@ -122,6 +124,9 @@
 			id: text(raw.id, 40) || String(i + 1),
 			label: text(raw.label, 80) || String(i + 1),
 			buyer: text(raw.buyer, 80),
+            orderRef: text(raw.orderRef, 100),
+            hits: (Array.isArray(raw.hits) ? raw.hits : []).slice(-30).map(function(h) { return text(h,160); }).filter(Boolean),
+            fulfillment: ["packed","shipped"].indexOf(raw.fulfillment) !== -1 ? raw.fulfillment : "pending",
 			platform: platforms.indexOf(raw.platform) !== -1 ? raw.platform : "",
 			price: money(raw.price),
 			paid: money(raw.paid),
@@ -152,6 +157,7 @@
 		return {
 			id: text(raw.id, 80),
 			title: text(raw.title, 100) || "My break",
+            showId: text(raw.showId,80),
 			platform: platforms.indexOf(raw.platform) !== -1 ? raw.platform : "other",
 			currency: /^[A-Z]{3}$/.test(raw.currency || "") ? raw.currency : "USD",
 			stage: ["filling", "breaking", "finished"].indexOf(raw.stage) !== -1 ? raw.stage : "filling",
@@ -219,6 +225,9 @@
 		raw = raw || {};
 		return {
 			version: 1,
+            showId: text(raw.showId,80),
+            printJobs: (Array.isArray(raw.printJobs) ? raw.printJobs : []).slice(-50).filter(function(id){return /^[a-f0-9]{32}$/.test(id);}),
+            shows: (Array.isArray(raw.shows) ? raw.shows : []).slice(0,12).map(showRecord),
 			revision: number(raw.revision, Number.MAX_SAFE_INTEGER, 0),
 			auctions: auctionState(raw.auctions),
 			sales: salesState(raw.sales),
@@ -234,6 +243,398 @@
 					return s.id && s.name;
 				}),
 		};
+	}
+
+	function showRecord(raw) {
+		raw = raw || {};
+		return {
+			id: text(raw.id, 80),
+			title: text(raw.title, 100) || "My show",
+			queue: (Array.isArray(raw.queue) ? raw.queue : [])
+				.slice(0, 12)
+				.map(function (q) {
+					return { id: text(q.id, 80), board: board(q.board), stockId: text(q.stockId, 80) };
+				})
+				.filter(function (q) {
+					return q.id && q.board;
+				}),
+			prizes: (Array.isArray(raw.prizes) ? raw.prizes : []).slice(0, 60).map(function (p) {
+				return {
+					id: text(p.id, 80),
+					name: text(p.name, 160),
+					buyer: text(p.buyer, 80),
+					platform: text(p.platform, 40) || "other",
+					orderRef: text(p.orderRef, 100),
+					receipt: text(p.receipt, 200),
+					fulfillment: ["packed", "shipped"].indexOf(p.fulfillment) !== -1 ? p.fulfillment : "pending",
+					stock: p.stock ? stockUse(p.stock) : null
+				};
+			})
+		};
+	}
+	function selectedShow(s, id) {
+		var show = s.shows.filter(function (v) {
+			return v.id === id;
+		})[0];
+		if (!show) throw new Error("Choose a show first.");
+		return show;
+	}
+	function showBoards(s, id) {
+		return (s.active ? [s.active] : []).concat(s.history).filter(function (b) {
+			return b.showId === id;
+		});
+	}
+	function buyerKey(platform, buyer) {
+		return JSON.stringify([platform || "other", buyer.trim().toLowerCase()]);
+	}
+	function packing(raw, data) {
+		var s = normalize(raw),
+			show = selectedShow(s, data.showId),
+			groups = Object.create(null),
+			unresolved = [],
+			totals = Object.create(null);
+		function add(platform, buyer, line, source) {
+			if (!buyer) {
+				unresolved.push(line.title + ": missing buyer");
+				return;
+			}
+			var key = buyerKey(platform, buyer),
+				group = groups[key];
+			if (!group) group = groups[key] = { key: key, buyer: buyer, platform: platform || "other", lines: [] };
+			group.lines.push(Object.assign({}, line, { fulfillment: source.fulfillment }));
+		}
+		showBoards(s, show.id).forEach(function (b) {
+			b.spots.forEach(function (p) {
+				if (!p.buyer && p.status === "available") {
+					unresolved.push(b.title + " / " + p.label + ": open spot");
+					return;
+				}
+				var issue = p.payment === "paid" ? "" : "Payment " + (p.payment === "unknown" ? "not checked" : p.payment);
+				add(
+					p.platform || b.platform,
+					p.buyer,
+					{
+						id: b.id + ":" + p.id,
+						title: b.title + " / " + p.label,
+						orderRef: p.orderRef,
+						hits: p.hits.length ? p.hits : p.result ? [p.result] : [],
+						issue: issue,
+						payment: p.payment,
+						paid: p.paid,
+						currency: b.currency
+					},
+					p
+				);
+			});
+			var t = totals[b.currency] || (totals[b.currency] = { currency: b.currency, revenue: 0, cost: 0, unknown: 0 });
+			b.spots.forEach(function (p) {
+				if (p.payment === "paid" && p.paid !== null) t.revenue += p.paid;
+			});
+			if (b.cost !== null) t.cost += b.cost;
+			t.cost += b.fees; // Percentage fees apply to this break's own revenue below.
+			var revenue = b.spots.reduce(function (n, p) {
+				return n + (p.payment === "paid" && p.paid !== null ? p.paid : 0);
+			}, 0);
+			t.cost += (revenue * b.feePercent) / 100;
+			b.stockUse.forEach(function (u) {
+				if (u.unitCost === null || u.currency !== b.currency) t.unknown++;
+				else t.cost += u.quantity * u.unitCost;
+			});
+		});
+		show.prizes.forEach(function (p) {
+			add(
+				p.platform,
+				p.buyer,
+				{ id: p.id, title: "Giveaway: " + p.name, orderRef: p.orderRef, hits: [], issue: "" },
+				p
+			);
+			if (p.stock) {
+				var t =
+					totals[p.stock.currency] ||
+					(totals[p.stock.currency] = { currency: p.stock.currency, revenue: 0, cost: 0, unknown: 0 });
+				if (p.stock.unitCost === null) t.unknown++;
+				else t.cost += p.stock.quantity * p.stock.unitCost;
+			}
+		});
+		var list = Object.keys(groups)
+			.map(function (key) {
+				var g = groups[key];
+				g.status = g.lines.every(function (l) {
+					return l.fulfillment === "shipped";
+				})
+					? "shipped"
+					: g.lines.every(function (l) {
+								return l.fulfillment !== "pending";
+						  })
+						? "packed"
+						: "pending";
+				g.issues = g.lines.filter(function (l) {
+					return l.issue;
+				}).length;
+				return g;
+			})
+			.sort(function (a, b) {
+				return a.platform.localeCompare(b.platform) || a.buyer.localeCompare(b.buyer);
+			});
+		var page = Math.max(0, Math.floor(number(data.page, 1000, 0))),
+			chosen = groups[data.buyerKey] || null;
+		return {
+			showId: show.id,
+			title: show.title,
+			revision: s.revision,
+			page: page,
+			total: list.length,
+			unresolved: unresolved.slice(0, 20),
+			unresolvedCount: unresolved.length,
+			totals: Object.keys(totals).map(function (k) {
+				return totals[k];
+			}),
+			groups: list.slice(page * 25, page * 25 + 25).map(function (g) {
+				return {
+					key: g.key,
+					buyer: g.buyer,
+					platform: g.platform,
+					count: g.lines.length,
+					status: g.status,
+					issues: g.issues
+				};
+			}),
+			selected: chosen
+		};
+	}
+	function slip(raw, data) {
+		return packingHTML(packing(raw, data));
+	}
+	function packingHTML(result) {
+		var g = result.selected;
+		if (!g) throw new Error("Select a buyer first.");
+		function escape(v) {
+			return String(v || "").replace(/[&<>"']/g, function (c) {
+				return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+			});
+		}
+		return (
+			'<div style="overflow-wrap:anywhere"><h2>' +
+			escape(g.buyer) +
+			"</h2><p>" +
+			escape(g.platform) +
+			" / " +
+			escape(result.title) +
+			"</p>" +
+			g.lines
+				.map(function (l) {
+					return (
+						'<div style="border-top:1px solid #888;padding:8px 0"><strong>' +
+						escape(l.title) +
+						"</strong>" +
+						(l.orderRef ? "<div>Order: " + escape(l.orderRef) + "</div>" : "") +
+						(l.issue ? "<div>CHECK: " + escape(l.issue) + "</div>" : "") +
+						l.hits
+							.map(function (h) {
+								return "<div>[ ] " + escape(h) + "</div>";
+							})
+							.join("") +
+						"</div>"
+					);
+				})
+				.join("") +
+			"<p>Packing checklist. Check against the platform order.</p></div>"
+		);
+	}
+	function showApply(s, command, data, now) {
+		if (command === "breakShow") {
+			if (data.create) {
+				if (s.shows.length >= 12) throw new Error("Export and remove an older show first (12 shows).");
+				if (!text(data.title, 100)) throw new Error("Enter a show name.");
+				var created = showRecord({ id: "show-" + now + "-" + s.revision, title: data.title });
+				s.shows.push(created);
+				s.showId = created.id;
+			} else if (data.remove) {
+				var old = selectedShow(s, data.showId);
+				if (s.active && s.active.showId === old.id)
+					throw new Error("Archive the current break before removing this show.");
+				if (!data.discard) throw new Error("Export this show before removing its records.");
+				s.history = s.history.filter(function (b) {
+					return b.showId !== old.id;
+				});
+				s.shows = s.shows.filter(function (v) {
+					return v !== old;
+				});
+				if (s.showId === old.id) s.showId = "";
+			} else {
+				selectedShow(s, data.showId);
+				s.showId = data.showId;
+			}
+			if (data.attach) {
+				var b = active(s, data);
+				if (b.showId && b.showId !== s.showId) throw new Error("This break already belongs to another show.");
+				b.showId = s.showId;
+				log(b, "Added to show", now);
+			}
+			return finish(s, command);
+		}
+		var show = selectedShow(s, data.showId);
+		if (command === "breakQueue") {
+			if (show.queue.length >= 12) throw new Error("Keep up to 12 breaks in the queue.");
+			var draft = apply(
+				{ presets: s.presets, history: (s.active ? [s.active] : []).concat(s.history) },
+				"breakCreate",
+				Object.assign({}, data, { revision: 0, replace: true }),
+				now
+			).active;
+			show.queue.push({ id: "queue-" + now + "-" + s.revision, board: draft, stockId: text(data.stockId, 80) });
+		} else if (command === "breakQueueRemove")
+			show.queue = show.queue.filter(function (q) {
+				return q.id !== data.id;
+			});
+		else if (command === "breakQueueStart") {
+			var q = show.queue.filter(function (q) {
+				return q.id === data.id;
+			})[0];
+			if (!q) throw new Error("This queued break is no longer available.");
+			s.showId = show.id;
+			s = apply(
+				s,
+				"breakCreate",
+				Object.assign({}, q.board, { revision: s.revision, replace: data.replace, showId: show.id }),
+				now
+			);
+			if (q.stockId)
+				s = apply(
+					s,
+					"breakStockUse",
+					{ revision: s.revision, boardId: s.active.id, stockId: q.stockId, quantity: 1 },
+					now
+				);
+			selectedShow(s, show.id).queue = selectedShow(s, show.id).queue.filter(function (v) {
+				return v.id !== q.id;
+			});
+		} else if (command === "breakPrize") {
+			var prize = show.prizes.filter(function (p) {
+				return p.id === data.id;
+			})[0];
+			if (!prize) {
+				if (show.prizes.length >= 60) throw new Error("Keep up to 60 prizes per show.");
+				if (!text(data.name, 160)) throw new Error("Enter a prize name.");
+				prize = {
+					id: "prize-" + now + "-" + s.revision,
+					name: text(data.name, 160),
+					buyer: "",
+					platform: "other",
+					orderRef: "",
+					receipt: "",
+					fulfillment: "pending",
+					stock: null
+				};
+				if (data.stockId) {
+					var stockItem = s.stock.filter(function (v) {
+						return v.id === data.stockId;
+					})[0];
+					if (!stockItem || stockItem.quantity < 1) throw new Error("This prize is out of stock.");
+					stockItem.quantity--;
+					prize.stock = stockUse(
+						Object.assign({}, stockItem, {
+							stockId: stockItem.id,
+							id: prize.id,
+							quantity: 1,
+							unitCost: stockItem.cost,
+							at: now
+						})
+					);
+				}
+				show.prizes.push(prize);
+			}
+			if (
+				data.receipt &&
+				s.shows.some(function (v) {
+					return v.prizes.some(function (p) {
+						return p !== prize && p.receipt === data.receipt;
+					});
+				})
+			)
+				throw new Error("This giveaway winner is already recorded.");
+			["buyer", "platform", "orderRef", "receipt"].forEach(function (k) {
+				if (data[k] !== undefined) {
+					var value = text(data[k], k === "receipt" ? 200 : k === "orderRef" ? 100 : 80);
+					if (prize[k] !== value) prize.fulfillment = "pending";
+					prize[k] = value;
+				}
+			});
+		} else if (command === "breakPrizeRemove") {
+			var prize = show.prizes.filter(function (p) {
+				return p.id === data.id;
+			})[0];
+			if (!prize) throw new Error("Prize already removed.");
+			if (prize.fulfillment === "shipped") throw new Error("Mark it pending before removing a shipped prize.");
+			if (prize.stock) {
+				var home = s.stock.filter(function (p) {
+					return (
+						p.id === prize.stock.stockId &&
+						p.ebayId === prize.stock.ebayId &&
+						p.ebayVariant === prize.stock.ebayVariant &&
+						p.ebayEnvironment === prize.stock.ebayEnvironment
+					);
+				})[0];
+				if (!home && prize.stock.ebayId)
+					home = s.stock.filter(function (p) {
+						return (
+							p.ebayId === prize.stock.ebayId &&
+							p.ebayVariant === prize.stock.ebayVariant &&
+							p.ebayEnvironment === prize.stock.ebayEnvironment
+						);
+					})[0];
+				if (!home) {
+					if (s.stock.length >= 100) throw new Error("Make room in stock before returning this prize.");
+					home = stock(
+						Object.assign({}, prize.stock, {
+							id: "stock-" + now + "-" + s.revision,
+							cost: prize.stock.unitCost,
+							quantity: 0
+						})
+					);
+					s.stock.push(home);
+				}
+				if (home.quantity >= 100000) throw new Error("Stock quantity limit reached.");
+				home.quantity++;
+			}
+			show.prizes = show.prizes.filter(function (p) {
+				return p !== prize;
+			});
+		} else if (command === "breakPackingPayment") {
+			var match;
+			showBoards(s, show.id).forEach(function (b) {
+				b.spots.forEach(function (p) {
+					if (b.id + ":" + p.id === data.lineId) match = { board: b, spot: p };
+				});
+			});
+			if (!match) throw new Error("Choose a spot in this show.");
+			if (["unknown", "paid", "failed", "refunded"].indexOf(data.payment) === -1)
+				throw new Error("Choose a payment status.");
+			if (data.payment === "paid" && money(data.paid) === null)
+				throw new Error("Enter the confirmed paid amount, including zero for a free spot.");
+			match.spot.payment = data.payment;
+			if (data.payment === "paid") match.spot.paid = money(data.paid);
+			match.spot.fulfillment = "pending";
+			log(match.board, "Packing payment check: " + match.spot.label + " / " + data.payment, now);
+		} else if (command === "breakPack") {
+			if (["pending", "packed", "shipped"].indexOf(data.status) === -1) throw new Error("Choose a packing status.");
+			var group = packing(s, data).selected;
+			if (!group) throw new Error("Choose a buyer.");
+			if (data.status === "shipped" && group.status === "pending")
+				throw new Error("Pack and check these items first.");
+			if (data.status !== "pending" && group.issues && !data.reviewed)
+				throw new Error("Check unresolved payments before packing.");
+			showBoards(s, show.id).forEach(function (b) {
+				b.spots.forEach(function (p) {
+					if (p.buyer && buyerKey(p.platform || b.platform, p.buyer) === data.buyerKey)
+						p.fulfillment = data.status;
+				});
+			});
+			show.prizes.forEach(function (p) {
+				if (p.buyer && buyerKey(p.platform, p.buyer) === data.buyerKey) p.fulfillment = data.status;
+			});
+		}
+		return finish(s, command);
 	}
 	function saleRecord(raw) {
 		raw = raw || {};
@@ -444,6 +845,10 @@
 		s.history = s.history.map(function (b) {
 			return { id: b.id, title: b.title, finishedAt: b.finishedAt, spots: b.spots.length };
 		});
+        s.show = s.shows.filter(function(v){return v.id===s.showId;})[0] || null;
+        if(s.show)s.show.queue=s.show.queue.map(function(q){return {id:q.id,title:q.board.title,spots:q.board.spots.length,stockId:q.stockId};});
+        s.shows=s.shows.map(function(v){return {id:v.id,title:v.title};});
+		delete s.printJobs;
 		delete s.undo;
 		delete s.auctions.seen;
 		delete s.auctions.captures;
@@ -520,6 +925,7 @@
 			throw new Error(command === "breakStock"
 				? "Stock changed elsewhere. Discard edits to reload, then reapply your changes."
 				: "This break changed elsewhere. Refresh to load the latest, then try again.");
+        if(['breakShow','breakQueue','breakQueueStart','breakQueueRemove','breakPrize','breakPrizeRemove','breakPack','breakPackingPayment'].indexOf(command)!==-1)return showApply(s,command,data,now);
 		var b, item;
 		if (command === "breakCreate") {
 			var template =
@@ -588,6 +994,7 @@
 				Object.assign({}, preset || {}, data, {
 					id: "break-" + now + "-" + (s.revision + 1),
 					createdAt: now,
+                    showId: s.showId,
 					finishedAt: 0,
 					stage: "filling",
 					visible: false,
@@ -604,7 +1011,7 @@
 							status: "available",
 							payment: "unknown",
 							paid: null,
-							result: "",
+							result: "", orderRef:"", hits:[], fulfillment:"pending",
 						});
 					}),
 				})
@@ -659,9 +1066,10 @@
 				p.payment = "unknown";
 				p.paid = null;
 				p.result = "";
-				p.note = "";
+				p.note = ""; p.orderRef=""; p.hits=[]; p.fulfillment="pending";
 			});
-			item.log = [];
+			item.showId = "";
+            item.log = [];
 			item.stockUse = [];
 			item.highlight = "";
 			item.highlightAt = 0;
@@ -775,6 +1183,7 @@
 				log(b, "Undid: " + s.undoLabel, now);
 				// Only assignments rewind. Stage, visibility, lock and appearance stay as they are.
 				b.spots = s.undo.spots;
+                b.spots.forEach(function(p){p.fulfillment="pending";});
 				if (
 					!b.spots.some(function (p) {
 						return p.id === b.highlight;
@@ -815,7 +1224,8 @@
 							if (data[key] !== undefined && data[key] !== "" && data[key] !== null && money(data[key]) === null)
 								throw new Error("Enter a valid " + key + " amount.");
 						});
-						item = find(b, String(data.id));
+						if(data.hits!==undefined && (!Array.isArray(data.hits)||data.hits.length>30||data.hits.some(function(h){return typeof h!=='string'||h.length>160;})))throw new Error('Use up to 30 pulls, each up to 160 characters.');
+                        item = find(b, String(data.id));
 						var updated = spot(Object.assign({}, item, data, { id: item.id }), 0);
 						if (!text(data.label === undefined ? item.label : data.label, 80)) throw new Error("Enter a spot name.");
 						if (item.status !== "available" && updated.status === "available") {
@@ -825,7 +1235,7 @@
 							updated.payment = "unknown";
 							updated.paid = null;
 							updated.result = "";
-							updated.note = "";
+							updated.note = ""; updated.orderRef=""; updated.hits=[]; updated.fulfillment="pending";
 							log(b, updated.label + ": reopened" + (item.buyer ? " (was " + item.buyer + ")" : ""), now);
 						} else {
 							if (updated.payment === "paid" && updated.paid === null)
@@ -851,7 +1261,12 @@
 									now
 								);
 						}
-						b.spots[b.spots.indexOf(item)] = updated;
+						if(updated.result && (updated.result!==item.result || data.recordHit===true)) {
+                            if(updated.hits.length>=30)throw new Error('Keep up to 30 recorded pulls per spot. Edit the pull list first.');
+                            updated.hits.push(updated.result);
+                        }
+                        if(['buyer','platform','orderRef','payment','paid','result','hits'].some(function(k){return JSON.stringify(updated[k])!==JSON.stringify(item[k]);}))updated.fulfillment='pending';
+                        b.spots[b.spots.indexOf(item)] = updated;
 					}
 				} else if (command === "breakSwap") {
 					var a = find(b, String(data.id)),
@@ -869,12 +1284,13 @@
 						(c.buyer || "empty") +
 						")";
 					// A payment and private note belong to the buyer's order, so they move with the buyer.
-					["buyer", "platform", "payment", "paid", "note"].forEach(function (key) {
+					["buyer", "platform", "payment", "paid", "note", "orderRef"].forEach(function (key) {
 						var held = a[key];
 						a[key] = c[key];
 						c[key] = held;
 					});
 					[a, c].forEach(function (p) {
+                        p.fulfillment="pending";
 						if (p.status !== "revealed") p.status = p.buyer ? "claimed" : "available";
 					});
 					log(b, swapped, now);
@@ -971,6 +1387,7 @@
 	}
 	var api = {
 		commands: commands,
+        packing: packing, slip: slip, packingHTML: packingHTML,
 		normalize: normalize,
 		apply: apply,
 		publicState: publicState,

@@ -3972,6 +3972,8 @@ class EventFlowEditor {
 					{ value: 'giftcontribution', label: 'Gift Contribution' },
 					{ value: 'giftfunded', label: 'Gift Fully Funded' },
 					{ value: 'purchase', label: 'Product Purchase' },
+					{ value: 'break_started', label: 'Break Started' },
+					{ value: 'break_finished', label: 'Break Finished' },
 					{ value: 'raid', label: 'Raid' },
 					{ value: 'follow', label: 'Follow' },
 					{ value: 'host', label: 'Host' },
