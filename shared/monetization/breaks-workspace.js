@@ -2159,6 +2159,10 @@
 				event.returnValue = "";
 				return;
 			}
+		});
+		root.addEventListener("pagehide", function (event) {
+			// Cached pages resume this timer when restored; canceled navigation must leave it running.
+			if (event.persisted) return;
 			clearInterval(timer);
 			generation++;
 		});

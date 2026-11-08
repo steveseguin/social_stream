@@ -129,9 +129,19 @@
 			});
 			document.body.appendChild(bridge);
 		}
-		window.addEventListener("beforeunload", function () {
+		// beforeunload can be canceled to keep a draft. Stop only when the page actually leaves.
+		window.addEventListener("pagehide", function () {
 			stopped = true; clearTimeout(retry); lost();
-			if (socket) socket.close();
+			if (socket) {
+				socket.onclose = socket.onerror = null;
+				socket.close(); socket = null;
+			}
+		});
+		window.addEventListener("pageshow", function (event) {
+			if (!event.persisted || !stopped) return;
+			stopped = false;
+			if (!native && route) connect();
+			else workspace.refresh();
 		});
 	};
 })();
