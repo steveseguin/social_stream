@@ -24,7 +24,12 @@
 		form { display: flex; gap: 8px; align-items: flex-end; }
 		form input { flex: 1; }
 		form button { margin: 0; }
+		#chat-feed { height: 320px; overflow-y: auto; background: #202020; border: 1px solid #444; margin-top: 16px; padding: 10px; }
+		.message { padding: 4px 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+		#send-status { font-size: 12px; }
 	</style>
+	<link rel="stylesheet" href="../../shared/compact-source-layout.css?v=20260916-setup">
+	<script src="../../shared/utils/compactSourceLayout.js?v=20261108-lumni" defer></script>
 </head>
 <body data-compact-source="lumni">
 	<h1>Lumni</h1>
@@ -33,17 +38,18 @@
 	<span id="last-event-chip" class="chip">Last event: waiting</span>
 
 	<label for="key-input">Lumni connection key</label>
-	<input id="key-input" type="password" autocomplete="off" spellcheck="false" placeholder="lumni_ssn_…" />
-	<p class="hint">Lumni › Settings › Social Stream Ninja › Copy. The key is stored only in this browser. Anyone with it can post in your Lumni chat as you, so keep it off screen.</p>
+	<input id="key-input" type="password" autocomplete="off" spellcheck="false" placeholder="lumni_ssn_..." />
+	<p class="hint">Copy your key from Lumni's Settings / Social Stream Ninja. Keep it private; it allows sending chat as you.</p>
 	<button id="connect-btn">Connect</button>
 	<button id="disconnect-btn" class="ghost" disabled>Disconnect</button>
 	<button id="forget-btn" class="ghost">Forget key</button>
 
-	<label for="chat-message">Send to Lumni chat</label>
+	<div id="chat-feed" role="log" aria-label="Lumni chat"></div>
 	<form id="chat-compose">
-		<input id="chat-message" type="text" maxlength="300" autocomplete="off" placeholder="Message" />
-		<button type="submit">Send</button>
+		<input id="chat-message" type="text" maxlength="300" autocomplete="off" placeholder="Message" aria-label="Send to Lumni chat" />
+		<button id="send-btn" type="submit" disabled>Send</button>
 	</form>
+	<p id="send-status" role="status"></p>
 	<script src="lumni.js"></script>
 </body>
 </html>

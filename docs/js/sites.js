@@ -386,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <li>Paste the key into the page and press Connect</li>
                 </ul>
             `,
-            notes: 'The connection key only reads that channel\'s public chat and posts plain text there as the streamer; it is stored in the page\'s local storage, never in the URL. Refresh or turn off the key in Lumni settings to revoke it at once.'
+            notes: 'Keep the key private: this source uses it to read events and send chat as you. The page saves it locally for the selected Lumni server. Disconnect stops the connection; Forget key also removes the saved key.'
         },
         {
             name: 'Odysee',

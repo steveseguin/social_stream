@@ -6230,6 +6230,18 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (request.setting == "textonlymode") {
 				pushSettingChange();
 			}
+			if (request.setting == "hideevents") {
+				const lumniSettings = getEffectiveSettingsForSources();
+				chrome.tabs.query({}, function (tabs) {
+					chrome.runtime.lastError;
+					tabs.forEach(function (tab) {
+						try {
+							if (!/\/sources\/websocket\/lumni\.html$/.test(new URL(tab.url).pathname)) return;
+							chrome.tabs.sendMessage(tab.id, { settings: lumniSettings, state: isExtensionOn }, function () { chrome.runtime.lastError; });
+						} catch (e) {}
+					});
+				});
+			}
 			if (request.setting == "youtubeLargerFont") {
 				pushSettingChange();
 			}

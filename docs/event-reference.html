@@ -1559,6 +1559,16 @@
                 </div>
                 </article>
 
+                <article class="platform-card" id="lumni-ws">
+                    <h3>Lumni</h3>
+                    <p class="source-note">Implementation: <code>sources/websocket/lumni.js</code> (API polling).</p>
+                    <ul class="requirements">
+                        <li>Forwards Lumni's chat and event rows with <code>type: "lumni"</code>. Text-only mode converts HTML message bodies to plain text; donation display amounts stay in <code>hasDonation</code>, with optional numeric USD <code>donoValue</code>.</li>
+                        <li>The Hide events setting suppresses event rows. <code>joined</code> also requires Capture "joined" stream events. Viewer updates require the viewer-count or hype setting.</li>
+                        <li>Dock replies use the connected account's key to send plain-text messages of up to 300 characters. Disconnect stops polling and sending; Forget key removes the saved key for the selected server.</li>
+                    </ul>
+                </article>
+
                 <article class="platform-card" id="houla-ws">
                     <h3>Hou.la</h3>
                     <p class="source-note">Implementations: <code>sources/houla.js</code> (standard chat capture), <code>sources/websocket/houla.js</code> (event key).</p>
