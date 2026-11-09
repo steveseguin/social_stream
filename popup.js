@@ -3447,6 +3447,8 @@ function updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, v
   if (avatar) params.push("avatar=" + encodeURIComponent(avatar));
   if (scale && scale !== "1") params.push("scale=" + encodeURIComponent(scale));
   if (tts) params.push("tts");
+  if (getAiOverlayControlValue("popup-28-hideidle", false)) params.push("hideidle");
+  if (getAiOverlayControlValue("popup-28-hidebubble", false)) params.push("hidebubble");
   if (versionParam) {
     versionParam.split("&").filter(Boolean).forEach(part => params.push(part));
   }
@@ -3509,6 +3511,7 @@ const CHAT_OVERLAY_TEMPLATE_CONFIGS = {
   "themes/compact-classic.html": "compact-overlay-config",
   "themes/compact-clean.html": "compact-overlay-config",
   "themes/compact-glass.html": "compact-overlay-config",
+  "themes/vertical-chat.html": "vertical-chat-overlay-config",
   "themes/overlay-neon-cyberpunk.html": "overlay-neon-cyberpunk-overlay-config",
   "themes/overlay-particles.html": "overlay-particles-overlay-config",
   "themes/overlay-typewriter.html": "overlay-typewriter-overlay-config",
@@ -3894,6 +3897,12 @@ function syncChatOverlayTemplateConfig(templatePath) {
   if (membershipOption) {
     membershipOption.style.display = normalizedPath === "themes/compact-clean.html" ? "" : "none";
   }
+  const compactLight = document.getElementById("compact-light-option");
+  const compactAvatar = document.getElementById("compact-avatar-option");
+  const compactNoAvatar = document.getElementById("compact-noavatar-option");
+  if (compactLight) compactLight.style.display = normalizedPath === "themes/compact-classic.html" ? "none" : "";
+  if (compactAvatar) compactAvatar.style.display = normalizedPath === "themes/compact-clean.html" ? "none" : "";
+  if (compactNoAvatar) compactNoAvatar.style.display = normalizedPath === "themes/compact-clean.html" ? "" : "none";
 
   document.querySelectorAll(".overlay-config-section").forEach(function(section) {
     section.style.display = "none";
@@ -7351,12 +7360,16 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     return true;
 }
 function handleExclusiveCases(ele, paramType, paramValue, sync) {
-    const exclusiveTypes = ['param1', 'param2', 'param4', 'param5', 'param13', 'param25'];
+    const exclusiveTypes = ['param1', 'param2', 'param3', 'param4', 'param5', 'param12', 'param13', 'param24', 'param25'];
     if (!exclusiveTypes.includes(paramType)) return;
 
     // Handle exclusive settings like darkmode/lightmode
     const exclusiveMap = {
         param1: {
+            'includeprivate': 'privateonly',
+            'privateonly': 'includeprivate',
+            'nobeepmod': 'beeponlymod',
+            'beeponlymod': 'nobeepmod',
             'darkmode': 'lightmode',
             'lightmode': 'darkmode',
             'onlytwitch': 'hidetwitch',
@@ -7366,24 +7379,44 @@ function handleExclusiveCases(ele, paramType, paramValue, sync) {
             'randomcolorall': ['color', 'randomcolor']
         },
         param2: {
+            'fade': 'swipe',
+            'swipe': 'fade',
             'transparent': 'chroma',
             'chroma': 'transparent'
         },
+        param3: {
+            'transparent': 'pagebg',
+            'pagebg': 'transparent',
+            'darkmode': 'lightmode',
+            'lightmode': 'darkmode'
+        },
         param4: {
+            'darkmode': 'lightmode',
+            'lightmode': 'darkmode',
             'alignright': 'align=center',
             'align=center': 'alignright',
             'transparent': 'pagebg',
             'pagebg': 'transparent'
         },
         param5: {
+            'darkmode': 'lightmode',
+            'lightmode': 'darkmode',
             'alignright': 'aligncenter',
             'aligncenter': 'alignright',
             'transparent': 'pagebg',
             'pagebg': 'transparent'
         },
+        param12: {
+            'resetoncomplete': 'noresetoncomplete',
+            'noresetoncomplete': 'resetoncomplete'
+        },
         param13: {
             'nobg': 'pagebg',
             'pagebg': 'nobg'
+        },
+        param24: {
+            'alignright': 'align=center',
+            'align=center': 'alignright'
         },
         param25: {
             'alignright': 'align=center',
@@ -7770,7 +7803,7 @@ function handleSetting(ele, sync) {
         refreshLinks();
     }
 
-    if (ele.dataset.setting === "aiOverlayTts") {
+    if (["aiOverlayTts", "aiOverlayHideIdle", "aiOverlayHideBubble"].includes(ele.dataset.setting)) {
         updateAiOverlayLinksFromCurrentState();
     }
     
@@ -14736,6 +14769,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					const paramKey = normalizeParamKey(paramValue.split('=')[0]);
 					overlayDiv.raw = removeQueryParamWithValue(overlayDiv.raw, paramKey);
 					overlayDiv.raw = updateURL(paramValue, overlayDiv.raw);
+				});
+				container.querySelectorAll('input[data-optionparam20]').forEach(function(input) {
+					if (!input.value || !input.checkValidity()) return;
+					const paramKey = input.dataset.optionparam20;
+					overlayDiv.raw = removeQueryParamWithValue(overlayDiv.raw, paramKey);
+					overlayDiv.raw = updateURL(paramKey + '=' + encodeURIComponent(input.value), overlayDiv.raw);
 				});
 			};
 			
