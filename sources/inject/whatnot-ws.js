@@ -68,6 +68,8 @@
 
     let tUrl = typeof url === "string" ? url : url.href;
     if (tUrl.startsWith("wss://www.whatnot.com/")) {
+      ws.addEventListener("open", function () { if (!exited) postMessage({ type: "open" }); });
+      ws.addEventListener("close", function () { if (!exited) postMessage({ type: "close" }); });
       /**
        * @type {typeof WebSocket.prototype.send}
        * @this {WebSocket}

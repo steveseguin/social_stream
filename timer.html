@@ -43,7 +43,9 @@
         .span2 { grid-column: span 2; }
         .field label { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
         .field input, .field select, .btn { min-height: 46px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255,255,255,.07); color: var(--text); font: inherit; padding: 0 14px; outline: none; }
-        .btns { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+        .btns { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+        .btns.timer-adjustments { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+        .timer-adjustments .btn { padding: 0 2px; }
         .btn { cursor: pointer; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
         .btn.primary { background: rgba(115,240,208,.16); border-color: rgba(115,240,208,.34); }
         .btn.warn { background: rgba(255,179,86,.15); border-color: rgba(255,179,86,.34); }
@@ -53,7 +55,7 @@
         body.compact #timerCore, body.compact #label, body.compact #helper, body.compact #meta { align-items: flex-start; text-align: left; justify-content: flex-start; }
         body.compact #time { font-size: clamp(62px, 11vw, 132px); }
         body.ring #timerWrap { width: min(74vw, 680px); min-height: min(74vw, 680px); }
-        @media (max-width: 860px) { #controlsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .btns { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        @media (max-width: 860px) { #controlsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
         @media (max-width: 560px) { #topbar { flex-direction: column; align-items: flex-start; } #controlsGrid, .btns { grid-template-columns: repeat(2, minmax(0, 1fr)); } .span2 { grid-column: span 2; } }
     </style>
 </head>
@@ -95,9 +97,17 @@
                     <button class="btn primary" id="applyButton" type="button">Apply</button>
                     <button class="btn primary" id="startButton" type="button">Start</button>
                     <button class="btn" id="pauseButton" type="button">Pause</button>
-                    <button class="btn warn" id="addButton" type="button">+30s</button>
-                    <button class="btn warn" id="subButton" type="button">-30s</button>
                     <button class="btn dangerBtn" id="resetButton" type="button">Reset</button>
+                </div>
+                <div class="btns timer-adjustments">
+                    <button class="btn warn" id="addButton" type="button" data-timer-action="timeradd" data-seconds="30">+30s</button>
+                    <button class="btn warn" type="button" data-timer-action="timeradd" data-seconds="60">+1m</button>
+                    <button class="btn warn" type="button" data-timer-action="timeradd" data-seconds="300">+5m</button>
+                    <button class="btn warn" type="button" data-timer-action="timeradd" data-seconds="600">+10m</button>
+                    <button class="btn warn" id="subButton" type="button" data-timer-action="timersubtract" data-seconds="30">-30s</button>
+                    <button class="btn warn" type="button" data-timer-action="timersubtract" data-seconds="60">-1m</button>
+                    <button class="btn warn" type="button" data-timer-action="timersubtract" data-seconds="300">-5m</button>
+                    <button class="btn warn" type="button" data-timer-action="timersubtract" data-seconds="600">-10m</button>
                 </div>
             </div>
         </div>
@@ -532,8 +542,9 @@ function processInput(data) {
         el.applyButton.onclick = function () { dispatch("settimer", controlPayload()); };
         el.startButton.onclick = function () { dispatch("starttimer"); };
         el.pauseButton.onclick = function () { dispatch("pausetimer"); };
-        el.addButton.onclick = function () { dispatch("timeradd", 30); };
-        el.subButton.onclick = function () { dispatch("timersubtract", 30); };
+        document.querySelectorAll("[data-timer-action]").forEach(function (button) {
+            button.onclick = function () { dispatch(button.dataset.timerAction, parseInt(button.dataset.seconds, 10)); };
+        });
         el.resetButton.onclick = function () { dispatch("resettimer"); };
         attachSoundUnlockListeners();
         [el.labelInput, el.timeInput, el.warnInput, el.dangerInput, el.soundInput].forEach(function (node) {

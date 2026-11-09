@@ -236,6 +236,8 @@ const state = {
     chatMessageCache: new Map(),
     recentGiftEventIds: new Map(),
     recentGiftSignatures: new Map(),
+    rewardCaptureStartedAt: Date.now(),
+    seenRewardRedemptions: new Set(),
     profileCache: new Map(),
     profileFetches: new Map(),
     eventTypesUnavailable: false,
@@ -2545,6 +2547,10 @@ function setChannelSlug(value, options = {}) {
 
     const changed = !sameValue || force;
     if (changed) {
+        if (!sameValue) {
+            state.rewardCaptureStartedAt = Date.now();
+            state.seenRewardRedemptions.clear();
+        }
         state.channelSlug = slug;
         state.channelId = null;
         state.socket.chatroomId = null;
@@ -7698,8 +7704,8 @@ async function forwardBannedUser(evt, bridgeMeta) {
         reason: pickFirstString([metadata?.reason, evt?.reason, evt?.ban_reason, evt?.message], ''),
         durationSeconds,
         permanent,
-        bannedAt,
-        endsAt,
+        bannedAt: toTimestampMs(bannedAt),
+        endsAt: toTimestampMs(endsAt),
         verified: bridgeMeta?.verified !== false
     };
 
@@ -8052,6 +8058,44 @@ function formatKickAmountLabel(amount, currency) {
     return currencyText ? `${amountText} ${currencyText}` : amountText;
 }
 
+function toTimestampMs(value) {
+    if (typeof value !== "string" && typeof value !== "number") return null;
+    if (typeof value === "string") {
+        value = value.trim();
+        if (!value) return null;
+    }
+    var numeric = typeof value === "number" || /^[+-]?\d+(?:\.\d+)?$/.test(value);
+    var timestamp = numeric ? Number(value) : Date.parse(value);
+    // Incoming epoch numbers may be seconds or milliseconds; never parse them as date text.
+    if (numeric && Math.abs(timestamp) < 100000000000) timestamp *= 1000;
+    return Number.isFinite(timestamp) && Math.abs(timestamp) <= 8640000000000000
+        ? Math.trunc(timestamp) : null;
+}
+
+function shouldSkipKickRewardRedemption(redemptionId, status, redeemedAt, bridgeMeta) {
+    const normalizedStatus = status.trim().toLowerCase();
+    // Use redemption identity, not delivery identity or text: updates can have
+    // different webhook IDs, and two genuine redemptions can have identical text.
+    const key = redemptionId ? 'redemption:' + redemptionId
+        : bridgeMeta?.messageId ? 'delivery:' + bridgeMeta.messageId : '';
+    if (key && state.seenRewardRedemptions.has(key)) return true;
+    if (normalizedStatus === 'rejected') {
+        // Also suppress a delayed pending notification arriving after rejection.
+        if (key) state.seenRewardRedemptions.add(key);
+        return true;
+    }
+    if (normalizedStatus && normalizedStatus !== 'pending' && normalizedStatus !== 'accepted') return true;
+    const redeemedTime = toTimestampMs(redeemedAt);
+    if (Number.isFinite(redeemedTime) && redeemedTime < state.rewardCaptureStartedAt) return true;
+    // Queue-skipping rewards may arrive already accepted. Require their original
+    // redemption time so an approval of an old request cannot become a new alert.
+    if (normalizedStatus === 'accepted' && !Number.isFinite(redeemedTime)) return true;
+    // Keep identities for this channel's capture lifetime, including reconnects.
+    // Expiring them after a short interval would replay later approvals.
+    if (key) state.seenRewardRedemptions.add(key);
+    return false;
+}
+
 function forwardRewardRedemption(eventType, evt, bridgeMeta) {
     const reward = evt?.reward || evt?.channel_reward || evt?.reward_detail || {};
     const redeemerSources = [
@@ -8106,7 +8150,8 @@ function forwardRewardRedemption(eventType, evt, bridgeMeta) {
     const rewardId = rawRewardId == null ? '' : String(rawRewardId).trim();
     const cost = takeNumber(reward?.cost ?? evt?.cost ?? evt?.reward_cost);
     const description = pickFirstString([reward?.description, evt?.description], '');
-    const redeemedAt = pickFirstString([evt?.redeemed_at, evt?.redeemedAt, evt?.created_at], '');
+    const redeemedAt = toTimestampMs(evt?.redeemed_at || evt?.redeemedAt || evt?.created_at);
+    if (shouldSkipKickRewardRedemption(redemptionId, status, redeemedAt, bridgeMeta)) return;
     const messageSegments = [];
     if (rewardTitle) {
         messageSegments.push(rewardTitle);
@@ -8130,6 +8175,7 @@ function forwardRewardRedemption(eventType, evt, bridgeMeta) {
     pushMessage({
         type: 'kick',
         event: 'reward',
+        timestamp: redeemedAt,
         chatname: redeemer || getTranslation('kick-viewer-label', 'Kick viewer'),
         chatmessage: escapeHtml(chatmessage),
         chatimg: chatimg || '',
@@ -8444,7 +8490,7 @@ function forwardKicksGifted(eventType, evt, bridgeMeta) {
         giftType,
         tier,
         pinnedTimeSeconds: pinnedTimeSeconds ?? null,
-        createdAt: pickFirstString([evt?.created_at, evt?.createdAt], '')
+        createdAt: toTimestampMs(evt?.created_at || evt?.createdAt)
     };
     const messagePayload = {
         type: 'kick',

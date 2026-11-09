@@ -5,13 +5,13 @@
 		var status = 'Connect your eBay seller account',
 			busy = false,
 			nextPoll = 0,
-			connected = false;
+			connected = false, sellerSupported = false, sellerScopes = [], nextNotice = 0;
 		function state() {
 			var p = hooks.privateState();
 			if (!p.ebay) p.ebay = { key: '', items: [], seen: [], cursor: 0 };
 			return p.ebay;
 		}
-		async function api(path, method) {
+		async function api(path, method, body) {
 			var p = state();
 			if (!p.key) {
 				p.key = Array.from(crypto.getRandomValues(new Uint8Array(32)))
@@ -27,12 +27,17 @@
 				}, 15000);
 			try {
 				var route = p.environment === 'sandbox' ? 'ebay-sandbox' : 'ebay';
-				var response = await fetch('https://api.socialstream.ninja/v1/' + route + '/' + path, { method: method || 'GET', headers: { Authorization: 'Bearer ' + p.key }, credentials: 'omit', redirect: 'error', signal: controller.signal });
+				var headers = { Authorization: 'Bearer ' + p.key };
+				if (body !== undefined) headers['Content-Type'] = 'application/json';
+				var response = await fetch('https://api.socialstream.ninja/v1/' + route + '/' + path, { method: method || 'GET', headers: headers, body: body === undefined ? undefined : JSON.stringify(body), credentials: 'omit', redirect: 'error', signal: controller.signal });
 				if (response.status === 503) {
 					var problem = await response.json().catch(function () { return {}; });
 					if (problem.code === 'EBAY_NOT_CONFIGURED') throw new Error('eBay needs application credentials configured on the SSN API.');
 				}
-				if (!response.ok) throw new Error(response.status === 404 ? 'eBay connections are not available on this server yet.' : response.status === 401 ? 'Connect your eBay seller account first.' : 'Could not update eBay. Check your connection and API access.');
+				if (!response.ok) {
+					var error = problem || await response.json().catch(function () { return {}; });
+					throw new Error(typeof error.message === 'string' ? error.message.slice(0, 300) : response.status === 404 ? 'This eBay tool needs an updated SSN server.' : response.status === 401 ? 'Connect your eBay seller account first.' : 'Could not update eBay. Check your connection and API access.');
+				}
 				return await response.json();
 			} finally {
 				clearTimeout(timer);
@@ -60,8 +65,61 @@
 			useEnvironment(reply.environment);
 			await hooks.store();
 			connected = reply.protocol === 'ssn-ebay-1' && reply.connected === true;
+			sellerSupported = reply.sellerTools === true;
+			sellerScopes = Array.isArray(reply.scopes) ? reply.scopes : [];
 			status = connected ? (state().environment === 'sandbox' ? 'Connected to eBay Sandbox (test purchases only)' : 'Connected to eBay') : 'Finish connecting your seller account';
 			return connected;
+		}
+		function stockListings() {
+			var p = state(), rows = (p.sellerListings || []).slice();
+			p.items.forEach(function (item) { if (!rows.some(function (r) { return r.id === item.id; })) rows.push(item); });
+			return rows;
+		}
+		// Called only through the sealed Breaks operator command, never through ordinary eBay actions.
+		async function seller(request) {
+			await verify();
+			if (!sellerSupported) throw new Error('Seller tools need an updated SSN server. Your existing eBay showcase still works.');
+			var p = state(), result, op = request.operation;
+			if (op === 'connect') {
+				if (['seller', 'finances'].indexOf(request.feature) === -1) throw new Error('Choose a seller permission.');
+				result = await api('connect', 'POST', {feature:request.feature});
+				var url = new URL(result.url);
+				if (result.environment !== (p.environment || 'production') || url.origin !== (p.environment === 'sandbox' ? 'https://auth.sandbox.ebay.com' : 'https://auth.ebay.com') || url.pathname !== '/oauth2/authorize' || url.username || url.password) throw new Error('Invalid eBay connection link.');
+				return {operation:op, url:url.href};
+			}
+			if (op === 'listings') {
+				var id = request.url ? SSNMonetization.ebayId(request.url) : '';
+				if (request.url && !id) throw new Error('Paste a full eBay listing URL.');
+				if (request.url && /(^|\.)sandbox\.ebay\.com$/.test(new URL(request.url).hostname) !== (p.environment === 'sandbox')) throw new Error('Use a listing from the selected eBay environment.');
+				result = await api('seller/listings?' + (id ? 'id=' + id : 'page=' + (Number(request.page) || 1)));
+				if (result.environment !== (p.environment || 'production') || !Array.isArray(result.items) || result.items.length > 100) throw new Error('Incomplete seller listing response.');
+				var prior = p.sellerListings, rows = result.items.map(function (i) {
+					if (!/^\d{9,15}$/.test(i.id) || typeof i.name !== 'string' || i.variant && (typeof i.variant !== 'string' || i.variant.length > 100)) throw new Error('Invalid seller listing.');
+					var old = (prior || []).filter(function (r) { return r.id === i.id && (r.variant || '') === (i.variant || ''); })[0];
+					return {id:i.id, name:i.name.slice(0,180), variant:i.variant || '', sku:i.sku || '', quantity:i.quantity, amount:i.amount, currency:i.currency, available:i.active === false ? false : i.quantity == null ? null : i.quantity > 0, addedAt:old && old.addedAt || Date.now()};
+				});
+				// Keep imported links even when the next page replaces the discovery results.
+				var linked = hooks.stockLinks ? hooks.stockLinks() : [];
+				p.sellerListings = rows.concat((prior || []).filter(function (r) { return linked.some(function (s) { return s.ebayId === r.id && (s.ebayVariant || '') === (r.variant || ''); }) && !rows.some(function (i) { return i.id === r.id && i.variant === r.variant; }); }));
+				if (p.sellerListings.length > 200) { p.sellerListings = prior; throw new Error('Too many linked variations. Remove unused stock links first.'); }
+				try { await hooks.store(); } catch (e) { p.sellerListings = prior; throw e; }
+				return {operation:op, page:result.page, more:result.more, count:rows.length};
+			}
+			if (op === 'preview' || op === 'apply') {
+				result = await api('seller/stock/' + op, 'POST', op === 'preview' ? {itemId:request.itemId, variant:request.variant || '', quantity:request.quantity} : {id:request.id});
+				return Object.assign({operation:op}, result);
+			}
+			if (op === 'notifications') {
+				result = await api('seller/notifications', 'POST', {enabled:request.enabled === true});
+				p.notifications = result.enabled === true; await hooks.store(); nextNotice = 0;
+				return {operation:op, enabled:p.notifications};
+			}
+			if (op === 'finances') {
+				result = await api('seller/finances?since=' + Number(request.since) + '&until=' + Number(request.until) + '&page=' + (Number(request.page) || 0));
+				if (result.environment !== (p.environment || 'production') || !Array.isArray(result.transactions) || result.transactions.length > 50) throw new Error('Incomplete financial response.');
+				return Object.assign({operation:op}, result);
+			}
+			throw new Error('Unknown eBay seller action.');
 		}
 		async function action(request) {
 			var p = state();
@@ -81,6 +139,7 @@
 					throw e;
 				}
 				connected = false;
+				sellerSupported = false; sellerScopes = [];
 				nextPoll = 0;
 				status = 'Environment changed. Connect or check your seller account before enabling the showcase.';
 				return {};
@@ -99,10 +158,11 @@
 				return {};
 			}
 			if (request.action === 'ebayDisconnect') {
-				await api('connection', 'DELETE');
+				var disconnected = await api('connection', 'DELETE');
 				connected = false;
 				p.key = '';
-				status = 'Disconnected';
+				p.notifications = false;
+				status = disconnected.notificationsStopped === false ? 'Disconnected. Revoke Social Stream under eBay third-party access to stop its notifications.' : 'Disconnected';
 			} else if (request.action === 'ebayAdd') {
 				var id = SSNMonetization.ebayId(request.url);
 				if (!id) throw new Error('Paste a full eBay item URL.');
@@ -138,7 +198,13 @@
 			return {};
 		}
 		async function poll() {
-			if (busy || Date.now() < nextPoll || !hooks.enabled() || !hooks.config().enabled || !state().key || !state().items.length) return;
+			var stockEnabled = hooks.stockEnabled && hooks.stockEnabled();
+			if (busy || !hooks.enabled() || (!hooks.config().enabled && !stockEnabled) || !state().key || (!state().items.length && !stockListings().length)) return;
+			if (state().notifications && sellerSupported && Date.now() >= nextNotice) {
+				nextNotice = Date.now() + 10000; busy = true;
+				try { await hooks.serialize(async function () { var p = state(), notice = await api('seller/updates'); if (notice.revision !== p.noticeRevision) { p.noticeRevision = notice.revision; nextPoll = 0; } }); } catch (_) {} finally { busy = false; }
+			}
+			if (Date.now() < nextPoll) return;
 			busy = true;
 			nextPoll = Date.now() + 60000;
 			try {
@@ -149,14 +215,14 @@
 						since = Math.max(p.cursor - 120000, Date.now() - 29 * 86400000),
 						result = await api('sales?since=' + Math.floor(since));
 					if (!Array.isArray(result.sales) || !Number.isFinite(result.through)) throw new Error('Incomplete eBay sales response.');
-					if (!hooks.enabled() || !hooks.config().enabled) return;
+					if (!hooks.enabled() || (!hooks.config().enabled && !(hooks.stockEnabled && hooks.stockEnabled()))) return;
 					var alerts = [],
 						before = JSON.stringify(p);
 					result.sales.forEach(function (sale) {
 						var item = p.items.find(function (i) {
 							return i.id === sale.itemId;
 						});
-						if (!item || !/^[a-f0-9]{64}$/.test(sale.id) || p.seen.indexOf(sale.id) !== -1 || (sale.paidAt || sale.createdAt) < item.addedAt) return;
+						if (!hooks.config().enabled || !item || !/^[a-f0-9]{64}$/.test(sale.id) || p.seen.indexOf(sale.id) !== -1 || (sale.paidAt || sale.createdAt) < item.addedAt) return;
 						p.seen.push(sale.id);
 						item.bought = true;
 						alerts.push({ platform: 'ebay', type: 'ebay', event: 'purchase', id: 'ebay-' + sale.id, chatname: p.environment === 'sandbox' ? 'eBay Sandbox buyer' : 'eBay buyer', chatmessage: (p.environment === 'sandbox' ? 'Sandbox test purchase: ' : 'Purchased ') + item.name, /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true, subtitle: item.name, contentimg: SSNMonetization.imageURL(item.image), meta: { commerce: { quantity: Math.max(1, Math.min(100000, Number(sale.quantity) || 1)) }, ebayPurchase: { itemId: item.id, itemName: item.name, quantity: Math.max(1, Math.min(100000, Number(sale.quantity) || 1)), url: item.url } } });
@@ -164,7 +230,9 @@
 					p.cursor = result.through;
 					p.seen = p.seen.slice(-10000);
 					try {
-						await hooks.store();
+						// Stage private stock reviews in the same write as the cursor and receipt IDs.
+						if (hooks.storeSales) await hooks.storeSales(result.sales, p.environment || 'production', stockListings());
+						else await hooks.store();
 					} catch (e) {
 						hooks.privateState().ebay = JSON.parse(before);
 						throw e;
@@ -173,6 +241,15 @@
 					for (var a = 0; a < alerts.length; a++) {
 						await hooks.deliver(alerts[a]);
 						if (hooks.config().announce) hooks.chat(alerts[a].chatmessage + '!');
+					}
+					if (sellerSupported && hooks.stockEnabled && hooks.stockEnabled()) {
+						if (!p.orderWindow) p.orderWindow = {since:Math.floor(Math.max((p.orderCursor || 0) - 120000, Date.now() - 29 * 86400000)), until:Date.now()};
+						var orderResult = await api('seller/orders?since=' + p.orderWindow.since + '&until=' + p.orderWindow.until + '&page=' + (p.orderPage || 0));
+						if (!Array.isArray(orderResult.changes) || !Number.isFinite(orderResult.through)) throw new Error('Incomplete eBay order changes.');
+						if (hooks.storeOrders) await hooks.storeOrders(orderResult.changes, p.environment || 'production');
+						p.orderPage = orderResult.more ? (p.orderPage || 0) + 1 : 0;
+						if (!orderResult.more) { p.orderCursor = orderResult.through; p.orderWindow = null; }
+						await hooks.store();
 					}
 					// Refresh listings independently: a removed listing must not suppress paid-sale alerts.
 					var stale = 0;
@@ -200,6 +277,8 @@
 			}
 		}
 		return {
+			seller: seller,
+			stockSnapshot: function () { return {status:status, environment:state().environment || 'production', items:stockListings(), sellerSupported:sellerSupported, sellerScopes:sellerScopes, notifications:state().notifications === true}; },
 			action: action,
 			verify: verify,
 			poll: poll,

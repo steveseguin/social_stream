@@ -581,6 +581,7 @@ function createMediaPreviewDataUri(label, bgColor) {
 }
 
 function pickSourceKey(payload = {}) {
+  if (payload.meta?.platform === 'streamlabs') return 'streamlabs';
   const directPlatform = normalizeSourceKey(payload.platform);
   if (directPlatform) return directPlatform;
 

@@ -520,6 +520,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			sendResponse("youtube");
 			return;
 		}
+		if ("getYouTubeVideoId" == request) {
+			sendResponse(document.documentElement.dataset.youtubeVideoId || "");
+			return;
+		}
 		if ("focusChat" == request) {
 			document.querySelector('#input-text').focus();
 			sendResponse(true);
@@ -597,7 +601,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			}
 			if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
 				window.dispatchEvent(new CustomEvent('sendExtensionMessage', {
-					detail: { message: request.message },
+					detail: { message: request.message, youtubeReplyVideoId: request.youtubeReplyVideoId },
 					bubbles: true
 				}));
 				sendResponse(true);
@@ -658,7 +662,7 @@ window.addEventListener('message', function(event) {
 	}
 	if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
 		window.dispatchEvent(new CustomEvent('sendExtensionMessage', {
-			detail: { message: request.message },
+			detail: { message: request.message, youtubeReplyVideoId: request.youtubeReplyVideoId },
 			bubbles: true
 		}));
 	}

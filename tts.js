@@ -521,6 +521,8 @@ TTS.ttsSpeakChatname = true;
 TTS.replaceURLInLink = true;
 TTS.ttscommand = false;
 TTS.ttscommandmembersonly = false;
+TTS.paused = false;
+TTS.pauseSerial = 0;
 TTS.doNotReadEvents = true;
 TTS.neuroSyncEnabled = false;
 TTS.bottts = false;
@@ -930,6 +932,11 @@ document.addEventListener('DOMContentLoaded', function() {
         ttsButton.addEventListener('click', function() {
             TTS.toggle();
         });
+    }
+    var pauseButton = document.getElementById('tts_pause');
+    if (pauseButton && TTS.ttscommand) {
+        pauseButton.classList.remove('hidden');
+        pauseButton.addEventListener('click', TTS.togglePause);
     }
 });
 
@@ -1497,6 +1504,7 @@ TTS.updateButtonState = function(state) {
  */
 TTS.speak = function(text, allow = false, options = {}) {
     //console.log("TTS.speak called with:", text, "Allow:", allow, "TTS.speech:", TTS.speech);
+    if (TTS.paused) return;
     
     if (!TTS.speech && !allow) {
         //console.log("Speech is disabled and not forced, aborting");
@@ -1789,6 +1797,36 @@ TTS.skipCurrent = function() {
     }
 };
 
+// The dock's command-mode pause is independent of automatic reading and resets on reload.
+TTS.togglePause = function() {
+    var button = document.getElementById("tts_pause");
+    if (!button || !TTS.ttscommand) return;
+    TTS.paused = !TTS.paused;
+    if (TTS.paused) {
+        TTS.pauseSerial++;
+        TTS.premiumSerial++; // Discard speech still being generated or downloaded.
+        TTS.premiumQueueTTS = [];
+        if (TTS.browserKokoroStreamActive) TTS.browserKokoroSkipRequested = true;
+        TTS.clearQueue();
+        if (typeof TTS.resolveCurrentAudioPlayback === "function") {
+            TTS.resolveCurrentAudioPlayback(false);
+        }
+        if (TTS.audio) {
+            TTS.audio.pause();
+            TTS.audio.removeAttribute("src");
+            TTS.audio.load();
+        }
+        TTS.revokeCurrentObjectUrl();
+        TTS.premiumQueueActive = false;
+        TTS.updateButtonState(TTS.speech ? 'on' : 'off');
+    }
+    button.dataset.state = TTS.paused ? "1" : "0";
+    button.setAttribute("aria-pressed", TTS.paused ? "true" : "false");
+    button.title = TTS.paused ? "Resume text-to-speech (new messages only)" : "Pause text-to-speech and clear queued speech";
+    button.setAttribute("aria-label", button.title);
+    button.style.backgroundImage = TTS.paused ? "url(./icons/main_msg_play.png)" : "url(./icons/main_msg_pause.png)";
+};
+
 /**
  * Toggle TTS on/off
  */
@@ -1840,6 +1878,7 @@ TTS.toggle = function() {
  */
 TTS.speechMeta = function(data, allow = false) {
     //console.log("TTS.speechMeta called with data:", data, "Allow:", allow);
+    if (TTS.paused) return;
     
     if (!data) {
         console.error("TTS.speechMeta: No data provided");
@@ -2489,6 +2528,7 @@ TTS.desktopSystemTTS = async function(text, options) {
             return;
         }
         await TTS.playAudioBlob(new Blob([wavBuffer], { type: "audio/wav" }));
+        if (premiumSerial !== TTS.premiumSerial) return;
         TTS.updateButtonState("speaking");
     } catch (error) {
         if (premiumSerial !== TTS.premiumSerial) return;
@@ -2570,8 +2610,10 @@ TTS.googleTTS = function(tts, options) {
             }
         };
 
-        // Chirp 3: HD rejects speaking rate and pitch, including their default values.
-        if (!/-Chirp3-HD-/i.test(voiceName || "")) {
+        // Chirp 3: HD supports pace from 0.25x to 2x, but not the pitch parameter.
+        if (/-Chirp3-HD-/i.test(voiceName || "")) {
+            data.audioConfig.speakingRate = Math.max(0.25, Math.min(2, Number(TTS.googleSettings.rate) || 1));
+        } else {
             data.audioConfig.speakingRate = TTS.googleSettings.rate;
             data.audioConfig.pitch = TTS.googleSettings.pitch;
         }
@@ -2637,6 +2679,7 @@ TTS.googleTTS = function(tts, options) {
                     if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
                         await TTS.audioContext.resume();
                     }
+                    if (premiumSerial !== TTS.premiumSerial) return;
                     await TTS.audio.play();
                 } catch (e) {
                     if (premiumSerial === TTS.premiumSerial) {
@@ -2728,6 +2771,7 @@ TTS.geminiTTS = async function(tts, options) {
             if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
                 await TTS.audioContext.resume();
             }
+            if (premiumSerial !== TTS.premiumSerial) return;
             await TTS.audio.play();
         } catch (e) {
             if (premiumSerial === TTS.premiumSerial) {
@@ -2801,6 +2845,7 @@ TTS.SpeechifyTTS = function(tts, options) {
                     if (TTS.audioContext.state === 'suspended') {
                         await TTS.audioContext.resume();
                     }
+                    if (premiumSerial !== TTS.premiumSerial) return;
                     TTS.audio.play().catch(err => {
                         console.error("Audio play failed, user interaction required", err);
                         if (premiumSerial === TTS.premiumSerial) {
@@ -3160,6 +3205,7 @@ TTS.espeakTTS = async function(text, options) {
         }
         
         // Play the audio
+        if (premiumSerial !== TTS.premiumSerial) return;
         TTS.audio.play().catch(err => {
             console.error("Audio play failed, user interaction required", err);
             if (premiumSerial === TTS.premiumSerial) {
@@ -3269,6 +3315,12 @@ TTS.normalizePhraseText = function(text) {
 
 TTS.getPhraseClipId = function(text, voice) {
     if (!voice || /^en(?:[-_]|$)/i.test(voice)) return "";
+    // These Piper models can collapse isolated Portuguese greetings into very short sounds.
+    if (voice === "pt_PT-tugão-medium" || voice === "pt_BR-faber-medium") {
+        const greeting = String(text || "").normalize("NFC").trim().toLowerCase();
+        if (/^o+i+[.!?,\s]*$/.test(greeting)) return "pt-oi";
+        if (/^o+l+[aá]+[.!?,\s]*$/.test(greeting)) return "pt-ola";
+    }
     if (!TTS.phraseClipIndex) {
         TTS.phraseClipIndex = {};
         Object.keys(TTS.phraseClips).forEach(function(id) {
@@ -3569,6 +3621,7 @@ TTS.kittenTTS = async function(text, options) {
         }
         
         // Play the audio
+        if (premiumSerial !== TTS.premiumSerial) return;
         TTS.audio.play().catch(err => {
             console.error("Audio play failed, user interaction required", err);
             if (premiumSerial === TTS.premiumSerial) {
@@ -3665,6 +3718,8 @@ TTS.audioBlobFromJson = function(json, fallbackFormat) {
 };
 
 TTS.playAudioBlob = async function(audioBlob) {
+    if (TTS.paused) return;
+    var pauseSerial = TTS.pauseSerial;
     if (TTS.neuroSyncEnabled) {
         TTS.sendToNeuroSync(audioBlob).then(function(result) {
             if (result && result.blendshapes) {
@@ -3688,8 +3743,10 @@ TTS.playAudioBlob = async function(audioBlob) {
         if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
             await TTS.audioContext.resume();
         }
+        if (pauseSerial !== TTS.pauseSerial || TTS.paused) return;
         await TTS.audio.play();
     } catch (e) {
+        if (pauseSerial !== TTS.pauseSerial) return;
         TTS.finishedAudio();
         console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
     }

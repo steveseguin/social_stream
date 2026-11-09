@@ -16,7 +16,7 @@ function extractFunction(name) {
     assert.ok(end > start, `Missing Dock function end: ${name}`);
     return dock.slice(start, end + '\n\t\t\t}'.length);
 }
-const source = ['processInput', 'updateQueueButton', 'removeQueue', 'selectedMessage',
+const source = ['rememberDockTtsArrival', 'processInput', 'updateQueueButton', 'removeQueue', 'selectedMessage',
     'checkAutoShow', 'nextInQueue', 'syncQueueP2P', 'cancelPendingFeaturedMessage'].map(extractFunction).join('\n');
 
 function fixture(ids = [1, 2, 3]) {
@@ -43,6 +43,7 @@ function fixture(ids = [1, 2, 3]) {
     const lengths = [], syncs = [], timers = new Map();
     let timerId = 0;
     const c = vm.createContext({
+        TTS: { ttscommand: false }, dockTtsArrivals: new WeakMap(),
         selectedQueue: [], pendingFeaturedMessage: null, syncDocks: true, autoshowqueued: false,
         blockMessageSelecting: false, blockMessageSelecting2: false,
         shouldDeferRawDonationWebhook: () => false, isRawDonationWebhook: () => false,

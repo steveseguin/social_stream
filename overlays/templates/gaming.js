@@ -3,6 +3,119 @@
 	"use strict";
 	var esc = SSO.esc;
 
+	// ---------------------------------------------------------------- live controller input
+	// Face button order follows the browser's standard mapping: bottom, right, left, top.
+	var PAD_FACE_LABELS = { xbox: ["A", "B", "X", "Y"], ps: ["\u2715", "\u25cb", "\u25a1", "\u25b3"], nintendo: ["B", "A", "Y", "X"] };
+	function padButton(tag, index, attrs) {
+		return "<" + tag + ' class="gp-btn" data-b="' + index + '" ' + attrs + "></" + tag + ">";
+	}
+	function padSvg(labels) {
+		var face = [[295, 119], [319, 95], [271, 95], [295, 71]].map(function (at, i) {
+			return padButton("circle", i, 'cx="' + at[0] + '" cy="' + at[1] + '" r="12"') +
+				'<text class="gp-label" x="' + at[0] + '" y="' + (at[1] + 4) + '" text-anchor="middle">' + esc(labels[i]) + "</text>";
+		}).join("");
+		function stick(cx, cy, base, cap, axisX, axisY, button) {
+			return '<circle class="gp-well" cx="' + cx + '" cy="' + cy + '" r="' + base + '"></circle>' +
+				'<g class="gp-stick" data-x="' + axisX + '" data-y="' + axisY + '" data-reach="' + (base - cap) + '"><circle class="gp-btn" data-b="' + button + '" cx="' + cx + '" cy="' + cy + '" r="' + cap + '"></circle></g>';
+		}
+		return '<svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+			'<rect class="gp-well" x="70" y="4" width="60" height="12" rx="3"></rect><rect class="gp-fill" data-t="6" x="70" y="4" width="0" height="12" rx="3"></rect>' +
+			'<rect class="gp-well" x="270" y="4" width="60" height="12" rx="3"></rect><rect class="gp-fill" data-t="7" x="270" y="4" width="0" height="12" rx="3"></rect>' +
+			padButton("rect", 4, 'x="70" y="21" width="60" height="13" rx="5"') + padButton("rect", 5, 'x="270" y="21" width="60" height="13" rx="5"') +
+			'<path class="gp-body" d="M110 40h180c40 0 70 30 82 80l16 70c8 34-24 56-48 36l-44-40c-8-7-16-10-26-10H130c-10 0-18 3-26 10l-44 40c-24 20-56-2-48-36l16-70c12-50 42-80 82-80z"></path>' +
+			stick(110, 95, 28, 15, 0, 1, 10) + stick(245, 140, 24, 13, 2, 3, 11) +
+			padButton("rect", 12, 'x="147" y="112" width="16" height="20" rx="2"') + padButton("rect", 13, 'x="147" y="148" width="16" height="20" rx="2"') +
+			padButton("rect", 14, 'x="127" y="132" width="20" height="16" rx="2"') + padButton("rect", 15, 'x="163" y="132" width="20" height="16" rx="2"') +
+			padButton("rect", 8, 'x="166" y="78" width="20" height="10" rx="5"') + padButton("rect", 9, 'x="214" y="78" width="20" height="10" rx="5"') +
+			padButton("circle", 16, 'cx="200" cy="106" r="8"') + face + "</svg>";
+	}
+	SSO.register({
+		id: "gamepad",
+		name: "Controller input display",
+		category: "gaming",
+		description: "Shows your controller's buttons, triggers and sticks live on stream. Plug the controller into the PC running OBS, then press any button once to wake it.",
+		size: [420, 260],
+		fields: [
+			{ key: "player", label: "Controller", type: "select", group: "Content", default: "auto", options: [["auto", "First connected"], ["0", "Controller 1"], ["1", "Controller 2"], ["2", "Controller 3"], ["3", "Controller 4"]] },
+			{ key: "labels", label: "Button labels", type: "select", group: "Content", default: "xbox", options: [["xbox", "A B X Y"], ["ps", "Shapes"], ["nintendo", "B A Y X"]] },
+			{ key: "hideidle", label: "Hide until a controller is connected", type: "bool", group: "Content", default: false },
+			{ key: "body", label: "Controller colour", type: "color", group: "Style", default: "1f2430" },
+			{ key: "bodyopacity", label: "Controller opacity", type: "range", group: "Style", default: 0.85, min: 0, max: 1, step: 0.05 },
+			{ key: "idle", label: "Button colour", type: "color", group: "Style", default: "667088" },
+			{ key: "active", label: "Pressed colour", type: "color", group: "Style", default: "ffffff" },
+			{ key: "text", label: "Label colour", type: "color", group: "Style", default: "ffffff" }
+		],
+		presets: [
+			{ name: "Dark", tags: ["gaming", "simple"], values: {} },
+			{ name: "Light", tags: ["simple"], values: { body: "f2f3f6", idle: "9aa1b2", active: "111111", text: "111111" } },
+			{ name: "Shape buttons", tags: ["gaming"], values: { labels: "ps", body: "14213d", idle: "4a6fa5", active: "ffffff" } },
+			{ name: "Neon outline", tags: ["cyber", "gaming"], values: { bodyopacity: 0, idle: "ff3ec8", active: "22d3ee", text: "ffffff" } }
+		],
+		css: [
+			".gp{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;}",
+			".gp svg{display:block;width:100%;height:100%;}",
+			".gp-btn{fill:var(--gp-idle);}",
+			".gp-btn.on{fill:var(--gp-on);}",
+			".gp-well{fill:rgba(0,0,0,.35);stroke:var(--gp-idle);stroke-width:1.5;}",
+			".gp-fill{fill:var(--gp-on);}",
+			".gp-label{fill:var(--gp-text);font:700 13px Arial,sans-serif;pointer-events:none;}",
+			".gp-btn.on + .gp-label{fill:var(--gp-body-solid);}"
+		].join("\n"),
+		render: function (root, c, ctx) {
+			var wrap = document.createElement("div");
+			wrap.className = "gp";
+			wrap.style.setProperty("--gp-idle", SSO.color(c.idle));
+			wrap.style.setProperty("--gp-on", SSO.color(c.active));
+			wrap.style.setProperty("--gp-text", SSO.color(c.text));
+			wrap.style.setProperty("--gp-body-solid", SSO.color(c.body));
+			wrap.innerHTML = padSvg(PAD_FACE_LABELS[c.labels] || PAD_FACE_LABELS.xbox);
+			wrap.querySelector(".gp-body").setAttribute("fill", SSO.rgba(c.body, c.bodyopacity));
+			root.appendChild(wrap);
+			var buttons = Array.prototype.slice.call(wrap.querySelectorAll(".gp-btn"));
+			var sticks = Array.prototype.slice.call(wrap.querySelectorAll(".gp-stick"));
+			var triggers = Array.prototype.slice.call(wrap.querySelectorAll(".gp-fill"));
+			// The Studio preview has no controller, so it mimes one rather than sitting still.
+			var demo = !!(ctx && ctx.preview);
+			function readPad() {
+				var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+				if (c.player !== "auto") { return pads[Number(c.player)] || null; }
+				for (var i = 0; i < pads.length; i++) { if (pads[i]) { return pads[i]; } }
+				return null;
+			}
+			function demoPad(now) {
+				var t = now / 1000, list = [];
+				for (var i = 0; i < 17; i++) { list.push({ pressed: Math.floor(t * 1.5) % 17 === i, value: 0 }); }
+				list[7] = { pressed: false, value: (Math.sin(t * 2) + 1) / 2 };
+				return { buttons: list, axes: [Math.cos(t * 1.4), Math.sin(t * 1.4), Math.sin(t), Math.cos(t * 0.7)] };
+			}
+			function deadzone(value) { return Math.abs(value) < 0.08 ? 0 : value; }
+			var alive = true;
+			function frame(now) {
+				if (!alive) { return; }
+				var pad = readPad() || (demo ? demoPad(now) : null);
+				wrap.style.visibility = c.hideidle && !pad ? "hidden" : "";
+				buttons.forEach(function (el) {
+					var state = pad && pad.buttons[Number(el.getAttribute("data-b"))];
+					var on = !!(state && (state.pressed || state.value > 0.5));
+					if (on !== el.classList.contains("on")) { el.classList.toggle("on", on); }
+				});
+				triggers.forEach(function (el) {
+					var state = pad && pad.buttons[Number(el.getAttribute("data-t"))];
+					el.setAttribute("width", String(60 * (state ? Math.max(0, Math.min(1, state.value)) : 0)));
+				});
+				sticks.forEach(function (el) {
+					var reach = Number(el.getAttribute("data-reach"));
+					var x = pad ? deadzone(pad.axes[Number(el.getAttribute("data-x"))] || 0) : 0;
+					var y = pad ? deadzone(pad.axes[Number(el.getAttribute("data-y"))] || 0) : 0;
+					el.setAttribute("transform", "translate(" + (x * reach).toFixed(1) + " " + (y * reach).toFixed(1) + ")");
+				});
+				requestAnimationFrame(frame);
+			}
+			requestAnimationFrame(frame);
+			if (SSO.onCleanup) { SSO.onCleanup(root, function () { alive = false; }); }
+		}
+	});
+
 	// ---------------------------------------------------------------- achievement toast
 	var TOAST_STYLES = {
 		block: { label: "Blocky advancement", font: "Silkscreen", bg: "#212121", fg: "#ffffff", accent: "#f7e14b", icon: "⛏️" },

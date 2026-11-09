@@ -487,9 +487,11 @@
 		description: "A border to put around your camera, with an optional name tag. Size the OBS source to match your cam.",
 		size: [640, 400],
 		fields: [
-			{ key: "style", label: "Frame style", type: "select", group: "Style", default: "solid", options: [["solid", "Solid"], ["double", "Double line"], ["corners", "Corner brackets"], ["neon", "Neon glow"], ["gradient", "Gradient"], ["rgb", "Gamer RGB (animated)"], ["fire", "Fire glow"], ["pixel", "Blocky pixel"], ["tape", "Taped on (punk)"], ["kawaii", "Kawaii hearts"], ["polaroid", "Photo print"]] },
+			{ key: "style", label: "Frame style", type: "select", group: "Style", default: "solid", options: [["solid", "Solid"], ["double", "Double line"], ["corners", "Corner brackets"], ["neon", "Neon glow"], ["gradient", "Gradient"], ["rgb", "Gamer RGB (animated)"], ["fire", "Fire glow"], ["pixel", "Blocky pixel"], ["tape", "Taped on (punk)"], ["kawaii", "Kawaii hearts"], ["polaroid", "Photo print"], ["window", "Retro app window"], ["browser", "Browser window"]] },
 			{ key: "color", label: "Frame colour", type: "color", group: "Style", default: "ffffff" },
 			{ key: "color2", label: "Second colour (gradient)", type: "color", group: "Style", default: "8b5cf6" },
+			{ key: "wintitle", label: "Title or address", type: "text", group: "Style", default: "LIVE.EXE", show: { style: ["window", "browser"] } },
+			{ key: "winfg", label: "Title bar text", type: "color", group: "Style", default: "111111", show: { style: ["window", "browser"] } },
 			{ key: "width", label: "Thickness", type: "range", group: "Style", default: 6, min: 1, max: 40, step: 1 },
 			{ key: "radius", label: "Corner radius", type: "range", group: "Style", default: 14, min: 0, max: 200, step: 1 },
 			{ key: "inset", label: "Space around the frame", type: "range", group: "Style", default: 12, min: 0, max: 80, step: 1 },
@@ -503,6 +505,8 @@
 		],
 		presets: [
 			{ name: "Clean white", tags: ["simple"], values: {} },
+			{ name: "Retro app window", tags: ["retro", "cyber"], values: { style: "window", radius: 2, color: "c8ccd4", width: 5, wintitle: "LIVE.EXE" } },
+			{ name: "Browser window", tags: ["cute", "cozy"], values: { style: "browser", radius: 14, color: "c9a6f0", width: 5, wintitle: "twitch.tv/yourname" } },
 			{ name: "Neon", tags: ["cyber"], values: { style: "neon", color: "22d3ee", width: 4, tag: "@yourname", tagbg: "22d3ee", tagfg: "001018", font: "Orbitron", fontsize: 16 } },
 			{ name: "Gradient", tags: ["simple"], values: { style: "gradient", color: "f472b6", color2: "8b5cf6", width: 8, radius: 22 } },
 			{ name: "Corner brackets", tags: ["gaming", "pro"], values: { style: "corners", color: "facc15", width: 6, radius: 0, tag: "LIVE", tagpos: "top-left", tagbg: "ef4444", tagfg: "ffffff", font: "Oswald" } },
@@ -517,6 +521,13 @@
 			".fr{position:absolute;box-sizing:border-box;}",
 			".fr-tag{position:absolute;padding:.25em .8em;border-radius:.4em;font-weight:700;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:6;}",
 			".fr-c{position:absolute;width:18%;height:22%;box-sizing:border-box;}",
+			".fr-bar{position:absolute;left:0;top:0;right:0;display:flex;align-items:center;box-sizing:border-box;padding:.3em .6em;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;border-radius:inherit;border-bottom-left-radius:0;border-bottom-right-radius:0;z-index:5;}",
+			".fr-bar-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;}",
+			".fr-bar-btns{flex:0 0 auto;display:flex;margin-left:.6em;}",
+			".fr-bar-btns i{display:block;width:.75em;height:.75em;margin-left:.3em;border:2px solid currentColor;box-sizing:border-box;}",
+			".fr-bar-nav{flex:0 0 auto;margin-right:.6em;letter-spacing:.2em;}",
+			".fr-bar.browser .fr-bar-text{padding:.1em .8em;border-radius:1em;background:rgba(255,255,255,.8);color:#222;font-weight:500;}",
+			".fr-bar.browser .fr-bar-btns i{border-radius:50%;}",
 			"@keyframes fr-rgb{from{background-position:0 0}to{background-position:300% 0}}",
 			"@keyframes fr-fire{from{filter:brightness(1)}to{filter:brightness(1.35) saturate(1.3)}}",
 			"@keyframes fr-bob{from{transform:translateY(0) rotate(-8deg)}to{transform:translateY(-6px) rotate(8deg)}}",
@@ -541,6 +552,27 @@
 				fr.style.webkitMask = "linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0)";
 				fr.style.webkitMaskComposite = "xor";
 				fr.style.maskComposite = "exclude";
+			} else if (c.style === "window" || c.style === "browser") {
+				fr.style.boxShadow = "inset 0 0 0 " + w + "px " + col + ",0 6px 24px rgba(0,0,0,.35)";
+				var bar = document.createElement("div");
+				bar.className = "fr-bar " + c.style;
+				bar.style.background = col;
+				bar.style.color = SSO.color(c.winfg);
+				var barText = document.createElement("span");
+				barText.className = "fr-bar-text";
+				barText.textContent = c.wintitle;
+				if (c.style === "browser") {
+					var nav = document.createElement("span");
+					nav.className = "fr-bar-nav";
+					nav.textContent = "\u2039\u203a";
+					bar.appendChild(nav);
+				}
+				bar.appendChild(barText);
+				var buttons = document.createElement("span");
+				buttons.className = "fr-bar-btns";
+				buttons.innerHTML = "<i></i><i></i><i></i>";
+				bar.appendChild(buttons);
+				fr.appendChild(bar);
 			} else if (c.style === "polaroid") {
 				fr.style.boxShadow = "inset 0 0 0 " + Math.max(w, 14) + "px #fdfdf8,0 10px 30px rgba(0,0,0,.4)";
 				fr.style.borderBottom = Math.max(w * 4, 56) + "px solid #fdfdf8";
@@ -594,6 +626,9 @@
 				var off = c.inset + "px";
 				if (c.style === "polaroid" && p[0] === "bottom") {
 					tag.style.cssText += "background:transparent;box-shadow:none;bottom:" + (c.inset + 8) + "px;";
+				} else if ((c.style === "window" || c.style === "browser") && p[0] === "top") {
+					// Below the title bar, so it does not cover the title or the buttons.
+					tag.style.top = "calc(" + off + " + 2.3em)";
 				} else {
 					tag.style[p[0]] = "calc(" + off + " - .9em)";
 				}

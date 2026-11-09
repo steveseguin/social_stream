@@ -5,11 +5,31 @@
 	var ready = false,
 		current = null;
 	var products = [], editingProduct = -1;
-    var boardsPanel = document.createElement('details'); boardsPanel.className = 'popup-subsection commerce-board-controls';
-    panel.appendChild(boardsPanel);
+    var boardsPanel = document.createElement('details'); boardsPanel.className = 'wrapper commerce-board-controls';
+    panel.insertBefore(boardsPanel, document.getElementById('money-breaks-panel'));
+    var breaksLink = by('breaks');
+    var breaksReset = by('breaks-reset');
+    var breaksHint = by('breaks-status');
+    breaksReset.onclick = function () {
+        if (!window.confirm('Reset the workspace link? Existing control windows and OBS docks will disconnect. Your breaks and stock are kept.')) return;
+        request('breaksAccessReset').then(function (reply) { breaksKey = reply.key || ''; links(); breaksHint.textContent = 'Workspace link reset. Open Breaks again to reconnect.'; }).catch(function (error) { breaksHint.textContent = error.message; });
+    };
+    var breaksKey = '', breaksKeyRequested = false;
+    // The key goes in the fragment: browsers never send that part of a link to a web server.
+    function loadBreaksKey() {
+        if (breaksKeyRequested) return;
+        breaksKeyRequested = true;
+        request('breaksAccess').then(function (reply) { breaksKey = reply.key || ''; links(); }).catch(function () { breaksKeyRequested = false; });
+    }
     window.SSNCommerceBoardControls(boardsPanel, request, function () {
         links(); return by('overlay').href;
     });
+    boardsPanel.querySelector('summary').className = 'collapsible-label';
+    var boardContent = boardsPanel.querySelector('.cb-content');
+    boardContent.classList.add('options_group', 'popup-settings-panel');
+    var boardBody = document.createElement('div'), boardOptions = document.createElement('div');
+    boardBody.className = 'collapsible-text'; boardOptions.className = 'options';
+    boardOptions.appendChild(boardContent); boardBody.appendChild(boardOptions); boardsPanel.appendChild(boardBody);
 	var feedbackUntil = {};
 	var saveLabel = by('save').textContent;
 	function tr(key, fallback) { return typeof getTranslation === 'function' ? getTranslation(key, fallback) : fallback; }
@@ -325,8 +345,30 @@
             control.searchParams.set('session', lastResponse.streamID);
             control.searchParams.set('commerce', '');
             if (language) control.searchParams.set('ln', language);
-            if (serverValue && /^wss?:\/\//i.test(serverValue)) control.searchParams.set('server', serverValue);
+            ['server2', 'server3', 'localserver', 'localserverport'].forEach(function (key) { if (connectionParams.has(key)) control.searchParams.set(key, connectionParams.get(key)); });
+            if (lastResponse.password) control.searchParams.set('password', lastResponse.password);
+            var mainControls = document.getElementById('obs_control_dock_url');
+            if (mainControls) { var mainURL = new URL(control.href); mainURL.searchParams.delete('commerce'); mainControls.href = mainURL.href; }
             by('control-dock').href = control.href;
+            var breaksURL = new URL(control.href);
+            // Use the installed workspace rather than a potentially older hosted dock.
+            if (location.protocol === 'chrome-extension:' || location.protocol === 'moz-extension:') {
+                var bundledBreaks = new URL(chrome.runtime.getURL('obs-control-dock.html'));
+                bundledBreaks.search = breaksURL.search;
+                breaksURL = bundledBreaks;
+            }
+            breaksURL.searchParams.delete('commerce');
+            breaksURL.searchParams.set('breaks', '');
+            // Dock's server flag forwards Featured selections; it does not enable the host API.
+            // Breaks uses the host routes, otherwise P2P. Explicit hand-made API links still work.
+            breaksURL.searchParams.delete('server');
+            ['server2', 'server3', 'localserver', 'localserverport'].forEach(function (name) {
+                if (connectionParams.has(name)) breaksURL.searchParams.set(name, connectionParams.get(name));
+            });
+            breaksURL.hash = breaksKey ? 'breakKey=' + breaksKey : '';
+            breaksLink.href = breaksURL.href;
+            if (lastResponse.password) { breaksURL.searchParams.set('password', lastResponse.password); breaksLink.href = breaksURL.href; }
+            loadBreaksKey();
             by('overlay').href = u.href;
 			by('overlay').textContent = tr('money-open-overlay', 'Open overlay') + ': ' + by('mode').options[by('mode').selectedIndex].textContent;
 		} catch (_) {}
@@ -603,7 +645,7 @@
         if (current && !panel.hasAttribute('aria-busy')) render(current);
     };
 	setInterval(function () {
-		if (ready && panel.open && !panel.hasAttribute('aria-busy'))
+		if (ready && panel.getClientRects().length && !document.hidden && !panel.hasAttribute('aria-busy'))
 			request('get').then(
 				function (reply) {
                     if (panel.hasAttribute('aria-busy')) return;

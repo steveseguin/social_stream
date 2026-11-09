@@ -269,6 +269,7 @@
 				if (nativeGift) data.meta = Object.assign({}, data.meta || {}, nativeGift);
 			} catch (e) {}
 		}
+		normalizeTikTokGiftLanguage(data);
 		applyTikTokGiftDonationValue(data, ele);
 		var identity = getTikTokGiftUpdateIdentity(data, ele);
 		if (!identity) {
@@ -323,6 +324,36 @@
 			tiktokGiftQuietMs: TIKTOK_GIFT_STREAK_QUIET_MS
 		});
 		return true;
+	}
+
+	function normalizeTikTokGiftLanguage(data) {
+		if (!data || data.type !== "tiktok" || data.event !== "gift" || !data.chatmessage) return;
+		var meta = data.meta || {};
+		if (!meta.tiktokGiftMessageId || !meta.giftId) return;
+		// An explicit SSN language wins over the capture browser's language.
+		var language = settings.translationlanguage && settings.translationlanguage.optionsetting;
+		language = String(language || navigator.language || "").toLowerCase();
+		if (!/^en(?:[-_]|$)/.test(language)) return;
+
+		var container = document.createElement("template").content.appendChild(document.createElement("div"));
+		container.innerHTML = data.chatmessage;
+		var images = container.querySelectorAll("img[src]");
+		if (images.length !== 1) return;
+		var image = images[0];
+		var imageUrl = image.getAttribute("src") || "";
+		if (!/^https:\/\/[^/]*\.tiktokcdn\.com\/img\//i.test(imageUrl)) return;
+		// Match TikTok's native Chinese gift template, never arbitrary viewer text.
+		var match = (container.textContent || "").trim().match(/^送出了\s*(.*?)\s*[x×]\s*(\d+)$/);
+		if (!match || !match[1].trim()) return;
+		if (Number(match[2]) !== Number(meta.tiktokGiftCount)) return;
+
+		var nativeName = String(meta.giftName || "").trim();
+		var mapped = giftMapping[meta.giftId] || giftMapping[getIdFromUrl(imageUrl)] ||
+			giftMapping["name:" + nativeName.toLowerCase()];
+		// Native gift names can remain English even when the page labels are Chinese.
+		var name = String(mapped && mapped.name || nativeName).trim();
+		if (!name || /[\u3400-\u9fff]/.test(name)) return;
+		data.chatmessage = "Sent " + escapeHtml(name, true) + " " + image.outerHTML + " ×" + match[2];
 	}
 
 	function sendMetaEvent(eventName, meta) {
@@ -3126,6 +3157,10 @@
 	}
 
 	function processEvent(ele) {
+		// The chat observer can also see typing counters and drafts in the composer.
+		if (ele.closest('[data-e2e="live-chat-input-container"]')) {
+			return;
+		}
 		if (ele.querySelector("[class*='DivTopGiverContainer']")) {
 			return;
 		}

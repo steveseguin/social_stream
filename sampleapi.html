@@ -691,7 +691,7 @@
 		}
 
 		function addMinutes(date, minutes) {
-			return new Date(date.getTime() + minutes * 60000).toISOString();
+			return date.getTime() + minutes * 60000;
 		}
 
 		function buildHypeTrainTestPayload(phase, trainType) {
@@ -717,10 +717,10 @@
 					],
 					lastContribution: { userId: '101', userLogin: 'ava', userName: 'Ava', type: 'bits', total: 100 },
 					sharedTrainParticipants: [],
-					startedAt: now.toISOString(),
+					startedAt: now.getTime(),
 					expiresAt: addMinutes(now, 2),
-					endedAt: phase === 'end' ? now.toISOString() : '',
-					cooldownEndsAt: phase === 'end' ? addMinutes(now, 60) : '',
+					endedAt: phase === 'end' ? now.getTime() : null,
+					cooldownEndsAt: phase === 'end' ? addMinutes(now, 60) : null,
 					isSharedTrain: false,
 					trainType: trainType || 'regular',
 					eventSubType: 'channel.hype_train.' + (phase === 'begin' ? 'begin' : phase === 'end' ? 'end' : 'progress')

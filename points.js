@@ -633,9 +633,13 @@ class PointsSystem {
                 if (!record.config || !Array.isArray(record.entries) || !Array.isArray(record.winners) || !Array.isArray(record.won) || !record.roundId || !record.session ||
                     !['draft','open','locked','cancelled','completed'].includes(record.status) || record.entries.length>10000) throw new Error('Invalid round in backup.');
                 const config=record.config;
-                if(!['giveaway','coin','number'].includes(config.kind) || typeof config.keyword!=='string' || !['exact','word'].includes(config.match) ||
+                if(!['giveaway','coin','number','trivia'].includes(config.kind) || typeof config.keyword!=='string' || !['exact','word'].includes(config.match) ||
                     !Number.isSafeInteger(config.ticketCost) || config.ticketCost<0 || config.ticketCost>10000 || !Number.isSafeInteger(config.maxTickets) || config.maxTickets<1 || config.maxTickets>10000 ||
                     !Number.isSafeInteger(config.prizePoints) || config.prizePoints<0 || config.prizePoints>1000000 || !Number.isSafeInteger(config.winnerCount) || config.winnerCount<1 || config.winnerCount>20)throw new Error('Invalid rules in backup.');
+                if (config.durationSeconds !== undefined && (!Number.isSafeInteger(config.durationSeconds) || config.durationSeconds < 0 || config.durationSeconds > 86400 ||
+                    config.durationSeconds && !['giveaway','trivia'].includes(config.kind))) throw new Error('Invalid draw timer in backup.');
+                if (config.kind === 'trivia' && (config.ticketCost || typeof config.triviaQuestion !== 'string' || !config.triviaQuestion.trim() || config.triviaQuestion.length > 300 ||
+                    typeof config.triviaAnswer !== 'string' || !config.triviaAnswer.trim() || config.triviaAnswer.length > 160)) throw new Error('Invalid trivia rules in backup.');
                 const identities=new Set();
                 for(const entry of record.entries){
                     if (!entry || identities.has(entry.id) || entry.accountKey!==this.getUserKey(entry.name,entry.platform) || !Number.isSafeInteger(entry.tickets) || entry.tickets<1 ||

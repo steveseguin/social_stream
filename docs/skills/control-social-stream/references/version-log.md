@@ -2,6 +2,23 @@
 
 Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command list is authoritative, including when development builds share an application version.
 
+## 2026-11-07: Breaks display keys
+
+- Breaks minimum remains SSApp 0.4.48 with updated Social Stream sources; no SSApp binary/API version change. Check advertised SSN remote-control actions before using the five Breaks display keys.
+- The same keys support the extension through the existing plugin P2P or configured API relay. Private records and printing still require the workspace.
+
+## Closed browser windows
+
+The updated SSApp 0.4.48 build skips destroyed source windows when listing browser targets. After a window closes, list targets again before choosing another window. Command names and schemas are unchanged.
+
+## Starting saved sources during startup
+
+SSApp 0.4.48 builds containing the source readiness fix let `startSource` wait up to 15 seconds for the source controls to load. The command checks the latest source state before activation, including sources that auto-activated while it waited. Command names and schemas are unchanged.
+
+## Breaks workspace with updated Social Stream sources
+
+Minimum supported runtime for this addition: SSApp 0.4.48 with the Breaks page sources. There are no new SSApp REST or MCP commands, and session commands cannot read or change private Breaks records. The workspace uses its own private link, and Event Flow's Commerce control action adds display-only `breakHighlight`, `breakStage`, and `breakSettings` on the host. See the [control API reference](control-api.md#breaks-workspace).
+
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
 | 1.6.0 / MCP 1.5.0 | 0.4.40 | Adds opt-in private human viewing, instance-bound viewer grants, API/MCP pause during private input, disconnect suspension, explicit handback, and `getHumanControlStatus`. Browser screenshots add captured-page origin/title metadata. Private viewing keeps hidden Windows targets rendering; cleanup restores their original size and hidden state, including when off-screen placement uses a remembered size, and preserves manual resizing. Remote bridges must separately authorize and transport the human viewer. |

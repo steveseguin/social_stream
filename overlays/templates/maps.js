@@ -420,6 +420,102 @@
 		if (code >= 1) { return { kind: "partly", text: "Partly cloudy" }; }
 		return { kind: "clear", text: "Clear" };
 	};
+	// Known cities and "lat,lon" need no lookup; anything else asks the Open-Meteo geocoder.
+	function locateWeatherPlace(text, tz, done) {
+		var known = parsePlaces(text)[0];
+		var coords = /(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/.exec(String(text));
+		if (known || coords) { done(parsePlace(text, tz)); return; }
+		fetch("https://geocoding-api.open-meteo.com/v1/search?count=1&name=" + encodeURIComponent(String(text).trim()))
+			.then(function (r) { return r.json(); })
+			.then(function (d) {
+				var hit = d && d.results && d.results[0];
+				done(hit ? { label: String(text).trim(), lat: hit.latitude, lon: hit.longitude, tz: tz || hit.timezone || "" } : null);
+			}).catch(function () { done(null); });
+	}
+	SSO.register({
+		id: "weather",
+		name: "Weather & local time",
+		category: "time",
+		description: "The current temperature and conditions for your city beside the local time, for IRL and travel streams. Uses the free Open-Meteo forecast.",
+		size: [640, 90],
+		fields: [
+			{ key: "place", label: "Location (city name, or lat,lon)", type: "text", group: "Place", default: "Toronto" },
+			{ key: "label", label: "Name to show (blank = the location above)", type: "text", group: "Place", default: "" },
+			SSO.f.tz("tz", "Time zone (blank = the city's own)"),
+			{ key: "units", label: "Temperature", type: "select", group: "Weather", default: "both", options: [["both", "\u00b0C and \u00b0F"], ["c", "\u00b0C"], ["f", "\u00b0F"]] },
+			{ key: "conditions", label: "Show conditions (Rain, Clear...)", type: "bool", group: "Weather", default: true },
+			{ key: "time", label: "Show the local time", type: "bool", group: "Weather", default: true },
+			{ key: "h12", label: "12-hour clock", type: "bool", group: "Weather", default: true },
+			{ key: "bg", label: "Background", type: "color", group: "Style", default: "000000" },
+			{ key: "bgopacity", label: "Background opacity", type: "range", group: "Style", default: 0.6, min: 0, max: 1, step: 0.05 },
+			{ key: "fg", label: "Text colour", type: "color", group: "Style", default: "ffffff" },
+			{ key: "radius", label: "Corner radius", type: "range", group: "Style", default: 10, min: 0, max: 60, step: 1 },
+			{ key: "shadow", label: "Text shadow", type: "bool", group: "Style", default: true },
+			SSO.f.font("Rajdhani"),
+			{ key: "fontsize", label: "Text size", type: "range", group: "Text", default: 34, min: 12, max: 120, step: 1 },
+			{ key: "align", label: "Anchor", type: "select", group: "Layout", default: "flex-start", options: [["flex-start", "Left"], ["center", "Center"], ["flex-end", "Right"]] }
+		],
+		presets: [
+			{ name: "Dark pill", tags: ["simple"], values: {} },
+			{ name: "Plain text", tags: ["simple"], values: { bgopacity: 0, conditions: false } },
+			{ name: "Fahrenheit", tags: ["simple"], values: { units: "f", place: "New York" } },
+			{ name: "Corner badge", tags: ["pro"], values: { font: "Oswald", fontsize: 26, radius: 0, align: "flex-end", units: "c", conditions: false } }
+		],
+		css: [
+			".wx{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;padding:0 12px;}",
+			".wx-line{display:inline-block;white-space:nowrap;line-height:1.2;font-variant-numeric:tabular-nums;max-width:100%;overflow:hidden;text-overflow:ellipsis;}"
+		].join("\n"),
+		render: function (root, c) {
+			SSO.loadFont(c.font);
+			var wrap = document.createElement("div");
+			wrap.className = "wx";
+			wrap.style.justifyContent = c.align;
+			var line = document.createElement("div");
+			line.className = "wx-line";
+			line.style.cssText = "color:" + SSO.color(c.fg) + ";font-family:" + SSO.fontStack(c.font) + ";font-size:" + c.fontsize + "px;border-radius:" + c.radius + "px;" +
+				(c.bgopacity > 0 ? "background:" + SSO.rgba(c.bg, c.bgopacity) + ";padding:.25em .6em;" : "") +
+				(c.shadow ? "text-shadow:0 2px 6px rgba(0,0,0,.6);" : "");
+			wrap.appendChild(line);
+			root.appendChild(wrap);
+			var place = null, wx = null, temp = null;
+			function paint() {
+				var parts = [String(c.label || c.place || "").trim()];
+				if (temp !== null) {
+					var celsius = Math.round(temp) + "\u00b0C", fahrenheit = Math.round(temp * 9 / 5 + 32) + "\u00b0F";
+					parts.push(c.units === "c" ? celsius : c.units === "f" ? fahrenheit : celsius + " | " + fahrenheit);
+				}
+				if (c.conditions && wx) { parts.push(wx.text); }
+				if (c.time && ((place && place.tz) || c.tz)) {
+					var tz = (place && place.tz) || c.tz || "";
+					parts.push(SSO.formatTime(SSO.zonedParts(new Date(), tz), c.h12, false));
+				}
+				line.textContent = parts.filter(Boolean).join(" \u00b7 ");
+				// Conditions change length through the day, so fit the line to the source rather than cut the clock off.
+				var size = c.fontsize;
+				line.style.fontSize = size + "px";
+				while (size > 12 && line.scrollWidth > line.clientWidth) {
+					size -= 1;
+					line.style.fontSize = size + "px";
+				}
+			}
+			function fetchWeather() {
+				if (!place) { return; }
+				fetch("https://api.open-meteo.com/v1/forecast?current_weather=true&latitude=" + encodeURIComponent(place.lat) + "&longitude=" + encodeURIComponent(place.lon) + "&timezone=" + encodeURIComponent(place.tz || "auto"))
+					.then(function (r) { return r.json(); })
+					.then(function (d) {
+						if (!d || !d.current_weather) { return; }
+						if (!place.tz && typeof d.timezone === "string") place.tz = d.timezone;
+						wx = WEATHER(d.current_weather.weathercode);
+						temp = d.current_weather.temperature;
+						paint();
+					}).catch(function () {});
+			}
+			paint();
+			locateWeatherPlace(c.place, c.tz, function (found) { place = found; paint(); fetchWeather(); });
+			var clockTimer = setInterval(paint, 15000), weatherTimer = setInterval(fetchWeather, 15 * 60000);
+			if (SSO.onCleanup) { SSO.onCleanup(root, function () { clearInterval(clockTimer); clearInterval(weatherTimer); }); }
+		}
+	});
 	SSO.register({
 		id: "skylight",
 		name: "Real sky light",

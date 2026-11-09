@@ -177,6 +177,7 @@
 </tbody>
 </table>
 <pre>{"action":"drawgiveaway","get":"draw-1"}</pre>
+<p>For timed giveaways or trivia, add <code>durationSeconds</code> (0 for manual, up to 86400) to the start config. For trivia, also set <code>kind: "trivia"</code>, <code>triviaQuestion</code>, and <code>triviaAnswer</code>, with <code>ticketCost: 0</code>. Captured viewers use <code>!answer ID ANSWER</code>. API entries use <code>entergiveaway</code> with an <code>answer</code> and captured <code>actor</code>; correct answers earn one entry. Host replies and displays omit the correct answer.</p>
 <p>Stream Deck (protocol 2) uses the same names. Its reply is about the giveaway, not whether OBS shows it.</p>
 <p>The old standalone community wheel (no <code>managed</code> in the link) keeps its own pool and ignores these actions.</p>
 </details>

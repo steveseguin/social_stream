@@ -7,6 +7,7 @@ const vm = require("vm");
 
 const repoRoot = path.resolve(__dirname, "..");
 const dockHtml = fs.readFileSync(path.join(repoRoot, "obs-control-dock.html"), "utf8");
+const dockScript = fs.readFileSync(path.join(repoRoot, "shared/monetization/control-dock.js"), "utf8");
 const guideHtml = fs.readFileSync(path.join(repoRoot, "docs", "obs-control-dock-guide.html"), "utf8");
 const creditsGuideHtml = fs.readFileSync(path.join(repoRoot, "docs", "credits-roll-guide.html"), "utf8");
 const popupHtml = fs.readFileSync(path.join(repoRoot, "popup.html"), "utf8");
@@ -16,11 +17,14 @@ for (const match of dockHtml.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/
 	if (match[1].trim()) new vm.Script(match[1], { filename: "obs-control-dock-inline.js" });
 }
 
-assert.ok(dockHtml.includes('new WebSocket(WEBSOCKET_URL)'));
-assert.ok(dockHtml.includes('{ join: sessionId, out: 1, in: 2 }'));
-assert.ok(dockHtml.includes('params.get("session") || params.get("s") || params.get("id")'));
-assert.ok(dockHtml.includes('localStorage.setItem(STORAGE_KEY, value)'));
-assert.ok(dockHtml.includes('fullApiLink.href = "./sampleapi.html?session=" + encodeURIComponent(sessionId)'));
+assert.ok(dockHtml.includes('src="shared/monetization/control-dock.js"'));
+new vm.Script(dockScript, { filename: "control-dock.js" });
+assert.ok(dockScript.includes('SSNOperatorConnection(getUrlParams(), sessionId'));
+assert.ok(dockHtml.includes('src="shared/operator-connection.js"'));
+assert.ok(dockScript.includes('params.get("session") || params.get("s") || params.get("id")'));
+assert.ok(dockScript.includes('localStorage.setItem(STORAGE_KEY, value)'));
+assert.ok(dockScript.includes("apiUrl.searchParams.set('session', sessionId)"));
+assert.ok(dockScript.includes('fullApiLink.href = apiUrl.href'));
 assert.ok(!/<script[^>]+src=["']https?:\/\//i.test(dockHtml), "control dock must not load remote executable scripts");
 assert.ok(!/<script[^>]+type=["']module["']/i.test(dockHtml), "control dock must remain a classic browser page");
 
@@ -47,7 +51,7 @@ assert.ok(!/<script[^>]+type=["']module["']/i.test(dockHtml), "control dock must
 assert.ok(guideHtml.includes("Docks</strong> &rarr; <strong>Custom Browser Docks"));
 assert.ok(guideHtml.includes("https://socialstream.ninja/obs-control-dock.html?session=YOUR_SESSION_ID"));
 assert.ok(guideHtml.includes("remote API control of extension"));
-assert.ok(guideHtml.includes("No <code>&amp;server</code> is needed"));
+assert.ok(guideHtml.includes("Normal links use P2P"));
 assert.ok(guideHtml.includes("OBS's <strong>WebSocket Server Settings</strong> are unrelated"));
 assert.ok(guideHtml.includes("Background collection"));
 assert.ok(guideHtml.includes("Test uses built-in names"));

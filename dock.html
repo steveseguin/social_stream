@@ -2925,6 +2925,8 @@
 			    <button class="imgButton imgSmallButton" id="tts" data-state="0" style="background-image: url(./icons/tts_incoming_messages_off.png)" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
 			</div>
 
+			<button type="button" class="imgButton imgSmallButton hidden" id="tts_pause" data-state="0" aria-pressed="false" aria-label="Pause text-to-speech and clear queued speech" style="background-image: url(./icons/main_msg_pause.png)" title="Pause text-to-speech and clear queued speech"></button>
+
 			<!-- Scroll button -->
 			<button class="imgButton imgSmallButton" id="jumpto" data-state="0" onclick="jumptoBottom();" style="background-image: url(./icons/scroll_to_bottom_off.png)" title="Scroll to bottom"></button>
 		</div>
@@ -5599,6 +5601,41 @@
 			var server2 = false;
 			var server3 = false;
 			var reconnectionTimeoutExtension = null;
+			var cloudReceiptPositions = null;
+			if (urlParams.has("cloudack")) {
+				try { cloudReceiptPositions = JSON.parse(localStorage.getItem("ssn-cloud-receipts:" + roomID) || "{}"); } catch (error) {}
+			}
+			function receiveCloudMessage(data, socket) {
+				if (!data || !data.ssnCloudDelivery) return false;
+				// Only Cloud's opt-in link consumes these envelopes. Ordinary source
+				// messages and existing overlay links retain their usual behavior.
+				if (!urlParams.has("cloudack")) return true;
+				var receipt = data.ssnCloudDelivery;
+				var payload = data.ssnCloudMessage;
+				if (receipt.v !== 1 || !/^[a-f0-9]{32}$/.test(receipt.stream || "") ||
+					!/^[a-f0-9]{32}$/.test(receipt.token || "") || !Number.isSafeInteger(receipt.seq) || receipt.seq < 1 ||
+					!payload || (payload.type !== "kick" && (!payload.delete || payload.delete.type !== "kick"))) return true;
+				try {
+					var storageKey = "ssn-cloud-receipts:" + roomID;
+					if (!cloudReceiptPositions || typeof cloudReceiptPositions !== "object" || Array.isArray(cloudReceiptPositions)) return true;
+					var previous = cloudReceiptPositions[receipt.stream] || 0;
+					if (!Number.isSafeInteger(previous) || previous < 0) return true;
+					if (receipt.seq > previous) {
+						if (!previous && Object.keys(cloudReceiptPositions).length >= 128) return true;
+						// Check storage availability before handing the message to the dock.
+						localStorage.setItem(storageKey, JSON.stringify(cloudReceiptPositions));
+						if (!isDuplicateTransportDelivery(payload, "server")) processInput(payload);
+						cloudReceiptPositions[receipt.stream] = receipt.seq;
+					}
+					var persisted = JSON.parse(localStorage.getItem(storageKey) || "{}");
+					persisted[receipt.stream] = Math.max(persisted[receipt.stream] || 0, receipt.seq);
+					localStorage.setItem(storageKey, JSON.stringify(persisted));
+					if (socket.readyState === 1) socket.send(JSON.stringify({ssnCloudReceipt: receipt}));
+				} catch (error) {
+					console.warn("Cloud message confirmation is unavailable.");
+				}
+				return true;
+			}
 
 			function setupSocketExtension() {
 				if (reconnectionTimeoutExtension) {
@@ -5637,7 +5674,13 @@
 						try {
 							var data = JSON.parse(event.data);
 							if (!server2 && data.action !== "twitchTimeoutResult") return;
+							if (receiveCloudMessage(data, socketserverExtension)) return;
 							if (!isDuplicateTransportDelivery(data, "server")) {
+								if (data.operatorRelay === true && isVersionedRemoteControlRequest(data) && data.get) {
+									var operatorResult = executeRemoteControlDockRequest(data);
+									if (!operatorResult.skip) sendExtensionDataToServer({ callback: { get: data.get, result: operatorResult.result } });
+									return;
+								}
 								processInput(data);
 							}
 						} catch (e) {
@@ -6752,13 +6795,14 @@
 				//  todo -- make broadcast channel based.
 				
 				setTimeout(function(){ // timeout to avoid middle+click causing override.
-					let pass = "";
-					if (urlParams.has("password")) {
-						pass = "&password="+encodeURIComponent(password);
-					}
-
-					const uniqueName = "popup_" + Date.now();
-					const popup = window.open("./input.html?session=" + roomID + pass, uniqueName, "width=600,height=60,toolbar=no,menubar=no,resizable=yes");
+                    const inputURL = new URL('./input.html', location.href);
+                    inputURL.searchParams.set('session', roomID);
+                    ['password', 'server2', 'server3', 'localserver', 'localserverport'].forEach(function (key) {
+                        if (urlParams.has(key)) inputURL.searchParams.set(key, urlParams.get(key));
+                    });
+                    const uniqueName = "popup_" + Date.now();
+                    const popup = window.open(inputURL.href, uniqueName, "width=600,height=60,toolbar=no,menubar=no,resizable=yes");
+                    if (!popup) return;
 					popup.document.body.style.margin = "0";
 					popup.document.body.style.padding = "0";
 				},0);
@@ -8211,10 +8255,21 @@
 				return false;
 			}
 
+			// Keep speech pause state with buffered chat without changing message payloads.
+			var dockTtsArrivals = new WeakMap();
+			function rememberDockTtsArrival(data, original) {
+				if (TTS.ttscommand && data && typeof data === "object" && !dockTtsArrivals.has(data)) {
+					var serial = original && dockTtsArrivals.has(original) ? dockTtsArrivals.get(original) : (TTS.paused ? -1 : TTS.pauseSerial);
+					dockTtsArrivals.set(data, serial);
+				}
+			}
+
 			function processInput(data, force=false, allowRawDonationFallback=false) {
 				if (!data) {
 					return featuredMode ? true : false;
 				}
+				var ttsOriginalMessage = data.content || data;
+				rememberDockTtsArrival(ttsOriginalMessage);
 				// Prefer background.js normalization, but retain a delayed direct-server fallback for
 				// users whose saved Dock URL predates the remote API requirement.
 				if (!allowRawDonationFallback && shouldDeferRawDonationWebhook(data)) {
@@ -9095,6 +9150,7 @@
 				if (isDuplicateWebhookDelivery(data)) {
 					return false;
 				}
+				rememberDockTtsArrival(data.content || data, ttsOriginalMessage);
 
 				if (data.action) {
 				
@@ -9179,6 +9235,7 @@
 						if (data.value) {
 							//let content = decodeURI(data.value);
 							let content = JSON.parse(data.value);
+							rememberDockTtsArrival(content, ttsOriginalMessage);
 							if (!pauseState) {
 								if (smoothMessageBuffer) {
 									// Track platform burst patterns
@@ -12000,6 +12057,7 @@
 				}
 				if (data.contents) {
 					data = data.contents;
+					var ttsPauseSerial = dockTtsArrivals.has(data) ? dockTtsArrivals.get(data) : TTS.pauseSerial;
 
 					// Temporary Web Store ad-announcement workaround; remove on 2026-10-07 (one week).
 					if (data.type === "twitch" && ["ad_break", "adbreak", "ad_request", "ad_schedule"].includes(data.event)) {
@@ -13279,7 +13337,7 @@
 						}
 						
 						
-						if (!suppressLiveSideEffects) {
+						if (!suppressLiveSideEffects && !TTS.paused && ttsPauseSerial === TTS.pauseSerial) {
 							if (data.command && doNotTTSBeep){
 								// skipp TTS
 							} else if (TTS.ttscommand && data.chatmessage && (data.textContent || data.chatmessage).includes(TTS.ttscommand+" ") && (!TTS.ttscommandmembersonly || (TTS.ttscommandmembersonly && data.membership))){
@@ -13287,7 +13345,7 @@
 									if (waitToReveal) {
 										setTimeout(function() {
 											// Check if node still exists and is connected to DOM
-											if (node && node.isConnected && !node.classList.contains("hide")) {
+											if (ttsPauseSerial === TTS.pauseSerial && node && node.isConnected && !node.classList.contains("hide")) {
 												TTS.speechMeta(data);
 											}
 										}, waitToReveal);
@@ -13300,7 +13358,7 @@
 									if (waitToReveal) {
 										setTimeout(function() {
 											// Check if node still exists and is connected to DOM
-											if (node && node.isConnected && !node.classList.contains("hide")) {
+											if (ttsPauseSerial === TTS.pauseSerial && node && node.isConnected && !node.classList.contains("hide")) {
 												TTS.speechMeta(data);
 											}
 										}, waitToReveal);

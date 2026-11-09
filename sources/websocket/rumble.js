@@ -40,6 +40,7 @@
         lastStreamId: '',
         lastStreamLive: null,
         lastViewerCount: null,
+        lastViewerCountAt: 0,
         lastFollowerCount: null,
         lastSubscriberCount: null,
         lastSocketState: '',
@@ -59,6 +60,7 @@
         sseEmoteCatalogRetryAfter: 0,
         sseFailedStreamId: '',
         sseLoggedConnected: false,
+        sseStartedAt: null,
         consecutiveErrors: 0
     };
     const websocketProxy = {
@@ -842,7 +844,7 @@
         };
     }
 
-    function combineLatestAndRecent(latest, recent, keyBuilder) {
+    function combineLatestAndRecent(latest, recent, keyBuilder, preserveOccurrences) {
         const output = [];
         const seen = new Set();
         const pushIfNew = function (entry) {
@@ -853,7 +855,14 @@
             seen.add(key);
             output.push(entry);
         };
-        (Array.isArray(recent) ? recent : []).forEach(pushIfNew);
+        (Array.isArray(recent) ? recent : []).forEach(function (entry) {
+            if (preserveOccurrences && entry) {
+                seen.add(keyBuilder(entry));
+                output.push(entry);
+            } else {
+                pushIfNew(entry);
+            }
+        });
         pushIfNew(latest);
         return output;
     }
@@ -914,6 +923,20 @@
         ].join('::');
     }
 
+    function toTimestampMs(value) {
+        if (typeof value !== "string" && typeof value !== "number") return null;
+        if (typeof value === "string") {
+            value = value.trim();
+            if (!value) return null;
+        }
+        var numeric = typeof value === "number" || /^[+-]?\d+(?:\.\d+)?$/.test(value);
+        var timestamp = numeric ? Number(value) : Date.parse(value);
+        // Incoming epoch numbers may be seconds or milliseconds; never parse them as date text.
+        if (numeric && Math.abs(timestamp) < 100000000000) timestamp *= 1000;
+        return Number.isFinite(timestamp) && Math.abs(timestamp) <= 8640000000000000
+            ? Math.trunc(timestamp) : null;
+    }
+
     function buildChatPayload(item, stream, snapshot) {
         const payload = buildBasePayload();
         const username = normalizeText(item && (item.username || item.user)) || 'Rumble User';
@@ -929,7 +952,7 @@
             apiType: snapshot && snapshot.type ? String(snapshot.type) : '',
             streamId: stream && stream.id ? String(stream.id) : '',
             streamTitle: stream && stream.title ? String(stream.title) : '',
-            createdAt: item && item.created_on ? String(item.created_on) : '',
+            createdAt: toTimestampMs(item && item.created_on),
             badges: Array.isArray(item && item.badges) ? item.badges.slice() : [],
             plainText: message.plainText
         };
@@ -954,8 +977,8 @@
             apiType: snapshot && snapshot.type ? String(snapshot.type) : '',
             streamId: stream && stream.id ? String(stream.id) : '',
             streamTitle: stream && stream.title ? String(stream.title) : '',
-            createdAt: item && item.created_on ? String(item.created_on) : '',
-            expiresOn: item && item.expires_on ? String(item.expires_on) : '',
+            createdAt: toTimestampMs(item && item.created_on),
+            expiresOn: toTimestampMs(item && item.expires_on),
             amount_cents: coerceInteger(item && item.amount_cents),
             amount_dollars: numberOrNull(item && item.amount_dollars),
             currency: 'USD',
@@ -975,7 +998,7 @@
         payload.meta = {
             source: 'live_stream_api',
             apiType: snapshot && snapshot.type ? String(snapshot.type) : '',
-            followedOn: item && item.followed_on ? String(item.followed_on) : ''
+            followedOn: toTimestampMs(item && item.followed_on)
         };
         payload.timestamp = payload.meta.followedOn;
         return payload;
@@ -993,7 +1016,7 @@
         payload.meta = {
             source: 'live_stream_api',
             apiType: snapshot && snapshot.type ? String(snapshot.type) : '',
-            subscribedOn: item && item.subscribed_on ? String(item.subscribed_on) : '',
+            subscribedOn: toTimestampMs(item && item.subscribed_on),
             amount_cents: coerceInteger(item && item.amount_cents),
             amount_dollars: numberOrNull(item && item.amount_dollars),
             currency: amountLabel ? 'USD' : ''
@@ -1089,7 +1112,7 @@
             streamId: normalizeText(streamId),
             messageId: normalizeText(item && item.id),
             requestId: normalizeText(eventPayload && eventPayload.request_id),
-            createdAt: normalizeText(item && item.time),
+            createdAt: toTimestampMs(item && item.time),
             userId: userId,
             userLink: normalizeText(user.link),
             isFollower: !!user.is_follower,
@@ -1114,7 +1137,9 @@
             if (!payload || !rememberEventId(key)) {
                 return;
             }
-            if (seedOnly) {
+            const oldSnapshotMessage = !state.cfg.replayHistory && eventPayload && eventPayload.type === 'init' &&
+                payload.timestamp !== null && state.sseStartedAt !== null && payload.timestamp < state.sseStartedAt;
+            if (seedOnly || oldSnapshotMessage) {
                 appendFeedEntry(payload, { seeded: true });
                 seeded += 1;
                 return;
@@ -1126,9 +1151,9 @@
         return { forwarded: forwarded, seeded: seeded };
     }
 
-    function processSseEvent(eventPayload, streamId) {
+    function processSseEvent(eventPayload, streamId, initialBatch) {
         const eventData = eventPayload && eventPayload.data ? eventPayload.data : {};
-        const seedOnly = eventPayload && eventPayload.type === 'init' && !state.cfg.replayHistory;
+        const seedOnly = initialBatch && eventPayload && eventPayload.type === 'init' && !state.cfg.replayHistory;
         let results;
         rememberSseUsers(eventData.users);
         results = processSseMessages(eventData.messages, streamId, eventPayload, seedOnly);
@@ -1298,7 +1323,7 @@
         }
     }
 
-    function collectSseEventsFromBuffer(buffer, includeInit, maxEvents) {
+    function collectSseEventsFromBuffer(buffer, maxEvents) {
         const events = [];
         let boundary;
         while ((boundary = findSseBoundary(buffer)) && events.length < maxEvents) {
@@ -1308,9 +1333,7 @@
             if (!parsed) {
                 continue;
             }
-            if (parsed.type === 'init' && !includeInit) {
-                continue;
-            }
+            // Reconnect snapshots can contain messages received between batches.
             events.push(parsed);
         }
         return { events: events, buffer: buffer };
@@ -1323,6 +1346,7 @@
         let timeoutId = null;
         let timedOut = false;
         let response;
+        let serverTime = null;
         let reader;
         let buffer = '';
         const decoder = new TextDecoder();
@@ -1349,9 +1373,10 @@
             if (!response.ok) {
                 throw new Error('HTTP ' + response.status);
             }
+            serverTime = toTimestampMs(response.headers.get('Date'));
             if (!response.body || typeof response.body.getReader !== 'function') {
                 const text = await response.text();
-                return collectSseEventsFromBuffer(text, includeInit, SSE_BATCH_MAX_EVENTS).events;
+                return { events: collectSseEventsFromBuffer(text, SSE_BATCH_MAX_EVENTS).events, serverTime: serverTime };
             }
             reader = response.body.getReader();
             while (events.length < SSE_BATCH_MAX_EVENTS) {
@@ -1368,13 +1393,13 @@
                     break;
                 }
                 buffer += decoder.decode(result.value, { stream: true });
-                const collected = collectSseEventsFromBuffer(buffer, includeInit, SSE_BATCH_MAX_EVENTS - events.length);
+                const collected = collectSseEventsFromBuffer(buffer, SSE_BATCH_MAX_EVENTS - events.length);
                 buffer = collected.buffer;
                 Array.prototype.push.apply(events, collected.events);
                 if (includeInit && events.length) {
                     break;
                 }
-                if (!includeInit && collected.events.length) {
+                if (!includeInit && collected.events.some(function (event) { return event.type !== 'init'; })) {
                     break;
                 }
             }
@@ -1390,7 +1415,7 @@
                 try { await reader.cancel(); } catch (error) {}
             }
         }
-        return events;
+        return { events: events, serverTime: serverTime };
     }
 
     function fetchSseBatch(streamId, includeInit) {
@@ -1415,7 +1440,7 @@
                             reject(new Error((response && response.error) || 'Rumble SSE background fetch failed'));
                             return;
                         }
-                        resolve(Array.isArray(response.events) ? response.events : []);
+                        resolve({ events: Array.isArray(response.events) ? response.events : [], serverTime: toTimestampMs(response.serverTime) });
                     });
                 } catch (error) {
                     reject(error);
@@ -1512,17 +1537,22 @@
     }
 
     function maybeEmitCounterEvent(eventName, count, trackerName) {
-        if (eventName === 'viewer_update' && !(state.settings.showviewercount || state.settings.hypemode)) {
+        const isViewerCount = eventName === 'viewer_update';
+        if (isViewerCount && (!state.isExtensionOn || !(state.settings.showviewercount || state.settings.hypemode))) {
             state[trackerName] = null;
             return;
         }
+        // Desktop counts need a source ID so startup and later updates share one entry.
+        if (isViewerCount && window.ninjafy && typeof window.__SSAPP_TAB_ID__ === 'undefined') return;
         if (!isFinite(count)) {
             return;
         }
-        if (state[trackerName] === count) {
+        // Keep a steady count visible in docks, which expire updates after 130 seconds.
+        if (state[trackerName] === count && (!isViewerCount || Date.now() - state.lastViewerCountAt < 60000)) {
             return;
         }
         state[trackerName] = count;
+        if (isViewerCount) state.lastViewerCountAt = Date.now();
         pushMessage({
             type: 'rumble',
             event: eventName,
@@ -1585,6 +1615,7 @@
         state.sseEmoteCatalogFailedStreamId = '';
         state.sseEmoteCatalogRetryAfter = 0;
         state.sseLoggedConnected = false;
+        state.sseStartedAt = null;
         if (state.sseTimer) {
             clearTimeout(state.sseTimer);
             state.sseTimer = null;
@@ -1605,12 +1636,17 @@
         if (!state.active || !state.sseActive || token !== state.sseToken || state.sseStreamId !== streamId) {
             return;
         }
-        fetchSseBatch(streamId, includeInit).then(function (events) {
+        const requestedAt = Math.floor(Date.now() / 1000) * 1000;
+        fetchSseBatch(streamId, includeInit).then(function (batch) {
             if (!state.active || !state.sseActive || token !== state.sseToken || state.sseStreamId !== streamId) {
                 return;
             }
+            if (state.sseStartedAt === null) {
+                // Use Rumble's clock so a fast local clock cannot discard new snapshot messages.
+                state.sseStartedAt = batch.serverTime || requestedAt;
+            }
             return ensureRumbleEmoteCatalog(streamId).then(function () {
-                return events;
+                return batch.events;
             });
         }).then(function (events) {
             if (!state.active || !state.sseActive || token !== state.sseToken || state.sseStreamId !== streamId) {
@@ -1621,7 +1657,7 @@
                 log('Connected to Rumble SSE chat for avatars.', 'success');
             }
             (Array.isArray(events) ? events : []).forEach(function (eventPayload) {
-                processSseEvent(eventPayload, streamId);
+                processSseEvent(eventPayload, streamId, includeInit);
             });
             scheduleSseLoop(token, streamId, false, 250);
         }).catch(function (error) {
@@ -1694,7 +1730,7 @@
         const viewers = stream ? coerceInteger(stream.watching_now) : null;
         const recentMessages = !useSseChat && stream && stream.chat ? combineLatestAndRecent(stream.chat.latest_message, stream.chat.recent_messages, function (item) {
             return buildChatKey(stream && stream.id ? stream.id : '', item);
-        }) : [];
+        }, true) : [];
         const recentRants = stream && stream.chat ? combineLatestAndRecent(stream.chat.latest_rant, stream.chat.recent_rants, function (item) {
             return buildRantKey(stream && stream.id ? stream.id : '', item);
         }) : [];
@@ -1762,9 +1798,14 @@
                 }
             });
         });
+        // The API has no chat IDs and timestamps can share a second. Keep each row
+        // in a snapshot, while recognizing the same occurrences on later polls.
+        const chatOccurrences = Object.create(null);
         sortByDate(recentMessages, 'created_on').forEach(function (item) {
+            const key = buildChatKey(stream && stream.id ? stream.id : '', item);
+            chatOccurrences[key] = (chatOccurrences[key] || 0) + 1;
             entries.push({
-                key: buildChatKey(stream && stream.id ? stream.id : '', item),
+                key: key + '::' + chatOccurrences[key],
                 build: function () {
                     return buildChatPayload(item, stream, snapshot);
                 }
@@ -2046,10 +2087,23 @@
         await pollOnce(false);
     }
 
+    function applySourceSettings(request) {
+        if (!request || typeof request !== 'object') return;
+        const wasEnabled = state.isExtensionOn && (state.settings.showviewercount || state.settings.hypemode);
+        if ('settings' in request) state.settings = request.settings || {};
+        if ('state' in request) state.isExtensionOn = !!request.state;
+        if (!wasEnabled && state.isExtensionOn && (state.settings.showviewercount || state.settings.hypemode)) {
+            state.lastViewerCount = null;
+        }
+    }
+
     function bridge() {
-        if (extAvailable()) {
+        const appBridge = window.ninjafy;
+        const useAppBridge = appBridge && typeof appBridge.sendMessage === 'function' &&
+            typeof appBridge.exposeDoSomethingInWebApp === 'function';
+        if (useAppBridge || extAvailable()) {
             try {
-                chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+                const onMessage = function (request, sender, sendResponse) {
                     try {
                         if (request === 'getSource') {
                             // Rumble websocket mode is read-only, so keep it out of relay targets.
@@ -2061,13 +2115,8 @@
                             return;
                         }
                         if (request && typeof request === 'object') {
-                            if ('settings' in request) {
-                                state.settings = request.settings || {};
-                                sendResponse(true);
-                                return;
-                            }
-                            if ('state' in request) {
-                                state.isExtensionOn = !!request.state;
+                            if ('settings' in request || 'state' in request) {
+                                applySourceSettings(request);
                                 sendResponse(true);
                                 return;
                             }
@@ -2081,24 +2130,22 @@
                         log('Extension bridge error: ' + ((error && error.message) || error), 'error');
                     }
                     sendResponse(false);
-                });
+                };
+                if (useAppBridge) appBridge.exposeDoSomethingInWebApp(onMessage);
+                else chrome.runtime.onMessage.addListener(onMessage);
             } catch (error) {
                 log('Failed wiring extension bridge: ' + ((error && error.message) || error), 'warn');
             }
 
             try {
-                chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
-                    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
+                const onSettings = function (response) {
+                    if (!useAppBridge && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
                         return;
                     }
-                    response = response || {};
-                    if ('settings' in response) {
-                        state.settings = response.settings || {};
-                    }
-                    if ('state' in response) {
-                        state.isExtensionOn = !!response.state;
-                    }
-                });
+                    applySourceSettings(response);
+                };
+                if (useAppBridge) appBridge.sendMessage(null, { getSettings: true }, onSettings, window.__SSAPP_TAB_ID__);
+                else chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, onSettings);
             } catch (error) {}
         }
 

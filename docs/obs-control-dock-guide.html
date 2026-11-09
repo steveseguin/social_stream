@@ -57,10 +57,10 @@
 				<h2 id="read-section-1">Quick setup</h2>
 				<ol class="guide-steps">
 					<li>In Social Stream Ninja, open <strong>Global settings and tools</strong> &rarr; <strong>Mechanics</strong>.</li>
-					<li>Enable <strong>remote API control of extension</strong>. Keep Social Stream Ninja active during the stream.</li>
-					<li>Copy the Session ID shown in Social Stream Ninja.</li>
+					<li>Open <strong>OBS Control Dock</strong> and copy its link. Keep Social Stream Ninja active during the stream.</li>
+					<li>The copied link includes your session, password, and connection settings.</li>
 					<li>In OBS, open <strong>Docks</strong> &rarr; <strong>Custom Browser Docks</strong>.</li>
-					<li>Name the dock <strong>Social Stream Controls</strong> and use this URL:</li>
+					<li>Name the dock <strong>Social Stream Controls</strong> and paste the copied link. For a session without a password or server settings, the URL is:</li>
 				</ol>
 				<pre><code>https://socialstream.ninja/obs-control-dock.html?session=YOUR_SESSION_ID</code></pre>
 				<ol class="guide-steps" start="6">
@@ -72,17 +72,9 @@
 
 			<div class="guide-card">
 				<h2 id="read-section-2">Which server settings are required?</h2>
-				<table class="guide-table guide-table-stack">
-					<thead><tr><th>Setting</th><th>For this control dock</th><th>Purpose</th></tr></thead>
-					<tbody>
-						<tr><td data-label="Setting">remote API control of extension</td><td data-label="For this control dock"><strong>Required</strong></td><td data-label="Purpose">Lets the control dock send commands to the Social Stream app or extension on channel 1.</td></tr>
-						<tr><td data-label="Setting">Enable Dock to use and publish via API server</td><td data-label="For this control dock">Not required</td><td data-label="Purpose">Optional direct server transport for the Streaming Chat Dock.</td></tr>
-						<tr><td data-label="Setting">Send chat messages to API server</td><td data-label="For this control dock">Not required</td><td data-label="Purpose">Used when an external program needs to receive captured chat on channel 4.</td></tr>
-						<tr><td data-label="Setting">Dock sends its commands to Extension via server</td><td data-label="For this control dock">Not required</td><td data-label="Purpose">Used when the Streaming Chat Dock itself must send commands back through the server.</td></tr>
-					</tbody>
-				</table>
-				<div class="guide-note"><strong><code>&amp;server</code> is not required on the control-dock or Credits URLs.</strong> The control dock already opens its own WebSocket control connection. OBS's <strong>WebSocket Server Settings</strong> are unrelated and can remain off.</div>
-				<p>If you intentionally use direct API transport for <code>dock.html</code>, use the generated Dock link after enabling its server setting, or add <code>&amp;server</code> to that Dock URL. This is optional and does not change how Credits commands work.</p>
+                <p>The generated control link follows Social Stream's connection settings. Normal links use P2P. When <strong>Dock sends its commands to Extension via server</strong> is enabled, controls use that server connection.</p>
+                <p>For a manually configured API connection, add <code>&amp;server</code> (or <code>&amp;server=wss://YOUR_SERVER</code>) and enable <strong>remote API control of extension</strong>.</p>
+                <div class="guide-note">OBS's <strong>WebSocket Server Settings</strong> are unrelated and can remain off.</div>
 			</div>
 
 			<div class="guide-card">
@@ -113,7 +105,7 @@
 			<div class="guide-card" id="commerce">
 				<h2 id="read-section-5">Products &amp; support links</h2>
 				<p>In Social Stream, open Monetization, save and enable your products, then choose <strong>Open OBS control dock</strong>. Copy that private control URL into OBS's Custom Browser Docks. For a products-only dock, use <code>obs-control-dock.html?session=YOUR_SESSION_ID&amp;commerce</code>.</p>
-				<p>Keep Social Stream on and enable <strong>remote API control of extension</strong> as described above. Add the separate monetization overlay URL as an OBS Browser Source for viewers. The control dock is for you; never share its session URL with viewers.</p>
+				<p>Keep Social Stream on and use the generated Product Controls link. Add the separate monetization overlay URL as an OBS Browser Source for viewers. The control dock is for you; never share its session URL with viewers.</p>
 				<a href="images/monetization/obs-native-product-controls.png"><img src="images/monetization/obs-native-product-controls.png" alt="OBS product controls with a saved product selector, duration, Show, Next, Hide products, Resume schedule, and selected product state" style="display:block;width:100%;max-width:390px;height:auto;margin:16px auto;"></a>
 				<ul class="guide-list">
 					<li><strong>Show:</strong> select a saved product and pin it. <strong>Next:</strong> advance from the current product.</li>
@@ -148,7 +140,7 @@ https://io.socialstream.ninja/SESSION_ID/creditsReset</code></pre>
 				<h2 id="read-section-8">Troubleshooting</h2>
 				<ul class="guide-list">
 					<li><strong>Session needed:</strong> use the exact Session ID from Social Stream, without the word <code>session=</code>.</li>
-					<li><strong>Disconnected:</strong> enable remote API control, confirm Social Stream is active, and reopen the dock after changing its URL.</li>
+					<li><strong>Disconnected:</strong> confirm Social Stream is active and reopen the generated control link after changing connection settings.</li>
 					<li><strong>Credits says no source accepted the command:</strong> reveal the ending scene, wait for its Browser Source to load, then retry.</li>
 					<li><strong>Test works but Start is empty:</strong> Test uses built-in names. Select Background collection before the stream and confirm normal chat sources are capturing.</li>
 					<li><strong>Featured Chat button has no visible effect:</strong> confirm the Streaming Chat Dock and featured overlay use the same session and are loaded.</li>

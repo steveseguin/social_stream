@@ -325,7 +325,15 @@
         </div>
     </div>
 
+    <script src="../libs/objects.js"></script>
+    <script src="../shared/utils/chatHtml.js"></script>
     <script>
+        function escapeChatText(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
+            });
+        }
+
         const App = {
             eventSource: null,
             config: {
@@ -481,27 +489,31 @@
                 
                 // Build message HTML
                 const avatar = message.chatimg || this.getDefaultAvatar(message.type);
-                const platform = message.type || 'unknown';
-                const username = message.chatname || 'Anonymous';
-                const messageContent = message.chatmessage || '';
+                const platform = escapeChatText(message.type || 'unknown');
+                const username = escapeChatText(message.chatname || 'Anonymous');
+                const body = message.chatmessage || '';
+                const messageContent = message.textonly || !window.SocialStreamChatHTML ?
+                    escapeChatText(body) : SocialStreamChatHTML.sanitize(body);
                 
                 let donationHtml = '';
                 if (message.hasDonation || message.donation) {
-                    donationHtml = `<span class="donation-amount">${message.hasDonation || message.donation}</span>`;
+                    donationHtml = `<span class="donation-amount">${escapeChatText(message.hasDonation || message.donation)}</span>`;
                 }
                 
                 messageEl.innerHTML = `
                     <div class="message-header">
-                        <div class="user-avatar" style="background-image: url('${avatar}')"></div>
+                        <div class="user-avatar"></div>
                         <div class="user-name">
                             ${username}
-                            <img src="./sources/images/${platform}.png" alt="${platform}" class="platform-badge" onerror="this.style.display='none'">
+                            <img src="../sources/images/${platform}.png" alt="${platform}" class="platform-badge" onerror="this.style.display='none'">
                             ${donationHtml}
                         </div>
                     </div>
                     <div class="message-content">${messageContent}</div>
                 `;
                 
+                messageEl.querySelector('.user-avatar').style.backgroundImage = 'url(' + JSON.stringify(String(avatar)) + ')';
+
                 // Add to container
                 this.elements.messagesContainer.prepend(messageEl);
                 
@@ -517,7 +529,7 @@
                     case 'youtube':
                         return 'https://yt3.googleusercontent.com/ytc/APkrFKaqca-xQcJz5ONCA5I5B5jc3u7asIAFMwIoL4Ns=s176-c-k-c0x00ffffff-no-rj';
                     default:
-                        return './sources/images/unknown.png';
+                        return '../sources/images/unknown.png';
                 }
             },
             

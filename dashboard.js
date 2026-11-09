@@ -199,7 +199,7 @@ function updatePeerList() {
     }
     
     // Group peers by label
-    const peersByLabel = {};
+    const peersByLabel = Object.create(null);
     Object.entries(connectedPeers).forEach(([uuid, label]) => {
         const peerLabel = label || dashboardTranslation('unlabeled-peer', 'Unlabeled');
         if (!peersByLabel[peerLabel]) {
@@ -209,20 +209,22 @@ function updatePeerList() {
         peersByLabel[peerLabel].push(uuid.substring(0, 8) + '...');
     });
     
-    // Create HTML for the peer list
-    let html = `<strong>${dashboardTranslation('connected-peers-label', 'Connected Peers:')}</strong><br>`;
-    
+    peerListContent.textContent = '';
+    const heading = document.createElement('strong');
+    heading.textContent = dashboardTranslation('connected-peers-label', 'Connected Peers:');
+    peerListContent.appendChild(heading);
+    peerListContent.appendChild(document.createElement('br'));
+
     Object.entries(peersByLabel).forEach(([label, uuids]) => {
-        html += `<span style="color: var(--primary-color);">${label}</span> (${uuids.length}): `;
-        if (uuids.length <= 3) {
-            html += uuids.join(', ');
-        } else {
-            html += `${uuids.slice(0, 2).join(', ')} ${dashboardTranslation('and-more-peer-count', 'and {count} more', { count: uuids.length - 2 })}`;
-        }
-        html += '<br>';
+        const name = document.createElement('span');
+        name.style.color = 'var(--primary-color)';
+        name.textContent = label;
+        peerListContent.appendChild(name);
+        const peers = uuids.length <= 3 ? uuids.join(', ') :
+            uuids.slice(0, 2).join(', ') + ' ' + dashboardTranslation('and-more-peer-count', 'and {count} more', { count: uuids.length - 2 });
+        peerListContent.appendChild(document.createTextNode(' (' + uuids.length + '): ' + peers));
+        peerListContent.appendChild(document.createElement('br'));
     });
-    
-    peerListContent.innerHTML = html;
 }
 
 // Set up periodically updated data

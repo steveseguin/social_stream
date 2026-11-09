@@ -13,6 +13,8 @@
 	const REMOTE_CONTROL_ROLE = "social-stream-host";
 	const REMOTE_CONTROL_MAX_REQUEST_LENGTH = 32768;
 	const REMOTE_CONTROL_MAX_CORRELATION_LENGTH = 256;
+	// Under the session relay's frame limit, which closes the sender's connection above about 204,800 characters.
+	const BREAKS_MAX_SEALED_LENGTH = 190000;
 
 	const SSAPP_ACTIONS = {
 		getSources: ["sourceControls", "list"],
@@ -71,6 +73,12 @@
 	};
 
 	const SSN_ACTIONS = {
+		breaksShow: true,
+		breaksHide: true,
+		breaksNextSpot: true,
+		breaksPreviousSpot: true,
+		breaksClearHighlight: true,
+
 		getWorkflowTriggers: true,
 		triggerWorkflow: true,
         getCommerceState: true,
@@ -167,6 +175,11 @@
 		getgiveawaystate: { owner: "background", phase: 2, category: "giveaway", label: "Get giveaway state", risk: "read-only", callback: "guaranteed" },
 
         getCommerceState: { owner: "background", phase: 2, category: "commerce", label: "Get product display state", risk: "read-only", callback: "guaranteed" },
+		breaksShow: { owner: "background", phase: 2, category: "breaks", label: "Show break overlay", risk: "mutating", callback: "guaranteed" },
+		breaksHide: { owner: "background", phase: 2, category: "breaks", label: "Hide break overlay", risk: "mutating", callback: "guaranteed" },
+		breaksNextSpot: { owner: "background", phase: 2, category: "breaks", label: "Highlight next spot", risk: "mutating", callback: "guaranteed" },
+		breaksPreviousSpot: { owner: "background", phase: 2, category: "breaks", label: "Highlight previous spot", risk: "mutating", callback: "guaranteed" },
+		breaksClearHighlight: { owner: "background", phase: 2, category: "breaks", label: "Clear break highlight", risk: "mutating", callback: "guaranteed" },
 		commerceShow: { owner: "background", phase: 2, category: "commerce", label: "Show product", risk: "mutating", callback: "guaranteed" },
 		commerceNext: { owner: "background", phase: 2, category: "commerce", label: "Next product", risk: "mutating", callback: "guaranteed" },
 		commerceHide: { owner: "background", phase: 2, category: "commerce", label: "Hide products", risk: "mutating", callback: "guaranteed" },
@@ -645,7 +658,8 @@
 			return { ok: false, code: "INVALID_CORRELATION_ID", message: "The correlation ID is too long." };
 		}
 		try {
-			if (JSON.stringify(request).length > REMOTE_CONTROL_MAX_REQUEST_LENGTH) {
+			const sealedBreak = request.action === "commerceControl" && request.value && request.value.command === "breakSecure";
+			if (JSON.stringify(request).length > (sealedBreak ? BREAKS_MAX_SEALED_LENGTH + 1024 : REMOTE_CONTROL_MAX_REQUEST_LENGTH)) {
 				return { ok: false, code: "PAYLOAD_TOO_LARGE", message: "The remote-control request is too large." };
 			}
 		} catch (error) {
@@ -666,6 +680,12 @@
         if (Array.isArray(value) || (value !== undefined && value !== null && typeof value === "boolean")) return { ok: false, message: "Invalid product control value." };
         const options = value && typeof value === "object" ? value : {};
         const command = { commerceShow: "show", commerceNext: "next", commerceHide: "hide", commerceResume: "resume" }[action] || options.command || request.command;
+        // Breaks only crosses the session relay encrypted. Plain break commands fall through and are refused below.
+        if (action === 'commerceControl' && command === 'breakSecure') {
+            const data = options.data !== undefined ? options.data : request.data;
+            if (!data || typeof data !== 'object' || Array.isArray(data) || typeof data.iv !== 'string' || typeof data.box !== 'string' || data.box.length > BREAKS_MAX_SEALED_LENGTH) return {ok:false, message:'Open Breaks from its private link.'};
+            return {ok:true, command:command, data:{iv:data.iv, box:data.box}};
+        }
         if (action === 'commerceControl' && ['boardSave', 'boardSpot', 'boardVisibility', 'saleAdd', 'saleRemove', 'salesClear', 'salesSettings'].indexOf(command) !== -1) {
             const data = options.data !== undefined ? options.data : request.data;
             if (!data || typeof data !== 'object' || Array.isArray(data) || JSON.stringify(data).length > 16000) return {ok:false, message:'Use a commerce board data object.'};

@@ -1,5 +1,13 @@
 # SSApp Control API
 
+## Breaks workspace
+
+With SSApp 0.4.48 and the updated Social Stream sources, the operator opens Breaks from Monetization. That private link carries a key in its URL fragment: never ask for it, log it, or put it in a viewer link. The viewer URL is `commerce-board.html?view=breaks&session=SESSION`, and `meta.monetization.breaks` in `monetization_update` holds the public board.
+
+The session API cannot read or edit private Breaks records, because the session ID also appears in overlay links and the relay repeats traffic to everyone in the session. Private commands such as `breakSpot` remain refused. With updated SSN sources, advertised `breaksShow`, `breaksHide`, `breaksNextSpot`, `breaksPreviousSpot`, and `breaksClearHighlight` commands control only the display through the existing remote-control transport. They return only visibility, highlight ID and stage. `breakSecure` is encrypted with the private link's key and is only for the workspace. On the host, Event Flow's Commerce control action can use `breakHighlight`, `breakStage`, and `breakSettings` with `visible` only, because session holders can start flows. Those commands may use `boardId: "active"`.
+
+Breaks stores assignments, bounded archives, presets, and local stock independently of the older commerce board. eBay listings shown in Stock are cached read-only data; copying one does not change eBay inventory. Whatnot/TikTok/eBay Live assignments and payment flags remain host-confirmed. Stock used on a break is recorded on that break and can be returned; it never changes eBay or other platforms. Notes, payment flags, costs, stock, stock records, undo, and history must never be forwarded to audience overlays. The CSV is a private operator export and contains notes. Read the [Breaks guide](https://socialstream.ninja/docs/breaks.html) for the workflow and commands.
+
 ## Connection
 
 - Origin: `http://127.0.0.1:17777` by default.

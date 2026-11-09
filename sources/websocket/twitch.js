@@ -1841,8 +1841,8 @@ function ensureClientFactory() {
 			reason: details.reason || '',
 			durationSeconds,
 			permanent,
-			bannedAt: details.bannedAt || '',
-			endsAt: details.endsAt || ''
+			bannedAt: toTimestampMs(details.bannedAt),
+			endsAt: toTimestampMs(details.endsAt)
 		};
 
 		if (login && !meta.avatarUrl) {
@@ -3864,7 +3864,7 @@ async function ensureChatClientInstance() {
 			data.chatimg = normalizedPayload?.chatimg || "";
 		}
 		if (normalizedPayload?.timestamp) {
-			data.timestamp = normalizedPayload.timestamp;
+			data.timestamp = toTimestampMs(normalizedPayload.timestamp);
 		}
 		data.hasDonation = hasDonation;
 		if (hasDonation) {
@@ -4821,6 +4821,20 @@ async function cleanupCurrentConnection() {
 			.filter(Boolean);
 	}
 
+	function toTimestampMs(value) {
+		if (typeof value !== "string" && typeof value !== "number") return null;
+		if (typeof value === "string") {
+			value = value.trim();
+			if (!value) return null;
+		}
+		var numeric = typeof value === "number" || /^[+-]?\d+(?:\.\d+)?$/.test(value);
+		var timestamp = numeric ? Number(value) : Date.parse(value);
+		// Incoming epoch numbers may be seconds or milliseconds; never parse them as date text.
+		if (numeric && Math.abs(timestamp) < 100000000000) timestamp *= 1000;
+		return Number.isFinite(timestamp) && Math.abs(timestamp) <= 8640000000000000
+			? Math.trunc(timestamp) : null;
+	}
+
 	function buildHypeTrainMeta(event, eventSubType) {
 		const phase = eventSubType === 'channel.hype_train.begin'
 			? 'begin'
@@ -4840,10 +4854,10 @@ async function cleanupCurrentConnection() {
 			topContributions: normalizeHypeTrainContributions(event.top_contributions),
 			lastContribution: normalizeHypeTrainContribution(event.last_contribution),
 			sharedTrainParticipants: Array.isArray(event.shared_train_participants) ? event.shared_train_participants : [],
-			startedAt: event.started_at || '',
-			expiresAt: event.expires_at || '',
-			endedAt: event.ended_at || '',
-			cooldownEndsAt: event.cooldown_ends_at || '',
+			startedAt: toTimestampMs(event.started_at),
+			expiresAt: toTimestampMs(event.expires_at),
+			endedAt: toTimestampMs(event.ended_at),
+			cooldownEndsAt: toTimestampMs(event.cooldown_ends_at),
 			isSharedTrain: event.is_shared_train === true,
 			trainType: event.type || 'regular',
 			allTimeHighLevel: normalizeHypeTrainNumber(event.all_time_high_level),
@@ -4978,8 +4992,8 @@ async function cleanupCurrentConnection() {
 				chatmessage: followMessage,
 				chatname: event.user_name,
 				userid: event.user_id,
-				timestamp: event.followed_at,
-				meta: { userId: event.user_id, followedAt: event.followed_at },
+				timestamp: toTimestampMs(event.followed_at),
+				meta: { userId: event.user_id, followedAt: toTimestampMs(event.followed_at) },
 				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				textonly: settings.textonlymode || false
 			});
@@ -5091,7 +5105,7 @@ async function cleanupCurrentConnection() {
 					chatname: event.user_name,
 					userid: event.user_id,
 					chatmessage: rewardMessage,
-					timestamp: event.redeemed_at,
+					timestamp: toTimestampMs(event.redeemed_at),
 					meta: {
 						userId: event.user_id,
 						rewardId: event.reward.id,
@@ -5155,7 +5169,7 @@ async function cleanupCurrentConnection() {
 				break;
 
 			case 'stream.online':
-				pushMessage({ type: 'twitch', event: 'stream_online', meta: { startedAt: event.started_at } });
+				pushMessage({ type: 'twitch', event: 'stream_online', meta: { startedAt: toTimestampMs(event.started_at) } });
 				addEvent('Stream Online');
 				break;
 			case 'stream.offline':
@@ -5837,11 +5851,23 @@ async function cleanupCurrentConnection() {
               lastAt = now;
             }
           };
+          var reportRequestError = function(msg){
+            // An API request can fail while joined chat continues receiving messages.
+            // EventSub alone is not evidence that the chat connection is healthy.
+            if (window.websocket && window.websocket.readyState === 1) {
+              console.warn('Twitch API request failed while chat remains connected:', msg);
+            } else {
+              emit('error', msg);
+            }
+          };
           window.fetch = async function(input, init){
+            var url = (typeof input === 'string') ? input : (input && (input.url || input.href)) || '';
+            var host = '';
+            try { host = new URL(url, window.location.href).hostname; } catch(_){}
+            var isTwitchRequest = host === 'api.twitch.tv' || host === 'id.twitch.tv' || host === 'gql.twitch.tv';
             try {
               var res = await _origFetch(input, init);
-              var url = (typeof input === 'string') ? input : (input && input.url) || '';
-              if (url.indexOf('api.twitch.tv') !== -1 || url.indexOf('id.twitch.tv') !== -1 || url.indexOf('gql.twitch.tv') !== -1) {
+              if (isTwitchRequest) {
                 if (!res.ok) {
                   var msg = 'Twitch API ' + res.status;
                   try {
@@ -5856,24 +5882,24 @@ async function cleanupCurrentConnection() {
                   // - OAuth (id.twitch.tv) 401 => auth expired / sign-in required
                   // - Optional Helix/EventSub 401/403 => log only; chat can still be connected
                   // - Other Helix/GQL 401/403 => non-scary optional feature warning
-                  // - Otherwise, generic error
-                  var isOAuth = url.indexOf('id.twitch.tv') !== -1;
-                  var isHelixOrGql = url.indexOf('api.twitch.tv') !== -1 || url.indexOf('gql.twitch.tv') !== -1;
+                  // - Other failures must not override a healthy chat connection
+                  var isOAuth = host === 'id.twitch.tv';
+                  var isHelixOrGql = host === 'api.twitch.tv' || host === 'gql.twitch.tv';
                   var isEventSubSubscription = url.indexOf('api.twitch.tv/helix/eventsub/subscriptions') !== -1;
                   if (isOAuth && res.status === 401) {
                     __tw_maybeNotifySigninRequired('Twitch auth expired', { ignoreAccessToken: true });
                   } else if (isEventSubSubscription && (res.status === 401 || res.status === 403)) {
                     console.warn('Optional Twitch EventSub feature unavailable:', msg);
                   } else if (isHelixOrGql && (res.status === 401 || res.status === 403)) {
-                    emit('warn', 'Optional Twitch API feature unavailable');
+                    console.warn('Optional Twitch API feature unavailable:', msg);
                   } else {
-                    emit('error', msg);
+                    reportRequestError(msg);
                   }
                 }
               }
               return res;
             } catch(e) {
-              emit('error', e && e.message ? e.message : 'Network error');
+              if (isTwitchRequest) reportRequestError(e && e.message ? e.message : 'Network error');
               throw e;
             }
           };

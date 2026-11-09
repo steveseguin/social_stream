@@ -16,11 +16,225 @@
 		throneSourceKey = '',
 		throneStatus = 'Disabled';
     var auctionDraft = null;
+    var breakAuctionTracker = Object.create(null);
+    function isBreakCommand(command) { return typeof SSNBreaks !== 'undefined' && SSNBreaks.commands.indexOf(command) !== -1; }
+    async function runBreakCommand(command, data) {
+        var sellerResult;
+        if (command === 'breakShowGet' && (data.export || data.csv || data.packing)) {
+            var saved = SSNBreaks.normalize(privateState.breaks);
+            if (data.revision !== saved.revision) throw new Error('Show changed during export. Try again.');
+            var show = saved.shows.filter(function (v) {
+                return v.id === data.showId;
+            })[0];
+            if (!show) throw new Error('Choose a show first.');
+            var boards = (saved.active ? [saved.active] : []).concat(saved.history).filter(function (b) {
+                return b.showId === show.id;
+            });
+            var content;
+            if (data.packing) content = JSON.stringify(SSNBreaks.packing(saved, data));
+            else if (data.csv) {
+                function cell(v) {
+                    v = String(v == null ? '' : v);
+                    if (/^[=+@\-\t\r]/.test(v)) v = "'" + v;
+                    return '"' + v.replace(/"/g, '""') + '"';
+                }
+                var rows = [
+                    [
+                        'Show',
+                        'Platform',
+                        'Buyer',
+                        'Break / prize',
+                        'Spot',
+                        'Order reference',
+                        'Payment',
+                        'Fulfillment',
+                        'Recorded pulls'
+                    ]
+                ];
+                boards.forEach(function (b) {
+                    b.spots.forEach(function (p) {
+                        if (p.buyer)
+                            rows.push([
+                                show.title,
+                                p.platform || b.platform,
+                                p.buyer,
+                                b.title,
+                                p.label,
+                                p.orderRef,
+                                p.payment,
+                                p.fulfillment,
+                                p.hits.join('; ') || p.result
+                            ]);
+                    });
+                });
+                show.prizes.forEach(function (p) {
+                    rows.push([show.title, p.platform, p.buyer, p.name, '', p.orderRef, 'Giveaway', p.fulfillment, '']);
+                });
+                content = rows
+                    .map(function (row) {
+                        return row.map(cell).join(',');
+                    })
+                    .join('\r\n');
+            } else content = JSON.stringify({ version: 1, show: show, breaks: boards }, null, 2);
+            var offset = Number(data.offset) || 0;
+            if (!Number.isSafeInteger(offset) || offset < 0 || offset > content.length)
+                throw new Error('Invalid export position.');
+            return {
+                commerceState: {
+                    exportChunk: content.slice(offset, offset + 40000),
+                    total: content.length,
+                    revision: saved.revision
+                }
+            };
+        }
+        if (command === 'breakShowGet')
+            return {
+                commerceState: {
+                    breaks: SSNBreaks.controlState(privateState.breaks),
+                    showResult: SSNBreaks.packing(privateState.breaks, data),
+                    nativePrinter: !!(window.ninjafy && window.ninjafy.printThermal)
+                }
+            };
+        if (command === 'breakGiveawayResults') {
+            var rounds = await (await getGiveawayHost()).history(),
+                winners = [];
+            rounds
+                .sort(function (a, b) {
+                    return b.updatedAt - a.updatedAt;
+                })
+                .forEach(function (r) {
+                    (r.winners || []).forEach(function (w, i) {
+                        winners.push({ receipt: r.roundId + ':' + i, name: w.name, platform: w.platform, round: r.giveawayId });
+                    });
+                });
+            return {
+                commerceState: { breaks: SSNBreaks.controlState(privateState.breaks), giveawayResults: winners.slice(0, 100) }
+            };
+        }
+        if (command === 'breakPrint') {
+            if (!window.ninjafy || !window.ninjafy.printThermal)
+                throw new Error('Use the workspace Print button to open your browser print dialog.');
+            if (!data || !/^[a-f0-9]{32}$/.test(data.jobId || ''))
+                throw new Error('Open a fresh packing slip before printing.');
+            var printState = SSNBreaks.normalize(privateState.breaks);
+            if (data.revision !== printState.revision) throw new Error('Packing changed. Refresh the slip before printing.');
+            if (printState.printJobs.indexOf(data.jobId) !== -1)
+                throw new Error('This job was already submitted. Check the printer before printing another copy.');
+            var html = SSNBreaks.slip(printState, data),
+                previousPrintState = privateState.breaks;
+            printState.printJobs.push(data.jobId);
+            printState.printJobs = printState.printJobs.slice(-50);
+            printState.revision++;
+            privateState.breaks = printState;
+            try {
+                await store();
+            } catch (error) {
+                privateState.breaks = previousPrintState;
+                throw error;
+            }
+            var printed = await printThermal(html);
+            if (!printed || !printed.success)
+                throw new Error((printed && printed.error) || 'Print result unknown. Check the printer before trying again.');
+            return {
+                commerceState: {
+                    breaks: SSNBreaks.controlState(privateState.breaks),
+                    printResult: 'Sent to printer. Check the printed slip.'
+                }
+            };
+        }
+        if (command === 'breakEbay') {
+            sellerResult = await ebay.seller(data || {});
+            data = {};
+        } else if (command !== 'breakGet') {
+            var previousBreaks = privateState.breaks;
+            if (command === 'breakStock' && data && data.ebayId) {
+                var oldStock = (previousBreaks && previousBreaks.stock || []).filter(function (item) { return item.id === data.id; })[0];
+                if (!oldStock || oldStock.ebayId !== data.ebayId || oldStock.ebayEnvironment !== data.ebayEnvironment || (oldStock.ebayVariant || '') !== (data.ebayVariant || '')) {
+                    var savedListings = ebay.stockSnapshot();
+                    if (savedListings.environment !== data.ebayEnvironment || !savedListings.items.some(function (item) { return item.id === data.ebayId && (item.variant || '') === (data.ebayVariant || ''); }))
+                        throw new Error('This listing is no longer in the connected eBay list. Refresh and choose a listing again.');
+                }
+            }
+            privateState.breaks = SSNBreaks.apply(previousBreaks, command, data);
+            try { await store(); } catch (error) { privateState.breaks = previousBreaks; throw error; }
+            if (command === 'breakCreate' || command === 'breakQueueStart' || command === 'breakArchive' || command === 'breakAuctionSettings') breakAuctionTracker = Object.create(null);
+            broadcast();
+            // Optional local flow signals contain only the already-public break title.
+            // Run after committing, outside the commerce queue, so flow actions cannot deadlock it.
+            var current=privateState.breaks.active, previous=previousBreaks && previousBreaks.active;
+            var event=current && command==='breakStage' && (!previous || previous.stage!==current.stage) ?
+                current.stage==='breaking'?'break_started':current.stage==='finished'?'break_finished':'' : '';
+            if(event && window.eventFlowSystem) {
+                var flowEvent={type:'socialstream',platform:'socialstream',event:event,chatname:'Breaks',chatmessage:current.title,textonly:true};
+                setTimeout(function(){Promise.resolve(window.eventFlowSystem.processMessage(flowEvent)).catch(function(error){console.warn('Break saved; flow failed',error);});},0);
+            }
+        }
+        var archiveOnly = command === 'breakGet' && data && data.archiveOnly === true;
+        var breakState = SSNBreaks.controlState(privateState.breaks, Object.assign({}, data, {archiveOnly:!!archiveOnly}));
+        if (breakState.unchanged) return {commerceState:{unchanged:true, hostOn:!!isExtensionOn}};
+        if (archiveOnly) return {commerceState:{breaks:breakState, hostOn:!!isExtensionOn}};
+        var listings = ebay.stockSnapshot();
+        // The workspace only needs stock draft fields, not product artwork or listing URLs.
+        var ebayStock = {status:listings.status, enabled:cfg().ebay.enabled, environment:listings.environment, sellerSupported:listings.sellerSupported, sellerScopes:listings.sellerScopes, notifications:listings.notifications, items:listings.items.map(function (item) {
+            return {id:item.id, name:item.name, amount:item.amount, currency:item.currency, available:item.available, quantity:item.quantity, variant:item.variant || '', sku:item.sku || ''};
+        })};
+        return {commerceState:{breaks:breakState, ebayStock:ebayStock, ebayResult:sellerResult, hostOn:!!isExtensionOn}};
+    }
+    // Only the private link's key opens a request, and app errors stay inside the sealed reply because they can name buyers or spots.
+    async function runSecureBreakCommand(sealed) {
+        var key = privateState.breaksKey, message = await SSNBreaksAccess.open(key, 'request', sealed), reply;
+        try {
+            if (!message || !isBreakCommand(message.command)) throw new Error('Unknown break command.');
+            reply = await runBreakCommand(message.command, message.data);
+        } catch (error) { reply = {error:error.message || 'Breaks command failed.'}; }
+        var sealedReply = await SSNBreaksAccess.seal(key, 'reply', {id:message && message.id, reply:reply});
+        // Above the relay's frame limit this would close the host's connection, so send what fits.
+        if (sealedReply.box.length > SSNBreaksAccess.maxSealed && reply.commerceState && reply.commerceState.showResult) {
+            // A whole buyer's packing list can span several archived breaks. Fetch it in bounded parts.
+            delete reply.commerceState.showResult;
+            reply.commerceState.packingDeferred = true;
+            sealedReply = await SSNBreaksAccess.seal(key, 'reply', {id:message.id, reply:reply});
+        }
+        if (sealedReply.box.length > SSNBreaksAccess.maxSealed && reply.commerceState && reply.commerceState.breaks && reply.commerceState.breaks.opened) {
+            if (reply.commerceState.breaks.opened && !(message.data && message.data.archiveOnly)) reply.commerceState.breaks.archiveDeferred = true;
+            reply.commerceState.breaks.opened = null;
+            reply.commerceState.breaks.openedTooLarge = true;
+            sealedReply = await SSNBreaksAccess.seal(key, 'reply', {id:message.id, reply:reply});
+        }
+        if (sealedReply.box.length > SSNBreaksAccess.maxSealed && reply.commerceState && reply.commerceState.ebayStock) {
+            reply.commerceState.ebayStock = {items:[], status:'Listing details are too large. Manage listings in Monetization.'};
+            sealedReply = await SSNBreaksAccess.seal(key, 'reply', {id:message.id, reply:reply});
+        }
+        if (sealedReply.box.length > SSNBreaksAccess.maxSealed) sealedReply = await SSNBreaksAccess.seal(key, 'reply', {id:message && message.id, reply:{error:'Breaks is holding too much to send to this workspace.'}});
+        return {commerceState:{sealed:sealedReply}};
+    }
+    async function breaksKey(reset) {
+        if (reset || !SSNBreaksAccess.validKey(privateState.breaksKey)) {
+            var previousKey = privateState.breaksKey;
+            privateState.breaksKey = SSNBreaksAccess.newKey();
+            try { await store(); } catch (error) { privateState.breaksKey = previousKey; throw error; }
+        }
+        return {key:privateState.breaksKey};
+    }
 	var ebay = SSNEbayService({
 		privateState: function () {
 			return privateState;
 		},
 		store: store,
+        stockEnabled: function () { return !!(privateState.breaks && privateState.breaks.sales && privateState.breaks.sales.enabled); },
+        stockLinks: function () { return privateState.breaks && privateState.breaks.stock || []; },
+        storeOrders: async function (changes, environment) {
+            var previous = privateState.breaks, next = SSNBreaks.ingestOrders(previous, changes, environment);
+            if (!next) return;
+            privateState.breaks = next;
+            try { await store(); } catch (error) { privateState.breaks = previous; throw error; }
+        },
+		storeSales: async function (sales, environment, listings) {
+            var previous = privateState.breaks;
+            var next = typeof SSNBreaks !== 'undefined' ? SSNBreaks.ingestSales(previous, sales, environment, listings, Date.now()) : null;
+            if (next) privateState.breaks = next;
+            try { await store(); } catch (error) { if (next) privateState.breaks = previous; throw error; }
+        },
 		config: function () {
 			return cfg().ebay;
 		},
@@ -65,7 +279,9 @@
 	function publicState() {
 		var c = cfg(),
 			l = list();
-		return { boards: SSNCommerceBoards.publicState(privateState.boards), commerce: commerceState(), ebay: ebay.publicState(), throne: { enabled: c.throne.enabled, username: c.throne.username, qr: c.throne.qr, position: c.throne.position, url: c.throne.username ? 'https://throne.com/' + encodeURIComponent(c.throne.username) : '', rank: thronePrivate().gifts + 1, gifts: thronePrivate().gifts }, wishlist: { enabled: c.wishlist.enabled, qr: c.wishlist.qr, position: c.wishlist.position, rank: l.rank, total: l.total, item: l.current ? { name: l.current.name, amount: l.current.amount, currency: l.current.currency, image: l.current.image, url: M.purchaseURL(l.current, l.url) } : null, url: l.url }, ninja: { enabled: c.ninja.enabled, qr: c.ninja.qr, position: c.ninja.position, username: c.ninja.username, url: c.ninja.username ? 'https://ninjabacker.com/' + encodeURIComponent(c.ninja.username) : '' } };
+		var result = { boards: SSNCommerceBoards.publicState(privateState.boards), commerce: commerceState(), ebay: ebay.publicState(), throne: { enabled: c.throne.enabled, username: c.throne.username, qr: c.throne.qr, position: c.throne.position, url: c.throne.username ? 'https://throne.com/' + encodeURIComponent(c.throne.username) : '', rank: thronePrivate().gifts + 1, gifts: thronePrivate().gifts }, wishlist: { enabled: c.wishlist.enabled, qr: c.wishlist.qr, position: c.wishlist.position, rank: l.rank, total: l.total, item: l.current ? { name: l.current.name, amount: l.current.amount, currency: l.current.currency, image: l.current.image, url: M.purchaseURL(l.current, l.url) } : null, url: l.url }, ninja: { enabled: c.ninja.enabled, qr: c.ninja.qr, position: c.ninja.position, username: c.ninja.username, url: c.ninja.username ? 'https://ninjabacker.com/' + encodeURIComponent(c.ninja.username) : '' } };
+        if (privateState.breaks && typeof SSNBreaks !== 'undefined') result.breaks = SSNBreaks.publicState(privateState.breaks);
+        return result;
 	}
 	function broadcast(purchase) {
 		if (!ready || !isExtensionOn) return;
@@ -438,8 +654,12 @@
         if (request.action === 'publishShop' || request.action === 'unpublishShop') {
             await enqueueShop(request.action === 'unpublishShop'); broadcast(); return snapshot();
         }
+        if (request.action === 'breaksAccess') return breaksKey(false);
+        if (request.action === 'breaksAccessReset') return breaksKey(true);
         if (request.action === 'commerceControl') {
             var command = request.command, items = c.commerce.items;
+            if (command === 'breakSecure') return runSecureBreakCommand(request.data);
+            if (isBreakCommand(command)) throw new Error('Open Breaks from its private link.');
             if (SSNCommerceBoards.commands.indexOf(command) !== -1) {
                 var previous = privateState.boards;
                 privateState.boards = SSNCommerceBoards.apply(previous, command, request.data);
@@ -581,9 +801,18 @@
 		return { commerceState: controlState(), publicShop: shopState(), commerceLive: liveCommerce, patreon: patreonReceiver.snapshot(), shopify: shopifyReceiver.snapshot(), receiver: { enabled: !!settings.socketserver, on: !!isExtensionOn, connected: !!(typeof socketserver !== 'undefined' && socketserver && socketserver.readyState === 1), providers: providerActivity }, ninjaReceiver: ninjaReceiver.snapshot(), ebay: ebay.snapshot(), throne: { status: throneStatus, gifts: thronePrivate().gifts, webhook: thronePrivate().hook ? 'https://api.socialstream.ninja/v1/throne/webhook/' + thronePrivate().hook : '' }, config: cfg(), list: list(), tokenSaved: !!privateState.token, status: cfg().ninja.reliable ? ninjaReceiver.snapshot().status : status, canUndo: !!lastPurchase };
 	}
 	window.handleMonetizationRequest = function (request, sender) {
-		if (sender && sender.tab && sender.tab.id !== null && sender.tab.id !== undefined) return Promise.resolve({ error: 'Use the SSN popup to configure monetization.' });
+		var localBreaks = request.action === 'commerceControl' && request.command === 'breakSecure' && typeof request.session === 'string';
+		if (localBreaks && (request.session !== streamID || !isExtensionOn)) return Promise.resolve({ error: 'Open Breaks from the active Social Stream session.' });
+		if (sender && sender.tab && sender.tab.id !== null && sender.tab.id !== undefined) {
+			var workspace = false;
+			try {
+				var page = new URL(sender.url), expected = new URL(chrome.runtime.getURL('obs-control-dock.html'));
+				workspace = localBreaks && sender.id === chrome.runtime.id && page.origin === expected.origin && page.pathname === expected.pathname && page.searchParams.has('breaks');
+			} catch (_) {}
+			if (!workspace) return Promise.resolve({ error: 'Use the SSN popup to configure monetization.' });
+		}
         if (request.action === 'getCommerceState') return Promise.resolve({ commerce: controlState() });
-        if (request.action === 'commerceControl' && SSNCommerceBoards.commands.indexOf(request.command) === -1) return action(request).catch(function (e) { return { error: e.message }; });
+        if (request.action === 'commerceControl' && SSNCommerceBoards.commands.indexOf(request.command) === -1 && !isBreakCommand(request.command) && request.command !== 'breakSecure') return action(request).catch(function (e) { return { error: e.message }; });
 		var job = queue.then(function () {
 			return request.action === 'get' ? snapshot() : action(request);
 		});
@@ -592,10 +821,82 @@
 			return { error: e.message || 'Monetization action failed.' };
 		});
 	};
+    // Reuse the configured host relay. Channel 15 carries only sealed Breaks replies.
+    // This narrow authenticated route does not grant channel-3 clients general API access.
+    window.handleBreaksRelayRequest = function (packet, socket) {
+        if (!packet || packet.breaksRelay !== true) return false;
+        if (!isExtensionOn || settings.disablehost || !(settings.server2 || settings.server3) || packet.action !== 'commerceControl' ||
+            !packet.value || packet.value.command !== 'breakSecure' || typeof packet.get !== 'string' || packet.get.length > 200) return true;
+        var session = streamID;
+        window.handleMonetizationRequest({ action: 'commerceControl', command: 'breakSecure', data: packet.value.data }).then(function (reply) {
+            if (session !== streamID || !isExtensionOn || settings.disablehost || !(settings.server2 || settings.server3) || socket.readyState !== 1 || !reply.commerceState || !reply.commerceState.sealed) return;
+            socket.send(JSON.stringify({ out: 15, type: 'commandResult', get: packet.get, result: reply }));
+        }).catch(function () {});
+        return true;
+    };
+    // Public remote keys use the existing display-only whitelist. Never accept a private patch here.
+    window.handleBreaksDisplayRequest = function (action) {
+        var job = queue.then(async function () {
+            var b = privateState.breaks && privateState.breaks.active;
+            if (!b) throw new Error('Create a break in the Breaks workspace first.');
+            var data = {revision:privateState.breaks.revision, boardId:b.id}, command;
+            if (action === 'breaksShow' || action === 'breaksHide') {
+                command = 'breakSettings'; data.visible = action === 'breaksShow';
+            } else if (action === 'breaksClearHighlight') {
+                command = 'breakHighlight'; data.id = '';
+            } else if (action === 'breaksNextSpot' || action === 'breaksPreviousSpot') {
+                var spots = b.spots.filter(function (spot) { return !b.availableOnly || spot.status === 'available'; });
+                if (!spots.length) throw new Error('No spots match the overlay display filter.');
+                var index = spots.findIndex(function (spot) { return spot.id === b.highlight; });
+                var step = action === 'breaksNextSpot' ? 1 : -1;
+                index = index < 0 ? (step > 0 ? 0 : spots.length - 1) : (index + step + spots.length) % spots.length;
+                command = 'breakHighlight'; data.id = spots[index].id;
+            } else throw new Error('Unknown Breaks display command.');
+            await runBreakCommand(command, SSNBreaks.flowRequest(command, data));
+            b = privateState.breaks.active;
+            return {breaksDisplay:{visible:b.visible, highlight:b.highlight, stage:b.stage}};
+        });
+        queue = job.catch(function () {});
+        return job.catch(function (e) { return {error:e.message || 'Breaks display command failed.'}; });
+    };
+    // In-process only, for Event Flow on the host. No message or relay route calls this directly.
+    window.handleBreaksLocalRequest = function (command, data) {
+        var job = queue.then(async function () {
+            var request = SSNBreaks.flowRequest(command, data);
+            if (command !== 'breakGet') await runBreakCommand(command, request);
+            return {commerceState:{breaks:SSNBreaks.flowState(privateState.breaks)}};
+        });
+        queue = job.catch(function () {});
+        return job.catch(function (e) { return { error: e.message || 'Breaks command failed.' }; });
+    };
     window.recordCommerceAuction = function (event) {
         if (!ready || !isExtensionOn || !privateState.boards || !privateState.boards.auctionSource || event.type !== privateState.boards.auctionSource) return;
         var draft = SSNCommerceBoards.auction(event, Date.now());
         if (draft) auctionDraft = draft.title && draft.status !== 'idle' ? draft : null;
+    };
+    window.recordBreaksAuction = function (event) {
+        if (!ready || !isExtensionOn || !privateState.breaks || !privateState.breaks.auctions || !privateState.breaks.auctions.enabled) return;
+        if (!SSNBreaks.auctionEvent(event)) return;
+        var job = queue.then(async function () {
+            var previous = privateState.breaks;
+            var next = SSNBreaks.ingestAuction(previous, event, breakAuctionTracker, Date.now());
+            if (!next) return;
+            privateState.breaks = next;
+            try { await store(); } catch (error) { privateState.breaks = previous; throw error; }
+            // Suggestions are private. Workspaces read them through sealed breakGet replies.
+        });
+        queue = job.catch(async function (error) {
+            var state = privateState.breaks;
+            if (state && state.auctions && state.auctions.enabled) {
+                // Preserve the last usable record and make an intake failure visible
+                // through the private poll, even when no new suggestion could fit.
+                state.auctions.warning = 'Could not save a suggestion. Check the platform for missed assignments.';
+                state.revision++;
+                try { await store(); } catch (_) {}
+            }
+            console.warn('[Breaks] Could not save auction suggestion:', error.message);
+        });
+        return queue;
     };
     window.recordCommercePurchase = function (event) {
         if (!ready || !isExtensionOn || !privateState.boards || !privateState.boards.automatic) return;
@@ -616,9 +917,17 @@
             if (p.publicShop && /^[a-f0-9]{64}$/.test(p.publicShop.key || '')) privateState.publicShop = { key: p.publicShop.key, id: /^[a-f0-9]{64}$/.test(p.publicShop.id || '') ? p.publicShop.id : '', published: p.publicShop.published === true, removePending: p.publicShop.removePending === true };
 			function ebayProfile(value) {
 				if (!value || !(value.key === '' || /^[a-f0-9]{64}$/.test(value.key || '')) || !Array.isArray(value.items) || !Array.isArray(value.seen)) return null;
-				return { key: value.key, environment: value.environment === 'sandbox' ? 'sandbox' : 'production', items: value.items.slice(0, 20), seen: value.seen.slice(-10000), cursor: Number(value.cursor) || 0 };
+				return { key: value.key, environment: value.environment === 'sandbox' ? 'sandbox' : 'production', items: value.items.slice(0, 20), seen: value.seen.slice(-10000), cursor: Number(value.cursor) || 0,
+                    sellerListings:Array.isArray(value.sellerListings) ? value.sellerListings.slice(0,200) : [], notifications:value.notifications === true,
+                    orderCursor:Number(value.orderCursor) || 0, orderPage:0 };
 			}
 			privateState.boards = SSNCommerceBoards.normalize(p.boards);
+            if (p.breaks) privateState.breaks = typeof SSNBreaks !== 'undefined' ? SSNBreaks.normalize(p.breaks) : p.breaks;
+            if (privateState.breaks && privateState.breaks.auctions && privateState.breaks.auctions.enabled) {
+                privateState.breaks.auctions.warning = 'Host restarted. Check the platform for missed assignments.';
+                privateState.breaks.revision++;
+            }
+            if (/^[a-f0-9]{64}$/.test(p.breaksKey || '')) privateState.breaksKey = p.breaksKey;
 			var savedEbay = ebayProfile(p.ebay);
 			if (savedEbay) privateState.ebay = savedEbay;
 			privateState.ebayProfiles = {};
@@ -691,7 +1000,8 @@
 		}
 		var boards = privateState.boards;
 		var boardVisible = boards && ((boards.board && boards.board.visible && boards.board.spots.length) || (boards.salesVisible && boards.sales.length));
-		if ((c.commerce.enabled || c.wishlist.enabled || c.ninja.enabled || c.throne.enabled || c.ebay.enabled || boardVisible) && now - lastBroadcast > 10000) broadcast();
+        var breakVisible = privateState.breaks && privateState.breaks.active && privateState.breaks.active.visible;
+		if ((c.commerce.enabled || c.wishlist.enabled || c.ninja.enabled || c.throne.enabled || c.ebay.enabled || c.patreon.enabled || boardVisible || breakVisible) && now - lastBroadcast > 10000) broadcast();
 		['wishlist', 'ninja', 'throne', 'ebay'].forEach(function (mode) {
 			if (c[mode].enabled && c[mode].interval && now >= next[mode]) {
 				next[mode] = now + c[mode].minutes * 60000;
