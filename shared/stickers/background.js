@@ -24,7 +24,7 @@
             var done = receipt && pending.get(receipt.redemptionId);
             if (done && done.clients && done.clients.get(client) === socket && done.session === streamID) {
                 done.clients.delete(client);
-                if (receipt.success === true || !done.clients.size) done(receipt.success === true);
+                if (receipt.success === true || (!done.clients.size && !done.peers.size)) done(receipt.success === true);
             }
         }
         return true;
@@ -44,7 +44,7 @@
         var done = pending.get(receipt.redemptionId);
         if (done && done.peers && done.peers.has(uuid)) {
             done.peers.delete(uuid);
-            if (receipt.success === true || !done.peers.size) done(receipt.success === true);
+            if (receipt.success === true || (!done.clients.size && !done.peers.size)) done(receipt.success === true);
         }
     };
     function deliver(payload) {
@@ -58,22 +58,25 @@
             pending.set(id, done);
             payload.meta.sticker.expiresAt = Date.now() + 7000;
             var displays = relayReceivers();
-            // Deliver to each display as P2P does. A busy or stale display must not
-            // reject another display's successful image-load receipt.
-            if (displays.length) {
-                done.clients = new Map(displays.map(function (entry) { return [entry.client, entry.socket]; }));
-                done.session = streamID;
-                displays.forEach(function (entry) {
-                    try { entry.socket.send(JSON.stringify(Object.assign({}, payload, { out: 17, stickerClient: entry.client }))); }
-                    catch (_) { done.clients.delete(entry.client); }
-                });
+            var connected = peers();
+            // Send to both connection types. A hidden/busy display must not reject
+            // another display's pending image-load receipt.
+            done.clients = new Map(displays.map(function (entry) { return [entry.client, entry.socket]; }));
+            if (displays.length) done.session = streamID;
+            done.peers = new Set(Object.keys(connected).filter(function (key) { return connected[key] === 'stickers'; }));
+            displays.forEach(function (entry) {
+                try { entry.socket.send(JSON.stringify(Object.assign({}, payload, { out: 17, stickerClient: entry.client }))); }
+                catch (_) { done.clients.delete(entry.client); }
+            });
+            if (!done.peers.size) {
                 if (!done.clients.size) done(false);
                 return;
             }
-            var connected = peers();
-            // A hidden/busy OBS source must not reject another source's display.
-            done.peers = new Set(Object.keys(connected).filter(function (key) { return connected[key] === 'stickers'; }));
-            Promise.resolve().then(function () { return sendTargetP2P(payload, 'stickers'); }).then(function (sent) { if (!sent) done(false); }, function () { done(false); });
+            function p2pFailed() {
+                done.peers.clear();
+                if (!done.clients.size) done(false);
+            }
+            Promise.resolve().then(function () { return sendTargetP2P(payload, 'stickers'); }).then(function (sent) { if (!sent) p2pFailed(); }, p2pFailed);
         });
     }
     function prepare(url) {

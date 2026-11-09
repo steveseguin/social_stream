@@ -2662,6 +2662,11 @@
                 </div>
             </section>
 
+            <section class="section-summary" id="chaturbate-events-api">
+                <h2>Chaturbate Events API</h2>
+                <p>Cloud API capture emits plain-text chat and tip rows with <code>type: "chaturbate"</code>. Tips carry <code>hasDonation</code> in tokens and numeric <code>meta.tokens</code>; they do not set a USD override. Anonymous tips use "Anonymous" and omit the sender identity. Media purchases use <code>event: "purchase"</code>, the media name in <code>subtitle</code>, and <code>meta.mediaId</code> and <code>meta.mediaType</code>. <code>meta.messageId</code> preserves the native event ID; <code>id</code> is scoped to the broadcaster in <code>meta.channel</code>. Private messages and initial history are excluded. A tip amount does not identify a tip-menu purchase.</p>
+            </section>
+
             <section class="deprecated-events" id="deprecated-events">
                 <h2>Source-Specific Aliases and Legacy Names</h2>
                 <p>These mappings are specific to the source/context listed, not global replacements. Consumer support for aliases varies by page. Current TikTok DOM and TikFinity sources still emit <code>followed</code>; Velora uses <code>subscription</code> and <code>channel_points</code>, and Streamlabs uses <code>subscription</code>. Accept the current source contract and its relevant legacy aliases rather than renaming every matching event.</p>
