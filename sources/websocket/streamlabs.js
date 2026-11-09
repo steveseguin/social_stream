@@ -297,6 +297,7 @@
 
       const numericAmount = sanitizeNumber(entry.amount);
       const meta = cleanMeta({
+        platform: 'streamlabs',
         rawType: baseType || null,
         sourcePlatform: platformTag || null,
         alertType: entry.type || null,
@@ -314,7 +315,6 @@
       });
 
       const normalized = {
-        platform: 'streamlabs',
         type,
         event: type,
         chatname: sanitizeString(name) || 'Someone',

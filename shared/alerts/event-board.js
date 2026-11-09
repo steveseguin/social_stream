@@ -81,7 +81,8 @@
         }
         function identity(payload) {
             if (payload.id === undefined || payload.id === null) return '';
-            return [payload.platform, payload.type, payload.sourceid, payload.channel, payload.id].join('|');
+            var platform = payload.meta && payload.meta.platform === 'streamlabs' ? 'streamlabs' : payload.platform;
+            return [platform, payload.type, payload.sourceid, payload.channel, payload.id].join('|');
         }
         function signature(payload) {
             return JSON.stringify([payload.event, payload.chatname, payload.chatmessage, payload.hasDonation, payload.membership, payload.contentimg, payload.meta]);

@@ -413,7 +413,6 @@
 							<td>string</td>
 							<td>Platform-specific user identifier. User actions prefer this value over <code>username</code> and <code>chatname</code>.</td>
 						</tr>
-                        <tr><td><code>data.platform</code></td><td>string (optional)</td><td>Some integrations include this alongside <code>type</code>. Many source adapters omit it; use <code>type</code> for source routing.</td></tr>
                         <tr><td><code>data.id</code></td><td>string | number (optional)</td><td>Message or event identifier. Its meaning depends on the source and transport; do not assume it is always a platform-native moderation ID. Use <code>meta.messageId</code> when the adapter exposes it for delete sync.</td></tr>
                         <tr><td><code>data.donoValue</code></td><td>number (optional)</td><td>Source-supplied numeric USD equivalent, including estimates. A valid value (including zero) overrides currency.js conversion. Without it, consumers estimate USD from hasDonation and source context. Original amounts and units remain in hasDonation and existing provider metadata.</td></tr>
                         <tr><td><code>data.chatbadges</code></td><td>array | string (optional)</td><td>Badge image URLs or badge objects (<code>type: "img"</code> with <code>src</code>, <code>type: "svg"</code> with <code>html</code>, or <code>type: "text"</code> with <code>text</code>). The relay retains a text badge's literal label in optional <code>rawText</code> and produces escaped <code>text</code> for older overlays. On later relay passes, regenerate <code>text</code> from <code>rawText</code>; do not escape <code>text</code> again. Current renderers display <code>rawText</code> literally when present and retain legacy encoded-text handling otherwise. This is a representation field, not permission to render HTML. Older sources can send a single HTML string instead of an array. Badge-rendering overlays accept both formats and sanitize badge HTML and URLs locally, including when the sender is an older extension. Invalid badges must not prevent the chat or membership message from displaying.</td></tr>
@@ -1048,6 +1047,7 @@
 
                 <article class="platform-card" id="streamlabs-alertbox">
                     <h3>Streamlabs Alert Box</h3>
+                    <p>Socket alerts identify Streamlabs with <code>meta.platform: "streamlabs"</code>. The alert kind stays in <code>type</code> and <code>event</code>; <code>meta.sourcePlatform</code> identifies the upstream service when supplied.</p>
                     <p class="source-note">Implementation: <code>sources/streamlabs.js</code> (alert-box DOM); optional socket bridge at <code>sources/websocket/streamlabs.html</code></p>
                     <ul class="requirements">
                         <li>Keep your Streamlabs alert box open in a tab or browser source so alerts render; the content script reads the alert DOM for message/image/tokens.</li>

@@ -64,13 +64,13 @@
     function bitCount(data, meta) {
         var direct = total(meta.bits);
         // Streamlabs socket alerts carry the bit count as amount, and subscription tiers as plan.
-        if (!direct && data.platform === 'streamlabs' && eventOf(data) === 'bits') direct = total(meta.amount);
+        if (!direct && (meta.platform || data.platform) === 'streamlabs' && eventOf(data) === 'bits') direct = total(meta.amount);
         if (direct) return Math.round(direct);
         var match = String(data.hasDonation || '').match(/(\d[\d,.]*)\s*bits?\b/i);
         return match ? Math.round(total(match[1].replace(/,/g, ''))) : 0;
     }
     function tierOf(data, meta) {
-        var raw = String(data.tier || meta.tier || (data.platform === 'streamlabs' ? meta.plan : '') || '').toLowerCase();
+        var raw = String(data.tier || meta.tier || ((meta.platform || data.platform) === 'streamlabs' ? meta.plan : '') || '').toLowerCase();
         if (/^(3|3000|tier ?3)$/.test(raw)) return 3;
         if (/^(2|2000|tier ?2)$/.test(raw)) return 2;
         if (!raw) {
@@ -91,7 +91,7 @@
         // A gift counts once, on the purchase. Twitch EventSub also sends a notice for each recipient.
         var isRecipient = event === 'giftredemption' || membership === 'gift_recipient' || data.isGift === true || meta.isGift === true;
         if (!isRecipient) {
-            if (GIFT_EVENTS.indexOf(event) !== -1 || membership === 'gift_giver' || (data.platform === 'streamlabs' && event === 'gift')) result.gifted = giftCount(data, meta);
+            if (GIFT_EVENTS.indexOf(event) !== -1 || membership === 'gift_giver' || ((meta.platform || data.platform) === 'streamlabs' && event === 'gift')) result.gifted = giftCount(data, meta);
             else if (SUB_EVENTS.indexOf(event) !== -1 || (event === 'true' && membership)) result.subs = 1;
         }
         var label = data.hasDonation || data.donation || data.donationAmount || '';
