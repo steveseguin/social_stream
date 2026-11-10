@@ -23,6 +23,10 @@ jobs:
       with:
         node-version: '20'
 
+    - name: Test points accounting
+      timeout-minutes: 2
+      run: node --test tests/points-*.test.cjs
+
     - name: Install dependencies
       run: npm install htmlhint
 
