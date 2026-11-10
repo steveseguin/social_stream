@@ -2,6 +2,11 @@
 
 Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command list is authoritative, including when development builds share an application version.
 
+## 2026-11-10: l2.games chat
+
+- Minimum: updated SSApp 0.4.50 with the l2.games source script. Check for `platforms.l2games` before adding this source.
+- `l2games` accepts a username or `https://l2.games/popout/chat/USERNAME` URL using `classic` capture. Existing commands and schemas are unchanged.
+
 ## 2026-11-07: Breaks display keys
 
 - Breaks minimum remains SSApp 0.4.48 with updated Social Stream sources; no SSApp binary/API version change. Check advertised SSN remote-control actions before using the five Breaks display keys.

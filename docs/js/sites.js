@@ -1229,6 +1229,14 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
+			name: 'l2.games',
+			icon: 'l2games.png',
+			description: 'Lineage 2 community chat.',
+			type: 'popout',
+			instructions: `<ul><li>Open https://l2.games/popout/chat/USERNAME, replacing USERNAME with the streamer name.</li></ul>`,
+			notes: 'Captures new messages after the chat opens. Keep the browser pop-out visible so the site refreshes its chat. In the desktop app, choose l2.games and enter the username or chat pop-out URL.'
+		},
+		{
 			name: 'Seal Team Sloth',
 			icon: 'sealteamsloth.png',
 			description: 'Live streaming platform.',
