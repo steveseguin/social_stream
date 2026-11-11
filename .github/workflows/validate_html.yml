@@ -26,6 +26,11 @@ jobs:
     - name: Install dependencies
       run: npm install htmlhint
 
+    - name: Test non-browser monetization and providers
+      timeout-minutes: 2
+      # Exclude Node's synthetic root so it does not re-include the browser cases.
+      run: node --test --test-name-pattern='^(?!<root>$|Wishlist HTML import|Popup retries incomplete startup).+' tests/monetization.test.cjs tests/monetization-providers.test.cjs
+
     - name: Validate HTML files
       run: npx htmlhint "**/*.html" --config .htmlhintrc
 
