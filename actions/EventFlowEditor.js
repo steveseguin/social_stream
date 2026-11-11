@@ -4092,7 +4092,7 @@ class EventFlowEditor {
 				break;
 
 			case 'eventRaid':
-				html += this.renderEventSourceFilter(node, 'raid');
+				html += this.renderEventSourceFilter(node, 'raid, redirect (YouTube)');
 				html += `
 					<div class="property-group">
 						<label class="property-label">Minimum Viewers (optional)</label>
@@ -4102,11 +4102,12 @@ class EventFlowEditor {
 					</div>
 					<div class="property-group" style="background: #ede7f6; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>🚀 Raid</strong><br>
-						Triggers when another streamer raids the channel.<br><br>
+						Triggers when another streamer raids or redirects to the channel.<br><br>
 						<strong>⚡ Supported platforms:</strong><br>
-						• <strong>Twitch:</strong> Raid events (WebSocket mode)<br><br>
+						• <strong>Twitch:</strong> Raid events (WebSocket mode)<br>
+						• <strong>YouTube:</strong> Redirects (Standard mode)<br><br>
 						<div style="background: #d1c4e9; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
-							⚠️ <strong>Twitch WebSocket mode required.</strong> Raids are Twitch-specific.
+							YouTube redirects have no viewer count. Leave Minimum Viewers at 0.
 						</div>
 								<a href="${eventReferenceCrossPlatformUrl}" data-guide-link="event-reference-cross-platform" style="color: #512da8;">📖 Event Reference Documentation</a>
 					</div>`;
@@ -4268,7 +4269,7 @@ class EventFlowEditor {
 						• <code>sponsorship</code> - YouTube memberships<br>
 						• <code>subscription_gift</code> - Gift subs<br><br>
 						<div style="background: #e1bee7; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
-							⚠️ <strong>Twitch/YouTube/Kick require WebSocket mode</strong> for most stream events.<br>
+							Source mode depends on the event. <strong>YouTube redirects require Standard mode.</strong> See the Event Reference for other events.<br>
 							💡 <strong>TikTok</strong> provides many events via DOM detection without extra config.
 						</div>
 								<a href="${eventReferenceUrl}" data-guide-link="event-reference" style="color: #7b1fa2;">📖 Full Event Reference</a>

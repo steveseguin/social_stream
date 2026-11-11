@@ -2513,7 +2513,7 @@ class EventFlowSystem {
             }
 
             case 'eventRaid': {
-                const eventMatch = messageEvent === 'raid';
+                const eventMatch = messageEvent === 'raid' || (message.type === 'youtube' && messageEvent === 'redirect');
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
 
                 // Check minimum viewers if specified
