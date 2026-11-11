@@ -13139,6 +13139,7 @@
 						);
 					}
 					
+					// Parent-relative sizes avoid applying Android WebView text zoom twice.
 					if (splitMode && compactmode){
 						// this mode isn't compatible
 					} else if (horizontal || twoLines || largeavatar) {
@@ -13146,11 +13147,13 @@
 					} else if (compactmode) {
 						var nameEle = node.querySelector(".hl-name"); // we're going to resize long names to be smaller if they are longer than the message's height
 						if (nameEle) {
+							var parentFontSize = parseFloat(window.getComputedStyle(nameEle.parentElement).fontSize);
 							if (hlMessage && hlMessage.innerText) {
 								var ccc = 0;
 								while (hlMessage.clientHeight < nameEle.clientHeight || nameEle.clientHeight < nameEle.scrollHeight || nameEle.clientWidth < nameEle.scrollWidth) {
 									var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
-									nameEle.style.fontSize = fontsize - 1 + "px";
+									if (!(parentFontSize > 0)) break;
+									nameEle.style.fontSize = (100 * (fontsize - 1) / parentFontSize) + "%";
 									ccc += 1;
 									if (ccc > 8) {
 										break;
@@ -13160,7 +13163,8 @@
 								var ccc = 0;
 								while (hlMessage.clientHeight < nameEle.clientHeight || nameEle.clientWidth < nameEle.scrollWidth || nameEle.clientHeight < nameEle.scrollHeight) {
 									var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
-									nameEle.style.fontSize = fontsize - 1 + "px";
+									if (!(parentFontSize > 0)) break;
+									nameEle.style.fontSize = (100 * (fontsize - 1) / parentFontSize) + "%";
 									ccc += 1;
 									if (ccc > 8) {
 										break;
@@ -13171,10 +13175,12 @@
 					} else {
 						var nameEle = node.querySelector(".hl-name"); // we're going to resize long un-breaking names to be smaller if they don't fit
 						if (nameEle) {
+							var parentFontSize = parseFloat(window.getComputedStyle(nameEle.parentElement).fontSize);
 							var ccc = 0;
 							while (nameEle.clientWidth < nameEle.scrollWidth || nameEle.clientHeight < nameEle.scrollHeight) {
 								var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
-								nameEle.style.fontSize = fontsize - 1 + "px";
+								if (!(parentFontSize > 0)) break;
+								nameEle.style.fontSize = (100 * (fontsize - 1) / parentFontSize) + "%";
 								ccc += 1;
 								if (ccc > 8) {
 									break;
