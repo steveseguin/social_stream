@@ -2,8 +2,20 @@
     'use strict';
     document.addEventListener('DOMContentLoaded', function() {
         var status = document.getElementById('giveaway-control-status');
+        var idField = document.getElementById('giveaway-id');
         var state = null, busy = false, refreshing = false, actionVersion = 0, statusError = false;
-        function giveawayId() { return document.getElementById('giveaway-id').value.trim() || 'default'; }
+        function giveawayId() { return idField.value.trim() || 'default'; }
+        function validateGiveawayId(report) {
+            var valid = /^[a-zA-Z0-9_-]{1,64}$/.test(giveawayId());
+            idField.setCustomValidity(valid ? '' : getTranslation('giveaway-id-invalid', 'Use up to 64 characters: A-Z, a-z, 0-9, - or _. No spaces.'));
+            idField.setAttribute('aria-invalid', String(!valid));
+            if (!valid && report) {
+                idField.scrollIntoView({block:'center'});
+                idField.focus();
+                idField.reportValidity();
+            }
+            return valid;
+        }
         function updateButtons() {
             var current = state && state.giveawayId === giveawayId() ? state : null;
             var labels = {
@@ -30,11 +42,12 @@
         document.getElementById('giveaway-kind').addEventListener('change', updateFields);
         updateFields();
         function show(response) {
-            if (!response || !response.ok) { statusError = true; status.textContent = response && response.error || 'Giveaway host is unavailable. Refresh before retrying.'; return; }
+            if (!response || !response.ok) { statusError = true; status.classList.add('giveaway-error'); status.textContent = response && response.error || 'Giveaway host is unavailable. Refresh before retrying.'; return; }
             if (response.giveaway.giveawayId !== giveawayId()) return;
             state = response.giveaway;
             updateButtons();
             statusError = false;
+            status.classList.remove('giveaway-error');
             status.textContent = (state.open ? 'Entries open' : 'Entries closed') + ' - ' + state.count + ' eligible entries.' +
                 (state.ticketCount ? ' ' + state.ticketCount + ' tickets.' : '') + (state.winners.length ? ' Latest winner: ' + state.winners[0].name : '') +
                 (state.status === 'cancelled' ? ' Cancelled; reserved points refunded.' : '');
@@ -60,6 +73,7 @@
             button.addEventListener('click', function() {
                 var action = button.dataset.giveawayAction;
                 if (busy) return;
+                if (!validateGiveawayId(true)) return;
                 actionVersion++;
                 var value = {giveawayId:giveawayId(), operationId:Date.now().toString(36) + '-' + Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-')};
                 if (state && state.giveawayId === value.giveawayId) value.roundId = state.roundId;
@@ -96,6 +110,7 @@
             window.open(preview.href, '_blank', 'noopener');
         });
         document.getElementById('giveaway-manage').addEventListener('click',function() {
+            if (!validateGiveawayId(true)) return;
             var url = new URL('giveaway-control.html',location.href); url.searchParams.set('giveaway',giveawayId());
             var raw=document.getElementById('giveaway').raw;
             if(raw){try{
@@ -110,6 +125,15 @@
             }catch(_) {}}
             window.open(url.href,'_blank','noopener');
         });
-        document.getElementById('giveaway-id').addEventListener('input',function() {actionVersion++;state=null;updateButtons();status.textContent='Refresh to inspect this giveaway.';refreshStatus();});
+        idField.addEventListener('input',function() {
+            actionVersion++;
+            state = null;
+            updateButtons();
+            validateGiveawayId(false);
+            statusError = false;
+            status.classList.remove('giveaway-error');
+            status.textContent = 'Refresh to inspect this giveaway.';
+            refreshStatus();
+        });
     });
 })();

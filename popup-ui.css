@@ -179,6 +179,8 @@ body .heading-actions button.copy-link:focus, body button.edit-link:focus {
 /* Giveaway controls reuse the shared field and action styles. */
 .options_group.giveaway .textInputContainer { display:grid; width:100%; }
 .giveaway-actions { display:flex; flex-wrap:wrap; gap:6px; }
+#giveaway-id[aria-invalid="true"] { outline:2px solid var(--danger-text); outline-offset:2px; }
+#giveaway-control-status.giveaway-error { color:var(--danger-text); font-weight:600; }
 body .options .giveaway-actions button.giveaway-current,
 body .popup-settings-panel .giveaway-actions button.giveaway-current {
     border-color:var(--color-accent); box-shadow:inset 0 -3px 0 var(--color-accent);
