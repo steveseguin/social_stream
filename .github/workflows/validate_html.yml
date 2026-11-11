@@ -32,6 +32,10 @@ jobs:
     - name: Validate Python scripts
       run: python3 -m compileall -q scripts docs/skills/control-social-stream/scripts
 
+    - name: Test Dock queue and TTS arrival handling
+      timeout-minutes: 2
+      run: node tests/dock-queue-sync.test.cjs
+
     - name: Validate documentation links
       run: python3 scripts/validate-doc-links.py
 
