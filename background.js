@@ -8170,6 +8170,10 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 		}
 
 		if (message.chatname) {
+			if (message.type === "tiktok" && typeof message.chatname === "string") {
+				// Keep literal angle brackets in TikTok display names.
+				message.chatname = message.chatname.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+			}
 			message.chatname = filterXSS(message.chatname); // I do escapeHtml at the point of capture instead
 		}
 
