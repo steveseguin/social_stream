@@ -5330,8 +5330,8 @@
 				custombot = urlParams.get("myname") || urlParams.get("botlist") || urlParams.get("botnames") || false;
 				if (custombot) {
 					custombot = decodeURIComponent(custombot);
-					custombot = custombot.toLowerCase().replace(/[^a-z0-9,_]+/gi, "");
-					custombot = custombot.split(",");
+					custombot = custombot.toLowerCase().replace(/[^a-z0-9,_\u0080-\uFFFF]+/gi, "").replace(/\s/g, "");
+					custombot = custombot.split(",").filter(function (name) { return !!name; });
 				}
 			}
 
@@ -12687,7 +12687,7 @@
 							if (!data.textonly && custombot) {
 								textname = unescapeHtml(data.chatname);
 							}
-							if (custombot.includes(textname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
+							if (custombot.includes(textname.toLowerCase().replace(/[^a-z0-9_\u0080-\uFFFF]+/gi, "").replace(/\s/g, ""))) {
 								// because why not. :)
 								bot = true;
 							}
