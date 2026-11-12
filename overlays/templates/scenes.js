@@ -163,7 +163,7 @@
 			{ key: "title", label: "Title", type: "text", group: "Content", default: "Starting soon" },
 			{ key: "subtitle", label: "Subtitle", type: "text", group: "Content", default: "Grab a drink, the stream is about to begin" },
 			{ key: "minutes", label: "Countdown minutes (0 = none)", type: "number", group: "Content", default: 5, min: 0, max: 600, step: 0.5 },
-			{ key: "target", label: "…or count down to (HH:MM or 2026-12-31T23:59)", type: "text", group: "Content", default: "" },
+			{ key: "target", label: "…or count down to (HH:MM, 12-31T23:59 every year, or 2026-12-31T23:59)", type: "text", group: "Content", default: "" },
 			{ key: "countlabel", label: "Countdown label", type: "text", group: "Content", default: "" },
 			{ key: "endtext", label: "Text when the countdown ends", type: "text", group: "Content", default: "Any second now…" },
 			{ key: "messages", label: "Rotating messages", type: "textarea", group: "Content", default: "" },
@@ -219,7 +219,10 @@
 			{ name: "Blocky world", tags: ["minecraft", "gaming"], values: { title: "Loading world...", subtitle: "Building terrain", backdrop: "blocks", fg: "ffffff", accent: "ffff55", font: "Silkscreen", fontsize: 90, fx: "pixel", fx2: "ffffff", fx3: "3f3f3f" } },
 			{ name: "Horror night", tags: ["spooky"], values: { title: "don't turn around", subtitle: "the stream begins soon", backdrop: "embers", c1: "050000", c2: "4a0000", c3: "d90000", accent: "ff3b3b", font: "Creepster", fontsize: 130, fx: "drip", fx1: "d90000", fx3: "4a0000" } },
 			{ name: "Kawaii pastel", tags: ["cute"], values: { title: "starting soon ♡", subtitle: "grab a snack!", backdrop: "bokeh", c1: "ffd6e8", c2: "d9e4ff", c3: "ffffff", fg: "6b3a5b", accent: "ff7eb6", font: "Fredoka", fontsize: 120, fx: "bubble", fx1: "ff7eb6", fx3: "c2185b" } },
-			{ name: "Webcam spot", tags: ["cozy"], values: { backdrop: "bokeh", c1: "1f2937", c2: "7c2d12", c3: "fbbf24", accent: "fbbf24", camspot: "right", fontsize: 96, font: "Fredoka" } }
+			{ name: "Webcam spot", tags: ["cozy"], values: { backdrop: "bokeh", c1: "1f2937", c2: "7c2d12", c3: "fbbf24", accent: "fbbf24", camspot: "right", fontsize: 96, font: "Fredoka" } },
+			{ name: "Technical difficulties", tags: ["retro", "simple"], values: { title: "Please stand by", subtitle: "technical difficulties — back in a moment", backdrop: "vhs", c1: "0d0d12", accent: "ffd166", font: "VT323", fontsize: 130, upper: true, minutes: 0 } },
+			{ name: "Ad break", tags: ["pro", "simple"], values: { title: "Ad break", subtitle: "thanks for supporting the stream", minutes: 3, countlabel: "back in", endtext: "and we're back", backdrop: "bokeh", c1: "0f172a", c2: "2563eb", c3: "38bdf8", accent: "7dd3fc", font: "Poppins", fontsize: 110, panel: true } },
+			{ name: "Intermission", tags: ["elegant"], values: { title: "Intermission", subtitle: "stretch, hydrate, back shortly", minutes: 10, countlabel: "resuming in", endtext: "resuming now", backdrop: "aurora", c1: "03040d", c2: "2f6bff", c3: "7b2ff7", accent: "f6d77a", font: "Playfair Display", fontsize: 120, fx: "gold", dim: 0.35 } }
 		],
 		css: [
 			".scn{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;}",
@@ -323,6 +326,22 @@
 				var px = Math.round(Math.min(c.fontsize * 1.6, 260));
 				new window.QRCode(qrBox, { text: c.qr, width: px, height: px, colorDark: "#000000", colorLight: "#ffffff" });
 			}
+			// A long title or a big size would otherwise run off the top and bottom of the scene.
+			var fitText = function () {
+				var size = c.fontsize;
+				el.style.fontSize = size + "px";
+				var pad = window.getComputedStyle(body);
+				var room = body.clientHeight - parseFloat(pad.paddingTop) - parseFloat(pad.paddingBottom);
+				for (var n = 0; n < 16 && size > 20; n++) {
+					var tallest = 0;
+					for (var k = 0; k < body.children.length; k++) { tallest = Math.max(tallest, body.children[k].offsetHeight); }
+					if (tallest <= room) { break; }
+					size = Math.floor(size * 0.93);
+					el.style.fontSize = size + "px";
+				}
+			};
+			fitText();
+			SSO.fontsReady(fitText);
 			var socialsEl = body.querySelector(".scn-socials");
 			if (socialsEl && c.socialsfade > 0) {
 				var shown = true;
@@ -375,7 +394,7 @@
 			{ key: "transparent", label: "Transparent background (fish / jellyfish only)", type: "bool", group: "Background", default: false, show: { engine: ["aquarium", "jellyfish", "wordgame"] } }
 		],
 		presets: (SSO.ENGINE_LIST || []).map(function (e) {
-			var tags = { nebula: ["elegant", "cyber"], mandelbrot: ["cyber", "retro"], julia: ["elegant"], tunnel: ["cyber", "gaming"], lava: ["cozy", "retro"], aurora: ["cozy", "elegant"], sunset: ["cozy", "retro"], warp: ["cyber", "gaming"], galaxy: ["elegant"], jellyfish: ["cyber", "elegant"], aquarium: ["cozy", "cute"], maze: ["gaming", "cyber"], citydrive: ["retro", "cozy"], flappy: ["gaming", "retro"], fireflies: ["cozy"], wordgame: ["cozy", "gaming"] }[e[0]] || [];
+			var tags = { nebula: ["elegant", "cyber"], mandelbrot: ["cyber", "retro"], julia: ["elegant"], tunnel: ["cyber", "gaming"], lava: ["cozy", "retro"], aurora: ["cozy", "elegant"], sunset: ["cozy", "retro"], warp: ["cyber", "gaming"], galaxy: ["elegant"], jellyfish: ["cyber", "elegant"], aquarium: ["cozy", "cute"], maze: ["gaming", "cyber"], citydrive: ["retro", "cozy"], flappy: ["gaming", "retro"], fireflies: ["cozy"], wordgame: ["cozy", "gaming"], flag: ["country"], fireworks: ["newyear"], halloween: ["halloween", "spooky"], christmas: ["christmas", "cozy"] }[e[0]] || [];
 			return { name: e[1].replace(/ \((WebGL|WebGL particles)\)$/, ""), tags: tags, values: { engine: e[0] } };
 		}),
 		render: function (root, c) {
@@ -630,7 +649,8 @@
 					// Below the title bar, so it does not cover the title or the buttons.
 					tag.style.top = "calc(" + off + " + 2.3em)";
 				} else {
-					tag.style[p[0]] = "calc(" + off + " - .9em)";
+					// Sits across the border, but never hangs past the edge of the source where it would be cut off.
+					tag.style[p[0]] = Math.max(0, Math.round(c.inset - 0.9 * c.fontsize)) + "px";
 				}
 				if (p[1] === "center") { tag.style.left = "50%"; tag.style.transform = "translateX(-50%)"; }
 				else { tag.style[p[1]] = "calc(" + off + " + 1.2em)"; }

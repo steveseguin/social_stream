@@ -215,11 +215,25 @@
 			el.innerHTML = imgs.map(function (src, i) {
 				var img = '<img src="' + esc(src) + '" alt="" style="border-radius:' + c.radius + "px;" + (c.fit === "cover" ? "width:100%;height:100%;object-fit:cover;" : "") + '">';
 				var cap = caps[i] ? '<div class="ss-cap">' + esc(caps[i]) + "</div>" : "";
-				return '<div class="ss-i">' + (c.transition === "polaroid" ? '<div style="--r:' + ((Math.random() - 0.5) * 14).toFixed(1) + 'deg">' + img + cap + "</div>" : img + cap) + "</div>";
+				return '<div class="ss-i">' + (c.transition === "polaroid" ? '<div style="--r:' + ((Math.random() - 0.5) * 14).toFixed(1) + "deg" + (cap ? "" : ";padding-bottom:10px") + '">' + img + cap + "</div>" : img + cap) + "</div>";
 			}).join("");
 			root.appendChild(el);
 			var items = el.children;
 			if (!items.length) { return; }
+			if (c.transition === "polaroid") {
+				// The print has no fixed height, so a percentage limit on the photo does nothing and a tall photo
+				// pushed the border and caption off the source. Size the photo from the source instead.
+				var fitPile = function () {
+					var capH = caps.length ? c.fontsize * 1.75 : 10;
+					var maxH = Math.max(40, Math.round(el.clientHeight * 0.8 - capH - 10));
+					var maxW = Math.max(40, Math.round(el.clientWidth * 0.8 - 20));
+					var photos = el.querySelectorAll("img");
+					for (var k = 0; k < photos.length; k++) { photos[k].style.maxHeight = maxH + "px"; photos[k].style.maxWidth = maxW + "px"; }
+				};
+				fitPile();
+				window.addEventListener("resize", fitPile);
+				SSO.onCleanup(root, function () { window.removeEventListener("resize", fitPile); });
+			}
 			var i = 0;
 			items[0].className = "ss-i on";
 			if (items.length < 2) { return; }
