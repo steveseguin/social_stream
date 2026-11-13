@@ -40,5 +40,9 @@ jobs:
     - name: Validate documentation links
       run: python3 scripts/validate-doc-links.py
 
+    - name: Test commerce board guards and Event Flow actions
+      timeout-minutes: 2
+      run: node --test tests/commerce-boards.test.cjs tests/commerce-events.test.cjs
+
     - name: Validate documentation search index
       run: python3 scripts/build-docs-search-index.py --docs-root docs --output /tmp/social-stream-docs-search-index.json
