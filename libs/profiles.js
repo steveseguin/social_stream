@@ -84,10 +84,11 @@ const ProfileManager = {
     }
 
     // Apply the settings from the profile (skip savedProfiles to preserve current profiles list)
+    const paramNums = Object.values(getTargetMap());
     for (const [key, settingObj] of Object.entries(profile.settings)) {
       if (key === 'savedProfiles') continue;
       try {
-        processObjectSetting(key, settingObj, true, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], {settings: profile.settings});
+        processObjectSetting(key, settingObj, true, paramNums, {settings: profile.settings});
       } catch (e) {
         console.error(`Error applying setting ${key}:`, e);
       }

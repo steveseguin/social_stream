@@ -2,6 +2,12 @@
 
 Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command list is authoritative, including when development builds share an application version.
 
+## Local audio in Flow Actions
+
+- Minimum: updated SSApp 0.4.50 with the `localMedia.readAudio` desktop bridge and matching Event Flow/Flow Actions pages. REST and MCP commands are unchanged.
+- Selected local audio up to 16 MB can transfer to a Flow Actions WebRTC peer. The overlay caches verified content for the life of the page; a changed file is transferred on its next trigger. Server-only overlays, larger files, and older app builds use Upload or the Local Flow Actions URL.
+- Upload stays available when local media is selected. Successful uploads select the hosted file in that action, rather than adding it to the built-in sound library.
+
 ## 2026-11-10: l2.games chat
 
 - Minimum: updated SSApp 0.4.50 with the l2.games source script. Check for `platforms.l2games` before adding this source.

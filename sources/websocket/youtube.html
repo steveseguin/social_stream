@@ -6094,6 +6094,43 @@ function enableBackgroundKeepAlive() {
 		}
 	}
 
+	const youtubeBanCommands = new Map();
+
+	async function runYouTubeBanCommand(payload) {
+		const entry = youtubeBanCommands.get(String(payload.messageId || ''));
+		const token = getStoredToken();
+		const chatId = liveChatId;
+		const parts = entry ? entry.text.split(/\s+/) : [];
+		const username = String(payload.username || '');
+		if (!entry || entry.used || !entry.allowed || !chatId || entry.chatId !== chatId ||
+			Date.now() - entry.received > 120000 || Date.now() - entry.sent > 120000 ||
+			!/^![a-zA-Z0-9_]+$/.test(payload.command || '') || parts.length !== 2 ||
+			parts[0].toLowerCase() !== payload.command.toLowerCase() || parts[1].replace(/^@/, '') !== username || !username || username.length > 100) {
+			return { ok: false, message: "Ban commands require a recent command from this YouTube chat's owner or moderators." };
+		}
+		if (!token || !hasYouTubeWriteAccess()) return { ok: false, message: getWriteAccessRequiredMessage() };
+		entry.used = true;
+		try {
+			// Resolve the unique handle or channel ID, never a non-unique display name.
+			const isChannelId = /^UC[a-zA-Z0-9_-]{22}$/.test(username);
+			const lookup = await fetch('https://www.googleapis.com/youtube/v3/channels?part=id&' + (isChannelId ? 'id=' : 'forHandle=') + encodeURIComponent(username), {
+				headers: { Authorization: 'Bearer ' + token }
+			});
+			if (!lookup.ok) return { ok: false, message: 'YouTube could not look up that handle. Check the connection and try again.' };
+			const data = await lookup.json();
+			const target = data.items && data.items.length === 1 && data.items[0].id;
+			if (!target) return { ok: false, message: 'YouTube user not found. Use their @handle or channel ID.' };
+			if (target === authenticatedChannelId || (currentStream && target === currentStream.channelId)) {
+				return { ok: false, message: 'Cannot ban the broadcaster or the signed-in account.' };
+			}
+			if (token !== getStoredToken() || chatId !== liveChatId) return { ok: false, message: 'YouTube connection changed. Send the command again in the intended chat.' };
+			const ok = await banLiveChatAuthor({ userid: target });
+			return ok ? { ok: true } : { ok: false, message: 'YouTube did not confirm the ban. Check moderation permissions and the chat before trying again.' };
+		} catch (_) {
+			return { ok: false, unconfirmed: true, message: 'No ban confirmation received. Check YouTube before sending another command.' };
+		}
+	}
+
 	async function banLiveChatAuthor(payload = {}) {
 		const token = getStoredToken();
 		const messageId = resolveYouTubeDeleteMessageId(payload);
@@ -6934,6 +6971,17 @@ function enableBackgroundKeepAlive() {
 						}
 					} else if (messageData.messageId) {
 						outgoingMessage.meta = { messageId: String(messageData.messageId) };
+					}
+					const commandText = String(basePlainText || '').trim();
+					if (messageData.messageId && commandText.charAt(0) === '!' && commandText.length <= 200) {
+						const now = Date.now();
+						youtubeBanCommands.forEach((entry, id) => { if (now - entry.received > 120000) youtubeBanCommands.delete(id); });
+						const id = String(messageData.messageId);
+						if (!youtubeBanCommands.has(id)) youtubeBanCommands.set(id, {
+							text: commandText, allowed: messageData.isChatOwner === true || messageData.isChatModerator === true,
+							chatId: liveChatId, received: now, sent: new Date(messageData.publishedAt).getTime() || now, used: false
+						});
+						while (youtubeBanCommands.size > 100) youtubeBanCommands.delete(youtubeBanCommands.keys().next().value);
 					}
 					pushMessage(applySourceIdentity(outgoingMessage));
 				}
@@ -8280,6 +8328,13 @@ function enableBackgroundKeepAlive() {
 			const payload = detail.payload || {};
 			const controls = loadAdvancedControlSettings();
 			if (normalizeSourceControlPlatform(detail.platform || payload.type) !== 'youtube') {
+				return;
+			}
+			if (detail.control === 'banCommand') {
+				runYouTubeBanCommand(payload).then(result => {
+					addEvent(result.ok ? 'Banned ' + payload.username + ' from Event Flow' : result.message);
+					window.dispatchEvent(new CustomEvent('sourceControlResult', { detail: { requestId: detail.requestId, result } }));
+				});
 				return;
 			}
 			if (detail.control === 'deleteMessage') {

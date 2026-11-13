@@ -2799,6 +2799,7 @@ async function ensureChatClientInstance() {
 	});
 
 	let twitchPinControlQueue = Promise.resolve();
+	const twitchBanCommands = new Map();
 
 	async function handleSourceControlRequest(request) {
 		const payload = request?.payload || {};
@@ -2807,6 +2808,11 @@ async function ensureChatClientInstance() {
 		}
 		if (request.control === 'timeoutUser') {
 			return syncDockTimeoutToTwitch(payload);
+		}
+		if (request.control === 'banCommand') {
+			const result = await runTwitchBanCommand(payload);
+			addEvent(result.ok ? 'Banned ' + payload.username + ' from Event Flow' : result.message);
+			return result;
 		}
 		if (request.control === 'pinMessage' || request.control === 'unpinMessage') {
 			if (!isAdvancedControlEnabled('syncPinMessages')) return false;
@@ -3889,6 +3895,19 @@ async function ensureChatClientInstance() {
 		// Message ID for deduplication
 		if (parsedMessage.tags && parsedMessage.tags.id) {
 			data.id = parsedMessage.tags.id;
+		}
+		// Keep the native command and role here, before SSN role overrides or flow edits.
+		// A ban request must refer back to this channel's recent, unconsumed chat message.
+		const commandText = String(getTwitchMessageText(normalizedPayload, parsedMessage.trailing) || '').trim();
+		if (data.id && commandText.charAt(0) === '!' && commandText.length <= 100 && !pendingMessage.deleted) {
+			const now = Date.now();
+			twitchBanCommands.forEach((entry, id) => { if (now - entry.received > 120000) twitchBanCommands.delete(id); });
+			if (!twitchBanCommands.has(data.id)) twitchBanCommands.set(data.id, {
+				text: commandText, allowed: mod === true || normalizeTwitchLogin(user) === normalizeTwitchLogin(channel),
+				channelId: currentChannelId, sourceName: sourceInfo.name, received: now, used: false,
+				sent: Number(parsedMessage.tags['tmi-sent-ts']) || now
+			});
+			while (twitchBanCommands.size > 100) twitchBanCommands.delete(twitchBanCommands.keys().next().value);
 		}
 		
 		} catch(e){
@@ -5456,6 +5475,52 @@ async function cleanupCurrentConnection() {
 			return { ok: true };
 		} catch (error) {
 			return { ok: false, unconfirmed: true, message: 'No confirmation received from Twitch. Check Twitch before trying again.' };
+		}
+	}
+
+	async function runTwitchBanCommand(payload) {
+		const entry = twitchBanCommands.get(payload.messageId);
+		const token = getStoredToken();
+		const channelId = currentChannelId;
+		const channelLogin = normalizeTwitchLogin(channel);
+		if (!entry || entry.used || Date.now() - entry.received > 120000 || Date.now() - entry.sent > 120000 ||
+			!entry.allowed || entry.channelId !== channelId || normalizeTwitchLogin(entry.sourceName) !== channelLogin ||
+			normalizeTwitchLogin(payload.sourceName) !== channelLogin) {
+			return { ok: false, message: 'Ban commands require a recent message from this Twitch channel\'s broadcaster or moderators.' };
+		}
+		const parts = entry.text.split(/\s+/);
+		const username = String(payload.username || '').toLowerCase();
+		if (!/^![a-zA-Z0-9_]+$/.test(payload.command || '') || parts.length !== 2 ||
+			parts[0].toLowerCase() !== payload.command.toLowerCase() || parts[1].replace(/^@/, '').toLowerCase() !== username ||
+			!/^[a-z0-9_]{1,25}$/.test(username)) return { ok: false, message: 'Invalid Twitch ban command.' };
+		if (!token || !channelId) return { ok: false, message: 'Sign in to the Twitch connection to use ban commands.' };
+		entry.used = true; // Do not replay a command, including after an uncertain API response.
+		try {
+			const moderator = await getCurrentModerator();
+			if (!moderator || !moderator.user_id || !hasTwitchScope(moderator, 'moderator:manage:banned_users')) {
+				return { ok: false, message: 'Reconnect Twitch with ban/timeout permission using a broadcaster or moderator account.' };
+			}
+			const userId = await getUserIdByLogin(username);
+			if (!userId) return { ok: false, message: 'Twitch user not found: ' + username };
+			if (String(userId) === String(channelId) || String(userId) === String(moderator.user_id)) {
+				return { ok: false, message: 'Cannot ban the broadcaster or the signed-in account.' };
+			}
+			if (token !== getStoredToken() || channelId !== currentChannelId || channelLogin !== normalizeTwitchLogin(channel)) {
+				return { ok: false, message: 'Twitch connection changed. Send the command again in the intended channel.' };
+			}
+			const response = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${encodeURIComponent(channelId)}&moderator_id=${encodeURIComponent(moderator.user_id)}`, {
+				method: 'POST', headers: { 'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+				body: JSON.stringify({ data: { user_id: String(userId), reason: 'Banned by Event Flow command ' + payload.command } })
+			});
+			if (response.ok) return { ok: true };
+			const error = await response.json().catch(() => ({}));
+			let reason = error.message || 'Twitch returned HTTP ' + response.status;
+			if (response.status === 401) reason = 'Reconnect Twitch to grant ban/timeout permission.';
+			if (response.status === 403) reason = 'Broadcaster or moderator access is required in this Twitch channel.';
+			if (response.status === 429) reason = 'Twitch rate limit reached. Try again later.';
+			return { ok: false, message: reason };
+		} catch (_) {
+			return { ok: false, unconfirmed: true, message: 'No ban confirmation received. Check Twitch before sending another command.' };
 		}
 	}
 

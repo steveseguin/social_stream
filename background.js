@@ -153,9 +153,9 @@ function getCachedUserDisplayAliases(value) {
 	return entries;
 }
 
-function matchesConfiguredUser(entry, data, sourceType) {
+function matchesConfiguredUser(entry, data, sourceType, allowWildcardSource = false) {
 	if (!entry || !data) return false;
-	if (entry.type && entry.type !== sourceType) return false;
+	if (entry.type && entry.type !== sourceType && !(allowWildcardSource && entry.type === "*")) return false;
 
 	const configuredIdentifier = normalizeRoleIdentifier(entry.name);
 	if (!configuredIdentifier) return false;
@@ -15690,6 +15690,14 @@ async function processEventFlowBridgeEvent(value) {
 }
 
 async function processIncomingRequest(request, UUID = false) {
+	if (request && request.action === 'localAudioRead') {
+		const peers = ninjaBridge && typeof ninjaBridge.getPeers === 'function' ? ninjaBridge.getPeers() : connectedPeers;
+		if (UUID && peers && peers[UUID] === 'actions' && window.eventFlowSystem &&
+			typeof window.eventFlowSystem.handleLocalAudioRequest === 'function') {
+			window.eventFlowSystem.handleLocalAudioRequest(request, UUID, streamID, packet => sendDataP2P(packet, UUID));
+		}
+		return;
+	}
 	if (UUID && handleEdgeTtsRequest(request, packet => sendDataP2P(packet, UUID))) return;
 	// from the dock or chat bot, etc.
 	if (request && request.action === "stickerReceipt") {
@@ -16441,6 +16449,44 @@ function forwardTwitchTimeout(payload) {
 			});
 		} catch (error) {
 			resolve({ ok: false, unconfirmed: true, message: "Could not confirm the Twitch timeout. Check Twitch before trying again." });
+		}
+	});
+}
+
+function forwardPlatformBanCommand(payload) {
+	return new Promise(function (complete) {
+        const timer = setTimeout(function () { complete({ ok: false, unconfirmed: true, message: "No ban confirmation received. Check the platform before trying again." }); }, 30000);
+        const resolve = function (result) { clearTimeout(timer); complete(result); };
+		const tabId = Number(payload && payload.tid);
+		const platform = normalizeSourceControlPlatform(payload && payload.type);
+		if (!payload || !["twitch", "kick", "youtube", "vpzone"].includes(platform) || !Number.isInteger(tabId) || tabId <= 0) {
+			resolve({ ok: false, message: "The originating platform connection is unavailable." });
+			return;
+		}
+		// Query works in both the extension and SSApp. Never broadcast a ban.
+		try {
+			chrome.tabs.query({}, function (tabs) {
+				const tab = (tabs || []).find(function (entry) { return entry && entry.id === tabId; });
+				if (chrome.runtime.lastError || !tab) {
+					resolve({ ok: false, message: "The originating platform connection is closed." });
+					return;
+				}
+				if (getWebsocketSourcePlatformFromUrl(tab.url) !== platform) {
+					resolve({ ok: false, message: "Ban commands require this platform's API or WebSocket connection." });
+					return;
+				}
+				chrome.tabs.sendMessage(tabId, {
+					type: "SOURCE_CONTROL", control: "banCommand", platform: platform, payload: payload
+				}, function (result) {
+					if (chrome.runtime.lastError || !result || typeof result.ok !== "boolean") {
+						resolve({ ok: false, unconfirmed: true, message: "No confirmation received from the platform connection. Check the platform before trying again." });
+					} else {
+						resolve(result);
+					}
+				});
+			});
+		} catch (error) {
+			resolve({ ok: false, unconfirmed: true, message: "Could not confirm the platform ban. Check the platform before trying again." });
 		}
 	});
 }
@@ -18848,7 +18894,7 @@ async function applyBotActions(data, tab = false) {
 				if (!roleUserIdLower && !roleChatNameLower) return null;
 
 				const blacklist = getCachedRoleList(settings.blacklistusers.textsetting);
-				const isBlocked = blacklist.some(entry => matchesConfiguredUser(entry, data, altSourceType));
+				const isBlocked = blacklist.some(entry => matchesConfiguredUser(entry, data, altSourceType, true));
 
 				if (isBlocked) {
 					return null;
@@ -20950,6 +20996,7 @@ let tmp = new EventFlowSystem({
 	handleMessageStore: handleMessageStore || null, // Share the message store handler
 	sendTargetP2P: window.sendTargetP2P || null, // Add sendTargetP2P for OBS and other actions
 	printThermal: printThermal,
+	banUserOnPlatform: forwardPlatformBanCommand,
 	// Handle Spotify actions locally since we're already in background.js
 	sendMessageToBackground: async msg => {
 		if (!msg || typeof msg !== "object") return;

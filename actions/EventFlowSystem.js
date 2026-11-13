@@ -9,6 +9,7 @@ class EventFlowSystem {
         // Prefer helpers from background.js when available so both surfaces share behavior
         this.sendMessageToTabs = options.sendMessageToTabs || window.sendMessageToTabs || null;
         this.sendToDestinations = options.sendToDestinations || window.sendToDestinations || null;
+        this.banUserOnPlatform = options.banUserOnPlatform || null;
         this.fetchWithTimeout = options.fetchWithTimeout || window.fetchWithTimeout || window.fetch; // Fallback to window.fetch if not provided
         this.sanitizeRelay = options.sanitizeRelay || window.sanitizeRelay || null;
 		this.checkExactDuplicateAlreadyRelayed = options.checkExactDuplicateAlreadyRelayed || window.checkExactDuplicateAlreadyRelayed || null;
@@ -73,6 +74,67 @@ class EventFlowSystem {
         //console.log('  - handleMessageStore:', this.handleMessageStore ? 'Function provided' : 'NULL');
         
         this.initPromise = this.initDatabase();
+    }
+
+    async prepareLocalAudio(assetId) {
+        const api = window.ninjafy && window.ninjafy.localMedia || window.ssappLocalMedia;
+        if (!api || typeof api.readAudio !== 'function') return null;
+        const session = typeof streamID !== 'undefined' ? streamID : '';
+        const audio = await api.readAudio(assetId);
+        if (audio && audio.error) {
+            const error = new Error('Local audio unavailable: ' + audio.error);
+            error.code = audio.error;
+            throw error;
+        }
+        if (session !== (typeof streamID !== 'undefined' ? streamID : '')) return null;
+        if (!audio || !/^[a-f0-9]{64}$/.test(audio.hash) || typeof audio.base64 !== 'string' ||
+            audio.size < 1 || audio.size > 16 * 1024 * 1024 || audio.base64.length !== Math.ceil(audio.size / 3) * 4) return null;
+        if (!this.localAudioTransfers) this.localAudioTransfers = new Map();
+        const now = Date.now();
+        let match = null;
+        this.localAudioTransfers.forEach((entry, id) => {
+            if (entry.session !== session || now - entry.used > 120000) this.localAudioTransfers.delete(id);
+            else if (entry.hash === audio.hash && entry.assetId === assetId && entry.mime === audio.mime) match = entry;
+        });
+        if (!match) {
+            const id = Array.from(crypto.getRandomValues(new Uint32Array(4)), value => value.toString(16)).join('-');
+            match = Object.assign({ id, assetId, session, clients: new Map() }, audio);
+            this.localAudioTransfers.set(id, match);
+        }
+        match.used = now;
+        this.localAudioTransfers.delete(match.id);
+        this.localAudioTransfers.set(match.id, match);
+        // Bound retained audio and expire it even if no more commands arrive.
+        let retained = 0;
+        Array.from(this.localAudioTransfers.values()).reverse().forEach(entry => {
+            retained += entry.base64.length;
+            if (retained > 64 * 1024 * 1024) this.localAudioTransfers.delete(entry.id);
+        });
+        clearTimeout(this.localAudioExpiry);
+        this.localAudioExpiry = setTimeout(() => this.localAudioTransfers.clear(), 120000);
+        return { id: match.id, hash: match.hash, size: match.size, mime: match.mime };
+    }
+
+    handleLocalAudioRequest(request, peer, session, send) {
+        if (!request || request.action !== 'localAudioRead') return false;
+        const entry = this.localAudioTransfers && this.localAudioTransfers.get(request.id);
+        const offset = request.offset;
+        if (!peer || !entry || entry.session !== session || Date.now() - entry.used > 120000 ||
+            !/^[a-zA-Z0-9_-]{8,100}$/.test(request.requestId || '') || !Number.isSafeInteger(offset) ||
+            offset < 0 || offset >= entry.base64.length || offset % 16384 !== 0) return true;
+        // Each receiver asks for the next chunk. This paces the transfer without
+        // filling the shared data-channel queue or changing chat transport.
+        const key = peer + ':' + request.requestId;
+        if (!entry.clients.has(key)) {
+            if (offset !== 0 || entry.clients.size >= 16) return true;
+            entry.clients.set(key, 0);
+        }
+        if (entry.clients.get(key) !== offset) return true;
+        const data = entry.base64.slice(offset, offset + 16384);
+        entry.clients.set(key, offset + data.length);
+        send({ actionType: 'local_audio_chunk', id: entry.id, requestId: request.requestId, offset, data });
+        if (offset + data.length === entry.base64.length) entry.clients.delete(key);
+        return true;
     }
 
     parseDonationNumericValue(value) {
@@ -3219,6 +3281,7 @@ class EventFlowSystem {
                         return;
                     }
                     
+                    if (actionResult.stopChain && node.actionType === 'platformBanUser') return;
                     if (actionResult.modified) {
                         currentMessage = actionResult.message;
                         modified = true;
@@ -3827,6 +3890,32 @@ class EventFlowSystem {
                 }
                 break;
                 
+            case 'platformBanUser': {
+                const fail = (reason) => {
+                    console.warn('[Event Flow] Platform ban:', reason);
+                    if (window.flowEditor && typeof window.flowEditor.showNotification === 'function') {
+                        window.flowEditor.showNotification(reason, 'warning');
+                    }
+                    return { stopChain: true };
+                };
+                if (!message || message.reflection || message.event) return { stopChain: true };
+                if (!['twitch', 'kick', 'youtube', 'youtubeshorts', 'vpzone'].includes(message.type)) return fail('Platform bans are unavailable for this source.');
+                if (message.meta && message.meta.economyTest) return fail('Test Flow does not ban users. Use a platform chat command to run this action.');
+                const command = (config.command || '!getout').trim();
+                if (!/^![a-zA-Z0-9_]+$/.test(command)) return fail('Enter a command such as !getout.');
+                const text = message.textonly ? String(message.chatmessage || '') : this.stripHtml(message.chatmessage || '');
+                const parts = text.trim().split(/\s+/);
+                const username = (parts[1] || '').replace(/^@/, '');
+                if (parts.length !== 2 || parts[0].toLowerCase() !== command.toLowerCase() || !username || username.length > 100) {
+                    return fail('Use ' + command + ' <username>.');
+                }
+                if (!this.banUserOnPlatform) return fail('Platform ban commands are unavailable in this app version.');
+                const result = await this.banUserOnPlatform({ type: message.type, tid: message.tid,
+                    messageId: message.meta && message.meta.messageId || message.id,
+                    sourceName: message.sourceName, command: command, username: username });
+                if (!result || !result.ok) return fail(result && result.message || 'The platform did not confirm the ban.');
+                break;
+            }
             case 'sendMessage': {
                 //console.log('[SEND MESSAGE - Action] Starting send message action execution');
                 //console.log('[SEND MESSAGE - Action] Config:', config);
@@ -4443,6 +4532,17 @@ class EventFlowSystem {
 						volume: config.volume !== undefined ? config.volume : 1.0,
                         audioPlayback: config.audioPlayback === 'queue' || config.audioPlayback === 'interrupt' ? config.audioPlayback : undefined
 					};
+					if (actionPayload.sourceType === 'local') {
+						const generation = this.localAudioGeneration || 0;
+						const audioSession = typeof streamID !== 'undefined' ? streamID : '';
+						try { actionPayload.localAudio = await this.prepareLocalAudio(config.localAssetId); }
+						catch (error) {
+							actionPayload.localAudioError = ['AUDIO_TOO_LARGE', 'AUDIO_MISSING', 'AUDIO_CHANGED', 'AUDIO_BUSY'].includes(error && error.code) ? error.code : 'AUDIO_UNAVAILABLE';
+							console.warn('[Event Flow] Local audio transfer unavailable:', error && error.message || error);
+						}
+                        if (generation !== (this.localAudioGeneration || 0) || (execution && execution.cancelled) ||
+                            audioSession !== (typeof streamID !== 'undefined' ? streamID : '')) break;
+					}
 					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
 						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
 						//console.log('[ExecuteAction - playAudioClip] Sent to actions page:', actionPayload);
@@ -4458,6 +4558,9 @@ class EventFlowSystem {
 				break;
             }
             case 'stopAudioClips': {
+                this.localAudioGeneration = (this.localAudioGeneration || 0) + 1;
+                if (this.localAudioTransfers) this.localAudioTransfers.clear();
+                clearTimeout(this.localAudioExpiry);
                 const payload = { overlayNinja: { actionType: 'stop_audio' } };
                 if (this.sendTargetP2P) this.sendTargetP2P(payload, 'actions');
                 else if (this.sendMessageToTabs) this.sendMessageToTabs({ ...payload, targetPage: 'actions' }, true);

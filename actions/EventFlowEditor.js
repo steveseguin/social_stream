@@ -1,6 +1,16 @@
 // Predefined flow templates for quick setup
 // Node positions are arranged top-to-bottom to match visual flow direction
 const FLOW_TEMPLATES = {
+    'platform-ban-sound': {
+        name: 'Platform ban command + sound', active: false,
+        description: 'Use !getout <username> in a supported platform chat. Only that channel\'s moderators and broadcaster can trigger it. The sound plays after a confirmed ban.',
+        nodes: [
+            { id: 'command', type: 'trigger', triggerType: 'messageStartsWith', x: 100, y: 50, config: { text: '!getout ' } },
+            { id: 'ban', type: 'action', actionType: 'platformBanUser', x: 100, y: 230, config: { command: '!getout' } },
+            { id: 'sound', type: 'action', actionType: 'playAudioClip', x: 100, y: 410, config: { audioUrl: './audio/chime.wav', volume: 0.35, audioPlayback: 'queue' } }
+        ],
+        connections: [{ from: 'command', to: 'ban' }, { from: 'ban', to: 'sound' }]
+    },
     'streamdeck-workflow': {
         name: 'Stream Deck / API button', active: false,
         description: 'Starts disabled. Save and enable, then choose Run Workflow in Stream Deck and refresh. Open Flow Actions to see the text. Each press starts a run.',
@@ -423,6 +433,7 @@ class EventFlowEditor {
                     { id: 'setProperty', name: '🎨 Set Property' },
                     { id: 'featureMessage', name: '🌟 Feature Message' },
                     { id: 'pinMessage', name: 'Pin Message' },
+                    { id: 'platformBanUser', name: 'Ban User on Platform' },
                     { id: 'sendMessage', name: '💬 Send Message' },
                     { id: 'relay', name: '📢 Relay Chat' },
                     { id: 'reflectionFilter', name: '🪞 Reflection Filter' }
@@ -626,8 +637,8 @@ class EventFlowEditor {
                 <label class="property-label" for="${inputId}">${label}</label>
                 <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                     <input type="url" class="property-input" id="${inputId}" value="${this.escapeHtml(config[configKey] || '')}" style="flex: 1; min-width: 160px;">
-                    <button type="button" id="${uploadButtonId}" style="padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Upload</button>
-                    <button type="button" id="chooseLocalMediaBtn" style="padding: 5px 10px; border: 1px solid #667eea; border-radius: 4px; cursor: pointer;">Choose Local File</button>
+                    <button type="button" id="${uploadButtonId}" title="Upload to Social Stream Ninja and select the uploaded file for this action." style="padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Upload</button>
+                    <button type="button" id="chooseLocalMediaBtn" title="Keep this file on your computer. Keep the desktop app running to play it." style="padding: 5px 10px; border: 1px solid #667eea; border-radius: 4px; cursor: pointer;">Choose Local File</button>
                 </div>
             </div>`;
         }
@@ -638,7 +649,8 @@ class EventFlowEditor {
                 <div><strong>${localName}</strong> <span style="opacity: 0.7;">(${localType})</span></div>
                 <div id="localMediaStatus" class="property-help" style="margin: 5px 0;">Checking local file…</div>
                 <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                    <button type="button" id="chooseLocalMediaBtn">Relink</button>
+                    <button type="button" id="${uploadButtonId}" title="Upload to Social Stream Ninja and replace this action's local file after upload succeeds.">Upload</button>
+                    <button type="button" id="chooseLocalMediaBtn">Choose Local File</button>
                     <button type="button" id="previewLocalMediaBtn">Preview</button>
                     <button type="button" id="revealLocalMediaBtn">Reveal in Folder</button>
                     <button type="button" id="changeLocalMediaPortBtn">Change Server Port</button>
@@ -687,7 +699,10 @@ class EventFlowEditor {
         try {
             const [asset, server] = await Promise.all([api.get(node.config.localAssetId), api.status()]);
             if (!asset || asset.status === 'missing') {
-                statusElement.textContent = 'File missing — use Relink to choose its new location.';
+                statusElement.textContent = 'File missing. Use Choose Local File to locate it.';
+            } else if (node.actionType === 'playAudioClip' && typeof api.readAudio === 'function') {
+                statusElement.textContent = 'Available';
+                statusElement.title = 'Sent directly to Flow Actions over WebRTC. Use Upload or the Local Flow Actions URL for sounds over 16 MB.';
             } else if (!server || !server.running) {
                 statusElement.textContent = `File available; local server is offline${server && server.lastError ? `: ${server.lastError}` : '.'}`;
             } else {
@@ -2301,6 +2316,7 @@ class EventFlowEditor {
                 }
                 case 'showAiEventOverlay': return `${node.config.profile || 'Choose an overlay'}${node.config.variation ? ': ' + node.config.variation : ''}`;
                 case 'featureMessage': return 'Feature in dock/overlay';
+                case 'platformBanUser': return (node.config.command || '!getout') + ' <username>';
                 case 'pinMessage': {
                     const modeMap = { pin: 'Pin', unpin: 'Unpin', nextPinned: 'Show next pinned' };
                     const pinConfig = node.config || {};
@@ -2392,7 +2408,7 @@ class EventFlowEditor {
                 }
 				case 'playAudioClip':
 					if (node.config.sourceType === 'local' && node.config.localAssetName) return node.config.localAssetName;
-					return node.config.audioUrl || 'No audio selected';
+					return node.config.uploadedMediaName || node.config.audioUrl || 'No audio selected';
                 case 'showAvatar': {
                     const duration = node.config.duration || 5000;
                     const pos = `${node.config.x ?? 5}%,${node.config.y ?? 5}%`;
@@ -3309,6 +3325,8 @@ class EventFlowEditor {
                     node.config = {}; break;
                 case 'pinMessage':
                     node.config = { mode: 'pin', messageId: '{id}', target: '' }; break;
+                case 'platformBanUser':
+                    node.config = { command: '!getout' }; break;
                 case 'sendMessage':
 					node.config = { destination: 'reply', template: 'Thank you {username}!', timeout: 0, sanitizeMode: 'safe' }; break;
                 case 'relay':
@@ -4970,6 +4988,15 @@ class EventFlowEditor {
                     <div class="property-help">Use with a trigger like “Message Starts With” or “Channel Points” to auto-feature specific messages.</div>
                 </div>`;
                 break;
+            case 'platformBanUser': {
+                html += `<div class="property-group">
+                    <label class="property-label" for="prop-command">Command</label>
+                    <input type="text" class="property-input" id="prop-command" value="${this.escapeHtml(node.config.command || '!getout')}" placeholder="!getout">
+                    <p class="property-help">Bans on the command's platform. Connect a sound after this action to play it when the ban succeeds.</p>
+                    <a href="${this.escapeHtml(this.resolveGuideTarget('event-flow'))}#platform-ban-command" target="_blank" rel="noopener">Setup guide</a>
+                </div>`;
+                break;
+            }
             case 'pinMessage': {
                 const pinConfig = node.config || {};
                 const pinMode = pinConfig.mode || 'pin';
@@ -6617,7 +6644,10 @@ class EventFlowEditor {
         document.querySelectorAll('#node-properties-content .property-input:not([data-node-meta="true"])').forEach(input => {
             const propId = input.id.replace('prop-', '');
             input.addEventListener('input', (e) => { // 'change' for select/checkbox, 'input' for text/textarea
-                if (nodeData.actionType === 'playAudioClip' && propId === 'audioUrl') delete nodeData.config.audioChoices;
+                if (nodeData.actionType === 'playAudioClip' && propId === 'audioUrl') {
+                    delete nodeData.config.audioChoices;
+                    delete nodeData.config.uploadedMediaName;
+                }
                 if (e.target.type === 'checkbox') {
                     nodeData.config[propId] = e.target.checked;
                     if (propId === 'includeMessage' && document.getElementById('webhook-body-group')) {
@@ -7237,39 +7267,46 @@ class EventFlowEditor {
             });
         }
 
-        const openNodeMediaUpload = (popupName, inputId, configKey) => {
-            const applyUploadUrl = (uploadedUrl) => {
-                const input = document.getElementById(inputId);
-                if (input) {
-                    input.value = uploadedUrl;
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                    input.dispatchEvent(new Event('change', { bubbles: true }));
-                    nodeData.config[configKey] = uploadedUrl;
-                    this.markUnsavedChanges(true);
-                    this.renderNodeOnCanvas(nodeData.id);
-                }
+        const openNodeMediaUpload = (popupName, configKey) => {
+            const applyUploadUrl = (uploadedUrl, filename) => {
+                let parsed;
+                try { parsed = new URL(uploadedUrl); } catch (_) { return; }
+                if (parsed.protocol !== 'https:' || !['fileuploads.socialstream.ninja', 'fileuploads.vdo.ninja'].includes(parsed.hostname) ||
+                    parsed.username || parsed.password || !/^\/media\/[a-zA-Z0-9_-]+$/.test(parsed.pathname)) return;
+                nodeData.config[configKey] = uploadedUrl;
+                nodeData.config.sourceType = 'url';
+                delete nodeData.config.localAssetId;
+                delete nodeData.config.localAssetName;
+                delete nodeData.config.localMediaType;
+                delete nodeData.config.audioChoices;
+                nodeData.config.uploadedMediaName = typeof filename === 'string' ? filename.slice(0, 200) : '';
+                this.markUnsavedChanges(true);
+                this.showNodeProperties(nodeData);
+                this.renderNodeOnCanvas(nodeData.id);
+                this.showNotification('Uploaded file selected. Save Flow to use it.', 'success');
             };
 
             if (window.ninjafy && typeof window.ninjafy.startMediaUpload === 'function') {
                 window.ninjafy.startMediaUpload({ popupName })
                     .then((result) => {
                         if (result && result.success && result.url) {
-                            applyUploadUrl(result.url);
+                            applyUploadUrl(result.url, result.filename);
                         }
                     })
                     .catch((error) => {
                         console.warn('Hosted media upload failed:', error && error.message ? error.message : error);
+                        this.showNotification('Upload did not finish. Try Upload again, or paste the uploaded file URL.', 'warning');
                     });
                 return;
             }
 
-            window.open('https://fileuploads.socialstream.ninja/popup/upload', popupName, 'width=640,height=640');
+            const uploadWindow = window.open('https://fileuploads.socialstream.ninja/popup/upload', popupName, 'width=640,height=640');
 
             window.addEventListener('message', function handleMessage(event) {
-                if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+                if (event.origin !== 'https://fileuploads.socialstream.ninja' || event.source !== uploadWindow) return;
 
                 if (event.data && event.data.type === 'media-uploaded') {
-                    applyUploadUrl(event.data.url);
+                    applyUploadUrl(event.data.url, event.data.filename);
                     window.removeEventListener('message', handleMessage);
                 }
             });
@@ -7279,7 +7316,7 @@ class EventFlowEditor {
         const uploadMediaBtn = document.getElementById('uploadMediaBtn');
         if (uploadMediaBtn) {
             uploadMediaBtn.addEventListener('click', () => {
-                openNodeMediaUpload('uploadMedia', 'prop-mediaUrl', 'mediaUrl');
+                openNodeMediaUpload('uploadMedia', 'mediaUrl');
             });
         }
 
@@ -7303,11 +7340,13 @@ class EventFlowEditor {
             window.SSNSoundLibrary.attach({
                 container: host, input, id: 'eventflow-audio', label: 'Play this sound — Flow Actions overlay',
                 getValue: () => nodeData.config.sourceType === 'local' ? '' : (nodeData.config.audioUrl || ''),
+                getSelectedLabel: () => nodeData.config.sourceType === 'local' ? '' : (nodeData.config.uploadedMediaName || ''),
                 getVolume: () => nodeData.config.volume === undefined ? 0.35 : nodeData.config.volume,
                 getChoices: () => nodeData.config.audioChoices || [],
                 setChoices: values => {
                     nodeData.config.sourceType = 'url';
                     nodeData.config.audioUrl = values[0];
+                    delete nodeData.config.uploadedMediaName;
                     nodeData.config.audioChoices = values;
                     delete nodeData.config.localAssetId;
                     delete nodeData.config.localAssetName;
@@ -7320,6 +7359,7 @@ class EventFlowEditor {
                     delete nodeData.config.audioChoices;
                     nodeData.config.sourceType = 'url';
                     nodeData.config.audioUrl = value;
+                    delete nodeData.config.uploadedMediaName;
                     delete nodeData.config.localAssetId;
                     delete nodeData.config.localAssetName;
                     delete nodeData.config.localMediaType;
@@ -7338,7 +7378,7 @@ class EventFlowEditor {
         }
         if (uploadAudioBtn) {
             uploadAudioBtn.addEventListener('click', () => {
-                openNodeMediaUpload('uploadAudio', 'prop-audioUrl', 'audioUrl');
+                openNodeMediaUpload('uploadAudio', 'audioUrl');
             });
         }
 
@@ -7359,6 +7399,7 @@ class EventFlowEditor {
                     });
                     if (!result || !result.success || !result.asset) return;
                     nodeData.config.sourceType = 'local';
+                    delete nodeData.config.uploadedMediaName;
                     nodeData.config.localAssetId = result.asset.id;
                     nodeData.config.localAssetName = result.asset.displayName || result.asset.fileName;
                     nodeData.config.localMediaType = result.asset.mediaType;

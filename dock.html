@@ -8781,7 +8781,7 @@
 						const blockName = data.blockUser.chatname || data.blockUser.username;
 						if (blockName && data.blockUser.type) {
 							if (!localBlockUserList) {
-								localBlockUserList = {};
+								localBlockUserList = Object.create(null);
 							}
 							if (localBlockUserList[blockName]) {
 								if (!localBlockUserList[blockName].includes(data.blockUser.type)) {
@@ -8801,7 +8801,7 @@
 
 						} else if (data.blockUser.username) {
 							if (!localBlockUserList) {
-								localBlockUserList = {};
+								localBlockUserList = Object.create(null);
 							}
 							if (localBlockUserList[data.blockUser.username]) {
 								if (!localBlockUserList[data.blockUser.username].includes("*")) {
@@ -10282,7 +10282,7 @@
 					//console.log(chatName, type);
 					
 					if (!localBlockUserList) {
-						localBlockUserList = {};
+						localBlockUserList = Object.create(null);
 					}
 					if (chatName && type) {
 						if (localBlockUserList[chatName]) {
