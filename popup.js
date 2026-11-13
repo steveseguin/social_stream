@@ -710,13 +710,21 @@ if (typeof(chrome.runtime)=='undefined'){
 				const isGetSettingsRequest = !!(data && data.cmd === "getSettings");
 				const isLLMProviderTestRequest = !!(data && (data.cmd === "testLLMProvider" || data.cmd === "testCensorModel"));
 				const isAiEventRequest = !!(data && data.cmd === "aiEvent");
-				const timeoutMs = isAiEventRequest ? 195000 : data?.cmd === "testCensorModel" ? getCensorTestTimeout(data.model) : isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
+				const isPointsBackupRequest = !!(data && (data.cmd === "importPointsData" || data.cmd === "exportPointsData"));
+				const timeoutMs = isPointsBackupRequest ? 120000 : isAiEventRequest ? 195000 : data?.cmd === "testCensorModel" ? getCensorTestTimeout(data.model) : isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
 				
 				// Create promise with timeout
 				const promise = new Promise((resolve) => {
 					// Store callback with timeout
 					const timeoutId = setTimeout(() => {
 						pendingCallbacks.delete(callbackId);
+						if (isPointsBackupRequest) {
+							// Database work may still be running. Never resend an import on timeout.
+							resolve({ success: false, error: data.cmd === "importPointsData"
+								? 'Points import timed out waiting for a response. It may still be running. Check your balances before importing again.'
+								: 'Points export timed out waiting for a response. Please try again.' });
+							return;
+						}
 						if (isLLMProviderTestRequest || isAiEventRequest) {
 							// The provider may still be working. Never resubmit a timed-out test.
 							resolve({ success: false, error: isAiEventRequest ? 'AI overlay request timed out.' : 'Connection test timed out.' });
