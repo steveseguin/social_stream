@@ -150,3 +150,65 @@ test('an already scheduled auto-show advances the reconciled queue', () => {
     callback();
     assertQueue(f, []);
 });
+
+for (const state of [
+    { name: 'uninterrupted', paused: false, nextSerial: 0, expected: 0 },
+    { name: 'paused before arrival', paused: true, nextSerial: 1, expected: -1 },
+    { name: 'paused and resumed while waiting', paused: false, nextSerial: 1, expected: 0 }
+]) {
+    test(`deferred webhook keeps its TTS arrival after normalization: ${state.name}`, () => {
+        const { c, timers } = fixture([]);
+        const received = [];
+        Object.assign(c, {
+            TTS: { ttscommand: true, paused: state.paused, pauseSerial: 0 },
+            Currencies: {}, WEBHOOK_BACKGROUND_GRACE_MS: 1500,
+            pendingRawWebhookFallbacks: new Map(), recentWebhookDeliveries: new Map(),
+            pendingRawWebhookSequence: 0,
+            shouldDeferRawDonationWebhook: () => true,
+            isRawDonationWebhook: data => !!data.kofi,
+            updateMeta: () => false,
+            errorlog: error => { throw error; },
+            processData: ({ contents }) => received.push(contents)
+        });
+        vm.runInContext(['normalizeWebhookDeliveryId', 'getRawDonationWebhookIdentity',
+            'getWebhookDeliveryKey', 'setRawWebhookMeta', 'pruneRecentWebhookDeliveries',
+            'queueRawDonationWebhookFallback'].map(extractFunction).join('\n'), c);
+        const incoming = { kofi: { data: JSON.stringify({ type: 'Donation', is_public: true,
+            message_id: 'arrival-1', from_name: 'Local fixture', message: 'Thank you',
+            amount: '5', currency: 'USD' }) } };
+        const before = JSON.stringify(incoming);
+        assert.equal(c.processInput(incoming), false);
+        assert.equal(received.length, 0, 'Do not normalize before the fallback timer');
+        assert.equal(timers.size, 1);
+        c.TTS.paused = false;
+        c.TTS.pauseSerial = state.nextSerial;
+        const [timerId, callback] = timers.entries().next().value;
+        timers.delete(timerId);
+        callback();
+        assert.equal(received.length, 1, 'Normalize exactly one deferred message');
+        assert.equal(received[0].meta.webhookId, 'arrival-1');
+        assert.equal(received[0].chatmessage, 'Thank you');
+        assert.equal(c.dockTtsArrivals.get(received[0]), state.expected,
+            'The replacement message must inherit the original arrival, not the current serial');
+        assert.equal(c.dockTtsArrivals.get(incoming), state.expected);
+        assert.equal(c.pendingRawWebhookFallbacks.size, 0);
+        assert.equal(JSON.stringify(incoming), before, 'Keep pause metadata out of the payload');
+    });
+}
+
+for (const paused of [false, true]) {
+    test(`JSON content records TTS arrival without altering payload: paused=${paused}`, () => {
+        const { c } = fixture([]);
+        const received = [];
+        c.TTS = { ttscommand: true, paused, pauseSerial: 0 };
+        c.processData = ({ contents }) => received.push(contents);
+        const content = { id: 41, type: 'youtube', chatmessage: 'Local fixture' };
+        const incoming = { action: 'content', value: JSON.stringify(content) };
+        const before = JSON.stringify(incoming);
+        c.processInput(incoming);
+        assert.equal(received.length, 1);
+        assert.equal(JSON.stringify(received[0]), JSON.stringify(content));
+        assert.equal(c.dockTtsArrivals.get(received[0]), paused ? -1 : 0);
+        assert.equal(JSON.stringify(incoming), before);
+    });
+}
