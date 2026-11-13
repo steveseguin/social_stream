@@ -1633,6 +1633,48 @@
 				margin: 0px 0 0px 5px;
 			}
 
+			/* Optional card look (&cards). Styling only: the same rows, order, limits and timed removal apply. */
+			/* Card colours reuse the bubble variables, so the existing highlight-colour options still apply. */
+			html.chatcards {
+				--bgcolor-bubble: #14161ce6;
+				--bgcolor-bubble-odd: #14161ce6;
+				--donation-bgcolor-bubble: #b45309f2;
+				--donation-bgcolor-bubble-odd: #b45309f2;
+				--member-bgcolor-bubble: #0f5c63f2;
+				--member-bgcolor-bubble-odd: #0f5c63f2;
+				--padding-rows: 8px;
+			}
+			body.chatcards .highlight-chat,
+			body.chatcards .highlight-chat.odd:not(.expand) {
+				background-color: var(--bgcolor-bubble);
+			}
+			body.chatcards .highlight-chat {
+				margin: 3px 6px;
+				max-width: calc(100% - 12px);
+				box-sizing: border-box;
+				padding-left: 10px;
+				padding-right: 10px;
+				border-radius: 12px;
+			}
+			body.chatcards .highlight-chat:not(:hover) {
+				box-shadow: inset 0 0 0 1px #ffffff1f;
+			}
+			body.chatcards .highlight-chat.member,
+			body.chatcards .highlight-chat.member.odd:not(.expand) {
+				background-color: var(--member-bgcolor-bubble);
+			}
+			body.chatcards .highlight-chat.firsttime {
+				background-image: linear-gradient(var(--firstime-bgcolor), var(--firstime-bgcolor));
+			}
+			body.chatcards .highlight-chat.dono-highlight,
+			body.chatcards .highlight-chat.dono-highlight.odd:not(.expand) {
+				background-color: var(--donation-bgcolor-bubble);
+			}
+			body.chatcards .highlight-chat.special,
+			body.chatcards .highlight-chat.special.odd:not(.expand) {
+				background-color: var(--special-bgcolor-bubble);
+			}
+
 			.donationAmount {
 				text-shadow: 0 0 10px #fff, 0 0 20px var(--donation-amount), 0 0 30px var(--donation-amount);
 				padding-left: 5px;
@@ -4320,6 +4362,11 @@
 			}
 			if (urlParams.has("namebubble")) {
 				document.body.classList.add("namebubble");
+			}
+			if (urlParams.has("cards")) {
+				// Card look for the audience overlay; off unless the link asks for it.
+				document.documentElement.classList.add("chatcards");
+				document.body.classList.add("chatcards");
 			}
 			
 			var showviewercount = false;

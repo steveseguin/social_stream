@@ -2107,10 +2107,61 @@
 	var youtubeStaleReloadWindowMs = 60 * 60 * 1000;
 	var youtubeStaleReloadMaxPerWindow = 60;
 
+	var youtubeChatThemeAttempt = "";
+
+	async function syncYouTubeChatTheme() {
+		if (!/^(www\.)?youtube\.com$/.test(location.hostname) || location.pathname !== "/live_chat") return;
+		var root = document.documentElement;
+		var baseCSS = document.querySelector('link#base-css[rel="stylesheet"]');
+		if (!root || !baseCSS || !baseCSS.sheet) return;
+		var dark = root.hasAttribute("dark");
+		var background = getComputedStyle(root).getPropertyValue("--yt-live-chat-background-color").trim().toLowerCase();
+		if (!(dark ? /^#fff(?:fff)?$/.test(background) : background === "#0f0f0f")) {
+			youtubeChatThemeAttempt = "";
+			return;
+		}
+		var theme = dark ? "1" : "0";
+		if (youtubeChatThemeAttempt === theme) return;
+		youtubeChatThemeAttempt = theme;
+		var originalCSS = baseCSS.href;
+		try {
+			// Device theme can change the text without changing YouTube's token stylesheet.
+			// Request the matching palette without reloading chat or saving a theme preference.
+			var url = new URL(location.href);
+			url.searchParams.set("dark_theme", theme);
+			var response = await fetch(url.href);
+			if (!response.ok || new URL(response.url).origin !== location.origin) return;
+			var themeDocument = parseSafeHTMLDocument(await response.text());
+			var themeCSS = themeDocument && themeDocument.querySelector('link#base-css[rel="stylesheet"]');
+			if (!themeCSS || !themeCSS.getAttribute("href")) return;
+			var cssURL = new URL(themeCSS.getAttribute("href"), response.url);
+			if (cssURL.origin !== location.origin || !cssURL.pathname.startsWith("/s/")) return;
+			if (root.hasAttribute("dark") !== dark || !baseCSS.isConnected || baseCSS.href !== originalCSS) return;
+			var replacement = baseCSS.cloneNode(false);
+			replacement.removeAttribute("id");
+			replacement.media = "not all";
+			replacement.onload = function () {
+				replacement.onload = null;
+				replacement.onerror = null;
+				if (root.hasAttribute("dark") !== dark || !baseCSS.isConnected || baseCSS.href !== originalCSS) {
+					replacement.remove();
+					return;
+				}
+				replacement.media = baseCSS.media;
+				replacement.id = baseCSS.id;
+				baseCSS.replaceWith(replacement);
+			};
+			replacement.onerror = function () { replacement.remove(); };
+			replacement.href = cssURL.href;
+			baseCSS.after(replacement);
+		} catch (e) {}
+	}
+
 	function applyYouTubeChatBackgroundFix() {
 		if (typeof window.__SSAPP_TAB_ID__ === "undefined") {
 			return;
 		}
+		syncYouTubeChatTheme();
 		if (!document.head || document.getElementById("ssn-youtube-chat-background-fix")) {
 			return;
 		}

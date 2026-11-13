@@ -14106,7 +14106,7 @@ function normalizeTimerMode(mode) {
 
 function normalizeTimerStyle(style) {
 	style = (style || "").toString().toLowerCase();
-	return style === "compact" || style === "ring" ? style : "stage";
+	return style === "compact" || style === "ring" || style === "bar" ? style : "stage";
 }
 
 function parseTimerDurationMs(value, fallback) {
