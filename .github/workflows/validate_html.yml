@@ -23,15 +23,15 @@ jobs:
       with:
         node-version: '20'
 
+    - name: Test Breaks recorded-slot guards
+      timeout-minutes: 2
+      run: node --test tests/breaks-recorded-slots.test.cjs
+
     - name: Install dependencies
       run: npm install htmlhint
 
     - name: Validate HTML files
       run: npx htmlhint "**/*.html" --config .htmlhintrc
-
-    - name: Test Breaks recorded-slot guards
-      timeout-minutes: 2
-      run: node --test tests/breaks-recorded-slots.test.cjs
 
     - name: Validate Python scripts
       run: python3 -m compileall -q scripts docs/skills/control-social-stream/scripts
