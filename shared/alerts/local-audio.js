@@ -14,7 +14,10 @@
         clearTimeout(job.timer);
         pending.delete(job.key);
         job.chunks.length = 0;
-        if (error) job.reject(error);
+        if (error) {
+            try { job.send({ action: 'localAudioRead', id: job.info.id, requestId: job.requestId, cancel: true }, job.peer); } catch (_) {}
+            job.reject(error);
+        }
         else job.resolve(url);
     }
     function request(job) {

@@ -120,18 +120,30 @@ class EventFlowSystem {
         const entry = this.localAudioTransfers && this.localAudioTransfers.get(request.id);
         const offset = request.offset;
         if (!peer || !entry || entry.session !== session || Date.now() - entry.used > 120000 ||
-            !/^[a-zA-Z0-9_-]{8,100}$/.test(request.requestId || '') || !Number.isSafeInteger(offset) ||
-            offset < 0 || offset >= entry.base64.length || offset % 16384 !== 0) return true;
+            !/^[a-zA-Z0-9_-]{8,100}$/.test(request.requestId || '')) return true;
+        const key = peer + ':' + request.requestId;
+        if (request.cancel === true) {
+            entry.clients.delete(key);
+            return true;
+        }
+        if (!Number.isSafeInteger(offset) || offset < 0 || offset >= entry.base64.length || offset % 16384 !== 0) return true;
+        const now = Date.now();
+        entry.clients.forEach((client, id) => {
+            // A receiver has one pending request per sound. Reclaim its previous
+            // request on retry, including when a cancellation packet was lost.
+            if (now - client.used > 15000 || (offset === 0 && client.peer === peer && id !== key)) entry.clients.delete(id);
+        });
         // Each receiver asks for the next chunk. This paces the transfer without
         // filling the shared data-channel queue or changing chat transport.
-        const key = peer + ':' + request.requestId;
         if (!entry.clients.has(key)) {
             if (offset !== 0 || entry.clients.size >= 16) return true;
-            entry.clients.set(key, 0);
+            entry.clients.set(key, { peer, offset: 0, used: now });
         }
-        if (entry.clients.get(key) !== offset) return true;
+        const client = entry.clients.get(key);
+        if (client.offset !== offset) return true;
         const data = entry.base64.slice(offset, offset + 16384);
-        entry.clients.set(key, offset + data.length);
+        client.offset = offset + data.length;
+        client.used = now;
         send({ actionType: 'local_audio_chunk', id: entry.id, requestId: request.requestId, offset, data });
         if (offset + data.length === entry.base64.length) entry.clients.delete(key);
         return true;
@@ -4532,26 +4544,50 @@ class EventFlowSystem {
 						volume: config.volume !== undefined ? config.volume : 1.0,
                         audioPlayback: config.audioPlayback === 'queue' || config.audioPlayback === 'interrupt' ? config.audioPlayback : undefined
 					};
-					if (actionPayload.sourceType === 'local') {
-						const generation = this.localAudioGeneration || 0;
-						const audioSession = typeof streamID !== 'undefined' ? streamID : '';
-						try { actionPayload.localAudio = await this.prepareLocalAudio(config.localAssetId); }
-						catch (error) {
-							actionPayload.localAudioError = ['AUDIO_TOO_LARGE', 'AUDIO_MISSING', 'AUDIO_CHANGED', 'AUDIO_BUSY'].includes(error && error.code) ? error.code : 'AUDIO_UNAVAILABLE';
-							console.warn('[Event Flow] Local audio transfer unavailable:', error && error.message || error);
-						}
-                        if (generation !== (this.localAudioGeneration || 0) || (execution && execution.cancelled) ||
-                            audioSession !== (typeof streamID !== 'undefined' ? streamID : '')) break;
-					}
-					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
-						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
-						//console.log('[ExecuteAction - playAudioClip] Sent to actions page:', actionPayload);
-					} else if (this.sendMessageToTabs) {
-						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
-						//console.log('[ExecuteAction - playAudioClip] Sent via sendMessageToTabs:', actionPayload);
-					} else {
-						console.warn('[ExecuteAction - playAudioClip] No function available to send message to actions page.');
-					}
+                    if (actionPayload.audioPlayback === 'interrupt') {
+                        const preparing = this.audioClipPreparing || actionPayload.sourceType === 'local';
+                        this.localAudioGeneration = (this.localAudioGeneration || 0) + 1;
+                        this.audioClipPreparation = null;
+                        this.audioClipPreparing = 0;
+                        if (preparing) {
+                            const stop = { overlayNinja: { actionType: 'stop_audio' } };
+                            if (this.sendTargetP2P) this.sendTargetP2P(stop, 'actions');
+                            else if (this.sendMessageToTabs) this.sendMessageToTabs({ ...stop, targetPage: 'actions' }, true);
+                        }
+                    }
+                    const generation = this.localAudioGeneration || 0;
+                    const audioSession = typeof streamID !== 'undefined' ? streamID : '';
+                    const cancelled = () => generation !== (this.localAudioGeneration || 0) ||
+                        (execution && execution.cancelled) || audioSession !== (typeof streamID !== 'undefined' ? streamID : '');
+                    const prepareAndSend = async () => {
+                        if (cancelled()) return;
+                        if (actionPayload.sourceType === 'local') {
+                            try { actionPayload.localAudio = await this.prepareLocalAudio(actionPayload.localAssetId); }
+                            catch (error) {
+                                actionPayload.localAudioError = ['AUDIO_TOO_LARGE', 'AUDIO_MISSING', 'AUDIO_CHANGED', 'AUDIO_BUSY'].includes(error && error.code) ? error.code : 'AUDIO_UNAVAILABLE';
+                                console.warn('[Event Flow] Local audio transfer unavailable:', error && error.message || error);
+                            }
+                        }
+                        if (cancelled()) return;
+                        if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                            this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+                        } else if (this.sendMessageToTabs) {
+                            this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
+                        } else {
+                            console.warn('[ExecuteAction - playAudioClip] No function available to send message to actions page.');
+                        }
+                    };
+                    // Keep actions in arrival order while a local file is being read.
+                    // Interrupt and Stop start a new generation without waiting for old reads.
+                    if (actionPayload.sourceType === 'local' || this.audioClipPreparing) {
+                        if (this.audioClipPreparing >= 30) break;
+                        this.audioClipPreparing = (this.audioClipPreparing || 0) + 1;
+                        const pending = (this.audioClipPreparation || Promise.resolve()).then(prepareAndSend).finally(() => {
+                            if (generation === (this.localAudioGeneration || 0)) this.audioClipPreparing--;
+                        });
+                        this.audioClipPreparation = pending.catch(() => {});
+                        await pending;
+                    } else await prepareAndSend();
 				} else {
 					console.warn('[ExecuteAction - playAudioClip] Audio URL not configured.');
 				}
@@ -4559,6 +4595,8 @@ class EventFlowSystem {
             }
             case 'stopAudioClips': {
                 this.localAudioGeneration = (this.localAudioGeneration || 0) + 1;
+                this.audioClipPreparation = null;
+                this.audioClipPreparing = 0;
                 if (this.localAudioTransfers) this.localAudioTransfers.clear();
                 clearTimeout(this.localAudioExpiry);
                 const payload = { overlayNinja: { actionType: 'stop_audio' } };
