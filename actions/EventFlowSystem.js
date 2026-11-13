@@ -97,6 +97,15 @@ class EventFlowSystem {
             else if (entry.hash === audio.hash && entry.assetId === assetId && entry.mime === audio.mime) match = entry;
         });
         if (!match) {
+            let retained = 0;
+            this.localAudioTransfers.forEach(entry => { retained += entry.base64.length; });
+            // Advertised sounds may still be downloading or waiting at a receiver.
+            // Refuse new audio rather than invalidate one of those transfer IDs.
+            if (retained + audio.base64.length > 64 * 1024 * 1024) {
+                const error = new Error('Local audio transfer cache is full. Try again shortly.');
+                error.code = 'AUDIO_BUSY';
+                throw error;
+            }
             const id = Array.from(crypto.getRandomValues(new Uint32Array(4)), value => value.toString(16)).join('-');
             match = Object.assign({ id, assetId, session, clients: new Map() }, audio);
             this.localAudioTransfers.set(id, match);
@@ -104,14 +113,20 @@ class EventFlowSystem {
         match.used = now;
         this.localAudioTransfers.delete(match.id);
         this.localAudioTransfers.set(match.id, match);
-        // Bound retained audio and expire it even if no more commands arrive.
-        let retained = 0;
-        Array.from(this.localAudioTransfers.values()).reverse().forEach(entry => {
-            retained += entry.base64.length;
-            if (retained > 64 * 1024 * 1024) this.localAudioTransfers.delete(entry.id);
-        });
+        // Expire idle audio even if no more commands arrive. Valid chunk requests
+        // refresh entry.used so cleanup cannot interrupt an active transfer.
         clearTimeout(this.localAudioExpiry);
-        this.localAudioExpiry = setTimeout(() => this.localAudioTransfers.clear(), 120000);
+        const expire = () => {
+            const now = Date.now();
+            let next = 120000;
+            this.localAudioTransfers.forEach((entry, id) => {
+                const remaining = 120000 - (now - entry.used);
+                if (remaining <= 0) this.localAudioTransfers.delete(id);
+                else next = Math.min(next, remaining);
+            });
+            if (this.localAudioTransfers.size) this.localAudioExpiry = setTimeout(expire, next);
+        };
+        this.localAudioExpiry = setTimeout(expire, 120000);
         return { id: match.id, hash: match.hash, size: match.size, mime: match.mime };
     }
 
@@ -144,6 +159,7 @@ class EventFlowSystem {
         const data = entry.base64.slice(offset, offset + 16384);
         client.offset = offset + data.length;
         client.used = now;
+        entry.used = now;
         send({ actionType: 'local_audio_chunk', id: entry.id, requestId: request.requestId, offset, data });
         if (offset + data.length === entry.base64.length) entry.clients.delete(key);
         return true;
