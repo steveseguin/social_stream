@@ -805,12 +805,12 @@ settings.pollDonationWeighted = normalizeBoolean(settings.pollDonationWeighted) 
 settings.pollTimer = normalizeNumber(settings.pollTimer, 60) || 60;
 settings.pollOptions = normalizeOptionsList(settings.pollOptions);
 
-let results = {};
+let results = Object.create(null);
 // Numeric freeform votes refer to the last rendered, ranked options.
 let displayedFreeformOptions = [];
 let totalVotes = 0;
 let alreadyVoted = {};
-let donationTotals = {}; // Track donation amounts per option
+let donationTotals = Object.create(null); // Track donation amounts per option
 let totalDonations = 0;  // Track total donations
 let updatePending = false;
 let lastUpdateTime = 0;
@@ -1428,7 +1428,7 @@ function processData(data, source) {
                 updateUiSetting('pollDonationWeighted', incomingDonationWeighted);
             }
         }
-        if (data.settings.multipleChoiceOptions) {
+        if (settings.pollType === 'multiple' && data.settings.multipleChoiceOptions) {
             const rawOptions = typeof data.settings.multipleChoiceOptions === 'string'
                 ? data.settings.multipleChoiceOptions
                 : (typeof data.settings.multipleChoiceOptions.textsetting === 'string'
@@ -1463,10 +1463,10 @@ function processData(data, source) {
             const shouldReinitializePoll = coreChanges.some((change) => pollCoreResetKeys.has(change.key));
             if (shouldReinitializePoll) {
                 messageQueue.length = 0;
-                results = {};
+                results = Object.create(null);
                 totalVotes = 0;
                 alreadyVoted = {};
-                donationTotals = {};
+                donationTotals = Object.create(null);
                 totalDonations = 0;
             }
             if (shouldReinitializePoll) {
@@ -1489,6 +1489,7 @@ function processData(data, source) {
             debugLog('UI adjustments applied alongside core reset', { uiChanges });
         }
     } else if (shouldProcessPollMessage(data)) {
+        if (!settings.pollEnabled) return;
         if (isDuplicatePollDelivery(data, source)) return;
         queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation, getDonationValueUSD(data));
     } else if (data.chatmessage) {
@@ -1521,8 +1522,8 @@ function startPoll() {
     settings.pollClosed = false;
     alreadyVoted = {};
     totalVotes = 0;
-    results = {};
-    donationTotals = {};
+    results = Object.create(null);
+    donationTotals = Object.create(null);
     totalDonations = 0;
     initializePoll();
     updatePollVisibility();
@@ -1535,10 +1536,10 @@ function startPoll() {
 function resetPoll() {
     messageQueue.length = 0;
     settings.pollClosed = false;
-    results = {};
+    results = Object.create(null);
     totalVotes = 0;
     alreadyVoted = {};
-    donationTotals = {};
+    donationTotals = Object.create(null);
     totalDonations = 0;
     initializePoll();
     debugLog('Poll reset without changing visibility', {
@@ -1562,6 +1563,7 @@ function processInput(data, source) {
         }
         return true;
     } else if (shouldProcessPollMessage(data)) {
+        if (!settings.pollEnabled) return false;
         if (isDuplicatePollDelivery(data, source)) return false;
         debugLog('Chat message received for poll', { chatmessage: data.chatmessage, chatname: data.chatname, source: data.type, hasDonation: data.hasDonation });
         queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation, getDonationValueUSD(data));

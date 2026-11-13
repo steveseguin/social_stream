@@ -1238,12 +1238,12 @@ function initialLoadBadWords() {
 						profanityHashTable = createProfanityHashTable(customBadWordsList);
 					} else {
 						log("using default badwords list");
-						badWords = generateVariationsList(badWords);
+						badWords = generateVariationsList(DEFAULT_BAD_WORDS);
 						profanityHashTable = createProfanityHashTable(badWords);
 					}
 				} catch (e) {
 					log("failed to load badwords; loading backups");
-					badWords = generateVariationsList(badWords);
+					badWords = generateVariationsList(DEFAULT_BAD_WORDS);
 					profanityHashTable = createProfanityHashTable(badWords);
 				}
 			}
@@ -1264,17 +1264,17 @@ function initialLoadBadWords() {
 							customBadWordsList = generateVariationsList(customBadWordsList);
 							profanityHashTable = createProfanityHashTable(customBadWordsList);
 						} else {
-							badWords = generateVariationsList(badWords);
+							badWords = generateVariationsList(DEFAULT_BAD_WORDS);
 							profanityHashTable = createProfanityHashTable(badWords);
 						}
 					} catch (e) {
-						badWords = generateVariationsList(badWords);
+						badWords = generateVariationsList(DEFAULT_BAD_WORDS);
 						profanityHashTable = createProfanityHashTable(badWords);
 					}
 				});
 		}
 	} catch (e) {
-		badWords = generateVariationsList(badWords);
+		badWords = generateVariationsList(DEFAULT_BAD_WORDS);
 		profanityHashTable = createProfanityHashTable(badWords);
 	}
 }
@@ -1339,7 +1339,7 @@ try {
 window.customUserFunction = function (data) {
 	// This is a placeholder function that can be overridden by custom user JavaScript
 	console.log("Default customUserFunction - no custom implementation loaded");
-	// Return false to indicate no custom processing was done
+	// Pass messages through when no custom implementation is loaded.
 	return data;
 };
 
@@ -1436,7 +1436,7 @@ function resetCustomJs() {
 	// Reset to default function
 	window.customUserFunction = function (data) {
 		console.log("Default customUserFunction - no custom implementation loaded");
-		return false;
+		return data;
 	};
 
 	console.log("Custom JavaScript function reset to default");
@@ -4020,6 +4020,8 @@ async function importSettings(item = false) {
 			!imported.settings || typeof imported.settings !== "object" || Array.isArray(imported.settings)) {
 			throw new Error("Missing or invalid settings object");
 		}
+		// Rebuild translations from the selected language, not imported HTML.
+		delete imported.settings.translation;
 		loadSettings(imported, true);
 		messagePopup({ settingsImported: true });
 	} catch (e) {
@@ -7665,7 +7667,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				queueTransportTask(destroyNinjaTransport);
 			}
 
-			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, cohostCapability: await getOpenAIRealtimeCohostCapability() });
+			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, cohostCapability: await getOpenAIRealtimeCohostCapability() });
 		} else if (request.cmd && request.cmd === "uploadCustomJs") {
 			localStorage.setItem("customJavaScript", request.data);
 			try {
@@ -8673,13 +8675,10 @@ function sendToH2R(data) {
 			if (data.timestamp) {
 				msg.timestamp = data.timestamp;
 			}
-			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
-			if (!data.textonly) {
-				data.chatmessage = unescapeHtml(data.chatmessage);
-			}
+			const messageText = data.textonly ? data.chatmessage : unescapeHtml(data.chatmessage);
 			msg.snippet = {};
 			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
-			msg.snippet.displayMessage = sanitizeRelay(data.chatmessage, data.textonly) || "";
+			msg.snippet.displayMessage = sanitizeRelay(messageText, data.textonly) || "";
 			if (!msg.snippet.displayMessage) {
 				return;
 			}
@@ -11644,9 +11643,14 @@ function setupSocket() {
 				outgoingMessage.outgoingOrigin = "host";
 				resp = sendMessageToTabs(outgoingMessage, false, null, false, false, false);
 			} else if (data.action && data.action === "blockUser" && data.value) {
-				let source = data.target.trim().toLowerCase() || "*";
-				let username = data.value.trim();
-				resp = blockUser({ chatname: username, type: source });
+				const user = typeof data.value === "object" ? data.value : { chatname: data.value, type: data.target };
+				if (typeof user.chatname === "string" && (user.type === undefined || typeof user.type === "string")) {
+					const username = user.chatname.trim();
+					const source = (user.type || "*").trim().toLowerCase() || "*";
+					if (username) {
+						resp = blockUser({ chatname: username, type: source });
+					}
+				}
 			} else if (data.action && (data.action === "clearDock" || data.action === "clear" || data.action === "clearAll")) {
 				sendDataP2P(data);
 				resp = true;
@@ -12053,6 +12057,7 @@ function setupSocket() {
 					message.membership = "";
 					message.contentimg = "";
 					message.type = "stripe";
+					message.textonly = true;
 					setInboundWebhookMeta(message, stripeWebhookId);
 
 					data = message; // replace inbound stripe message with new message
@@ -19151,8 +19156,12 @@ async function applyBotActions(data, tab = false) {
 					return messageText.includes(keywordLower);
 				}
 				// For word-based keywords, check word boundaries
-				const wordRegex = new RegExp(`\\b${keywordLower}\\b`);
-				return wordRegex.test(messageText);
+				try {
+					const wordRegex = new RegExp(`\\b${keywordLower}\\b`);
+					return wordRegex.test(messageText);
+				} catch (e) {
+					return messageText.includes(keywordLower);
+				}
 			});
 
 			if (isQuestion) {

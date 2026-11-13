@@ -137,7 +137,7 @@ const ProfileManager = {
 
       profileElement.innerHTML = `
         <div class="profile-info" style="flex-grow: 1;">
-          <div class="profile-name" style="font-weight: ${isActive ? 'bold' : 'normal'};">${profile.name}</div>
+          <div class="profile-name" style="font-weight: ${isActive ? 'bold' : 'normal'};"></div>
           <div class="profile-date" style="font-size: 0.8em; opacity: 0.7;">${dateStr}</div>
         </div>
         <div class="profile-actions">
@@ -145,6 +145,7 @@ const ProfileManager = {
           <button class="delete-profile glowingButton" style="background: #ff4444;"><span data-translate="delete-profiles">Delete</span></button>
         </div>
       `;
+      profileElement.querySelector('.profile-name').textContent = profile.name;
       container.appendChild(profileElement);
     });
     

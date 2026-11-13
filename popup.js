@@ -2225,7 +2225,7 @@ function updateBlockedWordsList() {
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
-    return div.innerHTML;
+    return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 const DEFAULT_CUSTOM_URL_SLOT_COUNT = 9;
@@ -12103,9 +12103,10 @@ const PollManager = {
             }
 
             pollElement.innerHTML = `
-                <div class="poll-name" style="flex-grow: 1;">${poll.name}</div>
+                <div class="poll-name" style="flex-grow: 1;"></div>
                 <button class="delete-poll" style="background: none; border: none; color: #ff4444; cursor: pointer; padding: 0 5px;">×</button>
             `;
+            pollElement.querySelector('.poll-name').textContent = poll.name;
             container.appendChild(pollElement);
         });
     },
@@ -12515,7 +12516,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		event.stopPropagation()
 		chrome.runtime.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}}, function (response) {
 			chrome.runtime.lastError;
-			update(response);
+			update(response, false);
 		});
 		return false;
 	};

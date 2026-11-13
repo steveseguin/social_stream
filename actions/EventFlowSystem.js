@@ -441,6 +441,11 @@ class EventFlowSystem {
                 const data = event && event.data;
                 if (!data || data.sourceInstanceId === this.userMemoryInstanceId) return;
 
+                if (data.kind === 'flows-changed') {
+                    this.reloadFlows().catch(error => console.warn('[EventFlowSystem] Unable to reload flows:', error));
+                    return;
+                }
+
                 if (data.kind === 'request-user-memory-state') {
                     this.userMemoryStates.forEach(state => {
                         this.userMemoryChannel.postMessage({
@@ -462,6 +467,19 @@ class EventFlowSystem {
         } catch (error) {
             this.userMemoryChannel = null;
             console.warn('[UserMemory] State synchronization is unavailable:', error && error.message ? error.message : error);
+        }
+    }
+
+    notifyFlowsChanged() {
+        // Standalone extension editors do not share SSApp's parent message route.
+        if (!this.userMemoryChannel || !window.location || window.location.protocol !== 'chrome-extension:') return;
+        try {
+            this.userMemoryChannel.postMessage({
+                kind: 'flows-changed',
+                sourceInstanceId: this.userMemoryInstanceId
+            });
+        } catch (error) {
+            console.warn('[EventFlowSystem] Unable to announce flow changes:', error);
         }
     }
 
@@ -1603,6 +1621,7 @@ class EventFlowSystem {
 			const store = tx.objectStore(this.storeName);
 			
 			const request = store.put(flowData); // flowData now includes 'order'
+			tx.oncomplete = () => this.notifyFlowsChanged();
 			
 			request.onsuccess = async () => {
 				this.reconcileFlowState(existingFlowIndex === -1 ? [...this.flows, flowData]
@@ -1663,6 +1682,7 @@ class EventFlowSystem {
                     }
                 });
                 this.flows.sort((a, b) => (a.order || 0) - (b.order || 0));
+                this.notifyFlowsChanged();
                 resolveOuter({ success: true, message: "Flows reordered successfully." });
             };
             transaction.onerror = (event) => {
@@ -1680,6 +1700,7 @@ class EventFlowSystem {
             const tx = db.transaction(this.storeName, 'readwrite');
             const store = tx.objectStore(this.storeName);
             const request = store.delete(flowId);
+            tx.oncomplete = () => this.notifyFlowsChanged();
             
             request.onsuccess = () => {
                 this.cleanupStateNodes(flowId);
