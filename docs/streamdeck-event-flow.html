@@ -64,7 +64,7 @@
   "get": "run-1",
   "apiid": "YOUR_SESSION"
 }</pre><p>Use a unique <code>get</code> string for each request. A successful callback has <code>result.ok: true</code>, <code>result.status: "accepted"</code>, and <code>result.payload.matchedFlows</code>. Acceptance means the enabled flow was found and scheduled. It does not mean every delayed action, webhook, OBS call or media playback has completed.</p>
-<h3>WebSocket</h3><p>Enable <strong>remote API control of extension</strong> in SSN. Connect to <code>wss://io.socialstream.ninja</code>. Join with <code>{"join":"YOUR_SESSION","out":1,"in":2}</code>, then send the request above. Channel 1 carries controls; channel 2 carries callbacks. You do not need to enable the chat channel for workflows.</p>
+<h3>WebSocket</h3><p>Enable <strong>remote API control of extension</strong> in SSN. Connect to <code>wss://io.socialstream.ninja</code>. Join with <code>{"join":"YOUR_SESSION","out":1,"in":2}</code>, then send the request above. Channel 1 carries controls; replies come back on channel 2. To get a reply over the hosted WebSocket, add <code>"replyFormat":"commandResult"</code> next to <code>get</code>. It arrives as <code>{"type":"commandResult","action":"...","get":"...","result":{...}}</code>. Without it, the relay keeps the older <code>callback</code> reply for HTTP requests and does not forward it to WebSocket clients. You do not need to enable the chat channel for workflows.</p>
 <h3>HTTP</h3><p>Enable the same remote API control setting. Replace the session placeholder before use:</p><pre>POST https://io.socialstream.ninja/YOUR_SESSION
 Content-Type: application/json
 

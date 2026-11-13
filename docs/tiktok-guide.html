@@ -150,10 +150,10 @@
                     <div class="callout-box">
                         <strong>Quick recommendation:</strong>
                         <ul class="guide-list">
-                            <li>Start with <strong>TikTok WS + Auto</strong>.</li>
+                            <li>Start with <strong>Auto (recommended)</strong>.</li>
                             <li>If you need to reply, switch to <strong>Standard</strong>.</li>
                             <li>If Standard is flaky, try <strong>Local Signer</strong>.</li>
-                            <li>If TikTok keeps missing chat, use <strong>TikFinity OBS Dock</strong> through <strong>Other chat sites</strong>.</li>
+                            <li>If TikTok keeps missing chat, use <strong>TikFinity OBS Dock</strong> through <strong>Add other source</strong>.</li>
                         </ul>
                     </div>
                     <div class="callout-box warning">
@@ -175,8 +175,8 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><strong>TikTok WS + Auto</strong></td>
-                                <td>Best default for most users. Uses WebSocket first, then falls back to Polling if needed.</td>
+                                <td><strong>Auto (recommended)</strong></td>
+                                <td>Best default for most users. Picks the connection for you and falls back on its own if needed.</td>
                                 <td>No</td>
                             </tr>
                             <tr>
@@ -190,8 +190,8 @@
                                 <td>Yes</td>
                             </tr>
                             <tr>
-                                <td><strong>Polling</strong></td>
-                                <td>Compatibility mode. Slower, but useful when WebSocket paths fail.</td>
+                                <td><strong>Compatibility (WebSocket)</strong></td>
+                                <td>The older WebSocket connector. Try it if Auto keeps missing chat.</td>
                                 <td>No</td>
                             </tr>
                             <tr>
@@ -239,7 +239,7 @@
                         <ol class="guide-steps">
                             <li>Try <strong>Local Signer</strong>.</li>
                             <li>Keep the signer window open.</li>
-                            <li>If WebSocket still fails, try <strong>Polling</strong>.</li>
+                            <li>If it still fails, try <strong>Compatibility (WebSocket)</strong> or <strong>Standard (capture window)</strong>.</li>
                             <li>If TikTok still misses too much chat, switch to the TikFinity fallback below.</li>
                         </ol>
                     </div>
@@ -252,10 +252,10 @@
                     <ul class="guide-list">
                         <li><strong>Best reply mode:</strong> <strong>Standard</strong></li>
                         <li><strong>Fallback reply mode:</strong> <strong>Local Signer</strong></li>
-                        <li><strong>Not meant for replies:</strong> Auto, Polling, TikFinity fallback</li>
+                        <li><strong>Not meant for replies:</strong> Auto, Compatibility (WebSocket), TikFinity fallback</li>
                     </ul>
                     <div class="callout-box">
-                        <strong>Practical rule:</strong> if reading reliability matters most, start with Auto or Polling. If replying matters most, use Standard or Local Signer.
+                        <strong>Practical rule:</strong> if reading reliability matters most, start with Auto. If replying matters most, use Standard or Local Signer.
                     </div>
                 </div>
 
@@ -268,7 +268,7 @@
                         <li>Go to <strong>Overlay -&gt; OBS Docks</strong>.</li>
                         <li>Pick a dock slot and configure it for chat.</li>
                         <li>Copy the dock URL.</li>
-                        <li>In SSN, click <strong>Other chat sites</strong>.</li>
+                        <li>In SSN, click <strong>Add other source</strong>.</li>
                         <li>Paste the TikFinity dock URL.</li>
                         <li>Activate the new source and keep TikFinity open while live.</li>
                     </ol>

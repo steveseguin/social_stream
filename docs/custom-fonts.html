@@ -62,6 +62,9 @@
                     <li>Which CSS variables adjust text sizing and layout on both pages.</li>
                     <li>Quick fallbacks if you want to keep using Google Fonts or installed system fonts.</li>
                 </ul>
+                <div class="guide-note">
+                <p><strong>Just want a different font?</strong> Add <code>&amp;googlefont=Font+Name</code> to your dock or featured link for any Google Font, or <code>&amp;font=Font Name</code> for a font installed on your computer. You only need the steps below for a font file that is in neither place.</p>
+                </div>
                 <figure class="guide-figure">
                     <img src="images/guides/custom-font-featured-demo.png" alt="featured.html overlay message rendered in the Pacifico font with an avatar and name tag" class="guide-image">
                     <figcaption>The same <code>featured.html</code> overlay with <code>&amp;googlefont=Pacifico</code> applied. Self-hosted fonts work the same way via <code>@font-face</code>.</figcaption>
@@ -101,7 +104,7 @@
   --font-family: 'MyDockFont', 'Segoe UI', 'Arial Unicode MS', sans-serif;
   --comment-font-size: 28px;
   --author-font-size: 24px;
-  --message-line-height: 32px;
+  --message-line-height: 32px; /* dock.html only */
 }</pre>
                 </div>
                 <div class="guide-note">
@@ -127,7 +130,7 @@ https://socialstream.ninja/featured.html?session=YOURSESSION&css=https://your-si
 
 			<div class="guide-card">
 				<h3>4) Tune the overlay text</h3>
-				<p>Core typography variables used by both pages:</p>
+				<p>Core typography variables. Unmarked ones work on both pages:</p>
 				<div class="code-block">
 <pre>:root {
   --font-family: 'MyDockFont', 'FontB', sans-serif;
@@ -139,8 +142,8 @@ https://socialstream.ninja/featured.html?session=YOURSESSION&css=https://your-si
   --name-font-weight: 700;    /* dock.html */
   --comment-color: #ffffff;
   --author-color: #ffe08a;
-  --comment-bg-color: #161616;
-  --author-bg-color: #202020;
+  --comment-bg-color: #161616;  /* featured.html */
+  --author-bg-color: #202020;   /* featured.html */
 }</pre>
 				</div>
 				<p><strong>Dock-only extras:</strong> <code>--stylized-emoji</code>, <code>--stylized-img</code>, <code>--text-stroke-width</code>, <code>--text-shadow</code>, and row colors (<code>--highlight-base</code>, <code>--highlight-base2</code>, plus the <code>compact</code> variants).</p>

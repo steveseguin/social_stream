@@ -335,9 +335,9 @@
 					<ol class="guide-steps">
 						<li>Open your streaming platform's chat in a browser (or use the pop-out chat feature if available)</li>
 						<li>Click the Social Stream Ninja extension icon in your browser toolbar</li>
-						<li>Click "Enable Extension" to turn it on (the icon should turn green)</li>
-						<li>Open the "Dashboard Link" provided in the extension popup</li>
-						<li>Open the "Overlay Link" in OBS as a browser source</li>
+						<li>Click the on/off button at the top of the popup so the extension shows as active (the icon should turn green)</li>
+						<li>Open the "Main chat overlay &amp; control dock" link shown in the extension popup</li>
+						<li>Add the "Featured chat overlay" link to OBS as a browser source</li>
 					</ol>
 					<div class="guide-note">
 						<p><strong>Note:</strong> For the best experience, keep chat windows visible (not minimized) when using the browser extension.</p>
@@ -569,8 +569,8 @@
 					<h4>How to Enable:</h4>
 					<ol class="guide-steps">
 						<li>Click the Social Stream Ninja extension icon</li>
-						<li>Find the <strong>"Capture Stream Events"</strong> toggle in settings</li>
-						<li>Enable it to start receiving alerts</li>
+						<li>Stream events are captured by default. Under <strong>Global settings and tools</strong> &rarr; <strong>Mechanics - Events &amp; Capture</strong>, make sure <strong>Hide stream events (follows, likes, subs)</strong> is off</li>
+						<li>Open an alerts or events overlay to see them on stream</li>
 					</ol>
 
 					<div class="guide-note">
@@ -648,10 +648,10 @@
 					<h4>Getting Started:</h4>
 					<ol class="guide-steps">
 						<li>Open the Event Flow editor from the main dashboard menu</li>
-						<li>Create a new flow and add source nodes (e.g., "Twitch Message")</li>
-						<li>Connect logic nodes to filter messages (Contains Keyword, User Role, etc.)</li>
-						<li>Add action nodes to respond (Send Chat, Play Audio, Display Overlay)</li>
-						<li>Test with the built-in simulator before going live</li>
+						<li>Create a new flow and add a trigger (for example, a chat message from one platform)</li>
+						<li>Add conditions to filter messages (message text, user role, etc.)</li>
+						<li>Add actions to respond (send a message, play audio, show media)</li>
+						<li>Send a test message to check the flow before going live</li>
 					</ol>
 
 					<h4>Flow Actions Overlay:</h4>
@@ -735,7 +735,7 @@
 					<ol class="guide-steps">
 						<li>Note your Session ID from the extension popup</li>
 						<li>Keep Social Stream Ninja enabled</li>
-						<li>Under <code>Global settings and tools</code> &rarr; <code>Mechanics</code>, enable <strong>remote API control of extension</strong></li>
+						<li>Under <code>Global settings and tools</code> &rarr; <code>Mechanics - Connections &amp; Integrations</code>, enable <strong>remote API control of extension</strong></li>
 						<li>Use your normal generated dock and overlay links; do not add <code>&server</code>, <code>&server2</code>, or <code>&server3</code> for donation webhooks</li>
 						<li>Reload the dock once if it was already open</li>
 					</ol>
@@ -929,7 +929,7 @@
 						<li>Launch the Social Stream Ninja application</li>
 						<li>Click the button corresponding to the platform you want to add in the left sidebar</li>
 						<li>Enter your username, Video ID, or URL as prompted</li>
-						<li>Click "Activate source" or "Select Live Sources" to connect</li>
+						<li>Click "Activate source" or "Auto-find &amp; Activate" to connect</li>
 						<li>Copy the "Streaming Chat" link and add it as a Browser Source in OBS</li>
 					</ol>
 					<div class="guide-note">
@@ -944,7 +944,7 @@
 					<div class="platform-guide">
 						<h4>YouTube</h4>
 						<ul class="guide-list">
-							<li>Click "YouTube Username" in the left sidebar</li>
+							<li>Click "YouTube" in the left sidebar</li>
 							<li>Enter your channel name or Video ID</li>
 							<li>Click "Auto-find & Activate" for live streams</li>
 						</ul>
@@ -953,7 +953,7 @@
 					<div class="platform-guide">
 						<h4>Twitch</h4>
 						<ul class="guide-list">
-							<li>Click "Twitch Username" in the left sidebar</li>
+							<li>Click "Twitch" in the left sidebar</li>
 							<li>Enter your Twitch username</li>
 							<li>Click "Activate source" to connect</li>
 						</ul>
@@ -988,9 +988,9 @@
 					<h3>TikTok Guide</h3>
 					<p>Need help with TikTok setup, replies, connection modes, or TikFinity fallback? Use the dedicated TikTok guide.</p>
 					<ul class="guide-list">
-						<li>Which mode to use: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy, or Euler Signing</li>
+						<li>Which mode to use: Auto (recommended), Local signer, Compatibility (WebSocket), Standard (capture window), Euler Proxy, or Euler Signing</li>
 						<li>How to reply to TikTok chat from SSN</li>
-						<li>How to use TikFinity OBS Dock as a fallback through Other chat sites</li>
+						<li>How to use TikFinity OBS Dock as a fallback through Add other source</li>
 						<li>What to try when TikTok says you are offline, misses messages, duplicates chat, or closes auth windows</li>
 					</ul>
 					<p><a href="tiktok-guide.html" class="btn btn-primary">Open the TikTok Guide</a></p>
@@ -1007,9 +1007,9 @@
 					<h3>Open the full TikTok guide</h3>
 					<p>The standalone app has the most TikTok options in SSN, so the guide lives on its own page now.</p>
 					<ul class="guide-list">
-						<li>Mode picker help: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy, and Euler Signing</li>
+						<li>Mode picker help: Auto (recommended), Local signer, Compatibility (WebSocket), Standard (capture window), Euler Proxy, and Euler Signing</li>
 						<li>How to send replies to TikTok chat from SSN</li>
-						<li>How to use TikFinity OBS Dock through <strong>Other chat sites</strong></li>
+						<li>How to use TikFinity OBS Dock through <strong>Add other source</strong></li>
 						<li>Common fixes for auth windows closing, missed chat, duplicate chat, and throttling</li>
 					</ul>
 					<p><a href="tiktok-guide.html" class="btn btn-primary">Open the TikTok Guide</a></p>
@@ -1085,7 +1085,7 @@
 					<ul class="guide-list">
 						<li><strong>Window Pinning:</strong> Keep the app window always on top</li>
 						<li><strong>Background Transparency:</strong> Adjust window transparency for overlay effects</li>
-						<li><strong>Auto-Update:</strong> Automatically receive the latest features and fixes</li>
+						<li><strong>Stays current:</strong> Loads the latest SSN features and fixes on its own; a notice appears when a new app version is out</li>
 						<li><strong>Better Performance:</strong> Avoids browser throttling issues</li>
 					</ul>
 				</div>
@@ -1153,8 +1153,8 @@
 					<h4>How to Enable:</h4>
 					<ol class="guide-steps">
 						<li>Open the Social Stream Ninja app</li>
-						<li>Go to settings and find <strong>"Capture Stream Events"</strong></li>
-						<li>Enable it to start receiving alerts</li>
+						<li>Stream events are captured by default. Under <strong>Global settings and tools</strong> &rarr; <strong>Mechanics - Events &amp; Capture</strong>, make sure <strong>Hide stream events (follows, likes, subs)</strong> is off</li>
+						<li>Open an alerts or events overlay to see them on stream</li>
 					</ol>
 
 					<div class="guide-note">
@@ -1346,7 +1346,7 @@
 						<span>The standalone app is recommended for most users as it:</span>
 						<ul>
 							<li>Avoids browser throttling issues</li>
-							<li>Provides automatic updates</li>
+							<li>Loads the latest SSN features on its own</li>
 							<li>Offers window pinning and transparency features</li>
 							<li>Has better performance and stability</li>
 						</ul>
@@ -1376,7 +1376,7 @@
 					</button>
 					<div class="accordion-content">
 						<span><strong>For the browser extension:</strong> To update the manually installed extension, download the latest version, replace the old files with the new ones, and then reload the extension or restart your browser. <strong>Do not uninstall</strong> the extension if you want to keep your settings. If using the Chrome Web Store version, it will update automatically but less frequently.</span>
-						<span><strong>For the standalone app:</strong> The app will update automatically when you restart it. You can also check for updates manually from the app's menu.</span>
+						<span><strong>For the standalone app:</strong> The app loads the latest SSN features on its own. When a new app version is out, a notice appears with a download link; install it over the old version.</span>
 					</div>
 				</div>
 				
@@ -1416,7 +1416,7 @@
 						<span class="accordion-icon"></span>
 					</button>
 					<div class="accordion-content">
-						<span>We maintain a canonical list of every event payload (followers, memberships, raids, viewer counts, donations, and more) in the <a href="event-reference.html">Event Reference</a>. It also explains which sources require the “Capture Stream Events” toggle, login permissions, or additional scopes to receive data.</span>
+						<span>We maintain a canonical list of every event payload (followers, memberships, raids, viewer counts, donations, and more) in the <a href="event-reference.html">Event Reference</a>. It also explains which sources require extra settings, login permissions, or additional scopes to receive data.</span>
 					</div>
 				</div>
 				

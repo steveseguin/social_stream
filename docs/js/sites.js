@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'YouTube Live',
             icon: 'youtube.png',
             description: 'The world\'s largest video platform with live streaming capabilities.',
-            type: 'popout',
+            type: 'popout', guide: 'youtube-setup-guide.html',
             instructions: `
                 <ul>
                     <li>Pop out the chat to trigger (studio or guest view)</li>
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'Twitch',
             icon: 'twitch.png',
             description: 'Popular gaming and creative content live streaming platform.',
-            type: 'popout',
+            type: 'popout', guide: 'twitch-eventsub-setup.html',
             instructions: `
                 <ul>
                     <li>Pop out the chat to trigger</li>
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'TikTok Live',
             icon: 'tiktok.png',
             description: 'Live streaming on the popular short-form video platform.',
-            type: 'standard',
+            type: 'standard', guide: 'tiktok-quick-start.html',
             instructions: `
                 <ul>
                     <li>URL format: tiktok.com/*/live</li>
@@ -245,10 +245,10 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'Microsoft Teams',
             icon: 'teams.png',
             description: 'Microsoft\'s collaboration platform.',
-            type: 'standard',
+            type: 'toggle',
             instructions: `
                 <ul>
-                    <li>Works with teams.live.com and teams.microsoft.com</li>
+                    <li>REQUIRES the TOGGLE in menu to enable it</li><li>Works with teams.live.com and teams.microsoft.com</li>
                     <li>No need to pop out the chat</li>
                 </ul>
             `
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'Twitch IRC WebSocket',
             icon: 'twitch.png',
             description: 'WebSocket connection to Twitch chat.',
-            type: 'websocket',
+            type: 'websocket', guide: 'twitch-eventsub-setup.html',
             instructions: `
                 <ul>
                     <li>URL: https://socialstream.ninja/sources/websocket/twitch</li>
@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'Kick.com',
             icon: 'kick.png',
             description: 'Emerging live streaming platform.',
-            type: 'popout',
+            type: 'popout', guide: 'kick-setup-authentication.html',
             instructions: `
                 <ul>
                     <li>Use the pop out chat</li>
@@ -558,10 +558,10 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'Amazon Chime',
             icon: 'chime.png',
             description: 'Amazon\'s communication service.',
-            type: 'standard',
+            type: 'toggle',
             instructions: `
                 <ul>
-                    <li>URL: https://app.chime.aws/meetings/xxxxxxxxx</li>
+                    <li>REQUIRES the TOGGLE in menu to enable it</li><li>URL: https://app.chime.aws/meetings/xxxxxxxxx</li>
                 </ul>
             `
         },
@@ -1718,7 +1718,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			name: 'Patreon',
 			icon: 'patreon.png',
 			description: 'Creator subscription and membership platform.',
-			type: 'toggle',
+			type: 'toggle', guide: 'creator-store-setup.html#patreon',
 			instructions: `
 				<ul>
 					<li>REQUIRES the TOGGLE in menu to enable it</li>
@@ -1802,7 +1802,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			name: 'TikFinity Activity Feed',
 			icon: 'tikfinity.png',
 			description: 'Read-only TikTok chat and event ingestion through TikFinity.',
-			type: 'standard',
+			type: 'standard', guide: 'tikfinity-setup.html',
 			instructions: `
 				<ul>
 					<li>Open the TikFinity activity-feed widget</li>
@@ -1924,7 +1924,7 @@ document.addEventListener('DOMContentLoaded', function() {
         modalIcon.src = sourceURL('../sources/images/' + site.icon);
         document.getElementById('modalTitle').textContent = site.name;
         document.getElementById('modalDescription').textContent = site.description;
-        document.getElementById('modalInstructions').innerHTML = site.instructions;
+        document.getElementById('modalInstructions').innerHTML = site.instructions + (site.guide ? '<p><a href="' + site.guide + '">Step-by-step setup guide</a></p>' : '');
         
         // Set notes if they exist
         const modalNotes = document.getElementById('modalNotes');

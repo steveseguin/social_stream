@@ -1210,7 +1210,7 @@
                     <p class="source-note">Implementation: <code>sources/whatnot.js</code></p>
                     <ul class="requirements">
                         <li>Use the Whatnot source in SSApp for public chat and auction events without video, or open the live show page for website capture. Both connect to the public auction feed. Website capture also reads rendered auction and catalog sections.</li>
-                        <li><em>Capture Stream Events</em> controls Whatnot system events plus auction/catalog metadata updates; joined rows also require <em>Capture "joined" stream events</em>; viewer counts still follow the viewer/hype toggles.</li>
+                        <li>Whatnot system events and auction/catalog metadata updates are captured whenever SSN is on, with no extra toggle; joined rows also require <em>Capture "joined" stream events</em>; viewer counts still follow the viewer/hype toggles.</li>
                     </ul>
                     <div class="table-scroll" role="region" tabindex="0" aria-label="Whatnot table">
 <table class="event-table">
@@ -1288,7 +1288,7 @@
                     <ul class="requirements">
                         <li>Open either <code>/ebaylive/events/&lt;id&gt;/chat</code> or <code>/ebaylive/events/&lt;id&gt;/stream</code>. Both receive the same live auction feed.</li>
                         <li>The public WebSocket feed supplies auctions, bids, winners, timing extensions and stock changes; a read-only GraphQL query supplies listing details. DOM capture remains a fallback when network data is unavailable.</li>
-                        <li><em>Capture Stream Events</em> controls metadata snapshots (<code>auction_update</code>, <code>commerce_update</code>); viewer counters still honor viewer/hype toggles.</li>
+                        <li>Metadata snapshots (<code>auction_update</code>, <code>commerce_update</code>) are sent whenever SSN is on, with no extra toggle; viewer counters still honor viewer/hype toggles.</li>
                     </ul>
                     <div class="table-scroll" role="region" tabindex="0" aria-label="eBay Live table">
 <table class="event-table">
