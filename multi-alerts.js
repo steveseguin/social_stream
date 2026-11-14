@@ -2152,6 +2152,11 @@ function displayStackAlert(model, options) {
   var streak = pickTikTokGiftStreakId(model.payload);
   var previous = streak && alertBoard.rows().find(function (row) { return pickTikTokGiftStreakId(row.payload) === streak; });
   if (previous) options.silent = true;
+  previous = previous || options.replaceRow;
+  // Make room for real alerts by replacing a like before any other unpinned row.
+  if (!previous && model.category !== ALERT_CATEGORIES.LIKE && alertBoard.rows().length >= settings.limit) {
+    previous = alertBoard.rows().find(function (row) { return !row.pinned && inferCategory(row.payload, true) === ALERT_CATEGORIES.LIKE; });
+  }
   var card = renderAlert(model);
   elements.stage.appendChild(card);
   alertBoard.register(card, model.payload, settings.keep ? 0 : settings.showTime, previous);
@@ -2173,10 +2178,19 @@ function displayStackAlert(model, options) {
 
 function queueAlert(model) {
   if (model.category === ALERT_CATEGORIES.LIKE) {
-    // Likes are best-effort: never build a backlog or displace an existing alert.
+    // Likes are best-effort: never build a backlog or displace other alert types.
     const now = Date.now();
     if (state.paused || state.currentAlert || state.queue.length || now < state.blockedUntil ||
-        (alertBoard && (alertBoard.isPaused() || alertBoard.rows().length))) return;
+        (alertBoard && alertBoard.isPaused())) return;
+    var replaceRow = null;
+    if (alertBoard) {
+      const rows = alertBoard.rows();
+      if (rows.some(function (row) { return now - row.at < settings.showTime; })) return;
+      if (rows.length >= settings.limit) {
+        replaceRow = rows.find(function (row) { return !row.pinned && inferCategory(row.payload, true) === ALERT_CATEGORIES.LIKE; });
+        if (!replaceRow) return;
+      }
+    }
     const payload = model.payload;
     const source = collectSourceMatchKeys(payload);
     const key = JSON.stringify([model.sourceKey, payload.meta?.sourcePlatform || '',
@@ -2186,7 +2200,7 @@ function queueAlert(model) {
     if (recentLikeViewers.has(key)) return;
     recentLikeViewers.set(key, now);
     if (recentLikeViewers.size > 1000) recentLikeViewers.delete(recentLikeViewers.keys().next().value);
-    displayAlert(model);
+    displayAlert(model, { replaceRow });
     return;
   }
   if (!settings.stack && !state.paused && state.currentAlert?.category === ALERT_CATEGORIES.LIKE) {
@@ -2289,6 +2303,7 @@ function finalizeAlert(card, alertToken) {
   if (alertToken && state.alertSequence !== alertToken) {
     return;
   }
+  const wasLike = state.currentAlert?.category === ALERT_CATEGORIES.LIKE;
   clearDisplayTimers();
   if (card?.isConnected) {
     card.remove();
@@ -2299,7 +2314,7 @@ function finalizeAlert(card, alertToken) {
   state.currentAlertNode = null;
   elements.stage.classList.remove('has-alert');
 
-  const effectiveCooldown = state.queue.length > 3 ? Math.min(settings.cooldown, 200) : settings.cooldown;
+  const effectiveCooldown = wasLike ? 0 : (state.queue.length > 3 ? Math.min(settings.cooldown, 200) : settings.cooldown);
   if (effectiveCooldown > 0) {
     state.blockedUntil = Date.now() + effectiveCooldown;
     state.cooldownTimer = window.setTimeout(processQueue, effectiveCooldown);
@@ -2798,6 +2813,8 @@ async function playAlertSound(model) {
       log('custom beep failed', error);
     }
   }
+
+  if (model.category === ALERT_CATEGORIES.LIKE) return;
 
   try {
     var ctx = await resumeAudioContext();

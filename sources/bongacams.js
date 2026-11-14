@@ -1,6 +1,7 @@
 (function () {
 
 	var settings = {};
+	var isExtensionOn = true;
 
 	function escapeHtml(unsafe) {
 		return unsafe
@@ -12,33 +13,23 @@
 	}
 
 	function getAllContentNodes(element) {
-		var resp = "";
 		if (!element) return "";
-		if (!element.childNodes || !element.childNodes.length) {
-			if (element.textContent) {
-				return escapeHtml(element.textContent) || "";
-			}
-			return "";
+		if (element.nodeType === 3) {
+			return settings.textonlymode ? element.textContent : escapeHtml(element.textContent);
 		}
-		element.childNodes.forEach(node => {
-			if (node.childNodes.length) {
-				resp += getAllContentNodes(node);
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
-				resp += escapeHtml(node.textContent) + " ";
-			} else if (node.nodeType === 1) {
-				// Capture contract: textonly=true means a literal chatmessage string, not HTML.
-				// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
-				// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
-				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
-				if (!settings.textonlymode) {
-					if ((node.nodeName == "IMG") && node.src) {
-						node.src = node.src + "";
-					}
-					resp += node.outerHTML;
-				}
-			}
-		});
-		return resp;
+		if (element.nodeType !== 1 || /^(SCRIPT|STYLE|IFRAME|OBJECT|BUTTON)$/.test(element.tagName)) return "";
+		if (element.tagName === "IMG") {
+			var alt = element.getAttribute("alt") || element.getAttribute("data-token") || "";
+			if (settings.textonlymode) return alt;
+			var src = element.src || "";
+			return /^(https?:|data:image\/|blob:)/i.test(src) ? '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt) + '">' : escapeHtml(alt);
+		}
+		if (element.tagName === "BR") return settings.textonlymode ? "\n" : "<br>";
+		var text = "";
+		for (var i = 0; i < element.childNodes.length; i++) {
+			text += getAllContentNodes(element.childNodes[i]);
+		}
+		return text;
 	}
 
 	function processMessage(ele) {
@@ -46,6 +37,8 @@
 		if (ele.skip) return;
 		if (ele.nodeType !== 1) return;
 		if (!ele.classList.contains("js-chat_msg")) return;
+
+		if (!isExtensionOn) { ele.skip = true; return; }
 
 		var name = "";
 		var nameColor = "";
@@ -59,7 +52,7 @@
 			try {
 				var tipNameEle = ele.querySelector(".mts_name");
 				if (tipNameEle) {
-					name = escapeHtml(tipNameEle.dataset.displayName || tipNameEle.textContent.trim());
+					name = tipNameEle.dataset.displayName || tipNameEle.textContent.trim();
 				}
 
 				var systemArea = ele.querySelector(".system_area");
@@ -73,7 +66,7 @@
 
 				var tipMenuItem = ele.querySelector(".msg_tma_info");
 				if (tipMenuItem) {
-					msg = escapeHtml(tipMenuItem.textContent.trim());
+					msg = getAllContentNodes(tipMenuItem).trim();
 				}
 
 				// some tips have a nested chat message with a comment
@@ -88,7 +81,7 @@
 			try {
 				var authorEle = ele.querySelector(".author_name");
 				if (!authorEle) return;
-				name = escapeHtml(authorEle.textContent.trim());
+				name = authorEle.textContent.trim();
 			} catch (e) {
 				return;
 			}
@@ -135,6 +128,29 @@
 		pushMessage(data);
 	}
 
+	var lastViewerCount = null;
+	var viewerRoom = location.pathname;
+	function checkViewers() {
+		if (viewerRoom !== location.pathname) {
+			viewerRoom = location.pathname;
+			lastViewerCount = null;
+		}
+		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)) {
+			lastViewerCount = null;
+			return;
+		}
+		var element = document.querySelector(".js-chat-tab-button[data-tab=\"users\"] .js-chat_users_count");
+		if (!element) return;
+		var match = element.textContent.trim().match(/^(\d+(?:[,\s]\d{3})*(?:\.\d+)?)([KM])?(?:\s|$)/i);
+		if (!match) return;
+		var count = Number(match[1].replace(/[,\s]/g, ""));
+		if (match[2]) count *= match[2].toUpperCase() === "K" ? 1000 : 1000000;
+		if (!isFinite(count) || count < 0 || Math.floor(count) !== count || count === lastViewerCount) return;
+		lastViewerCount = count;
+		pushMessage({ type: "bongacams", event: "viewer_update", meta: count });
+	}
+	setInterval(checkViewers, 10000);
+
 	function pushMessage(data) {
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function (e) { });
@@ -148,6 +164,8 @@
 		if ("settings" in response) {
 			settings = response.settings;
 		}
+		if ("state" in response) { isExtensionOn = response.state; }
+		checkViewers();
 	});
 
 	chrome.runtime.onMessage.addListener(
@@ -166,12 +184,13 @@
 						}
 					}
 				}
-				if (typeof request === "object") {
-					if ("settings" in request) {
-						settings = request.settings;
-						sendResponse(true);
-						return;
-					}
+				if (request && typeof request === "object") {
+					if ("state" in request) { isExtensionOn = request.state; }
+					if ("settings" in request) { settings = request.settings || {}; }
+					lastViewerCount = null;
+					checkViewers();
+					sendResponse(true);
+					return;
 				}
 			} catch (e) { }
 			sendResponse(false);
@@ -184,6 +203,7 @@
 			// A tip's nested comment belongs to the same captured message.
 			row = row.closest(".js-chat_msg.msg_tip_success") || row;
 			if (row.skip || row.ssnPending) return;
+			if (!isExtensionOn) { row.skip = true; return; }
 			row.ssnPending = true;
 			setTimeout(function () {
 				row.ssnPending = false;

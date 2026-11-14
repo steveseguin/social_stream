@@ -36,41 +36,26 @@
 			 .replace(/'/g, "&#039;") || "";
 	}
 
-	function getAllContentNodes(element) { // takes an element.
-		var resp = "";
-		
-		if (!element){return resp;}
-		if (settings.textonlymode){return element.textContent || "";}
-		
-		if (!element.childNodes || !element.childNodes.length){
-			if (element.textContent){
-				return escapeHtml(element.textContent) || "";
-			} else {
-				return "";
-			}
+	function getAllContentNodes(element) {
+		if (!element) return "";
+		if (element.nodeType === 3) {
+			return settings.textonlymode ? element.textContent : escapeHtml(element.textContent);
 		}
-		
-		element.childNodes.forEach(node=>{
-			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent)+" ";
-			} else if (node.nodeType === 1){
-				// Capture contract: textonly=true means a literal chatmessage string, not HTML.
-				// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
-				// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
-				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
-				if (!settings.textonlymode){
-					if ((node.nodeName == "IMG") && node.src){
-						node.src = node.src+"";
-					}
-					resp += node.outerHTML;
-				}
-			}
-		});
-		return resp.replaceAll("&nbsp;"," ").replaceAll("  "," ");
+		if (element.nodeType !== 1 || /^(SCRIPT|STYLE|IFRAME|OBJECT|BUTTON)$/.test(element.tagName)) return "";
+		if (element.tagName === "IMG") {
+			var alt = element.getAttribute("alt") || element.getAttribute("data-token") || "";
+			if (settings.textonlymode) return alt;
+			var src = element.src || "";
+			return /^(https?:|data:image\/|blob:)/i.test(src) ? '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt) + '">' : escapeHtml(alt);
+		}
+		if (element.tagName === "BR") return settings.textonlymode ? "\n" : "<br>";
+		var text = "";
+		for (var i = 0; i < element.childNodes.length; i++) {
+			text += getAllContentNodes(element.childNodes[i]);
+		}
+		return text;
 	}
-	
+
 	var settings = {};
 	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
@@ -92,6 +77,8 @@
 		}
 
 		
+		if (!isExtensionOn) { ele.skip = true; return; }
+
 		var chatimg = ""
 
 		try {
@@ -105,12 +92,12 @@
 		var tip = null;
 		try {
 			if (author){
-				name = escapeHtml(author.textContent);
+				name = author.textContent;
 			} else {
 				var tipLine = ele.querySelector("span");
 				var tipParts = tipLine && tipLine.querySelectorAll("b");
 				if (!tipParts || tipParts.length !== 2 || !/ tipped \d+ tokens?$/i.test(tipLine.textContent.trim())){return;}
-				name = escapeHtml(tipParts[0].textContent);
+				name = tipParts[0].textContent;
 				tip = tipParts[1].textContent.trim() + " tokens";
 			}
 			name = name.split(":")[0];
@@ -191,6 +178,29 @@
 		pushMessage(data);
 	}
 
+	var lastViewerCount = null;
+	var viewerRoom = location.pathname;
+	function checkViewers() {
+		if (viewerRoom !== location.pathname) {
+			viewerRoom = location.pathname;
+			lastViewerCount = null;
+		}
+		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)) {
+			lastViewerCount = null;
+			return;
+		}
+		var element = document.querySelector("[class*=\"chat-module__usersCount--\"]");
+		if (!element) return;
+		var match = element.textContent.trim().match(/^(\d+(?:[,\s]\d{3})*(?:\.\d+)?)([KM])?(?:\s|$)/i);
+		if (!match) return;
+		var count = Number(match[1].replace(/[,\s]/g, ""));
+		if (match[2]) count *= match[2].toUpperCase() === "K" ? 1000 : 1000000;
+		if (!isFinite(count) || count < 0 || Math.floor(count) !== count || count === lastViewerCount) return;
+		lastViewerCount = count;
+		pushMessage({ type: "camsoda", event: "viewer_update", meta: count });
+	}
+	setInterval(checkViewers, 10000);
+
 	function pushMessage(data){
 		try{
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
@@ -198,43 +208,6 @@
 		}
 	}
 	var isExtensionOn = true;
-	
-	function checkViewers(){
-		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
-			try {
-				let viewerSpan = document.querySelector("svg > path[d='M15 12a3 3 0 11-6 0 3 3 0 016 0z']").parentNode.nextElementSibling;
-				if (viewerSpan && viewerSpan.textContent){
-					let views = viewerSpan.textContent.toUpperCase();
-					let multiplier = 1;
-					if (views.includes("K")){
-						multiplier = 1000;
-						views = views.replace("K","");
-					} else if (views.includes("M")){
-						multiplier = 1000000;
-						views = views.replace("M","");
-					}
-					views = views.split(" ")[0];
-					if (views == parseFloat(views)){
-						views = parseFloat(views) * multiplier;
-						chrome.runtime.sendMessage(
-							chrome.runtime.id,
-							({message:{
-									type: 'camsoda',
-									event: 'viewer_update',
-									meta: views
-								}
-							}),
-							function (e) {}
-						);
-					}
-				}
-			} catch (e) {
-			}
-		}
-	}
-
-
-	// OnlineViewers_root_orkvv
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response={}){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
@@ -248,6 +221,7 @@
 		if (!checking){
 			startCheck();
 		}
+		checkViewers();
 	});
 
 	chrome.runtime.onMessage.addListener(
@@ -273,23 +247,14 @@
 					sendResponse(false);
 					return;
 				}
-				if (typeof request === "object"){
-					if ("state" in request) {
-						isExtensionOn = request.state;
-						
-						if (!checking){
-							startCheck();
-						}
-					}
-					
-					if ("settings" in request){
-						settings = request.settings;
-						sendResponse(true);
-						return;
-					}
+				if (request && typeof request === "object") {
+					if ("state" in request) { isExtensionOn = request.state; }
+					if ("settings" in request) { settings = request.settings || {}; }
+					lastViewerCount = null;
+					checkViewers();
+					sendResponse(true);
+					return;
 				}
-				
-				
 			} catch(e){}
 			sendResponse(false);
 		}
@@ -301,6 +266,7 @@
 	
 	function queueMessage(row) {
 		if (!row || row.skip || row.ssnPending){return;}
+		if (!isExtensionOn) { row.skip = true; return; }
 		row.ssnPending = true;
 		setTimeout(function(){
 			row.ssnPending = false;
@@ -360,13 +326,10 @@
 
 
 	function startCheck(){
-		if (isExtensionOn && checking){return;}
+		if (checking){return;}
 
 		clearInterval(checking);
 		checking = false;
-		if (!isExtensionOn){
-			return;
-		}
 		checking = setInterval(function(){
 			try {
 				var container = document.querySelector("div[class*='chat-module__wrapper--']");
@@ -377,7 +340,7 @@
 
 					onElementInserted(container);
 				}
-				// checkViewers();
+
 			} catch(e){}
 		},2000);
 	}

@@ -5656,9 +5656,6 @@ function routeIndividualLikeEvent(message, alreadyRouted) {
 		}
 		try {
 			sendTargetP2P(reactionPayload, "reactions");
-			if (settings.likealerts && settings.likealerts.param25) {
-				sendTargetP2P(reactionPayload, "alerts");
-			}
 		} catch (e) {
 			console.error(e);
 		}
@@ -5668,6 +5665,20 @@ function routeIndividualLikeEvent(message, alreadyRouted) {
 		routed: true,
 		stop: !getSettingFlag("capturelikeevent")
 	};
+}
+
+// Alert-only likes need user filters, but must not trigger chat commands or Event Flow.
+async function sendIndividualLikeAlert(message, tab = false) {
+	if (!settings.likealerts || !settings.likealerts.param25 || !isIndividualLikeEvent(message) ||
+		getSettingFlag("hideevents") || isEventBlockedByCustomFilter(message)) return;
+	try {
+		var filtered = await applyBotActions(Object.assign({}, message), tab, true);
+		if (!filtered) return;
+		filtered = sanitizeRelayPayloadFields(filtered);
+		if (filtered) sendTargetP2P(filtered, "alerts");
+	} catch (e) {
+		console.error(e);
+	}
 }
 
 // Only captures still being processed are retained; completed messages need no tombstone cache.
@@ -5829,6 +5840,7 @@ async function processIncomingMessage(message, sender = null) {
 			}
 			individualLikeRouting = routeIndividualLikeEvent(message, false);
 			if (individualLikeRouting.stop) {
+				await sendIndividualLikeAlert(message, sender?.tab);
 				return message;
 			}
 		}
@@ -8285,6 +8297,7 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 
 		var individualLikeRouting = routeIndividualLikeEvent(message, !!individualLikeAlreadyRouted);
 		if (individualLikeRouting.stop) {
+			await sendIndividualLikeAlert(message);
 			return true;
 		}
 
@@ -8423,8 +8436,7 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 	}
 
 	try {
-		// Opt-in likes were already sent directly, independently of main-chat capture.
-		if (isAlertMessage && !(isIndividualLikeEvent(message) && settings.likealerts && settings.likealerts.param25)) {
+		if (isAlertMessage) {
 			sendTargetP2P(message, "alerts");
 		}
 	} catch (e) {
@@ -18897,8 +18909,8 @@ function findExistingEvents(eventType, response) {
 }
 
 // expects an object; not False/Null/undefined
-async function applyBotActions(data, tab = false) {
-	if (!data.id) {
+async function applyBotActions(data, tab = false, userFiltersOnly = false) {
+	if (!userFiltersOnly && !data.id) {
 		messageCounter += 1;
 		data.id = messageCounter;
 	}
@@ -19076,6 +19088,11 @@ async function applyBotActions(data, tab = false) {
 				// there's no content worth sending I'm assuming
 				return false;
 			}
+		}
+
+		if (userFiltersOnly) {
+			if (settings.blacklistname && data.chatname) data.chatname = filterProfanity(data.chatname);
+			return data;
 		}
 
 		//
@@ -19714,6 +19731,8 @@ async function applyBotActions(data, tab = false) {
 	} catch (e) {
 		console.error(e);
 	}
+	// Fail closed if a user filter threw before its early return.
+	if (userFiltersOnly) return null;
 	try {
 		if (settings.hypemode) {
 			processHype(data);
