@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music and Now Playing - Social Stream Ninja</title>
+    <link rel="icon" href="../icons/favicon.ico">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+</head>
+<body>
+<main class="guide-section"><div class="container">
+    <nav aria-label="Guides"><a href="guides.html">All guides</a></nav>
+    <h1>Show the current song</h1>
+    <ol>
+        <li>Open <strong>Interactive &gt; Music &gt; Now Playing</strong> and enable Music.</li>
+        <li>Select and connect a source below.</li>
+        <li>In <strong>Now Playing Overlay</strong>, set <strong>Overlay input</strong> to <strong>Selected Music source</strong>.</li>
+        <li>Copy the overlay link into an OBS Browser Source. Choose a style and hide options in the same panel.</li>
+    </ol>
+    <p>Existing Spotify overlay links keep showing Spotify. Music uses one selected input for its overlay and Event Flow. Its overlay clears the track if it loses contact with SSN.</p>
+    <h2>Choose a source</h2>
+    <h3>Spotify</h3>
+    <p>Enable and connect Spotify in <strong>Spotify Setup &amp; Configuration</strong>. Playback controls and song requests continue to use that account.</p>
+    <h3>What's Now Playing</h3>
+    <p>Connect your DJ software or media player in <a href="https://whatsnowplaying.github.io/whats-now-playing/latest/input/">What's Now Playing</a>, then enable its web server. Enter its address in Music, usually <code>http://127.0.0.1:8899</code>. For a DJ computer on your local network, use that computer's address and web server port.</p>
+    <p>Tracks without playback timing show artist and title without a progress bar. Set the expiry interval to suit your sets so old track information clears when the source stops updating.</p>
+    <h3>File (SSApp)</h3>
+    <p>Set your player or DJ helper to overwrite a current-song file, then choose that file in Music. Select one of these formats:</p>
+    <ul>
+        <li><strong>Artist - Title:</strong> one line, for example <code>Example Artist - Example Song</code>.</li>
+        <li><strong>Separate lines:</strong> artist on line 1 and title on line 2.</li>
+        <li><strong>JSON:</strong> the object below. Only <code>title</code> is required.</li>
+    </ul>
+    <pre><code>{"title":"Example Song","artist":"Example Artist","album":"Example Album"}</code></pre>
+    <p>JSON can also include a string <code>id</code>, an HTTPS <code>imageUrl</code>, <code>status</code> (playing, paused or stopped), and numeric <code>durationMs</code> and <code>progressMs</code> in milliseconds. Leave unknown values out. An empty file clears the track. Files must be 64 KB or smaller. The selected path stays on the SSApp computer.</p>
+    <h2>Chat commands and Event Flow</h2>
+    <p>When Music is enabled, its <strong>Song commands</strong> setting owns Spotify's <code>!song</code>, <code>!np</code> and their configured aliases. Choose <strong>Built-in dock replies</strong> for a simple response in SSN, or <strong>Event Flow</strong> for custom responses. Built-in replies use the existing Spotify command permissions. Playback and queue commands remain Spotify-specific.</p>
+    <p>For a platform chat reply, choose Event Flow and add the <strong>Music Song Command</strong> template in the editor. It starts disabled. Review the command and destination, then enable it. Configure permissions and a Rate Limiter in your flow as needed.</p>
+    <p><strong>Get Now Playing</strong> adds the selected track to the current flow without changing the originating chat. Use <code>{meta.music.message}</code> for a complete response, including when no song is available, or format <code>{meta.music.track.name}</code>, <code>{meta.music.track.artist}</code> and <code>{meta.music.track.album}</code> yourself.</p>
+    <p><strong>Track Changed</strong> can drive Show Text, OBS Set Text, TTS or a webhook. <strong>Playback Changed</strong> works when the selected source reports playback status. Initial connection and reconnect snapshots do not announce tracks. Music updates do not trigger Any Message flows.</p>
+    <p>Keep automatic Spotify dock announcements off if a flow already announces the same Spotify track.</p>
+</div></main>
+</body>
+</html>

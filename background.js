@@ -1936,6 +1936,7 @@ function loadSettings(item, resave = false) {
 	if (settings.spotifyEnabled) {
 		initializeSpotify();
 	}
+	if (window.musicService) window.musicService.configure(true);
 
 	const timedMessage = settings["timedMessage"] || [];
 	for (const i of timedMessage) {
@@ -3934,11 +3935,14 @@ async function resetSettings(item = false) {
 }
 
 async function exportSettings() {
-	chrome.storage.local.get(properties, async function (item) {
+	chrome.storage.sync.get(["streamID", "password", "state"], async function (item) {
 		try {
 		if (chrome.runtime.lastError) {
 			throw new Error(chrome.runtime.lastError.message);
 		}
+		if (!("streamID" in item)) item.streamID = streamID;
+		if (!("password" in item)) item.password = password;
+		if (!("state" in item)) item.state = isExtensionOn;
 		item.settings = settings;
 		const opts = {
 			types: [
@@ -4020,8 +4024,20 @@ async function importSettings(item = false) {
 			!imported.settings || typeof imported.settings !== "object" || Array.isArray(imported.settings)) {
 			throw new Error("Missing or invalid settings object");
 		}
+		if (imported.streamID) {
+			if (!validateRoomId(imported.streamID)) throw new Error("Invalid session ID");
+			const warningRestoreTarget = await bringBackgroundPageToFrontForPicker();
+			try {
+				if (!window.confirm("These settings include a session ID. Stop any other Social Stream extension or app instance using that ID before importing.\n\nImport settings?")) return;
+			} finally {
+				await restorePreviousTabAfterPicker(warningRestoreTarget);
+			}
+		}
 		// Rebuild translations from the selected language, not imported HTML.
 		delete imported.settings.translation;
+		if (isSSAPP) {
+			await new Promise(resolve => chrome.storage.local.set({ settings: imported.settings, allowEmptySettings: true }, resolve));
+		}
 		loadSettings(imported, true);
 		messagePopup({ settingsImported: true });
 	} catch (e) {
@@ -6092,6 +6108,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			}
 
 			pruneSettingsObjects(settings);
+			if (request.setting && (request.setting.startsWith("music") || request.setting === "spotifyEnabled") && window.musicService) window.musicService.configure();
 
             if (["aiTranslateEngine", "aiAutoTranslate", "aiAutoTranslateOutgoing", "localTranslateSourceLanguage"].includes(request.setting) && typeof prepareLocalTranslation === "function") prepareLocalTranslation();
 
@@ -7916,6 +7933,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if (request.cmd && request.cmd === "spotifySignOut") {
 			// Handle Spotify sign out
 			console.log("Spotify sign out request received");
+			if (window.musicService) window.musicService.spotify({ status: "idle", track: null });
 
 			// Clear Spotify tokens from settings synchronously first
 			delete settings.spotifyAccessToken;
@@ -7958,6 +7976,12 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 
 			// Respond immediately - tokens are already cleared in memory
 			sendResponse({ success: true });
+		} else if (request.cmd === "musicStatus") {
+			sendResponse(window.musicService ? window.musicService.status() : { message: "Music is loading." });
+		} else if (request.cmd === "musicSelectFile") {
+			if (!window.musicService) sendResponse({ error: "Music is loading." });
+			else window.musicService.selectFile().then(sendResponse).catch(error => sendResponse({ error: error.message }));
+			return true;
 		} else if (request.spotifyAction) {
 			// Handle Spotify actions from Event Flow (uses shared handleSpotifyAction helper)
 			(async () => {
@@ -10401,6 +10425,7 @@ function initializeSpotify() {
 			onTrackUpdate: payload => {
 				try {
 					sendSpotifyOverlay(payload);
+					if (window.musicService) window.musicService.spotify(payload);
 				} catch (err) {
 					console.warn("Failed to send Spotify overlay update:", err);
 				}
@@ -10639,6 +10664,7 @@ function markP2PPeerConnected(uuid, label) {
 	p2pTransportState.lastPeerAt = Date.now();
 	if (uuid && label) {
 		connectedPeers[uuid] = label;
+		if (label === "music" && window.musicService) window.musicService.publish();
 	}
 }
 
@@ -13638,7 +13664,7 @@ function prepareOverlayControl(data, target) {
 	if (!(target === "actions" || (target === "credits" && data.creditsCommand) ||
 		(target === "poll" && (data.settings || data.setting || data.cmd)) || (target === "hype" && data.hype) ||
         (target === "map" && (data.settings || data.setting || ["startmap", "pausemap", "resetmap"].includes(data.cmd))) ||
-        (target === "timer" && data.timer) || (target === "ticker" && data.ticker) || (target === "spotify" && data.spotify) ||
+        (target === "timer" && data.timer) || (target === "ticker" && data.ticker) || (target === "spotify" && data.spotify) || (target === "music" && data.music) ||
         (target === "tipjar" && ["resettipjar", "settipjaramount"].includes(data.cmd)) ||
         (target === "meta" && ["resetmetastats", "metastats"].includes(data.cmd)) ||
         ((target === "alerts" || target === "dock") && data.action === "eventOverlayControl" && data.surface === (target === "alerts" ? "alerts" : "events")) || (target === "alerts" && data.action === "clearAlerts") || (target === "bot" && data.action === "clearBotOverlay") ||
@@ -13671,7 +13697,7 @@ function prepareOverlayControl(data, target) {
         packet.pollState = { epoch: pollControlState.epoch, revision: pollControlState.revision, reset: pollControlState.reset, closed: pollControlState.closed };
 	}
 	packet.ssnControl = { id: "control-" + Date.now().toString(36) + "-" + Array.from(crypto.getRandomValues(new Uint32Array(4))).join("-"), target };
-    if (target === "timer" || target === "ticker" || target === "spotify") {
+    if (target === "timer" || target === "ticker" || target === "spotify" || target === "music") {
         var prior = overlayStateSnapshots.get(target);
         var stateValue = packet[target];
         if (target === "timer") {
@@ -13724,7 +13750,7 @@ function handleOverlayControlRequest(data, socket, replyChannel, allowSnapshot) 
         packet = prepareOverlayControl({ settings: settings }, "map");
     } else if (request.target === "timer" && timerStateInitialized) {
         packet = prepareOverlayControl({ timer: exportTimerState() }, "timer");
-    } else if (request.target === "ticker" || request.target === "spotify") {
+    } else if (request.target === "ticker" || request.target === "spotify" || request.target === "music") {
         var saved = overlayStateSnapshots.get(request.target);
         if (!saved || saved.session !== streamID) return true;
         packet = Object.assign({}, saved.packet, { ssnControl: Object.assign({}, saved.packet.ssnControl) });
@@ -19215,8 +19241,14 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 
+		// Music owns only information commands when explicitly enabled.
+		const musicOwnsCommand = window.musicService && window.musicService.ownsCommand(originalChatMessage || data.chatmessage);
+		if (musicOwnsCommand && data.chatmessage && data.chatname && !data.bot) {
+			const response = window.musicService.command(originalChatMessage || data.chatmessage, data);
+			if (response) sendToDestinations({ type: "music", bot: "music", chatname: "Music", chatimg: "https://socialstream.ninja/icons/bot.png", chatmessage: response, textonly: true });
+		}
 		// Handle Spotify commands
-		if (spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
+		if (!musicOwnsCommand && spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
 			// Pass message data for role-based permission checking
 			spotify
 				.handleCommand(originalChatMessage || data.chatmessage, data)

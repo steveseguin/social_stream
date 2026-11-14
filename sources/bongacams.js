@@ -65,7 +65,7 @@
 				var systemArea = ele.querySelector(".system_area");
 				if (systemArea) {
 					var tipText = systemArea.textContent || "";
-					var tipMatch = tipText.match(/tipped\s+(\d+)\s+Tokens?/i);
+					var tipMatch = tipText.match(/(?:tipped|подарил(?:а)?)\s+(\d+)\s+(?:Tokens?|Токен(?:а|ов)?)/i);
 					if (tipMatch) {
 						hasDonation = tipMatch[1] + " tokens";
 					}

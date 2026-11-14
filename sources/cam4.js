@@ -66,6 +66,9 @@
 					var amountEles = notifText.querySelectorAll("[class*='amountOfTokensBold'], [class*='amountOfTokensAnim']");
 					if (amountEles.length > 0) {
 						hasDonation = escapeHtml(amountEles[0].textContent.trim()) + " tokens";
+					} else if (strongs.length > 1) {
+						var amountMatch = strongs[1].textContent.trim().match(/^(\d+)(?:\s+Tokens?)?$/i);
+						if (amountMatch) hasDonation = amountMatch[1] + " tokens";
 					}
 				}
 			} catch (e) {

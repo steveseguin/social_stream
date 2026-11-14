@@ -426,7 +426,10 @@ body {
 	}
 	const sessionId = urlParams.get('session') || urlParams.get('room') || '';
 	const password = urlParams.get('password') || 'false';
-	const label = urlParams.get('label') || 'spotify';
+	const musicMode = urlParams.get('source') === 'music';
+	const target = musicMode ? 'music' : 'spotify';
+	const label = musicMode ? target : (urlParams.get('label') || target);
+	if (musicMode) document.title = 'Music / Now Playing';
 	const hidePaused = urlParams.has('hidepaused');
 	const hideInactive = urlParams.has('hideoffline') || urlParams.has('hideinactive');
 	const hideWhenNoSong = hideInactive || urlParams.has('hidenosong');
@@ -454,6 +457,7 @@ body {
 		device: null,
 		queue: []
 	};
+	let musicContact = 0, musicExpired = false;
 
 	const overlayEl = document.getElementById('overlay');
 	const titleEl = document.getElementById('title');
@@ -499,6 +503,7 @@ body {
 
 	function updateProgressBar() {
 		const { status, durationMs, progressMs, receivedAt, isPlaying } = state;
+		if (musicMode) progressRow.style.display = hideProgress || tickerMode || durationMs === null || progressMs === null ? 'none' : '';
 		if (!durationMs) {
 			barEl.style.setProperty('--progress', '0%');
 			currentTimeEl.textContent = '0:00';
@@ -586,7 +591,7 @@ body {
 
 		const shouldHide = (!track && hideWhenNoSong) ||
 			(status === 'paused' && hidePaused) ||
-			(status === 'stopped' && hideInactive);
+			((status === 'stopped' || (musicMode && ['offline', 'stale', 'error', 'idle'].includes(status))) && hideInactive);
 
 		if (shouldHide) {
 			overlayEl.classList.add('hidden-state');
@@ -601,7 +606,7 @@ body {
 			albumEl.textContent = hideAlbum ? '' : (track.album || '');
 			artEl.src = track.imageUrl || fallbackArt;
 		} else {
-			titleEl.textContent = status === 'stopped' ? 'Nothing playing' : 'Waiting for Spotify…';
+			titleEl.textContent = status === 'stopped' ? 'Nothing playing' : (musicMode ? 'Waiting for music' : 'Waiting for Spotify…');
 			artistEl.textContent = '';
 			albumEl.textContent = '';
 			artEl.src = fallbackArt;
@@ -610,7 +615,7 @@ body {
 		if (status === 'error' && state.message) {
 			errorEl.textContent = state.message;
 			errorEl.style.display = 'block';
-			titleEl.textContent = 'Spotify Issue';
+			titleEl.textContent = musicMode ? 'Music unavailable' : 'Spotify Issue';
 		} else {
 			errorEl.style.display = 'none';
 		}
@@ -633,7 +638,7 @@ body {
 			if (track?.name) parts.push(track.name);
 			if (track?.artist) parts.push(`by ${track.artist}`);
 			if (track?.album && !hideAlbum) parts.push(`— ${track.album}`);
-			tickerTrack.textContent = parts.join('  •  ') || 'Loading Spotify…';
+			tickerTrack.textContent = parts.join('  •  ') || (musicMode ? 'Waiting for music' : 'Loading Spotify…');
 		}
 
 		updateProgressBar();
@@ -642,11 +647,18 @@ body {
 	}
 
     var spotifyStateTracker = SSNOverlayControl.createStateTracker();
-	if (label === 'spotify') SSNOverlayControl.connect(urlParams, sessionId, "spotify", processPayload);
+	if (label === target) SSNOverlayControl.connect(urlParams, sessionId, target, processPayload);
 function processPayload(raw) {
-    if (!SSNOverlayControl.accept(raw, "spotify")) return;
-    if (raw && raw.ssnState) { var transition = spotifyStateTracker(raw.ssnState); if (!transition.accept || !transition.changed) return; }
-		const payload = raw?.spotify || raw;
+    if (!SSNOverlayControl.accept(raw, target)) return;
+		if (musicMode && (!raw || !raw.music)) return;
+    if (raw && raw.ssnState) {
+        var transition = spotifyStateTracker(raw.ssnState);
+        if (!transition.accept) return;
+        if (musicMode) musicContact = Date.now();
+        if (!transition.changed && !musicExpired) return;
+    }
+		if (musicMode) { musicContact = Date.now(); musicExpired = false; }
+		const payload = musicMode ? raw.music : (raw?.spotify || raw);
 		if (!payload || typeof payload !== 'object') return;
 
 		state = {
@@ -654,8 +666,8 @@ function processPayload(raw) {
 			track: payload.track || null,
 			status: payload.status || (payload.isPlaying ? 'playing' : (payload.track ? 'paused' : 'idle')),
 			isPlaying: !!payload.isPlaying,
-			progressMs: payload.progressMs || payload.progress || 0,
-			durationMs: payload.durationMs || payload.duration || payload.track?.duration || 0,
+			progressMs: musicMode ? payload.progressMs : (payload.progressMs || payload.progress || 0),
+			durationMs: musicMode ? payload.durationMs : (payload.durationMs || payload.duration || payload.track?.duration || 0),
 			device: payload.device || null,
 			// Playback/error updates can be partial; only an explicit queue array replaces it.
 			queue: Array.isArray(payload.queue) ? payload.queue : state.queue,
@@ -731,6 +743,11 @@ function processPayload(raw) {
 
 	// Keep progress smooth while playing
 	setInterval(function() {
+		if (musicMode && musicContact && !musicExpired && Date.now() - musicContact > 35000) {
+			musicExpired = true;
+			state = { ...state, track: null, status: 'offline', isPlaying: false, progressMs: null, durationMs: null, queue: [] };
+			render();
+		}
 		updateProgressBar();
 		updateQueueTimes();
 	}, 500);

@@ -17641,9 +17641,9 @@ details.wrapper[open] > .collapsible-text {
 				</div>
 			</div>
 
-			<div class="link" id="spotify-integration" title="Spotify Integration" data-panel-section="spotify">
+			<div class="link" id="spotify-integration" title="Music" data-panel-section="spotify">
 				<h2 class="spotify_section_title">
-					<span class="title-group"><span class="emoji" aria-hidden="true">🎵</span><span data-translate="popup-spotify-integration">Spotify Integration</span></span>
+					<span class="title-group"><span class="emoji" aria-hidden="true">🎵</span><span data-translate="popup-music">Music</span></span>
 					<span class="options-link-group" style="float: right; display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
 						<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy overlay link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
 					<button type="button" class="edit-link rounded_area" data-edit-link="spotify" title="Load an existing link for this overlay">Edit link</button>
@@ -17652,21 +17652,34 @@ details.wrapper[open] > .collapsible-text {
 				</h2>
 				<input type="checkbox" id="help-spotify" class="link-help-toggle">
 				<div class="link-help-content">
-					<strong>Display currently playing Spotify tracks on stream.</strong>
-					<p>Connect your Spotify account to show what song is playing as an overlay, or announce tracks to chat automatically.</p>
-					<ul>
-						<li>"Now Playing" overlay widget</li>
-						<li>Optional upcoming song-request queue</li>
-						<li>Auto-announce songs to chat</li>
-						<li>Chat commands for song info (!song, !np)</li>
-						<li>Customizable overlay appearance</li>
-					</ul>
-					<div class="help-warning">⚠️ <strong>Requires setup:</strong> You need to authorize your Spotify account in the setup section below.</div>
+					<p>Choose Spotify, What's Now Playing, or a current-song file for overlays and Event Flow. Playback controls and song requests use Spotify.</p>
+					<a href="docs/music.html" target="_blank" rel="noopener">Music setup guide</a>
 				</div>
-				<p class="popup-section-description"><span>Connect your Spotify account to create a widget overlay or announce to chat the current song.</span></p>
+				<p class="popup-section-description"><span>Show the current song from Spotify or a DJ music source.</span></p>
 				<div id="spotify" data-raw="" class="streaming_chat"><a href="" id="spotifylink"></a></div>
 				<div id="spotify-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
 			</div>
+
+
+            <div class="wrapper" data-panel-section="spotify">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-music" />
+                    <label class="collapsible-label" for="wrapper-music"><span>Now Playing</span></label>
+                    <div class="collapsible-text"><div class="options"><div class="options_group popup-settings-panel">
+                        <div class="popup-toggle-row"><label class="switch" title="Use the selected input for Music overlays and Event Flow. Spotify playback controls stay separate."><input type="checkbox" id="musicEnabled" data-setting="musicEnabled"><span class="slider round"></span></label><label for="musicEnabled">Enable Music</label></div>
+                        <div class="textInputContainer"><label for="musicSource">Source</label><select id="musicSource" class="textInput" data-optionsetting="musicSource"><option value="spotify">Spotify</option><option value="wnp">What's Now Playing</option><option value="file">File (SSApp)</option></select></div>
+                        <div id="musicWnpFields" hidden><div class="textInputContainer"><label for="musicWnpUrl">Web server address</label><input type="text" id="musicWnpUrl" class="textInput" data-textsetting="musicWnpUrl" placeholder="http://127.0.0.1:8899"></div></div>
+                        <div id="musicFileFields" hidden>
+                            <div class="textInputContainer"><label for="musicFileFormat">File format</label><select id="musicFileFormat" class="textInput" data-optionsetting="musicFileFormat"><option value="line">Artist - Title</option><option value="lines">Artist / Title on separate lines</option><option value="json">JSON</option></select></div>
+                            <button type="button" class="button" id="musicChooseFile">Choose file</button>
+                        </div>
+                        <div id="musicExpiryFields" hidden><div class="textInputContainer"><label for="musicStaleSeconds">Track expiry (seconds)</label><input id="musicStaleSeconds" class="textInput" type="number" min="30" max="86400" value="900" data-numbersetting="musicStaleSeconds" title="Clears old file or DJ metadata when the source stops updating."></div></div>
+                        <div class="textInputContainer"><label for="musicCommandOwner">Song commands</label><select id="musicCommandOwner" class="textInput" data-optionsetting="musicCommandOwner" title="When Music is enabled, this replaces Spotify's !song and !np replies. Aliases and permissions use the command settings below."><option value="builtin">Built-in dock replies</option><option value="flow">Event Flow</option></select></div>
+                        <div role="status" aria-live="polite" id="musicStatus"></div>
+                        <a href="docs/music.html" target="_blank" rel="noopener">Music setup guide</a>
+                    </div></div></div>
+                </div>
+            </div>
 
 			<div class="wrapper" data-panel-section="spotify">
                 <div class="collapsible">
@@ -17725,10 +17738,11 @@ details.wrapper[open] > .collapsible-text {
 			<div class="wrapper" data-panel-section="spotify">
                 <div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-spotify-overlay-options" />
-					<label class="collapsible-label" for="wrapper-spotify-overlay-options"><span>📊 Spotify Overlay Options</span></label>
+					<label class="collapsible-label" for="wrapper-spotify-overlay-options"><span>📊 Now Playing Overlay</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat" id="spotify-overlay-options">
+                                    <div class="textInputContainer"><label for="musicOverlaySource">Overlay input</label><select id="musicOverlaySource" class="textInput" data-optionparam22="source"><option value="">Spotify</option><option value="music">Selected Music source</option></select></div>
 								<h3><span class="popup-control-icon" aria-hidden="true">🎨</span>Appearance</h3>
 								<div>
 									<span>Style preset</span>
@@ -17759,11 +17773,8 @@ details.wrapper[open] > .collapsible-text {
 										<input type="checkbox" data-param22="showqueue" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">👁️</span>Show upcoming song-request queue</span>
+									<span title="Requires the managed song-request queue and Spotify overlay input."><span class="popup-control-icon" aria-hidden="true">👁️</span>Show Spotify request queue</span>
 								</div>
-								<p style="font-size: 0.85em; color: var(--text-secondary); margin: 0 0 12px;">
-									Requires the managed song-request queue under Spotify Chat Commands.
-								</p>
 								<h3><span class="popup-control-icon" aria-hidden="true">👁️</span>Visibility toggles</h3>
 								<div>
 									<label class="switch">

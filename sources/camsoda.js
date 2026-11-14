@@ -142,8 +142,12 @@
 			
 		try {
 			var content = ele.querySelector("p.break-words");
-			if (!content && author && author.nextElementSibling && author.nextElementSibling.tagName === "SPAN"){
-				content = author.nextElementSibling;
+			if (!content && author){
+				var next = author.nextElementSibling;
+				while (next && next.matches("[class*='badge-module__badge--']")){
+					next = next.nextElementSibling;
+				}
+				if (next && next.tagName === "SPAN"){content = next;}
 			}
 			msg = getAllContentNodes(content).trim();
 		} catch(e){

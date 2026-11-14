@@ -498,8 +498,9 @@
 		css: [
 			".lc{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;}",
 			".lc-cube{position:relative;flex:0 0 auto;transform-style:preserve-3d;will-change:transform;}",
-			".lc-face{position:absolute;left:0;top:0;width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:var(--lc-pad,12px);text-align:center;line-height:1.15;font-weight:700;border:1px solid rgba(255,255,255,.22);-webkit-backface-visibility:hidden;backface-visibility:hidden;filter:brightness(.5);}",
-			".lc-face.on{filter:brightness(1);}",
+			".lc-face{position:absolute;left:0;top:0;width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:var(--lc-pad,12px);text-align:center;line-height:1.15;font-weight:700;border:1px solid rgba(255,255,255,.22);-webkit-backface-visibility:hidden;backface-visibility:hidden;}",
+			".lc-face::after{content:'';position:absolute;left:0;top:0;right:0;bottom:0;background:#000;opacity:.5;pointer-events:none;transition:opacity var(--lc-turn,0s) ease;}",
+			".lc-face.on::after{opacity:0;}",
 			".lc-face img{display:block;max-width:100%;max-height:100%;}",
 			".lc-face.cover{padding:0;} .lc-face.cover img{width:100%;height:100%;object-fit:cover;}",
 			".lc-face span{display:block;width:100%;}"
@@ -519,6 +520,8 @@
 			stage.className = "lc";
 			var cube = document.createElement("div");
 			cube.className = "lc-cube";
+			// Shade a child layer; filters on the transformed faces can hide their backgrounds in OBS.
+			if (!reduce) { cube.style.setProperty("--lc-turn", turn + "s"); }
 			stage.appendChild(cube);
 			root.appendChild(stage);
 			if (!items.length) { return; }
@@ -530,7 +533,6 @@
 				face.style.color = SSO.color(c.fg);
 				face.style.fontFamily = SSO.fontStack(c.font);
 				face.style.background = "linear-gradient(145deg," + SSO.color(c.bg2) + "," + SSO.color(c.bg) + ")";
-				if (!reduce) { face.style.transition = "filter " + turn + "s ease"; }
 				cube.appendChild(face);
 				faces.push(face);
 			}
@@ -540,16 +542,15 @@
 			function fitText(face) {
 				var span = face.querySelector("span");
 				if (!span || !face.clientWidth) { return; }
-				var size = c.fontsize, tries = 0;
+				var size = c.fontsize;
 				var style = window.getComputedStyle(face);
 				var room = face.clientHeight - (parseFloat(style.paddingTop) || 0) - (parseFloat(style.paddingBottom) || 0);
 				span.style.overflowWrap = "normal";
 				span.style.fontSize = size + "px";
 				// Long messages shrink to stay on the face instead of being cut off or split mid-word.
-				while (tries < 20 && size > 8 && (span.scrollWidth > span.clientWidth + 1 || span.offsetHeight > room)) {
-					size = Math.max(8, Math.floor(size * 0.9));
+				while (size > 1 && (span.scrollWidth > span.clientWidth + 1 || span.offsetHeight > room)) {
+					size = Math.max(1, Math.floor(size * 0.9));
 					span.style.fontSize = size + "px";
-					tries++;
 				}
 				// Only a single very long word can still be too wide at the smallest size; let that one break.
 				if (span.scrollWidth > span.clientWidth + 1) { span.style.overflowWrap = "break-word"; }

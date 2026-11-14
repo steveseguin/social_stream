@@ -14228,6 +14228,39 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	const musicSource = document.getElementById('musicSource');
+	function updateMusicFields() {
+		if (!musicSource) return;
+		document.getElementById('musicWnpFields').hidden = musicSource.value !== 'wnp';
+		document.getElementById('musicFileFields').hidden = musicSource.value !== 'file';
+		document.getElementById('musicExpiryFields').hidden = musicSource.value === 'spotify';
+	}
+	function refreshMusicStatus() {
+		updateMusicFields();
+		if (document.hidden || !document.getElementById('wrapper-music')?.checked || !document.getElementById('musicStatus').getClientRects().length) return;
+		chrome.runtime.sendMessage({ cmd: 'musicStatus' }, response => {
+			if (chrome.runtime.lastError || !response) return;
+			const track = response.music && response.music.track;
+			const status = document.getElementById('musicStatus');
+			const text = !response.enabled ? 'Off' : response.message || (track ? track.name + (track.artist ? ' - ' + track.artist : '') : response.music?.status || 'Waiting');
+			if (status.textContent !== text) status.textContent = text;
+			document.getElementById('musicChooseFile').disabled = !response.fileAvailable;
+		});
+	}
+	if (musicSource) {
+		musicSource.addEventListener('change', updateMusicFields);
+		document.getElementById('musicEnabled').addEventListener('change', () => setTimeout(refreshMusicStatus, 100));
+		document.getElementById('wrapper-music').addEventListener('change', refreshMusicStatus);
+		document.getElementById('musicChooseFile').addEventListener('click', () => {
+			chrome.runtime.sendMessage({ cmd: 'musicSelectFile' }, result => {
+				if (chrome.runtime.lastError) return;
+				document.getElementById('musicStatus').textContent = result?.error || result?.name || '';
+			});
+		});
+		setInterval(refreshMusicStatus, 2000);
+		refreshMusicStatus();
+	}
+
 	// Initialize Spotify section inputs and handle manual saving
 	const spotifyClientIdInput = document.getElementById('spotifyClientId');
 	const spotifyClientSecretInput = document.getElementById('spotifyClientSecret');

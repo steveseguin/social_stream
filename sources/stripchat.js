@@ -277,12 +277,18 @@
 			try {
 				if ("getSource" == request) { sendResponse("stripchat"); return; }
 				if ("focusChat" == request) {
-					var input = document.querySelector('[class*="ChatInput__input"]');
-					if (input) {
+					var inputs = document.querySelectorAll('input[class*="ChatInput__input"], textarea[class*="ChatInput__input"]');
+					for (var i = 0; i < inputs.length; i++) {
+						var input = inputs[i];
+						if (input.disabled || input.readOnly || !input.getClientRects().length) continue;
 						input.focus();
-						sendResponse(true);
-						return;
+						if (document.activeElement === input) {
+							sendResponse(true);
+							return;
+						}
 					}
+					sendResponse(false);
+					return;
 				}
 				if (typeof request === "object") {
 					if ("settings" in request) {

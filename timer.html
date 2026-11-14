@@ -291,7 +291,8 @@
         function applyExported(obj) {
             if (!obj || typeof obj !== "object") { return; }
             state.mode = normalizeMode(obj.mode || state.mode);
-            state.style = normalizeStyle(obj.style || state.style);
+            // An explicit link style is local to this display; host snapshots still synchronize its timer.
+            if (!hasParam("style")) { state.style = normalizeStyle(obj.style || state.style); }
             state.label = typeof obj.label === "string" ? obj.label : state.label;
             state.durationMs = Math.max(0, parseInt(obj.durationMs, 10) || 0);
             state.currentMs = parseInt(obj.currentMs, 10);

@@ -191,6 +191,15 @@ const FLOW_TEMPLATES = {
             { from: 'logic_2', to: 'action_1' }
         ]
     },
+    'music-song-command': {
+        name: 'Music Song Command', active: false,
+        description: 'Reply to !song using the source selected in Music. Set song commands to Event Flow in Music first.',
+        nodes: [
+            { id: 't', type: 'trigger', triggerType: 'messageEquals', x: 100, y: 50, config: { text: '!song' } },
+            { id: 'get', type: 'action', actionType: 'musicNowPlaying', x: 100, y: 230, config: {} },
+            { id: 'reply', type: 'action', actionType: 'sendMessage', x: 100, y: 410, config: { destination: 'reply', template: '{meta.music.message}' } }
+        ], connections: [{ from: 't', to: 'get' }, { from: 'get', to: 'reply' }]
+    },
     'now-playing': {
         name: 'Now Playing Command',
         description: 'Show current Spotify track with !np or !song',
@@ -324,6 +333,10 @@ class EventFlowEditor {
                     { id: 'eventOther', name: '📋 Other Event...' },
                     { id: 'eventCustom', name: '✏️ Custom Event' }
                 ]
+            },
+            {
+                id: 'music-events', name: 'Music', expanded: false,
+                triggers: [{ id: 'musicTrackChanged', name: 'Track Changed' }, { id: 'musicPlaybackChanged', name: 'Playback Changed' }]
             },
             {
                 id: 'obs-events',
@@ -488,6 +501,10 @@ class EventFlowEditor {
                     { id: 'obsReplayBufferControl', name: '⏺️ Control Replay Buffer' },
                     { id: 'obsReplayBuffer', name: '💾 Save Replay Buffer' }
                 ]
+            },
+            {
+                id: 'music', name: 'Music', expanded: false,
+                actions: [{ id: 'musicNowPlaying', name: 'Get Now Playing' }]
             },
             {
                 id: 'spotify',
@@ -2178,6 +2195,8 @@ class EventFlowEditor {
         if (!node.config) node.config = {}; // Ensure config exists
         if (node.type === 'trigger') {
             switch (node.triggerType) {
+                case 'musicTrackChanged': return 'When the selected music track changes';
+                case 'musicPlaybackChanged': return 'When playback changes';
                 case 'messageContains': return `Text: "${(node.config.text || '').substring(0,15)}${(node.config.text || '').length > 15 ? '...' : ''}"`;
                 case 'messageStartsWith': return `Text: "${(node.config.text || '').substring(0,15)}${(node.config.text || '').length > 15 ? '...' : ''}"`;
                 case 'messageEndsWith': return `Text: "${(node.config.text || '').substring(0,15)}${(node.config.text || '').length > 15 ? '...' : ''}"`;
@@ -2292,6 +2311,7 @@ class EventFlowEditor {
             }
         } else if (node.type === 'action') {
              switch (node.actionType) {
+                case 'musicNowPlaying': return 'Read the selected music source';
                 case 'blockMessage': return 'Block message (async continue)';
                 case 'returnMessage': return 'Return message (async continue)';
                 case 'continueAsync': return 'Fork to background';
@@ -4215,6 +4235,14 @@ class EventFlowEditor {
 				</div>`;
 				break;
 
+			case 'musicTrackChanged':
+			case 'musicPlaybackChanged':
+				html += `<div class="property-group"><label class="property-label">Music source</label><select class="property-input" id="prop-source">
+					${[['', 'Selected source'], ['spotify', 'Spotify'], ['wnp', "What's Now Playing"], ['file', 'File']].map(([v, label]) => `<option value="${v}" ${node.config.source === v ? 'selected' : ''}>${label}</option>`).join('')}
+					</select></div>`;
+				if (node.triggerType === 'musicPlaybackChanged') html += `<div class="property-group"><label class="property-label">Playback</label><select class="property-input" id="prop-status">${[['', 'Any change'], ['playing', 'Playing'], ['paused', 'Paused'], ['stopped', 'Stopped']].map(([v, label]) => `<option value="${v}" ${node.config.status === v ? 'selected' : ''}>${label}</option>`).join('')}</select></div>`;
+				html += '<p class="property-help">Enable Music in the popup. Connecting or restoring an overlay does not announce the current track again.</p>';
+				break;
 			case 'eventOther':
 				const otherEventTypes = [
 					{ value: '', label: '-- Select Event --' },
@@ -6156,6 +6184,9 @@ class EventFlowEditor {
 					</div>`;
 				break;
 
+			case 'musicNowPlaying':
+				html += '<p class="property-help">Reads the source selected in Music. Use {meta.music.message} for a complete reply, or format {meta.music.track.name} and {meta.music.track.artist}. The complete reply handles unavailable tracks.</p>';
+				break;
 			case 'spotifyNowPlaying':
 				html += `
 					<div class="property-group">

@@ -1845,6 +1845,12 @@ class EventFlowSystem {
 		return !hasChatFields;
 	}
 
+	isMusicEventPayload(message) {
+		return !!(message && ['spotify', 'wnp', 'file'].includes(message.type)
+			&& ['music_track_changed', 'music_playback_changed'].includes(message.event)
+			&& message.meta && message.meta.music && !this.hasChatLikeFields(message));
+	}
+
 	isCounterEventPayload(message) {
 		if (!this.isMetaOnlyPayload(message)) return false;
 		const eventType = String(message.event || '').trim().toLowerCase();
@@ -1974,10 +1980,11 @@ class EventFlowSystem {
 
         // Automatic User Memory resets happen before flows evaluate the stream event.
         await this.resetUserMemoriesForEvent(message);
+        const musicEvent = this.isMusicEventPayload(message);
         
-		// Counter payloads may continue only to explicit matching event triggers.
+		// Counter and music payloads continue only to their explicit matching triggers.
 		// Other meta-only traffic remains excluded from Event Flow.
-		if (this.isMetaOnlyPayload(message) && !this.isCounterEventPayload(message)) {
+		if (this.isMetaOnlyPayload(message) && !this.isCounterEventPayload(message) && !musicEvent) {
 			return message;
 		}
 		
@@ -1992,6 +1999,18 @@ class EventFlowSystem {
             if (!flow.active) {
                 // //console.log(`[ProcessMessage] Flow "${flow.name}" (ID: ${flow.id}) is inactive. Skipping.`);
                 continue;
+            }
+            // An unrelated NOT gate must not turn a music update into a chat action.
+            if (musicEvent) {
+                let matchesMusic = false;
+                for (const node of flow.nodes || []) {
+                    if (node.type === 'trigger' && ['musicTrackChanged', 'musicPlaybackChanged'].includes(node.triggerType)
+                        && await this.evaluateTrigger(node, message, flow)) {
+                        matchesMusic = true;
+                        break;
+                    }
+                }
+                if (!matchesMusic) continue;
             }
           ////console.log(`[ProcessMessage] Evaluating active flow "${flow.name}" (ID: ${flow.id})`);
             
@@ -2419,8 +2438,13 @@ class EventFlowSystem {
         // console.log(`[EvaluateTrigger] Node: ${triggerNode.id}, Type: ${triggerType}, Config: ${JSON.stringify(config)}, Message: ${message.chatmessage}`);
         let match = false;
 		
-		// Known counters may match only an explicit Event Type trigger. This keeps
-		// them out of Any Message and other generic chat-oriented triggers.
+		// Metadata events use explicit triggers, keeping them out of generic chat flows.
+		if (this.isMusicEventPayload(message)) {
+			const expected = triggerType === 'musicTrackChanged' ? 'music_track_changed' : triggerType === 'musicPlaybackChanged' ? 'music_playback_changed' : '';
+			return !!expected && message.event === expected && (!config.source || config.source === message.type)
+				&& (!config.status || config.status === message.meta.music.status);
+		}
+		if (triggerType === 'musicTrackChanged' || triggerType === 'musicPlaybackChanged') return false;
 		if (this.isMetaOnlyPayload(message) && (triggerType !== 'eventOther' || !this.isCounterEventPayload(message))){
 			return false;
 		}
@@ -4831,6 +4855,20 @@ class EventFlowSystem {
                     console.warn('[OBS] sendTargetP2P not available');
                 }
                 break;
+
+            case 'musicNowPlaying': {
+                const service = window.musicService;
+                const current = service && service.status();
+                const music = current && current.enabled ? current.music : { track: null, status: 'idle' };
+                music.message = music.track ? music.track.name + (music.track.artist ? ' by ' + music.track.artist : '') : 'No current song available.';
+                if (message && message.meta != null && (typeof message.meta !== 'object' || Array.isArray(message.meta))) {
+                    result.music = music;
+                    break;
+                }
+                result.modified = true;
+                result.message = { ...message, meta: { ...(message && message.meta || {}), music } };
+                break;
+            }
 
             // Spotify Actions
             case 'spotifySkip':

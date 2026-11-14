@@ -71,6 +71,7 @@
                                     <li><a href="#quick-availability">Quick availability</a></li>
                                     <li><a href="#field-overview">Field overview</a></li>
                                     <li><a href="#meta-conventions">Meta conventions</a></li>
+                                    <li><a href="#music-events">Music and Now Playing</a></li>
                                     <li><a href="#platform-coverage">Platform coverage</a></li>
                                     <li><a href="#cross-platform">Cross-platform alignment</a></li>
                                     <li><a href="#repository-audit">Coverage limits</a></li>
@@ -2716,6 +2717,15 @@
                     </tbody>
                 </table>
                 </div>
+            </section>
+
+            <section class="section-summary" id="music-events">
+                <h2>Music and Now Playing</h2>
+                <p>The selected Music input emits metadata-only Event Flow events with <code>type: "spotify"</code>, <code>"wnp"</code> (What's Now Playing), or <code>"file"</code>. <code>event: "music_track_changed"</code> identifies a new track; <code>"music_playback_changed"</code> identifies a reported playing, paused or stopped transition. Initial connection, reconnect snapshots and overlay refreshes do not emit these events. They match the dedicated Music triggers, not Any Message. See the <a href="music.html">Music setup guide</a>.</p>
+                <p><code>meta.music</code> contains <code>source</code>, <code>status</code>, <code>isPlaying</code>, <code>receivedAt</code> (Unix milliseconds), <code>progressMs</code>, <code>durationMs</code>, <code>queue: []</code> and <code>track</code>. The track is null when unavailable; otherwise it contains <code>name</code>, <code>artist</code>, <code>album</code>, <code>id</code>, <code>imageUrl</code> and <code>duration</code> in milliseconds. Unknown timing is null. Status can also be unknown, idle, offline, stale or error. Missing playback status is never inferred from a title.</p>
+                <p>Track identity uses a source ID when available, otherwise artist and title. Repeated identical metadata does not mean a new play. Inputs that supply only a current title cannot identify two consecutive plays of that same title.</p>
+                <p>For events with numeric or array <code>meta</code>, Get Now Playing leaves that field unchanged and returns the snapshot separately as <code>music</code> on the action result. Built-in song replies are ordinary bot rows with <code>type: "music"</code> and <code>textonly: true</code>.</p>
+                <p>The <code>musicNowPlaying</code> action adds the current snapshot at <code>meta.music</code> while preserving the originating chat and routing fields. It also adds <code>meta.music.message</code>, a ready-to-use reply including the no-track case. Music overlay state uses the existing control transport with target <code>music</code> and a <code>{music: snapshot}</code> payload; it is not a chat row. Existing Spotify overlay payloads and playback actions retain their format.</p>
             </section>
 
             <section class="usage-notes" id="using-reference">
