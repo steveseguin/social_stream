@@ -14,6 +14,7 @@
     <script src="thirdparty/obs-websocket.min.js"></script>
     <script type="text/javascript" src="tts.js"></script>
     <script src="shared/alerts/audio-player.js"></script>
+    <script src="shared/alerts/local-audio.js"></script>
     <style>
 		body, html {
 			margin: 0;
@@ -372,7 +373,7 @@
         }
 
         function showLocalMediaDiagnostic(assetName) {
-            statusMessage.textContent = `Local media${assetName ? ` "${assetName}"` : ''} requires the Local Flow Actions URL from the Social Stream desktop app.`;
+            statusMessage.textContent = `Local media${assetName ? ` "${assetName}"` : ''}: use Upload or Copy Local Flow Actions URL for OBS in the desktop app.`;
             statusMessage.style.display = 'block';
         }
         var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
@@ -1388,25 +1389,77 @@
             });
         }
 
-		function processInput(data) {
+		function processInput(data, peer) {
+            if (data && data.actionType === 'local_audio_chunk') {
+                if (window.SSNLocalAudio) window.SSNLocalAudio.receive(data, peer);
+                return;
+            }
             if (!SSNOverlayControl.accept(data, "actions")) return;
 			if (data.actionType) {
 				// Handle direct action object
-				handleAction(data);
+				handleAction(data, peer);
 			} else if (data.action) {
-				handleAction(data.action);
+				handleAction(data.action, peer);
 			} else if (data.content && data.content.action) {
-				handleAction(data.content.action);
+				handleAction(data.content.action, peer);
 			} else if (data.overlayNinja) {
-				handleAction(data.overlayNinja);
+				processInput(data.overlayNinja, peer);
 			} else if (data.dataReceived && data.dataReceived.overlayNinja) {
 				// Handle WebRTC data channel format
-				processInput(data.dataReceived.overlayNinja);
+				processInput(data.dataReceived.overlayNinja, peer);
 			}
 		}
 
         // Function to handle different action types
-        async function handleAction(payload) {
+        var localAudioGeneration = 0;
+        var localAudioPreparation = Promise.resolve();
+        var localAudioWaiting = 0;
+        function cancelLocalAudioPreparation() {
+            localAudioGeneration++;
+            if (window.SSNLocalAudio) window.SSNLocalAudio.cancel();
+            localAudioPreparation = Promise.resolve();
+            localAudioWaiting = 0;
+        }
+        function sendLocalAudioRequest(packet, peer) {
+            if (!iframe || !iframe.contentWindow || !peer || connectedPeers[peer] !== 'SocialStream') return false;
+            iframe.contentWindow.postMessage({ sendData: { overlayNinja: packet }, type: 'rpcs', UUID: peer }, 'https://vdo.socialstream.ninja');
+            return true;
+        }
+        async function playFlowAudio(payload, peer, generation) {
+            var audioUrl = payload.sourceType === 'local' ? resolveLocalMediaUrl(payload.localAssetId) : payload.audioUrl;
+            if (payload.sourceType === 'local' && !audioUrl && payload.localAudioError) {
+                var errors = {
+                    AUDIO_TOO_LARGE: 'Sounds over 16 MB need Upload or the Local Flow Actions URL.',
+                    AUDIO_MISSING: 'Local sound is missing. Use Choose Local File to locate it, or Upload.',
+                    AUDIO_CHANGED: 'The local sound changed while reading. Trigger it again.',
+                    AUDIO_BUSY: 'Local audio is busy. Try again shortly.'
+                };
+                statusMessage.textContent = errors[payload.localAudioError] || 'Local sound is unavailable. Select the file again or use Upload.';
+                statusMessage.style.display = 'block';
+                return;
+            }
+            if (payload.sourceType === 'local' && !audioUrl && payload.localAudio && window.SSNLocalAudio) {
+                peer = peer || Object.keys(connectedPeers).find(function (id) { return connectedPeers[id] === 'SocialStream'; });
+                try { audioUrl = await window.SSNLocalAudio.get(payload.localAudio, peer, sendLocalAudioRequest); }
+                catch (error) {
+                    if (generation === localAudioGeneration) {
+                        statusMessage.textContent = error.message;
+                        statusMessage.style.display = 'block';
+                    }
+                    return;
+                }
+            }
+            if (generation !== localAudioGeneration) return;
+            if (audioUrl) {
+                if (payload.sourceType === 'local') statusMessage.style.display = 'none';
+                if (payload.audioPlayback === 'queue' || payload.audioPlayback === 'interrupt') {
+                    window.SSNFlowAudio.onBlocked = function (blocked) { audioUnlockPrompt.hidden = !blocked && !blockedAudio; };
+                    window.SSNFlowAudio.play(audioUrl, payload.volume, payload.audioPlayback);
+                } else playAudio(audioUrl, payload.volume);
+            } else if (payload.sourceType === 'local') showLocalMediaDiagnostic(payload.localAssetName);
+        }
+
+        async function handleAction(payload, peer) {
             if (!payload || !payload.actionType) {
                 console.warn("Received an empty or invalid payload:", payload);
                 return;
@@ -1457,25 +1510,24 @@
                     break;
                     
                 case 'play_audio':
-					{
-						const audioUrl = payload.sourceType === 'local'
-							? resolveLocalMediaUrl(payload.localAssetId)
-							: payload.audioUrl;
-                    if (audioUrl) {
-                        if (payload.audioPlayback === 'queue' || payload.audioPlayback === 'interrupt') {
-                            window.SSNFlowAudio.onBlocked = function (blocked) { audioUnlockPrompt.hidden = !blocked && !blockedAudio; };
-                            window.SSNFlowAudio.play(audioUrl, payload.volume, payload.audioPlayback);
-                        }
-                        else playAudio(audioUrl, payload.volume);
-					} else if (payload.sourceType === 'local') {
-						showLocalMediaDiagnostic(payload.localAssetName);
-                    } else {
-                        console.warn("Play audio action received without an audio URL.");
+                    if (payload.audioPlayback === 'interrupt' && localAudioWaiting) {
+                        cancelLocalAudioPreparation();
+                        window.SSNFlowAudio.stop();
                     }
-					}
+                    if (localAudioWaiting || (payload.sourceType === 'local' && payload.localAudio && !resolveLocalMediaUrl(payload.localAssetId))) {
+                        if (localAudioWaiting >= 30) break;
+                        const generation = localAudioGeneration;
+                        localAudioWaiting++;
+                        localAudioPreparation = localAudioPreparation.then(function () {
+                            if (generation === localAudioGeneration) return playFlowAudio(payload, peer, generation);
+                        }).catch(function (error) { console.warn('[Local Audio]', error); }).finally(function () {
+                            if (generation === localAudioGeneration) localAudioWaiting--;
+                        });
+                    } else playFlowAudio(payload, peer, localAudioGeneration);
                     break;
                     
                 case 'stop_audio':
+                    cancelLocalAudioPreparation();
                     window.SSNFlowAudio.stop();
                     blockedAudio = null;
                     audioUnlockPrompt.hidden = true;
@@ -2239,10 +2291,10 @@
 				// Process data from the WebRTC data channel
 				if (e.data && e.data.dataReceived) {
 					if (e.data.dataReceived.overlayNinja) {
-						processInput(e.data.dataReceived.overlayNinja);
+						processInput(e.data.dataReceived.overlayNinja, e.data.UUID);
 					} else {
 						// Handle direct action object in dataReceived
-						processInput(e.data.dataReceived);
+						processInput(e.data.dataReceived, e.data.UUID);
 					}
 				} else if (e.data && e.data.actionType) {
 					// Handle direct action object

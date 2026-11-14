@@ -74,7 +74,7 @@
 					<li>Open the Social Stream Ninja extension popup or the settings panel in SSApp.</li>
 					<li>Open <strong>Global settings and tools &gt; Mechanics - Connections &amp; Integrations</strong>.</li>
 					<li>Enable <strong>Enable Dock to use and publish via API server</strong>. This adds <code>server</code> to supported generated links.</li>
-					<li>Enable <strong>Send messages to Dock from Extension via server</strong>. This adds <code>server2</code> and carries captured chat to the Dock.</li>
+					<li>Enable <strong>Send chat messages to API server</strong>. This adds <code>server2</code> and carries captured chat to the Dock.</li>
 					<li>If you want replies or moderation and source commands that travel from the Dock back to the extension, enable <strong>Dock sends its commands to Extension via server</strong>. This adds <code>server3</code>.</li>
 					<li>Leave <strong>Experimental/temporary: also send API-routed chat to normal dock/overlay connections</strong> off unless you are specifically testing additive delivery.</li>
 					<li>Leave <strong>Peer-to-peer connections via local network only</strong> off for the normal hosted setup.</li>
@@ -121,7 +121,7 @@
 				</figure>
 				<p>New installations normally use <code>127.0.0.1:3003</code>. An upgraded installation that already used port <code>3000</code> may keep it. A generated local two-way Dock link may contain:</p>
 				<pre><code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;server&amp;server2&amp;server3&amp;localserver&amp;localserverport=3003</code></pre>
-				<p>For mini-games, enable <strong>Send messages to Dock from Extension via server</strong> and copy the game link after selecting the game. Local game links with <code>server2</code> receive captured chat directly from SSApp, even when no Dock is open. Changing games keeps the local mode and port.</p>
+				<p>For mini-games, enable <strong>Send chat messages to API server</strong> and copy the game link after selecting the game. Local game links with <code>server2</code> receive captured chat directly from SSApp, even when no Dock is open. Changing games keeps the local mode and port.</p>
 				<p>The API sample and test-message tool use WebSocket in local mode. The local relay does not accept the public API's HTTP GET, POST, or webhook URLs. Public webhook receivers need the hosted relay; provider-specific reliable receivers are separate services.</p>
 				<p>Local Server does not make every feature work offline. Waitlist, Word Cloud, Custom GIF Commands, private chatbot requests, and AI/co-host control bridges still use WebRTC for some or all communication. Website files, platform chat, and external AI, voice, music, or payment services can still require internet access.</p>
 			</div>

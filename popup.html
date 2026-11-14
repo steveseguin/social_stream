@@ -4801,6 +4801,13 @@ details.wrapper[open] > .collapsible-text {
                                     </label>
                                     <span data-translate="split-mode-messages-align-relative-to-center">✂️ Split mode (messages align relative to center) </span>
                                 </div>
+                                <div title="Each message gets its own panel, and donations get a coloured card. Turn on Auto-hide message to make cards disappear after a set time.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="cards" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🃏 Show each message as a card</span>
+                                </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="bubble" />
@@ -7140,6 +7147,13 @@ details.wrapper[open] > .collapsible-text {
 									</label>
 									<span><span class="popup-control-icon" aria-hidden="true">🚂</span><span data-translate="popup-show-hype-train-level-alerts-twitch">Show hype train level alerts (Twitch)</span></span>
 								</div>
+								<div title="Shows named likes from supported sources without enabling likes in main chat. Repeats within 60 seconds and likes arriving while alerts are busy are skipped.">
+									<label class="switch">
+										<input type="checkbox" data-param25="likealerts" />
+										<span class="slider round"></span>
+									</label>
+									<span><span class="popup-control-icon" aria-hidden="true">♥</span><span data-translate="popup-like-alerts">Like alerts</span></span>
+								</div>
 								<div class="textInputContainer" style="width: 95%;" title="Minimum converted USD value required for donation/bits alerts. Example: 5 blocks 100 bits but allows $5+ alerts.">
 									<input type="text" id="multialertmindonation" class="textInput instant" autocomplete="off" placeholder="5" data-textparam25="mindonation" />
 									<label for="multialertmindonation"><span class="popup-control-icon" aria-hidden="true">💵</span><span data-translate="popup-minimum-donation-bits-value-usd">Minimum donation / bits value (USD)</span></label>
@@ -7172,6 +7186,35 @@ details.wrapper[open] > .collapsible-text {
 <div>
 									<label for="multi-alert-followstyle" data-translate="popup-follow-preset">💚 Follow preset</label>
 									<select id="multi-alert-followstyle" data-optionparam25="followstyle" class="textInput popup-reviewed-control">
+										<option value="twitch" selected data-translate="popup-twitch-style">Twitch Style</option>
+										<option value="classic" data-translate="popup-classic">Classic</option>
+										<option value="minimal" data-translate="popup-minimal">Minimal</option>
+										<option value="solid" data-translate="popup-solid-flat">Solid / Flat</option>
+									<option value="cute" data-translate="popup-pastel-pop">🍬 Pastel Pop</option>
+<option value="cozy" data-translate="popup-cozy-cafe">☕ Cozy Cafe</option>
+<option value="art-cat" data-translate="popup-strawberry-cat-illustrated">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog" data-translate="popup-good-company-illustrated">🐶 Good Company — Illustrated</option>
+<option value="art-halloween" data-translate="popup-pumpkin-haunt-illustrated">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas" data-translate="popup-merry-little-reindeer-illustrated">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music" data-translate="popup-midnight-mixtape-illustrated">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest" data-translate="popup-moss-mushrooms-illustrated">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space" data-translate="popup-moon-bunny-illustrated">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon" data-translate="popup-crystal-guardian-illustrated">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats" data-translate="popup-cat-cafe">🐱 Cat Cafe</option>
+<option value="music" data-translate="popup-studio-sessions">🎵 Studio Sessions</option>
+<option value="arcade" data-translate="popup-pocket-arcade">🕹️ Pocket Arcade</option>
+<option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
+<option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
+<option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="spring" data-translate="popup-spring-bloom">🌸 Spring Bloom</option>
+<option value="summer" data-translate="popup-summer-splash">🌊 Summer Splash</option>
+<option value="hearts" data-translate="popup-sweetheart">💖 Sweetheart</option>
+<option value="lunar" data-translate="popup-lunar-lantern">🏮 Lunar Lantern</option>
+<option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
+								</div>
+<div>
+									<label for="multi-alert-likestyle" data-translate="popup-like-preset">♥ Like preset</label>
+									<select id="multi-alert-likestyle" data-optionparam25="likestyle" class="textInput popup-reviewed-control">
 										<option value="twitch" selected data-translate="popup-twitch-style">Twitch Style</option>
 										<option value="classic" data-translate="popup-classic">Classic</option>
 										<option value="minimal" data-translate="popup-minimal">Minimal</option>
@@ -7673,6 +7716,11 @@ details.wrapper[open] > .collapsible-text {
 											<label><span data-translate="popup-follow-sound">💖 Follow sound</span></label>
 											<button type="button" id="uploadFollowSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
 										</div>
+<div class="textInputContainer textInputWithUpload" style="width: 100%;" title="Likes are silent unless you choose a sound here and enable alert sounds.">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Like sound URL (.ogg, .mp3, .wav)" data-textparam25="likesound" id="multi-alert-likesound" />
+											<label><span data-translate="popup-like-sound">💖 Like sound</span></label>
+											<button type="button" id="uploadLikeSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
+										</div>
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Sub sound URL (.ogg, .mp3, .wav)" data-textparam25="subsound" id="multi-alert-subsound" />
 											<label><span data-translate="popup-subscription-sound">💜 Subscription sound</span></label>
@@ -7879,7 +7927,7 @@ details.wrapper[open] > .collapsible-text {
 			<div class="wrapper beginner-basic" data-panel-section="multialerts">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-preview-options" />
-					<label class="collapsible-label" for="wrapper-multi-alert-preview-options"><span data-translate="popup-preview-test">🧪 Preview & Test</span></label>
+					<label class="collapsible-label" for="wrapper-multi-alert-preview-options" title="Tests the alert overlay only. Does not run Event Flows."><span data-translate="popup-test-alert-overlay">🧪 Test Alert Overlay</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
@@ -7892,7 +7940,7 @@ details.wrapper[open] > .collapsible-text {
 										<option value="kick" data-translate="popup-kick">Kick</option>
 									</select>
 								</div>
-								<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
+								<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;" title="Tests the alert overlay only. Does not run Event Flows.">
 									<button type="button" id="multi-alert-preview-follow" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">👤</span><span data-translate="popup-follow">Follow</span></button>
 									<button type="button" id="multi-alert-preview-sub" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">⭐</span><span data-translate="popup-sub">Sub</span></button>
 									<button type="button" id="multi-alert-preview-dono" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">💵</span><span data-translate="popup-donation">Donation</span></button>
@@ -7900,6 +7948,7 @@ details.wrapper[open] > .collapsible-text {
 									<button type="button" id="multi-alert-preview-raid" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">👥</span><span data-translate="popup-raid">Raid</span></button>
 									<button type="button" id="multi-alert-preview-auction" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">🏆</span><span data-translate="money-overlay-auction">Auction</span></button>
 									<button type="button" id="multi-alert-preview-hype" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">🚂</span><span data-translate="popup-hype">Hype</span></button>
+<button type="button" id="multi-alert-preview-like" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">♥</span><span data-translate="popup-like">Like</span></button>
 									<button type="button" id="multi-alert-preview-clear" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">🗑️</span><span data-translate="popup-clear">Clear</span></button>
 									<button type="button" id="multi-alert-preview-mute" class="overlayButton" style="flex: 0 0 auto; min-width: 0; white-space: nowrap; opacity: 0.6;" title="Mute preview sound">🔊</button>
 								</div>
@@ -10433,9 +10482,18 @@ details.wrapper[open] > .collapsible-text {
 								</div>
 								<div id="geminimodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-2.5-flash" data-textsetting="geminimodel" />
-										<label for="geminimodel"><span class="popup-control-icon" aria-hidden="true">🤖</span><span data-translate="geminimodel">Gemini Model to use</span></label>
+										<select id="geminiChatModelSelect" class="textInput">
+											<option value="">Default (gemini-2.5-flash)</option>
+											<option value="custom">Enter model ID...</option>
+										</select>
+										<label for="geminiChatModelSelect"><span class="popup-control-icon" aria-hidden="true">🤖</span><span data-translate="geminimodel">Gemini Model to use</span></label>
 									</div>
+									<div id="geminiChatModelCustom" class="textInputContainer hidden" style="width: 95%;">
+										<input id="geminiChatModelInput" type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-3.1-pro-preview" data-textsetting="geminimodel" />
+										<label for="geminiChatModelInput">Model ID</label>
+									</div>
+									<button type="button" id="refreshGeminiModels" title="Get current text models from Google using your API key">Load models</button>
+									<span id="geminiModelStatus" role="status" aria-live="polite"></span>
 								</div>
 								<div id="xaimodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
@@ -10496,7 +10554,7 @@ details.wrapper[open] > .collapsible-text {
 								</div>
 
 								<div id="openrouterApiKey" class="textInputContainer hidden" style="width: 95%;">
-									<input type="password" class="textInput" autocomplete="off" placeholder="Your OpenRouter API key" data-textsetting="openrouterApiKey" />
+									<input type="password" class="textInput" autocomplete="off" placeholder="API key, or comma-separated keys" title="Optional backup keys: separate with commas. On quota or rate-limit errors, another key is tried. Provider limits still apply." data-textsetting="openrouterApiKey" />
 									<label for="openrouterApiKey"><span class="popup-control-icon" aria-hidden="true">🔑</span>OpenRouter API Key</label>
 								</div>
 
@@ -17511,7 +17569,7 @@ details.wrapper[open] > .collapsible-text {
 					<ul>
 						<li>Single timer with overtime and warning states</li>
 						<li>Optional operator controls with start, pause, reset, and +/-30s</li>
-						<li>Three built-in looks: stage, compact, ring</li>
+						<li>Four built-in looks: stage, compact, ring, bar</li>
 						<li>Works with the <code>&amp;server</code> API path for remote control</li>
 					</ul>
 				</div>
@@ -17548,6 +17606,7 @@ details.wrapper[open] > .collapsible-text {
 										<option value="stage">Stage</option>
 										<option value="compact">Compact</option>
 										<option value="ring">Ring</option>
+										<option value="bar">Bar</option>
 									</select>
 								</div>
 								<br>
@@ -17624,9 +17683,9 @@ details.wrapper[open] > .collapsible-text {
 				</div>
 			</div>
 
-			<div class="link" id="spotify-integration" title="Spotify Integration" data-panel-section="spotify">
+			<div class="link" id="spotify-integration" title="Music" data-panel-section="spotify">
 				<h2 class="spotify_section_title">
-					<span class="title-group"><span class="emoji" aria-hidden="true">🎵</span><span data-translate="popup-spotify-integration">Spotify Integration</span></span>
+					<span class="title-group"><span class="emoji" aria-hidden="true">🎵</span><span data-translate="popup-music">Music</span></span>
 					<span class="options-link-group" style="float: right; display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
 						<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy overlay link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
 					<button type="button" class="edit-link rounded_area" data-edit-link="spotify" title="Load an existing link for this overlay">Edit link</button>
@@ -17635,20 +17694,73 @@ details.wrapper[open] > .collapsible-text {
 				</h2>
 				<input type="checkbox" id="help-spotify" class="link-help-toggle">
 				<div class="link-help-content">
-					<strong>Display currently playing Spotify tracks on stream.</strong>
-					<p>Connect your Spotify account to show what song is playing as an overlay, or announce tracks to chat automatically.</p>
-					<ul>
-						<li>"Now Playing" overlay widget</li>
-						<li>Optional upcoming song-request queue</li>
-						<li>Auto-announce songs to chat</li>
-						<li>Chat commands for song info (!song, !np)</li>
-						<li>Customizable overlay appearance</li>
-					</ul>
-					<div class="help-warning">⚠️ <strong>Requires setup:</strong> You need to authorize your Spotify account in the setup section below.</div>
+					<p>Choose Spotify, What's Now Playing, or a current-song file for overlays and Event Flow. Playback controls and song requests use Spotify.</p>
+					<a class="popup-guide-link" href="docs/music.html" target="_blank" rel="noopener">Music setup guide</a>
 				</div>
-				<p class="popup-section-description"><span>Connect your Spotify account to create a widget overlay or announce to chat the current song.</span></p>
+				<p class="popup-section-description"><span>Show the current song from Spotify or a DJ music source.</span></p>
 				<div id="spotify" data-raw="" class="streaming_chat"><a href="" id="spotifylink"></a></div>
 				<div id="spotify-edit-status" class="link-edit-status" role="status" aria-live="polite"></div>
+			</div>
+
+
+			<div class="wrapper" data-panel-section="spotify">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-music" />
+					<label class="collapsible-label" for="wrapper-music"><span>🎧 Now Playing</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group popup-settings-panel" id="music-source-options">
+								<div class="popup-toggle-row" title="Use the selected input for Music overlays and Event Flow. Spotify playback controls stay separate.">
+									<label class="switch"><input type="checkbox" id="musicEnabled" data-setting="musicEnabled" /><span class="slider round"></span></label>
+									<label for="musicEnabled"><span class="popup-control-icon" aria-hidden="true">🔌</span>Enable Music</label>
+								</div>
+								<p id="musicStatus" role="status" aria-live="polite"></p>
+								<div class="textInputContainer">
+									<label for="musicSource"><span class="popup-control-icon" aria-hidden="true">🎚️</span>Source</label>
+									<select id="musicSource" class="textInput" data-optionsetting="musicSource">
+										<option value="spotify">Spotify</option>
+										<option value="wnp">What's Now Playing</option>
+										<option value="file">File (SSApp)</option>
+									</select>
+								</div>
+								<div id="musicWnpFields" hidden>
+									<div class="textInputContainer">
+										<label for="musicWnpUrl"><span class="popup-control-icon" aria-hidden="true">🌐</span>Web server address</label>
+										<input type="text" id="musicWnpUrl" class="textInput" autocomplete="off" placeholder="http://127.0.0.1:8899" data-textsetting="musicWnpUrl" />
+									</div>
+								</div>
+								<div id="musicFileFields" hidden>
+									<div class="textInputContainer">
+										<label for="musicFileFormat"><span class="popup-control-icon" aria-hidden="true">📄</span>File format</label>
+										<select id="musicFileFormat" class="textInput" data-optionsetting="musicFileFormat">
+											<option value="line">Artist - Title</option>
+											<option value="lines">Artist / Title on separate lines</option>
+											<option value="json">JSON</option>
+										</select>
+									</div>
+									<div class="popup-file-actions">
+										<button type="button" id="musicChooseFile">Choose file</button>
+										<span id="musicFileName"></span>
+									</div>
+								</div>
+								<div id="musicExpiryFields" hidden>
+									<div class="textInputContainer" title="Clears old file or DJ metadata when the source stops updating.">
+										<label for="musicStaleSeconds"><span class="popup-control-icon" aria-hidden="true">⏱️</span>Track expiry (seconds)</label>
+										<input type="number" id="musicStaleSeconds" class="textInput" min="30" max="86400" value="900" data-numbersetting="musicStaleSeconds" />
+									</div>
+								</div>
+								<div class="textInputContainer" title="When Music is enabled, this replaces Spotify's !song and !np replies. Aliases and permissions use the command settings below.">
+									<label for="musicCommandOwner"><span class="popup-control-icon" aria-hidden="true">💬</span>Song commands</label>
+									<select id="musicCommandOwner" class="textInput" data-optionsetting="musicCommandOwner">
+										<option value="builtin">Built-in dock replies</option>
+										<option value="flow">Event Flow</option>
+									</select>
+								</div>
+								<a class="popup-guide-link" href="docs/music.html" target="_blank" rel="noopener"><span class="popup-control-icon" aria-hidden="true">📖</span>Music setup guide</a>
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 
 			<div class="wrapper" data-panel-section="spotify">
@@ -17708,10 +17820,18 @@ details.wrapper[open] > .collapsible-text {
 			<div class="wrapper" data-panel-section="spotify">
                 <div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-spotify-overlay-options" />
-					<label class="collapsible-label" for="wrapper-spotify-overlay-options"><span>📊 Spotify Overlay Options</span></label>
+					<label class="collapsible-label" for="wrapper-spotify-overlay-options"><span>📊 Now Playing Overlay</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat" id="spotify-overlay-options">
+								<h3><span class="popup-control-icon" aria-hidden="true">🎧</span>Input</h3>
+								<div>
+									<span>Overlay input</span>
+									<select id="musicOverlaySource" data-optionparam22="source">
+										<option value="">Spotify</option>
+										<option value="music">Selected Music source</option>
+									</select>
+								</div>
 								<h3><span class="popup-control-icon" aria-hidden="true">🎨</span>Appearance</h3>
 								<div>
 									<span>Style preset</span>
@@ -17742,11 +17862,8 @@ details.wrapper[open] > .collapsible-text {
 										<input type="checkbox" data-param22="showqueue" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">👁️</span>Show upcoming song-request queue</span>
+									<span title="Requires the managed song-request queue and Spotify overlay input."><span class="popup-control-icon" aria-hidden="true">👁️</span>Show Spotify request queue</span>
 								</div>
-								<p style="font-size: 0.85em; color: var(--text-secondary); margin: 0 0 12px;">
-									Requires the managed song-request queue under Spotify Chat Commands.
-								</p>
 								<h3><span class="popup-control-icon" aria-hidden="true">👁️</span>Visibility toggles</h3>
 								<div>
 									<label class="switch">

@@ -87,11 +87,13 @@
 						return (j.events || []).slice(0, c.count).map(function (e) { return "<i>" + esc(e.year) + "</i>" + esc(e.text); });
 					});
 				} else {
-					// Today's feed can be empty early in the (UTC) day, so fall back to yesterday's.
+					// The feed only carries news for the current UTC day (past days come back without it), so ask by
+					// UTC date, not local date. An evening in the Americas is already tomorrow in UTC. If that day has
+					// nothing yet, the next one carries the same headlines.
 					var feed = function (dt) {
-						return getJSON("https://api.wikimedia.org/feed/v1/wikipedia/en/featured/" + dt.getFullYear() + "/" + SSO.pad(dt.getMonth() + 1) + "/" + SSO.pad(dt.getDate())).then(function (j) { return j.news || []; });
+						return getJSON("https://api.wikimedia.org/feed/v1/wikipedia/en/featured/" + dt.getUTCFullYear() + "/" + SSO.pad(dt.getUTCMonth() + 1) + "/" + SSO.pad(dt.getUTCDate())).then(function (j) { return j.news || []; });
 					};
-					p = feed(d).then(function (news) { return news.length ? news : feed(new Date(d.getTime() - 86400000)); }).then(function (news) {
+					p = feed(d).then(function (news) { return news.length ? news : feed(new Date(d.getTime() + 86400000)); }).then(function (news) {
 						return news.slice(0, c.count).map(function (n) { return esc(strip(n.story)); });
 					});
 				}
@@ -437,12 +439,18 @@
 				vEl.textContent = lines.join(" · ");
 			}
 			function load() {
-				if (!c.url) { return; }
-				fetch(c.url, { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (text) {
+				// The ticker has no card to hold a hint, so say it in the ticker instead of sitting on "Loading…".
+				if (!c.url) { if (update) { update(["Paste a link in the settings"]); } return; }
+				fetch(c.url, { cache: "no-store" }).then(function (r) { if (!r.ok) { throw new Error(r.status); } return r.text(); }).then(function (text) {
 					if (c.mode === "json") { var j = JSON.parse(text), v = pick(j, c.cell); apply([typeof v === "object" ? JSON.stringify(v) : String(v)]); }
 					else if (c.mode === "csv") { apply([cellOf(parseCSV(text), c.cell)]); }
 					else { apply(SSO.lines(text)); }
-				}).catch(function () { if (vEl) { vEl.textContent = "Couldn't read that link (it may block cross-site access)."; } });
+				}).catch(function () {
+					// Keep showing the last good data through a failed refresh.
+					if (lines.length) { return; }
+					if (vEl) { vEl.textContent = "Couldn't read that link (it may block cross-site access)."; }
+					else if (update) { update(["Couldn't read that link (it may block cross-site access)."]); }
+				});
 			}
 			load();
 			setInterval(load, c.refresh * 1000);

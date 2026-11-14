@@ -1,6 +1,7 @@
 (function () {
 
 	var settings = {};
+	var isExtensionOn = true;
 	var seenMessageKeys = [];
 	var seenMessageLookup = {};
 	var stripchatObserver = null;
@@ -8,6 +9,9 @@
 	var currentChatContainer = null;
 	var hasInitializedChat = false;
 	var highestMessageId = 0;
+	var currentRoom = location.pathname;
+	var fallbackMessageIds = new WeakMap();
+	var nextFallbackMessageId = 0;
 
 	function escapeHtml(unsafe) {
 		unsafe = unsafe || "";
@@ -50,12 +54,10 @@
 	function getMessageKey(ele) {
 		if (!ele || ele.nodeType !== 1) return "";
 		if (ele.dataset && ele.dataset.messageId) {
-			return "id:" + ele.dataset.messageId;
+			return location.pathname + ":id:" + ele.dataset.messageId;
 		}
-		var className = (ele.className || "").toString();
-		var text = (ele.textContent || "").replace(/\s+/g, " ").trim();
-		if (!className && !text) return "";
-		return "fallback:" + className + "|" + text.slice(0, 200);
+		if (!fallbackMessageIds.has(ele)) fallbackMessageIds.set(ele, ++nextFallbackMessageId);
+		return "row:" + fallbackMessageIds.get(ele);
 	}
 
 	function hasSeenMessageKey(key) {
@@ -96,33 +98,33 @@
 	}
 
 	function getAllContentNodes(element) {
-		var resp = "";
 		if (!element) return "";
-		if (!element.childNodes || !element.childNodes.length) {
-			if (element.textContent) {
-				return escapeHtml(element.textContent) || "";
-			}
-			return "";
+		if (element.nodeType === 3) {
+			return settings.textonlymode ? element.textContent : escapeHtml(element.textContent);
 		}
-		element.childNodes.forEach(node => {
-			if (node.childNodes.length) {
-				resp += getAllContentNodes(node);
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
-				resp += escapeHtml(node.textContent) + " ";
-			} else if (node.nodeType === 1) {
-				// Capture contract: textonly=true means a literal chatmessage string, not HTML.
-				// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
-				// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
-				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
-				if (!settings.textonlymode) {
-					if ((node.nodeName == "IMG") && node.src) {
-						node.src = node.src + "";
-					}
-					resp += node.outerHTML;
-				}
-			}
-		});
-		return resp;
+		if (element.nodeType !== 1 || /^(SCRIPT|STYLE|IFRAME|OBJECT|BUTTON)$/.test(element.tagName)) return "";
+		if (element.tagName === "IMG") {
+			var alt = element.getAttribute("alt") || element.getAttribute("data-token") || "";
+			if (settings.textonlymode) return alt;
+			var src = element.src || "";
+			return /^(https?:|data:image\/|blob:)/i.test(src) ? '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt) + '">' : escapeHtml(alt);
+		}
+		if (element.tagName === "BR") return settings.textonlymode ? "\n" : "<br>";
+		var text = "";
+		for (var i = 0; i < element.childNodes.length; i++) {
+			text += getAllContentNodes(element.childNodes[i]);
+		}
+		return text;
+	}
+
+	function resetRoomIfChanged() {
+		if (currentRoom === location.pathname) return;
+		currentRoom = location.pathname;
+		seenMessageKeys = [];
+		seenMessageLookup = {};
+		highestMessageId = 0;
+		hasInitializedChat = false;
+		currentChatContainer = null;
 	}
 
 	function processMessage(ele) {
@@ -130,9 +132,11 @@
 		if (ele.nodeType !== 1) return;
 		ele = getMessageElement(ele);
 		if (!ele || !isStripchatMessage(ele)) return;
+		resetRoomIfChanged();
 
 		var messageKey = getMessageKey(ele);
 		if (hasSeenMessageKey(messageKey)) return;
+		if (!isExtensionOn) { rememberMessageKey(messageKey); updateHighestMessageId(ele); return; }
 
 		// skip lovense buzz notifications, goal updates, and action messages
 		var className = (ele.className || "").toString();
@@ -157,7 +161,7 @@
 				usernameEle = ele.querySelector(".user-levels-username-chat-owner");
 			}
 			if (!usernameEle) return;
-			name = escapeHtml(usernameEle.textContent.trim());
+			name = usernameEle.textContent.trim();
 		} catch (e) {
 			return;
 		}
@@ -168,12 +172,12 @@
 			try {
 				var amountEle = ele.querySelector("[class*='amountHighlight'], strong");
 				if (amountEle) {
-					hasDonation = escapeHtml(amountEle.textContent.trim());
+					hasDonation = amountEle.textContent.trim();
 				}
 				if (!hasDonation) {
 					var tipMatch = (ele.textContent || "").match(/tipped\s+([0-9.,]+\s*(?:tk|tokens?))/i);
 					if (tipMatch) {
-						hasDonation = escapeHtml(tipMatch[1].trim());
+						hasDonation = tipMatch[1].trim();
 					}
 				}
 				var commentEle = ele.querySelector("[class*='commentBody']");
@@ -218,9 +222,34 @@
 		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "stripchat";
+		if (ele.dataset && ele.dataset.messageId) data.meta = { messageId: ele.dataset.messageId };
+		if (window.__ssnCamModeration && !window.__ssnCamModeration.track(ele, data)) return;
 
 		pushMessage(data);
 	}
+
+	var lastViewerCount = null;
+	var viewerRoom = location.pathname;
+	function checkViewers() {
+		if (viewerRoom !== location.pathname) {
+			viewerRoom = location.pathname;
+			lastViewerCount = null;
+		}
+		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)) {
+			lastViewerCount = null;
+			return;
+		}
+		var element = document.querySelector(".player-viewers-count");
+		if (!element) return;
+		var match = element.textContent.trim().match(/^(\d+(?:[,\s]\d{3})*(?:\.\d+)?)([KM])?(?:\s|$)/i);
+		if (!match) return;
+		var count = Number(match[1].replace(/[,\s]/g, ""));
+		if (match[2]) count *= match[2].toUpperCase() === "K" ? 1000 : 1000000;
+		if (!isFinite(count) || count < 0 || Math.floor(count) !== count || count === lastViewerCount) return;
+		lastViewerCount = count;
+		pushMessage({ type: "stripchat", event: "viewer_update", meta: count });
+	}
+	setInterval(checkViewers, 10000);
 
 	function pushMessage(data) {
 		try {
@@ -270,6 +299,8 @@
 		if ("settings" in response) {
 			settings = response.settings;
 		}
+		if ("state" in response) { isExtensionOn = response.state; }
+		checkViewers();
 	});
 
 	chrome.runtime.onMessage.addListener(
@@ -277,19 +308,26 @@
 			try {
 				if ("getSource" == request) { sendResponse("stripchat"); return; }
 				if ("focusChat" == request) {
-					var input = document.querySelector('[class*="ChatInput__input"]');
-					if (input) {
+					var inputs = document.querySelectorAll('input[class*="ChatInput__input"], textarea[class*="ChatInput__input"]');
+					for (var i = 0; i < inputs.length; i++) {
+						var input = inputs[i];
+						if (input.disabled || input.readOnly || !input.getClientRects().length) continue;
 						input.focus();
-						sendResponse(true);
-						return;
+						if (document.activeElement === input) {
+							sendResponse(true);
+							return;
+						}
 					}
+					sendResponse(false);
+					return;
 				}
-				if (typeof request === "object") {
-					if ("settings" in request) {
-						settings = request.settings;
-						sendResponse(true);
-						return;
-					}
+				if (request && typeof request === "object") {
+					if ("state" in request) { isExtensionOn = request.state; }
+					if ("settings" in request) { settings = request.settings || {}; }
+					lastViewerCount = null;
+					checkViewers();
+					sendResponse(true);
+					return;
 				}
 			} catch (e) { }
 			sendResponse(false);
@@ -300,6 +338,7 @@
 		function queueMessageNode(node) {
 			var messageNode = getMessageElement(node);
 			if (messageNode) {
+				if (!isExtensionOn) { processMessage(messageNode); return; }
 				setTimeout(function (n) {
 					processMessage(n);
 				}, 100, messageNode);
@@ -363,6 +402,7 @@
 
 	function scanChatContainer(chatContainer) {
 		if (!chatContainer || !chatContainer.isConnected || !chatContainer.querySelectorAll) return;
+		resetRoomIfChanged();
 		var existing = chatContainer.querySelectorAll(".message-base, [data-message-id]");
 		var queued = [];
 		for (var i = 0; i < existing.length; i++) {
@@ -411,6 +451,7 @@
 	console.log("Social Stream injected");
 
 	var checkReady = setInterval(function () {
+		resetRoomIfChanged();
 		var chatContainer = getChatContainer();
 		if (chatContainer) {
 			if (chatContainer !== currentChatContainer) {

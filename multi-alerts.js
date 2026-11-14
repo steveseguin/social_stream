@@ -1,4 +1,5 @@
 const ALERT_CATEGORIES = Object.freeze({
+  LIKE: 'like',
   FOLLOW: 'follow',
   SUBSCRIPTION: 'subscription',
   DONATION: 'donation',
@@ -14,6 +15,7 @@ const DEFAULT_ALERT_STYLE = 'twitch';
 const ANIMATION_STYLES = new Set(['slidedown', 'slideup', 'pop', 'fade', 'none']);
 
 const CATEGORY_LABELS = Object.freeze({
+  [ALERT_CATEGORIES.LIKE]: 'New Like',
   [ALERT_CATEGORIES.FOLLOW]: 'New Follower',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'New Subscriber',
   [ALERT_CATEGORIES.DONATION]: 'New Donation',
@@ -25,6 +27,7 @@ const CATEGORY_LABELS = Object.freeze({
 });
 
 const CATEGORY_LABEL_KEYS = Object.freeze({
+  [ALERT_CATEGORIES.LIKE]: 'alert-title-new-like',
   [ALERT_CATEGORIES.FOLLOW]: 'alert-title-new-follower',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'alert-title-new-subscriber',
   [ALERT_CATEGORIES.DONATION]: 'alert-title-new-donation',
@@ -36,6 +39,7 @@ const CATEGORY_LABEL_KEYS = Object.freeze({
 });
 
 const CATEGORY_ACCENTS = Object.freeze({
+  [ALERT_CATEGORIES.LIKE]: '#ff68b3',
   [ALERT_CATEGORIES.FOLLOW]: '#ff68b3',
   [ALERT_CATEGORIES.SUBSCRIPTION]: '#8b5cf6',
   [ALERT_CATEGORIES.DONATION]: '#14f195',
@@ -47,6 +51,7 @@ const CATEGORY_ACCENTS = Object.freeze({
 });
 
 const COUNT_EVENTS = new Set([
+  'likes_update',
   'viewer_update',
   'viewer_updates',
   'follower_update',
@@ -226,6 +231,7 @@ function useServerOnlyTransport() {
 let translation = {};
 
 const CATEGORY_STYLE_PARAMS = {
+  [ALERT_CATEGORIES.LIKE]: 'likestyle',
   [ALERT_CATEGORIES.FOLLOW]: 'followstyle',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'substyle',
   [ALERT_CATEGORIES.DONATION]: 'donostyle',
@@ -247,11 +253,13 @@ const CATEGORY_DISABLE_PARAMS = {
 
 // Opt-in categories: hidden unless the enable param is present in the URL
 const CATEGORY_OPT_IN_PARAMS = {
+  [ALERT_CATEGORIES.LIKE]: 'likealerts',
   [ALERT_CATEGORIES.AUCTION]: 'auctionwins',
   [ALERT_CATEGORIES.HYPE]: 'hypetrain'
 };
 
 const CATEGORY_SOUND_PARAMS = {
+  [ALERT_CATEGORIES.LIKE]: 'likesound',
   [ALERT_CATEGORIES.FOLLOW]: 'followsound',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'subsound',
   [ALERT_CATEGORIES.DONATION]: 'donosound',
@@ -263,6 +271,7 @@ const CATEGORY_SOUND_PARAMS = {
 };
 
 const CATEGORY_ACCENT_PARAMS = {
+  [ALERT_CATEGORIES.LIKE]: 'likeaccent',
   [ALERT_CATEGORIES.FOLLOW]: 'followaccent',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'subaccent',
   [ALERT_CATEGORIES.DONATION]: 'donoaccent',
@@ -292,6 +301,7 @@ const settings = readSettings();
 const recentPayloads = [];
 const hypeTrainLevels = {};
 let lastAuctionWinSignature = '';
+const recentLikeViewers = new Map();
 
 const state = {
   iframe: null,
@@ -1240,6 +1250,12 @@ function inferCategory(payload = {}, displayOnly = false) {
     return null;
   }
 
+  if (eventKey === 'liked' || eventKey === 'like') {
+    // A channel name or an aggregate counter does not identify the person who liked.
+    const actor = normalizeText(payload.chatname);
+    return actor && !/^(someone|viewer|streamlabs alert|anonymous)$/i.test(actor) ? ALERT_CATEGORIES.LIKE : null;
+  }
+
   if (eventKey === 'purchase') return ALERT_CATEGORIES.PURCHASE;
 
   if (AUCTION_EVENTS.has(eventKey)) {
@@ -1292,6 +1308,8 @@ function buildHeadline(category, eventKey, actor, amount, viewerCount, payload =
   if (eventKey === 'giftfunded') return { lead: actor, tail: 'fully funded a gift' };
   if (eventKey === 'purchase') return { lead: actor, tail: 'purchased ' + (pickSubtitle(payload) || 'an item') };
   switch (category) {
+    case ALERT_CATEGORIES.LIKE:
+      return { lead: actor, tail: getTranslation('alert-sent-like', 'sent a like') };
     case ALERT_CATEGORIES.AUCTION:
       return {
         lead: actor,
@@ -1379,6 +1397,7 @@ function buildBodyText(category, payload, viewerCount, format = {}) {
   const eventKey = pickEventKey(payload);
   const rawMessage = normalizeText(payload.chatmessage);
   format.isHTML = false;
+  if (category === ALERT_CATEGORIES.LIKE) return '';
   function chatBody() {
     // Only an HTML-mode chatmessage sets isHTML; plain chat and generated labels stay literal strings for textContent, without HTML filtering.
     format.isHTML = !payload.textonly;
@@ -1545,6 +1564,9 @@ function createMockAlertPayload(category, overrides = {}) {
 
   let payload;
   switch (category) {
+    case ALERT_CATEGORIES.LIKE:
+      payload = { ...common, event: 'liked', chatmessage: 'liked the stream' };
+      break;
     case ALERT_CATEGORIES.FOLLOW:
       payload = {
         ...common,
@@ -2098,6 +2120,11 @@ function flattenPayloads(payload) {
 
 function playModelSound(model, card) {
   if (state.muted) return;
+  // Likes stay silent unless a like-specific sound is chosen; do not read them aloud.
+  if (model.category === ALERT_CATEGORIES.LIKE) {
+    if (settings.categorySounds[ALERT_CATEGORIES.LIKE]) playAlertSound(model);
+    return;
+  }
   const playback = playAlertSound(model);
   const soundToken = state.soundSequence;
   playback.then(function () {
@@ -2125,6 +2152,11 @@ function displayStackAlert(model, options) {
   var streak = pickTikTokGiftStreakId(model.payload);
   var previous = streak && alertBoard.rows().find(function (row) { return pickTikTokGiftStreakId(row.payload) === streak; });
   if (previous) options.silent = true;
+  previous = previous || options.replaceRow;
+  // Make room for real alerts by replacing a like before any other unpinned row.
+  if (!previous && model.category !== ALERT_CATEGORIES.LIKE && alertBoard.rows().length >= settings.limit) {
+    previous = alertBoard.rows().find(function (row) { return !row.pinned && inferCategory(row.payload, true) === ALERT_CATEGORIES.LIKE; });
+  }
   var card = renderAlert(model);
   elements.stage.appendChild(card);
   alertBoard.register(card, model.payload, settings.keep ? 0 : settings.showTime, previous);
@@ -2145,6 +2177,35 @@ function displayStackAlert(model, options) {
 }
 
 function queueAlert(model) {
+  if (model.category === ALERT_CATEGORIES.LIKE) {
+    // Likes are best-effort: never build a backlog or displace other alert types.
+    const now = Date.now();
+    if (state.paused || state.currentAlert || state.queue.length || now < state.blockedUntil ||
+        (alertBoard && alertBoard.isPaused())) return;
+    var replaceRow = null;
+    if (alertBoard) {
+      const rows = alertBoard.rows();
+      if (rows.some(function (row) { return now - row.at < settings.showTime; })) return;
+      if (rows.length >= settings.limit) {
+        replaceRow = rows.find(function (row) { return !row.pinned && inferCategory(row.payload, true) === ALERT_CATEGORIES.LIKE; });
+        if (!replaceRow) return;
+      }
+    }
+    const payload = model.payload;
+    const source = collectSourceMatchKeys(payload);
+    const key = JSON.stringify([model.sourceKey, payload.meta?.sourcePlatform || '',
+      source.exact[0] || source.loose[0] || '',
+      normalizeText(payload.userid || payload.userId || payload.username || payload.chatname).toLowerCase()]);
+    recentLikeViewers.forEach(function (at, viewer) { if (now - at >= 60000) recentLikeViewers.delete(viewer); });
+    if (recentLikeViewers.has(key)) return;
+    recentLikeViewers.set(key, now);
+    if (recentLikeViewers.size > 1000) recentLikeViewers.delete(recentLikeViewers.keys().next().value);
+    displayAlert(model, { replaceRow });
+    return;
+  }
+  if (!settings.stack && !state.paused && state.currentAlert?.category === ALERT_CATEGORIES.LIKE) {
+    clearAlert();
+  }
   if (settings.stack) { displayStackAlert(model); return; }
   if (state.paused) { state.queue.push(model); while (state.queue.length > settings.maxQueue) state.queue.shift(); return; }
   const tikTokGiftStreakId = pickTikTokGiftStreakId(model?.payload);
@@ -2242,6 +2303,7 @@ function finalizeAlert(card, alertToken) {
   if (alertToken && state.alertSequence !== alertToken) {
     return;
   }
+  const wasLike = state.currentAlert?.category === ALERT_CATEGORIES.LIKE;
   clearDisplayTimers();
   if (card?.isConnected) {
     card.remove();
@@ -2252,7 +2314,7 @@ function finalizeAlert(card, alertToken) {
   state.currentAlertNode = null;
   elements.stage.classList.remove('has-alert');
 
-  const effectiveCooldown = state.queue.length > 3 ? Math.min(settings.cooldown, 200) : settings.cooldown;
+  const effectiveCooldown = wasLike ? 0 : (state.queue.length > 3 ? Math.min(settings.cooldown, 200) : settings.cooldown);
   if (effectiveCooldown > 0) {
     state.blockedUntil = Date.now() + effectiveCooldown;
     state.cooldownTimer = window.setTimeout(processQueue, effectiveCooldown);
@@ -2751,6 +2813,8 @@ async function playAlertSound(model) {
       log('custom beep failed', error);
     }
   }
+
+  if (model.category === ALERT_CATEGORIES.LIKE) return;
 
   try {
     var ctx = await resumeAudioContext();

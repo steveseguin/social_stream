@@ -36,40 +36,26 @@
 			 .replace(/'/g, "&#039;") || "";
 	}
 
-	function getAllContentNodes(element) { // takes an element.
-		var resp = "";
-		
-		if (!element){return resp;}
-		
-		if (!element.childNodes || !element.childNodes.length){
-			if (element.textContent){
-				return escapeHtml(element.textContent) || "";
-			} else {
-				return "";
-			}
+	function getAllContentNodes(element) {
+		if (!element) return "";
+		if (element.nodeType === 3) {
+			return settings.textonlymode ? element.textContent : escapeHtml(element.textContent);
 		}
-		
-		element.childNodes.forEach(node=>{
-			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent)+" ";
-			} else if (node.nodeType === 1){
-				// Capture contract: textonly=true means a literal chatmessage string, not HTML.
-				// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
-				// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
-				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
-				if (!settings.textonlymode){
-					if ((node.nodeName == "IMG") && node.src){
-						node.src = node.src+"";
-					}
-					resp += node.outerHTML;
-				}
-			}
-		});
-		return resp.replaceAll("&nbsp;"," ").replaceAll("  "," ");
+		if (element.nodeType !== 1 || /^(SCRIPT|STYLE|IFRAME|OBJECT|BUTTON)$/.test(element.tagName)) return "";
+		if (element.tagName === "IMG") {
+			var alt = element.getAttribute("alt") || element.getAttribute("data-token") || "";
+			if (settings.textonlymode) return alt;
+			var src = element.src || "";
+			return /^(https?:|data:image\/|blob:)/i.test(src) ? '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(alt) + '">' : escapeHtml(alt);
+		}
+		if (element.tagName === "BR") return settings.textonlymode ? "\n" : "<br>";
+		var text = "";
+		for (var i = 0; i < element.childNodes.length; i++) {
+			text += getAllContentNodes(element.childNodes[i]);
+		}
+		return text;
 	}
-	
+
 	var settings = {};
 	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
 	// settings.captureevents
@@ -91,6 +77,8 @@
 		}
 
 		
+		if (!isExtensionOn) { ele.skip = true; return; }
+
 		var chatimg = ""
 
 		try {
@@ -100,8 +88,18 @@
 		}
 		
 		var name="";
+		var author = ele.querySelector("[class*='chat-user-module__user--']");
+		var tip = null;
 		try {
-			name = escapeHtml(ele.querySelector("[class^='chat-user-module__user--']").textContent);
+			if (author){
+				name = author.textContent;
+			} else {
+				var tipLine = ele.querySelector("span");
+				var tipParts = tipLine && tipLine.querySelectorAll("b");
+				if (!tipParts || tipParts.length !== 2 || !/ tipped \d+ tokens?$/i.test(tipLine.textContent.trim())){return;}
+				name = tipParts[0].textContent;
+				tip = tipParts[1].textContent.trim() + " tokens";
+			}
 			name = name.split(":")[0];
 			name = name.trim();
 		} catch(e){
@@ -122,7 +120,7 @@
 			});
 		} catch(e){
 		} */
-		var hasDonation = '';
+		var hasDonation = tip || '';
 		
 		var msg="";
 		
@@ -130,7 +128,15 @@
 			
 			
 		try {
-			msg = getAllContentNodes(ele.querySelector("p.break-words")).trim();
+			var content = ele.querySelector("p.break-words");
+			if (!content && author){
+				var next = author.nextElementSibling;
+				while (next && next.matches("[class*='badge-module__badge--']")){
+					next = next.nextElementSibling;
+				}
+				if (next && next.tagName === "SPAN"){content = next;}
+			}
+			msg = getAllContentNodes(content).trim();
 		} catch(e){
 			
 		}
@@ -146,7 +152,7 @@
 			}
 		}
 		
-		if (!msg || !name){
+		if ((!msg && !hasDonation) || !name){
 			//console.log("no name", msg, name);
 			return;
 		}
@@ -167,10 +173,34 @@
 		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "camsoda";
+		if (window.__ssnCamModeration && !window.__ssnCamModeration.track(ele, data)) return;
 		
 		//console.log(data);
 		pushMessage(data);
 	}
+
+	var lastViewerCount = null;
+	var viewerRoom = location.pathname;
+	function checkViewers() {
+		if (viewerRoom !== location.pathname) {
+			viewerRoom = location.pathname;
+			lastViewerCount = null;
+		}
+		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)) {
+			lastViewerCount = null;
+			return;
+		}
+		var element = document.querySelector("[class*=\"chat-module__usersCount--\"]");
+		if (!element) return;
+		var match = element.textContent.trim().match(/^(\d+(?:[,\s]\d{3})*(?:\.\d+)?)([KM])?(?:\s|$)/i);
+		if (!match) return;
+		var count = Number(match[1].replace(/[,\s]/g, ""));
+		if (match[2]) count *= match[2].toUpperCase() === "K" ? 1000 : 1000000;
+		if (!isFinite(count) || count < 0 || Math.floor(count) !== count || count === lastViewerCount) return;
+		lastViewerCount = count;
+		pushMessage({ type: "camsoda", event: "viewer_update", meta: count });
+	}
+	setInterval(checkViewers, 10000);
 
 	function pushMessage(data){
 		try{
@@ -179,43 +209,6 @@
 		}
 	}
 	var isExtensionOn = true;
-	
-	function checkViewers(){
-		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
-			try {
-				let viewerSpan = document.querySelector("svg > path[d='M15 12a3 3 0 11-6 0 3 3 0 016 0z']").parentNode.nextElementSibling;
-				if (viewerSpan && viewerSpan.textContent){
-					let views = viewerSpan.textContent.toUpperCase();
-					let multiplier = 1;
-					if (views.includes("K")){
-						multiplier = 1000;
-						views = views.replace("K","");
-					} else if (views.includes("M")){
-						multiplier = 1000000;
-						views = views.replace("M","");
-					}
-					views = views.split(" ")[0];
-					if (views == parseFloat(views)){
-						views = parseFloat(views) * multiplier;
-						chrome.runtime.sendMessage(
-							chrome.runtime.id,
-							({message:{
-									type: 'camsoda',
-									event: 'viewer_update',
-									meta: views
-								}
-							}),
-							function (e) {}
-						);
-					}
-				}
-			} catch (e) {
-			}
-		}
-	}
-
-
-	// OnlineViewers_root_orkvv
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response={}){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
@@ -229,6 +222,7 @@
 		if (!checking){
 			startCheck();
 		}
+		checkViewers();
 	});
 
 	chrome.runtime.onMessage.addListener(
@@ -241,27 +235,27 @@
 				
 				if ("getSource" == request){sendResponse("camsoda");	return;	}
 				if ("focusChat" == request){
-					document.querySelector('.comments-section textarea,input[type="text"]').focus();
+					var inputs = document.querySelectorAll('input[class*="chat-input-module__input--"], .comments-section textarea, .comments-section input[type="text"]');
+					for (var i = 0; i < inputs.length; i++){
+						var input = inputs[i];
+						if (input.disabled || input.readOnly || !input.getClientRects().length){continue;}
+						input.focus();
+						if (document.activeElement === input){
+							sendResponse(true);
+							return;
+						}
+					}
+					sendResponse(false);
+					return;
+				}
+				if (request && typeof request === "object") {
+					if ("state" in request) { isExtensionOn = request.state; }
+					if ("settings" in request) { settings = request.settings || {}; }
+					lastViewerCount = null;
+					checkViewers();
 					sendResponse(true);
 					return;
 				}
-				if (typeof request === "object"){
-					if ("state" in request) {
-						isExtensionOn = request.state;
-						
-						if (!checking){
-							startCheck();
-						}
-					}
-					
-					if ("settings" in request){
-						settings = request.settings;
-						sendResponse(true);
-						return;
-					}
-				}
-				
-				
 			} catch(e){}
 			sendResponse(false);
 		}
@@ -271,22 +265,35 @@
 	var observer = null;
 	var observerTarget = null;
 	
+	function queueMessage(row) {
+		if (!row || row.skip || row.ssnPending){return;}
+		if (!isExtensionOn) { row.skip = true; return; }
+		row.ssnPending = true;
+		setTimeout(function(){
+			row.ssnPending = false;
+			processMessage(row);
+		},300);
+	}
 	
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
+				var changed = mutation.target.nodeType === 1 ? mutation.target : mutation.target.parentElement;
+				var row = changed && changed.closest("[class*='message-module__wrapper--']");
+				if (row && target.contains(row)){queueMessage(row);}
 				if (mutation.addedNodes.length) {
-					console.log(mutation.addedNodes);
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							const addedNode = mutation.addedNodes[i];
 							if (addedNode.nodeType !== 1) continue; // Only process element nodes
 
-							if (addedNode.skip){continue;}
-
-							setTimeout(()=>{
-									processMessage(addedNode);
-							},300);
+							if (addedNode.matches("[class*='message-module__wrapper--']")){
+								queueMessage(addedNode);
+							} else {
+								var nested = addedNode.querySelectorAll("[class*='message-module__wrapper--']");
+								nested.forEach(queueMessage);
+								if (!nested.length && addedNode.parentElement === target){queueMessage(addedNode);}
+							}
 
 						} catch(e){
 							console.error("Error processing added node:", e);
@@ -296,7 +303,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true, characterData: true };
 		if (!target){return;}
 		if (observer && observerTarget === target && target.isConnected) {
 			return;
@@ -307,6 +314,9 @@
 			} catch(e){}
 		}
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		// Rows already present when chat connects are history, not new messages.
+		Array.from(target.children).forEach(function(row){row.skip = true;});
+		target.querySelectorAll("[class*='message-module__wrapper--']").forEach(function(row){row.skip = true;});
 		
 		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -317,16 +327,13 @@
 
 
 	function startCheck(){
-		if (isExtensionOn && checking){return;}
+		if (checking){return;}
 
 		clearInterval(checking);
 		checking = false;
-		if (!isExtensionOn){
-			return;
-		}
 		checking = setInterval(function(){
 			try {
-				var container = document.querySelector("div[class^='chat-module__wrapper--=']");
+				var container = document.querySelector("div[class*='chat-module__wrapper--']");
 				if (container && (!container.marked || !observer || observerTarget !== container || !container.isConnected)){
 					container.marked=true;
 
@@ -334,7 +341,7 @@
 
 					onElementInserted(container);
 				}
-				// checkViewers();
+
 			} catch(e){}
 		},2000);
 	}

@@ -112,6 +112,7 @@ Entries: 13.
 | `split` | `split` | boolean | Enables split mode for message alignment |
 | `bubble` | `bubble` | boolean | Styles messages as chat bubbles |
 | `namebubble` | `namebubble` | boolean | Adds a separate rounded bubble behind usernames (bubble mode) |
+| `cards` | `cards` | boolean | Shows each message as its own card, with coloured cards for donations and members. Pair with `showtime` to make cards disappear after a set time |
 | `fadedtop` | `fadedtop` | boolean | Fades out the top of the overlay |
 | `reverse` | `reverse` | boolean | Displays the feed in reverse order (newest at the top) |
 | `dropdown` | `dropdown` | boolean | Enables reverse order with drop-down style animations |

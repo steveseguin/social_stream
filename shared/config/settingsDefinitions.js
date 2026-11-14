@@ -1222,7 +1222,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "openrouterApiKey": {
     type: "text",
     category: "configure_llm_api",
-    description: "OpenRouter API key for routing hosted model calls."
+    description: "OpenRouter API key, or comma-separated backup keys for quota and rate-limit errors."
   },
   "openroutermodel": {
     type: "text",

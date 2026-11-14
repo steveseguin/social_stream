@@ -227,8 +227,8 @@
 	function lightTint(hex) { var n = parseInt(String(hex).replace("#", ""), 16) || 0, mix = function (v) { return Math.round(v + (255 - v) * 0.7); }; return ((1 << 24) + (mix(n >> 16 & 255) << 16) + (mix(n >> 8 & 255) << 8) + mix(n & 255)).toString(16).slice(1); }
 
 	add("screen", [
-		{ name: "Patriot — starting soon", tags: ["country"], values: { backdrop: "flag", country: "us", flagmono: true, title: "STARTING SOON", subtitle: "★  ★  ★", font: "Teko", fontsize: 170, upper: true, dim: 0.2, socials: "twitch:yourname,youtube:@yourname,tiktok:@yourname", minutes: 5 } },
-		{ name: "Patriot — be right back", tags: ["country"], values: { backdrop: "flag", country: "us", flagmono: true, title: "BE RIGHT BACK", subtitle: "★  ★  ★", font: "Teko", fontsize: 170, upper: true, dim: 0.3, minutes: 0, layout: "split", panel: true, socials: "twitch:yourname,youtube:@yourname,discord:discord.gg/yourname", qr: "https://socialstream.ninja" } },
+		{ name: "Patriot — starting soon", tags: ["country"], values: { backdrop: "flag", country: "us", flagmono: true, title: "STARTING SOON", subtitle: "★  ★  ★", font: "Teko", fontsize: 130, upper: true, dim: 0.2, socials: "twitch:yourname,youtube:@yourname,tiktok:@yourname", minutes: 5 } },
+		{ name: "Patriot — be right back", tags: ["country"], values: { backdrop: "flag", country: "us", flagmono: true, title: "BE RIGHT BACK", subtitle: "★  ★  ★", font: "Teko", fontsize: 130, upper: true, dim: 0.3, minutes: 0, layout: "split", panel: true, socials: "twitch:yourname,youtube:@yourname,discord:discord.gg/yourname", qr: "https://socialstream.ninja" } },
 		{ name: "Patriot — ending", tags: ["country"], values: { backdrop: "flag", country: "us", flagmono: true, title: "THANKS FOR RIDING ALONG", subtitle: "★  ★  ★", font: "Teko", fontsize: 130, upper: true, dim: 0.35, minutes: 0, socials: "twitch:yourname,youtube:@yourname", socialsfade: 10 } }
 	].concat(COUNTRY_PICKS.slice(0, 16).map(function (code) {
 		var th = SSO.countryTheme(code);
@@ -238,7 +238,7 @@
 		{ name: "Halloween — BRB", tags: ["halloween", "spooky"], values: { backdrop: "halloween", c1: "12051f", c2: "ff7a00", c3: "6b2fb3", title: "be right back", subtitle: "don't let the bats bite", font: "Creepster", fontsize: 140, fg: "ffffff", fx: "drip", fx1: "ff7a00", fx3: "6b0000", minutes: 0, dim: 0, layout: "top" } },
 		{ name: "Christmas — starting soon", tags: ["christmas", "cozy"], values: { backdrop: "christmas", c1: "0b1a3a", c2: "ff3b3b", c3: "ffd166", title: "Starting soon", subtitle: "grab some hot cocoa ☕", font: "Mountains of Christmas", fontsize: 150, dim: 0, layout: "top", accent: "ffd166" } },
 		{ name: "Christmas — ending", tags: ["christmas", "cozy"], values: { backdrop: "christmas", c1: "0b1a3a", c2: "ff3b3b", c3: "ffd166", title: "Merry Christmas!", subtitle: "thanks for watching", font: "Mountains of Christmas", fontsize: 150, dim: 0, layout: "top", minutes: 0, socials: "twitch:yourname,youtube:@yourname" } },
-		{ name: "New Year's Eve countdown", tags: ["newyear"], values: { backdrop: "fireworks", c1: "03030c", c2: "ffd166", c3: "ff4d6d", title: "New Year's Eve", subtitle: "counting down together", target: "2027-01-01T00:00", countlabel: "midnight in", endtext: "HAPPY NEW YEAR! 🎆", font: "Great Vibes", fontsize: 150, fx: "gold", dim: 0, accent: "ffd166" } },
+		{ name: "New Year's Eve countdown", tags: ["newyear"], values: { backdrop: "fireworks", c1: "03030c", c2: "ffd166", c3: "ff4d6d", title: "New Year's Eve", subtitle: "counting down together", target: "01-01T00:00", countlabel: "midnight in", endtext: "HAPPY NEW YEAR! 🎆", font: "Great Vibes", fontsize: 150, fx: "gold", dim: 0, accent: "ffd166" } },
 		{ name: "Happy New Year", tags: ["newyear"], values: { backdrop: "fireworks", c1: "03030c", c2: "ffd166", c3: "c77dff", title: "Happy New Year!", subtitle: "thanks for an amazing year", minutes: 0, font: "Bungee", fontsize: 120, fx: "rainbow", dim: 0, socials: "twitch:yourname,youtube:@yourname,discord:discord.gg/yourname" } }
 	]));
 
@@ -264,9 +264,9 @@
 	]);
 
 	add("countdown", [
-		{ name: "New Year countdown", tags: ["newyear"], values: { target: "2027-01-01T00:00", label: "New Year in", endtext: "HAPPY NEW YEAR! 🎆", style: "units", font: "Bungee", fontsize: 56, bgopacity: 0.6, accent: "ffd166" } },
-		{ name: "Christmas countdown", tags: ["christmas"], values: { target: "2026-12-25T00:00", label: "Christmas in", endtext: "Merry Christmas! 🎄", style: "units", font: "Mountains of Christmas", fontsize: 60, bg: "0b3d2e", bgopacity: 0.85, accent: "ffd166" } },
-		{ name: "Halloween countdown", tags: ["halloween"], values: { target: "2026-10-31T18:00", label: "Halloween in", endtext: "Happy Halloween 🎃", style: "units", font: "Creepster", fontsize: 64, bg: "12051f", bgopacity: 0.85, fg: "ff9a3c", accent: "ff7a00" } }
+		{ name: "New Year countdown", tags: ["newyear"], values: { target: "01-01T00:00", label: "New Year in", endtext: "HAPPY NEW YEAR! 🎆", style: "units", font: "Bungee", fontsize: 56, bgopacity: 0.6, accent: "ffd166" } },
+		{ name: "Christmas countdown", tags: ["christmas"], values: { target: "12-25T00:00", label: "Christmas in", endtext: "Merry Christmas! 🎄", style: "units", font: "Mountains of Christmas", fontsize: 60, bg: "0b3d2e", bgopacity: 0.85, accent: "ffd166" } },
+		{ name: "Halloween countdown", tags: ["halloween"], values: { target: "10-31T18:00", label: "Halloween in", endtext: "Happy Halloween 🎃", style: "units", font: "Creepster", fontsize: 64, bg: "12051f", bgopacity: 0.85, fg: "ff9a3c", accent: "ff7a00" } }
 	]);
 
 	add("title", [

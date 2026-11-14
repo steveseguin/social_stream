@@ -153,9 +153,9 @@ function getCachedUserDisplayAliases(value) {
 	return entries;
 }
 
-function matchesConfiguredUser(entry, data, sourceType) {
+function matchesConfiguredUser(entry, data, sourceType, allowWildcardSource = false) {
 	if (!entry || !data) return false;
-	if (entry.type && entry.type !== sourceType) return false;
+	if (entry.type && entry.type !== sourceType && !(allowWildcardSource && entry.type === "*")) return false;
 
 	const configuredIdentifier = normalizeRoleIdentifier(entry.name);
 	if (!configuredIdentifier) return false;
@@ -1238,12 +1238,12 @@ function initialLoadBadWords() {
 						profanityHashTable = createProfanityHashTable(customBadWordsList);
 					} else {
 						log("using default badwords list");
-						badWords = generateVariationsList(badWords);
+						badWords = generateVariationsList(DEFAULT_BAD_WORDS);
 						profanityHashTable = createProfanityHashTable(badWords);
 					}
 				} catch (e) {
 					log("failed to load badwords; loading backups");
-					badWords = generateVariationsList(badWords);
+					badWords = generateVariationsList(DEFAULT_BAD_WORDS);
 					profanityHashTable = createProfanityHashTable(badWords);
 				}
 			}
@@ -1264,17 +1264,17 @@ function initialLoadBadWords() {
 							customBadWordsList = generateVariationsList(customBadWordsList);
 							profanityHashTable = createProfanityHashTable(customBadWordsList);
 						} else {
-							badWords = generateVariationsList(badWords);
+							badWords = generateVariationsList(DEFAULT_BAD_WORDS);
 							profanityHashTable = createProfanityHashTable(badWords);
 						}
 					} catch (e) {
-						badWords = generateVariationsList(badWords);
+						badWords = generateVariationsList(DEFAULT_BAD_WORDS);
 						profanityHashTable = createProfanityHashTable(badWords);
 					}
 				});
 		}
 	} catch (e) {
-		badWords = generateVariationsList(badWords);
+		badWords = generateVariationsList(DEFAULT_BAD_WORDS);
 		profanityHashTable = createProfanityHashTable(badWords);
 	}
 }
@@ -1339,7 +1339,7 @@ try {
 window.customUserFunction = function (data) {
 	// This is a placeholder function that can be overridden by custom user JavaScript
 	console.log("Default customUserFunction - no custom implementation loaded");
-	// Return false to indicate no custom processing was done
+	// Pass messages through when no custom implementation is loaded.
 	return data;
 };
 
@@ -1436,7 +1436,7 @@ function resetCustomJs() {
 	// Reset to default function
 	window.customUserFunction = function (data) {
 		console.log("Default customUserFunction - no custom implementation loaded");
-		return false;
+		return data;
 	};
 
 	console.log("Custom JavaScript function reset to default");
@@ -1936,6 +1936,7 @@ function loadSettings(item, resave = false) {
 	if (settings.spotifyEnabled) {
 		initializeSpotify();
 	}
+	if (window.musicService) window.musicService.configure(true);
 
 	const timedMessage = settings["timedMessage"] || [];
 	for (const i of timedMessage) {
@@ -3934,11 +3935,14 @@ async function resetSettings(item = false) {
 }
 
 async function exportSettings() {
-	chrome.storage.local.get(properties, async function (item) {
+	chrome.storage.sync.get(["streamID", "password", "state"], async function (item) {
 		try {
 		if (chrome.runtime.lastError) {
 			throw new Error(chrome.runtime.lastError.message);
 		}
+		if (!("streamID" in item)) item.streamID = streamID;
+		if (!("password" in item)) item.password = password;
+		if (!("state" in item)) item.state = isExtensionOn;
 		item.settings = settings;
 		const opts = {
 			types: [
@@ -4019,6 +4023,20 @@ async function importSettings(item = false) {
 		if (!imported || typeof imported !== "object" || Array.isArray(imported) ||
 			!imported.settings || typeof imported.settings !== "object" || Array.isArray(imported.settings)) {
 			throw new Error("Missing or invalid settings object");
+		}
+		if (imported.streamID) {
+			if (!validateRoomId(imported.streamID)) throw new Error("Invalid session ID");
+			const warningRestoreTarget = await bringBackgroundPageToFrontForPicker();
+			try {
+				if (!window.confirm("These settings include a session ID. Stop any other Social Stream extension or app instance using that ID before importing.\n\nImport settings?")) return;
+			} finally {
+				await restorePreviousTabAfterPicker(warningRestoreTarget);
+			}
+		}
+		// Rebuild translations from the selected language, not imported HTML.
+		delete imported.settings.translation;
+		if (isSSAPP) {
+			await new Promise(resolve => chrome.storage.local.set({ settings: imported.settings, allowEmptySettings: true }, resolve));
 		}
 		loadSettings(imported, true);
 		messagePopup({ settingsImported: true });
@@ -5649,6 +5667,20 @@ function routeIndividualLikeEvent(message, alreadyRouted) {
 	};
 }
 
+// Alert-only likes need user filters, but must not trigger chat commands or Event Flow.
+async function sendIndividualLikeAlert(message, tab = false) {
+	if (!settings.likealerts || !settings.likealerts.param25 || !isIndividualLikeEvent(message) ||
+		getSettingFlag("hideevents") || isEventBlockedByCustomFilter(message)) return;
+	try {
+		var filtered = await applyBotActions(Object.assign({}, message), tab, true);
+		if (!filtered) return;
+		filtered = sanitizeRelayPayloadFields(filtered);
+		if (filtered) sendTargetP2P(filtered, "alerts");
+	} catch (e) {
+		console.error(e);
+	}
+}
+
 // Only captures still being processed are retained; completed messages need no tombstone cache.
 const pendingModeratedCaptures = new Set();
 function cancelPendingModeratedCaptures(deletion) {
@@ -5808,6 +5840,7 @@ async function processIncomingMessage(message, sender = null) {
 			}
 			individualLikeRouting = routeIndividualLikeEvent(message, false);
 			if (individualLikeRouting.stop) {
+				await sendIndividualLikeAlert(message, sender?.tab);
 				return message;
 			}
 		}
@@ -6090,6 +6123,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			}
 
 			pruneSettingsObjects(settings);
+			if (request.setting && (request.setting.startsWith("music") || request.setting === "spotifyEnabled") && window.musicService) window.musicService.configure();
 
             if (["aiTranslateEngine", "aiAutoTranslate", "aiAutoTranslateOutgoing", "localTranslateSourceLanguage"].includes(request.setting) && typeof prepareLocalTranslation === "function") prepareLocalTranslation();
 
@@ -7665,7 +7699,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				queueTransportTask(destroyNinjaTransport);
 			}
 
-			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, cohostCapability: await getOpenAIRealtimeCohostCapability() });
+			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, cohostCapability: await getOpenAIRealtimeCohostCapability() });
 		} else if (request.cmd && request.cmd === "uploadCustomJs") {
 			localStorage.setItem("customJavaScript", request.data);
 			try {
@@ -7914,6 +7948,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if (request.cmd && request.cmd === "spotifySignOut") {
 			// Handle Spotify sign out
 			console.log("Spotify sign out request received");
+			if (window.musicService) window.musicService.spotify({ status: "idle", track: null });
 
 			// Clear Spotify tokens from settings synchronously first
 			delete settings.spotifyAccessToken;
@@ -7956,6 +7991,12 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 
 			// Respond immediately - tokens are already cleared in memory
 			sendResponse({ success: true });
+		} else if (request.cmd === "musicStatus") {
+			sendResponse(window.musicService ? window.musicService.status() : { message: "Music is loading." });
+		} else if (request.cmd === "musicSelectFile") {
+			if (!window.musicService) sendResponse({ error: "Music is loading." });
+			else window.musicService.selectFile().then(sendResponse).catch(error => sendResponse({ error: error.message }));
+			return true;
 		} else if (request.spotifyAction) {
 			// Handle Spotify actions from Event Flow (uses shared handleSpotifyAction helper)
 			(async () => {
@@ -8170,6 +8211,10 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 		}
 
 		if (message.chatname) {
+			if (message.type === "tiktok" && typeof message.chatname === "string") {
+				// Keep literal angle brackets in TikTok display names.
+				message.chatname = message.chatname.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+			}
 			message.chatname = filterXSS(message.chatname); // I do escapeHtml at the point of capture instead
 		}
 
@@ -8252,6 +8297,7 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 
 		var individualLikeRouting = routeIndividualLikeEvent(message, !!individualLikeAlreadyRouted);
 		if (individualLikeRouting.stop) {
+			await sendIndividualLikeAlert(message);
 			return true;
 		}
 
@@ -8669,13 +8715,10 @@ function sendToH2R(data) {
 			if (data.timestamp) {
 				msg.timestamp = data.timestamp;
 			}
-			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
-			if (!data.textonly) {
-				data.chatmessage = unescapeHtml(data.chatmessage);
-			}
+			const messageText = data.textonly ? data.chatmessage : unescapeHtml(data.chatmessage);
 			msg.snippet = {};
 			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
-			msg.snippet.displayMessage = sanitizeRelay(data.chatmessage, data.textonly) || "";
+			msg.snippet.displayMessage = sanitizeRelay(messageText, data.textonly) || "";
 			if (!msg.snippet.displayMessage) {
 				return;
 			}
@@ -10398,6 +10441,7 @@ function initializeSpotify() {
 			onTrackUpdate: payload => {
 				try {
 					sendSpotifyOverlay(payload);
+					if (window.musicService) window.musicService.spotify(payload);
 				} catch (err) {
 					console.warn("Failed to send Spotify overlay update:", err);
 				}
@@ -10636,6 +10680,7 @@ function markP2PPeerConnected(uuid, label) {
 	p2pTransportState.lastPeerAt = Date.now();
 	if (uuid && label) {
 		connectedPeers[uuid] = label;
+		if (label === "music" && window.musicService) window.musicService.publish();
 	}
 }
 
@@ -11640,9 +11685,14 @@ function setupSocket() {
 				outgoingMessage.outgoingOrigin = "host";
 				resp = sendMessageToTabs(outgoingMessage, false, null, false, false, false);
 			} else if (data.action && data.action === "blockUser" && data.value) {
-				let source = data.target.trim().toLowerCase() || "*";
-				let username = data.value.trim();
-				resp = blockUser({ chatname: username, type: source });
+				const user = typeof data.value === "object" ? data.value : { chatname: data.value, type: data.target };
+				if (typeof user.chatname === "string" && (user.type === undefined || typeof user.type === "string")) {
+					const username = user.chatname.trim();
+					const source = (user.type || "*").trim().toLowerCase() || "*";
+					if (username) {
+						resp = blockUser({ chatname: username, type: source });
+					}
+				}
 			} else if (data.action && (data.action === "clearDock" || data.action === "clear" || data.action === "clearAll")) {
 				sendDataP2P(data);
 				resp = true;
@@ -12049,6 +12099,7 @@ function setupSocket() {
 					message.membership = "";
 					message.contentimg = "";
 					message.type = "stripe";
+					message.textonly = true;
 					setInboundWebhookMeta(message, stripeWebhookId);
 
 					data = message; // replace inbound stripe message with new message
@@ -13629,12 +13680,13 @@ function prepareOverlayControl(data, target) {
 	if (!(target === "actions" || (target === "credits" && data.creditsCommand) ||
 		(target === "poll" && (data.settings || data.setting || data.cmd)) || (target === "hype" && data.hype) ||
         (target === "map" && (data.settings || data.setting || ["startmap", "pausemap", "resetmap"].includes(data.cmd))) ||
-        (target === "timer" && data.timer) || (target === "ticker" && data.ticker) || (target === "spotify" && data.spotify) ||
+        (target === "timer" && data.timer) || (target === "ticker" && data.ticker) || (target === "spotify" && data.spotify) || (target === "music" && data.music) ||
         (target === "tipjar" && ["resettipjar", "settipjaramount"].includes(data.cmd)) ||
         (target === "meta" && ["resetmetastats", "metastats"].includes(data.cmd)) ||
         ((target === "alerts" || target === "dock") && data.action === "eventOverlayControl" && data.surface === (target === "alerts" ? "alerts" : "events")) || (target === "alerts" && data.action === "clearAlerts") || (target === "bot" && data.action === "clearBotOverlay") ||
         (target === "wordcloud" && (data.chatmessage || "state" in data)) || (target === "gif" && data.contentimg) ||
         (target === "reactions" && ["reaction", "liked", "like"].includes(data.event)) ||
+        (target === "alerts" && isIndividualLikeEvent(data) && settings.likealerts && settings.likealerts.param25) ||
         (target === "waitlist" && ("drawmode" in data || "drawPoolSize" in data)))) return data;
 	var packet = Object.assign({}, data);
     if (target === "map") {
@@ -13662,7 +13714,7 @@ function prepareOverlayControl(data, target) {
         packet.pollState = { epoch: pollControlState.epoch, revision: pollControlState.revision, reset: pollControlState.reset, closed: pollControlState.closed };
 	}
 	packet.ssnControl = { id: "control-" + Date.now().toString(36) + "-" + Array.from(crypto.getRandomValues(new Uint32Array(4))).join("-"), target };
-    if (target === "timer" || target === "ticker" || target === "spotify") {
+    if (target === "timer" || target === "ticker" || target === "spotify" || target === "music") {
         var prior = overlayStateSnapshots.get(target);
         var stateValue = packet[target];
         if (target === "timer") {
@@ -13715,7 +13767,7 @@ function handleOverlayControlRequest(data, socket, replyChannel, allowSnapshot) 
         packet = prepareOverlayControl({ settings: settings }, "map");
     } else if (request.target === "timer" && timerStateInitialized) {
         packet = prepareOverlayControl({ timer: exportTimerState() }, "timer");
-    } else if (request.target === "ticker" || request.target === "spotify") {
+    } else if (request.target === "ticker" || request.target === "spotify" || request.target === "music") {
         var saved = overlayStateSnapshots.get(request.target);
         if (!saved || saved.session !== streamID) return true;
         packet = Object.assign({}, saved.packet, { ssnControl: Object.assign({}, saved.packet.ssnControl) });
@@ -14003,6 +14055,7 @@ var timerState = {
 	version: 1,
 	mode: "countdown",
 	style: "stage",
+	styleUpdatedAt: 0,
 	label: "Timer",
 	durationMs: 300000,
 	currentMs: 300000,
@@ -14033,6 +14086,7 @@ function exportTimerState(now = Date.now()) {
 		version: 1,
 		mode: timerState.mode,
 		style: timerState.style,
+		styleUpdatedAt: timerState.styleUpdatedAt,
 		label: timerState.label,
 		durationMs: timerState.durationMs,
 		currentMs: timerState.currentMs,
@@ -14097,7 +14151,7 @@ function normalizeTimerMode(mode) {
 
 function normalizeTimerStyle(style) {
 	style = (style || "").toString().toLowerCase();
-	return style === "compact" || style === "ring" ? style : "stage";
+	return style === "compact" || style === "ring" || style === "bar" ? style : "stage";
 }
 
 function parseTimerDurationMs(value, fallback) {
@@ -14243,7 +14297,11 @@ function applyTimerAction(action, value) {
 		const modeChanged = nextMode !== timerState.mode;
 		const nextRunning = payload.autostart !== undefined ? !!payload.autostart : payload.running !== undefined ? !!payload.running : wasRunning;
 		timerState.mode = nextMode;
-		timerState.style = payload.style !== undefined ? normalizeTimerStyle(payload.style) : timerState.style;
+		if (payload.style !== undefined) {
+			timerState.style = normalizeTimerStyle(payload.style);
+			// Distinguish an explicit style command from ordinary timer snapshots, even for the same style.
+			timerState.styleUpdatedAt = Math.max(now, timerState.styleUpdatedAt + 1);
+		}
 		timerState.durationMs = nextDuration;
 		if (nextCurrent !== null) {
 			timerState.currentMs = nextCurrent;
@@ -15681,6 +15739,14 @@ async function processEventFlowBridgeEvent(value) {
 }
 
 async function processIncomingRequest(request, UUID = false) {
+	if (request && request.action === 'localAudioRead') {
+		const peers = ninjaBridge && typeof ninjaBridge.getPeers === 'function' ? ninjaBridge.getPeers() : connectedPeers;
+		if (UUID && peers && peers[UUID] === 'actions' && window.eventFlowSystem &&
+			typeof window.eventFlowSystem.handleLocalAudioRequest === 'function') {
+			window.eventFlowSystem.handleLocalAudioRequest(request, UUID, streamID, packet => sendDataP2P(packet, UUID));
+		}
+		return;
+	}
 	if (UUID && handleEdgeTtsRequest(request, packet => sendDataP2P(packet, UUID))) return;
 	// from the dock or chat bot, etc.
 	if (request && request.action === "stickerReceipt") {
@@ -16432,6 +16498,44 @@ function forwardTwitchTimeout(payload) {
 			});
 		} catch (error) {
 			resolve({ ok: false, unconfirmed: true, message: "Could not confirm the Twitch timeout. Check Twitch before trying again." });
+		}
+	});
+}
+
+function forwardPlatformBanCommand(payload) {
+	return new Promise(function (complete) {
+        const timer = setTimeout(function () { complete({ ok: false, unconfirmed: true, message: "No ban confirmation received. Check the platform before trying again." }); }, 30000);
+        const resolve = function (result) { clearTimeout(timer); complete(result); };
+		const tabId = Number(payload && payload.tid);
+		const platform = normalizeSourceControlPlatform(payload && payload.type);
+		if (!payload || !["twitch", "kick", "youtube", "vpzone"].includes(platform) || !Number.isInteger(tabId) || tabId <= 0) {
+			resolve({ ok: false, message: "The originating platform connection is unavailable." });
+			return;
+		}
+		// Query works in both the extension and SSApp. Never broadcast a ban.
+		try {
+			chrome.tabs.query({}, function (tabs) {
+				const tab = (tabs || []).find(function (entry) { return entry && entry.id === tabId; });
+				if (chrome.runtime.lastError || !tab) {
+					resolve({ ok: false, message: "The originating platform connection is closed." });
+					return;
+				}
+				if (getWebsocketSourcePlatformFromUrl(tab.url) !== platform) {
+					resolve({ ok: false, message: "Ban commands require this platform's API or WebSocket connection." });
+					return;
+				}
+				chrome.tabs.sendMessage(tabId, {
+					type: "SOURCE_CONTROL", control: "banCommand", platform: platform, payload: payload
+				}, function (result) {
+					if (chrome.runtime.lastError || !result || typeof result.ok !== "boolean") {
+						resolve({ ok: false, unconfirmed: true, message: "No confirmation received from the platform connection. Check the platform before trying again." });
+					} else {
+						resolve(result);
+					}
+				});
+			});
+		} catch (error) {
+			resolve({ ok: false, unconfirmed: true, message: "Could not confirm the platform ban. Check the platform before trying again." });
 		}
 	});
 }
@@ -18805,8 +18909,8 @@ function findExistingEvents(eventType, response) {
 }
 
 // expects an object; not False/Null/undefined
-async function applyBotActions(data, tab = false) {
-	if (!data.id) {
+async function applyBotActions(data, tab = false, userFiltersOnly = false) {
+	if (!userFiltersOnly && !data.id) {
 		messageCounter += 1;
 		data.id = messageCounter;
 	}
@@ -18839,7 +18943,7 @@ async function applyBotActions(data, tab = false) {
 				if (!roleUserIdLower && !roleChatNameLower) return null;
 
 				const blacklist = getCachedRoleList(settings.blacklistusers.textsetting);
-				const isBlocked = blacklist.some(entry => matchesConfiguredUser(entry, data, altSourceType));
+				const isBlocked = blacklist.some(entry => matchesConfiguredUser(entry, data, altSourceType, true));
 
 				if (isBlocked) {
 					return null;
@@ -18984,6 +19088,11 @@ async function applyBotActions(data, tab = false) {
 				// there's no content worth sending I'm assuming
 				return false;
 			}
+		}
+
+		if (userFiltersOnly) {
+			if (settings.blacklistname && data.chatname) data.chatname = filterProfanity(data.chatname);
+			return data;
 		}
 
 		//
@@ -19147,8 +19256,12 @@ async function applyBotActions(data, tab = false) {
 					return messageText.includes(keywordLower);
 				}
 				// For word-based keywords, check word boundaries
-				const wordRegex = new RegExp(`\\b${keywordLower}\\b`);
-				return wordRegex.test(messageText);
+				try {
+					const wordRegex = new RegExp(`\\b${keywordLower}\\b`);
+					return wordRegex.test(messageText);
+				} catch (e) {
+					return messageText.includes(keywordLower);
+				}
 			});
 
 			if (isQuestion) {
@@ -19156,8 +19269,14 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 
+		// Music owns only information commands when explicitly enabled.
+		const musicOwnsCommand = window.musicService && window.musicService.ownsCommand(originalChatMessage || data.chatmessage);
+		if (musicOwnsCommand && data.chatmessage && data.chatname && !data.bot) {
+			const response = window.musicService.command(originalChatMessage || data.chatmessage, data);
+			if (response) sendToDestinations({ type: "music", bot: "music", chatname: "Music", chatimg: "https://socialstream.ninja/icons/bot.png", chatmessage: response, textonly: true });
+		}
 		// Handle Spotify commands
-		if (spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
+		if (!musicOwnsCommand && spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
 			// Pass message data for role-based permission checking
 			spotify
 				.handleCommand(originalChatMessage || data.chatmessage, data)
@@ -19612,6 +19731,8 @@ async function applyBotActions(data, tab = false) {
 	} catch (e) {
 		console.error(e);
 	}
+	// Fail closed if a user filter threw before its early return.
+	if (userFiltersOnly) return null;
 	try {
 		if (settings.hypemode) {
 			processHype(data);
@@ -20937,6 +21058,7 @@ let tmp = new EventFlowSystem({
 	handleMessageStore: handleMessageStore || null, // Share the message store handler
 	sendTargetP2P: window.sendTargetP2P || null, // Add sendTargetP2P for OBS and other actions
 	printThermal: printThermal,
+	banUserOnPlatform: forwardPlatformBanCommand,
 	// Handle Spotify actions locally since we're already in background.js
 	sendMessageToBackground: async msg => {
 		if (!msg || typeof msg !== "object") return;

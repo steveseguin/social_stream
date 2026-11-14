@@ -1056,42 +1056,73 @@
 		}
 	});
 
-	// ---------------------------------------------------------------- snowy christmas night (canvas)
-	engine({
-		id: "christmas", label: "Snowy Christmas night", colors: ["0b1a3a", "ff3b3b", "ffd166"],
-		start: function (host, o) {
+	// ---------------------------------------------------------------- snowy christmas: night / day / sunset (canvas)
+	// One scene, three skies. Trees, ground and sleigh stay in the same place in every version, so anything
+	// layered on top (walking characters, chat) still lines up when someone swaps night for day.
+	var XMAS_SKY = {
+		night: { top: "#020611", orb: "rgba(255,250,235,.95)", halo: "255,250,235", tree: "#0b2a1d", sleigh: "#04070f" },
+		day: { top: "#1b78d0", low: "#a8dcff", orb: "#ffd93b", halo: "255,228,120", tree: "#1d6b3c", sleigh: "#6b2416" },
+		dusk: { top: "#241f5e", mid: "#c2507a", low: "#ffb072", orb: "#ffc061", halo: "255,170,90", tree: "#10303a", sleigh: "#1c0b26" }
+	};
+	function xmasScene(mode) {
+		var P = XMAS_SKY[mode], night = mode === "night";
+		return function (host, o) {
 			var cv = makeCanvas(host, 0.75), g = cv.getContext("2d");
 			function W() { return cv.width; } function H() { return cv.height; }
-			var flakes = [], trees = [], rnd = SSO.seeded("xmas");
+			var flakes = [], trees = [], clouds = [], stars = [], rnd = SSO.seeded("xmas");
 			for (var i = 0; i < 220; i++) { flakes.push({ x: Math.random(), y: Math.random(), s: Math.random(), v: 0.02 + Math.random() * 0.05 }); }
 			for (var tr = 0; tr < 11; tr++) { trees.push({ x: rnd(), h: 0.18 + rnd() * 0.22, lights: Math.floor(6 + rnd() * 10), seed: rnd() * 100 }); }
 			trees.sort(function (a, b) { return a.h - b.h; });
+			if (!night) {
+				for (var cl = 0; cl < 5; cl++) { clouds.push({ x: rnd() * 1.4 - 0.2, y: 0.08 + rnd() * 0.3, s: 0.05 + rnd() * 0.05, v: 0.004 + rnd() * 0.006 }); }
+				for (var st = 0; st < 40; st++) { stars.push([rnd(), rnd() * 0.3, rnd()]); }
+			}
 			var bulbCols = [o.c2, o.c3, "#4cc9f0", "#80ffdb", "#ffffff"];
+			// A daytime sky has to stay light: a dark colour here (the starting-soon screen defaults to one) falls back to the scene's own.
+			var c1 = hex3(o.c1), low = night || (c1[0] * 0.3 + c1[1] * 0.59 + c1[2] * 0.11) > (mode === "day" ? 0.55 : 0.4) ? SSO.color(o.c1) : P.low;
 			var sleighX = -0.3;
 			return loop(function (t, dt) {
 				dt *= o.speed || 1;
 				var sky = g.createLinearGradient(0, 0, 0, H());
-				sky.addColorStop(0, "#020611"); sky.addColorStop(1, SSO.color(o.c1));
+				sky.addColorStop(0, P.top); if (P.mid) { sky.addColorStop(0.5, P.mid); } sky.addColorStop(night ? 1 : 0.86, low);
 				g.fillStyle = sky; g.fillRect(0, 0, W(), H());
-				// moon + sleigh silhouette
-				var mx = W() * 0.78, my = H() * 0.22, mr = H() * 0.1;
-				g.fillStyle = "rgba(255,250,235,.95)"; g.beginPath(); g.arc(mx, my, mr, 0, 6.283); g.fill();
-				var mg = g.createRadialGradient(mx, my, mr, mx, my, mr * 3); mg.addColorStop(0, "rgba(255,250,235,.25)"); mg.addColorStop(1, "rgba(255,250,235,0)");
+				if (mode === "dusk") {
+					stars.forEach(function (s) { g.fillStyle = "rgba(255,255,255," + (0.25 + 0.5 * s[2] * (0.6 + 0.4 * Math.sin(t * 2 + s[2] * 40))).toFixed(3) + ")"; g.fillRect(s[0] * W(), s[1] * H(), 1.6, 1.6); });
+				}
+				// moon or sun + sleigh silhouette
+				var mx = W() * 0.78, my = H() * (mode === "dusk" ? 0.6 : 0.22), mr = H() * (mode === "dusk" ? 0.13 : 0.1);
+				if (!night) {
+					g.save(); g.translate(mx, my); g.rotate(t * 0.05);
+					g.fillStyle = "rgba(" + P.halo + "," + (mode === "day" ? 0.2 : 0.12) + ")";
+					for (var ry = 0; ry < 14; ry++) { g.rotate(6.283 / 14); g.beginPath(); g.moveTo(-mr * 0.16, -mr * 1.1); g.lineTo(0, -mr * (ry % 2 ? 1.9 : 2.5)); g.lineTo(mr * 0.16, -mr * 1.1); g.fill(); }
+					g.restore();
+				}
+				g.fillStyle = P.orb; g.beginPath(); g.arc(mx, my, mr, 0, 6.283); g.fill();
+				var mg = g.createRadialGradient(mx, my, mr, mx, my, mr * 3); mg.addColorStop(0, "rgba(" + P.halo + "," + (night ? 0.25 : 0.4) + ")"); mg.addColorStop(1, "rgba(" + P.halo + ",0)");
 				g.fillStyle = mg; g.beginPath(); g.arc(mx, my, mr * 3, 0, 6.283); g.fill();
+				clouds.forEach(function (c) {
+					c.x += c.v * dt; if (c.x > 1.25) { c.x = -0.25; }
+					var cx = c.x * W(), cy = c.y * H(), cs = c.s * H();
+					g.fillStyle = mode === "day" ? "rgba(255,255,255,.88)" : "rgba(255,200,205,.5)";
+					g.beginPath(); g.ellipse(cx, cy, cs * 1.7, cs * 0.5, 0, 0, 6.283); g.fill();
+					g.beginPath(); g.ellipse(cx - cs * 0.7, cy - cs * 0.3, cs * 0.75, cs * 0.55, 0, 0, 6.283); g.fill();
+					g.beginPath(); g.ellipse(cx + cs * 0.3, cy - cs * 0.45, cs * 0.95, cs * 0.7, 0, 0, 6.283); g.fill();
+				});
 				sleighX += dt * 0.04; if (sleighX > 1.4) { sleighX = -0.6; }
 				var sx = sleighX * W(), sy = H() * 0.2 + Math.sin(sleighX * 6) * H() * 0.03, ss = H() * 0.012;
-				g.fillStyle = "#04070f";
+				g.fillStyle = P.sleigh;
 				for (var d = 0; d < 4; d++) { var dx = sx + d * ss * 5; g.beginPath(); g.ellipse(dx, sy, ss * 1.6, ss * 0.8, 0, 0, 6.283); g.fill(); g.fillRect(dx - ss, sy, ss * 0.3, ss * 1.6); g.fillRect(dx + ss, sy, ss * 0.3, ss * 1.6); g.fillRect(dx + ss * 1.2, sy - ss * 1.5, ss * 0.3, ss * 1.2); }
 				g.beginPath(); g.moveTo(sx - ss * 9, sy - ss); g.lineTo(sx - ss * 3, sy - ss); g.lineTo(sx - ss * 2, sy + ss * 1.5); g.lineTo(sx - ss * 10, sy + ss * 1.5); g.fill();
 				// ground
-				g.fillStyle = "#e8f0ff";
+				if (night) { g.fillStyle = "#e8f0ff"; }
+				else { var gg = g.createLinearGradient(0, H() * 0.84, 0, H()); gg.addColorStop(0, mode === "day" ? "#ffffff" : "#ffe9e2"); gg.addColorStop(1, mode === "day" ? "#cfe3fa" : "#d9a9c4"); g.fillStyle = gg; }
 				g.beginPath(); g.moveTo(0, H());
 				for (var x = 0; x <= W(); x += W() / 20) { g.lineTo(x, H() * 0.86 - Math.sin(x / W() * 7) * H() * 0.02); }
 				g.lineTo(W(), H()); g.fill();
 				// trees with lights
 				trees.forEach(function (tr2) {
 					var tx = tr2.x * W(), base = H() * 0.88, h = tr2.h * H(), w = h * 0.55;
-					g.fillStyle = "#0b2a1d";
+					g.fillStyle = P.tree;
 					for (var lv = 0; lv < 3; lv++) {
 						var top = base - h + lv * h * 0.22, bot = base - h * 0.3 + lv * h * 0.12;
 						g.beginPath(); g.moveTo(tx, top); g.lineTo(tx - w * (0.35 + lv * 0.15), bot); g.lineTo(tx + w * (0.35 + lv * 0.15), bot); g.fill();
@@ -1106,9 +1137,11 @@
 						var col = bulbCols[b % bulbCols.length];
 						if (on) {
 							var lg = g.createRadialGradient(lx, ly, 0, lx, ly, h * 0.05);
-							lg.addColorStop(0, col); lg.addColorStop(1, "rgba(0,0,0,0)");
+							lg.addColorStop(0, col); lg.addColorStop(1, night ? "rgba(0,0,0,0)" : SSO.rgba(col, 0));
 							g.fillStyle = lg; g.beginPath(); g.arc(lx, ly, h * 0.05, 0, 6.283); g.fill();
 						}
+						// In daylight a glow alone washes out, so the bulb itself is drawn too.
+						if (!night) { g.fillStyle = on ? col : "rgba(0,0,0,.25)"; g.beginPath(); g.arc(lx, ly, h * 0.014, 0, 6.283); g.fill(); }
 					}
 					g.fillStyle = SSO.color(o.c3);
 					g.beginPath(); g.arc(tx, base - h, h * 0.035, 0, 6.283); g.fill();
@@ -1123,8 +1156,11 @@
 				});
 				g.globalAlpha = 1;
 			});
-		}
-	});
+		};
+	}
+	engine({ id: "christmas", label: "Snowy Christmas night", colors: ["0b1a3a", "ff3b3b", "ffd166"], start: xmasScene("night") });
+	engine({ id: "christmasday", label: "Snowy Christmas day", colors: ["a8dcff", "ff3b3b", "ffd166"], start: xmasScene("day") });
+	engine({ id: "christmasdusk", label: "Snowy Christmas sunset", colors: ["ffb072", "ff3b3b", "ffd166"], start: xmasScene("dusk") });
 
 	// Starts an engine into host; falls back to a plain gradient if it is missing.
 	SSO.startEngine = function (id, host, o) {

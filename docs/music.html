@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/docs/music.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://socialstream.ninja/docs/music.html">
+    <meta property="og:title" content="Music and Now Playing Guide - Social Stream Ninja">
+    <meta property="og:description" content="Show the current song from Spotify, What's Now Playing or a text file in an overlay, chat commands and Event Flow.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/docs/music.html">
+    <meta name="twitter:title" content="Music and Now Playing Guide - Social Stream Ninja">
+    <meta name="twitter:description" content="Show the current song from Spotify, What's Now Playing or a text file in an overlay, chat commands and Event Flow.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music and Now Playing Guide - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Show the current song from Spotify, What's Now Playing or a text file in an overlay, chat commands and Event Flow.">
+    <style>
+        .quick-note { background: rgba(26,115,232,.08); border: 1px solid var(--border-color); padding: 1.2rem 1.4rem; margin: 1.5rem 0; }
+        .dark-mode .quick-note { background: rgba(26,115,232,.18); }
+        pre { overflow-x: auto; }
+    </style>
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
+</head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <main>
+        <section class="page-hero"><div class="container"><h1>Music and Now Playing</h1><p>Show the current song from Spotify, DJ software or a text file in an overlay, chat commands and Event Flow.</p></div></section>
+        <section class="guide-content"><div class="container">
+            <div class="quick-note"><strong>One input at a time:</strong> Music reads the single source you select and uses it for the Music overlay, song commands and Event Flow. Existing Spotify overlay links keep showing Spotify.</div>
+
+            <nav class="guide-jump-links" aria-label="On this page"><a href="#quick-start">Quick start</a><a href="#sources">Choose a source</a><a href="#overlay">Overlay</a><a href="#commands">Chat commands</a><a href="#event-flow">Event Flow</a></nav>
+
+            <div class="guide-card"><h2 id="quick-start">Quick start</h2><ol class="guide-steps">
+                <li>Open <strong>Interactive &gt; Music &gt; Now Playing</strong> and turn on <strong>Enable Music</strong>.</li>
+                <li>Select a <strong>Source</strong> and connect it as described below. The status line under the toggle shows the track being read, or what is missing.</li>
+                <li>In <strong>Now Playing Overlay</strong>, set <strong>Overlay input</strong> to <strong>Selected Music source</strong>.</li>
+                <li>Copy the overlay link into an OBS Browser Source. Choose a style and the hide options in the same panel.</li>
+            </ol></div>
+
+            <div class="guide-card"><h2 id="sources">Choose a source</h2>
+                <h3>Spotify</h3>
+                <p>Enable and connect Spotify in <strong>Spotify Setup &amp; Configuration</strong>. Playback controls and song requests continue to use that account.</p>
+                <h3>What's Now Playing</h3>
+                <p>Connect your DJ software or media player in <a href="https://whatsnowplaying.github.io/whats-now-playing/latest/input/">What's Now Playing</a>, then enable its web server. Enter its address in Music, usually <code>http://127.0.0.1:8899</code>. For a DJ computer on your local network, use that computer's address and web server port.</p>
+                <h3>File (SSApp)</h3>
+                <p>Set your player or DJ helper to overwrite a current-song file, then choose that file in Music. Select one of these formats:</p>
+                <ul class="guide-list">
+                    <li><strong>Artist - Title:</strong> one line, for example <code>Example Artist - Example Song</code>.</li>
+                    <li><strong>Separate lines:</strong> artist on line 1 and title on line 2.</li>
+                    <li><strong>JSON:</strong> the object below. Only <code>title</code> is required.</li>
+                </ul>
+                <pre><code>{"title":"Example Song","artist":"Example Artist","album":"Example Album"}</code></pre>
+                <p>JSON can also include a string <code>id</code>, an HTTPS <code>imageUrl</code>, <code>status</code> (playing, paused or stopped), and numeric <code>durationMs</code> and <code>progressMs</code> in milliseconds. Leave unknown values out. An empty file clears the track. Files must be 64 KB or smaller. The selected path stays on the SSApp computer.</p>
+                <h3>Track expiry</h3>
+                <p>For What's Now Playing and file inputs, SSN clears a track that the source has not updated within <strong>Track expiry</strong>, so old information does not linger when the source stops. The default is 900 seconds; raise it if your sets include longer tracks.</p>
+            </div>
+
+            <div class="guide-card"><h2 id="overlay">Overlay</h2><ul class="guide-list">
+                <li>The Music overlay uses the same styles and hide options as the Spotify overlay.</li>
+                <li>Sources that do not report playback timing show artist and title without a progress bar or playback badge.</li>
+                <li>The overlay clears the track if it loses contact with SSN for about 35 seconds, and restores it when contact returns.</li>
+                <li>The song-request queue is Spotify-only and needs <strong>Overlay input</strong> set to <strong>Spotify</strong>.</li>
+            </ul></div>
+
+            <div class="guide-card"><h2 id="commands">Chat commands</h2>
+                <p>When Music is enabled, its <strong>Song commands</strong> setting owns Spotify's <code>!song</code>, <code>!np</code> and their configured aliases. Playback and queue commands remain Spotify-specific.</p>
+                <ul class="guide-list">
+                    <li><strong>Built-in dock replies:</strong> a simple response shown in SSN. It uses the existing Spotify command permissions.</li>
+                    <li><strong>Event Flow:</strong> custom responses, including replies sent to the platform chat.</li>
+                </ul>
+                <p>For a platform chat reply, choose Event Flow and add the <strong>Music Song Command</strong> template in the editor. It starts disabled. Review the command and destination, then enable it. Configure permissions and a Rate Limiter in your flow as needed.</p>
+            </div>
+
+            <div class="guide-card"><h2 id="event-flow">Event Flow</h2>
+                <p><strong>Get Now Playing</strong> adds the selected track to the current flow without changing the originating chat. Use <code>{meta.music.message}</code> for a complete response, including when no song is available, or format <code>{meta.music.track.name}</code>, <code>{meta.music.track.artist}</code> and <code>{meta.music.track.album}</code> yourself.</p>
+                <p><strong>Track Changed</strong> can drive Show Text, OBS Set Text, TTS or a webhook. <strong>Playback Changed</strong> works when the selected source reports playback status. Initial connection and reconnect snapshots do not announce tracks. Music updates do not trigger Any Message flows.</p>
+                <p>Keep automatic Spotify dock announcements off if a flow already announces the same Spotify track.</p>
+                <p>Field details are in the <a href="event-reference.html#music-events">event reference</a>.</p>
+            </div>
+        </div></section>
+    </main>
+    <footer><div class="container"><div class="footer-content"><div class="footer-logo"><img src="../media/site/logo.webp" alt="Social Stream Ninja logo"><span>Social Stream Ninja</span></div><div class="footer-links"><div class="footer-section"><h4>Resources</h4><ul><li><a href="guides.html">Guides</a></li><li><a href="event-reference.html">Event Reference</a></li><li><a href="support.html">Support</a></li></ul></div></div></div><div class="footer-bottom"><p>&copy; 2026 Social Stream Ninja. All rights reserved.</p></div></div></footer>
+    <script data-copy-markdown src="js/main.js"></script>
+</body>
+</html>

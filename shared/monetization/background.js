@@ -152,7 +152,7 @@
                 if (!oldStock || oldStock.ebayId !== data.ebayId || oldStock.ebayEnvironment !== data.ebayEnvironment || (oldStock.ebayVariant || '') !== (data.ebayVariant || '')) {
                     var savedListings = ebay.stockSnapshot();
                     if (savedListings.environment !== data.ebayEnvironment || !savedListings.items.some(function (item) { return item.id === data.ebayId && (item.variant || '') === (data.ebayVariant || ''); }))
-                        throw new Error('This listing is no longer in the connected eBay list. Refresh and choose a listing again.');
+                        throw new Error('This listing is no longer in the saved eBay list. Refresh and choose a listing again.');
                 }
             }
             privateState.breaks = SSNBreaks.apply(previousBreaks, command, data);

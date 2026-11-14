@@ -71,6 +71,7 @@
                                     <li><a href="#quick-availability">Quick availability</a></li>
                                     <li><a href="#field-overview">Field overview</a></li>
                                     <li><a href="#meta-conventions">Meta conventions</a></li>
+                                    <li><a href="#music-events">Music and Now Playing</a></li>
                                     <li><a href="#platform-coverage">Platform coverage</a></li>
                                     <li><a href="#cross-platform">Cross-platform alignment</a></li>
                                     <li><a href="#repository-audit">Coverage limits</a></li>
@@ -334,6 +335,24 @@
 							<td>Rendered pop-out chat rows plus opt-in viewer count updates</td>
 						</tr>
                         <tr>
+                            <td><strong>Streamate</strong></td>
+                            <td>-</td><td>-</td>
+                            <td>Gold tips and supplied menu item labels</td>
+                            <td>Open a <code>streamate.com/cam/NAME</code> room. Public live chat uses <code>type: "streamate"</code> and plain text. Tips preserve <code>N Gold</code> in <code>hasDonation</code> and the numeric amount in <code>meta.gold</code>. History and private shows are excluded.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>LiveJasmin</strong></td>
+                            <td>-</td><td>-</td>
+                            <td>Tips, toy interactions, and priced actions</td>
+                            <td>Open a <code>livejasmin.com/en/chat/NAME</code> room and sign in if guest viewing expires. Public live chat uses <code>type: "livejasmin"</code> and plain text. Paid rows preserve <code>N Credits</code> in <code>hasDonation</code>, the item name in <code>subtitle</code>, and the numeric amount in <code>meta.credits</code>. History, whispers, and private shows are excluded. Native message deletions remove the matching row.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cam4, CamSoda, BongaCams, Stripchat</strong></td>
+                            <td>-</td><td>-</td>
+                            <td>Chat and token tips</td>
+                            <td>Open the model's room page. Sources use <code>cam4</code>, <code>camsoda</code>, <code>bongacams</code>, and <code>stripchat</code>. Text-only mode preserves literal text and available emote labels. Tips retain their displayed units in <code>hasDonation</code>. Enable viewer counts to receive <code>viewer_update</code> with integer <code>meta</code> from the room's viewer/user counter; counts are checked every 10 seconds. Moderation deletes target <code>meta.messageId</code>: native IDs for Stripchat, room-prefixed native IDs for Cam4 and BongaCams, and capture IDs when the row has no native ID. Native message deletions and user-message purges remove matching captured messages; ordinary chat history pruning does not.</td>
+                        </tr>
+                        <tr>
                             <td><strong>RPLAY</strong></td>
                             <td>-</td>
                             <td>-</td>
@@ -568,8 +587,8 @@
                             </tr>
                             <tr>
                                 <td class="status-event"><code>reaction</code></td>
-                                <td>A viewer reaction appears in YouTube's live emoji fountain.</td>
-                                <td>Sent directly to the dedicated reactions target. The anonymous emoji and image URL are preserved in <code>chatmessage</code>/<code>contentimg</code> and under <code>meta.reactionType</code>/<code>reactionImage</code>. Known live variants include ❤, 😄, 🎉, 😳, and 💯.</td>
+                                <td>YouTube reports anonymous live reactions. SSApp Standard capture reads the chat response; extension capture watches the emoji fountain.</td>
+                                <td>Sent directly to the dedicated reactions target, with a distinct <code>id</code> for each occurrence. The emoji and image are preserved in <code>chatmessage</code>/<code>contentimg</code> and under <code>meta.reactionType</code>/<code>reactionImage</code>. Images may be local data URLs. Known live variants include ❤, 😄, 🎉, 😳, and 💯.</td>
                             </tr>
                             <tr>
                                 <td class="donation-event"><code>thankyou</code></td>
@@ -579,7 +598,7 @@
                             <tr>
                                 <td class="status-event"><code>redirect</code></td>
                                 <td>YouTube redirect banner appears in live chat (the closest equivalent to a raid notice).</td>
-                                <td>DOM-only capture from <code>yt-live-chat-banner-redirect-renderer</code>. Sets <code>event</code> to <code>redirect</code> and uses <code>membership</code> as the label so overlays render it like other system notices.</td>
+                                <td>Standard capture watches <code>yt-live-chat-banner-redirect-renderer</code>, including banners outside the message list. Sets <code>event</code> to <code>redirect</code> and uses <code>membership</code> as the label. The banner's native ID is preserved in <code>meta.messageId</code> when available.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>viewer_update</code></td>
@@ -1198,7 +1217,7 @@
                     <p class="source-note">Implementation: <code>sources/whatnot.js</code></p>
                     <ul class="requirements">
                         <li>Use the Whatnot source in SSApp for public chat and auction events without video, or open the live show page for website capture. Both connect to the public auction feed. Website capture also reads rendered auction and catalog sections.</li>
-                        <li><em>Capture Stream Events</em> controls Whatnot system events plus auction/catalog metadata updates; joined rows also require <em>Capture "joined" stream events</em>; viewer counts still follow the viewer/hype toggles.</li>
+                        <li>Whatnot system events and auction/catalog metadata updates are captured whenever SSN is on, with no extra toggle; joined rows also require <em>Capture "joined" stream events</em>; viewer counts still follow the viewer/hype toggles.</li>
                     </ul>
                     <div class="table-scroll" role="region" tabindex="0" aria-label="Whatnot table">
 <table class="event-table">
@@ -1276,7 +1295,7 @@
                     <ul class="requirements">
                         <li>Open either <code>/ebaylive/events/&lt;id&gt;/chat</code> or <code>/ebaylive/events/&lt;id&gt;/stream</code>. Both receive the same live auction feed.</li>
                         <li>The public WebSocket feed supplies auctions, bids, winners, timing extensions and stock changes; a read-only GraphQL query supplies listing details. DOM capture remains a fallback when network data is unavailable.</li>
-                        <li><em>Capture Stream Events</em> controls metadata snapshots (<code>auction_update</code>, <code>commerce_update</code>); viewer counters still honor viewer/hype toggles.</li>
+                        <li>Metadata snapshots (<code>auction_update</code>, <code>commerce_update</code>) are sent whenever SSN is on, with no extra toggle; viewer counters still honor viewer/hype toggles.</li>
                     </ul>
                     <div class="table-scroll" role="region" tabindex="0" aria-label="eBay Live table">
 <table class="event-table">
@@ -2129,6 +2148,7 @@
                         <li>Open <code>https://razo.tv/watch/USERNAME</code>. In the desktop app, paste that URL into <strong>Add other source</strong> and activate it. The signed-in dashboard chat popout and complete Chat overlay link from Creator Studio also work as source URLs.</li>
                         <li>Captures ordinary Razo chat, including loaded history, once per native message ID during the page session. Messages received while capture is off are skipped.</li>
                         <li>Chat uses <code>type: "razo"</code> and <code>platform: "razo"</code>, with display name, username, name color, image badges and message text or emotes. Text-only mode uses emote alt text.</li>
+                        <li>Enable viewer counts or chat activity tracking to capture <code>viewer_update</code> with an integer <code>meta</code> from Razo's chat header. Counts refresh on change and every 30 seconds while capture is enabled. Use the watch page or dashboard chat popout with Razo's viewer count enabled; chat overlays without a counter cannot provide counts. The shared <em>Hide viewer counts from these sources</em> setting also applies to Razo.</li>
                         <li>Visible &ldquo;Message removed&rdquo; updates remove the corresponding captured message. Paid cards, activity notices, private staff/bot notices and imported multichat rows are excluded; use Razo for those features.</li>
                     </ul>
                 </article>
@@ -2618,7 +2638,7 @@
                     <li><strong>Gift events differ:</strong> YouTube uses <code>giftpurchase</code>/<code>giftredemption</code>, while Twitch and Kick use <code>subscription_gift</code>.</li>
                     <li><strong>Donations vary by platform:</strong> YouTube uses specific paid event names such as <code>superchat</code>, <code>supersticker</code>, and <code>jeweldonation</code> with <code>hasDonation</code>; Twitch has bits (<code>cheer</code>); Kick has tips (<code>donation</code>).</li>
                     <li><strong><code>new_follower</code> is now consistent</strong> across all three platforms, but YouTube polls recent subscribers and may return delayed or incomplete results.</li>
-                    <li><strong>Likes and reactions are separate contracts:</strong> individual <code>liked</code>/<code>like</code> events reach the Reactions Overlay unless globally filtered, and enter the main pipeline only when <code>capturelikeevent</code> is enabled. Visual or platform-native <code>reaction</code> events retain producer-defined routing. Aggregate <code>likes_update</code> counters are separately controlled by <code>captureliketotals</code>.</li>
+                    <li><strong>Likes and reactions are separate contracts:</strong> individual <code>liked</code>/<code>like</code> events reach the Reactions Overlay unless globally filtered, and enter the main pipeline only when <code>capturelikeevent</code> is enabled. Visual or platform-native <code>reaction</code> events retain producer-defined routing. Aggregate <code>likes_update</code> counters are separately controlled by <code>captureliketotals</code>. The opt-in Multi Alerts <code>likealerts</code> setting also routes individual likes directly to alerts, independently of <code>capturelikeevent</code>. Named alerts require <code>chatname</code>; anonymous events and aggregate totals do not produce them. Global event filters still apply.</li>
                 </ul>
             </section>
 
@@ -2703,6 +2723,15 @@
                     </tbody>
                 </table>
                 </div>
+            </section>
+
+            <section class="section-summary" id="music-events">
+                <h2>Music and Now Playing</h2>
+                <p>The selected Music input emits metadata-only Event Flow events with <code>type: "spotify"</code>, <code>"wnp"</code> (What's Now Playing), or <code>"file"</code>. <code>event: "music_track_changed"</code> identifies a new track; <code>"music_playback_changed"</code> identifies a reported playing, paused or stopped transition. Initial connection, reconnect snapshots and overlay refreshes do not emit these events. They match the dedicated Music triggers, not Any Message. See the <a href="music.html">Music setup guide</a>.</p>
+                <p><code>meta.music</code> contains <code>source</code>, <code>status</code>, <code>isPlaying</code>, <code>receivedAt</code> (Unix milliseconds), <code>progressMs</code>, <code>durationMs</code>, <code>queue: []</code> and <code>track</code>. The track is null when unavailable; otherwise it contains <code>name</code>, <code>artist</code>, <code>album</code>, <code>id</code>, <code>imageUrl</code> and <code>duration</code> in milliseconds. Unknown timing is null. Status can also be unknown, idle, offline, stale or error. Missing playback status is never inferred from a title.</p>
+                <p>Track identity uses a source ID when available, otherwise artist and title. Repeated identical metadata does not mean a new play. Inputs that supply only a current title cannot identify two consecutive plays of that same title.</p>
+                <p>For events with numeric or array <code>meta</code>, Get Now Playing leaves that field unchanged and returns the snapshot separately as <code>music</code> on the action result. Built-in song replies are ordinary bot rows with <code>type: "music"</code> and <code>textonly: true</code>.</p>
+                <p>The <code>musicNowPlaying</code> action adds the current snapshot at <code>meta.music</code> while preserving the originating chat and routing fields. It also adds <code>meta.music.message</code>, a ready-to-use reply including the no-track case. Music overlay state uses the existing control transport with target <code>music</code> and a <code>{music: snapshot}</code> payload; it is not a chat row. Existing Spotify overlay payloads and playback actions retain their format.</p>
             </section>
 
             <section class="usage-notes" id="using-reference">

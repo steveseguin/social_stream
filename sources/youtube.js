@@ -1146,6 +1146,11 @@
 		if (!ele || !ele.isConnected){
 			return 1;
 		}
+		// Redirect banners have no chat-row ID and live outside #items.
+		if (eventType === "redirect") {
+			processYouTubeRedirect(ele);
+			return;
+		}
 		if (ele.hasAttribute("is-deleted")) {
 			deleteThis(ele)
 			return 2;
@@ -1199,44 +1204,6 @@
 		ele.ssnYouTubePending = false;
 
 		//console.log(ele);
-
-		// Handle YouTube Redirects (similar to Twitch Raids)
-		if (eventType === "redirect") {
-			try {
-				var bannerText = ele.querySelector("#banner-text");
-				if (bannerText) {
-					var redirector = bannerText.querySelector(".bold");
-					var redirectorName = "";
-					if (redirector) {
-						redirectorName = escapeHtml(redirector.innerText.replace("@", "").trim());
-					}
-					var redirectMessage = getAllContentNodes(bannerText);
-
-					if (redirectorName || redirectMessage) {
-						var data = {};
-						data.chatname = redirectorName;
-						data.chatmessage = redirectMessage;
-						data.membership = getTranslation("redirect", "REDIRECT");
-						data.type = "youtube";
-						data.event = "redirect";
-						if (videoId) {
-							data.videoid = videoId;
-						}
-						if (channelName) {
-							data.sourceName = channelName;
-						}
-						if (channelThumbnail) {
-							data.sourceImg = channelThumbnail;
-						}
-
-						sendYouTubeMessage(data, ele);
-					}
-				}
-			} catch (e) {
-				console.error("Error processing redirect:", e);
-			}
-			return;
-		}
 
 		var hasMembership = "";
 		var subtitle = "";
@@ -2100,6 +2067,17 @@
 	var youtubeChatStructureObserver = null;
 	var youtubeReactionObserver = null;
 	var youtubeReactionObserverTarget = null;
+	var youtubeBannerObserver = null;
+	var youtubeBannerObserverTarget = null;
+	var youtubeNetworkReactions = false;
+	var youtubeReactionSequence = 0;
+	var youtubeReactionImages = new Map();
+	var youtubeEffectHistoryKey = "ssn_youtube_effects:" + videoId;
+	var youtubeEffectHistory = new Set();
+	try {
+		var savedEffects = JSON.parse(sessionStorage.getItem(youtubeEffectHistoryKey) || "[]");
+		if (Array.isArray(savedEffects)) youtubeEffectHistory = new Set(savedEffects.slice(-200));
+	} catch (e) {}
 	var youtubeGiftOverlayObserver = null;
 	var youtubeGiftOverlayObserverTarget = null;
 	var youtubeObservedItems = null;
@@ -2129,10 +2107,61 @@
 	var youtubeStaleReloadWindowMs = 60 * 60 * 1000;
 	var youtubeStaleReloadMaxPerWindow = 60;
 
+	var youtubeChatThemeAttempt = "";
+
+	async function syncYouTubeChatTheme() {
+		if (!/^(www\.)?youtube\.com$/.test(location.hostname) || location.pathname !== "/live_chat") return;
+		var root = document.documentElement;
+		var baseCSS = document.querySelector('link#base-css[rel="stylesheet"]');
+		if (!root || !baseCSS || !baseCSS.sheet) return;
+		var dark = root.hasAttribute("dark");
+		var background = getComputedStyle(root).getPropertyValue("--yt-live-chat-background-color").trim().toLowerCase();
+		if (!(dark ? /^#fff(?:fff)?$/.test(background) : background === "#0f0f0f")) {
+			youtubeChatThemeAttempt = "";
+			return;
+		}
+		var theme = dark ? "1" : "0";
+		if (youtubeChatThemeAttempt === theme) return;
+		youtubeChatThemeAttempt = theme;
+		var originalCSS = baseCSS.href;
+		try {
+			// Device theme can change the text without changing YouTube's token stylesheet.
+			// Request the matching palette without reloading chat or saving a theme preference.
+			var url = new URL(location.href);
+			url.searchParams.set("dark_theme", theme);
+			var response = await fetch(url.href);
+			if (!response.ok || new URL(response.url).origin !== location.origin) return;
+			var themeDocument = parseSafeHTMLDocument(await response.text());
+			var themeCSS = themeDocument && themeDocument.querySelector('link#base-css[rel="stylesheet"]');
+			if (!themeCSS || !themeCSS.getAttribute("href")) return;
+			var cssURL = new URL(themeCSS.getAttribute("href"), response.url);
+			if (cssURL.origin !== location.origin || !cssURL.pathname.startsWith("/s/")) return;
+			if (root.hasAttribute("dark") !== dark || !baseCSS.isConnected || baseCSS.href !== originalCSS) return;
+			var replacement = baseCSS.cloneNode(false);
+			replacement.removeAttribute("id");
+			replacement.media = "not all";
+			replacement.onload = function () {
+				replacement.onload = null;
+				replacement.onerror = null;
+				if (root.hasAttribute("dark") !== dark || !baseCSS.isConnected || baseCSS.href !== originalCSS) {
+					replacement.remove();
+					return;
+				}
+				replacement.media = baseCSS.media;
+				replacement.id = baseCSS.id;
+				baseCSS.replaceWith(replacement);
+			};
+			replacement.onerror = function () { replacement.remove(); };
+			replacement.href = cssURL.href;
+			baseCSS.after(replacement);
+		} catch (e) {}
+	}
+
 	function applyYouTubeChatBackgroundFix() {
 		if (typeof window.__SSAPP_TAB_ID__ === "undefined") {
 			return;
 		}
+		syncYouTubeChatTheme();
 		if (!document.head || document.getElementById("ssn-youtube-chat-background-fix")) {
 			return;
 		}
@@ -2538,10 +2567,175 @@
 		}, "gif");
 	}
 
+	function rememberYouTubeEffect(id) {
+		if (youtubeEffectHistory.has(id)) return false;
+		youtubeEffectHistory.add(id);
+		if (youtubeEffectHistory.size > 200) youtubeEffectHistory.delete(youtubeEffectHistory.values().next().value);
+		try { sessionStorage.setItem(youtubeEffectHistoryKey, JSON.stringify(Array.from(youtubeEffectHistory))); } catch (e) {}
+		return true;
+	}
+
+	function processYouTubeRedirect(ele, historyOnly) {
+		if (!ele || !ele.isConnected || !youtubeSettingsLoaded) return;
+		var bannerText = ele.querySelector("#banner-text");
+		if (!bannerText || !normalizeDonationText(bannerText.textContent)) return;
+		var wrapper = ele.closest("yt-live-chat-banner-renderer") || ele;
+		var model = window.ninjafy && (wrapper.data || (wrapper.__data && wrapper.__data.data));
+		var nativeId = (model && model.actionId) || ele.id || "";
+		if (wrapper.youtubeSocialStreamRedirect === nativeId) return;
+		wrapper.youtubeSocialStreamRedirect = nativeId;
+		if (nativeId && !rememberYouTubeEffect("redirect:" + nativeId)) return;
+		if (historyOnly || !isExtensionOn || settings.customyoutubestate || ele.hasAttribute("is-deleted")) return;
+		var redirector = bannerText.querySelector(".bold");
+		var data = {
+			chatname: redirector ? normalizeDonationText(redirector.textContent).replace(/^@/, "") : "",
+			chatmessage: getAllContentNodes(bannerText),
+			membership: getTranslation("redirect", "REDIRECT"),
+			textonly: settings.textonlymode || false,
+			type: "youtube",
+			event: "redirect"
+		};
+		if (nativeId) data.meta = { messageId: nativeId };
+		if (videoId) data.videoid = videoId;
+		if (channelName) data.sourceName = channelName;
+		if (channelThumbnail) data.sourceImg = channelThumbnail;
+		sendYouTubeMessage(data, ele);
+	}
+
+	function observeYouTubeRedirects() {
+		var target = document.querySelector("yt-live-chat-app");
+		if (!target || target === youtubeBannerObserverTarget) return;
+		if (youtubeBannerObserver) youtubeBannerObserver.disconnect();
+		var firstBinding = !youtubeBannerObserverTarget;
+		youtubeBannerObserverTarget = target;
+		target.querySelectorAll("yt-live-chat-banner-redirect-renderer").forEach(function (ele) {
+			processYouTubeRedirect(ele, firstBinding);
+		});
+		function scan(node) {
+			if (node.nodeType !== 1) node = node.parentElement;
+			if (!node) return;
+			var banner = node.closest("yt-live-chat-banner-redirect-renderer");
+			if (banner) processYouTubeRedirect(banner);
+			node.querySelectorAll("yt-live-chat-banner-redirect-renderer").forEach(function (ele) {
+				processYouTubeRedirect(ele);
+			});
+		}
+		youtubeBannerObserver = new MutationObserver(function (mutations) {
+			mutations.forEach(function (mutation) {
+				var parent = mutation.target.nodeType === 1 ? mutation.target : mutation.target.parentElement;
+				var banner = parent && parent.closest("yt-live-chat-banner-redirect-renderer");
+				if (banner) processYouTubeRedirect(banner);
+				mutation.addedNodes.forEach(scan);
+			});
+		});
+		youtubeBannerObserver.observe(target, { childList: true, subtree: true, characterData: true });
+	}
+
+	function sendYouTubeReaction(reactionType, imageUrl, id) {
+		var chatmessage = reactionType;
+		if (!settings.textonlymode) {
+			chatmessage = '<img class="youtube-live-reaction" src="' + escapeYouTubeAttribute(imageUrl) + '" alt="' + escapeYouTubeAttribute(reactionType) + '">';
+		}
+		sendYouTubeTargetedMessage({
+			id: id,
+			chatname: "YouTube Live",
+			chatmessage: chatmessage,
+			chatimg: "",
+			contentimg: imageUrl,
+			textonly: settings.textonlymode || false,
+			type: youtubeShorts ? "youtubeshorts" : "youtube",
+			event: "reaction",
+			meta: {
+				reactionType: reactionType,
+				reactionImage: imageUrl,
+				source: "youtube_live_reactions"
+			}
+		}, "reactions");
+	}
+
+	function captureYouTubeReactionResponse(payload) {
+		var mutations = payload && payload.frameworkUpdates && payload.frameworkUpdates.entityBatchUpdate;
+		mutations = mutations && mutations.mutations;
+		if (!Array.isArray(mutations)) return;
+		mutations.forEach(function (mutation) {
+			var entity = mutation.payload && mutation.payload.emojiFountainDataEntity;
+			if (!entity || !entity.updateTimeUsec || !Array.isArray(entity.reactionBuckets)) return;
+			var batchId = "reaction:" + videoId + ":" + entity.updateTimeUsec;
+			if (!rememberYouTubeEffect(batchId)) return;
+			// Paused capture must not replay effects when resumed.
+			if (!youtubeSettingsLoaded || !isExtensionOn || settings.customyoutubestate) return;
+			entity.reactionBuckets.forEach(function (bucket, bucketIndex) {
+				if (!Array.isArray(bucket.reactionsData)) return;
+				bucket.reactionsData.forEach(function (reaction, reactionIndex) {
+					var emoji = reaction.unicodeEmojiId || (reaction.videoReactionType === "VIDEO_REACTION_TYPE_LIKE" ? "\uD83D\uDC4D" : "");
+					var count = Number(reaction.reactionCount);
+					if (!emoji || !Number.isSafeInteger(count) || count <= 0) return;
+					// A local emoji image also works in text-only mode and when YouTube's
+					// signed-out chat omits the emoji picker and animation components.
+					var imageUrl = youtubeReactionImages.get(emoji);
+					if (!imageUrl) {
+						var canvas = document.createElement("canvas");
+						canvas.width = canvas.height = 72;
+						var context = canvas.getContext("2d");
+						context.font = '60px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+						context.textAlign = "center";
+						context.textBaseline = "middle";
+						context.fillText(emoji === "\u2764" ? "\u2764\uFE0F" : emoji, 36, 38);
+						imageUrl = canvas.toDataURL("image/png");
+						youtubeReactionImages.set(emoji, imageUrl);
+					}
+					for (var i = 0; i < count; i++) {
+						sendYouTubeReaction(emoji, imageUrl, batchId + ":" + bucketIndex + ":" + reactionIndex + ":" + i);
+					}
+				});
+			});
+		});
+	}
+
+	function observeYouTubeReactionResponses() {
+		// SSApp injects into the page world. Extensions retain the DOM observer.
+		if (!window.ninjafy || !/(^|\.)youtube\.com$/.test(location.hostname) || location.pathname !== "/live_chat") return;
+		function isChatResponse(url) {
+			try {
+				var parsed = new URL(url, location.href);
+				return parsed.origin === location.origin && parsed.pathname === "/youtubei/v1/live_chat/get_live_chat";
+			} catch (e) { return false; }
+		}
+		var originalFetch = window.fetch;
+		window.fetch = function () {
+			var request = arguments[0];
+			var matches = isChatResponse(request && request.url ? request.url : request);
+			var result = originalFetch.apply(this, arguments);
+			if (matches) result.then(function (response) {
+				if (response.ok) response.clone().json().then(captureYouTubeReactionResponse).catch(function () {});
+			}).catch(function () {});
+			return result;
+		};
+		var originalOpen = XMLHttpRequest.prototype.open;
+		XMLHttpRequest.prototype.open = function (method, url) {
+			var result = originalOpen.apply(this, arguments);
+			if (isChatResponse(url)) {
+				this.addEventListener("load", function () {
+					try {
+						if (this.status >= 200 && this.status < 300 && isChatResponse(this.responseURL)) {
+							captureYouTubeReactionResponse(this.responseType === "json" ? this.response : JSON.parse(this.responseText));
+						}
+					} catch (e) {}
+				}, { once: true });
+			}
+			return result;
+		};
+		youtubeNetworkReactions = true;
+	}
+
+	observeYouTubeReactionResponses();
+
 	function emitYouTubeReactionImage(imageNode) {
 		if (!imageNode) {
 			return;
 		}
+		// Custom emotes carry a native data-emoji-id; keep their existing image path.
+		if (youtubeNetworkReactions && !imageNode.getAttribute("data-emoji-id")) return;
 		var sourceAttribute = imageNode.getAttribute("src");
 		var imageUrl = normalizeYouTubeEffectImageUrl(sourceAttribute === null ? (imageNode.src || "") : sourceAttribute);
 		if (!imageUrl) {
@@ -2553,26 +2747,7 @@
 		}
 		imageNode.youtubeSocialStreamHandledUrl = imageUrl;
 		var reactionType = normalizeDonationText(imageNode.getAttribute("alt") || "") || "emoji";
-		var chatmessage = reactionType;
-		// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
-		if (!settings.textonlymode) {
-			chatmessage = '<img class="youtube-live-reaction" src="' + escapeYouTubeAttribute(imageUrl) + '" alt="' + escapeYouTubeAttribute(reactionType) + '">';
-		}
-		sendYouTubeTargetedMessage({
-			chatname: "YouTube Live",
-			chatmessage: chatmessage,
-			chatimg: "",
-			contentimg: imageUrl,
-			// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
-			textonly: settings.textonlymode || false,
-			type: youtubeShorts ? "youtubeshorts" : "youtube",
-			event: "reaction",
-			meta: {
-				reactionType: reactionType,
-				reactionImage: imageUrl,
-				source: "youtube_live_reactions"
-			}
-		}, "reactions");
+		sendYouTubeReaction(reactionType, imageUrl, "reaction:" + messageReplyPrefix + (++youtubeReactionSequence));
 	}
 
 	function processYouTubeEffectMutationNode(node) {
@@ -2640,6 +2815,7 @@
 		if (!youtubeSettingsLoaded || !isExtensionOn) {
 			return;
 		}
+		observeYouTubeRedirects();
 		var reactionTarget = document.querySelector("yt-emoji-fountain-view-model #emoji-container");
 		if (reactionTarget && reactionTarget !== youtubeReactionObserverTarget) {
 			try {

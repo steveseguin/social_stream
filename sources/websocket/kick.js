@@ -2358,7 +2358,7 @@ function initExtensionBridge() {
                     }
                     if (request.type === 'SOURCE_CONTROL') {
                         handleSourceControlRequest(request)
-                            .then(result => sendResponse(Boolean(result)))
+                            .then(result => sendResponse(request.control === 'banCommand' ? result : Boolean(result)))
                             .catch(err => {
                                 console.error('Kick SOURCE_CONTROL failed', err);
                                 sendResponse(false);
@@ -5386,10 +5386,58 @@ async function banKickUser(payload = {}) {
     return true;
 }
 
+const kickBanCommands = new Map();
+
+async function runKickBanCommand(payload) {
+    const entry = kickBanCommands.get(String(payload.messageId || ''));
+    const channelId = state.channelId;
+    const channelSlug = state.channelSlug;
+    const parts = entry ? entry.text.split(/\s+/) : [];
+    const username = String(payload.username || '').toLowerCase();
+    if (!entry || entry.used || !entry.allowed || entry.channelId !== channelId || entry.channelSlug !== channelSlug ||
+        Date.now() - entry.received > 120000 || Date.now() - entry.sent > 120000 ||
+        !/^![a-zA-Z0-9_]+$/.test(payload.command || '') || parts.length !== 2 ||
+        parts[0].toLowerCase() !== payload.command.toLowerCase() || parts[1].replace(/^@/, '').toLowerCase() !== username ||
+        !/^[a-z0-9_-]{1,100}$/.test(username)) {
+        return { ok: false, message: 'Ban commands require a recent command from this Kick channel\'s broadcaster or moderators.' };
+    }
+    entry.used = true;
+    try {
+        const matches = new Set();
+        state.chatMessageCache.forEach(message => {
+            if (normalizeChannel(message.username) === normalizeChannel(username) && message.userId) matches.add(String(message.userId));
+        });
+        const userId = matches.size === 1 ? matches.values().next().value : null;
+        if (!userId) return { ok: false, message: 'Kick user not found in this connection. Use a username that has appeared in chat.' };
+        const account = getAuthenticatedKickChannelIdentity();
+        if (String(userId) === String(channelId) || String(userId) === String(account.userId)) {
+            return { ok: false, message: 'Cannot ban the broadcaster or the signed-in account.' };
+        }
+        const token = await ensureToken();
+        if (!channelId || channelId !== state.channelId || channelSlug !== state.channelSlug) {
+            return { ok: false, message: 'Kick connection changed. Send the command again in the intended channel.' };
+        }
+        // Use the existing ban endpoint with a fixed token/channel and no mutation retries.
+        const response = await fetch('https://api.kick.com/public/v1/moderation/bans', {
+            method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ broadcaster_user_id: Number(channelId), user_id: Number(userId), reason: 'Banned by Event Flow command ' + payload.command })
+        });
+        if (response.ok) return { ok: true };
+        return { ok: false, message: 'Kick rejected the ban (HTTP ' + response.status + '). Check the signed-in account\'s moderation permissions.' };
+    } catch (_) {
+        return { ok: false, unconfirmed: true, message: 'No ban confirmation received. Check Kick before sending another command.' };
+    }
+}
+
 async function handleSourceControlRequest(request) {
     const payload = request?.payload || {};
     if (normalizeSourceControlPlatform(request?.platform || payload?.type) !== 'kick') {
         return false;
+    }
+    if (request.control === 'banCommand') {
+        const result = await runKickBanCommand(payload);
+        log(result.ok ? 'Banned ' + payload.username + ' from Event Flow' : result.message, result.ok ? 'info' : 'warning');
+        return result;
     }
     if (request.control === 'deleteMessage') {
         if (!state.advancedControls.syncDeleteMessages) {
@@ -6955,6 +7003,20 @@ async function forwardChatMessage(evt, bridgeMeta) {
         }
         if (bridgeMessageId && bridgeMessageId !== normalizeKickMessageId(resolvedId)) {
             rememberKickChatMessage(bridgeMessageId, cacheContext);
+        }
+        const commandText = String(content || '').trim();
+        if (nativeMessageId && !normalizedEvent && commandText.charAt(0) === '!' && commandText.length <= 200) {
+            const now = Date.now();
+            kickBanCommands.forEach((entry, id) => { if (now - entry.received > 120000) kickBanCommands.delete(id); });
+            const nativeMod = sender.is_moderator === true || sender.moderator === true || sender.identity?.moderator === true ||
+                (Array.isArray(sender.roles) && sender.roles.some(role => /^(mod|moderator)$/i.test(role))) ||
+                (Array.isArray(sender.identity?.badges) && sender.identity.badges.some(badge => badge && /^(mod|moderator)$/i.test(badge.type || badge.name || '')));
+            if (!kickBanCommands.has(nativeMessageId)) kickBanCommands.set(nativeMessageId, {
+                text: commandText, allowed: nativeMod || (!!ids?.userId && String(ids.userId) === String(state.channelId)),
+                channelId: state.channelId, channelSlug: state.channelSlug, received: now, used: false,
+                sent: toTimestampMs(message.created_at || payload.created_at || bridgeMeta?.timestamp) || now
+            });
+            while (kickBanCommands.size > 100) kickBanCommands.delete(kickBanCommands.keys().next().value);
         }
         pushMessage(messagePayload);
         appendChatFeedMessage(messagePayload, content);

@@ -1633,6 +1633,48 @@
 				margin: 0px 0 0px 5px;
 			}
 
+			/* Optional card look (&cards). Styling only: the same rows, order, limits and timed removal apply. */
+			/* Card colours reuse the bubble variables, so the existing highlight-colour options still apply. */
+			html.chatcards {
+				--bgcolor-bubble: #14161ce6;
+				--bgcolor-bubble-odd: #14161ce6;
+				--donation-bgcolor-bubble: #b45309f2;
+				--donation-bgcolor-bubble-odd: #b45309f2;
+				--member-bgcolor-bubble: #0f5c63f2;
+				--member-bgcolor-bubble-odd: #0f5c63f2;
+				--padding-rows: 8px;
+			}
+			body.chatcards .highlight-chat,
+			body.chatcards .highlight-chat.odd:not(.expand) {
+				background-color: var(--bgcolor-bubble);
+			}
+			body.chatcards .highlight-chat {
+				margin: 3px 6px;
+				max-width: calc(100% - 12px);
+				box-sizing: border-box;
+				padding-left: 10px;
+				padding-right: 10px;
+				border-radius: 12px;
+			}
+			body.chatcards .highlight-chat:not(:hover) {
+				box-shadow: inset 0 0 0 1px #ffffff1f;
+			}
+			body.chatcards .highlight-chat.member,
+			body.chatcards .highlight-chat.member.odd:not(.expand) {
+				background-color: var(--member-bgcolor-bubble);
+			}
+			body.chatcards .highlight-chat.firsttime {
+				background-image: linear-gradient(var(--firstime-bgcolor), var(--firstime-bgcolor));
+			}
+			body.chatcards .highlight-chat.dono-highlight,
+			body.chatcards .highlight-chat.dono-highlight.odd:not(.expand) {
+				background-color: var(--donation-bgcolor-bubble);
+			}
+			body.chatcards .highlight-chat.special,
+			body.chatcards .highlight-chat.special.odd:not(.expand) {
+				background-color: var(--special-bgcolor-bubble);
+			}
+
 			.donationAmount {
 				text-shadow: 0 0 10px #fff, 0 0 20px var(--donation-amount), 0 0 30px var(--donation-amount);
 				padding-left: 5px;
@@ -4321,6 +4363,11 @@
 			if (urlParams.has("namebubble")) {
 				document.body.classList.add("namebubble");
 			}
+			if (urlParams.has("cards")) {
+				// Card look for the audience overlay; off unless the link asks for it.
+				document.documentElement.classList.add("chatcards");
+				document.body.classList.add("chatcards");
+			}
 			
 			var showviewercount = false;
 			if (urlParams.has("showviewercount")) {
@@ -5330,8 +5377,8 @@
 				custombot = urlParams.get("myname") || urlParams.get("botlist") || urlParams.get("botnames") || false;
 				if (custombot) {
 					custombot = decodeURIComponent(custombot);
-					custombot = custombot.toLowerCase().replace(/[^a-z0-9,_]+/gi, "");
-					custombot = custombot.split(",");
+					custombot = custombot.toLowerCase().replace(/[^a-z0-9,_\u0080-\uFFFF]+/gi, "").replace(/\s/g, "");
+					custombot = custombot.split(",").filter(function (name) { return !!name; });
 				}
 			}
 
@@ -6146,6 +6193,10 @@
 				}
 				document.documentElement.style.setProperty("--font-color", "#000");
 				document.documentElement.style.setProperty("--highlight-base2", "#EEE7");
+				if (urlParams.has("cards")) {
+					document.documentElement.style.setProperty("--bgcolor-bubble", "#EEED");
+					document.documentElement.style.setProperty("--bgcolor-bubble-odd", "#EEED");
+				}
 
 				document.documentElement.style.setProperty("--donation-bgcolor-bubble", "#EEED");
 				document.documentElement.style.setProperty("--donation-bgcolor-bubble-odd", "#EEE7");
@@ -6493,11 +6544,13 @@
 					}
 					var post = autoShowQueue.shift();
 					if (doNotAutoshowFiltered && post.classList.contains("hide")) {
+						checkTimeout = false;
 						if (autoShowQueue.length) {
 							checkAutoShow();
 						}
 						return;
 					} else if (post.classList.contains(pressedClass)) {
+						checkTimeout = false;
 						if (autoShowQueue.length) {
 							checkAutoShow();
 						}
@@ -6597,6 +6650,9 @@
 					}
 				} catch(e){}
 				redoOdd();
+				if (historyMode && historyScrollContainer) {
+					historyLastScrollTop = historyScrollContainer.scrollTop;
+				}
 			}
 
 			function members() {
@@ -8776,7 +8832,7 @@
 						const blockName = data.blockUser.chatname || data.blockUser.username;
 						if (blockName && data.blockUser.type) {
 							if (!localBlockUserList) {
-								localBlockUserList = {};
+								localBlockUserList = Object.create(null);
 							}
 							if (localBlockUserList[blockName]) {
 								if (!localBlockUserList[blockName].includes(data.blockUser.type)) {
@@ -8796,7 +8852,7 @@
 
 						} else if (data.blockUser.username) {
 							if (!localBlockUserList) {
-								localBlockUserList = {};
+								localBlockUserList = Object.create(null);
 							}
 							if (localBlockUserList[data.blockUser.username]) {
 								if (!localBlockUserList[data.blockUser.username].includes("*")) {
@@ -8956,6 +9012,7 @@
 						message.membership = "";
 						message.contentimg = "";
 						message.type = "stripe";
+						message.textonly = true;
 						setRawWebhookMeta(message, data.stripe.id || (data.stripe.data && data.stripe.data.object && data.stripe.data.object.id));
 
 						data = message; // replace inbound stripe message with new message
@@ -9978,6 +10035,9 @@
 				for (var i = 0; i < eles.length; i++) {
 					filterMessage(eles[i]);
 				}
+				if (historyMode && historyScrollContainer) {
+					historyLastScrollTop = historyScrollContainer.scrollTop;
+				}
 			}
 
 			function toDataURL(url, callback) {
@@ -10273,7 +10333,7 @@
 					//console.log(chatName, type);
 					
 					if (!localBlockUserList) {
-						localBlockUserList = {};
+						localBlockUserList = Object.create(null);
 					}
 					if (chatName && type) {
 						if (localBlockUserList[chatName]) {
@@ -12687,7 +12747,7 @@
 							if (!data.textonly && custombot) {
 								textname = unescapeHtml(data.chatname);
 							}
-							if (custombot.includes(textname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))) {
+							if (custombot.includes(textname.toLowerCase().replace(/[^a-z0-9_\u0080-\uFFFF]+/gi, "").replace(/\s/g, ""))) {
 								// because why not. :)
 								bot = true;
 							}
@@ -12715,7 +12775,7 @@
 						return;
 					}
 					
-					if (host && doNotShowHostNames) {
+					if (host && doNotShowHost) {
 						return;
 					}
 
@@ -13139,6 +13199,7 @@
 						);
 					}
 					
+					// Parent-relative sizes avoid applying Android WebView text zoom twice.
 					if (splitMode && compactmode){
 						// this mode isn't compatible
 					} else if (horizontal || twoLines || largeavatar) {
@@ -13146,11 +13207,13 @@
 					} else if (compactmode) {
 						var nameEle = node.querySelector(".hl-name"); // we're going to resize long names to be smaller if they are longer than the message's height
 						if (nameEle) {
+							var parentFontSize = parseFloat(window.getComputedStyle(nameEle.parentElement).fontSize);
 							if (hlMessage && hlMessage.innerText) {
 								var ccc = 0;
 								while (hlMessage.clientHeight < nameEle.clientHeight || nameEle.clientHeight < nameEle.scrollHeight || nameEle.clientWidth < nameEle.scrollWidth) {
 									var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
-									nameEle.style.fontSize = fontsize - 1 + "px";
+									if (!(parentFontSize > 0)) break;
+									nameEle.style.fontSize = (100 * (fontsize - 1) / parentFontSize) + "%";
 									ccc += 1;
 									if (ccc > 8) {
 										break;
@@ -13160,7 +13223,8 @@
 								var ccc = 0;
 								while (hlMessage.clientHeight < nameEle.clientHeight || nameEle.clientWidth < nameEle.scrollWidth || nameEle.clientHeight < nameEle.scrollHeight) {
 									var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
-									nameEle.style.fontSize = fontsize - 1 + "px";
+									if (!(parentFontSize > 0)) break;
+									nameEle.style.fontSize = (100 * (fontsize - 1) / parentFontSize) + "%";
 									ccc += 1;
 									if (ccc > 8) {
 										break;
@@ -13171,10 +13235,12 @@
 					} else {
 						var nameEle = node.querySelector(".hl-name"); // we're going to resize long un-breaking names to be smaller if they don't fit
 						if (nameEle) {
+							var parentFontSize = parseFloat(window.getComputedStyle(nameEle.parentElement).fontSize);
 							var ccc = 0;
 							while (nameEle.clientWidth < nameEle.scrollWidth || nameEle.clientHeight < nameEle.scrollHeight) {
 								var fontsize = parseInt(window.getComputedStyle(nameEle).fontSize);
-								nameEle.style.fontSize = fontsize - 1 + "px";
+								if (!(parentFontSize > 0)) break;
+								nameEle.style.fontSize = (100 * (fontsize - 1) / parentFontSize) + "%";
 								ccc += 1;
 								if (ccc > 8) {
 									break;

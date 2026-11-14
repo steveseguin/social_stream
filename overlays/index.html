@@ -14,7 +14,7 @@
 	<link rel="icon" href="../favicon.ico">
 	<link rel="stylesheet" href="../docs/css/site-shell.css">
 	<script src="../docs/js/site-shell.js"></script>
-	<link rel="stylesheet" href="studio.css?v=15">
+	<link rel="stylesheet" href="studio.css?v=16">
 </head>
 <body class="site-header-offset studio-index">
 	<a class="studio-skip" href="#gallery">Skip to overlays</a>
@@ -36,9 +36,13 @@
 		</details>
 		<div class="toolbar">
 			<input class="search" id="search" type="search" placeholder="Search overlays…" aria-label="Search overlays">
+			<label class="tool">Type
+				<select id="type"><option value="">All types</option></select>
+			</label>
 			<label class="tool">Sort
 				<select id="sort">
-					<option value="cat">By type</option>
+					<option value="mix">Featured mix</option>
+					<option value="cat">Grouped by type</option>
 					<option value="name">A–Z</option>
 					<option value="shuffle">Surprise me</option>
 				</select>
@@ -72,23 +76,23 @@
 	</div>
 
 	</main>
-	<script src="core.js?v=15"></script>
+	<script src="core.js?v=16"></script>
 	<script src="templates/countries.js?v=15"></script>
 	<script src="templates/engines.js?v=15"></script>
-	<script src="templates/socials.js?v=17"></script>
+	<script src="templates/socials.js?v=18"></script>
 	<script src="templates/text.js?v=15"></script>
-	<script src="templates/gaming.js?v=16"></script>
-	<script src="templates/time.js?v=15"></script>
-	<script src="templates/scenes.js?v=17"></script>
+	<script src="templates/gaming.js?v=17"></script>
+	<script src="templates/time.js?v=16"></script>
+	<script src="templates/scenes.js?v=18"></script>
 	<script src="templates/maps.js?v=17"></script>
 	<script src="templates/fun.js?v=15"></script>
 	<script src="templates/obs.js?v=15"></script>
 	<script src="templates/pets.js?v=15"></script>
-	<script src="templates/extra.js?v=19"></script>
-	<script src="templates/themes.js?v=15"></script>
+	<script src="templates/extra.js?v=22"></script>
+	<script src="templates/themes.js?v=16"></script>
 	<script src="templates/music.js?v=15"></script>
 	<script src="templates/promo.js?v=15"></script>
-	<script src="templates/live.js?v=15"></script>
+	<script src="templates/live.js?v=16"></script>
 	<script src="templates/games.js?v=15"></script>
 	<script src="templates/reef.js?v=15"></script>
 	<script src="templates/kaiju.js?v=15"></script>
@@ -105,7 +109,7 @@
 		});
 		var OBS_TEMPLATES = ["pets", "status", "scenename", "livetimer", "growth"];
 		var MAX_LOADING = 4;
-		var state = { cat: "all", vibe: "", q: "", sort: "cat", page: 1 };
+		var state = { cat: "all", type: "", vibe: "", q: "", sort: "mix", page: 1 };
 		var cols = parseInt(SSO.store.get("gallery-cols"), 10) || (window.innerWidth < 900 ? 2 : 3);
 		if ([2, 3, 4].indexOf(cols) === -1) { cols = 3; }
 		var bg = SSO.store.get("gallery-bg") || "game";
@@ -119,7 +123,8 @@
 			state.cat = SSO.CATEGORIES.some(function (c) { return c.id === category; }) ? category : "all";
 			state.vibe = SSO.VIBES.some(function (v) { return v[0] === vibe; }) ? vibe : "";
 			state.q = hash.get("q") || "";
-			state.sort = ["cat", "name", "shuffle"].indexOf(hash.get("sort")) !== -1 ? hash.get("sort") : "cat";
+			state.type = SSO.get(hash.get("type") || "") ? hash.get("type") : "";
+			state.sort = ["mix", "cat", "name", "shuffle"].indexOf(hash.get("sort")) !== -1 ? hash.get("sort") : "mix";
 			state.page = Math.max(1, parseInt(hash.get("page"), 10) || 1);
 			$("search").value = state.q;
 			$("sort").value = state.sort;
@@ -132,6 +137,9 @@
 		// ---- all cards (built once, rendered per page) ----
 		var catOrder = SSO.CATEGORIES.map(function (c) { return c.id; });
 		var cards = [];
+		// Position of each overlay type inside its own category, for the mixed order.
+		var typeRank = {}, perCat = {};
+		SSO.list().forEach(function (def) { perCat[def.category] = perCat[def.category] || 0; typeRank[def.id] = perCat[def.category]++; });
 		SSO.list().forEach(function (def, ti) {
 			(def.presets.length ? def.presets : [{ name: def.name, values: {} }]).forEach(function (preset, idx) {
 				cards.push({
@@ -141,6 +149,9 @@
 					tags: preset.tags || [],
 					text: (def.name + " " + preset.name + " " + def.description + " " + def.category + " " + (preset.tags || []).join(" ")).toLowerCase(),
 					order: catOrder.indexOf(def.category) * 100000 + ti * 100 + idx,
+					// Featured mix: the first style of every type, one category after another, then the second
+					// styles, and so on. The first page shows the range instead of sixty banners in a row.
+					mix: idx * 1000000 + typeRank[def.id] * 1000 + catOrder.indexOf(def.category),
 					rnd: Math.random()
 				});
 			});
@@ -154,6 +165,7 @@
 			b.setAttribute("data-v", value);
 			b.addEventListener("click", function () {
 				state[key] = key === "vibe" && state.vibe === value ? "" : value;
+				if (key === "cat" && state.type && value !== "all" && SSO.get(state.type).category !== value) { state.type = ""; }
 				state.page = 1;
 				render();
 			});
@@ -162,17 +174,31 @@
 		chip($("cats"), "all", "All", "cat");
 		SSO.CATEGORIES.forEach(function (c) { chip($("cats"), c.id, c.label, "cat"); });
 		SSO.VIBES.forEach(function (v) { chip($("vibes"), v[0], v[1], "vibe"); });
+		SSO.CATEGORIES.forEach(function (c) {
+			var group = document.createElement("optgroup");
+			group.label = c.label;
+			SSO.list().forEach(function (def) {
+				if (def.category !== c.id) { return; }
+				var o = document.createElement("option");
+				o.value = def.id;
+				o.textContent = def.name + " (" + Math.max(1, def.presets.length) + ")";
+				group.appendChild(o);
+			});
+			if (group.children.length) { $("type").appendChild(group); }
+		});
 
 		function filtered() {
 			var q = state.q.trim().toLowerCase();
 			var list = cards.filter(function (c) {
 				return (state.cat === "all" || c.def.category === state.cat) &&
+					(!state.type || c.def.id === state.type) &&
 					(!state.vibe || c.tags.indexOf(state.vibe) !== -1) &&
 					(!q || c.text.indexOf(q) !== -1);
 			});
 			list.sort(function (a, b) {
 				if (state.sort === "name") { return a.preset.name.localeCompare(b.preset.name); }
 				if (state.sort === "shuffle") { return a.rnd - b.rnd; }
+				if (state.sort === "mix") { return a.mix - b.mix; }
 				return a.order - b.order;
 			});
 			return list;
@@ -244,6 +270,7 @@
 		function render() {
 			var vibe = SSO.VIBES.filter(function (v) { return v[0] === state.vibe; })[0];
 			$("styleSummary").textContent = vibe ? "Style: " + vibe[1] : "Style filters";
+			$("type").value = state.type;
 			var marks = document.querySelectorAll("#cats .chip, #vibes .chip");
 			for (var i = 0; i < marks.length; i++) {
 				var key = marks[i].parentNode.id === "cats" ? "cat" : "vibe";
@@ -285,12 +312,18 @@
 				queue.push({ box: a.querySelector(".thumb"), card: card });
 			});
 			pump();
-			try { history.replaceState(null, "", "#" + Object.keys(state).filter(function (k) { return state[k] && !(k === "cat" && state[k] === "all") && !(k === "page" && state[k] === 1) && !(k === "sort" && state[k] === "cat"); }).map(function (k) { return k + "=" + encodeURIComponent(state[k]); }).join("&")); } catch (e) {}
+			try { history.replaceState(null, "", "#" + Object.keys(state).filter(function (k) { return state[k] && !(k === "cat" && state[k] === "all") && !(k === "page" && state[k] === 1) && !(k === "sort" && state[k] === "mix"); }).map(function (k) { return k + "=" + encodeURIComponent(state[k]); }).join("&")); } catch (e) {}
 		}
 
 		var st;
 		$("search").addEventListener("input", function () { clearTimeout(st); st = setTimeout(function () { state.q = $("search").value; state.page = 1; render(); }, 200); });
 		$("sort").addEventListener("change", function () { state.sort = $("sort").value; state.page = 1; if (state.sort === "shuffle") { cards.forEach(function (c) { c.rnd = Math.random(); }); } render(); });
+		$("type").addEventListener("change", function () {
+			state.type = $("type").value;
+			if (state.type && state.cat !== "all" && SSO.get(state.type).category !== state.cat) { state.cat = "all"; }
+			state.page = 1;
+			render();
+		});
 		$("bgpick").addEventListener("change", function () {
 			bg = $("bgpick").value;
 			SSO.store.set("gallery-bg", bg);

@@ -168,6 +168,14 @@ body .textInputContainer.textInputWithUpload .textInput { grid-area:2 / 1; min-w
 #nc-audience-room p, #nc-audience-room a { overflow-wrap:anywhere; }
 #nc-audience-room { text-align:start; }
 
+/* Music source fields share one column; the status line reports what the host is reading. */
+#music-source-options .textInputContainer { width:100%; max-width:340px; }
+#musicWnpFields, #musicFileFields, #musicExpiryFields { padding-left:0; }
+#music-source-options input.textInput { margin-left:0; }
+#musicStatus, #musicFileName { font-size:.9em; color:var(--text-secondary); overflow-wrap:anywhere; }
+#musicStatus { margin:6px 0 8px; min-height:1.3em; }
+#musicFileName { margin:0 3px 6px; }
+
 /* Compact heading copy actions match the adjacent link controls. */
 body .heading-actions button.copy-link, body button.edit-link {
     border:0; margin:0; font-family:inherit; line-height:inherit;
@@ -179,6 +187,8 @@ body .heading-actions button.copy-link:focus, body button.edit-link:focus {
 /* Giveaway controls reuse the shared field and action styles. */
 .options_group.giveaway .textInputContainer { display:grid; width:100%; }
 .giveaway-actions { display:flex; flex-wrap:wrap; gap:6px; }
+#giveaway-id[aria-invalid="true"] { outline:2px solid var(--danger-text); outline-offset:2px; }
+#giveaway-control-status.giveaway-error { color:var(--danger-text); font-weight:600; }
 body .options .giveaway-actions button.giveaway-current,
 body .popup-settings-panel .giveaway-actions button.giveaway-current {
     border-color:var(--color-accent); box-shadow:inset 0 -3px 0 var(--color-accent);

@@ -592,6 +592,21 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				return;
 			}
 			if (request.type === 'SOURCE_CONTROL') {
+				if (request.control === 'banCommand') {
+					const requestId = 'ban-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+					const finish = result => {
+						clearTimeout(timer);
+						window.removeEventListener('sourceControlResult', listener);
+						sendResponse(result);
+					};
+					const listener = e => {
+						if (e.detail && e.detail.requestId === requestId) finish(e.detail.result);
+					};
+					const timer = setTimeout(() => finish({ ok: false, unconfirmed: true, message: 'No ban confirmation received. Check YouTube before trying again.' }), 30000);
+					window.addEventListener('sourceControlResult', listener);
+					window.dispatchEvent(new CustomEvent('sourceControlMessage', { detail: Object.assign({}, request, { requestId }), bubbles: true }));
+					return true;
+				}
 				window.dispatchEvent(new CustomEvent('sourceControlMessage', {
 					detail: request,
 					bubbles: true
