@@ -23,6 +23,10 @@ jobs:
       with:
         node-version: '20'
 
+    - name: Test Breaks recorded-slot guards
+      timeout-minutes: 2
+      run: node --test tests/breaks-recorded-slots.test.cjs
+
     - name: Install dependencies
       run: npm install htmlhint
 
