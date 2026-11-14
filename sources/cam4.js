@@ -54,10 +54,10 @@
 		var badges = [];
 
 		// check if this is a tip notification
-		var tipNotif = ele.querySelector("[class*='ChatNotificationsTypes__goldNotifWrapperDesktop'], [class*='ChatNotificationsTypes__silverNotifWrapperDesktop'], [class*='ChatNotificationsTypes__notifWrapper']");
+		var tipNotif = ele.querySelector("[class*='ChatNotificationsTypes__goldNotifWrapperDesktop'], [class*='ChatNotificationsTypes__silverNotifWrapperDesktop'], [class*='ChatNotificationsTypes__notifWrapper'], [class*='newTippingMessage__container']");
 		if (tipNotif || (ele.className && ele.className.match && ele.className.match(/ChatNotificationsTypes/))) {
 			try {
-				var notifText = ele.querySelector("[class*='ChatNotificationsTypes__basicNotifText']");
+				var notifText = ele.querySelector("[class*='ChatNotificationsTypes__basicNotifText'], [class*='newTippingMessage__text']");
 				if (notifText) {
 					var strongs = notifText.querySelectorAll("strong");
 					if (strongs.length > 0) {
@@ -185,25 +185,35 @@
 	);
 
 	function onElementInserted(target) {
+		function queueMessage(node) {
+			if (!node) return;
+			var row = node.nodeType === 1 ? node : node.parentElement;
+			if (!row || row === target || !target.contains(row)) return;
+			while (row.parentElement !== target) {
+				row = row.parentElement;
+			}
+			if (row.skip || row.ssnPending) return;
+			row.ssnPending = true;
+			setTimeout(function () {
+				row.ssnPending = false;
+				processMessage(row);
+			}, 200);
+		}
+
 		var onMutationsObserved = function (mutations) {
 			mutations.forEach(function (mutation) {
+				queueMessage(mutation.target);
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							var node = mutation.addedNodes[i];
-							if (node.nodeType !== 1) continue;
-							if (node.skip) continue;
-
-							setTimeout(function (n) {
-								processMessage(n);
-							}, 200, node);
+							queueMessage(mutation.addedNodes[i]);
 						} catch (e) { }
 					}
 				}
 			});
 		};
 
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true, characterData: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);

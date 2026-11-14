@@ -1845,10 +1845,25 @@ class EventFlowSystem {
 		return !hasChatFields;
 	}
 
+	// The metadata event a Music trigger listens for; empty for every other trigger type.
+	musicTriggerEvent(triggerType) {
+		if (triggerType === 'musicTrackChanged') return 'music_track_changed';
+		if (triggerType === 'musicPlaybackChanged') return 'music_playback_changed';
+		return '';
+	}
+
 	isMusicEventPayload(message) {
 		return !!(message && ['spotify', 'wnp', 'file'].includes(message.type)
 			&& ['music_track_changed', 'music_playback_changed'].includes(message.event)
 			&& message.meta && message.meta.music && !this.hasChatLikeFields(message));
+	}
+
+	async flowMatchesMusicEvent(flow, message) {
+		for (const node of flow.nodes || []) {
+			if (node.type === 'trigger' && this.musicTriggerEvent(node.triggerType)
+				&& await this.evaluateTrigger(node, message, flow)) return true;
+		}
+		return false;
 	}
 
 	isCounterEventPayload(message) {
@@ -2001,17 +2016,7 @@ class EventFlowSystem {
                 continue;
             }
             // An unrelated NOT gate must not turn a music update into a chat action.
-            if (musicEvent) {
-                let matchesMusic = false;
-                for (const node of flow.nodes || []) {
-                    if (node.type === 'trigger' && ['musicTrackChanged', 'musicPlaybackChanged'].includes(node.triggerType)
-                        && await this.evaluateTrigger(node, message, flow)) {
-                        matchesMusic = true;
-                        break;
-                    }
-                }
-                if (!matchesMusic) continue;
-            }
+            if (musicEvent && !(await this.flowMatchesMusicEvent(flow, message))) continue;
           ////console.log(`[ProcessMessage] Evaluating active flow "${flow.name}" (ID: ${flow.id})`);
             
             const result = await this.evaluateFlow(flow, processed);
@@ -2439,12 +2444,13 @@ class EventFlowSystem {
         let match = false;
 		
 		// Metadata events use explicit triggers, keeping them out of generic chat flows.
+		const musicTriggerEvent = this.musicTriggerEvent(triggerType);
 		if (this.isMusicEventPayload(message)) {
-			const expected = triggerType === 'musicTrackChanged' ? 'music_track_changed' : triggerType === 'musicPlaybackChanged' ? 'music_playback_changed' : '';
-			return !!expected && message.event === expected && (!config.source || config.source === message.type)
+			return message.event === musicTriggerEvent
+				&& (!config.source || config.source === message.type)
 				&& (!config.status || config.status === message.meta.music.status);
 		}
-		if (triggerType === 'musicTrackChanged' || triggerType === 'musicPlaybackChanged') return false;
+		if (musicTriggerEvent) return false;
 		if (this.isMetaOnlyPayload(message) && (triggerType !== 'eventOther' || !this.isCounterEventPayload(message))){
 			return false;
 		}
@@ -4857,16 +4863,18 @@ class EventFlowSystem {
                 break;
 
             case 'musicNowPlaying': {
-                const service = window.musicService;
-                const current = service && service.status();
-                const music = current && current.enabled ? current.music : { track: null, status: 'idle' };
-                music.message = music.track ? music.track.name + (music.track.artist ? ' by ' + music.track.artist : '') : 'No current song available.';
-                if (message && message.meta != null && (typeof message.meta !== 'object' || Array.isArray(message.meta))) {
+                // Adds the snapshot and a ready-to-send reply at meta.music. A numeric or array
+                // meta is left as it is; the snapshot is then returned on the result instead.
+                const music = window.musicService
+                    ? window.musicService.nowPlaying()
+                    : { track: null, status: 'idle', message: 'No current song available.' };
+                const meta = message && message.meta;
+                if (meta != null && (typeof meta !== 'object' || Array.isArray(meta))) {
                     result.music = music;
                     break;
                 }
                 result.modified = true;
-                result.message = { ...message, meta: { ...(message && message.meta || {}), music } };
+                result.message = { ...message, meta: { ...(meta || {}), music } };
                 break;
             }
 

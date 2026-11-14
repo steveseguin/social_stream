@@ -716,7 +716,8 @@ if (typeof(chrome.runtime)=='undefined'){
 				// Create promise with timeout
 				const promise = new Promise((resolve) => {
 					// Store callback with timeout
-					const timeoutId = setTimeout(() => {
+					// The native file dialog completes when the user selects a file or cancels. Never resend it.
+					const timeoutId = data && data.cmd === "musicSelectFile" ? null : setTimeout(() => {
 						pendingCallbacks.delete(callbackId);
 						if (isPointsBackupRequest) {
 							// Database work may still be running. Never resend an import on timeout.
@@ -8766,6 +8767,7 @@ function attachMultiAlertSoundLibrary(inputId) {
     window.SSNSoundLibrary.attach({
         container, input, id: inputId, label: ({
             'multi-alert-custombeep': 'Default alert sound',
+            'multi-alert-likesound': 'Like sound',
             'multi-alert-followsound': 'Follow sound',
             'multi-alert-subsound': 'Subscription sound',
             'multi-alert-donosound': 'Donation sound',
@@ -9217,6 +9219,8 @@ function buildMultiAlertPreviewDescriptor(category) {
         : `${profile.chatname} has subscribed`;
 
     switch (category) {
+        case 'like':
+            return { category, overrides: { ...commonOverrides, event: 'liked', chatmessage: 'liked the stream' } };
         case 'follow':
             return {
                 category,
@@ -9298,6 +9302,12 @@ function buildMultiAlertPreviewDescriptor(category) {
 
 function buildTestAlertPayload(category, overrides = {}) {
     const payloads = {
+        like: {
+            type: 'tiktok',
+            event: 'liked',
+            chatname: 'Jess',
+            chatmessage: 'sent a like'
+        },
         follow: {
             type: 'twitch',
             event: 'new_follower',
@@ -12702,6 +12712,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	moveHypetrainOptionsIntoMetaSection();
 
 	attachOverlayPreviewControls('multialerts', [
+		{ id: 'multi-alert-preview-like', descriptor: () => buildMultiAlertPreviewDescriptor('like') },
 		{ id: 'multi-alert-preview-follow', descriptor: () => buildMultiAlertPreviewDescriptor('follow') },
 		{ id: 'multi-alert-preview-sub', descriptor: () => buildMultiAlertPreviewDescriptor('subscription') },
 		{ id: 'multi-alert-preview-dono', descriptor: () => buildMultiAlertPreviewDescriptor('donation') },
@@ -14228,33 +14239,44 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	// Music: show the fields for the selected source and report the host status while the panel is open.
 	const musicSource = document.getElementById('musicSource');
-	function updateMusicFields() {
-		if (!musicSource) return;
-		document.getElementById('musicWnpFields').hidden = musicSource.value !== 'wnp';
-		document.getElementById('musicFileFields').hidden = musicSource.value !== 'file';
-		document.getElementById('musicExpiryFields').hidden = musicSource.value === 'spotify';
-	}
-	function refreshMusicStatus() {
-		updateMusicFields();
-		if (document.hidden || !document.getElementById('wrapper-music')?.checked || !document.getElementById('musicStatus').getClientRects().length) return;
-		chrome.runtime.sendMessage({ cmd: 'musicStatus' }, response => {
-			if (chrome.runtime.lastError || !response) return;
-			const track = response.music && response.music.track;
-			const status = document.getElementById('musicStatus');
-			const text = !response.enabled ? 'Off' : response.message || (track ? track.name + (track.artist ? ' - ' + track.artist : '') : response.music?.status || 'Waiting');
-			if (status.textContent !== text) status.textContent = text;
-			document.getElementById('musicChooseFile').disabled = !response.fileAvailable;
-		});
-	}
 	if (musicSource) {
+		const musicStatus = document.getElementById('musicStatus');
+		const updateMusicFields = () => {
+			document.getElementById('musicWnpFields').hidden = musicSource.value !== 'wnp';
+			document.getElementById('musicFileFields').hidden = musicSource.value !== 'file';
+			document.getElementById('musicExpiryFields').hidden = musicSource.value === 'spotify';
+		};
+		const describeMusicStatus = response => {
+			if (response.enabled === false) return 'Music is off.';
+			if (response.message) return response.message;
+			const status = response.music && response.music.status;
+			if (response.summary) return ({ paused: 'Paused: ', stopped: 'Stopped: ' }[status] || 'Now playing: ') + response.summary;
+			return status === 'stopped' ? 'Nothing is playing.' : 'Waiting for a track.';
+		};
+		const refreshMusicStatus = () => {
+			// Saved settings are applied to the selector without a change event.
+			updateMusicFields();
+			const panelOpen = document.getElementById('wrapper-music').checked && musicSource.getClientRects().length;
+			if (document.hidden || !panelOpen) return;
+			chrome.runtime.sendMessage({ cmd: 'musicStatus' }, response => {
+				if (chrome.runtime.lastError || !response) return;
+				const text = describeMusicStatus(response);
+				// Leave an unchanged live region alone so it is not announced again.
+				if (musicStatus.textContent !== text) musicStatus.textContent = text;
+				document.getElementById('musicChooseFile').disabled = !response.fileAvailable;
+				document.getElementById('musicFileName').textContent = response.fileName || '';
+			});
+		};
 		musicSource.addEventListener('change', updateMusicFields);
 		document.getElementById('musicEnabled').addEventListener('change', () => setTimeout(refreshMusicStatus, 100));
 		document.getElementById('wrapper-music').addEventListener('change', refreshMusicStatus);
 		document.getElementById('musicChooseFile').addEventListener('click', () => {
 			chrome.runtime.sendMessage({ cmd: 'musicSelectFile' }, result => {
-				if (chrome.runtime.lastError) return;
-				document.getElementById('musicStatus').textContent = result?.error || result?.name || '';
+				if (chrome.runtime.lastError || !result || result.canceled) return;
+				musicStatus.textContent = result.error || result.name || '';
+				if (result.name) document.getElementById('musicFileName').textContent = result.name;
 			});
 		});
 		setInterval(refreshMusicStatus, 2000);
@@ -15397,6 +15419,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	// Handle per-type alert sound upload buttons
 	const alertSoundUploads = [
 		{ btnId: 'uploadMultiAlertSoundBtn', inputId: 'multi-alert-custombeep' },
+		{ btnId: 'uploadLikeSoundBtn', inputId: 'multi-alert-likesound' },
 		{ btnId: 'uploadFollowSoundBtn', inputId: 'multi-alert-followsound' },
 		{ btnId: 'uploadSubSoundBtn', inputId: 'multi-alert-subsound' },
 		{ btnId: 'uploadDonoSoundBtn', inputId: 'multi-alert-donosound' },

@@ -214,7 +214,7 @@
         window.addEventListener('beforeunload', function () { save(); clearInterval(timer); });
         if (layout === 'marquee') window.addEventListener('resize', refresh);
         return { register: register, remove: remove, command: command, defer: defer, restore: restore, duplicate: duplicate, translateControls: translateControls,
-            isRestoring: function () { return !!restoring; }, rows: function () { return rows.filter(function (row) { return row.node.isConnected; }); },
+            isPaused: function () { return paused; }, isRestoring: function () { return !!restoring; }, rows: function () { return rows.filter(function (row) { return row.node.isConnected; }); },
             clear: function () { command({ action: 'eventOverlayControl', surface: options.kind, board: board, command: 'clear' }); } };
     }
     function samples() {

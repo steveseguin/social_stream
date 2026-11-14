@@ -7147,6 +7147,13 @@ details.wrapper[open] > .collapsible-text {
 									</label>
 									<span><span class="popup-control-icon" aria-hidden="true">🚂</span><span data-translate="popup-show-hype-train-level-alerts-twitch">Show hype train level alerts (Twitch)</span></span>
 								</div>
+								<div title="Shows named likes from supported sources without enabling likes in main chat. Repeats within 60 seconds and likes arriving while alerts are busy are skipped.">
+									<label class="switch">
+										<input type="checkbox" data-param25="likealerts" />
+										<span class="slider round"></span>
+									</label>
+									<span><span class="popup-control-icon" aria-hidden="true">♥</span><span data-translate="popup-like-alerts">Like alerts</span></span>
+								</div>
 								<div class="textInputContainer" style="width: 95%;" title="Minimum converted USD value required for donation/bits alerts. Example: 5 blocks 100 bits but allows $5+ alerts.">
 									<input type="text" id="multialertmindonation" class="textInput instant" autocomplete="off" placeholder="5" data-textparam25="mindonation" />
 									<label for="multialertmindonation"><span class="popup-control-icon" aria-hidden="true">💵</span><span data-translate="popup-minimum-donation-bits-value-usd">Minimum donation / bits value (USD)</span></label>
@@ -7179,6 +7186,35 @@ details.wrapper[open] > .collapsible-text {
 <div>
 									<label for="multi-alert-followstyle" data-translate="popup-follow-preset">💚 Follow preset</label>
 									<select id="multi-alert-followstyle" data-optionparam25="followstyle" class="textInput popup-reviewed-control">
+										<option value="twitch" selected data-translate="popup-twitch-style">Twitch Style</option>
+										<option value="classic" data-translate="popup-classic">Classic</option>
+										<option value="minimal" data-translate="popup-minimal">Minimal</option>
+										<option value="solid" data-translate="popup-solid-flat">Solid / Flat</option>
+									<option value="cute" data-translate="popup-pastel-pop">🍬 Pastel Pop</option>
+<option value="cozy" data-translate="popup-cozy-cafe">☕ Cozy Cafe</option>
+<option value="art-cat" data-translate="popup-strawberry-cat-illustrated">🐱 Strawberry Cat — Illustrated</option>
+<option value="art-dog" data-translate="popup-good-company-illustrated">🐶 Good Company — Illustrated</option>
+<option value="art-halloween" data-translate="popup-pumpkin-haunt-illustrated">🎃 Pumpkin Haunt — Illustrated</option>
+<option value="art-christmas" data-translate="popup-merry-little-reindeer-illustrated">🎄 Merry Little Reindeer — Illustrated</option>
+<option value="art-music" data-translate="popup-midnight-mixtape-illustrated">🎵 Midnight Mixtape — Illustrated</option>
+<option value="art-forest" data-translate="popup-moss-mushrooms-illustrated">🍄 Moss &amp; Mushrooms — Illustrated</option>
+<option value="art-space" data-translate="popup-moon-bunny-illustrated">🌙 Moon Bunny — Illustrated</option>
+<option value="art-dragon" data-translate="popup-crystal-guardian-illustrated">🐉 Crystal Guardian — Illustrated</option>
+<option value="cats" data-translate="popup-cat-cafe">🐱 Cat Cafe</option>
+<option value="music" data-translate="popup-studio-sessions">🎵 Studio Sessions</option>
+<option value="arcade" data-translate="popup-pocket-arcade">🕹️ Pocket Arcade</option>
+<option value="slate" data-translate="popup-compact-slate">🌑 Compact Slate</option>
+<option value="paper" data-translate="popup-compact-paper">📄 Compact Paper</option>
+<option value="micro" data-translate="popup-micro-line">➖ Micro Line</option>
+<option value="spring" data-translate="popup-spring-bloom">🌸 Spring Bloom</option>
+<option value="summer" data-translate="popup-summer-splash">🌊 Summer Splash</option>
+<option value="hearts" data-translate="popup-sweetheart">💖 Sweetheart</option>
+<option value="lunar" data-translate="popup-lunar-lantern">🏮 Lunar Lantern</option>
+<option value="broadcast" data-translate="popup-broadcast-bars">Broadcast bars</option><option value="outline" data-translate="popup-outlined">Outlined</option><option value="pills" data-translate="popup-rounded-pills">Rounded pills</option><option value="neon" data-translate="popup-neon">Neon</option></select>
+								</div>
+<div>
+									<label for="multi-alert-likestyle" data-translate="popup-like-preset">♥ Like preset</label>
+									<select id="multi-alert-likestyle" data-optionparam25="likestyle" class="textInput popup-reviewed-control">
 										<option value="twitch" selected data-translate="popup-twitch-style">Twitch Style</option>
 										<option value="classic" data-translate="popup-classic">Classic</option>
 										<option value="minimal" data-translate="popup-minimal">Minimal</option>
@@ -7680,6 +7716,11 @@ details.wrapper[open] > .collapsible-text {
 											<label><span data-translate="popup-follow-sound">💖 Follow sound</span></label>
 											<button type="button" id="uploadFollowSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
 										</div>
+<div class="textInputContainer textInputWithUpload" style="width: 100%;" title="Likes are silent unless you choose a sound here and enable alert sounds.">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Like sound URL (.ogg, .mp3, .wav)" data-textparam25="likesound" id="multi-alert-likesound" />
+											<label><span data-translate="popup-like-sound">💖 Like sound</span></label>
+											<button type="button" id="uploadLikeSoundBtn" class="textInputUploadButton"><span class="popup-control-icon" aria-hidden="true">📤</span><span data-translate="popup-upload">Upload</span></button>
+										</div>
 										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Sub sound URL (.ogg, .mp3, .wav)" data-textparam25="subsound" id="multi-alert-subsound" />
 											<label><span data-translate="popup-subscription-sound">💜 Subscription sound</span></label>
@@ -7907,6 +7948,7 @@ details.wrapper[open] > .collapsible-text {
 									<button type="button" id="multi-alert-preview-raid" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">👥</span><span data-translate="popup-raid">Raid</span></button>
 									<button type="button" id="multi-alert-preview-auction" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">🏆</span><span data-translate="money-overlay-auction">Auction</span></button>
 									<button type="button" id="multi-alert-preview-hype" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">🚂</span><span data-translate="popup-hype">Hype</span></button>
+<button type="button" id="multi-alert-preview-like" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">♥</span><span data-translate="popup-like">Like</span></button>
 									<button type="button" id="multi-alert-preview-clear" class="overlayButton" style="flex: 1 1 75px; min-width: 0; white-space: nowrap;"><span class="popup-control-icon" aria-hidden="true">🗑️</span><span data-translate="popup-clear">Clear</span></button>
 									<button type="button" id="multi-alert-preview-mute" class="overlayButton" style="flex: 0 0 auto; min-width: 0; white-space: nowrap; opacity: 0.6;" title="Mute preview sound">🔊</button>
 								</div>
@@ -17653,7 +17695,7 @@ details.wrapper[open] > .collapsible-text {
 				<input type="checkbox" id="help-spotify" class="link-help-toggle">
 				<div class="link-help-content">
 					<p>Choose Spotify, What's Now Playing, or a current-song file for overlays and Event Flow. Playback controls and song requests use Spotify.</p>
-					<a href="docs/music.html" target="_blank" rel="noopener">Music setup guide</a>
+					<a class="popup-guide-link" href="docs/music.html" target="_blank" rel="noopener">Music setup guide</a>
 				</div>
 				<p class="popup-section-description"><span>Show the current song from Spotify or a DJ music source.</span></p>
 				<div id="spotify" data-raw="" class="streaming_chat"><a href="" id="spotifylink"></a></div>
@@ -17661,25 +17703,65 @@ details.wrapper[open] > .collapsible-text {
 			</div>
 
 
-            <div class="wrapper" data-panel-section="spotify">
-                <div class="collapsible">
-                    <input type="checkbox" class="collapsible-input" id="wrapper-music" />
-                    <label class="collapsible-label" for="wrapper-music"><span>Now Playing</span></label>
-                    <div class="collapsible-text"><div class="options"><div class="options_group popup-settings-panel">
-                        <div class="popup-toggle-row"><label class="switch" title="Use the selected input for Music overlays and Event Flow. Spotify playback controls stay separate."><input type="checkbox" id="musicEnabled" data-setting="musicEnabled"><span class="slider round"></span></label><label for="musicEnabled">Enable Music</label></div>
-                        <div class="textInputContainer"><label for="musicSource">Source</label><select id="musicSource" class="textInput" data-optionsetting="musicSource"><option value="spotify">Spotify</option><option value="wnp">What's Now Playing</option><option value="file">File (SSApp)</option></select></div>
-                        <div id="musicWnpFields" hidden><div class="textInputContainer"><label for="musicWnpUrl">Web server address</label><input type="text" id="musicWnpUrl" class="textInput" data-textsetting="musicWnpUrl" placeholder="http://127.0.0.1:8899"></div></div>
-                        <div id="musicFileFields" hidden>
-                            <div class="textInputContainer"><label for="musicFileFormat">File format</label><select id="musicFileFormat" class="textInput" data-optionsetting="musicFileFormat"><option value="line">Artist - Title</option><option value="lines">Artist / Title on separate lines</option><option value="json">JSON</option></select></div>
-                            <button type="button" class="button" id="musicChooseFile">Choose file</button>
-                        </div>
-                        <div id="musicExpiryFields" hidden><div class="textInputContainer"><label for="musicStaleSeconds">Track expiry (seconds)</label><input id="musicStaleSeconds" class="textInput" type="number" min="30" max="86400" value="900" data-numbersetting="musicStaleSeconds" title="Clears old file or DJ metadata when the source stops updating."></div></div>
-                        <div class="textInputContainer"><label for="musicCommandOwner">Song commands</label><select id="musicCommandOwner" class="textInput" data-optionsetting="musicCommandOwner" title="When Music is enabled, this replaces Spotify's !song and !np replies. Aliases and permissions use the command settings below."><option value="builtin">Built-in dock replies</option><option value="flow">Event Flow</option></select></div>
-                        <div role="status" aria-live="polite" id="musicStatus"></div>
-                        <a href="docs/music.html" target="_blank" rel="noopener">Music setup guide</a>
-                    </div></div></div>
-                </div>
-            </div>
+			<div class="wrapper" data-panel-section="spotify">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-music" />
+					<label class="collapsible-label" for="wrapper-music"><span>🎧 Now Playing</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group popup-settings-panel" id="music-source-options">
+								<div class="popup-toggle-row" title="Use the selected input for Music overlays and Event Flow. Spotify playback controls stay separate.">
+									<label class="switch"><input type="checkbox" id="musicEnabled" data-setting="musicEnabled" /><span class="slider round"></span></label>
+									<label for="musicEnabled"><span class="popup-control-icon" aria-hidden="true">🔌</span>Enable Music</label>
+								</div>
+								<p id="musicStatus" role="status" aria-live="polite"></p>
+								<div class="textInputContainer">
+									<label for="musicSource"><span class="popup-control-icon" aria-hidden="true">🎚️</span>Source</label>
+									<select id="musicSource" class="textInput" data-optionsetting="musicSource">
+										<option value="spotify">Spotify</option>
+										<option value="wnp">What's Now Playing</option>
+										<option value="file">File (SSApp)</option>
+									</select>
+								</div>
+								<div id="musicWnpFields" hidden>
+									<div class="textInputContainer">
+										<label for="musicWnpUrl"><span class="popup-control-icon" aria-hidden="true">🌐</span>Web server address</label>
+										<input type="text" id="musicWnpUrl" class="textInput" autocomplete="off" placeholder="http://127.0.0.1:8899" data-textsetting="musicWnpUrl" />
+									</div>
+								</div>
+								<div id="musicFileFields" hidden>
+									<div class="textInputContainer">
+										<label for="musicFileFormat"><span class="popup-control-icon" aria-hidden="true">📄</span>File format</label>
+										<select id="musicFileFormat" class="textInput" data-optionsetting="musicFileFormat">
+											<option value="line">Artist - Title</option>
+											<option value="lines">Artist / Title on separate lines</option>
+											<option value="json">JSON</option>
+										</select>
+									</div>
+									<div class="popup-file-actions">
+										<button type="button" id="musicChooseFile">Choose file</button>
+										<span id="musicFileName"></span>
+									</div>
+								</div>
+								<div id="musicExpiryFields" hidden>
+									<div class="textInputContainer" title="Clears old file or DJ metadata when the source stops updating.">
+										<label for="musicStaleSeconds"><span class="popup-control-icon" aria-hidden="true">⏱️</span>Track expiry (seconds)</label>
+										<input type="number" id="musicStaleSeconds" class="textInput" min="30" max="86400" value="900" data-numbersetting="musicStaleSeconds" />
+									</div>
+								</div>
+								<div class="textInputContainer" title="When Music is enabled, this replaces Spotify's !song and !np replies. Aliases and permissions use the command settings below.">
+									<label for="musicCommandOwner"><span class="popup-control-icon" aria-hidden="true">💬</span>Song commands</label>
+									<select id="musicCommandOwner" class="textInput" data-optionsetting="musicCommandOwner">
+										<option value="builtin">Built-in dock replies</option>
+										<option value="flow">Event Flow</option>
+									</select>
+								</div>
+								<a class="popup-guide-link" href="docs/music.html" target="_blank" rel="noopener"><span class="popup-control-icon" aria-hidden="true">📖</span>Music setup guide</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 
 			<div class="wrapper" data-panel-section="spotify">
                 <div class="collapsible">
@@ -17742,7 +17824,14 @@ details.wrapper[open] > .collapsible-text {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat" id="spotify-overlay-options">
-                                    <div class="textInputContainer"><label for="musicOverlaySource">Overlay input</label><select id="musicOverlaySource" class="textInput" data-optionparam22="source"><option value="">Spotify</option><option value="music">Selected Music source</option></select></div>
+								<h3><span class="popup-control-icon" aria-hidden="true">🎧</span>Input</h3>
+								<div>
+									<span>Overlay input</span>
+									<select id="musicOverlaySource" data-optionparam22="source">
+										<option value="">Spotify</option>
+										<option value="music">Selected Music source</option>
+									</select>
+								</div>
 								<h3><span class="popup-control-icon" aria-hidden="true">🎨</span>Appearance</h3>
 								<div>
 									<span>Style preset</span>

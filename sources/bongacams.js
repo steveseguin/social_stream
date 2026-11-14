@@ -155,11 +155,15 @@
 			try {
 				if ("getSource" == request) { sendResponse("bongacams"); return; }
 				if ("focusChat" == request) {
-					var input = document.querySelector("input.js-chat_msg_input");
-					if (input) {
+					var inputs = document.querySelectorAll('input.js-chat_msg_input, textarea.js-chat_msg_input, .js-chat_msg_input[contenteditable="true"], .js-chat_msg_input[contenteditable="plaintext-only"]');
+					for (var i = 0; i < inputs.length; i++) {
+						var input = inputs[i];
+						if (input.disabled || input.readOnly || !input.getClientRects().length) continue;
 						input.focus();
-						sendResponse(true);
-						return;
+						if (document.activeElement === input) {
+							sendResponse(true);
+							return;
+						}
 					}
 				}
 				if (typeof request === "object") {
@@ -175,8 +179,22 @@
 	);
 
 	function onElementInserted(target) {
+		function queueMessage(row) {
+			if (!row || !target.contains(row)) return;
+			// A tip's nested comment belongs to the same captured message.
+			row = row.closest(".js-chat_msg.msg_tip_success") || row;
+			if (row.skip || row.ssnPending) return;
+			row.ssnPending = true;
+			setTimeout(function () {
+				row.ssnPending = false;
+				processMessage(row);
+			}, 200);
+		}
+
 		var onMutationsObserved = function (mutations) {
 			mutations.forEach(function (mutation) {
+				var changed = mutation.target.nodeType === 1 ? mutation.target : mutation.target.parentElement;
+				queueMessage(changed && changed.closest(".js-chat_msg"));
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
@@ -185,20 +203,14 @@
 							if (node.skip) continue;
 
 							if (node.classList && node.classList.contains("js-chat_msg")) {
-								setTimeout(function (n) {
-									processMessage(n);
-								}, 200, node);
+								queueMessage(node);
 								continue;
 							}
 
 							// Bongacams sometimes appends wrappers that contain one or more js-chat_msg nodes
 							var nestedMessages = node.querySelectorAll ? node.querySelectorAll(".js-chat_msg") : [];
 							for (var j = 0; j < nestedMessages.length; j++) {
-								var nested = nestedMessages[j];
-								if (nested.skip) continue;
-								setTimeout(function (n) {
-									processMessage(n);
-								}, 200, nested);
+								queueMessage(nestedMessages[j]);
 							}
 						} catch (e) { }
 					}
@@ -206,7 +218,7 @@
 			});
 		};
 
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true, characterData: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);

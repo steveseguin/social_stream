@@ -586,6 +586,12 @@ body {
 		updateQueueTimes();
 	}
 
+	function emptyTitle(status) {
+		if (status === 'stopped') return 'Nothing playing';
+		if (!musicMode) return 'Waiting for Spotify…';
+		return status === 'error' ? 'Music unavailable' : 'Waiting for music';
+	}
+
 	function render() {
 		const { track, status, isPlaying, device } = state;
 
@@ -606,7 +612,7 @@ body {
 			albumEl.textContent = hideAlbum ? '' : (track.album || '');
 			artEl.src = track.imageUrl || fallbackArt;
 		} else {
-			titleEl.textContent = status === 'stopped' ? 'Nothing playing' : (musicMode ? 'Waiting for music' : 'Waiting for Spotify…');
+			titleEl.textContent = emptyTitle(status);
 			artistEl.textContent = '';
 			albumEl.textContent = '';
 			artEl.src = fallbackArt;
@@ -615,13 +621,17 @@ body {
 		if (status === 'error' && state.message) {
 			errorEl.textContent = state.message;
 			errorEl.style.display = 'block';
-			titleEl.textContent = musicMode ? 'Music unavailable' : 'Spotify Issue';
+			titleEl.textContent = 'Spotify Issue';
 		} else {
 			errorEl.style.display = 'none';
 		}
 
 		const badge = status || (isPlaying ? 'playing' : 'paused');
 		statusEl.textContent = badge.toUpperCase();
+		// Music inputs often supply only a track, so show the badge just for a reported playback state.
+		if (musicMode && !hideStatus) {
+			statusEl.style.display = ['playing', 'paused', 'stopped'].includes(status) ? '' : 'none';
+		}
 
 		if (device && !hideDevice) {
 			const bits = [];

@@ -5656,6 +5656,9 @@ function routeIndividualLikeEvent(message, alreadyRouted) {
 		}
 		try {
 			sendTargetP2P(reactionPayload, "reactions");
+			if (settings.likealerts && settings.likealerts.param25) {
+				sendTargetP2P(reactionPayload, "alerts");
+			}
 		} catch (e) {
 			console.error(e);
 		}
@@ -8420,7 +8423,8 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 	}
 
 	try {
-		if (isAlertMessage) {
+		// Opt-in likes were already sent directly, independently of main-chat capture.
+		if (isAlertMessage && !(isIndividualLikeEvent(message) && settings.likealerts && settings.likealerts.param25)) {
 			sendTargetP2P(message, "alerts");
 		}
 	} catch (e) {
@@ -13670,6 +13674,7 @@ function prepareOverlayControl(data, target) {
         ((target === "alerts" || target === "dock") && data.action === "eventOverlayControl" && data.surface === (target === "alerts" ? "alerts" : "events")) || (target === "alerts" && data.action === "clearAlerts") || (target === "bot" && data.action === "clearBotOverlay") ||
         (target === "wordcloud" && (data.chatmessage || "state" in data)) || (target === "gif" && data.contentimg) ||
         (target === "reactions" && ["reaction", "liked", "like"].includes(data.event)) ||
+        (target === "alerts" && isIndividualLikeEvent(data) && settings.likealerts && settings.likealerts.param25) ||
         (target === "waitlist" && ("drawmode" in data || "drawPoolSize" in data)))) return data;
 	var packet = Object.assign({}, data);
     if (target === "map") {
@@ -14038,6 +14043,7 @@ var timerState = {
 	version: 1,
 	mode: "countdown",
 	style: "stage",
+	styleUpdatedAt: 0,
 	label: "Timer",
 	durationMs: 300000,
 	currentMs: 300000,
@@ -14068,6 +14074,7 @@ function exportTimerState(now = Date.now()) {
 		version: 1,
 		mode: timerState.mode,
 		style: timerState.style,
+		styleUpdatedAt: timerState.styleUpdatedAt,
 		label: timerState.label,
 		durationMs: timerState.durationMs,
 		currentMs: timerState.currentMs,
@@ -14278,7 +14285,11 @@ function applyTimerAction(action, value) {
 		const modeChanged = nextMode !== timerState.mode;
 		const nextRunning = payload.autostart !== undefined ? !!payload.autostart : payload.running !== undefined ? !!payload.running : wasRunning;
 		timerState.mode = nextMode;
-		timerState.style = payload.style !== undefined ? normalizeTimerStyle(payload.style) : timerState.style;
+		if (payload.style !== undefined) {
+			timerState.style = normalizeTimerStyle(payload.style);
+			// Distinguish an explicit style command from ordinary timer snapshots, even for the same style.
+			timerState.styleUpdatedAt = Math.max(now, timerState.styleUpdatedAt + 1);
+		}
 		timerState.durationMs = nextDuration;
 		if (nextCurrent !== null) {
 			timerState.currentMs = nextCurrent;

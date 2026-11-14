@@ -288,11 +288,23 @@
             el.dangerInput.value = String(Math.round(state.dangerAtMs / 1000));
             el.soundInput.value = state.soundUrl || "";
         }
+        var lastHostStyle = null;
+        var lastHostStyleUpdatedAt = null;
         function applyExported(obj) {
             if (!obj || typeof obj !== "object") { return; }
             state.mode = normalizeMode(obj.mode || state.mode);
-            // An explicit link style is local to this display; host snapshots still synchronize its timer.
-            if (!hasParam("style")) { state.style = normalizeStyle(obj.style || state.style); }
+            if (obj.style !== undefined) {
+                var hostStyle = normalizeStyle(obj.style);
+                var hostStyleUpdatedAt = typeof obj.styleUpdatedAt === "number" && isFinite(obj.styleUpdatedAt) ? obj.styleUpdatedAt : null;
+                // Keep the link's initial style, then follow deliberate host style commands.
+                // Older hosts have no style timestamp, so recognize changes to their style value.
+                var styleChanged = lastHostStyle !== null && (hostStyleUpdatedAt === null
+                    ? hostStyle !== lastHostStyle
+                    : hostStyleUpdatedAt > 0 && hostStyleUpdatedAt !== lastHostStyleUpdatedAt);
+                if (!hasParam("style") || styleChanged) { state.style = hostStyle; }
+                lastHostStyle = hostStyle;
+                lastHostStyleUpdatedAt = hostStyleUpdatedAt;
+            }
             state.label = typeof obj.label === "string" ? obj.label : state.label;
             state.durationMs = Math.max(0, parseInt(obj.durationMs, 10) || 0);
             state.currentMs = parseInt(obj.currentMs, 10);
@@ -381,7 +393,7 @@ function processInput(data) {
             if (data.timer && typeof data.timer === "object") {
                 if (data.ssnState) { var transition = timerStateTracker(data.ssnState); if (!transition.accept || !transition.changed) return true; }
                 // Repeated snapshots must not overwrite subsequent page-owned controls.
-                var hostKey = JSON.stringify([data.timer.updatedAt, data.timer.currentMs, data.timer.startedAt, data.timer.running, data.timer.durationMs, data.timer.mode]);
+                var hostKey = JSON.stringify([data.timer.updatedAt, data.timer.currentMs, data.timer.startedAt, data.timer.running, data.timer.durationMs, data.timer.mode, data.timer.style, data.timer.styleUpdatedAt]);
                 if (!data.ssnState && hostKey === lastHostTimerKey) return true;
                 lastHostTimerKey = hostKey;
                 applyExported(data.timer); render(); return true;
