@@ -5219,6 +5219,105 @@ async function loadOpenCodeModels(force) {
     return openCodeModelLoadInFlight;
 }
 
+let geminiChatModels = [];
+let geminiModelRequest = null;
+
+function populateGeminiModelSelect() {
+    const select = document.getElementById("geminiChatModelSelect");
+    const input = document.getElementById("geminiChatModelInput");
+    if (!select || !input) return;
+    const manual = select.value === "custom";
+    const current = input.value;
+    select.textContent = "";
+    select.add(new Option("Default (gemini-2.5-flash)", ""));
+    if (current && geminiChatModels.indexOf(current) === -1) {
+        select.add(new Option(current + " (saved)", current));
+    }
+    geminiChatModels.forEach(function (id) { select.add(new Option(id, id)); });
+    select.add(new Option("Enter model ID...", "custom"));
+    select.value = manual ? "custom" : current;
+    document.getElementById("geminiChatModelCustom").classList.toggle("hidden", !manual);
+}
+
+function resetGeminiModels() {
+    if (geminiModelRequest) geminiModelRequest.abort();
+    geminiModelRequest = null;
+    geminiChatModels = [];
+    populateGeminiModelSelect();
+    document.getElementById("geminiModelStatus").textContent = "";
+    const button = document.getElementById("refreshGeminiModels");
+    button.disabled = false;
+    button.textContent = "Load models";
+}
+
+async function loadGeminiModels() {
+    const keyInput = document.querySelector("[data-textsetting='geminiApiKey']");
+    const status = document.getElementById("geminiModelStatus");
+    const button = document.getElementById("refreshGeminiModels");
+    const apiKey = keyInput.value.trim();
+    if (!apiKey) {
+        status.textContent = "Enter your Google API key first.";
+        return;
+    }
+    if (geminiModelRequest) return;
+    const controller = new AbortController();
+    geminiModelRequest = controller;
+    const timeout = setTimeout(function () { controller.abort(); }, 15000);
+    button.disabled = true;
+    status.textContent = "Loading...";
+    try {
+        const models = new Set();
+        const pageTokens = new Set();
+        let pageToken = "";
+        do {
+            const url = new URL("https://generativelanguage.googleapis.com/v1beta/models");
+            url.searchParams.set("pageSize", "1000");
+            if (pageToken) url.searchParams.set("pageToken", pageToken);
+            const response = await fetch(url.href, {
+                headers: { "x-goog-api-key": apiKey },
+                cache: "no-store",
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                status.textContent = "Could not load models (HTTP " + response.status + "). Check your API key and retry.";
+                return;
+            }
+            const payload = await response.json();
+            if (!Array.isArray(payload.models)) throw new Error("Invalid model list");
+            payload.models.forEach(function (model) {
+                if (!model || typeof model.name !== "string") return;
+                const id = model.name.replace(/^models\//, "");
+                // generateContent also includes specialized image and speech models.
+                if (/^gemini-/.test(id) && !/(?:^|-)(?:embedding|image|tts|audio|live|robotics)(?:-|$)/i.test(id) &&
+                    Array.isArray(model.supportedGenerationMethods) && model.supportedGenerationMethods.indexOf("generateContent") !== -1) {
+                    models.add(id);
+                }
+            });
+            pageToken = payload.nextPageToken || "";
+            if (pageToken && pageTokens.has(pageToken)) throw new Error("Repeated model page");
+            pageTokens.add(pageToken);
+        } while (pageToken);
+        if (geminiModelRequest !== controller || keyInput.value.trim() !== apiKey) return;
+        geminiChatModels = Array.from(models).sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true }); });
+        populateGeminiModelSelect();
+        const current = document.getElementById("geminiChatModelInput").value;
+        status.textContent = !models.size ? "No text models returned. Enter a model ID manually." :
+            current && !models.has(current) ? "Saved model not in Google's list." : "";
+        button.textContent = "Refresh models";
+    } catch (error) {
+        if (geminiModelRequest === controller) {
+            status.textContent = error.name === "AbortError" ? "Request timed out. Retry or enter a model ID." :
+                "Could not load models. Retry or enter a model ID.";
+        }
+    } finally {
+        clearTimeout(timeout);
+        if (geminiModelRequest === controller) {
+            geminiModelRequest = null;
+            button.disabled = false;
+        }
+    }
+}
+
 // Handle AI provider visibility
 function handleAIProviderVisibility(provider) {
     // Hide all provider-specific elements first
@@ -8565,6 +8664,9 @@ function updateSettings(ele, sync = true, value = null) {
         return;
     }
     
+    // Keep the Gemini picker on the existing text setting used by all chatbot callers.
+    if (ele.dataset.textsetting === "geminimodel") populateGeminiModelSelect();
+
     // Handle text settings
     if (ele.dataset.textsetting && sync) {
         chrome.runtime.sendMessage({
@@ -13885,6 +13987,24 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		testSelectedLLMProviderButton.addEventListener('click', testSelectedLLMProvider);
 	}
 	const refreshOpenCodeModelsButton = document.getElementById('refreshOpenCodeModels');
+	const refreshGeminiModelsButton = document.getElementById('refreshGeminiModels');
+	if (refreshGeminiModelsButton) {
+		refreshGeminiModelsButton.addEventListener('click', loadGeminiModels);
+		document.querySelector("[data-textsetting='geminiApiKey']").addEventListener('input', resetGeminiModels);
+		document.getElementById('geminiChatModelSelect').addEventListener('change', function() {
+			const manual = this.value === 'custom';
+			document.getElementById('geminiChatModelCustom').classList.toggle('hidden', !manual);
+			const input = document.getElementById('geminiChatModelInput');
+			if (manual) {
+				input.focus();
+			} else {
+				input.value = this.value;
+				updateSettings(input);
+				document.getElementById('geminiModelStatus').textContent = '';
+			}
+		});
+		populateGeminiModelSelect();
+	}
 	if (refreshOpenCodeModelsButton) {
 		refreshOpenCodeModelsButton.addEventListener('click', function() {
 			loadOpenCodeModels(true);

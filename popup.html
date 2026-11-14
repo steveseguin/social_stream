@@ -10440,9 +10440,18 @@ details.wrapper[open] > .collapsible-text {
 								</div>
 								<div id="geminimodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-2.5-flash" data-textsetting="geminimodel" />
-										<label for="geminimodel"><span class="popup-control-icon" aria-hidden="true">🤖</span><span data-translate="geminimodel">Gemini Model to use</span></label>
+										<select id="geminiChatModelSelect" class="textInput">
+											<option value="">Default (gemini-2.5-flash)</option>
+											<option value="custom">Enter model ID...</option>
+										</select>
+										<label for="geminiChatModelSelect"><span class="popup-control-icon" aria-hidden="true">🤖</span><span data-translate="geminimodel">Gemini Model to use</span></label>
 									</div>
+									<div id="geminiChatModelCustom" class="textInputContainer hidden" style="width: 95%;">
+										<input id="geminiChatModelInput" type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-3.1-pro-preview" data-textsetting="geminimodel" />
+										<label for="geminiChatModelInput">Model ID</label>
+									</div>
+									<button type="button" id="refreshGeminiModels" title="Get current text models from Google using your API key">Load models</button>
+									<span id="geminiModelStatus" role="status" aria-live="polite"></span>
 								</div>
 								<div id="xaimodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
@@ -10503,7 +10512,7 @@ details.wrapper[open] > .collapsible-text {
 								</div>
 
 								<div id="openrouterApiKey" class="textInputContainer hidden" style="width: 95%;">
-									<input type="password" class="textInput" autocomplete="off" placeholder="Your OpenRouter API key" data-textsetting="openrouterApiKey" />
+									<input type="password" class="textInput" autocomplete="off" placeholder="API key, or comma-separated keys" title="Optional backup keys: separate with commas. On quota or rate-limit errors, another key is tried. Provider limits still apply." data-textsetting="openrouterApiKey" />
 									<label for="openrouterApiKey"><span class="popup-control-icon" aria-hidden="true">🔑</span>OpenRouter API Key</label>
 								</div>
 

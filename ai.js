@@ -52,6 +52,51 @@ let openCodeZenModelCache = {
 let openCodeZenModelFreeMetadata = {};
 let openCodeZenModelApiOrder = {};
 let openCodeZenFreeModelCooldowns = {};
+let openRouterKeyState = { keys: [], index: 0, cooldowns: [] };
+
+async function requestOpenRouterWithFallback(value, makeRequest, signal) {
+    const keys = Array.from(new Set(String(value || '').split(/[,\s]+/).filter(Boolean)));
+    if (keys.join(',') !== openRouterKeyState.keys.join(',')) {
+        openRouterKeyState = { keys, index: 0, cooldowns: [] };
+    }
+    if (keys.length < 2) return makeRequest(keys[0] || '');
+    const state = openRouterKeyState;
+    const start = state.index;
+    let lastError;
+    for (let offset = 0; offset < keys.length; offset++) {
+        if (signal && signal.aborted) return { aborted: true };
+        const index = (start + offset) % keys.length;
+        if (state.cooldowns[index] > Date.now()) continue;
+        try {
+            const result = await makeRequest(keys[index]);
+            if ((signal && signal.aborted) || (result && result.aborted)) return { aborted: true };
+            state.index = index;
+            return result;
+        } catch (error) {
+            if (signal && signal.aborted) return { aborted: true };
+            const status = Number(error.status);
+            if (status !== 402 && status !== 429) throw error;
+            state.cooldowns[index] = Math.max(Date.now() + 60000, error.openRouterRetryAt || 0);
+            lastError = error;
+        }
+    }
+    if (lastError) throw lastError;
+    throw createLLMError({
+        provider: 'openrouter', status: 429, code: 'openrouter_keys_cooling_down',
+        message: 'All configured OpenRouter keys are waiting for quota or rate limits to reset.',
+        hint: 'Try again later or review your OpenRouter allowance.'
+    });
+}
+
+function getOpenRouterRetryAt(headers) {
+    const retryAfter = getLLMResponseHeader(headers, 'retry-after');
+    const seconds = Number(retryAfter);
+    const retryAt = retryAfter && Number.isFinite(seconds)
+        ? Date.now() + Math.max(0, seconds) * 1000
+        : Date.parse(retryAfter) || 0;
+    const resetAt = Number(getLLMResponseHeader(headers, 'x-ratelimit-reset'));
+    return Math.max(retryAt, Number.isFinite(resetAt) ? resetAt : 0);
+}
 
 class LLMServiceError extends Error {
     constructor(details = {}) {
@@ -1974,6 +2019,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
         }
 
 		const makeOpenAICompatibleRequest = async function (currentModel) {
+			let responseHeaders = null;
 			if (typeof currentModel === "string" && currentModel.trim()) {
 				model = currentModel.trim();
 				message.model = model;
@@ -2018,6 +2064,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 							url: endpoint, headers, body: message,
 							diagnostics: { kind: 'llm', provider, model: message.model }
 						}, chunk => { body += chunk; }, abortController.signal);
+						responseHeaders = result && result.headers;
 						if (result && result.error) {
 							throw createLLMError(buildContext(), {
 								status: result.status || result.error?.status || null,
@@ -2033,6 +2080,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 							kind: 'llm', provider, model: message.model
 						}, options.requestTimeoutMs);
 					}
+					responseHeaders = response.headers || responseHeaders;
 					if (response.error && response.data === undefined) {
 						// Electron uses status 500 for local fetch failures, even without an HTTP response.
 						const timedOut = response.type === 'request-timeout' || response.type === 'body-timeout';
@@ -2128,6 +2176,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						credentials: options.strictEndpoint ? 'omit' : 'same-origin',
 						signal: abortController?.signal
 					});
+					responseHeaders = response.headers;
 
 					if (!response.ok) {
 						let errorMessage = '';
@@ -2158,6 +2207,9 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 				return { aborted: true };
 			}
 			const wrappedError = wrapLLMError(error);
+			if (provider === "openrouter") {
+				wrappedError.openRouterRetryAt = getOpenRouterRetryAt(responseHeaders);
+			}
 			if (provider === "opencode" && openCodeZenReasoningEffortEnabled && isOpenCodeZenReasoningEffortUnsupported(wrappedError)) {
 				openCodeZenReasoningEffortEnabled = false;
 				delete message.reasoning_effort;
@@ -2169,6 +2221,14 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 
 		if (provider === "opencode" && isOpenCodeZenAutoModel(message.model)) {
 			return requestOpenCodeZenWithFallback(options.strictEndpoint ? { ...llmSettings, opencodeApiKey: { textsetting: '' } } : llmSettings, makeOpenAICompatibleRequest, openCodeAllowGo);
+		}
+
+		if (provider === "openrouter") {
+			return requestOpenRouterWithFallback(apiKey, function (key) {
+				if (key) headers.Authorization = 'Bearer ' + key;
+				else delete headers.Authorization;
+				return makeOpenAICompatibleRequest(message.model);
+			}, abortController && abortController.signal);
 		}
 
 		return makeOpenAICompatibleRequest(message.model);

@@ -40,6 +40,7 @@
 		var resp = "";
 		
 		if (!element){return resp;}
+		if (settings.textonlymode){return element.textContent || "";}
 		
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.textContent){
@@ -100,8 +101,18 @@
 		}
 		
 		var name="";
+		var author = ele.querySelector("[class*='chat-user-module__user--']");
+		var tip = null;
 		try {
-			name = escapeHtml(ele.querySelector("[class^='chat-user-module__user--']").textContent);
+			if (author){
+				name = escapeHtml(author.textContent);
+			} else {
+				var tipLine = ele.querySelector("span");
+				var tipParts = tipLine && tipLine.querySelectorAll("b");
+				if (!tipParts || tipParts.length !== 2 || !/ tipped \d+ tokens?$/i.test(tipLine.textContent.trim())){return;}
+				name = escapeHtml(tipParts[0].textContent);
+				tip = tipParts[1].textContent.trim() + " tokens";
+			}
 			name = name.split(":")[0];
 			name = name.trim();
 		} catch(e){
@@ -122,7 +133,7 @@
 			});
 		} catch(e){
 		} */
-		var hasDonation = '';
+		var hasDonation = tip || '';
 		
 		var msg="";
 		
@@ -130,7 +141,11 @@
 			
 			
 		try {
-			msg = getAllContentNodes(ele.querySelector("p.break-words")).trim();
+			var content = ele.querySelector("p.break-words");
+			if (!content && author && author.nextElementSibling && author.nextElementSibling.tagName === "SPAN"){
+				content = author.nextElementSibling;
+			}
+			msg = getAllContentNodes(content).trim();
 		} catch(e){
 			
 		}
@@ -146,7 +161,7 @@
 			}
 		}
 		
-		if (!msg || !name){
+		if ((!msg && !hasDonation) || !name){
 			//console.log("no name", msg, name);
 			return;
 		}
@@ -241,8 +256,17 @@
 				
 				if ("getSource" == request){sendResponse("camsoda");	return;	}
 				if ("focusChat" == request){
-					document.querySelector('.comments-section textarea,input[type="text"]').focus();
-					sendResponse(true);
+					var inputs = document.querySelectorAll('input[class*="chat-input-module__input--"], .comments-section textarea, .comments-section input[type="text"]');
+					for (var i = 0; i < inputs.length; i++){
+						var input = inputs[i];
+						if (input.disabled || input.readOnly || !input.getClientRects().length){continue;}
+						input.focus();
+						if (document.activeElement === input){
+							sendResponse(true);
+							return;
+						}
+					}
+					sendResponse(false);
 					return;
 				}
 				if (typeof request === "object"){
@@ -271,22 +295,34 @@
 	var observer = null;
 	var observerTarget = null;
 	
+	function queueMessage(row) {
+		if (!row || row.skip || row.ssnPending){return;}
+		row.ssnPending = true;
+		setTimeout(function(){
+			row.ssnPending = false;
+			processMessage(row);
+		},300);
+	}
 	
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
+				var changed = mutation.target.nodeType === 1 ? mutation.target : mutation.target.parentElement;
+				var row = changed && changed.closest("[class*='message-module__wrapper--']");
+				if (row && target.contains(row)){queueMessage(row);}
 				if (mutation.addedNodes.length) {
-					console.log(mutation.addedNodes);
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							const addedNode = mutation.addedNodes[i];
 							if (addedNode.nodeType !== 1) continue; // Only process element nodes
 
-							if (addedNode.skip){continue;}
-
-							setTimeout(()=>{
-									processMessage(addedNode);
-							},300);
+							if (addedNode.matches("[class*='message-module__wrapper--']")){
+								queueMessage(addedNode);
+							} else {
+								var nested = addedNode.querySelectorAll("[class*='message-module__wrapper--']");
+								nested.forEach(queueMessage);
+								if (!nested.length && addedNode.parentElement === target){queueMessage(addedNode);}
+							}
 
 						} catch(e){
 							console.error("Error processing added node:", e);
@@ -296,7 +332,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true, characterData: true };
 		if (!target){return;}
 		if (observer && observerTarget === target && target.isConnected) {
 			return;
@@ -307,6 +343,9 @@
 			} catch(e){}
 		}
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		// Rows already present when chat connects are history, not new messages.
+		Array.from(target.children).forEach(function(row){row.skip = true;});
+		target.querySelectorAll("[class*='message-module__wrapper--']").forEach(function(row){row.skip = true;});
 		
 		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -326,7 +365,7 @@
 		}
 		checking = setInterval(function(){
 			try {
-				var container = document.querySelector("div[class^='chat-module__wrapper--=']");
+				var container = document.querySelector("div[class*='chat-module__wrapper--']");
 				if (container && (!container.marked || !observer || observerTarget !== container || !container.isConnected)){
 					container.marked=true;
 
