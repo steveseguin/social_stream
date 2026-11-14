@@ -1069,6 +1069,7 @@
 		return function (host, o) {
 			var cv = makeCanvas(host, 0.75), g = cv.getContext("2d");
 			function W() { return cv.width; } function H() { return cv.height; }
+			function groundY(x) { return H() * (0.86 - Math.sin(x / W() * 7) * 0.02); }
 			var flakes = [], trees = [], clouds = [], stars = [], rnd = SSO.seeded("xmas");
 			for (var i = 0; i < 220; i++) { flakes.push({ x: Math.random(), y: Math.random(), s: Math.random(), v: 0.02 + Math.random() * 0.05 }); }
 			for (var tr = 0; tr < 11; tr++) { trees.push({ x: rnd(), h: 0.18 + rnd() * 0.22, lights: Math.floor(6 + rnd() * 10), seed: rnd() * 100 }); }
@@ -1118,11 +1119,13 @@
 				else { var gg = g.createLinearGradient(0, H() * 0.84, 0, H()); gg.addColorStop(0, mode === "day" ? "#ffffff" : "#ffe9e2"); gg.addColorStop(1, mode === "day" ? "#cfe3fa" : "#d9a9c4"); g.fillStyle = gg; }
 				g.beginPath(); g.moveTo(0, H());
 				// Counted steps: adding W/20 twenty times can land just past W and leave the bottom-right corner unfilled.
-				for (var gi = 0; gi <= 20; gi++) { g.lineTo(gi / 20 * W(), H() * 0.86 - Math.sin(gi / 20 * 7) * H() * 0.02); }
+				for (var gi = 0; gi <= 20; gi++) { g.lineTo(gi / 20 * W(), groundY(gi / 20 * W())); }
 				g.lineTo(W(), H()); g.fill();
 				// trees with lights
 				trees.forEach(function (tr2) {
-					var tx = tr2.x * W(), base = H() * 0.88, h = tr2.h * H(), w = h * 0.55;
+					var tx = tr2.x * W(), h = tr2.h * H(), w = h * 0.55, ground = groundY(tx), base = ground + h * 0.03;
+					g.fillStyle = "#5b3a1e";
+					g.fillRect(tx - h * 0.025, base - h * 0.14, h * 0.05, ground + H() * 0.003 - (base - h * 0.14));
 					g.fillStyle = P.tree;
 					for (var lv = 0; lv < 3; lv++) {
 						var top = base - h + lv * h * 0.22, bot = base - h * 0.3 + lv * h * 0.12;
@@ -1132,7 +1135,7 @@
 					g.beginPath(); g.moveTo(tx, base - h); g.lineTo(tx - w * 0.12, base - h + h * 0.12); g.lineTo(tx + w * 0.12, base - h + h * 0.12); g.fill();
 					var r2 = SSO.seeded("l" + tr2.seed);
 					for (var b = 0; b < tr2.lights; b++) {
-						var ly = base - h * (0.15 + r2() * 0.75), spread = (base - ly) / h * w * 0.5;
+						var ly = base - h * (0.15 + r2() * 0.75), spread = (ly - (base - h)) / h * w * 0.45;
 						var lx = tx + (r2() - 0.5) * 2 * spread;
 						var on = Math.sin(t * 2.5 + b * 1.7 + tr2.seed) > -0.2;
 						var col = bulbCols[b % bulbCols.length];

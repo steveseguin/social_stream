@@ -90,8 +90,8 @@
 			var u = S.u, cx = S.x + S.w * 0.36, h = 152 * u, i;
 			S.tl = K.pine(b, cx, S.gy, h, { col: "#1c6338", tiers: 6, wide: 0.42, lights: 36, rnd: S.R });
 			b.strokeStyle = "#e9c46a"; b.lineWidth = 1.5 * u; b.lineCap = "round";
-			for (i = 1; i < 6; i++) { var yy = S.gy - h + i * h * 0.155, hw = h * 0.4 * (i / 6.3); b.beginPath(); b.moveTo(cx - hw, yy - h * 0.02); b.quadraticCurveTo(cx, yy + h * 0.06, cx + hw, yy - h * 0.03); b.stroke(); }
-			for (i = 0; i < 11; i++) { var fy = 0.2 + S.R() * 0.68; K.bauble(b, cx + (S.R() * 2 - 1) * h * 0.4 * fy * 0.85, S.gy - h + fy * h * 0.88, (2.6 + S.R() * 1.4) * u, K.pick(S.R, ["#d7263d", "#ffd166", "#2e86de", "#e84393", "#ffffff"]), i % 4); }
+			for (i = 1; i < 6; i++) { var yy = S.gy - h + i * h * 0.155, hw = K.pineWidth(h, { tiers: 6, wide: 0.42 }, i * h * 0.155 - h * 0.03); b.beginPath(); b.moveTo(cx - hw, yy - h * 0.02); b.quadraticCurveTo(cx, yy + h * 0.06, cx + hw, yy - h * 0.03); b.stroke(); }
+			for (i = 0; i < 11; i++) { var fy = (0.2 + S.R() * 0.68) * h * 0.88, half = K.pineWidth(h, { tiers: 6, wide: 0.42 }, fy); K.bauble(b, cx + (S.R() * 2 - 1) * Math.max(0, half - 4 * u), S.gy - h + fy, (2.6 + S.R() * 1.4) * u, K.pick(S.R, ["#d7263d", "#ffd166", "#2e86de", "#e84393", "#ffffff"]), i % 4); }
 			for (i = 0; i < 6; i++) { var c = K.GIFT_COLS[(i + Math.floor(S.R() * 7)) % 7], gw = (9 + S.R() * 7) * u; K.gift(b, cx + (i - 2.5) * 10 * u + S.R() * 4 * u, S.gy + 3 * u, gw, (7 + S.R() * 7) * u, c[0], c[1]); }
 			S.star = [cx, S.gy - h - 3 * u];
 			S.lamp = K.lamp(b, S.x + S.w * 0.92, S.gy, 56 * u);

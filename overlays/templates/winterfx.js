@@ -163,7 +163,9 @@
 					b.strokeStyle = "rgba(110,160,215,.55)"; b.lineWidth = 1.5; b.beginPath(); rrSub(b, x, y, w, h, r); b.stroke(); b.beginPath(); rrSub(b, x + wd, y + wd, w - wd * 2, h - wd * 2, ri); b.stroke();
 					[[x + ri * 0.4 + wd, x + w - ri * 0.4 - wd, y + wd], [x + r * 0.5, x + w - r * 0.5, y + h]].forEach(function (rowDef) {
 						for (var ix = rowDef[0]; ix < rowDef[1]; ix += 6 + R() * 16) {
-							var iw = 5 + R() * 8, il = wd * (0.5 + R() * R() * 2.4), gr = b.createLinearGradient(0, rowDef[2], 0, rowDef[2] + il);
+							var iw = 5 + R() * 8, il = Math.min(wd * (0.5 + R() * R() * 2.4), Math.max(0, H - rowDef[2] - 1));
+							if (il < 1) { continue; }
+							var gr = b.createLinearGradient(0, rowDef[2], 0, rowDef[2] + il);
 							gr.addColorStop(0, "rgba(255,255,255,.96)"); gr.addColorStop(1, "rgba(175,215,250,.55)");
 							b.fillStyle = gr; b.beginPath(); b.moveTo(ix - iw / 2, rowDef[2] - 1); b.lineTo(ix + iw / 2, rowDef[2] - 1); b.lineTo(ix + iw * 0.08, rowDef[2] + il); b.closePath(); b.fill();
 						}
@@ -223,6 +225,15 @@
 	function sprite(size, draw) {
 		var cv = document.createElement("canvas"); cv.width = cv.height = size;
 		var g = cv.getContext("2d"); g.translate(size / 2, size / 2); draw(g, size);
+		// Attach the string to the artwork, not the transparent padding around it.
+		var pixels = g.getImageData(0, 0, size, size).data, anchor = null;
+		for (var y = 0; y < size && !anchor; y++) {
+			for (var x = 0; x < size; x++) {
+				if (pixels[(y * size + x) * 4 + 3] >= 240 && (!anchor || Math.abs(x - size / 2) < Math.abs(anchor[0] - size / 2))) { anchor = [x, y]; }
+			}
+		}
+		cv._hangX = anchor ? (anchor[0] + 0.5) / size : 0.5;
+		cv._hangY = anchor ? (anchor[1] + 0.5) / size : 0.5;
 		return cv;
 	}
 	var spriteCache = null;
@@ -238,12 +249,12 @@
 			g.fillStyle = "#e63946"; for (var i = 0; i < 8; i++) { g.rotate(TAU / 8); g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(22, -12, 44 * Math.cos(-0.2), 44 * Math.sin(-0.2)); g.arc(0, 0, 44, -0.2, 0.2); g.quadraticCurveTo(24, -1, 0, 0); g.fill(); }
 			g.strokeStyle = "rgba(255,255,255,.9)"; g.lineWidth = 4; g.beginPath(); g.arc(0, 0, 46, 0, TAU); g.stroke();
 		}));
-		S.stars.push(sprite(128, function (g) { g.drawImage(K.glow("#ffd166"), -64, -64, 128, 128); K.star(g, 0, 0, 40, "#ffe08a", 0); K.star(g, 0, 0, 22, "#fff6d0", 0); }));
+		S.stars.push(sprite(128, function (g) { g.globalAlpha = 0.3; g.drawImage(K.glow("#ffd166"), -64, -64, 128, 128); g.globalAlpha = 1; K.star(g, 0, 0, 40, "#ffe08a", 0); K.star(g, 0, 0, 22, "#fff6d0", 0); }));
 		S.stars.push(sprite(128, function (g) {
 			g.strokeStyle = "rgba(255,255,255,.96)"; g.lineCap = "round"; g.lineWidth = 6;
 			for (var i = 0; i < 6; i++) { g.save(); g.rotate(i * Math.PI / 3); g.beginPath(); g.moveTo(0, 0); g.lineTo(0, -52); g.moveTo(0, -28); g.lineTo(-14, -42); g.moveTo(0, -28); g.lineTo(14, -42); g.moveTo(0, -12); g.lineTo(-10, -22); g.moveTo(0, -12); g.lineTo(10, -22); g.stroke(); g.restore(); }
 		}));
-		S.stars.push(sprite(128, function (g) { g.drawImage(K.glow("#ffffff"), -64, -64, 128, 128); K.star(g, 0, 0, 34, "#ffffff", 0.3); }));
+		S.stars.push(sprite(128, function (g) { g.globalAlpha = 0.3; g.drawImage(K.glow("#ffffff"), -64, -64, 128, 128); g.globalAlpha = 1; K.star(g, 0, 0, 34, "#ffffff", 0.3); }));
 		return (spriteCache = S);
 	}
 	SSO.register({
@@ -299,7 +310,7 @@
 					if (c.mode === "hang") {
 						var a = Math.sin(t * it.w * c.speed + it.ph) * 0.13, ex = it.x + Math.sin(a) * it.len, ey = Math.cos(a) * it.len;
 						g.strokeStyle = "rgba(233,196,106,.9)"; g.lineWidth = Math.max(1, 1.6 * u); g.beginPath(); g.moveTo(it.x, -2); g.lineTo(ex, ey); g.stroke();
-						g.save(); g.translate(ex, ey); g.rotate(-a); g.drawImage(it.img, -it.s / 2, -it.s * 0.12, it.s, it.s); g.restore();
+						g.save(); g.translate(ex, ey); g.rotate(-a); g.drawImage(it.img, -it.s * it.img._hangX, -it.s * it.img._hangY, it.s, it.s); g.restore();
 					} else {
 						it.y += it.v * c.speed * dt; it.x += Math.sin(t * 0.8 + it.ph) * 22 * u * (0.4 + it.d) * dt;
 						if (c.spin) { it.rot += it.vr * c.speed * dt; } else { it.rot = Math.sin(t * 1.3 + it.ph) * 0.28; }

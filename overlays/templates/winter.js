@@ -148,6 +148,17 @@
 	};
 
 	// ---------------------------------------------------------------- trees
+	// Safe decoration width at a height below the treetop, inside the overlapping branches.
+	K.pineWidth = function (h, o, y) {
+		var tiers = o.tiers || 4, w = h * (o.wide || 0.46), width = 0;
+		for (var i = 0; i < tiers; i++) {
+			var top = i / tiers * h * 0.7, bot = (i + 1) / tiers * h * 0.7 + h * 0.2;
+			if (y >= top && y <= bot - (bot - top) * 0.1) {
+				width = Math.max(width, w * (0.32 + 0.68 * (i + 1) / tiers) * (y - top) / (bot - top));
+			}
+		}
+		return width * 0.88;
+	};
 	// A layered pine with a snow cap on each tier. o: { col, tiers, wide, snow (0 = none), lights (count), rnd }.
 	// Returns the light positions [[x, y], ...] so the caller can twinkle them.
 	K.pine = function (b, x, base, h, o) {
@@ -155,8 +166,7 @@
 		var col = o.col || "#1f5c3a", tiers = o.tiers || 4, w = h * (o.wide || 0.46), R = o.rnd || Math.random, out = [];
 		b.fillStyle = o.trunk || "#5b3a1e"; b.fillRect(x - h * 0.035, base - h * 0.16, h * 0.07, h * 0.16);
 		for (var i = tiers - 1; i >= 0; i--) {
-			var top = base - h + (i / tiers) * h * 0.7, bot = top + h * (0.3 + 0.045 * i), hw = w * (0.32 + 0.68 * (i + 1) / tiers), th = bot - top;
-			if (i === tiers - 1) { bot = base - h * 0.1; th = bot - top; }
+			var top = base - h + (i / tiers) * h * 0.7, bot = base - h + (i + 1) / tiers * h * 0.7 + h * 0.2, hw = w * (0.32 + 0.68 * (i + 1) / tiers), th = bot - top;
 			b.fillStyle = i % 2 ? col : K.shade(col, 1.14);
 			b.beginPath(); b.moveTo(x, top); b.lineTo(x - hw, bot); b.quadraticCurveTo(x, bot - th * 0.16, x + hw, bot); b.closePath(); b.fill();
 			if (o.snow !== 0) {
@@ -169,7 +179,7 @@
 			}
 		}
 		for (var k = 0; k < (o.lights || 0); k++) {
-			var fy = 0.14 + R() * 0.74, ly = base - h + fy * h * 0.9 + h * 0.04, half = w * fy * 0.9;
+			var fy = 0.14 + R() * 0.74, ly = base - h + fy * h * 0.9 + h * 0.04, half = K.pineWidth(h, o, ly - (base - h));
 			out.push([x + (R() * 2 - 1) * half, ly]);
 		}
 		return out;

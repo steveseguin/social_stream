@@ -76,9 +76,15 @@
 	function box(S, info, u, n) { var q = { u: u, info: info, smoke: [], x: n || 0 }; S.houses.push(q); return q; }
 	function strip(S, key, b, W, H, top, h, opts) {
 		S[key] = K.strip(W, h, opts); S[key + "Y"] = top;
-		b.save(); b.translate(0, top); S[key].paint(b); b.restore();
+		S[key + "Back"] = K.layer(W, h, S.d);
+		S[key].paint(S[key + "Back"].b);
 	}
-	function stripLive(S, key, g, t, dt) { g.save(); g.translate(0, S[key + "Y"]); S[key].live(g, t, dt); g.restore(); }
+	function stripLive(S, key, g, t, dt) {
+		var back = S[key + "Back"];
+		g.save(); g.translate(0, S[key + "Y"]);
+		g.drawImage(back.cv, 0, 0, back.cv.width / S.d, back.cv.height / S.d);
+		S[key].live(g, t, dt); g.restore();
+	}
 
 	// ---------------------------------------------------------------- Christmas village at night
 	scene({
@@ -241,17 +247,20 @@
 			var th = H * 0.7, ty = H * 0.865;
 			S.tl = K.pine(b, cx, ty, th, { col: "#17592f", tiers: 8, wide: 0.45, lights: 120, rnd: R });
 			b.strokeStyle = "#e9c46a"; b.lineWidth = 4 * u; b.lineCap = "round";
-			for (i = 1; i < 9; i++) { var yy = ty - th + i * th * 0.108, hw = th * 0.45 * (i / 9); b.beginPath(); b.moveTo(cx - hw, yy - th * 0.012); b.quadraticCurveTo(cx, yy + th * 0.05, cx + hw, yy - th * 0.022); b.stroke(); }
-			for (i = 0; i < 34; i++) { var fy = 0.16 + R() * 0.74; K.bauble(b, cx + (R() * 2 - 1) * th * 0.45 * fy * 0.86, ty - th + fy * th * 0.9, (8 + R() * 6) * u, K.pick(R, ["#d7263d", "#ffd166", "#2e86de", "#e84393", "#ffffff", "#1b998b"]), i % 4); }
+			for (i = 1; i < 9; i++) { var yy = ty - th + i * th * 0.108, hw = K.pineWidth(th, { tiers: 8, wide: 0.45 }, i * th * 0.108 - th * 0.022); b.beginPath(); b.moveTo(cx - hw, yy - th * 0.012); b.quadraticCurveTo(cx, yy + th * 0.05, cx + hw, yy - th * 0.022); b.stroke(); }
+			for (i = 0; i < 34; i++) { var fy = (0.16 + R() * 0.74) * th * 0.9, half = K.pineWidth(th, { tiers: 8, wide: 0.45 }, fy); K.bauble(b, cx + (R() * 2 - 1) * Math.max(0, half - 14 * u), ty - th + fy, (8 + R() * 6) * u, K.pick(R, ["#d7263d", "#ffd166", "#2e86de", "#e84393", "#ffffff", "#1b998b"]), i % 4); }
 			for (i = 0; i < 13; i++) { var c = K.GIFT_COLS[i % 7], gw = (40 + R() * 34) * u; K.gift(b, cx + (i - 6) * 34 * u + R() * 14 * u, ty + (10 + R() * 18) * u, gw, (30 + R() * 30) * u, c[0], c[1]); }
 			S.star = [cx, ty - th - 8 * u];
 			// strings of lights from the tree top out over the square
 			S.strings = [];
 			[-1, 1].forEach(function (d) {
 				for (var j = 0; j < 3; j++) {
-					var x0 = cx, y0 = ty - th * 0.93, x1 = cx + d * W * (0.24 + j * 0.14), y1 = H * (0.36 - j * 0.06), mx = (x0 + x1) / 2, my = (y0 + y1) / 2 + H * 0.13;
-					b.strokeStyle = "rgba(10,14,34,.75)"; b.lineWidth = 1.6 * u; b.beginPath(); b.moveTo(x0, y0); b.quadraticCurveTo(mx, my, x1, y1); b.stroke();
-					for (var k = 1; k < 15; k++) { var q = k / 15; S.strings.push([(1 - q) * (1 - q) * x0 + 2 * q * (1 - q) * mx + q * q * x1, (1 - q) * (1 - q) * y0 + 2 * q * (1 - q) * my + q * q * y1 + 4 * u]); }
+					var x0 = cx, y0 = ty - th * 0.93, x1 = cx + d * (W * 0.55 + j * H * 0.08), y1 = H * (0.36 - j * 0.06), mx = (x0 + x1) / 2, my = (y0 + y1) / 2 + H * 0.13;
+					b.strokeStyle = "rgba(100,111,124,.8)"; b.lineWidth = 1.6 * u; b.beginPath(); b.moveTo(x0, y0); b.quadraticCurveTo(mx, my, x1, y1); b.stroke();
+					for (var k = 1; k < 15; k++) {
+						var q = k / 15, lx = (1 - q) * (1 - q) * x0 + 2 * q * (1 - q) * mx + q * q * x1, ly = (1 - q) * (1 - q) * y0 + 2 * q * (1 - q) * my + q * q * y1;
+						b.beginPath(); b.moveTo(lx, ly); b.lineTo(lx, ly + 4 * u); b.stroke(); S.strings.push([lx, ly + 4 * u]);
+					}
 				}
 			});
 			strip(S, "near", b, W, H, H * 0.67, H * 0.33, { kind: "town", order: ["lamp", "carol", "mailbox", "stall", "lamp", "carol", "stall", "mailbox"], seed: 3, busy: 1.9, far: false, santa: false, snow1: "#f2f6ff", snow2: "#a6bbe6", preview: true });
