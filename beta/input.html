@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Chat Input Bar. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <title>Social Stream - Chat Input Bar</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+			width:100%;
+        }
+
+        body {
+            background-color: #2F3136;
+        }
+
+        #chatInput_parent {
+            position: fixed;
+            bottom: 5px;
+            width: 100%;
+            max-width: calc(100% - 20px);
+            padding: 5px;
+            display: flex;
+            justify-content: center;
+            background-color: #6f6f6f;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+
+        #chatInput {
+            width: 100%;
+            max-width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        #chatInput:focus {
+            width: 100%;
+            border-color: #007BFF;
+        }
+
+        button {
+            padding: 10px 15px;
+            margin-left: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #chatInput_parent.hidden {
+            display: none;
+        }
+
+		.electronDraggable {
+			-webkit-app-region: drag;
+		}
+
+		body > div {
+			-webkit-app-region: no-drag;
+		}
+		.hidden {
+			display:none;
+			opacity:hidden;
+			width:0;
+			height:0;
+		}
+    </style>
+</head>
+<body class="electronDraggable">
+
+	<div id="loading">Loading...</div>
+    <div id="chatInput_parent">
+        <input id="chatInput" type="text" placeholder="Send message..." />
+        <button id="chatInputButton">Send</button>
+    </div>
+
+    <script src="js/local-server-url.js"></script>
+    <script src="shared/input.js"></script>
+
+</body>
+</html>
