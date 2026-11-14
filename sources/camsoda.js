@@ -173,6 +173,7 @@
 		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "camsoda";
+		if (window.__ssnCamModeration && !window.__ssnCamModeration.track(ele, data)) return;
 		
 		//console.log(data);
 		pushMessage(data);

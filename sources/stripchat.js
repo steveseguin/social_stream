@@ -223,6 +223,7 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "stripchat";
 		if (ele.dataset && ele.dataset.messageId) data.meta = { messageId: ele.dataset.messageId };
+		if (window.__ssnCamModeration && !window.__ssnCamModeration.track(ele, data)) return;
 
 		pushMessage(data);
 	}

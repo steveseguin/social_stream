@@ -103,6 +103,30 @@
 			"matches": ["https://www.cam4.com/*", "https://cam4.com/*"]
 		},
 		{
+			"js": ["./sources/helpers/cam-moderation.js"],
+			"matches": ["https://www.camsoda.com/*", "https://*.bongacams.com/*", "https://bongacams.com/*", "https://www.cam4.com/*", "https://cam4.com/*"],
+			"run_at": "document_start"
+		},
+		{
+			"js": ["./sources/helpers/cam-moderation.js"],
+			"matches": ["https://*.stripchat.com/*", "https://stripchat.com/*"],
+			"all_frames": true,
+			"run_at": "document_start"
+		},
+		{
+			"js": ["./sources/inject/cam-moderation.js"],
+			"matches": ["https://www.camsoda.com/*", "https://*.bongacams.com/*", "https://bongacams.com/*", "https://www.cam4.com/*", "https://cam4.com/*"],
+			"run_at": "document_start",
+			"world": "MAIN"
+		},
+		{
+			"js": ["./sources/inject/cam-moderation.js"],
+			"matches": ["https://*.stripchat.com/*", "https://stripchat.com/*"],
+			"all_frames": true,
+			"run_at": "document_start",
+			"world": "MAIN"
+		},
+		{
 			"js": ["./sources/generic.js"],
 			"matches": ["https://versus.cam/?testchat"]
 		},

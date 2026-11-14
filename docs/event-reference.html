@@ -350,7 +350,7 @@
                             <td><strong>Cam4, CamSoda, BongaCams, Stripchat</strong></td>
                             <td>-</td><td>-</td>
                             <td>Chat and token tips</td>
-                            <td>Open the model's room page. Sources use <code>cam4</code>, <code>camsoda</code>, <code>bongacams</code>, and <code>stripchat</code>. Text-only mode preserves literal text and available emote labels. Tips retain their displayed units in <code>hasDonation</code>. Enable viewer counts to receive <code>viewer_update</code> with integer <code>meta</code> from the room's viewer/user counter; counts are checked every 10 seconds. Stripchat also supplies native chat IDs in <code>meta.messageId</code>.</td>
+                            <td>Open the model's room page. Sources use <code>cam4</code>, <code>camsoda</code>, <code>bongacams</code>, and <code>stripchat</code>. Text-only mode preserves literal text and available emote labels. Tips retain their displayed units in <code>hasDonation</code>. Enable viewer counts to receive <code>viewer_update</code> with integer <code>meta</code> from the room's viewer/user counter; counts are checked every 10 seconds. Moderation deletes target <code>meta.messageId</code>: native IDs for Stripchat, room-prefixed native IDs for Cam4 and BongaCams, and capture IDs when the row has no native ID. Native message deletions and user-message purges remove matching captured messages; ordinary chat history pruning does not.</td>
                         </tr>
                         <tr>
                             <td><strong>RPLAY</strong></td>
