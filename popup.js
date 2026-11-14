@@ -5278,6 +5278,7 @@ async function loadGeminiModels() {
                 cache: "no-store",
                 signal: controller.signal
             });
+            if (geminiModelRequest !== controller || keyInput.value.trim() !== apiKey) return;
             if (!response.ok) {
                 status.textContent = "Could not load models (HTTP " + response.status + "). Check your API key and retry.";
                 return;
