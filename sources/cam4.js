@@ -63,7 +63,7 @@
 					if (strongs.length > 0) {
 						name = escapeHtml(strongs[0].textContent.trim());
 					}
-					var amountEles = notifText.querySelectorAll("[class*='amountOfTokensBold']");
+					var amountEles = notifText.querySelectorAll("[class*='amountOfTokensBold'], [class*='amountOfTokensAnim']");
 					if (amountEles.length > 0) {
 						hasDonation = escapeHtml(amountEles[0].textContent.trim()) + " tokens";
 					}
