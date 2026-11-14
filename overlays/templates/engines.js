@@ -1117,7 +1117,8 @@
 				if (night) { g.fillStyle = "#e8f0ff"; }
 				else { var gg = g.createLinearGradient(0, H() * 0.84, 0, H()); gg.addColorStop(0, mode === "day" ? "#ffffff" : "#ffe9e2"); gg.addColorStop(1, mode === "day" ? "#cfe3fa" : "#d9a9c4"); g.fillStyle = gg; }
 				g.beginPath(); g.moveTo(0, H());
-				for (var x = 0; x <= W(); x += W() / 20) { g.lineTo(x, H() * 0.86 - Math.sin(x / W() * 7) * H() * 0.02); }
+				// Counted steps: adding W/20 twenty times can land just past W and leave the bottom-right corner unfilled.
+				for (var gi = 0; gi <= 20; gi++) { g.lineTo(gi / 20 * W(), H() * 0.86 - Math.sin(gi / 20 * 7) * H() * 0.02); }
 				g.lineTo(W(), H()); g.fill();
 				// trees with lights
 				trees.forEach(function (tr2) {

@@ -394,7 +394,7 @@
 			{ key: "transparent", label: "Transparent background (fish / jellyfish only)", type: "bool", group: "Background", default: false, show: { engine: ["aquarium", "jellyfish", "wordgame"] } }
 		],
 		presets: (SSO.ENGINE_LIST || []).map(function (e) {
-			var tags = { nebula: ["elegant", "cyber"], mandelbrot: ["cyber", "retro"], julia: ["elegant"], tunnel: ["cyber", "gaming"], lava: ["cozy", "retro"], aurora: ["cozy", "elegant"], sunset: ["cozy", "retro"], warp: ["cyber", "gaming"], galaxy: ["elegant"], jellyfish: ["cyber", "elegant"], aquarium: ["cozy", "cute"], maze: ["gaming", "cyber"], citydrive: ["retro", "cozy"], flappy: ["gaming", "retro"], fireflies: ["cozy"], wordgame: ["cozy", "gaming"], flag: ["country"], fireworks: ["newyear"], halloween: ["halloween", "spooky"], christmas: ["christmas", "cozy"] }[e[0]] || [];
+			var tags = { nebula: ["elegant", "cyber"], mandelbrot: ["cyber", "retro"], julia: ["elegant"], tunnel: ["cyber", "gaming"], lava: ["cozy", "retro"], aurora: ["cozy", "elegant"], sunset: ["cozy", "retro"], warp: ["cyber", "gaming"], galaxy: ["elegant"], jellyfish: ["cyber", "elegant"], aquarium: ["cozy", "cute"], maze: ["gaming", "cyber"], citydrive: ["retro", "cozy"], flappy: ["gaming", "retro"], fireflies: ["cozy"], wordgame: ["cozy", "gaming"], flag: ["country"], fireworks: ["newyear"], halloween: ["halloween", "spooky"], christmas: ["christmas", "cozy"], christmasday: ["christmas", "cozy"], christmasdusk: ["christmas", "cozy"] }[e[0]] || [];
 			return { name: e[1].replace(/ \((WebGL|WebGL particles)\)$/, ""), tags: tags, values: { engine: e[0] } };
 		}),
 		render: function (root, c) {

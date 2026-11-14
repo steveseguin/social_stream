@@ -3857,6 +3857,13 @@ async function ensureChatClientInstance() {
 		data.membership = markSubscriberAsMembership ? subscriber : "";
 		data.subtitle = subtitle;
 		data.mod = mod;
+		if (normalizedPayload?.bot === true || (globalThis.SSNTwitchBots && (
+			globalThis.SSNTwitchBots.isKnownBot(user)
+			|| globalThis.SSNTwitchBots.hasBotBadge(parsedMessage.tags?.badges)
+			|| globalThis.SSNTwitchBots.hasBotBadge(parsedMessage.tags?.['source-badges'])
+		))) {
+			data.bot = true;
+		}
 
 		try {
 			if (userInfo && userInfo.profile_image_url) {
