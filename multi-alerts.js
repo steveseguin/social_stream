@@ -1844,6 +1844,7 @@ function readSettings() {
         : urlParams.has('alignright')
           ? 'right'
           : 'left',
+    valign: readVerticalAlign(),
     scale: Math.max(0.45, Math.min(3, parseNumberParam('scale', 1))),
     mediaScale: Math.max(0.6, Math.min(2.2, parseNumberParam('mediascale', 1))),
     headlineScale: Math.max(0.75, Math.min(1.8, parseNumberParam('headlinescale', 1))),
@@ -1874,6 +1875,13 @@ function readSettings() {
   };
 }
 
+function readVerticalAlign() {
+  const value = normalizeText(urlParams.get('valign')).toLowerCase();
+  if (value === 'top') return 'top';
+  if (value === 'middle' || value === 'center') return 'middle';
+  return '';
+}
+
 function applyPagePresentation() {
   document.documentElement.style.setProperty('--overlay-scale', String(settings.scale));
   document.documentElement.style.setProperty('--media-scale', String(settings.mediaScale));
@@ -1898,6 +1906,9 @@ function applyPagePresentation() {
     document.body.dataset.anim = settings.animation;
   }
   document.body.dataset.align = settings.align;
+  if (settings.valign && !settings.stack && !urlParams.has('embedded')) {
+    document.body.dataset.valign = settings.valign;
+  }
   document.body.classList.toggle('show-status', settings.showStatus);
 
   if (settings.compact) {
@@ -2896,6 +2907,7 @@ window.__multiAlertsOverlay = {
       includeSourceMatches: Array.from(settings.includeSourceMatches),
       excludeSourceMatches: Array.from(settings.excludeSourceMatches),
       align: settings.align,
+      valign: settings.valign,
       scale: settings.scale,
       mediaScale: settings.mediaScale,
       headlineScale: settings.headlineScale,

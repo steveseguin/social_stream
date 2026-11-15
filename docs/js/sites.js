@@ -193,6 +193,20 @@ document.addEventListener('DOMContentLoaded', function() {
             notes: 'See this video for help with toggled integrations: <a href="https://www.youtube.com/watch?v=L3l0_8V1t0Q" target="_blank">https://www.youtube.com/watch?v=L3l0_8V1t0Q</a>'
         },
         {
+            name: 'Altstream',
+            icon: 'altstream.png',
+            description: 'Live channel chat on altstream.online.',
+            type: 'popout',
+            instructions: `
+                <ul>
+                    <li>Open https://altstream.online/USERNAME/chat</li>
+                    <li>In the desktop app, use Add other source and paste the chat URL</li>
+                    <li>With the extension, enable Social Stream Ninja and keep the chat page open</li>
+                </ul>
+            `,
+            notes: 'Only new chat messages are captured. Send a new message to check your setup. Enable Show viewer count in SSN to include the live viewer total.'
+        },
+        {
             name: 'VPZone.tv',
             icon: 'vpzone.png',
             description: 'Live streaming platform with on-page chat capture and an authenticated API page option. Supports Pixels tips as donations, dock delete/block sync, and a stream title/category editor for channel owners.',

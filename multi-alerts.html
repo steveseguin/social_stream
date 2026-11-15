@@ -74,6 +74,38 @@
       transform-origin: bottom right;
     }
 
+    body[data-valign="top"] {
+      align-items: flex-start;
+    }
+
+    body[data-valign="middle"] {
+      align-items: center;
+    }
+
+    body[data-valign="top"] #alert-stage {
+      transform-origin: top left;
+    }
+
+    body[data-valign="top"][data-align="center"] #alert-stage {
+      transform-origin: top center;
+    }
+
+    body[data-valign="top"][data-align="right"] #alert-stage {
+      transform-origin: top right;
+    }
+
+    body[data-valign="middle"] #alert-stage {
+      transform-origin: center left;
+    }
+
+    body[data-valign="middle"][data-align="center"] #alert-stage {
+      transform-origin: center center;
+    }
+
+    body[data-valign="middle"][data-align="right"] #alert-stage {
+      transform-origin: center right;
+    }
+
     .status-chip {
       display: none;
       align-items: center;

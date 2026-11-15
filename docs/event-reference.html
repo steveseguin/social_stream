@@ -102,6 +102,7 @@
                                     <li><a href="#onlinechurch">Online Church</a></li>
                                     <li><a href="#shareplay">SharePlay</a></li>
                                     <li><a href="#gosh">Gosh</a></li>
+                                    <li><a href="#altstream">Altstream</a></li>
                                     <li><a href="#livacha">Livacha</a></li>
                                     <li><a href="#chatango">Chatango</a></li>
                                     <li><a href="#streamplace">Streamplace</a></li>
@@ -2520,7 +2521,7 @@
             </section>
 
             <section class="section-summary" id="additional-viewer-counts">
-                <h2>Goodgame, Pilled, Owncast, Picarto, and Piczel Viewer Counts</h2>
+                <h2>Additional Platform Viewer Counts</h2>
                 <p>Enable <em>Show viewer count</em> or <em>Track active chatters</em> (<code>showviewercount</code> or <code>hypemode</code>) to collect viewer counts. Opening the Viewer Count &amp; Chat Activity overlay with viewers displayed also requests them. Each source emits <code>event: "viewer_update"</code> with a nonnegative integer <code>meta</code>, refreshed every 30 seconds while capture is enabled. These are stream viewer counts; active chatters are counted separately. A reported zero is valid; failed requests do not produce a zero count.</p>
                 <p>Normal chat uses the source's <code>type</code>, <code>chatname</code>, <code>chatmessage</code>, and <code>textonly</code> fields without a viewer event marker. Viewer updates contain <code>type</code>, <code>event</code>, and integer <code>meta</code>; the background combines them into <code>viewer_updates</code> for overlays.</p>
                 <div class="table-scroll" role="region" tabindex="0" aria-label="Additional viewer count sources">
@@ -2528,6 +2529,7 @@
                         <thead><tr><th scope="col">Source / type</th><th scope="col">Page to capture</th><th scope="col">Viewer count and chat fields</th></tr></thead>
                         <tbody>
                             <tr id="goodgame"><td><strong>Goodgame</strong><br><code>goodgame</code></td><td><code>goodgame.ru/CHANNEL/chat</code></td><td>Stream <code>viewers</code>. Chat rows also include the native ID as a string in <code>meta.messageId</code> when available.</td></tr>
+                            <tr id="altstream"><td><strong>Altstream</strong><br><code>altstream</code></td><td><code>altstream.online/USERNAME/chat</code>, or the channel page with chat open</td><td><code>data.stream.viewers</code> from <code>/api/v1/channels/USERNAME</code>; an offline channel emits zero. Chat includes avatars (<code>chatimg</code>), login names (<code>userid</code>), name colors, badges, inline emotes/stickers, and the native ID in <code>meta.messageId</code>. Channel supporters set <code>membership</code> and qualify for <code>memberchatonly</code>; site-wide supporters do not. <code>textonlymode</code> uses plain text and emote/sticker alt text. Initial history and non-chat event cards are excluded.</td></tr>
                             <tr id="pilled"><td><strong>Pilled</strong><br><code>pilled</code></td><td><code>pilled.net/livechat/USERNAME</code> or <code>pilled.net/comment/TOPIC_ID</code></td><td>The current live topic's <code>topicFacts.liveViews</code>. The dedicated chat URL supports counts without opening the video page.</td></tr>
                             <tr id="owncast"><td><strong>Owncast</strong><br><code>owncast</code></td><td>Your captured Owncast stream or chat page</td><td><code>viewerCount</code> from that server's <code>/api/status</code>.</td></tr>
                             <tr id="picarto"><td><strong>Picarto</strong><br><code>picarto</code></td><td><code>picarto.tv/chatpopout/CHANNEL/public</code></td><td>Channel <code>viewers</code>.</td></tr>

@@ -217,6 +217,7 @@ Layout/display:
 - `hideprogress`: hide the countdown bar
 - `align=center`
 - `alignright`
+- `valign=top` or `valign=middle`: vertical placement (default is bottom). Not applied with `stack` or `embedded`
 - `scale`
 - `mediascale`
 - `headlinescale`
