@@ -12099,6 +12099,7 @@ const PollManager = {
             multipleChoiceOptions: document.querySelector('[data-textsetting="multipleChoiceOptions"]').value,
             pollMatchMode: document.querySelector('[data-optionsetting="pollMatchMode"]')?.value || 'exact',
             pollStyle: document.querySelector('[data-optionsetting="pollStyle"]').value,
+            pollFontSize: document.querySelector('[data-numbersetting="pollFontSize"]').value,
             pollTimer: document.querySelector('[data-numbersetting="pollTimer"]').value,
             pollTimerState: document.querySelector('[data-setting="pollTimerState"]').checked,
             pollTally: document.querySelector('[data-setting="pollTally"]').checked,
@@ -12132,6 +12133,7 @@ const PollManager = {
             multipleChoiceOptions: '',
             pollMatchMode: 'exact',
             pollStyle: 'default',
+            pollFontSize: 100,
             pollTimer: 60,
             pollTimerState: false,
             pollTally: false,
@@ -12145,6 +12147,7 @@ const PollManager = {
             '[data-textsetting="multipleChoiceOptions"]': defaultSettings.multipleChoiceOptions,
             '[data-optionsetting="pollMatchMode"]': defaultSettings.pollMatchMode,
             '[data-optionsetting="pollStyle"]': defaultSettings.pollStyle,
+            '[data-numbersetting="pollFontSize"]': defaultSettings.pollFontSize,
             '[data-numbersetting="pollTimer"]': defaultSettings.pollTimer,
             '[data-setting="pollTimerState"]': defaultSettings.pollTimerState,
             '[data-setting="pollTally"]': defaultSettings.pollTally,
@@ -12181,6 +12184,7 @@ const PollManager = {
             '[data-textsetting="multipleChoiceOptions"]': poll.settings.multipleChoiceOptions,
             '[data-optionsetting="pollMatchMode"]': poll.settings.pollMatchMode || 'exact',
             '[data-optionsetting="pollStyle"]': poll.settings.pollStyle,
+            '[data-numbersetting="pollFontSize"]': poll.settings.pollFontSize || 100,
             '[data-numbersetting="pollTimer"]': poll.settings.pollTimer,
             '[data-setting="pollTimerState"]': poll.settings.pollTimerState,
             '[data-setting="pollTally"]': poll.settings.pollTally,
@@ -13191,6 +13195,16 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		addPopupSearchVisibleText(parts, element);
 		addPopupSearchAttributes(parts, element);
+		if (/^(input|select|textarea)$/i.test(element.tagName || '')) {
+			// Some fields have a label beside them rather than a dedicated row.
+			Array.prototype.forEach.call(element.labels || [], function(label) {
+				addPopupSearchVisibleText(parts, label);
+			});
+			var previous = element.previousElementSibling;
+			if (previous && /^(label|span)$/i.test(previous.tagName) && !isPopupSearchExplicitlyHidden(previous)) {
+				addPopupSearchVisibleText(parts, previous);
+			}
+		}
 
 		var searchable = element.querySelectorAll('[title], [aria-label], [alt], [data-keywords], [data-search], input, textarea, select, label, img');
 		searchable.forEach(function(child) {
@@ -13614,13 +13628,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 
 	function getPopupSearchRows(wrapper) {
-		var rows = wrapper.querySelectorAll('.options_group > *, .options_group > span > *, .options > :not(.options_group), .options > .overlay-config-section > *, .options_group > .game-config-section > *, .collapsible-text > :not(.options)');
+		var rows = wrapper.querySelectorAll('.options_group > *, .options_group > span > *, .options > :not(.options_group), .options > .overlay-config-section > *, .options_group > .game-config-section > *, .collapsible-text > :not(.options), .popup-toggle-row');
 		var filtered = [];
+		var seen = new Set();
 		function addRow(row) {
 			if (!row.classList || row.classList.contains('options_group') || row.classList.contains('options') || /^(script|style|template|br)$/i.test(row.tagName || '')) {
 				return;
 			}
-			if (filtered.indexOf(row) === -1) {
+			if (!seen.has(row)) {
+				seen.add(row);
 				filtered.push(row);
 			}
 		}
@@ -13630,6 +13646,23 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				return;
 			}
 			container.querySelectorAll(':scope > div, :scope > h3, :scope > p, :scope > span').forEach(addRow);
+		});
+		// Discover fields at any depth, including controls inside closed details.
+		// Keep a complete toggle/field row, but never promote it to a settings panel.
+		wrapper.querySelectorAll('input:not(.collapsible-input):not([type="hidden"]), select, textarea, button').forEach(function(control) {
+			var row = control.closest('.colorInputRow, .textInputContainer, .popup-toggle-row');
+			if (!row || !wrapper.contains(row)) {
+				row = control.parentElement;
+				if (row && row.classList.contains('switch')) row = row.parentElement;
+				if (!row || row === wrapper ||
+					!row.matches('div, p, li, label, span') ||
+					row.matches('.options, .options_group, .collapsible-text, .popup-settings-panel') ||
+					row.querySelector(':scope > div input, :scope > div select, :scope > div textarea, details, .options_group') ||
+					row.querySelectorAll('select, textarea, label.switch').length > 1) {
+					row = control;
+				}
+			}
+			addRow(row);
 		});
 		return filtered;
 	}
@@ -13692,6 +13725,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				return;
 			}
 			if (!isPopupSearchExplicitlyHidden(element)) {
+				getPopupSearchRows(element).forEach(function(row) {
+					if (!isPopupSearchExplicitlyHidden(row)) {
+						index.topLevel.push({element: row, text: getPopupSearchText(row)});
+					}
+				});
 				index.topLevel.push({
 					element: element,
 					text: getPopupSearchText(element)
@@ -13749,9 +13787,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				return;
 			}
 			matchedElements.add(element);
-			if (matches.length < resultLimit) {
-				matches.push({element: element, wrapper: wrapper || null});
-			}
+			matches.push({element: element, wrapper: wrapper || null});
 		}
 
 		popupSearchIndex.wrappers.forEach(function(wrapperRecord) {
@@ -13760,15 +13796,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			var sectionMatches = popupSearchTextMatches(wrapperRecord.sectionText, terms);
 			rows.forEach(function(rowRecord) {
 				if (popupSearchRecordMatches(rowRecord, terms)) {
-					var matchElement = rowRecord.element;
-					var parent = matchElement.parentElement;
-					while (parent && parent !== wrapper) {
-						if (wrapperRecord.rowElementSet.has(parent)) {
-							matchElement = parent;
-						}
-						parent = parent.parentElement;
-					}
-					addResult(matchElement, wrapper);
+					addResult(rowRecord.element, wrapper);
 				}
 			});
 			if (sectionMatches) {
@@ -13788,6 +13816,21 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 		});
 
+		// A nested match must not also produce a result for its entire panel.
+		// Apply this across all sections before limiting the number of results.
+		var matchingContainers = new Set();
+		matches.forEach(function(record) {
+			var parent = record.element.parentElement;
+			while (parent && parent !== document.body) {
+				if (matchedElements.has(parent)) matchingContainers.add(parent);
+				parent = parent.parentElement;
+			}
+		});
+		matches = matches.filter(function(record) {
+			return !matchingContainers.has(record.element);
+		});
+		matchingContainers.forEach(function(element) { matchedElements.delete(element); });
+		matches = matches.slice(0, resultLimit);
 		renderPopupSearchResults(matches, matchedElements.size);
 		setPopupSearchActive(true, matchedElements.size === 0);
 	}

@@ -13668,7 +13668,7 @@ var overlayStateEpoch = Date.now().toString(36) + "-" + Math.random().toString(3
 var overlayStateSnapshots = new Map();
 var overlayStateSequence = 0;
 const POLL_CONTROL_KEYS = ["pollEnabled", "pollType", "pollQuestion", "multipleChoiceOptions", "pollMatchMode",
-	"pollStyle", "pollTimer", "pollTimerState", "pollTally", "pollSpam", "pollDonationWeighted"];
+	"pollStyle", "pollFontSize", "pollTimer", "pollTimerState", "pollTally", "pollSpam", "pollDonationWeighted"];
 function pollControlSettings(input) {
 	var selected = {};
 	POLL_CONTROL_KEYS.forEach(key => { if (Object.prototype.hasOwnProperty.call(input, key)) selected[key] = input[key]; });
@@ -14831,11 +14831,14 @@ function loadPollPreset(pollId) {
 
 	const fields = {
 		pollType: "optionsetting", pollQuestion: "textsetting", multipleChoiceOptions: "textsetting",
-		pollMatchMode: "optionsetting", pollStyle: "optionsetting", pollTimer: "numbersetting",
+		pollMatchMode: "optionsetting", pollStyle: "optionsetting", pollFontSize: "numbersetting", pollTimer: "numbersetting",
 		pollTimerState: "setting", pollTally: "setting", pollSpam: "setting", pollDonationWeighted: "setting"
 	};
 	Object.keys(fields).forEach(key => {
-		if (!Object.prototype.hasOwnProperty.call(poll.settings, key)) return;
+		if (!Object.prototype.hasOwnProperty.call(poll.settings, key)) {
+			if (key === "pollFontSize") settings[key] = { numbersetting: 100 };
+			return;
+		}
 		settings[key] = { [fields[key]]: poll.settings[key] };
 	});
 	sendTargetP2P({ settings: settings }, "poll");
@@ -14845,7 +14848,7 @@ function loadPollPreset(pollId) {
 function updatePollSettings(newSettings) {
 	try {
 		// Update poll-related settings
-		const pollKeys = ["pollType", "pollQuestion", "multipleChoiceOptions", "pollMatchMode", "pollStyle", "pollTimer", "pollTimerState", "pollTally", "pollSpam", "pollDonationWeighted"];
+		const pollKeys = ["pollType", "pollQuestion", "multipleChoiceOptions", "pollMatchMode", "pollStyle", "pollFontSize", "pollTimer", "pollTimerState", "pollTally", "pollSpam", "pollDonationWeighted"];
 
 		pollKeys.forEach(key => {
 			if (newSettings.hasOwnProperty(key)) {
@@ -14875,6 +14878,7 @@ function createNewPoll(pollSettings) {
 			multipleChoiceOptions: "",
 			pollMatchMode: "exact",
 			pollStyle: "default",
+			pollFontSize: 100,
 			pollTimer: "60",
 			pollTimerState: false,
 			pollTally: true,
