@@ -1984,53 +1984,6 @@
             setPausedState(true);
         }
 
-        function setMapType(value) {
-            const normalized = (value || '').toString().trim().toLowerCase();
-            const next = VALID_MAP_TYPES.has(normalized) ? normalized : 'country';
-            if (next === settings.mapType) return;
-            settings.mapType = next;
-            if (settings.mapType === 'city') {
-                registerRegionalCities(settings.region);
-            }
-            resetMap();
-            updateStats();
-            updateTopList();
-            renderMap({ preferMarkerFit: settings.autoFitMarkers });
-        }
-
-        function setRegion(value) {
-            const normalized = normalizeRegionKey(value);
-            if (normalized === settings.region) return;
-            settings.region = normalized;
-            registerRegionalCities(settings.region);
-            if (!atlasFeatures.length) return;
-            resetMap();
-            renderMap({ preferMarkerFit: settings.autoFitMarkers });
-            updateVisuals({});
-        }
-
-        function setMapStyle(value) {
-            const key = (value || 'default').toString().trim().toLowerCase();
-            settings.mapStyle = key;
-            applyStylePreset(key);
-            applyCustomOverrides();
-            updateMapFill();
-        }
-
-        function setMotion(value) {
-            settings.motion = !!value;
-            applyMotionPreference(settings.motion);
-        }
-
-        function applyMapScale() {
-            // Apply scale to the HUD element
-            if (hudEl) {
-                const scale = settings.mapScale || 1;
-                hudEl.style.transform = scale !== 1 ? `scale(${scale})` : '';
-                hudEl.style.transformOrigin = 'bottom right';
-            }
-        }
-
         function setMultiVote(value) {
             const next = !!value;
             if (settings.multiVote === next) return;
@@ -2227,50 +2180,14 @@
             return false;
         }
 
+        // Appearance belongs to this overlay's URL, including when an older host sends it.
         function applySettingsFromPayload(payload) {
             if (!payload) return;
-            if (payload.mapTitle && payload.mapTitle.textsetting) {
-                settings.title = payload.mapTitle.textsetting;
-                titleEl.textContent = settings.title;
-            }
-            if (payload.mapShowList && Object.prototype.hasOwnProperty.call(payload.mapShowList, 'setting')) {
-                settings.showList = normalizeBoolean(payload.mapShowList.setting, settings.showList);
-            }
-            if (payload.mapShowTotals && Object.prototype.hasOwnProperty.call(payload.mapShowTotals, 'setting')) {
-                settings.showTotals = normalizeBoolean(payload.mapShowTotals.setting, settings.showTotals);
-            }
             if (payload.mapAllowChanges && Object.prototype.hasOwnProperty.call(payload.mapAllowChanges, 'setting')) {
                 settings.allowChanges = normalizeBoolean(payload.mapAllowChanges.setting, settings.allowChanges);
             }
             if (payload.mapEnabled && Object.prototype.hasOwnProperty.call(payload.mapEnabled, 'setting')) {
                 setEnabledState(normalizeBoolean(payload.mapEnabled.setting, isEnabled));
-            }
-            if (payload.mapType && (payload.mapType.setting || payload.mapType.textsetting || typeof payload.mapType === 'string')) {
-                const nextType = payload.mapType.setting ?? payload.mapType.textsetting ?? payload.mapType;
-                setMapType(nextType);
-            }
-            if (payload.maptype && (payload.maptype.setting || payload.maptype.textsetting || typeof payload.maptype === 'string')) {
-                const nextType = payload.maptype.setting ?? payload.maptype.textsetting ?? payload.maptype;
-                setMapType(nextType);
-            }
-            if (payload.mapStyle && (payload.mapStyle.setting || payload.mapStyle.textsetting || typeof payload.mapStyle === 'string')) {
-                const nextStyle = payload.mapStyle.setting ?? payload.mapStyle.textsetting ?? payload.mapStyle;
-                setMapStyle(nextStyle);
-            }
-            if (payload.mapstyle && (payload.mapstyle.setting || payload.mapstyle.textsetting || typeof payload.mapstyle === 'string')) {
-                const nextStyle = payload.mapstyle.setting ?? payload.mapstyle.textsetting ?? payload.mapstyle;
-                setMapStyle(nextStyle);
-            }
-            const opacityPayload = payload.mapOpacity ?? payload.mapopacity;
-            if (opacityPayload !== undefined && opacityPayload !== null) {
-                const rawOpacity = (typeof opacityPayload === 'object')
-                    ? (opacityPayload.numbersetting ?? opacityPayload.setting ?? opacityPayload.textsetting)
-                    : opacityPayload;
-                settings.baseOpacity = normalizeOpacity(rawOpacity);
-                // Re-run the preset so an empty value restores the theme's own land visibility
-                applyStylePreset(settings.mapStyle);
-                applyCustomOverrides();
-                if (ready) updateMapFill();
             }
             if (payload.mapspam && Object.prototype.hasOwnProperty.call(payload.mapspam, 'setting')) {
                 setMultiVote(normalizeBoolean(payload.mapspam.setting, settings.multiVote));
@@ -2278,68 +2195,6 @@
             if (payload.mapSpam && Object.prototype.hasOwnProperty.call(payload.mapSpam, 'setting')) {
                 setMultiVote(normalizeBoolean(payload.mapSpam.setting, settings.multiVote));
             }
-            if (payload.mapRegion && (payload.mapRegion.setting || typeof payload.mapRegion === 'string')) {
-                const nextRegion = payload.mapRegion.setting ?? payload.mapRegion;
-                setRegion(nextRegion);
-            }
-            if (payload.region && (payload.region.setting || typeof payload.region === 'string')) {
-                const nextRegion = payload.region.setting ?? payload.region;
-                setRegion(nextRegion);
-            }
-            if (payload.mapregion && (payload.mapregion.setting || typeof payload.mapregion === 'string')) {
-                const nextRegion = payload.mapregion.setting ?? payload.mapregion;
-                setRegion(nextRegion);
-            }
-            if (payload.mapMotion && Object.prototype.hasOwnProperty.call(payload.mapMotion, 'setting')) {
-                setMotion(normalizeBoolean(payload.mapMotion.setting, settings.motion));
-            }
-            if (payload.mapAutoFit && Object.prototype.hasOwnProperty.call(payload.mapAutoFit, 'setting')) {
-                const nextAutoFit = normalizeBoolean(payload.mapAutoFit.setting, settings.autoFitMarkers);
-                if (nextAutoFit !== settings.autoFitMarkers) {
-                    settings.autoFitMarkers = nextAutoFit;
-                    if (ready) {
-                        renderMap({ preferMarkerFit: settings.autoFitMarkers });
-                        updateMapFill();
-                        updateMarkers();
-                    }
-                }
-            }
-            // Handle hide numbers setting
-            if (payload.mapHideNumbers && Object.prototype.hasOwnProperty.call(payload.mapHideNumbers, 'setting')) {
-                settings.hideNumbers = normalizeBoolean(payload.mapHideNumbers.setting, settings.hideNumbers);
-                if (ready) updateMarkers();
-            }
-            if (payload.maphidenumbers && Object.prototype.hasOwnProperty.call(payload.maphidenumbers, 'setting')) {
-                settings.hideNumbers = normalizeBoolean(payload.maphidenumbers.setting, settings.hideNumbers);
-                if (ready) updateMarkers();
-            }
-            // Handle color intensity setting
-            if (payload.mapColorIntensity && Object.prototype.hasOwnProperty.call(payload.mapColorIntensity, 'setting')) {
-                settings.colorIntensity = normalizeBoolean(payload.mapColorIntensity.setting, settings.colorIntensity);
-                if (ready) updateMarkers();
-            }
-            if (payload.mapcolorintensity && Object.prototype.hasOwnProperty.call(payload.mapcolorintensity, 'setting')) {
-                settings.colorIntensity = normalizeBoolean(payload.mapcolorintensity.setting, settings.colorIntensity);
-                if (ready) updateMarkers();
-            }
-            // Handle map scale setting
-            if (payload.mapScale && (payload.mapScale.setting !== undefined || payload.mapScale.numbersetting !== undefined)) {
-                const rawScale = payload.mapScale.numbersetting ?? payload.mapScale.setting;
-                const newScale = parseFloat(rawScale) / 100 || 1;
-                if (newScale !== settings.mapScale) {
-                    settings.mapScale = newScale;
-                    applyMapScale();
-                }
-            }
-            if (payload.mapscale && (payload.mapscale.setting !== undefined || payload.mapscale.numbersetting !== undefined)) {
-                const rawScale = payload.mapscale.numbersetting ?? payload.mapscale.setting;
-                const newScale = parseFloat(rawScale) / 100 || 1;
-                if (newScale !== settings.mapScale) {
-                    settings.mapScale = newScale;
-                    applyMapScale();
-                }
-            }
-            hudEl.classList.toggle('hidden', !settings.showList && !settings.showTotals);
             updateStatusBanner();
         }
 

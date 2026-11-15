@@ -6180,7 +6180,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				chrome.storage.local.set({ returningBeepHintShown: true });
 			}
 
-			if (request.target) {
+			if (request.target && (request.target !== "map" || MAP_CONTROL_KEYS.includes(request.setting))) {
 				sendTargetP2P(request, request.target);
 			}
 
@@ -13674,7 +13674,7 @@ function pollControlSettings(input) {
 	POLL_CONTROL_KEYS.forEach(key => { if (Object.prototype.hasOwnProperty.call(input, key)) selected[key] = input[key]; });
 	return selected;
 }
-const MAP_CONTROL_KEYS = ["mapTitle", "mapShowList", "mapShowTotals", "mapAllowChanges", "mapEnabled", "mapType", "mapStyle", "mapOpacity", "mapopacity", "mapSpam", "mapRegion", "mapMotion", "mapAutoFit", "mapHideNumbers", "mapColorIntensity", "mapScale"];
+const MAP_CONTROL_KEYS = ["mapAllowChanges", "mapEnabled", "mapSpam", "mapspam"];
 function prepareOverlayControl(data, target) {
 	if (!data || data.ssnControl) return data;
 	if (!(target === "actions" || (target === "credits" && data.creditsCommand) ||
