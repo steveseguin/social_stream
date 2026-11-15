@@ -2441,6 +2441,7 @@ function initElements() {
         streamAdminTarget: q('stream-admin-target'),
         streamTitle: q('stream-title'),
         streamCategory: q('stream-category'),
+        streamTags: q('stream-tags'),
         refreshStreamInfo: q('refresh-stream-info'),
         updateStreamInfo: q('update-stream-info')
     });
@@ -4866,6 +4867,7 @@ async function apiFetch(path, options = {}, retry = true) {
     return res.text();
 }
 
+let kickStreamTagsToken = null;
 function updateKickStreamEditorFields(channel) {
     const values = resolveKickStreamEditorValues(channel);
     if (els.streamTitle) {
@@ -4873,6 +4875,13 @@ function updateKickStreamEditorFields(channel) {
     }
     if (els.streamCategory) {
         els.streamCategory.value = values.category || '';
+    }
+    if (els.streamTags) {
+        const tags = channel?.stream?.custom_tags;
+        els.streamTags.value = Array.isArray(tags) ? tags.join(', ') : '';
+        els.streamTags.dataset.current = els.streamTags.value;
+        els.streamTags.disabled = !Array.isArray(tags);
+        kickStreamTagsToken = state.tokens?.access_token || null;
     }
 }
 
@@ -5271,7 +5280,9 @@ async function fetchCurrentKickChannelInfo() {
 }
 
 async function refreshKickStreamInfo() {
+    const token = state.tokens?.access_token;
     const channel = await fetchCurrentKickChannelInfo();
+    if (token !== state.tokens?.access_token) return null;
     if (!channel) {
         throw new Error('Unable to load current Kick channel information.');
     }
@@ -5296,10 +5307,17 @@ async function resolveKickCategoryId(value) {
 }
 
 async function updateKickStreamInfoFromInputs() {
+    const token = state.tokens?.access_token;
     const title = els.streamTitle ? els.streamTitle.value.trim() : '';
     const category = els.streamCategory ? els.streamCategory.value.trim() : '';
     const adminContext = getKickAdminControlContext();
     const payload = {};
+    if (els.streamTags && !els.streamTags.disabled && els.streamTags.value !== els.streamTags.dataset.current) {
+        if (!token || token !== kickStreamTagsToken) throw new Error('Sign-in changed. Refresh current stream details first.');
+        const tags = els.streamTags.value.split(',').map(tag => tag.trim()).filter(Boolean);
+        if (tags.length > 10) throw new Error('Use up to 10 tags.');
+        payload.custom_tags = tags;
+    }
     if (title) {
         payload.stream_title = title;
     }
@@ -5316,6 +5334,7 @@ async function updateKickStreamInfoFromInputs() {
     if (adminContext.mismatch) {
         log(`Kick admin controls target ${adminContext.authLabel}, not ${adminContext.selectedLabel}.`, 'warning');
     }
+    if (token !== state.tokens?.access_token) throw new Error('Sign-in changed. Refresh current stream details first.');
     await apiFetch('/public/v1/channels', {
         method: 'PATCH',
         body: JSON.stringify(payload)
@@ -5327,7 +5346,8 @@ async function updateKickStreamInfoFromInputs() {
         slug: adminContext.authSlug || state.channelSlug,
         source: 'patch'
     });
-    log('Kick stream title/category updated.', 'info');
+    if (payload.custom_tags && els.streamTags) els.streamTags.dataset.current = payload.custom_tags.join(', ');
+    log('Kick stream details updated.', 'info');
     // Reflect submitted values immediately — the Kick API caches stale data
     // after a PATCH so an immediate re-fetch would overwrite the inputs with
     // old values.  After a short delay the cache should have cleared.

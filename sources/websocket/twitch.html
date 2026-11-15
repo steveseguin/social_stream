@@ -609,11 +609,13 @@
                         <input type="checkbox" id="hide-metrics">
                         <span>Hide dashboard metrics</span>
                     </label>
+                    <div class="advanced-subheading" style="margin-top:14px;">Stream details</div>
                     <div class="moderation-input-grid">
                         <input type="text" id="stream-title" class="channel-input" placeholder="Stream title">
                         <input type="text" id="stream-category" class="channel-input" placeholder="Game / category">
-                        <div class="moderation-button-group">
-                            <button id="btn-update-channel" class="connect-button" style="background:#2255dd;">Update Title / Category</button>
+                        <input type="text" id="stream-tags" class="channel-input" style="grid-column:1 / -1;" aria-label="Stream tags" placeholder="Tags, separated by commas" title="Up to 10 tags, 25 letters or numbers each. Clear the field to remove all tags." disabled>
+                        <div class="moderation-button-group" style="grid-column:1 / -1;">
+                            <button id="btn-update-channel" class="connect-button" style="background:#2255dd;">Save details</button>
                             <button id="btn-refresh-channel" class="connect-button" style="background:#555;">Refresh Current</button>
                         </div>
                     </div>
@@ -765,7 +767,9 @@
             g('btn-ad-schedule')?.addEventListener('click', () => post('ad_schedule', {}));
             g('btn-update-channel')?.addEventListener('click', () => post('update_channel_info', {
 				title: g('stream-title')?.value,
-				category: g('stream-category')?.value
+				category: g('stream-category')?.value,
+				tags: !g('stream-tags')?.disabled && g('stream-tags').value !== g('stream-tags').dataset.current ? g('stream-tags').value : undefined,
+				channelId: g('stream-tags')?.dataset.channelId
 			}));
             g('btn-refresh-channel')?.addEventListener('click', () => post('refresh_channel_info', {}));
 			window.addEventListener('message', function(event) {
@@ -778,6 +782,12 @@
 					}
 					if (g('stream-category')) {
 						g('stream-category').value = event.data.payload.category || '';
+					}
+					if (g('stream-tags')) {
+						g('stream-tags').value = (event.data.payload.tags || []).join(', ');
+						g('stream-tags').dataset.current = g('stream-tags').value;
+						g('stream-tags').dataset.channelId = event.data.payload.channelId || '';
+						g('stream-tags').disabled = !Array.isArray(event.data.payload.tags);
 					}
 				}
 			});

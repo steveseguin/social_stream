@@ -5306,14 +5306,17 @@ async function cleanupCurrentConnection() {
 	}
 
 	async function refreshChannelInformation() {
+		const channelId = currentChannelId;
 		const channelInfo = await getCurrentChannelInformation();
-		if (!channelInfo) {
+		if (!channelInfo || channelId !== currentChannelId) {
 			return null;
 		}
 		const payload = {
 			title: channelInfo.title || '',
 			category: channelInfo.game_name || '',
-			categoryId: channelInfo.game_id || ''
+			categoryId: channelInfo.game_id || '',
+			channelId,
+			tags: channelInfo.tags
 		};
 		notifyPage('channel_info', payload);
 		return payload;
@@ -5323,7 +5326,20 @@ async function cleanupCurrentConnection() {
 		try {
 			const token = getStoredToken();
 			if (!token || !currentChannelId) return false;
+			const channelId = currentChannelId;
 			const requestBody = {};
+			if (typeof payload.tags === 'string') {
+				if (payload.channelId !== channelId) {
+					addEvent('Channel changed. Refresh current stream details first.');
+					return false;
+				}
+				const tags = payload.tags.split(',').map(tag => tag.trim()).filter(Boolean);
+				if (tags.length > 10 || tags.some(tag => !/^[\p{L}\p{N}]{1,25}$/u.test(tag))) {
+					addEvent('Use up to 10 tags, with 25 letters or numbers each.');
+					return false;
+				}
+				requestBody.tags = tags;
+			}
 			const title = (payload?.title || '').trim();
 			const category = (payload?.category || '').trim();
 			if (title) {
@@ -5340,7 +5356,8 @@ async function cleanupCurrentConnection() {
 			if (!Object.keys(requestBody).length) {
 				return false;
 			}
-			const response = await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${currentChannelId}`, {
+			if (channelId !== currentChannelId || token !== getStoredToken()) return false;
+			const response = await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${channelId}`, {
 				method: 'PATCH',
 				headers: {
 					'Client-ID': getTwitchApiClientId(),
@@ -5352,11 +5369,11 @@ async function cleanupCurrentConnection() {
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => ({}));
 				console.error('updateChannelInformation failed', errorData);
-				addEvent('Stream title/category update failed');
+				addEvent('Stream details update failed');
 				return false;
 			}
 			await refreshChannelInformation();
-			addEvent('Stream title/category updated');
+			addEvent('Stream details updated');
 			return true;
 		} catch (error) {
 			console.error('updateChannelInformation error', error);

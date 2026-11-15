@@ -663,6 +663,27 @@ body.hide-metrics .stats-container {
 	line-height: 1.4;
 }
 
+#stream-details summary {
+	cursor: pointer;
+}
+.stream-details-fields {
+	display: grid;
+	gap: 8px;
+	margin-top: 12px;
+	padding-bottom: 48px;
+}
+.stream-details-fields input,
+.stream-details-fields select {
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+}
+#stream-thumbnail-preview {
+	max-width: 100%;
+	max-height: 110px;
+	object-fit: contain;
+}
+
 /* Responsive adjustments */
 @media (max-width: 1000px) {
 	body:has(.socket:not(.hidden)) .container {
