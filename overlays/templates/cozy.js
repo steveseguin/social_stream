@@ -690,7 +690,11 @@
 				var tx = document.createElement("div");
 				tx.className = "fp-txt";
 				tx.style.cssText = "color:" + SSO.color(c.fg) + ";font-family:" + SSO.fontStack(c.font) + ";font-size:" + c.fontsize + "px;";
-				if (c.textpos !== "top") { tx.style.top = "auto"; tx.style.bottom = "4%"; } else { tx.style.top = "1.5%"; }
+				if (c.textpos !== "top") {
+					// Sit in the middle of the rug (its centre is 9% up from the bottom) so the stitched ring frames the words.
+					// Anchored to the bottom with a minimum height, so oversized text grows upward instead of off the screen.
+					tx.style.cssText += "top:auto;bottom:0;min-height:18%;display:flex;flex-direction:column;justify-content:center;";
+				} else { tx.style.top = "1.5%"; }
 				tx.innerHTML = (c.title ? "<div>" + esc(c.title) + "</div>" : "") + (c.subtitle ? '<div class="fp-sub">' + esc(c.subtitle) + "</div>" : "");
 				el.appendChild(tx);
 			}

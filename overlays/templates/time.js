@@ -32,6 +32,16 @@
 		el.className = cls;
 		wrap.appendChild(el);
 		root.appendChild(wrap);
+		// A readout wider than the source (12-hour time with seconds, three-digit day counts) used to run off both
+		// edges. Shrink it to fit instead; nothing changes while it already fits.
+		var origin = c.align === "flex-start" ? "0 50%" : c.align === "flex-end" ? "100% 50%" : "50% 50%";
+		function fit() {
+			var room = wrap.clientWidth - 24, need = el.offsetWidth;
+			var want = need > room && room > 40 ? "scale(" + (room / need).toFixed(3) + ")" : "";
+			if (el.style.transform !== want) { el.style.transformOrigin = origin; el.style.transform = want; }
+		}
+		setTimeout(fit, 0);
+		setInterval(fit, 500);
 		return el;
 	}
 	function tick(fn, ms) { fn(); setInterval(fn, ms || 250); }
