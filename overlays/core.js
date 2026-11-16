@@ -13,6 +13,10 @@
 		{ id: "gaming", label: "Gaming" },
 		{ id: "time", label: "Clocks & timers" },
 		{ id: "scenes", label: "Scenes & frames" },
+		{ id: "vertical", label: "Vertical 9:16" },
+		{ id: "3d", label: "3D scenes" },
+		{ id: "random", label: "Dice, wheels & draws" },
+		{ id: "celebrate", label: "Winners, raids & giveaways" },
 		{ id: "maps", label: "Maps" },
 		{ id: "pets", label: "Pets" },
 		{ id: "obs", label: "Reacts to OBS" },
@@ -45,7 +49,8 @@
 		["simple", "Simple"], ["gaming", "Gaming"], ["minecraft", "Blocky / Minecraft"], ["console", "Console"],
 		["spicy", "Spicy"], ["punk", "Punk"], ["cute", "Cute"], ["cozy", "Cozy"], ["retro", "Retro"],
 		["cyber", "Cyber / neon"], ["spooky", "Spooky"], ["elegant", "Elegant"], ["pro", "Pro / broadcast"],
-		["country", "Country pride"], ["halloween", "Halloween"], ["christmas", "Christmas"], ["newyear", "New Year"]
+		["country", "Country pride"], ["halloween", "Halloween"], ["christmas", "Christmas"], ["newyear", "New Year"],
+		["autumn", "Autumn"], ["winter", "Winter"], ["spring", "Spring"], ["summer", "Summer & vacation"], ["holiday", "More holidays"], ["celebrate", "Winners & parties"], ["3d", "3D"], ["vertical", "Vertical 9:16"]
 	];
 	SSO.get = function (id) { return templateMap[id] || null; };
 

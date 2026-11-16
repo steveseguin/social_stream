@@ -14,7 +14,8 @@
 	function span(v, a, b) { return clamp((v - a) / (b - a), 0, 1); }
 	function pick(R, list) { return list[Math.floor(R() * list.length) % list.length]; }
 	function rgbOf(hex) {
-		var m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(hex || "").trim());
+		var m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(hex || "").trim()), q = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(String(hex || ""));
+		if (q) { return [+q[1], +q[2], +q[3]]; }
 		if (!m) { return [136, 136, 136]; }
 		var h = m[1]; if (h.length === 3) { h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; }
 		var n = parseInt(h, 16);
@@ -22,7 +23,6 @@
 	}
 	// f < 1 darkens, f > 1 lightens toward white.
 	function shade(hex, f) { return "rgb(" + rgbOf(hex).map(function (v) { return Math.max(0, Math.min(255, Math.round(f >= 1 ? v + (255 - v) * (f - 1) : v * f))); }).join(",") + ")"; }
-	function alpha(hex, a) { return "rgba(" + rgbOf(hex).join(",") + "," + a + ")"; }
 	function ell(g, x, y, rx, ry, col, rot) { g.fillStyle = col; g.beginPath(); g.ellipse(x, y, rx, ry, rot || 0, 0, TAU); g.fill(); }
 	function circ(g, x, y, r, col) { g.fillStyle = col; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); }
 	function path(g, pts) { g.beginPath(); for (var i = 0; i < pts.length; i += 2) { if (i) { g.lineTo(pts[i], pts[i + 1]); } else { g.moveTo(pts[i], pts[i + 1]); } } }
@@ -378,7 +378,7 @@
 		live: function (g, S, t) {
 			var k = t % 9, hop = k > 7.6 && k < 8.2 ? Math.sin((k - 7.6) / 0.6 * Math.PI) * 3.2 : 0, dir = Math.floor(t / 4.5) % 2 ? -1 : 1;
 			bird(g, 15 - dir, -66 - hop, 4.6, dir, S.col, "#f6e7c8", Math.sin(t * 5) * 0.03);
-			if (k > 2 && k < 4) { var q = (k - 2) / 2; g.globalAlpha = Math.sin(q * Math.PI); g.fillStyle = "#ffffff"; g.font = "700 5px sans-serif"; g.fillText("♪", 15 + dir * (6 + q * 4), -74 - q * 7); g.globalAlpha = 1; }
+			if (k > 2 && k < 4) { var q = (k - 2) / 2; g.globalAlpha = Math.sin(q * Math.PI); g.fillStyle = "#ffffff"; g.font = "700 5px sans-serif"; g.fillText("\u266a", 15 + dir * (6 + q * 4), -74 - q * 7); g.globalAlpha = 1; }
 		}
 	};
 	V.wateringcan = { w: 48,
@@ -711,7 +711,7 @@
 			b.restore();
 		},
 		live: function (g, S, t) {
-			for (var i = 0; i < 2; i++) { var q = ((t * 0.3 + i * 0.5) % 1); g.globalAlpha = Math.sin(q * Math.PI) * 0.9; g.fillStyle = "#ffffff"; g.font = "700 4.6px sans-serif"; g.fillText(i ? "♫" : "♪", 43 + Math.sin(q * 5 + i) * 2.5, -2 - q * 15); }
+			for (var i = 0; i < 2; i++) { var q = ((t * 0.3 + i * 0.5) % 1); g.globalAlpha = Math.sin(q * Math.PI) * 0.9; g.fillStyle = "#ffffff"; g.font = "700 4.6px sans-serif"; g.fillText(i ? "\u266b" : "\u266a", 43 + Math.sin(q * 5 + i) * 2.5, -2 - q * 15); }
 			g.globalAlpha = 1;
 		}
 	};
@@ -754,7 +754,7 @@
 		},
 		// the tide lapping along the very bottom edge
 		fore: function (g, e, t) {
-			var u = e.u, base = e.H - 5 * u, reach = (0.5 + 0.5 * Math.sin(t * 0.7)) * 4.6 * u, px, step = 9 * u;
+			var u = e.u, base = e.H - 5 * u, reach = (0.5 + 0.5 * Math.sin(t * 0.7)) * 4.6 * u, px, step = 13 * u;
 			function wy(x) { return base - reach + Math.sin(x / (38 * u) + t * 1.1) * 1.1 * u + Math.sin(x / (95 * u) - t * 0.6) * 1.5 * u; }
 			g.fillStyle = "rgba(160,120,70,.3)"; g.beginPath(); g.moveTo(0, e.H);
 			for (px = 0; px <= e.W + step; px += step) { g.lineTo(px, base - 5.2 * u + Math.sin(px / (60 * u)) * 1.1 * u); }
@@ -951,7 +951,6 @@
 	};
 	V.apples = { w: 42,
 		front: function (b, S) {
-			var i;
 			b.save(); b.translate(0, 10);
 			ell(b, 20, 0.6, 19, 1.7, "rgba(0,0,0,.14)");
 			[[8.5, -9.2, "#d7263d"], [12.6, -9.8, "#e63946"], [16.6, -9.2, "#c81d33"], [10.6, -11.6, "#e63946"], [14.6, -11.8, "#d7263d"]].forEach(function (q) { apple(b, q[0], q[1], 2.2, q[2]); });
@@ -1234,7 +1233,10 @@
 	SCENES.halloween = {
 		deck: ["tombs", "jacks", "deadtree", "cauldron", "haunted", "ironfence", "zombiehand", "blackcat", "candy", "tombs"],
 		far: function (b, e) {
-			var u = e.u, Rf = SSO.seeded("far" + e.seed), px;
+			var u = e.u, Rf = SSO.seeded("far" + e.seed), px, haze = b.createLinearGradient(0, e.gy - 105 * u, 0, e.gy);
+			// moonlit haze, so the dark silhouettes still read when the stream behind them is dark too
+			haze.addColorStop(0, "rgba(118,102,196,0)"); haze.addColorStop(0.55, "rgba(118,102,196,.2)"); haze.addColorStop(1, "rgba(132,118,208,.44)");
+			b.fillStyle = haze; b.fillRect(0, e.gy - 105 * u, e.W, 105 * u + 2);
 			farHill(b, e, "#2a2540", 0.9);
 			for (px = Rf() * 40 * u; px < e.W; px += (40 + Rf() * 90) * u) {
 				b.save(); b.translate(px, hillY(e, px, 0.9) + 2 * u); b.scale(u, u);
@@ -1561,7 +1563,7 @@
 			b.restore();
 		},
 		live: function (g, S, t) {
-			for (var i = 0; i < 2; i++) { var q = ((t * 0.26 + i * 0.5) % 1); g.globalAlpha = Math.sin(q * Math.PI) * 0.9; g.fillStyle = "#ffe98a"; g.font = "700 4.6px sans-serif"; g.fillText(i ? "♫" : "♪", 20 + Math.sin(q * 5 + i) * 3, -22 - q * 15); }
+			for (var i = 0; i < 2; i++) { var q = ((t * 0.26 + i * 0.5) % 1); g.globalAlpha = Math.sin(q * Math.PI) * 0.9; g.fillStyle = "#ffe98a"; g.font = "700 4.6px sans-serif"; g.fillText(i ? "\u266b" : "\u266a", 20 + Math.sin(q * 5 + i) * 3, -22 - q * 15); }
 			g.globalAlpha = 1;
 		}
 	};
@@ -1592,6 +1594,8 @@
 		var env = { W: W, H: H, u: u, gy: gy, d: d, seed: seed, kind: kind, groundY: groundY, busy: o.busy == null ? 1 : o.busy, preview: o.preview };
 		while (x < W + 4 * u && guard++ < 400) {
 			if (!deck.length) { deck = sc.deck.slice(); for (i = deck.length - 1; i > 0; i--) { var j = Math.floor(R() * (i + 1)), tmp = deck[i]; deck[i] = deck[j]; deck[j] = tmp; } }
+			// never the same vignette twice in a row
+			if (slots.length && deck[0] === slots[slots.length - 1].name) { for (i = 1; i < deck.length; i++) { if (deck[i] !== deck[0]) { deck.push(deck.splice(0, 1, deck[i])[0]); deck.splice(i, 1); break; } } }
 			var name = deck.shift(), v = V[name];
 			if (!v) { continue; }
 			slots.push({ name: name, v: v, x: x, w: v.w * z, u: z, gy: gy, d: d, R: SSO.seeded("slot" + slots.length + name + seed), sway: [], fx: [], t0: R() * 40, env: env });
@@ -1669,7 +1673,9 @@
 	function cornersOf(where) { return { top: [0, 1], bottom: [2, 3], all: [0, 1, 2, 3], left: [0, 2], right: [1, 3], tl: [0], tr: [1] }[where] || [0, 1]; }
 	// Runs fn with the canvas flipped so (0, 0) is that corner (0 TL, 1 TR, 2 BL, 3 BR) and +x / +y point into the frame.
 	function inCorner(g, W, H, k, fn) { g.save(); g.translate(k % 2 ? W : 0, k > 1 ? H : 0); g.scale(k % 2 ? -1 : 1, k > 1 ? -1 : 1); fn(); g.restore(); }
-	function areaK(W, H) { return Math.max(0.4, W * H / 2073600); }
+	// A cord hung from evenly spaced pins: each span is a parabola, which one quadratic curve draws exactly.
+	function swag(g, W, pins, top, sag) { g.beginPath(); g.moveTo(0, top); for (var i = 0; i < pins; i++) { g.quadraticCurveTo((i + 0.5) / pins * W, top + sag * 2, (i + 1) / pins * W, top); } g.stroke(); }
+	function areaK(W, H) { return Math.max(0.6, W * H / 2073600); }
 	function sprite(w, h, draw) { var cv = document.createElement("canvas"); cv.width = w; cv.height = h; draw(cv.getContext("2d")); return cv; }
 	// Things that tumble down the frame like paper: list items { x, y, s, rot, vr, fl, vf, ph, sp, k }.
 	function tumble(W, H, n, make) { var list = []; for (var i = 0; i < n; i++) { var p = make(i); p.x = Math.random() * W; p.y = Math.random() * H; p.rot = Math.random() * TAU; p.fl = Math.random() * TAU; p.ph = Math.random() * TAU; p.k = i; list.push(p); } return list; }
@@ -1715,7 +1721,7 @@
 		return petalImgs;
 	}
 	FX.blossom = function (W, H, c, ctx, d) {
-		var vh = H / 100, S = Math.min(48 * vh * c.size, W * 0.48), layers = [], img = petalSprites(), cols = ["#ffd3e2", "#f7a8c4", "#ffffff", "#ffc2d6"];
+		var vh = H / 100, S = Math.min(56 * vh * c.size, W * 0.48), layers = [], img = petalSprites(), cols = ["#ffd3e2", "#f7a8c4", "#ffffff", "#ffc2d6"];
 		cornersOf(c.where).forEach(function (k, li) {
 			var L = A.layer(S, S, d), b = L.b, R = SSO.seeded("blossom" + k), pts = [];
 			bough(b, -S * 0.02, S * 0.09, 0.4, S * 0.36, S * 0.03, 3, R, pts);
@@ -1733,7 +1739,7 @@
 		});
 		var petals = tumble(W, H, Math.round(34 * c.amount * areaK(W, H)), function () { return { s: (0.7 + Math.random() * 0.8) * vh * c.size, vr: (Math.random() - 0.5) * 2, vf: 1.5 + Math.random() * 2.5, sp: (6 + Math.random() * 7) * vh }; });
 		return function (g, t, dt) {
-			layers.forEach(function (L) { inCorner(g, W, H, L.k, function () { g.rotate(Math.sin(t * 0.5 + L.ph) * 0.012); g.drawImage(L.cv, 0, 0, S, S); }); });
+			layers.forEach(function (L) { inCorner(g, W, H, L.k, function () { g.drawImage(L.cv, 0, 0, S, S); }); });
 			tumbleStep(petals, W, H, t, dt, 0.3 + Math.sin(t * 0.13) * 0.5);
 			for (var j = 0; j < petals.length; j++) {
 				var p = petals[j];
@@ -1742,11 +1748,34 @@
 		};
 	};
 
+	FX.maple = function (W, H, c, ctx, d) {
+		var vh = H / 100, S = Math.min(56 * vh * c.size, W * 0.48), layers = [], spr = SSO.leafSprites ? SSO.leafSprites() : null;
+		function leaf(b, s, k) { if (spr) { b.drawImage(spr[k % spr.length], -s, -s, s * 2, s * 2); } else { ell(b, 0, 0, s * 0.6, s, FALL[k % FALL.length]); } }
+		cornersOf(c.where).forEach(function (k) {
+			var L = A.layer(S, S, d), b = L.b, R = SSO.seeded("maple" + k), pts = [], n = 0;
+			bough(b, -S * 0.02, S * 0.09, 0.4, S * 0.36, S * 0.03, 3, R, pts);
+			bough(b, S * 0.1, -S * 0.02, 1.05, S * 0.26, S * 0.022, 2, R, pts);
+			pts.forEach(function (p) {
+				for (var q = 0; q < (p[2] === 0 ? 2 : 1); q++) { b.save(); b.translate(p[0] + (R() - 0.5) * S * 0.06, p[1] + (R() - 0.5) * S * 0.06); b.rotate(R() * TAU); leaf(b, S * (0.03 + R() * 0.022), n++); b.restore(); }
+			});
+			layers.push({ k: k, cv: L.cv });
+		});
+		var leaves = tumble(W, H, Math.round(16 * c.amount * areaK(W, H)), function () { return { s: (1.6 + Math.random() * 1.6) * vh * c.size, vr: (Math.random() - 0.5) * 1.8, vf: 1 + Math.random() * 2.2, sp: (5 + Math.random() * 6) * vh }; });
+		return function (g, t, dt) {
+			layers.forEach(function (L) { inCorner(g, W, H, L.k, function () { g.drawImage(L.cv, 0, 0, S, S); }); });
+			tumbleStep(leaves, W, H, t, dt, 0.35 + Math.sin(t * 0.12) * 0.5);
+			for (var j = 0; j < leaves.length; j++) {
+				var p = leaves[j];
+				g.save(); g.translate(p.x, p.y); g.rotate(p.rot); g.scale(1, Math.max(0.14, Math.abs(Math.cos(p.fl)))); leaf(g, p.s, p.k); g.restore();
+			}
+		};
+	};
+
 	FX.butterflies = function (W, H, c) {
 		var vh = H / 100, n = Math.max(1, Math.round(7 * c.amount)), main = hexOr(c.color, ""), list = [], i;
 		for (i = 0; i < n; i++) {
 			var w = main ? [i % 2 ? shade(main, 0.85) : main, shade(main, 1.5)] : WINGS[i % WINGS.length];
-			list.push({ x: Math.random() * W, y: (12 + Math.random() * 72) * vh, dir: Math.random() < 0.5 ? -1 : 1, v: (7 + Math.random() * 8) * vh, ph: Math.random() * TAU, s: (2 + Math.random() * 1.7) * vh * c.size, c1: w[0], c2: w[1], wob: 5 + Math.random() * 9 });
+			list.push({ x: Math.random() * W, y: (12 + Math.random() * 72) * vh, dir: Math.random() < 0.5 ? -1 : 1, v: (7 + Math.random() * 8) * vh, ph: Math.random() * TAU, s: (2.6 + Math.random() * 2) * vh * c.size, c1: w[0], c2: w[1], wob: 5 + Math.random() * 9 });
 		}
 		list.sort(function (a, b) { return a.s - b.s; });
 		return function (g, t, dt) {
@@ -1760,7 +1789,7 @@
 	};
 
 	FX.fireflies = function (W, H, c) {
-		var vh = H / 100, n = Math.round(42 * c.amount * areaK(W, H)), list = [], i;
+		var vh = H / 100, n = Math.round(54 * c.amount * areaK(W, H)), list = [], i;
 		for (i = 0; i < n; i++) { list.push({ x: Math.random() * W, y: H * (0.18 + Math.random() * 0.8), ax: (4 + Math.random() * 9) * vh, ay: (3 + Math.random() * 6) * vh, fx: 0.2 + Math.random() * 0.4, fy: 0.25 + Math.random() * 0.45, ph: Math.random() * TAU, bl: 2.6 + Math.random() * 4, off: Math.random() * 10, r: (0.9 + Math.random() * 0.9) * vh * c.size, vx: (Math.random() - 0.5) * 1.6 * vh }); }
 		return function (g, t, dt) {
 			g.globalCompositeOperation = "lighter";
@@ -1799,16 +1828,19 @@
 			});
 		}
 		var r1 = rays("raysA", 30), r2 = rays("raysB", 22), seeds = [], motes = [];
+		var low = sprite(Math.ceil(W / 4), Math.ceil(H / 4), function () {}), lb = low.getContext("2d");
 		var ghosts = [[0.3, 5, "255,200,120", 0.2], [0.5, 2.4, "140,255,190", 0.16], [0.72, 8, "255,150,170", 0.12], [1.02, 3.6, "150,200,255", 0.17], [1.3, 11, "255,220,150", 0.1]];
 		for (i = 0; i < Math.round(12 * c.amount * areaK(W, H)); i++) { seeds.push({ x: Math.random() * W, y: Math.random() * H, s: (1.3 + Math.random() * 1.3) * vh * c.size, vx: (left ? 1 : -1) * (2 + Math.random() * 3.5) * vh, vy: -(0.3 + Math.random() * 1.6) * vh, ph: Math.random() * TAU }); }
 		for (i = 0; i < Math.round(30 * c.amount * areaK(W, H)); i++) { motes.push({ x: Math.random() * W, y: Math.random() * H, ph: Math.random() * TAU, sp: 0.5 + Math.random() * 1.5, r: (0.25 + Math.random() * 0.4) * vh }); }
 		return function (g, t, dt) {
 			var px = sx + Math.sin(t * 0.13) * 1.2 * vh, py = sy + Math.cos(t * 0.11) * 0.8 * vh, j;
+			lb.setTransform(0.25, 0, 0, 0.25, 0, 0); lb.globalCompositeOperation = "source-over"; lb.clearRect(0, 0, W + 4, H + 4); lb.globalCompositeOperation = "lighter";
+			lb.save(); lb.translate(px, py); lb.rotate(Math.sin(t * 0.09) * 0.12); lb.globalAlpha = 0.75 + 0.25 * Math.sin(t * 0.5); lb.drawImage(r1, -reach, -reach, reach * 2, reach * 2); lb.restore();
+			lb.save(); lb.translate(px, py); lb.rotate(-Math.sin(t * 0.07 + 1) * 0.16); lb.globalAlpha = 0.7 + 0.3 * Math.sin(t * 0.37 + 2); lb.drawImage(r2, -reach, -reach, reach * 2, reach * 2); lb.restore();
+			lb.globalAlpha = 1;
+			A.light(lb, px, py, 48 * vh * c.size, "255,236,170", 0.8); A.light(lb, px, py, 17 * vh * c.size, "255,255,235", 1);
+			g.drawImage(low, 0, 0, low.width * 4, low.height * 4);
 			g.globalCompositeOperation = "lighter";
-			g.save(); g.translate(px, py); g.rotate(Math.sin(t * 0.09) * 0.12); g.globalAlpha = 0.75 + 0.25 * Math.sin(t * 0.5); g.drawImage(r1, -reach, -reach, reach * 2, reach * 2); g.restore();
-			g.save(); g.translate(px, py); g.rotate(-Math.sin(t * 0.07 + 1) * 0.16); g.globalAlpha = 0.7 + 0.3 * Math.sin(t * 0.37 + 2); g.drawImage(r2, -reach, -reach, reach * 2, reach * 2); g.restore();
-			g.globalAlpha = 1;
-			A.light(g, px, py, 48 * vh * c.size, "255,236,170", 0.8); A.light(g, px, py, 17 * vh * c.size, "255,255,235", 1);
 			for (j = 0; j < ghosts.length; j++) { var G = ghosts[j]; A.light(g, px + (W / 2 - px) * G[0] * 1.5, py + (H / 2 - py) * G[0] * 1.5, G[1] * vh * c.size * (1 + 0.06 * Math.sin(t + j)), G[2], G[3]); }
 			for (j = 0; j < motes.length; j++) { var m = motes[j]; m.y -= 0.6 * vh * dt; m.x += Math.sin(t * 0.4 + m.ph) * vh * dt; if (m.y < -vh) { m.y = H + vh; m.x = Math.random() * W; } var tw = 0.5 + 0.5 * Math.sin(t * m.sp + m.ph); A.light(g, m.x, m.y, m.r * 3, "255,244,200", tw * tw * 0.7); }
 			g.globalCompositeOperation = "source-over";
@@ -1872,24 +1904,23 @@
 		g.restore();
 	}
 	FX.tropical = function (W, H, c, ctx, d) {
-		var vh = H / 100, S = Math.min(50 * vh * c.size, W * 0.48), layers = [], mon = monstera(360), ban = bananaLeaf(360);
+		var vh = H / 100, S = Math.min(50 * vh * c.size, W * 0.48), F = S * 0.62, layers = [], mon = monstera(360), ban = bananaLeaf(360);
 		function stamp(b, img, x, y, ang, len) { b.save(); b.translate(x, y); b.rotate(ang + Math.PI / 2); b.drawImage(img, -len / 2, -len, len, len); b.restore(); }
 		cornersOf(c.where).forEach(function (k, li) {
-			var R = SSO.seeded("tropic" + k), back = A.layer(S, S, d), mid = A.layer(S, S, d), front = A.layer(S, S, d), o = -S * 0.05;
-			back.b.translate(o, o); back.b.scale(S / 60, S / 60);
+			var R = SSO.seeded("tropic" + k), back = A.layer(S, S, d), front = A.layer(F, F, d), o = -S * 0.05;
+			back.b.save(); back.b.translate(o, o); back.b.scale(S / 60, S / 60);
 			[0.16, 0.5, 0.86, 1.2, 1.5].forEach(function (a, i) { frond(back.b, a - 0.32, 46 - (i % 2) * 6, i % 2 ? "#2a7d45" : "#1f6a3a"); });
-			stamp(mid.b, ban, o, o, 0.3 + R() * 0.1, S * 0.82); stamp(mid.b, ban, o, o, 1.24 + R() * 0.1, S * 0.7);
-			stamp(mid.b, mon, S * 0.02, S * 0.02, 0.78, S * 0.74);
+			back.b.restore();
+			stamp(back.b, ban, o, o, 0.3 + R() * 0.1, S * 0.82); stamp(back.b, ban, o, o, 1.24 + R() * 0.1, S * 0.7);
+			stamp(back.b, mon, S * 0.02, S * 0.02, 0.78, S * 0.74);
 			stamp(front.b, mon, o, S * 0.06, 0.28 + R() * 0.1, S * 0.5); stamp(front.b, mon, S * 0.08, o, 1.3 - R() * 0.1, S * 0.46);
 			hibiscus(front.b, S * 0.16, S * 0.13, S * 0.085, "#ff4d6d", R() * 3); hibiscus(front.b, S * 0.3, S * 0.07, S * 0.06, "#ff922b", R() * 3); hibiscus(front.b, S * 0.07, S * 0.3, S * 0.062, "#ffd23f", R() * 3);
 			[[0.23, 0.26, 0.036], [0.4, 0.14, 0.03], [0.13, 0.42, 0.03]].forEach(function (q) { flower5(front.b, S * q[0], S * q[1], S * q[2], "#ffffff", R() * 3); });
-			layers.push({ k: k, set: [back.cv, mid.cv, front.cv], ph: li * 1.9 });
+			layers.push({ k: k, back: back.cv, front: front.cv, ph: li * 1.9 });
 		});
 		return function (g, t) {
 			layers.forEach(function (L) {
-				inCorner(g, W, H, L.k, function () {
-					for (var i = 0; i < 3; i++) { g.save(); g.rotate(Math.sin(t * (0.5 + i * 0.13) + L.ph + i * 1.4) * (0.022 - i * 0.005)); g.drawImage(L.set[i], 0, 0, S, S); g.restore(); }
-				});
+				inCorner(g, W, H, L.k, function () { g.drawImage(L.back, 0, 0, S, S); g.rotate(Math.sin(t * 0.6 + L.ph) * 0.02 + Math.sin(t * 0.23 + L.ph * 2) * 0.008); g.drawImage(L.front, 0, 0, F, F); });
 			});
 		};
 	};
@@ -1902,8 +1933,8 @@
 		});
 	}
 	FX.hearts = function (W, H, c) {
-		var vh = H / 100, main = hexOr(c.color, ""), pal = main ? [main, shade(main, 1.3), shade(main, 0.8), shade(main, 1.6)] : LOVE, spr = pal.map(heartSprite), list = [], n = Math.round(26 * c.amount * areaK(W, H)), i;
-		for (i = 0; i < n; i++) { var z = Math.random(); list.push({ x: Math.random() * W, y: Math.random() * H, z: z, s: (1 + z * 2.6) * vh * c.size, v: (4 + z * 7) * vh, ph: Math.random() * TAU, k: i % spr.length }); }
+		var vh = H / 100, main = hexOr(c.color, ""), pal = main ? [main, shade(main, 1.3), shade(main, 0.8), shade(main, 1.6)] : LOVE, spr = pal.map(heartSprite), list = [], n = Math.round(34 * c.amount * areaK(W, H)), i;
+		for (i = 0; i < n; i++) { var z = Math.random(); list.push({ x: Math.random() * W, y: Math.random() * H, z: z, s: (1.4 + z * 3.2) * vh * c.size, v: (4 + z * 7) * vh, ph: Math.random() * TAU, k: i % spr.length }); }
 		list.sort(function (a, b) { return a.z - b.z; });
 		return function (g, t, dt) {
 			for (var j = 0; j < list.length; j++) {
@@ -1918,8 +1949,8 @@
 	};
 
 	FX.shamrocks = function (W, H, c) {
-		var vh = H / 100, spr = CLOVER.concat(["#51cf66"]).map(function (col, i) { return sprite(96, 96, function (g) { clover(g, 48, 48, 30, col, i === 3, true); circ(g, 48, 48, 4, shade(col, 0.8)); }); });
-		var list = tumble(W, H, Math.round(30 * c.amount * areaK(W, H)), function (i) { return { s: (1.3 + Math.random() * 1.5) * vh * c.size, vr: (Math.random() - 0.5) * 1.8, vf: 1 + Math.random() * 2, sp: (5 + Math.random() * 6) * vh, four: i % 9 === 4 }; }), glints = [], i;
+		var vh = H / 100, spr = ["#51cf66", "#69db7c", "#40c057", "#8ce99a"].map(function (col, i) { return sprite(96, 96, function (g) { var n = i === 3 ? 4 : 3, a; clover(g, 48, 48, 33.5, shade(col, 0.5), i === 3, true); clover(g, 48, 48, 30, col, i === 3, true); circ(g, 48, 48, 4, shade(col, 0.8)); g.strokeStyle = "rgba(255,255,255,.4)"; g.lineWidth = 1.6; g.lineCap = "round"; for (var q = 0; q < n; q++) { a = q * TAU / n + (n === 4 ? Math.PI / 4 : -Math.PI / 2); g.beginPath(); g.moveTo(48 + Math.cos(a) * 7, 48 + Math.sin(a) * 7); g.lineTo(48 + Math.cos(a) * 26, 48 + Math.sin(a) * 26); g.stroke(); } }); });
+		var list = tumble(W, H, Math.round(38 * c.amount * areaK(W, H)), function (i) { return { s: (2.3 + Math.random() * 2.5) * vh * c.size, vr: (Math.random() - 0.5) * 1.8, vf: 1 + Math.random() * 2, sp: (5 + Math.random() * 6) * vh, four: i % 9 === 4 }; }), glints = [], i;
 		for (i = 0; i < Math.round(7 * c.amount); i++) { glints.push({ x: Math.random(), y: Math.random(), ph: Math.random() * 9, len: 2.5 + Math.random() * 3 }); }
 		return function (g, t, dt) {
 			var j;
@@ -1958,9 +1989,9 @@
 		function wy(px) { var f = (px / W * pins) % 1; return top + sag * 4 * f * (1 - f); }
 		for (i = 0; i < n; i++) { var x = (i + 0.5) / n * W; list.push({ x: x, y: wy(x), s: (3.1 + R() * 1.2) * vh * c.size, drop: (0.2 + R() * 2.4) * vh * c.size, tall: i % 3 === 1 ? 1 : 0, ph: R() * TAU, sp: 0.7 + R() * 0.5 }); }
 		return function (g, t) {
-			var px, j;
+			var j;
 			g.lineCap = "round"; g.lineJoin = "round";
-			[["rgba(40,20,10,.55)", 0.34], ["#c9a23a", 0.16]].forEach(function (st) { g.strokeStyle = st[0]; g.lineWidth = Math.max(1, st[1] * vh); g.beginPath(); for (px = 0; px <= W + 8; px += Math.max(4, W / 240)) { if (px) { g.lineTo(px, wy(px)); } else { g.moveTo(px, wy(px)); } } g.stroke(); });
+			[["rgba(40,20,10,.55)", 0.34], ["#c9a23a", 0.16]].forEach(function (st) { g.strokeStyle = st[0]; g.lineWidth = Math.max(1, st[1] * vh); swag(g, W, pins, top, sag); });
 			for (j = 0; j < list.length; j++) {
 				var L = list[j], sw = Math.sin(t * L.sp + L.ph) * 0.07 + Math.sin(t * 0.31 + L.ph * 2) * 0.03, w = L.s * 2.58, h = w * 2.5, f = A.flick(t * 0.6 + L.ph);
 				g.save(); g.translate(L.x, L.y); g.rotate(sw);
@@ -2046,9 +2077,9 @@
 		function wy(px) { var f = (px / W * pins) % 1; return top + sag * 4 * f * (1 - f); }
 		function slope(px) { var f = (px / W * pins) % 1; return sag * 4 * (1 - 2 * f) * pins / W; }
 		return function (g, t) {
-			var px, i;
+			var i;
 			g.lineCap = "round"; g.lineJoin = "round";
-			[["rgba(30,20,10,.45)", 0.36], ["#f6f1e7", 0.18]].forEach(function (st) { g.strokeStyle = st[0]; g.lineWidth = Math.max(1, st[1] * vh); g.beginPath(); for (px = 0; px <= W + 8; px += Math.max(4, W / 240)) { if (px) { g.lineTo(px, wy(px)); } else { g.moveTo(px, wy(px)); } } g.stroke(); });
+			[["rgba(30,20,10,.45)", 0.36], ["#f6f1e7", 0.18]].forEach(function (st) { g.strokeStyle = st[0]; g.lineWidth = Math.max(1, st[1] * vh); swag(g, W, pins, top, sag); });
 			for (i = 0; i < n; i++) {
 				var x = (i + 0.5) / n * W, tip = Math.sin(t * 2.4 + i * 1.3) * fw * 0.12, col = pal[i % pal.length];
 				g.save(); g.translate(x, wy(x)); g.rotate(Math.atan(slope(x)) + Math.sin(t * 1.9 + i * 0.9) * 0.06);
@@ -2062,11 +2093,11 @@
 
 	// Fern-like ice crystals creeping in from a corner.
 	function frostFern(g, x, y, ang, len, w, depth, R) {
-		var x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len, n = Math.max(3, Math.round(len / (w * 7))), i;
+		var x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len, n = Math.max(3, Math.round(len / (w * 13))), i;
 		g.lineWidth = w; g.beginPath(); g.moveTo(x, y); g.lineTo(x2, y2); g.stroke();
 		if (depth <= 0) { return; }
 		for (i = 1; i <= n; i++) {
-			var k = i / (n + 0.6), bx = x + (x2 - x) * k, by = y + (y2 - y) * k, bl = len * (0.42 - k * 0.3) * (0.7 + R() * 0.6);
+			var k = i / (n + 0.6), bx = x + (x2 - x) * k, by = y + (y2 - y) * k, bl = len * (0.36 - k * 0.24) * (0.7 + R() * 0.6);
 			frostFern(g, bx, by, ang + 1.02 + (R() - 0.5) * 0.2, bl, w * 0.62, depth - 1, R); frostFern(g, bx, by, ang - 1.02 + (R() - 0.5) * 0.2, bl, w * 0.62, depth - 1, R);
 		}
 	}
@@ -2074,10 +2105,11 @@
 		var vh = H / 100, S = Math.min(46 * vh * c.size, W * 0.48), layers = [], glints = [], grow = ctx && ctx.preview ? 2.5 : 6;
 		cornersOf(c.where).forEach(function (k) {
 			var L = A.layer(S, S, d), b = L.b, R = SSO.seeded("frost" + k), i, gr = b.createRadialGradient(0, 0, 0, 0, 0, S * 0.9);
-			gr.addColorStop(0, "rgba(236,246,255,.55)"); gr.addColorStop(0.45, "rgba(226,240,255,.2)"); gr.addColorStop(1, "rgba(226,240,255,0)");
+			gr.addColorStop(0, "rgba(236,246,255,.34)"); gr.addColorStop(0.45, "rgba(226,240,255,.13)"); gr.addColorStop(1, "rgba(226,240,255,0)");
 			b.fillStyle = gr; b.fillRect(0, 0, S, S);
-			b.strokeStyle = "rgba(244,250,255,.82)"; b.lineCap = "round";
-			for (i = 0; i < Math.round(7 * Math.min(2, c.amount)); i++) { frostFern(b, R() * S * 0.06, R() * S * 0.06, (i + 0.3 + R() * 0.4) / (7 * Math.min(2, c.amount)) * Math.PI / 2, S * (0.42 + R() * 0.36), Math.max(1, S * 0.006), 3, R); }
+			b.strokeStyle = "rgba(244,250,255,.8)"; b.lineCap = "round";
+			var count = Math.round(5 * Math.min(2, c.amount));
+			for (i = 0; i < count; i++) { frostFern(b, R() * S * 0.05, R() * S * 0.05, (i + 0.3 + R() * 0.4) / count * Math.PI / 2, S * (0.5 + R() * 0.34), Math.max(0.8, S * 0.0042), 2 + (i % 2), R); }
 			for (i = 0; i < 9; i++) { var along = i % 2, p = R() * S * 0.9; frostFern(b, along ? p : 0, along ? 0 : p, (along ? Math.PI / 2 : 0) + (R() - 0.5) * 0.9, S * (0.07 + R() * 0.1) * (1 - p / S * 0.6), Math.max(1, S * 0.004), 2, R); }
 			layers.push({ k: k, cv: L.cv });
 			for (i = 0; i < 9; i++) { var a = R() * Math.PI / 2, rr = S * (0.12 + R() * 0.6); glints.push({ k: k, x: Math.cos(a) * rr, y: Math.sin(a) * rr, ph: R() * 9, len: 2 + R() * 3 }); }
@@ -2093,21 +2125,21 @@
 			glints.forEach(function (q) {
 				var k = ((t + q.ph) % q.len) / q.len, a = Math.sin(k * Math.PI) * reveal;
 				if (a < 0.05) { return; }
-				inCorner(g, W, H, q.k, function () { g.globalAlpha = a; star(g, q.x, q.y, (0.3 + a * 0.9) * vh * c.size, "#ffffff", t * 0.5); glowAt(g, q.x, q.y, 2.4 * vh * c.size, "200,230,255", a * 0.6); g.globalAlpha = 1; });
+				inCorner(g, W, H, q.k, function () { g.globalAlpha = a; star(g, q.x, q.y, (0.3 + a * 0.8) * vh * c.size, "#ffffff", t * 0.5); glowAt(g, q.x, q.y, 1.8 * vh * c.size, "200,230,255", a * 0.4); g.globalAlpha = 1; });
 			});
 		};
 	};
 
-	var FX_COLOR = ["butterflies", "hearts", "lanterns", "balloons", "bunting"], FX_CORNER = ["blossom", "tropical", "frost"];
+	var FX_COLOR = ["butterflies", "hearts", "lanterns", "balloons", "bunting"], FX_CORNER = ["blossom", "maple", "tropical", "frost"];
 	SSO.register({
 		id: "seasonfx",
 		name: "Seasonal effects",
 		category: "holidays",
-		description: "Transparent seasonal touches to lay over any scene: cherry-blossom branches with falling petals, butterflies, fireflies, summer sun rays with drifting dandelion seeds, tropical leaf corners, floating hearts, shamrocks, paper lanterns, hot-air balloons, rain, party bunting and frosted corners.",
+		description: "Transparent seasonal touches to lay over any scene: cherry-blossom branches with falling petals, autumn maple boughs, butterflies, fireflies, summer sun rays with drifting dandelion seeds, tropical leaf corners, floating hearts, shamrocks, paper lanterns, hot-air balloons, rain, party bunting and frosted corners.",
 		size: [1920, 1080],
 		sizeFor: function (c, thumb) { return thumb ? [960, 540] : [1920, 1080]; },
 		fields: [
-			{ key: "kind", label: "Effect", type: "select", group: "Effect", default: "blossom", options: [["blossom", "Cherry blossom branches & petals"], ["butterflies", "Butterflies"], ["fireflies", "Fireflies at dusk"], ["sunrays", "Sun rays & dandelion seeds"], ["tropical", "Tropical leaf corners"], ["hearts", "Floating hearts"], ["shamrocks", "Falling shamrocks"], ["lanterns", "Hanging paper lanterns"], ["balloons", "Hot-air balloons drifting by"], ["rain", "Rain with ripples"], ["bunting", "Party bunting"], ["frost", "Frosted corners"]] },
+			{ key: "kind", label: "Effect", type: "select", group: "Effect", default: "blossom", options: [["blossom", "Cherry blossom branches & petals"], ["maple", "Autumn maple branches & leaves"], ["butterflies", "Butterflies"], ["fireflies", "Fireflies at dusk"], ["sunrays", "Sun rays & dandelion seeds"], ["tropical", "Tropical leaf corners"], ["hearts", "Floating hearts"], ["shamrocks", "Falling shamrocks"], ["lanterns", "Hanging paper lanterns"], ["balloons", "Hot-air balloons drifting by"], ["rain", "Rain with ripples"], ["bunting", "Party bunting"], ["frost", "Frosted corners"]] },
 			{ key: "amount", label: "Amount", type: "range", group: "Effect", default: 1, min: 0.2, max: 3, step: 0.1 },
 			{ key: "size", label: "Size", type: "range", group: "Effect", default: 1, min: 0.4, max: 2.5, step: 0.1 },
 			{ key: "speed", label: "Speed", type: "range", group: "Effect", default: 1, min: 0.2, max: 3, step: 0.1 },
@@ -2127,6 +2159,7 @@
 			{ name: "Falling shamrocks", tags: ["holiday", "spring"], values: { kind: "shamrocks" } },
 			{ name: "Spring rain", tags: ["spring", "cozy"], values: { kind: "rain" } },
 			{ name: "Party bunting", tags: ["summer", "cute"], values: { kind: "bunting" } },
+			{ name: "Autumn maple corners", tags: ["autumn", "cozy"], values: { kind: "maple" } },
 			{ name: "Frosted corners", tags: ["winter", "elegant", "christmas"], values: { kind: "frost" } },
 			{ name: "Blossoms all around", tags: ["spring", "elegant"], values: { where: "all", amount: 1.3, size: 0.9 } },
 			{ name: "Tropical frame", tags: ["summer"], values: { kind: "tropical", where: "all", size: 0.85 } },

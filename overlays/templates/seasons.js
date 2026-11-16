@@ -5,6 +5,10 @@
 	"use strict";
 	if (!SSO.addEngine || !SSO.winter) { return; }
 	var K = SSO.winter, TAU = Math.PI * 2;
+	// Colour maths that hands back hex, so a shaded colour can be shaded, mixed or made translucent again (the winter kit returns rgb() strings).
+	function toHex(c) { return "#" + c.map(function (v) { v = Math.max(0, Math.min(255, Math.round(v))).toString(16); return v.length < 2 ? "0" + v : v; }).join(""); }
+	function tone(hex, f) { return toHex(K.rgb(hex).map(function (v) { return f >= 1 ? v + (255 - v) * (f - 1) : v * f; })); }
+	function blend(a, b, k) { var x = K.rgb(a), y = K.rgb(b); return toHex(x.map(function (v, i) { return v + (y[i] - v) * k; })); }
 
 	// def.build(b, W, H, o, S) paints the still picture once per size; def.draw(g, t, dt, W, H, o, S) adds the moving parts.
 	// S.u is the scale against a 1080-high screen. S.layer() makes an extra full-size layer (for things that sit in front of moving sky).
@@ -125,9 +129,9 @@
 		b.fillStyle = "#4ba24a";
 		b.beginPath(); b.moveTo(x, base); b.quadraticCurveTo(x - s * 0.5, base - s * 0.5, x - s * 0.24, base - s * 0.9); b.quadraticCurveTo(x - s * 0.06, base - s * 0.4, x, base); b.fill();
 		b.beginPath(); b.moveTo(x, base); b.quadraticCurveTo(x + s * 0.44, base - s * 0.4, x + s * 0.3, base - s * 0.74); b.quadraticCurveTo(x + s * 0.09, base - s * 0.35, x, base); b.fill();
-		b.fillStyle = K.shade(col, 0.78); ell(b, hx, top - s * 0.14, s * 0.2, s * 0.3);
+		b.fillStyle = tone(col, 0.78); ell(b, hx, top - s * 0.14, s * 0.2, s * 0.3);
 		b.fillStyle = col; ell(b, hx - s * 0.12, top - s * 0.13, s * 0.15, s * 0.31, -0.22); ell(b, hx + s * 0.12, top - s * 0.13, s * 0.15, s * 0.31, 0.22);
-		b.fillStyle = K.shade(col, 1.3); ell(b, hx - s * 0.14, top - s * 0.18, s * 0.05, s * 0.18, -0.22);
+		b.fillStyle = tone(col, 1.3); ell(b, hx - s * 0.14, top - s * 0.18, s * 0.05, s * 0.18, -0.22);
 	}
 	function daisy(b, x, y, s, col, mid) {
 		b.fillStyle = col;
@@ -147,7 +151,7 @@
 		b.fillStyle = "rgba(0,0,0,.25)"; ell(b, x, base, r * 1.2, r * 0.16);
 		[-2, 2, -1, 1, 0].forEach(function (i) {
 			var px = x + i * r * 0.3, gr = b.createRadialGradient(px - r * 0.15, base - r * 1.0, r * 0.05, px, base - r * 0.7, r * 0.95);
-			gr.addColorStop(0, K.shade(col, 1.35)); gr.addColorStop(0.6, col); gr.addColorStop(1, K.shade(col, 0.55));
+			gr.addColorStop(0, tone(col, 1.35)); gr.addColorStop(0.6, col); gr.addColorStop(1, tone(col, 0.55));
 			b.fillStyle = gr; ell(b, px, base - r * 0.7, r * (0.5 - Math.abs(i) * 0.05), r * (0.72 - Math.abs(i) * 0.04));
 		});
 		b.fillStyle = "#4d6b25"; b.beginPath(); b.moveTo(x - r * 0.09, base - r * 1.36); b.quadraticCurveTo(x - r * 0.02, base - r * 1.6, x + r * 0.2, base - r * 1.7); b.lineTo(x + r * 0.27, base - r * 1.58); b.quadraticCurveTo(x + r * 0.1, base - r * 1.5, x + r * 0.1, base - r * 1.34); b.fill();
@@ -246,7 +250,7 @@
 		return cols.map(function (c) {
 			return petalCache[c] || (petalCache[c] = sprite(48, 48, function (g) {
 				g.translate(24, 24);
-				var gr = g.createLinearGradient(0, -18, 0, 20); gr.addColorStop(0, "#ffffff"); gr.addColorStop(0.55, c); gr.addColorStop(1, K.shade(c, 0.84));
+				var gr = g.createLinearGradient(0, -18, 0, 20); gr.addColorStop(0, "#ffffff"); gr.addColorStop(0.55, c); gr.addColorStop(1, tone(c, 0.84));
 				g.fillStyle = gr; g.beginPath(); g.moveTo(0, 20); g.bezierCurveTo(-20, 6, -14, -18, -3, -17); g.lineTo(0, -12); g.lineTo(3, -17); g.bezierCurveTo(14, -18, 20, 6, 0, 20); g.fill();
 			}));
 		});
@@ -257,7 +261,7 @@
 		id: "springpark", label: "Cherry blossom park", colors: ["cfeaff", "ff9ec4", "ffe08a"],
 		build: function (b, W, H, o, S) {
 			var R = SSO.seeded("springpark"), u = S.u, pink = o.c2, i, x, y;
-			var P = [K.shade(pink, 0.76), pink, K.shade(pink, 1.5)], G = ["#3f8a47", "#5fae58", "#8fd07a"];
+			var P = [tone(pink, 0.76), pink, tone(pink, 1.5)], G = ["#3f8a47", "#5fae58", "#8fd07a"];
 			sky(b, W, H, [[0, "#4f9fe4"], [0.42, "#9fd0f5"], [0.66, lightOr(o.c1, 0.5, "#cfeaff")]]);
 			S.sun = [W * 0.21, H * 0.15, H * 0.058];
 			sun(b, S.sun[0], S.sun[1], S.sun[2], "#fff8dc", o.c3);
@@ -265,7 +269,7 @@
 			hill(b, W, H, H * 0.6, H * 0.03, 1.2, grad(b, 0, H * 0.54, 0, H * 0.66, [[0, "#a9d4cf"], [1, "#bfe3c4"]]));
 			hill(b, W, H, H * 0.632, H * 0.016, 4.3, "#93cf9a");
 			// far row of trees on the ridge, mostly in bloom
-			for (i = 0; i < 17; i++) { x = (i + R() * 0.8) / 17 * W; tree(b, x, H * (0.655 + R() * 0.012), H * (0.085 + R() * 0.05), i % 4 === 2 ? G : [K.mix(P[0], "#93cf9a", 0.25), K.mix(P[1], "#cfe9d4", 0.2), P[2]], R, { blobs: 12, trunk: "#6a4a3a" }); }
+			for (i = 0; i < 17; i++) { x = (i + R() * 0.8) / 17 * W; tree(b, x, H * (0.655 + R() * 0.012), H * (0.085 + R() * 0.05), i % 4 === 2 ? G : [blend(P[0], "#93cf9a", 0.25), blend(P[1], "#cfe9d4", 0.2), P[2]], R, { blobs: 12, trunk: "#6a4a3a" }); }
 			// meadow
 			b.fillStyle = grad(b, 0, H * 0.65, 0, H, [[0, "#9fdc8e"], [0.45, "#72c268"], [1, "#4a9a48"]]); b.fillRect(0, H * 0.655, W, H * 0.345);
 			// pond
@@ -299,7 +303,7 @@
 			tree(f, W * 0.055, H * 0.95, H * 0.8, P, R, { trunk: "#432b23", blobs: 70, wide: 0.42 });
 			tree(f, W * 0.965, H * 0.97, H * 0.74, P, R, { trunk: "#432b23", blobs: 64, wide: 0.42 });
 			f.strokeStyle = "#432b23"; f.lineCap = "round";
-			branch(f, W * 0.36, -H * 0.03, 0.5, H * 0.17, H * 0.016, 3, R, function (lx, ly, len, depth) {
+			branch(f, W * 0.36, -H * 0.03, 0.5, H * 0.17, H * 0.016, 3, R, function (lx, ly, len) {
 				for (var q = 0; q < 5; q++) { blossom(f, lx + (R() - 0.5) * len * 0.9, ly + (R() - 0.5) * len * 0.6, H * (0.009 + R() * 0.006), q % 2 ? P[2] : P[1]); }
 			});
 			grass(f, W, H * 0.975, 320, u * 40, ["#3d8a43", "#4f9d4a", "#2f7a3c", "#5fae58"], R);
@@ -458,9 +462,9 @@
 				b.fillStyle = "rgba(70,30,95,.55)"; ell(b, x, y, cw, ch); ell(b, x + cw * 0.3, y - ch * 0.9, cw * 0.55, ch * 0.9);
 				b.fillStyle = "rgba(255,160,120,.55)"; ell(b, x + cw * 0.05, y + ch * 0.7, cw * 0.86, ch * 0.4);
 			}
-			b.fillStyle = grad(b, 0, sy - sr, 0, sy + sr, [[0, "#fff6c9"], [0.55, o.c3], [1, K.mix(o.c3, o.c2, 0.7)]]); circ(b, sx, sy, sr);
+			b.fillStyle = grad(b, 0, sy - sr, 0, sy + sr, [[0, "#fff6c9"], [0.55, o.c3], [1, blend(o.c3, o.c2, 0.7)]]); circ(b, sx, sy, sr);
 			// sea
-			b.fillStyle = grad(b, 0, hz, 0, H, [[0, K.mix(o.c2, "#ffb07a", 0.35)], [0.12, "#c4506e"], [0.45, "#5a2468"], [1, "#180c38"]]); b.fillRect(0, hz, W, H - hz);
+			b.fillStyle = grad(b, 0, hz, 0, H, [[0, blend(o.c2, "#ffb07a", 0.35)], [0.12, "#c4506e"], [0.45, "#5a2468"], [1, "#180c38"]]); b.fillRect(0, hz, W, H - hz);
 			// soft pool of light on the water under the sun (a few widening bands, so it has no hard edge)
 			for (i = 0; i < 5; i++) {
 				b.fillStyle = grad(b, 0, hz, 0, H, [[0, K.alpha(o.c3, 0.16)], [1, K.alpha(o.c3, 0)]]);
@@ -488,7 +492,7 @@
 		},
 		draw: function (g, t, dt, W, H, o, S) {
 			var u = S.u, hz = H * 0.62, i, dark = "#150926";
-			g.lineCap = "round"; g.strokeStyle = K.mix(o.c3, "#ffffff", 0.45);
+			g.lineCap = "round"; g.strokeStyle = blend(o.c3, "#ffffff", 0.45);
 			for (i = 0; i < S.glit.length; i++) {
 				var q = S.glit[i], a = 0.3 + 0.6 * Math.sin(t * q[4] + q[3]);
 				if (a <= 0.03) { continue; }
@@ -527,7 +531,7 @@
 			sky(b, W, H, [[0, darkOr(o.c1, 0.45, "#33265c")], [0.3, "#7b3f7e"], [0.47, "#d9667a"], [0.6, o.c2]]);
 			stars(b, W, H * 0.34, 90, R, u);
 			// harvest moon
-			var mx = W * 0.2, my = H * 0.28, mr = H * 0.085;
+			var mx = W * 0.115, my = H * 0.2, mr = H * 0.085;
 			sun(b, mx, my, mr, "#fff3d6", o.c3, 4);
 			b.fillStyle = "rgba(214,170,110,.3)"; [[-0.3, -0.2, 0.2], [0.34, 0.24, 0.14], [0.08, -0.5, 0.1], [-0.4, 0.36, 0.12], [0.3, -0.25, 0.08]].forEach(function (c) { circ(b, mx + c[0] * mr, my + c[1] * mr, c[2] * mr); });
 			for (i = 0; i < 8; i++) {
@@ -627,7 +631,7 @@
 	scene({
 		id: "springrain", label: "Spring shower in the garden", colors: ["b4c5d6", "ff6f91", "ffd23f"],
 		build: function (b, W, H, o, S) {
-			var R = SSO.seeded("springrain"), u = S.u, i, x, y, G = ["#3f8a47", "#63b35c", "#a5df8a"];
+			var R = SSO.seeded("springrain"), u = S.u, i, x, G = ["#3f8a47", "#63b35c", "#a5df8a"];
 			sky(b, W, H, [[0, "#66798f"], [0.4, lightOr(o.c1, 0.45, "#b4c5d6")], [0.64, "#e3e9e6"]]);
 			// sunlight breaking through on the right, and a rainbow over the hills
 			var lg = b.createRadialGradient(W * 0.86, H * 0.08, 0, W * 0.86, H * 0.08, H * 0.75); lg.addColorStop(0, "rgba(255,244,200,.8)"); lg.addColorStop(1, "rgba(255,244,200,0)");
@@ -687,7 +691,7 @@
 			[0, 1].forEach(function (k) {
 				var bx2 = W * 0.105 + k * u * 54, by2 = H * 0.955;
 				b.fillStyle = o.c2; K.rr(b, bx2 - u * 20, by2 - u * 100, u * 40, u * 100, u * 10); b.fill(); K.rr(b, bx2 - u * 20, by2 - u * 30, u * 70, u * 30, u * 14); b.fill();
-				b.fillStyle = K.shade(o.c2, 0.7); b.fillRect(bx2 - u * 20, by2 - u * 100, u * 40, u * 12); b.fillRect(bx2 - u * 20, by2 - u * 6, u * 70, u * 6);
+				b.fillStyle = tone(o.c2, 0.7); b.fillRect(bx2 - u * 20, by2 - u * 100, u * 40, u * 12); b.fillRect(bx2 - u * 20, by2 - u * 6, u * 70, u * 6);
 				b.fillStyle = "rgba(255,255,255,.3)"; K.rr(b, bx2 - u * 13, by2 - u * 82, u * 7, u * 46, u * 3); b.fill();
 			});
 			// an umbrella left open on the lawn
@@ -776,7 +780,7 @@
 			function quad(g2, grow) { g2.beginPath(); g2.moveTo(P[0] - grow, P[1] - grow * 0.5); g2.lineTo(P[2] + grow, P[1] - grow * 0.5); g2.lineTo(P[5] + grow * 1.6, P[4] + grow * 0.7); g2.lineTo(P[3] - grow * 1.6, P[4] + grow * 0.7); g2.closePath(); }
 			S.poolPath = quad;
 			b.fillStyle = "#aab8cf"; quad(b, u * 22); b.fill(); b.fillStyle = "#7f8eaa"; quad(b, u * 6); b.fill();
-			b.fillStyle = grad(b, 0, P[1], 0, P[4], [[0, K.shade(o.c2, 0.5)], [0.5, o.c2], [1, K.shade(o.c2, 1.35)]]); quad(b, 0); b.fill();
+			b.fillStyle = grad(b, 0, P[1], 0, P[4], [[0, tone(o.c2, 0.5)], [0.5, o.c2], [1, tone(o.c2, 1.35)]]); quad(b, 0); b.fill();
 			b.save(); quad(b, 0); b.clip();
 			[0.36, 0.52, 0.68].forEach(function (q) { var lg = b.createRadialGradient(W * q, P[1] + u * 6, 0, W * q, P[1] + u * 6, u * 190); lg.addColorStop(0, "rgba(235,255,250,.75)"); lg.addColorStop(1, "rgba(235,255,250,0)"); b.fillStyle = lg; b.fillRect(W * q - u * 200, P[1], u * 400, u * 200); });
 			b.fillStyle = "rgba(0,20,40,.25)"; b.fillRect(0, P[1], W, u * 10);
@@ -832,7 +836,7 @@
 			g.strokeStyle = "rgba(255,255,255,.45)"; g.lineWidth = u * 5; g.beginPath(); g.ellipse(0, -u * 5, u * 78, u * 24, 0, Math.PI * 1.1, Math.PI * 1.7); g.stroke();
 			g.fillStyle = o.c3; circ(g, u * 50, -u * 136, u * 19);
 			g.fillStyle = "#1c1c28"; g.beginPath(); g.moveTo(u * 36, -u * 146); g.lineTo(u * 8, -u * 128); g.lineTo(u * 38, -u * 126); g.fill(); circ(g, u * 52, -u * 141, u * 3.5);
-			g.fillStyle = K.shade(o.c3, 0.8); ell(g, -u * 30, -u * 30, u * 40, u * 16, -0.25);
+			g.fillStyle = tone(o.c3, 0.8); ell(g, -u * 30, -u * 30, u * 40, u * 16, -0.25);
 			g.restore();
 			var dx = W * 0.36 + Math.cos(t * 0.06) * W * 0.07, dy = H * 0.8 + Math.sin(t * 0.08) * H * 0.025 + Math.sin(t * 1.1 + 2) * u * 2;
 			g.strokeStyle = "rgba(0,30,50,.3)"; g.lineWidth = u * 26; g.beginPath(); g.ellipse(dx, dy + u * 9, u * 54, u * 18, 0, 0, TAU); g.stroke();
@@ -861,7 +865,7 @@
 			var fg = b.createRadialGradient(vx, vy, 0, vx, vy, H * 1.1); fg.addColorStop(0, o.c3); fg.addColorStop(0.26, fog); fg.addColorStop(0.6, "#a8521c"); fg.addColorStop(1, "#3a1c0c");
 			b.fillStyle = fg; b.fillRect(0, 0, W, H);
 			// forest floor and the path running into the mist
-			b.fillStyle = grad(b, 0, vy, 0, H, [[0, K.mix(fog, "#b0601f", 0.3)], [0.3, "#8a4318"], [1, "#2f1408"]]); b.fillRect(0, vy + H * 0.02, W, H);
+			b.fillStyle = grad(b, 0, vy, 0, H, [[0, blend(fog, "#b0601f", 0.3)], [0.3, "#8a4318"], [1, "#2f1408"]]); b.fillRect(0, vy + H * 0.02, W, H);
 			b.fillStyle = grad(b, 0, vy, 0, H, [[0, o.c3], [0.4, "#dcae6c"], [1, "#a8743e"]]);
 			b.beginPath(); b.moveTo(vx - u * 12, vy + H * 0.02); b.bezierCurveTo(vx - u * 60, H * 0.72, W * 0.36, H * 0.84, W * 0.27, H); b.lineTo(W * 0.73, H); b.bezierCurveTo(W * 0.62, H * 0.84, vx + u * 80, H * 0.72, vx + u * 12, vy + H * 0.02); b.fill();
 			for (i = 0; i < 900; i++) {
@@ -873,16 +877,16 @@
 			b.globalAlpha = 1;
 			// a deer pausing far down the path
 			var dx = vx + u * 46, dy = vy + H * 0.055, ds = u * 0.5;
-			b.fillStyle = K.mix(fog, "#6a3a1a", 0.55); ell(b, dx, dy - ds * 62, ds * 44, ds * 22);
+			b.fillStyle = blend(fog, "#6a3a1a", 0.55); ell(b, dx, dy - ds * 62, ds * 44, ds * 22);
 			b.fillRect(dx - ds * 34, dy - ds * 54, ds * 8, ds * 54); b.fillRect(dx - ds * 22, dy - ds * 54, ds * 8, ds * 54); b.fillRect(dx + ds * 20, dy - ds * 54, ds * 8, ds * 54); b.fillRect(dx + ds * 30, dy - ds * 54, ds * 8, ds * 54);
 			b.beginPath(); b.moveTo(dx + ds * 28, dy - ds * 74); b.lineTo(dx + ds * 50, dy - ds * 116); b.lineTo(dx + ds * 64, dy - ds * 110); b.lineTo(dx + ds * 44, dy - ds * 62); b.fill(); ell(b, dx + ds * 62, dy - ds * 118, ds * 16, ds * 10, 0.2);
 			b.strokeStyle = b.fillStyle; b.lineWidth = ds * 4; b.lineCap = "round"; b.beginPath(); b.moveTo(dx + ds * 54, dy - ds * 126); b.lineTo(dx + ds * 46, dy - ds * 156); b.moveTo(dx + ds * 50, dy - ds * 140); b.lineTo(dx + ds * 36, dy - ds * 150); b.moveTo(dx + ds * 62, dy - ds * 126); b.lineTo(dx + ds * 70, dy - ds * 154); b.moveTo(dx + ds * 66, dy - ds * 140); b.lineTo(dx + ds * 80, dy - ds * 148); b.stroke();
 			// four ranks of trees, paler the deeper they stand in the mist
 			var pal = [o.c2, "#e89a2a", "#f2c03a", "#b8401c", "#d9822a"];
 			for (L = 0; L < 4; L++) {
-				var depth = [0.26, 0.46, 0.72, 1][L], tw = u * [16, 30, 56, 104][L], gap = W * [0.045, 0.085, 0.16, 0.27][L], col = K.mix(fog, "#24110a", depth), lit = K.mix(fog, "#6a3a1c", depth), n = [15, 11, 8, 5][L], list = [];
+				var depth = [0.26, 0.46, 0.72, 1][L], tw = u * [16, 30, 56, 104][L], gap = W * [0.045, 0.085, 0.16, 0.27][L], col = blend(fog, "#24110a", depth), lit = blend(fog, "#6a3a1c", depth), n = [15, 11, 8, 5][L], list = [];
 				for (i = 0; i < n; i++) { var side = i % 2 ? 1 : -1, fr = (Math.floor(i / 2) + 0.2 + R() * 0.7) / Math.ceil(n / 2); list.push(vx + side * (gap + fr * (W * 0.5 - gap + tw))); }
-				list.forEach(function (tx, k) {
+				list.forEach(function (tx) {
 					var base = vy + H * [0.035, 0.08, 0.17, 0.36][L] + R() * H * 0.03 * (L + 1), w = tw * (0.7 + R() * 0.6), lean = (R() - 0.5) * w * 1.6, toward = tx < vx ? 1 : -1;
 					b.fillStyle = grad(b, tx - w / 2, 0, tx + w / 2, 0, toward > 0 ? [[0, col], [0.7, col], [1, lit]] : [[0, lit], [0.3, col], [1, col]]);
 					b.beginPath(); b.moveTo(tx - w * 0.75, base); b.quadraticCurveTo(tx - w * 0.5, base - w * 0.8, tx - w * 0.46 + lean * 0.3, base - H * 0.3); b.lineTo(tx - w * 0.32 + lean, -10); b.lineTo(tx + w * 0.32 + lean, -10); b.lineTo(tx + w * 0.46 + lean * 0.3, base - H * 0.3); b.quadraticCurveTo(tx + w * 0.5, base - w * 0.8, tx + w * 0.8, base); b.fill();
@@ -895,7 +899,7 @@
 					x = R() * W; y = R() * R() * H * [0.34, 0.28, 0.2, 0.1][L] - H * 0.02;
 					if (Math.abs(x - vx) < gap * 0.7 && y > H * 0.12) { continue; }
 					var lc = pal[Math.floor(R() * pal.length)], cr = H * [0.026, 0.034, 0.046, 0.064][L] * (0.6 + R() * 0.8);
-					for (var m2 = 0; m2 < 5; m2++) { b.fillStyle = K.mix(fog, m2 < 2 ? K.shade(lc, 0.72) : m2 < 4 ? lc : K.shade(lc, 1.3), 0.35 + depth * 0.65); circ(b, x + (R() - 0.5) * cr * 2.2 - (m2 > 3 ? cr * 0.3 : 0), y + (R() - 0.5) * cr * 1.4 - (m2 > 3 ? cr * 0.3 : 0), cr * (m2 > 3 ? 0.55 : 0.7 + R() * 0.5)); }
+					for (var m2 = 0; m2 < 5; m2++) { b.fillStyle = blend(fog, m2 < 2 ? tone(lc, 0.72) : m2 < 4 ? lc : tone(lc, 1.3), 0.35 + depth * 0.65); circ(b, x + (R() - 0.5) * cr * 2.2 - (m2 > 3 ? cr * 0.3 : 0), y + (R() - 0.5) * cr * 1.4 - (m2 > 3 ? cr * 0.3 : 0), cr * (m2 > 3 ? 0.55 : 0.7 + R() * 0.5)); }
 				}
 				if (L < 3) { b.fillStyle = grad(b, 0, vy - H * 0.3, 0, vy + H * 0.3, [[0, K.alpha(fog, 0)], [0.5, K.alpha(o.c3, [0.3, 0.22, 0.13][L])], [1, K.alpha(fog, 0)]]); b.fillRect(0, vy - H * 0.3, W, H * 0.6); }
 			}
@@ -1081,7 +1085,7 @@
 			g.strokeStyle = gold; g.lineWidth = 3; g.beginPath(); g.moveTo(60, 0); g.lineTo(60, 24); g.moveTo(60, 128); g.lineTo(60, 150); g.stroke();
 			g.fillStyle = gold; circ(g, 60, 152, 6);
 			g.strokeStyle = col; g.lineWidth = 2; for (var i = -4; i <= 4; i++) { g.beginPath(); g.moveTo(60 + i * 1.6, 156); g.lineTo(60 + i * 2.6, 196); g.stroke(); }
-			var gr = g.createRadialGradient(52, 70, 4, 60, 78, 58); gr.addColorStop(0, "#ffe0a8"); gr.addColorStop(0.3, K.shade(col, 1.25)); gr.addColorStop(1, K.shade(col, 0.55));
+			var gr = g.createRadialGradient(52, 70, 4, 60, 78, 58); gr.addColorStop(0, "#ffe0a8"); gr.addColorStop(0.3, tone(col, 1.25)); gr.addColorStop(1, tone(col, 0.55));
 			g.fillStyle = gr; ell(g, 60, 78, 54, 46);
 			g.strokeStyle = "rgba(90,0,0,.35)"; g.lineWidth = 2; [44, 30, 14].forEach(function (rx) { g.beginPath(); g.ellipse(60, 78, rx, 46, 0, 0, TAU); g.stroke(); });
 			g.fillStyle = gold; K.rr(g, 36, 24, 48, 12, 4); g.fill(); K.rr(g, 38, 120, 44, 10, 4); g.fill();
@@ -1110,9 +1114,9 @@
 		}));
 	}
 	function shamrock(b, x, y, s, col, rot, four) {
-		var n = four ? 4 : 3, lite = K.shade(col, 1.28);
+		var n = four ? 4 : 3, lite = tone(col, 1.28);
 		b.save(); b.translate(x, y); b.rotate(rot || 0);
-		b.strokeStyle = K.shade(col, 0.7); b.lineWidth = s * 0.12; b.lineCap = "round"; b.beginPath(); b.moveTo(0, 0); b.quadraticCurveTo(s * 0.3, s * 0.7, s * 0.1, s * 1.3); b.stroke();
+		b.strokeStyle = tone(col, 0.7); b.lineWidth = s * 0.12; b.lineCap = "round"; b.beginPath(); b.moveTo(0, 0); b.quadraticCurveTo(s * 0.3, s * 0.7, s * 0.1, s * 1.3); b.stroke();
 		for (var i = 0; i < n; i++) { b.save(); b.rotate(i / n * TAU + (four ? 0.785 : 0)); K.heart(b, 0, -s * 0.62, s * 0.5, col); K.heart(b, -s * 0.06, -s * 0.7, s * 0.24, lite); b.restore(); }
 		b.restore();
 	}
@@ -1151,7 +1155,7 @@
 			b.lineWidth = th * 0.04;
 			[[-0.24, 0.6], [0.26, 0.62], [-0.12, 0.74], [0.1, 0.78], [0.4, 0.46]].forEach(function (q) { b.beginPath(); b.moveTo(tx, base - th * 0.4); b.quadraticCurveTo(tx + q[0] * th * 0.4, base - th * 0.5, tx + q[0] * th, base - th * q[1]); b.stroke(); });
 			S.swing = [tx + th * 0.36, base - th * 0.46, th * 0.33];
-			var hearts = [], HC = [K.shade(o.c2, 0.6), K.shade(o.c2, 0.8), o.c2, "#ff8fb0", "#ffc2d6"];
+			var hearts = [], HC = [tone(o.c2, 0.6), tone(o.c2, 0.8), o.c2, "#ff8fb0", "#ffc2d6"];
 			for (i = 0; i < 150; i++) { var a = R() * TAU, d = Math.sqrt(R()); hearts.push([tx + Math.cos(a) * th * 0.5 * d, base - th * 0.72 + Math.sin(a) * th * 0.33 * d, u * (14 + R() * 20), i]); }
 			hearts.forEach(function (q, k) { var c = k < 50 ? HC[k % 2] : k < 110 ? HC[1 + (k % 3)] : HC[2 + (k % 3)]; b.save(); b.translate(q[0], q[1]); b.rotate((R() - 0.5) * 0.9); K.heart(b, 0, 0, q[2], c); b.restore(); });
 			// picnic for two
@@ -1207,9 +1211,9 @@
 			b.lineWidth = H * 0.017;
 			["#ff5d5d", "#ff9a3d", "#ffe04a", "#5fd06a", "#4aa8ff", "#6a6cff", "#a06cff"].forEach(function (c, k) { b.strokeStyle = K.alpha(c, 0.55); b.beginPath(); b.arc(W * 0.42, H * 0.86, H * (0.64 - k * 0.0165), Math.PI, TAU); b.stroke(); });
 			// patchwork fields divided by stone walls
-			var h1 = hill(b, W, H, H * 0.63, H * 0.04, 4.6, grad(b, 0, H * 0.56, 0, H * 0.8, [[0, K.shade(green, 1.75)], [1, K.shade(green, 1.45)]]));
+			var h1 = hill(b, W, H, H * 0.63, H * 0.04, 4.6, grad(b, 0, H * 0.56, 0, H * 0.8, [[0, tone(green, 1.75)], [1, tone(green, 1.45)]]));
 			b.save(); b.beginPath(); b.moveTo(0, H); for (i = 0; i <= 60; i++) { b.lineTo(i / 60 * W, h1(i / 60 * W)); } b.lineTo(W, H); b.clip();
-			for (i = 0; i < 9; i++) { x = W * (i / 9) - W * 0.05; b.fillStyle = [K.shade(green, 1.55), K.shade(green, 1.3), "#cfe58a", K.shade(green, 1.15)][i % 4]; b.beginPath(); b.moveTo(x, H * 0.56); b.lineTo(x + W * 0.13, H * 0.56); b.lineTo(x + W * 0.2, H * 0.8); b.lineTo(x + W * 0.02, H * 0.8); b.fill(); }
+			for (i = 0; i < 9; i++) { x = W * (i / 9) - W * 0.05; b.fillStyle = [tone(green, 1.55), tone(green, 1.3), "#cfe58a", tone(green, 1.15)][i % 4]; b.beginPath(); b.moveTo(x, H * 0.56); b.lineTo(x + W * 0.13, H * 0.56); b.lineTo(x + W * 0.2, H * 0.8); b.lineTo(x + W * 0.02, H * 0.8); b.fill(); }
 			b.strokeStyle = "#7f8f86"; b.lineWidth = u * 5; b.setLineDash([u * 9, u * 3]);
 			for (i = 0; i <= 9; i++) { x = W * (i / 9) - W * 0.05; b.beginPath(); b.moveTo(x, H * 0.56); b.lineTo(x + W * 0.02, H * 0.8); b.stroke(); }
 			b.beginPath(); for (i = 0; i <= 40; i++) { x = i / 40 * W; b.lineTo(x, h1(x) + H * 0.055 + Math.sin(x / H * 3) * H * 0.008); } b.stroke(); b.setLineDash([]);
@@ -1224,33 +1228,33 @@
 			b.fillStyle = "#c1272d"; K.rr(b, cx + u * 2, cy - u * 52, u * 30, u * 54, u * 4); b.fill();
 			b.fillStyle = "#7fb7e0"; b.fillRect(cx - u * 56, cy - u * 50, u * 34, u * 28); b.fillRect(cx + u * 56, cy - u * 50, u * 34, u * 28); b.strokeStyle = green; b.lineWidth = u * 4; b.strokeRect(cx - u * 56, cy - u * 50, u * 34, u * 28); b.strokeRect(cx + u * 56, cy - u * 50, u * 34, u * 28);
 			S.chim = [cx + u * 81, cy - u * 138]; S.smoke = [];
-			tree(b, cx - u * 170, cy + u * 6, H * 0.2, [K.shade(green, 0.7), green, K.shade(green, 1.5)], R, { blobs: 22 });
+			tree(b, cx - u * 170, cy + u * 6, H * 0.2, [tone(green, 0.7), green, tone(green, 1.5)], R, { blobs: 22 });
 			// near hill thick with clover
-			S.near = hill(b, W, H, H * 0.78, H * 0.03, 1.1, grad(b, 0, H * 0.72, 0, H, [[0, K.shade(green, 1.2)], [0.5, green], [1, K.shade(green, 0.62)]]));
-			for (i = 0; i < 300; i++) { x = R() * W; var q = R(); y = S.near(x) + u * 14 + q * (H - S.near(x)); shamrock(b, x, y, u * (5 + q * 16), K.shade(green, 0.72 + R() * 0.5), R() * TAU, R() < 0.06); }
+			S.near = hill(b, W, H, H * 0.78, H * 0.03, 1.1, grad(b, 0, H * 0.72, 0, H, [[0, tone(green, 1.2)], [0.5, green], [1, tone(green, 0.62)]]));
+			for (i = 0; i < 300; i++) { x = R() * W; var q = R(); y = S.near(x) + u * 14 + q * (H - S.near(x)); shamrock(b, x, y, u * (5 + q * 16), tone(green, 0.72 + R() * 0.5), R() * TAU, R() < 0.06); }
 			// pot of gold where the rainbow lands
 			var px = W * 0.765, py = H * 0.875, ps = u * 78;
 			S.pot = [px, py - ps * 1.05, ps];
 			b.fillStyle = "rgba(0,40,10,.3)"; ell(b, px, py, ps * 1.3, ps * 0.2);
-			for (i = 0; i < 34; i++) { var a = R() * Math.PI, d = R(); b.fillStyle = K.shade(gold, 0.8 + R() * 0.5); ell(b, px + Math.cos(a) * ps * 0.8 * d, py - ps * 1.02 - Math.sin(a) * ps * 0.42 * d, ps * 0.17, ps * 0.07, (R() - 0.5)); }
+			for (i = 0; i < 34; i++) { var a = R() * Math.PI, d = R(); b.fillStyle = tone(gold, 0.8 + R() * 0.5); ell(b, px + Math.cos(a) * ps * 0.8 * d, py - ps * 1.02 - Math.sin(a) * ps * 0.42 * d, ps * 0.17, ps * 0.07, (R() - 0.5)); }
 			b.fillStyle = grad(b, px - ps, 0, px + ps, 0, [[0, "#3a3a44"], [0.35, "#22222b"], [1, "#0c0c12"]]); b.beginPath(); b.moveTo(px - ps * 0.86, py - ps); b.bezierCurveTo(px - ps * 1.3, py - ps * 0.2, px - ps * 0.8, py, px, py); b.bezierCurveTo(px + ps * 0.8, py, px + ps * 1.3, py - ps * 0.2, px + ps * 0.86, py - ps); b.fill();
 			b.fillStyle = "#2c2c36"; K.rr(b, px - ps, py - ps * 1.1, ps * 2, ps * 0.2, ps * 0.1); b.fill();
-			for (i = 0; i < 12; i++) { b.fillStyle = K.shade(gold, 0.85 + R() * 0.4); ell(b, px + (R() - 0.5) * ps * 1.5, py - ps * 1.12 - R() * ps * 0.1, ps * 0.17, ps * 0.07, (R() - 0.5)); }
-			for (i = 0; i < 8; i++) { x = px + (R() - 0.5) * ps * 4; y = py + (R() - 0.3) * ps * 0.5; b.fillStyle = K.shade(gold, 0.75); ell(b, x, y + u * 3, ps * 0.17, ps * 0.07); b.fillStyle = gold; ell(b, x, y, ps * 0.17, ps * 0.07); }
+			for (i = 0; i < 12; i++) { b.fillStyle = tone(gold, 0.85 + R() * 0.4); ell(b, px + (R() - 0.5) * ps * 1.5, py - ps * 1.12 - R() * ps * 0.1, ps * 0.17, ps * 0.07, (R() - 0.5)); }
+			for (i = 0; i < 8; i++) { x = px + (R() - 0.5) * ps * 4; y = py + (R() - 0.3) * ps * 0.5; b.fillStyle = tone(gold, 0.75); ell(b, x, y + u * 3, ps * 0.17, ps * 0.07); b.fillStyle = gold; ell(b, x, y, ps * 0.17, ps * 0.07); }
 			// a leprechaun's hat left on the grass
 			b.save(); b.translate(W * 0.15, H * 0.93); b.rotate(-0.14);
 			var hs = u * 80; b.fillStyle = "rgba(0,40,10,.3)"; ell(b, 0, hs * 0.06, hs * 1.25, hs * 0.16);
-			b.fillStyle = K.shade(green, 0.72); ell(b, 0, 0, hs * 1.15, hs * 0.2);
-			b.fillStyle = grad(b, -hs * 0.7, 0, hs * 0.7, 0, [[0, K.shade(green, 1.1)], [1, K.shade(green, 0.6)]]); b.beginPath(); b.moveTo(-hs * 0.66, 0); b.lineTo(-hs * 0.56, -hs * 1.2); b.quadraticCurveTo(0, -hs * 1.34, hs * 0.56, -hs * 1.2); b.lineTo(hs * 0.66, 0); b.quadraticCurveTo(0, hs * 0.18, -hs * 0.66, 0); b.fill();
+			b.fillStyle = tone(green, 0.72); ell(b, 0, 0, hs * 1.15, hs * 0.2);
+			b.fillStyle = grad(b, -hs * 0.7, 0, hs * 0.7, 0, [[0, tone(green, 1.1)], [1, tone(green, 0.6)]]); b.beginPath(); b.moveTo(-hs * 0.66, 0); b.lineTo(-hs * 0.56, -hs * 1.2); b.quadraticCurveTo(0, -hs * 1.34, hs * 0.56, -hs * 1.2); b.lineTo(hs * 0.66, 0); b.quadraticCurveTo(0, hs * 0.18, -hs * 0.66, 0); b.fill();
 			b.fillStyle = "#1c1c22"; b.beginPath(); b.moveTo(-hs * 0.66, 0); b.lineTo(-hs * 0.635, -hs * 0.3); b.quadraticCurveTo(0, -hs * 0.14, hs * 0.635, -hs * 0.3); b.lineTo(hs * 0.66, 0); b.quadraticCurveTo(0, hs * 0.18, -hs * 0.66, 0); b.fill();
 			b.strokeStyle = gold; b.lineWidth = hs * 0.07; b.strokeRect(-hs * 0.17, -hs * 0.2, hs * 0.34, hs * 0.27);
 			b.restore();
 			// big clover in front
 			var big = [];
 			for (i = 0; i < 22; i++) { big.push([W * (i < 12 ? 0.24 + R() * 0.42 : (R() < 0.5 ? R() * 0.07 : 0.9 + R() * 0.1)), H * (0.94 + R() * 0.07), u * (34 + R() * 34), R()]); }
-			big.sort(function (a2, c) { return a2[1] - c[1]; }).forEach(function (q2) { shamrock(b, q2[0], q2[1] - q2[2], q2[2], K.shade(green, 0.8 + q2[3] * 0.5), (q2[3] - 0.5) * 0.8, q2[3] > 0.86); });
+			big.sort(function (a2, c) { return a2[1] - c[1]; }).forEach(function (q2) { shamrock(b, q2[0], q2[1] - q2[2], q2[2], tone(green, 0.8 + q2[3] * 0.5), (q2[3] - 0.5) * 0.8, q2[3] > 0.86); });
 			S.glints = []; for (i = 0; i < 9; i++) { S.glints.push([px + (R() - 0.5) * ps * 1.5, py - ps * (1.05 + R() * 0.4), R() * TAU, 1.2 + R() * 2]); }
-			S.clover = drifters(W, H, Math.round(10 * W / 1920) + 3, cloverSprites([green, K.shade(green, 1.3)]), u * 16, H * 0.035);
+			S.clover = drifters(W, H, Math.round(10 * W / 1920) + 3, cloverSprites([green, tone(green, 1.3)]), u * 16, H * 0.035);
 			flutter(S, W, 3, H * 0.5, H * 0.8, ["#ffffff", "#ffd23f", "#ff9a3d"]);
 		},
 		draw: function (g, t, dt, W, H, o, S) {
@@ -1320,7 +1324,7 @@
 			// front layer: a plum bough in bloom
 			var F = S.front = S.layer(), f = F.b;
 			f.strokeStyle = "#1a0508"; f.lineCap = "round";
-			branch(f, -W * 0.02, H * 0.1, 0.12, H * 0.2, H * 0.02, 4, R, function (lx, ly, len, depth) {
+			branch(f, -W * 0.02, H * 0.1, 0.12, H * 0.2, H * 0.02, 4, R, function (lx, ly, len) {
 				for (var q3 = 0; q3 < 4; q3++) { blossom(f, lx + (R() - 0.5) * len * 0.9, ly + (R() - 0.5) * len * 0.5, H * (0.009 + R() * 0.007), q3 % 2 ? "#ffd1dc" : "#ff9ab8", "#c2185b"); }
 			});
 			S.img = lanternImg(o.c2, gold);
@@ -1334,10 +1338,10 @@
 			S.boat = 0.2;
 		},
 		draw: function (g, t, dt, W, H, o, S) {
-			var u = S.u, hz = H * 0.72, i;
+			var u = S.u, i;
 			S.fire(g, t, dt);
 			S.sky(g, t, dt);
-			g.lineCap = "round"; g.strokeStyle = K.mix(o.c3, "#ffffff", 0.3);
+			g.lineCap = "round"; g.strokeStyle = blend(o.c3, "#ffffff", 0.3);
 			for (i = 0; i < S.glit.length; i++) { var q = S.glit[i], a = 0.3 + 0.6 * Math.sin(t * q[4] + q[3]); if (a <= 0.03) { continue; } g.globalAlpha = a; g.lineWidth = q[5]; g.beginPath(); g.moveTo(q[0] - q[2], q[1]); g.lineTo(q[0] + q[2], q[1]); g.stroke(); }
 			g.globalAlpha = 1;
 			// a boat with a lamp crossing the water
@@ -1360,7 +1364,7 @@
 	scene({
 		id: "diwali", label: "Diwali festival of lights", colors: ["1a0b3a", "ff9a1f", "ff3d81"],
 		build: function (b, W, H, o, S) {
-			var R = SSO.seeded("diwali"), u = S.u, i, x, y, n, hz = H * 0.66, flameCol = o.c2, pink = o.c3;
+			var R = SSO.seeded("diwali"), u = S.u, i, y, n, hz = H * 0.66, flameCol = o.c2, pink = o.c3;
 			sky(b, W, H, [[0, "#0a0420"], [0.4, darkOr(o.c1, 0.4, "#1a0b3a")], [0.66, "#7a2a6a"]]);
 			stars(b, W, H * 0.45, 150, R, u);
 			// palace domes along the skyline, picked out in tiny lights
@@ -1415,7 +1419,7 @@
 			S.sparks = []; for (i = 0; i < 30; i++) { S.sparks.push([R() * W, H * (0.5 + R() * 0.5), R() * TAU, 0.5 + R()]); }
 		},
 		draw: function (g, t, dt, W, H, o, S) {
-			var u = S.u, hz = H * 0.66, i, q;
+			var u = S.u, i, q;
 			S.fire(g, t, dt);
 			g.globalCompositeOperation = "lighter";
 			for (i = 0; i < S.dots.length; i++) { q = S.dots[i]; K.light(g, q[0], q[1], u * 9, i % 3 ? "#ffd23f" : o.c3, 0.55 + 0.4 * Math.sin(t * 2.2 + q[2])); }
@@ -1482,7 +1486,7 @@
 			var cx = W * 0.5, base = sill + H * 0.11, top = sill - H * 0.2, gap = u * 62;
 			S.cand = [];
 			f.fillStyle = "rgba(0,0,0,.4)"; ell(f, cx, base + u * 4, u * 190, u * 16);
-			f.strokeStyle = grad(f, cx - u * 260, 0, cx + u * 260, 0, [[0, K.shade(gold, 0.7)], [0.45, K.shade(gold, 1.35)], [1, K.shade(gold, 0.6)]]); f.lineCap = "round"; f.lineWidth = u * 13;
+			f.strokeStyle = grad(f, cx - u * 260, 0, cx + u * 260, 0, [[0, tone(gold, 0.7)], [0.45, tone(gold, 1.35)], [1, tone(gold, 0.6)]]); f.lineCap = "round"; f.lineWidth = u * 13;
 			for (n = 1; n <= 4; n++) { f.beginPath(); f.moveTo(cx - n * gap, top); f.lineTo(cx - n * gap, top + u * 40); f.arc(cx, top + u * 40, n * gap, Math.PI, 0, true); f.lineTo(cx + n * gap, top); f.stroke(); }
 			f.lineWidth = u * 16; f.beginPath(); f.moveTo(cx, top - u * 34); f.lineTo(cx, base - u * 20); f.stroke();
 			f.fillStyle = f.strokeStyle; K.rr(f, cx - u * 120, base - u * 26, u * 240, u * 26, u * 8); f.fill(); K.rr(f, cx - u * 70, base - u * 46, u * 140, u * 24, u * 8); f.fill(); circ(f, cx, top + u * 150, u * 20);
@@ -1502,7 +1506,7 @@
 				f.strokeStyle = gold; f.lineWidth = ds * 0.09; f.beginPath(); f.moveTo(-ds * 0.2, -ds * 1.25); f.lineTo(-ds * 0.2, -ds * 0.75); f.lineTo(ds * 0.2, -ds * 0.75); f.moveTo(ds * 0.05, -ds * 1.25); f.lineTo(ds * 0.05, -ds * 0.95); f.stroke();
 				f.restore();
 			});
-			for (i = 0; i < 7; i++) { x = W * (0.66 + i * 0.022 + R() * 0.01); var gy = sill + H * (0.1 + R() * 0.05); f.fillStyle = K.shade(gold, 0.7); ell(f, x, gy + u * 4, u * 24, u * 9); f.fillStyle = K.shade(gold, 1.1); ell(f, x, gy, u * 24, u * 9); f.strokeStyle = K.shade(gold, 0.75); f.lineWidth = u * 2; f.beginPath(); f.ellipse(x, gy, u * 16, u * 5.5, 0, 0, TAU); f.stroke(); }
+			for (i = 0; i < 7; i++) { x = W * (0.66 + i * 0.022 + R() * 0.01); var gy = sill + H * (0.1 + R() * 0.05); f.fillStyle = tone(gold, 0.7); ell(f, x, gy + u * 4, u * 24, u * 9); f.fillStyle = tone(gold, 1.1); ell(f, x, gy, u * 24, u * 9); f.strokeStyle = tone(gold, 0.75); f.lineWidth = u * 2; f.beginPath(); f.ellipse(x, gy, u * 16, u * 5.5, 0, 0, TAU); f.stroke(); }
 			var gx = W * 0.82, gy2 = sill + H * 0.13, gs = u * 120;
 			f.fillStyle = "rgba(0,0,0,.35)"; ell(f, gx, gy2 + u * 4, gs * 0.7, u * 12);
 			f.fillStyle = grad(f, gx - gs / 2, 0, gx + gs / 2, 0, [[0, "#2f6fe0"], [1, "#1f4aa8"]]); f.fillRect(gx - gs / 2, gy2 - gs * 0.75, gs, gs * 0.75);
@@ -1543,18 +1547,18 @@
 	]);
 	add("screen", [
 		{ name: "Spring blossoms starting soon", tags: ["spring", "cute", "cozy"], values: { backdrop: "springpark", c1: "cfeaff", c2: "ff9ec4", c3: "ffe08a", title: "starting soon", subtitle: "spring is in the air", layout: "center", font: "Pacifico", fontsize: 110, dim: 0, fg: "ffffff", accent: "fff2a8" } },
-		{ name: "Beach day BRB", tags: ["summer", "cute"], values: { backdrop: "beachday", c1: "bfeaff", c2: "ffcf4a", c3: "ff5d5d", title: "gone to the beach", subtitle: "be right back", minutes: 0, layout: "top", font: "Lobster", fontsize: 110, dim: 0, fg: "ffffff" } },
+		{ name: "Beach day BRB", tags: ["summer", "cute"], values: { backdrop: "beachday", c1: "bfeaff", c2: "ffcf4a", c3: "ff5d5d", title: "gone to the beach", subtitle: "be right back", minutes: 0, layout: "top", font: "Lobster", fontsize: 110, dim: 0, fg: "ffffff", fx: "bubble", fx1: "ff6a4d", fx3: "b83a1e" } },
 		{ name: "Vacation mode — ending", tags: ["summer", "cozy", "elegant"], values: { backdrop: "tropicsunset", c1: "2a1458", c2: "ff7a45", c3: "ffd76b", title: "thanks for watching", subtitle: "see you after sunset", minutes: 0, layout: "top", font: "Pacifico", fontsize: 100, dim: 0, fg: "fff3dc", accent: "ffd76b" } },
 		{ name: "Harvest starting soon", tags: ["autumn", "cozy", "holiday"], values: { backdrop: "harvest", c1: "33265c", c2: "ff9a4d", c3: "ffd98a", title: "Starting soon", subtitle: "pull up a hay bale", layout: "top", font: "Amatic SC", fontsize: 150, dim: 0, fg: "fff3dc", accent: "ffd98a" } },
-		{ name: "Happy Thanksgiving", tags: ["autumn", "holiday", "cozy"], values: { backdrop: "harvest", c1: "33265c", c2: "ff9a4d", c3: "ffd98a", title: "Happy Thanksgiving", subtitle: "grateful for this chat", minutes: 0, layout: "top", font: "Playfair Display", fontsize: 96, dim: 0, fg: "fff3dc", fx: "gold" } },
+		{ name: "Happy Thanksgiving", tags: ["autumn", "holiday", "cozy"], values: { backdrop: "harvest", c1: "33265c", c2: "ff9a4d", c3: "ffd98a", title: "Happy Thanksgiving", subtitle: "grateful for this chat", minutes: 0, layout: "top", font: "Playfair Display", fontsize: 90, dim: 0, fg: "fff3dc" } },
 		{ name: "Spring shower BRB", tags: ["spring", "cozy"], values: { backdrop: "springrain", c1: "b4c5d6", c2: "ff6f91", c3: "ffd23f", title: "be right back", subtitle: "just waiting out the rain", minutes: 0, layout: "top", font: "Caveat", fontsize: 130, dim: 0, fg: "ffffff" } },
 		{ name: "Pool party starting soon", tags: ["summer", "cyber", "cozy"], values: { backdrop: "poolnight", c1: "0b1a3a", c2: "19d3c5", c3: "ff5fa2", title: "Pool party", subtitle: "stream starts soon — grab a float", layout: "top", font: "Righteous", fontsize: 110, dim: 0, fx: "neon", fx1: "19d3c5", fx3: "ff5fa2", accent: "ff5fa2" } },
 		{ name: "Autumn walk BRB", tags: ["autumn", "cozy", "elegant"], values: { backdrop: "autumnpath", c1: "f0b565", c2: "d9661f", c3: "ffe9b8", title: "gone for a walk", subtitle: "back before the leaves settle", minutes: 0, layout: "center", panel: true, font: "Amatic SC", fontsize: 150, dim: 0, fg: "fff3dc" } },
 		{ name: "Autumn forest ending", tags: ["autumn", "cozy"], values: { backdrop: "autumnpath", c1: "f0b565", c2: "d9661f", c3: "ffe9b8", title: "thanks for watching", subtitle: "see you down the path", minutes: 0, layout: "split", panel: true, font: "Kalam", fontsize: 96, dim: 0.1, fg: "fff3dc", socials: "twitch:yourname,youtube:@yourname,discord:discord.gg/yourname" } },
 		{ name: "Happy Easter", tags: ["spring", "holiday", "cute"], values: { backdrop: "eastermeadow", c1: "c9ecff", c2: "ffb3d1", c3: "fff0a3", title: "Happy Easter", subtitle: "the egg hunt starts soon", layout: "top", font: "Sniglet", fontsize: 120, dim: 0, fg: "ffffff", fx: "bubble", fx1: "ff7eb6", fx3: "c2185b", accent: "ffffff" } },
 		{ name: "Valentine's Day", tags: ["holiday", "cute", "elegant"], values: { backdrop: "valentine", c1: "ffb3c9", c2: "ff4d7e", c3: "ffe3a3", title: "Happy Valentine's Day", subtitle: "love you, chat", minutes: 0, layout: "corner", font: "Dancing Script", fontsize: 100, dim: 0, fg: "fff0f3" } },
-		{ name: "St. Patrick's Day", tags: ["holiday", "spring", "cute"], values: { backdrop: "stpatrick", c1: "c4ebff", c2: "2fa84f", c3: "ffd23f", title: "Happy St. Patrick's Day", subtitle: "may your stream be lucky", minutes: 0, layout: "top", font: "Lobster", fontsize: 96, dim: 0, fg: "ffffff" } },
-		{ name: "Lunar New Year", tags: ["holiday", "newyear", "elegant"], values: { backdrop: "lunarnewyear", c1: "6a0f14", c2: "e62e2e", c3: "ffd166", title: "Happy Lunar New Year", subtitle: "wishing you luck and good fortune", minutes: 0, layout: "center", font: "Cinzel", fontsize: 90, dim: 0.1, fx: "gold", fg: "ffe9b8" } },
+		{ name: "St. Patrick's Day", tags: ["holiday", "spring", "cute"], values: { backdrop: "stpatrick", c1: "c4ebff", c2: "2fa84f", c3: "ffd23f", title: "Happy St. Patrick's Day", subtitle: "may your stream be lucky", minutes: 0, layout: "top", font: "Lobster", fontsize: 96, dim: 0, fg: "ffffff", fx: "bubble", fx1: "2fa84f", fx3: "14602a" } },
+		{ name: "Lunar New Year", tags: ["holiday", "newyear", "elegant"], values: { backdrop: "lunarnewyear", c1: "6a0f14", c2: "e62e2e", c3: "ffd166", title: "Happy Lunar New Year", subtitle: "wishing you luck and good fortune", minutes: 0, layout: "bottom", font: "Playfair Display", fontsize: 76, dim: 0, fx: "gold", fg: "ffe9b8" } },
 		{ name: "Happy Diwali", tags: ["holiday", "elegant"], values: { backdrop: "diwali", c1: "1a0b3a", c2: "ff9a1f", c3: "ff3d81", title: "Happy Diwali", subtitle: "may your stream shine bright", minutes: 0, layout: "center", font: "Cinzel Decorative", fontsize: 110, dim: 0, fx: "gold", fg: "ffe9b8" } },
 		{ name: "Happy Hanukkah", tags: ["holiday", "winter", "cozy"], values: { backdrop: "hanukkah", c1: "0b1c4a", c2: "f2c14e", c3: "cfe3ff", title: "Happy Hanukkah", subtitle: "eight nights of light", minutes: 0, layout: "top", panel: true, font: "Playfair Display", fontsize: 84, dim: 0, fg: "f4f7ff" } },
 		{ name: "Tropical starting soon", tags: ["summer", "cozy", "retro"], values: { backdrop: "tropicsunset", c1: "2a1458", c2: "ff7a45", c3: "ffd76b", title: "Starting soon", subtitle: "island time", layout: "top", font: "Righteous", fontsize: 110, dim: 0, fg: "fff3dc", accent: "ffd76b" } },

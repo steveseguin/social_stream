@@ -217,7 +217,7 @@
 	ART.bat = function (g, x, y, s, flap, col, rim) {
 		var ty = -flap * s * 0.46, side;
 		g.save(); g.translate(x, y);
-		g.fillStyle = col || "#1d1029"; g.strokeStyle = rim || "rgba(176,138,240,.6)"; g.lineWidth = Math.max(0.6, s * 0.035); g.lineJoin = "round";
+		g.fillStyle = col || "#33204d"; g.strokeStyle = rim || "rgba(190,152,255,.8)"; g.lineWidth = Math.max(0.7, s * 0.04); g.lineJoin = "round";
 		for (side = -1; side <= 1; side += 2) {
 			g.beginPath();
 			g.moveTo(side * s * 0.08, -s * 0.12);
@@ -513,16 +513,18 @@
 				} else { bauble(b, x, gy, T * (0.15 + rnd() * 0.05), gems[(k + ei) % gems.length]); }
 			}
 			for (x = T * 0.5; x < E.len; x += T * (0.62 + rnd() * 0.3)) { lights.push({ e: ei, x: x, y: cy(x) + (rnd() - 0.5) * T * 0.44, ph: rnd() * TAU, sp: 0.7 + rnd() * 1.3, warm: rnd() < 0.8 }); }
-			var out = ART.layer(E.len, SH, d);
+			// turn the bough for its edge once, so each frame is a plain blit
+			var side = ei > 1, out = ART.layer(side ? SH : E.len, side ? E.len : SH, d);
 			out.b.shadowColor = "rgba(0,0,0,.42)"; out.b.shadowBlur = T * 0.16 * d;
+			out.b.transform(E.m[0], E.m[1], E.m[2], E.m[3], ei === 3 ? SH : 0, ei === 1 ? SH : 0);
 			out.b.drawImage(raw.cv, 0, 0, E.len, SH);
-			E.cv = out.cv;
+			E.cv = out.cv; E.x = ei === 3 ? W - SH : 0; E.y = ei === 1 ? H - SH : 0; E.w = side ? SH : E.len; E.h = side ? E.len : SH;
 		});
 		var bw = T * 2.6, bows = ART.layer(bw, bw, d);
 		bow(bows.b, bw / 2, bw * 0.4, T * 0.62);
 		return function (g, t) {
 			var j, E;
-			for (j = 0; j < 4; j++) { E = edges[j]; g.save(); g.transform(E.m[0], E.m[1], E.m[2], E.m[3], E.m[4], E.m[5]); g.drawImage(E.cv, 0, 0, E.len, SH); g.restore(); }
+			for (j = 0; j < 4; j++) { E = edges[j]; g.drawImage(E.cv, E.x, E.y, E.w, E.h); }
 			g.globalCompositeOperation = "lighter";
 			for (j = 0; j < lights.length; j++) {
 				var q = lights[j], m = edges[q.e].m, px = m[0] * q.x + m[2] * q.y + m[4], py = m[1] * q.x + m[3] * q.y + m[5];
@@ -645,11 +647,11 @@
 		presets: [
 			{ name: "Cobwebs & spider", tags: ["halloween", "spooky"], values: {} },
 			{ name: "Bat swarm", tags: ["halloween", "spooky"], values: { kind: "bats", amount: 1.4 } },
-			{ name: "Pumpkin patch", tags: ["halloween", "cozy"], values: { kind: "pumpkins" } },
+			{ name: "Pumpkin patch", tags: ["halloween", "autumn", "cozy"], values: { kind: "pumpkins" } },
 			{ name: "Christmas lights", tags: ["christmas", "cozy"], values: { kind: "lights" } },
 			{ name: "Pine garland", tags: ["christmas"], values: { kind: "garland" } },
-			{ name: "Snowfall", tags: ["christmas", "cozy"], values: { kind: "snow" } },
-			{ name: "Autumn leaves", tags: ["cozy"], values: { kind: "leaves" } },
+			{ name: "Snowfall", tags: ["christmas", "winter", "cozy"], values: { kind: "snow" } },
+			{ name: "Autumn leaves", tags: ["autumn", "cozy"], values: { kind: "leaves" } },
 			{ name: "New Year confetti", tags: ["newyear"], values: { kind: "confetti", every: 8 } },
 			{ name: "New Year fireworks", tags: ["newyear"], values: { kind: "fireworks" } }
 		],

@@ -473,15 +473,21 @@
 		id: "logocube",
 		name: "Rotating logo cube",
 		category: "socials",
-		description: "An old console-style block that turns to show the next logo, banner or short message, pausing on each face so it can be read.",
+		description: "An old console-style block that turns to show the next logo, banner or short message, pausing on each face so it can be read. It can also glide gently or spin non-stop, and a face can carry a big line with smaller lines under it.",
 		size: [480, 360],
 		fields: [
 			{ key: "faces", label: "Faces: an image link or a short message per line", type: "textarea", image: true, group: "Content", default: [SSO.assetBase() + "media/logo.png", "Thanks for watching", "!discord to join"].join("\n") },
+			{ key: "rows", label: "More than one row on a face: split with |", type: "bool", group: "Content", default: false, help: "Big line | smaller line | another smaller line. An image link can go first to put a caption under it." },
+			{ key: "subsize", label: "Smaller rows size (% of the big row)", type: "range", group: "Content", default: 55, min: 20, max: 100, step: 1, show: { rows: true } },
 			{ key: "hold", label: "Seconds on each face", type: "number", group: "Content", default: 5, min: 1, max: 600, step: 0.5 },
+			{ key: "move", label: "Movement", type: "select", group: "Motion", default: "step", options: [["step", "Turn, then pause"], ["smooth", "Gentle turn, then pause"], ["spin", "Keep spinning (never stops)"]], help: "Keep spinning uses the seconds on each face as its speed." },
 			{ key: "shape", label: "Shape", type: "select", group: "Motion", default: "4", options: [["4", "Cube"], ["3", "Triangle"], ["6", "Hexagon"]] },
 			{ key: "axis", label: "Turns", type: "select", group: "Motion", default: "y", options: [["y", "Sideways"], ["x", "Upwards"]] },
-			{ key: "turn", label: "Turn time (seconds)", type: "range", group: "Motion", default: 0.9, min: 0.2, max: 4, step: 0.1 },
+			{ key: "turn", label: "Turn time (seconds)", type: "range", group: "Motion", default: 0.9, min: 0.2, max: 30, step: 0.1, show: { move: ["step", "smooth"] } },
+			{ key: "reverse", label: "Turn the other way", type: "bool", group: "Motion", default: false },
 			{ key: "size", label: "Size (% of the source)", type: "range", group: "Style", default: 62, min: 20, max: 90, step: 1 },
+			{ key: "facew", label: "Face width (% of the source, 0 = automatic)", type: "range", group: "Style", default: 0, min: 0, max: 100, step: 1, help: "Set a width and height yourself for a long banner face. Lower them if the corners get cut off while it turns." },
+			{ key: "faceh", label: "Face height (% of the source, 0 = automatic)", type: "range", group: "Style", default: 0, min: 0, max: 100, step: 1 },
 			{ key: "fit", label: "Image fit", type: "select", group: "Style", default: "contain", options: [["contain", "Show the whole image"], ["cover", "Fill and crop"]] },
 			{ key: "bg", label: "Face colour", type: "color", group: "Style", default: "141a2e" },
 			{ key: "bg2", label: "Second face colour (gradient)", type: "color", group: "Style", default: "2b3a67" },
@@ -493,7 +499,10 @@
 			{ name: "Console cube", tags: ["console", "retro", "gaming"], values: {} },
 			{ name: "Sponsor prism", tags: ["pro", "simple"], values: { shape: "3", axis: "x", bg: "ffffff", bg2: "e5e7eb", fg: "111827", font: "Poppins", hold: 6 } },
 			{ name: "Neon hexagon", tags: ["cyber"], values: { shape: "6", bg: "12002b", bg2: "3b0764", fg: "67e8f9", font: "Orbitron", turn: 1.2 } },
-			{ name: "Message block", tags: ["simple", "cozy"], values: { faces: "Be kind in chat\nFollow for more\nNew video every Friday\nBack in 5", bg: "1f2937", bg2: "111827", font: "Poppins", fontsize: 36 } }
+			{ name: "Message block", tags: ["simple", "cozy"], values: { faces: "Be kind in chat\nFollow for more\nNew video every Friday\nBack in 5", bg: "1f2937", bg2: "111827", font: "Poppins", fontsize: 36 } },
+			{ name: "Spinning marquee", tags: ["retro", "gaming", "cyber"], values: { faces: "Thanks for watching | you make the stream\nLike & follow | it really helps\n!discord | come hang out\nNew streams | Mon / Wed / Fri\nCheck out the sponsors | links in the description\nStay awhile | chat is open", rows: true, move: "spin", hold: 3, shape: "6", axis: "x", facew: 92, faceh: 26, bg: "2e6dff", bg2: "a938ff", fg: "f9fbfb", font: "Orbitron", fontsize: 40 } },
+			{ name: "Slow glide sponsor block", tags: ["pro", "elegant"], values: { faces: "Tonight\u2019s sponsor | your name here\nUse code STREAM | 10% off this week\nThank you | for keeping the lights on", rows: true, move: "smooth", turn: 3, hold: 5, shape: "4", axis: "x", facew: 80, faceh: 34, bg: "0f172a", bg2: "1e293b", fg: "f8fafc", font: "Poppins", fontsize: 38, subsize: 50 } },
+			{ name: "Logo carousel (non-stop)", tags: ["simple", "pro"], values: { faces: [SSO.assetBase() + "media/logo.png | Social Stream Ninja", "Thanks for watching | see you next stream", "Like & share | tell a friend"].join("\n"), rows: true, move: "spin", hold: 4, shape: "4", bg: "111827", bg2: "312e81", font: "Poppins", fontsize: 30 } }
 		],
 		css: [
 			".lc{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;}",
@@ -503,7 +512,9 @@
 			".lc-face.on::after{opacity:0;}",
 			".lc-face img{display:block;max-width:100%;max-height:100%;}",
 			".lc-face.cover{padding:0;} .lc-face.cover img{width:100%;height:100%;object-fit:cover;}",
-			".lc-face span{display:block;width:100%;}"
+			".lc-face span{display:block;width:100%;}",
+			".lc-face .lc-sub{font-size:var(--lc-sub,.55em);font-weight:600;line-height:1.2;margin-top:.22em;opacity:.94;}",
+			".lc-face.pic{flex-direction:column;} .lc-face.pic img{flex:1 1 0;width:100%;height:0;min-height:0;max-height:none;object-fit:contain;} .lc-face.pic > span{flex:0 0 auto;margin-top:.3em;}"
 		].join("\n"),
 		render: function (root, c) {
 			SSO.loadFont(c.font);
@@ -514,6 +525,9 @@
 			var angle = 360 / sides;
 			var turn = Math.max(0.2, parseFloat(c.turn) || 0.9);
 			var hold = Math.max(1, parseFloat(c.hold) || 5);
+			var move = c.move === "spin" || c.move === "smooth" ? c.move : "step";
+			// Turning the other way mirrors where the faces sit, so the list still plays top to bottom.
+			var dir = c.reverse ? -1 : 1;
 			// Respect the viewer's reduced-motion setting: faces still change, but cut instead of spinning.
 			var reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 			var stage = document.createElement("div");
@@ -521,7 +535,8 @@
 			var cube = document.createElement("div");
 			cube.className = "lc-cube";
 			// Shade a child layer; filters on the transformed faces can hide their backgrounds in OBS.
-			if (!reduce) { cube.style.setProperty("--lc-turn", turn + "s"); }
+			if (!reduce) { cube.style.setProperty("--lc-turn", (move === "spin" ? Math.min(1.2, hold / 2) : turn) + "s"); }
+			if (c.rows) { cube.style.setProperty("--lc-sub", (SSO.clamp(parseFloat(c.subsize) || 55, 20, 100) / 100) + "em"); }
 			stage.appendChild(cube);
 			root.appendChild(stage);
 			if (!items.length) { return; }
@@ -545,6 +560,7 @@
 				var size = c.fontsize;
 				var style = window.getComputedStyle(face);
 				var room = face.clientHeight - (parseFloat(style.paddingTop) || 0) - (parseFloat(style.paddingBottom) || 0);
+				if (face.className.indexOf(" pic") !== -1) { room *= 0.42; }
 				span.style.overflowWrap = "normal";
 				span.style.fontSize = size + "px";
 				// Long messages shrink to stay on the face instead of being cut off or split mid-word.
@@ -561,6 +577,31 @@
 				if (face.getAttribute("data-line") === line) { return; }
 				face.setAttribute("data-line", line);
 				face.textContent = "";
+				var lit = face.className.indexOf(" on") !== -1 ? " on" : "";
+				var parts = c.rows ? line.split("|").map(function (p) { return p.trim(); }).filter(Boolean) : [line];
+				if (parts.length > 1) {
+					// A big first row with smaller rows under it; an image link first becomes a picture with a caption.
+					var pic = isImage(parts[0]) ? parts.shift() : "";
+					var block = document.createElement("span");
+					parts.forEach(function (text, n) {
+						var row = document.createElement("span");
+						if (n > 0) { row.className = "lc-sub"; }
+						row.textContent = text;
+						block.appendChild(row);
+					});
+					face.className = "lc-face" + (pic ? " pic" : "") + lit;
+					if (pic) {
+						var shot = document.createElement("img");
+						shot.alt = "";
+						shot.onerror = function () { shot.style.visibility = "hidden"; };
+						shot.src = pic;
+						face.appendChild(shot);
+					}
+					face.appendChild(block);
+					fitText(face);
+					return;
+				}
+				line = parts[0] || line;
 				if (isImage(line)) {
 					var img = document.createElement("img");
 					img.alt = "";
@@ -581,7 +622,7 @@
 			var step = 0;
 			var apothem = 0;
 			function place() {
-				cube.style.transform = "translateZ(" + (-apothem) + "px) " + (upward ? "rotateX(" + (step * angle) + "deg)" : "rotateY(" + (-step * angle) + "deg)");
+				cube.style.transform = "translateZ(" + (-apothem) + "px) " + (upward ? "rotateX(" + (dir * step * angle) + "deg)" : "rotateY(" + (-dir * step * angle) + "deg)");
 			}
 			function layout() {
 				var W = root.clientWidth || 480, H = root.clientHeight || 360;
@@ -590,6 +631,9 @@
 				var swing = Math.sin(Math.PI / sides) / 1.12;
 				var w = Math.max(40, Math.round(W * share * (upward ? 1 / 1.12 : swing)));
 				var h = Math.max(30, Math.round(H * share * (upward ? swing : 1 / 1.12)));
+				// A face size picked by hand wins over the automatic one (for long banner faces).
+				if (parseFloat(c.facew) > 0) { w = Math.max(40, Math.round(W * Math.min(100, parseFloat(c.facew)) / 100)); }
+				if (parseFloat(c.faceh) > 0) { h = Math.max(30, Math.round(H * Math.min(100, parseFloat(c.faceh)) / 100)); }
 				apothem = Math.round(((upward ? h : w) / 2) / Math.tan(Math.PI / sides));
 				cube.style.width = w + "px";
 				cube.style.height = h + "px";
@@ -597,20 +641,43 @@
 				cube.style.setProperty("--lc-pad", Math.round(Math.min(w, h) * 0.07) + "px");
 				stage.style.perspective = Math.round(Math.max(w, h) * 3.2) + "px";
 				for (var k = 0; k < sides; k++) {
-					faces[k].style.transform = (upward ? "rotateX(" + (-k * angle) + "deg)" : "rotateY(" + (k * angle) + "deg)") + " translateZ(" + apothem + "px)";
+					faces[k].style.transform = (upward ? "rotateX(" + (-dir * k * angle) + "deg)" : "rotateY(" + (dir * k * angle) + "deg)") + " translateZ(" + apothem + "px)";
 					fitText(faces[k]);
 				}
 				place();
 			}
-			for (i = -(hidden - 1); i <= hidden; i++) { setFace(i, i); }
+			// Light the front face before anything is measured, so it does not fade up from dim on load.
 			faces[0].className += " on";
+			for (i = -(hidden - 1); i <= hidden; i++) { setFace(i, i); }
 			layout();
 			window.addEventListener("resize", layout);
 			var swapTimer = null;
 			if (SSO.onCleanup) { SSO.onCleanup(root, function () { clearTimeout(swapTimer); window.removeEventListener("resize", layout); }); }
 			if (items.length < 2) { return; }
+			if (move === "spin" && !reduce) {
+				// Non-stop rotation. Every slot facing the camera, plus the next one to come round, holds its item,
+				// so each swap happens on a face that is still out of sight.
+				var quarter = sides / 4, started = null, frameId = 0, alive = true, front = 0;
+				if (SSO.onCleanup) { SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); }); }
+				(function frame(now) {
+					if (!alive) { return; }
+					if (started === null) { started = now; }
+					step = (now - started) / 1000 / hold;
+					for (var slot = Math.floor(step - quarter) + 1; slot <= Math.ceil(step + quarter); slot++) { setFace(slot, slot); }
+					var facing = Math.round(step);
+					if (facing !== front) {
+						var was = faces[((front % sides) + sides) % sides], next = faces[((facing % sides) + sides) % sides];
+						was.className = was.className.replace(" on", "");
+						if (next.className.indexOf(" on") === -1) { next.className += " on"; }
+						front = facing;
+					}
+					place();
+					frameId = requestAnimationFrame(frame);
+				})(performance.now());
+				return;
+			}
 			// Start animating only after the first placement, so the cube does not swing in on load.
-			setTimeout(function () { if (!reduce) { cube.style.transition = "transform " + turn + "s cubic-bezier(.6,.04,.3,1)"; } }, 60);
+			setTimeout(function () { if (!reduce) { cube.style.transition = "transform " + turn + "s " + (move === "smooth" ? "cubic-bezier(.45,.05,.55,.95)" : "cubic-bezier(.6,.04,.3,1)"); } }, 60);
 			setInterval(function () {
 				var leaving = faces[((step % sides) + sides) % sides];
 				step++;

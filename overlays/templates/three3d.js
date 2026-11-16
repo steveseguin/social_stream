@@ -228,10 +228,22 @@
 		}
 	}
 
+	// Puts the painted sky on its own canvas behind the 3D one and repaints it when the source is resized.
+	function skyBehind(st, c, info) {
+		var sky = document.createElement("canvas"), inner = st.resize;
+		sky.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;display:block;";
+		st.host.insertBefore(sky, st.canvas);
+		st.resize = function (w, h) {
+			sky.width = Math.max(2, w); sky.height = Math.max(2, h);
+			paintSky(sky, c, info.season, info.time);
+			if (inner) { inner(w, h); }
+		};
+	}
+
 	function diorama(st, c) {
 		var T = st.T, season = LOOK[c.season] ? c.season : "spring", look = LOOK[season], rnd = SSO.seeded("island-" + season);
 		var time = LIGHT[c.time] ? c.time : look.time, L = LIGHT[time], glow = L.glow, snowy = season === "winter" || season === "christmas", spooky = season === "halloween";
-		var B = builder(T, rnd), G = builder(T, rnd), cache = {}, anim = [];
+		var B = builder(T, rnd), G = builder(T, rnd), cache = {};
 		function C(h) { return cache[h] || (cache[h] = lin(h)); }
 		var R = 5, snow = snowy ? C("#f7fbff") : null, halos = [], bulbs = [], lamps = [];
 		// The island's outline, and a pond that sits against the edge so its water can spill over.
@@ -493,7 +505,7 @@
 		}
 
 		// ---- water
-		var fallTop = null, fallA = pondA, wpos = [], wi;
+		var fallTop = null, fallA = pondA, wpos = [];
 		wet.tris.forEach(function (p) { wpos.push(p[0], p[1], p[2]); });
 		if (wpos.length) {
 			var wg = new T.BufferGeometry();
@@ -798,7 +810,7 @@
 		// ---- camera
 		var tilt = (c.tilt == null ? 16 : c.tilt) * Math.PI / 180, start = (c.angle || 0) * Math.PI / 180 - 0.32, dist = 20;
 		// with a title on screen the island moves out of its way
-		var shift = c.title || c.subtitle ? (c.textpos === "top" ? 1.2 : -1.2) : 0;
+		var shift = c.shift != null ? c.shift : (c.title || c.subtitle ? (c.textpos === "top" ? 1.2 : -1.2) : 0);
 		st.resize = function (w, h) {
 			var k = Math.tan(st.camera.fov * Math.PI / 360), asp = w / Math.max(1, h);
 			dist = Math.max(11.4 / (2 * k), 16.6 / (2 * k * asp)) / (c.zoom || 1) * (shift ? 1.12 : 1);
@@ -921,17 +933,7 @@
 			var st = stage(root, { fov: 30, preview: ctx && ctx.preview });
 			if (!st) { return; }
 			var info = diorama(st, c);
-			if (c.sky !== "clear") {
-				var sky = document.createElement("canvas");
-				sky.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;display:block;";
-				st.host.insertBefore(sky, st.canvas);
-				var inner = st.resize;
-				st.resize = function (w, h) {
-					sky.width = Math.max(2, w); sky.height = Math.max(2, h);
-					paintSky(sky, c, info.season, info.time);
-					if (inner) { inner(w, h); }
-				};
-			}
+			if (c.sky !== "clear") { skyBehind(st, c, info); }
 			caption(st.host, c);
 			st.start();
 		}
@@ -1047,7 +1049,7 @@
 	}
 	// Brilliant-cut gem: flat table, a crown of kite facets, a thin girdle and a pointed pavilion.
 	function gemGeometry(T, R) {
-		var n = 8, v = [], i, j, tY = 0.44 * R, gY = 0.07 * R, tR = 0.56 * R, apex = [0, -0.98 * R, 0], top = [0, tY, 0];
+		var n = 8, v = [], col = [], i, j, tY = 0.44 * R, gY = 0.07 * R, tR = 0.56 * R, apex = [0, -0.98 * R, 0], top = [0, tY, 0], shade = 1;
 		function tp(k) { var a = k / n * TAU; return [Math.cos(a) * tR, tY, Math.sin(a) * tR]; }
 		function gp(k, y) { var a = (k - 0.0) / (n * 2) * TAU; return [Math.cos(a) * R, y, Math.sin(a) * R]; }
 		function tri(a, b, c) {
@@ -1055,17 +1057,21 @@
 			var nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx;
 			if (nx * (a[0] + b[0] + c[0]) + ny * (a[1] + b[1] + c[1] + 0.45 * R) + nz * (a[2] + b[2] + c[2]) < 0) { v.push(a[0], a[1], a[2], c[0], c[1], c[2], b[0], b[1], b[2]); }
 			else { v.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]); }
+			col.push(shade, shade, shade, shade, shade, shade, shade, shade, shade);
 		}
 		for (i = 0; i < n; i++) {
-			tri(top, tp(i), tp(i + 1));
-			tri(tp(i), gp(2 * i, gY), gp(2 * i + 1, gY)); tri(tp(i), gp(2 * i + 1, gY), tp(i + 1)); tri(tp(i + 1), gp(2 * i + 1, gY), gp(2 * i + 2, gY));
+			shade = 1.25; tri(top, tp(i), tp(i + 1));
+			shade = i % 2 ? 0.72 : 1.05; tri(tp(i), gp(2 * i, gY), gp(2 * i + 1, gY));
+			shade = i % 2 ? 1.2 : 0.86; tri(tp(i), gp(2 * i + 1, gY), tp(i + 1));
+			shade = i % 2 ? 0.92 : 0.66; tri(tp(i + 1), gp(2 * i + 1, gY), gp(2 * i + 2, gY));
 		}
 		for (j = 0; j < n * 2; j++) {
-			tri(gp(j, gY), gp(j + 1, gY), gp(j + 1, -gY)); tri(gp(j, gY), gp(j + 1, -gY), gp(j, -gY));
-			tri(gp(j, -gY), gp(j + 1, -gY), apex);
+			shade = 1.1; tri(gp(j, gY), gp(j + 1, gY), gp(j + 1, -gY)); tri(gp(j, gY), gp(j + 1, -gY), gp(j, -gY));
+			shade = [0.62, 1.12, 0.8, 1.3][j % 4]; tri(gp(j, -gY), gp(j + 1, -gY), apex);
 		}
 		var g = new T.BufferGeometry();
 		g.setAttribute("position", new T.Float32BufferAttribute(v, 3));
+		g.setAttribute("color", new T.Float32BufferAttribute(col, 3));
 		g.computeVertexNormals();
 		return g;
 	}
@@ -1181,7 +1187,7 @@
 			var gold = new T.MeshStandardMaterial({ color: new T.Color(metal.c[0], metal.c[1], metal.c[2]), metalness: 1, roughness: 0.17, envMapIntensity: 1.15 });
 			var goldFlat = gold.clone(); goldFlat.flatShading = true; goldFlat.roughness = 0.2;
 			var jewelCol = lin(c.jewel, "#e11d48");
-			var jewel = new T.MeshStandardMaterial({ color: jewelCol, metalness: 0.55, roughness: 0.06, envMapIntensity: 2.2, flatShading: true, emissive: jewelCol.clone().multiplyScalar(0.22) });
+			var jewel = new T.MeshStandardMaterial({ color: jewelCol, metalness: 0.55, roughness: 0.06, envMapIntensity: 2.2, flatShading: true, vertexColors: true, emissive: jewelCol.clone().multiplyScalar(0.22) });
 			st.keep.push(gold, goldFlat, jewel);
 			st.scene.add(new T.AmbientLight(0xffffff, 0.25));
 			var key = new T.DirectionalLight(0xffffff, 1.1); key.position.set(4, 7, 8); st.scene.add(key);
@@ -1215,11 +1221,11 @@
 				var wall = add(cg, goldFlat);
 				wall.material = goldFlat.clone(); wall.material.side = T.DoubleSide; st.keep.push(wall.material);
 				var band = function (y, r, tube) { var m = add(new T.TorusGeometry(r, tube, 12, 64), gold, 0, y, 0); m.rotation.x = Math.PI / 2; };
-				band(0.06, 1.1, 0.09); band(0.5, 1.115, 0.05);
+				band(0.06, 1.1, 0.09); band(0.4, 1.165, 0.045);
 				for (k = 0; k < n; k++) {
 					a0 = k / n * TAU;
 					add(new T.SphereGeometry(0.13, 16, 12), gold, Math.cos(a0) * rO * 1.14, 1.6, Math.sin(a0) * rO * 1.14);
-					var gm = add(gemGeometry(T, 0.15), jewel, Math.cos(a0 + TAU / (n * 2)) * 1.16, 0.28, Math.sin(a0 + TAU / (n * 2)) * 1.16);
+					var gm = add(gemGeometry(T, 0.15), jewel, Math.cos(a0 + TAU / (n * 2)) * 1.17, 0.24, Math.sin(a0 + TAU / (n * 2)) * 1.17);
 					gm.rotation.set(0, -(a0 + TAU / (n * 2)), Math.PI / 2);
 					gm.scale.set(1, 0.6, 1);
 				}
@@ -1250,10 +1256,10 @@
 				topY = 4.6; sparkR = 1.6;
 			} else if (c.shape === "gem") {
 				add(lathe([[0, 0], [0.9, 0], [0.94, 0.05], [0.9, 0.14], [0.62, 0.22], [0.4, 0.3], [0.34, 0.5], [0.42, 0.62], [0.55, 0.68], [0.5, 0.74], [0, 0.74]]));
-				var gemMat = new T.MeshStandardMaterial({ color: jewelCol.clone().lerp(new T.Color(1, 1, 1), 0.25), metalness: 0.9, roughness: 0.03, envMapIntensity: 2.4, flatShading: true, emissive: jewelCol.clone().multiplyScalar(0.3), transparent: true, opacity: 0.93 });
+				var gemMat = new T.MeshStandardMaterial({ color: jewelCol.clone().lerp(new T.Color(1, 1, 1), 0.25), metalness: 0.9, roughness: 0.03, envMapIntensity: 2.4, flatShading: true, vertexColors: true, emissive: jewelCol.clone().multiplyScalar(0.14), transparent: true, opacity: 0.95 });
 				floaty = new T.Group(); piece.add(floaty);
 				add(gemGeometry(T, 1.5), gemMat, 0, 2.72, 0, floaty);
-				var core = add(gemGeometry(T, 1.18), glowBlend(T, new T.MeshBasicMaterial({ color: jewelCol.clone().lerp(new T.Color(1, 1, 1), 0.5), opacity: 0.35, toneMapped: false })), 0, 2.77, 0, floaty);
+				var core = add(gemGeometry(T, 1.18), glowBlend(T, new T.MeshBasicMaterial({ color: jewelCol.clone().lerp(new T.Color(1, 1, 1), 0.5), opacity: 0.22, toneMapped: false })), 0, 2.77, 0, floaty);
 				core.rotation.y = TAU / 32;
 				topY = 3.7; sparkR = 1.8;
 			} else {
@@ -1417,7 +1423,7 @@
 	function billTexture(T, hex, symbol) {
 		var cv = document.createElement("canvas"), g, W = 512, H = 218, c = new T.Color(hex6(hex, "#5fa870")), i, tex;
 		cv.width = W; cv.height = H; g = cv.getContext("2d");
-		var dark = "#" + c.clone().multiplyScalar(0.3).getHexString(), mid = "#" + c.clone().multiplyScalar(0.72).getHexString(), pale = "#" + c.clone().lerp(new T.Color(1, 1, 1), 0.38).getHexString();
+		var dark = "#" + c.clone().multiplyScalar(0.3).getHexString(), mid = "#" + c.clone().multiplyScalar(0.72).getHexString(), pale = "#" + c.clone().lerp(new T.Color(1, 1, 1), 0.24).getHexString();
 		g.fillStyle = pale; g.fillRect(0, 0, W, H);
 		g.fillStyle = mid; g.fillRect(10, 10, W - 20, H - 20);
 		g.fillStyle = pale; g.fillRect(20, 20, W - 40, H - 40);
@@ -1501,11 +1507,11 @@
 				for (i = 0; i < nCoin; i++) { var mc = metals[i % metals.length]; coinMesh.setColorAt(i, new T.Color(mc[0], mc[1], mc[2])); items.push({ mesh: coinMesh, idx: i, type: 0, r: 0.64 }); }
 			}
 			if (nBill) {
-				billMesh = new T.InstancedMesh(billGeometry(T), new T.MeshStandardMaterial({ map: billTexture(T, c.bill, c.symbol && c.symbol.length === 1 && "$€£¥₿".indexOf(c.symbol) !== -1 ? c.symbol : "$"), roughness: 0.8, metalness: 0, envMapIntensity: 0.45 }), nBill);
+				billMesh = new T.InstancedMesh(billGeometry(T), new T.MeshStandardMaterial({ map: billTexture(T, c.bill, c.symbol && c.symbol.length === 1 && "$€£¥₿".indexOf(c.symbol) !== -1 ? c.symbol : "$"), roughness: 0.9, metalness: 0, envMapIntensity: 0.3 }), nBill);
 				for (i = 0; i < nBill; i++) { items.push({ mesh: billMesh, idx: i, type: 1, r: 0.8 }); }
 			}
 			if (nGem) {
-				gemMesh = new T.InstancedMesh(gemGeometry(T, 1), new T.MeshStandardMaterial({ metalness: 0.9, roughness: 0.04, envMapIntensity: 2.3, flatShading: true }), nGem);
+				gemMesh = new T.InstancedMesh(gemGeometry(T, 1), new T.MeshStandardMaterial({ metalness: 0.9, roughness: 0.04, envMapIntensity: 2.3, flatShading: true, vertexColors: true }), nGem);
 				var gemCols = ["#ff3355", "#35d07f", "#3d8bff", "#b266ff", "#e8f7ff", "#ffcf3d", "#ff7ad9"];
 				for (i = 0; i < nGem; i++) { gemMesh.setColorAt(i, lin(gemCols[i % gemCols.length])); items.push({ mesh: gemMesh, idx: i, type: 2, r: 0.52 }); }
 			}
@@ -1591,4 +1597,392 @@
 			st.start();
 		}
 	});
+
+	// ---------------------------------------------------------------- sky lanterns
+	var LANTERN_COLS = {
+		warm: ["#ffb35c", "#ff9a3c", "#ffc978", "#ff8a4a", "#ffd89a"],
+		redgold: ["#ff3b30", "#e32619", "#ff5a36", "#ffb347", "#d91e18", "#ff4838"],
+		pastel: ["#ffb3c7", "#b5d8ff", "#c9b8ff", "#b8f0d0", "#ffe3a3", "#ffc7a8"],
+		white: ["#fff3d6", "#ffe9c2", "#fffaf0"]
+	};
+	// Paper lit from inside: brightest by the flame, with seams where the panels meet.
+	function lanternTexture(T, round) {
+		var cv = document.createElement("canvas"), W = 256, H = 256, g, gr, i, rnd = SSO.seeded("lantern" + round), ribs = round ? 14 : 8, tex;
+		cv.width = W; cv.height = H; g = cv.getContext("2d");
+		gr = g.createLinearGradient(0, H, 0, 0);
+		if (round) { gr.addColorStop(0, "#9c9690"); gr.addColorStop(0.3, "#f4efe8"); gr.addColorStop(0.5, "#ffffff"); gr.addColorStop(0.7, "#f4efe8"); gr.addColorStop(1, "#9c9690"); }
+		else { gr.addColorStop(0, "#ffffff"); gr.addColorStop(0.2, "#fff6e0"); gr.addColorStop(0.6, "#e4dcd0"); gr.addColorStop(1, "#8a8580"); }
+		g.fillStyle = gr; g.fillRect(0, 0, W, H);
+		for (i = 0; i < 40; i++) { g.fillStyle = "rgba(" + (rnd() < 0.5 ? "0,0,0" : "255,255,255") + "," + (rnd() * 0.05).toFixed(3) + ")"; g.beginPath(); g.ellipse(rnd() * W, rnd() * H, 10 + rnd() * 30, 6 + rnd() * 20, rnd() * 3, 0, TAU); g.fill(); }
+		for (i = 0; i <= ribs; i++) {
+			g.fillStyle = round ? "rgba(40,10,0,.3)" : "rgba(60,30,10,.2)";
+			g.fillRect(Math.round(i / ribs * W) - 1, 0, round ? 3 : 2, H);
+			g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(Math.round(i / ribs * W) + 2, 0, 2, H);
+		}
+		if (!round) { g.fillStyle = "rgba(70,35,10,.6)"; g.fillRect(0, H - 9, W, 9); }
+		tex = new T.CanvasTexture(cv); tex.encoding = T.sRGBEncoding; tex.wrapS = T.RepeatWrapping;
+		return tex;
+	}
+	function paintNight(cv, c, moon) {
+		var W = cv.width, H = cv.height, g = cv.getContext("2d"), rnd = SSO.seeded("lantern-sky"), gr, i, x, y, r;
+		gr = g.createLinearGradient(0, 0, 0, H);
+		gr.addColorStop(0, SSO.color(c.c1 || "#04061a")); gr.addColorStop(0.72, SSO.color(c.c2 || "#27184f")); gr.addColorStop(1, SSO.color(c.c2 || "#27184f"));
+		g.fillStyle = gr; g.fillRect(0, 0, W, H);
+		gr = g.createRadialGradient(W / 2, H * 1.05, 0, W / 2, H * 1.05, H * 0.75);
+		gr.addColorStop(0, "rgba(255,150,80,.32)"); gr.addColorStop(1, "rgba(255,150,80,0)");
+		g.fillStyle = gr; g.fillRect(0, 0, W, H);
+		for (i = 0; i < 260; i++) { g.fillStyle = "rgba(255,255,255," + (0.12 + rnd() * 0.7).toFixed(2) + ")"; r = (0.5 + rnd() * 1.2) * H / 1080; g.beginPath(); g.arc(rnd() * W, Math.pow(rnd(), 1.4) * H * 0.9, r, 0, TAU); g.fill(); }
+		if (moon) {
+			x = W * 0.8; y = H * 0.2; r = H * 0.06;
+			gr = g.createRadialGradient(x, y, r * 0.8, x, y, r * 5); gr.addColorStop(0, "rgba(220,230,255,.3)"); gr.addColorStop(1, "rgba(220,230,255,0)");
+			g.fillStyle = gr; g.fillRect(0, 0, W, H);
+			g.fillStyle = "#f6f4e8"; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill();
+			g.fillStyle = "rgba(160,165,190,.3)"; g.beginPath(); g.arc(x - r * 0.3, y - r * 0.2, r * 0.2, 0, TAU); g.arc(x + r * 0.35, y + r * 0.3, r * 0.14, 0, TAU); g.fill();
+		}
+		// far hills
+		[[0.86, "rgba(10,8,28,.75)", 0.05, 3.1], [0.92, "rgba(5,4,16,.96)", 0.045, 5.3]].forEach(function (L) {
+			g.fillStyle = L[1]; g.beginPath(); g.moveTo(0, H);
+			for (x = 0; x <= W + 8; x += W / 90) { g.lineTo(x, H * L[0] - (Math.sin(x / W * L[3] * 2 + L[3]) * 0.6 + Math.sin(x / W * 17 + L[3]) * 0.25 + 0.4) * H * L[2]); }
+			g.lineTo(W, H); g.fill();
+		});
+	}
+
+	SSO.register({
+		id: "lanterns3d",
+		name: "Sky lanterns (3D)",
+		category: "3d",
+		description: "Glowing paper lanterns drifting up into the night in real 3D: near ones large, far ones tiny, each flickering on its own. Warm sky lanterns for a calm ending screen, red and gold festival lanterns for Lunar New Year, pastel ones for a celebration. Let them rise or hang them from the top on strings. Night sky behind, or transparent over your scene.",
+		size: [1920, 1080],
+		sizeFor: function (c, thumb) { return thumb ? [960, 540] : [1920, 1080]; },
+		libs: LIBS,
+		fields: [
+			{ key: "style", label: "Lanterns", type: "select", group: "Lanterns", default: "sky", options: [["sky", "Sky lanterns"], ["round", "Round festival lanterns"], ["mix", "Both"]] },
+			{ key: "palette", label: "Colours", type: "select", group: "Lanterns", default: "warm", options: [["warm", "Warm candlelight"], ["redgold", "Red and gold"], ["pastel", "Pastel mix"], ["white", "Soft white"], ["custom", "Your colour"]] },
+			{ key: "color", label: "Lantern colour", type: "color", group: "Lanterns", default: "7dd3fc", show: { palette: "custom" } },
+			{ key: "motion", label: "Movement", type: "select", group: "Lanterns", default: "rise", options: [["rise", "Rising into the sky"], ["hang", "Hanging from the top, swaying"]] },
+			{ key: "amount", label: "How many", type: "range", group: "Lanterns", default: 60, min: 6, max: 160, step: 2 },
+			{ key: "size", label: "Size", type: "range", group: "Lanterns", default: 1, min: 0.4, max: 3, step: 0.1 },
+			{ key: "speed", label: "Speed", type: "range", group: "Lanterns", default: 1, min: 0.2, max: 3, step: 0.1 },
+			{ key: "sky", label: "Background", type: "select", group: "Sky", default: "night", options: [["night", "Night sky"], ["clear", "Transparent"]] },
+			{ key: "c1", label: "Sky colour at the top (blank = automatic)", type: "color", group: "Sky", default: "", show: { sky: "night" } },
+			{ key: "c2", label: "Sky colour at the bottom (blank = automatic)", type: "color", group: "Sky", default: "", show: { sky: "night" } },
+			{ key: "moon", label: "Moon", type: "bool", group: "Sky", default: true, show: { sky: "night" } },
+			{ key: "title", label: "Title (blank = none)", type: "text", group: "Text", default: "" },
+			{ key: "subtitle", label: "Subtitle", type: "text", group: "Text", default: "" },
+			{ key: "textpos", label: "Text position", type: "select", group: "Text", default: "middle", options: [["middle", "Middle"], ["bottom", "Bottom"], ["top", "Top"]] },
+			{ key: "fg", label: "Text colour", type: "color", group: "Text", default: "fff3dc" },
+			SSO.f.font("Cinzel"),
+			{ key: "fontsize", label: "Title size", type: "range", group: "Text", default: 96, min: 24, max: 220, step: 2 }
+		],
+		presets: [
+			{ name: "Sky lanterns", tags: ["3d", "cozy", "elegant"], values: {} },
+			{ name: "Lunar New Year lanterns", tags: ["3d", "holiday", "newyear"], values: { style: "round", palette: "redgold", motion: "hang", amount: 26, c2: "4a1020" } },
+			{ name: "Festival of lights", tags: ["3d", "holiday", "elegant"], values: { style: "mix", palette: "redgold", amount: 80, c1: "0a0418", c2: "3a1436" } },
+			{ name: "Pastel wishes", tags: ["3d", "cute", "celebrate"], values: { palette: "pastel", amount: 70, c1: "0b1030", c2: "3a2a6a" } },
+			{ name: "Goodnight lanterns", tags: ["3d", "cozy", "elegant"], values: { amount: 44, speed: 0.6, title: "Goodnight, friends", subtitle: "thanks for watching", font: "Dancing Script", fontsize: 120 } },
+			{ name: "Lanterns over your scene", tags: ["3d", "cozy", "simple"], values: { sky: "clear", amount: 30 } },
+			{ name: "Hanging paper lanterns", tags: ["3d", "cozy", "summer"], values: { style: "round", palette: "pastel", motion: "hang", amount: 22, sky: "clear" } },
+			{ name: "New Year's wish", tags: ["3d", "newyear", "elegant"], values: { palette: "white", amount: 90, speed: 0.8, title: "Happy New Year", c1: "02040f", c2: "14224a" } }
+		],
+		render: function (root, c, ctx) {
+			SSO.loadFont(c.font);
+			var st = stage(root, { fov: 40, preview: ctx && ctx.preview });
+			if (!st) { return; }
+			var T = st.T, camZ = 14, K = Math.tan(st.camera.fov * Math.PI / 360), night = c.sky !== "clear", hang = c.motion === "hang", i;
+			st.camera.position.set(0, 0, camZ);
+			if (night) {
+				var sky = document.createElement("canvas");
+				sky.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;display:block;";
+				st.host.insertBefore(sky, st.canvas);
+				st.scene.fog = new T.Fog(lin(c.c2 || "#27184f").lerp(lin(c.c1 || "#04061a"), 0.45), camZ + 8, camZ + 46);
+			}
+			var cols = LANTERN_COLS[c.palette];
+			if (!cols) { var base = new T.Color(hex6(c.color, "#7dd3fc")); cols = ["#" + base.getHexString(), "#" + base.clone().lerp(new T.Color(1, 1, 1), 0.35).getHexString(), "#" + base.clone().multiplyScalar(0.8).getHexString()]; }
+			var total = Math.round(c.amount * (st.preview ? 0.75 : 1)), kinds = c.style === "mix" ? ["sky", "round"] : [c.style === "round" ? "round" : "sky"], rnd = SSO.seeded("lanterns" + c.style + c.motion);
+			var lanterns = [], sets = [], dot = dotTexture(T), d = new T.Object3D(), tmp = new T.Color(), warm = new T.Color(1, 0.85, 0.6), eu = new T.Euler();
+			function profile(pts, seg) { return new T.LatheGeometry(pts.map(function (p) { return new T.Vector2(p[0], p[1]); }), seg); }
+			kinds.forEach(function (kind, ki) {
+				var n = Math.max(1, Math.round(total / kinds.length)), round = kind === "round", tb = builder(T, rnd), body;
+				if (round) {
+					body = profile([[0.17, -0.5], [0.36, -0.42], [0.52, -0.22], [0.58, 0], [0.52, 0.22], [0.36, 0.42], [0.17, 0.5]], 18);
+					tb.add(new T.CylinderGeometry(0.19, 0.19, 0.09, 12), mat(0, 0.54, 0), lin("#e9b949"), 0.05);
+					tb.add(new T.CylinderGeometry(0.19, 0.19, 0.09, 12), mat(0, -0.54, 0), lin("#e9b949"), 0.05);
+					tb.add(new T.CylinderGeometry(0.012, 0.012, 0.3, 4), mat(0, -0.73, 0), lin("#c9302c"), 0);
+					tb.add(new T.ConeGeometry(0.06, 0.34, 7), mat(0, -1.02, 0), lin("#d63a2f"), 0.06);
+					tb.add(new T.TorusGeometry(0.06, 0.012, 4, 10), mat(0, 0.64, 0), lin("#e9b949"), 0);
+				} else {
+					body = profile([[0.34, -0.62], [0.44, -0.3], [0.53, 0.05], [0.57, 0.36], [0.52, 0.6], [0.38, 0.78], [0.18, 0.88], [0, 0.9]], 12);
+					tb.add(new T.TorusGeometry(0.33, 0.014, 4, 12), mat(0, -0.62, 0, 1, Math.PI / 2, 0, 0), lin("#3a2414"), 0);
+					tb.add(new T.IcosahedronGeometry(0.075, 0), mat(0, -0.56, 0, [1, 1.5, 1]), lin("#fff2b0"), 0);
+				}
+				var bodyMesh = new T.InstancedMesh(body, new T.MeshBasicMaterial({ map: lanternTexture(T, round), side: T.DoubleSide }), n);
+				var trimMesh = new T.InstancedMesh(tb.geometry(), new T.MeshBasicMaterial({ vertexColors: true }), n);
+				var haloMesh = new T.InstancedMesh(new T.PlaneGeometry(1, 1), glowBlend(T, new T.MeshBasicMaterial({ map: dot, opacity: 0.6, fog: false })), n);
+				var stringMesh = null;
+				if (hang) {
+					var sg = new T.CylinderGeometry(0.012, 0.012, 1, 4);
+					sg.translate(0, -0.5, 0);
+					stringMesh = new T.InstancedMesh(sg, new T.MeshBasicMaterial({ color: lin(night ? "#6a5a4a" : "#3a2f28") }), n);
+				}
+				[stringMesh, bodyMesh, trimMesh, haloMesh].forEach(function (m) { if (m) { m.frustumCulled = false; st.scene.add(m); } });
+				haloMesh.renderOrder = 2;
+				sets.push({ body: bodyMesh, trim: trimMesh, halo: haloMesh, string: stringMesh, n: n, top: round ? 0.66 : 0.9 });
+				for (i = 0; i < n; i++) {
+					var col = lin(cols[Math.floor(rnd() * cols.length)]);
+					bodyMesh.setColorAt(i, col);
+					lanterns.push({ set: sets.length - 1, idx: i, col: col, z: 0, x: 0, y: 0, s: 1, v: 0.5 + rnd() * 0.6, ph: rnd() * TAU, a: 0.3 + rnd() * 0.5, fl: 3 + rnd() * 5, u: rnd(), w: rnd(), len: 0 });
+				}
+			});
+			st.keep.push(dot);
+			function halfH(z) { return K * (camZ - z); }
+			function layout() {
+				var asp = st.w / Math.max(1, st.h), n = lanterns.length;
+				lanterns.forEach(function (L, li) {
+					var hh, hw;
+					if (hang) {
+						// three rows at different depths, spread evenly with a little disorder, on strings of different lengths
+						var row = li % 3;
+						L.z = [1.5, -5, -13][row]; hh = halfH(L.z); hw = hh * asp;
+						L.s = c.size * (1.15 - row * 0.05);
+						L.x = (((Math.floor(li / 3) + 0.5 + (L.u - 0.5) * 0.7) / Math.ceil(n / 3)) * 2 - 1) * hw * 1.02 + row * 0.9;
+						L.len = hh * (0.28 + L.w * 0.75 - row * 0.03);
+						L.y = hh + 0.4;
+					} else {
+						L.z = night ? 3 - Math.pow(L.u, 1.5) * 40 : 3 - L.u * 20; hh = halfH(L.z); hw = hh * asp;
+						L.s = c.size * (0.9 + L.w * 0.35);
+						L.x = (L.ph / TAU * 2 - 1) * hw * 1.05;
+						L.y = (L.w * 2 - 1) * (hh + 2);
+					}
+				});
+			}
+			st.resize = function (w, h) {
+				if (night) { sky.width = Math.max(2, w); sky.height = Math.max(2, h); paintNight(sky, c, c.moon); }
+				layout();
+			};
+			caption(st.host, c);
+			st.update = function (dt, t) {
+				var asp = st.w / Math.max(1, st.h), k, L, S, hh, fl, sway, depthDim;
+				for (k = 0; k < lanterns.length; k++) {
+					L = lanterns[k]; S = sets[L.set]; hh = halfH(L.z);
+					fl = 0.78 + 0.22 * Math.sin(t * L.fl + L.ph) * Math.sin(t * L.fl * 0.37 + L.ph * 3);
+					if (hang) {
+						sway = Math.sin(t * (0.5 + L.a) * c.speed + L.ph) * 0.07;
+						d.position.set(L.x, L.y, L.z); d.rotation.set(0, 0, sway); d.scale.set(1, L.len, 1); d.updateMatrix();
+						S.string.setMatrixAt(L.idx, d.matrix);
+						d.position.set(L.x + Math.sin(sway) * (L.len + S.top * L.s), L.y - Math.cos(sway) * (L.len + S.top * L.s), L.z);
+						eu.set(0, t * 0.15 + L.ph, sway, "ZYX"); d.quaternion.setFromEuler(eu);
+					} else {
+						L.y += L.v * c.speed * dt * (0.55 + 0.03 * (L.z + 37));
+						if (L.y > hh + 2.2 * L.s) { L.y = -hh - 2.2 * L.s; L.x = (Math.random() * 2 - 1) * hh * asp * 1.05; }
+						d.position.set(L.x + Math.sin(t * L.a + L.ph) * 0.6, L.y, L.z);
+						d.rotation.set(Math.sin(t * L.a * 1.3 + L.ph) * 0.06, t * 0.2 * L.a + L.ph, Math.cos(t * L.a + L.ph) * 0.07);
+					}
+					d.scale.setScalar(L.s); d.updateMatrix();
+					S.body.setMatrixAt(L.idx, d.matrix); S.trim.setMatrixAt(L.idx, d.matrix);
+					depthDim = night ? 1 : 0.55 + 0.45 * Math.max(0, Math.min(1, (L.z + 20) / 23));
+					tmp.copy(L.col).multiplyScalar((0.82 + 0.18 * fl) * depthDim); S.body.setColorAt(L.idx, tmp);
+					// the halo sits just behind the paper so it rims the lantern instead of washing it out
+					d.rotation.set(0, 0, 0); d.position.z -= 0.2; d.scale.setScalar(L.s * 3.6); d.updateMatrix();
+					S.halo.setMatrixAt(L.idx, d.matrix);
+					tmp.copy(L.col).lerp(warm, 0.25).multiplyScalar(fl * depthDim * (night ? Math.max(0.25, 1 - (camZ - L.z - 11) / 48) : 1)); S.halo.setColorAt(L.idx, tmp);
+				}
+				sets.forEach(function (S2) {
+					S2.body.instanceMatrix.needsUpdate = true; S2.trim.instanceMatrix.needsUpdate = true; S2.halo.instanceMatrix.needsUpdate = true;
+					S2.body.instanceColor.needsUpdate = true; S2.halo.instanceColor.needsUpdate = true;
+					if (S2.string) { S2.string.instanceMatrix.needsUpdate = true; }
+				});
+			};
+			st.start();
+		}
+	});
+
+	// ---------------------------------------------------------------- disco ball
+	var DISCO = {
+		classic: { lights: ["#ffffff", "#dfe9ff", "#fff1d0", "#ffffff", "#cfe0ff"], tint: [0.96, 0.97, 1] },
+		rainbow: { lights: ["#ff3b6b", "#ffb03b", "#fff23b", "#3bff8a", "#3bd4ff", "#8a5bff", "#ff3bd4"], tint: [0.96, 0.97, 1] },
+		gold: { lights: ["#ffd166", "#ffb347", "#fff0b3", "#ff9f1c", "#ffe08a"], tint: [1, 0.82, 0.46] },
+		pinkblue: { lights: ["#ff3ec8", "#00e5ff", "#b56bff", "#ff7ad9", "#49b6ff"], tint: [0.96, 0.97, 1] }
+	};
+	// A sphere of little square mirrors, each with its own slightly wonky facing so the reflections dance.
+	function mirrorBall(T, R, tile, rnd) {
+		var pos = [], nor = [], col = [], rows = Math.round(Math.PI * R / tile), r, k, n, gap = 0.08;
+		function P(lat, lon) { return [R * Math.cos(lat) * Math.cos(lon), R * Math.sin(lat), R * Math.cos(lat) * Math.sin(lon)]; }
+		for (r = 0; r < rows; r++) {
+			var lat0 = -Math.PI / 2 + r / rows * Math.PI, lat1 = lat0 + Math.PI / rows, mid = (lat0 + lat1) / 2, offs = rnd() * TAU;
+			n = Math.max(3, Math.round(TAU * R * Math.cos(mid) / tile));
+			for (k = 0; k < n; k++) {
+				var lon0 = offs + k / n * TAU, lon1 = lon0 + TAU / n;
+				var la = lat0 + (lat1 - lat0) * gap, lb = lat1 - (lat1 - lat0) * gap, lo = lon0 + (lon1 - lon0) * gap, lp = lon1 - (lon1 - lon0) * gap;
+				var a = P(la, lo), b = P(la, lp), c2 = P(lb, lp), d2 = P(lb, lo), cm = P(mid, (lon0 + lon1) / 2);
+				var nx = cm[0] / R + (rnd() - 0.5) * 0.09, ny = cm[1] / R + (rnd() - 0.5) * 0.09, nz = cm[2] / R + (rnd() - 0.5) * 0.09, nl = Math.sqrt(nx * nx + ny * ny + nz * nz), sh = 0.8 + rnd() * 0.2;
+				[a, c2, b, a, d2, c2].forEach(function (v) { pos.push(v[0], v[1], v[2]); nor.push(nx / nl, ny / nl, nz / nl); col.push(sh, sh, sh); });
+			}
+		}
+		var g = new T.BufferGeometry();
+		g.setAttribute("position", new T.Float32BufferAttribute(pos, 3));
+		g.setAttribute("normal", new T.Float32BufferAttribute(nor, 3));
+		g.setAttribute("color", new T.Float32BufferAttribute(col, 3));
+		return g;
+	}
+	function beamTexture(T) {
+		var cv = document.createElement("canvas"), g, gr, x;
+		cv.width = 64; cv.height = 256; g = cv.getContext("2d");
+		// bright at the lamp (top), fading along its length, soft at both edges
+		for (x = 0; x < 64; x++) {
+			gr = g.createLinearGradient(0, 0, 0, 256);
+			var e = Math.pow(Math.sin(Math.PI * (x + 0.5) / 64), 1.6);
+			gr.addColorStop(0, "rgba(255,255,255," + (0.9 * e).toFixed(3) + ")"); gr.addColorStop(0.6, "rgba(255,255,255," + (0.35 * e).toFixed(3) + ")"); gr.addColorStop(1, "rgba(255,255,255,0)");
+			g.fillStyle = gr; g.fillRect(x, 0, 1, 256);
+		}
+		return new T.CanvasTexture(cv);
+	}
+
+	SSO.register({
+		id: "disco3d",
+		name: "Disco ball (3D)",
+		category: "3d",
+		description: "A mirror ball turning on its chain, every little tile catching the coloured lights, with rows of light spots sweeping across your whole scene. Hang it over a dance break, a raid party or New Year's Eve. Real 3D reflections, transparent background.",
+		size: [1280, 720],
+		sizeFor: function (c, thumb) { return thumb ? [960, 540] : [1920, 1080]; },
+		libs: LIBS,
+		fields: [
+			{ key: "theme", label: "Lights", type: "select", group: "Ball", default: "rainbow", options: [["rainbow", "Rainbow"], ["classic", "Classic white"], ["gold", "Gold"], ["pinkblue", "Pink and blue"], ["custom", "Your colour"]] },
+			{ key: "color", label: "Light colour", type: "color", group: "Ball", default: "7dd3fc", show: { theme: "custom" } },
+			{ key: "pos", label: "Where it hangs", type: "select", group: "Ball", default: "top", options: [["top", "Top centre"], ["left", "Top left"], ["right", "Top right"], ["center", "Middle of the screen"]] },
+			{ key: "size", label: "Size", type: "range", group: "Ball", default: 1, min: 0.4, max: 2.5, step: 0.1 },
+			{ key: "spin", label: "Seconds per turn", type: "number", group: "Ball", default: 14, min: 2, max: 120, step: 1 },
+			{ key: "spots", label: "Light spots across the screen", type: "range", group: "Effects", default: 1, min: 0, max: 2, step: 0.1 },
+			{ key: "beams", label: "Spotlight beams", type: "bool", group: "Effects", default: true },
+			{ key: "glints", label: "Sparkles on the ball", type: "bool", group: "Effects", default: true }
+		],
+		presets: [
+			{ name: "Disco ball", tags: ["3d", "celebrate", "retro", "music"], values: {} },
+			{ name: "Classic mirror ball", tags: ["3d", "celebrate", "elegant", "music"], values: { theme: "classic" } },
+			{ name: "New Year's gold", tags: ["3d", "newyear", "celebrate", "elegant"], values: { theme: "gold", size: 1.2 } },
+			{ name: "Retro pink and blue", tags: ["3d", "retro", "cyber", "music"], values: { theme: "pinkblue", pos: "left" } },
+			{ name: "Dance break (big, centre)", tags: ["3d", "celebrate", "music"], values: { pos: "center", size: 1.7, spin: 9 } },
+			{ name: "Corner ball, spots only", tags: ["3d", "simple", "music"], values: { pos: "right", size: 0.7, beams: false, theme: "classic" } }
+		],
+		render: function (root, c, ctx) {
+			var st = stage(root, { fov: 40, preview: ctx && ctx.preview });
+			if (!st) { return; }
+			var T = st.T, camZ = 16, K = Math.tan(st.camera.fov * Math.PI / 360), rnd = SSO.seeded("disco" + c.theme), theme = DISCO[c.theme], i;
+			if (!theme) { var base = new T.Color(hex6(c.color, "#7dd3fc")); theme = { lights: ["#" + base.getHexString(), "#" + base.clone().lerp(new T.Color(1, 1, 1), 0.5).getHexString(), "#ffffff", "#" + base.clone().multiplyScalar(0.8).getHexString()], tint: [0.96, 0.97, 1] }; }
+			st.camera.position.set(0, 0, camZ);
+			st.renderer.toneMapping = T.ACESFilmicToneMapping;
+			st.renderer.toneMappingExposure = 1.1;
+			// the room the mirrors reflect: dark, with a ring of small coloured lamps and two soft panels
+			var lamps = [];
+			for (i = 0; i < 18; i++) { var a = i / 18 * TAU + rnd(), el = (rnd() - 0.35) * 1.5; lamps.push([Math.cos(a) * Math.cos(el) * 11, Math.sin(el) * 8, Math.sin(a) * Math.cos(el) * 11, 0.9 + rnd() * 0.9, theme.lights[i % theme.lights.length], 30 + rnd() * 40]); }
+			lamps.push([0, 8, 4, 5, "#ffffff", 2.2], [4, 2, 12, 5, "#c8d0e0", 1.2], [-8, -2, 8, 4, theme.lights[0], 1.3]);
+			st.scene.environment = studioEnv(st, { bare: true, room: "#2a2b36", spots: lamps, blur: 0.012 });
+			var R = 1.5 * c.size, ball = new T.Group(), rig = new T.Group();
+			var mirrors = new T.Mesh(mirrorBall(T, R, 0.15 * Math.max(0.75, Math.sqrt(c.size)), rnd), new T.MeshStandardMaterial({ color: new T.Color(theme.tint[0], theme.tint[1], theme.tint[2]), metalness: 1, roughness: 0.05, envMapIntensity: 1.5, vertexColors: true }));
+			ball.add(mirrors);
+			ball.add(new T.Mesh(new T.SphereGeometry(R * 0.988, 40, 28), new T.MeshBasicMaterial({ color: lin("#15151c") })));
+			rig.add(ball);
+			var steel = new T.MeshStandardMaterial({ color: new T.Color(0.75, 0.77, 0.82), metalness: 1, roughness: 0.3 });
+			var cap = new T.Mesh(new T.CylinderGeometry(R * 0.16, R * 0.22, R * 0.14, 20), steel); cap.position.y = R * 1.02; rig.add(cap);
+			var chain = new T.Mesh(new T.CylinderGeometry(R * 0.025, R * 0.025, 1, 8), steel); rig.add(chain);
+			st.scene.add(rig);
+			st.scene.add(new T.AmbientLight(0xffffff, 0.2));
+
+			// rows of light spots thrown around the room; only the ones on the far side are ever in view
+			var spots = [], spotMesh = null, dot = dotTexture(T), d = new T.Object3D(), nSpot = 0;
+			if (c.spots > 0) {
+				var per = Math.round(8 * Math.min(1.7, 0.5 + c.spots * 0.5)), rowsS = [-50, -34, -20, -7, 6, 19, 33];
+				theme.lights.slice(0, 4).forEach(function (hex, li) {
+					rowsS.forEach(function (lat, ri) {
+						for (var k = 0; k < per; k++) { spots.push({ lat: (lat + li * 3.1 + (k % 2) * 1.4) * Math.PI / 180, lon: k / per * TAU + li * 1.31 + ri * 2.399, col: lin(hex), s: 0.6 + rnd() * 0.85 }); }
+					});
+				});
+				nSpot = spots.length;
+				spotMesh = new T.InstancedMesh(new T.PlaneGeometry(1, 1), glowBlend(T, new T.MeshBasicMaterial({ map: dot, opacity: Math.min(1, 0.42 * c.spots + 0.12), depthTest: false, toneMapped: false })), nSpot);
+				spotMesh.frustumCulled = false; spotMesh.renderOrder = -1;
+				spots.forEach(function (s2, si) { spotMesh.setColorAt(si, s2.col); });
+				st.scene.add(spotMesh);
+			}
+			st.keep.push(dot);
+			// spotlight beams from above the frame down onto the ball
+			var beams = [];
+			if (c.beams) {
+				var btex = beamTexture(T);
+				st.keep.push(btex);
+				[[-1, 0], [1, 1], [-0.35, 2], [0.5, 3]].forEach(function (b) {
+					var g = new T.PlaneGeometry(1, 1);
+					g.translate(0, -0.5, 0);
+					var m = new T.Mesh(g, glowBlend(T, new T.MeshBasicMaterial({ map: btex, color: lin(theme.lights[b[1] % theme.lights.length]), opacity: 0.5, depthTest: false, toneMapped: false })));
+					m.renderOrder = -2;
+					st.scene.add(m); beams.push({ m: m, side: b[0], ph: b[1] * 1.7 });
+				});
+			}
+			var spark = c.glints ? glints(st, st.preview ? 6 : 9, 1.1 * c.size, function (k, v) {
+				var a2 = Math.random() * TAU, u = Math.random() * 2 - 1, s3 = Math.sqrt(1 - u * u);
+				v.set(rig.position.x + R * s3 * Math.cos(a2) * 0.95, rig.position.y + R * u * 0.95, R * Math.abs(s3 * Math.sin(a2)) + 0.2);
+			}) : null;
+			var white = new T.Color(1, 1, 1), hh = 5.8, hw = 10;
+			st.resize = function (w, h) {
+				hh = K * camZ; hw = hh * w / Math.max(1, h);
+				var top = c.pos !== "center";
+				rig.position.set(c.pos === "left" ? -hw * 0.62 : c.pos === "right" ? hw * 0.62 : 0, top ? hh - R - Math.min(1.3, hh * 0.16) : 0.2, 0);
+				chain.scale.y = hh - rig.position.y - R + 1; chain.position.y = R + chain.scale.y / 2;
+			};
+			st.update = function (dt, t) {
+				var w = TAU / Math.max(2, c.spin), k, s2, rs, x, y, z, ca, a3;
+				ball.rotation.y = t * w;
+				rig.rotation.z = Math.sin(t * 0.5) * 0.012;
+				for (k = 0; k < nSpot; k++) {
+					s2 = spots[k]; a3 = s2.lon + t * w * 1.6; rs = 20; ca = Math.cos(s2.lat);
+					x = rig.position.x + rs * ca * Math.sin(a3); y = rig.position.y + rs * Math.sin(s2.lat) * 0.8 + 1; z = -rs * ca * Math.cos(a3);
+					if (z > 2) { d.scale.setScalar(0); }
+					else { d.scale.set(s2.s * (1.25 + 0.6 * Math.abs(Math.sin(a3))), s2.s * 1.25, 1); }
+					d.position.set(x, y, Math.min(z, -1)); d.updateMatrix(); spotMesh.setMatrixAt(k, d.matrix);
+				}
+				if (spotMesh) { spotMesh.instanceMatrix.needsUpdate = true; }
+				beams.forEach(function (b) {
+					var sx = b.side * hw * 1.05 + Math.sin(t * 0.4 + b.ph) * 1.5, sy = hh + 1.5, dx = rig.position.x - sx, dy = rig.position.y - sy, len = Math.sqrt(dx * dx + dy * dy);
+					b.m.position.set(sx, sy, -0.5);
+					b.m.rotation.z = Math.atan2(dy, dx) + Math.PI / 2;
+					b.m.scale.set(R * 2.6, len * 1.35, 1);
+					b.m.material.opacity = 0.34 + 0.16 * Math.sin(t * 1.3 + b.ph * 2);
+				});
+				if (spark) { spark.update(dt, white, 1); }
+			};
+			st.start();
+		}
+	});
+
+	// ---------------------------------------------------------------- the islands as backgrounds for screens and backdrops
+	// The screen and backdrop templates do not list three.js in their libs, so the engine fetches it the first time it is needed.
+	function islandEngine(season) {
+		return function (host, o) {
+			var stopped = false;
+			function go() {
+				if (stopped) { return; }
+				// a screen says where its text sits (l-top, l-bottom...) on the element around the background, so the island can keep clear of it
+				var where = host.parentNode && typeof host.parentNode.className === "string" ? host.parentNode.className : "";
+				var c = { season: season, time: "", sky: "sky", c1: o.c1, c2: o.c2, fall: 1, clouds: true, spin: 90 / Math.max(0.1, o.speed || 1), angle: 0, zoom: where.indexOf("l-top") !== -1 ? 0.84 : 0.92, tilt: 16, shift: /\bl-bottom\b/.test(where) ? -2.3 : /\bl-top\b/.test(where) ? 2.9 : 0 };
+				var st = stage(host, { fov: 30 });
+				if (!st) { host.style.background = "linear-gradient(" + o.c1 + "," + o.c2 + ")"; return; }
+				skyBehind(st, c, diorama(st, c));
+				st.start();
+			}
+			if (window.THREE) { go(); } else { SSO.loadScripts(LIBS, go); }
+			return { stop: function () { stopped = true; } };
+		};
+	}
+	if (SSO.addEngine) {
+		SEASONS.forEach(function (s) {
+			var pair = LOOK[s[0]].sky[LOOK[s[0]].time];
+			SSO.addEngine({ id: "isle3d-" + s[0], label: "3D island: " + s[1].toLowerCase(), colors: [pair[0].slice(1), pair[1].slice(1), "ffd166"], start: islandEngine(s[0]) });
+		});
+		var addPresets = function (id, list) { var d = SSO.get(id); if (d) { d.presets = d.presets.concat(list); } };
+		addPresets("screen", [
+			{ name: "Island starting soon", tags: ["3d", "autumn", "cozy"], values: { backdrop: "isle3d-autumn", c1: "4b2c5e", c2: "ff9d52", c3: "ffd166", title: "Starting soon", subtitle: "the leaves are falling, the kettle is on", layout: "bottom", font: "Fredoka", fontsize: 84, dim: 0, accent: "ffd166" } },
+			{ name: "Christmas island countdown", tags: ["3d", "christmas", "winter"], values: { backdrop: "isle3d-christmas", c1: "050a22", c2: "1f3a6e", c3: "ffd166", title: "Starting soon", subtitle: "", layout: "top", font: "Mountains of Christmas", fontsize: 96, dim: 0, accent: "ffd166" } },
+			{ name: "Spring island BRB", tags: ["3d", "spring", "cute"], values: { backdrop: "isle3d-spring", c1: "4fb0f5", c2: "d9f2ff", c3: "ffffff", title: "be right back", subtitle: "stretching my legs", minutes: 0, layout: "bottom", font: "Fredoka", fontsize: 84, dim: 0, accent: "ffffff" } },
+			{ name: "Haunted island", tags: ["3d", "halloween", "spooky"], values: { backdrop: "isle3d-halloween", c1: "07040f", c2: "3a1c52", c3: "a3ff7a", title: "starting soon...", subtitle: "if you dare", layout: "bottom", font: "Creepster", fontsize: 96, dim: 0, accent: "a3ff7a", fg: "e9ffd9" } },
+			{ name: "Summer island ending", tags: ["3d", "summer", "cute"], values: { backdrop: "isle3d-summer", c1: "2f9bf0", c2: "bdeeff", c3: "ffffff", title: "Thanks for watching!", subtitle: "see you next stream", minutes: 0, layout: "top", font: "Pacifico", fontsize: 84, dim: 0, accent: "ffffff" } }
+		]);
+	}
 })();

@@ -12,7 +12,8 @@
 	var channel = location.pathname.split("/")[1] || "";
 	var seen = new Set();
 	var processedRows = new WeakSet();
-	var rowSelector = '[id^="chat-message-"]';
+	var tipSelector = "div.group.rounded-lg.border-emerald-500";
+	var rowSelector = '[id^="chat-message-"], ' + tipSelector;
 	var viewerRequest = null;
 
 	function viewerChannel() {
@@ -85,9 +86,15 @@
 		return content;
 	}
 
-	function remember(row) {
+	function remember(row, id) {
 		processedRows.add(row);
-		seen.add(row.id);
+		seen.add(id || row.id);
+	}
+
+	function matchesMessage(row, message) {
+		if (!message || message.id === null || message.id === undefined || String(message.id) === "") return false;
+		if (row.id) return "chat-message-" + message.id === row.id;
+		return row.matches(tipSelector) && typeof message.text === "string" && message.text.indexOf("[KOFI_TIP]:") === 0;
 	}
 
 	function messageDetails(row) {
@@ -97,15 +104,49 @@
 			var fiber = key && row[key];
 			for (var depth = 0; fiber && depth < 6; depth++, fiber = fiber.return) {
 				var message = fiber.memoizedProps && fiber.memoizedProps.message;
-				if (message && "chat-message-" + message.id === row.id) return message;
+				if (matchesMessage(row, message)) return message;
 			}
 			row.removeAttribute("data-ssn-altstream-message");
 			row.dispatchEvent(new CustomEvent("ssn-read-altstream-message", { bubbles: true }));
 			var value = row.getAttribute("data-ssn-altstream-message");
 			row.removeAttribute("data-ssn-altstream-message");
 			var details = value && JSON.parse(value);
-			return details && "chat-message-" + details.id === row.id ? details : null;
+			return matchesMessage(row, details) ? details : null;
 		} catch (e) { return null; }
+	}
+
+	function processTip(row, nativeMessage, id) {
+		if (!row.isConnected || !nativeMessage || typeof nativeMessage.text !== "string" || nativeMessage.text.indexOf("[KOFI_TIP]:") !== 0) return;
+		var name = row.querySelector("p > button.font-black");
+		if (!name || !name.textContent.trim()) return;
+		var tip;
+		try { tip = JSON.parse(nativeMessage.text.slice("[KOFI_TIP]:".length)); } catch (e) { return; }
+		if (!tip || typeof tip !== "object" || Array.isArray(tip)) return;
+		if (settings.memberchatonly) { remember(row, id); return; }
+
+		var amount = typeof tip.amount === "number" || typeof tip.amount === "string" ? String(tip.amount).trim() : "";
+		var currency = typeof tip.currency === "string" && tip.currency.trim() ? tip.currency.trim().toUpperCase() : "USD";
+		var hasAmount = /^\d+(?:\.\d+)?$/.test(amount) && Number.isFinite(Number(amount)) && /^[A-Z]{3}$/.test(currency);
+		var message = typeof tip.message === "string" ? tip.message : "";
+		var data = {
+			chatname: name.textContent.trim(),
+			chatbadges: [],
+			backgroundColor: "",
+			textColor: "",
+			nameColor: getComputedStyle(name).color,
+			chatmessage: settings.textonlymode ? message : escapeHtml(message),
+			chatimg: "",
+			hasDonation: hasAmount ? amount + " " + currency : "Ko-fi tip",
+			membership: "",
+			subtitle: "Ko-fi tip",
+			contentimg: "",
+			textonly: !!settings.textonlymode,
+			type: "altstream",
+			meta: { messageId: String(nativeMessage.id) }
+		};
+		if (hasAmount && currency === "USD") data.donoValue = Number(amount);
+		remember(row, id);
+		sendToApp({ message: data });
 	}
 
 	function processMessage(row, nativeMessage) {
@@ -166,8 +207,12 @@
 		container.querySelectorAll(rowSelector).forEach(function (row) {
 			if (seen.has(row.id) || processedRows.has(row)) return;
 			var nativeMessage = messageDetails(row);
+			// Tip cards have no DOM ID; use the same native identity as ordinary chat.
+			var id = row.id || (nativeMessage ? "chat-message-" + nativeMessage.id : "");
+			if (!id || seen.has(id)) return;
 			var sentAt = nativeMessage && typeof nativeMessage.sentAt === "number" && Number.isFinite(nativeMessage.sentAt) ? nativeMessage.sentAt : null;
-			if (skipAll || !isExtensionOn || (sentAt !== null ? sentAt < startedAt : history)) remember(row);
+			if (skipAll || !isExtensionOn || (sentAt !== null ? sentAt < startedAt : history)) remember(row, id);
+			else if (row.matches(tipSelector)) processTip(row, nativeMessage, id);
 			else processMessage(row, nativeMessage);
 		});
 	}

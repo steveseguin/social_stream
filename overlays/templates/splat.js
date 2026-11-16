@@ -334,25 +334,27 @@
 	var AX = [1, 0, 0], AY = [0, 1, 0], AZ = [0, 0, 1];
 	var AUTUMN = pal(["#c2410c", "#ea580c", "#f59e0b", "#dc2626", "#b91c1c", "#eab308", "#d9480f", "#f97316"]);
 
-	// Branching tree skeleton with bark; returns the branch tips for the foliage.
-	function skeleton(b, o) {
-		var rnd = b.rnd, tips = [];
-		function limb(p0, p1, r0, r1) {
-			b.stick(p0, p1, r0, r1, o.bark, 0.97);
-			if (r0 < 0.026) { return; }
-			// thin light and dark streaks lying on the limb
-			var d = sub(p1, p0), L = vlen(d), dir = mul(d, 1 / L), ax = norm(cross(dir, [0.31, 0.2, 0.93])), ay = cross(dir, ax), n = Math.round(L / 0.012 * (o.barkDetail || 1)), k;
-			for (k = 0; k < n; k++) {
-				var t = rnd(), a = rnd() * TAU, r = (r0 + (r1 - r0) * t) * 0.92, off = add(mul(ax, Math.cos(a) * r), mul(ay, Math.sin(a) * r));
-				var side = 0.5 + 0.7 * Math.max(0, dot(norm(off), LIGHT));
-				b.blade(add(add(p0, mul(d, t)), off), dir, 0.05 + rnd() * 0.06, r * 0.1 + 0.0025, mul(o.bark, (rnd() < 0.5 ? 0.68 : 1.38) * side), 0.9);
-			}
+	// A limb with bark: a soft core with thin light and dark streaks lying along it. k: { step, len, wide, lo, hi, min }
+	function limb(b, p0, p1, r0, r1, bark, k) {
+		var rnd = b.rnd, i;
+		k = k || {};
+		b.stick(p0, p1, r0, r1, bark, 0.97);
+		if (r0 < (k.min || 0)) { return; }
+		var d = sub(p1, p0), L = vlen(d), dir = mul(d, 1 / L), ax = norm(cross(dir, [0.31, 0.2, 0.93])), ay = cross(dir, ax), n = Math.round(L / (k.step || 0.012));
+		for (i = 0; i < n; i++) {
+			var t = rnd(), a = rnd() * TAU, r = (r0 + (r1 - r0) * t) * 0.92, off = add(mul(ax, Math.cos(a) * r), mul(ay, Math.sin(a) * r));
+			var side = 0.5 + 0.7 * Math.max(0, dot(norm(off), LIGHT));
+			b.blade(add(add(p0, mul(d, t)), off), dir, (k.len || 0.05) * (1 + rnd() * 1.2), r * (k.wide || 0.1) + 0.0025, mul(bark, (rnd() < 0.5 ? (k.lo || 0.68) : (k.hi || 1.38)) * side), 0.9);
 		}
+	}
+	// Branching tree skeleton; returns the branch tips for the foliage.
+	function skeleton(b, o) {
+		var rnd = b.rnd, tips = [], BARK = { min: 0.026 };
 		function seg(p, dir, len, rad, depth) {
 			var side = norm(cross(dir, [rnd() - 0.5, rnd() - 0.5, rnd() - 0.5]));
 			var mid = add(add(p, mul(dir, len * 0.5)), mul(side, len * o.bend)), end = add(p, mul(dir, len));
-			limb(p, mid, rad, rad * 0.88);
-			limb(mid, end, rad * 0.88, rad * 0.74);
+			limb(b, p, mid, rad, rad * 0.88, o.bark, BARK);
+			limb(b, mid, end, rad * 0.88, rad * 0.74, o.bark, BARK);
 			if (depth <= 0) { tips.push(end); return; }
 			var kids = depth === o.depth ? 3 : (rnd() < 0.4 ? 3 : 2), a0 = rnd() * TAU, i;
 			var px = norm(cross(dir, Math.abs(dir[1]) < 0.9 ? AY : AX)), py = cross(dir, px);
@@ -422,7 +424,7 @@
 			var dir = norm([out[0] + (rnd() - 0.5) * 0.7, -0.5 + (rnd() - 0.5) * 0.5, out[2] + (rnd() - 0.5) * 0.7]);
 			var shade = (0.34 + 0.72 * u * u) * (0.78 + 0.4 * Math.max(0, dot(norm([out[0], 0.6, out[2]]), LIGHT))) * dim;
 			b.blade(p, dir, (0.065 + rnd() * 0.05) * R / 0.6, 0.0068 * R / 0.6, mul(b.jit(b.pick(o.pal), 0.3), shade), 0.92, { k: 1, ph: a / TAU, amp: 0.006 * u, w: 0.7 });
-			if (o.snow && u > 0.6 && rnd() < 0.34) {
+			if (o.snow && u > 0.6 && rnd() < 0.24) {
 				var sn = norm([out[0] * 0.35, 1, out[2] * 0.35]), ss = 0.03 + rnd() * 0.025;
 				b.surfel(add(p, [out[0] * 0.02, 0.028, out[2] * 0.02]), sn, ss, ss * 0.75, b.lit([0.93, 0.96, 1], sn), 0.95, null, null, 0.4);
 			}
@@ -556,12 +558,12 @@
 			function at(hn, a, k) { var r = (R * (1 - hn) * 0.86 + 0.02) * k; return [Math.cos(a) * r, h0 + hn * (H - h0) - 0.05 * (1 - hn), Math.sin(a) * r]; }
 			var lights = pal(["#ff3b3b", "#ffd24a", "#4aa8ff", "#4dff7a", "#ff6ad5", "#ffffff"]);
 			for (i = 0; i < 130; i++) {
-				var hn = 0.03 + 0.92 * i / 130, lp = at(hn, hn * TAU * 6.5 + (rnd() - 0.5) * 0.2, 0.98), lc = lights[i % lights.length], an = { k: 2, ph: rnd(), amp: 0.7, w: 1.5 + rnd() * 2.5, glow: 0.35 };
-				b.ball(lp, 0.02, mix(lc, [1, 1, 1], 0.35), 1, an);
-				b.ball(lp, 0.07, lc, 0.34, { k: 2, ph: an.ph, amp: 0.8, w: an.w, glow: 1 });
+				var hn = 0.03 + 0.92 * i / 130, lp = at(hn, hn * TAU * 6.5 + (rnd() - 0.5) * 0.2, 1.17), lc = lights[i % lights.length], an = { k: 2, ph: rnd(), amp: 0.7, w: 1.5 + rnd() * 2.5, glow: 0.35 };
+				b.ball(lp, 0.024, mix(lc, [1, 1, 1], 0.35), 1, an);
+				b.ball(lp, 0.085, lc, 0.4, { k: 2, ph: an.ph, amp: 0.8, w: an.w, glow: 1 });
 			}
 			var bcols = pal(["#d7263d", "#f5c542", "#e8e8f0", "#2a7fd8"]);
-			for (i = 0; i < 34; i++) { var bh = 0.05 + 0.8 * rnd(); bauble(b, at(bh, rnd() * TAU, 1.02), 0.045 + 0.02 * (1 - bh), b.pick(bcols)); }
+			for (i = 0; i < 34; i++) { var bh = 0.05 + 0.8 * rnd(); bauble(b, add(at(bh, rnd() * TAU, 1.16), [0, -0.05, 0]), 0.05 + 0.02 * (1 - bh), b.pick(bcols)); }
 			// star
 			var tp = [0, H + 0.07, 0], k, f;
 			b.ball(tp, 0.05, [1, 0.96, 0.7], 1, { glow: 0.4 });
@@ -637,8 +639,7 @@
 			var bc = [0.15, sy(0.15, 0.8) + 0.1, 0.8], ballCols = pal(["#e63946", "#ffffff", "#2a7fd8", "#ffffff", "#f5c542", "#ffffff"]);
 			b.sphere(bc, [0.1, 0.1, 0.1], b.N(700), 0.012, function (d, n2) { var k = Math.floor((Math.atan2(d[2], d[0]) + Math.PI) / TAU * 6) % 6; return { col: b.lit(Math.abs(d[1]) > 0.93 ? [1, 1, 1] : ballCols[k], n2), o: { spec: 0.5, n: n2 } }; }, [0.8, 0.8, 0.8]);
 			for (i = 0; i < b.N(700); i++) {
-				var tu = rnd(), tv = rnd(), tx = 0.42 + tu * 0.46 - 0.23, tz = 0.02 + (tv - 0.5) * 0.3 + 0.48, s2 = 0.014 + rnd() * 0.006;
-				tx = 0.78 + (tu - 0.5) * 0.5; tz = 0.12 + (tv - 0.5) * 0.28;
+				var tu = rnd(), tv = rnd(), tx = 0.78 + (tu - 0.5) * 0.5, tz = 0.12 + (tv - 0.5) * 0.28, s2 = 0.014 + rnd() * 0.006;
 				b.surfel([tx, sy(tx, tz) + 0.012, tz], AY, s2, s2, mul(Math.floor(tu * 7) % 2 ? hex("#2aa7d8") : hex("#ffffff"), 0.82 + 0.2 * rnd()), 0.96);
 			}
 			rock(b, [-0.95, 0.1, 0.65], 0.16, hex("#7f7f86"));
@@ -730,18 +731,13 @@
 			rock(b, [-0.3, 0.24, -0.12], 0.05, hex("#77736c"));
 			// trunk: an S curve with exposed roots
 			var path = [[-0.06, 0.2, 0.02], [0.03, 0.38, 0.04], [0.13, 0.52, 0.02], [0.02, 0.68, -0.03], [-0.1, 0.82, -0.02], [-0.02, 0.98, 0.02], [0.08, 1.1, 0.03]];
-			var skel = { bark: bark, barkDetail: 1.6 };
-			function limb(p0, p1, r0, r1) {
-				b.stick(p0, p1, r0, r1, bark, 0.97);
-				var d = sub(p1, p0), L = vlen(d), dir = mul(d, 1 / L), ax = norm(cross(dir, [0.31, 0.2, 0.93])), ay = cross(dir, ax), n = Math.round(L / 0.008), k;
-				for (k = 0; k < n; k++) { var t = rnd(), an = rnd() * TAU, rr = (r0 + (r1 - r0) * t) * 0.92, off = add(mul(ax, Math.cos(an) * rr), mul(ay, Math.sin(an) * rr)); b.blade(add(add(p0, mul(d, t)), off), dir, 0.03 + rnd() * 0.04, rr * 0.14 + 0.002, mul(skel.bark, (rnd() < 0.5 ? 0.5 : 1.6) * (0.5 + 0.7 * Math.max(0, dot(norm(off), LIGHT)))), 0.9); }
-			}
-			for (i = 0; i < path.length - 1; i++) { limb(path[i], path[i + 1], 0.075 - i * 0.008, 0.075 - (i + 1) * 0.008); }
+			var gnarled = { step: 0.008, len: 0.03, wide: 0.14, lo: 0.5, hi: 1.6 };
+			for (i = 0; i < path.length - 1; i++) { limb(b, path[i], path[i + 1], 0.075 - i * 0.008, 0.075 - (i + 1) * 0.008, bark, gnarled); }
 			for (i = 0; i < 5; i++) { var ra = i * TAU / 5 + 0.4; b.stick([-0.06, 0.26, 0.02], [-0.06 + Math.cos(ra) * 0.2, 0.2, 0.02 + Math.sin(ra) * 0.14], 0.03, 0.012, bark, 0.97); }
 			// foliage pads
 			[[[0.5, 0.74, 0.08], 0.3, 1], [[-0.52, 0.86, -0.05], 0.3, 2], [[0.26, 1.18, -0.02], 0.3, 6], [[-0.18, 1.3, 0.06], 0.26, 6], [[0.44, 0.98, -0.3], 0.22, 4], [[-0.38, 0.58, 0.26], 0.2, 1], [[-0.05, 1.02, 0.36], 0.2, 5]].forEach(function (pd) {
 				var c = pd[0], R = pd[1], from = path[pd[2]], k;
-				limb(from, [c[0], c[1] - 0.05, c[2]], 0.022, 0.012);
+				limb(b, from, [c[0], c[1] - 0.05, c[2]], 0.022, 0.012, bark, gnarled);
 				b.put(c, AX, AY, AZ, R * 0.62, R * 0.2, R * 0.5, mul(greens[2], 0.4), 0.92);
 				for (k = 0; k < b.N(2600 * R / 0.3); k++) {
 					var d = norm([b.g(), b.g(), b.g()]);
@@ -879,9 +875,9 @@
 			b.lathe(0, 0, [[0.4, 1.62], [0.36, 1.4], [0.3, 1.18], [0.15, 1.02], [0.0, 0.98]], b.N(3600), 0.018, function (th, y, n2) { return { col: mul(gold(n2, th + 1), 0.62), a: 0.97 }; });
 			// handles
 			[-1, 1].forEach(function (sd) {
-				var prev = null, k, dx = Math.cos(front) * 0, hx = Math.cos(front - Math.PI / 2), hz = Math.sin(front - Math.PI / 2);
+				var prev = null, k, hx = Math.cos(front - Math.PI / 2), hz = Math.sin(front - Math.PI / 2);
 				for (k = 0; k <= 22; k++) {
-					var t = k / 22, out = 0.36 + 0.24 * Math.sin(Math.PI * t) + dx, q = [hx * sd * out, 1.56 - 0.5 * t, hz * sd * out];
+					var t = k / 22, out = 0.36 + 0.24 * Math.sin(Math.PI * t), q = [hx * sd * out, 1.56 - 0.5 * t, hz * sd * out];
 					if (prev) { var n2 = norm([hx * sd, 0.3 - t, hz * sd]); b.stick(prev, q, 0.032, 0.032, gold(n2, t * 5), 0.97, { spec: 0.9, n: n2 }, 0.08); }
 					prev = q;
 				}
