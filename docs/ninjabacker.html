@@ -85,9 +85,10 @@
 <div class="guide-card">
 <h2 id="test">4. Check your setup</h2>
 <p>Open the SSN NinjaBacker alert overlay. In NinjaBacker, open Testing and click Send Test Tip. Expect a test alert in that overlay.</p>
+<p>Read the result below Send Test Tip. Webhook accepted confirms receipt, not an OBS alert. On failure, correct the URL or signing secret and send a new test. Dashboard tests retry for five minutes.</p>
 <p>Test tips do not add money to the Tip Jar, appear as paid chat donations, or trigger paid rewards.</p>
 <details class="guide-extra"><summary>No test alert?</summary><p>Keep SSN on and NinjaBacker donations enabled. Check the username and Tip ID match the same account. For webhooks, refresh Delivery History in NinjaBacker and check the receiver URL and signing secret.</p></details>
-<details class="guide-extra"><summary>HTTP 405 or a display URL error?</summary><p>Copy the Receiver URL from SSN's Reliable webhook setup, save it in NinjaBacker, and send a new test tip. Saving a new URL stops retries to the old destination.</p><figure class="guide-shot guide-shot-compact"><a href="images/ninjabacker/wrong-url.png"><img src="images/ninjabacker/wrong-url.png" alt="NinjaBacker rejects a Tip Jar display URL and links to this setup guide" width="390" height="376" loading="lazy"></a></figure></details>
+<details class="guide-extra"><summary>HTTP 405 or a display URL error?</summary><p>Copy the Receiver URL from SSN's Reliable webhook setup, save it in NinjaBacker, and send a new test tip. Saving a new URL stops retries to the old destination.</p><figure class="guide-shot guide-shot-compact"><a href="images/ninjabacker/wrong-url.png"><img src="images/ninjabacker/wrong-url.png" alt="NinjaBacker rejects a Tip Jar display URL and links to this setup guide" width="334" height="376" loading="lazy"></a></figure></details>
 <details class="guide-extra"><summary>Tips appear in chat but not in the goal?</summary><p>Check the Tip Jar session and source, donation type and paid event filters. Use a money goal for tip amounts. Refunds do not subtract from SSN alerts or goals.</p></details>
 <p><a href="https://ninjabacker.com/developers">Custom receivers and delivery details</a></p>
 </div>

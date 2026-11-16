@@ -105,6 +105,8 @@
                                     <li><a href="#altstream">Altstream</a></li>
                                     <li><a href="#livacha">Livacha</a></li>
                                     <li><a href="#chatango">Chatango</a></li>
+                                    <li><a href="#vkvideo">VK Video</a></li>
+                                    <li><a href="#mixlr">Mixlr</a></li>
                                     <li><a href="#streamplace">Streamplace</a></li>
                                     <li><a href="#worldswave">WorldsWave</a></li>
                                     <li><a href="#goodgame">Goodgame</a></li>
@@ -2501,9 +2503,20 @@
                 <p>Message IDs are used internally to avoid recapturing edits and remounted rows. Initial history and prepended older messages are skipped; timestamps and reaction menus are outside the captured body. No donation, membership, moderation, or viewer-count events are inferred.</p>
             </section>
 
+            <section class="section-summary" id="vkvideo">
+                <h2>VK Video</h2>
+                <p>Cloud Lightweight captures public default-stream chat with <code>type: "vkvideo"</code>, a channel-scoped <code>id</code>, <code>userid</code>, plain <code>chatmessage</code> with <code>textonly: true</code>, and <code>timestamp</code> in milliseconds. Emotes use their names. Private, deleted and alternate-stream messages are excluded. Message deletions and user-message clears remove captured rows by exact ID. Use Browser for paid events, emote images or sign-in.</p>
+            </section>
+
+            <section class="section-summary" id="mixlr">
+                <h2>Mixlr</h2>
+                <p>Cloud Lightweight captures public live event chat with <code>type: "mixlr"</code>, an owner-scoped <code>id</code>, <code>userid</code>, plain <code>chatmessage</code> with <code>textonly: true</code>, and <code>meta.messageId</code>/<code>meta.eventId</code>/<code>meta.channel</code>. Initial history and other broadcasts are excluded. Deletions remove captured messages by exact ID. Use Browser for GIFs, edited comments or sign-in.</p>
+            </section>
+
             <section class="section-summary" id="chatango">
                 <h2>Chatango - Group Chat</h2>
                 <p>Open <code>https://ROOM.chatango.com/</code>, or a page with an embedded Chatango room. New rows emit standard chat with <code>type</code>/<code>platform: "chatango"</code>, plain-text <code>chatname</code>, <code>nameColor</code>, <code>chatmessage</code>, and <code>chatimg</code> when available. Inline images use HTTP(S) URLs; text-only mode uses their alt text or <code>[image]</code>. Rows already displayed when capture attaches and older messages prepended while scrolling back are skipped.</p>
+                <p>Cloud Lightweight emits public text chat with <code>type: "chatango"</code>, <code>textonly: true</code>, room-scoped <code>id</code>, <code>timestamp</code> in milliseconds, and the original ID in <code>meta.messageId</code>. Initial history is skipped. Message deletions and room clears emit <code>delete: {type: "chatango", id}</code> for captured messages. Use Browser for emotes, avatars or sign-in.</p>
             </section>
 
             <section class="section-summary" id="vaughn">
