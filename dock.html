@@ -5652,9 +5652,12 @@
 			var cloudReceiptLegacy = null;
 			var cloudReceiptWindow = 10000;
 			var cloudReceiptPending = 0;
+			var cloudReceiptStorageKey = "ssn-cloud-receipts-v3:" + roomID;
+			// Symbols follow local message copies without entering exported payloads.
+			var cloudReceiptInfo = Symbol("cloudReceipt");
 			if (urlParams.has("cloudack")) {
 				try {
-					cloudReceiptPositions = JSON.parse(localStorage.getItem("ssn-cloud-receipts-v2:" + roomID) || "{}");
+					cloudReceiptPositions = JSON.parse(localStorage.getItem(cloudReceiptStorageKey) || localStorage.getItem("ssn-cloud-receipts-v2:" + roomID) || "{}");
 					cloudReceiptLegacy = JSON.parse(localStorage.getItem("ssn-cloud-receipts:" + roomID) || "{}");
 				} catch (error) {}
 			}
@@ -5669,6 +5672,17 @@
 						range[0] < record.floor || range[0] <= record.legacy || range[1] < range[0] ||
 						range[1] - record.floor >= cloudReceiptWindow || range[0] <= previous + 1) return false;
 					previous = range[1];
+				}
+				if (record.moderation !== undefined) {
+					if (!Array.isArray(record.moderation) || record.moderation.length > cloudReceiptWindow) return false;
+					for (var j = 0; j < record.moderation.length; j++) {
+						var action = record.moderation[j];
+						if (!action || !Number.isSafeInteger(action.seq) || action.seq < record.floor || action.seq - record.floor >= cloudReceiptWindow) return false;
+						if (action.id !== undefined) {
+							if (typeof action.id !== "string" || !action.id || action.id.length > 192) return false;
+						} else if (typeof action.userid !== "string" || typeof action.chatroomId !== "string" ||
+							!/^[1-9]\d{0,19}$/.test(action.userid) || !/^[1-9]\d{0,19}$/.test(action.chatroomId)) return false;
+					}
 				}
 				return true;
 			}
@@ -5688,7 +5702,15 @@
 					if (last && start <= last[1] + 1) last[1] = Math.max(last[1], ranges[i][1]);
 					else merged.push([start, ranges[i][1]]);
 				}
-				return { legacy: legacy, floor: floor, ranges: merged };
+				var result = { legacy: legacy, floor: floor, ranges: merged };
+				var moderation = new Map();
+				(first.moderation || []).concat(second.moderation || []).forEach(function (action) {
+					if (action.seq < floor) return;
+					var key = action.id !== undefined ? "message:" + action.id : "user:" + action.chatroomId + ":" + action.userid;
+					if (!moderation.has(key) || moderation.get(key).seq < action.seq) moderation.set(key, action);
+				});
+				if (moderation.size) result.moderation = Array.from(moderation.values());
+				return result;
 			}
 			function receiveCloudMessage(data, socket) {
 				if (!data || !data.ssnCloudDelivery) return false;
@@ -5700,42 +5722,59 @@
 				if (receipt.v !== 1 || !/^[a-f0-9]{32}$/.test(receipt.stream || "") ||
 					!/^[a-f0-9]{32}$/.test(receipt.token || "") || !Number.isSafeInteger(receipt.seq) || receipt.seq < 1 ||
 					!payload || (payload.type !== "kick" && (!payload.delete || payload.delete.type !== "kick"))) return true;
-				var storageKey = "ssn-cloud-receipts-v2:" + roomID;
+				var storageKey = cloudReceiptStorageKey;
 				function acceptReceipt() {
-				try {
-					if (!cloudReceiptPositions || typeof cloudReceiptPositions !== "object" || Array.isArray(cloudReceiptPositions)) return true;
-					var previous = cloudReceiptPositions[receipt.stream];
-					if (!previous) {
-						if (Object.keys(cloudReceiptPositions).length >= 128 || !cloudReceiptLegacy || typeof cloudReceiptLegacy !== "object" || Array.isArray(cloudReceiptLegacy)) return true;
-						var legacy = cloudReceiptLegacy[receipt.stream] || 0;
-						if (!Number.isSafeInteger(legacy) || legacy < 0) return true;
-						// Old storage only records a high-water mark. Preserve that
-						// boundary; new receipts are tracked individually above it.
-						previous = { legacy: legacy, floor: Math.min(Number.MAX_SAFE_INTEGER, legacy + 1), ranges: [] };
-					}
-					if (!validCloudReceiptRecord(previous)) return true;
-					var persisted = JSON.parse(localStorage.getItem(storageKey) || "{}");
-					if (!persisted || typeof persisted !== "object" || Array.isArray(persisted) ||
-						(!persisted[receipt.stream] && Object.keys(persisted).length >= 128)) return true;
-					var saved = persisted[receipt.stream] || previous;
-					if (!validCloudReceiptRecord(saved)) return true;
-					if (!hasCloudReceipt(previous, receipt.seq)) {
-						// An expired gap is unknown, not a duplicate. Leave it
-						// unacknowledged rather than silently discard its message.
-						if (receipt.seq < Math.max(previous.floor, saved.floor)) throw Error("Cloud receipt is outside the retained window.");
-						// Check storage availability before handing the message to the dock.
+					try {
+						if (!cloudReceiptPositions || typeof cloudReceiptPositions !== "object" || Array.isArray(cloudReceiptPositions)) return true;
+						var previous = cloudReceiptPositions[receipt.stream];
+						if (!previous) {
+							if (Object.keys(cloudReceiptPositions).length >= 128 || !cloudReceiptLegacy || typeof cloudReceiptLegacy !== "object" || Array.isArray(cloudReceiptLegacy)) return true;
+							var legacy = cloudReceiptLegacy[receipt.stream] || 0;
+							if (!Number.isSafeInteger(legacy) || legacy < 0) return true;
+							// Old storage only records a high-water mark. Preserve that
+							// boundary; new receipts are tracked individually above it.
+							previous = { legacy: legacy, floor: Math.min(Number.MAX_SAFE_INTEGER, legacy + 1), ranges: [] };
+						}
+						if (!validCloudReceiptRecord(previous)) return true;
+						var persisted = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem("ssn-cloud-receipts-v2:" + roomID) || "{}");
+						if (!persisted || typeof persisted !== "object" || Array.isArray(persisted) ||
+							(!persisted[receipt.stream] && Object.keys(persisted).length >= 128)) return true;
+						var saved = persisted[receipt.stream] || previous;
+						if (!validCloudReceiptRecord(saved)) return true;
+						var next = mergeCloudReceipts(previous, previous, receipt.seq);
+						if (payload.delete) {
+							var action = null;
+							if (typeof payload.delete.id === "string" && payload.delete.id && payload.delete.id.length <= 192) action = { seq: receipt.seq, id: payload.delete.id };
+							else if (payload.delete.userid && payload.delete.meta && payload.delete.meta.chatroomId) action = { seq: receipt.seq, userid: String(payload.delete.userid), chatroomId: String(payload.delete.meta.chatroomId) };
+							if (action) next.moderation = (next.moderation || []).concat([action]);
+						}
+						var combined = mergeCloudReceipts(saved, next, receipt.seq);
+						if (!validCloudReceiptRecord(combined)) return true;
+						if (!hasCloudReceipt(previous, receipt.seq)) {
+							// An expired gap is unknown, not a duplicate. Leave it
+							// unacknowledged rather than silently discard its message.
+							if (receipt.seq < Math.max(previous.floor, saved.floor)) throw Error("Cloud receipt is outside the retained window.");
+							// Check storage availability before handing the message to the dock.
+							localStorage.setItem(storageKey, JSON.stringify(persisted));
+							var moderated = !payload.delete && (combined.moderation || []).some(function (action) {
+								return receipt.seq < action.seq && (action.id !== undefined ? String(payload.id) === action.id :
+									String(payload.userid) === action.userid && String(payload.meta && payload.meta.chatroomId) === action.chatroomId);
+							});
+							if ((!moderated || showDeleted) && !isDuplicateTransportDelivery(payload, "server")) {
+								payload[cloudReceiptInfo] = { stream: receipt.stream, seq: receipt.seq };
+								if (moderated) deletedDockMessages.add(payload);
+								processInput(payload);
+							}
+						}
+						// Each open dock has its own delivery ledger. Merge persistent
+						// records for reloads without suppressing another dock's feed.
+						cloudReceiptPositions[receipt.stream] = mergeCloudReceipts(next, next, receipt.seq);
+						persisted[receipt.stream] = combined;
 						localStorage.setItem(storageKey, JSON.stringify(persisted));
-						if (!isDuplicateTransportDelivery(payload, "server")) processInput(payload);
+						if (socket.readyState === 1) socket.send(JSON.stringify({ssnCloudReceipt: receipt}));
+					} catch (error) {
+						console.warn("Cloud message confirmation is unavailable.");
 					}
-					// Each open dock has its own delivery ledger. Merge persistent
-					// records for reloads without suppressing another dock's feed.
-					cloudReceiptPositions[receipt.stream] = mergeCloudReceipts(previous, previous, receipt.seq);
-					persisted[receipt.stream] = mergeCloudReceipts(saved, cloudReceiptPositions[receipt.stream], receipt.seq);
-					localStorage.setItem(storageKey, JSON.stringify(persisted));
-					if (socket.readyState === 1) socket.send(JSON.stringify({ssnCloudReceipt: receipt}));
-				} catch (error) {
-					console.warn("Cloud message confirmation is unavailable.");
-				}
 				}
 				if (navigator.locks && typeof navigator.locks.request === "function") {
 					if (cloudReceiptPending >= 1000) return true;
@@ -7462,6 +7501,9 @@
 			function deleteMessages(data, deleteOnlyLast=false, forceRemove=false) {
 				let selector = "";
 				let matchField = "";
+				const cloudReceipt = data[cloudReceiptInfo];
+				const matchesCloudReceipt = message => !cloudReceipt || (message[cloudReceiptInfo] &&
+					message[cloudReceiptInfo].stream === cloudReceipt.stream && message[cloudReceiptInfo].seq < cloudReceipt.seq);
 				const nativeId = data.delete.meta && data.delete.meta.messageId;
 				const vpzoneChannel = data.delete.type === "vpzone" && data.delete.meta && data.delete.meta.streamUsername;
 				const matchesVpzoneChannel = message => !vpzoneChannel ||
@@ -7507,12 +7549,13 @@
 				selectedQueue.concat(autoShowQueue).forEach(node => {
 					if (node.matches(selector)) nodes.add(node);
 				});
-				let matches = Array.from(nodes).filter(node => matchesVpzoneChannel(node.rawContents || {}) && matchesKickChatroom(node.rawContents || {}) && (!nativeId ||
+				let matches = Array.from(nodes).filter(node => matchesCloudReceipt(node.rawContents || {}) && matchesVpzoneChannel(node.rawContents || {}) && matchesKickChatroom(node.rawContents || {}) && (!nativeId ||
 					String(getNativeSourceControlMessageId(node.rawContents || {})) === String(nativeId))
 				).map(node => ({ node, id: node.dataset.mid, type: node.dataset.sourceType }));
 				const pending = historyMissedLiveBuffer.concat(queue.map(item => item.contents), messageBuffer.map(item => item.contents));
 				if (featuredMessage) pending.push(featuredMessage);
 				pending.forEach(message => {
+					if (!matchesCloudReceipt(message)) return;
 					if (data.delete.type && String(message.type) !== String(data.delete.type)) return;
 					if (!matchesVpzoneChannel(message)) return;
 					if (!matchesKickChatroom(message)) return;
