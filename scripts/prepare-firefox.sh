@@ -44,6 +44,7 @@ rsync -a \
     --include='docs/images/kick-channel-points-event-flow/event-flow-media-action-values.png' \
     --exclude='docs/***' \
     --exclude='lite/' \
+    --exclude='/cloud/' \
     --exclude='tests/' \
     --exclude='scripts/' \
     --exclude='node_modules/' \
