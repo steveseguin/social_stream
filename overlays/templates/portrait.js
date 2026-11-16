@@ -769,7 +769,7 @@
 		".vk-goal-top b{font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:1em;}",
 		".vk-goal-top span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
 		".vk-bar{height:2.3em;border-radius:99em;background:var(--k-line);overflow:hidden;}",
-		".vk-bar div{position:relative;height:100%;border-radius:99em;background:linear-gradient(90deg,var(--k-acc),var(--k-acc2));overflow:hidden;min-width:2.3em;}",
+		".vk-bar div{position:relative;height:100%;border-radius:99em;background:linear-gradient(90deg,var(--k-acc),var(--k-acc2));overflow:hidden;}",
 		".vk-bar div:after{content:'';position:absolute;top:0;bottom:0;left:-40%;width:30%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);animation:vk-shine 3.6s ease-in-out infinite;}",
 		"@keyframes vk-shine{0%,35%{left:-40%}80%,100%{left:120%}}",
 		".vk-msg{padding:1.2em 2.4em;border-radius:99em;text-align:center;}",

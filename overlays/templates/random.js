@@ -538,7 +538,8 @@
 					if (c.norepeat) {
 						var key = "rnd-num:" + c.session, state = loadState(S, key);
 						var used = state && state.sig === spec.sig && state.used && state.used.length <= 20000 ? state.used : [];
-						if (spec.n - used.length < count) { fresh = used.length > 0; used = []; }
+						if (spec.n - used.length <= 0) { fresh = used.length > 0; used = []; }
+						count = Math.min(count, spec.n - used.length);
 						ks = sampleExcluding(spec.n, count, used);
 						saveState(S, key, { sig: spec.sig, used: used.concat(ks) });
 					} else if (c.repeats) {
@@ -1630,7 +1631,8 @@
 					fresh = false;
 					if (c.deal) {
 						var key = "rnd-cards:" + c.session, state = loadState(S, key), used = state && state.size === deckSize && state.used ? state.used : [];
-						if (deckSize - used.length < n) { fresh = used.length > 0; used = []; }
+						if (deckSize - used.length <= 0) { fresh = used.length > 0; used = []; }
+						n = Math.min(n, deckSize - used.length);
 						ids = sampleExcluding(deckSize, n, used);
 						saveState(S, key, { size: deckSize, used: used.concat(ids) });
 					} else {
@@ -1723,11 +1725,11 @@
 			var sig = hashText(all.map(function (e) { return e.name + "*" + e.w; }).join("\n"));
 			var shownList = [], picks = [], hops = [], reels = [], teams = [], teamNames = [], order = [], fresh = false, onAccent = lum(accent) > 0.55 ? "#14161c" : "#ffffff";
 
-			function liveEntries(S, m) {
+			function liveEntries(S) {
 				var key = "rnd-list:" + c.session, state = c.remove ? loadState(S, key) : null, gone = state && state.sig === sig && state.gone ? state.gone : [], live = [];
 				all.forEach(function (e, k) { if (gone.indexOf(k) === -1) { live.push({ name: e.name, w: e.w, k: k }); } });
 				fresh = false;
-				if (live.length < Math.min(m, all.length)) { fresh = gone.length > 0; gone = []; live = all.map(function (e, k) { return { name: e.name, w: e.w, k: k }; }); }
+				if (!live.length) { fresh = gone.length > 0; gone = []; live = all.map(function (e, k) { return { name: e.name, w: e.w, k: k }; }); }
 				return { live: live, save: function (chosen) { if (c.remove) { saveState(S, key, { sig: sig, gone: gone.concat(chosen.map(function (e) { return e.k; })) }); } } };
 			}
 			var act = {
@@ -1746,7 +1748,7 @@
 						S.result = { teams: teams.map(function (t) { return t.slice(); }) };
 						return;
 					}
-					var m = Math.max(1, Math.min(style === "reel" ? 3 : 10, Math.round(c.pick))), pool = liveEntries(S, m);
+					var m = Math.max(1, Math.min(style === "reel" ? 3 : 10, Math.round(c.pick))), pool = liveEntries(S);
 					m = Math.min(m, pool.live.length);
 					picks = weightedSample(pool.live, m);
 					pool.save(picks);

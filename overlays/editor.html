@@ -92,10 +92,10 @@
 	<script src="templates/seasondecor.js?v=1"></script>
 	<script src="templates/splat.js?v=1"></script>
 	<script src="templates/three3d.js?v=1"></script>
-	<script src="templates/portrait.js?v=1"></script>
+	<script src="templates/portrait.js?v=2"></script>
 	<script src="templates/celebrate.js?v=1"></script>
 	<script src="templates/moments.js?v=1"></script>
-	<script src="templates/random.js?v=1"></script>
+	<script src="templates/random.js?v=2"></script>
 	<script src="templates/seasontags.js?v=1"></script>
 	<script>
 	(function () {
@@ -280,8 +280,8 @@
 					num.min = field.min; num.max = field.max; num.step = field.step || 1;
 					num.value = value;
 					num.setAttribute("aria-label", field.label);
-					rng.addEventListener("input", function () { num.value = rng.value; cfg[field.key] = parseFloat(rng.value); update(); });
-					num.addEventListener("input", function () { if (num.value === "") { return; } rng.value = num.value; cfg[field.key] = parseFloat(rng.value); update(); });
+					rng.addEventListener("input", function () { num.value = rng.value; cfg[field.key] = parseFloat(rng.value); update(); refreshVisibility(); });
+					num.addEventListener("input", function () { if (num.value === "") { return; } rng.value = num.value; cfg[field.key] = parseFloat(rng.value); update(); refreshVisibility(); });
 					num.addEventListener("change", function () { num.value = rng.value; });
 					row.appendChild(rng); row.appendChild(num);
 					wrap.appendChild(row);

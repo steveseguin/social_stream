@@ -5649,8 +5649,46 @@
 			var server3 = false;
 			var reconnectionTimeoutExtension = null;
 			var cloudReceiptPositions = null;
+			var cloudReceiptLegacy = null;
+			var cloudReceiptWindow = 10000;
+			var cloudReceiptPending = 0;
 			if (urlParams.has("cloudack")) {
-				try { cloudReceiptPositions = JSON.parse(localStorage.getItem("ssn-cloud-receipts:" + roomID) || "{}"); } catch (error) {}
+				try {
+					cloudReceiptPositions = JSON.parse(localStorage.getItem("ssn-cloud-receipts-v2:" + roomID) || "{}");
+					cloudReceiptLegacy = JSON.parse(localStorage.getItem("ssn-cloud-receipts:" + roomID) || "{}");
+				} catch (error) {}
+			}
+			function validCloudReceiptRecord(record) {
+				if (!record || !Number.isSafeInteger(record.legacy) || record.legacy < 0 ||
+					!Number.isSafeInteger(record.floor) || record.floor < 1 || record.floor < record.legacy ||
+					!Array.isArray(record.ranges) || record.ranges.length > cloudReceiptWindow / 2) return false;
+				var previous = record.floor - 2;
+				for (var i = 0; i < record.ranges.length; i++) {
+					var range = record.ranges[i];
+					if (!Array.isArray(range) || range.length !== 2 || !Number.isSafeInteger(range[0]) || !Number.isSafeInteger(range[1]) ||
+						range[0] < record.floor || range[0] <= record.legacy || range[1] < range[0] ||
+						range[1] - record.floor >= cloudReceiptWindow || range[0] <= previous + 1) return false;
+					previous = range[1];
+				}
+				return true;
+			}
+			function hasCloudReceipt(record, sequence) {
+				return sequence <= record.legacy || record.ranges.some(function (range) { return sequence >= range[0] && sequence <= range[1]; });
+			}
+			function mergeCloudReceipts(first, second, sequence) {
+				var ranges = first.ranges.concat(second.ranges, [[sequence, sequence]]).sort(function (a, b) { return a[0] - b[0]; });
+				var legacy = Math.max(first.legacy, second.legacy);
+				var high = Math.max(sequence, first.ranges.length ? first.ranges[first.ranges.length - 1][1] : 0,
+					second.ranges.length ? second.ranges[second.ranges.length - 1][1] : 0);
+				var floor = Math.max(first.floor, second.floor, high - cloudReceiptWindow + 1, Math.min(Number.MAX_SAFE_INTEGER, legacy + 1));
+				var merged = [];
+				for (var i = 0; i < ranges.length; i++) {
+					if (ranges[i][1] < floor) continue;
+					var start = Math.max(floor, ranges[i][0]), last = merged[merged.length - 1];
+					if (last && start <= last[1] + 1) last[1] = Math.max(last[1], ranges[i][1]);
+					else merged.push([start, ranges[i][1]]);
+				}
+				return { legacy: legacy, floor: floor, ranges: merged };
 			}
 			function receiveCloudMessage(data, socket) {
 				if (!data || !data.ssnCloudDelivery) return false;
@@ -5662,25 +5700,52 @@
 				if (receipt.v !== 1 || !/^[a-f0-9]{32}$/.test(receipt.stream || "") ||
 					!/^[a-f0-9]{32}$/.test(receipt.token || "") || !Number.isSafeInteger(receipt.seq) || receipt.seq < 1 ||
 					!payload || (payload.type !== "kick" && (!payload.delete || payload.delete.type !== "kick"))) return true;
+				var storageKey = "ssn-cloud-receipts-v2:" + roomID;
+				function acceptReceipt() {
 				try {
-					var storageKey = "ssn-cloud-receipts:" + roomID;
 					if (!cloudReceiptPositions || typeof cloudReceiptPositions !== "object" || Array.isArray(cloudReceiptPositions)) return true;
-					var previous = cloudReceiptPositions[receipt.stream] || 0;
-					if (!Number.isSafeInteger(previous) || previous < 0) return true;
-					if (receipt.seq > previous) {
-						if (!previous && Object.keys(cloudReceiptPositions).length >= 128) return true;
-						// Check storage availability before handing the message to the dock.
-						localStorage.setItem(storageKey, JSON.stringify(cloudReceiptPositions));
-						if (!isDuplicateTransportDelivery(payload, "server")) processInput(payload);
-						cloudReceiptPositions[receipt.stream] = receipt.seq;
+					var previous = cloudReceiptPositions[receipt.stream];
+					if (!previous) {
+						if (Object.keys(cloudReceiptPositions).length >= 128 || !cloudReceiptLegacy || typeof cloudReceiptLegacy !== "object" || Array.isArray(cloudReceiptLegacy)) return true;
+						var legacy = cloudReceiptLegacy[receipt.stream] || 0;
+						if (!Number.isSafeInteger(legacy) || legacy < 0) return true;
+						// Old storage only records a high-water mark. Preserve that
+						// boundary; new receipts are tracked individually above it.
+						previous = { legacy: legacy, floor: Math.min(Number.MAX_SAFE_INTEGER, legacy + 1), ranges: [] };
 					}
+					if (!validCloudReceiptRecord(previous)) return true;
 					var persisted = JSON.parse(localStorage.getItem(storageKey) || "{}");
-					persisted[receipt.stream] = Math.max(persisted[receipt.stream] || 0, receipt.seq);
+					if (!persisted || typeof persisted !== "object" || Array.isArray(persisted) ||
+						(!persisted[receipt.stream] && Object.keys(persisted).length >= 128)) return true;
+					var saved = persisted[receipt.stream] || previous;
+					if (!validCloudReceiptRecord(saved)) return true;
+					if (!hasCloudReceipt(previous, receipt.seq)) {
+						// An expired gap is unknown, not a duplicate. Leave it
+						// unacknowledged rather than silently discard its message.
+						if (receipt.seq < Math.max(previous.floor, saved.floor)) throw Error("Cloud receipt is outside the retained window.");
+						// Check storage availability before handing the message to the dock.
+						localStorage.setItem(storageKey, JSON.stringify(persisted));
+						if (!isDuplicateTransportDelivery(payload, "server")) processInput(payload);
+					}
+					// Each open dock has its own delivery ledger. Merge persistent
+					// records for reloads without suppressing another dock's feed.
+					cloudReceiptPositions[receipt.stream] = mergeCloudReceipts(previous, previous, receipt.seq);
+					persisted[receipt.stream] = mergeCloudReceipts(saved, cloudReceiptPositions[receipt.stream], receipt.seq);
 					localStorage.setItem(storageKey, JSON.stringify(persisted));
 					if (socket.readyState === 1) socket.send(JSON.stringify({ssnCloudReceipt: receipt}));
 				} catch (error) {
 					console.warn("Cloud message confirmation is unavailable.");
 				}
+				}
+				if (navigator.locks && typeof navigator.locks.request === "function") {
+					if (cloudReceiptPending >= 1000) return true;
+					cloudReceiptPending++;
+					// Multiple docks share reload state, but each displays its own
+					// feed. Serialize the storage merge across those open pages.
+					navigator.locks.request(storageKey, acceptReceipt).catch(function () {
+						console.warn("Cloud message confirmation is unavailable.");
+					}).then(function () { cloudReceiptPending--; });
+				} else acceptReceipt();
 				return true;
 			}
 
