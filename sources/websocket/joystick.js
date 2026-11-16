@@ -8,7 +8,9 @@ const els={
  ex:document.getElementById('exchange-code'),rf:document.getElementById('refresh-token'),clr:document.getElementById('clear-auth'),con:document.getElementById('connect-btn'),
  dis:document.getElementById('disconnect-btn'),ar:document.getElementById('auto-reconnect'),schip:document.getElementById('socket-chip'),achip:document.getElementById('auth-chip'),
  cchip:document.getElementById('channel-chip'),status:document.getElementById('status-text'),feed:document.getElementById('feed'),log:document.getElementById('log'),
- input:document.getElementById('chat-input'),send:document.getElementById('send-btn'),method:document.getElementById('auth-method-selector')
+ input:document.getElementById('chat-input'),send:document.getElementById('send-btn'),method:document.getElementById('auth-method-selector'),
+ sd:document.getElementById('stream-details'),stitle:document.getElementById('stream-title'),stags:document.getElementById('stream-tags'),ssave:document.getElementById('save-stream-details'),
+ sreload:document.getElementById('reload-stream-details'),sstatus:document.getElementById('stream-details-status'),sprev:document.getElementById('stream-details-preview')
 };
 const st={cfg:{clientId:'',clientSecret:'',channelSlug:'',channelId:'',redirectUri:'',autoReconnect:true,authMethod:'external'},tokens:null,socket:null,sub:false,map:{},settings:{},rt:null,tt:null};
 const R={CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3};
@@ -33,9 +35,11 @@ const relay=(o)=>{if(!o||typeof o!=='object')return;try{if(ext()&&chrome.runtime
  try{const f=Object.assign({},o);if(typeof window.__SSAPP_TAB_ID__!=='undefined')f.__tabID__=window.__SSAPP_TAB_ID__;window.postMessage(f,'*');}catch(_){ }};
 const wss=(s,m,e={})=>relay({wssStatus:Object.assign({platform:'joystick',status:String(s||''),message:m||''},e||{})});
 const jerr=(j,f)=>j&&(j.error_description||j.message||(typeof j.error==='string'?j.error:j.error&&j.error.message))||f;
-async function directJson(url,o={}){const r=await fetch(url,{method:o.method||'GET',cache:'no-store',credentials:'omit',headers:o.headers||{Accept:'application/json'},body:o.body});const tx=await r.text();let j={};try{j=tx?JSON.parse(tx):{};}catch(_){j={error:tx||'Invalid JSON response'};}if(!r.ok)throw new Error(jerr(j,`HTTP ${r.status}`));return j;}
-function runtimeJson(req){return new Promise((res,rej)=>{try{chrome.runtime.sendMessage(chrome.runtime.id,{type:'toBackground',data:req},(r)=>{if(chrome.runtime.lastError){rej(new Error(chrome.runtime.lastError.message||'Joystick background fetch failed'));return;}if(!r||!r.ok){rej(new Error((r&&r.error)||'Joystick background fetch failed'));return;}res(r.data||{});});}catch(e){rej(e);}});}
-function appJson(req){const b=(window.ninjafy&&typeof window.ninjafy.fetchJoystickJson==='function')?window.ninjafy:((window.__ssapp&&typeof window.__ssapp.fetchJoystickJson==='function')?window.__ssapp:null);if(!b)return null;return Promise.resolve(b.fetchJoystickJson(req)).then(r=>{if(!r||!r.ok)throw new Error((r&&r.error)||'Joystick app fetch failed');return r.data||{};});}
+async function directJson(url,o={}){const r=await fetch(url,{method:o.method||'GET',cache:'no-store',credentials:'omit',headers:o.headers||{Accept:'application/json'},body:o.body});const tx=await r.text();let j={};try{j=tx?JSON.parse(tx):{};}catch(_){j={error:tx||'Invalid JSON response'};}if(!r.ok)throw herr(jerr(j,`HTTP ${r.status}`),r.status);return j;}
+// Error that keeps the HTTP status reported by the fetch bridge, when there is one.
+function herr(m,s){const e=new Error(m);if(s)e.status=s;return e;}
+function runtimeJson(req){return new Promise((res,rej)=>{try{chrome.runtime.sendMessage(chrome.runtime.id,{type:'toBackground',data:req},(r)=>{if(chrome.runtime.lastError){rej(new Error(chrome.runtime.lastError.message||'Joystick background fetch failed'));return;}if(!r||!r.ok){rej(herr((r&&r.error)||'Joystick background fetch failed',r&&r.status));return;}res(r.data||{});});}catch(e){rej(e);}});}
+function appJson(req){const b=(window.ninjafy&&typeof window.ninjafy.fetchJoystickJson==='function')?window.ninjafy:((window.__ssapp&&typeof window.__ssapp.fetchJoystickJson==='function')?window.__ssapp:null);if(!b)return null;return Promise.resolve(b.fetchJoystickJson(req)).then(r=>{if(!r||!r.ok)throw herr((r&&r.error)||'Joystick app fetch failed',r&&r.status);return r.data||{};});}
 async function apiJson(url,o={}){const req={cmd:'joystickFetchJson',url:url,method:o.method||'GET',body:o.body||'',auth:o.auth||'',authType:o.authType||''};const a=appJson(req);if(a)return a;if(ext())return runtimeJson(req);return directJson(url,o);}
 function setStatus(s,msg=''){if(els.status)els.status.textContent=msg; if(!els.schip)return;els.schip.className='chip'; if(s==='connected')els.schip.classList.add('good'); else if(s==='connecting')els.schip.classList.add('warn'); else els.schip.classList.add('bad'); els.schip.textContent=`Socket: ${s}`;}
 function setAuth(){if(!els.achip)return;els.achip.className='chip'; if(st.tokens&&st.tokens.access_token){els.achip.classList.add('good');els.achip.textContent='Token: authorized';}else{els.achip.classList.add('warn');els.achip.textContent='Token: not authorized';}}
@@ -55,15 +59,68 @@ async function exchange(code){syncCfg();code=(code||'').trim(); if(!st.cfg.clien
  const p=new URLSearchParams();p.set('redirect_uri',st.cfg.redirectUri||'/unused');p.set('code',code);p.set('grant_type','authorization_code');
  const j=await apiJson(`${API}/api/oauth/token?${p.toString()}`,{method:'POST',headers:{Authorization:`Basic ${b64(`${st.cfg.clientId}:${st.cfg.clientSecret}`)}`,Accept:'application/json','Content-Type':'application/x-www-form-urlencoded'},auth:`Basic ${b64(`${st.cfg.clientId}:${st.cfg.clientSecret}`)}`,authType:'basic',body:''});
  if(!j.access_token)throw new Error(jerr(j,'Token exchange failed'));
- st.tokens={access_token:j.access_token,token_type:j.token_type||'Bearer',refresh_token:j.refresh_token||'',expires_at:exp(j.expires_in)};saveTokens();scheduleRefresh();wss('authorized','Joystick OAuth token acquired');log('OAuth token exchange succeeded.','success');if(els.code)els.code.value='';await loadStreamSettings().catch(()=>{});
+ sdReset();st.tokens={access_token:j.access_token,token_type:j.token_type||'Bearer',refresh_token:j.refresh_token||'',expires_at:exp(j.expires_in)};saveTokens();scheduleRefresh();wss('authorized','Joystick OAuth token acquired');log('OAuth token exchange succeeded.','success');if(els.code)els.code.value='';await loadStreamSettings().catch(()=>{});loadStreamDetails().catch(()=>{});
 }
 async function refreshToken(){syncCfg(); if(!st.cfg.clientId||!st.cfg.clientSecret)throw new Error('Client ID and Client Secret are required for refresh.'); if(!st.tokens||!st.tokens.refresh_token)throw new Error('No refresh token available.');
+ const previousToken=st.tokens.access_token;
  const p=new URLSearchParams();p.set('refresh_token',st.tokens.refresh_token);p.set('grant_type','refresh_token');
  const j=await apiJson(`${API}/api/oauth/token?${p.toString()}`,{method:'POST',headers:{Authorization:`Basic ${b64(`${st.cfg.clientId}:${st.cfg.clientSecret}`)}`,Accept:'application/json','Content-Type':'application/x-www-form-urlencoded'},auth:`Basic ${b64(`${st.cfg.clientId}:${st.cfg.clientSecret}`)}`,authType:'basic',body:''});
  if(!j.access_token)throw new Error(jerr(j,'Token refresh failed'));
+ if(st.tokens&&st.tokens.access_token===previousToken&&st.sdToken===previousToken)st.sdToken=j.access_token;
  st.tokens={access_token:j.access_token,token_type:j.token_type||st.tokens.token_type||'Bearer',refresh_token:j.refresh_token||st.tokens.refresh_token||'',expires_at:exp(j.expires_in)};saveTokens();scheduleRefresh();wss('authorized','Joystick token refreshed');log('OAuth token refreshed.','success');
+ if(!st.sdToken)loadStreamDetails(true).catch(()=>{});
 }
-async function loadStreamSettings(){if(!st.tokens||!st.tokens.access_token)return null;let j;try{j=await apiJson(`${API}/api/users/stream-settings`,{headers:{Authorization:`Bearer ${st.tokens.access_token}`,Accept:'application/json','Content-Type':'application/json'},auth:`Bearer ${st.tokens.access_token}`,authType:'bearer'});}catch(e){log(`Stream settings fetch failed: ${e.message||e}`,'warn');return null;} const s=slug(j.username||st.cfg.channelSlug||''); const c=j.channel_id!=null?String(j.channel_id).trim():''; if(s){st.cfg.channelSlug=s;st.cfg.sourceName=s;}if(c)st.cfg.channelId=c;if(j.photo_url)st.cfg.sourceImg=String(j.photo_url);if(typeof j.live==='boolean')st.cfg.live=j.live;if(Number.isFinite(Number(j.number_of_followers)))st.cfg.followers=Number(j.number_of_followers);applyCfg();syncCfg();log(`Stream settings loaded${s?` for @${s}`:''}${c?` (channel ${c})`:''}.`,'success');return j;}
+async function loadStreamSettings(){if(!st.tokens||!st.tokens.access_token)return null;const tk=st.tokens.access_token;let j;try{j=await apiJson(`${API}/api/users/stream-settings`,{headers:{Authorization:`Bearer ${st.tokens.access_token}`,Accept:'application/json','Content-Type':'application/json'},auth:`Bearer ${st.tokens.access_token}`,authType:'bearer'});}catch(e){log(`Stream settings fetch failed: ${e.message||e}`,'warn');return null;} if(!st.tokens||st.tokens.access_token!==tk)return null;const s=slug(j.username||st.cfg.channelSlug||''); const c=j.channel_id!=null?String(j.channel_id).trim():''; if(s){st.cfg.channelSlug=s;st.cfg.sourceName=s;}if(c)st.cfg.channelId=c;if(j.photo_url)st.cfg.sourceImg=String(j.photo_url);if(typeof j.live==='boolean')st.cfg.live=j.live;if(Number.isFinite(Number(j.number_of_followers)))st.cfg.followers=Number(j.number_of_followers);if(typeof j.stream_title==='string'&&els.stitle&&!els.stitle.value){els.stitle.value=j.stream_title;sdPreview();}applyCfg();syncCfg();log(`Stream settings loaded${s?` for @${s}`:''}${c?` (channel ${c})`:''}.`,'success');return j;}
+
+// Stream details editor: title and tags through the v1 REST API. Saving needs the bot's stream:manage permission.
+const STREAM=`${API}/api/v1/me/stream`;
+function sdStatus(m,s){if(!els.sstatus)return;els.sstatus.textContent=m||'';if(s)els.sstatus.setAttribute('data-state',s);else els.sstatus.removeAttribute('data-state');}
+function sdPreview(){if(els.sprev)els.sprev.textContent=els.stitle?els.stitle.value.trim():'';}
+function sdErr(e){
+ const m=String((e&&e.message)||e||'Unknown error'),s=e&&e.status;
+ // Older app and extension builds only relay the token and legacy settings requests.
+ if(/request not allowed/i.test(m))return 'Update the Social Stream app or extension to edit Joystick stream details.';
+ // Joystick answers 403 for a missing permission and for a bad or expired token alike, so pass its reason along.
+ if(s===401||s===403||/\b(401|403)\b|forbidden|unauthori[sz]ed|scope/i.test(m))return `Joystick refused the request${/^HTTP \d+$/.test(m)?'':` (${m.length>120?m.slice(0,117)+'...':m})`}. Check that the bot has the stream:manage permission on Joystick, then authorize it again.`;
+ return m.length>180?m.slice(0,177)+'...':m;
+}
+function sdReset(){
+ st.sdToken='';
+ if(els.stitle)els.stitle.value='';
+ if(els.stags){els.stags.value='';els.stags.dataset.current='';els.stags.disabled=true;}
+ sdStatus('');sdPreview();
+}
+function sdApply(j,onlyMissing=false){
+ const d=j&&j.stream_title===undefined&&j.data&&typeof j.data==='object'?j.data:(j||{});
+ const tags=Array.isArray(d.tags)?d.tags.filter(t=>typeof t==='string').map(t=>t.trim()).filter(Boolean):null;
+ if(els.stitle&&typeof d.stream_title==='string'&&(!onlyMissing||!els.stitle.value))els.stitle.value=d.stream_title;
+ if(els.stags&&tags&&(!onlyMissing||els.stags.disabled)){els.stags.value=tags.join(', ');els.stags.dataset.current=els.stags.value;els.stags.disabled=false;st.sdToken=(st.tokens&&st.tokens.access_token)||'';}
+ sdPreview();
+}
+function sdAuth(tk){return {headers:{Authorization:`Bearer ${tk}`,Accept:'application/json','Content-Type':'application/json'},auth:`Bearer ${tk}`,authType:'bearer'};}
+async function loadStreamDetails(onlyMissing=false){
+ if(!st.tokens||!st.tokens.access_token)throw new Error('Authorize the bot first.');
+ const tk=st.tokens.access_token;
+ const j=await apiJson(STREAM,sdAuth(tk));
+ if(!st.tokens||st.tokens.access_token!==tk)return null;
+ sdApply(j,onlyMissing);return j;
+}
+async function saveStreamDetails(){
+ if(!st.tokens||!st.tokens.access_token)throw new Error('Authorize the bot first.');
+ const tk=st.tokens.access_token,body={},title=els.stitle?els.stitle.value.trim():'',tagsText=els.stags?els.stags.value:'';
+ if(title)body.stream_title=title;
+ // Tags are only sent when they were loaded for this sign-in and then edited.
+ if(els.stags&&!els.stags.disabled&&els.stags.value!==els.stags.dataset.current){
+  if(st.sdToken!==tk)throw new Error('Authorization changed. Reload the stream details first.');
+  body.tags=els.stags.value.split(',').map(t=>t.trim()).filter(Boolean);
+ }
+ if(!Object.keys(body).length)throw new Error('Nothing to save yet.');
+ const j=await apiJson(STREAM,Object.assign(sdAuth(tk),{method:'PUT',body:JSON.stringify(body)}));
+ log('Stream details saved.','success');
+ if(!st.tokens||st.tokens.access_token!==tk)return;
+ if(body.tags&&els.stags)els.stags.dataset.current=tagsText;
+ sdApply(j);
+}
 function allowMsg(m){if(!m||typeof m!=='object')return false;const cid=m.channelId!=null?String(m.channelId).trim():'';const ms=slug(m?.streamer?.slug||m?.streamer?.username||m?.author?.slug||m?.author?.username||'');if(cid&&ms)st.map[cid]=ms;const fs=slug(st.cfg.channelSlug||''),fc=(st.cfg.channelId||'').trim();
  if(fc)return cid===fc; if(fs){if(ms)return ms===fs; if(cid&&st.map[cid])return slug(st.map[cid])===fs; return false;} if(cid&&!st.cfg.channelId){st.cfg.channelId=cid;if(ms&&!st.cfg.channelSlug)st.cfg.channelSlug=ms;applyCfg();syncCfg();log(`Auto-selected channel ${st.cfg.channelId}${st.cfg.channelSlug?` (@${st.cfg.channelSlug})`:''}.`,'success');} return true;
 }
@@ -107,7 +164,7 @@ function authUrl(){syncCfg();if(!st.cfg.clientId)throw new Error('Client ID is r
  const p=new URLSearchParams();p.set('response_type','code');p.set('client_id',st.cfg.clientId);p.set('scope','bot');p.set('state',sn);if(st.cfg.redirectUri)p.set('redirect_uri',st.cfg.redirectUri);return `${H}/api/oauth/authorize?${p.toString()}`;}
 async function extAuth(){const fn=(window.ninjafy&&typeof window.ninjafy.startJoystickOAuth==='function')?window.ninjafy.startJoystickOAuth:((window.__ssapp&&typeof window.__ssapp.startJoystickOAuth==='function')?window.__ssapp.startJoystickOAuth:null);
  if(!fn){window.open(authUrl(),'_blank');log('Opened Joystick authorize URL in external browser tab.','info');return;}syncCfg();if(!st.cfg.clientId)throw new Error('Client ID is required.');const r=await fn({clientId:st.cfg.clientId,scopes:['bot'],redirectUri:st.cfg.redirectUri||defaultRedirect()});
- if(!r)throw new Error('No OAuth result returned.'); if(r.code){if(els.code)els.code.value=r.code;log('Received OAuth code from external helper. Exchange it now.','success');return;} if(r.access_token){st.tokens={access_token:r.access_token,token_type:r.token_type||'Bearer',refresh_token:r.refresh_token||'',expires_at:exp(r.expires_in)};saveTokens();scheduleRefresh();log('Received token from external helper.','success');return;} throw new Error(r.error||'OAuth flow did not provide code/token.');
+ if(!r)throw new Error('No OAuth result returned.'); if(r.code){if(els.code)els.code.value=r.code;log('Received OAuth code from external helper. Exchange it now.','success');return;} if(r.access_token){sdReset();st.tokens={access_token:r.access_token,token_type:r.token_type||'Bearer',refresh_token:r.refresh_token||'',expires_at:exp(r.expires_in)};saveTokens();scheduleRefresh();log('Received token from external helper.','success');loadStreamDetails().catch(()=>{});return;} throw new Error(r.error||'OAuth flow did not provide code/token.');
 }
 function bridge(){if(ext()){try{chrome.runtime.onMessage.addListener((req,s,cb)=>{try{if(req==='getSource'){cb('joystick');return;}if(req==='focusChat'){if(els.input){els.input.focus();cb(true);return;}cb(false);return;}if(req&&typeof req==='object'){if(req.settings){st.settings=req.settings;cb(true);return;}if(req.type==='SEND_MESSAGE'&&typeof req.message==='string'){send(req.message,false).then(()=>cb(true)).catch(e=>{log(`SEND_MESSAGE failed: ${e.message||e}`,'error');cb(false);});return true;}}}catch(e){log(`Extension bridge error: ${e.message||e}`,'error');}cb(false);});}catch(e){log(`Failed wiring extension bridge: ${e.message||e}`,'warn');}
  try{chrome.runtime.sendMessage(chrome.runtime.id,{getSettings:true},(r)=>{if(chrome.runtime.lastError)return;if(r&&r.settings)st.settings=r.settings;});}catch(_){ }}
@@ -117,14 +174,16 @@ function bind(){els.save?.addEventListener('click',()=>{syncCfg();applyCfg();set
  els.start?.addEventListener('click',async()=>{try{syncCfg();if(!st.cfg.clientId)throw new Error('Client ID is required.');if((new URLSearchParams(location.search).has('ssapp')||(window.ninjafy&&typeof window.ninjafy.startJoystickOAuth==='function')||(window.__ssapp&&typeof window.__ssapp.startJoystickOAuth==='function'))&&st.cfg.authMethod==='external'){await extAuth();if(els.status)els.status.textContent='Started external auth flow.';return;}location.href=authUrl();}catch(e){log(`Auth start failed: ${e.message||e}`,'error');if(els.status)els.status.textContent=`Auth start failed: ${e.message||e}`;}});
  els.ex?.addEventListener('click',()=>exchange(els.code?.value||'').catch(e=>{log(`Code exchange failed: ${e.message||e}`,'error');if(els.status)els.status.textContent=`Code exchange failed: ${e.message||e}`;}));
  els.rf?.addEventListener('click',()=>refreshToken().catch(e=>{log(`Refresh failed: ${e.message||e}`,'error');if(els.status)els.status.textContent=`Refresh failed: ${e.message||e}`;}));
- els.clr?.addEventListener('click',()=>{st.tokens=null;saveTokens();log('Cleared OAuth tokens.','warn');if(els.status)els.status.textContent='OAuth tokens cleared.';wss('signin_required','OAuth token cleared');});
+ els.clr?.addEventListener('click',()=>{st.tokens=null;sdReset();saveTokens();log('Cleared OAuth tokens.','warn');if(els.status)els.status.textContent='OAuth tokens cleared.';wss('signin_required','OAuth token cleared');});
  els.con?.addEventListener('click',()=>connect().catch(e=>{log(`Connect failed: ${e.message||e}`,'error');if(els.status)els.status.textContent=`Connect failed: ${e.message||e}`;wss('error',e.message||String(e));setStatus('error');}));
  els.dis?.addEventListener('click',()=>disconnect(true));
  els.send?.addEventListener('click',()=>send(els.input?.value||'',false).then(()=>{if(els.input)els.input.value='';}).catch(e=>{log(`Send failed: ${e.message||e}`,'error');if(els.status)els.status.textContent=`Send failed: ${e.message||e}`;}));
  els.input?.addEventListener('keydown',(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();els.send?.click();}});
+ els.ssave?.addEventListener('click',()=>{sdStatus('Saving...');saveStreamDetails().then(()=>sdStatus('Details saved.','success')).catch(e=>{log(`Stream details save failed: ${e.message||e}`,'error');sdStatus(`Not saved: ${sdErr(e)}`,'error');});});
+ els.sreload?.addEventListener('click',()=>{sdStatus('Loading...');loadStreamDetails().then(j=>sdStatus(j?'Loaded current details.':'Authorization changed. Try again.',j?'success':'error')).catch(e=>{log(`Stream details load failed: ${e.message||e}`,'warn');sdStatus(`Could not load details: ${sdErr(e)}`,'error');});});
 }
-function boot(){loadCfg();loadTokens();applyCfg();setAuth();setStatus('disconnected');bind();bridge();const q=new URLSearchParams(location.search);const code=q.get('code'),ret=q.get('state'),exp=localStorage.getItem(SK)||'';if(code&&(!exp||!ret||exp===ret)){try{const u=new URL(location.href);u.searchParams.delete('code');u.searchParams.delete('state');history.replaceState({},document.title,u.toString());}catch(_){ }if(els.code)els.code.value=code;exchange(code).catch(e=>log(`Auto exchange failed: ${e.message||e}`,'error'));}
- if(st.tokens&&st.tokens.access_token){scheduleRefresh();loadStreamSettings().catch(()=>{});}if(st.cfg.clientId&&st.cfg.clientSecret){if(els.status)els.status.textContent='Ready. Connect websocket when you are ready.';}else{if(els.status)els.status.textContent='Enter your Joystick bot Client ID/Secret, then connect.';wss('signin_required','Joystick bot credentials required');}
+function boot(){loadCfg();loadTokens();applyCfg();setAuth();setStatus('disconnected');bind();bridge();if(els.sd)els.sd.classList.remove('hidden');const q=new URLSearchParams(location.search);const code=q.get('code'),ret=q.get('state'),exp=localStorage.getItem(SK)||'';if(code&&(!exp||!ret||exp===ret)){try{const u=new URL(location.href);u.searchParams.delete('code');u.searchParams.delete('state');history.replaceState({},document.title,u.toString());}catch(_){ }if(els.code)els.code.value=code;exchange(code).catch(e=>log(`Auto exchange failed: ${e.message||e}`,'error'));}
+ if(st.tokens&&st.tokens.access_token){scheduleRefresh();loadStreamSettings().catch(()=>{});loadStreamDetails().catch(()=>{});}if(st.cfg.clientId&&st.cfg.clientSecret){if(els.status)els.status.textContent='Ready. Connect websocket when you are ready.';}else{if(els.status)els.status.textContent='Enter your Joystick bot Client ID/Secret, then connect.';wss('signin_required','Joystick bot credentials required');}
  try{window.__SSAPP_START_JOYSTICK_AUTH__=()=>{if(st.cfg.authMethod==='external')return extAuth();location.href=authUrl();return Promise.resolve();};}catch(_){ }
  window.addEventListener('beforeunload',()=>disconnect(false));
 }

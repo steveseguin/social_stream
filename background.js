@@ -7107,7 +7107,8 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				const method = String(request.method || "GET").toUpperCase();
 				const isOAuthTokenPost = method === "POST" && parsedUrl.pathname === "/api/oauth/token";
 				const isStreamSettingsGet = method === "GET" && parsedUrl.pathname === "/api/users/stream-settings";
-				if (!isOAuthTokenPost && !isStreamSettingsGet) {
+				const isStreamInfo = (method === "GET" || method === "PUT") && parsedUrl.pathname === "/api/v1/me/stream";
+				if (!isOAuthTokenPost && !isStreamSettingsGet && !isStreamInfo) {
 					sendResponse({ ok: false, error: "Joystick API request not allowed" });
 					return response;
 				}
@@ -7120,7 +7121,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 					if (request.authType === "basic" && authHeader.startsWith("Basic ")) {
 						headers.Authorization = authHeader;
 					}
-				} else if (isStreamSettingsGet) {
+				} else if (isStreamSettingsGet || isStreamInfo) {
 					headers["Content-Type"] = "application/json";
 					if (request.authType === "bearer" && authHeader.startsWith("Bearer ")) {
 						headers.Authorization = authHeader;
@@ -7131,7 +7132,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 					cache: "no-store",
 					credentials: "omit",
 					headers,
-					body: isOAuthTokenPost ? String(request.body || "") : undefined
+					body: isOAuthTokenPost || (isStreamInfo && method === "PUT") ? String(request.body || "") : undefined
 				});
 				const responseText = await joystickResponse.text();
 				let responseJson = {};

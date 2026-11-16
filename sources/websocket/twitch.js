@@ -2511,7 +2511,11 @@ async function ensureChatClientInstance() {
 				const ok = await updateChannelInformation(payload || {});
 				if (!ok) console.warn('Channel update failed');
 			} else if (action === 'refresh_channel_info') {
-				await refreshChannelInformation();
+				const generation = channelInformationGeneration + 1;
+				const info = await refreshChannelInformation();
+				if (!info && generation === channelInformationGeneration) {
+					notifyPage('stream_details_status', { message: 'Could not load the current stream details.', state: 'error', operation: 'load' });
+				}
 			}
 		} catch (e) {
 			console.error('UI action error', e);
@@ -5305,10 +5309,12 @@ async function cleanupCurrentConnection() {
 		}
 	}
 
-	async function refreshChannelInformation() {
+	let channelInformationGeneration = 0;
+	async function refreshChannelInformation(afterSave = false) {
+		const generation = ++channelInformationGeneration;
 		const channelId = currentChannelId;
 		const channelInfo = await getCurrentChannelInformation();
-		if (!channelInfo || channelId !== currentChannelId) {
+		if (!channelInfo || channelId !== currentChannelId || generation !== channelInformationGeneration) {
 			return null;
 		}
 		const payload = {
@@ -5316,26 +5322,38 @@ async function cleanupCurrentConnection() {
 			category: channelInfo.game_name || '',
 			categoryId: channelInfo.game_id || '',
 			channelId,
-			tags: channelInfo.tags
+			tags: channelInfo.tags,
+			afterSave
 		};
 		notifyPage('channel_info', payload);
 		return payload;
 	}
 
+	// Shows a stream details result under Recent Events and beside the editor's buttons.
+	function reportStreamDetails(message, state) {
+		addEvent(message);
+		notifyPage('stream_details_status', { message, state: state || 'error' });
+	}
+
 	async function updateChannelInformation(payload = {}) {
+		// A read started before this save must not replace the submitted fields.
+		channelInformationGeneration++;
 		try {
 			const token = getStoredToken();
-			if (!token || !currentChannelId) return false;
+			if (!token || !currentChannelId) {
+				reportStreamDetails('Connect to a channel before editing stream details.');
+				return false;
+			}
 			const channelId = currentChannelId;
 			const requestBody = {};
 			if (typeof payload.tags === 'string') {
 				if (payload.channelId !== channelId) {
-					addEvent('Channel changed. Refresh current stream details first.');
+					reportStreamDetails('Channel changed. Reload the stream details first.');
 					return false;
 				}
 				const tags = payload.tags.split(',').map(tag => tag.trim()).filter(Boolean);
 				if (tags.length > 10 || tags.some(tag => !/^[\p{L}\p{N}]{1,25}$/u.test(tag))) {
-					addEvent('Use up to 10 tags, with 25 letters or numbers each.');
+					reportStreamDetails('Use up to 10 tags, with 25 letters or numbers each.');
 					return false;
 				}
 				requestBody.tags = tags;
@@ -5348,15 +5366,19 @@ async function cleanupCurrentConnection() {
 			if (category) {
 				const gameId = await resolveGameId(category);
 				if (!gameId) {
-					addEvent(`Category lookup failed: ${category}`);
+					reportStreamDetails(`No Twitch category found for "${category}".`);
 					return false;
 				}
 				requestBody.game_id = gameId;
 			}
 			if (!Object.keys(requestBody).length) {
+				reportStreamDetails('Nothing to save yet.');
 				return false;
 			}
-			if (channelId !== currentChannelId || token !== getStoredToken()) return false;
+			if (channelId !== currentChannelId || token !== getStoredToken()) {
+				reportStreamDetails('Channel or sign-in changed. Reload the stream details first.');
+				return false;
+			}
 			const response = await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${channelId}`, {
 				method: 'PATCH',
 				headers: {
@@ -5369,15 +5391,18 @@ async function cleanupCurrentConnection() {
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => ({}));
 				console.error('updateChannelInformation failed', errorData);
-				addEvent('Stream details update failed');
+				const reason = response.status === 401 || response.status === 403
+					? 'Twitch refused the change. Only the channel owner can edit stream details.'
+					: (typeof errorData.message === 'string' && errorData.message ? errorData.message : 'HTTP ' + response.status);
+				reportStreamDetails('Stream details not saved: ' + reason);
 				return false;
 			}
-			await refreshChannelInformation();
-			addEvent('Stream details updated');
+			await refreshChannelInformation(true);
+			reportStreamDetails('Stream details saved.', 'success');
 			return true;
 		} catch (error) {
 			console.error('updateChannelInformation error', error);
-			addEvent('Stream title/category update failed');
+			reportStreamDetails('Stream details not saved: could not reach Twitch.');
 			return false;
 		}
 	}
@@ -5701,6 +5726,7 @@ async function cleanupCurrentConnection() {
 			canModerate: isBroadcaster || isModerator,
 			hasChannelModerateScope: !!scopes['channel:moderate'],
 			canManageBroadcast: isBroadcaster && !!scopes['channel:manage:broadcast'],
+			broadcastPermissionKnown: !!tokenInfo && Array.isArray(tokenInfo.scopes),
 			canManageAds: !!scopes['channel:manage:ads'],
 			canReadAds: !!scopes['channel:read:ads'],
 			canReadBits: !!scopes['bits:read'],
@@ -5732,9 +5758,26 @@ async function cleanupCurrentConnection() {
 			elements.moderationControls.style.display = 'block';
 		}
 		updateModerationRequirements(permissions, elements.moderationRequirements);
+		updateStreamDetailsAccess(permissions);
 
 		// Update permissions info display
 		updatePermissionsDisplay(permissions, elements.permissionsInfo);
+	}
+
+	// Twitch only lets the channel owner change the title, category, and tags.
+	function updateStreamDetailsAccess(permissions) {
+		let message = '';
+		if (permissions && !permissions.isBroadcaster) {
+			message = 'Only the channel owner can edit these. Sign in as the owner of this channel to make changes.';
+		} else if (permissions && !permissions.broadcastPermissionKnown) {
+			message = 'Could not check edit permission. You can still try saving.';
+		} else if (permissions && !permissions.canManageBroadcast) {
+			message = 'Sign out and sign in again to give Social Stream permission to edit stream details.';
+		}
+		notifyPage('stream_details_access', {
+			canEdit: !permissions || !!permissions.isBroadcaster,
+			message
+		});
 	}
 
 	function updateModerationRequirements(permissions, container) {
@@ -5758,9 +5801,6 @@ async function cleanupCurrentConnection() {
 		}
 		if (!permissions.canReadAds) {
 			notes.push('Fetching ad schedule requires channel:read:ads.');
-		}
-		if (!permissions.canManageBroadcast) {
-			notes.push('Title/category editing requires broadcaster access and channel:manage:broadcast.');
 		}
 
 		container.textContent = notes.length ? notes.join(' ') : 'Your current sign-in has access to these channel controls.';

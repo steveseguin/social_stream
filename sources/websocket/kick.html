@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Social Stream - Kick</title>
     <link rel="icon" href="../images/kick.png" type="image/png">
-    <link rel="stylesheet" href="kick.css?v=20260916-compact">
+    <link rel="stylesheet" href="kick.css?v=20261115-details">
     <link rel="stylesheet" href="websocket-responsive.css">
     <script src="kick-layout.js?v=20260916-setup" defer></script>
 </head>
@@ -16,7 +16,7 @@
     <div class="container">
         <div class="compact-toolbar">
             <strong>Kick Chat</strong>
-            <button id="compact-menu-toggle" class="button-secondary" aria-expanded="false" aria-controls="kick-setup kick-events kick-sidebar">
+            <button id="compact-menu-toggle" class="button-secondary" aria-expanded="false" aria-controls="kick-setup kick-stream-details kick-events kick-sidebar">
                 <span aria-hidden="true">&#9776;</span> <span id="compact-menu-label">Settings</span>
             </button>
         </div>
@@ -59,6 +59,36 @@
 
         <div class="layout">
             <main class="main-content">
+                <details id="kick-stream-details" class="panel collapsible-panel stream-details-panel">
+                    <summary class="panel-summary">
+                        <h2>Stream details</h2>
+                        <span id="stream-details-preview" class="stream-details-preview"></span>
+                        <span class="stream-details-toggle" aria-hidden="true"></span>
+                    </summary>
+                    <div class="panel-body">
+                        <div class="stream-details-grid">
+                            <div class="stream-field-wide">
+                                <label for="stream-title">Title</label>
+                                <input type="text" id="stream-title" autocomplete="off" placeholder="Kick stream title">
+                            </div>
+                            <div>
+                                <label for="stream-category">Category</label>
+                                <input type="text" id="stream-category" autocomplete="off" placeholder="Kick category name">
+                            </div>
+                            <div>
+                                <label for="stream-tags">Tags <span class="stream-field-hint">(up to 10, separated by commas)</span></label>
+                                <input type="text" id="stream-tags" autocomplete="off" placeholder="English, Chill, Speedrun" title="Up to 10 tags. Clear the field to remove all tags." disabled>
+                            </div>
+                        </div>
+                        <div class="stream-details-actions">
+                            <button type="button" id="update-stream-info">Save details</button>
+                            <button type="button" id="refresh-stream-info" class="button-secondary">Reload</button>
+                            <span id="stream-details-status" class="stream-details-status" role="status" aria-live="polite"></span>
+                        </div>
+                        <p id="stream-admin-target" class="hint">Sign in with the Kick channel you want to edit.</p>
+                    </div>
+                </details>
+
                 <details class="panel chat-panel collapsible-panel" open>
                     <summary class="panel-summary">
                         <h2>Live Chat</h2>
@@ -106,8 +136,7 @@
                 </section>
                 <section class="panel">
                     <h2>Advanced Controls</h2>
-                    <p class="hint">Optional source-side moderation sync and stream metadata editing.</p>
-                    <p id="stream-admin-target" class="hint">Sign in with the Kick channel you want to edit.</p>
+                    <p class="hint">Optional moderation sync for the Kick channel you sign in with.</p>
                     <div class="admin-toggle-list">
                         <label class="admin-toggle">
                             <input type="checkbox" id="sync-delete-messages">
@@ -122,28 +151,7 @@
                             <span>Hide dashboard metrics</span>
                         </label>
                     </div>
-                    <details>
-                    <summary>Stream details</summary>
-                    <div class="admin-form-grid">
-                        <div>
-                            <label for="stream-title">Stream title</label>
-                            <input type="text" id="stream-title" placeholder="Kick stream title">
-                        </div>
-                        <div>
-                            <label for="stream-category">Category</label>
-                            <input type="text" id="stream-category" placeholder="Kick category name or ID">
-                        </div>
-                        <div>
-                            <label for="stream-tags">Tags</label>
-                            <input type="text" id="stream-tags" placeholder="Tags, separated by commas" title="Up to 10 tags. Clear the field to remove all tags." disabled>
-                        </div>
-                    </div>
-                    <div class="button-row admin-button-row">
-                        <button id="refresh-stream-info" class="button-secondary">Refresh current</button>
-                        <button id="update-stream-info">Save stream details</button>
-                    </div>
-                    </details>
-                    <p class="hint">Kick requires the OAuth scopes <code>channel:write</code>, <code>moderation:ban</code>, and <code>moderation:chat_message:manage</code> for these controls.</p>
+                    <p class="hint">Kick requires the OAuth scopes <code>moderation:ban</code> and <code>moderation:chat_message:manage</code> for these controls.</p>
                 </section>
             </aside>
         </div>

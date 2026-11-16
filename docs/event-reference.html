@@ -125,6 +125,7 @@
                                     <li><a href="#favorited">Favorited Studio</a></li>
                                     <li><a href="#beamstream">BEAM</a></li>
                                     <li><a href="#castyr">Castyr</a></li>
+                                    <li><a href="#nimo">Nimo Cloud Lightweight</a></li>
                                     <li><a href="#starvios">Starvios</a></li>
                                     <li><a href="#vaughn">Vaughn Live</a></li>
                                     <li><a href="#streamspace">Stream.space</a></li>
@@ -2424,6 +2425,10 @@
                     </table>
                 </div>
                 </article>
+                <article class="platform-card" id="nimo">
+                    <h3>Nimo Cloud Lightweight</h3>
+                    <p>Public text chat and ordinary paid chat use <code>type: "nimo"</code>, a room-scoped native message <code>id</code>, plain <code>chatname</code> and <code>userid</code>, and literal <code>chatmessage</code> with <code>textonly: true</code>. Paid chat retains its native amount as <code>hasDonation: "100 diamonds"</code>; no USD conversion or donation event is supplied. Message restrictions emit <code>delete: {id, type: "nimo"}</code> for previously captured matching-user messages in that room. Use Browser for gifts, membership variants, and rich emotes.</p>
+                </article>
                 <article class="platform-card" id="starvios">
                     <h3>Starvios</h3>
                     <p class="source-note">Implementation: <code>sources/starvios.js</code></p>
@@ -2433,11 +2438,14 @@
                         <li>Existing rows and rows rendered during the initial 1.5-second history settling period are skipped. Separate pinned cards, reply previews, and subscription/raid notices are excluded. The popout supplies no verified viewer count.</li>
                         <li>Uses the standard <code>focusChat</code> reply hook when a visible, editable input is present. Authenticated sending remains unverified.</li>
                     </ul>
+                    <p>Cloud Lightweight receives public chat without a browser. Its event rows use <code>new_subscriber</code> with <code>meta.months</code>, <code>subscription_gift</code> with <code>meta.recipient</code>, <code>recipientMonths</code>, <code>total</code>, and <code>anonymous</code>, and <code>raid</code> with <code>meta.viewers</code>. Anonymous gifts omit the sender's identity and badges. Gift duration describes the recipient's subscription.</p>
+                    <p>Cloud rewards use <code>event: "reward"</code> and <code>meta.rewardTitle</code>, <code>cost</code>, and available reward/redemption IDs. Starfall and pumpkin notices use <code>community_highlight</code> with <code>meta.kind</code>. These notices have no donation amount. Message IDs include the stream ID; moderation emits <code>delete: {id, type: "starvios"}</code>.</p>
                 </article>
 				<article class="platform-card" id="robotstreamer">
 					<h3>RobotStreamer</h3>
 					<p>Open <code>https://robotstreamer.com/chat.html?c=CHANNEL_ID</code> and keep Stream Chat selected for channel-only capture. Each new message, including messages grouped beneath the same author, uses <code>platform/type: "robotstreamer"</code>, plain-text <code>chatname</code>, <code>userid</code>, <code>chatimg</code>, <code>chatbadges</code>, and <code>nameColor</code>. Message bodies preserve safe inline images; <code>textonlymode</code> uses literal text and image labels. Initial history and system notices are excluded. RobotStreamer deletions are not forwarded; remove moderated messages in the SSN dock if needed.</p>
-				</article>
+				    <p>Cloud Lightweight emits public text chat with <code>type: "robotstreamer"</code>, <code>textonly: true</code>, and a unique local occurrence <code>id</code>. Identical messages remain distinct. Author removal events delete captured rows in the same owner's chat by exact local ID. Initial history and system notices are excluded. Use Browser for rich emotes and avatars.</p>
+                </article>
 				<article class="platform-card" id="castyr">
 					<h3>Castyr - DOM Capture</h3>
 					<p class="source-note">Implementation: <code>sources/castyr.js</code></p>
@@ -2472,7 +2480,8 @@
             </section>
 
             <section class="section-summary" id="sooplive">
-                <h2>SOOP - Player DOM Capture</h2>
+                <h2>SOOP</h2>
+                <p>Cloud Lightweight connects to public <code>play.sooplive.com</code> channels without a browser. New chat uses <code>type: "sooplive"</code>, a channel/broadcast-scoped <code>id</code>, plain <code>chatname</code>/<code>userid</code>, and <code>chatmessage</code> with <code>textonly: true</code>. Star Balloon tips use <code>hasDonation</code> in Star Balloons, without an inferred USD value. Forced departures remove that user instance's ordinary chat by exact ID; paid rows remain. Use Browser for emotes or sign-in.</p>
                 <p class="source-note">Implementation: <code>sources/sooplive.js</code>. Supports the unified <code>play.sooplive.com</code> player and legacy <code>play.sooplive.co.kr</code> URLs. The former global chat layout remains recognized when served.</p>
                 <p>Public chat emits <code>type</code>/<code>platform: "sooplive"</code>, plain-text <code>chatname</code>/<code>userid</code>, <code>nameColor</code>, and sanitized <code>chatmessage</code>. Existing rows, duplicate message IDs, translation copies, and private whispers are excluded. Emotes become safe images or alt text in text-only mode.</p>
                 <p>With <code>showviewercount</code> or <code>hypemode</code> enabled, <code>viewer_update</code> carries an integer <code>meta</code> from the player's <code>#nAllViewer</code>. Chat-only popouts may not expose this count. SSApp uses the full player when opening a detached popup, since current SOOP popouts depend on their opener.</p>

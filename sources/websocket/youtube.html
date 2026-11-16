@@ -10,7 +10,7 @@
     <meta content="utf-8" http-equiv="encoding" />
     <title>Social Stream - YouTube</title>
     <link rel="icon" href="../images/youtube.png" type="image/png">
-    <link rel="stylesheet" type="text/css" href="youtube.css" /> 
+    <link rel="stylesheet" type="text/css" href="youtube.css?v=20261115-details" /> 
     <link rel="stylesheet" href="websocket-responsive.css">
     <link rel="stylesheet" href="../../shared/compact-source-layout.css?v=20260916-review">
     <script src="../../shared/utils/compactSourceLayout.js?v=20260916-setup" defer></script>
@@ -138,6 +138,72 @@
                     <a href="https://studio.youtube.com/" target="_blank" rel="noopener noreferrer" title="Change this stream's visibility in YouTube Studio.">Open YouTube Studio</a>
                 </div>
 
+                <details id="stream-details" class="stream-details">
+                    <summary>
+                        <span class="stream-details-heading">Stream details</span>
+                        <span id="stream-details-preview" class="stream-details-preview"></span>
+                        <span class="stream-details-toggle" aria-hidden="true"></span>
+                    </summary>
+                    <div class="stream-details-body">
+                        <div class="stream-field stream-field-wide">
+                            <label for="stream-title">Title</label>
+                            <input type="text" id="stream-title" class="channel-input" maxlength="100" autocomplete="off" placeholder="Video title">
+                        </div>
+                        <div class="stream-field stream-field-wide">
+                            <label for="stream-description">Description</label>
+                            <textarea id="stream-description" class="channel-input" rows="5" maxlength="5000" placeholder="Video description"></textarea>
+                        </div>
+                        <div class="stream-field">
+                            <label for="stream-category">Category</label>
+                            <select id="stream-category" class="channel-input">
+                                <option value="">Keep current</option>
+                                <option value="1">Film &amp; Animation</option>
+                                <option value="2">Autos &amp; Vehicles</option>
+                                <option value="10">Music</option>
+                                <option value="15">Pets &amp; Animals</option>
+                                <option value="17">Sports</option>
+                                <option value="19">Travel &amp; Events</option>
+                                <option value="20">Gaming</option>
+                                <option value="22">People &amp; Blogs</option>
+                                <option value="23">Comedy</option>
+                                <option value="24">Entertainment</option>
+                                <option value="25">News &amp; Politics</option>
+                                <option value="26">Howto &amp; Style</option>
+                                <option value="27">Education</option>
+                                <option value="28">Science &amp; Technology</option>
+                                <option value="29">Nonprofits &amp; Activism</option>
+                            </select>
+                        </div>
+                        <div class="stream-details-actions">
+                            <button type="button" id="update-stream-info" class="connect-button stream-details-save">Save details</button>
+                            <button type="button" id="refresh-stream-info" class="connect-button stream-details-quiet">Reload</button>
+                        </div>
+                        <div class="stream-details-divider stream-field-wide"></div>
+                        <div class="stream-field">
+                            <label for="stream-visibility">Visibility <span class="stream-field-hint">(saved on its own)</span></label>
+                            <div class="stream-field-row">
+                                <select id="stream-visibility" class="channel-input" disabled>
+                                    <option value="">Load current details first</option>
+                                    <option value="private">Private</option>
+                                    <option value="unlisted">Unlisted</option>
+                                    <option value="public">Public</option>
+                                </select>
+                                <button type="button" id="update-stream-visibility" class="connect-button stream-details-quiet" disabled>Set visibility</button>
+                            </div>
+                        </div>
+                        <div class="stream-field">
+                            <label for="stream-thumbnail">Thumbnail <span class="stream-field-hint">(JPEG or PNG)</span></label>
+                            <div class="stream-field-row">
+                                <input type="file" id="stream-thumbnail" accept="image/jpeg,image/png" title="JPEG or PNG, up to 50 MB.">
+                                <button type="button" id="upload-stream-thumbnail" class="connect-button stream-details-quiet" disabled>Upload thumbnail</button>
+                            </div>
+                            <img id="stream-thumbnail-preview" class="hidden" alt="Selected thumbnail">
+                        </div>
+                        <div id="stream-details-status" class="stream-details-status stream-field-wide" role="status" aria-live="polite"></div>
+                        <p id="stream-details-note" class="stream-details-note stream-field-wide"></p>
+                    </div>
+                </details>
+
                 <div class="stats-container">
                     <h3>Channel Statistics</h3>
                     <div class="stats-grid">
@@ -227,32 +293,6 @@
                         <input type="checkbox" id="sync-block-users">
                         <span>Sync dock blocks to YouTube bans</span>
                     </label>
-                    <details id="stream-details">
-                    <summary>Stream details</summary>
-                    <div class="stream-details-fields">
-                    <input type="text" id="stream-title" class="channel-input" aria-label="Video title" placeholder="Video title">
-                    <textarea id="stream-description" class="channel-input" rows="6" aria-label="Video description" placeholder="Video description"></textarea>
-                    <input type="text" id="stream-category" class="channel-input" placeholder="Video category name or ID">
-                    <div class="credentials-actions">
-                        <button id="refresh-stream-info" class="connect-button" style="background:#5f6368;">Refresh Current</button>
-                        <button id="update-stream-info" class="connect-button" style="background:#1a73e8;">Update Metadata</button>
-                    </div>
-                    <div class="credentials-note">YouTube uses a video category, not a Twitch/Kick game category.</div>
-                    <label for="stream-visibility">Visibility</label>
-                    <select id="stream-visibility" class="channel-input" disabled>
-                        <option value="">Load current details first</option>
-                        <option value="private">Private</option>
-                        <option value="unlisted">Unlisted</option>
-                        <option value="public">Public</option>
-                    </select>
-                    <button type="button" id="update-stream-visibility" class="connect-button" style="background:#5f6368; justify-self:start;" disabled>Set visibility</button>
-                    <label for="stream-thumbnail">Thumbnail</label>
-                    <input type="file" id="stream-thumbnail" accept="image/jpeg,image/png" title="JPEG or PNG, up to 50 MB.">
-                    <img id="stream-thumbnail-preview" class="hidden" alt="Selected thumbnail">
-                    <button type="button" id="upload-stream-thumbnail" class="connect-button" style="background:#5f6368; justify-self:start;" disabled>Upload thumbnail</button>
-                    <div id="stream-details-status" class="credentials-note" role="status"></div>
-                    </div>
-                    </details>
                 </div>
             </div>
             </div>
@@ -3436,7 +3476,7 @@ function enableBackgroundKeepAlive() {
             if (advancedPanel) {
                 advancedPanel.classList.toggle('hidden', !canWrite || !isSocketInterfaceVisible());
             }
-            ['sync-delete-messages', 'sync-block-users', 'stream-title', 'stream-description', 'stream-category', 'update-stream-info'].forEach(function(id) {
+            ['sync-delete-messages', 'sync-block-users'].forEach(function(id) {
                 const element = document.getElementById(id);
                 if (!element) return;
                 element.disabled = !canWrite;
@@ -5982,7 +6022,33 @@ function enableBackgroundKeepAlive() {
 	let currentVideoMetadataGeneration = null;
 	let currentVideoMetadataId = '';
 	let currentVideoMetadataToken = null;
+	// True when the loaded video belongs to a channel other than the signed-in one.
+	let currentVideoMetadataForeign = false;
+	let lastVideoMetadataError = '';
 	let youtubeStreamDetailBusy = false;
+
+	function setYouTubeStreamDetailsStatus(message, state) {
+		const status = document.getElementById('stream-details-status');
+		if (!status) return;
+		status.textContent = message || '';
+		if (state) status.setAttribute('data-state', state);
+		else status.removeAttribute('data-state');
+	}
+
+	function setYouTubeStreamCategoryValue(categoryId) {
+		const categoryInput = document.getElementById('stream-category');
+		if (!categoryInput) return;
+		const value = categoryId ? String(categoryId) : '';
+		if (value && !Array.prototype.some.call(categoryInput.options, function(option) { return option.value === value; })) {
+			// Not one of the standard categories; keep it selectable so saving does not change it.
+			const option = document.createElement('option');
+			option.value = value;
+			option.textContent = 'Category ' + value;
+			categoryInput.appendChild(option);
+		}
+		categoryInput.value = value;
+	}
+
 	async function refreshCurrentVideoMetadata() {
 		const connectionGeneration = liveChatConnectionGeneration;
 		const token = getStoredToken();
@@ -5994,16 +6060,18 @@ function enableBackgroundKeepAlive() {
 		}
 		const titleInput = document.getElementById('stream-title');
 		const descriptionInput = document.getElementById('stream-description');
-		const categoryInput = document.getElementById('stream-category');
 		if (titleInput) {
 			titleInput.value = videoDetails.snippet.title || '';
 		}
 		if (descriptionInput) {
 			descriptionInput.value = videoDetails.snippet.description || '';
 		}
-		if (categoryInput) {
-			categoryInput.value = videoDetails.snippet.categoryId || '';
-		}
+		setYouTubeStreamCategoryValue(videoDetails.snippet.categoryId);
+		const preview = document.getElementById('stream-details-preview');
+		if (preview) preview.textContent = videoDetails.snippet.title || '';
+		const ownerChannelId = normalizeYouTubeChannelId(videoDetails.snippet.channelId);
+		const signedInChannelId = normalizeYouTubeChannelId(authenticatedChannelId);
+		currentVideoMetadataForeign = !!(ownerChannelId && signedInChannelId && ownerChannelId !== signedInChannelId);
 		currentVideoMetadataGeneration = connectionGeneration;
 		currentVideoMetadataId = targetVideoId;
 		currentVideoMetadataToken = token;
@@ -6020,7 +6088,21 @@ function enableBackgroundKeepAlive() {
 	}
 
 	function syncYouTubeStreamDetailControls() {
-		const ready = hasCurrentYouTubeStreamDetails() && !youtubeStreamDetailBusy;
+		const canWrite = hasYouTubeWriteAccess();
+		const canEdit = canWrite && !currentVideoMetadataForeign;
+		const ready = canEdit && hasCurrentYouTubeStreamDetails() && !youtubeStreamDetailBusy;
+		['stream-title', 'stream-description', 'stream-category', 'update-stream-info'].forEach(function(id) {
+			const element = document.getElementById(id);
+			if (element) element.disabled = !canEdit || youtubeStreamDetailBusy;
+		});
+		const reloadButton = document.getElementById('refresh-stream-info');
+		if (reloadButton) reloadButton.disabled = youtubeStreamDetailBusy;
+		const note = document.getElementById('stream-details-note');
+		if (note) {
+			note.textContent = !canWrite
+				? 'Sign out and sign in with Write access to edit stream details.'
+				: (currentVideoMetadataForeign ? 'This stream belongs to another channel. You can only edit streams on the channel you signed in with.' : '');
+		}
 		const visibility = document.getElementById('stream-visibility');
 		const file = document.getElementById('stream-thumbnail');
 		if (visibility) visibility.disabled = !ready;
@@ -6033,9 +6115,8 @@ function enableBackgroundKeepAlive() {
 
 	async function updateYouTubeStreamDetail(action) {
 		if (youtubeStreamDetailBusy) return;
-		const status = document.getElementById('stream-details-status');
 		if (!hasCurrentYouTubeStreamDetails()) {
-			status.textContent = 'Refresh current details before editing this stream.';
+			setYouTubeStreamDetailsStatus('Reload the current details before editing this stream.', 'error');
 			return;
 		}
 		const targetVideoId = currentVideoMetadataId;
@@ -6045,7 +6126,7 @@ function enableBackgroundKeepAlive() {
 		const file = document.getElementById('stream-thumbnail').files[0];
 		youtubeStreamDetailBusy = true;
 		syncYouTubeStreamDetailControls();
-		status.textContent = action === 'visibility' ? 'Saving visibility...' : 'Uploading thumbnail...';
+		setYouTubeStreamDetailsStatus(action === 'visibility' ? 'Saving visibility...' : 'Uploading thumbnail...');
 		try {
 			let url;
 			let body;
@@ -6078,16 +6159,16 @@ function enableBackgroundKeepAlive() {
 				return;
 			}
 			if (!hasCurrentYouTubeStreamDetails() || token !== getStoredToken() || generation !== liveChatConnectionGeneration) {
-				throw new Error('Stream or sign-in changed. Refresh current details first.');
+				throw new Error('Stream or sign-in changed. Reload the current details first.');
 			}
 			const response = await fetch(url, { method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': contentType }, body });
 			const result = await response.json().catch(() => ({}));
 			if (!response.ok) throw new Error(result.error?.message || 'YouTube rejected the update.');
 			if (generation !== liveChatConnectionGeneration || token !== getStoredToken()) return;
 			if (action === 'visibility') updateYouTubePrivacyWarning(visibility);
-			status.textContent = action === 'visibility' ? 'Visibility saved: ' + visibility + '.' : 'Thumbnail uploaded.';
+			setYouTubeStreamDetailsStatus(action === 'visibility' ? 'Visibility saved: ' + visibility + '.' : 'Thumbnail uploaded.', 'success');
 		} catch (error) {
-			status.textContent = error.message || 'Update failed.';
+			setYouTubeStreamDetailsStatus(error.message || 'Update failed.', 'error');
 		} finally {
 			youtubeStreamDetailBusy = false;
 			syncYouTubeStreamDetailControls();
@@ -6129,11 +6210,14 @@ function enableBackgroundKeepAlive() {
 	async function updateCurrentVideoMetadata(payload = {}) {
 		const token = getStoredToken();
 		const targetVideoId = (currentStream && currentStream.id) || videoId;
+		lastVideoMetadataError = '';
 		if (!token || !targetVideoId || !hasYouTubeWriteAccess()) {
+			lastVideoMetadataError = 'Connect to a live stream first.';
 			return false;
 		}
 		const existingVideo = await fetchCurrentVideoSnippet(targetVideoId);
 		if (!existingVideo || !existingVideo.snippet) {
+			lastVideoMetadataError = 'Could not load the current video from YouTube.';
 			return false;
 		}
 		const updatedSnippet = { ...existingVideo.snippet };
@@ -6143,13 +6227,15 @@ function enableBackgroundKeepAlive() {
 		if (title) {
 			updatedSnippet.title = title;
 		}
-		if (typeof payload.description === 'string' && payload.description.trim()) {
+		// An empty description only clears the existing one when the caller loaded it first.
+		if (typeof payload.description === 'string' && (payload.description.trim() || payload.allowEmptyDescription === true)) {
 			updatedSnippet.description = description;
 		}
 		if (category) {
 			const resolvedCategoryId = await resolveVideoCategoryId(category);
 			if (!resolvedCategoryId) {
 				console.warn('Unable to resolve YouTube category:', category);
+				lastVideoMetadataError = 'YouTube has no category named "' + category + '".';
 				return false;
 			}
 			updatedSnippet.categoryId = String(resolvedCategoryId);
@@ -6169,12 +6255,14 @@ function enableBackgroundKeepAlive() {
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => ({}));
 				console.error('Error updating YouTube metadata:', errorData);
+				lastVideoMetadataError = errorData.error?.message || ('YouTube rejected the update (HTTP ' + response.status + ').');
 				return false;
 			}
 			await refreshCurrentVideoMetadata();
 			return true;
 		} catch (error) {
 			console.error('Error updating YouTube metadata:', error);
+			lastVideoMetadataError = 'Could not reach YouTube.';
 			return false;
 		}
 	}
@@ -6500,8 +6588,10 @@ function enableBackgroundKeepAlive() {
 		currentVideoMetadataToken = null;
 		const thumbnailInput = document.getElementById('stream-thumbnail');
 		if (thumbnailInput) { thumbnailInput.value = ''; thumbnailInput.dispatchEvent(new Event('change')); }
-		const detailStatus = document.getElementById('stream-details-status');
-		if (detailStatus) detailStatus.textContent = '';
+		currentVideoMetadataForeign = false;
+		const detailPreview = document.getElementById('stream-details-preview');
+		if (detailPreview) detailPreview.textContent = '';
+		setYouTubeStreamDetailsStatus('');
 		syncYouTubeStreamDetailControls();
 		updateYouTubePrivacyWarning('');
 		// Reconnecting to the same video also invalidates requests from the previous connection.
@@ -8211,13 +8301,19 @@ function enableBackgroundKeepAlive() {
 		const refreshStreamInfoButton = document.getElementById('refresh-stream-info');
 		if (refreshStreamInfoButton) {
 			const refreshStreamInfoHandler = function() {
+				if (youtubeStreamDetailBusy) return;
+				setYouTubeStreamDetailsStatus('Loading...');
 				refreshCurrentVideoMetadata().then((videoDetails) => {
 					if (videoDetails) {
 						addEvent('Loaded current YouTube metadata');
+						setYouTubeStreamDetailsStatus('Loaded current details.', 'success');
+					} else {
+						setYouTubeStreamDetailsStatus('Could not load details. Connect to a live stream first.', 'error');
 					}
 				}).catch((error) => {
 					console.error('Failed to refresh YouTube metadata:', error);
 					addEvent('Failed to load current YouTube metadata');
+					setYouTubeStreamDetailsStatus('Could not load the current details.', 'error');
 				});
 			};
 			refreshStreamInfoButton.addEventListener('click', refreshStreamInfoHandler);
@@ -8226,27 +8322,41 @@ function enableBackgroundKeepAlive() {
 		const updateStreamInfoButton = document.getElementById('update-stream-info');
 		if (updateStreamInfoButton) {
 			const updateStreamInfoHandler = function() {
+				if (youtubeStreamDetailBusy) return;
 				if (!hasYouTubeWriteAccess()) {
 					addEvent(getWriteAccessRequiredMessage());
+					setYouTubeStreamDetailsStatus(getWriteAccessRequiredMessage(), 'error');
 					return;
 				}
-				if (currentVideoMetadataGeneration !== liveChatConnectionGeneration) {
+				// The fields must reflect this stream, or a save could overwrite it with stale text.
+				if (!hasCurrentYouTubeStreamDetails()) {
 					addEvent('Load current YouTube metadata before updating');
+					setYouTubeStreamDetailsStatus('Reload the current details before saving.', 'error');
 					return;
 				}
+				youtubeStreamDetailBusy = true;
+				syncYouTubeStreamDetailControls();
+				setYouTubeStreamDetailsStatus('Saving...');
 				updateCurrentVideoMetadata({
 					title: document.getElementById('stream-title')?.value || '',
 					description: (document.getElementById('stream-description')?.value || '').trim(),
+					allowEmptyDescription: true,
 					category: document.getElementById('stream-category')?.value || ''
 				}).then((ok) => {
 					if (ok) {
 						addEvent('YouTube title/description/category updated');
+						setYouTubeStreamDetailsStatus('Details saved.', 'success');
 					} else {
 						addEvent('YouTube metadata update failed');
+						setYouTubeStreamDetailsStatus('Not saved: ' + (lastVideoMetadataError || 'YouTube rejected the update.'), 'error');
 					}
 				}).catch((error) => {
 					console.error('Failed to update YouTube metadata:', error);
 					addEvent('YouTube metadata update failed');
+					setYouTubeStreamDetailsStatus('Not saved: could not reach YouTube.', 'error');
+				}).finally(() => {
+					youtubeStreamDetailBusy = false;
+					syncYouTubeStreamDetailControls();
 				});
 			};
 			updateStreamInfoButton.addEventListener('click', updateStreamInfoHandler);

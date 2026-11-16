@@ -2443,7 +2443,9 @@ function initElements() {
         streamCategory: q('stream-category'),
         streamTags: q('stream-tags'),
         refreshStreamInfo: q('refresh-stream-info'),
-        updateStreamInfo: q('update-stream-info')
+        updateStreamInfo: q('update-stream-info'),
+        streamDetailsStatus: q('stream-details-status'),
+        streamDetailsPreview: q('stream-details-preview')
     });
 }
 
@@ -3159,17 +3161,29 @@ function bindEvents() {
     }
     if (els.refreshStreamInfo) {
         els.refreshStreamInfo.addEventListener('click', () => {
-            refreshKickStreamInfo().catch((err) => {
+            setKickStreamDetailsStatus('Loading...');
+            refreshKickStreamInfo().then((channel) => {
+                if (channel) {
+                    setKickStreamDetailsStatus('Loaded current details.', 'success');
+                } else {
+                    setKickStreamDetailsStatus('Sign-in changed. Try again.', 'error');
+                }
+            }).catch((err) => {
                 console.error('Failed to refresh Kick stream info', err);
                 log(`Unable to refresh stream info: ${err.message}`, 'warning');
+                setKickStreamDetailsStatus(`Could not load details: ${describeKickStreamDetailsError(err)}`, 'error');
             });
         });
     }
     if (els.updateStreamInfo) {
         els.updateStreamInfo.addEventListener('click', () => {
-            updateKickStreamInfoFromInputs().catch((err) => {
+            setKickStreamDetailsStatus('Saving...');
+            updateKickStreamInfoFromInputs().then(() => {
+                setKickStreamDetailsStatus('Details saved.', 'success');
+            }).catch((err) => {
                 console.error('Failed to update Kick stream info', err);
                 log(`Unable to update stream info: ${err.message}`, 'error');
+                setKickStreamDetailsStatus(`Not saved: ${describeKickStreamDetailsError(err)}`, 'error');
             });
         });
     }
@@ -4741,6 +4755,7 @@ async function refreshAccessToken() {
     if (state.refreshPromise) {
         return state.refreshPromise;
     }
+    const previousToken = state.tokens.access_token;
     state.refreshPromise = (async () => {
         const base = getBridgeBaseUrl().replace(/\/$/, '');
         const response = await fetch(`${base}/kick/token`, {
@@ -4770,6 +4785,9 @@ async function refreshAccessToken() {
             throw new Error(`Kick refresh failed (${response.status}): ${message}`);
         }
 
+        if (state.tokens?.access_token === previousToken && kickStreamTagsToken === previousToken) {
+            kickStreamTagsToken = data.access_token;
+        }
         const now = Date.now();
         state.tokens = {
             ...(state.tokens || {}),
@@ -4868,6 +4886,40 @@ async function apiFetch(path, options = {}, retry = true) {
 }
 
 let kickStreamTagsToken = null;
+
+// Result line beside the stream details buttons (absent on older page layouts).
+function setKickStreamDetailsStatus(message, stateName) {
+    if (!els.streamDetailsStatus) return;
+    els.streamDetailsStatus.textContent = message || '';
+    if (stateName) {
+        els.streamDetailsStatus.setAttribute('data-state', stateName);
+    } else {
+        els.streamDetailsStatus.removeAttribute('data-state');
+    }
+}
+
+function describeKickStreamDetailsError(err) {
+    const message = err && err.message ? String(err.message) : 'Unknown error.';
+    if (/not authenticated/i.test(message)) {
+        return 'Sign in with Kick to edit stream details.';
+    }
+    const status = /^Kick API (\d{3})/.exec(message);
+    if (status && (status[1] === '401' || status[1] === '403')) {
+        return 'Kick refused the request. Sign in as the channel you want to edit and allow the channel:write permission.';
+    }
+    return message.length > 180 ? message.slice(0, 177) + '...' : message;
+}
+
+// Collapsed-panel summary of what is currently set, taken from the editor fields.
+function updateKickStreamDetailsPreview() {
+    if (!els.streamDetailsPreview) return;
+    const parts = [
+        els.streamTitle ? els.streamTitle.value.trim() : '',
+        els.streamCategory ? els.streamCategory.value.trim() : ''
+    ].filter(Boolean);
+    els.streamDetailsPreview.textContent = parts.join(' ' + String.fromCharCode(183) + ' ');
+}
+
 function updateKickStreamEditorFields(channel) {
     const values = resolveKickStreamEditorValues(channel);
     if (els.streamTitle) {
@@ -4883,6 +4935,7 @@ function updateKickStreamEditorFields(channel) {
         els.streamTags.disabled = !Array.isArray(tags);
         kickStreamTagsToken = state.tokens?.access_token || null;
     }
+    updateKickStreamDetailsPreview();
 }
 
 function extractKickStreamEditorValues() {
@@ -5313,7 +5366,7 @@ async function updateKickStreamInfoFromInputs() {
     const adminContext = getKickAdminControlContext();
     const payload = {};
     if (els.streamTags && !els.streamTags.disabled && els.streamTags.value !== els.streamTags.dataset.current) {
-        if (!token || token !== kickStreamTagsToken) throw new Error('Sign-in changed. Refresh current stream details first.');
+        if (!token || token !== kickStreamTagsToken) throw new Error('Sign-in changed. Reload the stream details first.');
         const tags = els.streamTags.value.split(',').map(tag => tag.trim()).filter(Boolean);
         if (tags.length > 10) throw new Error('Use up to 10 tags.');
         payload.custom_tags = tags;
@@ -5334,7 +5387,7 @@ async function updateKickStreamInfoFromInputs() {
     if (adminContext.mismatch) {
         log(`Kick admin controls target ${adminContext.authLabel}, not ${adminContext.selectedLabel}.`, 'warning');
     }
-    if (token !== state.tokens?.access_token) throw new Error('Sign-in changed. Refresh current stream details first.');
+    if (token !== state.tokens?.access_token) throw new Error('Sign-in changed. Reload the stream details first.');
     await apiFetch('/public/v1/channels', {
         method: 'PATCH',
         body: JSON.stringify(payload)
@@ -5353,6 +5406,7 @@ async function updateKickStreamInfoFromInputs() {
     // old values.  After a short delay the cache should have cleared.
     if (els.streamTitle && title) els.streamTitle.value = title;
     if (els.streamCategory && category) els.streamCategory.value = category;
+    updateKickStreamDetailsPreview();
     setTimeout(() => {
         refreshKickStreamInfo().catch(() => {});
     }, 3000);
